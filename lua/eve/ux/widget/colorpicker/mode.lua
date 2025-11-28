@@ -41,18 +41,14 @@ local HsvInput = {
   end,
 }
 
-----------------------------------------------------------------------------------------------------
-
 ---@type eve.ux.widget.colorpicker.IOutputMode
 local HexOutput = {
   name = "HEX",
   str = function(r, g, b, alpha)
     if alpha then
-      local a = convert.round(alpha * 255 / 100)
-      return string.format("#%02x%02x%02x%02x", r, g, b, a)
-    else
-      return string.format("#%02x%02x%02x", r, g, b)
+      return string.format("#%02x%02x%02x%02x", r, g, b, convert.round(alpha * 255 / 100))
     end
+    return string.format("#%02x%02x%02x", r, g, b)
   end,
 }
 
@@ -61,10 +57,9 @@ local RgbOutput = {
   name = "RGB",
   str = function(r, g, b, alpha)
     if alpha then
-      return string.format("rgb(%d %d %d / %d%%)", r, g, b, alpha)
-    else
-      return string.format("rgb(%d %d %d)", r, g, b)
+      return string.format("rgb(%d,%d,%d,%d%%)", r, g, b, alpha)
     end
+    return string.format("rgb(%d,%d,%d)", r, g, b)
   end,
 }
 
@@ -74,10 +69,9 @@ local HslOutput = {
   str = function(r, g, b, alpha)
     local h, s, l = convert.rgb2hsl(r, g, b)
     if alpha then
-      return string.format("hsl(%d %d%% %d%% / %d%%)", h, s, l, alpha)
-    else
-      return string.format("hsl(%d %d%% %d%%)", h, s, l)
+      return string.format("hsl(%d,%d%%,%d%%,%d%%)", h, s, l, alpha)
     end
+    return string.format("hsl(%d,%d%%,%d%%)", h, s, l)
   end,
 }
 

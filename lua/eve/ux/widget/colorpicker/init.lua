@@ -3,11 +3,7 @@ local Color = require("eve.ux.widget.colorpicker.color")
 local UI = require("eve.ux.widget.colorpicker.ui")
 local picker = require("eve.ux.widget.colorpicker.picker")
 
-local COLORPICKER_WIN_HIGHLIGHT = table.concat({
-  "FloatBorder:f_cp_border",
-  "Normal:f_cp_normal",
-  "EndOfBuffer:f_cp_normal",
-}, ",")
+local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_cp_normal"
 
 ---@class eve.ux.widget.colorpicker.IProps : eve.ux.widget.colorpicker.ui.IProps
 
@@ -37,9 +33,7 @@ function M.new(props)
   self._bufnr = nil
   self._winnr = nil
   self._keymaps = self:__build_keymaps__()
-
   self._ui.on_quit_callback = function() end
-
   return self
 end
 
@@ -75,7 +69,7 @@ function M:pick()
     local bufnr = self:__create_buf_as_needed__()
     self:__create_win_as_needed__(bufnr)
     self._ui:render(self._color, bufnr, self._winnr)
-    vim.api.nvim_win_set_cursor(self._winnr, { 2, 0 })
+    vim.api.nvim_win_set_cursor(self._winnr, { 1, 0 })
   end)
 
   if not ok then
@@ -109,10 +103,10 @@ function M:close()
   self._bufnr = nil
   self._winnr = nil
 
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+  if winnr and vim.api.nvim_win_is_valid(winnr) then
     vim.api.nvim_win_close(winnr, true)
   end
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+  if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 
@@ -121,15 +115,12 @@ end
 
 ---@return boolean
 function M:isvisible()
-  local winnr = self._winnr
-  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+  return self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr)
 end
 
 ---@return boolean
 function M:isfocused()
-  local cur_winnr = vim.api.nvim_get_current_win()
-  local winnr = self._winnr
-  return winnr ~= nil and cur_winnr == winnr
+  return self._winnr ~= nil and vim.api.nvim_get_current_win() == self._winnr
 end
 
 ---@return nil
@@ -152,8 +143,7 @@ function M:__apply_delta__(d)
 
   if point.type == "color" and point.index then
     local value = self._color:get()
-    local new_value = value[point.index] + d
-    self._color:set_component(point.index, new_value)
+    self._color:set_component(point.index, value[point.index] + d)
   elseif point.type == "alpha" then
     local alpha = self._color:get_alpha()
     if alpha then
@@ -167,14 +157,13 @@ end
 ---@protected
 ---@return nil
 function M:__attach_autocmds__()
-  local winnr = self._winnr
-  if winnr == nil then
+  if not self._winnr then
     return
   end
 
-  local augroup = vim.api.nvim_create_augroup("eve-colorpicker-" .. winnr, { clear = true })
+  local augroup = vim.api.nvim_create_augroup("eve-colorpicker-" .. self._winnr, { clear = true })
   vim.api.nvim_create_autocmd("WinClosed", {
-    pattern = tostring(winnr),
+    pattern = tostring(self._winnr),
     group = augroup,
     callback = function()
       self:__on_close__()
@@ -187,7 +176,7 @@ end
 ---@return std.t.IKeymap[]
 function M:__build_keymaps__()
   ---@type std.t.IKeymap[]
-  local keymaps = {
+  return {
     {
       modes = { "n" },
       key = "<CR>",
@@ -211,8 +200,7 @@ function M:__build_keymaps__()
       callback = function()
         local point = self._ui:point_at()
         if point.type == "color" or point.type == "alpha" then
-          local count = vim.v.count1
-          self:__apply_delta__(-count)
+          self:__apply_delta__(-vim.v.count1)
         else
           vim.api.nvim_feedkeys("h", "n", false)
         end
@@ -225,8 +213,7 @@ function M:__build_keymaps__()
       callback = function()
         local point = self._ui:point_at()
         if point.type == "color" or point.type == "alpha" then
-          local count = vim.v.count1
-          self:__apply_delta__(count)
+          self:__apply_delta__(vim.v.count1)
         else
           vim.api.nvim_feedkeys("l", "n", false)
         end
@@ -239,8 +226,7 @@ function M:__build_keymaps__()
       callback = function()
         local point = self._ui:point_at()
         if point.type == "color" or point.type == "alpha" then
-          local count = vim.v.count1
-          self:__set_value__(count, point)
+          self:__set_value__(vim.v.count1, point)
         else
           vim.api.nvim_feedkeys("m", "n", false)
         end
@@ -248,8 +234,24 @@ function M:__build_keymaps__()
     },
     {
       modes = { "n" },
+      key = "0",
+      desc = "colorpicker: set min",
+      callback = function()
+        self:__set_percent__(0)
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "$",
+      desc = "colorpicker: set max",
+      callback = function()
+        self:__set_percent__(100)
+      end,
+    },
+    {
+      modes = { "n" },
       key = "H",
-      desc = "colorpicker: set0%",
+      desc = "colorpicker: set 0%",
       callback = function()
         self:__set_percent__(0)
       end,
@@ -257,7 +259,7 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "M",
-      desc = "colorpicker: set50%",
+      desc = "colorpicker: set 50%",
       callback = function()
         self:__set_percent__(50)
       end,
@@ -265,7 +267,7 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "L",
-      desc = "colorpicker: set100%",
+      desc = "colorpicker: set 100%",
       callback = function()
         self:__set_percent__(100)
       end,
@@ -335,7 +337,7 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "<ScrollWheelUp>",
-      desc = "colorpicker: increase1",
+      desc = "colorpicker: scroll up",
       callback = function()
         self:__apply_delta__(1)
       end,
@@ -343,14 +345,12 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "<ScrollWheelDown>",
-      desc = "colorpicker: decrease1",
+      desc = "colorpicker: scroll down",
       callback = function()
         self:__apply_delta__(-1)
       end,
     },
   }
-
-  return keymaps
 end
 
 ---@protected
@@ -365,11 +365,7 @@ function M:__complete__()
     eve.context.colorpicker.push(hex, alpha)
 
     local text = self._color:str()
-    local start_row = self._range[1] - 1
-    local start_col = self._range[2]
-    local end_row = self._range[3] - 1
-    local end_col = self._range[4]
-
+    local start_row, start_col, end_row, end_col = self._range[1] - 1, self._range[2], self._range[3] - 1, self._range[4]
     vim.api.nvim_buf_set_text(self._source_bufnr, start_row, start_col, end_row, end_col, { text })
   end
 end
@@ -377,12 +373,11 @@ end
 ---@protected
 ---@return integer
 function M:__create_buf_as_needed__()
-  local bufnr = self._bufnr
-  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr
+  if self._bufnr and vim.api.nvim_buf_is_valid(self._bufnr) then
+    return self._bufnr
   end
 
-  bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = vim.api.nvim_create_buf(false, true)
   self._bufnr = bufnr
 
   vim.bo[bufnr].buflisted = false
@@ -400,17 +395,16 @@ end
 ---@param bufnr                         integer
 ---@return integer
 function M:__create_win_as_needed__(bufnr)
-  local winnr = self._winnr
-  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    return winnr
+  if self._winnr and vim.api.nvim_win_is_valid(self._winnr) then
+    return self._winnr
   end
 
   local win_opts = self._ui:get_win_opts()
-  winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
+  local winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
   self._winnr = winnr
 
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].winhighlight = COLORPICKER_WIN_HIGHLIGHT
+  vim.wo[winnr].signcolumn = "yes:1"
+  vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
 
   self._ui:set_winnr(winnr)
   self:__attach_autocmds__()
@@ -424,7 +418,6 @@ function M:__goto_next_history__()
   if self._history_index <= 1 then
     return
   end
-
   self._history_index = self._history_index - 1
   self:__load_history_item__(self._history_index)
 end
@@ -471,38 +464,47 @@ end
 ---@protected
 ---@return nil
 function M:__on_click__()
-  local winnr = self._winnr
-  if not winnr then
+  if not self._winnr then
     return
   end
 
   local mouse = vim.fn.getmousepos()
-  if mouse.winid ~= winnr then
+  if mouse.winid ~= self._winnr then
     return
   end
 
   local row = mouse.line
-  local col = mouse.column
-
+  local col = mouse.wincol
   local input = self._color:input()
-  local bar_name_len = #input.bar_name[1]
-  local bar_start_col = bar_name_len + 10
+  local values = self._color:get()
   local bar_len = self._ui:get_bar_len()
+  local bar_char_width = self._ui:get_bar_char_width()
+  local point_char_width = self._ui:get_point_char_width()
 
-  if col >= bar_start_col then
-    local bar_pos = col - bar_start_col
-    local ratio = convert.clamp(bar_pos / bar_len, 0, 1)
+  if bar_len <= 0 or bar_char_width <= 0 or point_char_width <= 0 then
+    return
+  end
+  local bar_width = (bar_len - 1) * bar_char_width + point_char_width
 
-    if row >= 2 and row <= #input.bar_name + 1 then
-      local index = row - 1
-      local max_val = input.max[index]
-      local new_value = convert.round(max_val * ratio)
-      self._color:set_component(index, new_value)
-      self._ui:update()
-    elseif self._color:is_alpha_visible() and row == #input.bar_name + 2 then
-      self._color:set_alpha(convert.round(100 * ratio))
-      self._ui:update()
-    end
+  if row >= 1 and row <= #input.bar_name then
+    local bar_name = input.bar_name[row]
+    local value = values[row] or 0
+    local prefix = string.format("%s : %6d ", bar_name, value)
+    local bar_start_col = vim.api.nvim_strwidth(prefix) + 1
+    local offset = convert.clamp(col - bar_start_col, 0, bar_width)
+    local ratio = convert.clamp(offset / bar_width, 0, 1)
+    local max_val = input.max[row]
+    self._color:set_component(row, convert.round(max_val * ratio))
+    self._ui:update()
+  elseif self._color:is_alpha_visible() and row == #input.bar_name + 1 then
+    local alpha = self._color:get_alpha() or 0
+    local alpha_bar_name = "A" .. string.rep(" ", #input.bar_name[1] - 1)
+    local prefix = string.format("%s : %5d%% ", alpha_bar_name, alpha)
+    local bar_start_col = vim.api.nvim_strwidth(prefix) + 1
+    local offset = convert.clamp(col - bar_start_col, 0, bar_width)
+    local ratio = convert.clamp(offset / bar_width, 0, 1)
+    self._color:set_alpha(convert.round(100 * ratio))
+    self._ui:update()
   end
 end
 
@@ -523,8 +525,7 @@ function M:__set_percent__(percent)
   if point.type == "color" and point.index then
     local input = self._color:input()
     local max_val = input.max[point.index]
-    local new_value = convert.round(max_val * percent / 100)
-    self._color:set_component(point.index, new_value)
+    self._color:set_component(point.index, convert.round(max_val * percent / 100))
   elseif point.type == "alpha" then
     self._color:set_alpha(percent)
   end
@@ -533,8 +534,8 @@ function M:__set_percent__(percent)
 end
 
 ---@protected
----@param value                        integer
----@param point                        eve.ux.widget.colorpicker.IPoint
+---@param value                         integer
+---@param point                         eve.ux.widget.colorpicker.IPoint
 ---@return nil
 function M:__set_value__(value, point)
   if point.type == "color" and point.index then

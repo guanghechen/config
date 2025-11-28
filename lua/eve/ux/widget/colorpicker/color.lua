@@ -96,14 +96,12 @@ end
 ---@return nil
 function M:set_rgb(r, g, b)
   local input = self:input()
-  local value = input.from_rgb(r, g, b)
-  self:set(value)
+  self:set(input.from_rgb(r, g, b))
 end
 
 ---@return integer, integer, integer
 function M:get_rgb()
-  local input = self:input()
-  return input.to_rgb(self._value)
+  return self:input().to_rgb(self._value)
 end
 
 ---@return integer|nil
@@ -175,9 +173,8 @@ end
 
 ---@return string
 function M:str()
-  local output = self:output()
   local r, g, b = self:get_rgb()
-  return output.str(r, g, b, self:get_alpha())
+  return self:output().str(r, g, b, self:get_alpha())
 end
 
 ---@return eve.ux.widget.colorpicker.Color

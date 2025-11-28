@@ -3,88 +3,44 @@ local convert = require("eve.ux.widget.colorpicker.convert")
 ---@class eve.ux.widget.colorpicker.picker
 local M = {}
 
-local HEX_PATTERNS = {
-  [=[\\v%(^|[^[:keyword:]])\\zs#(\\x\\x)(\\x\\x)(\\x\\x)>]=],
-  [=[\\v%(^|[^[:keyword:]])\\zs#(\\x\\x)(\\x\\x)(\\x\\x)(\\x\\x)>]=],
-  [=[\\v%(^|[^[:keyword:]])\\zs#(\\x)(\\x)(\\x)>]=],
-  [=[\\v%(^|[^[:keyword:]])\\zs#(\\x)(\\x)(\\x)(\\x)>]=],
-}
-
----@param hex_str                       string
----@return integer|nil
-local function parse_hex_component(hex_str)
-  if not hex_str or #hex_str == 0 then
-    return nil
-  end
-  return tonumber(hex_str, 16)
-end
-
 ---@param line                          string
 ---@param cursor_col                    integer
 ---@return eve.ux.widget.colorpicker.IPickResult|nil
 function M.pick_hex(line, cursor_col)
   local init = 1
-  while init <= #line - 3 do
-    local best_start, best_end, best_r, best_g, best_b, best_a
-
-    for _, pattern in ipairs(HEX_PATTERNS) do
-      local result = vim.fn.matchstrpos(line, pattern, init - 1)
-      if result[2] >= 0 then
-        local matched = result[1]
-        local start_col = result[2] + 1
-        local end_col = result[3]
-
-        if not best_start or start_col < best_start then
-          local hex_part = matched:match("#(%x+)")
-          if hex_part then
-            local r, g, b, a
-            if #hex_part == 3 then
-              r = hex_part:sub(1, 1):rep(2)
-              g = hex_part:sub(2, 2):rep(2)
-              b = hex_part:sub(3, 3):rep(2)
-            elseif #hex_part == 4 then
-              r = hex_part:sub(1, 1):rep(2)
-              g = hex_part:sub(2, 2):rep(2)
-              b = hex_part:sub(3, 3):rep(2)
-              a = hex_part:sub(4, 4):rep(2)
-            elseif #hex_part == 6 then
-              r = hex_part:sub(1, 2)
-              g = hex_part:sub(3, 4)
-              b = hex_part:sub(5, 6)
-            elseif #hex_part == 8 then
-              r = hex_part:sub(1, 2)
-              g = hex_part:sub(3, 4)
-              b = hex_part:sub(5, 6)
-              a = hex_part:sub(7, 8)
-            end
-
-            if r and g and b then
-              best_start = start_col
-              best_end = end_col
-              best_r = r
-              best_g = g
-              best_b = b
-              best_a = a
-            end
-          end
-        end
-      end
-    end
-
-    if not best_start then
+  while init <= #line do
+    local start_col, end_col, hex_part = line:find("#(%x+)", init)
+    if not start_col then
       break
     end
 
-    if best_start <= cursor_col and cursor_col <= best_end then
-      local r = parse_hex_component(best_r or "")
-      local g = parse_hex_component(best_g or "")
-      local b = parse_hex_component(best_b or "")
-      local a = parse_hex_component(best_a or "")
+    if start_col <= cursor_col and cursor_col <= end_col then
+      local r, g, b, a
+      local len = #hex_part
+      if len == 3 then
+        r = tonumber(hex_part:sub(1, 1):rep(2), 16)
+        g = tonumber(hex_part:sub(2, 2):rep(2), 16)
+        b = tonumber(hex_part:sub(3, 3):rep(2), 16)
+      elseif len == 4 then
+        r = tonumber(hex_part:sub(1, 1):rep(2), 16)
+        g = tonumber(hex_part:sub(2, 2):rep(2), 16)
+        b = tonumber(hex_part:sub(3, 3):rep(2), 16)
+        a = tonumber(hex_part:sub(4, 4):rep(2), 16)
+      elseif len == 6 then
+        r = tonumber(hex_part:sub(1, 2), 16)
+        g = tonumber(hex_part:sub(3, 4), 16)
+        b = tonumber(hex_part:sub(5, 6), 16)
+      elseif len == 8 then
+        r = tonumber(hex_part:sub(1, 2), 16)
+        g = tonumber(hex_part:sub(3, 4), 16)
+        b = tonumber(hex_part:sub(5, 6), 16)
+        a = tonumber(hex_part:sub(7, 8), 16)
+      end
 
       if r and g and b then
         return {
-          start_col = best_start,
-          end_col = best_end,
+          start_col = start_col,
+          end_col = end_col,
           r = r,
           g = g,
           b = b,
@@ -95,7 +51,7 @@ function M.pick_hex(line, cursor_col)
       end
     end
 
-    init = best_end + 1
+    init = end_col + 1
   end
 
   return nil
@@ -105,11 +61,9 @@ end
 ---@param cursor_col                    integer
 ---@return eve.ux.widget.colorpicker.IPickResult|nil
 function M.pick_css_rgb(line, cursor_col)
-  local pattern = "rgb%s*%((.-)%)"
   local init = 1
-
   while init <= #line do
-    local s, e, inner = line:find(pattern, init)
+    local s, e, inner = line:find("rgb%s*%((.-)%)", init)
     if not s then
       break
     end
@@ -134,9 +88,6 @@ function M.pick_css_rgb(line, cursor_col)
       end
 
       if r and g and b then
-        local rn = tonumber(r) or 0
-        local gn = tonumber(g) or 0
-        local bn = tonumber(b) or 0
         local an = nil
         if a then
           an = is_percent and convert.round(tonumber(a) or 0) or convert.round((tonumber(a) or 0) * 100)
@@ -145,9 +96,9 @@ function M.pick_css_rgb(line, cursor_col)
         return {
           start_col = s,
           end_col = e,
-          r = rn,
-          g = gn,
-          b = bn,
+          r = tonumber(r) or 0,
+          g = tonumber(g) or 0,
+          b = tonumber(b) or 0,
           alpha = an,
           input_mode = "RGB",
           output_mode = "RGB",
@@ -165,11 +116,9 @@ end
 ---@param cursor_col                    integer
 ---@return eve.ux.widget.colorpicker.IPickResult|nil
 function M.pick_css_hsl(line, cursor_col)
-  local pattern = "hsl%s*%((.-)%)"
   local init = 1
-
   while init <= #line do
-    local s, e, inner = line:find(pattern, init)
+    local s, e, inner = line:find("hsl%s*%((.-)%)", init)
     if not s then
       break
     end
@@ -194,16 +143,13 @@ function M.pick_css_hsl(line, cursor_col)
       end
 
       if h and s_pct and l_pct then
-        local hn = tonumber(h) or 0
-        local sn = tonumber(s_pct) or 0
-        local ln = tonumber(l_pct) or 0
+        local hn, sn, ln = tonumber(h) or 0, tonumber(s_pct) or 0, tonumber(l_pct) or 0
         local an = nil
         if a then
           an = is_percent and convert.round(tonumber(a) or 0) or convert.round((tonumber(a) or 0) * 100)
         end
 
         local r, g, b = convert.hsl2rgb(hn, sn, ln)
-
         return {
           start_col = s,
           end_col = e,
@@ -232,22 +178,7 @@ function M.pick()
   local line = lines[1] or ""
   cursor_col = cursor_col + 1
 
-  local result = M.pick_hex(line, cursor_col)
-  if result then
-    return result
-  end
-
-  result = M.pick_css_rgb(line, cursor_col)
-  if result then
-    return result
-  end
-
-  result = M.pick_css_hsl(line, cursor_col)
-  if result then
-    return result
-  end
-
-  return nil
+  return M.pick_hex(line, cursor_col) or M.pick_css_rgb(line, cursor_col) or M.pick_css_hsl(line, cursor_col)
 end
 
 return M

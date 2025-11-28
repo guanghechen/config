@@ -3,19 +3,15 @@ local color = require("std.lib.color")
 ---@class eve.ux.widget.colorpicker.convert
 local M = {}
 
----@param n                             integer
----@param min_val                       integer
----@param max_val                       integer
----@return integer
+---@param n                             number
+---@param min_val                       number
+---@param max_val                       number
+---@return number
 function M.clamp(n, min_val, max_val)
-  if n < min_val then
-    return min_val
-  elseif n > max_val then
-    return max_val
-  elseif n ~= n then
+  if n ~= n then
     return min_val
   end
-  return n
+  return math.max(min_val, math.min(max_val, n))
 end
 
 ---@param float                         number
@@ -48,15 +44,12 @@ end
 ---@return integer, integer, integer
 function M.rgb2hsv(r, g, b)
   local R, G, B = r / 255, g / 255, b / 255
-  local MAX = math.max(R, G, B)
-  local MIN = math.min(R, G, B)
-
+  local MAX, MIN = math.max(R, G, B), math.min(R, G, B)
   local V = MAX
   local H, S
 
   if MAX == MIN then
-    H = 0
-    S = 0
+    H, S = 0, 0
   else
     if MAX == R then
       H = (G - B) / (MAX - MIN) * 60
@@ -66,12 +59,7 @@ function M.rgb2hsv(r, g, b)
       H = (R - G) / (MAX - MIN) * 60 + 240
     end
     H = H % 360
-
-    if V == 0 then
-      S = 0
-    else
-      S = (MAX - MIN) / MAX
-    end
+    S = V == 0 and 0 or (MAX - MIN) / MAX
   end
 
   return M.round(H), M.round(S * 100), M.round(V * 100)
@@ -120,15 +108,6 @@ end
 ---@return string
 function M.hex_stringify(r, g, b)
   return color.rgb2hex(r, g, b)
-end
-
----@param r                             integer
----@param g                             integer
----@param b                             integer
----@return boolean
-function M.is_bright(r, g, b)
-  local luminance = 0.298912 * r + 0.586611 * g + 0.114478 * b
-  return luminance > 127
 end
 
 return M

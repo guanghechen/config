@@ -5,12 +5,21 @@ local HISTORY_CHAR = "󱓻"
 local BAR_CHAR = "█"
 local BAR_LEN = 32
 
+---@param hex                           string
+---@return string
+local function invert_hex_color(hex)
+  local r, g, b = convert.hex_parse(hex)
+  if not r or not g or not b then
+    return "#000000"
+  end
+  return string.format("#%02x%02x%02x", 255 - r, 255 - g, 255 - b)
+end
+
 ---@class eve.ux.widget.colorpicker.ui.IProps
 ---@field public bar_char                string|nil
 ---@field public bar_len                 integer|nil
 ---@field public point_char              string|nil
 ---@field public history_char            string|nil
----@field public empty_point_bg          boolean|nil
 ---@field public win_opts                vim.api.keyset.win_config|nil
 
 ---@class eve.ux.widget.colorpicker.UI
@@ -23,7 +32,6 @@ local BAR_LEN = 32
 ---@field private _bar_len               integer
 ---@field private _point_char            string
 ---@field private _history_char          string
----@field private _empty_point_bg        boolean
 ---@field private _win_opts              vim.api.keyset.win_config
 ---@field public on_quit_callback        (fun(): nil)|nil
 ---@field public is_quit                 boolean
@@ -34,7 +42,6 @@ M.__index = M
 ---@return eve.ux.widget.colorpicker.UI
 function M.new(props)
   props = props or {}
-
   local self = setmetatable({}, M)
   self._ns_id = vim.api.nvim_create_namespace("eve-colorpicker")
   self._bufnr = nil
@@ -45,7 +52,6 @@ function M.new(props)
   self._bar_len = props.bar_len or BAR_LEN
   self._point_char = props.point_char or POINT_CHAR
   self._history_char = props.history_char or HISTORY_CHAR
-  self._empty_point_bg = props.empty_point_bg ~= false
   self._win_opts = vim.tbl_extend("force", {
     relative = "cursor",
     row = 1,
@@ -60,10 +66,7 @@ end
 
 ---@return vim.api.keyset.win_config
 function M:get_win_opts()
-  return vim.tbl_extend("force", self._win_opts, {
-    height = 5,
-    width = 50,
-  })
+  return vim.tbl_extend("force", self._win_opts, { height = 5, width = 50 })
 end
 
 ---@param winnr                         integer
@@ -82,33 +85,18 @@ function M:render(color, bufnr, winnr)
   self._bufnr = bufnr
   self._winnr = winnr
   self.is_quit = true
-
-  local buffer, width = self:__build_buffer__()
-  vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, buffer)
-  vim.bo[bufnr].modifiable = false
-  self:__highlight__()
-
-  vim.api.nvim_win_set_config(winnr, { height = #buffer, width = width })
-  vim.api.nvim_win_set_hl_ns(winnr, self._ns_id)
+  self:__refresh__()
 end
 
 ---@return nil
 function M:update()
-  if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
+  if not self._winnr or not vim.api.nvim_win_is_valid(self._winnr) then
     return
   end
-  if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
+  if not self._bufnr or not vim.api.nvim_buf_is_valid(self._bufnr) then
     return
   end
-
-  local buffer, width = self:__build_buffer__()
-  vim.bo[self._bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, buffer)
-  vim.bo[self._bufnr].modifiable = false
-  self:__highlight__()
-  vim.api.nvim_win_set_config(self._winnr, { height = #buffer, width = width })
-  vim.api.nvim_win_set_hl_ns(self._winnr, self._ns_id)
+  self:__refresh__()
 end
 
 ---@return nil
@@ -123,46 +111,20 @@ end
 
 ---@return eve.ux.widget.colorpicker.IPoint
 function M:point_at()
-  if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
+  if not self._winnr or not vim.api.nvim_win_is_valid(self._winnr) then
     return { type = "none", index = nil }
   end
 
-  local row, _ = unpack(vim.api.nvim_win_get_cursor(self._winnr))
+  local row = vim.api.nvim_win_get_cursor(self._winnr)[1]
   local input = self._color:input()
   local num_color = #input.bar_name
 
-  if row > 1 and row <= num_color + 1 then
-    return { type = "color", index = row - 1 }
-  elseif self._color:is_alpha_visible() and row == num_color + 2 then
+  if row >= 1 and row <= num_color then
+    return { type = "color", index = row }
+  elseif self._color:is_alpha_visible() and row == num_color + 1 then
     return { type = "alpha", index = nil }
   end
   return { type = "none", index = nil }
-end
-
----@param point                         eve.ux.widget.colorpicker.IPoint
----@return nil
-function M:set_point(point)
-  if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
-    return
-  end
-
-  local row = 1
-  if point.type == "color" and point.index then
-    row = point.index + 1
-  elseif point.type == "alpha" and self._color:is_alpha_visible() then
-    row = #self._color:input().bar_name + 2
-  end
-  vim.api.nvim_win_set_cursor(self._winnr, { row, 0 })
-end
-
----@return integer|nil
-function M:get_bufnr()
-  return self._bufnr
-end
-
----@return integer|nil
-function M:get_winnr()
-  return self._winnr
 end
 
 ---@return integer
@@ -170,7 +132,47 @@ function M:get_bar_len()
   return self._bar_len
 end
 
+---@return integer
+function M:get_bar_char_width()
+  return vim.api.nvim_strwidth(self._bar_char)
+end
+
+---@return integer
+function M:get_point_char_width()
+  return vim.api.nvim_strwidth(self._point_char)
+end
+
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@return nil
+function M:__refresh__()
+  local buffer, width = self:__build_buffer__()
+  vim.bo[self._bufnr].modifiable = true
+  vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, buffer)
+  vim.bo[self._bufnr].modifiable = false
+  self:__highlight__()
+
+  local title = self:__build_title__()
+  local winbar = self:__build_winbar__()
+  local footer_left, footer_right = self:__build_footer__()
+
+  local win_config = {
+    height = #buffer + 1,
+    width = width + 4,
+    title = title,
+    title_pos = "center",
+  }
+  if #footer_left > 0 then
+    win_config.footer = footer_left
+    win_config.footer_pos = "left"
+  end
+
+  vim.api.nvim_win_set_config(self._winnr, win_config)
+  vim.api.nvim_win_set_config(self._winnr, { footer = footer_right, footer_pos = "right" })
+  vim.wo[self._winnr].winbar = winbar
+  vim.api.nvim_win_set_hl_ns(self._winnr, self._ns_id)
+end
 
 ---@protected
 ---@param value                         integer
@@ -182,51 +184,11 @@ function M:__adjust_to_bar__(value, max_val)
 end
 
 ---@protected
----@return string[]
----@return integer
+---@return string[], integer
 function M:__build_buffer__()
   local input = self._color:input()
-  local output = self._color:output()
   local buffer = {}
-
   local value = self._color:get()
-  local sample_bar_line = string.format(
-    "%s : %6d %s",
-    input.bar_name[1],
-    value[1],
-    self:__create_bar__(value[1], input.max[1])
-  )
-  local width = vim.api.nvim_strwidth(sample_bar_line)
-
-  local before_hex = self._before_color:hex()
-  local after_hex = self._color:hex()
-
-  local header_left = input.name
-  local header_right = output.name
-  local header_center = string.format(
-    "%s %s -> %s %s",
-    self._history_char,
-    before_hex,
-    self._history_char,
-    after_hex
-  )
-
-  local left_width = vim.api.nvim_strwidth(header_left)
-  local right_width = vim.api.nvim_strwidth(header_right)
-  local center_width = vim.api.nvim_strwidth(header_center)
-
-  local remaining = width - left_width - right_width - center_width
-  local left_pad = math.floor(remaining / 2)
-  local right_pad = remaining - left_pad
-  if left_pad < 1 then
-    left_pad = 1
-  end
-  if right_pad < 1 then
-    right_pad = 1
-  end
-
-  local header_line = header_left .. string.rep(" ", left_pad) .. header_center .. string.rep(" ", right_pad) .. header_right
-  table.insert(buffer, header_line)
 
   for i = 1, #input.bar_name do
     local line = string.format(
@@ -245,17 +207,73 @@ function M:__build_buffer__()
     table.insert(buffer, line)
   end
 
-  local history = eve.context.colorpicker.history:snapshot()
-  if #history > 0 then
-    local history_chars = {}
-    for _ = 1, #history do
-      table.insert(history_chars, self._history_char)
+  local width = 0
+  for _, line in ipairs(buffer) do
+    local w = vim.api.nvim_strwidth(line)
+    if w > width then
+      width = w
     end
-    local history_line = table.concat(history_chars, " ")
-    table.insert(buffer, history_line)
   end
 
   return buffer, width
+end
+
+---@protected
+---@return string
+function M:__build_winbar__()
+  local output = self._color:output()
+  local before_hex = self._before_color:hex()
+  local after_hex = self._color:hex()
+
+  local r1, g1, b1 = self._before_color:get_rgb()
+  local r2, g2, b2 = self._color:get_rgb()
+  local before_str = output.str(r1, g1, b1, nil):gsub("%%", "%%%%")
+  local after_str = output.str(r2, g2, b2, nil):gsub("%%", "%%%%")
+
+  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_before_icon", { fg = before_hex })
+  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_after_icon", { fg = after_hex })
+
+  return string.format(
+    "%%=%%#f_cp_preview_before_icon#%s %%#f_cp_bar_name#%s%%#f_cp_normal# -> %%#f_cp_preview_after_icon#%s %%#f_cp_bar_name#%s%%=",
+    self._history_char,
+    before_str,
+    self._history_char,
+    after_str
+  )
+end
+
+---@protected
+---@return { [1]: string, [2]: string }[]
+function M:__build_title__()
+  local input = self._color:input()
+  return { { string.format(" Color Picker (%s) ", input.name), "f_cp_title" } }
+end
+
+---@protected
+---@return { [1]: string, [2]: string }[], { [1]: string, [2]: string }[]
+function M:__build_footer__()
+  local history = eve.context.colorpicker.history:snapshot()
+  local output = self._color:output()
+
+  ---@type { [1]: string, [2]: string }[]
+  local footer_left = {}
+  if #history > 0 then
+    table.insert(footer_left, { " ", "f_cp_normal" })
+    for i, item in ipairs(history) do
+      local hl_name = string.format("f_cp_history_%d", i)
+      vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
+      table.insert(footer_left, { self._history_char, hl_name })
+      if i < #history then
+        table.insert(footer_left, { " ", "f_cp_normal" })
+      end
+    end
+    table.insert(footer_left, { " ", "f_cp_normal" })
+  end
+
+  ---@type { [1]: string, [2]: string }[]
+  local footer_right = { { " " .. output.name .. " ", "f_cp_title" } }
+
+  return footer_left, footer_right
 end
 
 ---@protected
@@ -270,91 +288,17 @@ end
 ---@protected
 ---@return nil
 function M:__highlight__()
-  if self._bufnr == nil or not vim.api.nvim_buf_is_valid(self._bufnr) then
+  if not self._bufnr or not vim.api.nvim_buf_is_valid(self._bufnr) then
     return
   end
 
   vim.api.nvim_buf_clear_namespace(self._bufnr, self._ns_id, 0, -1)
 
-  local hl_point_dark = vim.api.nvim_get_hl(0, { name = "f_cp_point_dark" })
-  local hl_point_light = vim.api.nvim_get_hl(0, { name = "f_cp_point_light" })
-  local point_color_dark = hl_point_dark.fg and string.format("#%06x", hl_point_dark.fg) or "#000000"
-  local point_color_light = hl_point_light.fg and string.format("#%06x", hl_point_light.fg) or "#ffffff"
-
   local input = self._color:input()
-  local output = self._color:output()
   local bar_name_len = #input.bar_name[1]
   local value = self._color:get()
 
-  local before_hex = self._before_color:hex()
-  local after_hex = self._color:hex()
-  local r1, g1, b1 = self._before_color:get_rgb()
-  local r2, g2, b2 = self._color:get_rgb()
-
-  local history_char_len = #self._history_char
-
-  local header_left = input.name
-  local header_right = output.name
-  local header_center = string.format(
-    "%s %s -> %s %s",
-    self._history_char,
-    before_hex,
-    self._history_char,
-    after_hex
-  )
-
-  local sample_bar_line = string.format(
-    "%s : %6d %s",
-    input.bar_name[1],
-    value[1],
-    self:__create_bar__(value[1], input.max[1])
-  )
-  local total_width = vim.api.nvim_strwidth(sample_bar_line)
-  local left_width = vim.api.nvim_strwidth(header_left)
-  local right_width = vim.api.nvim_strwidth(header_right)
-  local center_width = vim.api.nvim_strwidth(header_center)
-
-  local remaining = total_width - left_width - right_width - center_width
-  local left_pad = math.floor(remaining / 2)
-  if left_pad < 1 then
-    left_pad = 1
-  end
-
-  local header_input_start = 0
-  local header_input_end = left_width
-  local center_start = left_width + left_pad
-  local col = center_start
-  local header_before_icon_start = col
-  local header_before_icon_end = col + history_char_len
-  col = header_before_icon_end + 1
-  local header_before_start = col
-  local header_before_end = col + #before_hex
-  col = header_before_end + 4
-  local header_after_icon_start = col
-  local header_after_icon_end = col + history_char_len
-  col = header_after_icon_end + 1
-  local header_after_start = col
-  local header_after_end = col + #after_hex
-  local header_output_end = total_width
-  local header_output_start = header_output_end - right_width
-
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_before_icon", { fg = before_hex })
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_after_icon", { fg = after_hex })
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_before_dyn", {
-    fg = convert.is_bright(r1, g1, b1) and point_color_dark or point_color_light,
-  })
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_after_dyn", {
-    fg = convert.is_bright(r2, g2, b2) and point_color_dark or point_color_light,
-  })
-
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_title", { 0, header_input_start }, { 0, header_input_end })
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_preview_before_icon", { 0, header_before_icon_start }, { 0, header_before_icon_end })
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_preview_before_dyn", { 0, header_before_start }, { 0, header_before_end })
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_preview_after_icon", { 0, header_after_icon_start }, { 0, header_after_icon_end })
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_preview_after_dyn", { 0, header_after_start }, { 0, header_after_end })
-  vim.hl.range(self._bufnr, self._ns_id, "f_cp_title", { 0, header_output_start }, { 0, header_output_end })
-
-  local row = 1
+  local row = 0
   for i = 1, #value do
     local max_val = input.max[i]
     local point_idx = self:__adjust_to_bar__(value[i], max_val)
@@ -372,15 +316,8 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if j == point_idx then
-        local r, g, b = self._color:get_rgb()
-        if self._empty_point_bg then
-          hl = { fg = convert.is_bright(r, g, b) and point_color_light or point_color_dark }
-        else
-          hl = {
-            fg = convert.is_bright(r, g, b) and point_color_light or point_color_dark,
-            bg = hex,
-          }
-        end
+        local inv_hex = invert_hex_color(hex)
+        hl = { fg = inv_hex, bg = hex }
       end
 
       local hl_name = string.format("f_cp_bar_%d_%d", i, j)
@@ -400,7 +337,6 @@ function M:__highlight__()
     vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 9 })
 
     local start_col = bar_name_len + 10
-
     for i = 1, self._bar_len do
       local char_len = (i == point_idx) and #self._point_char or #self._bar_char
       local end_col = start_col + char_len
@@ -414,14 +350,8 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if i == point_idx then
-        if self._empty_point_bg then
-          hl = { fg = alpha_ratio > 0.5 and point_color_dark or point_color_light }
-        else
-          hl = {
-            fg = alpha_ratio > 0.5 and point_color_dark or point_color_light,
-            bg = hex,
-          }
-        end
+        local inv_hex = invert_hex_color(hex)
+        hl = { fg = inv_hex, bg = hex }
       end
 
       local hl_name = string.format("f_cp_alpha_%d", i)
@@ -429,20 +359,6 @@ function M:__highlight__()
       vim.hl.range(self._bufnr, self._ns_id, hl_name, { row, start_col }, { row, end_col })
 
       start_col = end_col
-    end
-    row = row + 1
-  end
-
-  local history = eve.context.colorpicker.history:snapshot()
-  if #history > 0 then
-    local history_char_len = #self._history_char
-    local start_col = 0
-    for i, item in ipairs(history) do
-      local end_col = start_col + history_char_len
-      local hl_name = string.format("f_cp_history_%d", i)
-      vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
-      vim.hl.range(self._bufnr, self._ns_id, hl_name, { row, start_col }, { row, end_col })
-      start_col = end_col + 1
     end
   end
 end
