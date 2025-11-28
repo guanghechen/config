@@ -1,6 +1,6 @@
 {
+  "import": ["~/.config/cspell/cspell.json"],
   "ignorePaths": ["lua/resource/dict/", "lua/std/fileicon.lua", "lsp/yamlls.lua"],
-  "ignoreRegExpList": ["/```[\\s\\S]*?```/"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -451,7 +451,6 @@
     "grepformat",
     "grepprg",
     "gruvbox",
-    "guanghechen",
     "guifont",
     "heex",
     "hidewipe",
@@ -898,9 +897,7 @@
     "yarnrc",
     "yasb",
     "yazi",
-    "yozora",
     "zellij",
     "zindex"
   ]
 }
-
