@@ -108,6 +108,11 @@ function M:set_history_index(index)
   self._history_index = index
 end
 
+---@return eve.ux.widget.colorpicker.Color|nil
+function M:get_before_color()
+  return self._before_color
+end
+
 ---@return nil
 function M:on_close()
   self._bufnr = nil
@@ -197,12 +202,7 @@ function M:__build_buffer__()
   local value = self._color:get()
 
   for i = 1, #input.bar_name do
-    local line = string.format(
-      "%s : %4d %s",
-      input.bar_name[i],
-      value[i],
-      self:__create_bar__(value[i], input.max[i])
-    )
+    local line = string.format("%s : %4d %s", input.bar_name[i], value[i], self:__create_bar__(value[i], input.max[i]))
     table.insert(buffer, line)
   end
 
@@ -264,11 +264,7 @@ function M:__build_winbar__()
   input_str = input_str:gsub("%%", "%%%%")
 
   if input.name == output.name then
-    return string.format(
-      "%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%=",
-      self._point_char,
-      input_str
-    )
+    return string.format("%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%=", self._point_char, input_str)
   end
 
   local r, g, b = self._color:get_rgb()
@@ -308,7 +304,7 @@ function M:__build_footer__()
     table.insert(footer, { char, hl_name })
   end
 
-  table.insert(footer, { " ", "f_cp_normal" })
+  table.insert(footer, { " │ ", "f_cp_border" })
   vim.api.nvim_set_hl(self._ns_id, "f_cp_current", { fg = current_hex })
   local current_char = self._history_index == 0 and self._point_char or self._history_char
   table.insert(footer, { current_char, "f_cp_current" })

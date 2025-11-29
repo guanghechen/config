@@ -14,6 +14,7 @@ local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_
 ---@field private _range                 integer[]|nil
 ---@field private _source_bufnr          integer|nil
 ---@field private _history_index         integer
+---@field private _saved_color           eve.ux.widget.colorpicker.Color|nil
 ---@field private _bufnr                 integer|nil
 ---@field private _winnr                 integer|nil
 ---@field private _keymaps               std.t.IKeymap[]
@@ -30,6 +31,7 @@ function M.new(props)
   self._range = nil
   self._source_bufnr = nil
   self._history_index = 0
+  self._saved_color = nil
   self._bufnr = nil
   self._winnr = nil
   self._keymaps = self:__build_keymaps__()
@@ -137,6 +139,15 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
+---@return nil
+function M:__reset_to_current__()
+  if self._history_index ~= 0 then
+    self._history_index = 0
+    self._ui:set_history_index(0)
+  end
+end
+
+---@protected
 ---@param d                             integer
 ---@return nil
 function M:__apply_delta__(d)
@@ -145,10 +156,12 @@ function M:__apply_delta__(d)
   if point.type == "color" and point.index then
     local value = self._color:get()
     self._color:set_component(point.index, value[point.index] + d)
+    self:__reset_to_current__()
   elseif point.type == "alpha" then
     local alpha = self._color:get_alpha()
     if alpha then
       self._color:set_alpha(alpha + d)
+      self:__reset_to_current__()
     end
   end
 
@@ -178,6 +191,13 @@ end
 function M:__build_keymaps__()
   ---@type std.t.IKeymap[]
   return {
+    {
+      modes = { "n" },
+      key = "w",
+      aliases = { "W", "t", "T", "f", "F" },
+      desc = "colorpicker: noop",
+      callback = function() end,
+    },
     {
       modes = { "n" },
       key = "<CR>",
@@ -321,9 +341,20 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "r",
-      desc = "colorpicker: reset",
+      desc = "colorpicker: reset to initial",
       callback = function()
-        self._color:reset()
+        local before = self._ui:get_before_color()
+        if before then
+          local r, g, b = before:get_rgb()
+          self._color:set_rgb(r, g, b)
+          if before:is_alpha_visible() then
+            self._color:set_alpha(before:get_alpha() or 100)
+            self._color:show_alpha()
+          else
+            self._color:hide_alpha()
+          end
+        end
+        self:__reset_to_current__()
         self._ui:update()
       end,
     },
@@ -434,12 +465,29 @@ end
 ---@protected
 ---@return nil
 function M:__goto_next_history__()
-  if self._history_index <= 1 then
+  if self._history_index <= 0 then
     return
   end
-  self._history_index = self._history_index - 1
-  self._ui:set_history_index(self._history_index)
-  self:__load_history_item__(self._history_index)
+
+  if self._history_index == 1 then
+    self._history_index = 0
+    self._ui:set_history_index(0)
+    if self._saved_color then
+      local r, g, b = self._saved_color:get_rgb()
+      self._color:set_rgb(r, g, b)
+      if self._saved_color:is_alpha_visible() then
+        self._color:set_alpha(self._saved_color:get_alpha() or 100)
+        self._color:show_alpha()
+      else
+        self._color:hide_alpha()
+      end
+    end
+    self._ui:update()
+  else
+    self._history_index = self._history_index - 1
+    self._ui:set_history_index(self._history_index)
+    self:__load_history_item__(self._history_index)
+  end
 end
 
 ---@protected
@@ -451,6 +499,7 @@ function M:__goto_prev_history__()
   end
 
   if self._history_index == 0 then
+    self._saved_color = self._color:copy()
     self._history_index = 1
   elseif self._history_index < size then
     self._history_index = self._history_index + 1
@@ -516,6 +565,7 @@ function M:__on_click__()
     local ratio = convert.clamp(offset / bar_width, 0, 1)
     local max_val = input.max[row]
     self._color:set_component(row, convert.round(max_val * ratio))
+    self:__reset_to_current__()
     self._ui:update()
   elseif self._color:is_alpha_visible() and row == #input.bar_name + 1 then
     local alpha = self._color:get_alpha() or 0
@@ -525,6 +575,7 @@ function M:__on_click__()
     local offset = convert.clamp(col - bar_start_col, 0, bar_width)
     local ratio = convert.clamp(offset / bar_width, 0, 1)
     self._color:set_alpha(convert.round(100 * ratio))
+    self:__reset_to_current__()
     self._ui:update()
   end
 end
@@ -548,11 +599,13 @@ function M:__on_scroll__(d)
   if row >= 1 and row <= #input.bar_name then
     local value = self._color:get()
     self._color:set_component(row, value[row] + d)
+    self:__reset_to_current__()
     self._ui:update()
   elseif self._color:is_alpha_visible() and row == #input.bar_name + 1 then
     local alpha = self._color:get_alpha()
     if alpha then
       self._color:set_alpha(alpha + d)
+      self:__reset_to_current__()
       self._ui:update()
     end
   end
