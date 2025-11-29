@@ -557,10 +557,12 @@ M.definitions.term = {
 
 ---@class eve.builtin.command.definitions.toggle
 M.definitions.toggle = {
+  dim = def("Ftoggledim", "toggle: dim"),
   list = defc("Ftoggle", "toggle: select", "?", eve.setting.togglers),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   maximize = def("Ftogglemaximize", "toggle: maximize"),
   relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
+  scroll = def("Ftogglescroll", "toggle: scroll"),
   theme = defc("Ftoggletheme", "toggle: theme", "?", eve.setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),

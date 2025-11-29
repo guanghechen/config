@@ -926,6 +926,12 @@ command
 --[toggle] -----------------------------------------------------------------------------------------
 command
   .implement({
+    uuid = K.toggle.dim.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("dressing_dim_flight")
+    end,
+  })
+  .implement({
     uuid = K.toggle.list.uuid,
     action = function(arg)
       require("fml.action.toggle.list").list(arg)
@@ -947,6 +953,12 @@ command
     uuid = K.toggle.relativenumber.uuid,
     action = function()
       require("fml.action.toggle.list").list("relativenumber_ux")
+    end,
+  })
+  .implement({
+    uuid = K.toggle.scroll.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("dressing_scroll_flight")
     end,
   })
   .implement({
