@@ -13,13 +13,15 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public col                    integer
 ---@field public end_lnum               integer
 ---@field public end_col                integer
+---@field public selection_lnum         integer?
+---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
 local plainfile = eve.ux.view.Plainfile.new({ name = name }) ---@type eve.ux.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore
-local KIND_FILTER = {
+local KIND_FILTER_DEFAULT = {
   Class       = true,
   Constructor = true,
   Enum        = true,
@@ -31,6 +33,87 @@ local KIND_FILTER = {
   Package     = true,
   Struct      = true,
 }
+
+-- stylua: ignore
+local KIND_FILTER_BY_FT = {
+  lua = {
+    Class    = true,
+    Function = true,
+    Method   = true,
+    Module   = true,
+  },
+  python = {
+    Class       = true,
+    Constructor = true,
+    Function    = true,
+    Method      = true,
+    Module      = true,
+  },
+  go = {
+    Function  = true,
+    Interface = true,
+    Method    = true,
+    Struct    = true,
+  },
+  rust = {
+    Enum      = true,
+    Function  = true,
+    Interface = true,
+    Method    = true,
+    Module    = true,
+    Struct    = true,
+  },
+  javascript = {
+    Class       = true,
+    Constructor = true,
+    Function    = true,
+    Interface   = true,
+    Method      = true,
+    Module      = true,
+  },
+  typescript = {
+    Class       = true,
+    Constructor = true,
+    Enum        = true,
+    Function    = true,
+    Interface   = true,
+    Method      = true,
+    Module      = true,
+  },
+  typescriptreact = {
+    Class       = true,
+    Constructor = true,
+    Enum        = true,
+    Function    = true,
+    Interface   = true,
+    Method      = true,
+    Module      = true,
+  },
+  javascriptreact = {
+    Class       = true,
+    Constructor = true,
+    Function    = true,
+    Interface   = true,
+    Method      = true,
+    Module      = true,
+  },
+  json = {
+    Module = true,
+  },
+  markdown = {
+    Module = true,
+  },
+}
+
+---@param bufnr                         integer|nil
+---@return table<string, boolean>
+local function get_kind_filter(bufnr)
+  if not bufnr then
+    return KIND_FILTER_DEFAULT
+  end
+  local ft = vim.bo[bufnr].filetype
+  return KIND_FILTER_BY_FT[ft] or KIND_FILTER_DEFAULT
+end
 
 -- stylua: ignore
 local KIND_LEAF = {
@@ -113,6 +196,28 @@ end
 local function lsp_position_to_col(bufnr, position, encoding)
   local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, bufnr, position, encoding)
   return ok and col or position.character
+end
+
+---@param symbol_name                   string
+---@return string
+local function clean_symbol_name(symbol_name)
+  return (string.gsub(symbol_name, "\n.*", ""))
+end
+
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param col                           integer
+---@return integer
+local function fix_col_position(bufnr, lnum, col)
+  local lines = vim.api.nvim_buf_get_lines(bufnr, lnum - 1, lnum, false)
+  if #lines == 0 then
+    return col
+  end
+  local line_len = #lines[1]
+  if col > line_len then
+    return line_len
+  end
+  return col
 end
 
 ---@param nodes                         table[]
@@ -242,6 +347,7 @@ local function fetch_symbols(tree, callback)
   local inserted = 0 ---@type integer
   local seen = {} ---@type table<string, boolean>
   local seq = 0 ---@type integer
+  local kind_filter = get_kind_filter(bufnr) ---@type table<string, boolean>
 
   local function make_uuid(parent_uuid)
     seq = seq + 1
@@ -252,13 +358,16 @@ local function fetch_symbols(tree, callback)
   ---@param data                        fml.action.find.lsp_symbols.ISymbolData
   ---@return string|nil
   local function insert_node(parent_uuid, data)
-    local key = string.format("%s:%s:%d:%d:%d:%d", data.kind, data.name, data.lnum, data.col, data.end_lnum, data.end_col)
-    if seen[key] then
+    -- Check for duplicate symbols at same position (handles C++ macros, etc.)
+    local pos_key = string.format("%d:%d", data.lnum, data.col)
+    local full_key = string.format("%s:%s:%s", data.kind, data.name, pos_key)
+    if seen[full_key] or seen[pos_key .. ":" .. data.kind] then
       return nil
     end
     local uuid = make_uuid(parent_uuid)
     tree:insert(parent_uuid, uuid, data)
-    seen[key] = true
+    seen[full_key] = true
+    seen[pos_key .. ":" .. data.kind] = true
     return uuid
   end
 
@@ -280,23 +389,36 @@ local function fetch_symbols(tree, callback)
   ---@param encoding                    string?
   local function handle_document_symbol(symbol, parent_uuid, encoding)
     local sel_range, whole_range = resolve_ranges(symbol)
-    local start_pos = sel_range and sel_range.start
+    local sel_start = sel_range and sel_range.start
+    local whole_start = whole_range and whole_range.start
     local end_pos = whole_range and whole_range["end"]
     local kindname = vim.lsp.protocol.SymbolKind[symbol.kind] or "Unknown"
     local parent_for_children = parent_uuid
 
-    if start_pos and end_pos and KIND_FILTER[kindname] then
+    if whole_start and end_pos and kind_filter[kindname] then
       local icon, icon_hln = get_icon(kindname)
+      local lnum = whole_start.line + 1
+      local col = lsp_position_to_col(bufnr, whole_start, encoding)
+      col = fix_col_position(bufnr, lnum, col)
+
+      local sel_lnum = sel_start and (sel_start.line + 1) or nil
+      local sel_col = sel_start and lsp_position_to_col(bufnr, sel_start, encoding) or nil
+      if sel_lnum and sel_col then
+        sel_col = fix_col_position(bufnr, sel_lnum, sel_col)
+      end
+
       ---@type fml.action.find.lsp_symbols.ISymbolData
       local data = {
-        name = symbol.name or "Unknown",
+        name = clean_symbol_name(symbol.name or "Unknown"),
         kind = kindname,
-        lnum = start_pos.line + 1,
-        col = lsp_position_to_col(bufnr, start_pos, encoding),
+        lnum = lnum,
+        col = col,
         end_lnum = end_pos.line + 1,
         end_col = lsp_position_to_col(bufnr, end_pos, encoding),
         icon = icon,
         icon_hln = icon_hln,
+        selection_lnum = sel_lnum,
+        selection_col = sel_col,
       }
       local uuid = insert_node(parent_uuid, data)
       if uuid then
@@ -315,32 +437,44 @@ local function fetch_symbols(tree, callback)
   ---@param encoding                    string?
   local function handle_symbol_information(symbol, parent_uuid, encoding)
     local sel_range, whole_range = resolve_ranges(symbol)
-    local range = sel_range or whole_range
+    local range = whole_range or sel_range
     if not range or not range.start or not range["end"] then
       return
     end
 
     local kindname = vim.lsp.protocol.SymbolKind[symbol.kind] or "Unknown"
-    if not KIND_FILTER[kindname] then
+    if not kind_filter[kindname] then
       return
     end
 
-    local symbol_name = symbol.name or "Unknown"
+    local symbol_name = clean_symbol_name(symbol.name or "Unknown")
     if symbol.containerName and symbol.containerName ~= "" then
       symbol_name = symbol.containerName .. "." .. symbol_name
     end
 
     local icon, icon_hln = get_icon(kindname)
+    local lnum = range.start.line + 1
+    local col = lsp_position_to_col(bufnr, range.start, encoding)
+    col = fix_col_position(bufnr, lnum, col)
+
+    local sel_lnum = sel_range and (sel_range.start.line + 1) or nil
+    local sel_col = sel_range and lsp_position_to_col(bufnr, sel_range.start, encoding) or nil
+    if sel_lnum and sel_col then
+      sel_col = fix_col_position(bufnr, sel_lnum, sel_col)
+    end
+
     ---@type fml.action.find.lsp_symbols.ISymbolData
     local data = {
       name = symbol_name,
       kind = kindname,
-      lnum = range.start.line + 1,
-      col = lsp_position_to_col(bufnr, range.start, encoding),
+      lnum = lnum,
+      col = col,
       end_lnum = range["end"].line + 1,
       end_col = lsp_position_to_col(bufnr, range["end"], encoding),
       icon = icon,
       icon_hln = icon_hln,
+      selection_lnum = sel_lnum,
+      selection_col = sel_col,
     }
 
     if insert_node(parent_uuid, data) then
@@ -375,7 +509,7 @@ local function fetch_symbols(tree, callback)
       local parent_for_children = parent_uuid
       local kind = match.kind and TS_KIND_MAP[match.kind]
 
-      if kind and KIND_FILTER[kind] and match.pos and match.end_pos then
+      if kind and kind_filter[kind] and match.pos and match.end_pos then
         local icon, icon_hln = get_icon(kind)
         ---@type fml.action.find.lsp_symbols.ISymbolData
         local data = {
@@ -440,10 +574,9 @@ local function refresh()
       local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData|nil
       local kind = data and data.kind
       local is_leaf = kind and KIND_LEAF[kind]
-      local is_class = kind == "Class"
       treeview:insert(node.uuid, {
         nodetype = is_leaf and "leaf" or "container",
-        collapsed = not is_leaf and not is_class,
+        collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
         tick_selected = 0,
@@ -685,10 +818,14 @@ picker = eve.ux.picker.TreeComposer.new({
       end
     end
 
+    -- Use selection_range for more precise cursor positioning
+    local lnum = symbol_data.selection_lnum or symbol_data.lnum
+    local col = symbol_data.selection_col or symbol_data.col
+
     -- Navigate to symbol location
     vim.api.nvim_win_set_buf(target_winid, target_bufnr)
     vim.api.nvim_set_current_win(target_winid)
-    vim.api.nvim_win_set_cursor(target_winid, { symbol_data.lnum, symbol_data.col })
+    vim.api.nvim_win_set_cursor(target_winid, { lnum, col })
     vim.cmd("normal! zv zz")
   end,
 
