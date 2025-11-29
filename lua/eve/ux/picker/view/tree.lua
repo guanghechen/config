@@ -207,7 +207,7 @@ function M:match(params)
     ---@type std.collection.tree.IQuickTraverseHandler
     local collect = function(_, node)
       local state = statemap[node.uuid]
-      if state.nodetype == "leaf" then
+      if state.text ~= nil then
         k = k + 1
         uuids[k] = node.uuid
       end
@@ -302,6 +302,124 @@ function M:match(params)
   self._last_match_result = match_result
   self._tick_matched = tick_matched
   return uuids
+end
+
+---@param params                        eve.ux.view.tree.IRenderListviewParams
+---@return eve.ux.view.tree.IRenderResult
+function M:render_listview(params)
+  self:__health__()
+
+  local bufnr = params.bufnr ---@type integer
+  local only_matched = params.only_matched ---@type boolean
+  local result = P.render_listview(self, params)
+
+  if not only_matched then
+    return result
+  end
+
+  local nsnr = eve.var.nsnr.picker_matches ---@type integer
+  local uuids = result.lnum2uuid ---@type string[]
+  local N = #uuids ---@type integer
+
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+
+  if N < 1 then
+    return result
+  end
+
+  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local indents = result.indents ---@type string[]
+  local tick_matched = self._tick_matched ---@type integer
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.picker.view.tree.INodeState>
+
+  for lnum = 1, N, 1 do
+    local uuid = uuids[lnum] ---@type string
+    local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
+    if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
+      local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+      if node ~= nil then
+        local row = lnum - 1 ---@type integer
+        local text = nodestate.text or "" ---@type string
+        local L = #text ---@type integer
+        local cache = nodestate.cache_listview ---@type eve.ux.view.tree.INodeListviewResultCache|nil
+        local rendered_text = cache and cache.text or "" ---@type string
+        local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
+
+        local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+        for _, m in ipairs(matches) do
+          local l = m.l ---@type integer
+          local r = m.r ---@type integer
+          if r > 0 and l < L then
+            l = l < 0 and 0 or l ---@type integer
+            r = r < L and r or L ---@type integer
+            vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+          end
+        end
+      end
+    end
+  end
+
+  return result
+end
+
+---@param params                        eve.ux.view.tree.IRenderTreeviewParams
+---@return eve.ux.view.tree.IRenderResult
+function M:render_treeview(params)
+  self:__health__()
+
+  local bufnr = params.bufnr ---@type integer
+  local only_matched = params.only_matched ---@type boolean
+  local result = P.render_treeview(self, params)
+
+  if not only_matched then
+    return result
+  end
+
+  local nsnr = eve.var.nsnr.picker_matches ---@type integer
+  local uuids = result.lnum2uuid ---@type string[]
+  local N = #uuids ---@type integer
+
+  vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
+
+  if N < 1 then
+    return result
+  end
+
+  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local indents = result.indents ---@type string[]
+  local tick_matched = self._tick_matched ---@type integer
+  local statemap = self.statemap ---@type table<string, eve.ux.view.tree.INodeState>
+  ---@cast statemap                     table<string, eve.ux.picker.view.tree.INodeState>
+
+  for lnum = 1, N, 1 do
+    local uuid = uuids[lnum] ---@type string
+    local nodestate = statemap[uuid] ---@type eve.ux.picker.view.tree.INodeState|nil
+    if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
+      local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+      if node ~= nil then
+        local row = lnum - 1 ---@type integer
+        local text = nodestate.text or "" ---@type string
+        local L = #text ---@type integer
+        local cache = nodestate.cache_treeview ---@type eve.ux.view.tree.INodeTreeviewResultCache|nil
+        local rendered_text = cache and cache.text or "" ---@type string
+        local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
+
+        local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+        for _, m in ipairs(matches) do
+          local l = m.l ---@type integer
+          local r = m.r ---@type integer
+          if r > 0 and l < L then
+            l = l < 0 and 0 or l ---@type integer
+            r = r < L and r or L ---@type integer
+            vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+          end
+        end
+      end
+    end
+  end
+
+  return result
 end
 
 return M

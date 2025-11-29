@@ -116,12 +116,6 @@ local function get_kind_filter(bufnr)
 end
 
 -- stylua: ignore
-local KIND_LEAF = {
-  Constant = true,
-  Module   = true,
-}
-
--- stylua: ignore
 local TS_KIND_MAP = {
   constant   = "Constant",
   enum       = "Enum",
@@ -572,16 +566,18 @@ local function refresh()
     end
     tree:quick_traverse(tree.root, function(_, node)
       local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData|nil
-      local kind = data and data.kind
-      local is_leaf = kind and KIND_LEAF[kind]
+      local text = data and data.name or ""
+      local has_children = #node.children > 0
       treeview:insert(node.uuid, {
-        nodetype = is_leaf and "leaf" or "container",
+        nodetype = has_children and "container" or "leaf",
         collapsed = false,
         tick_invisible = 0,
         tick_matched = 0,
         tick_selected = 0,
         tick_selected_maximum = 0,
         cache_treeview = nil,
+        text = text,
+        text_lower = text:lower(),
       })
     end)
     picker:attach(tree.root)
