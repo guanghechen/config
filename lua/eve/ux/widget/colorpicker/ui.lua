@@ -160,7 +160,7 @@ function M:__refresh__()
 
   local win_config = {
     height = #buffer + 1,
-    width = width + 4,
+    width = width + 2,
     title = title,
     title_pos = "center",
   }
@@ -193,7 +193,7 @@ function M:__build_buffer__()
 
   for i = 1, #input.bar_name do
     local line = string.format(
-      "%s : %6d %s",
+      "%s : %4d %s",
       input.bar_name[i],
       value[i],
       self:__create_bar__(value[i], input.max[i])
@@ -204,7 +204,7 @@ function M:__build_buffer__()
   local alpha = self._color:get_alpha()
   if alpha then
     local alpha_bar_name = "A" .. string.rep(" ", #input.bar_name[1] - 1)
-    local line = string.format("%s : %5d%% %s", alpha_bar_name, alpha, self:__create_bar__(alpha, 100))
+    local line = string.format("%s : %3d%% %s", alpha_bar_name, alpha, self:__create_bar__(alpha, 100))
     table.insert(buffer, line)
   end
 
@@ -305,9 +305,9 @@ function M:__highlight__()
     local point_idx = self:__adjust_to_bar__(value[i], max_val)
 
     vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_name", { row, 0 }, { row, bar_name_len })
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 9 })
+    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
 
-    local start_col = bar_name_len + 10
+    local start_col = bar_name_len + 8
     for j = 1, self._bar_len do
       local char_len = (j == point_idx) and #self._point_char or #self._bar_char
       local end_col = start_col + char_len
@@ -335,9 +335,9 @@ function M:__highlight__()
     local point_idx = self:__adjust_to_bar__(alpha, 100)
 
     vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_name", { row, 0 }, { row, bar_name_len })
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 9 })
+    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
 
-    local start_col = bar_name_len + 10
+    local start_col = bar_name_len + 8
     for i = 1, self._bar_len do
       local char_len = (i == point_idx) and #self._point_char or #self._bar_char
       local end_col = start_col + char_len
