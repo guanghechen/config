@@ -1,21 +1,8 @@
 ---@meta
 
----@alias eve.ux.widget.colorpicker.InputModeName
----| "HEX"
----| "RGB"
----| "HSL"
----| "HSV"
-
----@alias eve.ux.widget.colorpicker.OutputModeName
----| "HEX"
----| "RGB"
----| "HSL"
----| "HSV"
-
----@alias eve.ux.widget.colorpicker.PointType
----| "color"
----| "alpha"
----| "none"
+---@alias eve.ux.widget.colorpicker.InputModeName "HEX"|"RGB"|"HSL"|"HSV"
+---@alias eve.ux.widget.colorpicker.OutputModeName "HEX"|"RGB"|"HSL"|"HSV"
+---@alias eve.ux.widget.colorpicker.PointType "color"|"alpha"|"none"
 
 ---@class eve.ux.widget.colorpicker.IPoint
 ---@field public type                    eve.ux.widget.colorpicker.PointType
@@ -39,5 +26,3 @@
 ---@field public g                       integer
 ---@field public b                       integer
 ---@field public alpha                   integer|nil
----@field public input_mode              eve.ux.widget.colorpicker.InputModeName|nil
----@field public output_mode             eve.ux.widget.colorpicker.OutputModeName|nil

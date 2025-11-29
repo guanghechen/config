@@ -35,8 +35,6 @@ end
 ---@field private _history_char          string
 ---@field private _history_index         integer
 ---@field private _win_opts              vim.api.keyset.win_config
----@field public on_quit_callback        (fun(): nil)|nil
----@field public is_quit                 boolean
 local M = {}
 M.__index = M
 
@@ -62,8 +60,6 @@ function M.new(props)
     style = "minimal",
     border = "rounded",
   }, props.win_opts or {})
-  self.on_quit_callback = nil
-  self.is_quit = true
   return self
 end
 
@@ -87,7 +83,6 @@ function M:render(color, bufnr, winnr)
   self._before_color = color:copy()
   self._bufnr = bufnr
   self._winnr = winnr
-  self.is_quit = true
   self:__refresh__()
 end
 
@@ -118,9 +113,6 @@ function M:on_close()
   self._bufnr = nil
   self._winnr = nil
   self._before_color = nil
-  if self.is_quit and self.on_quit_callback then
-    self.on_quit_callback()
-  end
 end
 
 ---@return eve.ux.widget.colorpicker.IPoint
@@ -167,21 +159,15 @@ function M:__refresh__()
   vim.bo[self._bufnr].modifiable = false
   self:__highlight__()
 
-  local title = self:__build_title__()
-  local winbar = self:__build_winbar__()
-  local footer = self:__build_footer__()
-
-  local win_config = {
+  vim.api.nvim_win_set_config(self._winnr, {
     height = #buffer + 1,
     width = width + 2,
-    title = title,
+    title = self:__build_title__(),
     title_pos = "center",
-    footer = footer,
+    footer = self:__build_footer__(),
     footer_pos = "right",
-  }
-
-  vim.api.nvim_win_set_config(self._winnr, win_config)
-  vim.wo[self._winnr].winbar = winbar
+  })
+  vim.wo[self._winnr].winbar = self:__build_winbar__()
   vim.api.nvim_win_set_hl_ns(self._winnr, self._ns_id)
 end
 
@@ -231,10 +217,10 @@ function M:__build_winbar__()
   local output = self._color:output()
   local hex = self._color:hex()
   local alpha = self._color:get_alpha()
+  local value = self._color:get()
 
   vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_icon", { fg = hex })
 
-  local value = self._color:get()
   local input_str
   if input.name == "HEX" then
     if alpha then
@@ -297,18 +283,17 @@ function M:__build_footer__()
 
   for i = #history, 1, -1 do
     local item = history[i]
-    table.insert(footer, { " ", "f_cp_normal" })
     local hl_name = string.format("f_cp_history_%d", i)
     vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
     local char = self._history_index == i and self._point_char or self._history_char
+    table.insert(footer, { " ", "f_cp_normal" })
     table.insert(footer, { char, hl_name })
   end
 
-  table.insert(footer, { " │ ", "f_cp_border" })
   vim.api.nvim_set_hl(self._ns_id, "f_cp_current", { fg = current_hex })
   local current_char = self._history_index == 0 and self._point_char or self._history_char
+  table.insert(footer, { " │ ", "f_cp_border" })
   table.insert(footer, { current_char, "f_cp_current" })
-
   table.insert(footer, { " " .. output.name .. " ", "f_cp_title" })
 
   return footer
@@ -354,8 +339,7 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if j == point_idx then
-        local fg = contrast_color(hex)
-        hl = { fg = fg, bg = hex }
+        hl = { fg = contrast_color(hex), bg = hex }
       end
 
       local hl_name = string.format("f_cp_bar_%d_%d", i, j)
@@ -375,12 +359,12 @@ function M:__highlight__()
     vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
 
     local start_col = bar_name_len + 8
+    local r, g, b = self._color:get_rgb()
     for i = 1, self._bar_len do
       local char_len = (i == point_idx) and #self._point_char or #self._bar_char
       local end_col = start_col + char_len
 
       local alpha_ratio = (i - 0.5) / self._bar_len
-      local r, g, b = self._color:get_rgb()
       local ar = convert.round(r * alpha_ratio)
       local ag = convert.round(g * alpha_ratio)
       local ab = convert.round(b * alpha_ratio)
@@ -388,8 +372,7 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if i == point_idx then
-        local fg = contrast_color(hex)
-        hl = { fg = fg, bg = hex }
+        hl = { fg = contrast_color(hex), bg = hex }
       end
 
       local hl_name = string.format("f_cp_alpha_%d", i)

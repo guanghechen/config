@@ -35,7 +35,6 @@ function M.new(props)
   self._bufnr = nil
   self._winnr = nil
   self._keymaps = self:__build_keymaps__()
-  self._ui.on_quit_callback = function() end
   return self
 end
 
@@ -51,22 +50,20 @@ function M:pick()
 
     if result then
       self._range = { row, result.start_col - 1, row, result.end_col }
-      if result.input_mode then
-        self._color:set_input_mode(result.input_mode)
-      end
-      if result.output_mode then
-        self._color:set_output_mode(result.output_mode)
-      end
-      self._color:set_rgb(result.r, result.g, result.b)
-      if result.alpha then
-        self._color:set_alpha(result.alpha)
-        self._color:show_alpha()
-      else
-        self._color:hide_alpha()
-      end
+      self:__apply_color__(result.r, result.g, result.b, result.alpha)
     else
       self._range = { row, col, row, col }
-      self._color:reset()
+      local last = eve.context.colorpicker.get_last_color()
+      if last then
+        local r, g, b = convert.hex_parse(last.hex)
+        if r and g and b then
+          self:__apply_color__(r, g, b, last.alpha)
+        else
+          self._color:reset()
+        end
+      else
+        self._color:reset()
+      end
     end
 
     local bufnr = self:__create_buf_as_needed__()
@@ -137,6 +134,36 @@ function M:isdisposed()
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param r                             integer
+---@param g                             integer
+---@param b                             integer
+---@param alpha                         integer|nil
+---@return nil
+function M:__apply_color__(r, g, b, alpha)
+  self._color:set_rgb(r, g, b)
+  if alpha then
+    self._color:set_alpha(alpha)
+    self._color:show_alpha()
+  else
+    self._color:hide_alpha()
+  end
+end
+
+---@protected
+---@param source                        eve.ux.widget.colorpicker.Color
+---@return nil
+function M:__restore_from__(source)
+  local r, g, b = source:get_rgb()
+  self._color:set_rgb(r, g, b)
+  if source:is_alpha_visible() then
+    self._color:set_alpha(source:get_alpha() or 100)
+    self._color:show_alpha()
+  else
+    self._color:hide_alpha()
+  end
+end
 
 ---@protected
 ---@return nil
@@ -243,7 +270,7 @@ function M:__build_keymaps__()
     {
       modes = { "n" },
       key = "m",
-      desc = "colorpicker: jump to position",
+      desc = "colorpicker: set value",
       callback = function()
         local point = self._ui:point_at()
         if point.type == "color" or point.type == "alpha" then
@@ -345,14 +372,7 @@ function M:__build_keymaps__()
       callback = function()
         local before = self._ui:get_before_color()
         if before then
-          local r, g, b = before:get_rgb()
-          self._color:set_rgb(r, g, b)
-          if before:is_alpha_visible() then
-            self._color:set_alpha(before:get_alpha() or 100)
-            self._color:show_alpha()
-          else
-            self._color:hide_alpha()
-          end
+          self:__restore_from__(before)
         end
         self:__reset_to_current__()
         self._ui:update()
@@ -406,13 +426,13 @@ end
 ---@protected
 ---@return nil
 function M:__complete__()
-  self._ui.is_quit = false
   self:close()
 
   if self._range and self._source_bufnr and vim.api.nvim_buf_is_valid(self._source_bufnr) then
     local hex = self._color:hex()
     local alpha = self._color:get_alpha()
     eve.context.colorpicker.push(hex, alpha)
+    eve.context.colorpicker.set_last_color(hex, alpha)
 
     local text = self._color:str()
     local start_row, start_col, end_row, end_col = self._range[1] - 1, self._range[2], self._range[3] - 1, self._range[4]
@@ -473,14 +493,7 @@ function M:__goto_next_history__()
     self._history_index = 0
     self._ui:set_history_index(0)
     if self._saved_color then
-      local r, g, b = self._saved_color:get_rgb()
-      self._color:set_rgb(r, g, b)
-      if self._saved_color:is_alpha_visible() then
-        self._color:set_alpha(self._saved_color:get_alpha() or 100)
-        self._color:show_alpha()
-      else
-        self._color:hide_alpha()
-      end
+      self:__restore_from__(self._saved_color)
     end
     self._ui:update()
   else
@@ -520,13 +533,7 @@ function M:__load_history_item__(index)
 
   local r, g, b = convert.hex_parse(item.hex)
   if r and g and b then
-    self._color:set_rgb(r, g, b)
-    if item.alpha then
-      self._color:set_alpha(item.alpha)
-      self._color:show_alpha()
-    else
-      self._color:hide_alpha()
-    end
+    self:__apply_color__(r, g, b, item.alpha)
     self._ui:update()
   end
 end

@@ -3,6 +3,20 @@
 local tailwind = require("eve.constant.lang.tailwind")
 
 ---@type table<string, true>
+local css_filetypes = {
+  ["astro"] = true,
+  ["css"] = true,
+  ["html"] = true,
+  ["javascriptreact"] = true,
+  ["less"] = true,
+  ["markdown"] = true,
+  ["scss"] = true,
+  ["svelte"] = true,
+  ["typescriptreact"] = true,
+  ["vue"] = true,
+}
+
+---@type table<string, true>
 local tailwind_filetypes = {
   ["astro"] = true,
   ["css"] = true,
@@ -152,6 +166,71 @@ return {
             return {
               priority = 2000,
               right_gravity = false,
+              virt_text = { { "󱓻 ", data.hl_group } },
+              virt_text_pos = "inline",
+            }
+          end,
+        },
+
+        rgb_color = {
+          pattern = function()
+            if css_filetypes[vim.bo.filetype] then
+              return "rgba?%(%d+,%s*%d+,%s*%d+[^%)]*%)"
+            end
+          end,
+          group = function(_, _, data)
+            local match = data.full_match
+            local r, g, b = match:match("rgba?%((%d+),%s*(%d+),%s*(%d+)")
+            if r and g and b then
+              local hex = string.format("#%02x%02x%02x", tonumber(r), tonumber(g), tonumber(b))
+              return hipatterns.compute_hex_color_group(hex, "fg")
+            end
+          end,
+          extmark_opts = function(_, _, data)
+            return {
+              priority = 2000,
+              virt_text = { { "󱓻 ", data.hl_group } },
+              virt_text_pos = "inline",
+            }
+          end,
+        },
+
+        hsl_color = {
+          pattern = function()
+            if css_filetypes[vim.bo.filetype] then
+              return "hsla?%(%d+,%s*%d+%%,%s*%d+%%[^%)]*%)"
+            end
+          end,
+          group = function(_, _, data)
+            local match = data.full_match
+            local h, s, l = match:match("hsla?%((%d+),%s*(%d+)%%,%s*(%d+)%%")
+            if h and s and l then
+              h, s, l = tonumber(h) / 360, tonumber(s) / 100, tonumber(l) / 100
+              local r, g, b
+              if s == 0 then
+                r, g, b = l, l, l
+              else
+                local function hue2rgb(p, q, t)
+                  if t < 0 then t = t + 1 end
+                  if t > 1 then t = t - 1 end
+                  if t < 1 / 6 then return p + (q - p) * 6 * t end
+                  if t < 1 / 2 then return q end
+                  if t < 2 / 3 then return p + (q - p) * (2 / 3 - t) * 6 end
+                  return p
+                end
+                local q = l < 0.5 and l * (1 + s) or l + s - l * s
+                local p = 2 * l - q
+                r = hue2rgb(p, q, h + 1 / 3)
+                g = hue2rgb(p, q, h)
+                b = hue2rgb(p, q, h - 1 / 3)
+              end
+              local hex = string.format("#%02x%02x%02x", r * 255, g * 255, b * 255)
+              return hipatterns.compute_hex_color_group(hex, "fg")
+            end
+          end,
+          extmark_opts = function(_, _, data)
+            return {
+              priority = 2000,
               virt_text = { { "󱓻 ", data.hl_group } },
               virt_text_pos = "inline",
             }

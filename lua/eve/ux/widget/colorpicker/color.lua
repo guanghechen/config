@@ -4,12 +4,36 @@ local mode = require("eve.ux.widget.colorpicker.mode")
 local INPUTS = { mode.input.hex, mode.input.rgb, mode.input.hsl, mode.input.hsv }
 local OUTPUTS = { mode.output.hex, mode.output.rgb, mode.output.hsl, mode.output.hsv }
 
+---@param name                          eve.ux.widget.colorpicker.InputModeName|nil
+---@return integer
+local function get_input_idx(name)
+  if name then
+    for i, m in ipairs(INPUTS) do
+      if m.name == name then
+        return i
+      end
+    end
+  end
+  return 1
+end
+
+---@param name                          eve.ux.widget.colorpicker.OutputModeName|nil
+---@return integer
+local function get_output_idx(name)
+  if name then
+    for i, m in ipairs(OUTPUTS) do
+      if m.name == name then
+        return i
+      end
+    end
+  end
+  return 1
+end
+
 ---@class eve.ux.widget.colorpicker.Color
 ---@field private _value                 integer[]
 ---@field private _alpha                 integer|nil
 ---@field private _show_alpha            boolean
----@field private _input_idx             integer
----@field private _output_idx            integer
 local M = {}
 M.__index = M
 
@@ -19,73 +43,53 @@ function M.new()
   self._value = { 0, 0, 0 }
   self._alpha = nil
   self._show_alpha = false
-  self._input_idx = 1
-  self._output_idx = 1
   return self
 end
 
 ---@return eve.ux.widget.colorpicker.IInputMode
 function M:input()
-  return INPUTS[self._input_idx]
+  local name = eve.context.colorpicker.get_input_mode() ---@type eve.ux.widget.colorpicker.InputModeName|nil
+  local idx = get_input_idx(name) ---@type integer
+  return INPUTS[idx]
 end
 
 ---@return eve.ux.widget.colorpicker.IOutputMode
 function M:output()
-  return OUTPUTS[self._output_idx]
+  local name = eve.context.colorpicker.get_output_mode() ---@type eve.ux.widget.colorpicker.OutputModeName|nil
+  local idx = get_output_idx(name) ---@type integer
+  return OUTPUTS[idx]
 end
 
 ---@return nil
 function M:cycle_input()
-  local r, g, b = self:get_rgb()
-  self._input_idx = self._input_idx >= #INPUTS and 1 or self._input_idx + 1
+  local r, g, b = self:get_rgb() ---@type integer, integer, integer
+  local name = eve.context.colorpicker.get_input_mode() ---@type eve.ux.widget.colorpicker.InputModeName|nil
+  local idx = get_input_idx(name) % #INPUTS + 1 ---@type integer
+  eve.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
 end
 
 ---@return nil
 function M:cycle_input_reverse()
-  local r, g, b = self:get_rgb()
-  self._input_idx = self._input_idx <= 1 and #INPUTS or self._input_idx - 1
+  local r, g, b = self:get_rgb() ---@type integer, integer, integer
+  local name = eve.context.colorpicker.get_input_mode() ---@type eve.ux.widget.colorpicker.InputModeName|nil
+  local idx = (get_input_idx(name) - 2) % #INPUTS + 1 ---@type integer
+  eve.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
 end
 
 ---@return nil
 function M:cycle_output()
-  self._output_idx = self._output_idx >= #OUTPUTS and 1 or self._output_idx + 1
+  local name = eve.context.colorpicker.get_output_mode() ---@type eve.ux.widget.colorpicker.OutputModeName|nil
+  local idx = get_output_idx(name) % #OUTPUTS + 1 ---@type integer
+  eve.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
 
 ---@return nil
 function M:cycle_output_reverse()
-  self._output_idx = self._output_idx <= 1 and #OUTPUTS or self._output_idx - 1
-end
-
----@param name                          eve.ux.widget.colorpicker.InputModeName
----@param preserve_color                boolean|nil
----@return nil
-function M:set_input_mode(name, preserve_color)
-  local r, g, b ---@type integer|nil, integer|nil, integer|nil
-  if preserve_color then
-    r, g, b = self:get_rgb()
-  end
-  for i, m in ipairs(INPUTS) do
-    if m.name == name then
-      self._input_idx = i
-      break
-    end
-  end
-  if r and g and b then
-    self:set_rgb(r, g, b)
-  end
-end
-
----@param name                          eve.ux.widget.colorpicker.OutputModeName
----@return nil
-function M:set_output_mode(name)
-  for i, m in ipairs(OUTPUTS) do
-    if m.name == name then
-      self._output_idx = i
-      break
-    end
-  end
+  local name = eve.context.colorpicker.get_output_mode() ---@type eve.ux.widget.colorpicker.OutputModeName|nil
+  local idx = (get_output_idx(name) - 2) % #OUTPUTS + 1 ---@type integer
+  eve.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
 
 ---@return integer[]
@@ -107,8 +111,7 @@ end
 ---@param b                             integer
 ---@return nil
 function M:set_rgb(r, g, b)
-  local input = self:input()
-  self:set(input.from_rgb(r, g, b))
+  self:set(self:input().from_rgb(r, g, b))
 end
 
 ---@return integer, integer, integer
@@ -147,10 +150,9 @@ end
 
 ---@return nil
 function M:toggle_alpha()
-  if self._show_alpha then
-    self:hide_alpha()
-  else
-    self:show_alpha()
+  self._show_alpha = not self._show_alpha
+  if self._show_alpha and self._alpha == nil then
+    self._alpha = 100
   end
 end
 
@@ -195,15 +197,11 @@ function M:copy()
   new._value = { self._value[1], self._value[2], self._value[3] }
   new._alpha = self._alpha
   new._show_alpha = self._show_alpha
-  new._input_idx = self._input_idx
-  new._output_idx = self._output_idx
   return new
 end
 
 ---@return nil
 function M:reset()
-  self._input_idx = 1
-  self._output_idx = 1
   self._value = { 0, 0, 0 }
   self._alpha = nil
   self._show_alpha = false

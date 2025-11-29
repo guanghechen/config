@@ -45,8 +45,6 @@ function M.pick_hex(line, cursor_col)
           g = g,
           b = b,
           alpha = a and convert.round(a * 100 / 255) or nil,
-          input_mode = "RGB",
-          output_mode = "HEX",
         }
       end
     end
@@ -100,8 +98,6 @@ function M.pick_css_rgb(line, cursor_col)
           g = tonumber(g) or 0,
           b = tonumber(b) or 0,
           alpha = an,
-          input_mode = "RGB",
-          output_mode = "RGB",
         }
       end
     end
@@ -157,8 +153,6 @@ function M.pick_css_hsl(line, cursor_col)
           g = g,
           b = b,
           alpha = an,
-          input_mode = "HSL",
-          output_mode = "HSL",
         }
       end
     end
