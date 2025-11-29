@@ -403,9 +403,21 @@ function M.new(props)
     end,
     open_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
-      if nodeuuid ~= nil then
-        self:__resolve_confirmation__(nodeuuid)
+      if nodeuuid == nil then
+        return
       end
+
+      local nodestate = treeview:retrieve(nodeuuid) ---@type eve.ux.view.tree.INodeState|nil
+      if nodestate ~= nil and nodestate.nodetype == "container" then
+        if nodestate.collapsed then
+          treeview:collapse(nodeuuid, "expand", true)
+          treeview:mark_cache_listview_dirty()
+          self._composer:mark_result_dirty()
+        end
+        return
+      end
+
+      self:__resolve_confirmation__(nodeuuid)
     end,
     collapse_node = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
