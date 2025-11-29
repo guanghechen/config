@@ -339,7 +339,7 @@ function M:__build_keymaps__()
       key = "<ScrollWheelUp>",
       desc = "colorpicker: scroll up",
       callback = function()
-        self:__apply_delta__(1)
+        self:__on_scroll__(1)
       end,
     },
     {
@@ -347,7 +347,7 @@ function M:__build_keymaps__()
       key = "<ScrollWheelDown>",
       desc = "colorpicker: scroll down",
       callback = function()
-        self:__apply_delta__(-1)
+        self:__on_scroll__(-1)
       end,
     },
   }
@@ -505,6 +505,35 @@ function M:__on_click__()
     local ratio = convert.clamp(offset / bar_width, 0, 1)
     self._color:set_alpha(convert.round(100 * ratio))
     self._ui:update()
+  end
+end
+
+---@protected
+---@param d                             integer
+---@return nil
+function M:__on_scroll__(d)
+  if not self._winnr then
+    return
+  end
+
+  local mouse = vim.fn.getmousepos()
+  if mouse.winid ~= self._winnr then
+    return
+  end
+
+  local row = mouse.line
+  local input = self._color:input()
+
+  if row >= 1 and row <= #input.bar_name then
+    local value = self._color:get()
+    self._color:set_component(row, value[row] + d)
+    self._ui:update()
+  elseif self._color:is_alpha_visible() and row == #input.bar_name + 1 then
+    local alpha = self._color:get_alpha()
+    if alpha then
+      self._color:set_alpha(alpha + d)
+      self._ui:update()
+    end
   end
 end
 
