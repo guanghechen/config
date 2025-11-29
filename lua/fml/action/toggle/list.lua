@@ -36,6 +36,7 @@ local group_flags = {
     autosave = eve.context.flight.autosave,
     devmode = eve.context.flight.devmode,
     dressing_clipboard = eve.context.flight.dressing_clipboard,
+    dressing_dim = eve.context.flight.dressing_dim,
     dressing_illumniate = eve.context.flight.dressing_illumniate,
     dressing_input = eve.context.flight.dressing_input,
     dressing_scroll = eve.context.flight.dressing_scroll,

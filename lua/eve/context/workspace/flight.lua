@@ -7,6 +7,7 @@
 ---@field public devmode                boolean
 ---
 ---@field public dressing_clipboard     boolean
+---@field public dressing_dim           boolean
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_scroll        boolean
@@ -27,6 +28,7 @@
 ---@field public devmode                std.collection.IObservable
 ---
 ---@field public dressing_clipboard     std.collection.IObservable
+---@field public dressing_dim           std.collection.IObservable
 ---@field public dressing_illumniate    std.collection.IObservable
 ---@field public dressing_input         std.collection.IObservable
 ---@field public dressing_scroll        std.collection.IObservable
@@ -64,6 +66,7 @@ function M.defaults()
     devmode = is_home_config_dir,
 
     dressing_clipboard = false,
+    dressing_dim = false,
     dressing_illumniate = true,
     dressing_input = true,
     dressing_scroll = true,
@@ -103,6 +106,9 @@ function M.normalize(data)
 
     if type(data.dressing_clipboard) == "boolean" then
       resolved.dressing_clipboard = data.dressing_clipboard
+    end
+    if type(data.dressing_dim) == "boolean" then
+      resolved.dressing_dim = data.dressing_dim
     end
     if type(data.dressing_illumniate) == "boolean" then
       resolved.dressing_illumniate = data.dressing_illumniate
@@ -148,6 +154,7 @@ function M.dump()
     devmode = M.devmode:snapshot(),
 
     dressing_clipboard = M.dressing_clipboard:snapshot(),
+    dressing_dim = M.dressing_dim:snapshot(),
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
     dressing_scroll = M.dressing_scroll:snapshot(),
@@ -174,6 +181,7 @@ function M.load(raw_data)
   M.devmode:next(data.devmode)
 
   M.dressing_clipboard:next(data.dressing_clipboard)
+  M.dressing_dim:next(data.dressing_dim)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
   M.dressing_scroll:next(data.dressing_scroll)
@@ -197,6 +205,7 @@ M.autosave = std.Observable.from_value(_defaults.autosave)
 M.devmode = std.Observable.from_value(_defaults.devmode)
 
 M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
+M.dressing_dim = std.Observable.from_value(_defaults.dressing_dim)
 M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
 M.dressing_scroll = std.Observable.from_value(_defaults.dressing_scroll)

@@ -72,6 +72,9 @@ function M.default_gen_hlgroup_map(context)
     f_diff_word_left = { bg = u.diffDelInline },
     f_diff_word_right = { bg = u.diffAddInline },
 
+    ---dim
+    f_dim = { fg = u.fg4 },
+
     ---file explorer
     f_fe_date = { fg = u.fg4 },
     f_fe_group = { fg = u.red },
