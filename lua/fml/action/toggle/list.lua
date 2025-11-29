@@ -38,6 +38,7 @@ local group_flags = {
     dressing_clipboard = eve.context.flight.dressing_clipboard,
     dressing_illumniate = eve.context.flight.dressing_illumniate,
     dressing_input = eve.context.flight.dressing_input,
+    dressing_scroll = eve.context.flight.dressing_scroll,
     dressing_select = eve.context.flight.dressing_select,
     dressing_trailspace = eve.context.flight.dressing_trailspace,
     dressing_ui_attach = eve.context.flight.dressing_ui_attach,

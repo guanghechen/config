@@ -9,6 +9,7 @@
 ---@field public dressing_clipboard     boolean
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_input         boolean
+---@field public dressing_scroll        boolean
 ---@field public dressing_select        boolean
 ---@field public dressing_trailspace    boolean
 ---@field public dressing_ui_attach     boolean
@@ -28,6 +29,7 @@
 ---@field public dressing_clipboard     std.collection.IObservable
 ---@field public dressing_illumniate    std.collection.IObservable
 ---@field public dressing_input         std.collection.IObservable
+---@field public dressing_scroll        std.collection.IObservable
 ---@field public dressing_select        std.collection.IObservable
 ---@field public dressing_trailspace    std.collection.IObservable
 ---@field public dressing_ui_attach     std.collection.IObservable
@@ -64,6 +66,7 @@ function M.defaults()
     dressing_clipboard = false,
     dressing_illumniate = true,
     dressing_input = true,
+    dressing_scroll = true,
     dressing_select = true,
     dressing_trailspace = true,
     dressing_ui_attach = true,
@@ -107,6 +110,9 @@ function M.normalize(data)
     if type(data.dressing_input) == "boolean" then
       resolved.dressing_input = data.dressing_input
     end
+    if type(data.dressing_scroll) == "boolean" then
+      resolved.dressing_scroll = data.dressing_scroll
+    end
     if type(data.dressing_select) == "boolean" then
       resolved.dressing_select = data.dressing_select
     end
@@ -144,6 +150,7 @@ function M.dump()
     dressing_clipboard = M.dressing_clipboard:snapshot(),
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
+    dressing_scroll = M.dressing_scroll:snapshot(),
     dressing_select = M.dressing_select:snapshot(),
     dressing_trailspace = M.dressing_trailspace:snapshot(),
     dressing_ui_attach = M.dressing_ui_attach:snapshot(),
@@ -169,6 +176,7 @@ function M.load(raw_data)
   M.dressing_clipboard:next(data.dressing_clipboard)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_input:next(data.dressing_input)
+  M.dressing_scroll:next(data.dressing_scroll)
   M.dressing_select:next(data.dressing_select)
   M.dressing_trailspace:next(data.dressing_trailspace)
   M.dressing_ui_attach:next(data.dressing_ui_attach)
@@ -191,6 +199,7 @@ M.devmode = std.Observable.from_value(_defaults.devmode)
 M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
 M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
+M.dressing_scroll = std.Observable.from_value(_defaults.dressing_scroll)
 M.dressing_select = std.Observable.from_value(_defaults.dressing_select)
 M.dressing_trailspace = std.Observable.from_value(_defaults.dressing_trailspace)
 M.dressing_ui_attach = std.Observable.from_value(_defaults.dressing_ui_attach)
