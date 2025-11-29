@@ -45,6 +45,7 @@ function M:pick()
     local row, col = unpack(vim.api.nvim_win_get_cursor(winnr))
     self._source_bufnr = vim.api.nvim_win_get_buf(winnr)
     self._history_index = 0
+    self._ui:set_history_index(0)
 
     if result then
       self._range = { row, result.start_col - 1, row, result.end_col }
@@ -283,10 +284,28 @@ function M:__build_keymaps__()
     },
     {
       modes = { "n" },
+      key = "I",
+      desc = "colorpicker: cycle input mode reverse",
+      callback = function()
+        self._color:cycle_input_reverse()
+        self._ui:update()
+      end,
+    },
+    {
+      modes = { "n" },
       key = "o",
       desc = "colorpicker: cycle output mode",
       callback = function()
         self._color:cycle_output()
+        self._ui:update()
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "O",
+      desc = "colorpicker: cycle output mode reverse",
+      callback = function()
+        self._color:cycle_output_reverse()
         self._ui:update()
       end,
     },
@@ -419,6 +438,7 @@ function M:__goto_next_history__()
     return
   end
   self._history_index = self._history_index - 1
+  self._ui:set_history_index(self._history_index)
   self:__load_history_item__(self._history_index)
 end
 
@@ -436,6 +456,7 @@ function M:__goto_prev_history__()
     self._history_index = self._history_index + 1
   end
 
+  self._ui:set_history_index(self._history_index)
   self:__load_history_item__(self._history_index)
 end
 

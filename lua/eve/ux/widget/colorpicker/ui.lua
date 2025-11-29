@@ -33,6 +33,7 @@ end
 ---@field private _bar_len               integer
 ---@field private _point_char            string
 ---@field private _history_char          string
+---@field private _history_index         integer
 ---@field private _win_opts              vim.api.keyset.win_config
 ---@field public on_quit_callback        (fun(): nil)|nil
 ---@field public is_quit                 boolean
@@ -53,6 +54,7 @@ function M.new(props)
   self._bar_len = props.bar_len or BAR_LEN
   self._point_char = props.point_char or POINT_CHAR
   self._history_char = props.history_char or HISTORY_CHAR
+  self._history_index = 0
   self._win_opts = vim.tbl_extend("force", {
     relative = "cursor",
     row = 1,
@@ -98,6 +100,12 @@ function M:update()
     return
   end
   self:__refresh__()
+end
+
+---@param index                         integer
+---@return nil
+function M:set_history_index(index)
+  self._history_index = index
 end
 
 ---@return nil
@@ -156,21 +164,18 @@ function M:__refresh__()
 
   local title = self:__build_title__()
   local winbar = self:__build_winbar__()
-  local footer_left, footer_right = self:__build_footer__()
+  local footer = self:__build_footer__()
 
   local win_config = {
     height = #buffer + 1,
     width = width + 2,
     title = title,
     title_pos = "center",
+    footer = footer,
+    footer_pos = "right",
   }
-  if #footer_left > 0 then
-    win_config.footer = footer_left
-    win_config.footer_pos = "left"
-  end
 
   vim.api.nvim_win_set_config(self._winnr, win_config)
-  vim.api.nvim_win_set_config(self._winnr, { footer = footer_right, footer_pos = "right" })
   vim.wo[self._winnr].winbar = winbar
   vim.api.nvim_win_set_hl_ns(self._winnr, self._ns_id)
 end
@@ -222,24 +227,58 @@ end
 ---@protected
 ---@return string
 function M:__build_winbar__()
+  local input = self._color:input()
   local output = self._color:output()
-  local before_hex = self._before_color:hex()
-  local after_hex = self._color:hex()
+  local hex = self._color:hex()
+  local alpha = self._color:get_alpha()
 
-  local r1, g1, b1 = self._before_color:get_rgb()
-  local r2, g2, b2 = self._color:get_rgb()
-  local before_str = output.str(r1, g1, b1, nil):gsub("%%", "%%%%")
-  local after_str = output.str(r2, g2, b2, nil):gsub("%%", "%%%%")
+  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_icon", { fg = hex })
 
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_before_icon", { fg = before_hex })
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_after_icon", { fg = after_hex })
+  local value = self._color:get()
+  local input_str
+  if input.name == "HEX" then
+    if alpha then
+      input_str = string.format("#%02x%02x%02x%02x", value[1], value[2], value[3], convert.round(alpha * 255 / 100))
+    else
+      input_str = string.format("#%02x%02x%02x", value[1], value[2], value[3])
+    end
+  elseif input.name == "RGB" then
+    if alpha then
+      input_str = string.format("rgb(%d %d %d / %d%%)", value[1], value[2], value[3], alpha)
+    else
+      input_str = string.format("rgb(%d,%d,%d)", value[1], value[2], value[3])
+    end
+  elseif input.name == "HSL" then
+    if alpha then
+      input_str = string.format("hsl(%d %d%% %d%% / %d%%)", value[1], value[2], value[3], alpha)
+    else
+      input_str = string.format("hsl(%d,%d%%,%d%%)", value[1], value[2], value[3])
+    end
+  elseif input.name == "HSV" then
+    if alpha then
+      input_str = string.format("hsv(%d %d%% %d%% / %d%%)", value[1], value[2], value[3], alpha)
+    else
+      input_str = string.format("hsv(%d,%d%%,%d%%)", value[1], value[2], value[3])
+    end
+  end
+  input_str = input_str:gsub("%%", "%%%%")
+
+  if input.name == output.name then
+    return string.format(
+      "%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%=",
+      self._point_char,
+      input_str
+    )
+  end
+
+  local r, g, b = self._color:get_rgb()
+  local output_str = output.str(r, g, b, alpha):gsub("%%", "%%%%")
 
   return string.format(
-    "%%=%%#f_cp_preview_before_icon#%s %%#f_cp_bar_name#%s%%#f_cp_normal# -> %%#f_cp_preview_after_icon#%s %%#f_cp_bar_name#%s%%=",
-    self._history_char,
-    before_str,
-    self._history_char,
-    after_str
+    "%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%#f_cp_normal# -> %s%%=",
+    self._point_char,
+    input_str,
+    output_str
   )
 end
 
@@ -251,30 +290,32 @@ function M:__build_title__()
 end
 
 ---@protected
----@return { [1]: string, [2]: string }[], { [1]: string, [2]: string }[]
+---@return { [1]: string, [2]: string }[]
 function M:__build_footer__()
   local history = eve.context.colorpicker.history:snapshot()
   local output = self._color:output()
+  local current_hex = self._color:hex()
 
   ---@type { [1]: string, [2]: string }[]
-  local footer_left = {}
-  if #history > 0 then
-    table.insert(footer_left, { " ", "f_cp_normal" })
-    for i, item in ipairs(history) do
-      local hl_name = string.format("f_cp_history_%d", i)
-      vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
-      table.insert(footer_left, { self._history_char, hl_name })
-      if i < #history then
-        table.insert(footer_left, { " ", "f_cp_normal" })
-      end
-    end
-    table.insert(footer_left, { " ", "f_cp_normal" })
+  local footer = {}
+
+  for i = #history, 1, -1 do
+    local item = history[i]
+    table.insert(footer, { " ", "f_cp_normal" })
+    local hl_name = string.format("f_cp_history_%d", i)
+    vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
+    local char = self._history_index == i and self._point_char or self._history_char
+    table.insert(footer, { char, hl_name })
   end
 
-  ---@type { [1]: string, [2]: string }[]
-  local footer_right = { { " " .. output.name .. " ", "f_cp_title" } }
+  table.insert(footer, { " ", "f_cp_normal" })
+  vim.api.nvim_set_hl(self._ns_id, "f_cp_current", { fg = current_hex })
+  local current_char = self._history_index == 0 and self._point_char or self._history_char
+  table.insert(footer, { current_char, "f_cp_current" })
 
-  return footer_left, footer_right
+  table.insert(footer, { " " .. output.name .. " ", "f_cp_title" })
+
+  return footer
 end
 
 ---@protected

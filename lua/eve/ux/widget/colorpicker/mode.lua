@@ -1,6 +1,19 @@
 local convert = require("eve.ux.widget.colorpicker.convert")
 
 ---@type eve.ux.widget.colorpicker.IInputMode
+local HexInput = {
+  name = "HEX",
+  bar_name = { "R", "G", "B" },
+  max = { 255, 255, 255 },
+  from_rgb = function(r, g, b)
+    return { r, g, b }
+  end,
+  to_rgb = function(value)
+    return value[1], value[2], value[3]
+  end,
+}
+
+---@type eve.ux.widget.colorpicker.IInputMode
 local RgbInput = {
   name = "RGB",
   bar_name = { "R", "G", "B" },
@@ -57,7 +70,7 @@ local RgbOutput = {
   name = "RGB",
   str = function(r, g, b, alpha)
     if alpha then
-      return string.format("rgb(%d,%d,%d,%d%%)", r, g, b, alpha)
+      return string.format("rgb(%d %d %d / %d%%)", r, g, b, alpha)
     end
     return string.format("rgb(%d,%d,%d)", r, g, b)
   end,
@@ -69,9 +82,21 @@ local HslOutput = {
   str = function(r, g, b, alpha)
     local h, s, l = convert.rgb2hsl(r, g, b)
     if alpha then
-      return string.format("hsl(%d,%d%%,%d%%,%d%%)", h, s, l, alpha)
+      return string.format("hsl(%d %d%% %d%% / %d%%)", h, s, l, alpha)
     end
     return string.format("hsl(%d,%d%%,%d%%)", h, s, l)
+  end,
+}
+
+---@type eve.ux.widget.colorpicker.IOutputMode
+local HsvOutput = {
+  name = "HSV",
+  str = function(r, g, b, alpha)
+    local h, s, v = convert.rgb2hsv(r, g, b)
+    if alpha then
+      return string.format("hsv(%d %d%% %d%% / %d%%)", h, s, v, alpha)
+    end
+    return string.format("hsv(%d,%d%%,%d%%)", h, s, v)
   end,
 }
 
@@ -82,6 +107,7 @@ local M = {}
 
 ---@class eve.ux.widget.colorpicker.mode.input
 M.input = {
+  hex = HexInput,
   rgb = RgbInput,
   hsl = HslInput,
   hsv = HsvInput,
@@ -92,6 +118,7 @@ M.output = {
   hex = HexOutput,
   rgb = RgbOutput,
   hsl = HslOutput,
+  hsv = HsvOutput,
 }
 
 return M

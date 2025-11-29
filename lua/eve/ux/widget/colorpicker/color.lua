@@ -1,8 +1,8 @@
 local convert = require("eve.ux.widget.colorpicker.convert")
 local mode = require("eve.ux.widget.colorpicker.mode")
 
-local INPUTS = { mode.input.rgb, mode.input.hsl, mode.input.hsv }
-local OUTPUTS = { mode.output.hex, mode.output.rgb, mode.output.hsl }
+local INPUTS = { mode.input.hex, mode.input.rgb, mode.input.hsl, mode.input.hsv }
+local OUTPUTS = { mode.output.hex, mode.output.rgb, mode.output.hsl, mode.output.hsv }
 
 ---@class eve.ux.widget.colorpicker.Color
 ---@field private _value                 integer[]
@@ -42,8 +42,20 @@ function M:cycle_input()
 end
 
 ---@return nil
+function M:cycle_input_reverse()
+  local r, g, b = self:get_rgb()
+  self._input_idx = self._input_idx <= 1 and #INPUTS or self._input_idx - 1
+  self:set_rgb(r, g, b)
+end
+
+---@return nil
 function M:cycle_output()
   self._output_idx = self._output_idx >= #OUTPUTS and 1 or self._output_idx + 1
+end
+
+---@return nil
+function M:cycle_output_reverse()
+  self._output_idx = self._output_idx <= 1 and #OUTPUTS or self._output_idx - 1
 end
 
 ---@param name                          eve.ux.widget.colorpicker.InputModeName

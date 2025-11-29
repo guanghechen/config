@@ -1,6 +1,7 @@
 ---@meta
 
 ---@alias eve.ux.widget.colorpicker.InputModeName
+---| "HEX"
 ---| "RGB"
 ---| "HSL"
 ---| "HSV"
@@ -9,6 +10,7 @@
 ---| "HEX"
 ---| "RGB"
 ---| "HSL"
+---| "HSV"
 
 ---@alias eve.ux.widget.colorpicker.PointType
 ---| "color"
