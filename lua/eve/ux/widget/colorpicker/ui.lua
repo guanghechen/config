@@ -7,12 +7,13 @@ local BAR_LEN = 32
 
 ---@param hex                           string
 ---@return string
-local function invert_hex_color(hex)
+local function contrast_color(hex)
   local r, g, b = convert.hex_parse(hex)
   if not r or not g or not b then
     return "#000000"
   end
-  return string.format("#%02x%02x%02x", 255 - r, 255 - g, 255 - b)
+  local luminance = 0.299 * r + 0.587 * g + 0.114 * b
+  return luminance > 127 and "#000000" or "#ffffff"
 end
 
 ---@class eve.ux.widget.colorpicker.ui.IProps
@@ -316,8 +317,8 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if j == point_idx then
-        local inv_hex = invert_hex_color(hex)
-        hl = { fg = inv_hex, bg = hex }
+        local fg = contrast_color(hex)
+        hl = { fg = fg, bg = hex }
       end
 
       local hl_name = string.format("f_cp_bar_%d_%d", i, j)
@@ -350,8 +351,8 @@ function M:__highlight__()
       local hl = { fg = hex }
 
       if i == point_idx then
-        local inv_hex = invert_hex_color(hex)
-        hl = { fg = inv_hex, bg = hex }
+        local fg = contrast_color(hex)
+        hl = { fg = fg, bg = hex }
       end
 
       local hl_name = string.format("f_cp_alpha_%d", i)
