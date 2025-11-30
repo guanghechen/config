@@ -80,11 +80,64 @@ Each integration includes environment-specific:
 
 ### Lua Code Standards
 - Avoid unnecessary comments except typing comments like `---@type string`
-- Type annotations must start at column 41: `---@param name                          string`
+- Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
 - Use `std.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
-- Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits.
+- Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits
+
+### Type Annotation Formatting
+- Type annotations must start at column 41 (counted from line start, not first non-space character):
+  ```lua
+  ---@param name                          string
+  ---@param callback                      fun(result: boolean): nil
+  ---@return nil
+  ```
+- For multi-line target objects, place `---@type` annotation **above** the target, not after:
+  ```lua
+  -- Bad
+  local config = create_config({
+    key = "value",
+  }) ---@type IConfig
+
+  -- Good
+  ---@type IConfig
+  local config = create_config({
+    key = "value",
+  })
+  ```
+- Class field annotations follow the same column 41 alignment:
+  ```lua
+  ---@class foo.bar.MyClass
+  ---@field public name                   string
+  ---@field public callback               fun(): nil
+  ---@field protected _internal           integer
+  ```
+
+### Class Field/Method Visibility
+- Use `protected` instead of `private` for non-public class fields and methods
+- Protected methods must use `__<method_name>__` naming convention
+- Protected methods must be placed at the end of the class (fields are not affected by this rule)
+- Add a 100-character dash separator line above the first protected method:
+  ```lua
+  ---@class foo.bar.Example
+  local M = {}
+
+  function M.public_method_alpha()
+  end
+
+  function M.public_method_beta()
+  end
+
+  ----------------------------------------------------------------------------------------------------
+
+  function M.__protected_method_alpha__()
+  end
+
+  function M.__protected_method_beta__()
+  end
+  ```
+- Protected methods should be ordered alphabetically
 
 ### Error Reporting
 Use `std.reporter` for notifications instead of `vim.notify`:
