@@ -1,7 +1,7 @@
 vim.api.nvim_create_autocmd("BufDelete", {
   group = eve.nvim.augroup("bootstrap_on_BufDelete"),
   callback = function(event)
-    local bufnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
+    local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     eve.tab.on_buf_delete(tabnr)
     eve.buf.on_close(bufnr)
