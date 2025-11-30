@@ -117,7 +117,7 @@ local fns = {
     return rstd.path.locate_nearest(dirname, config_files)
   end,
 
-  ---@param config_table table
+  ---@param config_table                table
   ---@return string[]
   config_to_args = function(config_table)
     local args = {}

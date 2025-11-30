@@ -71,7 +71,7 @@ function M.defaults()
   }
 end
 
----@param data                        any
+---@param data                          any
 ---@return eve.context.select.data
 function M.normalize(data)
   data = type(data) == "table" and data or {}

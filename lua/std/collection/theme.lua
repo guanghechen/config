@@ -14,7 +14,7 @@
 ---@field public registers              fun(self: std.collection.theme.ITheme, hlgroup_map: table<string, std.t.theme.IHlgroup | nil>): std.collection.theme.ITheme
 
 ---@class std.collection.Theme : std.collection.theme.ITheme
----@field private hlgroup_map           table<string, std.t.theme.IHlgroup>
+---@field protected hlgroup_map         table<string, std.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 

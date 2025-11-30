@@ -27,13 +27,13 @@ local function get_running_linters()
   return lint.get_running()
 end
 
----@param name string
+---@param name                          string
 ---@return boolean
 local function is_linter_enabled(name)
   return not disabled_linters[name]
 end
 
----@param name string
+---@param name                          string
 local function toggle_linter(name)
   disabled_linters[name] = not disabled_linters[name]
   eve.status.dirtier_statusline:mark_dirty()

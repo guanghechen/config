@@ -40,7 +40,7 @@ function M.defaults()
   }
 end
 
----@param data                            any
+---@param data                          any
 ---@return eve.context.search_buffer.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.context.search_buffer.data
@@ -100,7 +100,7 @@ function M.dump()
   }
 end
 
----@param raw_data                        any
+---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type eve.context.search_buffer.data

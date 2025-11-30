@@ -15,8 +15,8 @@ local function rgb_identity_reverse(value)
 end
 
 ---@class eve.ux.widget.colorpicker.mode
----@field public input                   eve.ux.widget.colorpicker.mode.input
----@field public output                  eve.ux.widget.colorpicker.mode.output
+---@field public input                  eve.ux.widget.colorpicker.mode.input
+---@field public output                 eve.ux.widget.colorpicker.mode.output
 local M = {}
 
 ---@class eve.ux.widget.colorpicker.mode.input

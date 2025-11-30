@@ -63,7 +63,7 @@ function M.defaults()
   }
 end
 
----@param data                        any
+---@param data                          any
 ---@return eve.context.theme.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.context.theme.data

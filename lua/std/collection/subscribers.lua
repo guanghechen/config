@@ -18,10 +18,10 @@ local __module_name__ = "std.collection.subscribers" ---@type string
 local noop_unsubscribable = { unsubscribe = std.fn.noop }
 
 ---@class std.collection.Subscribers : std.collection.ISubscribers
----@field private ARRANGE_THRESHOLD     number
----@field private _disposed             boolean
----@field private _items                std.collection.subscribers.ISubscriberItem[]
----@field private _subscribing_count    integer
+---@field protected ARRANGE_THRESHOLD   number
+---@field protected _disposed           boolean
+---@field protected _items              std.collection.subscribers.ISubscriberItem[]
+---@field protected _subscribing_count  integer
 local M = {}
 M.__index = M
 
@@ -91,8 +91,8 @@ function M:dispose()
   handler:cleanup()
 end
 
----@param value any
----@param value_prev any
+---@param value                         any
+---@param value_prev                    any
 ---@return nil
 function M:notify(value, value_prev)
   if self._disposed then
@@ -145,7 +145,7 @@ function M:subscribe(subscriber)
 
       item.unsubscribed = true
       self._subscribing_count = self._subscribing_count - 1
-      self:_arrange()
+      self:__arrange__()
     end,
   }
   return unsubscribe
@@ -155,7 +155,7 @@ end
 
 ---@protected
 ---@return nil
-function M:_arrange()
+function M:__arrange__()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
     ---@type std.collection.subscribers.ISubscriberItem[]

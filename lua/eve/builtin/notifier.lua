@@ -140,10 +140,10 @@ end
 ---@class eve.builtin.notifier
 local M = {}
 setmetatable(M, {
-  ---@param self                          eve.builtin.notifier
-  ---@param msg                           string
-  ---@param level0                        integer
-  ---@param opts                          any
+  ---@param self                        eve.builtin.notifier
+  ---@param msg                         string
+  ---@param level0                      integer
+  ---@param opts                        any
   ---@return nil
   __call = function(self, msg, level0, opts)
     opts = opts or {}
@@ -359,6 +359,8 @@ function M.notify(params)
     end
   end)
 end
+
+----------------------------------------------------------------------------------------------------
 
 ---@protected
 ---@param win                           eve.builtin.notifier.IWindow

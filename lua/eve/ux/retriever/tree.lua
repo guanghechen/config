@@ -86,6 +86,8 @@ function M:attach(bufnr, lnum2uuid, uuid2lnum, childline)
   self._uuid2lnum = uuid2lnum
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
 ---@return nil
 function M:__health__()

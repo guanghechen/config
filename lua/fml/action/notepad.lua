@@ -302,10 +302,11 @@ function M.rename()
     return
   end
 
+  ---@type fml.dressing.input.IOptions
   local input_opts = {
     prompt = "Rename notepad item:",
     default = item.name,
-  } ---@type fml.dressing.input.IOptions
+  }
 
   if widget:isvisible() then
     local winnr = widget:get_winnr() ---@type integer|nil

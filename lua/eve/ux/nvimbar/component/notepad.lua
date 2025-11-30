@@ -58,7 +58,7 @@ function M.items(position, notepad)
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = eve.nvim.make_bg_transparency(hln_button) ---@type string
 
-  ---@param item                            std.t.INotepadItemMeta
+  ---@param item                        std.t.INotepadItemMeta
   ---@return string
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
@@ -71,9 +71,9 @@ function M.items(position, notepad)
     return name
   end
 
-  ---@param item                            std.t.INotepadItemMeta
-  ---@param index                           integer
-  ---@param relative_distance               integer|nil
+  ---@param item                        std.t.INotepadItemMeta
+  ---@param index                       integer
+  ---@param relative_distance           integer|nil
   ---@return string
   ---@return string
   local function render_item(item, index, relative_distance)
@@ -95,8 +95,8 @@ function M.items(position, notepad)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@param item                            std.t.INotepadItemMeta
-  ---@param index                           integer
+  ---@param item                        std.t.INotepadItemMeta
+  ---@param index                       integer
   ---@return string
   ---@return string
   local function render_item_active(item, index)

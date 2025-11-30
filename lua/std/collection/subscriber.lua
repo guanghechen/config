@@ -10,16 +10,16 @@ local __module_name__ = "std.collection.subscriber" ---@type string
 ---@field public next                   fun(self: std.collection.ISubscriber, value: std.t.T, value_prev: std.t.T| nil): nil
 
 ---@class std.collection.subscriber.IProps
----@field on_dispose                    ?std.collection.subscriber.IOnDispose
+---@field on_dispose                    std.collection.subscriber.IOnDispose|nil
 ---@field on_next                       std.collection.subscriber.IOnNext
 
 ---@class std.collection.Subscriber : std.collection.ISubscriber
----@field private _on_dispose           std.collection.subscriber.IOnDispose
----@field private _on_next              std.collection.subscriber.IOnNext
+---@field protected _on_dispose         std.collection.subscriber.IOnDispose
+---@field protected _on_next            std.collection.subscriber.IOnNext
 local M = {}
 M.__index = M
 
----@param props std.collection.subscriber.IProps
+---@param props                         std.collection.subscriber.IProps
 ---@return std.collection.Subscriber
 function M.new(props)
   local on_dispose = props.on_dispose or std.fn.noop ---@type std.collection.subscriber.IOnDispose
@@ -59,6 +59,8 @@ function M:next(value, value_prev)
   self:__health__()
   self._on_next(value, value_prev)
 end
+
+----------------------------------------------------------------------------------------------------
 
 ---@protected
 ---@return nil

@@ -224,6 +224,7 @@ function M:search(params)
   local search_pattern = params.search_pattern ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
+  ---@type rstd.search.ISearchFileResult|nil, rstd.search.ISearchFailedResult|nil
   local results, err = rstd.search.search_in_files({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
@@ -236,7 +237,7 @@ function M:search(params)
     include_patterns = table.concat(includes, ","),
     exclude_patterns = table.concat(excludes, ","),
     specified_filepath = specified_filepath,
-  }) ---@type rstd.search.ISearchFileResult|nil, rstd.search.ISearchFailedResult|nil
+  })
 
   if results == nil or results.items == nil then
     std.reporter.error({

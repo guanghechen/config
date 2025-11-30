@@ -7,7 +7,7 @@ local M = {}
 ---@return string
 function M.uuid() end
 
----@param input                                 string
+---@param input                         string
 ---@return string
 function M.md5(input) end
 

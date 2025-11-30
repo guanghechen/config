@@ -80,7 +80,7 @@ function M.defaults()
   }
 end
 
----@param data                        any
+---@param data                          any
 ---@return eve.context.flight.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.context.flight.data

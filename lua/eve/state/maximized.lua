@@ -1,19 +1,19 @@
 ---@class eve.state.maximized.IOriginalWindow
----@field public winnr                   integer
----@field public winblend                integer
----@field public wincfg                  vim.api.keyset.win_config
+---@field public winnr                  integer
+---@field public winblend               integer
+---@field public wincfg                 vim.api.keyset.win_config
 
 ---@class eve.state.maximized.IContext
----@field public MAXIMIZED_ZINDEX        integer
----@field public original                eve.state.maximized.IOriginalWindow|nil
+---@field public MAXIMIZED_ZINDEX       integer
+---@field public original               eve.state.maximized.IOriginalWindow|nil
 
 ---@class eve.state.maximized.ResolveResizeOpts
----@field public winblend                integer|nil
+---@field public winblend               integer|nil
 
 ---@class eve.state.maximized.ResolveResizeResult
----@field public cfg                     vim.api.keyset.win_config
----@field public winblend                integer
----@field public maximized               boolean
+---@field public cfg                    vim.api.keyset.win_config
+---@field public winblend               integer
+---@field public maximized              boolean
 
 ---@type eve.state.maximized.IContext
 local context = {
@@ -23,7 +23,7 @@ local context = {
 
 ---@module 'eve.state.maximized'
 ---@class eve.state.maximized
----@field public context                 eve.state.maximized.IContext
+---@field public context                eve.state.maximized.IContext
 local M = {
   context = context,
 }
@@ -44,7 +44,7 @@ function M.clear_original()
   context.original = nil
 end
 
----@param wincfg                         vim.api.keyset.win_config
+---@param wincfg                        vim.api.keyset.win_config
 ---@return vim.api.keyset.win_config
 function M.compute_maximized_wincfg(wincfg)
   local maximize_cfg = vim.deepcopy(wincfg) ---@type vim.api.keyset.win_config
@@ -74,9 +74,9 @@ function M.compute_maximized_wincfg(wincfg)
   return maximize_cfg
 end
 
----@param winnr                          integer
----@param desired_cfg                    vim.api.keyset.win_config
----@param opts                           eve.state.maximized.ResolveResizeOpts|nil
+---@param winnr                         integer
+---@param desired_cfg                   vim.api.keyset.win_config
+---@param opts                          eve.state.maximized.ResolveResizeOpts|nil
 ---@return eve.state.maximized.ResolveResizeResult
 function M.resolve_resize_config(winnr, desired_cfg, opts)
   local winblend = opts and opts.winblend or nil ---@type integer|nil

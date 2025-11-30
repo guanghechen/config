@@ -73,7 +73,7 @@ end
 --- Merges the values similar to vim.tbl_deep_extend with the **force** behavior,
 --- but the values can be any type
 ---@generic T
----@param ... T
+---@param ...                           T
 ---@return T
 function M.merge_config(...)
   local ret = select(1, ...)
@@ -102,7 +102,7 @@ end
 
 ---@generic T
 ---@param elements                      T[]
----@param max_length                   integer
+---@param max_length                    integer
 ---@return nil
 function M.truncate_inline(elements, max_length)
   local N = #elements ---@type integer

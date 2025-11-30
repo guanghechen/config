@@ -17,24 +17,24 @@ local function contrast_color(hex)
 end
 
 ---@class eve.ux.widget.colorpicker.ui.IProps
----@field public bar_char                string|nil
----@field public bar_len                 integer|nil
----@field public point_char              string|nil
----@field public history_char            string|nil
----@field public win_opts                vim.api.keyset.win_config|nil
+---@field public bar_char               string|nil
+---@field public bar_len                integer|nil
+---@field public point_char             string|nil
+---@field public history_char           string|nil
+---@field public win_opts               vim.api.keyset.win_config|nil
 
 ---@class eve.ux.widget.colorpicker.UI
----@field private _ns_id                 integer
----@field private _bufnr                 integer|nil
----@field private _winnr                 integer|nil
----@field private _color                 eve.ux.widget.colorpicker.Color|nil
----@field private _before_color          eve.ux.widget.colorpicker.Color|nil
----@field private _bar_char              string
----@field private _bar_len               integer
----@field private _point_char            string
----@field private _history_char          string
----@field private _history_index         integer
----@field private _win_opts              vim.api.keyset.win_config
+---@field protected _ns_id              integer
+---@field protected _bufnr              integer|nil
+---@field protected _winnr              integer|nil
+---@field protected _color              eve.ux.widget.colorpicker.Color|nil
+---@field protected _before_color       eve.ux.widget.colorpicker.Color|nil
+---@field protected _bar_char           string
+---@field protected _bar_len            integer
+---@field protected _point_char         string
+---@field protected _history_char       string
+---@field protected _history_index      integer
+---@field protected _win_opts           vim.api.keyset.win_config
 local M = {}
 M.__index = M
 

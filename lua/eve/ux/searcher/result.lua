@@ -55,11 +55,11 @@ local __module_name__ = "eve.ux.searcher.result" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _augroup_CursorMoved      integer
----@field protected _nvimbar                  eve.ux.nvimbar.Nvimbar
----@field protected _scheduler_content        std.collection.Scheduler
----@field protected _scheduler_lnum_current   std.collection.Scheduler
----@field protected _scheduler_lnum_present   std.collection.Scheduler
+---@field protected _augroup_CursorMoved integer
+---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
+---@field protected _scheduler_content  std.collection.Scheduler
+---@field protected _scheduler_lnum_current std.collection.Scheduler
+---@field protected _scheduler_lnum_present std.collection.Scheduler
 ---@field protected _scheduler_lnums_selected std.collection.Scheduler
 local M = {}
 M.__index = M

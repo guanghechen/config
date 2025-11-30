@@ -68,7 +68,7 @@ function M.remove_from_name_index(name_to_uuid, name)
 end
 
 ---Initialize history stack based on current active UUID
----@param active_uuid                    string|nil
+---@param active_uuid                   string|nil
 ---@return string[]
 ---@return integer
 function M.initialize_history(active_uuid)

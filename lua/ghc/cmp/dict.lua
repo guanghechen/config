@@ -170,11 +170,11 @@ function M:apply_case(prefix, word)
   return word
 end
 
----@param range lsp.Range
----@param prefix string
----@param word   string
----@param documentation string
----@param index integer
+---@param range                         lsp.Range
+---@param prefix                        string
+---@param word                          string
+---@param documentation                 string
+---@param index                         integer
 ---@return lsp.CompletionItem
 function M:make_item(range, prefix, word, documentation, index)
   local display = self:apply_case(prefix, word)

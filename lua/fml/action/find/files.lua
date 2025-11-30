@@ -18,9 +18,9 @@ local o_excludes = eve.context.select.find_file.excludes
 local o_includes = eve.context.select.find_file.includes
 
 ---@class fml.action.find.files.ISettingData
----@field public keyword        string
----@field public includes       string[]
----@field public excludes       string[]
+---@field public keyword                string
+---@field public includes               string[]
+---@field public excludes               string[]
 
 ---@param picker                        eve.ux.picker.FiletreeComposer
 ---@return nil

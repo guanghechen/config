@@ -93,6 +93,8 @@ function M:attach(bufnr, uuids)
   self._linecount = #lnum2uuid
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
 ---@return nil
 function M:__health__()

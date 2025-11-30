@@ -226,7 +226,7 @@ function M.is_float(winnr)
   return config.relative ~= nil and config.relative ~= ""
 end
 
----@param winnr                       integer
+---@param winnr                         integer
 ---@return boolean
 function M.is_focusable(winnr)
   local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
@@ -242,7 +242,7 @@ function M.is_focusable(winnr)
   return config.focusable == true
 end
 
----@param winnr                       integer
+---@param winnr                         integer
 ---@return boolean
 function M.is_projectable(winnr)
   local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
@@ -280,7 +280,7 @@ function M.is_sourcefile(winnr)
   return true
 end
 
----@param winnr                       integer
+---@param winnr                         integer
 ---@return boolean
 function M.is_swappable(winnr)
   local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil

@@ -94,7 +94,7 @@ function M.define(raw_definition, overwrite)
   return M
 end
 
----@param implementation                 eve.builtin.command.IImplementation
+---@param implementation                eve.builtin.command.IImplementation
 ---@return eve.builtin.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string

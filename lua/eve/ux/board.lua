@@ -34,7 +34,7 @@ local DEFAULT_WIN_CFG = {
   focusable = true,
 }
 
----@param props eve.ux.board.IProps
+---@param props                         eve.ux.board.IProps
 ---@return eve.ux.Board
 function M.new(props)
   local permanent = not not props.permanent ---@type boolean

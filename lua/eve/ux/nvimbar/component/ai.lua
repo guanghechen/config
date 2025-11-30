@@ -22,7 +22,7 @@ local icons = {
   detached = eve.icon.status.detached,
 }
 
----@param attached table|nil
+---@param attached                      table|nil
 ---@return string
 local function format_attached_names(attached)
   if type(attached) ~= "table" then

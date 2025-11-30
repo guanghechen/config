@@ -279,6 +279,8 @@ function M:snapshot()
   return self._scheduler:snapshot() or ""
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
 ---@return nil
 function M:__health__()

@@ -3,7 +3,7 @@ local BYTE_SLASH      = 0x2f ---@type integer '/'
 local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
 -- stylua: ignore end
 
----@param octal                          string
+---@param octal                         string
 ---@return string
 local convert_octal_char = function(octal)
   return string.char(tonumber(octal, 8))

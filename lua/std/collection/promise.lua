@@ -183,7 +183,7 @@ function M:xthen(on_fulfilled)
   return promise
 end
 
----@param on_rejected                  std.collection.promise.IOnRejected
+---@param on_rejected                   std.collection.promise.IOnRejected
 ---@return std.collection.Promise
 function M:xcatch(on_rejected)
   if self._settled ~= nil then
@@ -228,7 +228,7 @@ function M:xcatch(on_rejected)
   return promise
 end
 
----@param on_finally                  std.collection.promise.IOnFinally
+---@param on_finally                    std.collection.promise.IOnFinally
 ---@return std.collection.Promise
 function M:xfinally(on_finally)
   if self._settled ~= nil then

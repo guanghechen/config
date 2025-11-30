@@ -21,7 +21,7 @@ M.__index = M
 
 local NSNR_DEFAULT = eve.var.nsnr.view_printer ---@type integer
 
----@param props                        eve.ux.view.IPrinterProps
+---@param props                         eve.ux.view.IPrinterProps
 ---@return eve.ux.view.Printer
 function M.new(props)
   local name = props.name ---@type string

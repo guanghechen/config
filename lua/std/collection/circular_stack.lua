@@ -21,11 +21,11 @@
 local _tmp_array = {} ---@type std.t.T[]
 
 ---@class std.collection.CircularStack : std.collection.ICircularStack
----@field private _elements             std.t.T[]
----@field private _capacity             integer
----@field private _size                 integer
----@field private _start                integer
----@field private _end                  integer
+---@field protected _elements           std.t.T[]
+---@field protected _capacity           integer
+---@field protected _size               integer
+---@field protected _start              integer
+---@field protected _end                integer
 local M = {}
 M.__index = M
 
@@ -62,8 +62,8 @@ function M.from(queue)
   return self
 end
 
----@param arr                          std.t.T[]
----@param capacity                     integer
+---@param arr                           std.t.T[]
+---@param capacity                      integer
 ---@return std.collection.CircularStack
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer

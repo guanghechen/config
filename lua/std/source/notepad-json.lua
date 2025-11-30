@@ -65,44 +65,18 @@ function M.new(config)
   return self
 end
 
----Schedule a debounced flush operation
----@private
----@return nil
-function M:_schedule_flush()
-  if self.flush_scheduler ~= nil then
-    self.flush_scheduler:schedule()
-  end
-end
-
----Load note content on demand
----@private
----@param item                          std.t.INotepadItemState
----@return nil
-function M:_load_note_content(item)
-  if item.content ~= nil then
-    return
-  end
-
-  if type(item.original) == "string" then
-    item.content = item.original
-  else
-    item.content = ""
-    item.original = ""
-  end
-end
-
 ---Mark orders as dirty (called when orders are modified externally)
 ---For JSON source, this triggers a flush since entire file is rewritten anyway
 ---@return nil
 function M:mark_orders_dirty()
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---Mark active uuid as dirty (called when active item changes)
 ---For JSON source, this triggers a flush since entire file is rewritten anyway
 ---@return nil
 function M:mark_active_dirty()
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---@param force                         boolean
@@ -273,7 +247,7 @@ function M:set_activated_uuid(uuid)
 
   if uuid == nil then
     state.active_uuid = nil
-    self:_schedule_flush()
+    self:__schedule_flush__()
     return true
   end
 
@@ -286,7 +260,7 @@ function M:set_activated_uuid(uuid)
   end
 
   state.active_uuid = uuid
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return true
 end
 
@@ -302,7 +276,7 @@ function M:retrieve(uuid, createIfNonexistent)
   end
 
   if item ~= nil then
-    self:_load_note_content(item)
+    self:__load_note_content__(item)
   end
 
   return item
@@ -323,7 +297,7 @@ function M:retrieve_by_name(name, createIfNonexistent)
   if uuid ~= nil then
     local item = state.items[uuid]
     if item ~= nil then
-      self:_load_note_content(item)
+      self:__load_note_content__(item)
     end
     return item
   end
@@ -346,7 +320,7 @@ function M:create(name, content)
   local existing_uuid = state.name_to_uuid[normalized_name]
   if existing_uuid ~= nil then
     local existing_item = state.items[existing_uuid]
-    self:_load_note_content(existing_item)
+    self:__load_note_content__(existing_item)
     return existing_item
   end
 
@@ -365,7 +339,7 @@ function M:create(name, content)
   state.items[uuid] = item
   state.name_to_uuid[normalized_name] = uuid
   state.orders[#state.orders + 1] = uuid
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return item
 end
 
@@ -380,7 +354,7 @@ function M:update(uuid, patch)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local modified = false
 
@@ -410,7 +384,7 @@ function M:update(uuid, patch)
 
   if modified then
     item.updated_at = std.notepad.now_iso_utc()
-    self:_schedule_flush()
+    self:__schedule_flush__()
   end
   return modified
 end
@@ -426,7 +400,7 @@ function M:rename(uuid, new_name)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
 
@@ -449,7 +423,7 @@ function M:rename(uuid, new_name)
   std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
   item.updated_at = std.notepad.now_iso_utc()
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return true
 end
@@ -474,7 +448,7 @@ function M:append_content(uuid, text)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local existing = type(item.content) == "string" and item.content or ""
   local new_content = existing .. text
@@ -485,7 +459,7 @@ function M:append_content(uuid, text)
 
   item.content = new_content
   item.updated_at = std.notepad.now_iso_utc()
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return true
 end
 
@@ -516,7 +490,7 @@ function M:remove(uuid)
     return element ~= uuid
   end)
 
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return true
 end
 
@@ -763,6 +737,32 @@ function M:load_from_json(json_data)
 
   self:flush()
   return true
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param item                          std.t.INotepadItemState
+---@return nil
+function M:__load_note_content__(item)
+  if item.content ~= nil then
+    return
+  end
+
+  if type(item.original) == "string" then
+    item.content = item.original
+  else
+    item.content = ""
+    item.original = ""
+  end
+end
+
+---@protected
+---@return nil
+function M:__schedule_flush__()
+  if self.flush_scheduler ~= nil then
+    self.flush_scheduler:schedule()
+  end
 end
 
 return M

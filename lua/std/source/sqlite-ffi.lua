@@ -75,15 +75,14 @@ do
 end
 
 ---@class std.source.sqlite.IConnection
----@field private _db                      ffi.cdata* sqlite3 handle
----@field private _filepath                string
----@field private _prepared_stmts          table<string, ffi.cdata*> Cached prepared statements
+---@field protected _db                 ffi.cdata* sqlite3 handle
+---@field protected _filepath           string
+---@field protected _prepared_stmts     table<string, ffi.cdata*> Cached prepared statements
 local Connection = {}
 Connection.__index = Connection
 
 ---Open database connection
----@private
----@param filepath                         string
+---@param filepath                      string
 ---@return ffi.cdata* db_handle
 local function open_database(filepath)
   local db_ptr = ffi.new("sqlite3*[1]")
@@ -102,8 +101,8 @@ local function open_database(filepath)
   return db_ptr[0]
 end
 
----@param filepath                         string
----@param options                          {timeout_ms: integer|nil}|nil
+---@param filepath                      string
+---@param options                       {timeout_ms: integer|nil}|nil
 ---@return std.source.sqlite.IConnection
 function Connection.new(filepath, options)
   options = options or {}
@@ -127,7 +126,7 @@ function Connection.new(filepath, options)
 end
 
 ---Execute SQL without results
----@param sql                              string
+---@param sql                           string
 ---@return nil
 function Connection:exec(sql)
   local errmsg_ptr = ffi.new("char*[1]")
@@ -141,14 +140,13 @@ function Connection:exec(sql)
 end
 
 ---@class std.source.sqlite.IStatement
----@field private _stmt                    ffi.cdata* sqlite3_stmt handle
----@field private _conn                    std.source.sqlite.IConnection
+---@field protected _stmt               ffi.cdata* sqlite3_stmt handle
+---@field protected _conn               std.source.sqlite.IConnection
 local Statement = {}
 Statement.__index = Statement
 
 ---Extract single row from current statement position
----@private
----@param stmt                             ffi.cdata* sqlite3_stmt
+---@param stmt                          ffi.cdata* sqlite3_stmt
 ---@return table Row object {column_name = value}
 local function extract_row(stmt)
   local row = {}
@@ -174,7 +172,7 @@ local function extract_row(stmt)
 end
 
 ---Bind values to prepared statement (1-indexed)
----@param ...                              any Values to bind
+---@param ...                           any Values to bind
 ---@return std.source.sqlite.IStatement
 function Statement:bind(...)
   local values = {...}
@@ -248,7 +246,7 @@ function Statement:execute_one()
 end
 
 ---Prepare SQL statement (cached)
----@param sql                              string
+---@param sql                           string
 ---@return std.source.sqlite.IStatement
 function Connection:prepare(sql)
   if self._prepared_stmts[sql] ~= nil then
@@ -293,7 +291,7 @@ function Connection:rollback()
 end
 
 ---Execute function in transaction (auto commit/rollback)
----@param fn                               fun(): nil
+---@param fn                            fun(): nil
 ---@return nil
 function Connection:transaction(fn)
   self:begin()

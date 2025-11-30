@@ -265,24 +265,24 @@ end
 
 ---@class eve.ux.widget.Notepad : std.t.ux.IWidget
 ---@field public name                   string|nil
----@field private title                 string
----@field private bufname               string
----@field private width                 number
----@field private height                number
----@field private max_width             number
----@field private max_height            number
----@field private min_width             number
----@field private min_height            number
----@field private filetype              string
----@field private win_opts              table<string, any>
----@field private _bufnr                integer|nil
----@field private _winnr                integer|nil
----@field private _suspend_sync         boolean
----@field private _buf_autocmds         integer[]
----@field private _nvimbar              eve.ux.nvimbar.Nvimbar|nil
----@field private _subscription_active  std.collection.IUnsubscribable|nil
----@field private _subscription_winbar  std.collection.IUnsubscribable|nil
----@field private _subscription_source  std.collection.IUnsubscribable|nil
+---@field protected title               string
+---@field protected bufname             string
+---@field protected width               number
+---@field protected height              number
+---@field protected max_width           number
+---@field protected max_height          number
+---@field protected min_width           number
+---@field protected min_height          number
+---@field protected filetype            string
+---@field protected win_opts            table<string, any>
+---@field protected _bufnr              integer|nil
+---@field protected _winnr              integer|nil
+---@field protected _suspend_sync       boolean
+---@field protected _buf_autocmds       integer[]
+---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar|nil
+---@field protected _subscription_active std.collection.IUnsubscribable|nil
+---@field protected _subscription_winbar std.collection.IUnsubscribable|nil
+---@field protected _subscription_source std.collection.IUnsubscribable|nil
 local M = {}
 M.__index = M
 
@@ -313,19 +313,21 @@ function M.new(props)
 
   source:load(false)
 
-  self:_setup_subscriptions()
-  self:_setup_nvimbar()
+  self:__setup_subscriptions__()
+  self:__setup_nvimbar__()
 
   return self
 end
 
----@private
+----------------------------------------------------------------------------------------------------
+
+---@protected
 ---@return nil
-function M:_setup_subscriptions()
+function M:__setup_subscriptions__()
   self._subscription_active = eve.state.notepad.o_activated_uuid:subscribe(
     std.Subscriber.new({
       on_next = function(next_uuid)
-        self:_on_active_uuid_changed(next_uuid)
+        self:__on_active_uuid_changed__(next_uuid)
       end,
     }),
     false
@@ -352,9 +354,9 @@ function M:_setup_subscriptions()
   )
 end
 
----@private
+---@protected
 ---@return nil
-function M:_setup_nvimbar()
+function M:__setup_nvimbar__()
   local widget = self
   self._nvimbar = eve.ux.nvimbar.Nvimbar
     .new({
@@ -388,41 +390,41 @@ function M:_setup_nvimbar()
     :place("right", eve.ux.nvimbar.component.notepad.source("f_wl", widget), 100)
 end
 
----@private
+---@protected
 ---@return std.t.INotepadSourceState
-function M:_ensure_state()
+function M:__ensure_state__()
   local source = self:get_source()
   return source:load(false)
 end
 
----@private
+---@protected
 ---@return nil
-function M:_notify_active_changed()
+function M:__notify_active_changed__()
   local source = self:get_source()
   local uuid = source:get_activated_uuid()
   eve.state.notepad.focus_note(uuid)
 end
 
----@private
+---@protected
 ---@return nil
-function M:_mark_dirty()
+function M:__mark_dirty__()
   eve.status.dirtier_notepadline:mark_dirty()
 end
 
----@private
+---@protected
 ---@return nil
-function M:_mark_orders_dirty()
+function M:__mark_orders_dirty__()
   local source = self:get_source()
   source:mark_orders_dirty()
-  self:_mark_dirty()
+  self:__mark_dirty__()
 end
 
----@private
+---@protected
 ---@return nil
-function M:_mark_active_dirty()
+function M:__mark_active_dirty__()
   local source = self:get_source()
   source:mark_active_dirty()
-  self:_mark_dirty()
+  self:__mark_dirty__()
 end
 
 ---@return string
@@ -448,7 +450,7 @@ function M:attach(source_name)
 
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
-    self:_sync_content_from_buf(bufnr, current_source:get_activated_uuid())
+    self:__sync_content_from_buf__(bufnr, current_source:get_activated_uuid())
   end
 
   self:flush()
@@ -460,17 +462,17 @@ function M:attach(source_name)
   eve.state.notepad.focus_note(new_uuid)
 
   if bufnr ~= nil then
-    self:_render_active_item(bufnr)
+    self:__render_active_item__(bufnr)
   end
 
   local winnr = self:get_winnr()
   if winnr ~= nil then
     local current_config = vim.api.nvim_win_get_config(winnr)
-    current_config.title = self:_get_window_title()
+    current_config.title = self:__get_window_title__()
     vim.api.nvim_win_set_config(winnr, current_config)
   end
 
-  self:_mark_dirty()
+  self:__mark_dirty__()
 
   if self._nvimbar ~= nil then
     self._nvimbar:render()
@@ -479,16 +481,16 @@ end
 
 ---@return integer
 function M:size()
-  return #self:_ensure_state().orders
+  return #self:__ensure_state__().orders
 end
 
----@param uuid string|nil
+---@param uuid                          string|nil
 ---@return integer
 function M:indexof(uuid)
   if uuid == nil then
     return -1
   end
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   for index, target in ipairs(state.orders) do
     if target == uuid then
       return index
@@ -497,10 +499,10 @@ function M:indexof(uuid)
   return -1
 end
 
----@param index integer
+---@param index                         integer
 ---@return string|nil, std.t.INotepadItemState|nil
 function M:at(index)
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   local uuid = state.orders[index]
   return uuid, uuid and state.items[uuid] or nil
 end
@@ -522,7 +524,7 @@ function M:current_item()
   return source:retrieve(active_uuid, false)
 end
 
----@param uuid string
+---@param uuid                          string
 ---@return std.t.INotepadItemState|nil
 function M:get(uuid)
   local source = self:get_source()
@@ -531,7 +533,7 @@ end
 
 ---@return fun():std.t.INotepadItemState|nil, integer|nil
 function M:iterator()
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   local index = 0
   return function()
     index = index + 1
@@ -540,7 +542,7 @@ function M:iterator()
   end
 end
 
----@param uuid string|nil
+---@param uuid                          string|nil
 ---@return boolean
 function M:focus_uuid(uuid)
   if uuid == nil then
@@ -559,7 +561,7 @@ function M:focus_uuid(uuid)
   if bufnr ~= nil then
     local old_uuid = source:get_activated_uuid()
     if old_uuid ~= nil then
-      self:_sync_content_from_buf(bufnr, old_uuid)
+      self:__sync_content_from_buf__(bufnr, old_uuid)
     end
   end
 
@@ -570,17 +572,17 @@ function M:focus_uuid(uuid)
   return eve.state.notepad.focus_note(uuid)
 end
 
----@param index integer
+---@param index                         integer
 ---@return boolean
 function M:focus_index(index)
-  local uuid = self:_ensure_state().orders[index]
+  local uuid = self:__ensure_state__().orders[index]
   return uuid ~= nil and self:focus_uuid(uuid) or false
 end
 
----@param step integer
+---@param step                          integer
 ---@return boolean
 function M:focus_step(step)
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   local count = #state.orders
   if count == 0 then
     return false
@@ -592,18 +594,18 @@ function M:focus_step(step)
   return self:focus_index(index_next)
 end
 
----@param name string|nil
+---@param name                          string|nil
 ---@return std.t.INotepadItemState
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
   local source = self:get_source()
   local item = source:create(#(trimmed or "") > 0 and trimmed or nil, nil)
-  self:_mark_dirty()
+  self:__mark_dirty__()
   self:focus_uuid(item.uuid)
   return item
 end
 
----@param name string
+---@param name                          string
 ---@return std.t.INotepadItemState|nil
 function M:find_first_by_name(name)
   if type(name) ~= "string" then
@@ -614,7 +616,7 @@ function M:find_first_by_name(name)
     return nil
   end
 
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   for _, uuid in ipairs(state.orders) do
     local item = state.items[uuid]
     if item ~= nil and type(item.name) == "string" and item.name:lower() == target then
@@ -624,7 +626,7 @@ function M:find_first_by_name(name)
   return nil
 end
 
----@param name string
+---@param name                          string
 ---@return std.t.INotepadItemState
 function M:ensure_named_item(name)
   local trimmed = vim.trim(type(name) == "string" and name or "")
@@ -640,14 +642,14 @@ function M:ensure_named_item(name)
 
   if source:get_activated_uuid() == nil then
     source:set_activated_uuid(item.uuid)
-    self:_notify_active_changed()
+    self:__notify_active_changed__()
   end
 
-  self:_mark_dirty()
+  self:__mark_dirty__()
   return item
 end
 
----@param uuid string|nil
+---@param uuid                          string|nil
 ---@return boolean
 function M:remove(uuid)
   local source = self:get_source()
@@ -657,7 +659,7 @@ function M:remove(uuid)
     return false
   end
 
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   if state.items[uuid] == nil then
     return false
   end
@@ -683,7 +685,7 @@ function M:remove(uuid)
     end
   end
 
-  self:_mark_dirty()
+  self:__mark_dirty__()
   return true
 end
 
@@ -700,7 +702,7 @@ function M:go_backward()
   if bufnr ~= nil then
     local old_uuid = source:get_activated_uuid()
     if old_uuid ~= nil then
-      self:_sync_content_from_buf(bufnr, old_uuid)
+      self:__sync_content_from_buf__(bufnr, old_uuid)
     end
   end
 
@@ -722,7 +724,7 @@ function M:go_forward()
   if bufnr ~= nil then
     local old_uuid = source:get_activated_uuid()
     if old_uuid ~= nil then
-      self:_sync_content_from_buf(bufnr, old_uuid)
+      self:__sync_content_from_buf__(bufnr, old_uuid)
     end
   end
 
@@ -731,8 +733,8 @@ function M:go_forward()
   return eve.state.notepad.focus_note(uuid)
 end
 
----@param uuid string|nil
----@param name string
+---@param uuid                          string|nil
+---@param name                          string
 ---@return boolean
 function M:rename(uuid, name)
   local source = self:get_source()
@@ -741,7 +743,7 @@ function M:rename(uuid, name)
     return false
   end
 
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   local item = state.items[uuid]
   if item == nil then
     return false
@@ -753,14 +755,14 @@ function M:rename(uuid, name)
   end
 
   if source:rename(uuid, name) then
-    self:_mark_dirty()
+    self:__mark_dirty__()
     return true
   end
   return false
 end
 
----@param uuid string|nil
----@param content string
+---@param uuid                          string|nil
+---@param content                       string
 ---@return boolean
 function M:set_content(uuid, content)
   local source = self:get_source()
@@ -785,8 +787,8 @@ function M:set_content(uuid, content)
   })
 end
 
----@param uuid string|nil
----@param text string
+---@param uuid                          string|nil
+---@param text                          string
 ---@return boolean
 function M:append_content(uuid, text)
   if type(text) ~= "string" or #text == 0 then
@@ -808,7 +810,7 @@ function M:append_content(uuid, text)
   if ok and uuid == source:get_activated_uuid() then
     local bufnr = self:get_bufnr()
     if bufnr ~= nil then
-      self:_render_active_item(bufnr)
+      self:__render_active_item__(bufnr)
     end
   end
 
@@ -819,7 +821,7 @@ end
 ---@param step                          integer
 ---@return boolean
 function M:__swap_step__(step)
-  local state = self:_ensure_state()
+  local state = self:__ensure_state__()
   local count = #state.orders
   if count <= 1 then
     return false
@@ -837,18 +839,18 @@ function M:__swap_step__(step)
   end
 
   state.orders[index_current], state.orders[index_next] = state.orders[index_next], state.orders[index_current]
-  self:_mark_orders_dirty()
+  self:__mark_orders_dirty__()
   return true
 end
 
----@param step integer|nil
+---@param step                          integer|nil
 ---@return boolean
 function M:swap_left(step)
   step = step or vim.v.count1 ---@type integer
   return self:__swap_step__(-step)
 end
 
----@param step integer|nil
+---@param step                          integer|nil
 ---@return boolean
 function M:swap_right(step)
   step = step or vim.v.count1 ---@type integer
@@ -861,9 +863,9 @@ function M:flush()
   return source:flush()
 end
 
----@private
+---@protected
 ---@return nil
-function M:_dispose_subscriptions()
+function M:__dispose_subscriptions__()
   if self._subscription_active ~= nil then
     self._subscription_active:unsubscribe()
     self._subscription_active = nil
@@ -878,20 +880,20 @@ function M:_dispose_subscriptions()
   end
 end
 
----@private
+---@protected
 ---@return nil
-function M:_clear_buf_autocmds()
+function M:__clear_buf_autocmds__()
   for _, id in ipairs(self._buf_autocmds) do
     pcall(vim.api.nvim_del_autocmd, id)
   end
   self._buf_autocmds = {}
 end
 
----@private
----@param bufnr                          integer
----@param uuid                           string|nil
+---@protected
+---@param bufnr                         integer
+---@param uuid                          string|nil
 ---@return nil
-function M:_sync_content_from_buf(bufnr, uuid)
+function M:__sync_content_from_buf__(bufnr, uuid)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -903,10 +905,10 @@ function M:_sync_content_from_buf(bufnr, uuid)
   end
 end
 
----@private
----@param bufnr                          integer
+---@protected
+---@param bufnr                         integer
 ---@return nil
-function M:_render_active_item(bufnr)
+function M:__render_active_item__(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -924,30 +926,30 @@ function M:_render_active_item(bufnr)
   self._suspend_sync = false
 end
 
----@private
+---@protected
 ---@return nil
-function M:_on_text_changed()
+function M:__on_text_changed__()
   if self._suspend_sync then
     return
   end
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
     local source = self:get_source()
-    self:_sync_content_from_buf(bufnr, source:get_activated_uuid())
+    self:__sync_content_from_buf__(bufnr, source:get_activated_uuid())
   end
 end
 
----@private
----@param bufnr                          integer
+---@protected
+---@param bufnr                         integer
 ---@return nil
-function M:_attach_autocmds(bufnr)
-  self:_clear_buf_autocmds()
+function M:__attach_autocmds__(bufnr)
+  self:__clear_buf_autocmds__()
 
   for _, event in ipairs(TEXT_CHANGED_EVENTS) do
     local id = vim.api.nvim_create_autocmd(event, {
       buffer = bufnr,
       callback = function()
-        self:_on_text_changed()
+        self:__on_text_changed__()
       end,
     })
     table.insert(self._buf_autocmds, id)
@@ -958,17 +960,17 @@ function M:_attach_autocmds(bufnr)
     callback = function()
       if self._bufnr == bufnr then
         self._bufnr = nil
-        self:_clear_buf_autocmds()
+        self:__clear_buf_autocmds__()
       end
     end,
   })
   table.insert(self._buf_autocmds, wipe_id)
 end
 
----@private
----@param uuid                           string|nil
+---@protected
+---@param uuid                          string|nil
 ---@return nil
-function M:_on_active_uuid_changed(uuid)
+function M:__on_active_uuid_changed__(uuid)
   uuid = uuid ~= nil and #uuid > 0 and uuid or nil
 
   -- The source's activated UUID has already been updated by focus_note()
@@ -978,7 +980,7 @@ function M:_on_active_uuid_changed(uuid)
     -- Check if the buffer is already showing this UUID to avoid unnecessary renders
     local current_uuid = vim.b[bufnr][BUFFER_VAR_NAME]
     if current_uuid ~= uuid then
-      self:_render_active_item(bufnr)
+      self:__render_active_item__(bufnr)
     end
   end
 
@@ -987,14 +989,12 @@ function M:_on_active_uuid_changed(uuid)
   end
 end
 
----@private
 ---@return integer|nil
 function M:get_bufnr()
   local bufnr = self._bufnr
   return bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) and bufnr or nil
 end
 
----@private
 ---@return integer
 function M:ensure_buf()
   local bufnr = self:get_bufnr()
@@ -1019,8 +1019,8 @@ function M:ensure_buf()
     render_manager.set_buf(bufnr, false)
   end
 
-  self:_attach_autocmds(bufnr)
-  self:_render_active_item(bufnr)
+  self:__attach_autocmds__(bufnr)
+  self:__render_active_item__(bufnr)
   eve.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
 
   return bufnr
@@ -1032,7 +1032,6 @@ function M:get_winnr()
   return winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and winnr or nil
 end
 
----@private
 ---@return eve.builtin.box.IDimension
 function M:measure_rect()
   local columns = vim.o.columns
@@ -1054,10 +1053,10 @@ function M:measure_rect()
   })
 end
 
----@private
----@param winhighlight string|nil
+---@protected
+---@param winhighlight                  string|nil
 ---@return string
-function M:_normalize_winhighlight(winhighlight)
+function M:__normalize_winhighlight__(winhighlight)
   if type(winhighlight) ~= "string" or #winhighlight == 0 then
     return NOTEPAD_WIN_HIGHLIGHT
   end
@@ -1070,22 +1069,21 @@ function M:_normalize_winhighlight(winhighlight)
   return winhighlight
 end
 
----@private
+---@protected
 ---@return string
-function M:_get_window_title()
+function M:__get_window_title__()
   local source_name = eve.context.option.notepad_source:snapshot() ---@type string
   local _, config = eve.state.notepad.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end
 
----@private
 ---@return integer
 function M:ensure_win()
   local bufnr = self:ensure_buf()
   local rect = self:measure_rect()
   local winblend = eve.context.theme.get_float_winblend()
 
-  self.win_opts.winhighlight = self:_normalize_winhighlight(self.win_opts.winhighlight)
+  self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 
   local config = {
     relative = "editor",
@@ -1095,7 +1093,7 @@ function M:ensure_win()
     width = rect.width,
     height = rect.height,
     focusable = true,
-    title = self:_get_window_title(),
+    title = self:__get_window_title__(),
     title_pos = "center",
     border = "rounded",
     style = "minimal",
@@ -1144,7 +1142,7 @@ function M:sync_active_content()
   local bufnr = self:get_bufnr()
   if bufnr ~= nil then
     local source = self:get_source()
-    self:_sync_content_from_buf(bufnr, source:get_activated_uuid())
+    self:__sync_content_from_buf__(bufnr, source:get_activated_uuid())
   end
   return bufnr
 end
@@ -1250,8 +1248,8 @@ end
 
 ---@return nil
 function M:dispose()
-  self:_dispose_subscriptions()
-  self:_clear_buf_autocmds()
+  self:__dispose_subscriptions__()
+  self:__clear_buf_autocmds__()
   if self._nvimbar ~= nil then
     self._nvimbar:dispose()
     self._nvimbar = nil

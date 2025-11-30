@@ -47,130 +47,18 @@ function M.new(config)
   return self
 end
 
----Get or create database connection
----@private
----@return std.source.sqlite.IConnection
-function M:_get_conn()
-  if self._conn ~= nil then
-    return self._conn
-  end
-
-  local dirpath = std.path.dirname(self.filepath)
-  vim.fn.mkdir(dirpath, "p")
-
-  self._conn = sqlite_ffi.Connection.new(self.filepath, {
-    timeout_ms = 5000,
-  })
-
-  return self._conn
-end
-
----Initialize database schema
----@private
----@return nil
-function M:_init_schema()
-  local conn = self:_get_conn()
-
-  conn:exec([[
-    CREATE TABLE IF NOT EXISTS notes (
-      uuid TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      content TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      CHECK(created_at GLOB '????-??-??T??:??:??Z'),
-      CHECK(updated_at GLOB '????-??-??T??:??:??Z')
-    );
-  ]])
-
-  conn:exec([[
-    CREATE TABLE IF NOT EXISTS metadata (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
-  ]])
-
-  conn:exec([[
-    CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC);
-  ]])
-
-  local version_row = conn:prepare("SELECT value FROM metadata WHERE key = 'schema_version'"):execute_one()
-  if version_row == nil then
-    conn
-      :prepare("INSERT INTO metadata (key, value) VALUES (?, ?)")
-      :bind("schema_version", tostring(SCHEMA_VERSION))
-      :execute()
-  end
-end
-
----Create default note if database is empty
----@private
----@return nil
-function M:_ensure_default_note()
-  local conn = self:_get_conn()
-  local note_count_row = conn:prepare("SELECT COUNT(*) as count FROM notes"):execute_one()
-  local note_count = note_count_row and note_count_row.count or 0
-
-  if note_count == 0 then
-    local uuid = rstd.fn.uuid()
-    local now = std.notepad.now_iso_utc()
-    local name = std.notepad.normalize_name(nil, self.default_item_name)
-
-    conn:transaction(function()
-      conn
-        :prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
-        :bind(uuid, name, "", now, now)
-        :execute()
-      conn
-        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
-        :bind("note_orders", vim.json.encode({ uuid }))
-        :execute()
-      conn
-        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
-        :bind("activated_item_uuid", uuid)
-        :execute()
-    end)
-  end
-end
-
----Schedule a debounced flush operation
----@private
----@return nil
-function M:_schedule_flush()
-  if self.flush_scheduler ~= nil then
-    self.flush_scheduler:schedule()
-  end
-end
-
----Load note content on demand
----@private
----@param item                          std.t.INotepadItemState
----@return nil
-function M:_load_note_content(item)
-  if item.content ~= nil then
-    return
-  end
-
-  if type(item.original) == "string" then
-    item.content = item.original
-  else
-    item.content = ""
-    item.original = ""
-  end
-end
-
 ---Mark orders as dirty (called when orders are modified externally)
 ---@return nil
 function M:mark_orders_dirty()
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---Mark active uuid as dirty (called when active item changes)
 ---@return nil
 function M:mark_active_dirty()
   self._dirty_active = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---@param force                         boolean
@@ -180,10 +68,10 @@ function M:load(force)
     return self._state
   end
 
-  self:_init_schema()
-  self:_ensure_default_note()
+  self:__init_schema__()
+  self:__ensure_default_note__()
 
-  local conn = self:_get_conn()
+  local conn = self:__get_conn__()
 
   local rows = conn
     :prepare([[
@@ -294,7 +182,7 @@ function M:set_activated_uuid(uuid)
   if uuid == nil then
     state.active_uuid = nil
     self._dirty_active = true
-    self:_schedule_flush()
+    self:__schedule_flush__()
     return true
   end
 
@@ -308,7 +196,7 @@ function M:set_activated_uuid(uuid)
 
   state.active_uuid = uuid
   self._dirty_active = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return true
 end
 
@@ -324,7 +212,7 @@ function M:retrieve(uuid, createIfNonexistent)
   end
 
   if item ~= nil then
-    self:_load_note_content(item)
+    self:__load_note_content__(item)
   end
 
   return item
@@ -345,7 +233,7 @@ function M:retrieve_by_name(name, createIfNonexistent)
   if uuid ~= nil then
     local item = state.items[uuid]
     if item ~= nil then
-      self:_load_note_content(item)
+      self:__load_note_content__(item)
     end
     return item
   end
@@ -368,7 +256,7 @@ function M:create(name, content)
   local existing_uuid = state.name_to_uuid[normalized_name]
   if existing_uuid ~= nil then
     local existing_item = state.items[existing_uuid]
-    self:_load_note_content(existing_item)
+    self:__load_note_content__(existing_item)
     return existing_item
   end
 
@@ -390,7 +278,7 @@ function M:create(name, content)
   state.orders[#state.orders + 1] = uuid
 
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return item
 end
@@ -406,7 +294,7 @@ function M:update(uuid, patch)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local modified = false
 
@@ -436,7 +324,7 @@ function M:update(uuid, patch)
 
   if modified then
     item.updated_at = std.notepad.now_iso_utc()
-    self:_schedule_flush()
+    self:__schedule_flush__()
   end
 
   return modified
@@ -453,7 +341,7 @@ function M:rename(uuid, new_name)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
 
@@ -476,7 +364,7 @@ function M:rename(uuid, new_name)
   std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
   item.updated_at = std.notepad.now_iso_utc()
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return true
 end
@@ -501,7 +389,7 @@ function M:append_content(uuid, text)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local existing = type(item.content) == "string" and item.content or ""
   local new_content = existing .. text
@@ -512,7 +400,7 @@ function M:append_content(uuid, text)
 
   item.content = new_content
   item.updated_at = std.notepad.now_iso_utc()
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return true
 end
@@ -544,7 +432,7 @@ function M:remove(uuid)
   end)
 
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return true
 end
@@ -632,7 +520,7 @@ function M:flush()
     self.flush_scheduler:cancel()
   end
 
-  local conn = self:_get_conn()
+  local conn = self:__get_conn__()
 
   local ok, err = pcall(function()
     conn:transaction(function()
@@ -726,7 +614,7 @@ function M:load_from_json(json_data)
     return false
   end
 
-  local conn = self:_get_conn()
+  local conn = self:__get_conn__()
 
   local ok, err = pcall(function()
     conn:transaction(function()
@@ -780,6 +668,115 @@ function M:load_from_json(json_data)
   self:load(true)
 
   return true
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@return nil
+function M:__ensure_default_note__()
+  local conn = self:__get_conn__()
+  local note_count_row = conn:prepare("SELECT COUNT(*) as count FROM notes"):execute_one()
+  local note_count = note_count_row and note_count_row.count or 0
+
+  if note_count == 0 then
+    local uuid = rstd.fn.uuid()
+    local now = std.notepad.now_iso_utc()
+    local name = std.notepad.normalize_name(nil, self.default_item_name)
+
+    conn:transaction(function()
+      conn
+        :prepare("INSERT INTO notes (uuid, name, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
+        :bind(uuid, name, "", now, now)
+        :execute()
+      conn
+        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        :bind("note_orders", vim.json.encode({ uuid }))
+        :execute()
+      conn
+        :prepare("INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)")
+        :bind("activated_item_uuid", uuid)
+        :execute()
+    end)
+  end
+end
+
+---@protected
+---@return std.source.sqlite.IConnection
+function M:__get_conn__()
+  if self._conn ~= nil then
+    return self._conn
+  end
+
+  local dirpath = std.path.dirname(self.filepath)
+  vim.fn.mkdir(dirpath, "p")
+
+  self._conn = sqlite_ffi.Connection.new(self.filepath, {
+    timeout_ms = 5000,
+  })
+
+  return self._conn
+end
+
+---@protected
+---@return nil
+function M:__init_schema__()
+  local conn = self:__get_conn__()
+
+  conn:exec([[
+    CREATE TABLE IF NOT EXISTS notes (
+      uuid TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      content TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      CHECK(created_at GLOB '????-??-??T??:??:??Z'),
+      CHECK(updated_at GLOB '????-??-??T??:??:??Z')
+    );
+  ]])
+
+  conn:exec([[
+    CREATE TABLE IF NOT EXISTS metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  ]])
+
+  conn:exec([[
+    CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC);
+  ]])
+
+  local version_row = conn:prepare("SELECT value FROM metadata WHERE key = 'schema_version'"):execute_one()
+  if version_row == nil then
+    conn
+      :prepare("INSERT INTO metadata (key, value) VALUES (?, ?)")
+      :bind("schema_version", tostring(SCHEMA_VERSION))
+      :execute()
+  end
+end
+
+---@protected
+---@param item                          std.t.INotepadItemState
+---@return nil
+function M:__load_note_content__(item)
+  if item.content ~= nil then
+    return
+  end
+
+  if type(item.original) == "string" then
+    item.content = item.original
+  else
+    item.content = ""
+    item.original = ""
+  end
+end
+
+---@protected
+---@return nil
+function M:__schedule_flush__()
+  if self.flush_scheduler ~= nil then
+    self.flush_scheduler:schedule()
+  end
 end
 
 return M

@@ -411,8 +411,8 @@ local function fetch_data()
   }
 end
 
----@param composer                       eve.ux.picker.ListComposer
----@param bufnr                          integer
+---@param composer                      eve.ux.picker.ListComposer
+---@param bufnr                         integer
 ---@return eve.ux.picker.preview.IDrawResult
 local function preview_render(composer, bufnr)
   local lnum_current = composer.result.lnum_current:snapshot() ---@type integer

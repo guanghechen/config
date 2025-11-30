@@ -88,7 +88,7 @@ local function render_result(_, bufnr, itemmap, matches)
   return result
 end
 
----@param theme                          string
+---@param theme                         string
 ---@return nil
 local function apply_theme(theme)
   local scheme = eve.context.theme.get_scheme(theme) ---@type std.t.theme.IScheme|nil

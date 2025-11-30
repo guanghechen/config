@@ -34,7 +34,7 @@ function util.timestamp()
 end
 
 ---Cancel an ongoing timer
----@param timer                        uv.uv_timer_t|nil
+---@param timer                         uv.uv_timer_t|nil
 function util.cancel_timer(timer)
   if timer then
     timer:stop()
@@ -66,7 +66,7 @@ function M.new(opts)
 end
 
 ---Reset the context
----@param ts                           integer|nil
+---@param ts                            integer|nil
 function M:reset_context(ts)
   ts = ts or util.timestamp()
 

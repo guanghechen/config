@@ -79,7 +79,7 @@ function M.show(task)
   M._show(states.popupmenu)
 end
 
----@param state                       fml.dressing.ui_attach.popupmenu.IState
+---@param state                         fml.dressing.ui_attach.popupmenu.IState
 ---@return nil
 function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil

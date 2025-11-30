@@ -1,10 +1,10 @@
 --- https://github.com/folke/snacks.nvim/blob/85b8ec210975aa137af4b7bef1fb7b7098be331a/lua/snacks/statuscolumn.lua
 
 ---@class fml.dressing.statuscolumn.IConfig
----@field public left                     fml.dressing.statuscolumn.IComponents
----@field public right                    fml.dressing.statuscolumn.IComponents
----@field public refresh                  integer
----@field public folds                    { open: boolean, git_hl: boolean }
+---@field public left                   fml.dressing.statuscolumn.IComponents
+---@field public right                  fml.dressing.statuscolumn.IComponents
+---@field public refresh                integer
+---@field public folds                  { open: boolean, git_hl: boolean }
 local config = {
   left = { "mark", "sign" }, -- priority of signs on the left (high to low)
   right = { "fold", "git" }, -- priority of signs on the right (high to low)
@@ -15,22 +15,18 @@ local config = {
   },
 }
 
----@private
 ---@alias fml.dressing.statuscolumn.IComponents
 ---| fml.dressing.statuscolumn.SignType[]
 ---| fun(winnr: number, bufnr: number,lnum:number): fml.dressing.statuscolumn.SignType[]
 
----@private
 ---@alias fml.dressing.statuscolumn.IWanted table<fml.dressing.statuscolumn.SignType, boolean>
 
----@private
 ---@alias fml.dressing.statuscolumn.SignType
 ---| "mark"
 ---| "sign"
 ---| "fold"
 ---| "git"
 
----@private
 ---@class fml.dressing.statuscolumn.ISign
 ---@field public type                   fml.dressing.statuscolumn.SignType
 ---@field public text                   string
@@ -38,7 +34,6 @@ local config = {
 ---@field public name                   string|nil
 ---@field public priority               number|nil
 
----@private
 ---@class fml.dressing.statuscolumn.IFoldInfo
 ---@field start                         number Line number where deepest fold starts
 ---@field level                         number Fold level, when zero other fields are N/A
@@ -68,8 +63,8 @@ local function _ffi()
   return C
 end
 
----@param win number
----@param lnum number
+---@param win                           number
+---@param lnum                          number
 ---@return fml.dressing.statuscolumn.IFoldInfo|nil
 local function fold_info(win, lnum)
   pcall(_ffi)

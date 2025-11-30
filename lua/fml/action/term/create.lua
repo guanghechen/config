@@ -1,9 +1,9 @@
 local __module_name__ = "fml.action.term.create" ---@type string
 
 ---@class fml.action.term.create.IProfile
----@field public name                     string
----@field public type                     string
----@field public cmd                      string
+---@field public name                   string
+---@field public type                   string
+---@field public cmd                    string
 
 ---@class fml.action.term.create
 local M = {}
@@ -13,7 +13,7 @@ local profiles = {
   { name = "shell", type = "shell", cmd = vim.o.shell },
 }
 
----@param profile                      fml.action.term.create.IProfile|nil
+---@param profile                       fml.action.term.create.IProfile|nil
 ---@return nil
 local function apply_profile(profile)
   if profile == nil then
@@ -94,10 +94,11 @@ function M.rename()
     return
   end
 
+  ---@type fml.dressing.input.IOptions
   local input_opts = {
     prompt = "Enter new terminal name: ",
     default = termmeta.name,
-  } ---@type fml.dressing.input.IOptions
+  }
 
   local terminal_widget = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
   local winnr = terminal_widget:get_winnr() ---@type integer|nil

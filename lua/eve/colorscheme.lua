@@ -1,13 +1,13 @@
 local __module_name__ = "eve.colorscheme" ---@type string
 
 ---@class IEveColorschemeLoadOptions
----@field public transparency         ?boolean
+---@field public transparency           ?boolean
 
 ---@class eve.colorscheme
 local M = {}
 
----@param theme                        std.e.ThemeFullName
----@param opts                         IEveColorschemeLoadOptions|nil
+---@param theme                         std.e.ThemeFullName
+---@param opts                          IEveColorschemeLoadOptions|nil
 ---@return boolean
 function M.load(theme, opts)
   if type(theme) ~= "string" or #theme == 0 then

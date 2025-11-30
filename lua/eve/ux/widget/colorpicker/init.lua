@@ -8,16 +8,16 @@ local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_
 ---@class eve.ux.widget.colorpicker.IProps : eve.ux.widget.colorpicker.ui.IProps
 
 ---@class eve.ux.widget.colorpicker.ColorPicker : std.t.ux.IWidget
----@field public name                    string
----@field private _ui                    eve.ux.widget.colorpicker.UI
----@field private _color                 eve.ux.widget.colorpicker.Color
----@field private _range                 integer[]|nil
----@field private _source_bufnr          integer|nil
----@field private _history_index         integer
----@field private _saved_color           eve.ux.widget.colorpicker.Color|nil
----@field private _bufnr                 integer|nil
----@field private _winnr                 integer|nil
----@field private _keymaps               std.t.IKeymap[]
+---@field public name                   string
+---@field protected _ui                 eve.ux.widget.colorpicker.UI
+---@field protected _color              eve.ux.widget.colorpicker.Color
+---@field protected _range              integer[]|nil
+---@field protected _source_bufnr       integer|nil
+---@field protected _history_index      integer
+---@field protected _saved_color        eve.ux.widget.colorpicker.Color|nil
+---@field protected _bufnr              integer|nil
+---@field protected _winnr              integer|nil
+---@field protected _keymaps            std.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -150,6 +150,8 @@ function M:__apply_color__(r, g, b, alpha)
     self._color:hide_alpha()
   end
 end
+
+----------------------------------------------------------------------------------------------------
 
 ---@protected
 ---@param source                        eve.ux.widget.colorpicker.Color

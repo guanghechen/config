@@ -63,124 +63,18 @@ function M.new(config)
   return self
 end
 
----Schedule a debounced flush operation
----@private
----@return nil
-function M:_schedule_flush()
-  if self.flush_scheduler ~= nil then
-    self.flush_scheduler:schedule()
-  end
-end
-
----Get note file path
----@private
----@param name                          string
----@return string
-function M:_get_note_path(name)
-  return std.path.join(self._dirpath, name_to_filename(name))
-end
-
----Load note content from file
----@private
----@param item                          std.t.INotepadItemState
----@return nil
-function M:_load_note_content(item)
-  if item.original ~= nil then
-    return
-  end
-
-  local filepath = self:_get_note_path(item.name)
-  local ok, content = pcall(function()
-    return vim.fn.readfile(filepath)
-  end)
-
-  if ok and type(content) == "table" then
-    item.content = table.concat(content, "\n")
-    item.original = item.content
-  else
-    item.content = ""
-    item.original = ""
-  end
-end
-
----Save note content to file
----@private
----@param item                          std.t.INotepadItemState
----@return boolean
-function M:_save_note_content(item)
-  if item.content == nil then
-    return true
-  end
-
-  local filepath = self:_get_note_path(item.name)
-  local ok, err = pcall(function()
-    local lines = vim.split(item.content, "\n", { plain = true })
-    vim.fn.writefile(lines, filepath)
-  end)
-
-  if not ok then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "Save Failed",
-      message = "Failed to save note content",
-      details = { filepath = filepath, error = err },
-    })
-    return false
-  end
-
-  item.original = item.content
-  return true
-end
-
----Delete note file
----@private
----@param name                          string
----@return boolean
-function M:_delete_note_file(name)
-  local filepath = self:_get_note_path(name)
-  local ok = pcall(function()
-    vim.fn.delete(filepath)
-  end)
-  return ok
-end
-
----Rename note file
----@private
----@param old_name                      string
----@param new_name                      string
----@return boolean
-function M:_rename_note_file(old_name, new_name)
-  local old_path = self:_get_note_path(old_name)
-  local new_path = self:_get_note_path(new_name)
-
-  local ok = pcall(function()
-    vim.fn.rename(old_path, new_path)
-  end)
-
-  if not ok then
-    std.reporter.error({
-      from = __module_name__,
-      subject = "Rename Failed",
-      message = "Failed to rename note file",
-      details = { old_path = old_path, new_path = new_path },
-    })
-  end
-
-  return ok
-end
-
 ---Mark orders as dirty (called when orders are modified externally)
 ---@return nil
 function M:mark_orders_dirty()
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---Mark active uuid as dirty (called when active item changes)
 ---@return nil
 function M:mark_active_dirty()
   self._dirty_active = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 end
 
 ---@param force                         boolean
@@ -273,7 +167,7 @@ function M:load(force)
     name_to_uuid[name] = uuid
     orders[1] = uuid
     active_uuid = uuid
-    self:_save_note_content(item)
+    self:__save_note_content__(item)
   elseif active_uuid == nil then
     active_uuid = orders[1]
   end
@@ -329,7 +223,7 @@ function M:set_activated_uuid(uuid)
   if uuid == nil then
     state.active_uuid = nil
     self._dirty_active = true
-    self:_schedule_flush()
+    self:__schedule_flush__()
     return true
   end
 
@@ -343,7 +237,7 @@ function M:set_activated_uuid(uuid)
 
   state.active_uuid = uuid
   self._dirty_active = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
   return true
 end
 
@@ -359,7 +253,7 @@ function M:retrieve(uuid, createIfNonexistent)
   end
 
   if item ~= nil then
-    self:_load_note_content(item)
+    self:__load_note_content__(item)
   end
 
   return item
@@ -380,7 +274,7 @@ function M:retrieve_by_name(name, createIfNonexistent)
   if uuid ~= nil then
     local item = state.items[uuid]
     if item ~= nil then
-      self:_load_note_content(item)
+      self:__load_note_content__(item)
     end
     return item
   end
@@ -402,7 +296,7 @@ function M:create(name, content)
   local existing_uuid = state.name_to_uuid[normalized_name]
   if existing_uuid ~= nil then
     local existing_item = state.items[existing_uuid]
-    self:_load_note_content(existing_item)
+    self:__load_note_content__(existing_item)
     return existing_item
   end
 
@@ -422,9 +316,9 @@ function M:create(name, content)
   state.name_to_uuid[normalized_name] = uuid
   state.orders[#state.orders + 1] = uuid
 
-  self:_save_note_content(item)
+  self:__save_note_content__(item)
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return item
 end
@@ -440,7 +334,7 @@ function M:update(uuid, patch)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local modified = false
   local name_changed = false
@@ -471,13 +365,13 @@ function M:update(uuid, patch)
 
   if modified then
     item.updated_at = std.notepad.now_iso_utc()
-    self:_save_note_content(item)
+    self:__save_note_content__(item)
 
     if name_changed then
-      self:_rename_note_file(old_name, item.name)
+      self:__rename_note_file__(old_name, item.name)
     end
 
-    self:_schedule_flush()
+    self:__schedule_flush__()
   end
 
   return modified
@@ -494,7 +388,7 @@ function M:rename(uuid, new_name)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
 
@@ -517,8 +411,8 @@ function M:rename(uuid, new_name)
   item.name = normalized_name
   item.updated_at = std.notepad.now_iso_utc()
 
-  self:_rename_note_file(old_name, item.name)
-  self:_schedule_flush()
+  self:__rename_note_file__(old_name, item.name)
+  self:__schedule_flush__()
 
   return true
 end
@@ -543,7 +437,7 @@ function M:append_content(uuid, text)
     return false
   end
 
-  self:_load_note_content(item)
+  self:__load_note_content__(item)
 
   local existing = type(item.content) == "string" and item.content or ""
   local new_content = existing .. text
@@ -554,8 +448,8 @@ function M:append_content(uuid, text)
 
   item.content = new_content
   item.updated_at = std.notepad.now_iso_utc()
-  self:_save_note_content(item)
-  self:_schedule_flush()
+  self:__save_note_content__(item)
+  self:__schedule_flush__()
 
   return true
 end
@@ -579,7 +473,7 @@ function M:remove(uuid)
     return false
   end
 
-  self:_delete_note_file(item.name)
+  self:__delete_note_file__(item.name)
   std.notepad.remove_from_name_index(state.name_to_uuid, item.name)
   state.items[uuid] = nil
   std.table.filter_inline(state.orders, function(element)
@@ -587,7 +481,7 @@ function M:remove(uuid)
   end)
 
   self._dirty_orders = true
-  self:_schedule_flush()
+  self:__schedule_flush__()
 
   return true
 end
@@ -719,7 +613,7 @@ function M:dump_to_json()
   for _, uuid in ipairs(state.orders) do
     local item = state.items[uuid]
     if item ~= nil then
-      self:_load_note_content(item)
+      self:__load_note_content__(item)
       items[#items + 1] = {
         uuid = item.uuid,
         name = item.name,
@@ -795,11 +689,113 @@ function M:load_from_json(json_data)
   }
 
   for _, item in pairs(items_map) do
-    self:_save_note_content(item)
+    self:__save_note_content__(item)
   end
 
   self:flush()
   return true
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param name                          string
+---@return boolean
+function M:__delete_note_file__(name)
+  local filepath = self:__get_note_path__(name)
+  local ok = pcall(function()
+    vim.fn.delete(filepath)
+  end)
+  return ok
+end
+
+---@protected
+---@param name                          string
+---@return string
+function M:__get_note_path__(name)
+  return std.path.join(self._dirpath, name_to_filename(name))
+end
+
+---@protected
+---@param item                          std.t.INotepadItemState
+---@return nil
+function M:__load_note_content__(item)
+  if item.original ~= nil then
+    return
+  end
+
+  local filepath = self:__get_note_path__(item.name)
+  local ok, content = pcall(function()
+    return vim.fn.readfile(filepath)
+  end)
+
+  if ok and type(content) == "table" then
+    item.content = table.concat(content, "\n")
+    item.original = item.content
+  else
+    item.content = ""
+    item.original = ""
+  end
+end
+
+---@protected
+---@param old_name                      string
+---@param new_name                      string
+---@return boolean
+function M:__rename_note_file__(old_name, new_name)
+  local old_path = self:__get_note_path__(old_name)
+  local new_path = self:__get_note_path__(new_name)
+
+  local ok = pcall(function()
+    vim.fn.rename(old_path, new_path)
+  end)
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Rename Failed",
+      message = "Failed to rename note file",
+      details = { old_path = old_path, new_path = new_path },
+    })
+  end
+
+  return ok
+end
+
+---@protected
+---@param item                          std.t.INotepadItemState
+---@return boolean
+function M:__save_note_content__(item)
+  if item.content == nil then
+    return true
+  end
+
+  local filepath = self:__get_note_path__(item.name)
+  local ok, err = pcall(function()
+    local lines = vim.split(item.content, "\n", { plain = true })
+    vim.fn.writefile(lines, filepath)
+  end)
+
+  if not ok then
+    std.reporter.error({
+      from = __module_name__,
+      subject = "Save Failed",
+      message = "Failed to save note content",
+      details = { filepath = filepath, error = err },
+    })
+    return false
+  end
+
+  item.original = item.content
+  return true
+end
+
+---@protected
+---@return nil
+function M:__schedule_flush__()
+  if self.flush_scheduler ~= nil then
+    self.flush_scheduler:schedule()
+  end
 end
 
 return M

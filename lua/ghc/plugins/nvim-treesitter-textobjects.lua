@@ -26,8 +26,8 @@ return {
     local select = require("nvim-treesitter-textobjects.select")
     local move = require("nvim-treesitter-textobjects.move")
 
-    ---@param key string
-    ---@param query string|string[]
+    ---@param key                       string
+    ---@param query                     string|string[]
     ---@return string
     local function make_move_desc(key, query)
       local queries = type(query) == "table" and query or { query } ---@type string[]

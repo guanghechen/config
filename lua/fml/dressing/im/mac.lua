@@ -51,7 +51,7 @@ function M.get_input_method()
   })
 end
 
----@param input_method                fml.dressing.im.InputMethod
+---@param input_method                  fml.dressing.im.InputMethod
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then

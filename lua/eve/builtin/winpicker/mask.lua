@@ -34,9 +34,11 @@ function M.new(char)
   return self
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
 ---@return integer
-function M:create_buf_as_needed()
+function M:__create_buf_as_needed__()
   local bufnr_hint = self.bufnr_hint ---@type integer|nil
   if bufnr_hint == nil or not vim.api.nvim_buf_is_valid(bufnr_hint) then
     bufnr_hint = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -55,7 +57,7 @@ end
 ---@param winnr                         integer
 ---@return integer
 function M:show(winnr)
-  local bufnr_hint = self:create_buf_as_needed() ---@type integer
+  local bufnr_hint = self:__create_buf_as_needed__() ---@type integer
 
   local width_target = vim.api.nvim_win_get_width(winnr) ---@type integer
   local height_target = vim.api.nvim_win_get_height(winnr) ---@type integer

@@ -204,8 +204,8 @@ local M = {}
 ---@field public on_exit                ?fun(proc: std.collection.spawn.Proc, err: boolean)
 
 ---@class std.collection.spawn.Multi: std.collection.spawn.IOptions,{}
----@field cmd? nil
----@field on_exit? fun(procs: std.collection.spawn.Proc[], err: boolean)
+---@field public cmd                    nil
+---@field public on_exit                ?fun(procs: std.collection.spawn.Proc[], err: boolean)
 
 ---@param procs                         std.collection.spawn.Proc[]
 ---@param opts                          ?std.collection.spawn.Multi

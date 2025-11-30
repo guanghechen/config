@@ -2,7 +2,7 @@ local __module_name__ = "fml.action.log" ---@type string
 
 local M = {}
 
----@param content                          string
+---@param content                       string
 ---@return string|nil
 local function extract_json_content(content)
   local trimmed = content:match("^%s*(.-)%s*$")
@@ -23,7 +23,7 @@ local function extract_json_content(content)
   return json_content
 end
 
----@param content                          string
+---@param content                       string
 ---@return nil
 local function show_json_preview(content)
   local json = extract_json_content(content)

@@ -134,7 +134,7 @@ for _, code in ipairs(STATUS_CODE_ORDER) do
   end
 end
 
----@param code                           string
+---@param code                          string
 ---@return integer
 local function ensure_status_bit(code)
   if type(code) ~= "string" or #code == 0 then
@@ -184,8 +184,8 @@ local function merge_priority_status(status, other)
   return status
 end
 
----@param bits                           integer|nil
----@param codes                          table<string, boolean>|nil
+---@param bits                          integer|nil
+---@param codes                         table<string, boolean>|nil
 ---@return string
 local function collect_display_from_bits(bits, codes)
   local chars = {} ---@type string[]
@@ -226,7 +226,7 @@ local function collect_display_from_bits(bits, codes)
   return table.concat(chars)
 end
 
----@param entry                          std.git.StatusEntry
+---@param entry                         std.git.StatusEntry
 ---@return string|nil
 local function resolve_entry_summary(entry)
   local summary_bits = bit.bor(entry.staged_bits or 0, entry.unstaged_bits or 0) ---@type integer

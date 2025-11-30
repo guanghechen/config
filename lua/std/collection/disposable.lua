@@ -2,18 +2,18 @@
 ---@field public unsubscribe            fun(self: std.collection.IUnsubscribable):nil
 
 ---@class std.collection.IDisposable
----@field public isdisposed            fun(self: std.collection.IDisposable): boolean Check if the disposable disposed.
+---@field public isdisposed             fun(self: std.collection.IDisposable): boolean Check if the disposable disposed.
 ---@field public dispose                fun(self: std.collection.IDisposable): boolean Dispose the disposable.
 
 ---@class std.collection.disposable.IProps
 ---@field public on_dispose             fun():nil
 
 ---@class std.collection.Disposable : std.collection.IDisposable
----@field private _on_dispose           fun():nil
+---@field protected _on_dispose         fun():nil
 local M = {}
 M.__index = M
 
----@param props std.collection.disposable.IProps
+---@param props                         std.collection.disposable.IProps
 ---@return std.collection.Disposable
 function M.new(props)
   local self = setmetatable({}, M)

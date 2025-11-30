@@ -33,7 +33,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field public mark_node_invisible    fun(): nil
 ---@field public mark_subroot_invisible fun(): nil
 ---@field public open_node              fun(): nil
----@field public collapse_node         fun(): nil
+---@field public collapse_node          fun(): nil
 ---@field public send_to_qflist         fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_recursively fun(): nil
@@ -124,7 +124,7 @@ local __module_name__ = "eve.ux.searcher.composer.filetree" ---@type string
 ---@field protected _search_pending     boolean
 ---@field protected _treeview           eve.ux.searcher.FiletreeView
 ---
----@field protected _last_preview_filepath  string|nil
+---@field protected _last_preview_filepath string|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
@@ -231,8 +231,8 @@ function M.new(props)
     return node, nodestate
   end
 
-  ---@param filepath                     string
-  ---@param locationstate                eve.ux.searcher.view.filetree.ILeafLocationState
+  ---@param filepath                    string
+  ---@param locationstate               eve.ux.searcher.view.filetree.ILeafLocationState
   ---@return std.t.ILocation
   local function build_ai_location(filepath, locationstate)
     local start_lnum = type(locationstate.lnum) == "number" and math.floor(locationstate.lnum) or nil ---@type integer|nil
@@ -275,10 +275,10 @@ function M.new(props)
     }
   end
 
-  ---@param target                       std.t.ILocation[]
-  ---@param node                         std.collection.filetree.INode|nil
-  ---@param nodestate                    eve.ux.searcher.view.filetree.INodeState|nil
-  ---@param include_directory            boolean
+  ---@param target                      std.t.ILocation[]
+  ---@param node                        std.collection.filetree.INode|nil
+  ---@param nodestate                   eve.ux.searcher.view.filetree.INodeState|nil
+  ---@param include_directory           boolean
   local function append_location_payload(target, node, nodestate, include_directory)
     if node == nil then
       return
@@ -1863,7 +1863,7 @@ function M:__collect_selected_lnums__()
 end
 
 ---@param offset_current                integer
----@param leafnodestate                     eve.ux.searcher.view.filetree.IFileNodeState
+---@param leafnodestate                 eve.ux.searcher.view.filetree.IFileNodeState
 ---@return integer[]
 function M:__collect_remain_offsets__(offset_current, leafnodestate)
   local treeview = self._treeview ---@type eve.ux.searcher.FiletreeView

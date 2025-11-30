@@ -9,8 +9,8 @@ local augroup_illuminate = eve.nvim.augroup("eve.builtin.lsp.illuminate") ---@ty
 ---@field public character              integer
 
 ---! Check if cursor is within range
----@param cursor                      eve.builtin.lsp.ISymbolPos
----@param range                       { start: eve.builtin.lsp.ISymbolPos, end: eve.builtin.lsp.ISymbolPos }
+---@param cursor                        eve.builtin.lsp.ISymbolPos
+---@param range                         { start: eve.builtin.lsp.ISymbolPos, end: eve.builtin.lsp.ISymbolPos }
 ---@return boolean
 local function is_within_range(cursor, range)
   local start = range.start ---@type eve.builtin.lsp.ISymbolPos
@@ -23,8 +23,8 @@ end
 local M = {}
 
 ---! Find the symbol path recursively
----@param cursor                      eve.builtin.lsp.ISymbolPos
----@param symbols                     any[]|nil
+---@param cursor                        eve.builtin.lsp.ISymbolPos
+---@param symbols                       any[]|nil
 ---@return any[]|nil
 function M.find_symbol_path(cursor, symbols)
   if symbols == nil then

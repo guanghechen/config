@@ -79,7 +79,7 @@ local __mods = {
 ---@field public search_buffer          eve.context.search_buffer
 ---@field public search_file            eve.context.search_file
 ---@field public select                 eve.context.select
----@field private _storage              eve.context.storage
+---@field protected _storage            eve.context.storage
 local M = setmetatable({
   _storage = {},
 }, {

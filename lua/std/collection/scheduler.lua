@@ -166,6 +166,8 @@ function M:snapshot()
   return self._value:snapshot()
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
 ---@return table
 function M:__details__()

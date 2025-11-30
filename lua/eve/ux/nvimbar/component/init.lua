@@ -34,7 +34,7 @@ local __mods = {
 ---@field public host                   eve.ux.nvimbar.component.host
 ---@field public lint                   eve.ux.nvimbar.component.lint
 ---@field public lsp                    eve.ux.nvimbar.component.lsp
----@field public notepad               eve.ux.nvimbar.component.notepad
+---@field public notepad                eve.ux.nvimbar.component.notepad
 ---@field public nvim                   eve.ux.nvimbar.component.nvim
 ---@field public picker                 eve.ux.nvimbar.component.picker
 ---@field public plugin                 eve.ux.nvimbar.component.plugin

@@ -13,8 +13,8 @@
 ---@class std.debug
 local M = {}
 setmetatable(M, {
-  ---@param title                         string|unknown
-  ---@param message                       unknown|nil
+  ---@param title                       string|unknown
+  ---@param message                     unknown|nil
   ---@return nil
   __call = function(self, title, message)
     self.log(title, message)

@@ -6,9 +6,9 @@ local __module_name__ = "fml.action.lint" ---@type string
 ---@field public start_col              integer
 ---@field public end_col                integer
 
----@param bufnr                          integer
----@param lnum                           integer
----@param col                            integer
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param col                           integer
 ---@return fml.action.lint.IWordContext|nil
 local function resolve_word_context(bufnr, lnum, col)
   local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
@@ -35,8 +35,8 @@ local function resolve_word_context(bufnr, lnum, col)
   return nil
 end
 
----@param source                         string
----@param suggestion                     string
+---@param source                        string
+---@param suggestion                    string
 ---@return string
 local function adapt_casing(source, suggestion)
   if type(suggestion) ~= "string" or #suggestion == 0 then
@@ -74,16 +74,16 @@ function M.word_under_cursor()
   return word_under_cursor()
 end
 
----@param bufnr                          integer
----@param lnum                           integer
----@param col                            integer
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param col                           integer
 ---@return fml.action.lint.IWordContext|nil
 function M.word_context(bufnr, lnum, col)
   return resolve_word_context(bufnr, lnum, col)
 end
 
----@param bufnr                          integer
----@param lnum                           integer
+---@param bufnr                         integer
+---@param lnum                          integer
 ---@return boolean
 function M.has_cspell_diagnostic(bufnr, lnum)
   for _, diagnostic in ipairs(vim.diagnostic.get(bufnr, { lnum = lnum })) do
@@ -94,9 +94,9 @@ function M.has_cspell_diagnostic(bufnr, lnum)
   return false
 end
 
----@param bufnr                          integer
----@param lnum                           integer
----@param context                        fml.action.lint.IWordContext|nil
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param context                       fml.action.lint.IWordContext|nil
 ---@return vim.Diagnostic|nil
 function M.find_cspell_diagnostic(bufnr, lnum, context)
   if context == nil then
@@ -144,8 +144,8 @@ function M.cspell_suggestions_from_diagnostic(diagnostic)
   return std.string.parse_comma_list(chunk)
 end
 
----@param context                        fml.action.lint.IWordContext|nil
----@param suggestion                     string
+---@param context                       fml.action.lint.IWordContext|nil
+---@param suggestion                    string
 ---@return string
 function M.preview_cspell_suggestion(context, suggestion)
   if context == nil then
@@ -154,10 +154,10 @@ function M.preview_cspell_suggestion(context, suggestion)
   return adapt_casing(context.text, suggestion)
 end
 
----@param bufnr                          integer
----@param lnum                           integer
----@param col                            integer
----@param suggestion                     string
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param col                           integer
+---@param suggestion                    string
 ---@return nil
 function M.apply_cspell_suggestion(bufnr, lnum, col, suggestion)
   if type(suggestion) ~= "string" or #suggestion == 0 then

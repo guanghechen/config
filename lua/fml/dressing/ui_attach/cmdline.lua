@@ -2,7 +2,7 @@ local states = require("fml.dressing.ui_attach.state")
 
 local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
 
----@param entries                      table[]|nil
+---@param entries                       table[]|nil
 ---@return string[]
 ---@return std.t.IHighlight[]
 local function parse_block_entries(entries)
@@ -334,7 +334,7 @@ function M._update_cmdline_position(state, winnr)
   }
 end
 
----@param block                        fml.dressing.ui_attach.cmdline_block.IState
+---@param block                         fml.dressing.ui_attach.cmdline_block.IState
 ---@return nil
 function M._render_block(block)
   if #block.lines < 1 then

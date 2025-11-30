@@ -10,10 +10,10 @@ local dict = {}
 
 ---@class rstd.dict.ISearchOptions
 ---@field keyword                       string
----@field language                      string?
----@field match_mode                    'prefix'|'substring'?
----@field include_compounds             boolean?
----@field max_items                     integer?
+---@field language                      string|nil
+---@field match_mode                    'prefix'|'substring'|nil
+---@field include_compounds             boolean|nil
+---@field max_items                     integer|nil
 
 ---@param options                       rstd.dict.ISearchOptions|string
 ---@return rstd.dict.ISearchResult[]

@@ -63,7 +63,7 @@ function M.get_image_as_base64()
   return result
 end
 
----@param filepath                    string
+---@param filepath                      string
 ---@return  boolean
 function M.paste_image_from_clipboard(filepath)
   local cmd = format_command(

@@ -22,19 +22,19 @@ local GIT_STATUS_HIGHLIGHT = {
 local M = {}
 
 ---@class eve.state.git.cache
----@field initialized                 boolean
----@field workspace                   string|nil
----@field last_refresh                integer
----@field status_table                table<string, std.git.StatusEntry>
----@field status_groups               table<string, table<string, boolean>>
----@field file_status                 table<string, string>
----@field file_display                table<string, string>
----@field file_summary                table<string, string|nil>
----@field file_stage                  table<string, "staged"|"unstaged"|"mixed"|nil>
----@field dir_display                 table<string, string>
----@field dir_summary                 table<string, string|nil>
----@field dir_stage                   table<string, "staged"|"unstaged"|"mixed"|nil>
----@field dir_codes                   table<string, table<string, boolean>>
+---@field initialized                   boolean
+---@field workspace                     string|nil
+---@field last_refresh                  integer
+---@field status_table                  table<string, std.git.StatusEntry>
+---@field status_groups                 table<string, table<string, boolean>>
+---@field file_status                   table<string, string>
+---@field file_display                  table<string, string>
+---@field file_summary                  table<string, string|nil>
+---@field file_stage                    table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field dir_display                   table<string, string>
+---@field dir_summary                   table<string, string|nil>
+---@field dir_stage                     table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field dir_codes                     table<string, table<string, boolean>>
 local cache = {
   initialized = false,
   workspace = nil,
@@ -52,10 +52,10 @@ local cache = {
 }
 
 ---@class eve.state.git.watchers
----@field workspace                   string|nil
----@field fs                           fun()[]
----@field interval                    uv.uv_timer_t|nil
----@field autocmd_group               integer|nil
+---@field workspace                     string|nil
+---@field fs                            fun()[]
+---@field interval                      uv.uv_timer_t|nil
+---@field autocmd_group                 integer|nil
 local watchers = {
   workspace = nil,
   fs = {},
@@ -67,11 +67,11 @@ local bootstrap_done = false ---@type boolean
 local refreshing = false ---@type boolean
 local pending_refresh = false ---@type boolean
 
----@param stage_state                 "staged"|"unstaged"|"mixed"|nil
----@param codes                       table<string, boolean>|nil
----@param summary                     string|nil
----@param display                     string|nil
----@param categories                  table<string, boolean>|nil
+---@param stage_state                   "staged"|"unstaged"|"mixed"|nil
+---@param codes                         table<string, boolean>|nil
+---@param summary                       string|nil
+---@param display                       string|nil
+---@param categories                    table<string, boolean>|nil
 ---@return string|nil
 local function resolve_highlight(stage_state, codes, summary, display, categories)
   local resolved = categories ---@type table<string, boolean>|nil
@@ -135,13 +135,13 @@ local function git_status_now()
 end
 
 ---@class eve.state.git.dirinfo
----@field summary                     string|nil
----@field stage                       std.git.StageState
----@field codes                       table<string, boolean>
+---@field summary                       string|nil
+---@field stage                         std.git.StageState
+---@field codes                         table<string, boolean>
 
----@param dir_info                    table<string, eve.state.git.dirinfo>
----@param path                        string
----@return                            eve.state.git.dirinfo
+---@param dir_info                      table<string, eve.state.git.dirinfo>
+---@param path                          string
+---@return                              eve.state.git.dirinfo
 local function dir_info_get(dir_info, path)
   local info = dir_info[path]
   if info == nil then
@@ -151,14 +151,14 @@ local function dir_info_get(dir_info, path)
   return info
 end
 
----@param info                        eve.state.git.dirinfo
+---@param info                          eve.state.git.dirinfo
 ---@return string
 local function dir_info_collect_display(info)
   return std.git.codes_to_display(info.codes)
 end
 
----@param info                        eve.state.git.dirinfo
----@param entry                       std.git.StatusEntry
+---@param info                          eve.state.git.dirinfo
+---@param entry                         std.git.StatusEntry
 local function dir_info_update(info, entry)
   local summary = entry.summary ---@type string|nil
   if summary ~= nil then
@@ -174,10 +174,10 @@ local function dir_info_update(info, entry)
   end
 end
 
----@param filepath                    string
----@param workspace                   string|nil
----@param dir_info                    table<string, eve.state.git.dirinfo>
----@param entry                       std.git.StatusEntry
+---@param filepath                      string
+---@param workspace                     string|nil
+---@param dir_info                      table<string, eve.state.git.dirinfo>
+---@param entry                         std.git.StatusEntry
 local function git_status_propagate_directory(filepath, workspace, dir_info, entry)
   local has_codes = type(entry.codes) == "table" and next(entry.codes) ~= nil ---@type boolean
   if entry.summary == nil and entry.stage == nil and not has_codes then
@@ -220,7 +220,7 @@ local function clear_interval()
   end
 end
 
----@param workspace                   string|nil
+---@param workspace                     string|nil
 local function set_workspace_watchers(workspace)
   if watchers.workspace == workspace then
     return
@@ -337,9 +337,9 @@ refresh_debounced_fs = std.timer.debounce(function()
   refresh_git_status_impl()
 end, FS_WATCH_DEBOUNCE_MS)
 
----@param workspace                   string|nil
----@param status_table                table<string, std.git.StatusEntry>
----@param status_groups               table<string, table<string, boolean>>|nil
+---@param workspace                     string|nil
+---@param status_table                  table<string, std.git.StatusEntry>
+---@param status_groups                 table<string, table<string, boolean>>|nil
 local function apply_status(workspace, status_table, status_groups)
   local normalized_workspace = workspace ~= nil and std.path.normalize(workspace) or nil ---@type string|nil
 
@@ -478,7 +478,7 @@ local function ensure_cache_ready()
   end
 end
 
----@param base                         string|nil
+---@param base                          string|nil
 ---@return string
 ---@return table<string, string>
 function M.status(base)
@@ -512,14 +512,14 @@ function M.status_groups()
   return cache.status_groups
 end
 
----@param status                      string
+---@param status                        string
 ---@return string
 function M.extract_parent_status(status)
   return std.git.extract_parent_status(status)
 end
 
----@param filepath                    string
----@param filetype                    "file"|"directory"|nil
+---@param filepath                      string
+---@param filetype                      "file"|"directory"|nil
 ---@return string|nil
 ---@return string|nil
 function M.resolve_status(filepath, filetype)
@@ -557,10 +557,10 @@ function M.resolve_status(filepath, filetype)
   return display, highlight
 end
 
----@param filepath                    string
----@param filetype                    "file"|"directory"|nil
----@param offset                      integer
----@param highlights                  std.t.IHighlightInline[]
+---@param filepath                      string
+---@param filetype                      "file"|"directory"|nil
+---@param offset                        integer
+---@param highlights                    std.t.IHighlightInline[]
 ---@return string
 ---@return string|nil
 function M.calc_status_info(filepath, filetype, offset, highlights)
@@ -607,7 +607,7 @@ function M.snapshot()
   return cache.file_status
 end
 
----@param force                       boolean|nil
+---@param force                         boolean|nil
 function M.refresh_git_status(force)
   pending_refresh = false
   if force then

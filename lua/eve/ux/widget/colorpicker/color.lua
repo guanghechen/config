@@ -31,9 +31,9 @@ local function get_output_idx(name)
 end
 
 ---@class eve.ux.widget.colorpicker.Color
----@field private _value                 integer[]
----@field private _alpha                 integer|nil
----@field private _show_alpha            boolean
+---@field protected _value              integer[]
+---@field protected _alpha              integer|nil
+---@field protected _show_alpha         boolean
 local M = {}
 M.__index = M
 

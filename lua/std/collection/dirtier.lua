@@ -14,7 +14,7 @@ local M = {}
 M.__index = M
 setmetatable(M, std.Observable)
 
----@param props std.collection.dirtier.IProps
+---@param props                         std.collection.dirtier.IProps
 ---@return std.collection.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean

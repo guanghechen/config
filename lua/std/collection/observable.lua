@@ -21,10 +21,10 @@ local __module_name__ = "std.collection.observable" ---@type string
 local noop_unsubscribable = { unsubscribe = std.fn.noop }
 
 ---@class std.collection.Observable : std.collection.IObservable
----@field private _readonly             boolean
----@field private _value                std.t.T
----@field private _value_last_notified  std.t.T|nil
----@field private _subscribers          std.collection.ISubscribers
+---@field protected _readonly           boolean
+---@field protected _value              std.t.T
+---@field protected _value_last_notified std.t.T|nil
+---@field protected _subscribers        std.collection.ISubscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
@@ -104,7 +104,7 @@ function M:next(value, options)
 
     local silent = not not options.silent ---@type boolean
     if not silent then
-      self:_notify()
+      self:__notify__()
     end
     return true
   end
@@ -133,8 +133,11 @@ function M:subscribe(subscriber, ignoreInitial)
   return self._subscribers:subscribe(subscriber, ignoreInitial)
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@protected
 ---@return nil
-function M:_notify()
+function M:__notify__()
   ---@type std.t.T | nil
   local value_prev = self._value_last_notified
 

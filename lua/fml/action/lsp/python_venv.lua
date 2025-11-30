@@ -9,7 +9,7 @@ local o_flag_regex = std.Observable.from_value(false)
 local o_flag_case_sensitive = std.Observable.from_value(false)
 local o_python_venv_path = eve.context.lsp.python_venv_path
 
----@param folder                               string
+---@param folder                        string
 ---@return                              string|nil
 local function format_search_path(folder)
   local resolved_path = vim.fn.expand(folder) ---@type string

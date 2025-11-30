@@ -22,7 +22,7 @@ function M.defaults()
   }
 end
 
----@param data                        any
+---@param data                          any
 ---@return eve.context.behavior.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type eve.context.behavior.data

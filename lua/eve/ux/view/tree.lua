@@ -195,11 +195,11 @@ end
 ---@field protected _indent_hln         string
 ---@field protected _tree               std.collection.IReadonlyTree
 ---
----@field protected _count_selected       integer
----@field protected _dirty_selected       boolean
----@field protected _tick_invisible       integer
----@field protected _tick_matched         integer
----@field protected _tick_selected        integer
+---@field protected _count_selected     integer
+---@field protected _dirty_selected     boolean
+---@field protected _tick_invisible     integer
+---@field protected _tick_matched       integer
+---@field protected _tick_selected      integer
 ---@field protected _tick_render_listview integer
 ---@field protected _tick_render_treeview integer
 ---

@@ -122,7 +122,7 @@ local __module_name__ = "eve.ux.picker.composer.filetree" ---@type string
 ---@field protected _scheduler_match    std.collection.Scheduler
 ---@field protected _treeview           eve.ux.picker.FiletreeView
 ---
----@field protected _last_preview_filepath  string|nil
+---@field protected _last_preview_filepath string|nil
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]

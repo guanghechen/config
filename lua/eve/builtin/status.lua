@@ -19,7 +19,7 @@
 ---@field public dirtier_statusline     std.collection.IDirtier
 ---@field public dirtier_tabline        std.collection.IDirtier
 ---@field public dirtier_termline       std.collection.IDirtier
----@field public dirtier_notepadline   std.collection.IDirtier
+---@field public dirtier_notepadline    std.collection.IDirtier
 ---@field public dirty_winline_nr       std.collection.IObservable
 ---
 ---@field public lint_schedule_nr       std.collection.IObservable

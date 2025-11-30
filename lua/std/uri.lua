@@ -1,14 +1,14 @@
 ---@class std.uri
 local M = {}
 
----@param value                          unknown
+---@param value                         unknown
 ---@return integer|nil
 local function normalize_index(value)
   local num = tonumber(value)
   return num ~= nil and math.max(math.floor(num), 1) or nil
 end
 
----@param location                        std.t.ILocation
+---@param location                      std.t.ILocation
 ---@return string|nil label
 ---@return string|nil err
 function M.file_location(location)

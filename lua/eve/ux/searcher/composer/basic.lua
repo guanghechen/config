@@ -122,10 +122,10 @@ local __highlights__ = {
 ---@field public search_pattern_history ?std.collection.IHistory
 ---@field public finder_title           string
 ---
----@field public replace_pattern         ?std.collection.IObservable
+---@field public replace_pattern        ?std.collection.IObservable
 ---@field public replace_pattern_history ?std.collection.IHistory
----@field public replacer_title          ?string
----@field public flag_replace            ?std.collection.IObservable
+---@field public replacer_title         ?string
+---@field public flag_replace           ?std.collection.IObservable
 ---
 ---@field public result_number          boolean
 ---@field public result_isselected      ?eve.ux.searcher.result.IIsSelected
@@ -463,7 +463,7 @@ function M:close()
   end)
 end
 
----@param pane                         eve.ux.searcher.composer.basic.PaneEnum|nil
+---@param pane                          eve.ux.searcher.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
@@ -743,8 +743,10 @@ function M:__create_wins__()
   return true, finder_winnr, replacer_winnr, result_winnr, preview_winnr
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
----@param pane                           eve.ux.searcher.composer.basic.PaneEnum|nil
+---@param pane                          eve.ux.searcher.composer.basic.PaneEnum|nil
 ---@return boolean
 function M:__is_pane_valid__(pane)
   if pane == nil then
@@ -1768,7 +1770,7 @@ function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param step                         integer
+---@param step                          integer
 ---@return nil
 function M:__result_move_down__(step)
   self.result:movedown(step)
@@ -1843,8 +1845,8 @@ function M:__toggle_replacer_visibility__(flag_replace)
   end
 end
 
----@param should_show_replacer           boolean
----@param should_show_preview            boolean
+---@param should_show_replacer          boolean
+---@param should_show_preview           boolean
 ---@return string[]
 function M:__get_finder_border__(should_show_replacer, should_show_preview)
   if should_show_replacer and should_show_preview then
@@ -1859,8 +1861,8 @@ function M:__get_finder_border__(should_show_replacer, should_show_preview)
 end
 
 ---@protected
----@param preview_layout               "hidden"|"right"|"bottom"
----@param should_show_replacer         boolean
+---@param preview_layout                "hidden"|"right"|"bottom"
+---@param should_show_replacer          boolean
 ---@return string[]
 ---@return string[]
 ---@return string[]

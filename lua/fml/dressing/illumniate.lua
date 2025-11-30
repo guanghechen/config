@@ -3,8 +3,8 @@
 local __module_name__ = "fml.dressing.illumniate" ---@type string
 
 ---@class fml.dressing.illumniate.ILspWord
----@field public from { [1]: number, [2]: number }
----@field public to   { [1]: number, [2]: number }
+---@field public from                   { [1]: number, [2]: number }
+---@field public to                     { [1]: number, [2]: number }
 
 local nsnr = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
 
@@ -16,7 +16,6 @@ local config = {
   jumplist = true, -- set jump point before jumping
 }
 
----@private
 ---@return fml.dressing.illumniate.ILspWord[]
 ---@return integer|nil
 local function get_reference_words()

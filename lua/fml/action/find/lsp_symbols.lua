@@ -272,7 +272,7 @@ local function get_treesitter_locals(bufnr)
     end
   end
 
-  ---@param node                         TSNode
+  ---@param node                        TSNode
   local function find_scope(node)
     local n = node:parent()
     while n do
@@ -314,7 +314,7 @@ local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type st
 local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type std.collection.IObservable
 local picker ---@type eve.ux.picker.TreeComposer
 
----@param kindname                       string
+---@param kindname                      string
 ---@return string, string
 local function get_icon(kindname)
   local icon = eve.icon.kind[kindname] or "󰅩"

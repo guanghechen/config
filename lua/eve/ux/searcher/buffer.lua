@@ -141,13 +141,13 @@ local function collect_buffer_content(bufnr)
 end
 
 ---@class eve.ux.searcher.buffer.ISearcherProps
----@field public o_flag_fuzzy?           std.collection.IObservable
----@field public o_flag_regex?           std.collection.IObservable
----@field public o_flag_replace?         std.collection.IObservable
----@field public o_flag_case_sensitive?  std.collection.IObservable
----@field public o_search_pattern?       std.collection.IObservable
+---@field public o_flag_fuzzy?          std.collection.IObservable
+---@field public o_flag_regex?          std.collection.IObservable
+---@field public o_flag_replace?        std.collection.IObservable
+---@field public o_flag_case_sensitive? std.collection.IObservable
+---@field public o_search_pattern?      std.collection.IObservable
 ---@field public o_search_pattern_history? std.collection.IHistory
----@field public o_replace_pattern?      std.collection.IObservable
+---@field public o_replace_pattern?     std.collection.IObservable
 ---@field public o_replace_pattern_history? std.collection.IHistory
 
 ---@class eve.ux.searcher.buffer.Searcher
@@ -175,7 +175,7 @@ end
 ---@field protected _preserve_match_index integer|nil
 ---@field protected _last_focused_window "finder"|"replacer"
 ---@field protected _last_search_pattern string|nil
----@field protected _last_bufnr_source integer|nil
+---@field protected _last_bufnr_source  integer|nil
 local M = {}
 M.__index = M
 
@@ -1029,7 +1029,7 @@ end
 ---@protected
 ---@param o_match_index                 std.collection.IObservable
 ---@param o_match_total                 std.collection.IObservable
----@param flags                          eve.ux.searcher.result.IFlagItem[]
+---@param flags                         eve.ux.searcher.result.IFlagItem[]
 ---@return eve.ux.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
   local position = "f_wl" ---@type eve.ux.nvimbar.PositionEnum
@@ -1145,7 +1145,7 @@ function M:__setup_observers__(
 end
 
 ---@protected
----@param flag_replace                   boolean
+---@param flag_replace                  boolean
 ---@return nil
 function M:__toggle_replacer__(flag_replace)
   local winnr_finder = self._winnr_finder ---@type integer|nil
@@ -1441,8 +1441,8 @@ end
 ---@field public text                   string
 
 ---@protected
----@param bufnr                          integer
----@param replacement_matches            eve.ux.searcher.buffer.IReplacementMatch[]
+---@param bufnr                         integer
+---@param replacement_matches           eve.ux.searcher.buffer.IReplacementMatch[]
 ---@return nil
 function M:__render_replacement_matches__(bufnr, replacement_matches)
   local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
@@ -1475,7 +1475,7 @@ function M:__render_replacement_matches__(bufnr, replacement_matches)
 end
 
 ---@protected
----@param lines                          string[]
+---@param lines                         string[]
 ---@return integer|nil
 ---@diagnostic disable-next-line: unused-local
 function M:__get_current_match_offset__(lines)
@@ -1495,8 +1495,8 @@ function M:__get_current_match_offset__(lines)
 end
 
 ---@protected
----@param lines                          string[]
----@param char_offset                    integer
+---@param lines                         string[]
+---@param char_offset                   integer
 ---@return integer
 function M:__calculate_line_number__(lines, char_offset)
   local char_pos = 0
@@ -1511,8 +1511,8 @@ function M:__calculate_line_number__(lines, char_offset)
 end
 
 ---@protected
----@param lines                          string[]
----@param lnum                           integer
+---@param lines                         string[]
+---@param lnum                          integer
 ---@return integer
 function M:__calculate_line_start_pos__(lines, lnum)
   local line_start_pos = 0
@@ -1523,7 +1523,7 @@ function M:__calculate_line_start_pos__(lines, lnum)
 end
 
 ---@protected
----@param bufnr                          integer
+---@param bufnr                         integer
 ---@return nil
 function M:__setup_source_keymaps__(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -1568,7 +1568,7 @@ function M:__setup_source_keymaps__(bufnr)
 end
 
 ---@protected
----@param bufnr                          integer
+---@param bufnr                         integer
 ---@return nil
 function M:__cleanup_source_keymaps__(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then

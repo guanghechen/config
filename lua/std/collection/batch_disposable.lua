@@ -68,7 +68,7 @@ function M:dispose()
   end
 end
 
----@param disposable std.collection.IDisposable
+---@param disposable                    std.collection.IDisposable
 ---@return std.collection.IBatchDisposable
 function M:add_disposable(disposable)
   if disposable:isdisposed() then

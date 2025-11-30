@@ -357,7 +357,7 @@ function M:close()
   end)
 end
 
----@param pane                         eve.ux.picker.composer.basic.PaneEnum|nil
+---@param pane                          eve.ux.picker.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
@@ -589,8 +589,10 @@ function M:__create_wins__()
   return true, finder_winnr, result_winnr, preview_winnr
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@protected
----@param pane                         eve.ux.picker.composer.basic.PaneEnum|nil
+---@param pane                          eve.ux.picker.composer.basic.PaneEnum|nil
 ---@return boolean
 function M:__is_pane_valid__(pane)
   if pane == nil then
@@ -1356,7 +1358,7 @@ function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param step                         integer
+---@param step                          integer
 ---@return nil
 function M:__result_move_down__(step)
   self.result:movedown(step)
@@ -1399,7 +1401,7 @@ function M:__preview_layout__()
 end
 
 ---@protected
----@param preview_layout               "hidden"|"right"|"bottom"
+---@param preview_layout                "hidden"|"right"|"bottom"
 ---@return string[]
 ---@return string[]
 ---@return string[]

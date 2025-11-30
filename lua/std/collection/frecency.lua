@@ -56,7 +56,7 @@ function M.deserialize(props)
   })
 end
 
----@param key                          string
+---@param key                           string
 ---@return nil
 function M:access(key)
   key = self._normalize(key)
@@ -89,7 +89,7 @@ function M:load(data)
   self._items = items
 end
 
----@param key                          string
+---@param key                           string
 ---@return number
 function M:score(key)
   key = self._normalize(key)

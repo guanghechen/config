@@ -5,25 +5,25 @@ local lsp = vim.lsp
 local util = vim.lsp.util
 
 ---@class eve.builtin.lsp_action.ProviderContext
----@field public bufnr                 integer
----@field public win                   integer
----@field public mode                  string
----@field public lnum                  integer
----@field public cursor                { row: integer, col: integer }
----@field public selection             { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }|nil
----@field public opts                  table
----@field public context               table
+---@field public bufnr                  integer
+---@field public win                    integer
+---@field public mode                   string
+---@field public lnum                   integer
+---@field public cursor                 { row: integer, col: integer }
+---@field public selection              { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }|nil
+---@field public opts                   table
+---@field public context                table
 
 ---@class eve.builtin.lsp_action.ProviderAction
----@field public title                 string
----@field public kind                  string|nil
----@field public execute               fun(ctx: eve.builtin.lsp_action.ProviderContext): nil
----@field public source                string|nil
+---@field public title                  string
+---@field public kind                   string|nil
+---@field public execute                fun(ctx: eve.builtin.lsp_action.ProviderContext): nil
+---@field public source                 string|nil
 
 ---@class eve.builtin.lsp_action.ProviderSpec
----@field public id                    string|nil
----@field public source                string|nil
----@field public handler               fun(ctx: eve.builtin.lsp_action.ProviderContext): eve.builtin.lsp_action.ProviderAction|eve.builtin.lsp_action.ProviderAction[]|nil
+---@field public id                     string|nil
+---@field public source                 string|nil
+---@field public handler                fun(ctx: eve.builtin.lsp_action.ProviderContext): eve.builtin.lsp_action.ProviderAction|eve.builtin.lsp_action.ProviderAction[]|nil
 
 ---@type eve.builtin.lsp_action.ProviderSpec[]
 local providers = {}
@@ -33,8 +33,8 @@ local original_code_action = vim.lsp.buf.code_action
 
 local patched = false ---@type boolean
 
----@param bufnr                          integer
----@param mode                           string
+---@param bufnr                         integer
+---@param mode                          string
 ---@return { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
 local function range_from_selection(bufnr, mode)
   local start_pos = vim.fn.getpos("v")
@@ -323,8 +323,8 @@ local function custom_code_action(opts)
   end
 
   local function process_results(results)
-    ---@param action lsp.Command|lsp.CodeAction
-    ---@param client_id integer
+    ---@param action                    lsp.Command|lsp.CodeAction
+    ---@param client_id                 integer
     local function action_filter(action, client_id)
       if opts and opts.context then
         if opts.context.only then

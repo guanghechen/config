@@ -10,12 +10,12 @@ local function vim_navigate_window_next()
   vim.cmd("wincmd w")
 end
 
----@param direction "h"|"j"|"k"|"l"
+---@param direction                     "h"|"j"|"k"|"l"
 local function vim_navigate_window(direction)
   vim.cmd("wincmd " .. direction)
 end
 
----@param direction "p"|"n"|"h"|"j"|"k"|"l"
+---@param direction                     "p"|"n"|"h"|"j"|"k"|"l"
 local function vim_navigate(direction)
   if direction == "p" then
     pcall(vim_navigate_window_prev)

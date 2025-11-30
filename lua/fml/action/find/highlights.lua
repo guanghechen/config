@@ -3,11 +3,11 @@ local name = "fml.action.find.highlights" ---@type string
 local title = "Find Highlights" ---@type string
 
 ---@class fml.action.find.highlights.IItem : eve.ux.picker.composer.list.IItem
----@field public data                        fml.action.find.highlights.IItemData
+---@field public data                   fml.action.find.highlights.IItemData
 
 ---@class fml.action.find.highlights.IItemData
----@field public lnum                        integer
----@field public hlid                        integer
+---@field public lnum                   integer
+---@field public hlid                   integer
 
 local _hlnames = nil ---@type string[]?
 local _hlgroups = nil ---@type table<string, vim.api.keyset.get_hl_info>?

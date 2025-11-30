@@ -80,7 +80,7 @@ local __module_name__ = "eve.ux.picker.view.tree" ---@type string
 local P = eve.ux.view.Tree ---@type eve.ux.view.Tree
 
 ---@class eve.ux.picker.TreeView : eve.ux.view.Tree
----@field protected _last_match_result    eve.ux.picker.view.tree.INodeMatchResult
+---@field protected _last_match_result  eve.ux.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
 setmetatable(M, P)
