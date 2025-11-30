@@ -1,3 +1,9 @@
+---@class std.timer.IDisposableCallable
+---@field cancel                          fun():nil
+---@field dispose                         fun():nil
+---@field stop                            fun():nil
+---@operator call                         fun(...: any): any
+
 ---@class std.timer
 local M = {}
 
@@ -12,17 +18,26 @@ end
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return T
+---@return std.timer.IDisposableCallable
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local wrapped = vim.schedule_wrap(fn)
   local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
+  local disposed = false ---@type boolean
 
   local function call(...)
+    if disposed then
+      return
+    end
+
     args = { ... }
     timer:stop()
     timer:start(delay, 0, function()
+      if disposed then
+        return
+      end
+
       timer:stop()
       local call_args = args
       args = nil
@@ -34,27 +49,69 @@ function M.debounce(fn, delay)
     end)
   end
 
-  return call
+  local function cancel_pending()
+    if disposed then
+      return
+    end
+
+    timer:stop()
+    args = nil
+  end
+
+  local function dispose()
+    if disposed then
+      return
+    end
+
+    cancel_pending()
+    disposed = true
+    if timer ~= nil and not timer:is_closing() then
+      timer:close()
+    end
+    timer = nil
+  end
+
+  ---@type std.timer.IDisposableCallable
+  local callable = {}
+  function callable:cancel()
+    cancel_pending()
+  end
+  callable.stop = callable.cancel
+  function callable:dispose()
+    dispose()
+  end
+
+  return setmetatable(callable, {
+    __call = function(_, ...)
+      return call(...)
+    end,
+  })
 end
 
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return T
+---@return std.timer.IDisposableCallable
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local pending = false ---@type boolean
   local wrapped = vim.schedule_wrap(fn)
   local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
-  return function(...)
-    if pending then
+  local disposed = false ---@type boolean
+
+  local function call(...)
+    if pending or disposed then
       return
     end
 
     pending = true
     args = { ... }
     timer:start(delay, 0, function()
+      if disposed then
+        return
+      end
+
       pending = false
       local call_args = args
       args = nil
@@ -65,6 +122,45 @@ function M.throttle(fn, delay)
       end
     end)
   end
+
+  local function cancel_pending()
+    if disposed then
+      return
+    end
+
+    timer:stop()
+    args = nil
+    pending = false
+  end
+
+  local function dispose()
+    if disposed then
+      return
+    end
+
+    cancel_pending()
+    disposed = true
+    if timer ~= nil and not timer:is_closing() then
+      timer:close()
+    end
+    timer = nil
+  end
+
+  ---@type std.timer.IDisposableCallable
+  local callable = {}
+  function callable:cancel()
+    cancel_pending()
+  end
+  callable.stop = callable.cancel
+  function callable:dispose()
+    dispose()
+  end
+
+  return setmetatable(callable, {
+    __call = function(_, ...)
+      return call(...)
+    end,
+  })
 end
 
 ---@param fn                            function

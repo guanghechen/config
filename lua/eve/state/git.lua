@@ -203,8 +203,8 @@ local function git_status_propagate_directory(filepath, workspace, dir_info, ent
 end
 
 local refresh_git_status_impl ---@type fun()
-local refresh_debounced_general ---@type fun()
-local refresh_debounced_fs ---@type fun()
+local refresh_debounced_general ---@type std.timer.IDisposableCallable
+local refresh_debounced_fs ---@type std.timer.IDisposableCallable
 
 local function clear_fs_watchers()
   for _, unwatch in ipairs(watchers.fs) do
@@ -325,6 +325,12 @@ local function setup_autocmd()
     callback = function()
       clear_fs_watchers()
       clear_interval()
+      if refresh_debounced_general ~= nil then
+        refresh_debounced_general:dispose()
+      end
+      if refresh_debounced_fs ~= nil then
+        refresh_debounced_fs:dispose()
+      end
     end,
   })
 end
