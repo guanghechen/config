@@ -197,6 +197,12 @@ vim.filetype.add({
     ["*.cjs"] = "javascript",
     ["*.mjs"] = "javascript",
 
+    ["%.json5$"] = "jsonc",
+    ["%.jsonc$"] = "jsonc",
+    ["%.vscode/tasks%.json$"] = "jsonc",
+    ["%.vscode/settings%.json$"] = "jsonc",
+    ["%.vscode/launch%.json$"] = "jsonc",
+    ["%.vscode/extensions%.json$"] = "jsonc",
     [".*/waybar/config"] = "jsonc",
     [".*/mako/config"] = "dosini",
     [".*/kitty/.+%.conf"] = "bash",
@@ -205,143 +211,6 @@ vim.filetype.add({
     ["untitled%-(%d+)"] = "text",
     [".*rc"] = "ini",
   },
-})
-
----bigfile
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_bigfile"),
-  pattern = "bigfile",
-  callback = function(evt)
-    local bufnr = evt.buf ---@type integer
-    if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-
-    local filepath = vim.api.nvim_buf_get_name(bufnr)
-    vim.api.nvim_buf_call(bufnr, function()
-      vim.b[bufnr].completion = false
-      vim.b[bufnr].minihipatterns_disable = true
-      vim.schedule(function()
-        if not vim.api.nvim_buf_is_valid(bufnr) then
-          return
-        end
-        local filetype = vim.filetype.match({ buf = bufnr }) or "" ---@type string
-        vim.bo[bufnr].syntax = filetype
-      end)
-    end)
-
-    std.reporter.warn({
-      from = __module_name__,
-      subject = "bigfile",
-      message = ("Big file detected `%s`.\nSome Neovim features have been **disabled**."):format(filepath),
-    })
-  end,
-})
-
----gitcommit
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_gitcommit"),
-  pattern = "gitcommit",
-  callback = function()
-    vim.opt_local.wrap = false
-  end,
-})
-
----html
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_html"),
-  pattern = "html",
-  callback = function()
-    vim.opt_local.wrap = false
-  end,
-})
-
----jsonc
-vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-  group = eve.nvim.augroup("filetype_jsonc"),
-  pattern = {
-    "*.json5",
-    "*.jsonc",
-    "**/.vscode/tasks.json",
-    "**/.vscode/settings.json",
-    "**/.vscode/launch.json",
-    "**/.vscode/extensions.json",
-  },
-  callback = function()
-    vim.bo.filetype = "jsonc"
-  end,
-})
-
----log
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_log"),
-  pattern = { "jsonl", "log", "text" },
-  callback = function(event)
-    local bufnr = event.buf
-    if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-
-    local K = eve.command.definitions
-
-    vim.keymap.set("n", "K", function()
-      eve.command.execute(K.log.preview_json_normal.uuid, nil, true)
-    end, {
-      buffer = bufnr,
-      desc = "log: Preview JSON from current line",
-      noremap = true,
-      silent = true,
-    })
-
-    vim.keymap.set("v", "K", function()
-      eve.command.execute(K.log.preview_json_visual.uuid, nil, true)
-    end, {
-      buffer = bufnr,
-      desc = "log: Preview JSON from selection",
-      noremap = true,
-      silent = true,
-    })
-  end,
-})
-
----markdown
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_markdown"),
-  pattern = "markdown",
-  callback = function()
-    vim.opt_local.backupcopy = "yes" -- disable atomic writing
-    vim.opt_local.formatoptions:append({ "o", "t" })
-    vim.opt_local.linebreak = true
-    vim.opt_local.shiftwidth = 2
-    vim.opt_local.softtabstop = 2 -- set the tab width
-    vim.opt_local.tabstop = 2 -- set the tab width
-    vim.opt_local.textwidth = 0
-    vim.opt_local.wrap = true
-    vim.opt_local.wrapmargin = 0
-    vim.opt_local.comments = {
-      "n:>", -- blockquote
-      "b:-", -- unordered list
-      "b:*", -- unordered list
-      "n:1.", -- numbered list
-    }
-  end,
-})
-
----text
-vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_text"),
-  pattern = "text",
-  callback = function()
-    vim.opt_local.backupcopy = "yes" -- disable atomic writing
-    vim.opt_local.formatoptions:append("t")
-    vim.opt_local.linebreak = true
-    vim.opt_local.shiftwidth = 2
-    vim.opt_local.softtabstop = 2 -- set the tab width
-    vim.opt_local.tabstop = 2 -- set the tab width
-    vim.opt_local.textwidth = 0
-    vim.opt_local.wrap = true
-    vim.opt_local.wrapmargin = 0
-  end,
 })
 
 --filetype functional-------------------------------------------------------------------------------
@@ -359,9 +228,6 @@ vim.api.nvim_create_autocmd("FileType", {
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end
       vim.keymap.set({ "n", "v" }, "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
-      vim.keymap.set({ "i", "n", "v" }, "<C-a>q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
-      vim.keymap.set({ "i", "n", "v" }, "<D-q>", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
-      vim.keymap.set({ "i", "n", "v" }, "<M-q>", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
     end
   end,
 })
