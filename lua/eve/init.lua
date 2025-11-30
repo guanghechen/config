@@ -215,7 +215,7 @@ function M.setup_lsp()
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         if filepath == filepath_cur then
           vim.api.nvim_win_call(winnr_cur, function()
-            vim.cmd("edit " .. filepath)
+            vim.cmd.edit(filepath)
           end)
         end
       end

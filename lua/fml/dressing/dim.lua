@@ -50,17 +50,16 @@ local function get_scope(winnr)
     return nil
   end
 
+  local MiniIndentscope = require("mini.indentscope")
+
   local pos = vim.api.nvim_win_get_cursor(winnr)
   local line, col = pos[1], pos[2] + 1
   local scope ---@type table|nil
 
-  -- local MiniIndentscope = require("mini.indentscope")
   if vim.api.nvim_get_current_buf() == bufnr then
-    ---@diagnostic disable-next-line: undefined-global
     scope = MiniIndentscope.get_scope(line, col)
   else
     vim.api.nvim_buf_call(bufnr, function()
-      ---@diagnostic disable-next-line: undefined-global
       scope = MiniIndentscope.get_scope(line, col)
     end)
   end
