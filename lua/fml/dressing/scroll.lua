@@ -251,8 +251,10 @@ local function check_scroll(winnr)
   timer:start(0, step, function()
     vim.schedule(function()
       if not is_state_valid(state) or state.timer ~= timer then
-        timer:stop()
-        timer:close()
+        if not timer:is_closing() then
+          timer:stop()
+          timer:close()
+        end
         return
       end
 
