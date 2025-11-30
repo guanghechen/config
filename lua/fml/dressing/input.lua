@@ -1,3 +1,5 @@
+---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/input.lua
+
 ---@alias fml.dressing.input.InputTypeEnum
 ---| "text"
 ---| "confirmation"
@@ -8,21 +10,19 @@
 ---@field public width                  ?integer
 ---@field public row                    ?integer
 ---@field public col                    ?integer
----@field public inputtype                   ?"text"|"confirmation"
+---@field public inputtype              ?"text"|"confirmation"
 ---
 ---@field public prompt                 ?string
 ---@field public default                ?string
 ---@field public completion             ?string
 ---@field public startinsert            ?boolean
----@field public highlight              ?fun(): string
 
 ---@class fml.dressing.input.IContext
----@field public opts                   fml.dressing.input.IOptions
----@field public bufnr                  ?integer
----@field public winnr                  ?integer
+---@field public completion             ?string
 
-local ctx = { opts = {} } ---@type fml.dressing.input.IContext
+local contexts = {} ---@type table<integer, fml.dressing.input.IContext>
 local NSNR_DEFAULT_CONFIRMATION = eve.var.nsnr.input_confirmation ---@type integer
+local MAX_WIDTH = 120 ---@type integer
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -43,8 +43,15 @@ local M = {}
 ---@param base                          string
 ---@return integer|string[]
 function M.complete(findstart, base)
-  local completion = ctx.opts.completion
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local ctx = contexts[bufnr] ---@type fml.dressing.input.IContext|nil
+  local completion = ctx and ctx.completion or nil ---@type string|nil
   if findstart == 1 then
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false) ---@type string[]
+      local text = lines[1] or "" ---@type string
+      return #text:gsub("%S+$", "")
+    end
     return 0
   end
   if not completion then
@@ -60,27 +67,28 @@ end
 function M.input(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
   local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr) ---@type vim.api.keyset.win_config
-  local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr))
+  local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr)) ---@type integer
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local inputtype = opts.inputtype or "text" ---@type fml.dressing.input.InputTypeEnum
-  local prompt = inputtype == "confirmation" and "? (y/n)  " or ""
+  local prompt = inputtype == "confirmation" and "? (y/n)  " or "" ---@type string
   local title = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
   local default = opts.default or "" ---@type string
-
-  local override_text = nil ---@type string|nil
+  local min_width = opts.width or 60 ---@type integer
+  local initial_text = inputtype == "confirmation" and prompt or default ---@type string
+  local initial_width = math.min(math.max(min_width, vim.api.nvim_strwidth(initial_text) + 5), MAX_WIDTH) ---@type integer
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = inputtype == "confirmation" and "prompt" or "nofile"
+  vim.bo[bufnr].buftype = "prompt"
   vim.bo[bufnr].completefunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].filetype = eve.filetype.UX_INPUT
   vim.bo[bufnr].swapfile = false
 
   local winblend = eve.context.theme.get_float_winblend() ---@type integer
-  local relative = opts.relative or "cursor"
+  local relative = opts.relative or "cursor" ---@type "editor"|"cursor"|"win"
   local relative_win = opts.win ---@type integer|nil
 
   if relative == "win" then
@@ -92,7 +100,7 @@ function M.input(opts, on_confirm)
     relative_win = nil
   end
 
-  local width = opts.width or 60 ---@type integer
+  local width = initial_width ---@type integer
   local row ---@type integer
   local col ---@type integer
 
@@ -119,6 +127,8 @@ function M.input(opts, on_confirm)
       anchor_win_cfg = cfg
     end
   end
+
+  ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = anchor_win_cfg.zindex and anchor_win_cfg.zindex + 1 or nil,
     relative = relative,
@@ -146,60 +156,47 @@ function M.input(opts, on_confirm)
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
 
-  ---@type fml.dressing.input.IContext
-  ctx = {
-    opts = {
-      prompt = title,
-      default = default,
-      completion = opts.completion,
-      highlight = opts.highlight,
-      inputtype = inputtype,
-    },
-    bufnr = bufnr,
-    winnr = winnr,
-  }
+  contexts[bufnr] = { completion = opts.completion }
 
   local disposed = false ---@type boolean
+
+  ---@param text                        ?string
+  local function dispose(text)
+    if disposed then
+      return
+    end
+    disposed = true
+    contexts[bufnr] = nil
+    vim.cmd("stopinsert")
+
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+    vim.schedule(function()
+      if vim.api.nvim_win_is_valid(parent_winnr) then
+        vim.api.nvim_set_current_win(parent_winnr)
+      end
+      on_confirm(text)
+    end)
+  end
+
   local action = {
     cancel = function()
-      if not disposed then
-        disposed = true
-        ctx.opts = {}
-        vim.cmd("stopinsert")
-
-        vim.api.nvim_win_close(winnr, true)
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(parent_winnr) then
-            vim.api.nvim_set_current_win(parent_winnr)
-          end
-          on_confirm()
-        end)
-      end
+      dispose(nil)
     end,
     confirm = function()
-      if not disposed then
-        disposed = true
-        ctx.opts = {}
-        vim.cmd("stopinsert")
-
-        local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-        local text = override_text or string.sub(lines[1] or "", #prompt + 1) ---@type string
-        vim.api.nvim_win_close(winnr, true)
-        vim.schedule(function()
-          if vim.api.nvim_win_is_valid(parent_winnr) then
-            vim.api.nvim_set_current_win(parent_winnr)
-          end
-          on_confirm(text)
-        end)
+      if disposed then
+        return
       end
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+      local text = string.sub(lines[1] or "", #prompt + 1) ---@type string
+      dispose(text)
     end,
   }
 
-  if #prompt > 0 then
-    vim.fn.prompt_setprompt(bufnr, prompt)
-    vim.fn.prompt_setcallback(bufnr, action.confirm)
-    vim.fn.prompt_setinterrupt(bufnr, action.cancel)
-  end
+  vim.fn.prompt_setprompt(bufnr, prompt)
+  vim.fn.prompt_setcallback(bufnr, action.confirm)
+  vim.fn.prompt_setinterrupt(bufnr, action.cancel)
 
   ---@type std.t.IKeymap[]
   local keymaps = {
@@ -216,24 +213,41 @@ function M.input(opts, on_confirm)
     { modes = { "n", "v" }, key = "O", desc = "input: noop", callback = std.fn.noop },
   }
 
-  -- Add y/n keymaps for confirmation type inputs
+  -- Add y/n/<Esc> keymaps for confirmation type inputs
   if opts.inputtype == "confirmation" then
     table.insert(keymaps, {
-      modes = { "n", "v" },
+      modes = { "i", "n", "v" },
+      key = "<Esc>",
+      desc = "input: cancel (no)",
+      callback = action.cancel,
+    })
+    table.insert(keymaps, {
+      modes = { "i", "n", "v" },
       key = "y",
       desc = "input: confirm (yes)",
       callback = function()
-        override_text = "y"
-        action.confirm()
+        dispose("y")
       end,
     })
     table.insert(keymaps, {
-      modes = { "n", "v" },
+      modes = { "i", "n", "v" },
+      key = "Y",
+      desc = "input: confirm (yes)",
+      callback = function()
+        dispose("y")
+      end,
+    })
+    table.insert(keymaps, {
+      modes = { "i", "n", "v" },
       key = "n",
       desc = "input: cancel (no)",
-      callback = function()
-        action.cancel()
-      end,
+      callback = action.cancel,
+    })
+    table.insert(keymaps, {
+      modes = { "i", "n", "v" },
+      key = "N",
+      desc = "input: cancel (no)",
+      callback = action.cancel,
     })
   end
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
@@ -253,6 +267,30 @@ function M.input(opts, on_confirm)
   if opts.startinsert then
     vim.cmd("startinsert")
   end
+
+  vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+    buffer = bufnr,
+    callback = function()
+      if disposed or not vim.api.nvim_win_is_valid(winnr) then
+        return
+      end
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false) ---@type string[]
+      local text = lines[1] or "" ---@type string
+      local text_width = vim.api.nvim_strwidth(text) + 5 ---@type integer
+      local new_width = math.min(math.max(min_width, text_width), MAX_WIDTH) ---@type integer
+      local current_cfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+      if current_cfg.width ~= new_width then
+        vim.api.nvim_win_set_config(winnr, { width = new_width })
+      end
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufLeave", {
+    buffer = bufnr,
+    callback = function()
+      vim.schedule(action.cancel)
+    end,
+  })
 
   vim.schedule(function()
     if vim.api.nvim_win_is_valid(winnr) then
