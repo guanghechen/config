@@ -1,2 +1,2 @@
-local colorscheme = require("eve.colorscheme")
-colorscheme.load("vsc-dark-modern")
+eve.context.theme.theme:next("vsc-dark-modern")
+eve.context.theme.reload_theme(false, false)

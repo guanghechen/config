@@ -1,2 +1,2 @@
-local colorscheme = require("eve.colorscheme")
-colorscheme.load("tokyonight-moon")
+eve.context.theme.theme:next("tokyonight-moon")
+eve.context.theme.reload_theme(false, false)

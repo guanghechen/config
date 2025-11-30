@@ -1,2 +1,2 @@
-local colorscheme = require("eve.colorscheme")
-colorscheme.load("rosepine-dawn")
+eve.context.theme.theme:next("rosepine-dawn")
+eve.context.theme.reload_theme(false, false)

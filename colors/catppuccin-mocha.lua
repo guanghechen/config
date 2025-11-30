@@ -1,2 +1,2 @@
-local colorscheme = require("eve.colorscheme")
-colorscheme.load("catppuccin-mocha")
+eve.context.theme.theme:next("catppuccin-mocha")
+eve.context.theme.reload_theme(false, false)

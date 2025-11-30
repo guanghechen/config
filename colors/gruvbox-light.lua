@@ -1,2 +1,2 @@
-local colorscheme = require("eve.colorscheme")
-colorscheme.load("gruvbox-light")
+eve.context.theme.theme:next("gruvbox-light")
+eve.context.theme.reload_theme(false, false)
