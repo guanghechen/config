@@ -387,6 +387,14 @@ function M.default_gen_hlgroup_map(context)
     h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.pink, 30) },
     h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 30) },
 
+    ---keymaps
+    f_us_km_desc = { fg = u.fg2 },
+    f_us_km_label = { fg = u.fg4 },
+    f_us_km_lhs = { fg = u.blue, bold = true },
+    f_us_km_mode = { fg = u.orange },
+    f_us_km_rhs = { fg = u.green },
+    f_us_km_source = { fg = u.purple },
+
     ---vim options
     f_us_vo_name = { fg = u.fg1 },
     f_us_vo_type = { fg = u.orange },

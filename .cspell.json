@@ -1,6 +1,12 @@
 {
-  "ignorePaths": ["lsp/yamlls.lua", "lua/resource/dict/", "lua/std/fileicon.lua"],
-  "import": ["~/.config/cspell/cspell.json"],
+  "ignorePaths": [
+    "lsp/yamlls.lua",
+    "lua/resource/dict/",
+    "lua/std/fileicon.lua"
+  ],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -198,6 +204,7 @@
     "airules",
     "alacritty",
     "appname",
+    "aste",
     "augroup",
     "augroups",
     "autocmd",
@@ -910,4 +917,3 @@
     "zindex"
   ]
 }
-

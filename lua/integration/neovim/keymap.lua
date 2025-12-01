@@ -186,6 +186,8 @@ ms({ "n", "x" }, "<leader>fs", K.find.lsp_symbols)
 ms({ "n", "x" }, "<leader>ft", K.find.bufs_term)
 ms({ "n", "x" }, "<leader>fv", K.find.vim_options)
 ms({ "n", "x" }, "<leader>fx", K.find.diagnostics_in_workspace)
+ms({ "n", "x" }, "<leader>f?", K.find.keymaps)
+ms({ "n", "x" }, "<leader>?", K.find.keymaps)
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------

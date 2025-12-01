@@ -372,6 +372,7 @@ M.definitions.find = {
   files_in_workspace = def("Ffindfilesinworkspace", "find: files (workspace)"),
   git_not_committed = def("Ffindgitnotcommitted", "find: git not committed"),
   highlights = def("Ffindhighlights", "find: highlights"),
+  keymaps = def("Ffindkeymaps", "find: keymaps"),
   lsp_symbols = def("Ffindlspsymbols", "find: lsp symbols"),
   notifications = def("Ffindnotifications", "find: notifications"),
   pinned_files = def("Ffindpinnedfiles", "find: pinned files"),

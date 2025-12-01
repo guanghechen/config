@@ -397,6 +397,12 @@ command
       require("fml.action.find.vim_options").find_vim_options()
     end,
   })
+  .implement({
+    uuid = K.find.keymaps.uuid,
+    action = function()
+      require("fml.action.find.keymaps").find_keymaps()
+    end,
+  })
 
 --[git] browse--------------------------------------------------------------------------------------
 command

@@ -7,6 +7,7 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public find_file              eve.context.select.item.data
 ---@field public find_git               eve.context.select.item.data
 ---@field public find_highlight         eve.context.select.item.data
+---@field public find_keymap            eve.context.select.item.data
 ---@field public find_pinned_file       eve.context.select.item.data
 ---@field public find_python_venv       eve.context.select.item.data
 ---@field public find_vim_option        eve.context.select.item.data
@@ -25,6 +26,7 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public find_file              eve.context.select.item.state
 ---@field public find_git               eve.context.select.item.state
 ---@field public find_highlight         eve.context.select.item.state
+---@field public find_keymap            eve.context.select.item.state
 ---@field public find_pinned_file       eve.context.select.item.state
 ---@field public find_python_venv       eve.context.select.item.state
 ---@field public find_vim_option        eve.context.select.item.state
@@ -58,6 +60,7 @@ function M.defaults()
     find_file = select_item.defaults(),
     find_git = select_item.defaults(),
     find_highlight = select_item.defaults(),
+    find_keymap = select_item.defaults(),
     find_pinned_file = select_item.defaults(),
     find_python_venv = select_item.defaults(),
     find_vim_option = select_item.defaults(),
@@ -84,6 +87,7 @@ function M.normalize(data)
     find_file = select_item.normalize(data.find_file),
     find_git = select_item.normalize(data.find_git),
     find_highlight = select_item.normalize(data.find_highlight),
+    find_keymap = select_item.normalize(data.find_keymap),
     find_pinned_file = select_item.normalize(data.find_pinned_file),
     find_python_venv = select_item.normalize(data.find_python_venv),
     find_vim_option = select_item.normalize(data.find_vim_option),
@@ -118,6 +122,7 @@ function M.dump()
     find_file = select_item.dump(M.find_file),
     find_git = select_item.dump(M.find_git),
     find_highlight = select_item.dump(M.find_highlight),
+    find_keymap = select_item.dump(M.find_keymap),
     find_pinned_file = select_item.dump(M.find_pinned_file),
     find_python_venv = select_item.dump(M.find_python_venv),
     find_vim_option = select_item.dump(M.find_vim_option),
@@ -142,6 +147,7 @@ function M.load(raw_data)
   M.find_file = select_item.load(M.find_file, "find_file", data.find_file)
   M.find_git = select_item.load(M.find_git, "find_git", data.find_git)
   M.find_highlight = select_item.load(M.find_highlight, "find_highlight", data.find_highlight)
+  M.find_keymap = select_item.load(M.find_keymap, "find_keymap", data.find_keymap)
   M.find_pinned_file = select_item.load(M.find_pinned_file, "find_pinned_file", data.find_pinned_file)
   M.find_python_venv = select_item.load(M.find_python_venv, "find_python_venv", data.find_python_venv)
   M.find_vim_option = select_item.load(M.find_vim_option, "find_vim_option", data.find_vim_option)
@@ -163,6 +169,7 @@ M.find_explorer = select_item.load(nil, "find_explorer", _defaults.find_explorer
 M.find_file = select_item.load(nil, "find_file", _defaults.find_file)
 M.find_git = select_item.load(nil, "find_git", _defaults.find_git)
 M.find_highlight = select_item.load(nil, "find_highlight", _defaults.find_highlight)
+M.find_keymap = select_item.load(nil, "find_keymap", _defaults.find_keymap)
 M.find_pinned_file = select_item.load(nil, "find_pinned_file", _defaults.find_pinned_file)
 M.find_python_venv = select_item.load(nil, "find_python_venv", _defaults.find_python_venv)
 M.find_vim_option = select_item.load(nil, "find_vim_option", _defaults.find_vim_option)
@@ -182,6 +189,7 @@ M.keys = {
   "find_file",
   "find_git",
   "find_highlight",
+  "find_keymap",
   "find_pinned_file",
   "find_python_venv",
   "find_vim_option",
