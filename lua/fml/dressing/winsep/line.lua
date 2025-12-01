@@ -1,6 +1,6 @@
 ---@class fml.dressing.winsep.line.highlights
 local config = {
-  zindex = 1,
+  zindex = eve.constant.zindex.WINSEP,
   h = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
     winhighlight = table.concat({

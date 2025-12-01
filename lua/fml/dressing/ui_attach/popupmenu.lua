@@ -115,7 +115,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = 2000,
+    zindex = eve.constant.zindex.POPUPMENU,
     relative = "editor",
     width = width,
     height = height,

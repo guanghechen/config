@@ -10,7 +10,6 @@
 ---@field public augroup                integer
 
 ---@class eve.state.maximized.IContext
----@field public MAXIMIZED_ZINDEX       integer
 ---@field public original_float         eve.state.maximized.IOriginalFloatWindow|nil
 ---@field public original_normal        eve.state.maximized.IOriginalNormalWindow|nil
 
@@ -24,7 +23,6 @@
 
 ---@type eve.state.maximized.IContext
 local context = {
-  MAXIMIZED_ZINDEX = 2000,
   original_float = nil,
   original_normal = nil,
 }
@@ -75,7 +73,7 @@ function M.compute_float_maximized_wincfg(wincfg)
   maximize_cfg.relative = "editor"
   maximize_cfg.anchor = "NW"
   maximize_cfg.col = 0
-  maximize_cfg.zindex = context.MAXIMIZED_ZINDEX
+  maximize_cfg.zindex = (wincfg.zindex or 100) + 1
   maximize_cfg.border = "rounded"
 
   local editor_width = vim.o.columns ---@type integer

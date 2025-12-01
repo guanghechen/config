@@ -51,7 +51,7 @@ function M.maximize(winnr)
     width = vim.o.columns,
     height = main.height,
     style = "minimal",
-    zindex = eve.state.maximized.context.MAXIMIZED_ZINDEX,
+    zindex = eve.constant.zindex.MAXIMIZE_NORMAL,
   })
 
   local wo = vim.wo[float_winnr]

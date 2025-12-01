@@ -68,7 +68,7 @@ function M:show(winnr)
 
   ---@type vim.api.keyset.win_config
   local wincfg_hint = {
-    zindex = 1000,
+    zindex = eve.constant.zindex.WINPICKER,
     relative = "win",
     win = winnr,
     row = row,

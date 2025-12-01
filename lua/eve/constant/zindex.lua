@@ -1,0 +1,15 @@
+---@class eve.constant.zindex
+local M = {
+  WINSEP = 1,
+  TREESITTER_CONTEXT = 30,
+  BOARD = 100,
+  MESSAGES = 100,
+  WINPICKER = 1000,
+  CMDLINE = 1000,
+  CMDLINE_BLOCK = 1200,
+  POPUPMENU = 2000,
+  MAXIMIZE_NORMAL = 3000,
+  NOTIFIER = 99999,
+}
+
+return M

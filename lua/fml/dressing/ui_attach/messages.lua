@@ -92,7 +92,7 @@ function M.history_show(task)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = 100,
+    zindex = eve.constant.zindex.MESSAGES,
     relative = "editor",
     width = win_width,
     height = win_height,
