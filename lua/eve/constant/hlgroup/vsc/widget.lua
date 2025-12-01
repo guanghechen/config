@@ -386,6 +386,11 @@ function M.gen_hlgroup_map(context)
     f_winsep_border = {},
     f_winsep_normal = { link = "ms_none" },
     f_winsep_title = {},
+
+    ---maximize
+    f_maximize_float_normal = { fg = c.editor_foreground, bg = c.editor_background },
+    f_maximize_float_border = { fg = c.widget_border, bg = c.editor_background },
+    f_maximize_normal = { fg = c.editor_foreground, bg = c.editor_background },
   }
 end
 

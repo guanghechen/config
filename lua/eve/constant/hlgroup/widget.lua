@@ -397,6 +397,11 @@ function M.default_gen_hlgroup_map(context)
     f_winsep_border = {},
     f_winsep_normal = { link = "ms_none" },
     f_winsep_title = {},
+
+    ---maximize
+    f_maximize_float_normal = { fg = u.fg1, bg = u.bg0 },
+    f_maximize_float_border = { fg = u.bg4, bg = u.bg0 },
+    f_maximize_normal = { fg = u.fg1, bg = u.bg0 },
   }
 end
 
