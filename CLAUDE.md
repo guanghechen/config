@@ -88,8 +88,8 @@ Each integration includes environment-specific:
 ### Type Annotation Formatting
 - Type annotations must start at column 41 (counted from line start, not first non-space character):
   ```lua
-  ---@param name                          string
-  ---@param callback                      fun(result: boolean): nil
+  ---@param name                        string
+  ---@param callback                    fun(result: boolean): nil
   ---@return nil
   ```
 - For multi-line target objects, place `---@type` annotation **above** the target, not after:
@@ -105,12 +105,12 @@ Each integration includes environment-specific:
     key = "value",
   })
   ```
-- Class field annotations follow the same column 41 alignment:
+- Class field annotations follow the same column 41 alignment (counted from line start, not first non-space character)::
   ```lua
   ---@class foo.bar.MyClass
-  ---@field public name                   string
-  ---@field public callback               fun(): nil
-  ---@field protected _internal           integer
+  ---@field public name                 string
+  ---@field public callback             fun(): nil
+  ---@field protected _internal         integer
   ```
 
 ### Class Field/Method Visibility
