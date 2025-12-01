@@ -48,8 +48,11 @@ mvs({ "n" }, "<leader>ss", "workbench.action.findInFiles")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[w]in--------------------------------------------------------------------------------------------
+mvs({ "n", "v" }, "<leader>wd", "workbench.action.closeActiveEditor")
 mvs({ "n", "v" }, "<leader>wh", "workbench.action.splitEditorLeft")
 mvs({ "n", "v" }, "<leader>wj", "workbench.action.splitEditorDown")
 mvs({ "n", "v" }, "<leader>wk", "workbench.action.splitEditorUp")
 mvs({ "n", "v" }, "<leader>wl", "workbench.action.splitEditorRight")
+mvs({ "n", "v" }, "<leader>wo", "workbench.action.closeEditorsInOtherGroups")
+mvs({ "n", "v" }, "<leader>ww", "workbench.action.focusNextGroup")
 --------------------------------------------------------------------------------------------#[w]in--
