@@ -17,6 +17,50 @@ local DISABLED_BUFTYPES = {
   help = true,
 }
 
+---@type table<string, boolean>
+local DISABLED_FILETYPES = {
+  [eve.filetype.BIGFILE] = true,
+  [eve.filetype.DAP_FLOAT] = true,
+  [eve.filetype.DAP_REPL] = true,
+  [eve.filetype.DAP_UI_BREAKPOINTS] = true,
+  [eve.filetype.DAP_UI_CONSOLE] = true,
+  [eve.filetype.DAP_UI_HOVER] = true,
+  [eve.filetype.DAP_UI_SCOPES] = true,
+  [eve.filetype.DAP_UI_STACKS] = true,
+  [eve.filetype.DAP_UI_WATCHES] = true,
+  [eve.filetype.DIFFVIEW_FILES] = true,
+  [eve.filetype.DIFFVIEW_FILE_HISTORY] = true,
+  [eve.filetype.FLASH_PROMPT] = true,
+  [eve.filetype.GITCOMMIT] = true,
+  [eve.filetype.IMAGE_VIEWER] = true,
+  [eve.filetype.LAZY] = true,
+  [eve.filetype.MASON] = true,
+  [eve.filetype.NEOTREE] = true,
+  [eve.filetype.NEOTREE_POPUP] = true,
+  [eve.filetype.NOTIFY] = true,
+  [eve.filetype.LSPINFO] = true,
+  [eve.filetype.PLENARY_TEST_POPUP] = true,
+  [eve.filetype.QUICKFIX] = true,
+  [eve.filetype.SELECT] = true,
+  [eve.filetype.SIDEKICK_TERMINAL] = true,
+  [eve.filetype.STARTUPTIME] = true,
+  [eve.filetype.TERM] = true,
+  [eve.filetype.TERM_MASK] = true,
+  [eve.filetype.TEMP_VIEWER] = true,
+  [eve.filetype.UX_CMDLINE] = true,
+  [eve.filetype.UX_INPUT] = true,
+  [eve.filetype.UX_MESSAGE_HISTORY] = true,
+  [eve.filetype.UX_PICKER_FINDER] = true,
+  [eve.filetype.UX_PICKER_PREVIEW] = true,
+  [eve.filetype.UX_PICKER_RESULT] = false,
+  [eve.filetype.UX_POPUPMENU] = true,
+  [eve.filetype.UX_SEARCHER_FINDER] = true,
+  [eve.filetype.UX_SEARCHER_PREVIEW] = true,
+  [eve.filetype.UX_SEARCHER_RESULT] = false,
+  [eve.filetype.WINPICKER_MASK] = true,
+  [eve.filetype.WINSEP] = true,
+}
+
 ---@param bufnr                         integer
 ---@param topline                       integer
 ---@param botline                       integer
@@ -86,6 +130,11 @@ local function refresh()
     return
   end
 
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if DISABLED_FILETYPES[filetype] then
+    return
+  end
+
   local info = vim.fn.getwininfo(winnr)[1]
   if info == nil then
     return
@@ -99,7 +148,6 @@ local function refresh()
   local offset = math.max(0, topline - extend) + 1 ---@type integer
   local endline = botline + extend ---@type integer
 
-  local filetype = vim.bo[bufnr].filetype
   if filetype == "markdown" then
     render_unicode(bufnr, offset, endline)
   else
