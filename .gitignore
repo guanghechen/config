@@ -15,6 +15,3 @@ __tmp__.lua
 lua/*.dll
 lua/*.so
 
-profile.log
-profile.svg
-

@@ -156,21 +156,6 @@ command
     end,
   })
 
---[profile] ----------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.profile.start.uuid,
-    action = function()
-      require("ghc.action.profile").start()
-    end,
-  })
-  .implement({
-    uuid = K.profile.stop.uuid,
-    action = function()
-      require("ghc.action.profile").stop()
-    end,
-  })
-
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,

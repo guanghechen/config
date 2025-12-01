@@ -472,12 +472,6 @@ M.definitions.notepad = {
   go_forward = def("Fnotepadgoforward", "notepad: go forward in history"),
 }
 
----@class eve.builtin.command.definitions.profile
-M.definitions.profile = {
-  start = def("Fprofilestart", "profile: start"),
-  stop = def("Fprofilestop", "profile: stop"),
-}
-
 ---@class eve.builtin.command.definitions.refresh
 M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),

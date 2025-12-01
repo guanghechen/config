@@ -1,12 +1,6 @@
 {
-  "ignorePaths": [
-    "lsp/yamlls.lua",
-    "lua/resource/dict/",
-    "lua/std/fileicon.lua"
-  ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "ignorePaths": ["lsp/yamlls.lua", "lua/resource/dict/", "lua/std/fileicon.lua"],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -127,8 +121,6 @@
     "Fnotepadswapright",
     "Fnotepadtoggle",
     "Fopen",
-    "Fprofilestart",
-    "Fprofilestop",
     "Frefreshall",
     "Freplacefiles",
     "Freplacefilesinbuffer",
@@ -918,3 +910,4 @@
     "zindex"
   ]
 }
+
