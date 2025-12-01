@@ -41,7 +41,7 @@ return {
         { "<leader>i", group = "debug/inspect", icon = { icon = eve.icon.ui.Indicator, color = "purple" } },
         { "<leader>q", group = "quit/session", icon = { icon = eve.icon.ui.SignOut, color = "red" } },
         { "<leader>s", group = "search/replace", icon = { icon = eve.icon.symbols.flag_replace, color = "purple" } },
-        { "<leader>t", group = "tab/terminal", icon = { icon = eve.icon.ui.Terminal, color = "yellow" } },
+        { "<leader>t", group = "tab/toggle", icon = { icon = eve.icon.ui.Terminal, color = "yellow" } },
         { "<leader>u", group = "ui", icon = { icon = eve.icon.ui.Gear, color = "orange" } },
         {
           "<leader>w",
