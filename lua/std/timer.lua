@@ -1,8 +1,8 @@
 ---@class std.timer.IDisposableCallable
----@field cancel                          fun():nil
----@field dispose                         fun():nil
----@field stop                            fun():nil
----@operator call                         fun(...: any): any
+---@field cancel                          fun(self: std.timer.IDisposableCallable):nil
+---@field dispose                         fun(self: std.timer.IDisposableCallable):nil
+---@field stop                            fun(self: std.timer.IDisposableCallable):nil
+---@operator call:any
 
 ---@class std.timer
 local M = {}
@@ -68,18 +68,14 @@ function M.debounce(fn, delay)
     if timer ~= nil and not timer:is_closing() then
       timer:close()
     end
-    timer = nil
   end
 
   ---@type std.timer.IDisposableCallable
-  local callable = {}
-  function callable:cancel()
-    cancel_pending()
-  end
-  callable.stop = callable.cancel
-  function callable:dispose()
-    dispose()
-  end
+  local callable = {
+    cancel = cancel_pending,
+    stop = cancel_pending,
+    dispose = dispose,
+  }
 
   return setmetatable(callable, {
     __call = function(_, ...)
@@ -143,18 +139,14 @@ function M.throttle(fn, delay)
     if timer ~= nil and not timer:is_closing() then
       timer:close()
     end
-    timer = nil
   end
 
   ---@type std.timer.IDisposableCallable
-  local callable = {}
-  function callable:cancel()
-    cancel_pending()
-  end
-  callable.stop = callable.cancel
-  function callable:dispose()
-    dispose()
-  end
+  local callable = {
+    cancel = cancel_pending,
+    stop = cancel_pending,
+    dispose = dispose,
+  }
 
   return setmetatable(callable, {
     __call = function(_, ...)

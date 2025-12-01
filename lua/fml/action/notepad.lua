@@ -407,7 +407,7 @@ function M.insert_splitline()
   end
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    widget:_render_active_item(bufnr)
+    widget:__render_active_item__(bufnr)
     local winnr = widget:get_winnr() ---@type integer|nil
     if winnr ~= nil then
       local target_row = math.min(#new_lines, insert_index + 3) ---@type integer

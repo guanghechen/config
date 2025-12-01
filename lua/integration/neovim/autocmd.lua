@@ -1,5 +1,3 @@
-local __module_name__ = "integration.neovim.autocmd" ---@type string
-
 --lsp_setup---------------------------------------------------------------------------------------
 
 ---@type table<string, string[]>
@@ -74,8 +72,11 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
     end
-    local file = vim.uv.fs_realpath(event.match) or event.match
-    vim.fn.mkdir(vim.fn.fnamemodify(file, ":p:h"), "p")
+
+    local sep = package.config:sub(1, 1) ---@type string
+    local filepath = event.match ---@type string
+    local dirpath = rstd.path.dirname(filepath, false, sep) ---@type string
+    rstd.path.mkdirs(dirpath)
   end,
 })
 
