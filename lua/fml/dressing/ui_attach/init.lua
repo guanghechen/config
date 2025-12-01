@@ -15,7 +15,9 @@ local processing = false ---@type boolean
 
 ---@type table<string, boolean|nil>
 local IGNOREABLE_EVENTS = {
+  grid_destroy = true,
   win_hide = true,
+  win_show = true,
 }
 
 ---@type table<string, boolean|nil>
