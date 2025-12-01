@@ -399,11 +399,6 @@ M.definitions.inspect = {
   inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }
 
----@class eve.builtin.command.definitions.lint
-M.definitions.lint = {
-  spellcheck_register = def("Flintspellcheckregisterss", "lint: spellcheck register"),
-}
-
 ---@class eve.builtin.command.definitions.log
 M.definitions.log = {
   preview_json_normal = def("Fjsonviewnormal", "json: preview current line"),

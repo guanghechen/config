@@ -464,14 +464,6 @@ command
     end,
   })
 
---[lint] ------------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.lint.spellcheck_register.uuid,
-  action = function()
-    require("fml.action.lint").spellcheck_register()
-  end,
-})
-
 --[log] ------------------------------------------------------------------------------------
 command
   .implement({

@@ -1,8 +1,6 @@
 local ms = eve.nvim.make_shortcut
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
-vim.cmd.menu(("PopUp.%s :%s<cr>"):format("Add\\ word\\ to\\ cspell", K.lint.spellcheck_register.uuid)) --action is like map-rhs
-
 --#[c]ommand----------------------------------------------------------------------------------------
 ms({ "n", "x" }, "<leader>:", K.code.run_as_neovim_command)
 ----------------------------------------------------------------------------------------#[c]ommand--
@@ -202,10 +200,6 @@ ms({ "n", "x" }, "<leader>gf", K.git.history_file)
 ms({ "n", "x" }, "<leader>gG", K.git.history)
 ms({ "n", "x" }, "<leader>gg", K.git.diffview)
 --------------------------------------------------------------------------------------------#[g]it--
-
---#[]lint-------------------------------------------------------------------------------------------
-ms({ "n", "x" }, "<leader>sa", K.lint.spellcheck_register)
--------------------------------------------------------------------------------------------#[]lint--
 
 --#[q]uit-------------------------------------------------------------------------------------------
 ms({ "n", "x" }, "<leader>qL", K.session.restore_autosaved)
