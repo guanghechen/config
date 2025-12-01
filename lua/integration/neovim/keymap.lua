@@ -19,7 +19,7 @@ ms({ "n", "v" }, "<leader>1", K.explorer.fs_cwd)
 ms({ "n", "v" }, "<leader>2", K.search.in_cwd)
 ms({ "n", "v" }, "<leader>3", K.find.git_not_committed)
 ms({ "n", "v" }, "<leader>4", K.explorer.git_cwd)
-ms({ "n", "v" }, "z<cr>", K.toggle.maximize)
+ms({ "n", "v" }, "z;", K.toggle.maximize)
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------

@@ -55,5 +55,11 @@ mk({ "t" }, "<Tab>", function()
   return vim.api.nvim_replace_termcodes("<Tab>", true, false, true)
 end, "terminal: insert tab", true)
 
+---! z-prefixed scrolling
+mk({ "n", "v" }, "zh", "zs", "scroll: line to left")
+mk({ "n", "v" }, "zl", "ze", "scroll: line to right")
+mk({ "n", "v" }, "zj", "zb", "scroll: line to bottom")
+mk({ "n", "v" }, "zk", "zt", "scroll: line to top")
+
 ---! quit
 mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
