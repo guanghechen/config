@@ -628,7 +628,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps_finder = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Tab>",
       desc = "toggle: execute action",
       callback = function()
@@ -639,7 +639,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps_result = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Tab>",
       aliases = { "l", "h", "<Left>", "<Right>" },
       desc = "toggle: execute action",

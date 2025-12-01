@@ -916,7 +916,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-k>",
       desc = "search_buffer: goto previous match",
       callback = function()
@@ -924,7 +924,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-j>",
       desc = "search_buffer: goto next match",
       callback = function()
@@ -932,7 +932,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<CR>",
       desc = "search_buffer: goto next match",
       callback = function()
@@ -940,20 +940,20 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>`",
       aliases = { "<D-`>", "<M-`>" },
       desc = "search_buffer: toggle between searcher and source window",
       callback = actions.toggle_source_with_searcher,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<leader>`",
       desc = "search_buffer: toggle between searcher and source window",
       callback = actions.toggle_source_with_searcher,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "search_buffer: focus replacer window (move down)",
@@ -964,7 +964,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "search_buffer: focus finder window (move up)",
@@ -975,7 +975,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<leader><CR>",
       desc = "search_buffer: replace current match",
       callback = function()
@@ -983,7 +983,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
       desc = "search_buffer: replace all matches",
@@ -992,7 +992,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },
       desc = "search_buffer: trigger re-search",
@@ -1004,7 +1004,7 @@ function M:__create_keymaps__(raw_flags, window_type)
 
   if self.o_flag_replace ~= nil then
     base_keymaps[#base_keymaps + 1] = {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "tr",
       desc = string.format("%s: toggle replace mode", self.title),
       callback = function()
@@ -1016,7 +1016,7 @@ function M:__create_keymaps__(raw_flags, window_type)
 
   for index, flag in ipairs(raw_flags) do
     base_keymaps[#base_keymaps + 1] = {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = string.format("t%d", index),
       desc = flag.desc,
       callback = flag.callback,

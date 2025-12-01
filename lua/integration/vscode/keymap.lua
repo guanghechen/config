@@ -21,22 +21,22 @@ mk({ "n" }, "u", "<Cmd>call VSCodeNotify('undo')<CR>")
 mk({ "n" }, "<C-r>", "<Cmd>call VSCodeNotify('redo')<CR>")
 
 --#[b]uf--------------------------------------------------------------------------------------------
-mvs({ "n", "v" }, { "<leader>[", "<leader>b[" }, "workbench.action.previousEditorInGroup")
-mvs({ "n", "v" }, { "<leader>]", "<leader>b]" }, "workbench.action.nextEditorInGroup")
-mvs({ "n", "v" }, { "<leader>{", "<leader>b{" }, "workbench.action.moveEditorLeftInGroup")
-mvs({ "n", "v" }, { "<leader>}", "<leader>b}" }, "workbench.action.moveEditorRightInGroup")
-mvs({ "n", "v" }, "<leader>bH", "workbench.action.moveEditorToLeftGroup")
-mvs({ "n", "v" }, "<leader>bJ", "workbench.action.moveEditorToBottomGroup")
-mvs({ "n", "v" }, "<leader>bK", "workbench.action.moveEditorToAboveGroup")
-mvs({ "n", "v" }, "<leader>bL", "workbench.action.moveEditorToRightGroup")
-mvs({ "n", "v" }, "<leader>bd", "workbench.action.closeActiveEditor")
-mvs({ "n", "v" }, "<leader>bh", "workbench.action.closeEditorsToTheLeft")
-mvs({ "n", "v" }, "<leader>bl", "workbench.action.closeEditorsToTheRight")
-mvs({ "n", "v" }, "<leader>bo", "workbench.action.closeOtherEditors")
+mvs({ "n", "x" }, { "<leader>[", "<leader>b[" }, "workbench.action.previousEditorInGroup")
+mvs({ "n", "x" }, { "<leader>]", "<leader>b]" }, "workbench.action.nextEditorInGroup")
+mvs({ "n", "x" }, { "<leader>{", "<leader>b{" }, "workbench.action.moveEditorLeftInGroup")
+mvs({ "n", "x" }, { "<leader>}", "<leader>b}" }, "workbench.action.moveEditorRightInGroup")
+mvs({ "n", "x" }, "<leader>bH", "workbench.action.moveEditorToLeftGroup")
+mvs({ "n", "x" }, "<leader>bJ", "workbench.action.moveEditorToBottomGroup")
+mvs({ "n", "x" }, "<leader>bK", "workbench.action.moveEditorToAboveGroup")
+mvs({ "n", "x" }, "<leader>bL", "workbench.action.moveEditorToRightGroup")
+mvs({ "n", "x" }, "<leader>bd", "workbench.action.closeActiveEditor")
+mvs({ "n", "x" }, "<leader>bh", "workbench.action.closeEditorsToTheLeft")
+mvs({ "n", "x" }, "<leader>bl", "workbench.action.closeEditorsToTheRight")
+mvs({ "n", "x" }, "<leader>bo", "workbench.action.closeOtherEditors")
 --------------------------------------------------------------------------------------------#[b]uf--
 
 --#[c]ode-------------------------------------------------------------------------------------------
-mvs({ "n", "v" }, "<leader>cr", "editor.action.rename")
+mvs({ "n", "x" }, "<leader>cr", "editor.action.rename")
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[f]ind-------------------------------------------------------------------------------------------
@@ -48,11 +48,11 @@ mvs({ "n" }, "<leader>ss", "workbench.action.findInFiles")
 -----------------------------------------------------------------------------------------#[s]earch--
 
 --#[w]in--------------------------------------------------------------------------------------------
-mvs({ "n", "v" }, "<leader>wd", "workbench.action.closeActiveEditor")
-mvs({ "n", "v" }, "<leader>wh", "workbench.action.splitEditorLeft")
-mvs({ "n", "v" }, "<leader>wj", "workbench.action.splitEditorDown")
-mvs({ "n", "v" }, "<leader>wk", "workbench.action.splitEditorUp")
-mvs({ "n", "v" }, "<leader>wl", "workbench.action.splitEditorRight")
-mvs({ "n", "v" }, "<leader>wo", "workbench.action.closeEditorsInOtherGroups")
-mvs({ "n", "v" }, "<leader>ww", "workbench.action.focusNextGroup")
+mvs({ "n", "x" }, "<leader>wd", "workbench.action.closeActiveEditor")
+mvs({ "n", "x" }, "<leader>wh", "workbench.action.splitEditorLeft")
+mvs({ "n", "x" }, "<leader>wj", "workbench.action.splitEditorDown")
+mvs({ "n", "x" }, "<leader>wk", "workbench.action.splitEditorUp")
+mvs({ "n", "x" }, "<leader>wl", "workbench.action.splitEditorRight")
+mvs({ "n", "x" }, "<leader>wo", "workbench.action.closeEditorsInOtherGroups")
+mvs({ "n", "x" }, "<leader>ww", "workbench.action.focusNextGroup")
 --------------------------------------------------------------------------------------------#[w]in--

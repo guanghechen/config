@@ -17,7 +17,7 @@ local K = eve.command.definitions
 ---@type std.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-s>",
     desc = K.notepad.save.desc,
     callback = function()
@@ -25,7 +25,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-a>s",
     aliases = { "<D-s>", "<M-s>" },
     desc = K.notepad.save.desc,
@@ -42,7 +42,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-n>",
     desc = K.notepad.rename.desc,
     callback = function()
@@ -58,7 +58,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "g;",
     desc = K.notepad.insert_splitline.desc,
     callback = function()
@@ -66,7 +66,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "v" },
+    modes = { "x" },
     key = "<leader><cr>",
     desc = K.ai.submit_selection.desc,
     callback = function()
@@ -74,7 +74,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-/>",
     desc = K.notepad.create.desc,
     callback = function()
@@ -82,7 +82,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-d>",
     desc = K.notepad.destroy.desc,
     callback = function()
@@ -98,7 +98,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-,>",
     desc = K.notepad.source_prev.desc,
     callback = function()
@@ -106,7 +106,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-.>",
     desc = K.notepad.source_next.desc,
     callback = function()
@@ -114,7 +114,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-[>",
     desc = K.notepad.focus_left.desc,
     callback = function()
@@ -122,7 +122,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-]>",
     desc = K.notepad.focus_right.desc,
     callback = function()
@@ -130,7 +130,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "<leader>[",
     desc = K.notepad.focus_left.desc,
     callback = function()
@@ -138,7 +138,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "<leader>]",
     desc = K.notepad.focus_right.desc,
     callback = function()
@@ -146,7 +146,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-S-,>",
     aliases = { "<C-S-[>" },
     desc = K.notepad.swap_left.desc,
@@ -155,7 +155,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<C-S-.>",
     aliases = { "<C-S-]>" },
     desc = K.notepad.swap_right.desc,
@@ -164,7 +164,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "<leader>0",
     desc = K.notepad.change_engine.desc,
     callback = function()
@@ -172,7 +172,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "<leader>1",
     desc = K.notepad.source_select.desc,
     callback = function()
@@ -180,7 +180,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "<leader>2",
     desc = K.notepad.note_select.desc,
     callback = function()
@@ -188,7 +188,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<M-i>",
     desc = K.notepad.go_backward.desc,
     callback = function()
@@ -196,7 +196,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<M-o>",
     desc = K.notepad.go_forward.desc,
     callback = function()
@@ -204,7 +204,7 @@ local NOTEPAD_KEYMAPS = {
     end,
   },
   {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = "<esc>",
     desc = "notepad: feedback esc to notepad (fix the conflict caused by the csi u)",
     expr = true,
@@ -218,7 +218,7 @@ local NOTEPAD_KEYMAPS = {
 for index = 1, 9 do
   local definition = K.notepad["focus_" .. tostring(index)]
   NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
-    modes = { "i", "n", "v" },
+    modes = { "i", "n", "x" },
     key = string.format("<C-%d>", index),
     desc = definition.desc,
     callback = function()
@@ -230,7 +230,7 @@ end
 for index = 1, 9 do
   local definition_left = K.notepad["focus_left_" .. tostring(index)]
   NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = string.format("[%d", index),
     desc = definition_left.desc,
     callback = function()
@@ -240,7 +240,7 @@ for index = 1, 9 do
 
   local definition_right = K.notepad["focus_right_" .. tostring(index)]
   NOTEPAD_KEYMAPS[#NOTEPAD_KEYMAPS + 1] = {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = string.format("]%d", index),
     desc = definition_right.desc,
     callback = function()

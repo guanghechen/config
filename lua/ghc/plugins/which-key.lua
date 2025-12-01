@@ -17,7 +17,7 @@ return {
     },
     spec = {
       {
-        mode = { "n", "v" },
+        mode = { "n", "x" },
         { "g", group = "goto", icon = { icon = eve.icon.ui.Location, color = "cyan" } },
         { "gs", group = "surround", icon = { icon = eve.icon.ui.Circle, color = "purple" } },
         { "z", group = "fold", icon = { icon = eve.icon.symbols.flag_fold_empty_path, color = "yellow" } },

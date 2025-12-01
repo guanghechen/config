@@ -212,7 +212,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
 
   keymaps_common = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "tc",
       desc = string.format("%s: change root (cwd)", title),
       callback = function()
@@ -222,7 +222,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "tw",
       desc = string.format("%s: change root (workspace)", title),
       callback = function()

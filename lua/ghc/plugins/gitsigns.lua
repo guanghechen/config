@@ -197,7 +197,7 @@ local keymaps = {
       ---@type std.t.IKeymap[]
       local keymaps = {
         {
-          modes = { "i", "n", "v" },
+          modes = { "i", "n", "x" },
           key = "<C-a>q",
           aliases = { "<D-q>", "<M-q>" },
           callback = function()
@@ -246,7 +246,7 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "ghi",
     desc = "git: select hunk",
     callback = function()
@@ -254,7 +254,7 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "ghp",
     desc = "git: preview hunk inline",
     callback = function()
@@ -292,7 +292,7 @@ local keymaps = {
   },
 
   {
-    modes = { "v" },
+    modes = { "x" },
     key = "ghr",
     desc = "git: reset hunk",
     callback = function()
@@ -309,7 +309,7 @@ local keymaps = {
     end,
   },
   {
-    modes = { "v" },
+    modes = { "x" },
     key = "ghs",
     desc = "git: stage hunk",
     callback = function()
@@ -330,7 +330,7 @@ local keymaps = {
     end,
   },
   {
-    modes = { "v" },
+    modes = { "x" },
     key = "ghu",
     desc = "git: unstage hunk",
     callback = function()
@@ -339,7 +339,7 @@ local keymaps = {
     end,
   },
   {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "ghw",
     desc = "git: toggle word_diff",
     callback = function()

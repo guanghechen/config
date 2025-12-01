@@ -623,7 +623,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps_finder = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "oa",
       desc = "filetree: add to ai",
       callback = function()
@@ -640,7 +640,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps_result = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "oa",
       desc = "filetree: add to ai",
       callback = function()
@@ -705,7 +705,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<Backspace>",
       callback = function()
         local next_cwd = std.path.dirname(state_cwd:snapshot())

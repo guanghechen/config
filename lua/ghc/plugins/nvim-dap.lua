@@ -179,11 +179,11 @@ return {
   },
   -- stylua: ignore start
   keys = {
-    { "<F6>",       function() require("dap").continue() end,   mode = { "i", "n", "t", "v" },            desc = "dap: continue" },
-    { "<F7>",       function() require("dap").step_into() end,  mode = { "i", "n", "t", "v" },            desc = "dap: step into" },
-    { "<F8>",       function() require("dap").step_over() end,  mode = { "i", "n", "t", "v" },            desc = "dap: step over" },
-    { "<F9>",       function() require("dap").step_out() end,   mode = { "i", "n", "t", "v" },            desc = "dap: step out" },
-    { "<F10>",      function() require("dap").pause() end,      mode = { "i", "n", "t", "v" },            desc = "dap: pause" },
+    { "<F6>",       function() require("dap").continue() end,   mode = { "i", "n", "t", "x" },            desc = "dap: continue" },
+    { "<F7>",       function() require("dap").step_into() end,  mode = { "i", "n", "t", "x" },            desc = "dap: step into" },
+    { "<F8>",       function() require("dap").step_over() end,  mode = { "i", "n", "t", "x" },            desc = "dap: step over" },
+    { "<F9>",       function() require("dap").step_out() end,   mode = { "i", "n", "t", "x" },            desc = "dap: step out" },
+    { "<F10>",      function() require("dap").pause() end,      mode = { "i", "n", "t", "x" },            desc = "dap: pause" },
     { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, desc = "dap: breakpoint condition" },
     { "<leader>dO", function() require("dap").step_over() end,                                            desc = "dap: step over" },
     { "<leader>dC", function() require("dap").run_to_cursor() end,                                        desc = "dap: run to cursor" },

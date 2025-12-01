@@ -20,22 +20,22 @@ mk({ "i" }, "<cr>", "<cr><C-g>u")
 mk({ "i" }, "<space>", "<space><C-g>u")
 
 ---! better copy/paste list
-mk({ "i", "n", "v" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>gg0vG$", "system: select all")
-mk({ "i", "n", "v" }, { "<C-a>v", "<D-v>", "<M-v>" }, '<esc>"+p', "system: paste from clipboard")
-mk({ "v" }, { "<C-a>c", "<D-c>", "<M-c>" }, '"+y', "system: copy to clipboard")
-mk({ "v" }, { "<C-a>x", "<D-x>", "<M-x>" }, '"+x', "system: cut to clipboard")
+mk({ "i", "n", "x" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "x" }, { "<C-a>v", "<D-v>", "<M-v>" }, '<esc>"+p', "system: paste from clipboard")
+mk({ "x" }, { "<C-a>c", "<D-c>", "<M-c>" }, '"+y', "system: copy to clipboard")
+mk({ "x" }, { "<C-a>x", "<D-x>", "<M-x>" }, '"+x', "system: cut to clipboard")
 
 ---! better indenting
-mk({ "v" }, "<", "<gv")
-mk({ "v" }, ">", ">gv")
+mk({ "x" }, "<", "<gv")
+mk({ "x" }, ">", ">gv")
 
 ---! better up/down
 mk({ "n", "x" }, { "j", "<Down>" }, "v:count == 0 ? 'gj' : 'j'", "navigate: down", true)
 mk({ "n", "x" }, { "k", "<Up>" }, "v:count == 0 ? 'gk' : 'k'", "navigate: up", true)
 
 ---! better jump list
-mk({ "i", "n", "v" }, "<C-i>", "<C-o>", "jump back")
-mk({ "i", "n", "v" }, "<C-o>", "<C-i>", "jump forward")
+mk({ "i", "n", "x" }, "<C-i>", "<C-o>", "jump back")
+mk({ "i", "n", "x" }, "<C-o>", "<C-i>", "jump forward")
 
 ---! commenting
 mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add below")
@@ -56,10 +56,10 @@ mk({ "t" }, "<Tab>", function()
 end, "terminal: insert tab", true)
 
 ---! z-prefixed scrolling
-mk({ "n", "v" }, "zh", "zs", "scroll: line to left")
-mk({ "n", "v" }, "zl", "ze", "scroll: line to right")
-mk({ "n", "v" }, "zj", "zb", "scroll: line to bottom")
-mk({ "n", "v" }, "zk", "zt", "scroll: line to top")
+mk({ "n", "x" }, "zh", "zs", "scroll: line to left")
+mk({ "n", "x" }, "zl", "ze", "scroll: line to right")
+mk({ "n", "x" }, "zj", "zb", "scroll: line to bottom")
+mk({ "n", "x" }, "zk", "zt", "scroll: line to top")
 
 ---! quit
-mk({ "n", "v" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")
+mk({ "n", "x" }, "<leader>qq", "<cmd>qa<cr>", "quit: quit all")

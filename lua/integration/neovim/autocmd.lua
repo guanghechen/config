@@ -228,7 +228,7 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.cmd("close")
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
       end
-      vim.keymap.set({ "n", "v" }, "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
+      vim.keymap.set({ "n", "x" }, "q", action, { buffer = bufnr, silent = true, desc = "buffer: quit" })
     end
   end,
 })

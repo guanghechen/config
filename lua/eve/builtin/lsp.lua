@@ -478,7 +478,7 @@ function M.on_attach(client, bufnr)
     },
     {
       disabled = support_codeAction ~= 1,
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
       callback = function()
@@ -491,7 +491,7 @@ function M.on_attach(client, bufnr)
     },
     {
       disabled = support_codelens ~= 1,
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<leader>cc",
       callback = function()
         vim.lsp.codelens.run()
@@ -500,7 +500,7 @@ function M.on_attach(client, bufnr)
     },
     {
       disabled = support_codelens ~= 1,
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "<leader>cC",
       callback = function()
         vim.lsp.codelens.refresh()
@@ -538,7 +538,7 @@ function M.on_attach(client, bufnr)
     },
     {
       disabled = support_documentHighlight ~= 1,
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "[[",
       callback = function()
         require("fml.dressing.illumniate").jump(-vim.v.count1, true)
@@ -547,7 +547,7 @@ function M.on_attach(client, bufnr)
     },
     {
       disabled = support_documentHighlight ~= 1,
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "]]",
       callback = function()
         require("fml.dressing.illumniate").jump(vim.v.count1, true)

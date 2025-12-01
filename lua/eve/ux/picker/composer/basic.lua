@@ -759,7 +759,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "q",
       desc = "picker: close",
       callback = function()
@@ -779,7 +779,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },
       desc = "picker: refresh",
@@ -808,7 +808,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     if index <= 9 then
       ---@type std.t.IKeymap
       local keymap = {
-        modes = { "i", "n", "v" },
+        modes = { "i", "n", "x" },
         key = string.format("<C-%d>", index),
         desc = item.desc,
         callback = item.callback,
@@ -819,7 +819,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
 
     ---@type std.t.IKeymap
     local keymap = {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = string.format(index_format, index),
       desc = item.desc,
       callback = item.callback,
@@ -843,7 +843,7 @@ function M:__resolve_builtin_keymaps_finder__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "dd",
       desc = "picker#finder: clear content",
       callback = function()
@@ -857,7 +857,7 @@ function M:__resolve_builtin_keymaps_finder__()
       callback = std.fn.noop,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "j",
       desc = "picker#finder: focus next item",
       callback = function()
@@ -866,7 +866,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Down>",
       desc = "picker#finder: focus next item",
       callback = function()
@@ -875,7 +875,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "k",
       desc = "picker#finder: focus prev item",
       callback = function()
@@ -884,7 +884,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Up>",
       desc = "picker#finder: focus prev item",
       callback = function()
@@ -893,7 +893,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "gg",
       desc = "picker#finder: focus first item",
       callback = function()
@@ -901,7 +901,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "G",
       desc = "picker#finder: focus last item",
       callback = function()
@@ -910,7 +910,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-i>",
       desc = "picker#finder: history backward",
       callback = function()
@@ -924,7 +924,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-o>",
       desc = "picker#finder: history forward",
       callback = function()
@@ -938,7 +938,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#finder: focus down",
@@ -947,7 +947,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#finder: focus left",
@@ -971,7 +971,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#finder: focus right",
@@ -994,7 +994,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#finder: focus up",
@@ -1008,7 +1008,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-j>",
       desc = "picker#finder: focus next item",
       callback = function()
@@ -1017,7 +1017,7 @@ function M:__resolve_builtin_keymaps_finder__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-k>",
       desc = "picker#finder: focus prev item",
       callback = function()
@@ -1034,7 +1034,7 @@ function M:__resolve_builtin_keymaps_result__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "A",
       desc = "picker#result: back to edit (A)",
       callback = function()
@@ -1047,7 +1047,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "a",
       desc = "picker#result: back to edit (a)",
       callback = function()
@@ -1060,7 +1060,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "I",
       desc = "picker#result: back to edit (I)",
       callback = function()
@@ -1073,7 +1073,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "i",
       desc = "picker#result: back to edit (i)",
       callback = function()
@@ -1087,7 +1087,7 @@ function M:__resolve_builtin_keymaps_result__()
     },
     {
       disabled = true,
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<LeftMouse>",
       desc = "picker#result: focus",
       callback = function()
@@ -1105,7 +1105,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#result: focus down",
@@ -1128,7 +1128,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
@@ -1149,7 +1149,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
@@ -1170,7 +1170,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#result: focus up",
@@ -1179,7 +1179,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "j",
       desc = "picker#result: focus next item",
       callback = function()
@@ -1188,7 +1188,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "k",
       desc = "picker#result: focus prev item",
       callback = function()
@@ -1205,14 +1205,14 @@ function M:__resolve_builtin_keymaps_preview__()
   ---@type std.t.IKeymap[]
   local builtin_keymaps = {
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "d",
       aliases = { "dd", "X", "x" },
       desc = "picker#preview: noop",
       callback = std.fn.noop,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "A",
       desc = "picker#preview: back to edit (A)",
       callback = function()
@@ -1225,7 +1225,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "a",
       desc = "picker#preview: back to edit (a)",
       callback = function()
@@ -1238,7 +1238,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "I",
       desc = "picker#preview: back to edit (I)",
       callback = function()
@@ -1251,7 +1251,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "i",
       desc = "picker#preview: back to edit (i)",
       callback = function()
@@ -1264,7 +1264,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#preview: focus down",
@@ -1276,7 +1276,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
@@ -1286,7 +1286,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
@@ -1301,7 +1301,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#preview: focus up",

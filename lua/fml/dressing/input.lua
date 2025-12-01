@@ -201,28 +201,28 @@ function M.input(opts, on_confirm)
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>" },
       desc = "input: quit",
       callback = action.cancel,
     },
-    { modes = { "i", "n", "v" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
-    { modes = { "n", "v" }, key = "q", desc = "input: quit", callback = action.cancel },
-    { modes = { "n", "v" }, key = "o", desc = "input: noop", callback = std.fn.noop },
-    { modes = { "n", "v" }, key = "O", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "i", "n", "x" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
+    { modes = { "n", "x" }, key = "q", desc = "input: quit", callback = action.cancel },
+    { modes = { "n", "x" }, key = "o", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "n", "x" }, key = "O", desc = "input: noop", callback = std.fn.noop },
   }
 
   -- Add y/n/<Esc> keymaps for confirmation type inputs
   if opts.inputtype == "confirmation" then
     table.insert(keymaps, {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Esc>",
       desc = "input: cancel (no)",
       callback = action.cancel,
     })
     table.insert(keymaps, {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "y",
       desc = "input: confirm (yes)",
       callback = function()
@@ -230,7 +230,7 @@ function M.input(opts, on_confirm)
       end,
     })
     table.insert(keymaps, {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "Y",
       desc = "input: confirm (yes)",
       callback = function()
@@ -238,13 +238,13 @@ function M.input(opts, on_confirm)
       end,
     })
     table.insert(keymaps, {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "n",
       desc = "input: cancel (no)",
       callback = action.cancel,
     })
     table.insert(keymaps, {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "N",
       desc = "input: cancel (no)",
       callback = action.cancel,

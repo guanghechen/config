@@ -71,14 +71,14 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local keymaps = vim.list_extend({
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
       desc = "select: noop",
       callback = std.fn.noop,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>", "<Esc>" },
       desc = "select: noop",
@@ -88,7 +88,7 @@ function M.new(props)
       end,
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "q",
       desc = "select: quit",
       callback = function()
@@ -97,7 +97,7 @@ function M.new(props)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<LeftMouse>",
       desc = "select: confirm",
       callback = function()
@@ -112,7 +112,7 @@ function M.new(props)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<2-LeftMouse>",
       aliases = { "<cr>", "o" },
       desc = "select: confirm",

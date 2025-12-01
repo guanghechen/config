@@ -206,7 +206,7 @@ picker = eve.ux.picker.ListComposer.new({
 
   keymaps_result = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-d>",
       desc = "buffer: close",
       callback = function()

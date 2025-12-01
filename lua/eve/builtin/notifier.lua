@@ -380,7 +380,7 @@ function M.__create_buf_as_needed__(win)
     ---@type std.t.IKeymap[]
     local keymaps = {
       {
-        modes = { "n", "v" },
+        modes = { "n", "x" },
         key = "q",
         desc = "notify: close",
         callback = function()

@@ -288,7 +288,7 @@ function M.create(params)
     local key = string.format("<C-%d>", i) ---@type string
     local definition = eve.command.definitions.term["focus_" .. tostring(i)] ---@type eve.builtin.command.IDefinition
     keymaps[#keymaps + 1] = {
-      modes = { "i", "n", "t", "v" },
+      modes = { "i", "n", "t", "x" },
       key = key,
       desc = definition.desc,
       callback = function()
@@ -297,7 +297,7 @@ function M.create(params)
     }
   end
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-,>",
     aliases = { "<C-[>" },
     desc = eve.command.definitions.term.focus_left.desc,
@@ -306,7 +306,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-.>",
     aliases = { "<C-]>" },
     desc = eve.command.definitions.term.focus_right.desc,
@@ -315,7 +315,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-S-,>",
     aliases = { "<C-S-[>" },
     desc = eve.command.definitions.term.swap_left.desc,
@@ -324,7 +324,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-S-.>",
     aliases = { "<C-S-]>" },
     desc = eve.command.definitions.term.swap_right.desc,
@@ -333,7 +333,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-n>",
     desc = eve.command.definitions.term.rename.desc,
     callback = function()
@@ -341,7 +341,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-/>",
     desc = eve.command.definitions.term.create.desc,
     callback = function()
@@ -349,7 +349,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<C-d>",
     desc = eve.command.definitions.term.destroy.desc,
     callback = function()
@@ -357,7 +357,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "v" },
+    modes = { "i", "n", "t", "x" },
     key = "<esc>",
     desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
     expr = true,
@@ -367,7 +367,7 @@ function M.create(params)
     end,
   }
   keymaps[#keymaps + 1] = {
-    modes = { "n", "v" },
+    modes = { "n", "x" },
     key = "q",
     desc = "term: close",
     callback = function()

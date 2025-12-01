@@ -140,7 +140,7 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>" },
       desc = "textarea: quit",

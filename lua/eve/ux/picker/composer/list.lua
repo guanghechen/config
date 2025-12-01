@@ -274,13 +274,13 @@ function M.new(props)
   ---@type std.t.IKeymap[]
   local preset_ks_common = {
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<enter>",
       desc = "list: confirm",
       callback = actions.on_confirm,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<2-LeftMouse>",
       desc = "list: confirm",
       callback = function()
@@ -294,7 +294,7 @@ function M.new(props)
       end,
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<Tab>",
       desc = "list: noop",
       callback = std.fn.noop,

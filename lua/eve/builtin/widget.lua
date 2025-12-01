@@ -71,28 +71,28 @@ function M.get_keymaps(widget)
   ---@type std.t.IKeymap[]
   local keymaps = {
     {
-      modes = { "i", "n", "t", "v" },
+      modes = { "i", "n", "t", "x" },
       key = "<C-a>i",
       aliases = { "<D-i>", "<M-i>" },
       callback = M.backward,
       desc = "widget: backward",
     },
     {
-      modes = { "i", "n", "t", "v" },
+      modes = { "i", "n", "t", "x" },
       key = "<C-a>o",
       aliases = { "<D-o>", "<M-o>" },
       callback = M.forward,
       desc = "widget: forward",
     },
     {
-      modes = { "i", "n", "v" },
+      modes = { "i", "n", "x" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>" },
       callback = on_close,
       desc = "widget: close present",
     },
     {
-      modes = { "n", "v" },
+      modes = { "n", "x" },
       key = "q",
       callback = on_close,
       desc = "widget: close present",
