@@ -13,6 +13,9 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@alias eve.ux.picker.composer.tree.IOnDisposed
 ---| fun(): nil
 
+---@alias eve.ux.picker.composer.tree.IOnEnter
+---| fun(self: eve.ux.picker.TreeComposer, nodeuuid: string): boolean
+
 ---@alias eve.ux.picker.composer.tree.IOnFocused
 ---| fun(self: eve.ux.picker.TreeComposer): nil
 
@@ -75,6 +78,7 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field public on_closed              ?eve.ux.picker.composer.tree.IOnClosed
 ---@field public on_confirm             ?eve.ux.picker.composer.tree.IOnConfirm
 ---@field public on_disposed            ?eve.ux.picker.composer.tree.IOnDisposed
+---@field public on_enter               ?eve.ux.picker.composer.tree.IOnEnter
 ---@field public on_focused             ?eve.ux.picker.composer.tree.IOnFocused
 ---@field public on_hidden              ?eve.ux.picker.composer.tree.IOnHidden
 ---@field public on_refresh             ?eve.ux.picker.composer.tree.IOnRefresh
@@ -111,6 +115,7 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field protected _on_attached        eve.ux.picker.composer.tree.IOnAttached
 ---@field protected _on_confirm         eve.ux.picker.composer.tree.IOnConfirm
 ---@field protected _on_disposed        eve.ux.picker.composer.tree.IOnDisposed
+---@field protected _on_enter           eve.ux.picker.composer.tree.IOnEnter|nil
 ---@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
@@ -157,6 +162,7 @@ function M.new(props)
   local on_closed = props.on_closed or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnClosed
   local on_confirm = props.on_confirm or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnConfirm
   local on_disposed = props.on_disposed or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnDisposed
+  local on_enter = props.on_enter ---@type eve.ux.picker.composer.tree.IOnEnter|nil
   local on_focused = props.on_focused or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnFocused
   local on_hidden = props.on_hidden or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or std.fn.noop ---@type eve.ux.picker.composer.tree.IOnRefresh
@@ -413,6 +419,10 @@ function M.new(props)
           treeview:collapse(nodeuuid, "expand", true)
           treeview:mark_cache_listview_dirty()
           self._composer:mark_result_dirty()
+          return
+        end
+        if on_enter ~= nil and on_enter(self, nodeuuid) then
+          return
         end
         return
       end
@@ -811,6 +821,7 @@ function M.new(props)
   self._on_attached = on_attached
   self._on_confirm = on_confirm
   self._on_disposed = on_disposed
+  self._on_enter = on_enter
   self._observer_unsubs = nil
 
   local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
@@ -925,6 +936,7 @@ function M:dispose()
   self._on_attached = nil
   self._on_confirm = nil
   self._on_disposed = nil
+  self._on_enter = nil
 end
 
 ---@return boolean

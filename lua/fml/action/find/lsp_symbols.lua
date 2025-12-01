@@ -742,6 +742,39 @@ local function render_preview(bufnr, force)
   }
 end
 
+---@param nodeuuid                      string
+---@return nil
+local function goto_symbol(nodeuuid)
+  local node = picker._tree:retrieve(nodeuuid)
+  if not (node and node.data and filepath_sourcefile) then
+    return
+  end
+
+  picker:close()
+
+  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
+  if not target_bufnr then
+    return
+  end
+
+  local target_winid = vim.api.nvim_get_current_win()
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(winid) == target_bufnr then
+      target_winid = winid
+      break
+    end
+  end
+
+  local lnum = symbol_data.selection_lnum or symbol_data.lnum
+  local col = symbol_data.selection_col or symbol_data.col
+
+  vim.api.nvim_win_set_buf(target_winid, target_bufnr)
+  vim.api.nvim_set_current_win(target_winid)
+  vim.api.nvim_win_set_cursor(target_winid, { lnum, col })
+  vim.cmd("normal! zv zz")
+end
+
 picker = eve.ux.picker.TreeComposer.new({
   name = name,
   permanent = true,
@@ -778,7 +811,6 @@ picker = eve.ux.picker.TreeComposer.new({
   flag_foldempty = o_flag_foldempty,
   flag_selected = std.Observable.from_value(false),
 
-  -- Required renderer functions
   render_listview_leaf = render_symbol,
   render_listview_location = render_location,
   render_treeview_container = render_treeview_container,
@@ -787,42 +819,16 @@ picker = eve.ux.picker.TreeComposer.new({
 
   render_preview = render_preview,
 
-  on_confirm = function(self, selected_uuids)
+  on_confirm = function(_, selected_uuids)
     if not selected_uuids or #selected_uuids == 0 then
       return
     end
+    goto_symbol(selected_uuids[1])
+  end,
 
-    self:close()
-
-    local node = picker._tree:retrieve(selected_uuids[1])
-    if not (node and node.data and filepath_sourcefile) then
-      return
-    end
-
-    local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-    local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
-    if not target_bufnr then
-      return
-    end
-
-    -- Find existing window or use current one
-    local target_winid = vim.api.nvim_get_current_win()
-    for _, winid in ipairs(vim.api.nvim_list_wins()) do
-      if vim.api.nvim_win_get_buf(winid) == target_bufnr then
-        target_winid = winid
-        break
-      end
-    end
-
-    -- Use selection_range for more precise cursor positioning
-    local lnum = symbol_data.selection_lnum or symbol_data.lnum
-    local col = symbol_data.selection_col or symbol_data.col
-
-    -- Navigate to symbol location
-    vim.api.nvim_win_set_buf(target_winid, target_bufnr)
-    vim.api.nvim_set_current_win(target_winid)
-    vim.api.nvim_win_set_cursor(target_winid, { lnum, col })
-    vim.cmd("normal! zv zz")
+  on_enter = function(_, nodeuuid)
+    goto_symbol(nodeuuid)
+    return true
   end,
 
   on_refresh = refresh,
