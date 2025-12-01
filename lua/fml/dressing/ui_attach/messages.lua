@@ -87,8 +87,8 @@ function M.history_show(task)
     end
   end
 
-  local win_width = math.floor(vim.o.columns * 0.8) ---@type integer
-  local win_height = math.floor(vim.o.lines * 0.8) ---@type integer
+  local win_width = math.min(math.floor(vim.o.columns * 0.8), 120) ---@type integer
+  local win_height = math.min(math.floor(vim.o.lines * 0.8), 40) ---@type integer
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
