@@ -303,6 +303,8 @@ ms({ "i", "n", "t", "x" }, "<C-S-h>", K.win.split_left)
 ms({ "i", "n", "t", "x" }, "<C-S-j>", K.win.split_below)
 ms({ "i", "n", "t", "x" }, "<C-S-k>", K.win.split_above)
 ms({ "i", "n", "t", "x" }, "<C-S-l>", K.win.split_right)
+ms({ "i", "n", "t", "x" }, "<C-j>", K.win.scroll_down)
+ms({ "i", "n", "t", "x" }, "<C-k>", K.win.scroll_up)
 ms({ "n", "x" }, "<leader>wH", K.win.history)
 ms({ "n", "x" }, "<leader>wd", K.win.close)
 ms({ "n", "x" }, "<leader>wh", K.win.split_left)
@@ -314,8 +316,6 @@ ms({ "n", "x" }, "<leader>wp", K.win.project)
 ms({ "n", "x" }, "<leader>wr", K.win.mark_sourcefile)
 ms({ "n", "x" }, "<leader>ws", K.win.swap)
 ms({ "n", "x" }, "<leader>ww", K.win.focus)
-ms({ "n", "x" }, "<leader>sj", K.win.scroll_down)
-ms({ "n", "x" }, "<leader>sk", K.win.scroll_up)
 --------------------------------------------------------------------------------------------#[w]in--
 
 --#[x] diagnostic-----------------------------------------------------------------------------------
