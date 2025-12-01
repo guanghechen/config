@@ -122,8 +122,6 @@ ms({ "n", "x" }, "<leader>[", K.buf.focus_left)
 ms({ "n", "x" }, "<leader>]", K.buf.focus_right)
 ms({ "n", "x" }, "<leader>{", K.buf.swap_left)
 ms({ "n", "x" }, "<leader>}", K.buf.swap_right)
-ms({ "n", "x" }, "<leader>b[", K.buf.focus_left)
-ms({ "n", "x" }, "<leader>b]", K.buf.focus_right)
 ms({ "n", "x" }, "<leader>b{", K.buf.swap_left)
 ms({ "n", "x" }, "<leader>b}", K.buf.swap_right)
 ms({ "n", "x" }, "<leader>ba", K.find.bufs)
@@ -262,9 +260,6 @@ ms({ "i", "n", "t", "x" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_reveal)
 
 --#[t]oggle-----------------------------------------------------------------------------------------
 ms({ "i", "n", "x" }, { "<C-a>T", "<D-T>", "<M-T>" }, K.toggle.theme_variant)
-ms({ "n", "x" }, "<leader>tr", K.toggle.relativenumber)
-ms({ "n", "x" }, "<leader>tt", K.toggle.list)
-ms({ "n", "x" }, "<leader>tw", K.toggle.wrap)
 -----------------------------------------------------------------------------------------#[t]oggle--
 
 --#[u]x---------------------------------------------------------------------------------------------
@@ -277,6 +272,7 @@ ms({ "n", "x" }, "<leader>un", K.ux.dismiss_notifications)
 ms({ "n", "x" }, "<leader>ur", K.toggle.relativenumber)
 ms({ "n", "x" }, "<leader>us", K.toggle.scroll)
 ms({ "n", "x" }, "<leader>ut", K.toggle.theme)
+ms({ "n", "x" }, "<leader>uu", K.toggle.list)
 ms({ "n", "x" }, "<leader>uv", K.toggle.virtcolumn)
 ms({ "n", "x" }, "<leader>uw", K.toggle.wrap)
 ms({ "n", "x" }, "<leader>uz", K.toggle.maximize)
