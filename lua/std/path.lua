@@ -183,6 +183,12 @@ function M.resolve(cwd, to)
   return rstd.path.resolve(cwd, to, true, SEP)
 end
 
+---@param path                          string
+---@return string
+function M.shorten(path)
+  return vim.fn.pathshorten(path)
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@return boolean
