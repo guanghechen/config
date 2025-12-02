@@ -21,6 +21,7 @@ winget install -e --source winget --id dandavison.delta
 winget install -e --source winget --id sharkdp.fd
 winget install -e --source winget --id lsd-rs.lsd
 winget install -e --source winget --id BurntSushi.ripgrep.MSVC
+winget install -e --source winget --id Starship.Starship
 winget install -e --source winget --id sxyazi.yazi
 winget install -e --source winget --id ajeetdsouza.zoxide
 
