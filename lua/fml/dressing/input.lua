@@ -67,7 +67,8 @@ end
 function M.input(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
   local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr) ---@type vim.api.keyset.win_config
-  local parent_row = unpack(vim.api.nvim_win_get_cursor(parent_winnr)) ---@type integer
+  local parent_cursor = vim.api.nvim_win_get_cursor(parent_winnr) ---@type integer[]
+  local parent_row = parent_cursor[1] ---@type integer
 
   opts = opts or {} ---@type fml.dressing.input.IOptions
   local inputtype = opts.inputtype or "text" ---@type fml.dressing.input.InputTypeEnum
@@ -175,6 +176,7 @@ function M.input(opts, on_confirm)
     vim.schedule(function()
       if vim.api.nvim_win_is_valid(parent_winnr) then
         vim.api.nvim_set_current_win(parent_winnr)
+        pcall(vim.api.nvim_win_set_cursor, parent_winnr, parent_cursor)
       end
       on_confirm(text)
     end)
