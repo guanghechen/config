@@ -61,7 +61,6 @@ max_height          = 600
 image_delay         = 100
 image_filter        = "triangle"
 image_quality       = 75
-sixel_fraction      = 15
 tab_size            = 2
 ueberzug_scale      = 1
 ueberzug_offset     = [0, 0, 0, 0]
