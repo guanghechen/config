@@ -24,7 +24,7 @@ function M.get_mason_ensure_installed()
     "tailwindcss-language-server", --  tailwindcss
     "taplo", -- taplo
     "vtsls", -- vtsls
-    "vue-language-server", -- volar
+    "vue-language-server", -- vue_ls
     "yaml-language-server", -- yamlls
 
     -- dap --

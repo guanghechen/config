@@ -197,9 +197,22 @@ local function on_init(client, config)
   eve.lsp.on_init(client, config)
 end
 
-local plugins = {
-  vue = eve.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+local paths = {
+  vue_ls = eve.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
+
+local vue_plugin = paths.vue_ls and {
+  name = "@vue/typescript-plugin",
+  location = paths.vue_ls,
+  languages = { "vue" },
+  configNamespace = "typescript",
+  enableForWorkspaceTypeScriptVersions = true,
+} or nil
+
+local global_plugins = {} ---@type table[]
+if vue_plugin then
+  global_plugins[#global_plugins + 1] = vue_plugin
+end
 
 ---@type vim.lsp.Config
 return {
@@ -212,7 +225,6 @@ return {
     "typescript",
     "typescriptreact",
     "typescript.tsx",
-    "vue",
   },
   init_options = {
     hostInfo = "neovim",
@@ -232,17 +244,7 @@ return {
           },
         },
         tsserver = {
-          globalPlugins = vim.tbl_filter(function(v)
-            return not not v
-          end, {
-            plugins.vue and {
-              name = "@vue/typescript-plugin",
-              location = plugins.vue,
-              languages = { "vue" },
-              configNamespace = "typescript",
-              enableForWorkspaceTypeScriptVersions = true,
-            },
-          }),
+          globalPlugins = global_plugins,
         },
       },
       typescript = {
