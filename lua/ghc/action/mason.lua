@@ -17,8 +17,8 @@ function M.get_mason_ensure_installed()
     "html-lsp", -- html
     "json-lsp", -- jsonls
     "lua-language-server", -- lua_ls
-    "pyright", -- pyright
-    -- "basedpyright",
+    -- "pyright", -- pyright
+    "basedpyright", -- basedpyright
     "rust-analyzer", -- rust_analyzer
     -- "sqls", -- sqls
     "tailwindcss-language-server", --  tailwindcss

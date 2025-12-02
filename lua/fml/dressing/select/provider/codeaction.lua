@@ -16,6 +16,7 @@ local ACTION_TYPE_ORDERS = {
 }
 
 local LSP_CLIENT_NAME_ORDERS = {
+  basedpyright = 5,
   bashls = 5,
   clangd = 5,
   cssls = 5,
