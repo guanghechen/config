@@ -3,22 +3,30 @@ function prompt {
   $addedCount = 0
   $modifiedCount = 0
   $untrackedCount = 0
+  $aheadCount = 0
+  $behindCount = 0
 
   $currentDir = Get-Location
   while ($true) {
     if (Test-Path (Join-Path $currentDir ".git")) {
       try {
-        $gitBranch = git -C $currentDir rev-parse --abbrev-ref HEAD 2>$null
-        $gitStatus = git -C $currentDir status --porcelain 2>$null
+        $gitStatus = git -C $currentDir status --porcelain=2 --branch 2>$null
         foreach ($line in $gitStatus) {
-          $line_status = $line.TrimStart()
-          if ($line_status.StartsWith("A")) {
-            $addedCount++
+          if ($line.StartsWith("# branch.head ")) {
+            $gitBranch = $line.Substring(14)
           }
-          if ($line_status.StartsWith("M") -or $line_status.StartsWith("D")) {
-            $modifiedCount++
+          elseif ($line.StartsWith("# branch.ab ")) {
+            if ($line -match '\+(\d+) \-(\d+)') {
+              $aheadCount = [int]$Matches[1]
+              $behindCount = [int]$Matches[2]
+            }
           }
-          if ($line_status.StartsWith("??")) {
+          elseif ($line.StartsWith("1 ") -or $line.StartsWith("2 ")) {
+            $xy = $line.Substring(2, 2)
+            if ($xy[0] -ne '.') { $addedCount++ }
+            if ($xy[1] -ne '.') { $modifiedCount++ }
+          }
+          elseif ($line.StartsWith("? ")) {
             $untrackedCount++
           }
         }
@@ -45,6 +53,13 @@ function prompt {
   if ($gitBranch -ne "") {
     Write-Host "(" -nonewline -foregroundcolor White
     Write-Host "`e[1m$gitBranch" -nonewline -foregroundcolor DarkMagenta
+    if ($aheadCount -gt 0 -and $behindCount -gt 0) {
+      Write-Host " ⇕$aheadCount/$behindCount" -nonewline -foregroundcolor DarkRed
+    } elseif ($aheadCount -gt 0) {
+      Write-Host " ↑$aheadCount" -nonewline -foregroundcolor DarkGreen
+    } elseif ($behindCount -gt 0) {
+      Write-Host " ↓$behindCount" -nonewline -foregroundcolor DarkRed
+    }
     Write-Host "|" -nonewline -foregroundcolor White
     if ($addedCount -gt 0) {
       Write-Host "+$addedCount" -nonewline -foregroundcolor DarkBlue
@@ -56,7 +71,7 @@ function prompt {
       Write-Host "?$untrackedCount" -nonewline -foregroundcolor White
     }
     if ($addedCount -eq 0 -and $modifiedCount -eq 0 -and $untrackedCount -eq 0) {
-      Write-Host "" -nonewline -foregroundcolor DarkGreen
+      Write-Host "✔" -nonewline -foregroundcolor DarkGreen
     }
     Write-Host ") " -nonewline -foregroundcolor White
   }
