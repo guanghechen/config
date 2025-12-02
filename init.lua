@@ -1,3 +1,16 @@
+local function get_starship_config()
+	local sep = package.config:sub(1, 1)
+	local home = os.getenv("HOME")
+	if home then
+		return home .. sep .. ".config" .. sep .. "yazi" .. sep .. "starship.toml"
+	end
+	local appdata = os.getenv("APPDATA")
+	if appdata then
+		return appdata .. sep .. "yazi" .. sep .. "config" .. sep .. "starship.toml"
+	end
+	return nil
+end
+
 require("git"):setup()
 require("full-border"):setup({
 	type = ui.Border.ROUNDED,
@@ -5,7 +18,7 @@ require("full-border"):setup({
 require("starship"):setup({
 	hide_flags = false,
 	flags_after_prompt = true,
-	config_file = "~/.config/yazi/starship.toml",
+	config_file = get_starship_config(),
 })
 
 Header:children_add(function()
