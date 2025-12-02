@@ -147,40 +147,6 @@ local function on_attach(client, bufnr)
       end,
       desc = "lsp: fix all",
     },
-    {
-      modes = { "n" },
-      key = "<leader>cr",
-      callback = function()
-        local old_name = vim.fn.expand("<cword>")
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        vim.ui.input({ prompt = "New Name", default = old_name }, function(new_name)
-          if new_name == nil or old_name == new_name then
-            return
-          end
-
-          vim.api.nvim_feedkeys("l", "n", false)
-
-          local params = vim.lsp.util.make_position_params(winnr, "utf-8")
-          params.position.character = params.position.character + 1
-          ---@diagnostic disable-next-line: inject-field
-          params.newName = new_name
-
-          vim.lsp.buf_request(bufnr, Methods.textDocument_rename, params, function(err, result, ctx, config)
-            if err then
-              std.reporter.error({
-                from = __module_name__,
-                subject = "rename",
-                message = "Failed to rename.",
-                details = { err = err, result = result, ctx = ctx, config = config },
-              })
-              return
-            end
-            vim.lsp.handlers[Methods.textDocument_rename](err, result, ctx, config)
-          end)
-        end)
-      end,
-      desc = "lsp: rename",
-    },
   }
   eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
