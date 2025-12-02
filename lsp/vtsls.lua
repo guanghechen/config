@@ -17,6 +17,11 @@ local CONFIG_FILENAMES = {
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
+  local is_deno = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" }) ~= nil ---@type boolean
+  if is_deno then
+    return
+  end
+
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local rootdir = eve.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
@@ -88,6 +93,38 @@ local function on_attach(client, bufnr)
 
   ---@type std.t.IKeymap[]
   local keymaps = {
+    {
+      modes = { "n" },
+      key = "gD",
+      callback = function()
+        client:exec_cmd({
+          title = "Go to source definition",
+          command = "typescript.goToSourceDefinition",
+          arguments = { vim.uri_from_bufnr(bufnr), vim.lsp.util.make_position_params(0, client.offset_encoding).position },
+        })
+      end,
+      desc = "lsp: go to source definition",
+    },
+    {
+      modes = { "n" },
+      key = "gR",
+      callback = function()
+        client:exec_cmd({
+          title = "Find all file references",
+          command = "typescript.findAllFileReferences",
+          arguments = { vim.uri_from_bufnr(bufnr) },
+        })
+      end,
+      desc = "lsp: find all file references",
+    },
+    {
+      modes = { "n" },
+      key = "<leader>cV",
+      callback = function()
+        client:exec_cmd({ title = "Select TypeScript version", command = "typescript.selectTypeScriptVersion" })
+      end,
+      desc = "lsp: select TypeScript version",
+    },
     {
       modes = { "n", "v" },
       key = "<leader>co",
@@ -197,51 +234,47 @@ return {
   },
   root_markers = { "tsconfig.json", "package.json", "jsconfig.json", ".git" },
   settings = {
-    complete_function_calls = true,
     vtsls = {
-      complete_function_calls = true,
-      vtsls = {
-        enableMoveToFileCodeAction = true,
-        autoUseWorkspaceTsdk = true,
-        experimental = {
-          maxInlayHintLength = 30,
-          completion = {
-            enableServerSideFuzzyMatch = true,
-          },
-        },
-        tsserver = {
-          globalPlugins = global_plugins,
+      enableMoveToFileCodeAction = true,
+      autoUseWorkspaceTsdk = true,
+      experimental = {
+        maxInlayHintLength = 30,
+        completion = {
+          enableServerSideFuzzyMatch = true,
         },
       },
-      typescript = {
-        tsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
-        globalTsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
-        updateImportsOnFileMove = { enabled = "always" },
-        suggest = {
-          completeFunctionCalls = true,
-        },
-        inlayHints = {
-          enumMemberValues = { enabled = true },
-          functionLikeReturnTypes = { enabled = true },
-          parameterNames = { enabled = "literals" },
-          parameterTypes = { enabled = true },
-          propertyDeclarationTypes = { enabled = true },
-          variableTypes = { enabled = false },
-        },
+      tsserver = {
+        globalPlugins = global_plugins,
       },
-      javascript = {
-        updateImportsOnFileMove = { enabled = "always" },
-        suggest = {
-          completeFunctionCalls = true,
-        },
-        inlayHints = {
-          enumMemberValues = { enabled = true },
-          functionLikeReturnTypes = { enabled = true },
-          parameterNames = { enabled = "literals" },
-          parameterTypes = { enabled = true },
-          propertyDeclarationTypes = { enabled = true },
-          variableTypes = { enabled = false },
-        },
+    },
+    typescript = {
+      tsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
+      globalTsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
+      updateImportsOnFileMove = { enabled = "always" },
+      suggest = {
+        completeFunctionCalls = true,
+      },
+      inlayHints = {
+        enumMemberValues = { enabled = true },
+        functionLikeReturnTypes = { enabled = true },
+        parameterNames = { enabled = "literals" },
+        parameterTypes = { enabled = true },
+        propertyDeclarationTypes = { enabled = true },
+        variableTypes = { enabled = false },
+      },
+    },
+    javascript = {
+      updateImportsOnFileMove = { enabled = "always" },
+      suggest = {
+        completeFunctionCalls = true,
+      },
+      inlayHints = {
+        enumMemberValues = { enabled = true },
+        functionLikeReturnTypes = { enabled = true },
+        parameterNames = { enabled = "literals" },
+        parameterTypes = { enabled = true },
+        propertyDeclarationTypes = { enabled = true },
+        variableTypes = { enabled = false },
       },
     },
   },

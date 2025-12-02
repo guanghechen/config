@@ -273,6 +273,10 @@ end
 ---@return lsp.ClientCapabilities
 M.get_capabilities = function()
   local capabilities = vim.lsp.protocol.make_client_capabilities() ---@type lsp.ClientCapabilities
+  capabilities.workspace = capabilities.workspace or {}
+  capabilities.workspace.fileOperations = capabilities.workspace.fileOperations or {}
+  capabilities.workspace.fileOperations.didRename = true
+  capabilities.workspace.fileOperations.willRename = true
   return capabilities
 end
 
