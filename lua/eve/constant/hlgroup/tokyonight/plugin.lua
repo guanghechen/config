@@ -253,16 +253,6 @@ function M.gen_hlgroup_map(context)
     TreesitterContextLineNumber = { fg = c.orange, bg = treesitter_context_bg },
     TreesitterContextLineNumberBottom = { underline = true },
 
-    ---! sidekick.nvim
-    SidekickCliAttach = { link = "NormalFloat" },
-    SidekickCliFailed = { link = "DiagnosticError" },
-    SidekickCliStarted = { link = "DiagnosticOk" },
-    SidekickDiffAdd = { link = "DiffWordRight" },
-    SidekickDiffDelete = { link = "DiffWordLeft" },
-    SidekickLocDelim = { link = "Delimiter" },
-    SidekickLocFile = { fg = c.blue },
-    SidekickLocRow = { fg = c.orange },
-
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.blue, bold = true },
     SnacksPickerFile = { fg = c.cyan },

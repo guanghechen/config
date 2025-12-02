@@ -206,22 +206,14 @@ return {
             end
           end,
           function()
-            -- Priority 2: Apply sidekick next edit suggestions
-            local Nes = require("sidekick.nes")
-            if Nes.have() and (Nes.jump() or Nes.apply()) then
-              return true
-            end
-          end,
-          function()
-            -- Priority 3: Jump to next snippet placeholder
+            -- Priority 2: Jump to next snippet placeholder
             if vim.snippet.active({ direction = 1 }) then
               vim.snippet.jump(1)
               return true
             end
           end,
           function()
-            -- Priority 4: Accept copilot inline completion
-            -- Just return truthy if completion exists; pressing TAB will accept it
+            -- Priority 3: Accept copilot inline completion
             return vim.lsp.inline_completion.get()
           end,
           actions.tab_fallback,

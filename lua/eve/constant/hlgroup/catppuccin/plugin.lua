@@ -256,16 +256,6 @@ function M.gen_hlgroup_map(context)
       italic = true,
     },
 
-    ---! sidekick.nvim
-    SidekickCliAttach = { link = "NormalFloat" },
-    SidekickCliFailed = { link = "DiagnosticError" },
-    SidekickCliStarted = { link = "DiagnosticOk" },
-    SidekickDiffAdd = { link = "DiffWordRight" },
-    SidekickDiffDelete = { link = "DiffWordLeft" },
-    SidekickLocDelim = { link = "Delimiter" },
-    SidekickLocFile = { fg = c.blue },
-    SidekickLocRow = { fg = c.peach },
-
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.blue, bold = true },
     SnacksPickerFile = { fg = c.teal },

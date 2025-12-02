@@ -42,7 +42,6 @@ local DISABLED_FILETYPES = {
   [eve.filetype.PLENARY_TEST_POPUP] = true,
   [eve.filetype.QUICKFIX] = true,
   [eve.filetype.SELECT] = true,
-  [eve.filetype.SIDEKICK_TERMINAL] = true,
   [eve.filetype.STARTUPTIME] = true,
   [eve.filetype.TERM] = true,
   [eve.filetype.TERM_MASK] = true,
