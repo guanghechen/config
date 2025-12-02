@@ -145,6 +145,7 @@ vim.filetype.add({
     wofi = "rasi",
   },
   filename = {
+    [".env"] = "conf",
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
@@ -208,7 +209,7 @@ vim.filetype.add({
     [".*/mako/config"] = "dosini",
     [".*/kitty/.+%.conf"] = "bash",
     [".*/hypr/.+%.conf"] = "hyprlang",
-    ["%.env%.[%w_.-]+"] = "sh",
+    ["%.env%.[%w_.-]+"] = "conf",
     ["untitled%-(%d+)"] = "text",
     [".*rc"] = "ini",
   },
