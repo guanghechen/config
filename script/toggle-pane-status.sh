@@ -9,21 +9,19 @@ function _ghc_tmux_toggle_pane_status_ {
     tmux set -g @GHC_PSL_MODE "01"
   elif [ "$direction" == "forward" ]; then
     case "$mode" in
-      "00") tmux set -g @GHC_PSL_MODE "01" ;;
       "01") tmux set -g @GHC_PSL_MODE "02" ;;
-      "02") tmux set -g @GHC_PSL_MODE "10" ;;
-      "10") tmux set -g @GHC_PSL_MODE "11" ;;
+      "02") tmux set -g @GHC_PSL_MODE "11" ;;
       "11") tmux set -g @GHC_PSL_MODE "12" ;;
-      "12") tmux set -g @GHC_PSL_MODE "00" ;;
+      "12") tmux set -g @GHC_PSL_MODE "01" ;;
+      *) tmux set -g @GHC_PSL_MODE "01" ;;
     esac
   elif [ "$direction" == "backward" ]; then
     case "$mode" in
-      "00") tmux set -g @GHC_PSL_MODE "12" ;;
-      "01") tmux set -g @GHC_PSL_MODE "00" ;;
+      "01") tmux set -g @GHC_PSL_MODE "12" ;;
       "02") tmux set -g @GHC_PSL_MODE "01" ;;
-      "10") tmux set -g @GHC_PSL_MODE "02" ;;
-      "11") tmux set -g @GHC_PSL_MODE "10" ;;
+      "11") tmux set -g @GHC_PSL_MODE "02" ;;
       "12") tmux set -g @GHC_PSL_MODE "11" ;;
+      *) tmux set -g @GHC_PSL_MODE "01" ;;
     esac
   fi
 
