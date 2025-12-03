@@ -4,8 +4,8 @@ function _ghc_tmux_hook_session_created {
   # Get the name of the new session
   local new_session_name=$1
 
-  # Check if the session name starts with "_popup" or is a special AI session
-  if [[ "${new_session_name}" == _popup@* ]] || [[ "${new_session_name}" =~ ^(claude|codex|gemini)\ [0-9a-f]+$ ]]; then
+  # Check if the session name starts with "_popup" or is the agent session
+  if [[ "${new_session_name}" == _popup@* ]] || [[ "${new_session_name}" == __agent__ ]]; then
     # Hide the status line and enable detach-on-destroy
     tmux set-option -t "${new_session_name}" status off
     tmux set-option -t "${new_session_name}" detach-on-destroy on
