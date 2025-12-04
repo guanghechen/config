@@ -87,11 +87,19 @@ Each integration includes environment-specific:
 - Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits
 
 ### Type Annotation Formatting
-- Type annotations must start at column 41 (counted from line start, not first non-space character):
+- Type annotations must start at column index 40 (0-indexed, i.e., the 41st character from line start):
   ```lua
   ---@param name                        string
   ---@param callback                    fun(result: boolean): nil
   ---@return nil
+  ```
+- Union type aliases must have each union item on its own line with `---| ` prefix, using double quotes for string literals:
+  ```lua
+  ---@alias std.git.StageState
+  ---| "staged"
+  ---| "unstaged"
+  ---| "mixed"
+  ---| nil
   ```
 - For multi-line target objects, place `---@type` annotation **above** the target, not after:
   ```lua
@@ -106,16 +114,18 @@ Each integration includes environment-specific:
     key = "value",
   })
   ```
-- Class field annotations follow the same column 41 alignment (counted from line start, not first non-space character)::
+- Class field annotations must include a visibility modifier (`public`, `protected`, or `private`) and follow the same column index 40 alignment:
   ```lua
   ---@class foo.bar.MyClass
   ---@field public name                 string
   ---@field public callback             fun(): nil
   ---@field protected _internal         integer
   ```
+- Avoid using `private`; prefer `protected` for non-public fields
 
 ### Class Field/Method Visibility
-- Use `protected` instead of `private` for non-public class fields and methods
+- All `@field` annotations must have a visibility modifier: `public`, `protected`, or `private`
+- Prefer `protected` over `private` for non-public class fields and methods
 - Protected methods must use `__<method_name>__` naming convention
 - Protected methods must be placed at the end of the class (fields are not affected by this rule)
 - Add a 100-character dash separator line above the first protected method:

@@ -5,15 +5,15 @@
 local dict = {}
 
 ---@class rstd.dict.ISearchResult
----@field type                          'scalar'|'segment'
----@field indexes                       integer[]
+---@field public type                   'scalar'|'segment'
+---@field public indexes                integer[]
 
 ---@class rstd.dict.ISearchOptions
----@field keyword                       string
----@field language                      string|nil
----@field match_mode                    'prefix'|'substring'|nil
----@field include_compounds             boolean|nil
----@field max_items                     integer|nil
+---@field public keyword                string
+---@field public language               string|nil
+---@field public match_mode             'prefix'|'substring'|nil
+---@field public include_compounds      boolean|nil
+---@field public max_items              integer|nil
 
 ---@param options                       rstd.dict.ISearchOptions|string
 ---@return rstd.dict.ISearchResult[]

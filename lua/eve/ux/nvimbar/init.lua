@@ -1,7 +1,7 @@
 ---@alias eve.ux.nvimbar.PositionEnum
----| 'f_sl'
----| 'f_tl'
----| 'f_wl'
+---| "f_sl"
+---| "f_tl"
+---| "f_wl"
 
 ---@class eve.ux.nvimbar.IRawComponent
 ---@field public atomic                 boolean

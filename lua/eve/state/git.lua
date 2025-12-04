@@ -22,19 +22,19 @@ local GIT_STATUS_HIGHLIGHT = {
 local M = {}
 
 ---@class eve.state.git.cache
----@field initialized                   boolean
----@field workspace                     string|nil
----@field last_refresh                  integer
----@field status_table                  table<string, std.git.StatusEntry>
----@field status_groups                 table<string, table<string, boolean>>
----@field file_status                   table<string, string>
----@field file_display                  table<string, string>
----@field file_summary                  table<string, string|nil>
----@field file_stage                    table<string, "staged"|"unstaged"|"mixed"|nil>
----@field dir_display                   table<string, string>
----@field dir_summary                   table<string, string|nil>
----@field dir_stage                     table<string, "staged"|"unstaged"|"mixed"|nil>
----@field dir_codes                     table<string, table<string, boolean>>
+---@field public initialized            boolean
+---@field public workspace              string|nil
+---@field public last_refresh           integer
+---@field public status_table           table<string, std.git.StatusEntry>
+---@field public status_groups          table<string, table<string, boolean>>
+---@field public file_status            table<string, string>
+---@field public file_display           table<string, string>
+---@field public file_summary           table<string, string|nil>
+---@field public file_stage             table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field public dir_display            table<string, string>
+---@field public dir_summary            table<string, string|nil>
+---@field public dir_stage              table<string, "staged"|"unstaged"|"mixed"|nil>
+---@field public dir_codes              table<string, table<string, boolean>>
 local cache = {
   initialized = false,
   workspace = nil,
@@ -52,10 +52,10 @@ local cache = {
 }
 
 ---@class eve.state.git.watchers
----@field workspace                     string|nil
----@field fs                            fun()[]
----@field interval                      uv.uv_timer_t|nil
----@field autocmd_group                 integer|nil
+---@field public workspace              string|nil
+---@field public fs                     fun()[]
+---@field public interval               uv.uv_timer_t|nil
+---@field public autocmd_group          integer|nil
 local watchers = {
   workspace = nil,
   fs = {},
@@ -135,9 +135,9 @@ local function git_status_now()
 end
 
 ---@class eve.state.git.dirinfo
----@field summary                       string|nil
----@field stage                         std.git.StageState
----@field codes                         table<string, boolean>
+---@field public summary                string|nil
+---@field public stage                  std.git.StageState
+---@field public codes                  table<string, boolean>
 
 ---@param dir_info                      table<string, eve.state.git.dirinfo>
 ---@param path                          string

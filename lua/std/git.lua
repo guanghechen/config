@@ -1,4 +1,8 @@
----@alias std.git.StageState "staged"|"unstaged"|"mixed"|nil
+---@alias std.git.StageState
+---| "staged"
+---| "unstaged"
+---| "mixed"
+---| nil
 
 ---@class std.git.StatusEntry
 ---@field public path                   string
@@ -16,9 +20,9 @@
 ---@field public unstaged_display       string
 
 ---@class std.git.ICollectStatusOpts
----@field base                          string|nil
----@field workspace                     string|nil
----@field include_untracked             boolean|nil
+---@field public base                   string|nil
+---@field public workspace              string|nil
+---@field public include_untracked      boolean|nil
 
 ---@type table<string, string[]>
 local STATUS_CATEGORY_CODE_MAP = {

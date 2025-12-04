@@ -35,10 +35,10 @@ local config = {
 ---@field public priority               number|nil
 
 ---@class fml.dressing.statuscolumn.IFoldInfo
----@field start                         number Line number where deepest fold starts
----@field level                         number Fold level, when zero other fields are N/A
----@field llevel                        number Lowest level that starts in v:lnum
----@field lines                         number Number of lines from v:lnum to end of closed fold
+---@field public start                  number Line number where deepest fold starts
+---@field public level                  number Fold level, when zero other fields are N/A
+---@field public llevel                 number Lowest level that starts in v:lnum
+---@field public lines                  number Number of lines from v:lnum to end of closed fold
 
 ---@type ffi.namespace*
 local C

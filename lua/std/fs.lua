@@ -293,9 +293,9 @@ function M.touch(filepath)
 end
 
 ---@class std.fs.IWatchFileOptions
----@field filepath                      string
----@field on_event                      fun(filepath:string, events: any, unwatch:fun():nil):nil
----@field on_error                      ?fun(filepath:string, err: any, unwatch:fun():nil):nil
+---@field public filepath               string
+---@field public on_event               fun(filepath:string, events: any, unwatch:fun():nil):nil
+---@field public on_error               ?fun(filepath:string, err: any, unwatch:fun():nil):nil
 
 ---@param opts                          std.fs.IWatchFileOptions
 ---@return fun():nil

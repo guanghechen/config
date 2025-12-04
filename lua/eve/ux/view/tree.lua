@@ -180,10 +180,10 @@ end
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---@field public tree                   std.collection.IReadonlyTree
----@field public render_listview_leaf       eve.ux.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_leaf   eve.ux.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   eve.ux.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  eve.ux.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf       eve.ux.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_leaf   eve.ux.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   eve.ux.view.tree.ITreeviewLeafLocationRenderer
 
 ---@class eve.ux.view.Tree

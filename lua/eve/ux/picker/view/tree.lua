@@ -71,10 +71,10 @@ local __module_name__ = "eve.ux.picker.view.tree" ---@type string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---@field public tree                   std.collection.IReadonlyTree
----@field public render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_leaf   eve.ux.picker.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   eve.ux.picker.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf       eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_leaf   eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
 local P = eve.ux.view.Tree ---@type eve.ux.view.Tree

@@ -67,11 +67,11 @@ local __module_name__ = "eve.ux.picker.composer.tree" ---@type string
 ---@field public search_pattern         std.collection.IObservable
 ---@field public search_pattern_history ?std.collection.IHistory
 ---
----@field public render_preview             ?eve.ux.picker.preview.IDraw
----@field public render_listview_leaf       eve.ux.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_preview         ?eve.ux.picker.preview.IDraw
+---@field public render_listview_leaf   eve.ux.picker.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   eve.ux.picker.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  eve.ux.picker.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf       eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_leaf   eve.ux.picker.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   eve.ux.picker.view.tree.ITreeviewLeafLocationRenderer
 ---
 ---@field public on_attached            ?eve.ux.picker.composer.tree.IOnAttached

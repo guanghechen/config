@@ -10,8 +10,8 @@ local __module_name__ = "std.collection.subscriber" ---@type string
 ---@field public next                   fun(self: std.collection.ISubscriber, value: std.t.T, value_prev: std.t.T| nil): nil
 
 ---@class std.collection.subscriber.IProps
----@field on_dispose                    std.collection.subscriber.IOnDispose|nil
----@field on_next                       std.collection.subscriber.IOnNext
+---@field public on_dispose             std.collection.subscriber.IOnDispose|nil
+---@field public on_next                std.collection.subscriber.IOnNext
 
 ---@class std.collection.Subscriber : std.collection.ISubscriber
 ---@field protected _on_dispose         std.collection.subscriber.IOnDispose

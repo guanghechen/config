@@ -4,10 +4,10 @@ local __module_name__ = "eve.fn.rename" ---@type string
 ---| function(params: eve.fn.rename.IParams): boolean
 
 ---@class eve.fn.rename.IParams
----@field from                          string
----@field to                            string
----@field isdir                         ?boolean
----@field force                         ?boolean
+---@field public from                   string
+---@field public to                     string
+---@field public isdir                  ?boolean
+---@field public force                  ?boolean
 
 ---@type eve.fn.rename
 local function rename(params)

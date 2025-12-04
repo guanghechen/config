@@ -1,6 +1,6 @@
 ---@class eve.ux.nvimbar.component.buf.IBufItem
----@field bufnr                         integer
----@field meta                          eve.builtin.buf.IMeta
+---@field public bufnr                  integer
+---@field public meta                   eve.builtin.buf.IMeta
 
 local btn = eve.nvim.btn
 local txt = eve.nvim.txt

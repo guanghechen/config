@@ -57,7 +57,7 @@ local ALL_VENV_MANAGER_PATHS = {
 }
 
 ---@class eve.constant.lang.python
----@field paths eve.constant.lang.python.IVenvManagerPaths
+---@field public paths                  eve.constant.lang.python.IVenvManagerPaths
 local M = {
   paths = ALL_VENV_MANAGER_PATHS[osname],
 }

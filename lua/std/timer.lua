@@ -1,7 +1,7 @@
 ---@class std.timer.IDisposableCallable
----@field cancel                          fun(self: std.timer.IDisposableCallable):nil
----@field dispose                         fun(self: std.timer.IDisposableCallable):nil
----@field stop                            fun(self: std.timer.IDisposableCallable):nil
+---@field public cancel                 fun(self: std.timer.IDisposableCallable):nil
+---@field public dispose                fun(self: std.timer.IDisposableCallable):nil
+---@field public stop                   fun(self: std.timer.IDisposableCallable):nil
 ---@operator call:any
 
 ---@class std.timer

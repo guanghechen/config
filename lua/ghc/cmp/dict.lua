@@ -1,22 +1,27 @@
 local __module_name__ = "ghc.cmp.dict" ---@type string
 
----@alias ghc.cmp.dict.IMatchMode 'prefix'|'substring'
----@alias IBlinkCmpDocumentation string | { kind: lsp.MarkupKind, value: string, draw?: fun(opts?: unknown) }
+---@alias ghc.cmp.dict.IMatchMode
+---| "prefix"
+---| "substring"
+
+---@alias IBlinkCmpDocumentation
+---| string
+---| { kind: lsp.MarkupKind, value: string, draw?: fun(opts?: unknown) }
 
 ---@class ghc.cmp.dict.IConfig
----@field dictionary_module             string
----@field max_items                     integer
----@field min_keyword_length            integer
----@field match_mode                    ghc.cmp.dict.IMatchMode
----@field include_compounds             boolean
----@field adjust_case                   boolean
----@field language                      string
+---@field public dictionary_module      string
+---@field public max_items              integer
+---@field public min_keyword_length     integer
+---@field public match_mode             ghc.cmp.dict.IMatchMode
+---@field public include_compounds      boolean
+---@field public adjust_case            boolean
+---@field public language               string
 
 ---@class ghc.cmp.dict
----@field opts                          ghc.cmp.dict.IConfig
----@field entries                       { word: string, documentation: string }[]
----@field kind_text                     integer
----@field insert_format                 integer
+---@field public opts                   ghc.cmp.dict.IConfig
+---@field public entries                { word: string, documentation: string }[]
+---@field public kind_text              integer
+---@field public insert_format          integer
 local M = {}
 
 local defaults = {

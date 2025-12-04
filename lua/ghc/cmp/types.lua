@@ -19,9 +19,20 @@
 --- @field is_incomplete_backward       boolean
 --- @field items                        blink.cmp.CompletionItem[]
 
---- @alias blink.cmp.CompletionKeywordRange 'prefix' | 'full'
---- @alias blink.cmp.CompletionTriggerKind  'manual' | 'prefetch' | 'keyword' | 'trigger_character'
---- @alias blink.cmp.Mode                   'cmdline' | 'term' | 'default'
+---@alias blink.cmp.CompletionKeywordRange
+---| "prefix"
+---| "full"
+
+---@alias blink.cmp.CompletionTriggerKind
+---| "manual"
+---| "prefetch"
+---| "keyword"
+---| "trigger_character"
+
+---@alias blink.cmp.Mode
+---| "cmdline"
+---| "term"
+---| "default"
 
 --- @class blink.cmp.ContextTrigger
 --- @field initial_kind                 blink.cmp.CompletionTriggerKind The trigger kind when the context was first created

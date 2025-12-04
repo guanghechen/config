@@ -11,8 +11,8 @@ local __module_name__ = "std.collection.subscribers" ---@type string
 ---@field public ARRANGE_THRESHOLD      ?number
 
 ---@class std.collection.subscribers.ISubscriberItem
----@field subscriber                    std.collection.ISubscriber
----@field unsubscribed                  boolean
+---@field public subscriber             std.collection.ISubscriber
+---@field public unsubscribed           boolean
 
 ---@type std.collection.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = std.fn.noop }

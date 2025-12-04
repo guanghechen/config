@@ -3,15 +3,15 @@ local __module_name__ = "ghc.cmp.path" ---@type string
 local uv = vim.uv
 
 ---@class ghc.cmp.path.config
----@field trailing_slash                boolean
----@field label_trailing_slash          boolean
----@field show_hidden_files_by_default  boolean
----@field debounce                      integer|false Debounce time in milliseconds
----@field request_timeout               integer Request timeout in milliseconds
----@field max_concurrent_requests       integer Maximum concurrent requests
----@field max_entries_per_scan          integer Maximum entries to process per directory scan
----@field chunk_size                    integer Number of entries to process per chunk
----@field gc_threshold_mb                integer Memory threshold in MB before triggering garbage collection
+---@field public trailing_slash         boolean
+---@field public label_trailing_slash   boolean
+---@field public show_hidden_files_by_default boolean
+---@field public debounce               integer|false Debounce time in milliseconds
+---@field public request_timeout        integer Request timeout in milliseconds
+---@field public max_concurrent_requests integer Maximum concurrent requests
+---@field public max_entries_per_scan   integer Maximum entries to process per directory scan
+---@field public chunk_size             integer Number of entries to process per chunk
+---@field public gc_threshold_mb        integer Memory threshold in MB before triggering garbage collection
 local config = {
   trailing_slash = true,
   label_trailing_slash = true,
@@ -43,15 +43,15 @@ function util.cancel_timer(timer)
 end
 
 ---@class ghc.cmp.path.context
----@field start_ts                     integer
----@field state                        table|nil
----@field active_scans                 integer
----@field last_dirname                 string|nil
+---@field public start_ts               integer
+---@field public state                  table|nil
+---@field public active_scans           integer
+---@field public last_dirname           string|nil
 
 ---@class ghc.cmp.path
----@field opts                         ghc.cmp.path.config
----@field context                      ghc.cmp.path.context
----@field debounce_timer               uv.uv_timer_t|nil
+---@field public opts                   ghc.cmp.path.config
+---@field public context                ghc.cmp.path.context
+---@field public debounce_timer         uv.uv_timer_t|nil
 local M = {}
 
 function M.new(opts)

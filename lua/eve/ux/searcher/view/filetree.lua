@@ -108,10 +108,10 @@ end
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
----@field public render_listview_leaf       ?eve.ux.searcher.view.filetree.IListviewFileRenderer
+---@field public render_listview_leaf   ?eve.ux.searcher.view.filetree.IListviewFileRenderer
 ---@field public render_listview_location   ?eve.ux.searcher.view.filetree.IListviewLocationRenderer
 ---@field public render_treeview_container  ?eve.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
----@field public render_treeview_leaf       ?eve.ux.searcher.view.filetree.ITreeviewFileRenderer
+---@field public render_treeview_leaf   ?eve.ux.searcher.view.filetree.ITreeviewFileRenderer
 ---@field public render_treeview_location   ?eve.ux.searcher.view.filetree.ITreeviewLocationRenderer
 
 local P = eve.ux.view.Tree ---@type eve.ux.view.Tree

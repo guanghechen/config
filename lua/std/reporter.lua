@@ -7,16 +7,16 @@ local Levels = {
 }
 
 ---@class std.reporter.IOptions
----@field from                          string
----@field group                         ?string
----@field subject                       ?string
----@field message                       ?string
----@field details                       ?any
----@field anonymous                     ?boolean
----@field silent                        ?boolean
----@field title                         ?string
----@field timeout                       ?integer
----@field highlights                    ?std.t.IHighlight[]
+---@field public from                   string
+---@field public group                  ?string
+---@field public subject                ?string
+---@field public message                ?string
+---@field public details                ?any
+---@field public anonymous              ?boolean
+---@field public silent                 ?boolean
+---@field public title                  ?string
+---@field public timeout                ?integer
+---@field public highlights             ?std.t.IHighlight[]
 
 ---@class std.reporter
 local M = {}

@@ -10,8 +10,8 @@ local __module_name__ = "std.collection.promise" ---@type string
 ---@field public xfinally               fun(self: std.collection.IPromise, on_finally: std.collection.promise.IOnFinally): std.collection.IPromise
 
 ---@alias std.collection.promise.ISettled
----| 'fulfilled'
----|'rejected'
+---| "fulfilled"
+---| "rejected"
 
 ---@alias std.collection.promise.IOnFulfilled
 ---| fun(value: unknown): unknown
