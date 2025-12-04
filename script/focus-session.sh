@@ -3,24 +3,24 @@
 function _ghc_tmux_focus_session_ {
   local direction=$1
   local current_session_name
-  current_session_name=$(tmux display-message -p '#S')
+  current_session_name="$(tmux display-message -p '#S')"
 
   if [[ "${current_session_name}" == _popup@* ]]; then
-    sessions=$(tmux list-sessions -F "#{session_name}" | grep "^_popup@")
-  elif [[ "${current_session_name}" == __agent__ ]]; then
-    sessions="__agent__"
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep '^_popup@')
+  elif [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep -E '^(claude|codex|gemini)-[0-9a-f]+$')
   else
-    sessions=$(tmux list-sessions -F "#{session_name}" | grep -v "^_popup@" | grep -v "^__agent__$")
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9a-f]+$')
   fi
 
   # Find the index of the current session in the list of sessions
   local index=0
-  for session in $sessions; do
-    if [ "$session" == "$current_session_name" ]; then
+  while IFS= read -r session; do
+    if [[ "$session" == "$current_session_name" ]]; then
       break
     fi
     index=$((index + 1))
-  done
+  done <<<"$sessions"
 
   # Calculate the index of the target session based on the direction
   if [ "$direction" == "prev" ]; then
