@@ -13,6 +13,7 @@ local cn = vim.api.nvim_create_namespace
 ---@class eve.builtin.var.nsnr
 M.nsnr = {
   -- stylua: ignore start
+  ai_prompt_preview     = cn("ux:ai:prompt:preview"),
   attach                = cn("ux:attach"),
   cmdline               = cn("ux:cmdline"),
   diagnostic            = cn("ux:diagnostic"),

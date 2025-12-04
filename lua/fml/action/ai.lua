@@ -76,4 +76,79 @@ function M.edit()
   eve.command.execute(eve.command.definitions.notepad.append_content.uuid, "\n" .. location .. " ")
 end
 
+---@return nil
+function M.attach_agent()
+  eve.ux.widget.ai.action.show_attach_picker()
+end
+
+---@return nil
+function M.detach_agent()
+  eve.ux.widget.ai.action.show_detach_picker()
+end
+
+---@return nil
+function M.submit_buffer()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local text = eve.buf.retrieve_split_block(winnr) ---@type string
+  eve.ux.widget.ai.action.send_to_attached(text, true)
+end
+
+---@return nil
+function M.submit_selection()
+  local text = eve.buf.retrieve_selected_text() or ""
+  if #text > 0 then
+    eve.ux.widget.ai.action.send_to_attached(text, true)
+  end
+end
+
+---@return nil
+function M.send_buffer()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local text = table.concat(lines, "\n")
+  eve.ux.widget.ai.action.send_to_attached(text, false)
+end
+
+---@return nil
+function M.send_selection()
+  local text = eve.buf.retrieve_selected_text() or ""
+  if #text > 0 then
+    eve.ux.widget.ai.action.send_to_attached(text, false)
+  end
+end
+
+---@return nil
+function M.send_this()
+  local filepath = vim.api.nvim_buf_get_name(0)
+  if filepath == "" then
+    std.reporter.warn({
+      from = __module_name__,
+      subject = "send_this",
+      message = "Cannot send: buffer has no file path.",
+    })
+    return
+  end
+
+  local location, _ = std.uri.file_location({ filepath = filepath })
+  if location then
+    eve.ux.widget.ai.action.send_to_attached(location, true)
+  end
+end
+
+---@return nil
+function M.send_file()
+  local filepath = vim.api.nvim_buf_get_name(0)
+  if filepath ~= "" then
+    local text = std.fs.read_file({ filepath = filepath, silent = true })
+    if text then
+      eve.ux.widget.ai.action.send_to_attached(text, true)
+    end
+  end
+end
+
+---@return nil
+function M.select_prompt()
+  eve.ux.widget.ai.action.show_prompt_picker()
+end
+
 return M

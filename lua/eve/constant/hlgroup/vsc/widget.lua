@@ -307,6 +307,23 @@ function M.gen_hlgroup_map(context)
     f_md_task_favorite = { fg = c.tokenConstantCharacterEscape, bold = true },
     f_md_text_inline_highlight = { fg = c.base, bg = cs.mix(c.base, c.tokenFunctionDeclarations, 50) },
 
+    ---select ai
+    f_us_ai_attached = { fg = u.brightGreen, bold = true },
+    f_us_ai_loc_col = { fg = c.accentAqua },
+    f_us_ai_loc_delim = { fg = u.fg4 },
+    f_us_ai_loc_file = { fg = c.accentBlue },
+    f_us_ai_loc_num = { fg = c.tokenConstantNumeric },
+    f_us_ai_loc_row = { fg = c.accentPurple },
+    f_us_ai_new = { fg = u.fg2 },
+    f_us_ai_prompt_header = { fg = c.accentPurple, bold = true },
+    f_us_ai_running = { fg = u.brightBlue },
+    f_us_ai_send_to_all = { fg = u.pink, bold = true },
+
+    ---select codeaction
+    f_us_codeaction_client_name = { fg = u.fg4, bg = c.none },
+    f_us_codeaction_content = { fg = u.fg1, bg = c.none },
+    f_us_codeaction_order = { fg = u.red, bg = c.none },
+
     ---search
     f_us_input_normal = { fg = u.fg1, bg = bg },
     f_us_input_prompt = { fg = u.red, bg = bg },
@@ -342,13 +359,8 @@ function M.gen_hlgroup_map(context)
 
     ---searcher
     f_ss_matches = { fg = u.pink, bold = true, italic = true },
-    f_ss_search = { fg = u.red, bold = true, italic = true, strikethrough = true },
     f_ss_replace = { fg = u.green, bold = true, italic = true },
-
-    ---select codeaction
-    f_us_codeaction_order = { fg = u.red, bg = c.none },
-    f_us_codeaction_content = { fg = u.fg1, bg = c.none },
-    f_us_codeaction_client_name = { fg = u.fg4, bg = c.none },
+    f_ss_search = { fg = u.red, bold = true, italic = true, strikethrough = true },
 
     ---signs
     fs_input_prompt = { fg = u.red, bg = bg },

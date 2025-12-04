@@ -101,6 +101,7 @@ M.symbols = {
 ---@class eve.builtin.icon.status
 M.status = {
   attached = "󰖩",
+  broadcast = "󰐼",
   detached = "󰖪",
 }
 

@@ -1,5 +1,6 @@
 ---@class eve.ux.widget.__mods
 local __mods = {
+  ai = "eve.ux.widget.ai",
   Notepad = "eve.ux.widget.notepad",
   Terminal = "eve.ux.widget.terminal",
 }
@@ -10,6 +11,7 @@ local _colorpicker = nil
 ---@class eve.ux.widget
 ---@field public __mods                 eve.ux.widget.__mods
 ---
+---@field public ai                     eve.ux.widget.ai
 ---@field public ColorPicker            eve.ux.widget.colorpicker.ColorPicker
 ---@field public Notepad                eve.ux.widget.Notepad
 ---@field public Terminal               eve.ux.widget.Terminal

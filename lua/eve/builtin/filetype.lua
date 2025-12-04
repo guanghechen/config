@@ -1,6 +1,7 @@
 ---@class eve.builtin.filetype
 local M = {}
 
+M.AI_TERMINAL = "ai_terminal"
 M.BIGFILE = "bigfile"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
@@ -170,6 +171,7 @@ local filetypes = {
     ["markdown"] = true,
   },
   not_sourcefile = {
+    [M.AI_TERMINAL] = true,
     [M.CHECKHEALTH] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,
@@ -212,6 +214,7 @@ local filetypes = {
     [M.WINPICKER_MASK] = true,
   },
   no_flash = {
+    [M.AI_TERMINAL] = true,
     [M.FLASH_PROMPT] = true,
     [M.IMAGE_VIEWER] = true,
     [M.NOTIFY] = true,

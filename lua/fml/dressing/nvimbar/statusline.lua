@@ -47,6 +47,7 @@ statusline
   :place("right", c.python.env(position), 100)
   :place("right", c.lsp.client(position), 100)
   :place("right", c.lint.status(position), 95)
+  :place("right", c.ai.status(position), 95)
   :place("right", c.copilot.status(position), 95)
   :place("right", c.lsp.diagnostics(position), 95)
   :place("right", c.nvim.msg_mode(position), 95)
