@@ -66,7 +66,6 @@ end
 ---@return integer
 function M.input(opts, on_confirm)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local parent_win_cfg = vim.api.nvim_win_get_config(parent_winnr) ---@type vim.api.keyset.win_config
   local parent_cursor = vim.api.nvim_win_get_cursor(parent_winnr) ---@type integer[]
   local parent_row = parent_cursor[1] ---@type integer
 
@@ -121,17 +120,12 @@ function M.input(opts, on_confirm)
   col = math.max(0, col)
   width = math.max(1, width)
 
-  local anchor_win_cfg = parent_win_cfg ---@type vim.api.keyset.win_config
-  if relative == "win" and relative_win ~= nil then
-    local ok, cfg = pcall(vim.api.nvim_win_get_config, relative_win)
-    if ok and type(cfg) == "table" then
-      anchor_win_cfg = cfg
-    end
-  end
+  local zindex_source_winnr = relative_win or parent_winnr ---@type integer
+  local zindex = eve.win.resolve_zindex(zindex_source_winnr) ---@type integer
 
   ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = anchor_win_cfg.zindex and anchor_win_cfg.zindex + 1 or nil,
+    zindex = zindex,
     relative = relative,
     win = relative_win,
     anchor = "NW",

@@ -4,6 +4,7 @@ local __module_name__ = "eve.ux.picker.finder" ---@type string
 ---@class eve.ux.picker.finder.IWinOpts
 ---@field public border                 string|string[]
 ---@field public winhighlight           string
+---@field public zindex                 ?integer
 
 ----------------------------------------------------------------------------------------------------
 
@@ -194,6 +195,7 @@ function M:create_win(winopts, dimension)
     noautocmd = true,
     title = self.title,
     title_pos = "center",
+    zindex = winopts.zindex,
   }
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr

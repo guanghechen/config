@@ -218,6 +218,7 @@ local keymaps = {
       printer:render(bufnr):dispose()
 
       local opts = {
+        zindex = eve.win.resolve_zindex(),
         relative = "cursor",
         width = width,
         height = height,

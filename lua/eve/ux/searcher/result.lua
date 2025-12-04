@@ -30,6 +30,7 @@ local __module_name__ = "eve.ux.searcher.result" ---@type string
 ---@field public border                 string|string[]
 ---@field public number                 boolean
 ---@field public winhighlight           string
+---@field public zindex                 ?integer
 
 ----------------------------------------------------------------------------------------------------
 
@@ -527,6 +528,7 @@ function M:create_win(winopts, dimension)
     style = "minimal",
     focusable = true,
     noautocmd = true,
+    zindex = winopts.zindex,
   }
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr

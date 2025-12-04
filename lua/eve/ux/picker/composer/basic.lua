@@ -561,11 +561,13 @@ function M:__create_wins__()
 
   local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension, std.t.IWinDimension|nil
   local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
+  local zindex = eve.win.resolve_zindex() ---@type integer
 
   ---@type eve.ux.picker.finder.IWinOpts
   local finder_winopts = {
     border = finder_border,
     winhighlight = __highlights__.finder,
+    zindex = zindex,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
@@ -574,6 +576,7 @@ function M:__create_wins__()
     border = result_border,
     number = result_number,
     winhighlight = __highlights__.result,
+    zindex = zindex,
   }
   result_winnr = result:create_win(result_winopts, result_dimension)
 
@@ -582,6 +585,7 @@ function M:__create_wins__()
     local preview_winopts = {
       border = preview_border,
       winhighlight = __highlights__.preview,
+      zindex = zindex,
     }
     preview_winnr = preview:create_win(preview_winopts, preview_dimension) ---@type integer|nil
   end

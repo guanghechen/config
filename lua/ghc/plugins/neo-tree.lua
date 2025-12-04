@@ -236,6 +236,7 @@ return {
         vim.bo[bufnr].readonly = true
 
         local wincfg = {
+          zindex = eve.win.resolve_zindex(),
           relative = "cursor",
           width = vim.api.nvim_strwidth(filepath_relative) + 12,
           height = 4,

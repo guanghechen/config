@@ -1086,6 +1086,7 @@ function M:ensure_win()
   self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 
   local config = {
+    zindex = eve.win.resolve_zindex(),
     relative = "editor",
     anchor = "NW",
     row = rect.row,

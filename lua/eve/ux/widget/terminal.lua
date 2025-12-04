@@ -326,6 +326,7 @@ function M:__create_win_as_needed__(termmeta)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
+    zindex = eve.win.resolve_zindex(),
     relative = "editor",
     row = row,
     col = col,

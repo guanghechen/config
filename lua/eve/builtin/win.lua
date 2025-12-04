@@ -305,6 +305,20 @@ function M.is_valid(winnr)
   return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
 end
 
+---@param winnr                         integer|nil
+---@return integer
+function M.resolve_zindex(winnr)
+  winnr = winnr or vim.api.nvim_get_current_win()
+  local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  local base_zindex = wincfg.zindex or 50 ---@type integer
+  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local wintype = meta and meta.wintype or nil ---@type eve.builtin.win.TypeEnum|nil
+  if wintype == Types.CMDLINE or wintype == Types.NOTIFY then
+    return base_zindex - 1
+  end
+  return base_zindex + 1
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@param winnr_candidate               integer|nil

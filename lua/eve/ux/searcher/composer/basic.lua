@@ -706,11 +706,13 @@ function M:__create_wins__()
 
   local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
   local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
+  local zindex = eve.win.resolve_zindex() ---@type integer
 
   ---@type eve.ux.searcher.finder.IWinOpts
   local finder_winopts = {
     border = self:__get_finder_border__(should_show_replacer, should_show_preview and preview_layout == "right"),
     winhighlight = __highlights__.finder,
+    zindex = zindex,
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
@@ -719,6 +721,7 @@ function M:__create_wins__()
     local replacer_winopts = {
       border = replacer_border,
       winhighlight = __highlights__.replacer,
+      zindex = zindex,
     }
     replacer_winnr = replacer:create_win(replacer_winopts, replacer_dimension)
   end
@@ -728,6 +731,7 @@ function M:__create_wins__()
     border = result_border,
     number = result_number,
     winhighlight = __highlights__.result,
+    zindex = zindex,
   }
   result_winnr = result:create_win(result_winopts, result_dimension)
 
@@ -736,6 +740,7 @@ function M:__create_wins__()
     local preview_winopts = {
       border = preview_border,
       winhighlight = __highlights__.preview,
+      zindex = zindex,
     }
     preview_winnr = preview:create_win(preview_winopts, preview_dimension) ---@type integer|nil
   end
