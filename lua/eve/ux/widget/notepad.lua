@@ -7,7 +7,8 @@ local MAX_HEIGHT = 0.9
 local MIN_WIDTH = 60
 local MIN_HEIGHT = 12
 local WIN_TITLE = " Notepad "
-local NOTEPAD_WIN_HIGHLIGHT = "FloatBorder:FloatBorder,FloatTitle:f_np_title,Normal:f_np_normal"
+local NOTEPAD_WIN_HIGHLIGHT =
+  "CursorLine:f_np_cursorline,CursorLineNr:f_np_cursorline,FloatBorder:FloatBorder,FloatTitle:f_np_title,LineNr:f_np_normal,Normal:f_np_normal,SignColumn:f_np_normal"
 local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" }
 local DEFAULT_ITEM_NAME = eve.setting.BUF_UNTITLED
 local BUFFER_VAR_NAME = "eve_notepad_uuid"
