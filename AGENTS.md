@@ -78,12 +78,17 @@ Each integration includes environment-specific:
 
 ## Code Conventions
 
+### Neovim Version
+- This configuration only supports the latest Neovim version; no backward compatibility code is needed
+
 ### Lua Code Standards
 - Avoid unnecessary comments except typing comments like `---@type string`
 - Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
 - Use `std.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
+- Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
+- Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
 - Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits
 
 ### Type Annotation Formatting
