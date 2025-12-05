@@ -1,5 +1,8 @@
 # rosepine-moon
 
+[bell]
+color = "#EA9A97"
+
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true

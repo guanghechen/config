@@ -1,5 +1,8 @@
 # vsc-light-modern
 
+[bell]
+color = "#C72E0F"
+
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true

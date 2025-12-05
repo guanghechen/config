@@ -1,5 +1,8 @@
 # tokyonight-night
 
+[bell]
+color = "#ff9e64"
+
 [colors]
 draw_bold_text_with_bright_colors = false
 transparent_background_colors = true

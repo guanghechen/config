@@ -1,7 +1,6 @@
 # Bell
 [bell]
 animation = "EaseOutExpo"
-color = "#888888"
 duration = 100
 
 [cursor]
