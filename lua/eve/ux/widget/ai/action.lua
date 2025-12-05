@@ -95,7 +95,9 @@ function M.collect_items()
       if a_pane.window_name ~= b_pane.window_name then
         return a_pane.window_name < b_pane.window_name
       end
-      return a_pane.pane_id < b_pane.pane_id
+      local a_pane_num = tonumber(a_pane.pane_id:match("%%(%d+)")) or 0
+      local b_pane_num = tonumber(b_pane.pane_id:match("%%(%d+)")) or 0
+      return a_pane_num < b_pane_num
     end
 
     return M.get_source_identifier(a.source) < M.get_source_identifier(b.source)
