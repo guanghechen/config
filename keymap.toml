@@ -61,6 +61,7 @@ bindings = [
   { key = "Key9",       mods = "Control|Shift",             action = "ReceiveChar" },
 
   # ----- csi u keybindings -----
+  { key = "Tab",                                            chars = "\u0009" },
   { key = "I",          mods = "Control",                   chars = "\u001b[105;5u" },
   { key = "M",          mods = "Control",                   chars = "\u001b[109;5u" },
   { key = "O",          mods = "Control",                   chars = "\u001b[111;5u" },
