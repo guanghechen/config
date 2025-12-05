@@ -167,7 +167,10 @@ function M.attach_to_source(source)
     std.reporter.info({
       from = __module_name__,
       subject = "attach_to_source",
-      message = string.format("Attached to external %s pane (messages will be sent via tmux).", config.agent_labels[source.agent]),
+      message = string.format(
+        "Attached to external %s pane (messages will be sent via tmux).",
+        config.agent_labels[source.agent]
+      ),
     })
     return
   end
@@ -229,11 +232,25 @@ end
 function M.send_to_source(source, text, submit)
   if source.type == "tmux" and source.tmux_pane then
     local tool = config.tools[source.agent]
+    local pane_id = source.tmux_pane.pane_id
     if tool and tool.vim_mode then
-      tmux.send_escape_i(source.tmux_pane.pane_id)
+      tmux.send_escape_i(pane_id)
+      vim.defer_fn(function()
+        tmux.send_text(pane_id, text)
+        if submit then
+          tmux.send_enter(pane_id)
+        end
+      end, 50)
+      return true
     end
-    return submit and tmux.send_and_submit(source.tmux_pane.pane_id, text)
-      or tmux.send_text(source.tmux_pane.pane_id, text)
+
+    if not tmux.send_text(pane_id, text) then
+      return false
+    end
+    if submit then
+      return tmux.send_enter(pane_id)
+    end
+    return true
   elseif source.type == "terminal" then
     return term.send(source.id, text, submit)
   end

@@ -296,11 +296,4 @@ function M.send_enter(pane_id)
   return exec({ "tmux", "send-keys", "-t", pane_id, "Enter" }) ~= nil
 end
 
----@param pane_id                       string
----@param text                          string
----@return boolean
-function M.send_and_submit(pane_id, text)
-  return M.send_text(pane_id, text) and M.send_enter(pane_id)
-end
-
 return M
