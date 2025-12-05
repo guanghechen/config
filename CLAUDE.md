@@ -126,6 +126,17 @@ Each integration includes environment-specific:
   ---@field protected _internal         integer
   ```
 - Avoid using `private`; prefer `protected` for non-public fields
+- Adjacent type definitions (`---@alias` or `---@class`) must be separated by at least one blank line:
+  ```lua
+  -- Bad
+  ---@alias foo.TypeA string
+  ---@alias foo.TypeB number
+
+  -- Good
+  ---@alias foo.TypeA string
+
+  ---@alias foo.TypeB number
+  ```
 
 ### Class Field/Method Visibility
 - All `@field` annotations must have a visibility modifier: `public`, `protected`, or `private`

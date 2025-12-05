@@ -2,8 +2,6 @@
 
 local __module_name__ = "fml.action.git.browse" ---@type string
 
-local uv = vim.uv or vim.loop
-
 ---@alias fml.action.git.browse.TargetScope
 ---| "branch"
 ---| "commit"
@@ -221,7 +219,7 @@ function M.browse(opts)
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
   filepath = filepath ~= "" and std.path.normalize(filepath) or nil
-  local stat = filepath and uv.fs_stat(filepath) or nil
+  local stat = filepath and vim.uv.fs_stat(filepath) or nil
   local is_file = stat and stat.type == "file" or false
 
   local cwd = is_file and vim.fn.fnamemodify(filepath --[[@as string]], ":h") or std.path.cwd()

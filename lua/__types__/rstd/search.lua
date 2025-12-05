@@ -51,6 +51,7 @@ local M = {}
 function M.search_in_files(options) end
 
 ---@alias rstd.search.ISearchInLinesLiteralMatchPoint rstd.search.ISearchInLinesMatchPoint
+
 ---@alias rstd.search.ISearchInLinesLiteralLineMatch rstd.search.ISearchInLinesLineMatch
 
 ---@class rstd.search.ISearchInLinesLiteralOptions
@@ -65,6 +66,7 @@ function M.search_in_files(options) end
 function M.search_in_lines_literal(options) end
 
 ---@alias rstd.search.ISearchInLinesRegexMatchPoint rstd.search.ISearchInLinesMatchPoint
+
 ---@alias rstd.search.ISearchInLinesRegexLineMatch rstd.search.ISearchInLinesLineMatch
 
 ---@class rstd.search.ISearchInLinesRegexOptions

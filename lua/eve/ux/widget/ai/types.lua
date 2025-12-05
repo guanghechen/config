@@ -14,7 +14,9 @@
 ---@field public cmd                    string
 
 ---@alias eve.ux.widget.ai.IChunk { [1]: string, [2]?: string } A chunk of text with optional highlight group.
+
 ---@alias eve.ux.widget.ai.ITextLine eve.ux.widget.ai.IChunk[] A line composed of chunks.
+
 ---@alias eve.ux.widget.ai.IText eve.ux.widget.ai.ITextLine[] Multiple lines of chunked text.
 
 ---@class eve.ux.widget.ai.IPromptRenderResult

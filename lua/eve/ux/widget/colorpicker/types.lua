@@ -5,11 +5,13 @@
 ---| "RGB"
 ---| "HSL"
 ---| "HSV"
+
 ---@alias eve.ux.widget.colorpicker.OutputModeName
 ---| "HEX"
 ---| "RGB"
 ---| "HSL"
 ---| "HSV"
+
 ---@alias eve.ux.widget.colorpicker.PointType
 ---| "color"
 ---| "alpha"

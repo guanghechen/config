@@ -6,7 +6,7 @@ local util = vim.lsp.util
 
 ---@class eve.builtin.lsp_action.ProviderContext
 ---@field public bufnr                  integer
----@field public win                    integer
+---@field public winnr                  integer
 ---@field public mode                   string
 ---@field public lnum                   integer
 ---@field public cursor                 { row: integer, col: integer }
@@ -127,12 +127,12 @@ end
 ---@param opts                          table|nil
 ---@param context                       table
 ---@param bufnr                         integer
----@param win                           integer
+---@param winnr                         integer
 ---@param mode                          string
 ---@param lnum                          integer
 ---@param cursor                        { row: integer, col: integer }
 ---@return eve.builtin.lsp_action.ProviderContext
-local function make_provider_context(opts, context, bufnr, win, mode, lnum, cursor)
+local function make_provider_context(opts, context, bufnr, winnr, mode, lnum, cursor)
   local selection ---@type { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }|nil
   if opts ~= nil and opts.range ~= nil then
     local start_pos = assert(opts.range.start, "range must have a `start` property")
@@ -144,7 +144,7 @@ local function make_provider_context(opts, context, bufnr, win, mode, lnum, curs
 
   return {
     bufnr = bufnr,
-    win = win,
+    winnr = winnr,
     mode = mode,
     lnum = lnum,
     cursor = cursor,
@@ -166,12 +166,12 @@ local function custom_code_action(opts)
   end
 
   local bufnr = api.nvim_get_current_buf()
-  local win = api.nvim_get_current_win()
+  local winnr = api.nvim_get_current_win()
   local mode = api.nvim_get_mode().mode
-  local cursor_pos = api.nvim_win_get_cursor(win)
+  local cursor_pos = api.nvim_win_get_cursor(winnr)
   local lnum = cursor_pos[1] - 1
 
-  local provider_ctx = make_provider_context(opts, context, bufnr, win, mode, lnum, {
+  local provider_ctx = make_provider_context(opts, context, bufnr, winnr, mode, lnum, {
     row = cursor_pos[1],
     col = cursor_pos[2],
   })
@@ -190,7 +190,7 @@ local function custom_code_action(opts)
       local end_pos = { selection_end.line + 1, selection_end.character }
       params = util.make_given_range_params(start_pos, end_pos, bufnr, client.offset_encoding)
     else
-      params = util.make_range_params(win, client.offset_encoding)
+      params = util.make_range_params(provider_ctx.winnr, client.offset_encoding)
     end
     ---@cast params lsp.CodeActionParams
 

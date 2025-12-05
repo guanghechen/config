@@ -63,17 +63,17 @@ local function _ffi()
   return C
 end
 
----@param win                           number
+---@param winnr                         number
 ---@param lnum                          number
 ---@return fml.dressing.statuscolumn.IFoldInfo|nil
-local function fold_info(win, lnum)
+local function fold_info(winnr, lnum)
   pcall(_ffi)
   if not C then
     return
   end
   local ffi = require("ffi")
   local err = ffi.new("Error")
-  local wp = C.find_window_by_handle(win, err)
+  local wp = C.find_window_by_handle(winnr, err)
   if wp == nil then
     return
   end
@@ -307,9 +307,9 @@ end
 
 ---@return string
 function M.statuscolumn()
-  local win = vim.g.statusline_winid
-  local buf = vim.api.nvim_win_get_buf(win)
-  local key = ("%d:%d:%d:%d:%d"):format(win, buf, vim.v.lnum, vim.v.virtnum ~= 0 and 1 or 0, vim.v.relnum)
+  local winnr = vim.g.statusline_winid
+  local bufnr = vim.api.nvim_win_get_buf(winnr)
+  local key = ("%d:%d:%d:%d:%d"):format(winnr, bufnr, vim.v.lnum, vim.v.virtnum ~= 0 and 1 or 0, vim.v.relnum)
   if cache[key] then
     return cache[key]
   end
