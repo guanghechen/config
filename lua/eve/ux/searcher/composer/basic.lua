@@ -1110,21 +1110,8 @@ function M:__resolve_builtin_keymaps_finder__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "searcher#finder: focus left",
       callback = function()
-        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
-        if preview_layout == "right" and self.preview ~= nil then
-          local winnr = self.preview:get_winnr() ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            self:__focus_pane__("preview")
-            return
-          end
-        elseif preview_layout == "bottom" then
-          self:__focus_pane__(self:__should_show_replacer__() and "replacer" or "result")
-          return
-        end
-
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
-          return
         end
       end,
     },
@@ -1394,21 +1381,8 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "searcher#result: focus left",
       callback = function()
-        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
-        if preview_layout == "right" and self.preview ~= nil then
-          local winnr = self.preview:get_winnr() ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            self:__focus_pane__("preview")
-            return
-          end
-        elseif preview_layout == "bottom" then
-          self:__focus_pane__(self:__should_show_replacer__() and "replacer" or "finder")
-          return
-        end
-
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
-          return
         end
       end,
     },
@@ -1542,21 +1516,8 @@ function M:__resolve_builtin_keymaps_replacer__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "searcher#replacer: focus left",
       callback = function()
-        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
-        if preview_layout == "right" and self.preview ~= nil then
-          local winnr = self.preview:get_winnr() ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            self:__focus_pane__("preview")
-            return
-          end
-        elseif preview_layout == "bottom" then
-          self:__focus_pane__("result")
-          return
-        end
-
         if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
-          return
         end
       end,
     },
@@ -1684,10 +1645,17 @@ function M:__resolve_builtin_keymaps_preview__()
       modes = { "i", "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
-      desc = "searcher#result: focus left",
+      desc = "searcher#preview: focus left",
       callback = function()
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
-        self:__focus_pane__(pane_focused)
+        local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
+        if preview_layout == "right" then
+          local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type eve.ux.searcher.composer.basic.PaneEnum
+          self:__focus_pane__(pane_focused)
+          return
+        end
+        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+          std.tmux.change_pane("h")
+        end
       end,
     },
     {
