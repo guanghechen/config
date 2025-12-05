@@ -18,6 +18,8 @@ keybind = ctrl+grave_accent=csi:96;5u
 keybind = ctrl+i=csi:105;5u
 keybind = ctrl+m=csi:109;5u
 keybind = ctrl+o=csi:111;5u
+keybind = tab=text:\x09
+keybind = shift+enter=csi:13;2u
 
 # Control + Shift + Keys to CSI u format
 keybind = ctrl+shift+comma=csi:44;6u
