@@ -191,7 +191,6 @@ When modifying `rust/rstd/src/`:
 
 ## Development Files
 - `init-theme.lua`: Theme testing and development
-- `init-debug.lua`: Debug mode configuration
 - `init-update.lua`: Update utilities
 - `README.md`: Main documentation
 - `doc/`: Issue tracking and detailed documentation
