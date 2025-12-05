@@ -9,3 +9,4 @@ trustedFolders.json
 
 local/
 tmp/
+state.json
