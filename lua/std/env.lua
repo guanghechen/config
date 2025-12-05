@@ -15,6 +15,13 @@ local PATH_ENV_SEP = IS_WIN and ";" or ":" ---@type string
 local PATH_SEP = IS_WIN and "\\" or "/" ---@type string
 local USERNAME = os.getenv("USER") or os.getenv("USERNAME") or "unknown" ---@type string
 
+local TERM = (os.getenv("TERM") or ""):lower() ---@type string
+local TERM_PROGRAM = (os.getenv("TERM_PROGRAM") or ""):lower() ---@type string
+
+local IS_KITTY = os.getenv("KITTY_PID") ~= nil or TERM:find("kitty", 1, true) ~= nil or TERM_PROGRAM == "kitty"
+local IS_WEZTERM = os.getenv("WEZTERM_EXECUTABLE") ~= nil or TERM_PROGRAM == "wezterm"
+local IS_GHOSTTY = os.getenv("GHOSTTY_RESOURCES_DIR") ~= nil or TERM_PROGRAM == "ghostty"
+
 ---@class std.env
 local M = {}
 
@@ -65,6 +72,13 @@ M.IS_TMUX = IS_TMUX ---@type boolean
 
 M.IS_X64 = IS_X64 ---@type boolean
 M.IS_X86 = IS_X86 ---@type boolean
+
+---! Terminal settings
+M.TERM = TERM ---@type string
+M.TERM_PROGRAM = TERM_PROGRAM ---@type string
+M.IS_KITTY = IS_KITTY ---@type boolean
+M.IS_WEZTERM = IS_WEZTERM ---@type boolean
+M.IS_GHOSTTY = IS_GHOSTTY ---@type boolean
 
 M.PATH_ENV_SEP = PATH_ENV_SEP ---@type string
 M.PATH_SEP = PATH_SEP ---@type string
