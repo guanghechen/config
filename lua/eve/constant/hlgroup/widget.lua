@@ -127,6 +127,14 @@ function M.default_gen_hlgroup_map(context)
     f_hipattern_hint = { fg = u.bg0, bg = u.aqua, bold = true, italic = true, underline = true },
     f_hipattern_quote = { fg = u.bg0, bg = u.fg3, bold = true, italic = true, underline = true },
 
+    ---image
+    f_image_anchor = { fg = u.purple },
+    f_image_border = { link = "ms_b_none" },
+    f_image_loading = { fg = u.fg4 },
+    f_image_math = { fg = u.purple },
+    f_image_special = { fg = u.purple },
+    f_image_spinner = { fg = u.fg4 },
+
     ---indentline
     f_indentline_1 = { fg = cs.mix(u.bg0, u.red, 20) },
     f_indentline_2 = { fg = cs.mix(u.bg0, u.orange, 20) },

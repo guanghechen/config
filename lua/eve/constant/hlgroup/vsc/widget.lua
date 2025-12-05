@@ -116,6 +116,14 @@ function M.gen_hlgroup_map(context)
     f_hipattern_hint = { fg = c.base, bg = c.accentAqua, bold = true, italic = true, underline = true },
     f_hipattern_quote = { fg = c.base, bg = c.textDim, bold = true, italic = true, underline = true },
 
+    ---image
+    f_image_anchor = { fg = c.accentPurple },
+    f_image_border = { link = "ms_b_none" },
+    f_image_loading = { fg = c.textDim },
+    f_image_math = { fg = c.accentPurple },
+    f_image_special = { fg = c.accentPurple },
+    f_image_spinner = { fg = c.textDim },
+
     ---indentline
     f_indentline_1 = { fg = cs.mix(u.bg0, u.red, 20) },
     f_indentline_2 = { fg = cs.mix(u.bg0, u.orange, 20) },
