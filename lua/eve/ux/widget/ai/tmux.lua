@@ -274,6 +274,12 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param pane_id                       string
+---@return boolean
+function M.send_escape_i(pane_id)
+  return exec({ "tmux", "send-keys", "-t", pane_id, "Escape", "i" }) ~= nil
+end
+
+---@param pane_id                       string
 ---@param text                          string
 ---@return boolean
 function M.send_text(pane_id, text)

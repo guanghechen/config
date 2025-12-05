@@ -24,6 +24,7 @@ M.tools = {
     end,
     proc_pattern = "\\<claude\\>",
     url = "https://github.com/anthropics/claude-code",
+    vim_mode = true,
   },
   codex = {
     cmd = "codex",
@@ -35,6 +36,7 @@ M.tools = {
     end,
     proc_pattern = "\\<codex\\>",
     url = "https://github.com/openai/codex",
+    vim_mode = false,
   },
   copilot = {
     cmd = "copilot",
@@ -46,6 +48,7 @@ M.tools = {
     end,
     proc_pattern = "\\<copilot\\>",
     url = "https://github.com/github/copilot-cli",
+    vim_mode = false,
   },
   gemini = {
     cmd = "gemini",
@@ -57,6 +60,7 @@ M.tools = {
     end,
     proc_pattern = "\\<gemini\\>",
     url = "https://github.com/google-gemini/gemini-cli",
+    vim_mode = true,
   },
 }
 

@@ -51,6 +51,7 @@
 ---@field public env                    fun(): table<string, string|false>
 ---@field public proc_pattern           string
 ---@field public url                    string
+---@field public vim_mode               boolean If true, send <Esc>i before text to ensure insert mode.
 
 ---@class eve.ux.widget.ai.ITmuxPaneInfo
 ---@field public session_id             string

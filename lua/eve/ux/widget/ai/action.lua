@@ -228,6 +228,10 @@ end
 ---@return boolean
 function M.send_to_source(source, text, submit)
   if source.type == "tmux" and source.tmux_pane then
+    local tool = config.tools[source.agent]
+    if tool and tool.vim_mode then
+      tmux.send_escape_i(source.tmux_pane.pane_id)
+    end
     return submit and tmux.send_and_submit(source.tmux_pane.pane_id, text)
       or tmux.send_text(source.tmux_pane.pane_id, text)
   elseif source.type == "terminal" then
