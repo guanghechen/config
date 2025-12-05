@@ -1027,6 +1027,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.trailspace.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("dressing_trailspace_flight")
+    end,
+  })
+  .implement({
     uuid = K.toggle.transparency.uuid,
     action = function()
       require("fml.action.toggle.list").list("transparency_ux")

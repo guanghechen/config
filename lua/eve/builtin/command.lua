@@ -555,6 +555,7 @@ M.definitions.toggle = {
   scroll = def("Ftogglescroll", "toggle: scroll"),
   theme = defc("Ftoggletheme", "toggle: theme", "?", eve.setting.themes),
   theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
+  trailspace = def("Ftoggletrailspace", "toggle: trailspace"),
   transparency = def("Ftoggletransparency", "toggle: transparency"),
   username = def("Ftoggleusername", "toggle: username"),
   virtcolumn = def("Ftogglevirtcolumn", "toggle: virtcolumn"),
