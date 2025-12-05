@@ -2,11 +2,13 @@
 
 local tmux_directions = { ["p"] = "l", ["h"] = "L", ["j"] = "D", ["k"] = "U", ["l"] = "R", ["n"] = "t:.+" }
 local tmux_direction_cmds = {
-  h = "if -F '#{pane_at_left}'    ''  'select-pane -L'",
-  j = "if -F '#{pane_at_bottom}'  ''  'select-pane -D'",
-  k = "if -F '#{pane_at_top}'     ''  'select-pane -U'",
-  l = "if -F '#{pane_at_right}'   ''  'select-pane -R'",
+  h = { "if", "-F", "#{pane_at_left}", "", "select-pane -L" },
+  j = { "if", "-F", "#{pane_at_bottom}", "", "select-pane -D" },
+  k = { "if", "-F", "#{pane_at_top}", "", "select-pane -U" },
+  l = { "if", "-F", "#{pane_at_right}", "", "select-pane -R" },
 }
+
+local tmux_socket = vim.env.TMUX and vim.fn.split(vim.env.TMUX, ",")[1] or ""
 
 -- send the tmux command to the server running on the socket
 -- given by the environment variable $TMUX
@@ -14,9 +16,19 @@ local tmux_direction_cmds = {
 -- the check if tmux is actually running (so the variable $TMUX is
 -- not nil) is made before actually calling this function
 ---@param command                       string
+---@return string
 local function tmux_command(command)
-  local tmux_socket = vim.fn.split(vim.env.TMUX, ",")[1]
   return vim.fn.system("tmux -S " .. tmux_socket .. " " .. command)
+end
+
+---@param args                          string[]
+---@return nil
+local function tmux_command_async(args)
+  local cmd = { "tmux", "-S", tmux_socket }
+  for _, arg in ipairs(args) do
+    table.insert(cmd, arg)
+  end
+  vim.system(cmd)
 end
 
 ---@return boolean
@@ -89,12 +101,12 @@ if vim.env.TMUX ~= nil then
   ---@param direction                   "p"|"h"|"j"|"k"|"l"|"n"
   ---@return nil
   function M.change_pane(direction)
-    local cmd = tmux_direction_cmds[direction] ---@type string|nil
+    local cmd = tmux_direction_cmds[direction] ---@type string[]|nil
     if cmd ~= nil then
-      tmux_command(cmd)
+      tmux_command_async(cmd)
       return
     end
-    tmux_command("select-pane -" .. tmux_directions[direction])
+    tmux_command_async({ "select-pane", "-" .. tmux_directions[direction] })
   end
 
   ---@param tmux_env_name               string
@@ -112,7 +124,6 @@ if vim.env.TMUX ~= nil then
       return nil
     end
 
-    -- Extract the value from the result
     local env_value = result:match("^[^=]+=(.-)%s*$")
     return env_value
   end

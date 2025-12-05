@@ -91,7 +91,7 @@ local function tmux_navigate(direction)
     end
 
     -- if we're in the same window and zoom is not disabled, tmux should take control
-    -- if should_by_tmux and not tmux.is_tmux_pane_corner(direction) and tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
+    -- if should_by_tmux and not std.tmux.is_tmux_pane_corner(direction) and std.tmux.should_tmux_control(DISABLE_WHEN_ZOOMED) then
     local is_zen_mode = eve.status.tmux_zen_mode:snapshot() ---@type boolean
     if should_by_tmux and (not DISABLE_WHEN_ZOOMED or not is_zen_mode) then
       std.tmux.change_pane(direction)
