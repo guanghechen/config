@@ -2,33 +2,43 @@ config-file = local/theme
 config-file = keymap-unbind
 config-file = keymap
 
-# Font
-font-size = 15
-font-family = "Maple Mono NF CN"
-font-style = Regular
-font-family-bold = "Maple Mono NF CN"
-font-style-bold = Bold
-font-family-italic = "Maple Mono NF CN"
-font-style-italic = Italic
-font-family-bold-italic = "Maple Mono NF CN"
-font-style-bold-italic = Bold Italic
-font-feature = +cv61 +cv62 +cv66 +cv98 +ss03 +ss07 +ss09 +ss10 +calt
+# Background
+background-blur = true
 
-# General behavior
-copy-on-select = true
-link-url = true
-
-# Scrollback
-scrollback-limit = 10000
-
-# Window settings
-window-decoration = none
-window-width = 1600
-window-height = 1000
-window-padding-x = 0
-window-padding-y = 0
+# Bell
+bell-features = attention
+bell-features = title
 
 # Cursor
 cursor-style = block
 cursor-style-blink = false
+
+# Font
+font-family = "Maple Mono NF CN"
+font-family-bold = "Maple Mono NF CN"
+font-family-bold-italic = "Maple Mono NF CN"
+font-family-italic = "Maple Mono NF CN"
+font-feature = +cv61 +cv62 +cv66 +cv98 +ss03 +ss07 +ss09 +ss10 +calt
+font-size = 15
+font-style = Regular
+font-style-bold = Bold
+font-style-bold-italic = Bold Italic
+font-style-italic = Italic
+font-thicken = false
+
+# General
+confirm-close-surface = false
+copy-on-select = true
+link-url = true
 mouse-hide-while-typing = true
+scrollback-limit = 10000
+
+# macOS
+macos-option-as-alt = true
+
+# Window
+window-decoration = none
+window-height = 1000
+window-padding-x = 0
+window-padding-y = 0
+window-width = 1600
