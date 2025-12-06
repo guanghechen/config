@@ -9,8 +9,7 @@ function ghc-ghostty-shader
         gears-and-belts \
         inside-the-matrix \
         sparks-from-fire \
-        starfield \
-        starfield-colors
+        starfield
 
     set config_dir "$HOME/.config/ghostty/local"
     set config_path "$config_dir/shader.conf"

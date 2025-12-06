@@ -7,5 +7,4 @@ complete ghc-ghostty-shader --arguments "
   inside-the-matrix
   sparks-from-fire
   starfield
-  starfield-colors
 "
