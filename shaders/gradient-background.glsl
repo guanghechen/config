@@ -1,8 +1,7 @@
 // @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/gradient-background.glsl
 
 // credits: https://github.com/unkn0wncode
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // Normalize pixel coordinates (range from 0 to 1)
     vec2 uv = fragCoord.xy / iResolution.xy;
 

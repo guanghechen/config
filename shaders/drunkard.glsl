@@ -13,7 +13,7 @@ vec2 hash2(vec2 p) {
 float perlin2d(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
-    vec2 u = f*f*(3.0-2.0*f);
+    vec2 u = f * f * (3.0 - 2.0 * f);
 
     return mix(mix(dot(hash2(i + vec2(0.0,0.0)), f - vec2(0.0,0.0)),
                    dot(hash2(i + vec2(1.0,0.0)), f - vec2(1.0,0.0)), u.x),
@@ -47,9 +47,8 @@ float fbm(vec2 p) {
 #define ANIMATE true
 #define SPEED 0.4            // Animation speed
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
-    vec2 uv = fragCoord/iResolution.xy;
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
     float time = ANIMATE ? iTime * SPEED : 0.0;
  
     vec2 noisePos = uv * NOISE_SCALE + vec2(time);

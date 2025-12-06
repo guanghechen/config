@@ -122,7 +122,7 @@ float isTargetPixel(vec2 uv) {
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = fragCoord/iResolution.xy;
+    vec2 uv = fragCoord / iResolution.xy;
     vec4 originalColor = texture(iChannel0, uv);
     
     // Calculate smoke effect

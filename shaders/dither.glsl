@@ -20,8 +20,7 @@ float getBayerFromPacked(int x, int y) {
 #define LEVELS 2.0 // Available color steps per channel
 #define INV_LEVELS (1.0 / LEVELS)
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord * (1.0 / iResolution.xy);
     vec3 color = texture(iChannel0, uv).rgb;
  

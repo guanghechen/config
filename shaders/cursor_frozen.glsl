@@ -1,5 +1,4 @@
-float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
-{
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b) {
     vec2 d = abs(p - xy) - b;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
@@ -71,10 +70,9 @@ float ease(float x) {
 
 const vec4 TRAIL_COLOR = vec4(.502, 0.98, 1., 1.0);
 const vec4 TRAIL_COLOR_ACCENT = vec4(.0, 0., 1., 1.0);
-const float DURATION = 0.3; //IN SECONDS
+const float DURATION = 0.3; // IN SECONDS
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
     #endif
@@ -113,11 +111,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     float fadeFactor = 1.0 - smoothstep(lineLength, sdfCurrentCursor, easedProgress * lineLength);
 
     float mod = .007;
-    //trailblaze
+    // trailblaze
     vec4 trail = mix(TRAIL_COLOR_ACCENT, fragColor, 1. - smoothstep(0., sdfTrail + mod, 0.007));
     trail = mix(TRAIL_COLOR, trail, 1. - smoothstep(0., sdfTrail + mod, 0.006));
     trail = mix(trail, TRAIL_COLOR, step(sdfTrail + mod, 0.));
-    //cursorblaze
+    // cursorblaze
     trail = mix(TRAIL_COLOR_ACCENT, trail, 1. - smoothstep(0., sdfCurrentCursor + .002, 0.004));
     trail = mix(TRAIL_COLOR, trail, 1. - smoothstep(0., sdfCurrentCursor + .002, 0.004));
     fragColor = mix(trail, fragColor, 1. - smoothstep(0., sdfCurrentCursor, easedProgress * lineLength));

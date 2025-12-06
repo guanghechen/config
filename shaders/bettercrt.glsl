@@ -13,8 +13,7 @@
 float warp = 0.25; // simulate curvature of CRT monitor
 float scan = 0.50; // simulate darkness between scanlines
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     // squared distance from center
     vec2 uv = fragCoord / iResolution.xy;
     vec2 dc = abs(0.5 - uv);

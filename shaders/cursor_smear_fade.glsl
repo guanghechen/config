@@ -1,5 +1,4 @@
-float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
-{
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b) {
     vec2 d = abs(p - xy) - b;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
@@ -61,10 +60,9 @@ float ease(float x) {
 }
 
 const vec4 TRAIL_COLOR = vec4(1., 1., 0., 1.0);
-const float DURATION = 0.5; //IN SECONDS
+const float DURATION = 0.5; // IN SECONDS
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
     #endif

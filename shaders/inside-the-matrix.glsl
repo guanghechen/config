@@ -238,8 +238,7 @@ float smoothstep1(float x) {
     return smoothstep(0., 1., x);
 }
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     if (STRIP_CHAR_WIDTH > XYCELL_SIZE || STRIP_CHAR_HEIGHT * STRIP_CHARS_MAX > ZCELL_SIZE) {
         // error
         fragColor = vec4(1., 0., 0., 1.);

@@ -1,5 +1,4 @@
-float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
-{
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b) {
     vec2 d = abs(p - xy) - b;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
@@ -81,8 +80,7 @@ const vec3 DEEP_BLUE = vec3(0.1, 0.4, 0.8); // Deep water blue
 const vec3 CURSOR_COLOR = vec3(0.6, 0.8, 1.0); // Soft blue cursor
 const float DURATION = 0.4; // Gentle fade
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
     #endif
