@@ -195,6 +195,7 @@
  * @property {string}                   accentBlue
  * @property {string}                   accentGreen
  * @property {string}                   accentOrange
+ * @property {string}                   accentPink
  * @property {string}                   accentPurple
  * @property {string}                   accentRed
  * @property {string}                   accentYellow
