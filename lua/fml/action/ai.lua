@@ -119,11 +119,19 @@ end
 
 ---@return nil
 function M.send_this()
-  local filepath = vim.api.nvim_buf_get_name(0)
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local text = table.concat(lines, "\n")
+  eve.ux.widget.ai.action.send_to_attached(text, false)
+end
+
+---@return nil
+function M.send_file()
+  local filepath = vim.api.nvim_buf_get_name(0) ---@type string
   if filepath == "" then
     std.reporter.warn({
       from = __module_name__,
-      subject = "send_this",
+      subject = "send_file",
       message = "Cannot send: buffer has no file path.",
     })
     return
@@ -131,18 +139,7 @@ function M.send_this()
 
   local location, _ = std.uri.file_location({ filepath = filepath })
   if location then
-    eve.ux.widget.ai.action.send_to_attached(location, true)
-  end
-end
-
----@return nil
-function M.send_file()
-  local filepath = vim.api.nvim_buf_get_name(0)
-  if filepath ~= "" then
-    local text = std.fs.read_file({ filepath = filepath, silent = true })
-    if text then
-      eve.ux.widget.ai.action.send_to_attached(text, true)
-    end
+    eve.ux.widget.ai.action.send_to_attached(location, false)
   end
 end
 
