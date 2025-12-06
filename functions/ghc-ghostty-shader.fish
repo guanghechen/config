@@ -1,5 +1,5 @@
 function ghc-ghostty-shader
-    argparse 's/silent' 'r/reverse' -- $argv
+    argparse 'silent' 'prev' 'next' -- $argv
     or return 1
 
     set -l shaders \
@@ -34,7 +34,7 @@ function ghc-ghostty-shader
         end
 
         set -l max (count $shaders)
-        if test -n "$_flag_reverse"
+        if test -n "$_flag_prev"
             if test $idx -le 1
                 set shader_name $shaders[$max]
             else
