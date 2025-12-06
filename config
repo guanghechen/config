@@ -54,7 +54,7 @@ custom-shader = shaders/cursor_smear_fade.glsl
 # custom-shader = shaders/fireworks-rockets.glsl
 # custom-shader = shaders/gears-and-belts.glsl
 # custom-shader = shaders/inside-the-matrix.glsl
-custom-shader = shaders/starfield.glsl
+# custom-shader = shaders/starfield.glsl
 # custom-shader = shaders/starfield-colors.glsl
 # custom-shader = shaders/sparks-from-fire.glsl
 
