@@ -32,7 +32,7 @@ hovered                 = { reversed = true,    bold = true }
 footer                  = { fg = "#3B3B3B",     bg = "#005FB8" }
 
 [input]
-border                  = { fg = "#6E7681" }
+border                  = { fg = "#767676" }
 title                   = {}
 value                   = {}
 selected                = { reversed = true }
@@ -40,13 +40,13 @@ selected                = { reversed = true }
 [mgr]
 cwd                     = { fg = "#267F99" }
 border_symbol           = "│"
-border_style            = { fg = "#E5E5E5" }
-count_copied            = { fg = "#F8F8F8",     bg = "#2EA043" }
-count_cut               = { fg = "#F8F8F8",     bg = "#F85149" }
-count_selected          = { fg = "#F8F8F8",     bg = "#E75480" }
+border_style            = { fg = "#CCCCCC" }
+count_copied            = { fg = "#F2F2F2",     bg = "#2EA043" }
+count_cut               = { fg = "#F2F2F2",     bg = "#F85149" }
+count_selected          = { fg = "#F2F2F2",     bg = "#E75480" }
 find_keyword            = { fg = "#795E26",  bold = true, italic = true }
 find_position           = { fg = "#AF00DB",  bg = "reset", bold = true, italic = true }
-hovered                 = { fg = "#F8F8F8",     bg = "#E75480", bold = true }
+hovered                 = { fg = "#F2F2F2",     bg = "#E75480", bold = true }
 marker_copied           = { fg = "#2EA043",   bg = "#2EA043" }
 marker_cut              = { fg = "#F85149",     bg = "#F85149" }
 marker_marked           = { fg = "#267F99",    bg = "#267F99" }
@@ -55,12 +55,12 @@ preview_hovered         = { fg = "#E75480",    underline = true }
 syntect_theme           = ""
 
 [mode]
-normal_main             = { fg = "#F8F8F8",     bg = "#267F99",    bold = true }
-normal_alt              = { fg = "#616161",     bg = "#F2F2F2" }
-select_main             = { fg = "#F8F8F8",     bg = "#E75480",    bold = true }
-select_alt              = { fg = "#616161",     bg = "#F2F2F2" }
-unset_main              = { fg = "#F8F8F8",     bg = "#2EA043",  bold = true }
-unset_alt               = { fg = "#616161",     bg = "#F2F2F2",  bold = true }
+normal_main             = { fg = "#F2F2F2",     bg = "#267F99",    bold = true }
+normal_alt              = { fg = "#616161",     bg = "#E8E8E8" }
+select_main             = { fg = "#F2F2F2",     bg = "#E75480",    bold = true }
+select_alt              = { fg = "#616161",     bg = "#E8E8E8" }
+unset_main              = { fg = "#F2F2F2",     bg = "#2EA043",  bold = true }
+unset_alt               = { fg = "#616161",     bg = "#E8E8E8",  bold = true }
 
 [notify]
 title_info              = { fg = "#2EA043" }
@@ -80,18 +80,18 @@ title                   = { fg = "#005FB8" }
 overall                 = { fg = "#616161" }
 perm_exec               = { fg = "#F85149",     bold = true }
 perm_read               = { fg = "#616161",     bold = true }
-perm_sep                = { fg = "#6E7681",     bold = true }
+perm_sep                = { fg = "#767676",     bold = true }
 perm_write              = { fg = "#795E26",  bold = true }
 perm_type               = { fg = "#005FB8",    bold = true }
-progress_error          = { fg = "#F85149",     bg = "#F8F8F8" }
+progress_error          = { fg = "#F85149",     bg = "#F2F2F2" }
 progress_label          = { fg = "#616161",     bold = true }
-progress_normal         = { fg = "#616161",     bg = "#F8F8F8" }
+progress_normal         = { fg = "#616161",     bg = "#F2F2F2" }
 sep_left                = { open = "",         close = "" }
 sep_right               = { open = "",         close = "" }
 
 [tabs]
-active                  = { fg = "#F8F8F8",     bg = "#E75480", bold = true }
-inactive                = { fg = "#E75480",    bg = "#F2F2F2" }
+active                  = { fg = "#F2F2F2",     bg = "#E75480", bold = true }
+inactive                = { fg = "#E75480",    bg = "#E8E8E8" }
 sep_inner               = { open = "",         close = "" }
 sep_outer               = { open = "",         close = "" }
 
@@ -102,12 +102,12 @@ hovered                 = { fg = "#AF00DB",  underline = true }
 
 [which]
 cols                    = 3
-mask                    = { bg = "#F8F8F8" }
+mask                    = { bg = "#F2F2F2" }
 cand                    = { fg = "#267F99" }
 rest                    = { fg = "#616161" }
 desc                    = { fg = "#AF00DB" }
 separator               = "  "
-separator_style         = { fg = "#F2F2F2" }
+separator_style         = { fg = "#E8E8E8" }
 
 [filetype]
 rules = [
@@ -275,7 +275,7 @@ files = [
   { name = "_vimrc",                      text = "󰈚", fg = "#2EA043" },
   { name = "avif",                        text = "󰈚", fg = "#AF00DB" },
   { name = "brewfile",                    text = "󰈚", fg = "#AF00DB" },
-  { name = "bspwmrc",                     text = "󰈚", fg = "#F8F8F8" },
+  { name = "bspwmrc",                     text = "󰈚", fg = "#F2F2F2" },
   { name = "build",                       text = "󰈚", fg = "#2EA043" },
   { name = "build.gradle",                text = "󰈚", fg = "#267F99" },
   { name = "build.zig.zon",               text = "󰈚", fg = "#795E26" },
@@ -386,7 +386,7 @@ files = [
   { name = "security.md",                 text = "󰒃", fg = "#616161" },
   { name = "settings.gradle",             text = "󰈚", fg = "#267F99" },
   { name = "svelte.config.js",            text = "󰈚", fg = "#F85149" },
-  { name = "sxhkdrc",                     text = "󰈚", fg = "#F8F8F8" },
+  { name = "sxhkdrc",                     text = "󰈚", fg = "#F2F2F2" },
   { name = "sym-lib-table",               text = "󰈚", fg = "#616161" },
   { name = "tailwind.config.js",          text = "󱏿", fg = "#005FB8" },
   { name = "tailwind.config.mjs",         text = "󱏿", fg = "#005FB8" },
