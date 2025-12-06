@@ -29,7 +29,7 @@ background = #FFFFFF
 foreground = #3B3B3B
 
 # Cursor colors
-cursor-color = #FD716C
+cursor-color = #E75480
 cursor-text = #F8F8F8
 
 # Selection colors
