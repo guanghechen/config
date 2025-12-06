@@ -8,14 +8,14 @@ if type -q fnm
     fnm env --use-on-cd --shell fish | source
 end
 
-## fzf
+## fzf (CSI u: Ctrl+Shift+Key)
 fzf_configure_bindings \
-    --directory=\cf \
-    --git_log=\cg \
-    --git_status=\cs \
-    --history=\co \
-    --processes=\cp \
-    --variables=\cv
+    --directory=\e\[70\;6u \
+    --git_log=\e\[76\;6u \
+    --git_status=\e\[83\;6u \
+    --history=\e\[82\;6u \
+    --processes=\e\[80\;6u \
+    --variables=\e\[69\;6u
 
 ### miniforge3
 if test -f "$HOME/.app/miniforge3/bin/conda"
