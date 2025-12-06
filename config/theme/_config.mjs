@@ -75,20 +75,11 @@ export const apps = [
     home: path.join(XDG_CONFIG_HOME, 'ghostty'),
     themes: 'theme/',
     extname: '',
-    local: 'local/theme',
+    local: 'local/theme.conf',
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async app => {
-      const theme_filepath = path.join(app.home, app.local)
-      let content = await fs.readFile(theme_filepath, 'utf8')
-
-      // const backgroundImagePath =
-      //   scheme.darken
-      //     ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-      //     : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
-      //
-      // content += '\n\n' + `background_image = ${backgroundImagePath}\n`
-      await fs.writeFile(theme_filepath, content, 'utf8')
+    after_apply: async () => {
+      await safe_exec('pkill', ['-USR2', 'ghostty'])
     },
   },
   {
