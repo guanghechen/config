@@ -21,7 +21,7 @@ gui:
     defaultFgColor:
       - '#616161'
     inactiveBorderColor:
-      - '#767676'
+      - '#8B949E'
     inactiveViewSelectedLineBgColor:
       - '#E5EBF1'
       - bold

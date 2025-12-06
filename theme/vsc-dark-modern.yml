@@ -3,7 +3,7 @@
 gui:
   authorColors:
     guanghechen: '#4DAAFC'
-    '*': '#868686'
+    '*': '#9D9D9D'
   branchColorPatterns:
     "^(main|master)$": '#C586C0'
     "^(user/[^/]+/)?fix": '#F85149'
@@ -19,9 +19,9 @@ gui:
     cherryPickedCommitFgColor:
       - '#0078D4'
     defaultFgColor:
-      - '#868686'
+      - '#9D9D9D'
     inactiveBorderColor:
-      - '#989898'
+      - '#6E7681'
     inactiveViewSelectedLineBgColor:
       - '#3A3D41'
       - bold
