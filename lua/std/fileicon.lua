@@ -88,6 +88,7 @@ local ICONS_EXTENSION = {
   ipynb                   = { glyph = "󰠮", hl = "MiniIconsOrange" },
   exs                     = { glyph = "", hl = "MiniIconsPurple" },
   purs                    = "purescript",
+  glsl                    = "glsl",
   tf                      = "terraform",
 
   -- Video
