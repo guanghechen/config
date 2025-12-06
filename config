@@ -1,5 +1,4 @@
 config-file = local/theme
-config-file = keymap-unbind
 config-file = keymap
 
 # Background

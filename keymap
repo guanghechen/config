@@ -1,3 +1,10 @@
+# Clear all default keybindings first
+keybind = clear
+
+# ============================================================================
+# CSI u format keybindings (for terminal applications)
+# ============================================================================
+
 # Control + Keys to CSI u format
 keybind = ctrl+comma=csi:44;5u
 keybind = ctrl+period=csi:46;5u
@@ -54,7 +61,11 @@ keybind = ctrl+shift+z=csi:90;6u
 keybind = ctrl+shift+left_bracket=csi:91;6u
 keybind = ctrl+shift+right_bracket=csi:93;6u
 
-# Function keys
+# ============================================================================
+# Cmd + Keys -> Ctrl+A prefix (tmux style)
+# ============================================================================
+
+# Function keys (Cmd+Fn -> Ctrl+A Fn)
 keybind = cmd+f1=text:\x01\x1b[112;5u
 keybind = cmd+f2=text:\x01\x1b[113;5u
 keybind = cmd+f3=text:\x01\x1b[114;5u
@@ -80,7 +91,7 @@ keybind = cmd+shift+f10=text:\x01\x1b[121;6u
 keybind = cmd+shift+f11=text:\x01\x1b[122;6u
 keybind = cmd+shift+f12=text:\x01\x1b[123;6u
 
-# Arrow keys
+# Arrow keys (Cmd+Arrow -> Ctrl+A Arrow)
 keybind = cmd+up=text:\x01\x1b[A
 keybind = cmd+right=text:\x01\x1b[C
 keybind = cmd+down=text:\x01\x1b[B
@@ -90,7 +101,8 @@ keybind = cmd+shift+right=text:\x01\x1b[1;2C
 keybind = cmd+shift+down=text:\x01\x1b[1;2B
 keybind = cmd+shift+left=text:\x01\x1b[1;2D
 
-# Digit keys
+# Digit keys (Cmd+N -> Ctrl+A N)
+keybind = cmd+digit_0=text:\x01\x30
 keybind = cmd+digit_1=text:\x01\x31
 keybind = cmd+digit_2=text:\x01\x32
 keybind = cmd+digit_3=text:\x01\x33
@@ -100,9 +112,20 @@ keybind = cmd+digit_6=text:\x01\x36
 keybind = cmd+digit_7=text:\x01\x37
 keybind = cmd+digit_8=text:\x01\x38
 keybind = cmd+digit_9=text:\x01\x39
-keybind = cmd+digit_0=text:\x01\x30
 
-# Lower letter keys
+# Cmd+Ctrl+Digit -> Ctrl+A Ctrl+Digit (CSI u format)
+keybind = cmd+ctrl+digit_0=text:\x01\x1b[48;5u
+keybind = cmd+ctrl+digit_1=text:\x01\x1b[49;5u
+keybind = cmd+ctrl+digit_2=text:\x01\x1b[50;5u
+keybind = cmd+ctrl+digit_3=text:\x01\x1b[51;5u
+keybind = cmd+ctrl+digit_4=text:\x01\x1b[52;5u
+keybind = cmd+ctrl+digit_5=text:\x01\x1b[53;5u
+keybind = cmd+ctrl+digit_6=text:\x01\x1b[54;5u
+keybind = cmd+ctrl+digit_7=text:\x01\x1b[55;5u
+keybind = cmd+ctrl+digit_8=text:\x01\x1b[56;5u
+keybind = cmd+ctrl+digit_9=text:\x01\x1b[57;5u
+
+# Lower letter keys (Cmd+Letter -> Ctrl+A letter)
 keybind = cmd+a=text:\x01\x61
 keybind = cmd+b=text:\x01\x62
 keybind = cmd+c=text:\x01\x63
@@ -124,13 +147,13 @@ keybind = cmd+r=text:\x01\x72
 keybind = cmd+s=text:\x01\x73
 keybind = cmd+t=text:\x01\x74
 keybind = cmd+u=text:\x01\x75
-# keybind = cmd+v=text:\x01\x76
+keybind = cmd+v=text:\x01\x76
 keybind = cmd+w=text:\x01\x77
 keybind = cmd+x=text:\x01\x78
 keybind = cmd+y=text:\x01\x79
 keybind = cmd+z=text:\x01\x7a
 
-# Upper letter keys
+# Upper letter keys (Cmd+Shift+Letter -> Ctrl+A LETTER)
 keybind = cmd+shift+a=text:\x01\x41
 keybind = cmd+shift+b=text:\x01\x42
 keybind = cmd+shift+c=text:\x01\x43
@@ -158,7 +181,7 @@ keybind = cmd+shift+x=text:\x01\x58
 keybind = cmd+shift+y=text:\x01\x59
 keybind = cmd+shift+z=text:\x01\x5a
 
-# Ctrl + letter keys
+# Ctrl + letter keys (Cmd+Ctrl+Letter -> Ctrl+A Ctrl+Letter)
 keybind = cmd+ctrl+a=text:\x01\x01
 keybind = cmd+ctrl+b=text:\x01\x02
 keybind = cmd+ctrl+c=text:\x01\x03
@@ -166,13 +189,8 @@ keybind = cmd+ctrl+d=text:\x01\x04
 keybind = cmd+ctrl+e=text:\x01\x05
 keybind = cmd+ctrl+f=text:\x01\x06
 keybind = cmd+ctrl+g=text:\x01\x07
-keybind = cmd+ctrl+h=text:\x01\x08
 keybind = cmd+ctrl+i=text:\x01\x09
-keybind = cmd+ctrl+j=text:\x01\x0a
-keybind = cmd+ctrl+k=text:\x01\x0b
-keybind = cmd+ctrl+l=text:\x01\x0c
 keybind = cmd+ctrl+m=text:\x01\x0d
-keybind = cmd+ctrl+n=text:\x01\x0e
 keybind = cmd+ctrl+o=text:\x01\x0f
 keybind = cmd+ctrl+p=text:\x01\x10
 keybind = cmd+ctrl+q=text:\x01\x11
@@ -181,12 +199,11 @@ keybind = cmd+ctrl+s=text:\x01\x13
 keybind = cmd+ctrl+t=text:\x01\x14
 keybind = cmd+ctrl+u=text:\x01\x15
 keybind = cmd+ctrl+v=text:\x01\x16
-keybind = cmd+ctrl+w=text:\x01\x17
 keybind = cmd+ctrl+x=text:\x01\x18
 keybind = cmd+ctrl+y=text:\x01\x19
 keybind = cmd+ctrl+z=text:\x01\x1a
 
-# Special characters
+# Special characters (Cmd+Punct -> Ctrl+A punct)
 keybind = cmd+comma=text:\x01\x2c
 keybind = cmd+period=text:\x01\x2e
 keybind = cmd+shift+comma=text:\x01\x3c
@@ -195,15 +212,17 @@ keybind = cmd+left_bracket=text:\x01\x5b
 keybind = cmd+right_bracket=text:\x01\x5d
 keybind = cmd+shift+left_bracket=text:\x01\x7b
 keybind = cmd+shift+right_bracket=text:\x01\x7d
-
-# Misc
 keybind = cmd+enter=text:\x1b\x0d
 keybind = cmd+semicolon=text:\x01\x3b
 keybind = cmd+shift+semicolon=text:\x01\x3a
 keybind = cmd+apostrophe=text:\x01\x27
 keybind = cmd+grave_accent=text:\x01\x60
 
-# Terminal functions
+# ============================================================================
+# Terminal functions (Ghostty actions)
+# ============================================================================
+
+# Clipboard
 keybind = cmd+v=paste_from_clipboard
 keybind = ctrl+insert=copy_to_clipboard
 keybind = shift+insert=paste_from_clipboard
@@ -215,43 +234,27 @@ keybind = cmd+ctrl+comma=previous_tab
 keybind = cmd+ctrl+period=next_tab
 keybind = cmd+ctrl+shift+comma=move_tab:-1
 keybind = cmd+ctrl+shift+period=move_tab:1
-keybind = cmd+ctrl+digit_1=goto_tab:1
-keybind = cmd+ctrl+digit_2=goto_tab:2
-keybind = cmd+ctrl+digit_3=goto_tab:3
-keybind = cmd+ctrl+digit_4=goto_tab:4
-keybind = cmd+ctrl+digit_5=goto_tab:5
-keybind = cmd+ctrl+digit_6=goto_tab:6
-keybind = cmd+ctrl+digit_7=goto_tab:7
-keybind = cmd+ctrl+digit_8=goto_tab:8
-keybind = cmd+ctrl+digit_9=goto_tab:9
 
-# Window/split management
-# swap_split is not available in Ghostty, so leave these unbound
-# keybind = cmd+ctrl+shift+left=swap_split:left
-# keybind = cmd+ctrl+shift+down=swap_split:down
-# keybind = cmd+ctrl+shift+up=swap_split:up
-# keybind = cmd+ctrl+shift+right=swap_split:right
-keybind = cmd+ctrl+left=resize_split:left,10
-keybind = cmd+ctrl+down=resize_split:down,10
-keybind = cmd+ctrl+up=resize_split:up,10
-keybind = cmd+ctrl+right=resize_split:right,10
+# Split management
+keybind = cmd+ctrl+shift+h=new_split:left
 keybind = cmd+ctrl+shift+j=new_split:down
+keybind = cmd+ctrl+shift+k=new_split:up
 keybind = cmd+ctrl+shift+l=new_split:right
 keybind = cmd+ctrl+h=goto_split:left
 keybind = cmd+ctrl+j=goto_split:bottom
 keybind = cmd+ctrl+k=goto_split:top
 keybind = cmd+ctrl+l=goto_split:right
-# keybind = cmd+ctrl+o=close_all_splits # TODO this is InvalidAction
+keybind = cmd+ctrl+left=resize_split:left,10
+keybind = cmd+ctrl+down=resize_split:down,10
+keybind = cmd+ctrl+up=resize_split:up,10
+keybind = cmd+ctrl+right=resize_split:right,10
 keybind = cmd+ctrl+z=toggle_split_zoom
 
 # Font size controls
 keybind = cmd+ctrl+equal=increase_font_size:1
 keybind = cmd+ctrl+minus=decrease_font_size:1
-keybind = cmd+ctrl+digit_0=reset_font_size
 
-# Configuration functions
-# keybind = cmd+ctrl+f2=write_screen_file:toggle  # TODO this is InvliadFormat
+# Configuration
 keybind = cmd+ctrl+f5=reload_config
 keybind = cmd+ctrl+f11=toggle_fullscreen
 keybind = cmd+ctrl+f12=toggle_fullscreen
-
