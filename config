@@ -35,6 +35,9 @@ scrollback-limit = 10000
 
 # macOS
 macos-option-as-alt = true
+macos-titlebar-style = transparent
+macos-window-shadow = true
+window-save-state = always
 
 # Window
 window-decoration = none
