@@ -1,6 +1,6 @@
 # catppuccin-frappe
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#51576D
@@ -28,15 +28,18 @@ palette = 15=#B5BFE2
 background = #303446
 foreground = #C6D0F5
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #F2D5CF
 cursor-text = #232634
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #51576D
 selection-foreground = #C6D0F5
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #414559
+
+# Unfocused split fill color
+unfocused-split-fill = #292C3C
+
 

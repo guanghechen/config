@@ -1,6 +1,6 @@
 # catppuccin-latte
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#BCC0CC
@@ -28,15 +28,18 @@ palette = 15=#5C5F77
 background = #EFF1F5
 foreground = #4C4F69
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #DC8A78
 cursor-text = #DCE0E8
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #BCC0CC
 selection-foreground = #4C4F69
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #CCD0DA
+
+# Unfocused split fill color
+unfocused-split-fill = #E6E9EF
+
 

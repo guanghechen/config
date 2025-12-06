@@ -1,6 +1,6 @@
 # gruvbox-light
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#F2E5BC
@@ -28,15 +28,18 @@ palette = 15=#3C3836
 background = #F2E5BC
 foreground = #32302F
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #B16286
 cursor-text = #EBDBB2
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #BDAE93
 selection-foreground = #32302F
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #D5C4A1
+
+# Unfocused split fill color
+unfocused-split-fill = #EBDBB2
+
 

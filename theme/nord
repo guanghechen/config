@@ -1,6 +1,6 @@
 # nord
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#2E3440
@@ -28,15 +28,18 @@ palette = 15=#E5E9F0
 background = #2E3440
 foreground = #ECEFF4
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #FFA3A3
 cursor-text = #3B4252
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #4C566A
 selection-foreground = #ECEFF4
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #434C5E
+
+# Unfocused split fill color
+unfocused-split-fill = #3B4252
+
 

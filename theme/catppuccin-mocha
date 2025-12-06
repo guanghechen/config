@@ -1,6 +1,6 @@
 # catppuccin-mocha
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#45475A
@@ -28,15 +28,18 @@ palette = 15=#BAC2DE
 background = #1E1E2E
 foreground = #CDD6F4
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #F5E0DC
 cursor-text = #11111B
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #45475A
 selection-foreground = #CDD6F4
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #313244
+
+# Unfocused split fill color
+unfocused-split-fill = #181825
+
 

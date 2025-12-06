@@ -1,6 +1,6 @@
 # tokyonight-storm
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#24283b
@@ -28,15 +28,18 @@ palette = 15=#adb7e2
 background = #24283b
 foreground = #c0caf5
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #bb9af7
 cursor-text = #1f2335
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #292e42
 selection-foreground = #c0caf5
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #1b1e2d
+
+# Unfocused split fill color
+unfocused-split-fill = #1f2335
+
 

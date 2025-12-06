@@ -1,6 +1,6 @@
 # rosepine-main
 
-# ANSI Colors (following official catppuccin theme)
+# ANSI Colors
 # Dark themes: palette 0 = surface1, palette 7 = subtext0
 # Light theme: palette 0 = subtext1, palette 7 = surface2
 palette =  0=#191724
@@ -28,15 +28,18 @@ palette = 15=#E0DEF4
 background = #191724
 foreground = #E0DEF4
 
-# Cursor colors (following official catppuccin theme)
+# Cursor colors
 cursor-color = #EB6F92
 cursor-text = #1F1D2E
 
-# Selection colors (following official catppuccin theme)
-# Official uses overlay2 mixed with base, resulting in a subtle highlight
+# Selection colors
 selection-background = #403D52
 selection-foreground = #E0DEF4
 
-# Split divider color (following official catppuccin theme)
+# Split divider color
 split-divider-color = #26233A
+
+# Unfocused split fill color
+unfocused-split-fill = #1F1D2E
+
 
