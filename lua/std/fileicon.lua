@@ -84,11 +84,12 @@ local ICONS_DIRECTORY = {
 ---@class std.fileicon.category_extension
 local ICONS_EXTENSION = {
   -- Extensions for which `vim.filetype.match()` mismatches or doesn"t work. Usually because matching depends on an actual buffer content.
+  conf                    = "conf",
+  exs                     = { glyph = "", hl = "MiniIconsPurple" },
+  glsl                    = "glsl",
   h                       = { glyph = "󰫵", hl = "MiniIconsPurple" },
   ipynb                   = { glyph = "󰠮", hl = "MiniIconsOrange" },
-  exs                     = { glyph = "", hl = "MiniIconsPurple" },
   purs                    = "purescript",
-  glsl                    = "glsl",
   tf                      = "terraform",
 
   -- Video
