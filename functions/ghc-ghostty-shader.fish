@@ -1,5 +1,5 @@
 function ghc-ghostty-shader
-    argparse 's/silent' -- $argv
+    argparse 's/silent' 'r/reverse' -- $argv
     or return 1
 
     set -l shaders \
@@ -33,10 +33,19 @@ function ghc-ghostty-shader
             end
         end
 
-        if test $idx -eq 0 -o $idx -eq (count $shaders)
-            set shader_name $shaders[1]
+        set -l max (count $shaders)
+        if test -n "$_flag_reverse"
+            if test $idx -le 1
+                set shader_name $shaders[$max]
+            else
+                set shader_name $shaders[(math $idx - 1)]
+            end
         else
-            set shader_name $shaders[(math $idx + 1)]
+            if test $idx -eq 0 -o $idx -eq $max
+                set shader_name $shaders[1]
+            else
+                set shader_name $shaders[(math $idx + 1)]
+            end
         end
     else
         set shader_name $argv[1]
