@@ -66,30 +66,30 @@ keybind = ctrl+shift+right_bracket=csi:93;6u
 # ============================================================================
 
 # Function keys (Cmd+Fn -> Ctrl+A Fn)
-keybind = cmd+f1=text:\x01\x1b[112;5u
-keybind = cmd+f2=text:\x01\x1b[113;5u
-keybind = cmd+f3=text:\x01\x1b[114;5u
-keybind = cmd+f4=text:\x01\x1b[115;5u
-keybind = cmd+f5=text:\x01\x1b[116;5u
-keybind = cmd+f6=text:\x01\x1b[117;5u
-keybind = cmd+f7=text:\x01\x1b[118;5u
-keybind = cmd+f8=text:\x01\x1b[119;5u
-keybind = cmd+f9=text:\x01\x1b[120;5u
-keybind = cmd+f10=text:\x01\x1b[121;5u
-keybind = cmd+f11=text:\x01\x1b[122;5u
-keybind = cmd+f12=text:\x01\x1b[123;5u
-keybind = cmd+shift+f1=text:\x01\x1b[112;6u
-keybind = cmd+shift+f2=text:\x01\x1b[113;6u
-keybind = cmd+shift+f3=text:\x01\x1b[114;6u
-keybind = cmd+shift+f4=text:\x01\x1b[115;6u
-keybind = cmd+shift+f5=text:\x01\x1b[116;6u
-keybind = cmd+shift+f6=text:\x01\x1b[117;6u
-keybind = cmd+shift+f7=text:\x01\x1b[118;6u
-keybind = cmd+shift+f8=text:\x01\x1b[119;6u
-keybind = cmd+shift+f9=text:\x01\x1b[120;6u
-keybind = cmd+shift+f10=text:\x01\x1b[121;6u
-keybind = cmd+shift+f11=text:\x01\x1b[122;6u
-keybind = cmd+shift+f12=text:\x01\x1b[123;6u
+keybind = cmd+f1=text:\x01\x1bOP
+keybind = cmd+f2=text:\x01\x1bOQ
+keybind = cmd+f3=text:\x01\x1bOR
+keybind = cmd+f4=text:\x01\x1bOS
+keybind = cmd+f5=text:\x01\x1b[15~
+keybind = cmd+f6=text:\x01\x1b[17~
+keybind = cmd+f7=text:\x01\x1b[18~
+keybind = cmd+f8=text:\x01\x1b[19~
+keybind = cmd+f9=text:\x01\x1b[20~
+keybind = cmd+f10=text:\x01\x1b[21~
+keybind = cmd+f11=text:\x01\x1b[23~
+keybind = cmd+f12=text:\x01\x1b[24~
+keybind = cmd+shift+f1=text:\x01\x1b[1;2P
+keybind = cmd+shift+f2=text:\x01\x1b[1;2Q
+keybind = cmd+shift+f3=text:\x01\x1b[1;2R
+keybind = cmd+shift+f4=text:\x01\x1b[1;2S
+keybind = cmd+shift+f5=text:\x01\x1b[15;2~
+keybind = cmd+shift+f6=text:\x01\x1b[17;2~
+keybind = cmd+shift+f7=text:\x01\x1b[18;2~
+keybind = cmd+shift+f8=text:\x01\x1b[19;2~
+keybind = cmd+shift+f9=text:\x01\x1b[20;2~
+keybind = cmd+shift+f10=text:\x01\x1b[21;2~
+keybind = cmd+shift+f11=text:\x01\x1b[23;2~
+keybind = cmd+shift+f12=text:\x01\x1b[24;2~
 
 # Arrow keys (Cmd+Arrow -> Ctrl+A Arrow)
 keybind = cmd+up=text:\x01\x1b[A
