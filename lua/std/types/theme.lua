@@ -235,6 +235,7 @@
 ---@field public accentBlue             string
 ---@field public accentGreen            string
 ---@field public accentOrange           string
+---@field public accentPink             string
 ---@field public accentPurple           string
 ---@field public accentRed              string
 ---@field public accentYellow           string

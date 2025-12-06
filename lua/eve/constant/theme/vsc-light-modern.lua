@@ -40,7 +40,7 @@ local M = {
       brightOrange  = "#895503",
 
       grey          = "#767676",
-      pink          = "#FD716C",
+      pink          = "#E75480",
 
       diffDel       = "#FFE2DA",
       diffDelInline = "#F8CAB5",
@@ -54,6 +54,7 @@ local M = {
       accentBlue    = "#005FB8",
       accentGreen   = "#2EA043",
       accentOrange  = "#C72E0F",
+      accentPink    = "#E75480",
       accentPurple  = "#AF00DB",
       accentRed     = "#F85149",
       accentYellow  = "#795E26",
