@@ -1,4 +1,7 @@
 function ghc-ghostty-shader
+    argparse 's/silent' -- $argv
+    or return 1
+
     set -l shaders \
         off \
         cubes \
@@ -41,10 +44,10 @@ function ghc-ghostty-shader
 
     if test "$shader_name" = off
         echo -n >"$config_path"
-        echo "Shader disabled"
+        test -z "$_flag_silent"; and echo "Shader disabled"
     else
         echo "custom-shader = ../shaders/$shader_name.glsl" >"$config_path"
-        echo "Shader: $shader_name"
+        test -z "$_flag_silent"; and echo "Shader: $shader_name"
     end
 
     pkill -USR2 ghostty
