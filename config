@@ -33,8 +33,6 @@ window-save-state = always
 
 # Window
 window-height = 1000
-window-padding-balance = false
-window-padding-x = 0,0
-window-padding-y = 0,0
+window-padding-balance = true
 window-width = 1600
 
