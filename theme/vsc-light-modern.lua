@@ -4,25 +4,25 @@ local config = {
   colors = {
     -- Primary colors
     background    = "#FFFFFF",
-    foreground    = "#1F1F1F",
+    foreground    = "#000000",
 
     -- Cursor colors (following official catppuccin theme)
     cursor_bg     = "#E75480",
-    cursor_fg     = "#F8F8F8",
+    cursor_fg     = "#F2F2F2",
     cursor_border = "#E75480",
 
     -- Selection colors (following official catppuccin theme)
-    selection_bg  = "#E5E5E5",
-    selection_fg  = "#1F1F1F",
+    selection_bg  = "#CCCCCC",
+    selection_fg  = "#000000",
 
     -- Split separator color
-    split         = "#767676",
+    split         = "#8B949E",
 
     -- Scrollbar thumb color
-    scrollbar_thumb = "#E5E5E5",
+    scrollbar_thumb = "#CCCCCC",
 
     -- Visual bell color
-    visual_bell   = "#F2F2F2",
+    visual_bell   = "#E8E8E8",
 
     -- Compose cursor (for IME)
     compose_cursor = "#C72E0F",
@@ -41,7 +41,7 @@ local config = {
 
     -- Bright colors
     brights = {
-      "#767676",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#939393",  -- bright black (surface2 for dark themes, subtext0 for latte)
       "#F85149",
       "#098658",
       "#795E26",
@@ -59,50 +59,50 @@ local config = {
 
     -- Tab bar colors (following official catppuccin theme)
     tab_bar = {
-      background = "#F8F8F8",
+      background = "#F2F2F2",
 
       active_tab = {
         bg_color = "#AF00DB",
-        fg_color = "#F8F8F8",
+        fg_color = "#F2F2F2",
       },
 
       inactive_tab = {
-        bg_color = "#F8F8F8",
-        fg_color = "#1F1F1F",
+        bg_color = "#F2F2F2",
+        fg_color = "#000000",
       },
 
       inactive_tab_hover = {
         bg_color = "#FFFFFF",
-        fg_color = "#1F1F1F",
+        fg_color = "#000000",
       },
 
       new_tab = {
-        bg_color = "#F2F2F2",
-        fg_color = "#1F1F1F",
+        bg_color = "#E8E8E8",
+        fg_color = "#000000",
       },
 
       new_tab_hover = {
-        bg_color = "#E5E5E5",
-        fg_color = "#1F1F1F",
+        bg_color = "#D3D3D3",
+        fg_color = "#000000",
       },
 
-      inactive_tab_edge = "#F2F2F2",
+      inactive_tab_edge = "#E8E8E8",
     },
   },
 
   -- Window frame colors
   window_frame = {
-    active_titlebar_bg = "#F8F8F8",
-    active_titlebar_fg = "#1F1F1F",
-    inactive_titlebar_bg = "#F8F8F8",
-    inactive_titlebar_fg = "#1F1F1F",
-    button_fg = "#1F1F1F",
+    active_titlebar_bg = "#F2F2F2",
+    active_titlebar_fg = "#000000",
+    inactive_titlebar_bg = "#F2F2F2",
+    inactive_titlebar_fg = "#000000",
+    button_fg = "#000000",
     button_bg = "#FFFFFF",
   },
 
   -- Command palette colors
-  command_palette_bg_color = "#F8F8F8",
-  command_palette_fg_color = "#1F1F1F",
+  command_palette_bg_color = "#F2F2F2",
+  command_palette_fg_color = "#000000",
 }
 
 return config

@@ -4,25 +4,25 @@ local config = {
   colors = {
     -- Primary colors
     background    = "#1F1F1F",
-    foreground    = "#D7D7D7",
+    foreground    = "#FFFFFF",
 
     -- Cursor colors (following official catppuccin theme)
     cursor_bg     = "#F5A9B8",
-    cursor_fg     = "#181818",
+    cursor_fg     = "#202020",
     cursor_border = "#F5A9B8",
 
     -- Selection colors (following official catppuccin theme)
-    selection_bg  = "#313131",
-    selection_fg  = "#D7D7D7",
+    selection_bg  = "#454545",
+    selection_fg  = "#FFFFFF",
 
     -- Split separator color
-    split         = "#989898",
+    split         = "#6E7681",
 
     -- Scrollbar thumb color
-    scrollbar_thumb = "#313131",
+    scrollbar_thumb = "#454545",
 
     -- Visual bell color
-    visual_bell   = "#2A2D2E",
+    visual_bell   = "#313131",
 
     -- Compose cursor (for IME)
     compose_cursor = "#CE9178",
@@ -41,14 +41,14 @@ local config = {
 
     -- Bright colors
     brights = {
-      "#9D9D9D",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#707070",  -- bright black (surface2 for dark themes, subtext0 for latte)
       "#F85149",
       "#B5CEA8",
       "#DCDCAA",
       "#9CDCFE",
       "#C586C0",
       "#4FC1FF",
-      "#868686",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#9D9D9D",  -- bright white (subtext0 for dark themes, surface1 for latte)
     },
 
     -- Indexed colors (extended palette)
@@ -59,50 +59,50 @@ local config = {
 
     -- Tab bar colors (following official catppuccin theme)
     tab_bar = {
-      background = "#181818",
+      background = "#202020",
 
       active_tab = {
         bg_color = "#C586C0",
-        fg_color = "#181818",
+        fg_color = "#202020",
       },
 
       inactive_tab = {
-        bg_color = "#181818",
-        fg_color = "#D7D7D7",
+        bg_color = "#202020",
+        fg_color = "#FFFFFF",
       },
 
       inactive_tab_hover = {
         bg_color = "#1F1F1F",
-        fg_color = "#D7D7D7",
+        fg_color = "#FFFFFF",
       },
 
       new_tab = {
-        bg_color = "#2A2D2E",
-        fg_color = "#D7D7D7",
+        bg_color = "#313131",
+        fg_color = "#FFFFFF",
       },
 
       new_tab_hover = {
-        bg_color = "#2B2B2B",
-        fg_color = "#D7D7D7",
+        bg_color = "#3C3C3C",
+        fg_color = "#FFFFFF",
       },
 
-      inactive_tab_edge = "#2A2D2E",
+      inactive_tab_edge = "#313131",
     },
   },
 
   -- Window frame colors
   window_frame = {
-    active_titlebar_bg = "#181818",
-    active_titlebar_fg = "#D7D7D7",
-    inactive_titlebar_bg = "#181818",
-    inactive_titlebar_fg = "#D7D7D7",
-    button_fg = "#D7D7D7",
+    active_titlebar_bg = "#202020",
+    active_titlebar_fg = "#FFFFFF",
+    inactive_titlebar_bg = "#202020",
+    inactive_titlebar_fg = "#FFFFFF",
+    button_fg = "#FFFFFF",
     button_bg = "#1F1F1F",
   },
 
   -- Command palette colors
-  command_palette_bg_color = "#181818",
-  command_palette_fg_color = "#D7D7D7",
+  command_palette_bg_color = "#202020",
+  command_palette_fg_color = "#FFFFFF",
 }
 
 return config
