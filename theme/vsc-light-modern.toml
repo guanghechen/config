@@ -9,7 +9,7 @@ transparent_background_colors = true
 
 [colors.cursor]
 text              = "#FFFFFF"
-cursor            = "#FD716C"
+cursor            = "#E75480"
 
 [colors.vi_mode_cursor]
 text              = "#FFFFFF"
@@ -33,7 +33,7 @@ background        = "#616161"
 
 [colors.selection]
 text              = "#FFFFFF"
-background        = "#FD716C"
+background        = "#E75480"
 
 [colors.footer_bar]
 foreground        = "#FFFFFF"
@@ -81,4 +81,4 @@ color = "#C72E0F"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#FD716C"
+color = "#E75480"
