@@ -7,9 +7,9 @@ local config = {
     foreground    = "#1F1F1F",
 
     -- Cursor colors (following official catppuccin theme)
-    cursor_bg     = "#FD716C",
+    cursor_bg     = "#E75480",
     cursor_fg     = "#F8F8F8",
-    cursor_border = "#FD716C",
+    cursor_border = "#E75480",
 
     -- Selection colors (following official catppuccin theme)
     selection_bg  = "#E5E5E5",
@@ -54,7 +54,7 @@ local config = {
     -- Indexed colors (extended palette)
     indexed = {
       [16] = "#C72E0F",
-      [17] = "#FD716C",
+      [17] = "#E75480",
     },
 
     -- Tab bar colors (following official catppuccin theme)
