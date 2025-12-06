@@ -12,16 +12,16 @@ local M = {
       none          = "none",
 
       bg0           = "#FFFFFF",
-      bg1           = "#F8F8F8",
-      bg2           = "#F2F2F2",
-      bg3           = "#E5E5E5",
-      bg4           = "#E5E5E5",
+      bg1           = "#F2F2F2",
+      bg2           = "#E8E8E8",
+      bg3           = "#D3D3D3",
+      bg4           = "#CCCCCC",
 
-      fg0           = "#1F1F1F",
+      fg0           = "#000000",
       fg1           = "#3B3B3B",
       fg2           = "#616161",
-      fg3           = "#6E7681",
-      fg4           = "#767676",
+      fg3           = "#767676",
+      fg4           = "#8B949E",
 
       red           = "#F85149",
       green         = "#2EA043",
@@ -39,7 +39,7 @@ local M = {
       brightAqua    = "#0070C1",
       brightOrange  = "#895503",
 
-      grey          = "#767676",
+      grey          = "#939393",
       pink          = "#E75480",
 
       diffDel       = "#FFE2DA",
