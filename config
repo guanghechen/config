@@ -11,6 +11,8 @@ bell-features = title
 # Cursor
 cursor-style = block
 cursor-style-blink = false
+cursor-invert-fg-bg = false
+cursor-opacity = 0.85
 
 # Font
 font-family = "Maple Mono NF CN"
@@ -31,6 +33,7 @@ copy-on-select = true
 link-url = true
 mouse-hide-while-typing = true
 scrollback-limit = 10000
+shell-integration-features = no-cursor
 
 # macOS
 macos-option-as-alt = true

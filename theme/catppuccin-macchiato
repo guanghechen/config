@@ -29,7 +29,7 @@ background = #24273A
 foreground = #CAD3F5
 
 # Cursor colors
-cursor-color = #F4DBD6
+cursor-color = #F5BDE6
 cursor-text = #181926
 
 # Selection colors
@@ -41,5 +41,4 @@ split-divider-color = #363A4F
 
 # Unfocused split fill color
 unfocused-split-fill = #1E2030
-
 
