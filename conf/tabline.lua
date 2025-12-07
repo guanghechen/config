@@ -3,9 +3,9 @@ local wezterm = require("wezterm")
 ---@class tabline
 local M = {}
 
--- Powerline symbols (slanted style like Kitty)
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_lower_right_triangle
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_upper_left_triangle
+-- Active tab icons (matching Kitty's active_tab_title_template)
+local ACTIVE_LEFT_ICON = "󱝁 "
+local ACTIVE_RIGHT_ICON = "󱝁 "
 
 ---@param tab_info table
 ---@return string
@@ -42,11 +42,23 @@ function M.setup(config)
 
 		local title = tab_title(tab)
 		local index = tab.tab_index + 1
-		local is_first = tab.tab_index == 0
+		local is_first = index == 1 ---@type boolean
 
-		-- Format: " title | index "
-		local formatted_title = string.format(" %s | %d ", title, index)
-		formatted_title = wezterm.truncate_right(formatted_title, max_width - 2)
+		-- Format title (active tab has icons only, no index)
+		local formatted_title
+		if tab.is_active then
+			if is_first then
+				formatted_title = string.format(" %s%s%s ", ACTIVE_LEFT_ICON, title, ACTIVE_RIGHT_ICON)
+			else
+				formatted_title = string.format(" %s%s%s", ACTIVE_LEFT_ICON, title, ACTIVE_RIGHT_ICON)
+			end
+		else
+			if is_first then
+				formatted_title = string.format(" %s | %d", title, index)
+			else
+				formatted_title = string.format("%s | %d", title, index)
+			end
+		end
 
 		local elements = {}
 
@@ -56,7 +68,7 @@ function M.setup(config)
 		else
 			table.insert(elements, { Background = { Color = edge_bg } })
 			table.insert(elements, { Foreground = { Color = bg } })
-			table.insert(elements, { Text = SOLID_LEFT_ARROW })
+			table.insert(elements, { Text = "" })
 		end
 
 		-- Tab content
@@ -67,8 +79,7 @@ function M.setup(config)
 		-- Right edge
 		table.insert(elements, { Background = { Color = edge_bg } })
 		table.insert(elements, { Foreground = { Color = bg } })
-		table.insert(elements, { Text = SOLID_RIGHT_ARROW })
-
+		table.insert(elements, { Text = "" })
 		return elements
 	end)
 end
