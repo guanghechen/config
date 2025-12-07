@@ -10,7 +10,7 @@ function M.setup(config)
 
 	-- CSI u format keybindings for special keys (ghostty-style)
 	table.insert(keys, { key = "Tab", mods = "", action = act.SendString("\x1b[9;1u") })
-	table.insert(keys, { key = "Enter", mods = "", action = act.SendString("\x1b[13;1u") })
+	-- table.insert(keys, { key = "Enter", mods = "", action = act.SendString("\x1b[13;1u") })
 	table.insert(keys, { key = "Escape", mods = "", action = act.SendString("\x1b[27;1u") })
 	table.insert(keys, { key = "Tab", mods = "SHIFT", action = act.SendString("\x1b[9;2u") })
 	table.insert(keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b[13;2u") })
