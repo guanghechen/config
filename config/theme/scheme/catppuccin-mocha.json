@@ -69,7 +69,23 @@
       "diffDel":        "#362424",
       "diffDelInline":  "#833535",
       "diffAdd":        "#293232",
-      "diffAddInline":  "#476E6E"
+      "diffAddInline":  "#476E6E",
+
+      "tokenKeyword":     "{{mauve}}",
+      "tokenString":      "{{green}}",
+      "tokenFunction":    "{{blue}}",
+      "tokenType":        "{{yellow}}",
+      "tokenConstant":    "{{peach}}",
+      "tokenVariable":    "{{text}}",
+      "tokenParameter":   "{{maroon}}",
+      "tokenComment":     "{{overlay2}}",
+      "tokenOperator":    "{{teal}}",
+      "tokenPunctuation": "{{overlay2}}",
+      "tokenNumber":      "{{peach}}",
+      "tokenProperty":    "{{teal}}",
+      "tokenTag":         "{{blue}}",
+      "tokenAttribute":   "{{yellow}}",
+      "tokenDecorator":   "{{peach}}"
     }
   }
 }

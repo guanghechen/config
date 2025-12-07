@@ -58,7 +58,23 @@
       "diffDel":        "#362436",
       "diffDelInline":  "#442430",
       "diffAdd":        "#2A3645",
-      "diffAddInline":  "#254055"
+      "diffAddInline":  "#254055",
+
+      "tokenKeyword":     "{{pine}}",
+      "tokenString":      "{{gold}}",
+      "tokenFunction":    "{{rose}}",
+      "tokenType":        "{{foam}}",
+      "tokenConstant":    "{{gold}}",
+      "tokenVariable":    "{{text}}",
+      "tokenParameter":   "{{iris}}",
+      "tokenComment":     "{{muted}}",
+      "tokenOperator":    "{{subtle}}",
+      "tokenPunctuation": "{{subtle}}",
+      "tokenNumber":      "{{gold}}",
+      "tokenProperty":    "{{foam}}",
+      "tokenTag":         "{{foam}}",
+      "tokenAttribute":   "{{iris}}",
+      "tokenDecorator":   "{{iris}}"
     }
   }
 }

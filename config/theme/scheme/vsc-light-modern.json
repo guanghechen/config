@@ -298,10 +298,26 @@
       "white": "{{editor_background}}",
       "grey": "{{editorIndentGuide_activeBackground1}}",
       "pink": "{{accentPink}}",
-      "diffDel": "#FFE2DA",
-      "diffDelInline": "#F8CAB5",
-      "diffAdd": "#DFF0D8",
-      "diffAddInline": "#C8E6C9"
+      "diffDel": "#FECACA",
+      "diffDelInline": "#FCA5A5",
+      "diffAdd": "#BBF7D0",
+      "diffAddInline": "#86EFAC",
+
+      "tokenKeyword":     "{{tokenKeyword}}",
+      "tokenString":      "{{tokenString}}",
+      "tokenFunction":    "{{tokenFunctionDeclarations}}",
+      "tokenType":        "{{tokenTypesDeclarationAndReferences}}",
+      "tokenConstant":    "{{tokenConstantsAndEnums}}",
+      "tokenVariable":    "{{tokenVariableAndParameterName}}",
+      "tokenParameter":   "{{tokenVariableAndParameterName}}",
+      "tokenComment":     "{{tokenComment}}",
+      "tokenOperator":    "{{tokenKeywordOperator}}",
+      "tokenPunctuation": "{{foreground}}",
+      "tokenNumber":      "{{tokenConstantNumeric}}",
+      "tokenProperty":    "{{tokenSupportTypePropertyNameJson}}",
+      "tokenTag":         "{{tokenEntityNameTag}}",
+      "tokenAttribute":   "{{tokenEntityOtherAttributeName}}",
+      "tokenDecorator":   "{{tokenControlFlowSpecialKeywords}}"
     }
   }
 }

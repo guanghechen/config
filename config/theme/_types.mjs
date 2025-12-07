@@ -495,6 +495,22 @@
  * @property {string}                   diffDelInline
  * @property {string}                   diffAdd
  * @property {string}                   diffAddInline
+ *
+ * @property {string}                   tokenKeyword
+ * @property {string}                   tokenString
+ * @property {string}                   tokenFunction
+ * @property {string}                   tokenType
+ * @property {string}                   tokenConstant
+ * @property {string}                   tokenVariable
+ * @property {string}                   tokenParameter
+ * @property {string}                   tokenComment
+ * @property {string}                   tokenOperator
+ * @property {string}                   tokenPunctuation
+ * @property {string}                   tokenNumber
+ * @property {string}                   tokenProperty
+ * @property {string}                   tokenTag
+ * @property {string}                   tokenAttribute
+ * @property {string}                   tokenDecorator
  */
 
 /**

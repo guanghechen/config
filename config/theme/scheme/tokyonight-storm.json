@@ -89,7 +89,23 @@
       "diffDel":         "{{diff_delete}}",
       "diffDelInline":   "{{git_delete}}",
       "diffAdd":         "{{diff_add}}",
-      "diffAddInline":   "{{git_add}}"
+      "diffAddInline":   "{{git_add}}",
+
+      "tokenKeyword":     "{{magenta}}",
+      "tokenString":      "{{green}}",
+      "tokenFunction":    "{{blue}}",
+      "tokenType":        "{{blue1}}",
+      "tokenConstant":    "{{orange}}",
+      "tokenVariable":    "{{fg}}",
+      "tokenParameter":   "{{yellow}}",
+      "tokenComment":     "{{comment}}",
+      "tokenOperator":    "{{blue5}}",
+      "tokenPunctuation": "{{dark5}}",
+      "tokenNumber":      "{{orange}}",
+      "tokenProperty":    "{{green1}}",
+      "tokenTag":         "{{red}}",
+      "tokenAttribute":   "{{green1}}",
+      "tokenDecorator":   "{{yellow}}"
     }
   }
 }
