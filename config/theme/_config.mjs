@@ -79,7 +79,12 @@ export const apps = [
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async () => {
-      await safe_exec('pkill', ['-USR2', 'ghostty'])
+      const result = await safe_exec('pgrep', ['-x', 'ghostty']).catch(() => null)
+      if (result?.stdout?.trim()) {
+        await safe_exec('pkill', ['-USR2', 'ghostty']).catch(error =>
+          console.log('[skipped] Failed to reload ghostty. error:', error),
+        )
+      }
     },
   },
   {
