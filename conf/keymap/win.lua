@@ -8,7 +8,13 @@ local M = {}
 function M.setup(config)
 	local keys = {}
 
-	-- CSI u format keybindings
+	-- CSI u format keybindings for special keys (ghostty-style)
+	table.insert(keys, { key = "Tab", mods = "", action = act.SendString("\x1b[9;1u") })
+	table.insert(keys, { key = "Enter", mods = "", action = act.SendString("\x1b[13;1u") })
+	table.insert(keys, { key = "Escape", mods = "", action = act.SendString("\x1b[27;1u") })
+	table.insert(keys, { key = "Tab", mods = "SHIFT", action = act.SendString("\x1b[9;2u") })
+	table.insert(keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b[13;2u") })
+	table.insert(keys, { key = "Escape", mods = "SHIFT", action = act.SendString("\x1b[27;2u") })
 
 	-- ctrl+keys to CSI u format
 	local ctrl_keys = {
@@ -40,12 +46,6 @@ function M.setup(config)
 			action = act.SendString(string.format("\x1b[%d;5u", entry.code)),
 		})
 	end
-
-	-- tab key
-	table.insert(keys, { key = "Tab", mods = "", action = act.SendString("\x09") })
-
-	-- shift+enter
-	table.insert(keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b[13;2u") })
 
 	-- ctrl+shift+keys to CSI u format
 	local ctrl_shift_keys = {
