@@ -78,7 +78,7 @@ function M.setup(config)
 		},
 	}
 
-	if env.IS_OSX then
+	if env.IS_MAC then
 		config.freetype_load_target = "Light"
 	end
 end
