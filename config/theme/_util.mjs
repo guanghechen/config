@@ -2,7 +2,16 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { HOME_THEME_SCHEME, HOME_THEME_APP, cwd, themes } from './_env.mjs'
+import {
+  HOME_THEME_SCHEME,
+  HOME_THEME_APP,
+  IS_MAC,
+  IS_NIX,
+  IS_WIN,
+  IS_WSL,
+  cwd,
+  themes,
+} from './_env.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
@@ -44,6 +53,10 @@ export async function render_template(template, scheme) {
     .replace(/\{{2}([^\n]+?)\}{2}/g, (_, expression) => {
       const fn = new Function(
         'name',
+        'IS_MAC',
+        'IS_WIN',
+        'IS_NIX',
+        'IS_WSL',
         'theme',
         'variant',
         'opposite',
@@ -55,6 +68,10 @@ export async function render_template(template, scheme) {
       )
       const result = fn(
         name,
+        IS_MAC,
+        IS_WIN,
+        IS_NIX,
+        IS_WSL,
         theme,
         variant,
         opposite,
