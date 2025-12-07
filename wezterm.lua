@@ -1,7 +1,6 @@
 local env = require("env")
 
-local os_name = env.os_name() ---@type "nix"|"osx"|"win"
-local keymap_config = require("keymap." .. os_name)
+local keymap_config = require("keymap." .. env.OSNAME)
 local font_config = require("font.maple")
 
 local config = {

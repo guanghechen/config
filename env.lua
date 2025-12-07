@@ -3,20 +3,15 @@ local wezterm = require("wezterm")
 ---@class env
 local M = {}
 
----@return "nix"|"osx"|"win"
-function M.os_name()
-	local target = wezterm.target_triple
+local target = wezterm.target_triple
 
-	if target:find("linux") then
-		return "nix"
-	elseif target:find("windows") then
-		return "win"
-	elseif target:find("darwin") then
-		return "osx"
-	end
+M.IS_NIX = target:find("linux") ~= nil
+M.IS_OSX = target:find("darwin") ~= nil
+M.IS_WIN = target:find("windows") ~= nil and os.getenv("WSL_DISTRO_NAME") == nil
+M.IS_WSL = target:find("windows") ~= nil and os.getenv("WSL_DISTRO_NAME") ~= nil
 
-	return "nix"
-end
+---@type "nix"|"osx"|"win"|"wsl"
+M.OSNAME = M.IS_OSX and "osx" or M.IS_WSL and "wsl" or M.IS_WIN and "win" or "nix"
 
 ---@return table
 function M.load_theme()

@@ -1,4 +1,5 @@
 local wezterm = require("wezterm")
+local env = require("env")
 
 local family = "Maple Mono NF CN"
 
@@ -72,5 +73,9 @@ local config = {
 		},
 	},
 }
+
+if env.IS_OSX then
+	config.freetype_load_target = "Light"
+end
 
 return config
