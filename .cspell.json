@@ -1,6 +1,13 @@
 {
   "language": "en",
   "version": "0.2",
-  "words": ["calt", "guanghechen", "harfbuzz", "keymap", "osname", "wezterm"]
+  "words": [
+    "calt",
+    "guanghechen",
+    "harfbuzz",
+    "keymap",
+    "osname",
+    "tabline",
+    "wezterm"
+  ]
 }
-

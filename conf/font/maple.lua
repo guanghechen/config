@@ -1,8 +1,12 @@
 local wezterm = require("wezterm")
 local env = require("env")
 
+---@class font.maple
+local M = {}
+
 local family = "Maple Mono NF CN"
 
+---@type string[]
 local harfbuzz_features = {
 	"cv61=1",
 	"cv62=1",
@@ -15,14 +19,15 @@ local harfbuzz_features = {
 	"calt=1",
 }
 
-local config = {
-	font_size = 15,
-	font = wezterm.font({
+---@param config table
+function M.setup(config)
+	config.font_size = 15
+	config.font = wezterm.font({
 		family = family,
 		weight = "Medium",
 		harfbuzz_features = harfbuzz_features,
-	}),
-	font_rules = {
+	})
+	config.font_rules = {
 		{
 			intensity = "Normal",
 			italic = true,
@@ -71,11 +76,11 @@ local config = {
 				harfbuzz_features = harfbuzz_features,
 			}),
 		},
-	},
-}
+	}
 
-if env.IS_OSX then
-	config.freetype_load_target = "Light"
+	if env.IS_OSX then
+		config.freetype_load_target = "Light"
+	end
 end
 
-return config
+return M

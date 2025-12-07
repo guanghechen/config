@@ -1,35 +1,46 @@
 local env = require("env")
-
-local keymap_config = require("keymap." .. env.OSNAME)
-local font_config = require("font.maple")
+local font = require("conf.font.maple")
+local keymap = require("conf.keymap." .. env.OSNAME)
+local tabline = require("conf.tabline")
 
 local config = {
+	-- Key bindings
 	disable_default_key_bindings = true,
-	initial_rows = 40,
+
+	-- Tab bar
+	enable_tab_bar = true,
+	hide_tab_bar_if_only_one_tab = true,
+	show_new_tab_button_in_tab_bar = false,
+	show_tab_index_in_tab_bar = false,
+	tab_bar_at_bottom = false,
+	tab_max_width = 32,
+	use_fancy_tab_bar = false,
+
+	-- Window
 	initial_cols = 120,
-	keys = keymap_config.keys,
+	initial_rows = 40,
 	native_macos_fullscreen_mode = true,
-	send_composed_key_when_left_alt_is_pressed = false,
-	send_composed_key_when_right_alt_is_pressed = true,
 	window_decorations = "RESIZE",
 	window_padding = {
+		bottom = 0,
 		left = 0,
 		right = 0,
 		top = 0,
-		bottom = 0,
 	},
-	enable_tab_bar = false,
-	tab_bar_at_bottom = false,
-	tab_max_width = 16,
+
+	-- macOS specific
+	send_composed_key_when_left_alt_is_pressed = false,
+	send_composed_key_when_right_alt_is_pressed = true,
 }
 
-for key, val in pairs(font_config) do
-	config[key] = val
-end
+font.setup(config)
+keymap.setup(config)
 
 local theme = env.load_theme() or {} ---@type table
 for key, val in pairs(theme) do
 	config[key] = val
 end
+
+tabline.setup(config)
 
 return config
