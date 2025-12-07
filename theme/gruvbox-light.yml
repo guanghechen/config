@@ -2,13 +2,15 @@
 
 gui:
   authorColors:
-    guanghechen: '#458588'
     '*': '#504945'
+    guanghechen: '#458588'
   branchColorPatterns:
     "^(main|master)$": '#B16286'
-    "^(user/[^/]+/)?fix": '#CC241D'
+    "^(user/[^/]+/)?chore": '#7C6F64'
     "^(user/[^/]+/)?feat": '#98971A'
     "^(user/[^/]+/)?feature": '#98971A'
+    "^(user/[^/]+/)?fix": '#CC241D'
+    "^(user/[^/]+/)?refactor": '#D65D0E'
     "^(user/[^/]+/)?release": '#458588'
   theme:
     activeBorderColor:
@@ -17,29 +19,29 @@ gui:
     cherryPickedCommitBgColor:
       - '#689D6A'
     cherryPickedCommitFgColor:
-      - '#458588'
+      - '#F2E5BC'
     defaultFgColor:
       - '#504945'
     inactiveBorderColor:
       - '#7C6F64'
     inactiveViewSelectedLineBgColor:
-      - '#BDAE93'
-      - bold
+      - '#D5C4A1'
     markedBaseCommitBgColor:
-      - '#B16286'
+      - '#D79921'
     markedBaseCommitFgColor:
-      - '#98971A'
+      - '#F2E5BC'
     optionsTextColor:
       - '#D65D0E'
     searchingActiveBorderColor:
-      - '#458588'
+      - '#689D6A'
+      - bold
     selectedLineBgColor:
-      - '#D5C4A1'
+      - '#BDAE93'
     unstagedChangesColor:
       - '#CC241D'
 
 git:
-  paging:
-    colorArg: always
-    pager: delta --paging=never --diff-so-fancy --light
+  pagers:
+    - colorArg: always
+      pager: delta --paging=never --light
 
