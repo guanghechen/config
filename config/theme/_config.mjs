@@ -179,41 +179,39 @@ export const apps = [
       const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
-      content = content.replace(
-        'return config',
-        `
-          config.background ={
-            {
-              source = { Color = "${scheme.palette.unified.bg0}" },
-              height = "100%",
-              width = "100%",
-            },
-            -- {
-            --   source = { File = '${backgroundImagePath}' },
-            --   attachment = "Fixed",
-            --   height = "Contain",
-            --   width = "100%",
-            --   opacity = 0.9,
-            --   repeat_x = "Mirror",
-            --   repeat_y = "NoRepeat",
-            --   horizontal_align = "Right",
-            --   vertical_align = "Middle",
-            -- },
-            {
-              source = { Color = "${scheme.palette.unified.bg0}" },
-              height = "100%",
-              width = "100%",
-              opacity = 0.9,
-            },
-          }
+      const backgroundConfig = `
+        config.background = {
+          {
+            source = { Color = "${scheme.palette.unified.bg0}" },
+            height = "100%",
+            width = "100%",
+          },
+          -- {
+          --   source = { File = '${backgroundImagePath}' },
+          --   attachment = "Fixed",
+          --   height = "Contain",
+          --   width = "100%",
+          --   opacity = 0.9,
+          --   repeat_x = "Mirror",
+          --   repeat_y = "NoRepeat",
+          --   horizontal_align = "Right",
+          --   vertical_align = "Middle",
+          -- },
+          {
+            source = { Color = "${scheme.palette.unified.bg0}" },
+            height = "100%",
+            width = "100%",
+            opacity = 0.9,
+          },
+        }
+      end`
+        .split(/\n/g)
+        .map(line => line.replace(/^[ ]{6}/, ''))
+        .join('\n')
 
-          return config
-        `
-          .trim()
-          .split(/\n/g)
-          .map(line => line.replace(/^[ ]{10}/g, ''))
-          .join('\n'),
-      )
+      content = content
+        .replace(/^end$/m, backgroundConfig)
+        .replace('@class theme.vsc_dark_modern', '@class theme.local')
       await fs.writeFile(theme_filepath, content, 'utf8')
     },
   },

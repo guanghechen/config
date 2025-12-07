@@ -1,7 +1,11 @@
 -- {{name}}
 
-local config = {
-  colors = {
+---@class theme.{{name.replace(/-/g, '_')}}
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "{{unified.bg0}}",
     foreground    = "{{catppuccin?.text || unified.fg0}}",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "{{catppuccin?.surface0 || unified.bg2}}",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "{{catppuccin?.crust || unified.bg1}}",
     active_titlebar_fg = "{{catppuccin?.text || unified.fg0}}",
     inactive_titlebar_bg = "{{catppuccin?.crust || unified.bg1}}",
     inactive_titlebar_fg = "{{catppuccin?.text || unified.fg0}}",
     button_fg = "{{catppuccin?.text || unified.fg0}}",
     button_bg = "{{catppuccin?.base || unified.bg0}}",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "{{catppuccin?.crust || unified.bg1}}",
-  command_palette_fg_color = "{{catppuccin?.text || unified.fg0}}",
-}
+  config.command_palette_bg_color = "{{catppuccin?.crust || unified.bg1}}"
+  config.command_palette_fg_color = "{{catppuccin?.text || unified.fg0}}"
+end
 
-return config
+return M
