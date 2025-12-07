@@ -1,6 +1,6 @@
 local wezterm = require("wezterm")
 
----@class ghc.util
+---@class env
 local M = {}
 
 ---@return "nix"|"osx"|"win"

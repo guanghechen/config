@@ -1,14 +1,14 @@
-local util = require("ghc.util")
+local env = require("env")
 
-local os_name = util.os_name() ---@type "nix"|"osx"|"win"
-local platform_config = require("ghc.platform." .. os_name)
+local os_name = env.os_name() ---@type "nix"|"osx"|"win"
+local keymap_config = require("keymap." .. os_name)
 local font_config = require("font.maple")
 
 local config = {
 	disable_default_key_bindings = true,
 	initial_rows = 40,
 	initial_cols = 120,
-	keys = platform_config.keys,
+	keys = keymap_config.keys,
 	native_macos_fullscreen_mode = true,
 	send_composed_key_when_left_alt_is_pressed = false,
 	send_composed_key_when_right_alt_is_pressed = true,
@@ -28,7 +28,7 @@ for key, val in pairs(font_config) do
 	config[key] = val
 end
 
-local theme = util.load_theme() or {} ---@type table
+local theme = env.load_theme() or {} ---@type table
 for key, val in pairs(theme) do
 	config[key] = val
 end
