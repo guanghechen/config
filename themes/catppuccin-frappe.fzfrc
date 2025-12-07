@@ -9,6 +9,7 @@
 --border=rounded
 --layout=reverse
 --info=right
+--info-command='echo "$FZF_POS/$FZF_MATCH_COUNT/$FZF_TOTAL_COUNT"'
 --pointer=""
 --marker="▎"
 --scrollbar="┃"
@@ -27,3 +28,5 @@
 --bind 'ctrl-f:preview-half-page-down'
 --bind 'ctrl-o:execute(nvim {+})'
 --bind 'ctrl-y:execute-silent(echo {+} | pbcopy)+bell'
+
+
