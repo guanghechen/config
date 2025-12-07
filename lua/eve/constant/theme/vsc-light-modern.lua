@@ -42,10 +42,10 @@ local M = {
       grey          = "#939393",
       pink          = "#E75480",
 
-      diffDel       = "#FFE2DA",
-      diffDelInline = "#F8CAB5",
-      diffAdd       = "#DFF0D8",
-      diffAddInline = "#C8E6C9",
+      diffDel       = "#FFCCCC",
+      diffDelInline = "#FFA3A3",
+      diffAdd       = "#E9EFDB",
+      diffAddInline = "#D3E4AE",
     },
     vsc = {
       none          = "none",
