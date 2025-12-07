@@ -42,7 +42,7 @@ mk({ "n" }, "gco", "o<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add bel
 mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add above")
 
 ---! enhancement
-mk({ "i", "n", "s" }, "<esc>", function()
+mk({ "i", "n", "x" }, "<esc>", function()
   vim.cmd("noh")
   if vim.snippet then
     vim.snippet.stop()
