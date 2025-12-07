@@ -3,6 +3,7 @@
 --cycle
 --highlight-line
 --multi
+--smart-case
 --padding=0
 --margin=0
 --border=rounded
@@ -11,8 +12,18 @@
 --pointer=""
 --marker="▎"
 --scrollbar="┃"
+
 --color="fg+:#3C3836,bg+:#D5C4A1,hl+:#B16286"
 --color="fg:#665C54,bg:#F2E5BC,hl:#D79921"
 --color="gutter:#F2E5BC,pointer:#B16286,spinner:#458588"
 --color="info:#076678,prompt:#79740E,marker:#B16286,query:#3C3836"
 --preview='bat --line-range=:500 --style=snip --theme=gruvbox-light --number --color=always {} || cat -n {}'
+
+--bind 'ctrl-a:toggle-all'
+--bind 'ctrl-s:toggle-sort'
+--bind 'ctrl-p:toggle-preview'
+--bind 'ctrl-l:clear-query'
+--bind 'ctrl-b:preview-half-page-up'
+--bind 'ctrl-f:preview-half-page-down'
+--bind 'ctrl-o:execute(nvim {+})'
+--bind 'ctrl-y:execute-silent(echo {+} | pbcopy)+bell'
