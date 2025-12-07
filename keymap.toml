@@ -63,7 +63,7 @@ bindings = [
   # ----- csi u keybindings -----
   # Special keys to CSI u format
   { key = "Tab",                                            chars = "\u001b[9;1u" },
-  { key = "Return",                                         chars = "\u001b[13;1u" },
+  # { key = "Return",                                         chars = "\u001b[13;1u" },
   { key = "Escape",                                         chars = "\u001b[27;1u" },
   { key = "Tab",        mods = "Shift",                     chars = "\u001b[9;2u" },
   { key = "Return",     mods = "Shift",                     chars = "\u001b[13;2u" },
@@ -224,7 +224,7 @@ bindings = [
   { key = "S",          mods = "Command",                   chars = "\u0001\u0073" },       # <Ctrl-a>s
   { key = "T",          mods = "Command",                   chars = "\u0001\u0074" },       # <Ctrl-a>t
   { key = "U",          mods = "Command",                   chars = "\u0001\u0075" },       # <Ctrl-a>u
-  #  { key = "V",          mods = "Command",                   chars = "\u0001\u0076" },       # <Ctrl-a>v
+  # { key = "V",          mods = "Command",                   chars = "\u0001\u0076" },       # <Ctrl-a>v
   { key = "W",          mods = "Command",                   chars = "\u0001\u0077" },       # <Ctrl-a>w
   { key = "X",          mods = "Command",                   chars = "\u0001\u0078" },       # <Ctrl-a>x
   { key = "Y",          mods = "Command",                   chars = "\u0001\u0079" },       # <Ctrl-a>y
