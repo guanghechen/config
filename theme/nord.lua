@@ -1,7 +1,11 @@
 -- nord
 
-local config = {
-  colors = {
+---@class theme.nord
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#2E3440",
     foreground    = "#ECEFF4",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#434C5E",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#3B4252",
     active_titlebar_fg = "#ECEFF4",
     inactive_titlebar_bg = "#3B4252",
     inactive_titlebar_fg = "#ECEFF4",
     button_fg = "#ECEFF4",
     button_bg = "#2E3440",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#3B4252",
-  command_palette_fg_color = "#ECEFF4",
-}
+  config.command_palette_bg_color = "#3B4252"
+  config.command_palette_fg_color = "#ECEFF4"
+end
 
-return config
+return M

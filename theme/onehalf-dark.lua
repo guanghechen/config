@@ -1,7 +1,11 @@
 -- onehalf-dark
 
-local config = {
-  colors = {
+---@class theme.onehalf_dark
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#1E222A",
     foreground    = "#E5E9F0",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#3E4451",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#252931",
     active_titlebar_fg = "#E5E9F0",
     inactive_titlebar_bg = "#252931",
     inactive_titlebar_fg = "#E5E9F0",
     button_fg = "#E5E9F0",
     button_bg = "#1E222A",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#252931",
-  command_palette_fg_color = "#E5E9F0",
-}
+  config.command_palette_bg_color = "#252931"
+  config.command_palette_fg_color = "#E5E9F0"
+end
 
-return config
+return M

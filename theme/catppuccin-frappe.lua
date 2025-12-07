@@ -1,7 +1,11 @@
 -- catppuccin-frappe
 
-local config = {
-  colors = {
+---@class theme.catppuccin_frappe
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#303446",
     foreground    = "#C6D0F5",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#414559",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#232634",
     active_titlebar_fg = "#C6D0F5",
     inactive_titlebar_bg = "#232634",
     inactive_titlebar_fg = "#C6D0F5",
     button_fg = "#C6D0F5",
     button_bg = "#303446",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#232634",
-  command_palette_fg_color = "#C6D0F5",
-}
+  config.command_palette_bg_color = "#232634"
+  config.command_palette_fg_color = "#C6D0F5"
+end
 
-return config
+return M

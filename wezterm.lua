@@ -3,6 +3,11 @@ local font = require("conf.font.maple")
 local keymap = require("conf.keymap." .. env.OSNAME)
 local tabline = require("conf.tabline")
 
+local ok, theme = pcall(require, "local.theme")
+if not ok then
+	theme = require("theme.vsc-dark-modern")
+end
+
 local config = {
 	-- Key bindings
 	disable_default_key_bindings = true,
@@ -35,12 +40,7 @@ local config = {
 
 font.setup(config)
 keymap.setup(config)
-
-local theme = env.load_theme() or {} ---@type table
-for key, val in pairs(theme) do
-	config[key] = val
-end
-
+theme.setup(config)
 tabline.setup(config)
 
 return config

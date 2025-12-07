@@ -1,7 +1,11 @@
 -- vsc-dark-modern
 
-local config = {
-  colors = {
+---@class theme.vsc_dark_modern
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#1F1F1F",
     foreground    = "#FFFFFF",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#313131",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#202020",
     active_titlebar_fg = "#FFFFFF",
     inactive_titlebar_bg = "#202020",
     inactive_titlebar_fg = "#FFFFFF",
     button_fg = "#FFFFFF",
     button_bg = "#1F1F1F",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#202020",
-  command_palette_fg_color = "#FFFFFF",
-}
+  config.command_palette_bg_color = "#202020"
+  config.command_palette_fg_color = "#FFFFFF"
+end
 
-return config
+return M

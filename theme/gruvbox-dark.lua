@@ -1,7 +1,11 @@
 -- gruvbox-dark
 
-local config = {
-  colors = {
+---@class theme.gruvbox_dark
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#32302F",
     foreground    = "#F2E5BC",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#504945",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#3C3836",
     active_titlebar_fg = "#F2E5BC",
     inactive_titlebar_bg = "#3C3836",
     inactive_titlebar_fg = "#F2E5BC",
     button_fg = "#F2E5BC",
     button_bg = "#32302F",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#3C3836",
-  command_palette_fg_color = "#F2E5BC",
-}
+  config.command_palette_bg_color = "#3C3836"
+  config.command_palette_fg_color = "#F2E5BC"
+end
 
-return config
+return M

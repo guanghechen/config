@@ -1,7 +1,11 @@
 -- catppuccin-mocha
 
-local config = {
-  colors = {
+---@class theme.catppuccin_mocha
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#1E1E2E",
     foreground    = "#CDD6F4",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#313244",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#11111B",
     active_titlebar_fg = "#CDD6F4",
     inactive_titlebar_bg = "#11111B",
     inactive_titlebar_fg = "#CDD6F4",
     button_fg = "#CDD6F4",
     button_bg = "#1E1E2E",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#11111B",
-  command_palette_fg_color = "#CDD6F4",
-}
+  config.command_palette_bg_color = "#11111B"
+  config.command_palette_fg_color = "#CDD6F4"
+end
 
-return config
+return M

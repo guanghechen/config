@@ -1,7 +1,11 @@
 -- catppuccin-macchiato
 
-local config = {
-  colors = {
+---@class theme.catppuccin_macchiato
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#24273A",
     foreground    = "#CAD3F5",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#363A4F",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#181926",
     active_titlebar_fg = "#CAD3F5",
     inactive_titlebar_bg = "#181926",
     inactive_titlebar_fg = "#CAD3F5",
     button_fg = "#CAD3F5",
     button_bg = "#24273A",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#181926",
-  command_palette_fg_color = "#CAD3F5",
-}
+  config.command_palette_bg_color = "#181926"
+  config.command_palette_fg_color = "#CAD3F5"
+end
 
-return config
+return M

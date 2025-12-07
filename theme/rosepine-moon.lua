@@ -1,7 +1,11 @@
 -- rosepine-moon
 
-local config = {
-  colors = {
+---@class theme.rosepine_moon
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#232136",
     foreground    = "#E0DEF4",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#393552",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#2A273F",
     active_titlebar_fg = "#E0DEF4",
     inactive_titlebar_bg = "#2A273F",
     inactive_titlebar_fg = "#E0DEF4",
     button_fg = "#E0DEF4",
     button_bg = "#232136",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#2A273F",
-  command_palette_fg_color = "#E0DEF4",
-}
+  config.command_palette_bg_color = "#2A273F"
+  config.command_palette_fg_color = "#E0DEF4"
+end
 
-return config
+return M

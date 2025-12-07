@@ -1,7 +1,11 @@
 -- catppuccin-latte
 
-local config = {
-  colors = {
+---@class theme.catppuccin_latte
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#EFF1F5",
     foreground    = "#4C4F69",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#CCD0DA",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#DCE0E8",
     active_titlebar_fg = "#4C4F69",
     inactive_titlebar_bg = "#DCE0E8",
     inactive_titlebar_fg = "#4C4F69",
     button_fg = "#4C4F69",
     button_bg = "#EFF1F5",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#DCE0E8",
-  command_palette_fg_color = "#4C4F69",
-}
+  config.command_palette_bg_color = "#DCE0E8"
+  config.command_palette_fg_color = "#4C4F69"
+end
 
-return config
+return M

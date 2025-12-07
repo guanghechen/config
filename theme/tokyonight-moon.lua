@@ -1,7 +1,11 @@
 -- tokyonight-moon
 
-local config = {
-  colors = {
+---@class theme.tokyonight_moon
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#222436",
     foreground    = "#c8d3f5",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#191b29",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#1e2030",
     active_titlebar_fg = "#c8d3f5",
     inactive_titlebar_bg = "#1e2030",
     inactive_titlebar_fg = "#c8d3f5",
     button_fg = "#c8d3f5",
     button_bg = "#222436",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#1e2030",
-  command_palette_fg_color = "#c8d3f5",
-}
+  config.command_palette_bg_color = "#1e2030"
+  config.command_palette_fg_color = "#c8d3f5"
+end
 
-return config
+return M

@@ -1,7 +1,11 @@
 -- tokyonight-night
 
-local config = {
-  colors = {
+---@class theme.tokyonight_night
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#1a1b26",
     foreground    = "#c0caf5",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#0c0e14",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#16161e",
     active_titlebar_fg = "#c0caf5",
     inactive_titlebar_bg = "#16161e",
     inactive_titlebar_fg = "#c0caf5",
     button_fg = "#c0caf5",
     button_bg = "#1a1b26",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#16161e",
-  command_palette_fg_color = "#c0caf5",
-}
+  config.command_palette_bg_color = "#16161e"
+  config.command_palette_fg_color = "#c0caf5"
+end
 
-return config
+return M

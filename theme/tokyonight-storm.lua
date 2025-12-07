@@ -1,7 +1,11 @@
 -- tokyonight-storm
 
-local config = {
-  colors = {
+---@class theme.tokyonight_storm
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#24283b",
     foreground    = "#c0caf5",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#1b1e2d",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#1f2335",
     active_titlebar_fg = "#c0caf5",
     inactive_titlebar_bg = "#1f2335",
     inactive_titlebar_fg = "#c0caf5",
     button_fg = "#c0caf5",
     button_bg = "#24283b",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#1f2335",
-  command_palette_fg_color = "#c0caf5",
-}
+  config.command_palette_bg_color = "#1f2335"
+  config.command_palette_fg_color = "#c0caf5"
+end
 
-return config
+return M

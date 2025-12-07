@@ -1,7 +1,11 @@
 -- vsc-light-modern
 
-local config = {
-  colors = {
+---@class theme.vsc_light_modern
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#FFFFFF",
     foreground    = "#000000",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#E8E8E8",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#F2F2F2",
     active_titlebar_fg = "#000000",
     inactive_titlebar_bg = "#F2F2F2",
     inactive_titlebar_fg = "#000000",
     button_fg = "#000000",
     button_bg = "#FFFFFF",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#F2F2F2",
-  command_palette_fg_color = "#000000",
-}
+  config.command_palette_bg_color = "#F2F2F2"
+  config.command_palette_fg_color = "#000000"
+end
 
-return config
+return M

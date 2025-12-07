@@ -1,7 +1,11 @@
 -- rosepine-dawn
 
-local config = {
-  colors = {
+---@class theme.rosepine_dawn
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#FAF4ED",
     foreground    = "#464261",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#F2E9E1",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#FFFAF3",
     active_titlebar_fg = "#464261",
     inactive_titlebar_bg = "#FFFAF3",
     inactive_titlebar_fg = "#464261",
     button_fg = "#464261",
     button_bg = "#FAF4ED",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#FFFAF3",
-  command_palette_fg_color = "#464261",
-}
+  config.command_palette_bg_color = "#FFFAF3"
+  config.command_palette_fg_color = "#464261"
+end
 
-return config
+return M

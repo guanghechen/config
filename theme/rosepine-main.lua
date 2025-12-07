@@ -1,7 +1,11 @@
 -- rosepine-main
 
-local config = {
-  colors = {
+---@class theme.rosepine_main
+local M = {}
+
+---@param config table
+function M.setup(config)
+  config.colors = {
     -- Primary colors
     background    = "#191724",
     foreground    = "#E0DEF4",
@@ -88,21 +92,21 @@ local config = {
 
       inactive_tab_edge = "#26233A",
     },
-  },
+  }
 
   -- Window frame colors
-  window_frame = {
+  config.window_frame = {
     active_titlebar_bg = "#1F1D2E",
     active_titlebar_fg = "#E0DEF4",
     inactive_titlebar_bg = "#1F1D2E",
     inactive_titlebar_fg = "#E0DEF4",
     button_fg = "#E0DEF4",
     button_bg = "#191724",
-  },
+  }
 
   -- Command palette colors
-  command_palette_bg_color = "#1F1D2E",
-  command_palette_fg_color = "#E0DEF4",
-}
+  config.command_palette_bg_color = "#1F1D2E"
+  config.command_palette_fg_color = "#E0DEF4"
+end
 
-return config
+return M
