@@ -16,7 +16,7 @@ M.OSNAME = M.IS_OSX and "osx" or M.IS_WSL and "wsl" or M.IS_WIN and "win" or "ni
 ---@return table
 function M.load_theme()
 	local ok, theme = pcall(require, "local.theme")
-	return ok and theme or require("theme.catppuccin-mocha")
+	return ok and theme or require("theme.vsc-dark-modern")
 end
 
 return M
