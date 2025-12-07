@@ -6,13 +6,13 @@ function fzf-file --description "Search files in current directory"
     if string match --quiet -- "*/" $unescaped && test -d "$unescaped"
         set -l result (
             fd --hidden --follow --no-ignore-vcs --color=always --exclude=.git --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.pdf' --exclude='*.mkv' --exclude='*.mp4' --exclude='*.zip' --type=f --base-directory=$unescaped |
-            fzf --ansi --multi --prompt="$unescaped> " --preview="bat --style=numbers --color=always $unescaped{}"
+            fzf --ansi --multi --prompt="$unescaped> " --preview="bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always $unescaped{} || cat -n $unescaped{}"
         )
         test $status -eq 0 && commandline --current-token --replace -- $unescaped(string escape -- $result | string join ' ')
     else
         set -l result (
             fd --hidden --follow --no-ignore-vcs --color=always --exclude=.git --exclude='*.local' --exclude=local/ --exclude='*.exe' --exclude='*.pdf' --exclude='*.mkv' --exclude='*.mp4' --exclude='*.zip' --type=f |
-            fzf --ansi --multi --prompt="File> " --query="$unescaped" --preview="bat --style=numbers --color=always {}"
+            fzf --ansi --multi --prompt="File> " --query="$unescaped" --preview="bat --line-range=:500 --style=snip --theme=vsc-light-modern --number --color=always {} || cat -n {}"
         )
         test $status -eq 0 && commandline --current-token --replace -- (string escape -- $result | string join ' ')
     end
