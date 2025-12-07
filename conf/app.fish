@@ -11,13 +11,13 @@ end
 ## fzf (CSI u: Ctrl+Shift+Key)
 set -gx FZF_DEFAULT_COMMAND "fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f"
 set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
-fzf_configure_bindings \
-    --directory=\e\[70\;6u \
-    --git_log=\e\[76\;6u \
-    --git_status=\e\[83\;6u \
-    --history=\e\[82\;6u \
-    --processes=\e\[80\;6u \
-    --variables=\e\[69\;6u
+for mode in default insert
+    bind --mode $mode \e\[70\;6u fzf-file       # Ctrl+Shift+F
+    bind --mode $mode \e\[76\;6u fzf-git-log    # Ctrl+Shift+L
+    bind --mode $mode \e\[82\;6u fzf-history    # Ctrl+Shift+R
+    bind --mode $mode \e\[80\;6u fzf-processes  # Ctrl+Shift+P
+    bind --mode $mode \e\[69\;6u fzf-variables  # Ctrl+Shift+E
+end
 
 ### miniforge3
 if test -f "$HOME/.app/miniforge3/bin/conda"
