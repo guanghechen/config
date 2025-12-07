@@ -3,11 +3,16 @@
   "version": "0.2",
   "words": [
     "calt",
+    "catppuccin",
+    "freetype",
     "guanghechen",
     "harfbuzz",
     "keymap",
+    "nerdfonts",
     "osname",
+    "powerline",
     "tabline",
+    "titlebar",
     "wezterm"
   ]
 }

@@ -19,6 +19,7 @@ end
 
 ---@param config table
 function M.setup(config)
+	---@diagnostic disable-next-line: unused-local
 	wezterm.on("format-tab-title", function(tab, tabs, _, _, hover, max_width)
 		local theme = config.colors or {}
 		local tab_bar = theme.tab_bar or {}
