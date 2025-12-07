@@ -13,8 +13,6 @@ set -gx no_proxy "localhost,127.0.0.1,::1"
 
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
-set -gx FZF_DEFAULT_COMMAND 'fd --color=never --type f --hidden --follow --no-ignore-vcs --exclude .git'
-set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
 set -gx LS_COLORS "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
 if test -f /opt/homebrew/bin/brew
     set -gx HOMEBREW_PREFIX /opt/homebrew

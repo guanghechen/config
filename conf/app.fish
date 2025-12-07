@@ -9,6 +9,8 @@ if type -q fnm
 end
 
 ## fzf (CSI u: Ctrl+Shift+Key)
+set -gx FZF_DEFAULT_COMMAND "fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f"
+set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
 fzf_configure_bindings \
     --directory=\e\[70\;6u \
     --git_log=\e\[76\;6u \
@@ -36,11 +38,6 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
     # end
 end
 
-### opencode
-if test -f "$HOME/.opencode/bin/opencode"
-    fish_add_path --prepend "$HOME/.opencode/bin/"
-end
-
 ### tmux
 if not set -q PREFER_TMUX_VERSION; or test "$PREFER_TMUX_VERSION" != stable
     if test -f "$ROOT_SOURCECODES/github/tmux/tmux/tmux"
@@ -53,9 +50,6 @@ if test -n "$TMUX"
 else
     set -x TERM xterm-256color
 end
-
-### yazi
-set -gx FZF_DEFAULT_COMMAND "fd --type f"
 
 ### zoxide
 if type -q zoxide
