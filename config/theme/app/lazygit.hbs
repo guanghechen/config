@@ -2,39 +2,41 @@
 
 gui:
   authorColors:
-    guanghechen: '{{vsc?.textLink_foreground || unified.blue}}'
     '*': '{{unified.fg2}}'
+    guanghechen: '{{vsc?.textLink_foreground || unified.blue}}'
   branchColorPatterns:
     "^(main|master)$": '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
-    "^(user/[^/]+/)?fix": '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+    "^(user/[^/]+/)?chore": '{{unified.fg4}}'
     "^(user/[^/]+/)?feat": '{{vsc?.editorGutter_addedBackground || unified.green}}'
     "^(user/[^/]+/)?feature": '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    "^(user/[^/]+/)?fix": '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+    "^(user/[^/]+/)?refactor": '{{unified.orange}}'
     "^(user/[^/]+/)?release": '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
   theme:
     activeBorderColor:
       - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
       - bold
     cherryPickedCommitBgColor:
-      - '{{vsc?.tokenTypesDeclarationAndReferences || unified.aqua}}'
+      - '{{unified.aqua}}'
     cherryPickedCommitFgColor:
-      - '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
+      - '{{unified.bg0}}'
     defaultFgColor:
       - '{{unified.fg2}}'
     inactiveBorderColor:
       - '{{unified.fg4}}'
     inactiveViewSelectedLineBgColor:
-      - '{{vsc?.editor_inactiveSelectionBackground || unified.bg3}}'
-      - bold
+      - '{{unified.bg2}}'
     markedBaseCommitBgColor:
-      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+      - '{{unified.yellow}}'
     markedBaseCommitFgColor:
-      - '{{vsc?.editorGutter_addedBackground || unified.green}}'
+      - '{{unified.bg0}}'
     optionsTextColor:
       - '{{vsc?.tokenFunctionDeclarations || unified.orange}}'
     searchingActiveBorderColor:
-      - '{{vsc?.focusBorder || unified.blue}}'
+      - '{{vsc?.focusBorder || unified.aqua}}'
+      - bold
     selectedLineBgColor:
-      - '{{vsc?.subtle || unified.bg2}}'
+      - '{{unified.bg3}}'
     unstagedChangesColor:
       - '{{vsc?.editorGutter_deletedBackground || unified.red}}'
 
