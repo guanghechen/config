@@ -1,12 +1,16 @@
 # catppuccin-latte
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#5C5F77,bg+:#CCD0DA,hl+:#EA76CB"
 --color="fg:#7C7F93,bg:#EFF1F5,hl:#DF8E1D"
 --color="gutter:#EFF1F5,pointer:#EA76CB,spinner:#1E66F5"

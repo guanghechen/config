@@ -1,12 +1,16 @@
 # onehalf-light
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#696D75,bg+:#EAEAEA,hl+:#F07178"
 --color="fg:#4F525A,bg:#FAFAFA,hl:#DEA95F"
 --color="gutter:#FAFAFA,pointer:#F07178,spinner:#4078F2"

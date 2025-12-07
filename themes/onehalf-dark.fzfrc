@@ -1,12 +1,16 @@
 # onehalf-dark
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#D7DAE0,bg+:#3E4451,hl+:#DE8C92"
 --color="fg:#B6BDCA,bg:#1E222A,hl:#E5C07B"
 --color="gutter:#1E222A,pointer:#DE8C92,spinner:#61AFEF"

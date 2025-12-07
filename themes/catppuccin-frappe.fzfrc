@@ -1,12 +1,16 @@
 # catppuccin-frappe
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#B5BFE2,bg+:#414559,hl+:#F4B8E4"
 --color="fg:#949CBB,bg:#303446,hl:#E5C890"
 --color="gutter:#303446,pointer:#F4B8E4,spinner:#8CAAEE"

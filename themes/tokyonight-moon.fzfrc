@@ -1,12 +1,16 @@
 # tokyonight-moon
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#b6c1e7,bg+:#191b29,hl+:#c099ff"
 --color="fg:#909bca,bg:#222436,hl:#ffc777"
 --color="gutter:#222436,pointer:#c099ff,spinner:#82aaff"

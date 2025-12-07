@@ -1,12 +1,16 @@
 # rosepine-main
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#E0DEF4,bg+:#26233A,hl+:#EB6F92"
 --color="fg:#6E6A86,bg:#191724,hl:#F6C177"
 --color="gutter:#191724,pointer:#EB6F92,spinner:#31748F"

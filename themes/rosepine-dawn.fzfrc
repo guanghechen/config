@@ -1,12 +1,16 @@
 # rosepine-dawn
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#464261,bg+:#F2E9E1,hl+:#B4637A"
 --color="fg:#9893A5,bg:#FAF4ED,hl:#EA9D34"
 --color="gutter:#FAF4ED,pointer:#B4637A,spinner:#286983"

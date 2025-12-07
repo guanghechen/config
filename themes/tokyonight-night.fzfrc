@@ -1,12 +1,16 @@
 # tokyonight-night
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#adb7e2,bg+:#0c0e14,hl+:#bb9af7"
 --color="fg:#868fba,bg:#1a1b26,hl:#e0af68"
 --color="gutter:#1a1b26,pointer:#bb9af7,spinner:#7aa2f7"

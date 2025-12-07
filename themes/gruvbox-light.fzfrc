@@ -1,12 +1,16 @@
 # gruvbox-light
 
+--cycle
+--highlight-line
+--multi
 --padding=0
 --margin=0
 --border=rounded
 --layout=reverse
 --info=right
+--pointer=""
+--marker="▎"
 --scrollbar="┃"
---multi
 --color="fg+:#3C3836,bg+:#D5C4A1,hl+:#B16286"
 --color="fg:#665C54,bg:#F2E5BC,hl:#D79921"
 --color="gutter:#F2E5BC,pointer:#B16286,spinner:#458588"
