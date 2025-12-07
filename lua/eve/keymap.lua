@@ -44,9 +44,7 @@ mk({ "n" }, "gcO", "O<esc>Vcx<esc><cmd>normal gcc<cr>fxa<bs>", "comment: add abo
 ---! enhancement
 mk({ "i", "n", "x" }, "<esc>", function()
   vim.cmd("noh")
-  if vim.snippet then
-    vim.snippet.stop()
-  end
+  vim.snippet.stop()
   return "<esc>"
 end, "system: clear search highlights", true)
 -- mk({ "t" }, { "<C-a>i", "<M-i>", "<D-i>" }, "<C-\\><C-n>", "system: enter normal mode") -- Exit terminal
