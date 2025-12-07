@@ -22,7 +22,7 @@ function fzf-git-status --description "Search git status and insert file paths"
                 end
             "' \
             --preview-window="right:60%:wrap" \
-a           --bind="ctrl-o:execute(nvim (string sub --start=4 {}) < /dev/tty)"
+            --bind="ctrl-o:execute(nvim (string sub --start=4 {}) < /dev/tty)"
     )
 
     if test $status -eq 0
