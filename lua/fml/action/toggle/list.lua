@@ -334,27 +334,6 @@ local group_items = {
         require("render-markdown").set(not enabled)
       end,
     },
-    relativenumber = {
-      title = "relativenumber",
-      snapshot = function()
-        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return "unknown", "Boolean"
-        end
-
-        local enabled = vim.wo[winnr_command].relativenumber ---@type boolean
-        return tostring(enabled), "Boolean"
-      end,
-      action = function()
-        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return
-        end
-
-        local flag = vim.wo[winnr_command].relativenumber ---@type boolean
-        vim.wo[winnr_command].relativenumber = not flag
-      end,
-    },
     wrap = {
       title = "wrap",
       snapshot = function()

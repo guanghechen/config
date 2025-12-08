@@ -36,7 +36,6 @@ M.togglers = {
   "fileformat_local",
   "hipatterns_local",
   "markdown_local",
-  "relativenumber_local",
   "wrap_local",
 
   "notification_paused_ux",
