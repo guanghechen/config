@@ -43,4 +43,10 @@ keymap.setup(config)
 theme.setup(config)
 tabline.setup(config)
 
+-- Load profile configuration only on Windows
+if env.IS_WIN then
+	local profile = require("conf.win.profile")
+	profile.setup(config)
+end
+
 return config

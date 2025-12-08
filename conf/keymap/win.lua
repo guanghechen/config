@@ -65,7 +65,34 @@ function M.setup(config)
 	end
 
 	-- ctrl+shift+letter to CSI u format
-	local letters = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" }
+	local letters = {
+		"a",
+		"b",
+		"c",
+		"d",
+		"e",
+		"f",
+		"g",
+		"h",
+		"i",
+		"j",
+		"k",
+		"l",
+		"m",
+		"n",
+		"o",
+		"p",
+		"q",
+		"r",
+		"s",
+		"t",
+		"u",
+		"v",
+		"w",
+		"x",
+		"y",
+		"z",
+	}
 
 	for _, key in ipairs(letters) do
 		local ascii_code = string.byte(key:upper())
@@ -270,8 +297,22 @@ function M.setup(config)
 	table.insert(keys, { key = "9", mods = "ALT|CTRL", action = act.ActivateTab(8) })
 
 	-- Split/Pane management
-	table.insert(keys, { key = "J", mods = "ALT|CTRL|SHIFT", action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }) })
-	table.insert(keys, { key = "L", mods = "ALT|CTRL|SHIFT", action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }) })
+	table.insert(
+		keys,
+		{
+			key = "J",
+			mods = "ALT|CTRL|SHIFT",
+			action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }),
+		}
+	)
+	table.insert(
+		keys,
+		{
+			key = "L",
+			mods = "ALT|CTRL|SHIFT",
+			action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }),
+		}
+	)
 	table.insert(keys, { key = "h", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Left") })
 	table.insert(keys, { key = "j", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Down") })
 	table.insert(keys, { key = "k", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Up") })
@@ -294,6 +335,9 @@ function M.setup(config)
 	table.insert(keys, { key = "F5", mods = "ALT|CTRL", action = act.ReloadConfiguration })
 	table.insert(keys, { key = "F11", mods = "", action = act.ToggleFullScreen })
 	table.insert(keys, { key = "F12", mods = "ALT|CTRL", action = act.ToggleFullScreen })
+
+	-- Launch Menu (Profiles)
+	table.insert(keys, { key = "p", mods = "ALT|CTRL", action = act.ShowLauncher })
 
 	-- Tab title
 	table.insert(keys, {
