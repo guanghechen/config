@@ -13,29 +13,19 @@ function M.setup(config)
       args = { "pwsh.exe" },
       domain = { DomainName = "local" },
     },
-    {
-      label = "Windows PowerShell",
-      args = { "powershell.exe" },
-      domain = { DomainName = "local" },
-    },
-    {
-      label = "Command Prompt",
-      args = { "cmd.exe" },
-      domain = { DomainName = "local" },
-    },
+    -- {
+    --   label = "Windows PowerShell",
+    --   args = { "powershell.exe" },
+    --   domain = { DomainName = "local" },
+    -- },
+    -- {
+    --   label = "Command Prompt",
+    --   args = { "cmd.exe" },
+    --   domain = { DomainName = "local" },
+    -- },
     {
       label = "WSL Ubuntu",
       args = { "wsl.exe", "-d", "Ubuntu" },
-      domain = { DomainName = "local" },
-    },
-    {
-      label = "WSL (Default)",
-      args = { "wsl.exe" },
-      domain = { DomainName = "local" },
-    },
-    {
-      label = "Git Bash",
-      args = { "C:\\Program Files\\Git\\bin\\bash.exe", "-i", "-l" },
       domain = { DomainName = "local" },
     },
   }
