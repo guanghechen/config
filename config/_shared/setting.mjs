@@ -47,7 +47,7 @@ export const settings = {
       const json = JSON.parse(content);
       return normalize(json);
     } catch (error) {
-      console.error("[get_config] failed to load the filepath.", { filepath });
+      console.error("[settings.load] Failed to load the filepath.", { filepath });
       return defaults();
     }
   },

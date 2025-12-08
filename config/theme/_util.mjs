@@ -134,7 +134,7 @@ export async function safe_exec(cmd, args, extendedEnv) {
 
     return { stdout }
   } catch (error) {
-    console.error(`['safe_exec'] Failed to run command.`, { cmd, args, error })
+    console.error(`[safe_exec] Failed to run command.`, { cmd, args, error })
   }
 }
 
@@ -148,7 +148,7 @@ export async function command_exists(cmd) {
     const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`])
     return !!result?.stdout
   } catch (error) {
-    console.error(`[command_exists] error`, { cmd, error })
+    console.error(`[command_exists] Failed to check command.`, { cmd, error })
     return false
   }
 }
@@ -198,7 +198,7 @@ export async function apply_theme_per_app(app, scheme) {
   if (app.local) {
     const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`)
     if (!existsSync(template_filepath)) {
-      console.error('[gen_theme] Cannot find the template.', { app })
+      console.error('[apply_theme_per_app] Cannot find the template.', { app })
       return
     }
     const template = await fs.readFile(template_filepath, 'utf8')
@@ -221,7 +221,7 @@ export async function gen_themes_per_app(app) {
 
   const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`)
   if (!existsSync(template_filepath)) {
-    console.error('[gen_theme] Cannot find the template.', { app })
+    console.error('[gen_themes_per_app] Cannot find the template.', { app })
     return
   }
   const template = await fs.readFile(template_filepath, 'utf8')
