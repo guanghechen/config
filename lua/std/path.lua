@@ -1,5 +1,6 @@
 local SEP = std.env.PATH_SEP ---@type string
 local HOME_CONFIG = std.env.HOME_CONFIG ---@type string
+local HOME_CONFIG_SHARED = std.env.HOME_CONFIG_SHARED ---@type string
 local HOME_NVIM_CACHE = std.env.HOME_NVIM_CACHE ---@type string
 local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
 local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
@@ -247,6 +248,12 @@ end
 ---@return string
 function M.locate_app_config_home(app)
   return M.join(HOME_CONFIG, app)
+end
+
+---@param filename                      string
+---@return string
+function M.locate_config_shared_filepath(filename)
+  return M.join(HOME_CONFIG_SHARED, "_shared/config/" .. filename)
 end
 
 ---@param filename                      string

@@ -73,6 +73,7 @@ local ignored = {
 local config = {
   prettier_bin_path = std.env.IS_WIN and std.path.normalize("node_modules/.bin/prettier.cmd")
     or std.path.normalize("node_modules/.bin/prettier"),
+  stylua_fallback_config_path = std.path.locate_config_shared_filepath("stylua.toml"),
   prettier_fallback_config = {
     arrowParens = "avoid",
     bracketSameLine = false,
@@ -92,6 +93,13 @@ local config = {
 }
 
 local fns = {
+  ---@param dirname                     string
+  ---@return string|nil
+  find_stylua_config = function(dirname)
+    local config_files = { ".stylua.toml", "stylua.toml" }
+    return rstd.path.locate_nearest(dirname, config_files)
+  end,
+
   ---@param dirname                     string
   ---@return string
   find_prettier_binpath = function(dirname)
@@ -156,6 +164,16 @@ return {
         options = {
           ignore_errors = true,
         },
+      },
+      stylua = {
+        prepend_args = function(_, ctx)
+          local stylua_config_path = fns.find_stylua_config(ctx.dirname)
+          if stylua_config_path then
+            return { "--config-path", stylua_config_path }
+          else
+            return { "--config-path", config.stylua_fallback_config_path }
+          end
+        end,
       },
       prettier = {
         prepend_args = function(_, ctx)

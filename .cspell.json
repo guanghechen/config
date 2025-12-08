@@ -654,6 +654,7 @@
     "parentleafs",
     "parentuuid",
     "pathsep",
+    "pathshorten",
     "pdate",
     "pipenv",
     "pipfile",
