@@ -28,17 +28,45 @@
   ],
   "actions": [
     {
+      "id": "ghc.input.tab",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[9;1u"
+      }
+    },
+    {
+      "id": "ghc.input.shift_tab",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[9;2u"
+      }
+    },
+    {
+      "id": "ghc.input.escape",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[27;1u"
+      }
+    },
+    {
+      "id": "ghc.input.shift_escape",
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[27;2u"
+      }
+    },
+    {
       "id": "ghc.input.alt_lbracket",
       "command": {
         "action": "sendInput",
-        "input": "\u001b[97;5u\u001b[91;1u"
+        "input": "\u0001\u005b"
       }
     },
     {
       "id": "ghc.input.alt_rbracket",
       "command": {
         "action": "sendInput",
-        "input": "\u001b[97;5u\u001b[93;1u"
+        "input": "\u0001\u005d"
       }
     },
     {
@@ -523,6 +551,22 @@
     }
   ],
   "keybindings": [
+    {
+      "id": "ghc.input.tab",
+      "keys": "tab"
+    },
+    {
+      "id": "ghc.input.shift_tab",
+      "keys": "shift+tab"
+    },
+    {
+      "id": "ghc.input.escape",
+      "keys": "escape"
+    },
+    {
+      "id": "ghc.input.shift_escape",
+      "keys": "shift+escape"
+    },
     {
       "id": "ghc.input.alt_lbracket",
       "keys": "alt+["
