@@ -66,6 +66,7 @@ source ~/.config/fish/conf/platform/local.fish
 source ~/.config/fish/conf/app.fish
 source ~/.config/fish/conf/theme.fish
 source ~/.config/fish/conf/alias.fish
+source ~/.config/fish/conf/keymap.fish
 
 ghc-claude-local
 
