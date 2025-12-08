@@ -13,12 +13,14 @@ export const USER_HOME =
   process.env.HOME || process.env.USERPROFILE || path.dirname(__XDG_CONFIG_HOME)
 export const GEMINI_CONFIG_DIR = process.env.GEMINI_CONFIG_DIR || path.join(USER_HOME, '.gemini')
 export const XDG_CONFIG_HOME = __XDG_CONFIG_HOME
-export const F_WINDOWS_TERMINAL_SETTINGS = fs.existsSync(__F_WINDOWS_TERMINAL_SETTINGS)
-  ? __F_WINDOWS_TERMINAL_SETTINGS
-  : null
-export const F_VSCODE_KEYBINDINGS = fs.existsSync(__F_VSCODE_KEYBINDINGS)
-  ? __F_VSCODE_KEYBINDINGS
-  : null
+export const F_WINDOWS_TERMINAL_SETTINGS =
+  __F_WINDOWS_TERMINAL_SETTINGS && fs.existsSync(__F_WINDOWS_TERMINAL_SETTINGS)
+    ? __F_WINDOWS_TERMINAL_SETTINGS
+    : null
+export const F_VSCODE_KEYBINDINGS =
+  __F_VSCODE_KEYBINDINGS && fs.existsSync(__F_VSCODE_KEYBINDINGS)
+    ? __F_VSCODE_KEYBINDINGS
+    : null
 
 export const platform = (() => {
   if (os.release().toLowerCase().includes('microsoft')) return 'wsl'

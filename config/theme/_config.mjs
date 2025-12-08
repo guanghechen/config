@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { GEMINI_CONFIG_DIR, XDG_CONFIG_HOME } from '../_shared/env.mjs'
 import { is_directory, is_file, touch } from '../_shared/util.mjs'
-import { gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
+import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 
@@ -79,11 +79,13 @@ export const apps = [
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async () => {
-      const result = await safe_exec('pgrep', ['-x', 'ghostty']).catch(() => null)
-      if (result?.stdout?.trim()) {
-        await safe_exec('pkill', ['-USR2', 'ghostty']).catch(error =>
-          console.log('[skipped] Failed to reload ghostty. error:', error),
-        )
+      const is_ghostty_exist = await command_exists('ghostty')
+      if (is_ghostty_exist) {
+        try {
+          await safe_exec('pkill', ['-USR2', 'ghostty'])
+        } catch (error) {
+          console.log('[skipped] Failed to reload ghostty. error:', error)
+        }
       }
     },
   },

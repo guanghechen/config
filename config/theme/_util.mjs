@@ -139,6 +139,21 @@ export async function safe_exec(cmd, args, extendedEnv) {
 }
 
 /**
+ * @param {string} cmd
+ * @return {Promise<boolean>}
+ */
+export async function command_exists(cmd) {
+  if (IS_WIN) return false
+  try {
+    const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`])
+    return !!result?.stdout
+  } catch (error) {
+    console.error(`[command_exists] error`, { cmd, error })
+    return false
+  }
+}
+
+/**
  * @param {string} theme
  * @return {Promise<IThemeScheme|undefined>}
  */
