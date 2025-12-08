@@ -1,7 +1,6 @@
 local env = require("env")
-local font = require("conf.font-maple")
-local platform = require("conf." .. env.OSNAME)
 local tabline = require("conf.tabline")
+local platform = require("conf." .. env.OSNAME)
 
 local ok, theme = pcall(require, "local.theme")
 if not ok then
@@ -38,7 +37,6 @@ local config = {
   send_composed_key_when_right_alt_is_pressed = true,
 }
 
-font.setup(config)
 theme.setup(config)
 tabline.setup(config)
 platform.setup(config)

@@ -1,6 +1,6 @@
 local wezterm = require("wezterm")
 
----@class tabline
+---@class conf.tabline
 local M = {}
 
 -- Active tab icons (matching Kitty's active_tab_title_template)

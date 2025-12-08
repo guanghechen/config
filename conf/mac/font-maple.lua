@@ -1,7 +1,6 @@
 local wezterm = require("wezterm")
-local env = require("env")
 
----@class font.maple
+---@class conf.mac.font.maple
 local M = {}
 
 local family = "Maple Mono NF CN"
@@ -78,9 +77,7 @@ function M.setup(config)
     },
   }
 
-  if env.IS_MAC then
-    config.freetype_load_target = "Light"
-  end
+  config.freetype_load_target = "Light"
 end
 
 return M

@@ -1,7 +1,7 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
----@class keymap.mac
+---@class conf.mac.keymap
 local M = {}
 
 ---@param config table
