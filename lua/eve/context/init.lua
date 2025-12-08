@@ -222,6 +222,19 @@ function M.watch_changes()
   end, true)
 
   std.fn.observe({
+    M.option.expandtab,
+  }, function()
+    local flag = M.option.expandtab:snapshot() ---@type boolean
+    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+    vim.o.expandtab = flag
+    for _, bufnr in ipairs(bufnrs) do
+      if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype == "" then
+        vim.bo[bufnr].expandtab = flag
+      end
+    end
+  end, true)
+
+  std.fn.observe({
     M.option.relativenumber,
   }, function()
     local flag = M.option.relativenumber:snapshot() ---@type boolean

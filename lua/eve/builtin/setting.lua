@@ -38,6 +38,7 @@ M.togglers = {
   "markdown_local",
   "wrap_local",
 
+  "expandtab_ux",
   "notification_paused_ux",
   "relativenumber_ux",
   "transparency_ux",

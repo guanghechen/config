@@ -987,7 +987,7 @@ command
   .implement({
     uuid = K.toggle.expandtab.uuid,
     action = function()
-      require("fml.action.toggle.list").list("expandtab_local")
+      require("fml.action.toggle.list").list("expandtab_ux")
     end,
   })
   .implement({

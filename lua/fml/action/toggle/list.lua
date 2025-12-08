@@ -60,6 +60,7 @@ local group_flags = {
 
   ---ux
   ux = {
+    expandtab = eve.context.option.expandtab,
     notification_paused = eve.status.notification_paused,
     relativenumber = eve.context.option.relativenumber,
     username = eve.context.theme.username,
@@ -286,28 +287,6 @@ local group_items = {
             end
           end)
         end
-      end,
-    },
-    expandtab = {
-      title = "expandtab",
-      snapshot = function()
-        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return "unknown", "Boolean"
-        end
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local enabled = vim.bo[bufnr].expandtab ---@type boolean
-        return tostring(enabled), "Boolean"
-      end,
-      action = function()
-        local winnr_command = eve.status.get_winnr_command() ---@type integer|nil
-        if winnr_command == nil then
-          return
-        end
-
-        local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local flag = vim.bo[bufnr].expandtab ---@type boolean
-        vim.bo[bufnr].expandtab = not flag
       end,
     },
     hipatterns = {
