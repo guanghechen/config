@@ -3,6 +3,7 @@ Write-Host "  [setup winget] preparing..." -ForegroundColor Blue
 
 # winget install -e --source winget --id Git.Git
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
+# winget install -e --source winget --id wez.wezterm
 winget install -e --source winget --id Microsoft.PowerShell
 winget install -e --source winget --id Microsoft.PowerToys
 winget install -e --source winget --id Neovim.Neovim
