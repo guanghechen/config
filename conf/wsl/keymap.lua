@@ -300,9 +300,25 @@ function M.setup(config)
   table.insert(
     keys,
     {
+      key = "H",
+      mods = "ALT|CTRL|SHIFT",
+      action = act.SplitPane({ direction = "Left", command = { domain = "CurrentPaneDomain" } }),
+    }
+  )
+  table.insert(
+    keys,
+    {
       key = "J",
       mods = "ALT|CTRL|SHIFT",
-      action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }),
+      action = act.SplitPane({ direction = "Down", command = { domain = "CurrentPaneDomain" } }),
+    }
+  )
+  table.insert(
+    keys,
+    {
+      key = "K",
+      mods = "ALT|CTRL|SHIFT",
+      action = act.SplitPane({ direction = "Up", command = { domain = "CurrentPaneDomain" } }),
     }
   )
   table.insert(
@@ -310,7 +326,7 @@ function M.setup(config)
     {
       key = "L",
       mods = "ALT|CTRL|SHIFT",
-      action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }),
+      action = act.SplitPane({ direction = "Right", command = { domain = "CurrentPaneDomain" } }),
     }
   )
   table.insert(keys, { key = "h", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Left") })
