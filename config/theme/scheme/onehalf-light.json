@@ -3,6 +3,7 @@
   "variant": "light",
   "opposite": "dark",
   "darken": false,
+  "uuid": "ce57932c-0513-43cb-b592-d6a287752adb",
   "palette": {
     "onehalf": {
       "background":     "#FAFAFA",

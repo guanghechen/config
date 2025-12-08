@@ -3,6 +3,7 @@
   "variant": "light",
   "opposite": "dark",
   "darken": false,
+  "uuid": "a716badb-4f8b-433f-a281-724106cdb432",
   "palette": {
     "gruvbox": {
       "aqua":           "#689D6A",

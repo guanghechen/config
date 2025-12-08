@@ -3,6 +3,7 @@
   "variant": "moon",
   "opposite": "day",
   "darken": true,
+  "uuid": "2703b7b7-c969-4576-84f4-a881bafd5381",
   "palette": {
     "tokyonight": {
       "bg":              "#222436",

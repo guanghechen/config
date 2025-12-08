@@ -3,6 +3,7 @@
   "variant": "macchiato",
   "opposite": "latte",
   "darken": true,
+  "uuid": "825615d7-f78e-4454-93f5-48b3de6f6d11",
   "palette": {
     "catppuccin": {
       "base":           "#24273A",

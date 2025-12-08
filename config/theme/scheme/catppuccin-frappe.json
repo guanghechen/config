@@ -3,6 +3,7 @@
   "variant": "frappe",
   "opposite": "mocha",
   "darken": true,
+  "uuid": "4f4b6075-5dfa-458e-9d2a-cc1485c4df77",
   "palette": {
     "catppuccin": {
       "base":           "#303446",

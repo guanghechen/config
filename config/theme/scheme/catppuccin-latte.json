@@ -3,6 +3,7 @@
   "variant": "latte",
   "opposite": "frappe",
   "darken": false,
+  "uuid": "e6561fc1-19b0-4a08-9de3-f84f450c37ad",
   "palette": {
     "catppuccin": {
       "base":           "#EFF1F5",

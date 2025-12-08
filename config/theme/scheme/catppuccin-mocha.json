@@ -3,6 +3,7 @@
   "variant": "mocha",
   "opposite": "macchiato",
   "darken": true,
+  "uuid": "573f681e-07d5-41bf-840b-07c8421e22f1",
   "palette": {
     "catppuccin": {
       "base":           "#1E1E2E",

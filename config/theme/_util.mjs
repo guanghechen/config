@@ -32,6 +32,7 @@ export function gen_full_theme_name(theme, variant) {
  */
 export async function render_template(template, scheme) {
   const name = scheme.variant ? scheme.theme + '-' + scheme.variant : scheme.theme
+  const uuid = scheme.uuid
   const theme = scheme.theme
   const variant = scheme.variant
   const opposite = scheme.opposite
@@ -57,6 +58,7 @@ export async function render_template(template, scheme) {
         'IS_WIN',
         'IS_NIX',
         'IS_WSL',
+        'uuid',
         'theme',
         'variant',
         'opposite',
@@ -72,6 +74,7 @@ export async function render_template(template, scheme) {
         IS_WIN,
         IS_NIX,
         IS_WSL,
+        uuid,
         theme,
         variant,
         opposite,

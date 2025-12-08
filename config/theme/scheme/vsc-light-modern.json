@@ -3,6 +3,7 @@
   "variant": "light-modern",
   "opposite": "dark-modern",
   "darken": false,
+  "uuid": "07a88c06-42e1-4f9b-af5d-049c817bc493",
   "palette": {
     "vsc": {
       "accentAqua": "#267F99",

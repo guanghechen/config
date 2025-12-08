@@ -3,6 +3,7 @@
   "variant": "day",
   "opposite": "storm",
   "darken": false,
+  "uuid": "26fcebc8-49f0-47cb-a0a4-a27c12da72e6",
   "palette": {
     "tokyonight": {
       "bg":              "#e1e2e7",
