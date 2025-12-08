@@ -10,6 +10,7 @@
 ---@field public dressing_dim           boolean
 ---@field public dressing_illumniate    boolean
 ---@field public dressing_image         boolean
+---@field public dressing_indent        boolean
 ---@field public dressing_input         boolean
 ---@field public dressing_scroll        boolean
 ---@field public dressing_select        boolean
@@ -32,6 +33,7 @@
 ---@field public dressing_dim           std.collection.IObservable
 ---@field public dressing_illumniate    std.collection.IObservable
 ---@field public dressing_image         std.collection.IObservable
+---@field public dressing_indent        std.collection.IObservable
 ---@field public dressing_input         std.collection.IObservable
 ---@field public dressing_scroll        std.collection.IObservable
 ---@field public dressing_select        std.collection.IObservable
@@ -71,6 +73,7 @@ function M.defaults()
     dressing_dim = false,
     dressing_illumniate = true,
     dressing_image = true,
+    dressing_indent = true,
     dressing_input = true,
     dressing_scroll = true,
     dressing_select = true,
@@ -119,6 +122,9 @@ function M.normalize(data)
     if type(data.dressing_image) == "boolean" then
       resolved.dressing_image = data.dressing_image
     end
+    if type(data.dressing_indent) == "boolean" then
+      resolved.dressing_indent = data.dressing_indent
+    end
     if type(data.dressing_input) == "boolean" then
       resolved.dressing_input = data.dressing_input
     end
@@ -163,6 +169,7 @@ function M.dump()
     dressing_dim = M.dressing_dim:snapshot(),
     dressing_illumniate = M.dressing_illumniate:snapshot(),
     dressing_image = M.dressing_image:snapshot(),
+    dressing_indent = M.dressing_indent:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
     dressing_scroll = M.dressing_scroll:snapshot(),
     dressing_select = M.dressing_select:snapshot(),
@@ -191,6 +198,7 @@ function M.load(raw_data)
   M.dressing_dim:next(data.dressing_dim)
   M.dressing_illumniate:next(data.dressing_illumniate)
   M.dressing_image:next(data.dressing_image)
+  M.dressing_indent:next(data.dressing_indent)
   M.dressing_input:next(data.dressing_input)
   M.dressing_scroll:next(data.dressing_scroll)
   M.dressing_select:next(data.dressing_select)
@@ -216,6 +224,7 @@ M.dressing_clipboard = std.Observable.from_value(_defaults.dressing_clipboard)
 M.dressing_dim = std.Observable.from_value(_defaults.dressing_dim)
 M.dressing_illumniate = std.Observable.from_value(_defaults.dressing_illumniate)
 M.dressing_image = std.Observable.from_value(_defaults.dressing_image)
+M.dressing_indent = std.Observable.from_value(_defaults.dressing_indent)
 M.dressing_input = std.Observable.from_value(_defaults.dressing_input)
 M.dressing_scroll = std.Observable.from_value(_defaults.dressing_scroll)
 M.dressing_select = std.Observable.from_value(_defaults.dressing_select)

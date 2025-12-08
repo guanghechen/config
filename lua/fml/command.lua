@@ -985,6 +985,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.indent.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("dressing_indent_flight")
+    end,
+  })
+  .implement({
     uuid = K.toggle.list.uuid,
     action = function(arg)
       require("fml.action.toggle.list").list(arg)

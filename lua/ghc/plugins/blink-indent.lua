@@ -62,4 +62,13 @@ return {
       },
     },
   },
+  config = function(_, opts)
+    local indent = require("blink.indent")
+    indent.setup(opts)
+
+    std.fn.observe({ eve.context.flight.dressing_indent }, function()
+      local flag = eve.context.flight.dressing_indent:snapshot() ---@type boolean
+      indent.enable(flag)
+    end, false)
+  end,
 }

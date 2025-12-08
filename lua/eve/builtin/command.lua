@@ -548,6 +548,7 @@ M.definitions.term = {
 ---@class eve.builtin.command.definitions.toggle
 M.definitions.toggle = {
   dim = def("Ftoggledim", "toggle: dim"),
+  indent = def("Ftoggleindent", "toggle: indent"),
   list = defc("Ftoggle", "toggle: select", "?", eve.setting.togglers),
   markdown = def("Ftogglemarkdown", "toggle: markdown"),
   maximize = def("Ftogglemaximize", "toggle: maximize"),
