@@ -17,19 +17,14 @@ end
 
 ---@return eve.ux.widget.ai.ISelectItem[]
 function M.collect_items()
-  local attached_items = {} ---@type eve.ux.widget.ai.ISelectItem[]
-  local running_items = {} ---@type eve.ux.widget.ai.ISelectItem[]
-  local new_items = {} ---@type eve.ux.widget.ai.ISelectItem[]
+  local items = {} ---@type eve.ux.widget.ai.ISelectItem[]
   local seen_ids = {} ---@type table<string, boolean>
   local cwd = std.path.cwd()
   local has_agent_pane = {} ---@type table<eve.ux.widget.ai.AgentName, boolean>
-  local current_info = tmux.get_current_info()
-  local current_session = current_info and current_info.session_name or ""
-  local current_window = current_info and current_info.window_name or ""
 
   for _, source in ipairs(state.get_attached()) do
     seen_ids[source.id] = true
-    attached_items[#attached_items + 1] = {
+    items[#items + 1] = {
       type = "running",
       agent = source.agent,
       source = source,
@@ -41,7 +36,7 @@ function M.collect_items()
     for _, source in ipairs(tmux.find_running_agents()) do
       if not seen_ids[source.id] then
         seen_ids[source.id] = true
-        running_items[#running_items + 1] = {
+        items[#items + 1] = {
           type = "running",
           agent = source.agent,
           source = source,
@@ -58,7 +53,7 @@ function M.collect_items()
 
   for _, agent in ipairs(config.agents) do
     if not has_agent_pane[agent] then
-      new_items[#new_items + 1] = {
+      items[#items + 1] = {
         type = "new",
         agent = agent,
         source = nil,
@@ -67,52 +62,6 @@ function M.collect_items()
     end
   end
 
-  ---@param a                           eve.ux.widget.ai.ISelectItem
-  ---@param b                           eve.ux.widget.ai.ISelectItem
-  ---@return boolean
-  local function sort_by_pane(a, b)
-    local a_pane = a.source and a.source.tmux_pane
-    local b_pane = b.source and b.source.tmux_pane
-
-    if a_pane and b_pane then
-      local a_same_session = a_pane.session_name == current_session
-      local b_same_session = b_pane.session_name == current_session
-      if a_same_session ~= b_same_session then
-        return a_same_session
-      end
-
-      if a_same_session and b_same_session then
-        local a_same_window = a_pane.window_name == current_window
-        local b_same_window = b_pane.window_name == current_window
-        if a_same_window ~= b_same_window then
-          return a_same_window
-        end
-      end
-
-      if a_pane.session_name ~= b_pane.session_name then
-        return a_pane.session_name < b_pane.session_name
-      end
-      if a_pane.window_name ~= b_pane.window_name then
-        return a_pane.window_name < b_pane.window_name
-      end
-      local a_pane_num = tonumber(a_pane.pane_id:match("%%(%d+)")) or 0
-      local b_pane_num = tonumber(b_pane.pane_id:match("%%(%d+)")) or 0
-      return a_pane_num < b_pane_num
-    end
-
-    return M.get_source_identifier(a.source) < M.get_source_identifier(b.source)
-  end
-
-  table.sort(attached_items, sort_by_pane)
-  table.sort(running_items, sort_by_pane)
-  table.sort(new_items, function(a, b)
-    return a.agent < b.agent
-  end)
-
-  local items = {} ---@type eve.ux.widget.ai.ISelectItem[]
-  vim.list_extend(items, attached_items)
-  vim.list_extend(items, running_items)
-  vim.list_extend(items, new_items)
   return items
 end
 

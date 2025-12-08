@@ -61,19 +61,84 @@ end
 --- Item builders
 ----------------------------------------------------------------------------------------------------
 
+---@class eve.ux.widget.ai.picker.IAttachItemInfo
+---@field public item                   eve.ux.widget.ai.ISelectItem
+---@field public category               eve.ux.widget.ai.ItemCategory
+---@field public identifier             string|nil
+---@field public pane_cwd               string|nil
+
+---@param info                          eve.ux.widget.ai.picker.IAttachItemInfo
+---@return string
+local function get_item_hlname(info)
+  local category = info.category
+  if category == "attached" then
+    return "f_us_ai_attached"
+  elseif category == "same_window" then
+    return "f_us_ai_running_same_window"
+  elseif category == "same_session" or category == "other_tmux" then
+    return "f_us_ai_running"
+  else
+    return "f_us_ai_new"
+  end
+end
+
+---@param a                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@param b                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@return boolean
+local function compare_by_pane_id(a, b)
+  local a_pane = a.item.source and a.item.source.tmux_pane
+  local b_pane = b.item.source and b.item.source.tmux_pane
+  if a_pane and b_pane then
+    local a_num = tonumber(a_pane.pane_id:match("%%(%d+)")) or 0
+    local b_num = tonumber(b_pane.pane_id:match("%%(%d+)")) or 0
+    return a_num < b_num
+  end
+  return false
+end
+
+---@param a                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@param b                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@return boolean
+local function compare_by_session_window_pane(a, b)
+  local a_pane = a.item.source and a.item.source.tmux_pane
+  local b_pane = b.item.source and b.item.source.tmux_pane
+  if a_pane and b_pane then
+    if a_pane.session_name ~= b_pane.session_name then
+      return a_pane.session_name < b_pane.session_name
+    end
+    if a_pane.window_name ~= b_pane.window_name then
+      return a_pane.window_name < b_pane.window_name
+    end
+    local a_num = tonumber(a_pane.pane_id:match("%%(%d+)")) or 0
+    local b_num = tonumber(b_pane.pane_id:match("%%(%d+)")) or 0
+    return a_num < b_num
+  end
+  return false
+end
+
+---@param a                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@param b                             eve.ux.widget.ai.picker.IAttachItemInfo
+---@return boolean
+local function compare_by_agent_name(a, b)
+  return a.item.agent < b.item.agent
+end
+
 ---@param items                         eve.ux.widget.ai.ISelectItem[]
 ---@return eve.ux.widget.ai.picker.IItem[], integer
 local function build_attach_picker_items(items)
+  local tmux = require("eve.ux.widget.ai.tmux")
+  local current_info = tmux.get_current_info()
+  local current_session = current_info and current_info.session_name or ""
+  local current_window = current_info and current_info.window_name or ""
+
   local width_agent = 0 ---@type integer
   local width_identifier = 0 ---@type integer
 
-  ---@class eve.ux.widget.ai.picker.IAttachItemInfo
-  ---@field public item                 eve.ux.widget.ai.ISelectItem
-  ---@field public attached             boolean
-  ---@field public identifier           string|nil
-  ---@field public pane_cwd             string|nil
-
-  local item_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  local attached_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  local same_window_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  local same_session_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  local other_tmux_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  local new_agent_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
 
   for _, item in ipairs(items) do
     local agent_label = config.agent_labels[item.agent] or item.agent
@@ -86,21 +151,68 @@ local function build_attach_picker_items(items)
       width_identifier = math.max(width_identifier, #identifier)
     end
 
-    item_infos[#item_infos + 1] = {
+    local pane = item.source and item.source.tmux_pane
+    local category ---@type eve.ux.widget.ai.ItemCategory
+
+    if attached then
+      category = "attached"
+    elseif item.type == "new" then
+      category = "new_agent"
+    elseif pane then
+      local same_session = pane.session_name == current_session
+      local same_window = same_session and pane.window_name == current_window
+      if same_window then
+        category = "same_window"
+      elseif same_session then
+        category = "same_session"
+      else
+        category = "other_tmux"
+      end
+    else
+      category = "new_agent"
+    end
+
+    ---@type eve.ux.widget.ai.picker.IAttachItemInfo
+    local info = {
       item = item,
-      attached = attached,
+      category = category,
       identifier = identifier,
       pane_cwd = pane_cwd,
     }
+
+    if category == "attached" then
+      attached_infos[#attached_infos + 1] = info
+    elseif category == "same_window" then
+      same_window_infos[#same_window_infos + 1] = info
+    elseif category == "same_session" then
+      same_session_infos[#same_session_infos + 1] = info
+    elseif category == "other_tmux" then
+      other_tmux_infos[#other_tmux_infos + 1] = info
+    else
+      new_agent_infos[#new_agent_infos + 1] = info
+    end
   end
+
+  table.sort(attached_infos, compare_by_session_window_pane)
+  table.sort(same_window_infos, compare_by_pane_id)
+  table.sort(same_session_infos, compare_by_session_window_pane)
+  table.sort(other_tmux_infos, compare_by_session_window_pane)
+  table.sort(new_agent_infos, compare_by_agent_name)
+
+  local sorted_infos = {} ---@type eve.ux.widget.ai.picker.IAttachItemInfo[]
+  vim.list_extend(sorted_infos, attached_infos)
+  vim.list_extend(sorted_infos, same_window_infos)
+  vim.list_extend(sorted_infos, same_session_infos)
+  vim.list_extend(sorted_infos, other_tmux_infos)
+  vim.list_extend(sorted_infos, new_agent_infos)
 
   local picker_items = {} ---@type eve.ux.widget.ai.picker.IItem[]
 
-  for index, info in ipairs(item_infos) do
+  for index, info in ipairs(sorted_infos) do
     local item = info.item
     local agent_label = config.agent_labels[item.agent] or item.agent
 
-    local icon = info.attached and eve.icon.status.attached
+    local icon = info.category == "attached" and eve.icon.status.attached
       or (item.type == "running" and eve.icon.status.detached or " ")
     local text_agent = std.string.pad_end(agent_label, width_agent, " ")
     local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
@@ -108,8 +220,7 @@ local function build_attach_picker_items(items)
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
     local text = icon .. " " .. text_agent .. text_identifier .. text_pane_cwd
 
-    local hlname = info.attached and "f_us_ai_attached"
-      or (item.type == "running" and "f_us_ai_running" or "f_us_ai_new")
+    local hlname = get_item_hlname(info)
 
     picker_items[#picker_items + 1] = {
       uuid = tostring(index),

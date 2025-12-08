@@ -8,6 +8,13 @@
 ---| "tmux"
 ---| "terminal"
 
+---@alias eve.ux.widget.ai.ItemCategory
+---| "attached"
+---| "same_window"
+---| "same_session"
+---| "other_tmux"
+---| "new_agent"
+
 ---@class eve.ux.widget.ai.IProc
 ---@field public pid                    integer
 ---@field public ppid                   integer

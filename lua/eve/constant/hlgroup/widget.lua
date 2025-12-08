@@ -327,7 +327,7 @@ function M.default_gen_hlgroup_map(context)
     f_md_text_inline_highlight = { fg = u.bg0, bg = cs.mix(u.bg0, u.yellow, 45) },
 
     ---select ai
-    f_us_ai_attached = { fg = u.brightGreen, bold = true },
+    f_us_ai_attached = { fg = u.brightOrange, bold = true },
     f_us_ai_loc_col = { fg = u.aqua },
     f_us_ai_loc_delim = { fg = u.fg4 },
     f_us_ai_loc_file = { fg = u.blue },
@@ -336,6 +336,7 @@ function M.default_gen_hlgroup_map(context)
     f_us_ai_new = { fg = u.fg2 },
     f_us_ai_prompt_header = { fg = u.purple, bold = true },
     f_us_ai_running = { fg = u.brightBlue },
+    f_us_ai_running_same_window = { fg = u.brightAqua },
     f_us_ai_send_to_all = { fg = u.pink, bold = true },
 
     ---select codeaction
