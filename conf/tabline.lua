@@ -7,6 +7,10 @@ local M = {}
 local ACTIVE_LEFT_ICON = "󱝁 "
 local ACTIVE_RIGHT_ICON = "󱝁 "
 
+-- Tab separators for visual distinction between tabs
+local LEFT_SEP = ""
+local RIGHT_SEP = ""
+
 ---@param tab_info table
 ---@return string
 local function tab_title(tab_info)
@@ -69,7 +73,7 @@ function M.setup(config)
     else
       table.insert(elements, { Background = { Color = edge_bg } })
       table.insert(elements, { Foreground = { Color = bg } })
-      table.insert(elements, { Text = "" })
+      table.insert(elements, { Text = LEFT_SEP })
     end
 
     -- Tab content
@@ -80,7 +84,7 @@ function M.setup(config)
     -- Right edge
     table.insert(elements, { Background = { Color = edge_bg } })
     table.insert(elements, { Foreground = { Color = bg } })
-    table.insert(elements, { Text = "" })
+    table.insert(elements, { Text = RIGHT_SEP })
     return elements
   end)
 end

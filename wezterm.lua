@@ -36,6 +36,7 @@ if not ok then
 end
 
 theme.setup(config)
+
 require("conf.tabline").setup(config)
 
 if env.IS_MAC then
