@@ -7,52 +7,52 @@ local M = {}
 function M.setup(config)
   config.colors = {
     -- Primary colors
-    background    = "#EFF1F5",
-    foreground    = "#4C4F69",
+    background = "#EFF1F5",
+    foreground = "#4C4F69",
 
     -- Cursor colors (following official catppuccin theme)
-    cursor_bg     = "#DC8A78",
-    cursor_fg     = "#DCE0E8",
+    cursor_bg = "#DC8A78",
+    cursor_fg = "#DCE0E8",
     cursor_border = "#DC8A78",
 
     -- Selection colors (following official catppuccin theme)
-    selection_bg  = "#ACB0BE",
-    selection_fg  = "#4C4F69",
+    selection_bg = "#ACB0BE",
+    selection_fg = "#4C4F69",
 
     -- Split separator color
-    split         = "#9CA0B0",
+    split = "#9CA0B0",
 
     -- Scrollbar thumb color
     scrollbar_thumb = "#ACB0BE",
 
     -- Visual bell color
-    visual_bell   = "#CCD0DA",
+    visual_bell = "#CCD0DA",
 
     -- Compose cursor (for IME)
     compose_cursor = "#DD7878",
 
     -- Normal colors
     ansi = {
-      "#BCC0CC",  -- black (surface1 for dark themes, subtext1 for latte)
+      "#BCC0CC", -- black (surface1 for dark themes, subtext1 for latte)
       "#D20F39",
       "#40A02B",
       "#DF8E1D",
       "#1E66F5",
       "#EA76CB",
       "#179299",
-      "#5C5F77",  -- white (subtext1 for dark themes, surface2 for latte)
+      "#5C5F77", -- white (subtext1 for dark themes, surface2 for latte)
     },
 
     -- Bright colors
     brights = {
-      "#ACB0BE",  -- bright black (surface2 for dark themes, subtext0 for latte)
+      "#ACB0BE", -- bright black (surface2 for dark themes, subtext0 for latte)
       "#D20F39",
       "#40A02B",
       "#DF8E1D",
       "#1E66F5",
       "#EA76CB",
       "#179299",
-      "#6C6F85",  -- bright white (subtext0 for dark themes, surface1 for latte)
+      "#6C6F85", -- bright white (subtext0 for dark themes, surface1 for latte)
     },
 
     -- Indexed colors (extended palette)

@@ -297,22 +297,16 @@ function M.setup(config)
   table.insert(keys, { key = "9", mods = "ALT|CTRL", action = act.ActivateTab(8) })
 
   -- Split/Pane management
-  table.insert(
-    keys,
-    {
-      key = "J",
-      mods = "ALT|CTRL|SHIFT",
-      action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }),
-    }
-  )
-  table.insert(
-    keys,
-    {
-      key = "L",
-      mods = "ALT|CTRL|SHIFT",
-      action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }),
-    }
-  )
+  table.insert(keys, {
+    key = "J",
+    mods = "ALT|CTRL|SHIFT",
+    action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }),
+  })
+  table.insert(keys, {
+    key = "L",
+    mods = "ALT|CTRL|SHIFT",
+    action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }),
+  })
   table.insert(keys, { key = "h", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Left") })
   table.insert(keys, { key = "j", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Down") })
   table.insert(keys, { key = "k", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Up") })

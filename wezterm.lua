@@ -1,6 +1,6 @@
 local env = require("env")
-local font = require("conf.font.maple")
-local keymap = require("conf.keymap." .. env.OSNAME)
+local font = require("conf.font-maple")
+local platform = require("conf." .. env.OSNAME)
 local tabline = require("conf.tabline")
 
 local ok, theme = pcall(require, "local.theme")
@@ -39,14 +39,8 @@ local config = {
 }
 
 font.setup(config)
-keymap.setup(config)
 theme.setup(config)
 tabline.setup(config)
-
--- Load profile configuration only on Windows
-if env.IS_WIN then
-  local profile = require("conf.win.profile")
-  profile.setup(config)
-end
+platform.setup(config)
 
 return config

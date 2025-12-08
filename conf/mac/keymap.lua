@@ -1,7 +1,7 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
----@class keymap.wsl
+---@class keymap.mac
 local M = {}
 
 ---@param config table
@@ -65,7 +65,34 @@ function M.setup(config)
   end
 
   -- ctrl+shift+letter to CSI u format
-  local letters = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" }
+  local letters = {
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z",
+  }
 
   for _, key in ipairs(letters) do
     local ascii_code = string.byte(key:upper())
@@ -76,9 +103,9 @@ function M.setup(config)
     })
   end
 
-  -- Alt+Keys -> Ctrl+A prefix (tmux style)
+  -- Cmd+Keys -> Ctrl+A prefix (tmux style)
 
-  -- Function keys (Alt+Fn -> Ctrl+A Fn)
+  -- Function keys (Cmd+Fn -> Ctrl+A Fn)
   local fn_sequences = {
     { key = "F1", seq = "\x01\x1bOP" },
     { key = "F2", seq = "\x01\x1bOQ" },
@@ -97,7 +124,7 @@ function M.setup(config)
   for _, entry in ipairs(fn_sequences) do
     table.insert(keys, {
       key = entry.key,
-      mods = "ALT",
+      mods = "CMD",
       action = act.SendString(entry.seq),
     })
   end
@@ -121,12 +148,12 @@ function M.setup(config)
   for _, entry in ipairs(shift_fn_sequences) do
     table.insert(keys, {
       key = entry.key,
-      mods = "ALT|SHIFT",
+      mods = "CMD|SHIFT",
       action = act.SendString(entry.seq),
     })
   end
 
-  -- Arrow keys (Alt+Arrow -> Ctrl+A Arrow)
+  -- Arrow keys (Cmd+Arrow -> Ctrl+A Arrow)
   local arrow_sequences = {
     { key = "UpArrow", seq = "\x01\x1b[A" },
     { key = "RightArrow", seq = "\x01\x1b[C" },
@@ -137,7 +164,7 @@ function M.setup(config)
   for _, entry in ipairs(arrow_sequences) do
     table.insert(keys, {
       key = entry.key,
-      mods = "ALT",
+      mods = "CMD",
       action = act.SendString(entry.seq),
     })
   end
@@ -153,41 +180,41 @@ function M.setup(config)
   for _, entry in ipairs(shift_arrow_sequences) do
     table.insert(keys, {
       key = entry.key,
-      mods = "ALT|SHIFT",
+      mods = "CMD|SHIFT",
       action = act.SendString(entry.seq),
     })
   end
 
-  -- Digit keys (Alt+N -> Ctrl+A N)
+  -- Digit keys (Cmd+N -> Ctrl+A N)
   local digits = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }
 
   for _, key in ipairs(digits) do
     table.insert(keys, {
       key = key,
-      mods = "ALT",
+      mods = "CMD",
       action = act.SendString("\x01" .. key),
     })
   end
 
-  -- Letter keys (Alt+Letter -> Ctrl+A letter)
+  -- Letter keys (Cmd+Letter -> Ctrl+A letter)
   for _, key in ipairs(letters) do
     table.insert(keys, {
       key = key,
-      mods = "ALT",
+      mods = "CMD",
       action = act.SendString("\x01" .. key),
     })
   end
 
-  -- Upper letter keys (Alt+Shift+Letter -> Ctrl+A LETTER)
+  -- Upper letter keys (Cmd+Shift+Letter -> Ctrl+A LETTER)
   for _, key in ipairs(letters) do
     table.insert(keys, {
       key = key:upper(),
-      mods = "ALT|SHIFT",
+      mods = "CMD|SHIFT",
       action = act.SendString("\x01" .. key:upper()),
     })
   end
 
-  -- Ctrl+letter keys (Alt+Ctrl+Letter -> Ctrl+A Ctrl+Letter)
+  -- Ctrl+letter keys (Cmd+Ctrl+Letter -> Ctrl+A Ctrl+Letter)
   local ctrl_letter_codes = {
     a = 0x01,
     b = 0x02,
@@ -216,26 +243,26 @@ function M.setup(config)
   for key, code in pairs(ctrl_letter_codes) do
     table.insert(keys, {
       key = key,
-      mods = "ALT|CTRL",
+      mods = "CMD|CTRL",
       action = act.SendString("\x01" .. string.char(code)),
     })
   end
 
-  -- Special characters (Alt+Punct -> Ctrl+A punct)
+  -- Special characters (Cmd+Punct -> Ctrl+A punct)
   local special_chars = {
-    { key = ",", mods = "ALT", seq = "\x01\x2c" },
-    { key = ".", mods = "ALT", seq = "\x01\x2e" },
-    { key = "<", mods = "ALT|SHIFT", seq = "\x01\x3c" },
-    { key = ">", mods = "ALT|SHIFT", seq = "\x01\x3e" },
-    { key = "[", mods = "ALT", seq = "\x01\x5b" },
-    { key = "]", mods = "ALT", seq = "\x01\x5d" },
-    { key = "{", mods = "ALT|SHIFT", seq = "\x01\x7b" },
-    { key = "}", mods = "ALT|SHIFT", seq = "\x01\x7d" },
-    { key = "Enter", mods = "ALT", seq = "\x1b\x0d" },
-    { key = ";", mods = "ALT", seq = "\x01\x3b" },
-    { key = ":", mods = "ALT|SHIFT", seq = "\x01\x3a" },
-    { key = "'", mods = "ALT", seq = "\x01\x27" },
-    { key = "`", mods = "ALT", seq = "\x01\x60" },
+    { key = ",", mods = "CMD", seq = "\x01\x2c" },
+    { key = ".", mods = "CMD", seq = "\x01\x2e" },
+    { key = "<", mods = "CMD|SHIFT", seq = "\x01\x3c" },
+    { key = ">", mods = "CMD|SHIFT", seq = "\x01\x3e" },
+    { key = "[", mods = "CMD", seq = "\x01\x5b" },
+    { key = "]", mods = "CMD", seq = "\x01\x5d" },
+    { key = "{", mods = "CMD|SHIFT", seq = "\x01\x7b" },
+    { key = "}", mods = "CMD|SHIFT", seq = "\x01\x7d" },
+    { key = "Enter", mods = "CMD", seq = "\x1b\x0d" },
+    { key = ";", mods = "CMD", seq = "\x01\x3b" },
+    { key = ":", mods = "CMD|SHIFT", seq = "\x01\x3a" },
+    { key = "'", mods = "CMD", seq = "\x01\x27" },
+    { key = "`", mods = "CMD", seq = "\x01\x60" },
   }
 
   for _, entry in ipairs(special_chars) do
@@ -249,56 +276,64 @@ function M.setup(config)
   -- Terminal actions (placed last to override SendString bindings)
 
   -- Clipboard
-  table.insert(keys, { key = "v", mods = "ALT", action = act.PasteFrom("Clipboard") })
+  table.insert(keys, { key = "v", mods = "CMD", action = act.PasteFrom("Clipboard") })
   table.insert(keys, { key = "Insert", mods = "CTRL", action = act.CopyTo("Clipboard") })
   table.insert(keys, { key = "Insert", mods = "SHIFT", action = act.PasteFrom("Clipboard") })
 
   -- Tab management
-  table.insert(keys, { key = "n", mods = "ALT|CTRL", action = act.SpawnTab("CurrentPaneDomain") })
-  table.insert(keys, { key = ",", mods = "ALT|CTRL", action = act.ActivateTabRelative(-1) })
-  table.insert(keys, { key = ".", mods = "ALT|CTRL", action = act.ActivateTabRelative(1) })
-  table.insert(keys, { key = "<", mods = "ALT|CTRL|SHIFT", action = act.MoveTabRelative(-1) })
-  table.insert(keys, { key = ">", mods = "ALT|CTRL|SHIFT", action = act.MoveTabRelative(1) })
-  table.insert(keys, { key = "1", mods = "ALT|CTRL", action = act.ActivateTab(0) })
-  table.insert(keys, { key = "2", mods = "ALT|CTRL", action = act.ActivateTab(1) })
-  table.insert(keys, { key = "3", mods = "ALT|CTRL", action = act.ActivateTab(2) })
-  table.insert(keys, { key = "4", mods = "ALT|CTRL", action = act.ActivateTab(3) })
-  table.insert(keys, { key = "5", mods = "ALT|CTRL", action = act.ActivateTab(4) })
-  table.insert(keys, { key = "6", mods = "ALT|CTRL", action = act.ActivateTab(5) })
-  table.insert(keys, { key = "7", mods = "ALT|CTRL", action = act.ActivateTab(6) })
-  table.insert(keys, { key = "8", mods = "ALT|CTRL", action = act.ActivateTab(7) })
-  table.insert(keys, { key = "9", mods = "ALT|CTRL", action = act.ActivateTab(8) })
+  table.insert(keys, { key = "n", mods = "CMD|CTRL", action = act.SpawnTab("CurrentPaneDomain") })
+  table.insert(keys, { key = ",", mods = "CMD|CTRL", action = act.ActivateTabRelative(-1) })
+  table.insert(keys, { key = ".", mods = "CMD|CTRL", action = act.ActivateTabRelative(1) })
+  table.insert(keys, { key = "<", mods = "CMD|CTRL|SHIFT", action = act.MoveTabRelative(-1) })
+  table.insert(keys, { key = ">", mods = "CMD|CTRL|SHIFT", action = act.MoveTabRelative(1) })
+  table.insert(keys, { key = "1", mods = "CMD|CTRL", action = act.ActivateTab(0) })
+  table.insert(keys, { key = "2", mods = "CMD|CTRL", action = act.ActivateTab(1) })
+  table.insert(keys, { key = "3", mods = "CMD|CTRL", action = act.ActivateTab(2) })
+  table.insert(keys, { key = "4", mods = "CMD|CTRL", action = act.ActivateTab(3) })
+  table.insert(keys, { key = "5", mods = "CMD|CTRL", action = act.ActivateTab(4) })
+  table.insert(keys, { key = "6", mods = "CMD|CTRL", action = act.ActivateTab(5) })
+  table.insert(keys, { key = "7", mods = "CMD|CTRL", action = act.ActivateTab(6) })
+  table.insert(keys, { key = "8", mods = "CMD|CTRL", action = act.ActivateTab(7) })
+  table.insert(keys, { key = "9", mods = "CMD|CTRL", action = act.ActivateTab(8) })
 
   -- Split/Pane management
-  table.insert(keys, { key = "J", mods = "ALT|CTRL|SHIFT", action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }) })
-  table.insert(keys, { key = "L", mods = "ALT|CTRL|SHIFT", action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }) })
-  table.insert(keys, { key = "h", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Left") })
-  table.insert(keys, { key = "j", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Down") })
-  table.insert(keys, { key = "k", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Up") })
-  table.insert(keys, { key = "l", mods = "ALT|CTRL", action = act.ActivatePaneDirection("Right") })
-  table.insert(keys, { key = "LeftArrow", mods = "ALT|CTRL", action = act.AdjustPaneSize({ "Left", 1 }) })
-  table.insert(keys, { key = "DownArrow", mods = "ALT|CTRL", action = act.AdjustPaneSize({ "Down", 1 }) })
-  table.insert(keys, { key = "UpArrow", mods = "ALT|CTRL", action = act.AdjustPaneSize({ "Up", 1 }) })
-  table.insert(keys, { key = "RightArrow", mods = "ALT|CTRL", action = act.AdjustPaneSize({ "Right", 1 }) })
-  table.insert(keys, { key = "LeftArrow", mods = "ALT|CTRL|SHIFT", action = act.RotatePanes("CounterClockwise") })
-  table.insert(keys, { key = "RightArrow", mods = "ALT|CTRL|SHIFT", action = act.RotatePanes("Clockwise") })
-  table.insert(keys, { key = "w", mods = "ALT|CTRL", action = act.CloseCurrentPane({ confirm = false }) })
-  table.insert(keys, { key = "z", mods = "ALT|CTRL", action = act.TogglePaneZoomState })
+  table.insert(keys, {
+    key = "J",
+    mods = "CMD|CTRL|SHIFT",
+    action = act.SplitPane({ direction = "Down", command = { cwd = wezterm.home_dir } }),
+  })
+  table.insert(keys, {
+    key = "L",
+    mods = "CMD|CTRL|SHIFT",
+    action = act.SplitPane({ direction = "Right", command = { cwd = wezterm.home_dir } }),
+  })
+  table.insert(keys, { key = "h", mods = "CMD|CTRL", action = act.ActivatePaneDirection("Left") })
+  table.insert(keys, { key = "j", mods = "CMD|CTRL", action = act.ActivatePaneDirection("Down") })
+  table.insert(keys, { key = "k", mods = "CMD|CTRL", action = act.ActivatePaneDirection("Up") })
+  table.insert(keys, { key = "l", mods = "CMD|CTRL", action = act.ActivatePaneDirection("Right") })
+  table.insert(keys, { key = "LeftArrow", mods = "CMD|CTRL", action = act.AdjustPaneSize({ "Left", 1 }) })
+  table.insert(keys, { key = "DownArrow", mods = "CMD|CTRL", action = act.AdjustPaneSize({ "Down", 1 }) })
+  table.insert(keys, { key = "UpArrow", mods = "CMD|CTRL", action = act.AdjustPaneSize({ "Up", 1 }) })
+  table.insert(keys, { key = "RightArrow", mods = "CMD|CTRL", action = act.AdjustPaneSize({ "Right", 1 }) })
+  table.insert(keys, { key = "LeftArrow", mods = "CMD|CTRL|SHIFT", action = act.RotatePanes("CounterClockwise") })
+  table.insert(keys, { key = "RightArrow", mods = "CMD|CTRL|SHIFT", action = act.RotatePanes("Clockwise") })
+  table.insert(keys, { key = "w", mods = "CMD|CTRL", action = act.CloseCurrentPane({ confirm = false }) })
+  table.insert(keys, { key = "z", mods = "CMD|CTRL", action = act.TogglePaneZoomState })
 
   -- Font size controls
-  table.insert(keys, { key = "0", mods = "ALT|CTRL", action = act.ResetFontSize })
-  table.insert(keys, { key = "=", mods = "ALT|CTRL", action = act.IncreaseFontSize })
-  table.insert(keys, { key = "-", mods = "ALT|CTRL", action = act.DecreaseFontSize })
+  table.insert(keys, { key = "0", mods = "CMD|CTRL", action = act.ResetFontSize })
+  table.insert(keys, { key = "=", mods = "CMD|CTRL", action = act.IncreaseFontSize })
+  table.insert(keys, { key = "-", mods = "CMD|CTRL", action = act.DecreaseFontSize })
 
   -- Configuration
-  table.insert(keys, { key = "F5", mods = "ALT|CTRL", action = act.ReloadConfiguration })
-  table.insert(keys, { key = "F11", mods = "", action = act.ToggleFullScreen })
-  table.insert(keys, { key = "F12", mods = "ALT|CTRL", action = act.ToggleFullScreen })
+  table.insert(keys, { key = "F5", mods = "CMD|CTRL", action = act.ReloadConfiguration })
+  table.insert(keys, { key = "F11", mods = "CMD|CTRL", action = act.ToggleFullScreen })
+  table.insert(keys, { key = "F12", mods = "CMD|CTRL", action = act.ToggleFullScreen })
 
   -- Tab title
   table.insert(keys, {
     key = "F2",
-    mods = "ALT|CTRL",
+    mods = "CMD|CTRL",
     action = act.PromptInputLine({
       description = "Enter new name for tab",
       action = wezterm.action_callback(function(window, _, line)
