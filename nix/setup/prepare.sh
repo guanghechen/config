@@ -4,9 +4,9 @@
 sudo apt update
 sudo apt dist-upgrade -y
 sudo apt remove -y tmux
-sudo apt install -y curl git wget
-sudo apt install -y clangd colordiff file fontconfig gcc locales make net-tools vim
+sudo apt install -y curl git locales wget
 sudo apt install -y build-essential libvips-dev unixodbc
+sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim
 sudo apt autoremove
 sudo apt autoclean
 printf "\e[96m  [preparation] done.\e[0m\n"
