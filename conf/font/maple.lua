@@ -8,79 +8,79 @@ local family = "Maple Mono NF CN"
 
 ---@type string[]
 local harfbuzz_features = {
-	"cv61=1",
-	"cv62=1",
-	"cv66=1",
-	"cv98=1",
-	"ss03=1",
-	"ss07=1",
-	"ss09=1",
-	"ss10=1",
-	"calt=1",
+  "cv61=1",
+  "cv62=1",
+  "cv66=1",
+  "cv98=1",
+  "ss03=1",
+  "ss07=1",
+  "ss09=1",
+  "ss10=1",
+  "calt=1",
 }
 
 ---@param config table
 function M.setup(config)
-	config.font_size = 15
-	config.font = wezterm.font({
-		family = family,
-		weight = "Medium",
-		harfbuzz_features = harfbuzz_features,
-	})
-	config.font_rules = {
-		{
-			intensity = "Normal",
-			italic = true,
-			font = wezterm.font({
-				family = family,
-				weight = "Medium",
-				style = "Italic",
-				harfbuzz_features = harfbuzz_features,
-			}),
-		},
-		{
-			intensity = "Bold",
-			italic = false,
-			font = wezterm.font({
-				family = family,
-				weight = "Bold",
-				harfbuzz_features = harfbuzz_features,
-			}),
-		},
-		{
-			intensity = "Bold",
-			italic = true,
-			font = wezterm.font({
-				family = family,
-				weight = "Bold",
-				style = "Italic",
-				harfbuzz_features = harfbuzz_features,
-			}),
-		},
-		{
-			intensity = "Half",
-			italic = false,
-			font = wezterm.font({
-				family = family,
-				weight = "Light",
-				harfbuzz_features = harfbuzz_features,
-			}),
-		},
-		{
-			intensity = "Half",
-			italic = true,
-			font = wezterm.font({
-				family = family,
-				weight = "Light",
-				style = "Italic",
-				harfbuzz_features = harfbuzz_features,
-			}),
-		},
-	}
+  config.font_size = 15
+  config.font = wezterm.font({
+    family = family,
+    weight = "Medium",
+    harfbuzz_features = harfbuzz_features,
+  })
+  config.font_rules = {
+    {
+      intensity = "Normal",
+      italic = true,
+      font = wezterm.font({
+        family = family,
+        weight = "Medium",
+        style = "Italic",
+        harfbuzz_features = harfbuzz_features,
+      }),
+    },
+    {
+      intensity = "Bold",
+      italic = false,
+      font = wezterm.font({
+        family = family,
+        weight = "Bold",
+        harfbuzz_features = harfbuzz_features,
+      }),
+    },
+    {
+      intensity = "Bold",
+      italic = true,
+      font = wezterm.font({
+        family = family,
+        weight = "Bold",
+        style = "Italic",
+        harfbuzz_features = harfbuzz_features,
+      }),
+    },
+    {
+      intensity = "Half",
+      italic = false,
+      font = wezterm.font({
+        family = family,
+        weight = "Light",
+        harfbuzz_features = harfbuzz_features,
+      }),
+    },
+    {
+      intensity = "Half",
+      italic = true,
+      font = wezterm.font({
+        family = family,
+        weight = "Light",
+        style = "Italic",
+        harfbuzz_features = harfbuzz_features,
+      }),
+    },
+  }
 
-	if env.IS_MAC then
-		config.freetype_load_target = "Light"
-	end
+  if env.IS_MAC then
+    config.freetype_load_target = "Light"
+  end
 end
 
 return M

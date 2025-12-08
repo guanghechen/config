@@ -1,5 +1,3 @@
-local wezterm = require("wezterm")
-
 ---@class profile.win
 local M = {}
 
