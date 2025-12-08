@@ -1,11 +1,4 @@
 local env = require("env")
-local tabline = require("conf.tabline")
-local platform = require("conf." .. env.OSNAME)
-
-local ok, theme = pcall(require, "local.theme")
-if not ok then
-  theme = require("theme.vsc-dark-modern")
-end
 
 local config = {
   -- Key bindings
@@ -37,8 +30,22 @@ local config = {
   send_composed_key_when_right_alt_is_pressed = true,
 }
 
+local ok, theme = pcall(require, "local.theme")
+if not ok then
+  theme = require("theme.vsc-dark-modern")
+end
+
 theme.setup(config)
-tabline.setup(config)
-platform.setup(config)
+require("conf.tabline").setup(config)
+
+if env.IS_MAC then
+  require("conf.mac").setup(config)
+elseif env.IS_NIX then
+  require("conf.nix").setup(config)
+elseif env.IS_WSL then
+  require("conf.wsl").setup(config)
+elseif env.IS_WIN then
+  require("conf.win").setup(config)
+end
 
 return config
