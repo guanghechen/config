@@ -20,6 +20,8 @@ local lib = setmetatable({
   end,
 })
 
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.lang.__mods
 local __lang__mods = {
   python = "dot.lang.python",
@@ -41,6 +43,8 @@ local lang = setmetatable({
     return require(m)
   end,
 })
+
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.theme.hlgroup.__mods
 local __theme_hlgroup__mods = {
@@ -73,6 +77,8 @@ local hlgroup = setmetatable({
     return require(m)
   end,
 })
+
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.theme.scheme.__mods
 local __theme_scheme__mods = {
@@ -135,6 +141,8 @@ local theme = {
   hlgroup = hlgroup,
   scheme = scheme,
 }
+
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.__mods
 local __mods = {
