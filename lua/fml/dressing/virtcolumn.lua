@@ -196,7 +196,7 @@ vim.api.nvim_create_autocmd({
   "FileType",
   "CursorHold",
 }, {
-  group = eve.nvim.augroup("virtcolumn_refresh"),
+  group = std.nvim.augroup("virtcolumn_refresh"),
   callback = function()
     scheduler:schedule({})
   end,

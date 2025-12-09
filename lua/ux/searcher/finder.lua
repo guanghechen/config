@@ -158,7 +158,7 @@ function M:create_buf()
   vim.bo[bufnr].filetype = eve.filetype.UX_PICKER_FINDER
   vim.bo[bufnr].swapfile = false
 
-  eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   local keyword = self.input:snapshot() ---@type string
   local initial_lines = vim.split(keyword, "\n", { plain = true }) ---@type string[]

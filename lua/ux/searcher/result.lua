@@ -77,7 +77,7 @@ function M.new(props)
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
   local on_drawed = props.on_drawed or std.fn.noop ---@type ux.searcher.result.IOnDrawed
-  local augroup_CursorMoved = eve.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
+  local augroup_CursorMoved = std.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
   local _o_lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
@@ -495,7 +495,7 @@ function M:create_buf()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   self._scheduler_content:schedule({ immediate = true })
   self._scheduler_lnum_current:schedule({ immediate = true })

@@ -17,7 +17,7 @@ local im = std.env.IS_MAC and require("fml.dressing.im.mac")
   or nil
 
 if im then
-  local augroup = eve.nvim.augroup("auto_toggle_im")
+  local augroup = std.nvim.augroup("auto_toggle_im")
   std.timer.set_timeout(function()
     local previous_mode = "n" ---@type std.e.VimMode
     local previous_input_method = nil ---@type fml.dressing.im.InputMethod|nil

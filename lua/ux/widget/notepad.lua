@@ -1022,7 +1022,7 @@ function M:ensure_buf()
 
   self:__attach_autocmds__(bufnr)
   self:__render_active_item__(bufnr)
-  eve.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
+  std.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
 
   return bufnr
 end

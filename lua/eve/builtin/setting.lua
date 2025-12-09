@@ -1,10 +1,6 @@
 ---@class eve.builtin.setting
 local M = {}
 
-M.feedkeys = {
-  UNDO = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true),
-}
-
 ---@class eve.builtin.setting.themes
 M.themes = {
   "catppuccin-frappe",

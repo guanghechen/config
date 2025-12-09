@@ -1,5 +1,5 @@
-local btn = eve.nvim.btn
-local txt = eve.nvim.txt
+local btn = std.nvim.btn
+local txt = std.nvim.txt
 
 ---@class ux.nvimbar.component.picker
 local M = {}

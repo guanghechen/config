@@ -156,8 +156,8 @@ function M.new(props)
   self.fullname = fullname
   self._value = value
   self._disposed = false
-  self._sep = eve.nvim.txt(comp_sep, comp_sep_hlname)
-  self._sep_active = eve.nvim.txt(comp_sep, comp_sep_hlname_active)
+  self._sep = std.nvim.txt(comp_sep, comp_sep_hlname)
+  self._sep_active = std.nvim.txt(comp_sep, comp_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(comp_sep)
   self._components = {}
   self._orders = {}

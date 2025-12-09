@@ -16,7 +16,6 @@ local __mods = {
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
-  nvim = "eve.builtin.nvim",
   qflist = "eve.builtin.qflist",
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
@@ -48,7 +47,6 @@ local __mods = {
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
----@field public nvim                   eve.builtin.nvim
 ---@field public qflist                 eve.builtin.qflist
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting

@@ -185,7 +185,7 @@ local function on_attach(client, bufnr)
       desc = "lsp: fix all",
     },
   }
-  eve.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  std.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 ---@param client                        vim.lsp.Client

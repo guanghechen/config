@@ -1,4 +1,4 @@
-local txt = eve.nvim.txt
+local txt = std.nvim.txt
 
 ---@param filetype                      string
 ---@return integer

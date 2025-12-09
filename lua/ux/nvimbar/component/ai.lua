@@ -1,5 +1,5 @@
-local btn = eve.nvim.btn
-local txt = eve.nvim.txt
+local btn = std.nvim.btn
+local txt = std.nvim.txt
 
 local state = require("ux.widget.ai.state")
 local config = require("ux.widget.ai.config")

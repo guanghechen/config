@@ -1,4 +1,5 @@
 local BLOCKING_MODES = { "ic", "ix", "c", "no", "r%?", "rm" } ---@type string[]
+local UNDO = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true) ---@type string
 
 ---@param num                           integer
 ---@return string
@@ -14,13 +15,13 @@ local function decode_int(text)
   return num
 end
 
----@class eve.builtin.nvim
+---@class std.nvim
 local M = {}
 
 ---@param name                          string
 ---@return integer
 function M.augroup(name)
-  return vim.api.nvim_create_augroup("eve_" .. name, { clear = true })
+  return vim.api.nvim_create_augroup("guanghechen_" .. name, { clear = true })
 end
 
 ---@param text                          string
@@ -105,7 +106,7 @@ end
 function M.create_undo()
   local mode = vim.api.nvim_get_mode().mode ---@type string
   if mode == "i" then
-    vim.api.nvim_feedkeys(eve.setting.feedkeys.UNDO, "n", false)
+    vim.api.nvim_feedkeys(UNDO, "n", false)
   end
 end
 

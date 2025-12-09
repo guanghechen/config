@@ -1,5 +1,5 @@
 vim.api.nvim_create_autocmd("BufDelete", {
-  group = eve.nvim.augroup("bootstrap_on_BufDelete"),
+  group = std.nvim.augroup("bootstrap_on_BufDelete"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -10,7 +10,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 vim.api.nvim_create_autocmd("BufWinEnter", {
-  group = eve.nvim.augroup("bootstrap_on_BufWinEnter"),
+  group = std.nvim.augroup("bootstrap_on_BufWinEnter"),
   callback = function(event)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -32,7 +32,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 })
 
 vim.api.nvim_create_autocmd("CursorHold", {
-  group = eve.nvim.augroup("bootstrap_on_CursorHold"),
+  group = std.nvim.augroup("bootstrap_on_CursorHold"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     eve.status.dirtier_statusline:mark_dirty()
@@ -44,7 +44,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 })
 
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
-  group = eve.nvim.augroup("bootstrap_on_DiagnosticChanged"),
+  group = std.nvim.augroup("bootstrap_on_DiagnosticChanged"),
   callback = function()
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
@@ -52,7 +52,7 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("bootstrap_on_FileType"),
+  group = std.nvim.augroup("bootstrap_on_FileType"),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -68,14 +68,14 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = eve.nvim.augroup("bootstrap_on_ModeChanged"),
+  group = std.nvim.augroup("bootstrap_on_ModeChanged"),
   callback = function()
     eve.constant.hlgroup.common.on_mode_changed()
   end,
 })
 
 vim.api.nvim_create_autocmd("OptionSet", {
-  group = eve.nvim.augroup("bootstrap_on_OptionSet_modified"),
+  group = std.nvim.augroup("bootstrap_on_OptionSet_modified"),
   pattern = "modified",
   callback = function()
     eve.status.dirtier_statusline:mark_dirty()
@@ -84,7 +84,7 @@ vim.api.nvim_create_autocmd("OptionSet", {
 })
 
 vim.api.nvim_create_autocmd("TabClosed", {
-  group = eve.nvim.augroup("bootstrap_on_TabClosed"),
+  group = std.nvim.augroup("bootstrap_on_TabClosed"),
   callback = function(event)
     local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     eve.tab.on_close(tabnr)
@@ -95,7 +95,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
 })
 
 vim.api.nvim_create_autocmd("TabEnter", {
-  group = eve.nvim.augroup("bootstrap_on_TabEnter"),
+  group = std.nvim.augroup("bootstrap_on_TabEnter"),
   callback = function()
     eve.status.dirtier_statusline:mark_dirty()
     eve.status.dirtier_tabline:mark_dirty()
@@ -103,7 +103,7 @@ vim.api.nvim_create_autocmd("TabEnter", {
 })
 
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
-  group = eve.nvim.augroup("state_on_VimEnter"),
+  group = std.nvim.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
       local cwd = std.path.cwd() ---@type string
@@ -147,7 +147,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 })
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = eve.nvim.augroup("state_on_VimLeavePre"),
+  group = std.nvim.augroup("state_on_VimLeavePre"),
   once = true,
   callback = function()
     eve.status.dispose()
@@ -156,7 +156,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd("VimResized", {
-  group = eve.nvim.augroup("bootstrap_on_VimResized"),
+  group = std.nvim.augroup("bootstrap_on_VimResized"),
   callback = function()
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -183,7 +183,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 })
 
 vim.api.nvim_create_autocmd("WinClosed", {
-  group = eve.nvim.augroup("bootstrap_on_WinClosed"),
+  group = std.nvim.augroup("bootstrap_on_WinClosed"),
   callback = function(event)
     local winnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     eve.win.on_close(winnr)
@@ -194,7 +194,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
 })
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = eve.nvim.augroup("bootstrap_on_WinEnter"),
+  group = std.nvim.augroup("bootstrap_on_WinEnter"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -237,7 +237,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 })
 
 vim.api.nvim_create_autocmd("WinNew", {
-  group = eve.nvim.augroup("bootstrap_on_WinNew"),
+  group = std.nvim.augroup("bootstrap_on_WinNew"),
   callback = function(arg)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -259,7 +259,7 @@ vim.api.nvim_create_autocmd("WinNew", {
 })
 
 vim.api.nvim_create_autocmd("WinResized", {
-  group = eve.nvim.augroup("bootstrap_on_WinResized"),
+  group = std.nvim.augroup("bootstrap_on_WinResized"),
   callback = function()
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -271,7 +271,7 @@ vim.api.nvim_create_autocmd("WinResized", {
 ----------------------------------------------------------------------------------------------------
 
 vim.api.nvim_create_autocmd("LspDetach", {
-  group = eve.nvim.augroup("bootstrap_on_LspDetach"),
+  group = std.nvim.augroup("bootstrap_on_LspDetach"),
   callback = function(args)
     local client_id = args.data.client_id
     local client = vim.lsp.get_client_by_id(client_id)
@@ -283,7 +283,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
 })
 
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = eve.nvim.augroup("bootstrap_on_LspProgress"),
+  group = std.nvim.augroup("bootstrap_on_LspProgress"),
   callback = function(event)
     local data = event.data.params.value
     local progress = ""
@@ -307,7 +307,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
 if 1 == 0 then
   vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
-    group = eve.nvim.augroup("debug_on_WinNew_WinEnter"),
+    group = std.nvim.augroup("debug_on_WinNew_WinEnter"),
     callback = function(arg)
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

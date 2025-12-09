@@ -132,6 +132,6 @@ return {
       end
     end
 
-    eve.nvim.bindkeys(keymaps, {})
+    std.nvim.bindkeys(keymaps, {})
   end,
 }

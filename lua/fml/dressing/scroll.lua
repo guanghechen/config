@@ -34,7 +34,7 @@ local config = {
   repeat_delay = 100,
 }
 
-local augroup = eve.nvim.augroup(__module_name__)
+local augroup = std.nvim.augroup(__module_name__)
 
 local states = {} ---@type table<integer, fml.dressing.scroll.IState>
 local mouse_scrolling = false ---@type boolean

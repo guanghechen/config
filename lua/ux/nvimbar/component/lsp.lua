@@ -1,8 +1,8 @@
 local __module_name__ = "ux.nvimbar.component.lsp" ---@type string
 
-local btn = eve.nvim.btn
-local txt = eve.nvim.txt
-local decode_btn_args = eve.nvim.decode_btn_args
+local btn = std.nvim.btn
+local txt = std.nvim.txt
+local decode_btn_args = std.nvim.decode_btn_args
 
 ---@type string
 local fn_goto_lsp_pos = eve.G.register_anonymous_fn(function(num)

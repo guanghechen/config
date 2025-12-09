@@ -190,7 +190,7 @@ local function setup()
 end
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = eve.nvim.augroup("filetype_python_venv"),
+  group = std.nvim.augroup("filetype_python_venv"),
   pattern = "python",
   callback = setup,
 })

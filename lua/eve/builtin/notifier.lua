@@ -391,7 +391,7 @@ function M.__create_buf_as_needed__(win)
         end,
       },
     }
-    eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+    std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
       local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
@@ -528,7 +528,7 @@ function M.__gen_winbar__(task, width)
   local text_left = string.format("%s %s", std.icon.loglevel[task.level], text_title) ---@type string
   local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
   local hlname = config.winbar[task.level] ---@type string
-  local hl_text = eve.nvim.txt(text_left, hlname) .. "%=%=" .. eve.nvim.txt(text_right, hlname)
+  local hl_text = std.nvim.txt(text_left, hlname) .. "%=%=" .. std.nvim.txt(text_right, hlname)
   return hl_text
 end
 
@@ -690,7 +690,7 @@ function M.__handle__()
 end
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = eve.nvim.augroup("notifier_on_WinEnter"),
+  group = std.nvim.augroup("notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
@@ -706,7 +706,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 })
 
 vim.api.nvim_create_autocmd("VimResized", {
-  group = eve.nvim.augroup("notifier_on_VimResized"),
+  group = std.nvim.augroup("notifier_on_VimResized"),
   callback = function()
     M.schedule()
   end,

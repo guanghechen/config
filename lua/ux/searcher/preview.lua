@@ -204,7 +204,7 @@ function M:create_buf()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  eve.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
   return bufnr, true
 end
 

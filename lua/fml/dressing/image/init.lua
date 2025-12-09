@@ -12,7 +12,7 @@ if state.did_setup then
 end
 state.did_setup = true
 
-local group = eve.nvim.augroup("fml.dressing.image")
+local group = std.nvim.augroup("fml.dressing.image")
 vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
   group = group,
   callback = function(e)

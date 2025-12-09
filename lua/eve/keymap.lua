@@ -1,4 +1,4 @@
-local mk = eve.nvim.make_keys
+local mk = std.nvim.make_keys
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 mk({ "n" }, "n", "'Nn'[v:searchforward].'zv'", "search: next result", true)

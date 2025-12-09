@@ -172,7 +172,7 @@ local function ui_attach_callback(event, kind, ...)
   return true
 end
 
-eve.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
+std.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
   local searching = eve.status.searching:snapshot() ---@type boolean
   if searching then
     eve.status.searching:next(false)

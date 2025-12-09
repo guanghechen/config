@@ -2,8 +2,8 @@
 ---@field public bufnr                  integer
 ---@field public meta                   eve.builtin.buf.IMeta
 
-local btn = eve.nvim.btn
-local txt = eve.nvim.txt
+local btn = std.nvim.btn
+local txt = std.nvim.txt
 
 ---@type string
 local fn_active_buf = eve.G.register_anonymous_fn(function(bufnr)

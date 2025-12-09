@@ -310,7 +310,7 @@ function M.__create_buf_as_needed__(termmeta)
     end,
   })
 
-  eve.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  std.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
   termmeta.bufnr = bufnr
   return bufnr
 end
