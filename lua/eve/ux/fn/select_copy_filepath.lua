@@ -26,11 +26,9 @@ local function select_copy_filepath(params)
     }, winopts),
     item_present_uuid = "relative",
     items = {
-          -- stylua: ignore start
-          { uuid = "absolute", text = "absolute", },
-          { uuid = "relative", text = "relative", },
-          { uuid = "filename", text = "filename",          },
-      -- stylua: ignore end
+      { uuid = "absolute", text = "absolute" },
+      { uuid = "relative", text = "relative" },
+      { uuid = "filename", text = "filename" },
     },
     on_select = function(widget, item)
       widget:destroy()
