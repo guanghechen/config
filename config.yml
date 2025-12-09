@@ -1,44 +1,80 @@
-disableStartupPopups: true
-notARepository: skip
-promptToReturnFromSubprocess: false
+confirmOnQuit: false # Don't show confirmation when quitting
+disableStartupPopups: true # Don't show introductory popups on startup
+notARepository: skip # Skip to most recent repo when opening outside a git repo
+promptToReturnFromSubprocess: false # Don't prompt to return after subprocess exits
+
 git:
+  autoFetch: false # Don't auto-fetch from remote
+  autoForwardBranches: allBranches # Auto fast-forward all local branches after fetch
+  autoRefresh: true # Auto-refresh files and submodules
+  autoStageResolvedConflicts: true # Auto-stage files after resolving conflicts
   commit:
-    signOff: false
-  commitPrefix:
+    signOff: false # Don't add --signoff flag to commits
+  commitPrefix: # Auto-generate commit message prefix from branch name
     - pattern: "^(?:user/[^/]+/)?(fix|feat|chore|refactor|docs|test)-(.+)$"
       replace: "$1(#$2): "
+  diffContextSize: 5 # Number of context lines in diff
+  disableForcePushing: false # Allow force pushing
+  fetchAll: false # Don't pass --all to git fetch
+  ignoreWhitespaceInDiffView: false # Show whitespace changes in diff
+  localBranchSortOrder: alphabetical # Sort local branches alphabetically
   log:
-    order: topo-order
-    showGraph: "always"
-    showWholeGraph: false
-  mainBranches:
+    order: topo-order # Use topo-order for easier graph reading
+    showGraph: "always" # Always show git graph in commits panel
+    showWholeGraph: false # Don't show commits from all branches by default
+  mainBranches: # Branches considered as main branches
     - main
     - master
-  pagers:
-    - # cargo install git-delta
-      colorArg: always
+  pagers: # Use delta as pager (install: cargo install git-delta)
+    - colorArg: always
       pager: delta --paging=never
-  autoFetch: false
-  autoRefresh: true
-  diffContextSize: 5
-  fetchAll: false
-  localBranchSortOrder: alphabetical
-  ignoreWhitespaceInDiffView: false
-  parseEmoji: true
-  remoteBranchSortOrder: alphabetical
-  skipHookPrefix: WIP
-  truncateCopiedCommitHashesTo: 40
+  parseEmoji: true # Render emoji strings like :rocket: as 🚀
+  remoteBranchSortOrder: alphabetical # Sort remote branches alphabetically
+  skipHookPrefix: WIP # Prefix to skip pre-commit hooks
+  truncateCopiedCommitHashesTo: 40 # Copy full commit hash (40 chars)
+
 gui:
-  authorColors:
-    guanghechen: blue
+  animateExplosion: true # Show explosion animation when nuking working tree
+  authorColors: # Custom colors for commit authors
     "*": white
-  branchColorPatterns:
+    guanghechen: blue
+  border: "rounded" # Rounded window borders
+  branchColorPatterns: # Custom colors for branch name patterns
     "^(main|master)$": purple
-    "^(user/[^/]+/)?fix": red
     "^(user/[^/]+/)?feat": green
     "^(user/[^/]+/)?feature": green
+    "^(user/[^/]+/)?fix": red
     "^(user/[^/]+/)?release": blue
-  spinner:
+  commitAuthorShortLength: 4 # Show 4 chars for author name in compact view
+  commitHashLength: 9 # Show 9 chars for commit hash
+  commitLength: # Show commit message length indicator
+    show: true
+  expandFocusedSidePanel: false # Don't expand focused side panel (accordion effect)
+  filterMode: fuzzy # Use fuzzy filtering when typing '/'
+  language: 'en' # UI language
+  mainPanelSplitMode: flexible # Split main panel based on window width
+  mouseEvents: true # Enable mouse events
+  nerdFontsVersion: "3" # Use Nerd Fonts v3 for icons
+  scrollOffMargin: 3
+  scrollPastBottom: true
+  shortTimeFormat: "15:04:05" # Time format for recent commits (HH:mm:SS)
+  showBottomLine: false # Hide bottom keybinding hints line
+  showBranchCommitHash: true # Show commit hash next to branch names
+  showCommandLog: true # Show command log panel
+  showDivergenceFromBaseBranch: arrowAndNumber # Show arrow and number for divergence from base branch
+  showFileIcons: true # Show file type icons
+  showFileTree: true # Display files as tree structure
+  showListFooter: true # Show "5 of 20" footer in list views
+  showNumstatInFilesView: true # Show lines added/removed in files view
+  showPanelJumps: true # Show panel jump keys (1-5) in window titles
+  showRandomTip: true # Show random tip on startup
+  showRootItemInFileTree: true # Show "/" root item in file tree
+  skipAmendWarning: false # Show warning when amending commit
+  skipDiscardChangeWarning: false # Show warning when discarding changes
+  skipNoStagedFilesWarning: false # Show warning when committing without staged files
+  skipRewordInEditorWarning: false # Show warning when rewording in editor
+  skipStashWarning: false # Show warning when stashing
+  spinner: # Custom spinner animation frames
     frames:
       - ⣾
       - ⣽
@@ -48,7 +84,11 @@ gui:
       - ⣟
       - ⣯
       - ⣷
-  theme:
+  splitDiff: auto # Split diff view when file has staged and unstaged changes
+  statusPanelView: allBranchesLog # Show all branches log in status panel
+  switchTabsWithPanelJumpKeys: false # Don't switch tabs when pressing panel jump keys on active panel
+  tabWidth: 2 # Tab width for diff display
+  theme: # Color theme settings
     activeBorderColor:
       - magenta
       - bold
@@ -74,44 +114,23 @@ gui:
       - white
     unstagedChangesColor:
       - red
-  border: "rounded"
-  commitAuthorShortLength: 4
-  commitHashLength: 9
-  expandFocusedSidePanel: false
-  filterMode: fuzzy
-  language: 'en'
-  mainPanelSplitMode: flexible
-  mouseEvents: true
-  nerdFontsVersion: "3"
-  showBottomLine: false
-  showBranchCommitHash: true
-  showCommandLog: true
-  showDivergenceFromBaseBranch: arrowAndNumber
-  showFileTree: true
-  showIcons: true
-  showNumstatInFilesView: true
-  showRandomTip: true
-  skipAmendWarning: false
-  skipDiscardChangeWarning: false
-  skipStashWarning: false
-  skipNoStagedFilesWarning: false
-  skipRewordInEditorWarning: false
-  splitDiff: auto
-  tabWidth: 2
-  useHunkModeInStagingView: true
-  wrapLinesInStagingView: false
-os:
-  edit: "nvim"
-  editAtLine: "nvim --line={{line}} {{filename}}"
-  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}"
-  editInTerminal: true
-  editPreset: "nvim-remote"
-  openDirInEditor: "nvim {{dir}}"
+  timeFormat: "2006-01-02 15:04:05" # Time format for older commits (YYYY-MM-DD HH:mm:SS)
+  useHunkModeInStagingView: true # Start in hunk mode when entering staging view
+  wrapLinesInStagingView: true # Wrap long lines in staging view
+
 keybinding:
-  universal:
-    nextBlock-alt2: <disabled>
-    prevBlock-alt2: <disabled>
-    nextScreenMode: <tab>
-    prevScreenMode: <backtab>
   main:
-    toggleSelectHunk: '`'
+    toggleSelectHunk: '`' # Use backtick to toggle hunk selection
+  universal:
+    nextBlock-alt2: <disabled> # Disable tab for panel switching
+    nextScreenMode: <tab> # Use tab for screen mode switching
+    prevBlock-alt2: <disabled> # Disable backtab for panel switching
+    prevScreenMode: <backtab> # Use backtab for screen mode switching
+
+os:
+  edit: "nvim" # Editor command
+  editAtLine: "nvim --line={{line}} {{filename}}" # Editor command with line number
+  editAtLineAndWait: "nvim --block --line={{line}} {{filename}}" # Editor command with line number (blocking)
+  editInTerminal: true # Run editor in terminal
+  editPreset: "nvim-remote" # Use nvim-remote preset
+  openDirInEditor: "nvim {{dir}}" # Command to open directory in editor
