@@ -1,18 +1,16 @@
----@class dot.lib.__mods
-local __lib__mods = {
-  color = "dot.lib.color",
-  easing = "dot.lib.easing",
+---@class dot.dict.__mods
+local __dict__mods = {
+  en = "dot.dict.en",
 }
 
----@class dot.lib
----@field public __mods                 dot.lib.__mods
----@field public color                  dot.lib.color
----@field public easing                 dot.lib.easing
-local lib = setmetatable({
-  __mods = __lib__mods,
+---@class dot.dict
+---@field public __mods                 dot.dict.__mods
+---@field public en                     { [1]: string, [2]: string }[]
+local dict = setmetatable({
+  __mods = __dict__mods,
 }, {
   __index = function(t, k)
-    local m = __lib__mods[k] ---@type string|nil
+    local m = __dict__mods[k] ---@type string|nil
     if m == nil then
       return rawget(t, k)
     end
@@ -37,6 +35,30 @@ local lang = setmetatable({
 }, {
   __index = function(t, k)
     local m = __lang__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
+---@class dot.lib.__mods
+local __lib__mods = {
+  color = "dot.lib.color",
+  easing = "dot.lib.easing",
+}
+
+---@class dot.lib
+---@field public __mods                 dot.lib.__mods
+---@field public color                  dot.lib.color
+---@field public easing                 dot.lib.easing
+local lib = setmetatable({
+  __mods = __lib__mods,
+}, {
+  __index = function(t, k)
+    local m = __lib__mods[k] ---@type string|nil
     if m == nil then
       return rawget(t, k)
     end
@@ -156,6 +178,7 @@ local __mods = {
 
 ---@class dot
 ---@field public __mods                 dot.__mods
+---@field public dict                   dot.dict
 ---@field public lang                   dot.lang
 ---@field public lib                    dot.lib
 ---@field public theme                  dot.theme
@@ -168,6 +191,7 @@ local __mods = {
 ---@field public var                    dot.var
 local M = setmetatable({
   __mods = __mods,
+  dict = dict,
   lang = lang,
   lib = lib,
   theme = theme,
