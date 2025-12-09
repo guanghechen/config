@@ -140,6 +140,11 @@ function M.theme(arg)
         width = 80, -- Increased width for color squares
       },
       render_result = render_result, -- Add the custom renderer
+      on_toggle = function(choice)
+        if choice then
+          apply_theme(choice)
+        end
+      end,
     }, function(choice)
       if choice then
         apply_theme(choice)

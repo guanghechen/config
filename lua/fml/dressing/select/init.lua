@@ -16,6 +16,7 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
+---@field public on_toggle              ?fun(item: any, idx: integer): nil
 ---@field public snacks                 ?any
 
 ---@class fml.dressing.select.IItemData
@@ -146,8 +147,26 @@ function M.select(items, opts, on_choice)
     end
   end
 
-  ---@type eve.ux.picker.ListComposer
-  local picker = eve.ux.picker.ListComposer.new({
+  local on_toggle = opts.on_toggle ---@type fun(item: any, idx: integer): nil|nil
+
+  ---@type eve.ux.picker.ListComposer|nil
+  local picker = nil
+
+  ---@return nil
+  local function do_toggle()
+    if not picker or not on_toggle then
+      return
+    end
+    local lnum = picker.result.lnum_current:snapshot()
+    local item = picker:retrieve(lnum)
+    if item then
+      ---@cast item fml.dressing.select.IItem
+      local idx = tonumber(item.uuid) or 0
+      on_toggle(item.data.original_item, idx)
+    end
+  end
+
+  picker = eve.ux.picker.ListComposer.new({
     name = name,
     permanent = false,
     title = title,
@@ -161,6 +180,14 @@ function M.select(items, opts, on_choice)
 
     render_result = render_result,
     render_preview = render_preview,
+
+    keymaps_common = on_toggle and {
+      { modes = { "i", "n", "x" }, key = "<C-l>", callback = do_toggle, desc = "Toggle selection" },
+      { modes = { "i", "n", "x" }, key = "<C-h>", callback = do_toggle, desc = "Toggle selection" },
+    } or nil,
+    keymaps_result = on_toggle and {
+      { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle selection" },
+    } or nil,
 
     on_cancel = function()
       if vim.api.nvim_win_is_valid(winnr) then

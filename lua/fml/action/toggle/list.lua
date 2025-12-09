@@ -608,6 +608,25 @@ picker = eve.ux.picker.ListComposer.new({
 
   render_result = render_result,
 
+  keymaps_common = {
+    {
+      modes = { "i", "n", "x" },
+      key = "<C-l>",
+      desc = "toggle: execute action",
+      callback = function()
+        execute_action(picker)
+      end,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "<C-h>",
+      desc = "toggle: execute action",
+      callback = function()
+        execute_action(picker)
+      end,
+    },
+  },
+
   keymaps_finder = {
     {
       modes = { "i", "n", "x" },
@@ -624,6 +643,14 @@ picker = eve.ux.picker.ListComposer.new({
       modes = { "i", "n", "x" },
       key = "<Tab>",
       aliases = { "l", "h", "<Left>", "<Right>" },
+      desc = "toggle: execute action",
+      callback = function()
+        execute_action(picker)
+      end,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "<space>",
       desc = "toggle: execute action",
       callback = function()
         execute_action(picker)
