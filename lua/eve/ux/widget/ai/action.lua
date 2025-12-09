@@ -179,13 +179,15 @@ end
 ---@param submit                        boolean
 ---@return boolean
 function M.send_to_source(source, text, submit)
+  local payload = submit and text or (vim.trim(text) .. " ")
+
   if source.type == "tmux" and source.tmux_pane then
     local tool = config.tools[source.agent]
     local pane_id = source.tmux_pane.pane_id
     if tool and tool.vim_mode then
       tmux.send_escape_i(pane_id)
       vim.defer_fn(function()
-        tmux.send_text(pane_id, text)
+        tmux.send_text(pane_id, payload)
         if submit then
           tmux.send_enter(pane_id)
         end
@@ -193,7 +195,7 @@ function M.send_to_source(source, text, submit)
       return true
     end
 
-    if not tmux.send_text(pane_id, text) then
+    if not tmux.send_text(pane_id, payload) then
       return false
     end
     if submit then
@@ -201,7 +203,7 @@ function M.send_to_source(source, text, submit)
     end
     return true
   elseif source.type == "terminal" then
-    return term.send(source.id, text, submit)
+    return term.send(source.id, payload, submit)
   end
   return false
 end
