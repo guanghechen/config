@@ -190,7 +190,7 @@ searcher = ux.searcher.FiletreeComposer.new({
         edit_setting(searcher)
       end,
       snapshot = function()
-        return std.icon.symbols.setting, "picker_flag_purple"
+        return dot.icon.symbols.setting, "picker_flag_purple"
       end,
     },
   },
@@ -203,7 +203,7 @@ searcher = ux.searcher.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_exclude:snapshot() ---@type boolean
-        return std.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return dot.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -214,7 +214,7 @@ searcher = ux.searcher.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
-        return std.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return dot.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

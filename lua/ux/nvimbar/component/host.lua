@@ -9,8 +9,8 @@ function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string
   local hln_sep = position .. "_host_username_sep" ---@type string
 
-  local text_with_icon = " " .. std.icon.os.current .. " " .. dot.env.USERNAME ---@type string
-  local text_icon_only = std.icon.os.current .. " " ---@type string
+  local text_with_icon = " " .. dot.icon.os.current .. " " .. dot.env.USERNAME ---@type string
+  local text_icon_only = dot.icon.os.current .. " " ---@type string
 
   ---@type ux.nvimbar.IRawComponent
   local component = {
@@ -27,8 +27,8 @@ function M.username(position)
       local text = text_with_icon ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = text .. std.icon.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(std.icon.symbols.sep_right, hln_sep) ---@type string
+      text = text .. dot.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }

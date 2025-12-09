@@ -231,7 +231,7 @@ function M.calc_diagnostic_info(filepath, offset, highlights)
 
   local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
   if count_error > 0 then
-    local part = " " .. std.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
+    local part = " " .. dot.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_error" }
@@ -240,7 +240,7 @@ function M.calc_diagnostic_info(filepath, offset, highlights)
 
   local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
   if count_warn > 0 then
-    local part = " " .. std.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
+    local part = " " .. dot.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_warn" }
@@ -249,7 +249,7 @@ function M.calc_diagnostic_info(filepath, offset, highlights)
 
   local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
   if count_hint > 0 then
-    local part = " " .. std.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
+    local part = " " .. dot.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_hint" }
@@ -258,7 +258,7 @@ function M.calc_diagnostic_info(filepath, offset, highlights)
 
   local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
   if count_info > 0 then
-    local part = " " .. std.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
+    local part = " " .. dot.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_info" }

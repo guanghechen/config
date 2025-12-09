@@ -19,11 +19,11 @@ function M.cwd(position)
     end,
     render = function(context)
       local cwd_name = std.path.basename(context.cwd) ---@type string
-      local text = std.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
+      local text = dot.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = std.icon.symbols.sep_left .. text ---@type string
-      hl_text = txt(std.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
+      text = dot.icon.symbols.sep_left .. text ---@type string
+      hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
       return text, hl_text, true
     end,
   }

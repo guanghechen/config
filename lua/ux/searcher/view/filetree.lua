@@ -92,12 +92,12 @@ local __module_name__ = "ux.searcher.view.filetree" ---@type string
 ---@field public preview                ux.searcher.view.filetree.ISearchedPreviewItem
 
 local function decode_preview_text(text)
-  return text:gsub(std.icon.listchars.eol, "\n")
+  return text:gsub(dot.icon.listchars.eol, "\n")
 end
 
 local function encode_preview_text(text)
   local sanitized = text:gsub("\r\n", "\n"):gsub("\r", "\n")
-  return sanitized:gsub("\n", std.icon.listchars.eol)
+  return sanitized:gsub("\n", dot.icon.listchars.eol)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -512,7 +512,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   local fileicon = node.data.fileicon ---@type string
   local fileicon_hln = node.data.fileicon_hln ---@type string
   if not nodestate.collapsed then
-    fileicon = std.icon.filetype.FolderOpen
+    fileicon = dot.icon.filetype.FolderOpen
   end
 
   if folded_depth < 1 then

@@ -5,18 +5,18 @@ local severity = vim.diagnostic.severity
 
 ---@type table<vim.diagnostic.Severity, string>
 M.severity2prefixicon = {
-  [severity.ERROR] = std.icon.diagnostic.Error_alt,
-  [severity.WARN] = std.icon.diagnostic.Warning_alt,
-  [severity.INFO] = std.icon.diagnostic.Information_alt,
-  [severity.HINT] = std.icon.diagnostic.Hint_alt,
+  [severity.ERROR] = dot.icon.diagnostic.Error_alt,
+  [severity.WARN] = dot.icon.diagnostic.Warning_alt,
+  [severity.INFO] = dot.icon.diagnostic.Information_alt,
+  [severity.HINT] = dot.icon.diagnostic.Hint_alt,
 }
 
 ---@type table<vim.diagnostic.Severity, string>
 M.severity2texticon = {
-  [severity.ERROR] = std.icon.diagnostic.Error_alt,
-  [severity.WARN] = std.icon.diagnostic.Warning_alt,
-  [severity.INFO] = std.icon.diagnostic.Information_alt,
-  [severity.HINT] = std.icon.diagnostic.Hint_alt,
+  [severity.ERROR] = dot.icon.diagnostic.Error_alt,
+  [severity.WARN] = dot.icon.diagnostic.Warning_alt,
+  [severity.INFO] = dot.icon.diagnostic.Information_alt,
+  [severity.HINT] = dot.icon.diagnostic.Hint_alt,
 }
 
 ---@type table<vim.diagnostic.Severity, string>

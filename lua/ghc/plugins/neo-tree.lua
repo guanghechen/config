@@ -38,21 +38,21 @@ return {
       highlight_tab = "NeoTreeTab",
       highlight_tab_active = "NeoTreeTabActive",
       separator = {
-        left = std.icon.symbols.sep_left,
-        right = std.icon.symbols.sep_right,
+        left = dot.icon.symbols.sep_left,
+        right = dot.icon.symbols.sep_right,
       },
       sources = {
         {
           source = "filesystem",
-          display_name = string.format(" %s Files ", std.icon.filetype.File),
+          display_name = string.format(" %s Files ", dot.icon.filetype.File),
         },
         {
           source = "buffers",
-          display_name = string.format(" %s Buffers ", std.icon.ui.Buffer),
+          display_name = string.format(" %s Buffers ", dot.icon.ui.Buffer),
         },
         {
           source = "git_status",
-          display_name = string.format(" %s Git ", std.icon.git.Git),
+          display_name = string.format(" %s Git ", dot.icon.git.Git),
         },
       },
     },
@@ -266,10 +266,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = std.icon.diagnostic.Hint_alt .. " ",
-          info = std.icon.diagnostic.Information_alt .. " ",
-          warn = std.icon.diagnostic.Warning_alt .. " ",
-          error = std.icon.diagnostic.Error_alt .. " ",
+          hint = dot.icon.diagnostic.Hint_alt .. " ",
+          info = dot.icon.diagnostic.Information_alt .. " ",
+          warn = dot.icon.diagnostic.Warning_alt .. " ",
+          error = dot.icon.diagnostic.Error_alt .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
@@ -279,8 +279,8 @@ return {
         },
       },
       indent = {
-        expander_collapsed = std.icon.ui.ArrowClosed,
-        expander_expanded = std.icon.ui.ArrowOpen,
+        expander_collapsed = dot.icon.ui.ArrowClosed,
+        expander_expanded = dot.icon.ui.ArrowOpen,
         indent_size = 2,
         indent_marker = "│",
         last_indent_marker = "╰",
@@ -289,13 +289,13 @@ return {
         with_markers = true,
       },
       icon = {
-        folder_closed = std.icon.filetype.Folder,
-        folder_open = std.icon.filetype.FolderOpen,
-        folder_empty = std.icon.filetype.FolderEmptyOpen,
-        default = std.icon.filetype.File,
+        folder_closed = dot.icon.filetype.Folder,
+        folder_open = dot.icon.filetype.FolderOpen,
+        folder_empty = dot.icon.filetype.FolderEmptyOpen,
+        default = dot.icon.filetype.File,
       },
       modified = {
-        symbol = std.icon.ui.Modified,
+        symbol = dot.icon.ui.Modified,
       },
       name = {
         trailing_slash = false,
@@ -306,13 +306,13 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = std.icon.git.Remove, -- this can only be used in the git_status source
-          renamed = std.icon.git.Rename, -- this can only be used in the git_status source
-          untracked = std.icon.git.Untracked,
-          ignored = std.icon.git.Ignore,
-          unstaged = std.icon.git.Unstaged,
-          staged = std.icon.git.Staged,
-          conflict = std.icon.git.Conflict,
+          deleted = dot.icon.git.Remove, -- this can only be used in the git_status source
+          renamed = dot.icon.git.Rename, -- this can only be used in the git_status source
+          untracked = dot.icon.git.Untracked,
+          ignored = dot.icon.git.Ignore,
+          unstaged = dot.icon.git.Unstaged,
+          staged = dot.icon.git.Staged,
+          conflict = dot.icon.git.Conflict,
         },
       },
       file_size = {

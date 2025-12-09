@@ -17,12 +17,12 @@ function M.neotree(position, neotree_position)
   local hln_active_sep = "ms_b_none" ---@type string
 
   local right_split = position == "f_wl" and "" or " " ---@type string -- "│"
-  local title_filesystem = string.format("%s Files", std.icon.filetype.File) ---@type string
-  local title_buffers = string.format("%s Buffers", std.icon.ui.Buffer) ---@type string
-  local title_git_status = string.format("%s Git", std.icon.git.Git) ---@type string
+  local title_filesystem = string.format("%s Files", dot.icon.filetype.File) ---@type string
+  local title_buffers = string.format("%s Buffers", dot.icon.ui.Buffer) ---@type string
+  local title_git_status = string.format("%s Git", dot.icon.git.Git) ---@type string
 
-  local sep_left = " " .. std.icon.symbols.sep_left ---@type string
-  local sep_right = std.icon.symbols.sep_right .. " " ---@type string
+  local sep_left = " " .. dot.icon.symbols.sep_left ---@type string
+  local sep_right = dot.icon.symbols.sep_right .. " " ---@type string
   local text_filesystem = sep_left .. title_filesystem .. sep_right ---@type string
   local text_buffers = sep_left .. title_buffers .. sep_right ---@type string
   local text_git_status = sep_left .. title_git_status .. sep_right ---@type string

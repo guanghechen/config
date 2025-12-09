@@ -1,7 +1,7 @@
----@class std.icon
+---@class dot.icon
 local M = {}
 
----@class std.icon.digits_subscript
+---@class dot.icon.digits_subscript
 local digits_subscript = {
   "₀",
   "₁",
@@ -15,7 +15,7 @@ local digits_subscript = {
   "₉",
 }
 
----@class std.icon.digits_supscript
+---@class dot.icon.digits_supscript
 local digits_supscript = {
   "⁰",
   "¹",
@@ -53,7 +53,7 @@ function M.todigit_supscript(num)
   return #result > 0 and result or digits_supscript[1]
 end
 
----@class std.icon.fillchars
+---@class dot.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -65,7 +65,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class std.icon.listchars
+---@class dot.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -77,7 +77,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class std.icon.symbols
+---@class dot.icon.symbols
 M.symbols = {
   setting = "",
   flag_buffer = "",
@@ -98,7 +98,7 @@ M.symbols = {
   sep_right = "",
 }
 
----@class std.icon.status
+---@class dot.icon.status
 M.status = {
   attached = "󰖩",
   broadcast = "󰐼",
@@ -107,7 +107,7 @@ M.status = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class std.icon.app
+---@class dot.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -116,7 +116,7 @@ M.app = {
   Vim = "",
 }
 
----@class std.icon.filetype
+---@class dot.icon.filetype
 M.filetype = {
   Default = "",
   File = "",
@@ -132,12 +132,12 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
----@class std.icon.lang
+---@class dot.icon.lang
 M.lang = {
   python = " ",
 }
 
----@class std.icon.os
+---@class dot.icon.os
 M.os = {
   dos = "",
   mac = "",
@@ -153,7 +153,7 @@ M.os = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class std.icon.dap
+---@class dot.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -171,7 +171,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class std.icon.diagnostic
+---@class dot.icon.diagnostic
 M.diagnostic = {
   ERROR = "",
   WARN = "",
@@ -190,7 +190,7 @@ M.diagnostic = {
   Warning_alt = "",
 }
 
----@class std.icon.git
+---@class dot.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -211,7 +211,7 @@ M.git = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class std.icon.kind
+---@class dot.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -266,7 +266,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class std.icon.log
+---@class dot.icon.log
 M.loglevel = {
   TRACE = "",
   DEBUG = "",
@@ -275,13 +275,13 @@ M.loglevel = {
   ERROR = "",
 }
 
----@class std.icon.notepad
+---@class dot.icon.notepad
 M.notepad = {
   Notebook = "󰠮",
   Source = "",
 }
 
----@class std.icon.ui
+---@class dot.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

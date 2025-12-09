@@ -317,7 +317,7 @@ local picker ---@type ux.picker.TreeComposer
 ---@param kindname                      string
 ---@return string, string
 local function get_icon(kindname)
-  local icon = std.icon.kind[kindname] or "󰅩"
+  local icon = dot.icon.kind[kindname] or "󰅩"
   local icon_hln = "f_lsp_symbol_icon_" .. kindname
   return icon, icon_hln
 end

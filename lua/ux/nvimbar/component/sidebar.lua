@@ -48,11 +48,11 @@ function M.of(position, filetype, get_title)
       local text_title = title ---@type string
       local hl_text_title = txt(text_title, hln_text) ---@type string
 
-      text_title = std.icon.symbols.sep_left .. text_title ---@type string
-      hl_text_title = txt(std.icon.symbols.sep_left, hln_sep) .. hl_text_title ---@type string
+      text_title = dot.icon.symbols.sep_left .. text_title ---@type string
+      hl_text_title = txt(dot.icon.symbols.sep_left, hln_sep) .. hl_text_title ---@type string
 
-      text_title = text_title .. std.icon.symbols.sep_right ---@type string
-      hl_text_title = hl_text_title .. txt(std.icon.symbols.sep_right, hln_sep) ---@type string
+      text_title = text_title .. dot.icon.symbols.sep_right ---@type string
+      hl_text_title = hl_text_title .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
 
       local title_width = vim.api.nvim_strwidth(text_title) ---@type integer
       local width_remain = width - title_width ---@type integer

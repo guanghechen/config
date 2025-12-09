@@ -263,7 +263,7 @@ function M.new(props)
       ),
       input = replace_pattern,
       title = replacer_title,
-      prompt_sign = std.icon.symbols.flag_replace,
+      prompt_sign = dot.icon.symbols.flag_replace,
       prompt_sign_hl = "f_pk_replacer_prompt",
     })
   end

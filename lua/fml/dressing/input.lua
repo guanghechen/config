@@ -137,7 +137,7 @@ function M.input(opts, on_confirm)
     style = "minimal",
     focusable = true,
     noautocmd = true,
-    title = string.format(" %s %s ", std.icon.ui.Edit, title),
+    title = string.format(" %s %s ", dot.icon.ui.Edit, title),
     title_pos = "center",
   })
 

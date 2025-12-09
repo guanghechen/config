@@ -243,11 +243,11 @@ function M:create_win(winopts, dimension)
   eve.win.set_type(winnr, eve.win.Types.PICKER_PREVIEW)
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-    std.icon.listchars.eol,
-    std.icon.listchars.lead,
-    std.icon.listchars.nbsp,
-    std.icon.listchars.space,
-    std.icon.listchars.trail
+    dot.icon.listchars.eol,
+    dot.icon.listchars.lead,
+    dot.icon.listchars.nbsp,
+    dot.icon.listchars.space,
+    dot.icon.listchars.trail
   )
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].spell = false

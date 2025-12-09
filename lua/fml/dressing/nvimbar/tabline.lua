@@ -28,7 +28,7 @@ tabline
   :place(
     "left",
     c.sidebar.of(position, std.filetype.DIFFVIEW_FILES, function()
-      local title = std.icon.git.Git .. " Git Diffview" ---@type string
+      local title = dot.icon.git.Git .. " Git Diffview" ---@type string
       return title
     end),
     95
@@ -36,7 +36,7 @@ tabline
   :place(
     "left",
     c.sidebar.of(position, std.filetype.DAP_UI_SCOPES, function()
-      local title = std.icon.ui.Bug .. " Debug" ---@type string
+      local title = dot.icon.ui.Bug .. " Debug" ---@type string
       return title
     end),
     95

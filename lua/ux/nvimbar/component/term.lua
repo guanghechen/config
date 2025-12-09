@@ -58,12 +58,12 @@ function M.items(position)
   local hln_sep_middle_active = position .. "_termc_sep_middle" ---@type string
   local hln_sep_right_active = position .. "_termc_sep_right" ---@type string
 
-  local text_sep_left = std.icon.symbols.sep_left ---@type string
+  local text_sep_left = dot.icon.symbols.sep_left ---@type string
   local text_sep_middle = " | " ---@type string
-  local text_sep_right = std.icon.symbols.sep_right ---@type string
+  local text_sep_right = dot.icon.symbols.sep_right ---@type string
 
-  local icon_arrow_left = std.icon.ui.Left ---@type string
-  local icon_arrow_right = std.icon.ui.Right ---@type string
+  local icon_arrow_left = dot.icon.ui.Left ---@type string
+  local icon_arrow_right = dot.icon.ui.Right ---@type string
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = std.nvim.make_bg_transparency(hln_button) ---@type string
 

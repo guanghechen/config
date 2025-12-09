@@ -47,19 +47,19 @@ end
 
 -- stylua: ignore start
 local _cmdline_title_map = {
-  ["command"]         = string.format(" %s Command ", std.icon.ui.Cmdline),
-  ["command_help"]    = string.format(" %s Command | help ", std.icon.ui.Cmdline),
-  ["command_lua"]     = string.format(" %s Command | lua ", std.icon.ui.Cmdline),
-  ["search_forward"]  = string.format(" %s Search Forward ", std.icon.ui.Search),
-  ["search_backward"] = string.format(" %s Search Backward ", std.icon.ui.Search),
+  ["command"]         = string.format(" %s Command ", dot.icon.ui.Cmdline),
+  ["command_help"]    = string.format(" %s Command | help ", dot.icon.ui.Cmdline),
+  ["command_lua"]     = string.format(" %s Command | lua ", dot.icon.ui.Cmdline),
+  ["search_forward"]  = string.format(" %s Search Forward ", dot.icon.ui.Search),
+  ["search_backward"] = string.format(" %s Search Backward ", dot.icon.ui.Search),
 }
 local _cmdline_type_map = {
-  ['command']         = string.format(" %s  ", std.icon.ui.Cmdline),
+  ['command']         = string.format(" %s  ", dot.icon.ui.Cmdline),
   ["command_help"]    = string.format(" %s  ", ""),
   ["command_lua"]     = string.format(" %s  ", ""),
-  ["confirm"]    = string.format(" %s  ", std.icon.ui.Cmdline),
-  ["search_forward"]  = string.format(" %s ", std.icon.ui.SearchForward),
-  ["search_backward"] = string.format(" %s ", std.icon.ui.SearchBackward),
+  ["confirm"]    = string.format(" %s  ", dot.icon.ui.Cmdline),
+  ["search_forward"]  = string.format(" %s ", dot.icon.ui.SearchForward),
+  ["search_backward"] = string.format(" %s ", dot.icon.ui.SearchBackward),
 }
 -- stylua: ignore end
 
@@ -226,7 +226,7 @@ function M._show(state)
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
-  local title = #state.prompt > 0 and string.format(" %s %s ", std.icon.ui.Edit, state.prompt)
+  local title = #state.prompt > 0 and string.format(" %s %s ", dot.icon.ui.Edit, state.prompt)
     or _cmdline_title_map[state.type] ---@type string
 
   ---@type vim.api.keyset.win_config
