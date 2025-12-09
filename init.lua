@@ -3,6 +3,7 @@ _G.yoz = require("yoz") ---@type yoz
 require("std.bootstrap").setup_patches()
 require("std.bootstrap").setup_workspace()
 
+_G.dot = require("dot")
 _G.std = require("std")
 _G.eve = require("eve")
 _G.ux = require("ux")

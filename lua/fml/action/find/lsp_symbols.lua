@@ -723,7 +723,7 @@ local function render_preview(bufnr, force)
 
   plainfile:render(bufnr, filepath_sourcefile, force)
 
-  local nsnr = eve.var.nsnr.picker_preview_visual ---@type integer
+  local nsnr = dot.var.nsnr.picker_preview_visual ---@type integer
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
   local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData

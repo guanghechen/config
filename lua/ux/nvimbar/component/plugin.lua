@@ -90,7 +90,7 @@ function M.neotree(position, neotree_position)
       end
 
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local source = vim.b[bufnr][eve.var.Names.NEO_TREE_SOURCE] ---@type string
+      local source = vim.b[bufnr][dot.var.Names.NEO_TREE_SOURCE] ---@type string
 
       local hl_sep_active_left = txt(sep_left, hln_active_sep) ---@type string
       local hl_sep_active_right = txt(sep_right, hln_active_sep) ---@type string

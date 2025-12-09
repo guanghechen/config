@@ -18,7 +18,7 @@ local __module_name__ = "ux.view.plainfile" ---@type string
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = eve.var.nsnr.view_plainfile ---@type integer
+local NSNR_DEFAULT = dot.var.nsnr.view_plainfile ---@type integer
 
 ---@param props                         ux.view.IPlainfileProps
 ---@return ux.view.Plainfile

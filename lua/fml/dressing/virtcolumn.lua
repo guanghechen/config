@@ -2,7 +2,7 @@ local __module_name__ = "fml.dressing.virtcolumn" ---@type string
 
 ---@class fml.dressing.virtcolumn.config
 local config = {
-  nsnr = eve.var.nsnr.virtcolumn,
+  nsnr = dot.var.nsnr.virtcolumn,
   virt_char = "╎",
   columns = { 100, 120 },
   hlgroups = { "h_virtcolumn_1", "h_virtcolumn_2" },

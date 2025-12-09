@@ -155,8 +155,8 @@ local picker = ux.picker.ListComposer.new({
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     composer._retriever:attach(bufnr, uuids)
 
-    local nsnr_content = eve.var.nsnr.picker_result
-    local nsnr_matches = eve.var.nsnr.picker_matches
+    local nsnr_content = dot.var.nsnr.picker_result
+    local nsnr_matches = dot.var.nsnr.picker_matches
 
     for lnum, match in ipairs(matches) do
       local row = lnum - 1 ---@type integer

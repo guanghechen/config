@@ -89,7 +89,7 @@ return {
         })
       end,
       goto_next_source = function(state)
-        local source = vim.b[eve.var.Names.NEO_TREE_SOURCE] ---@type string|nil
+        local source = vim.b[dot.var.Names.NEO_TREE_SOURCE] ---@type string|nil
         if type(source) ~= "string" then
           return
         end
@@ -107,7 +107,7 @@ return {
         })
       end,
       goto_prev_source = function(state)
-        local source = vim.b[eve.var.Names.NEO_TREE_SOURCE] ---@type string|nil
+        local source = vim.b[dot.var.Names.NEO_TREE_SOURCE] ---@type string|nil
         if type(source) ~= "string" then
           return
         end
@@ -250,7 +250,7 @@ return {
         local winnr = vim.api.nvim_open_win(bufnr, true, wincfg) ---@type integer
 
         eve.win.set_type(winnr, eve.win.Types.BOARD)
-        vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+        vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
         vim.wo[winnr].number = false
         vim.wo[winnr].relativenumber = false

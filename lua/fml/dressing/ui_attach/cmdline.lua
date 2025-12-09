@@ -1,6 +1,6 @@
 local states = require("fml.dressing.ui_attach.state")
 
-local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@param entries                       table[]|nil
 ---@return string[]
@@ -251,7 +251,7 @@ function M._show(state)
     state.winnr = winnr
 
     eve.win.set_type(winnr, eve.win.Types.CMDLINE)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -386,7 +386,7 @@ function M._render_block(block)
     block.winnr = winnr
 
     eve.win.set_type(winnr, eve.win.Types.CMDLINE)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -553,7 +553,7 @@ function M._show_confirm(state, msg_show_task)
     state.winnr = winnr
 
     eve.win.set_type(winnr, eve.win.Types.CMDLINE)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

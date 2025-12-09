@@ -595,14 +595,14 @@ function M.show_prompt(on_select)
       end
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, text_lines)
 
-      vim.api.nvim_buf_clear_namespace(bufnr, eve.var.nsnr.ai_prompt_preview, 0, -1)
+      vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.ai_prompt_preview, 0, -1)
       for row, rich_line in ipairs(result.lines) do
         local col = 0
         for _, chunk in ipairs(rich_line) do
           local text = chunk[1]
           local hlname = chunk[2]
           if hlname and #text > 0 then
-            vim.hl.range(bufnr, eve.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + #text })
+            vim.hl.range(bufnr, dot.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + #text })
           end
           col = col + #text
         end

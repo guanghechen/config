@@ -1,6 +1,6 @@
 local states = require("fml.dressing.ui_attach.state")
 
-local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@class fml.dressing.ui_attach.popupmenu
 local M = {}
@@ -133,7 +133,7 @@ function M._show(state)
     state.winnr = winnr
 
     eve.win.set_type(winnr, eve.win.Types.POPUPMENU)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

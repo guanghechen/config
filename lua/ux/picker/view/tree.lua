@@ -317,7 +317,7 @@ function M:render_listview(params)
     return result
   end
 
-  local nsnr = eve.var.nsnr.picker_matches ---@type integer
+  local nsnr = dot.var.nsnr.picker_matches ---@type integer
   local uuids = result.lnum2uuid ---@type string[]
   local N = #uuids ---@type integer
 
@@ -376,7 +376,7 @@ function M:render_treeview(params)
     return result
   end
 
-  local nsnr = eve.var.nsnr.picker_matches ---@type integer
+  local nsnr = dot.var.nsnr.picker_matches ---@type integer
   local uuids = result.lnum2uuid ---@type string[]
   local N = #uuids ---@type integer
 

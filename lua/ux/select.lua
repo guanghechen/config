@@ -162,7 +162,7 @@ function M:create_buf_as_needed()
   end
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr = eve.var.nsnr.select ---@type integer
+  local nsnr = dot.var.nsnr.select ---@type integer
   for lnum, item in ipairs(self._items) do
     if item.highlights ~= nil then
       for _, hl in ipairs(item.highlights) do
@@ -203,7 +203,7 @@ function M:create_win_as_needed()
     winnr_new_created = true
 
     eve.win.set_type(winnr, eve.win.Types.SELECT)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false

@@ -276,7 +276,7 @@ picker = ux.picker.FiletreeComposer.new({
     end
 
     local diagnostics = vim.diagnostic.get(bufnr_sourcefile) ---@type vim.Diagnostic[]
-    vim.diagnostic.set(eve.var.nsnr.diagnostic, bufnr, diagnostics, {
+    vim.diagnostic.set(dot.var.nsnr.diagnostic, bufnr, diagnostics, {
       virtual_text = false,
       virtual_lines = {
         format = function(diagnostic)

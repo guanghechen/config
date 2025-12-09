@@ -230,7 +230,7 @@ local keymaps = {
       local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
       eve.win.set_type(winnr, eve.win.Types.BOARD)
-      vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+      vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
       vim.wo[winnr].wrap = false
       vim.wo[winnr].number = false

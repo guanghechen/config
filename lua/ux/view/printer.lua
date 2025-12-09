@@ -19,7 +19,7 @@ local __module_name__ = "ux.view.printer" ---@type string
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = eve.var.nsnr.view_printer ---@type integer
+local NSNR_DEFAULT = dot.var.nsnr.view_printer ---@type integer
 
 ---@param props                         ux.view.IPrinterProps
 ---@return ux.view.Printer

@@ -1,7 +1,7 @@
----@class eve.builtin.var
+---@class dot.var
 local M = {}
 
----@class eve.builtin.var.Names
+---@class dot.var.Names
 M.Names = {
   BUF_DISABLE_LINT = "eve_buf_disable_lint",
   NEO_TREE_SOURCE = "neo_tree_source",
@@ -10,7 +10,7 @@ M.Names = {
 
 local cn = vim.api.nvim_create_namespace
 
----@class eve.builtin.var.nsnr
+---@class dot.var.nsnr
 M.nsnr = {
   -- stylua: ignore start
   ai_prompt_preview     = cn("ux:ai:prompt:preview"),
@@ -42,7 +42,7 @@ M.nsnr = {
   -- stylua: ignore end
 }
 
----@class eve.builtin.var.sign
+---@class dot.var.sign
 M.sign = {
   -- stylua: ignore start
   ---! picker

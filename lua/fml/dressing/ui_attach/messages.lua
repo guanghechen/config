@@ -14,7 +14,7 @@ local KIND_MAP = {
   },
 }
 
-local nsnrs = eve.var.nsnr ---@type eve.builtin.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
@@ -114,7 +114,7 @@ function M.history_show(task)
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
     eve.win.set_type(winnr, eve.win.Types.BOARD)
-    vim.w[winnr][eve.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = true
     vim.wo[winnr].number = true

@@ -56,8 +56,8 @@ function M.new(props)
     self.prompt_sign_name = string.format("SearcherFinderPrompt_%s", name)
     vim.fn.sign_define(self.prompt_sign_name, { text = prompt_sign, texthl = prompt_sign_hl })
   else
-    self.prompt_sign_group = eve.var.sign.GROUP_PICKER_FINDER_PROMPT
-    self.prompt_sign_name = eve.var.sign.PICKER_FINDER_PROMPT
+    self.prompt_sign_group = dot.var.sign.GROUP_PICKER_FINDER_PROMPT
+    self.prompt_sign_name = dot.var.sign.PICKER_FINDER_PROMPT
   end
 
   self._disposed = false

@@ -70,7 +70,7 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
-local DEFAULT_NSNR_MATCHES = eve.var.nsnr.view_filetree_matches ---@type integer
+local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 ---@class ux.picker.view.IFiletreeProps
 ---@field public name                   string
 ---@field public tree                   std.collection.IFiletree

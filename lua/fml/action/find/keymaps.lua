@@ -192,8 +192,8 @@ local picker = ux.picker.ListComposer.new({
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     composer._retriever:attach(bufnr, uuids)
 
-    local nsnr_content = eve.var.nsnr.picker_result
-    local nsnr_matches = eve.var.nsnr.picker_matches
+    local nsnr_content = dot.var.nsnr.picker_result
+    local nsnr_matches = dot.var.nsnr.picker_matches
 
     for lnum, match in ipairs(matches) do
       local row = lnum - 1 ---@type integer
@@ -262,7 +262,7 @@ local picker = ux.picker.ListComposer.new({
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    local nsnr_content = eve.var.nsnr.picker_preview
+    local nsnr_content = dot.var.nsnr.picker_preview
     local LABEL_WIDTH = 13
     vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 0, 0 }, { 0, LABEL_WIDTH }, { priority = 10 })
     vim.hl.range(bufnr, nsnr_content, "f_us_km_lhs", { 0, LABEL_WIDTH }, { 0, LABEL_WIDTH + #data.lhs }, { priority = 10 })

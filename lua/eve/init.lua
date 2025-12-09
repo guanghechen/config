@@ -20,7 +20,6 @@ local __mods = {
   shell = "eve.builtin.shell",
   tab = "eve.builtin.tab",
   term = "eve.builtin.term",
-  var = "eve.builtin.var",
   widget = "eve.builtin.widget",
   win = "eve.builtin.win",
   winpicker = "eve.builtin.winpicker",
@@ -48,7 +47,6 @@ local __mods = {
 ---@field public shell                  eve.builtin.shell
 ---@field public tab                    eve.builtin.tab
 ---@field public term                   eve.builtin.term
----@field public var                    eve.builtin.var
 ---@field public widget                 eve.builtin.widget
 ---@field public win                    eve.builtin.win
 ---@field public winpicker              eve.builtin.winpicker
