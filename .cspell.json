@@ -1,5 +1,5 @@
 {
-  "ignorePaths": ["lsp/yamlls.lua", "lua/std/dict/", "lua/std/fileicon.lua"],
+  "ignorePaths": ["lsp/yamlls.lua", "lua/std/dict/", "lua/dot/fileicon.lua"],
   "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
@@ -915,4 +915,3 @@
     "zindex"
   ]
 }
-
