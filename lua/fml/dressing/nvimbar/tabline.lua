@@ -1,10 +1,10 @@
-local c = eve.ux.nvimbar.component
+local c = ux.nvimbar.component
 
 local dirtier = eve.status.dirtier_tabline ---@type std.collection.IDirtier
-local position = "f_tl" ---@type eve.ux.nvimbar.PositionEnum
+local position = "f_tl" ---@type ux.nvimbar.PositionEnum
 
-local tabline ---@type eve.ux.nvimbar.Nvimbar
-tabline = eve.ux.nvimbar.Nvimbar.new({
+local tabline ---@type ux.nvimbar.Nvimbar
+tabline = ux.nvimbar.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",

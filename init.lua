@@ -5,6 +5,7 @@ require("std.bootstrap").setup_workspace()
 
 _G.std = require("std")
 _G.eve = require("eve")
+_G.ux = require("ux")
 
 if std.path.is_git_repo() then
   local log_filepath = std.path.locate_workspace_filepath("log.json")

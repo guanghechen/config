@@ -2,7 +2,7 @@
 local name = "fml.action.find.highlights" ---@type string
 local title = "Find Highlights" ---@type string
 
----@class fml.action.find.highlights.IItem : eve.ux.picker.composer.list.IItem
+---@class fml.action.find.highlights.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.highlights.IItemData
 
 ---@class fml.action.find.highlights.IItemData
@@ -13,7 +13,7 @@ local _hlnames = nil ---@type string[]?
 local _hlgroups = nil ---@type table<string, vim.api.keyset.get_hl_info>?
 local _last_preview_bufnr = -1 ---@type integer
 
----@return eve.ux.picker.composer.list.IResetData
+---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   local hlgroups = vim.api.nvim_get_hl(0, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
   local hlnames = {} ---@type string[]
@@ -48,7 +48,7 @@ local function fetch_data()
     items[#items + 1] = item
   end
 
-  ---@type eve.ux.picker.composer.list.IResetData
+  ---@type ux.picker.composer.list.IResetData
   return { items = items }
 end
 
@@ -57,8 +57,8 @@ local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObse
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
----@type eve.ux.picker.ListComposer
-local picker = eve.ux.picker.ListComposer.new({
+---@type ux.picker.ListComposer
+local picker = ux.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -107,7 +107,7 @@ local picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type ux.picker.composer.list.IRenderResultData
     return data
   end,
   render_preview = function(composer, bufnr, force)
@@ -117,7 +117,7 @@ local picker = eve.ux.picker.ListComposer.new({
       -- Render empty buffer
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No highlight selected" })
 
-      ---@type eve.ux.picker.preview.IDrawResult
+      ---@type ux.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = true,
@@ -181,12 +181,12 @@ local picker = eve.ux.picker.ListComposer.new({
       _last_preview_bufnr = bufnr
     end
 
-    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
     ---@cast item                       fml.action.find.highlights.IItem|nil
 
     local lnum_target = item and item.data.lnum or lnum_current ---@type integer
 
-    ---@type eve.ux.picker.preview.IDrawResult
+    ---@type ux.picker.preview.IDrawResult
     local result = {
       cursorline = true,
       number = true,
@@ -207,7 +207,7 @@ local picker = eve.ux.picker.ListComposer.new({
     end
   end,
   on_refresh = function(composer)
-    local data = fetch_data() ---@type eve.ux.picker.composer.list.IResetData
+    local data = fetch_data() ---@type ux.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

@@ -1,10 +1,10 @@
-local c = eve.ux.nvimbar.component
+local c = ux.nvimbar.component
 
 local dirtier = eve.status.dirtier_statusline ---@type std.collection.IDirtier
-local position = "f_sl" ---@type eve.ux.nvimbar.PositionEnum
+local position = "f_sl" ---@type ux.nvimbar.PositionEnum
 
-local statusline ---@type eve.ux.nvimbar.Nvimbar
-statusline = eve.ux.nvimbar.Nvimbar.new({
+local statusline ---@type ux.nvimbar.Nvimbar
+statusline = ux.nvimbar.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",

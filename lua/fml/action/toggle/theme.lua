@@ -37,13 +37,13 @@ local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
 local o_theme = eve.context.theme.theme ---@type std.collection.IObservable
 
----@type eve.ux.picker.composer.list.IRenderResult
+---@type ux.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
   for _, match_data in ipairs(matches) do
-    local item = itemmap[match_data.uuid] ---@type eve.ux.picker.composer.list.IItem
+    local item = itemmap[match_data.uuid] ---@type ux.picker.composer.list.IItem
     uuids[#uuids + 1] = match_data.uuid ---@type string
 
     local themename = item.text ---@type string
@@ -62,7 +62,7 @@ local function render_result(_, bufnr, itemmap, matches)
   for lnum, match_data in ipairs(matches) do
     local row = lnum - 1 ---@type integer
     local offset = MAX_WIDTH_THEMENAME + 2 ---@type integer
-    local item = itemmap[match_data.uuid] ---@type eve.ux.picker.composer.list.IItem
+    local item = itemmap[match_data.uuid] ---@type ux.picker.composer.list.IItem
     local themename = item.text ---@type string
     local hlgroup_prefix = "f_cs_" .. themename:gsub("-", "_") .. "__" ---@type string
 
@@ -83,7 +83,7 @@ local function render_result(_, bufnr, itemmap, matches)
     end
   end
 
-  ---@type eve.ux.picker.composer.list.IRenderResultData
+  ---@type ux.picker.composer.list.IRenderResultData
   local result = { uuids = uuids }
   return result
 end

@@ -4,7 +4,7 @@
 ---@return nil
 local function open_yazi(name, cwd, filepath)
   local tempname = std.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
-  local terminal = eve.ux.widget.Terminal ---@type eve.ux.widget.Terminal
+  local terminal = ux.widget.Terminal ---@type ux.widget.Terminal
 
   local dirpath = std.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string

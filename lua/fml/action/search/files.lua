@@ -29,7 +29,7 @@ local o_replace_pattern_history = eve.context.search_file.replace_pattern_histor
 ---@field public includes               string[]
 ---@field public excludes               string[]
 
----@param searcher                      eve.ux.searcher.FiletreeComposer
+---@param searcher                      ux.searcher.FiletreeComposer
 ---@return nil
 local function edit_setting(searcher)
   local s_search_pattern = o_search_pattern:snapshot() ---@type string
@@ -49,7 +49,7 @@ local function edit_setting(searcher)
     excludes = s_excludes,
   }
 
-  eve.ux.Setting
+  ux.Setting
     .new({
       position = "center",
       width = 100,
@@ -119,7 +119,7 @@ local function edit_setting(searcher)
     })
 end
 
----@param searcher                      eve.ux.searcher.FiletreeComposer
+---@param searcher                      ux.searcher.FiletreeComposer
 ---@param rootpath                      string
 ---@return nil
 local function attach(searcher, rootpath)
@@ -132,8 +132,8 @@ local function attach(searcher, rootpath)
   end
 end
 
-local searcher ---@type eve.ux.searcher.FiletreeComposer
-searcher = eve.ux.searcher.FiletreeComposer.new({
+local searcher ---@type ux.searcher.FiletreeComposer
+searcher = ux.searcher.FiletreeComposer.new({
   name = name,
   frecency = eve.context.frecency.files,
   permanent = true,

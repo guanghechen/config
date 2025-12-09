@@ -940,7 +940,7 @@ for index = 1, 9, 1 do
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
       if eve.term.focus(index) then
-        eve.ux.widget.Terminal:focus()
+        ux.widget.Terminal:focus()
       end
     end,
   })
@@ -1074,7 +1074,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      eve.ux.widget.ColorPicker:pick()
+      ux.widget.ColorPicker:pick()
     end,
   })
   .implement({

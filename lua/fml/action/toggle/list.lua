@@ -6,7 +6,7 @@ local __module_name__ = "fml.action.toggle.list" ---@type string
 ---@field public snapshot               fun(): string, string
 ---@field public action                 fun(): nil
 
----@class fml.action.toggle.IListItem : eve.ux.picker.composer.list.IItem
+---@class fml.action.toggle.IListItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.toggle.IItem
 
 ---@type table<string, integer>
@@ -124,7 +124,7 @@ local group_items = {
 
         ---@return nil
         local function reopen()
-          eve.ux.fn.select_encoding({
+          ux.fn.select_encoding({
             present = fileencoding_cur,
             title = string.format("Reopen with encoding (%s)", filename),
             on_select = function(encoding)
@@ -142,7 +142,7 @@ local group_items = {
 
         ---@return nil
         local function resave()
-          eve.ux.fn.select_encoding({
+          ux.fn.select_encoding({
             present = fileencoding_cur,
             title = string.format("Resave with encoding (%s)", filename),
             on_select = function(encoding)
@@ -164,7 +164,7 @@ local group_items = {
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
           reopen()
         else
-          eve.ux.Select
+          ux.Select
             .new({
               wincfg = {
                 relative = "editor",
@@ -237,10 +237,10 @@ local group_items = {
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
-        ---@param callback              fun(widget: eve.ux.ISelect, fileformat_next: string|nil): nil
+        ---@param callback              fun(widget: ux.ISelect, fileformat_next: string|nil): nil
         ---@return nil
         local function select_fileformat(callback)
-          eve.ux.Select
+          ux.Select
             .new({
               wincfg = {
                 relative = "editor",
@@ -484,7 +484,7 @@ local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObse
 local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
----@return eve.ux.picker.composer.list.IResetData
+---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -524,16 +524,16 @@ local function fetch_data()
     items[#items + 1] = list_item
   end
 
-  ---@type eve.ux.picker.composer.list.IResetData
+  ---@type ux.picker.composer.list.IResetData
   return { items = items }
 end
 
----@param picker                        eve.ux.picker.ListComposer
+---@param picker                        ux.picker.ListComposer
 ---@return nil
 local function execute_action(picker)
   local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
   if lnum_current >= 1 then
-    local item = picker:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    local item = picker:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
     if item then
       ---@cast item fml.action.toggle.IListItem
       item.data.action()
@@ -543,13 +543,13 @@ local function execute_action(picker)
   end
 end
 
----@type eve.ux.picker.composer.list.IRenderResult
+---@type ux.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
   for _, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+    local item = itemmap[match.uuid] ---@type ux.picker.composer.list.IItem
     ---@cast item                       fml.action.toggle.IListItem
 
     lines[#lines + 1] = item.text
@@ -562,7 +562,7 @@ local function render_result(_, bufnr, itemmap, matches)
   local nsnr_matches = eve.var.nsnr.picker_matches ---@type integer
 
   for lnum, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+    local item = itemmap[match.uuid] ---@type ux.picker.composer.list.IItem
     ---@cast item                       fml.action.toggle.IListItem
 
     local row = lnum - 1 ---@type integer
@@ -579,7 +579,7 @@ local function render_result(_, bufnr, itemmap, matches)
     end
   end
 
-  ---@type eve.ux.picker.composer.list.IRenderResultData
+  ---@type ux.picker.composer.list.IRenderResultData
   return { uuids = uuids }
 end
 
@@ -593,8 +593,8 @@ eve.command.define({
 ---@class fml.action.toggle.list
 local M = {}
 
-local picker ---@type eve.ux.picker.ListComposer
-picker = eve.ux.picker.ListComposer.new({
+local picker ---@type ux.picker.ListComposer
+picker = ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Toggle Select",

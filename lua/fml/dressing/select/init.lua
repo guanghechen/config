@@ -12,8 +12,8 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@field public format_item            ?fun(item): string
 ---@field public kind                   ?string
 ---@field public dimension              ?fml.dressing.select.IDimension
----@field public render_result          ?eve.ux.picker.composer.list.IRenderResult
----@field public render_preview         ?eve.ux.picker.composer.list.IRenderPreview
+---@field public render_result          ?ux.picker.composer.list.IRenderResult
+---@field public render_preview         ?ux.picker.composer.list.IRenderPreview
 ---@field public uuid_current           ?string
 ---@field public uuid_present           ?string
 ---@field public on_toggle              ?fun(item: any, idx: integer): nil
@@ -22,11 +22,11 @@ local __module_name__ = "fml.dressing.select" ---@type string
 ---@class fml.dressing.select.IItemData
 ---@field public original_item          any
 
----@class fml.dressing.select.IItem : eve.ux.picker.composer.list.IItem
+---@class fml.dressing.select.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.dressing.select.IItemData
 
 ---@alias fml.dressing.select.IDataProvider
----| fun(items: any[], opts: fml.dressing.select.IOptions): eve.ux.picker.composer.list.IResetData, integer, eve.ux.picker.composer.list.IRenderResult|nil, eve.ux.picker.composer.list.IRenderPreview|nil
+---| fun(items: any[], opts: fml.dressing.select.IOptions): ux.picker.composer.list.IResetData, integer, ux.picker.composer.list.IRenderResult|nil, ux.picker.composer.list.IRenderPreview|nil
 
 local providers = {
   ---@type fml.dressing.select.IDataProvider
@@ -149,7 +149,7 @@ function M.select(items, opts, on_choice)
 
   local on_toggle = opts.on_toggle ---@type fun(item: any, idx: integer): nil|nil
 
-  ---@type eve.ux.picker.ListComposer|nil
+  ---@type ux.picker.ListComposer|nil
   local picker = nil
 
   ---@return nil
@@ -166,7 +166,7 @@ function M.select(items, opts, on_choice)
     end
   end
 
-  picker = eve.ux.picker.ListComposer.new({
+  picker = ux.picker.ListComposer.new({
     name = name,
     permanent = false,
     title = title,

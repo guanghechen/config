@@ -31,7 +31,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       std.collection.Scheduler|nil
 ---@field public lsp_symbols            std.t.ILspSymbol[]|nil
----@field public nvimbar                eve.ux.nvimbar.Nvimbar
+---@field public nvimbar                ux.nvimbar.Nvimbar
 
 ---@class eve.builtin.win.IMeta
 ---@field public history                std.collection.IHistory|nil

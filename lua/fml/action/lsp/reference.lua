@@ -17,7 +17,7 @@ local flag_case_sensitive = eve.context.select.lsp_reference.flag_case_sensitive
 local flag_selected = eve.context.select.lsp_reference.flag_selected
 local flag_viewtype = eve.context.select.lsp_reference.flag_viewtype
 
-local picker = eve.ux.picker.FiletreeComposer.new({
+local picker = ux.picker.FiletreeComposer.new({
   name = "lsp:reference",
   permanent = true,
   frecency = eve.context.frecency.files,
@@ -202,10 +202,10 @@ local function focus(title, method, buf_flagname, additional_params)
     picker:focus()
 
     vim.schedule(function()
-      local treeview = picker._treeview ---@type eve.ux.picker.FiletreeView
+      local treeview = picker._treeview ---@type ux.picker.FiletreeView
       treeview:traverse_filenode(nil, function(node, nodestate)
         if nodestate ~= nil and nodestate.locations ~= nil then
-          local locations = nodestate.locations ---@type eve.ux.picker.view.filetree.ILocationNodeState[]
+          local locations = nodestate.locations ---@type ux.picker.view.filetree.ILocationNodeState[]
           local lnum_maximum = 1 ---@type integer
           for _, location in ipairs(locations) do
             lnum_maximum = lnum_maximum < location.lnum and location.lnum or lnum_maximum

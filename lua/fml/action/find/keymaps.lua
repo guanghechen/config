@@ -9,7 +9,7 @@ local title = "Find Keymaps" ---@type string
 ---@field public desc                   string
 ---@field public source                 string
 
----@class fml.action.find.keymaps.IItem : eve.ux.picker.composer.list.IItem
+---@class fml.action.find.keymaps.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.keymaps.IItemData
 
 local WIDTH_LHS = 28 ---@type integer
@@ -55,7 +55,7 @@ local function get_sort_key(lhs)
   end
 end
 
----@return eve.ux.picker.composer.list.IResetData
+---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -163,11 +163,11 @@ local function fetch_data()
     return a.data.mode < b.data.mode
   end)
 
-  ---@type eve.ux.picker.composer.list.IResetData
+  ---@type ux.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker = eve.ux.picker.ListComposer.new({
+local picker = ux.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -212,7 +212,7 @@ local picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type eve.ux.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type ux.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -223,7 +223,7 @@ local picker = eve.ux.picker.ListComposer.new({
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type eve.ux.picker.preview.IDrawResult
+      ---@type ux.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -233,13 +233,13 @@ local picker = eve.ux.picker.ListComposer.new({
       return result
     end
 
-    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
     ---@cast item fml.action.find.keymaps.IItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type eve.ux.picker.preview.IDrawResult
+      ---@type ux.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -275,7 +275,7 @@ local picker = eve.ux.picker.ListComposer.new({
     vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
     vim.hl.range(bufnr, nsnr_content, "f_us_km_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
 
-    ---@type eve.ux.picker.preview.IDrawResult
+    ---@type ux.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -306,7 +306,7 @@ local picker = eve.ux.picker.ListComposer.new({
 
   on_refresh = function(composer)
     dirty_data = true
-    local data = fetch_data() ---@type eve.ux.picker.composer.list.IResetData
+    local data = fetch_data() ---@type ux.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

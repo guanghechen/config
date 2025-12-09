@@ -5,6 +5,7 @@ require("std.bootstrap").setup_workspace()
 
 _G.std = require("std")
 _G.eve = require("eve")
+_G.ux = require("ux")
 require("eve.option")
 
 local default_storage = eve.get_default_storage() ---@type eve.context.storage

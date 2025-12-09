@@ -4,7 +4,6 @@ local __mods = {
   context = "eve.context",
   fn = "eve.fn",
   state = "eve.state",
-  ux = "eve.ux",
 
   G = "eve.builtin.G",
   ai = "eve.builtin.ai",
@@ -37,7 +36,6 @@ local __mods = {
 ---@field public context                eve.context
 ---@field public fn                     eve.fn
 ---@field public state                  eve.state
----@field public ux                     eve.ux
 ---
 ---@field public G                      eve.builtin.G
 ---@field public ai                     eve.builtin.ai

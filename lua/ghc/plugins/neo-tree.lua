@@ -79,7 +79,7 @@ return {
         end
 
         local filepath = node:get_id()
-        eve.ux.fn.select_copy_filepath({
+        ux.fn.select_copy_filepath({
           filepath = filepath,
           winopts = {
             relative = "cursor",
@@ -223,7 +223,7 @@ return {
         }
         eve.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-        eve.ux.view.Printer
+        ux.view.Printer
           .new({ name = "File info", indent = "" })
           :line("Size:      " .. size)
           :line("Created:   " .. created)

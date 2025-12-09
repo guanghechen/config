@@ -3,7 +3,7 @@ local __module_name__ = "fml.action.find.notification"
 ---@class fml.action.find.notification.IItemData
 ---@field public task                   eve.builtin.notifier.ITask
 
----@class fml.action.find.notification.IItem : eve.ux.picker.composer.list.IItem
+---@class fml.action.find.notification.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
 
 local dirty_data = true ---@type boolean
@@ -12,7 +12,7 @@ local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IOb
 local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
 local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
 
----@return eve.ux.picker.composer.list.IResetData
+---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -43,12 +43,12 @@ local function fetch_data()
     items[#items + 1] = item
   end
 
-  ---@type eve.ux.picker.composer.list.IResetData
+  ---@type ux.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker ---@type eve.ux.picker.ListComposer
-picker = eve.ux.picker.ListComposer.new({
+local picker ---@type ux.picker.ListComposer
+picker = ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find Notifications",
@@ -65,7 +65,7 @@ picker = eve.ux.picker.ListComposer.new({
 
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type eve.ux.picker.preview.IDrawResult
+      ---@type ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -74,10 +74,10 @@ picker = eve.ux.picker.ListComposer.new({
       }
     end
 
-    local item = composer:retrieve(lnum_current) ---@type eve.ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type eve.ux.picker.preview.IDrawResult
+      ---@type ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -146,7 +146,7 @@ picker = eve.ux.picker.ListComposer.new({
       end
     end
 
-    ---@type eve.ux.picker.preview.IDrawResult
+    ---@type ux.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = true,

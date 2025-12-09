@@ -227,7 +227,7 @@ function M.gen_hlgroup_map(context)
     widget_flag_popup_sep = { fg = c.bg1, bg = c.brightPurple },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type eve.ux.nvimbar.PositionEnum[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type ux.nvimbar.PositionEnum[]
 
   ---@class eve.constant.hlgroup.nvimbar : table<string, std.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }

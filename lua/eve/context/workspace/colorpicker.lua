@@ -6,8 +6,8 @@ local MAX_HISTORY = 10
 
 ---@class eve.context.colorpicker.data
 ---@field public history                eve.context.colorpicker.IColorItem[]
----@field public input_mode             eve.ux.widget.colorpicker.InputModeName|nil
----@field public output_mode            eve.ux.widget.colorpicker.OutputModeName|nil
+---@field public input_mode             ux.widget.colorpicker.InputModeName|nil
+---@field public output_mode            ux.widget.colorpicker.OutputModeName|nil
 ---@field public last_color             eve.context.colorpicker.IColorItem|nil
 
 ---@class eve.context.colorpicker.state
@@ -24,10 +24,10 @@ local MAX_HISTORY = 10
 ---@field public push                   fun(hex: string, alpha: number|nil): nil
 ---@field public get                    fun(index: integer): eve.context.colorpicker.IColorItem|nil
 ---@field public size                   fun(): integer
----@field public set_input_mode         fun(mode: eve.ux.widget.colorpicker.InputModeName): nil
----@field public get_input_mode         fun(): eve.ux.widget.colorpicker.InputModeName|nil
----@field public set_output_mode        fun(mode: eve.ux.widget.colorpicker.OutputModeName): nil
----@field public get_output_mode        fun(): eve.ux.widget.colorpicker.OutputModeName|nil
+---@field public set_input_mode         fun(mode: ux.widget.colorpicker.InputModeName): nil
+---@field public get_input_mode         fun(): ux.widget.colorpicker.InputModeName|nil
+---@field public set_output_mode        fun(mode: ux.widget.colorpicker.OutputModeName): nil
+---@field public get_output_mode        fun(): ux.widget.colorpicker.OutputModeName|nil
 ---@field public set_last_color         fun(hex: string, alpha: number|nil): nil
 ---@field public get_last_color         fun(): eve.context.colorpicker.IColorItem|nil
 local M = {}
@@ -131,24 +131,24 @@ function M.size()
   return #history
 end
 
----@param mode                          eve.ux.widget.colorpicker.InputModeName
+---@param mode                          ux.widget.colorpicker.InputModeName
 ---@return nil
 function M.set_input_mode(mode)
   M.input_mode:next(mode)
 end
 
----@return eve.ux.widget.colorpicker.InputModeName|nil
+---@return ux.widget.colorpicker.InputModeName|nil
 function M.get_input_mode()
   return M.input_mode:snapshot()
 end
 
----@param mode                          eve.ux.widget.colorpicker.OutputModeName
+---@param mode                          ux.widget.colorpicker.OutputModeName
 ---@return nil
 function M.set_output_mode(mode)
   M.output_mode:next(mode)
 end
 
----@return eve.ux.widget.colorpicker.OutputModeName|nil
+---@return ux.widget.colorpicker.OutputModeName|nil
 function M.get_output_mode()
   return M.output_mode:snapshot()
 end

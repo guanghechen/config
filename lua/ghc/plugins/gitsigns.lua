@@ -176,7 +176,7 @@ local keymaps = {
       vim.bo[bufnr].filetype = eve.filetype.TEMP_VIEWER
       vim.bo[bufnr].swapfile = false
 
-      local printer = eve.ux.view.Printer
+      local printer = ux.view.Printer
         .new({ name = "blame line", indent = "  " })
         :lf()
         :line(

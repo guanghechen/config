@@ -327,7 +327,7 @@ function M.browse(opts)
       local uuids = {} ---@type string[]
 
       for _, match in ipairs(matches) do
-        local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+        local item = itemmap[match.uuid] ---@type ux.picker.composer.list.IItem
         lines[#lines + 1] = item.text
         uuids[#uuids + 1] = item.uuid
       end
@@ -339,7 +339,7 @@ function M.browse(opts)
 
       for lnum, match in ipairs(matches) do
         local row = lnum - 1 ---@type integer
-        local item = itemmap[match.uuid] ---@type eve.ux.picker.composer.list.IItem
+        local item = itemmap[match.uuid] ---@type ux.picker.composer.list.IItem
 
         if item and item.highlights then
           for _, hl in ipairs(item.highlights) do
@@ -359,7 +359,7 @@ function M.browse(opts)
         end
       end
 
-      ---@type eve.ux.picker.composer.list.IRenderResultData
+      ---@type ux.picker.composer.list.IRenderResultData
       local data = { uuids = uuids }
       return data
     end,
