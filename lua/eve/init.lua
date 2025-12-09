@@ -10,7 +10,6 @@ local __mods = {
   buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
-  filetype = "eve.builtin.filetype",
   git = "eve.state.git",
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
@@ -39,7 +38,6 @@ local __mods = {
 ---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command
----@field public filetype               eve.builtin.filetype
 ---@field public git                    eve.state.git
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action

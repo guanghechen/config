@@ -90,7 +90,7 @@ function M._show(state)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = eve.filetype.UX_POPUPMENU
+    vim.bo[bufnr].filetype = std.filetype.UX_POPUPMENU
     vim.bo[bufnr].swapfile = false
   end
 

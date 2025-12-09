@@ -27,7 +27,7 @@ tabline
   :place("left", c.plugin.neotree(position, "left"), 95)
   :place(
     "left",
-    c.sidebar.of(position, eve.filetype.DIFFVIEW_FILES, function()
+    c.sidebar.of(position, std.filetype.DIFFVIEW_FILES, function()
       local title = std.icon.git.Git .. " Git Diffview" ---@type string
       return title
     end),
@@ -35,7 +35,7 @@ tabline
   )
   :place(
     "left",
-    c.sidebar.of(position, eve.filetype.DAP_UI_SCOPES, function()
+    c.sidebar.of(position, std.filetype.DAP_UI_SCOPES, function()
       local title = std.icon.ui.Bug .. " Debug" ---@type string
       return title
     end),
@@ -79,7 +79,7 @@ dirtier:subscribe(std.Subscriber.new({
       vim.o.showtabline = 2
 
       if last_showtabline == 0 then
-        local filetype = eve.filetype.NEOTREE ---@type string
+        local filetype = std.filetype.NEOTREE ---@type string
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

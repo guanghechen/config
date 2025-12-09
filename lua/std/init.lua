@@ -27,6 +27,7 @@ local __mods = {
   debug = "std.debug",
   env = "std.env",
   fileicon = "std.fileicon",
+  filetype = "std.filetype",
   fn = "std.fn",
   fs = "std.fs",
   git = "std.git",
@@ -76,6 +77,7 @@ local __mods = {
 ---@field public debug                  std.debug
 ---@field public env                    std.env
 ---@field public fileicon               std.fileicon
+---@field public filetype               std.filetype
 ---@field public fn                     std.fn
 ---@field public fs                     std.fs
 ---@field public git                    std.git

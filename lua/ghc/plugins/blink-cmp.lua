@@ -27,12 +27,12 @@ return {
 
     ---@type table<string, string[]>
     local sources_per_filetype = {
-      [eve.filetype.UX_PICKER_FINDER] = { "path" },
+      [std.filetype.UX_PICKER_FINDER] = { "path" },
     }
     do
       local code_sources = { "lsp", "path_at", "path", "snippets", "buffer", "dict" }
 
-      for _, cmp_code in ipairs(eve.filetype.list_code_filetypes()) do
+      for _, cmp_code in ipairs(std.filetype.list_code_filetypes()) do
         if sources_per_filetype[cmp_code] == nil then
           sources_per_filetype[cmp_code] = code_sources
         end
@@ -53,7 +53,7 @@ return {
         end
 
         local filetype = vim.bo.filetype ---@type string
-        if not eve.filetype.is_cmp_enabled(filetype) then
+        if not std.filetype.is_cmp_enabled(filetype) then
           return false
         end
 

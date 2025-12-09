@@ -163,7 +163,7 @@ vim.filetype.add({
           return
         end
 
-        if vim.bo[bufnr].filetype == eve.filetype.BIGFILE then
+        if vim.bo[bufnr].filetype == std.filetype.BIGFILE then
           return
         end
 
@@ -174,7 +174,7 @@ vim.filetype.add({
 
         local size_limit = vim.g.bigfile_size or 0 ---@type integer
         if size_limit > 0 and size > size_limit then
-          return eve.filetype.BIGFILE
+          return std.filetype.BIGFILE
         end
 
         local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
@@ -184,7 +184,7 @@ vim.filetype.add({
 
         local threshold = vim.g.bigfile_line_length or 0 ---@type integer
         if threshold > 0 and (size - line_count) / line_count > threshold then
-          return eve.filetype.BIGFILE
+          return std.filetype.BIGFILE
         end
       end,
     },
@@ -222,7 +222,7 @@ vim.filetype.add({
 --- Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
   group = std.nvim.augroup("close_filetypes_with_q"),
-  pattern = eve.filetype.get_quitable_with_q_filetypes(),
+  pattern = std.filetype.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then

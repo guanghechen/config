@@ -8,7 +8,7 @@ local M = {}
 ---@param neotree_position              "left"|"right"|"float"
 ---@return ux.nvimbar.IRawComponent
 function M.neotree(position, neotree_position)
-  local filetype = eve.filetype.NEOTREE ---@type string
+  local filetype = std.filetype.NEOTREE ---@type string
   local hln_text = position .. "_plugin_neotree_text" ---@type string
   local hln_sep = position .. "_plugin_neotree_sep" ---@type string
   local hln_blank = position .. "_plugin_neotree_blank" ---@type string

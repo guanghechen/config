@@ -97,7 +97,7 @@ return {
     },
     search = {
       mode = "exact",
-      exclude = eve.filetype.get_no_flash_filetypes(),
+      exclude = std.filetype.get_no_flash_filetypes(),
     },
   },
 }

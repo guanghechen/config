@@ -139,7 +139,7 @@ function M:create_buf()
   vim.b[bufnr].minihipatterns_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = eve.filetype.UX_PICKER_FINDER
+  vim.bo[bufnr].filetype = std.filetype.UX_PICKER_FINDER
   vim.bo[bufnr].swapfile = false
 
   std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })

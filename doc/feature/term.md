@@ -16,14 +16,14 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
      vim.wo[winnr].winblend = 0
      vim.wo[winnr].winhighlight = "Cursor:f_us_terminal_current,..."
      ```
-   - The window initially opens with an internal mask buffer (`filetype = eve.filetype.TERM_MASK`) to keep the layout stable while the real terminal buffer is attached.
+   - The window initially opens with an internal mask buffer (`filetype = std.filetype.TERM_MASK`) to keep the layout stable while the real terminal buffer is attached.
    - `termline` (the terminal winbar) renders inside this floating window; any time the window resizes the widget recomputes its max width and re-renders the bar.
 
 2. Each terminal tab runs in a dedicated buffer created by `eve.term.create`:
    - Buffer options match expectations for pseudo terminals:
      ```lua
      vim.bo[bufnr].buflisted = false
-     vim.bo[bufnr].filetype = eve.filetype.TERM
+     vim.bo[bufnr].filetype = std.filetype.TERM
      vim.bo[bufnr].modifiable = false
      vim.bo[bufnr].readonly = false
      vim.bo[bufnr].swapfile = false

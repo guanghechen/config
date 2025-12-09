@@ -28,7 +28,7 @@ local function create_widget(params)
       if eve.win.is_float(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if filetype == eve.filetype.NEOTREE then
+        if filetype == std.filetype.NEOTREE then
           return winnr, bufnr
         end
       end
@@ -97,7 +97,7 @@ local M = {}
 function M.fs_cwd()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == eve.filetype.NEOTREE ---@type boolean
+  local toggle = ft_current == std.filetype.NEOTREE ---@type boolean
 
   require("neo-tree.command").execute({
     action = "focus",
@@ -113,7 +113,7 @@ end
 function M.fs_workspace()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local ft_current = vim.bo[bufnr].filetype ---@type string
-  local toggle = ft_current == eve.filetype.NEOTREE ---@type boolean
+  local toggle = ft_current == std.filetype.NEOTREE ---@type boolean
 
   require("neo-tree.command").execute({
     action = "focus",
@@ -168,7 +168,7 @@ end
 
 ---@return nil
 function M.toggle()
-  if eve.win.find_by_filetype(0, eve.filetype.NEOTREE) ~= nil then
+  if eve.win.find_by_filetype(0, std.filetype.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
       source = "filesystem",

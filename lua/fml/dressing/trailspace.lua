@@ -21,7 +21,7 @@ local function highlight()
   end
 
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if not eve.filetype.is_sourcefile(filetype) then
+  if not std.filetype.is_sourcefile(filetype) then
     return
   end
 

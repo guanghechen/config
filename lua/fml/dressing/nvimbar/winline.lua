@@ -124,11 +124,11 @@ local function render(winnr)
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if eve.filetype.has_external_winline(filetype) then
+  if std.filetype.has_external_winline(filetype) then
     return
   end
 
-  if filetype == eve.filetype.NEOTREE then
+  if filetype == std.filetype.NEOTREE then
     if vim.o.showtabline == 0 or eve.win.is_float(winnr) then
       local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type ux.nvimbar.Nvimbar|nil
       if nvimbar ~= nil then
@@ -182,7 +182,7 @@ local function render(winnr)
     return
   end
 
-  if eve.filetype.is_sourcefile(filetype) then
+  if std.filetype.is_sourcefile(filetype) then
     vim.wo[winnr].winbar = txt(filepath, "f_wl_text")
     return
   end

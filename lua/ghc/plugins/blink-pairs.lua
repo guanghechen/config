@@ -8,7 +8,7 @@ return {
     mappings = {
       enabled = true,
       cmdline = true,
-      disabled_filetypes = eve.filetype.list_not_sourcefile_filetypes(),
+      disabled_filetypes = std.filetype.list_not_sourcefile_filetypes(),
     },
     highlights = {
       enabled = true,
