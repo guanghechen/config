@@ -99,13 +99,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = eve.icon.filetype.Folder,
-        folder_open = eve.icon.filetype.FolderOpen,
+        folder_closed = std.icon.filetype.Folder,
+        folder_open = std.icon.filetype.FolderOpen,
       },
       signs = {
-        fold_closed = eve.icon.ui.ArrowClosed,
-        fold_open = eve.icon.ui.ArrowOpen,
-        done = eve.icon.ui.Accepted,
+        fold_closed = std.icon.ui.ArrowClosed,
+        fold_open = std.icon.ui.ArrowOpen,
+        done = std.icon.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

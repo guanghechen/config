@@ -14,7 +14,6 @@ local __mods = {
   command = "eve.builtin.command",
   filetype = "eve.builtin.filetype",
   git = "eve.state.git",
-  icon = "eve.builtin.icon",
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
@@ -48,7 +47,6 @@ local __mods = {
 ---@field public command                eve.builtin.command
 ---@field public filetype               eve.builtin.filetype
 ---@field public git                    eve.state.git
----@field public icon                   eve.builtin.icon
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier

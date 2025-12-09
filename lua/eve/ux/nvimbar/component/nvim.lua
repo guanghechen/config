@@ -29,7 +29,7 @@ function M.mode(position)
   local hln_text = position .. "_nvim_mode_text" ---@type string
   local hln_sep = position .. "_nvim_mode_sep" ---@type string
 
-  local icon = " " .. eve.icon.app.Vim .. " " ---@type string
+  local icon = " " .. std.icon.app.Vim .. " " ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -43,8 +43,8 @@ function M.mode(position)
       local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = text .. eve.icon.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
+      text = text .. std.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(std.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -218,8 +218,8 @@ function M.pos(position)
   local hln_text_anchor = position .. "_nvim_pos_text_anchor" ---@type string
   local hln_text_percentage = position .. "_nvim_pos_text_percentage" ---@type string
 
-  local text_sep = eve.icon.symbols.sep_right ---@type string
-  local hl_text_sep = txt(eve.icon.symbols.sep_right, hln_sep) ---@type string
+  local text_sep = std.icon.symbols.sep_right ---@type string
+  local hl_text_sep = txt(std.icon.symbols.sep_right, hln_sep) ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {

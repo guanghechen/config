@@ -65,21 +65,21 @@ function M.status(position)
     render = function()
       local enabled = eve.context.flight.ai:snapshot() ---@type boolean
       if not enabled then
-        local text = eve.icon.app.Copilot .. " Copilot" ---@type string
+        local text = std.icon.app.Copilot .. " Copilot" ---@type string
         local hl_text = btn(text, fn_show_message)
         return text, hl_text, true
       end
 
       local status = get_status()
-      local icon = eve.icon.app.Copilot ---@type string
+      local icon = std.icon.app.Copilot ---@type string
       local hln_icon = position .. "_ai_copilot_icon_connected" ---@type string
 
       -- Use different icons and colors based on status
       if status == "Error" or status == "Stopped" or status == "Disconnected" then
-        icon = eve.icon.app.CopilotError
+        icon = std.icon.app.CopilotError
         hln_icon = position .. "_ai_copilot_icon_error"
       elseif status == "Busy" then
-        icon = eve.icon.app.CopilotWarn
+        icon = std.icon.app.CopilotWarn
         hln_icon = position .. "_ai_copilot_icon_busy"
       end
 

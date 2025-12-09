@@ -28,8 +28,8 @@ vim.g.qf_disable_statusline = true
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
-vim.opt.fillchars:append(eve.icon.fillchars)
-vim.opt.listchars:append(eve.icon.listchars)
+vim.opt.fillchars:append(std.icon.fillchars)
+vim.opt.listchars:append(std.icon.listchars)
 
 vim.o.foldcolumn = "0"
 vim.o.foldenable = true

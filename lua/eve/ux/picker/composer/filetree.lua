@@ -243,7 +243,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_selected:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
+        return std.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -256,10 +256,10 @@ function M.new(props)
       snapshot = function()
         local viewtype = o_flag_viewtype:snapshot() ---@type eve.ux.view.tree.ViewtypeEnum
         if viewtype == "tree" then
-          return eve.icon.symbols.flag_tree, "picker_flag_aqua"
+          return std.icon.symbols.flag_tree, "picker_flag_aqua"
         end
         if viewtype == "list" then
-          return eve.icon.symbols.flag_list, "picker_flag_aqua"
+          return std.icon.symbols.flag_list, "picker_flag_aqua"
         end
 
         local message = string.format("[%s#%s] Unknown viewtype: %s", __module_name__, name, viewtype)
@@ -279,7 +279,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_foldempty:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return std.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -290,7 +290,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return std.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -301,7 +301,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return std.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -312,7 +312,7 @@ function M.new(props)
       end,
       snapshot = function()
         local enabled = o_flag_regex:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return std.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     if flags_append ~= nil then

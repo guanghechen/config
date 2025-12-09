@@ -180,25 +180,25 @@ function M.bufs(position)
 
     local slots = 0 ---@type integer
     if count_error > 0 then
-      local text = " " .. eve.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
+      local text = " " .. std.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_error) ---@type string
       slots = slots + 1
     end
     if count_warn > 0 then
-      local text = " " .. eve.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
+      local text = " " .. std.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
       text_diagnostic = text_diagnostic .. text
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_warn) ---@type string
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      local text = " " .. eve.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
+      local text = " " .. std.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_hint)
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      local text = " " .. eve.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
+      local text = " " .. std.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
       text_diagnostic = text_diagnostic .. text ---@type string
       hl_text_diagnostic = hl_text_diagnostic .. txt(text, hln_bufc_info)
       slots = slots + 1
@@ -208,7 +208,7 @@ function M.bufs(position)
     local fileicon = meta.fileicon ---@type string
     local fileicon_hln = meta.fileicon_hln ---@type string
     local text_indicator = "▎" ---@type string
-    local text_order = total < 2 and "" or (eve.icon.todigit_subscript(index) .. ".") ---@type string
+    local text_order = total < 2 and "" or (std.icon.todigit_subscript(index) .. ".") ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -281,19 +281,19 @@ function M.bufs(position)
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
     if count_error > 0 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Error_alt .. " " .. count_error
+      text_diagnostic = text_diagnostic .. " " .. std.icon.diagnostic.Error_alt .. " " .. count_error
       slots = slots + 1
     end
     if count_warn > 0 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Warning_alt .. " " .. count_warn
+      text_diagnostic = text_diagnostic .. " " .. std.icon.diagnostic.Warning_alt .. " " .. count_warn
       slots = slots + 1
     end
     if count_hint > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Hint_alt .. " " .. count_hint
+      text_diagnostic = text_diagnostic .. " " .. std.icon.diagnostic.Hint_alt .. " " .. count_hint
       slots = slots + 1
     end
     if count_info > 0 and slots < 2 then
-      text_diagnostic = text_diagnostic .. " " .. eve.icon.diagnostic.Information_alt .. " " .. count_info
+      text_diagnostic = text_diagnostic .. " " .. std.icon.diagnostic.Information_alt .. " " .. count_info
       slots = slots + 1
     end
 
@@ -302,7 +302,7 @@ function M.bufs(position)
     local hln_title = hln_buf_text ---@type string
 
     local text_indicator = index == 1 and " " or "▏" ---@type string
-    local text_order = eve.icon.todigit_subscript(order) .. marker ---@type string
+    local text_order = std.icon.todigit_subscript(order) .. marker ---@type string
     local text_icon = fileicon .. " " ---@type string
     local text_title = filename ---@type string
     local text_mod = is_mod and "  " or "  " ---@type string
@@ -482,7 +482,7 @@ function M.bufs(position)
       ---! Render left omitter.
       if left_remain_count > 0 then
         local count = math.min(99, left_remain_count) ---@type integer
-        local omitter_text = " " .. eve.icon.ui.Left .. "  " .. tostring(count) .. " " ---@type string
+        local omitter_text = " " .. std.icon.ui.Left .. "  " .. tostring(count) .. " " ---@type string
         local omitter_text_hl = txt(omitter_text, hln_buf_omitter) ---@type string
         text = omitter_text .. text
         hl_text = btn(omitter_text_hl, fn_focus_left_buf) .. hl_text
@@ -491,9 +491,9 @@ function M.bufs(position)
       ---! Render right omitter.
       if right_remain_count > 0 then
         local count = math.min(99, right_remain_count) ---@type integer
-        local omitter_text = "▏" .. tostring(count) .. " " .. eve.icon.ui.Right .. "  " ---@type string
+        local omitter_text = "▏" .. tostring(count) .. " " .. std.icon.ui.Right .. "  " ---@type string
         local omitter_text_hl = txt("▏", hln_buf_omitter_sep)
-          .. txt(tostring(count) .. " " .. eve.icon.ui.Right .. "  ", hln_buf_omitter) ---@type string
+          .. txt(tostring(count) .. " " .. std.icon.ui.Right .. "  ", hln_buf_omitter) ---@type string
         text = text .. omitter_text
         hl_text = hl_text .. btn(omitter_text_hl, fn_focus_right_buf)
       end

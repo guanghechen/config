@@ -184,11 +184,11 @@ local function line_signs(winnr, bufnr, lnum, wanted)
     if info and info.level > 0 then
       if info.lines > 0 then
         ---@type fml.dressing.statuscolumn.ISign
-        local sign = { type = "fold", text = eve.icon.fillchars.foldclose, texthl = "Folded" }
+        local sign = { type = "fold", text = std.icon.fillchars.foldclose, texthl = "Folded" }
         signs[#signs + 1] = sign
       elseif config.folds.open and info.start == lnum then
         ---@type fml.dressing.statuscolumn.ISign
-        local sign = { type = "fold", text = eve.icon.fillchars.foldopen }
+        local sign = { type = "fold", text = std.icon.fillchars.foldopen }
         signs[#signs + 1] = sign
       end
     end

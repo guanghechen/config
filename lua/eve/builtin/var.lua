@@ -84,26 +84,26 @@ M.sign = {
 
 -- stylua: ignore start
 local sd = vim.fn.sign_define
-sd(M.sign.DAP_BREAKPOINT,                   { text = eve.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
-sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = eve.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
-sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = eve.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
-sd(M.sign.DAP_LOG_POINT,                    { text = eve.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
-sd(M.sign.DAP_STOPPED,                      { text = eve.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
+sd(M.sign.DAP_BREAKPOINT,                   { text = std.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
+sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = std.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
+sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = std.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
+sd(M.sign.DAP_LOG_POINT,                    { text = std.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
+sd(M.sign.DAP_STOPPED,                      { text = std.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
-sd(M.sign.PICKER_FINDER_PROMPT,             { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
-sd(M.sign.PICKER_RESULT_CURRENT,            { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
-sd(M.sign.PICKER_RESULT_PRESENT,            { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
-sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
-sd(M.sign.PICKER_RESULT_SELECTED,           { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
-sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = eve.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
+sd(M.sign.PICKER_FINDER_PROMPT,             { text = std.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
+sd(M.sign.PICKER_RESULT_CURRENT,            { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
+sd(M.sign.PICKER_RESULT_PRESENT,            { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
+sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
+sd(M.sign.PICKER_RESULT_SELECTED,           { text = std.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
+sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = std.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 
-sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
-sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
-sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = eve.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = eve.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
-sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = eve.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
-sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = eve.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
+sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = std.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
+sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
+sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = std.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = std.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
+sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = std.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
+sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = std.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 -- stylua: ignore end
 
 return M

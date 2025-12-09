@@ -22,7 +22,7 @@ local function fetch_data()
   for index = #tasks, 1, -1 do
     local task = tasks[index] ---@type eve.builtin.notifier.ITask
     local text =
-      string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), eve.icon.loglevel[task.level], task.title)
+      string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), std.icon.loglevel[task.level], task.title)
 
     local suffix = task.level:lower() ---@type string
     ---@type std.t.IHighlightInline[]

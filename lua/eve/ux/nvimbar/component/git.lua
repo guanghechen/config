@@ -16,7 +16,7 @@ function M.branch(position)
       return context.git_branch ~= nil
     end,
     render = function(context)
-      local text = eve.icon.git.Branch .. " " .. context.git_branch ---@type string
+      local text = std.icon.git.Branch .. " " .. context.git_branch ---@type string
       local hl_text = txt(text, hln_text) ---@type string
       return text, hl_text, true
     end,

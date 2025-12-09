@@ -1,7 +1,7 @@
----@class eve.builtin.icon
+---@class std.icon
 local M = {}
 
----@class eve.builtin.icon.digits_subscript
+---@class std.icon.digits_subscript
 local digits_subscript = {
   "₀",
   "₁",
@@ -15,7 +15,7 @@ local digits_subscript = {
   "₉",
 }
 
----@class eve.builtin.icon.digits_supscript
+---@class std.icon.digits_supscript
 local digits_supscript = {
   "⁰",
   "¹",
@@ -53,7 +53,7 @@ function M.todigit_supscript(num)
   return #result > 0 and result or digits_supscript[1]
 end
 
----@class eve.builtin.icon.fillchars
+---@class std.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -65,7 +65,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class eve.builtin.icon.listchars
+---@class std.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -77,7 +77,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class eve.builtin.icon.symbols
+---@class std.icon.symbols
 M.symbols = {
   setting = "",
   flag_buffer = "",
@@ -98,7 +98,7 @@ M.symbols = {
   sep_right = "",
 }
 
----@class eve.builtin.icon.status
+---@class std.icon.status
 M.status = {
   attached = "󰖩",
   broadcast = "󰐼",
@@ -107,7 +107,7 @@ M.status = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.builtin.icon.app
+---@class std.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -116,7 +116,7 @@ M.app = {
   Vim = "",
 }
 
----@class eve.builtin.icon.filetype
+---@class std.icon.filetype
 M.filetype = {
   Default = "",
   File = "",
@@ -132,12 +132,12 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
----@class eve.builtin.icon.lang
+---@class std.icon.lang
 M.lang = {
   python = " ",
 }
 
----@class eve.builtin.icon.os
+---@class std.icon.os
 M.os = {
   dos = "",
   mac = "",
@@ -153,7 +153,7 @@ M.os = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.builtin.icon.dap
+---@class std.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -171,7 +171,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class eve.builtin.icon.diagnostic
+---@class std.icon.diagnostic
 M.diagnostic = {
   ERROR = "",
   WARN = "",
@@ -190,7 +190,7 @@ M.diagnostic = {
   Warning_alt = "",
 }
 
----@class eve.builtin.icon.git
+---@class std.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -211,7 +211,7 @@ M.git = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class eve.builtin.icon.kind
+---@class std.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -266,7 +266,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class eve.builtin.icon.log
+---@class std.icon.log
 M.loglevel = {
   TRACE = "",
   DEBUG = "",
@@ -275,13 +275,13 @@ M.loglevel = {
   ERROR = "",
 }
 
----@class eve.builtin.icon.notepad
+---@class std.icon.notepad
 M.notepad = {
   Notebook = "󰠮",
   Source = "",
 }
 
----@class eve.builtin.icon.ui
+---@class std.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

@@ -10,9 +10,9 @@ local fileformat_text_map = {
 local __module_name__ = "eve.ux.nvimbar.component.file" ---@type string
 
 local fileformat_icon_map = {
-  dos = eve.icon.os.dos,
-  mac = eve.icon.os.mac,
-  unix = eve.icon.os.nix,
+  dos = std.icon.os.dos,
+  mac = std.icon.os.mac,
+  unix = std.icon.os.nix,
 }
 
 ---@type string
@@ -73,7 +73,7 @@ function M.format(position)
       local bufnr = context.bufnr ---@type integer
       local fileformat = vim.bo[bufnr].fileformat ---@type string
 
-      local icon_fileformat = fileformat_icon_map[fileformat] or eve.icon.os.current ---@type string
+      local icon_fileformat = fileformat_icon_map[fileformat] or std.icon.os.current ---@type string
       local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
 
       local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
@@ -92,7 +92,7 @@ end
 ---@return eve.ux.nvimbar.IRawComponent
 function M.indent(position)
   local hln_text = position .. "_file_indent_text" ---@type string
-  local icon_shiftwidth = eve.icon.ui.Tab ---@type string
+  local icon_shiftwidth = std.icon.ui.Tab ---@type string
 
   ---@type eve.ux.nvimbar.IRawComponent
   local component = {
@@ -205,7 +205,7 @@ function M.readonly(position)
       return vim.bo.readonly
     end,
     render = function()
-      local text = eve.icon.ui.Lock .. " [RO]" ---@type string
+      local text = std.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
       return text, hl_text, true
     end,
@@ -268,13 +268,13 @@ function M.status(position)
     local text = "" ---@type string
     if gitsigns_head and gitsigns_status_dict and not gitsigns_git_status then
       if gitsigns_status_dict.added and gitsigns_status_dict.added > 0 then
-        text = text .. " " .. eve.icon.git.Add .. " " .. gitsigns_status_dict.added ---@type string
+        text = text .. " " .. std.icon.git.Add .. " " .. gitsigns_status_dict.added ---@type string
       end
       if gitsigns_status_dict.changed and gitsigns_status_dict.changed > 0 then
-        text = text .. " " .. eve.icon.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
+        text = text .. " " .. std.icon.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
       end
       if gitsigns_status_dict.removed and gitsigns_status_dict.removed > 0 then
-        text = text .. " " .. eve.icon.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
+        text = text .. " " .. std.icon.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
       end
     end
     return text

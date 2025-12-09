@@ -209,8 +209,8 @@ local function build_attach_picker_items(items)
   for _, info in ipairs(sorted_infos) do
     local item = info.item
 
-    local icon = info.category == "attached" and eve.icon.status.attached
-      or (item.type == "running" and eve.icon.status.detached or " ")
+    local icon = info.category == "attached" and std.icon.status.attached
+      or (item.type == "running" and std.icon.status.detached or " ")
     local text_agent = std.string.pad_end(info.agent_label, width_agent, " ")
     local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
       or ""
@@ -274,7 +274,7 @@ local function build_attached_picker_items(attached)
     local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
       or ""
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
-    local text = eve.icon.status.attached .. " " .. text_agent .. text_identifier .. text_pane_cwd
+    local text = std.icon.status.attached .. " " .. text_agent .. text_identifier .. text_pane_cwd
 
     picker_items[#picker_items + 1] = {
       uuid = source.id,
@@ -417,7 +417,7 @@ function M.show_send_target(attached, on_select)
   local has_multiple = #attached > 1 ---@type boolean
 
   if has_multiple then
-    local send_to_all_text = eve.icon.status.broadcast .. " send to all (" .. #attached .. " agents)"
+    local send_to_all_text = std.icon.status.broadcast .. " send to all (" .. #attached .. " agents)"
     table.insert(picker_items, 1, {
       uuid = send_to_all_uuid,
       text = send_to_all_text,

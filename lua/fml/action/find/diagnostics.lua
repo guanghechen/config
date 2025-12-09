@@ -167,17 +167,17 @@ local function refresh(force)
     local highlights = {} ---@type std.t.IHighlightInline[]
 
     if diagnostic.code == nil then
-      text = string.format("%s  : %s", eve.icon.diagnostic[severity], diagnostic.message) ---@type string
+      text = string.format("%s  : %s", std.icon.diagnostic[severity], diagnostic.message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
-        colr = #eve.icon.diagnostic[severity],
+        colr = #std.icon.diagnostic[severity],
         hlname = string.format("Diagnostic_%s", severity),
       }
     else
-      text = string.format("%s %s : %s", eve.icon.diagnostic[severity], tostring(diagnostic.code), diagnostic.message) ---@type string
+      text = string.format("%s %s : %s", std.icon.diagnostic[severity], tostring(diagnostic.code), diagnostic.message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
-        colr = #eve.icon.diagnostic[severity],
+        colr = #std.icon.diagnostic[severity],
         hlname = string.format("Diagnostic_%s", severity),
       }
     end
@@ -251,7 +251,7 @@ picker = eve.ux.picker.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_buffer:snapshot() ---@type boolean
-        return eve.icon.symbols.flag_buffer, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return std.icon.symbols.flag_buffer, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

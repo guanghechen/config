@@ -125,19 +125,19 @@ function M.diagnostics(position)
     render = function(context)
       local text_hl = "" ---@type string
       local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
-      local text_count_error = count_error > 0 and eve.icon.diagnostic.Error_alt .. " " .. count_error .. " " or ""
+      local text_count_error = count_error > 0 and std.icon.diagnostic.Error_alt .. " " .. count_error .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
       local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
-      local text_count_warn = count_warn > 0 and eve.icon.diagnostic.Warning_alt .. " " .. count_warn .. " " or ""
+      local text_count_warn = count_warn > 0 and std.icon.diagnostic.Warning_alt .. " " .. count_warn .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
       local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
-      local text_count_hint = count_hint > 0 and eve.icon.diagnostic.Hint_alt .. " " .. count_hint .. " " or ""
+      local text_count_hint = count_hint > 0 and std.icon.diagnostic.Hint_alt .. " " .. count_hint .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
       local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
-      local text_count_info = count_info > 0 and eve.icon.diagnostic.Information_alt .. " " .. count_info .. " " or ""
+      local text_count_info = count_info > 0 and std.icon.diagnostic.Information_alt .. " " .. count_info .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
@@ -154,7 +154,7 @@ function M.symbols(position)
   local hln_lsp_sep = position .. "_lsp_symbol_sep" ---@type string
   local hln_lsp_text = position .. "_lsp_symbol_text" ---@type string
 
-  local sep = " " .. eve.icon.fillchars.foldclose .. " " ---@type string
+  local sep = " " .. std.icon.fillchars.foldclose .. " " ---@type string
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type eve.ux.nvimbar.IRawComponent
@@ -181,7 +181,7 @@ function M.symbols(position)
       local has_remain = false ---@type boolean
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
-        local icon = (eve.icon.kind[symbol.kind] or "") .. " " ---@type string
+        local icon = (std.icon.kind[symbol.kind] or "") .. " " ---@type string
         local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
         if width > remain_width then
           has_remain = true

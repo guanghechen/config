@@ -38,21 +38,21 @@ return {
       highlight_tab = "NeoTreeTab",
       highlight_tab_active = "NeoTreeTabActive",
       separator = {
-        left = eve.icon.symbols.sep_left,
-        right = eve.icon.symbols.sep_right,
+        left = std.icon.symbols.sep_left,
+        right = std.icon.symbols.sep_right,
       },
       sources = {
         {
           source = "filesystem",
-          display_name = string.format(" %s Files ", eve.icon.filetype.File),
+          display_name = string.format(" %s Files ", std.icon.filetype.File),
         },
         {
           source = "buffers",
-          display_name = string.format(" %s Buffers ", eve.icon.ui.Buffer),
+          display_name = string.format(" %s Buffers ", std.icon.ui.Buffer),
         },
         {
           source = "git_status",
-          display_name = string.format(" %s Git ", eve.icon.git.Git),
+          display_name = string.format(" %s Git ", std.icon.git.Git),
         },
       },
     },
@@ -266,10 +266,10 @@ return {
       },
       diagnostics = {
         symbols = {
-          hint = eve.icon.diagnostic.Hint_alt .. " ",
-          info = eve.icon.diagnostic.Information_alt .. " ",
-          warn = eve.icon.diagnostic.Warning_alt .. " ",
-          error = eve.icon.diagnostic.Error_alt .. " ",
+          hint = std.icon.diagnostic.Hint_alt .. " ",
+          info = std.icon.diagnostic.Information_alt .. " ",
+          warn = std.icon.diagnostic.Warning_alt .. " ",
+          error = std.icon.diagnostic.Error_alt .. " ",
         },
         highlights = {
           hint = "DiagnosticSignHint",
@@ -279,8 +279,8 @@ return {
         },
       },
       indent = {
-        expander_collapsed = eve.icon.ui.ArrowClosed,
-        expander_expanded = eve.icon.ui.ArrowOpen,
+        expander_collapsed = std.icon.ui.ArrowClosed,
+        expander_expanded = std.icon.ui.ArrowOpen,
         indent_size = 2,
         indent_marker = "│",
         last_indent_marker = "╰",
@@ -289,13 +289,13 @@ return {
         with_markers = true,
       },
       icon = {
-        folder_closed = eve.icon.filetype.Folder,
-        folder_open = eve.icon.filetype.FolderOpen,
-        folder_empty = eve.icon.filetype.FolderEmptyOpen,
-        default = eve.icon.filetype.File,
+        folder_closed = std.icon.filetype.Folder,
+        folder_open = std.icon.filetype.FolderOpen,
+        folder_empty = std.icon.filetype.FolderEmptyOpen,
+        default = std.icon.filetype.File,
       },
       modified = {
-        symbol = eve.icon.ui.Modified,
+        symbol = std.icon.ui.Modified,
       },
       name = {
         trailing_slash = false,
@@ -306,13 +306,13 @@ return {
           -- Change type
           added = "", -- or "✚", but this is redundant info if you use git_status_colors on the name
           modified = "", -- or "", but this is redundant info if you use git_status_colors on the name
-          deleted = eve.icon.git.Remove, -- this can only be used in the git_status source
-          renamed = eve.icon.git.Rename, -- this can only be used in the git_status source
-          untracked = eve.icon.git.Untracked,
-          ignored = eve.icon.git.Ignore,
-          unstaged = eve.icon.git.Unstaged,
-          staged = eve.icon.git.Staged,
-          conflict = eve.icon.git.Conflict,
+          deleted = std.icon.git.Remove, -- this can only be used in the git_status source
+          renamed = std.icon.git.Rename, -- this can only be used in the git_status source
+          untracked = std.icon.git.Untracked,
+          ignored = std.icon.git.Ignore,
+          unstaged = std.icon.git.Unstaged,
+          staged = std.icon.git.Staged,
+          conflict = std.icon.git.Conflict,
         },
       },
       file_size = {
