@@ -4,21 +4,17 @@ local M = {}
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
+  local cs = ark.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
-  local mix = dot.lib.color.mix
-  local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
-  local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
-  local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)
-  local treesitter_context_bg = t and c.none or mix(c.base, c.sapphire, 65)
-  local indent_marker_fg = mix(t and c.none or c.surface0, c.overlay0, 30)
+  local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
+  local lazy_panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
+  local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
+  local treesitter_context_bg = t and c.none or cs.mix(c.base, c.sapphire, 65)
+  local indent_marker_fg = cs.mix(t and c.none or c.surface0, c.overlay0, 30)
   local lazy_badge_fg = u.bg1 ---@type string
   local lazy_badge_bg = u.pink ---@type string
-
-  local function staged_color(accent)
-    return mix(accent, c.subtext0, 35)
-  end
 
   ---@type table<string, dot.t.theme.IHlgroup>
   return {
@@ -82,7 +78,7 @@ function M.gen_hlgroup_map(context)
     FlashCurrent = { fg = c.base, bg = c.peach, bold = true },
     FlashLabel = { fg = c.base, bg = c.pink, bold = true },
     FlashMatch = { fg = c.base, bg = c.sky, bold = true },
-    FlashPrompt = { fg = c.text, bg = mix(t and c.none or c.surface0, c.mantle, 45) },
+    FlashPrompt = { fg = c.text, bg = cs.mix(t and c.none or c.surface0, c.mantle, 45) },
     FlashPromptIcon = { fg = c.peach, bg = c.none },
     FlashCursor = { fg = c.base, bg = c.text },
 
@@ -98,15 +94,15 @@ function M.gen_hlgroup_map(context)
     GitSignsUntracked = { fg = c.overlay1 },
     GitSignsUntrackedNr = { link = "GitSignsUntracked" },
     GitSignsCurrentLineBlame = { fg = c.overlay1, italic = true },
-    GitSignsStagedAdd = { fg = staged_color(c.green) },
+    GitSignsStagedAdd = { fg = cs.mix(c.green, c.subtext0, 35) },
     GitSignsStagedAddNr = { link = "GitSignsStagedAdd" },
-    GitSignsStagedChange = { fg = staged_color(c.yellow) },
+    GitSignsStagedChange = { fg = cs.mix(c.yellow, c.subtext0, 35) },
     GitSignsStagedChangeNr = { link = "GitSignsStagedChange" },
-    GitSignsStagedDelete = { fg = staged_color(c.red) },
+    GitSignsStagedDelete = { fg = cs.mix(c.red, c.subtext0, 35) },
     GitSignsStagedDeleteNr = { link = "GitSignsStagedDelete" },
-    GitSignsStagedTopdelete = { fg = staged_color(c.red) },
+    GitSignsStagedTopdelete = { fg = cs.mix(c.red, c.subtext0, 35) },
     GitSignsStagedTopdeleteNr = { link = "GitSignsStagedTopdelete" },
-    GitSignsStagedUntracked = { fg = staged_color(c.overlay1) },
+    GitSignsStagedUntracked = { fg = cs.mix(c.overlay1, c.subtext0, 35) },
     GitSignsStagedUntrackedNr = { link = "GitSignsStagedUntracked" },
 
     ---! lazy.nvim
@@ -199,7 +195,7 @@ function M.gen_hlgroup_map(context)
     DapBreakpointRejected = { fg = c.overlay1 },
     DapLogPoint = { fg = c.blue },
     DapStopped = { fg = c.peach },
-    DapStoppedLine = { bg = mix(t and c.none or c.surface0, c.peach, 25), blend = 40 },
+    DapStoppedLine = { bg = cs.mix(t and c.none or c.surface0, c.peach, 25), blend = 40 },
 
     ---! nvim-dap-ui
     DapUIBreakpointsCurrentLine = { fg = c.green, bold = true },
@@ -291,7 +287,7 @@ function M.gen_hlgroup_map(context)
     WhichKeyIconPurple = { fg = c.mauve },
     WhichKeyIconRed = { fg = c.red },
     WhichKeyIconYellow = { fg = c.yellow },
-    WhichKeyNormal = { fg = c.text, bg = mix(t and c.none or c.surface0, c.surface1, 65) },
+    WhichKeyNormal = { fg = c.text, bg = cs.mix(t and c.none or c.surface0, c.surface1, 65) },
     WhichKeySeparator = { fg = c.overlay1 },
     WhichKeyValue = { fg = c.green },
   }

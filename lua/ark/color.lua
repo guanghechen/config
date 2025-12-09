@@ -23,7 +23,7 @@
 -- All credits to https://github.com/LeonHeidelbach for making this!
 -- 90% of functions are written by him
 
----@class dot.lib.color
+---@class ark.color
 local M = {}
 
 local BYTE_SHARP = string.byte("#") ---@type integer

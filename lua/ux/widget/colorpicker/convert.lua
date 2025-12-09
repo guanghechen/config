@@ -23,7 +23,7 @@ end
 ---@param b                             integer
 ---@return integer, integer, integer
 function M.rgb2hsl(r, g, b)
-  local h, s, l = dot.lib.color.rgb2hsl(r, g, b)
+  local h, s, l = ark.color.rgb2hsl(r, g, b)
   return M.round(h), M.round(s * 100), M.round(l * 100)
 end
 
@@ -32,7 +32,7 @@ end
 ---@param l                             integer
 ---@return integer, integer, integer
 function M.hsl2rgb(h, s, l)
-  local r, g, b = dot.lib.color.hsl2rgb(h, s / 100, l / 100)
+  local r, g, b = ark.color.hsl2rgb(h, s / 100, l / 100)
   return M.round(r), M.round(g), M.round(b)
 end
 
@@ -97,7 +97,7 @@ end
 ---@param hex                           string
 ---@return integer|nil, integer|nil, integer|nil
 function M.hex_parse(hex)
-  return dot.lib.color.hex2rgb(hex)
+  return ark.color.hex2rgb(hex)
 end
 
 ---@param r                             integer
@@ -105,7 +105,7 @@ end
 ---@param b                             integer
 ---@return string
 function M.hex_stringify(r, g, b)
-  return dot.lib.color.rgb2hex(r, g, b)
+  return ark.color.rgb2hex(r, g, b)
 end
 
 return M

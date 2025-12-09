@@ -212,7 +212,7 @@ local function check_scroll(winnr)
   local is_repeat = repeat_delta <= config.repeat_delay ---@type boolean
   local duration = is_repeat and config.repeat_duration or config.duration ---@type integer
   local step = is_repeat and config.repeat_step or config.step ---@type integer
-  local easing_fn = dot.lib.easing[config.easing] or dot.lib.easing.outQuad
+  local easing_fn = ark.easing[config.easing] or ark.easing.outQuad
 
   local scrolls = 0 ---@type integer
   local col_from = 0 ---@type integer

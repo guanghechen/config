@@ -22,7 +22,7 @@ end
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = dot.lib.color
+  local cs = ark.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
