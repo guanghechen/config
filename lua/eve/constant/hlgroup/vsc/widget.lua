@@ -1,12 +1,12 @@
 ---@class eve.constant.hlgroup.vsc.widget
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
-  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or u.bg0 ---@type string

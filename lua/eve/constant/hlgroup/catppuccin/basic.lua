@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.catppuccin.basic
 local M = {}
 
----@param context                       std.t.theme.IContext
+---@param context                       dot.t.theme.IContext
 ---@return eve.constant.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local mc = {
     command = c.brightBlue,
     confirm = c.brightAqua,
@@ -19,17 +19,17 @@ function M.gen_modes_color_map(context)
   return mc
 end
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
-  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
+  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
   local bg = t and c.none or c.base ---@type string
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ---Completion
     ComplHint = { fg = c.overlay1, italic = true },

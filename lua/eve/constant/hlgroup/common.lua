@@ -1,11 +1,11 @@
 ---@class eve.constant.hlgroup.common.modes_color_map
----@field public command                std.t.theme.IHlgroup
----@field public confirm                std.t.theme.IHlgroup
----@field public insert                 std.t.theme.IHlgroup
----@field public normal                 std.t.theme.IHlgroup
----@field public select                 std.t.theme.IHlgroup
----@field public terminal               std.t.theme.IHlgroup
----@field public visual                 std.t.theme.IHlgroup
+---@field public command                dot.t.theme.IHlgroup
+---@field public confirm                dot.t.theme.IHlgroup
+---@field public insert                 dot.t.theme.IHlgroup
+---@field public normal                 dot.t.theme.IHlgroup
+---@field public select                 dot.t.theme.IHlgroup
+---@field public terminal               dot.t.theme.IHlgroup
+---@field public visual                 dot.t.theme.IHlgroup
 
 ---@class eve.constant.hlgroup.common.modes_map
 local modes_map = {
@@ -82,14 +82,14 @@ function M.resolve_mode()
   return m[1], m[2]
 end
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local basic = require("eve.constant.hlgroup.basic") ---@type eve.constant.hlgroup.basic
   local mc = basic.gen_modes_color_map(context) ---@type eve.constant.hlgroup.common.modes_color_map
 
-  local hlgroup_map = {} ---@type table<string, std.t.theme.IHlgroup>
+  local hlgroup_map = {} ---@type table<string, dot.t.theme.IHlgroup>
   for _, color in ipairs(colors) do
     for mode, mode_color in pairs(mc) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string

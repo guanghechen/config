@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.gruvbox.lsp
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

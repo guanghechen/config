@@ -1,6 +1,6 @@
 --- gruvbox-dark
 
----@type std.t.theme.IScheme
+---@type dot.t.theme.IScheme
 local M = {
   theme = "gruvbox",
   variant = "dark",

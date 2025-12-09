@@ -1,8 +1,8 @@
 ---@class eve.constant.hlgroup.lsp
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("eve.constant.hlgroup.%s.lsp", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -13,10 +13,10 @@ function M.gen_hlgroup_map(context)
   return M.default_gen_hlgroup_map(context)
 end
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

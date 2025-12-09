@@ -1,8 +1,8 @@
 ---@class eve.constant.hlgroup.plugin
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("eve.constant.hlgroup.%s.plugin", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -15,7 +15,7 @@ end
 
 function M.default_gen_hlgroup_map(context)
   local cs = std.color
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
@@ -24,7 +24,7 @@ function M.default_gen_hlgroup_map(context)
   local lazy_badge_fg = c.bg1 ---@type string
   local lazy_badge_bg = c.pink ---@type string
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   return {
     ---! cmp
     BlinkCmpDoc = { bg = cmp_panel_bg },

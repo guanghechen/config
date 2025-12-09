@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.vsc.lsp
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

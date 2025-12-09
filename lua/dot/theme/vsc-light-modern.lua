@@ -1,6 +1,6 @@
 --- vsc-light-modern
 
----@type std.t.theme.IScheme
+---@type dot.t.theme.IScheme
 local M = {
   theme = "vsc",
   variant = "light-modern",

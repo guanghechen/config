@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.catppuccin.lsp
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
+  local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

@@ -1,20 +1,20 @@
 ---@class std.collection.theme.IApplyParams
----@field public scheme                 std.t.theme.IScheme
+---@field public scheme                 dot.t.theme.IScheme
 ---@field public nsnr                   integer
 
 ---@class std.collection.theme.ICompileParams
----@field public scheme                 std.t.theme.IScheme
+---@field public scheme                 dot.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
 ---@class std.collection.theme.ITheme
 ---@field public apply                  fun(self: std.collection.theme.ITheme, params: std.collection.theme.IApplyParams): nil
 ---@field public compile                fun(self: std.collection.theme.ITheme, params: std.collection.theme.ICompileParams): nil
----@field public register               fun(self: std.collection.theme.ITheme, hlname: string, hlgroup: std.t.theme.IHlgroup): std.collection.theme.ITheme
----@field public registers              fun(self: std.collection.theme.ITheme, hlgroup_map: table<string, std.t.theme.IHlgroup | nil>): std.collection.theme.ITheme
+---@field public register               fun(self: std.collection.theme.ITheme, hlname: string, hlgroup: dot.t.theme.IHlgroup): std.collection.theme.ITheme
+---@field public registers              fun(self: std.collection.theme.ITheme, hlgroup_map: table<string, dot.t.theme.IHlgroup | nil>): std.collection.theme.ITheme
 
 ---@class std.collection.Theme : std.collection.theme.ITheme
----@field protected hlgroup_map         table<string, std.t.theme.IHlgroup>
+---@field protected hlgroup_map         table<string, dot.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -37,14 +37,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       std.t.theme.IHlgroup
+---@param hlgroup                       dot.t.theme.IHlgroup
 ---@return std.collection.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, std.t.theme.IHlgroup|nil>
+---@param hlgroup_map                   table<string, dot.t.theme.IHlgroup|nil>
 ---@return std.collection.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do

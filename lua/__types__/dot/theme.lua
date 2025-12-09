@@ -1,6 +1,6 @@
 ---@meta
 
----@class std.t.theme.CatppuccinPalette
+---@class dot.t.theme.CatppuccinPalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -30,7 +30,7 @@
 ---@field public text                   string
 ---@field public yellow                 string
 
----@class std.t.theme.GruvboxPalette
+---@class dot.t.theme.GruvboxPalette
 ---@field public none                   string
 ---
 ---@field public aqua                   string
@@ -67,7 +67,7 @@
 ---@field public red                    string
 ---@field public yellow                 string
 
----@class std.t.theme.NordPalette
+---@class dot.t.theme.NordPalette
 ---@field public none                   string
 ---
 ---@field public nord0                  string
@@ -103,7 +103,7 @@
 ---@field public aurora3                string
 ---@field public aurora4                string
 
----@class std.t.theme.OnehalfPalette
+---@class dot.t.theme.OnehalfPalette
 ---@field public none                   string
 ---
 ---@field public background             string
@@ -122,7 +122,7 @@
 ---@field public white                  string
 ---@field public yellow                 string
 
----@class std.t.theme.RosepinePalette
+---@class dot.t.theme.RosepinePalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -141,7 +141,7 @@
 ---@field public surface                string
 ---@field public text                   string
 
----@class std.t.theme.TokyonightPalette
+---@class dot.t.theme.TokyonightPalette
 ---@field public none                   string
 ---
 ---@field public bg                     string
@@ -191,7 +191,7 @@
 ---@field public todo                   string
 ---@field public warning                string
 
----@class std.t.theme.UnifiedPalette
+---@class dot.t.theme.UnifiedPalette
 ---@field public none                   string
 ---
 ---@field public bg0                    string
@@ -230,7 +230,7 @@
 ---@field public diffAdd                string
 ---@field public diffAddInline          string
 
----@class std.t.theme.IVscPalette
+---@class dot.t.theme.IVscPalette
 ---@field public accentAqua             string
 ---@field public accentBlue             string
 ---@field public accentGreen            string
@@ -496,27 +496,27 @@
 ---@field public welcomePage_tileBackground string
 ---@field public widget_border          string
 
----@class std.t.theme.IPalette
----@field public unified                std.t.theme.UnifiedPalette
----@field public catppuccin             std.t.theme.CatppuccinPalette|nil
----@field public gruvbox                std.t.theme.GruvboxPalette|nil
----@field public nord                   std.t.theme.NordPalette|nil
----@field public onehalf                std.t.theme.OnehalfPalette|nil
----@field public rosepine               std.t.theme.RosepinePalette|nil
----@field public tokyonight             std.t.theme.TokyonightPalette|nil
----@field public vsc                    std.t.theme.IVscPalette|nil
+---@class dot.t.theme.IPalette
+---@field public unified                dot.t.theme.UnifiedPalette
+---@field public catppuccin             dot.t.theme.CatppuccinPalette|nil
+---@field public gruvbox                dot.t.theme.GruvboxPalette|nil
+---@field public nord                   dot.t.theme.NordPalette|nil
+---@field public onehalf                dot.t.theme.OnehalfPalette|nil
+---@field public rosepine               dot.t.theme.RosepinePalette|nil
+---@field public tokyonight             dot.t.theme.TokyonightPalette|nil
+---@field public vsc                    dot.t.theme.IVscPalette|nil
 
----@class std.t.theme.IScheme
+---@class dot.t.theme.IScheme
 ---@field public theme                  std.e.ThemeFamily
 ---@field public variant                std.e.ThemeVariant|nil
 ---@field public opposite               std.e.ThemeVariant|nil
 ---@field public darken                 boolean
----@field public palette                std.t.theme.IPalette
+---@field public palette                dot.t.theme.IPalette
 
----@class std.t.theme.IContext
+---@class dot.t.theme.IContext
 ---@field public theme                  string
 ---@field public variant                string|nil
----@field public scheme                 std.t.theme.IScheme
+---@field public scheme                 dot.t.theme.IScheme
 ---@field public transparency           boolean
 
----@class std.t.theme.IHlgroup : vim.api.keyset.highlight
+---@class dot.t.theme.IHlgroup : vim.api.keyset.highlight

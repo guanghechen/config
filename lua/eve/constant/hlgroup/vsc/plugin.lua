@@ -1,19 +1,19 @@
 ---@class eve.constant.hlgroup.vsc.plugin
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
-  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or cs.mix(c.base, c.accentBlue, 70) ---@type string
   local lazy_badge_fg = u.bg1 ---@type string
   local lazy_panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   return {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },

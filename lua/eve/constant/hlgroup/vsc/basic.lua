@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.vsc.basic
 local M = {}
 
----@param context                       std.t.theme.IContext
+---@param context                       dot.t.theme.IContext
 ---@return eve.constant.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   return {
     command = c.accentBlue,
     confirm = c.accentAqua,
@@ -18,15 +18,15 @@ function M.gen_modes_color_map(context)
   }
 end
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
-  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ComplHint = { fg = c.muted, italic = true },
     ComplHintMore = { fg = c.descriptionForeground, italic = true },

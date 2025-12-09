@@ -32,68 +32,12 @@ local hlgroup = setmetatable({
   end,
 })
 
----@class eve.constant.theme.__mods
-local theme__mods = {
-  ["catppuccin-frappe"] = "eve.constant.theme.catppuccin-frappe",
-  ["catppuccin-latte"] = "eve.constant.theme.catppuccin-latte",
-  ["catppuccin-macchiato"] = "eve.constant.theme.catppuccin-macchiato",
-  ["catppuccin-mocha"] = "eve.constant.theme.catppuccin-mocha",
-  ["gruvbox-light"] = "eve.constant.theme.gruvbox-light",
-  ["gruvbox-dark"] = "eve.constant.theme.gruvbox-dark",
-  ["nord"] = "eve.constant.theme.nord",
-  ["onehalf-light"] = "eve.constant.theme.onehalf-light",
-  ["onehalf-dark"] = "eve.constant.theme.onehalf-dark",
-  ["rosepine-main"] = "eve.constant.theme.rosepine-main",
-  ["rosepine-moon"] = "eve.constant.theme.rosepine-moon",
-  ["rosepine-dawn"] = "eve.constant.theme.rosepine-dawn",
-  ["tokyonight-day"] = "eve.constant.theme.tokyonight-day",
-  ["tokyonight-moon"] = "eve.constant.theme.tokyonight-moon",
-  ["tokyonight-night"] = "eve.constant.theme.tokyonight-night",
-  ["tokyonight-storm"] = "eve.constant.theme.tokyonight-storm",
-  ["vsc-dark-modern"] = "eve.constant.theme.vsc-dark-modern",
-  ["vsc-light-modern"] = "eve.constant.theme.vsc-light-modern",
-}
-
----@class eve.constant.theme
----@field public __mods                 eve.constant.theme.__mods
----@field public ["catppuccin-frappe"]  std.t.theme.IScheme
----@field public ["catppuccin-latte"]   std.t.theme.IScheme
----@field public ["catppuccin-macchiato"] std.t.theme.IScheme
----@field public ["catppuccin-mocha"]   std.t.theme.IScheme
----@field public ["gruvbox-light"]      std.t.theme.IScheme
----@field public ["gruvbox-dark"]       std.t.theme.IScheme
----@field public ["nord"]               std.t.theme.IScheme
----@field public ["onehalf-light"]      std.t.theme.IScheme
----@field public ["onehalf-dark"]       std.t.theme.IScheme
----@field public ["rosepine-main"]      std.t.theme.IScheme
----@field public ["rosepine-moon"]      std.t.theme.IScheme
----@field public ["rosepine-dawn"]      std.t.theme.IScheme
----@field public ["tokyonight-day"]     std.t.theme.IScheme
----@field public ["tokyonight-moon"]    std.t.theme.IScheme
----@field public ["tokyonight-night"]   std.t.theme.IScheme
----@field public ["tokyonight-storm"]   std.t.theme.IScheme
----@field public ["vsc-dark-modern"]    std.t.theme.IScheme
----@field public ["vsc-light-modern"]   std.t.theme.IScheme
-local theme = setmetatable({
-  __mods = theme__mods,
-}, {
-  __index = function(t, k)
-    local m = theme__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
 ---@class eve.constant
 ---@field public __mods                 eve.constant.__mods
 ---@field public hlgroup                eve.constant.hlgroup
----@field public theme                  eve.constant.theme
 local M = setmetatable({
   __mods = __mods,
   hlgroup = hlgroup,
-  theme = theme,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

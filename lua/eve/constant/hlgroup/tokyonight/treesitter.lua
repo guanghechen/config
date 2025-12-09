@@ -1,14 +1,14 @@
 ---@class eve.constant.hlgroup.tokyonight.treesitter
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type std.t.theme.TokyonightPalette
+  local c = context.scheme.palette.tokyonight ---@type dot.t.theme.TokyonightPalette
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ["@annotation"] = { link = "PreProc" },
     ["@attribute"] = { link = "PreProc" },

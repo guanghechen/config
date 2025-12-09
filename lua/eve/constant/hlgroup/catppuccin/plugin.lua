@@ -1,12 +1,12 @@
 ---@class eve.constant.hlgroup.catppuccin.plugin
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type std.t.theme.CatppuccinPalette
-  local u = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
+  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local mix = std.color.mix
   local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
@@ -20,7 +20,7 @@ function M.gen_hlgroup_map(context)
     return mix(accent, c.subtext0, 35)
   end
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   return {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },

@@ -26,9 +26,9 @@ local __module_name__ = "std.status.theme" ---@type string
 ---
 ---@field public apply_integration      fun(params: eve.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.context.theme.ILoadThemeParams): nil
----@field public get_scheme             fun(theme: std.e.ThemeFullName): std.t.theme.IScheme | nil
+---@field public get_scheme             fun(theme: std.e.ThemeFullName): dot.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
----@field public set_term_colors        fun(scheme: std.t.theme.IScheme): nil
+---@field public set_term_colors        fun(scheme: dot.t.theme.IScheme): nil
 
 ---@class eve.context.theme :  eve.context.theme.state
 ---@field public defaults               fun(): eve.context.theme.data
@@ -123,7 +123,7 @@ function M.apply_integration(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type std.t.theme.IContext
+    ---@type dot.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
       variant = scheme.variant,
@@ -163,11 +163,11 @@ function M.apply_theme(params)
     local uxTheme = std.Theme.new()
     for _, integration in ipairs(integrations) do
       local h = require("eve.constant.hlgroup." .. integration)
-      ---@return table<string, std.t.theme.IHlgroup>
+      ---@return table<string, dot.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, std.t.theme.IHlgroup>
+        local additional = {} ---@type table<string, dot.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if string.sub(hlname, 1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
@@ -213,7 +213,7 @@ function M.apply_theme(params)
 end
 
 ---@param theme                         std.e.ThemeFullName
----@return std.t.theme.IScheme | nil
+---@return dot.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(eve.setting.themes, theme) then
     std.reporter.error({
@@ -224,7 +224,7 @@ function M.get_scheme(theme)
     })
     return nil
   end
-  return require("eve.constant.theme." .. theme)
+  return require("dot.theme." .. theme)
 end
 
 ---@param force                         boolean
@@ -234,7 +234,7 @@ function M.reload_theme(force, reload_plugins)
   local theme = M.theme:snapshot() ---@type std.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
 
-  local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
+  local scheme = M.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
   if scheme ~= nil then
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
@@ -259,7 +259,7 @@ function M.reload_theme(force, reload_plugins)
       })
     end
 
-    -- local scheme = M.get_scheme(theme) ---@type std.t.theme.IScheme|nil
+    -- local scheme = M.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
     -- if scheme ~= nil then
     -- M.set_term_colors(scheme)
     -- end
@@ -270,10 +270,10 @@ end
 --- Since we also changed the terminal color outside, so no need to set it again,
 --- so we can get the terminal color automatically changed by the terminal itself
 --- since we used the color name instead of a specific value (hex).
----@param scheme                        std.t.theme.IScheme
+---@param scheme                        dot.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

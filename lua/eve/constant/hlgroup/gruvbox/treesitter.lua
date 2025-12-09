@@ -1,10 +1,10 @@
 ---@class eve.constant.hlgroup.gruvbox.treesitter
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type std.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
   local heading_colors = {
     c.brightRed,
@@ -15,7 +15,7 @@ function M.gen_hlgroup_map(context)
     c.brightPurple,
   }
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ["@annotation"] = { fg = c.brightRed },
     ["@attribute"] = { fg = c.brightYellow },

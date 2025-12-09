@@ -1,12 +1,12 @@
 ---@class eve.constant.hlgroup.vsc.treesitter
 local M = {}
 
----@param context                       std.t.theme.IContext
----@return table<string, std.t.theme.IHlgroup>
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.vsc ---@type std.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
 
-  ---@type table<string, std.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     -- Comments
     ["@comment"] = { fg = c.tokenComment },

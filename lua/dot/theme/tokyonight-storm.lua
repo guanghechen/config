@@ -1,6 +1,6 @@
 --- tokyonight-storm
 
----@type std.t.theme.IScheme
+---@type dot.t.theme.IScheme
 local M = {
   theme = "tokyonight",
   variant = "storm",
