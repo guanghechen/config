@@ -291,8 +291,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param on_select                     fun(item: eve.ux.widget.ai.ISelectItem): nil
+---@param on_toggle                     ?fun(item: eve.ux.widget.ai.ISelectItem): nil
 ---@return nil
-function M.show_attach(on_select)
+function M.show_attach(on_select, on_toggle)
   local action = require("eve.ux.widget.ai.action")
   local items = action.collect_items()
   local picker_items, width = build_attach_picker_items(items)
@@ -300,8 +301,26 @@ function M.show_attach(on_select)
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
   local picker_height, picker_width = calc_picker_dimensions(picker_items, width)
 
-  ---@type eve.ux.picker.ListComposer
-  local picker = eve.ux.picker.ListComposer.new({
+  ---@type eve.ux.picker.ListComposer|nil
+  local picker = nil
+
+  ---@return nil
+  local function do_toggle()
+    if not picker or not on_toggle then
+      return
+    end
+    local lnum = picker.result.lnum_current:snapshot()
+    local item = picker:retrieve(lnum)
+    if item then
+      ---@cast item eve.ux.widget.ai.picker.IItem
+      on_toggle(item.data)
+      local new_items = action.collect_items()
+      local new_picker_items = build_attach_picker_items(new_items)
+      picker:reset_data({ items = new_picker_items, uuid_current = item.uuid })
+    end
+  end
+
+  picker = eve.ux.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Select CLI tool ",
@@ -311,6 +330,13 @@ function M.show_attach(on_select)
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
+    keymaps_common = on_toggle and {
+      { modes = { "i", "n", "x" }, key = "<C-l>", callback = do_toggle, desc = "Toggle attach/detach" },
+      { modes = { "i", "n", "x" }, key = "<C-h>", callback = do_toggle, desc = "Toggle attach/detach" },
+    } or nil,
+    keymaps_result = on_toggle and {
+      { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle attach/detach" },
+    } or nil,
     on_cancel = function()
       restore_window(winnr)
     end,

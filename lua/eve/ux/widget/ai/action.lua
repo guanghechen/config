@@ -211,7 +211,7 @@ end
 ---@return nil
 function M.show_attach_picker()
   local picker = require("eve.ux.widget.ai.picker")
-  picker.show_attach(M.handle_selection)
+  picker.show_attach(M.handle_selection, M.handle_selection)
 end
 
 ---@return nil
