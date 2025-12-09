@@ -14,14 +14,6 @@ local M = {}
 
 ---@param text                          string
 ---@return string
-function M.escape_url_component(text)
-  return (text:gsub("([^%w%.%-])", function(c)
-    return string.format("%%%02X", string.byte(c))
-  end))
-end
-
----@param text                          string
----@return string
 function M.octal_to_utf8(text)
   local success, converted = pcall(string.gsub, text, "\\([0-7][0-7][0-7])", convert_octal_char)
   if success then

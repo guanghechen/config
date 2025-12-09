@@ -25,7 +25,7 @@ local function open_filepath_within_yoz(filepath, force)
   local url = string.format(
     "https://localhost:%s/api/file/switch?filepath=%s&force=%s",
     YOZ_SERVER_PORT,
-    std.string.escape_url_component(filepath),
+    std.uri.encode(filepath),
     force and "true" or "false"
   )
   vim.system({ "curl", "-k", "-X", "POST", url }, { detach = true })
