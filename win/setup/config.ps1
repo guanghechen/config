@@ -31,7 +31,6 @@ $repo_optional_branches = @(
   "nvim-lazy",
   "nvim-nvchad",
   "ora",
-  "plan",
   "pm2",
   "skhd",
   "tsuki",

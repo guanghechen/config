@@ -32,7 +32,6 @@ clone_or_update_config_repo() {
     "nvim-lazy"
     "nvim-nvchad"
     "ora"
-    "plan"
     "pm2"
     "pwsh"
     "skhd"
