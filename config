@@ -1,8 +1,8 @@
-config-file = keymap.conf
-config-file = font-maple.conf
-config-file = shader.conf
-config-file = local/shader.conf
 config-file = local/theme.conf
+config-file = local/shader.conf
+config-file = font-maple.conf
+config-file = keymap.conf
+config-file = shader.conf
 
 # Background
 background-blur = true
