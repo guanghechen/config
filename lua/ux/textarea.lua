@@ -36,7 +36,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@class ux.Textarea : ux.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected position            std.e.BoxPosition
+---@field protected position            dot.e.BoxPosition
 ---@field protected width               number
 ---@field protected height              number
 ---@field protected max_width           number|nil
@@ -51,7 +51,7 @@ local M = {}
 M.__index = M
 
 ---@class ux.textarea.IProps
----@field public position               std.e.BoxPosition
+---@field public position               dot.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -71,7 +71,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local position = props.position ---@type std.e.BoxPosition
+  local position = props.position ---@type dot.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil

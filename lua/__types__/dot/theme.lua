@@ -507,9 +507,9 @@
 ---@field public vsc                    dot.t.theme.IVscPalette|nil
 
 ---@class dot.t.theme.IScheme
----@field public theme                  std.e.ThemeFamily
----@field public variant                std.e.ThemeVariant|nil
----@field public opposite               std.e.ThemeVariant|nil
+---@field public theme                  dot.e.ThemeFamily
+---@field public variant                dot.e.ThemeVariant|nil
+---@field public opposite               dot.e.ThemeVariant|nil
 ---@field public darken                 boolean
 ---@field public palette                dot.t.theme.IPalette
 

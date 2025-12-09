@@ -1,0 +1,87 @@
+---@meta
+
+---@alias dot.e.BoxPosition
+---| "cursor"
+---| "center"
+
+---@alias dot.e.TermPosition
+---| "bottom"
+---| "right"
+---| "float"
+
+---@alias dot.e.ThemeFamily
+---| "catppuccin"
+---| "gruvbox"
+---| "nord"
+---| "onehalf"
+---| "rosepine"
+---| "tokyonight"
+---| "vsc"
+
+---@alias dot.e.ThemeFullName
+---| "catppuccin-frappe"
+---| "catppuccin-latte"
+---| "catppuccin-macchiato"
+---| "catppuccin-mocha"
+---| "gruvbox-light"
+---| "gruvbox-dark"
+---| "nord"
+---| "onehalf-light"
+---| "onehalf-dark"
+---| "rosepine-main"
+---| "rosepine-moon"
+---| "rosepine-dawn"
+---| "tokyonight-day"
+---| "tokyonight-moon"
+---| "tokyonight-night"
+---| "tokyonight-storm"
+---| "vsc-dark-modern"
+---| "vsc-light-modern"
+
+---@alias dot.e.ThemeIntegration
+---| "basic"
+---| "common"
+---| "lsp"
+---| "nvimbar"
+---| "widget"
+---| "treesitter"
+---| "plugin"
+
+---@alias dot.e.ThemeVariant
+---| "frappe"
+---| "latte"
+---| "macchiato"
+---| "mocha"
+---| "light"
+---| "light-modern"
+---| "dark"
+---| "dark-modern"
+---| "main"
+---| "moon"
+---| "dawn"
+---| "day"
+---| "night"
+---| "storm"
+
+---@alias dot.e.VimMode
+---| "c"
+---| "i"
+---| "n"
+---| "o"
+---| "s"
+---| "S"
+---| "t"
+---| "v"
+---| "V"
+---| "x"
+
+---@alias dot.e.VimModeName
+---| "normal"
+---| "visual"
+---| "insert"
+---| "terminal"
+---| "nterminal"
+---| "replace"
+---| "confirm"
+---| "command"
+---| "select"

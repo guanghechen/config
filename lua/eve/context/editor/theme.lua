@@ -1,19 +1,19 @@
 local __module_name__ = "std.status.theme" ---@type string
 
 ---@class eve.context.theme.ILoadIntegrationParams
----@field public theme                  std.e.ThemeFullName
+---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
----@field public integration            std.e.ThemeIntegration
+---@field public integration            dot.e.ThemeIntegration
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.ILoadThemeParams
----@field public theme                  std.e.ThemeFullName
+---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
 ---@class eve.context.theme.data
----@field public theme                  std.e.ThemeFullName
+---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public username               boolean
 
@@ -26,7 +26,7 @@ local __module_name__ = "std.status.theme" ---@type string
 ---
 ---@field public apply_integration      fun(params: eve.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: eve.context.theme.ILoadThemeParams): nil
----@field public get_scheme             fun(theme: std.e.ThemeFullName): dot.t.theme.IScheme | nil
+---@field public get_scheme             fun(theme: dot.e.ThemeFullName): dot.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
 ---@field public set_term_colors        fun(scheme: dot.t.theme.IScheme): nil
 
@@ -37,7 +37,7 @@ local __module_name__ = "std.status.theme" ---@type string
 ---@field public normalize              fun(data: unknown): eve.context.theme.data
 local M = {}
 
----@type std.e.ThemeIntegration[]
+---@type dot.e.ThemeIntegration[]
 local integrations = {
   "common",
   "basic",
@@ -116,9 +116,9 @@ end
 ---@param params                        eve.context.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
-  local theme = params.theme ---@type std.e.ThemeFullName
+  local theme = params.theme ---@type dot.e.ThemeFullName
   local transparency = params.transparency ---@type boolean
-  local integration = params.integration ---@type std.e.ThemeIntegration
+  local integration = params.integration ---@type dot.e.ThemeIntegration
   local nsnr = params.nsnr or 0 ---@type integer
 
   local scheme = M.get_scheme(theme)
@@ -141,7 +141,7 @@ end
 ---@param params                        eve.context.theme.ILoadThemeParams
 ---@return nil
 function M.apply_theme(params)
-  local theme = params.theme ---@type std.e.ThemeFullName
+  local theme = params.theme ---@type dot.e.ThemeFullName
   local transparency = params.transparency ---@type boolean
   local persistent = params.persistent ---@type boolean
   local nsnr = params.nsnr or 0 ---@type integer
@@ -210,7 +210,7 @@ function M.apply_theme(params)
   return scheme
 end
 
----@param theme                         std.e.ThemeFullName
+---@param theme                         dot.e.ThemeFullName
 ---@return dot.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(eve.setting.themes, theme) then
@@ -229,7 +229,7 @@ end
 ---@param reload_plugins                boolean
 ---@return nil
 function M.reload_theme(force, reload_plugins)
-  local theme = M.theme:snapshot() ---@type std.e.ThemeFullName
+  local theme = M.theme:snapshot() ---@type dot.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
 
   local scheme = M.get_scheme(theme) ---@type dot.t.theme.IScheme|nil

@@ -21,7 +21,7 @@ M.__index = M
 setmetatable(M, ux.Textarea)
 
 ---@class ux.setting.IProps
----@field public position               std.e.BoxPosition
+---@field public position               dot.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -38,7 +38,7 @@ setmetatable(M, ux.Textarea)
 ---@param props                         ux.setting.IProps
 ---@return ux.Setting
 function M.new(props)
-  local position = props.position ---@type std.e.BoxPosition
+  local position = props.position ---@type dot.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil

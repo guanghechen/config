@@ -40,7 +40,7 @@
 
 ---@class std.t.IKeymap : std.t.IKeymapOverridable
 ---@field public disabled               boolean|nil
----@field public modes                  std.e.VimMode[]
+---@field public modes                  dot.e.VimMode[]
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public desc                   string|nil

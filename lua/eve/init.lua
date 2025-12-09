@@ -79,7 +79,7 @@ function M.setup_context(storage)
   eve.context.set_storage(storage)
   eve.context.load(storage, false)
 
-  local colorscheme = eve.context.theme.theme:snapshot() ---@type std.e.ThemeFullName
+  local colorscheme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
   vim.cmd.colorscheme(colorscheme)
 end
 
