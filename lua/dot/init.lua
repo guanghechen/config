@@ -74,30 +74,30 @@ local lang = setmetatable({
   end,
 })
 
----@class dot.theme.__mods
-local __theme__mods = {
-  ["catppuccin-frappe"] = "dot.theme.catppuccin-frappe",
-  ["catppuccin-latte"] = "dot.theme.catppuccin-latte",
-  ["catppuccin-macchiato"] = "dot.theme.catppuccin-macchiato",
-  ["catppuccin-mocha"] = "dot.theme.catppuccin-mocha",
-  ["gruvbox-dark"] = "dot.theme.gruvbox-dark",
-  ["gruvbox-light"] = "dot.theme.gruvbox-light",
-  ["nord"] = "dot.theme.nord",
-  ["onehalf-dark"] = "dot.theme.onehalf-dark",
-  ["onehalf-light"] = "dot.theme.onehalf-light",
-  ["rosepine-dawn"] = "dot.theme.rosepine-dawn",
-  ["rosepine-main"] = "dot.theme.rosepine-main",
-  ["rosepine-moon"] = "dot.theme.rosepine-moon",
-  ["tokyonight-day"] = "dot.theme.tokyonight-day",
-  ["tokyonight-moon"] = "dot.theme.tokyonight-moon",
-  ["tokyonight-night"] = "dot.theme.tokyonight-night",
-  ["tokyonight-storm"] = "dot.theme.tokyonight-storm",
-  ["vsc-dark-modern"] = "dot.theme.vsc-dark-modern",
-  ["vsc-light-modern"] = "dot.theme.vsc-light-modern",
+---@class dot.theme.scheme.__mods
+local __theme_scheme__mods = {
+  ["catppuccin-frappe"] = "dot.theme.scheme.catppuccin-frappe",
+  ["catppuccin-latte"] = "dot.theme.scheme.catppuccin-latte",
+  ["catppuccin-macchiato"] = "dot.theme.scheme.catppuccin-macchiato",
+  ["catppuccin-mocha"] = "dot.theme.scheme.catppuccin-mocha",
+  ["gruvbox-dark"] = "dot.theme.scheme.gruvbox-dark",
+  ["gruvbox-light"] = "dot.theme.scheme.gruvbox-light",
+  ["nord"] = "dot.theme.scheme.nord",
+  ["onehalf-dark"] = "dot.theme.scheme.onehalf-dark",
+  ["onehalf-light"] = "dot.theme.scheme.onehalf-light",
+  ["rosepine-dawn"] = "dot.theme.scheme.rosepine-dawn",
+  ["rosepine-main"] = "dot.theme.scheme.rosepine-main",
+  ["rosepine-moon"] = "dot.theme.scheme.rosepine-moon",
+  ["tokyonight-day"] = "dot.theme.scheme.tokyonight-day",
+  ["tokyonight-moon"] = "dot.theme.scheme.tokyonight-moon",
+  ["tokyonight-night"] = "dot.theme.scheme.tokyonight-night",
+  ["tokyonight-storm"] = "dot.theme.scheme.tokyonight-storm",
+  ["vsc-dark-modern"] = "dot.theme.scheme.vsc-dark-modern",
+  ["vsc-light-modern"] = "dot.theme.scheme.vsc-light-modern",
 }
 
----@class dot.theme
----@field public __mods                 dot.theme.__mods
+---@class dot.theme.scheme
+---@field public __mods                 dot.theme.scheme.__mods
 ---@field public ["catppuccin-frappe"]  dot.t.theme.IScheme
 ---@field public ["catppuccin-latte"]   dot.t.theme.IScheme
 ---@field public ["catppuccin-macchiato"] dot.t.theme.IScheme
@@ -116,17 +116,23 @@ local __theme__mods = {
 ---@field public ["tokyonight-storm"]   dot.t.theme.IScheme
 ---@field public ["vsc-dark-modern"]    dot.t.theme.IScheme
 ---@field public ["vsc-light-modern"]   dot.t.theme.IScheme
-local theme = setmetatable({
-  __mods = __theme__mods,
+local scheme = setmetatable({
+  __mods = __theme_scheme__mods,
 }, {
   __index = function(t, k)
-    local m = __theme__mods[k] ---@type string|nil
+    local m = __theme_scheme__mods[k] ---@type string|nil
     if m == nil then
       return rawget(t, k)
     end
     return require(m)
   end,
 })
+
+---@class dot.theme
+---@field public scheme                 dot.theme.scheme
+local theme = {
+  scheme = scheme,
+}
 
 ---@class dot.__mods
 local __mods = {

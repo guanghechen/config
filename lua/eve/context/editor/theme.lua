@@ -222,7 +222,7 @@ function M.get_scheme(theme)
     })
     return nil
   end
-  return dot.theme[theme]
+  return dot.theme.scheme[theme]
 end
 
 ---@param force                         boolean
