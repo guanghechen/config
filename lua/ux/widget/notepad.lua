@@ -1033,7 +1033,7 @@ function M:get_winnr()
   return winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and winnr or nil
 end
 
----@return eve.builtin.box.IDimension
+---@return std.box.IDimension
 function M:measure_rect()
   local columns = vim.o.columns
   local desired_width = math.min(132, math.floor(columns * 0.9 + 0.5))
@@ -1043,7 +1043,7 @@ function M:measure_rect()
   desired_width = math.min(math.max(min_width, desired_width), columns)
   desired_height = math.min(math.max(min_height, desired_height), vim.o.lines - 2)
 
-  return eve.box.measure(desired_width, desired_height, {
+  return std.box.measure(desired_width, desired_height, {
     position = "center",
     rows = vim.o.lines,
     cols = columns,

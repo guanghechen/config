@@ -1,10 +1,10 @@
----@class eve.builtin.box.IDimension
+---@class std.box.IDimension
 ---@field public row                    integer
 ---@field public col                    integer
 ---@field public width                  integer
 ---@field public height                 integer
 
----@class eve.builtin.box.IRestriction
+---@class std.box.IRestriction
 ---@field public position               std.e.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
@@ -17,7 +17,7 @@
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 
----@class eve.builtin.box
+---@class std.box
 local M = {}
 
 ---@param size                          number
@@ -37,8 +37,8 @@ end
 
 ---@param width                         integer
 ---@param height                        integer
----@param restriction                   eve.builtin.box.IRestriction
----@return eve.builtin.box.IDimension
+---@param restriction                   std.box.IRestriction
+---@return std.box.IDimension
 function M.measure(width, height, restriction)
   local rows = restriction.rows ---@type integer
   local cols = restriction.cols ---@type integer
@@ -60,7 +60,7 @@ function M.measure(width, height, restriction)
     row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
     col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-    ---@type eve.builtin.box.IDimension
+    ---@type std.box.IDimension
     return { row = row, col = col, width = width, height = height }
   end
 
@@ -72,7 +72,7 @@ function M.measure(width, height, restriction)
       row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
       col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-      ---@type eve.builtin.box.IDimension
+      ---@type std.box.IDimension
       return { row = row, col = col, width = width, height = height }
     end
   end
@@ -82,7 +82,7 @@ function M.measure(width, height, restriction)
   row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
   col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-  ---@type eve.builtin.box.IDimension
+  ---@type std.box.IDimension
   return { row = row, col = col, width = width, height = height }
 end
 
@@ -162,18 +162,18 @@ function M.resolve_border_extents(border)
   return left, right, top, bottom
 end
 
----@class eve.builtin.box.FitEditorOpts
+---@class std.box.FitEditorOpts
 ---@field public cols                   integer|nil
 ---@field public rows                   integer|nil
 
 ---@param width                         integer
 ---@param height                        integer
 ---@param border                        string|table|nil
----@param opts                          eve.builtin.box.FitEditorOpts|nil
+---@param opts                          std.box.FitEditorOpts|nil
 ---@return integer
 ---@return integer
 function M.fit_editor(width, height, border, opts)
-  opts = opts or {} ---@type eve.builtin.box.FitEditorOpts
+  opts = opts or {} ---@type std.box.FitEditorOpts
 
   local cols = opts.cols or vim.o.columns ---@type integer
   local rows = opts.rows or vim.o.lines ---@type integer

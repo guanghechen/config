@@ -7,7 +7,6 @@ local __mods = {
 
   G = "eve.builtin.G",
   ai = "eve.builtin.ai",
-  box = "eve.builtin.box",
   buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
   command = "eve.builtin.command",
@@ -37,7 +36,6 @@ local __mods = {
 ---
 ---@field public G                      eve.builtin.G
 ---@field public ai                     eve.builtin.ai
----@field public box                    eve.builtin.box
 ---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public command                eve.builtin.command

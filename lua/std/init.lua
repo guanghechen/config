@@ -23,6 +23,7 @@ local __mods = {
   color = "std.lib.color",
   easing = "std.lib.easing",
 
+  box = "std.box",
   debug = "std.debug",
   env = "std.env",
   fileicon = "std.fileicon",
@@ -71,6 +72,7 @@ local __mods = {
 ---@field public color                  std.lib.color
 ---@field public easing                 std.lib.easing
 ---
+---@field public box                    std.box
 ---@field public debug                  std.debug
 ---@field public env                    std.env
 ---@field public fileicon               std.fileicon
