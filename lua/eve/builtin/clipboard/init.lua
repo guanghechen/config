@@ -47,7 +47,7 @@ function M.paste_image(filepath_target)
   local ok = M.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
-    if std.filetype.is_sourcefile(filetype) then
+    if dot.filetype.is_sourcefile(filetype) then
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
       local src = std.path.relative(std.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
@@ -70,7 +70,7 @@ end
 ---@return boolean
 function M.paste_image_as_base64(filepath_source)
   local filetype = vim.bo.filetype ---@type string
-  if std.filetype.is_not_sourcefile(filetype) then
+  if dot.filetype.is_not_sourcefile(filetype) then
     std.reporter.warn({
       from = __module_name__,
       subject = "paste_image_as_base64",

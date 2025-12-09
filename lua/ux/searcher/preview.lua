@@ -199,7 +199,7 @@ function M:create_buf()
   vim.b[bufnr].minihipatterns_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = std.filetype.UX_PICKER_PREVIEW
+  vim.bo[bufnr].filetype = dot.filetype.UX_PICKER_PREVIEW
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

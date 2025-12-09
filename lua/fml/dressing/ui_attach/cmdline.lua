@@ -221,7 +221,7 @@ function M._show(state)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = std.filetype.UX_CMDLINE
+    vim.bo[bufnr].filetype = dot.filetype.UX_CMDLINE
     vim.bo[bufnr].swapfile = false
   end
 
@@ -349,7 +349,7 @@ function M._render_block(block)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = std.filetype.UX_CMDLINE
+    vim.bo[bufnr].filetype = dot.filetype.UX_CMDLINE
     vim.bo[bufnr].swapfile = false
   end
 
@@ -431,7 +431,7 @@ function M._show_confirm(state, msg_show_task)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = std.filetype.UX_CMDLINE
+    vim.bo[bufnr].filetype = dot.filetype.UX_CMDLINE
     vim.bo[bufnr].swapfile = false
   end
 

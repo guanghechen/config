@@ -23,6 +23,7 @@ local lang = setmetatable({
 ---@class dot.__mods
 local __mods = {
   env = "dot.env",
+  filetype = "dot.filetype",
   icon = "dot.icon",
   var = "dot.var",
 }
@@ -32,6 +33,7 @@ local __mods = {
 ---@field public lang                   dot.lang
 ---
 ---@field public env                    dot.env
+---@field public filetype               dot.filetype
 ---@field public icon                   dot.icon
 ---@field public var                    dot.var
 local M = setmetatable({

@@ -97,7 +97,7 @@ return {
     },
     search = {
       mode = "exact",
-      exclude = std.filetype.get_no_flash_filetypes(),
+      exclude = dot.filetype.get_no_flash_filetypes(),
     },
   },
 }

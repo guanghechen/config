@@ -173,7 +173,7 @@ local keymaps = {
       local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
       vim.bo[bufnr].buflisted = false
       vim.bo[bufnr].buftype = "nofile"
-      vim.bo[bufnr].filetype = std.filetype.TEMP_VIEWER
+      vim.bo[bufnr].filetype = dot.filetype.TEMP_VIEWER
       vim.bo[bufnr].swapfile = false
 
       local printer = ux.view.Printer

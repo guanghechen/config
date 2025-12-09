@@ -114,7 +114,7 @@ return {
         end
 
         local filetype = vim.bo[bufnr].filetype ---@type string
-        if std.filetype.is_not_sourcefile(filetype) then
+        if dot.filetype.is_not_sourcefile(filetype) then
           return
         end
 

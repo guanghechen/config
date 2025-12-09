@@ -11,8 +11,8 @@ return {
     },
     disable = {
       ft = {
-        std.filetype.TERM,
-        std.filetype.WINSEP,
+        dot.filetype.TERM,
+        dot.filetype.WINSEP,
       },
     },
     spec = {

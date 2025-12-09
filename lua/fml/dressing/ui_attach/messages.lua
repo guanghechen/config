@@ -66,7 +66,7 @@ function M.history_show(task)
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = std.filetype.UX_MESSAGE_HISTORY
+    vim.bo[bufnr].filetype = dot.filetype.UX_MESSAGE_HISTORY
     vim.bo[bufnr].swapfile = false
   end
 
