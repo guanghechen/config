@@ -38,11 +38,12 @@ function M.log(level, options)
   end
 
   if options.details ~= nil then
-    local details = "```json\n" .. std.json.stringify_prettier(options.details) .. "\n```" ---@type string
+    local details = vim.json.encode(options.details, { indent = "  ", sort_keys = false }) ---@type string
+    local content = "```json\n" .. details .. "\n```" ---@type string
     if #text > 0 then
-      text = text .. "\n\n" .. details
+      text = text .. "\n\n" .. content
     else
-      text = details
+      text = content
     end
   end
 
