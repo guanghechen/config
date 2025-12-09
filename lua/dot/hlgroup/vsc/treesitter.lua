@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.vsc.treesitter
+---@class dot.hlgroup.vsc.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

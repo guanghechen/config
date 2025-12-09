@@ -1,3 +1,35 @@
+---@class dot.hlgroup.__mods
+local __hlgroup__mods = {
+  basic = "dot.hlgroup.basic",
+  common = "dot.hlgroup.common",
+  lsp = "dot.hlgroup.lsp",
+  nvimbar = "dot.hlgroup.nvimbar",
+  plugin = "dot.hlgroup.plugin",
+  treesitter = "dot.hlgroup.treesitter",
+  widget = "dot.hlgroup.widget",
+}
+
+---@class dot.hlgroup
+---@field public __mods                 dot.hlgroup.__mods
+---@field public basic                  dot.hlgroup.basic
+---@field public common                 dot.hlgroup.common
+---@field public lsp                    dot.hlgroup.lsp
+---@field public nvimbar                dot.hlgroup.nvimbar
+---@field public plugin                 dot.hlgroup.plugin
+---@field public treesitter             dot.hlgroup.treesitter
+---@field public widget                 dot.hlgroup.widget
+local hlgroup = setmetatable({
+  __mods = __hlgroup__mods,
+}, {
+  __index = function(t, k)
+    local m = __hlgroup__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
 ---@class dot.lang.__mods
 local __lang__mods = {
   python = "dot.lang.python",
@@ -86,6 +118,7 @@ local __mods = {
 
 ---@class dot
 ---@field public __mods                 dot.__mods
+---@field public hlgroup                dot.hlgroup
 ---@field public lang                   dot.lang
 ---@field public theme                  dot.theme
 ---
@@ -97,6 +130,7 @@ local __mods = {
 ---@field public var                    dot.var
 local M = setmetatable({
   __mods = __mods,
+  hlgroup = hlgroup,
   lang = lang,
   theme = theme,
 }, {

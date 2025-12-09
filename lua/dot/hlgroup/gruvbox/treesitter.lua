@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.gruvbox.treesitter
+---@class dot.hlgroup.gruvbox.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

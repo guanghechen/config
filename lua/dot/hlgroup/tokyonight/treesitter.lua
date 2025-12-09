@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.tokyonight.treesitter
+---@class dot.hlgroup.tokyonight.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

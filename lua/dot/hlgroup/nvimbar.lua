@@ -1,8 +1,8 @@
----@class eve.constant.hlgroup.nvimbar
+---@class dot.hlgroup.nvimbar
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return eve.constant.hlgroup.nvimbar
+---@return dot.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
   local cs = std.color
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
@@ -229,7 +229,7 @@ function M.gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type ux.nvimbar.PositionEnum[]
 
-  ---@class eve.constant.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
+  ---@class dot.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }

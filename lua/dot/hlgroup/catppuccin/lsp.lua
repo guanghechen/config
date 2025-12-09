@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.catppuccin.lsp
+---@class dot.hlgroup.catppuccin.lsp
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

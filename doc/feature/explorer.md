@@ -18,7 +18,7 @@
 - The split contains two vertically-stacked windows in the Snacks.nvim style: a single-line input window on top (prompt, filter, breadcrumbs) and a scrollable result tree on the bottom.
 - The input window exposes command hints, fuzzy filter text, and quick toggles (hidden files, git-only, root selector). It mirrors state between the textfield and `IExplorerInputState` observable so external actions can edit the prompt without stealing focus.
 - Window resizing keeps the stack pinned left: user-driven `:vertical resize` updates `explorer.width`, while the input window clamps its height to one row (plus optional winbar) and the tree window fills the remainder.
-- Renders a hierarchical tree with file and folder icons from `std.fileicon`, git badges appended to the right, and highlight groups pulled from `eve.constant.hlgroup`.
+- Renders a hierarchical tree with file and folder icons from `std.fileicon`, git badges appended to the right, and highlight groups pulled from `dot.hlgroup`.
 - Navigation mirrors our picker/searcher conventions: `<Enter>`/`l` open or expand, `<Backspace>`/`h` collapse or ascend, `<Tab>` toggles selection, `.` re-root on node, `oa`/`oA` forward to AI helpers, and we reuse existing `<leader>` bindings for visibility toggles and destructive actions. Git stage/unstage flows stay wired to the existing git action commands rather than new explorer-specific keys.
 - Supports multi-select via `m` to mark nodes and exposes batch actions (open, stage, yank paths). All keymaps flow through `eve.command.definitions` so they can be rebound centrally.
 - The widget cooperates with `eve.ux.nvimbar` to display breadcrumbs or quick filters when the window width permits.

@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.tokyonight.plugin
+---@class dot.hlgroup.tokyonight.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

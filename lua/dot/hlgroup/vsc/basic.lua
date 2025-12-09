@@ -1,8 +1,8 @@
----@class eve.constant.hlgroup.vsc.basic
+---@class dot.hlgroup.vsc.basic
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return eve.constant.hlgroup.common.modes_color_map
+---@return dot.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
   local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   return {

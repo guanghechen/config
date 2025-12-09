@@ -1,10 +1,10 @@
----@class eve.constant.hlgroup.basic
+---@class dot.hlgroup.basic
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return eve.constant.hlgroup.common.modes_color_map
+---@return dot.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local md = string.format("eve.constant.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local md = string.format("dot.hlgroup.%s.basic", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_modes_color_map(context)
@@ -16,7 +16,7 @@ end
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("eve.constant.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local md = string.format("dot.hlgroup.%s.basic", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)
@@ -26,7 +26,7 @@ function M.gen_hlgroup_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return eve.constant.hlgroup.common.modes_color_map
+---@return dot.hlgroup.common.modes_color_map
 function M.default_gen_modes_color_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local mc = {

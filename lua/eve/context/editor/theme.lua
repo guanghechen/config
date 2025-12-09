@@ -130,7 +130,7 @@ function M.apply_integration(params)
       scheme = scheme,
       transparency = transparency,
     }
-    local h = require("eve.constant.hlgroup." .. integration)
+    local h = dot.hlgroup[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
     local uxTheme = std.Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -151,10 +151,8 @@ function M.apply_theme(params)
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
 
-    local h_nvimbar = require("eve.constant.hlgroup.nvimbar")
-
-    ---@type eve.constant.hlgroup.nvimbar
-    local nvimbar_hlgroup_map = h_nvimbar.gen_hlgroup_map({
+    ---@type dot.hlgroup.nvimbar
+    local nvimbar_hlgroup_map = dot.hlgroup.nvimbar.gen_hlgroup_map({
       theme = theme,
       scheme = scheme,
       transparency = transparency,
@@ -162,7 +160,7 @@ function M.apply_theme(params)
 
     local uxTheme = std.Theme.new()
     for _, integration in ipairs(integrations) do
-      local h = require("eve.constant.hlgroup." .. integration)
+      local h = dot.hlgroup[integration]
       ---@return table<string, dot.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
@@ -224,7 +222,7 @@ function M.get_scheme(theme)
     })
     return nil
   end
-  return require("dot.theme." .. theme)
+  return dot.theme[theme]
 end
 
 ---@param force                         boolean

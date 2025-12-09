@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.vsc.plugin
+---@class dot.hlgroup.vsc.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

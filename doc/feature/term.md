@@ -69,5 +69,5 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 ### Nvimbar Component (`lua/eve/ux/nvimbar/component/term.lua`)
 - Renders terminals with truncated names, index badges, separators, and a persistent “+” button.
 - Uses the same centred-scroll strategy as the Notepad bar; arrow buttons display hidden counts and call the existing focus commands.
-- Highlights reuse the theming defined in `eve.constant.hlgroup.nvimbar`, so focused terminals share the look-and-feel of other widgets.
+- Highlights reuse the theming defined in `dot.hlgroup.nvimbar`, so focused terminals share the look-and-feel of other widgets.
 - Exposes `M.terms` for legacy code paths while new integrations should prefer `M.items` and `M.add_button`.

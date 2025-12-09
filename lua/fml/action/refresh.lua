@@ -29,7 +29,7 @@ function M.refresh_all()
     pcall(function()
       require("plenary.reload").reload_module("eve.constant.lang")
       require("plenary.reload").reload_module("dot.theme")
-      require("plenary.reload").reload_module("eve.constant.hlgroup")
+      require("plenary.reload").reload_module("dot.hlgroup")
       vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
     end)
   end

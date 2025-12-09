@@ -1,10 +1,10 @@
----@class eve.constant.hlgroup.plugin
+---@class dot.hlgroup.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("eve.constant.hlgroup.%s.plugin", context.scheme.theme) ---@type string
+  local md = string.format("dot.hlgroup.%s.plugin", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)

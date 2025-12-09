@@ -1,6 +1,5 @@
 ---@class eve.__mods
 local __mods = {
-  constant = "eve.constant",
   context = "eve.context",
   fn = "eve.fn",
   state = "eve.state",
@@ -27,7 +26,6 @@ local __mods = {
 
 ---@class eve
 ---@field public __mods                 eve.__mods
----@field public constant               eve.constant
 ---@field public context                eve.context
 ---@field public fn                     eve.fn
 ---@field public state                  eve.state

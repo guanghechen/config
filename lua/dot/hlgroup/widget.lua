@@ -1,16 +1,27 @@
----@class eve.constant.hlgroup.vsc.widget
+---@class dot.hlgroup.widget
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
+  local md = string.format("dot.hlgroup.%s.widget", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_hlgroup_map(context)
+  end
+
+  return M.default_gen_hlgroup_map(context)
+end
+
+---@param context                       dot.t.theme.IContext
+---@return table<string, dot.t.theme.IHlgroup>
+function M.default_gen_hlgroup_map(context)
   local cs = std.color
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
-  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
 
-  local bg = t and c.none or u.bg0 ---@type string
-  local bg_pane = t and u.bg0 or c.none ---@type string
+  local bg = t and u.none or u.bg0 ---@type string
+  local bg_pane = t and u.bg0 or u.none ---@type string
 
   return {
     ---buffers
@@ -19,17 +30,17 @@ function M.gen_hlgroup_map(context)
     f_buf_filepath = { fg = u.fg2 },
 
     ---colorpicker
-    f_cp_normal = { fg = c.text, bg = bg_pane },
-    f_cp_border = { fg = c.widget_border, bg = bg_pane },
-    f_cp_title = { fg = c.accentPurple, bg = bg_pane, bold = true },
-    f_cp_bar_name = { fg = c.textDim, bg = bg_pane },
-    f_cp_bar_value = { fg = c.text, bg = bg_pane },
-    f_cp_point = { fg = c.text, bold = true },
-    f_cp_point_dark = { fg = c.base, bold = true },
-    f_cp_point_light = { fg = c.text, bold = true },
-    f_cp_preview_before = { fg = c.text, bg = c.editorWidget_background },
-    f_cp_preview_after = { fg = c.text, bg = c.editorWidget_background },
-    f_cp_output_mode = { fg = c.textDim, bg = bg_pane },
+    f_cp_normal = { fg = u.fg1, bg = bg_pane },
+    f_cp_border = { fg = u.bg4, bg = bg_pane },
+    f_cp_title = { fg = u.purple, bg = bg_pane, bold = true },
+    f_cp_bar_name = { fg = u.fg3, bg = bg_pane },
+    f_cp_bar_value = { fg = u.fg2, bg = bg_pane },
+    f_cp_point = { fg = u.fg1, bold = true },
+    f_cp_point_dark = { fg = u.bg0, bold = true },
+    f_cp_point_light = { fg = u.fg0, bold = true },
+    f_cp_preview_before = { fg = u.fg1, bg = u.bg3 },
+    f_cp_preview_after = { fg = u.fg1, bg = u.bg3 },
+    f_cp_output_mode = { fg = u.fg4, bg = bg_pane },
 
     ---cmdline
     f_uc_border = { link = "FloatActiveBorder" },
@@ -47,7 +58,7 @@ function M.gen_hlgroup_map(context)
     f_lnum_warn = { fg = u.yellow },
     f_lnum_info = { fg = u.green },
     f_lnum_hint = { fg = u.purple },
-    f_transparent = { bg = c.none },
+    f_transparent = { bg = u.none },
     f_fold_virt_text = { fg = u.bg2, bg = u.yellow, italic = true },
     f_fold_virt_text_inv = { fg = u.yellow, bg = bg, italic = true },
 
@@ -98,31 +109,31 @@ function M.gen_hlgroup_map(context)
     f_ghp_normal = { bg = u.bg1 },
 
     ---matched pairs
-    f_matched_pairs_0 = { fg = c.editorBracket_fg1, bg = u.bg4, bold = true },
-    f_matched_pairs_1 = { fg = c.editorBracket_fg1 },
-    f_matched_pairs_2 = { fg = c.editorBracket_fg2 },
-    f_matched_pairs_3 = { fg = c.editorBracket_fg3 },
-    f_matched_pairs_4 = { fg = c.editorBracket_fg4 },
-    f_matched_pairs_5 = { fg = c.editorBracket_fg5 },
-    f_matched_pairs_6 = { fg = c.editorBracket_fg6 },
-    f_unmatched_pairs = { fg = c.editorBracket_fg0 },
+    f_matched_pairs_0 = { fg = u.green, bg = u.bg4, bold = true, italic = true },
+    f_matched_pairs_1 = { fg = cs.mix(u.bg0, u.brightPurple, 90) },
+    f_matched_pairs_2 = { fg = cs.mix(u.bg0, u.brightBlue, 90) },
+    f_matched_pairs_3 = { fg = cs.mix(u.bg0, u.brightYellow, 90) },
+    f_matched_pairs_4 = { fg = cs.mix(u.bg0, u.brightOrange, 90) },
+    f_matched_pairs_5 = { fg = cs.mix(u.bg0, u.brightAqua, 90) },
+    f_matched_pairs_6 = { fg = cs.mix(u.bg0, u.brightGreen, 90) },
+    f_unmatched_pairs = { fg = u.red, italic = true },
 
     ---hipatterns
-    f_hipattern_error = { fg = c.base, bg = c.accentRed, bold = true, italic = true, underline = true },
-    f_hipattern_warn = { fg = c.base, bg = c.warning, bold = true, italic = true, underline = true },
-    f_hipattern_todo = { fg = c.base, bg = c.accentPurple, bold = true, italic = true, underline = true },
-    f_hipattern_info = { fg = c.base, bg = c.accentBlue, bold = true, italic = true, underline = true },
-    f_hipattern_success = { fg = c.base, bg = c.success, bold = true, italic = true, underline = true },
-    f_hipattern_hint = { fg = c.base, bg = c.accentAqua, bold = true, italic = true, underline = true },
-    f_hipattern_quote = { fg = c.base, bg = c.textDim, bold = true, italic = true, underline = true },
+    f_hipattern_error = { fg = u.bg0, bg = u.red, bold = true, italic = true, underline = true },
+    f_hipattern_warn = { fg = u.bg0, bg = u.yellow, bold = true, italic = true, underline = true },
+    f_hipattern_todo = { fg = u.bg0, bg = u.purple, bold = true, italic = true, underline = true },
+    f_hipattern_info = { fg = u.bg0, bg = u.blue, bold = true, italic = true, underline = true },
+    f_hipattern_success = { fg = u.bg0, bg = u.green, bold = true, italic = true, underline = true },
+    f_hipattern_hint = { fg = u.bg0, bg = u.aqua, bold = true, italic = true, underline = true },
+    f_hipattern_quote = { fg = u.bg0, bg = u.fg3, bold = true, italic = true, underline = true },
 
     ---image
-    f_image_anchor = { fg = c.accentPurple },
+    f_image_anchor = { fg = u.purple },
     f_image_border = { link = "ms_b_none" },
-    f_image_loading = { fg = c.textDim },
-    f_image_math = { fg = c.accentPurple },
-    f_image_special = { fg = c.accentPurple },
-    f_image_spinner = { fg = c.textDim },
+    f_image_loading = { fg = u.fg4 },
+    f_image_math = { fg = u.purple },
+    f_image_special = { fg = u.purple },
+    f_image_spinner = { fg = u.fg4 },
 
     ---indentline
     f_indentline_1 = { fg = cs.mix(u.bg0, u.red, 20) },
@@ -213,31 +224,31 @@ function M.gen_hlgroup_map(context)
 
     ---notify
     -- stylua: ignore start
-    f_un_border_trace       = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_border_debug       = { fg = u.green,   bg = t and u.bg0 or c.none },
-    f_un_border_info        = { fg = u.blue,    bg = t and u.bg0 or c.none },
-    f_un_border_warn        = { fg = u.yellow,  bg = t and u.bg0 or c.none },
-    f_un_border_error       = { fg = u.red,     bg = t and u.bg0 or c.none },
-    f_un_icon_trace         = { fg = u.fg2,     bg = c.none },
-    f_un_icon_debug         = { fg = u.green,   bg = c.none },
-    f_un_icon_info          = { fg = u.blue,    bg = c.none },
-    f_un_icon_warn          = { fg = u.yellow,  bg = c.none },
-    f_un_icon_error         = { fg = u.red,     bg = c.none },
-    f_un_level_trace        = { fg = u.fg2,     bg = c.none },
-    f_un_level_debug        = { fg = u.green,   bg = c.none },
-    f_un_level_info         = { fg = u.blue,    bg = c.none },
-    f_un_level_warn         = { fg = u.yellow,  bg = c.none },
-    f_un_level_error        = { fg = u.red,     bg = c.none },
-    f_un_normal_trace       = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_normal_debug       = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_normal_info        = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_normal_warn        = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_normal_error       = { fg = u.fg2,     bg = t and u.bg0 or c.none },
-    f_un_title_trace        = { fg = u.fg2,     bg = c.none },
-    f_un_title_debug        = { fg = u.green,   bg = c.none },
-    f_un_title_info         = { fg = u.blue,    bg = c.none },
-    f_un_title_warn         = { fg = u.yellow,  bg = c.none },
-    f_un_title_error        = { fg = u.red,     bg = c.none },
+    f_un_border_trace       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_border_debug       = { fg = u.green,   bg = t and u.bg0 or u.none },
+    f_un_border_info        = { fg = u.blue,    bg = t and u.bg0 or u.none },
+    f_un_border_warn        = { fg = u.yellow,  bg = t and u.bg0 or u.none },
+    f_un_border_error       = { fg = u.red,     bg = t and u.bg0 or u.none },
+    f_un_icon_trace         = { fg = u.fg2,     bg = u.none },
+    f_un_icon_debug         = { fg = u.green,   bg = u.none },
+    f_un_icon_info          = { fg = u.blue,    bg = u.none },
+    f_un_icon_warn          = { fg = u.yellow,  bg = u.none },
+    f_un_icon_error         = { fg = u.red,     bg = u.none },
+    f_un_level_trace        = { fg = u.fg2,     bg = u.none },
+    f_un_level_debug        = { fg = u.green,   bg = u.none },
+    f_un_level_info         = { fg = u.blue,    bg = u.none },
+    f_un_level_warn         = { fg = u.yellow,  bg = u.none },
+    f_un_level_error        = { fg = u.red,     bg = u.none },
+    f_un_normal_trace       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_normal_debug       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_normal_info        = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_normal_warn        = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_normal_error       = { fg = u.fg2,     bg = t and u.bg0 or u.none },
+    f_un_title_trace        = { fg = u.fg2,     bg = u.none },
+    f_un_title_debug        = { fg = u.green,   bg = u.none },
+    f_un_title_info         = { fg = u.blue,    bg = u.none },
+    f_un_title_warn         = { fg = u.yellow,  bg = u.none },
+    f_un_title_error        = { fg = u.red,     bg = u.none },
     f_un_winbar_trace       = { fg = u.fg2,     bg = u.bg0, sp = u.bg2,    bold = true, underline = true },
     f_un_winbar_debug       = { fg = u.green,   bg = u.bg0, sp = u.green,  bold = true, underline = true },
     f_un_winbar_info        = { fg = u.blue,    bg = u.bg0, sp = u.blue,   bold = true, underline = true },
@@ -262,9 +273,9 @@ function M.gen_hlgroup_map(context)
     f_pk_result_current = { bg = u.bg3 },
     f_pk_result_normal = { bg = bg_pane },
     f_pk_sign_line_current = { bg = u.bg3 },
-    f_pk_sign_line_present = { fg = u.pink, bg = c.none, bold = true },
+    f_pk_sign_line_present = { fg = u.pink, bg = u.none, bold = true },
     f_pk_sign_line_present_current = { fg = u.pink, bg = u.bg3, bold = true },
-    f_pk_sign_line_selected = { fg = u.purple, bg = c.none },
+    f_pk_sign_line_selected = { fg = u.purple, bg = u.none },
     f_pk_sign_line_selected_current = { fg = u.purple, bg = u.bg3 },
 
     ---popupmenu
@@ -273,66 +284,66 @@ function M.gen_hlgroup_map(context)
     f_up_selected = { fg = u.bg1, bg = u.blue, bold = true, italic = true },
 
     ---render-markdown
-    f_md_bullet = { fg = c.tokenPunctuationDefinitionListBeginMarkdown },
-    f_md_callout_error = { fg = c.accentRed, bold = true },
-    f_md_callout_hint = { fg = c.accentAqua },
-    f_md_callout_info = { fg = c.textLink_foreground },
-    f_md_callout_progress = { fg = c.accentPurple, bold = true },
-    f_md_callout_quote = { fg = c.text, bg = c.textBlockQuote_background },
-    f_md_callout_success = { fg = c.success, bold = true },
-    f_md_callout_warn = { fg = c.accentYellow, bold = true },
-    f_md_code = { bg = c.textCodeBlock_background },
-    f_md_code_border = { bg = c.textCodeBlock_background },
-    f_md_code_fallback = { fg = c.textPreformat_foreground },
-    f_md_code_header = { fg = c.textPreformat_foreground, bg = c.textCodeBlock_background },
-    f_md_code_inline = { fg = c.tokenMarkupInlineRaw, bg = c.textPreformat_background },
-    f_md_dash = { fg = c.tokenConstantCharacterEscape },
-    f_md_heading_h1 = { fg = c.tokenControlFlowSpecialKeywords, bold = true },
-    f_md_heading_h1_bg = { bg = cs.mix(c.base, c.tokenControlFlowSpecialKeywords, 20) },
-    f_md_heading_h2 = { fg = c.tokenTypesDeclarationAndReferences, bold = true },
-    f_md_heading_h2_bg = { bg = cs.mix(c.base, c.tokenTypesDeclarationAndReferences, 20) },
-    f_md_heading_h3 = { fg = c.tokenFunctionDeclarations, bold = true },
-    f_md_heading_h3_bg = { bg = cs.mix(c.base, c.tokenFunctionDeclarations, 20) },
-    f_md_heading_h4 = { fg = c.tokenConstantsAndEnums, bold = true },
-    f_md_heading_h4_bg = { bg = cs.mix(c.base, c.tokenConstantsAndEnums, 20) },
-    f_md_heading_h5 = { fg = c.tokenVariableAndParameterName, bold = true },
-    f_md_heading_h5_bg = { bg = cs.mix(c.base, c.tokenVariableAndParameterName, 20) },
-    f_md_heading_h6 = { fg = c.tokenConstantNumeric, bold = true },
-    f_md_heading_h6_bg = { bg = cs.mix(c.base, c.tokenConstantNumeric, 20) },
-    f_md_link = { fg = c.textLink_foreground, underline = true },
-    f_md_link_wiki = { fg = c.textLink_activeForeground, italic = true },
-    f_md_quote = { fg = c.text, bg = c.textBlockQuote_background },
+    f_md_bullet = { fg = u.fg4 },
+    f_md_callout_error = { fg = u.red, bold = true },
+    f_md_callout_hint = { fg = u.aqua },
+    f_md_callout_info = { fg = u.blue },
+    f_md_callout_progress = { fg = u.aqua, bold = true },
+    f_md_callout_quote = { fg = u.fg1, bg = u.bg2 },
+    f_md_callout_success = { fg = u.green, bold = true },
+    f_md_callout_warn = { fg = u.yellow, bold = true },
+    f_md_code = { bg = u.bg2 },
+    f_md_code_border = { fg = u.aqua, bg = u.bg2 },
+    f_md_code_fallback = { fg = u.fg4 },
+    f_md_code_header = { fg = u.purple, bg = u.bg2 },
+    f_md_code_inline = { fg = u.orange, bg = u.bg4 },
+    f_md_dash = { fg = u.orange },
+    f_md_heading_h1 = { fg = u.purple, bold = true },
+    f_md_heading_h1_bg = { bg = cs.mix(u.bg0, u.purple, 15) },
+    f_md_heading_h2 = { fg = u.aqua, bold = true },
+    f_md_heading_h2_bg = { bg = cs.mix(u.bg0, u.aqua, 15) },
+    f_md_heading_h3 = { fg = u.orange, bold = true },
+    f_md_heading_h3_bg = { bg = cs.mix(u.bg0, u.orange, 15) },
+    f_md_heading_h4 = { fg = u.yellow, bold = true },
+    f_md_heading_h4_bg = { bg = cs.mix(u.bg0, u.yellow, 15) },
+    f_md_heading_h5 = { fg = u.blue, bold = true },
+    f_md_heading_h5_bg = { bg = cs.mix(u.bg0, u.blue, 15) },
+    f_md_heading_h6 = { fg = u.green, bold = true },
+    f_md_heading_h6_bg = { bg = cs.mix(u.bg0, u.green, 15) },
+    f_md_link = { fg = u.aqua, underline = true },
+    f_md_link_wiki = { fg = u.aqua, italic = true },
+    f_md_quote = { fg = u.fg1, bg = u.bg2 },
     f_md_table_filler = { link = "Conceal" },
-    f_md_table_head = { fg = c.tokenTypesDeclarationAndReferences, bold = true },
-    f_md_table_row = { fg = c.tokenString },
+    f_md_table_head = { fg = u.purple, bold = true },
+    f_md_table_row = { fg = u.orange },
     f_md_task_open = { fg = u.fg3 },
-    f_md_task_done = { fg = c.success, bold = true },
-    f_md_task_question = { fg = c.accentRed, bold = true },
-    f_md_task_next = { fg = c.textLink_foreground, bold = true },
-    f_md_task_cancelled = { fg = u.fg4, italic = true },
-    f_md_task_cancelled_text = { fg = u.fg4, italic = true, strikethrough = true },
-    f_md_task_important = { fg = c.tokenControlFlowSpecialKeywords, bold = true },
-    f_md_task_favorite = { fg = c.tokenConstantCharacterEscape, bold = true },
-    f_md_text_inline_highlight = { fg = c.base, bg = cs.mix(c.base, c.tokenFunctionDeclarations, 50) },
+    f_md_task_done = { fg = u.green, bold = true },
+    f_md_task_question = { fg = u.red, bold = true },
+    f_md_task_next = { fg = u.blue, bold = true },
+    f_md_task_cancelled = { fg = u.bg4, italic = true },
+    f_md_task_cancelled_text = { fg = u.bg4, italic = true, strikethrough = true },
+    f_md_task_important = { fg = u.purple, bold = true },
+    f_md_task_favorite = { fg = cs.mix(u.yellow, u.orange, 60), bold = true },
+    f_md_text_inline_highlight = { fg = u.bg0, bg = cs.mix(u.bg0, u.yellow, 45) },
 
     ---select ai
     f_us_ai_attached = { fg = u.pink, bold = true },
-    f_us_ai_loc_col = { fg = c.accentAqua },
+    f_us_ai_loc_col = { fg = u.aqua },
     f_us_ai_loc_delim = { fg = u.fg4 },
-    f_us_ai_loc_file = { fg = c.accentBlue },
-    f_us_ai_loc_num = { fg = c.tokenConstantNumeric },
-    f_us_ai_loc_row = { fg = c.accentPurple },
+    f_us_ai_loc_file = { fg = u.blue },
+    f_us_ai_loc_num = { fg = u.orange },
+    f_us_ai_loc_row = { fg = u.purple },
     f_us_ai_new = { fg = u.fg2 },
-    f_us_ai_prompt_header = { fg = c.accentPurple, bold = true },
+    f_us_ai_prompt_header = { fg = u.purple, bold = true },
     f_us_ai_running_other_session = { fg = u.fg0, bold = true },
     f_us_ai_running_same_session = { fg = u.aqua, bold = true },
     f_us_ai_running_same_window = { fg = u.blue, bold = true },
     f_us_ai_send_to_all = { fg = u.red, bold = true },
 
     ---select codeaction
-    f_us_codeaction_client_name = { fg = u.fg4, bg = c.none },
-    f_us_codeaction_content = { fg = u.fg1, bg = c.none },
-    f_us_codeaction_order = { fg = u.red, bg = c.none },
+    f_us_codeaction_client_name = { fg = u.fg4, bg = u.none },
+    f_us_codeaction_content = { fg = u.fg1, bg = u.none },
+    f_us_codeaction_order = { fg = u.red, bg = u.none },
 
     ---search
     f_us_input_normal = { fg = u.fg1, bg = bg },
@@ -342,7 +353,7 @@ function M.gen_hlgroup_map(context)
     f_us_main_current = { bg = u.bg3 },
     f_us_main_match = { fg = u.blue },
     f_us_main_match_lnum = { fg = u.fg4 },
-    f_us_main_present = { fg = u.blue, bg = c.none },
+    f_us_main_present = { fg = u.blue, bg = u.none },
     f_us_main_present_cur = { fg = u.blue, bg = u.bg3 },
     f_us_main_normal = { bg = bg_pane },
     f_us_main_replace = { fg = u.green },
@@ -375,9 +386,9 @@ function M.gen_hlgroup_map(context)
     ---signs
     fs_input_prompt = { fg = u.red, bg = bg },
     fs_main_current = { bg = u.bg3 },
-    fs_main_present = { fg = u.blue, bg = c.none },
+    fs_main_present = { fg = u.blue, bg = u.none },
     fs_main_present_cur = { fg = u.blue, bg = u.bg3 },
-    fs_main_selected = { fg = u.purple, bg = c.none },
+    fs_main_selected = { fg = u.purple, bg = u.none },
     fs_main_selected_cur = { fg = u.purple, bg = u.bg3 },
 
     ---terminal
@@ -396,8 +407,8 @@ function M.gen_hlgroup_map(context)
     f_ux_trailspace = { bg = cs.mix(u.bg0, u.red, 60) },
 
     ---virtcolumn
-    h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.pink, 25) },
-    h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 45) },
+    h_virtcolumn_1 = { fg = cs.mix(u.bg0, u.pink, 30) },
+    h_virtcolumn_2 = { fg = cs.mix(u.bg0, u.red, 30) },
 
     ---keymaps
     f_us_km_desc = { fg = u.fg2 },
@@ -419,9 +430,9 @@ function M.gen_hlgroup_map(context)
     f_winsep_title = {},
 
     ---maximize
-    f_maximize_float_normal = { fg = c.editor_foreground, bg = c.editor_background },
-    f_maximize_float_border = { fg = c.widget_border, bg = c.editor_background },
-    f_maximize_normal = { fg = c.editor_foreground, bg = c.editor_background },
+    f_maximize_float_normal = { fg = u.fg1, bg = u.bg0 },
+    f_maximize_float_border = { fg = u.bg4, bg = u.bg0 },
+    f_maximize_normal = { fg = u.fg1, bg = u.bg0 },
   }
 end
 

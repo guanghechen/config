@@ -1,4 +1,4 @@
----@class eve.constant.hlgroup.catppuccin.plugin
+---@class dot.hlgroup.catppuccin.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
