@@ -55,7 +55,6 @@ local __mods = {
   History = "std.collection.history",
   InputHistory = "std.collection.input_history",
   Observable = "std.collection.observable",
-  Promise = "std.collection.promise",
   Scheduler = "std.collection.scheduler",
   Spawn = "std.collection.spawn",
   Subscriber = "std.collection.subscriber",
@@ -102,7 +101,6 @@ local __mods = {
 ---@field public History                std.collection.History
 ---@field public InputHistory           std.collection.InputHistory
 ---@field public Observable             std.collection.Observable
----@field public Promise                std.collection.Promise
 ---@field public Scheduler              std.collection.Scheduler
 ---@field public Spawn                  std.collection.Spawn
 ---@field public Subscriber             std.collection.Subscriber
