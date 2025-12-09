@@ -2,11 +2,9 @@
 local M = {}
 
 ---@class dot.var.Names
-M.Names = {
-  BUF_DISABLE_LINT = "eve_buf_disable_lint",
-  NEO_TREE_SOURCE = "neo_tree_source",
-  WINLINE_DISABLED = "eve_winline_disabled",
-}
+M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
+M.N_NEO_TREE_SOURCE = "neo_tree_source"
+M.N_WINLINE_DISABLED = "dot_winline_disabled"
 
 local cn = vim.api.nvim_create_namespace
 

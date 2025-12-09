@@ -203,7 +203,7 @@ function M:create_win_as_needed()
     winnr_new_created = true
 
     eve.win.set_type(winnr, eve.win.Types.SELECT)
-    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].number = false
     vim.wo[winnr].relativenumber = false

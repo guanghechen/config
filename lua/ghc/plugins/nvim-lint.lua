@@ -109,7 +109,7 @@ return {
           return
         end
 
-        if vim.b[bufnr][dot.var.Names.BUF_DISABLE_LINT] then
+        if vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] then
           return true
         end
 

@@ -465,7 +465,7 @@ function M.__create_win_as_needed__(win)
     win.winnr = winnr
 
     eve.win.set_type(winnr, eve.win.Types.NOTIFY)
-    vim.w[winnr][dot.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].conceallevel = 0
     vim.wo[winnr].concealcursor = "n"

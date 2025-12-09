@@ -88,7 +88,7 @@ function M:show(winnr)
     self.winnr_hint = winnr_hint
 
     eve.win.set_type(winnr_hint, eve.win.Types.WINPICKER)
-    vim.w[winnr_hint][dot.var.Names.WINLINE_DISABLED] = true
+    vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr_hint].number = false
     vim.wo[winnr_hint].relativenumber = false

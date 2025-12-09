@@ -472,7 +472,7 @@ function M.locate_symbols(winnr, callback)
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
-  if vim.b[bufnr][dot.var.Names.WINLINE_DISABLED] or support_documentSymbol < 1 then
+  if vim.b[bufnr][dot.var.N_WINLINE_DISABLED] or support_documentSymbol < 1 then
     return abort()
   end
 
@@ -510,7 +510,7 @@ function M.locate_symbols(winnr, callback)
 
         if err.message == "trying to get AST for non-added document" then
           if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.b[bufnr][dot.var.Names.WINLINE_DISABLED] = true
+            vim.b[bufnr][dot.var.N_WINLINE_DISABLED] = true
           end
           settle(false)
           return
