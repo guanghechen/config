@@ -1,7 +1,7 @@
 {
   "ignorePaths": [
     "lsp/yamlls.lua",
-    "lua/resource/dict/",
+    "lua/std/dict/",
     "lua/std/fileicon.lua"
   ],
   "import": [

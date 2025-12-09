@@ -1,5 +1,5 @@
 //! Auto-generated English dictionary data.
-//! Source: lua/resource/dict/en.txt
+//! Source: lua/std/dict/en.txt
 
 #![allow(clippy::all)]
 #![allow(missing_docs)]

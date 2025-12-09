@@ -9,7 +9,6 @@ local __module_name__ = "ghc.cmp.dict" ---@type string
 ---| { kind: lsp.MarkupKind, value: string, draw?: fun(opts?: unknown) }
 
 ---@class ghc.cmp.dict.IConfig
----@field public dictionary_module      string
 ---@field public max_items              integer
 ---@field public min_keyword_length     integer
 ---@field public match_mode             ghc.cmp.dict.IMatchMode
@@ -25,7 +24,6 @@ local __module_name__ = "ghc.cmp.dict" ---@type string
 local M = {}
 
 local defaults = {
-  dictionary_module = "resource.dict.en",
   max_items = 20,
   min_keyword_length = 3,
   match_mode = "prefix",
@@ -119,32 +117,11 @@ end
 function M.new(opts)
   local self = setmetatable({}, { __index = M })
 
-  ---@type ghc.cmp.dict.IConfig
-  opts = vim.tbl_deep_extend("keep", opts or {}, defaults)
-  opts.match_mode = opts.match_mode == "substring" and "substring" or "prefix"
-  opts.max_items = math.max(1, opts.max_items)
-  opts.min_keyword_length = math.max(1, opts.min_keyword_length)
-
-  self.opts = opts
-  local entries = {}
-  local loaded = require(opts.dictionary_module)
-  if type(loaded) == "table" then
-    for index, item in ipairs(loaded) do
-      if type(item) == "table" then
-        local word = item[1]
-        local documentation = item[2]
-        if type(word) == "string" and type(documentation) == "string" then
-          entries[index] = { word = word, documentation = documentation }
-        end
-      end
-    end
-  else
-    std.reporter.error({
-      from = __module_name__,
-      subject = "load dictionary",
-      message = "Dictionary module did not return a table",
-      details = { module = opts.dictionary_module },
-    })
+  self.opts = vim.tbl_deep_extend("keep", opts or {}, defaults) ---@type ghc.cmp.dict.IConfig
+  local loaded = require("std.dict.en") ---@type { [1]: string, [2]: string }[]
+  local entries = {} ---@type { word: string, documentation: string }[]
+  for index, item in ipairs(loaded) do
+    entries[index] = { word = item[1], documentation = item[2] }
   end
 
   self.entries = entries
