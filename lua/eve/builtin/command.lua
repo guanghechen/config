@@ -5,18 +5,6 @@ local __module_name__ = "eve.builtin.command" ---@type string
 ---| "relative"
 ---| "filename"
 
----@class eve.builtin.command.IDefinition
----@field public uuid                   string
----@field public desc                   string
----@field public nargs                  0|1|"?"
----@field public candidates             ?string[]
-
----@class eve.builtin.command.IDefinitionWithCandidates
----@field public uuid                   string
----@field public desc                   string
----@field public nargs                  1|"?"
----@field public candidates             string[]
-
 ---@class eve.builtin.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtype                eve.builtin.tab.TypeEnum|nil
@@ -27,18 +15,18 @@ local __module_name__ = "eve.builtin.command" ---@type string
 ---@field public tabtype                ?eve.builtin.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
-local definition_map = {} ---@type table<string, eve.builtin.command.IDefinition>
+local definition_map = {} ---@type table<string, std.command.IDefinition>
 local command_map = {} ---@type table<string, eve.builtin.command.ICommand>
 
 ---@class eve.builtin.command
----@field protected __definition_map__  table<string, eve.builtin.command.IDefinition>
+---@field protected __definition_map__  table<string, std.command.IDefinition>
 ---@field protected __command_map__     table<string, eve.builtin.command.ICommand>
 local M = {
   __definition_map__ = definition_map,
   __command_map__ = command_map,
 }
 
----@param raw_definition                eve.builtin.command.IDefinition | eve.builtin.command.IDefinitionWithCandidates
+---@param raw_definition                std.command.IDefinition | std.command.IDefinitionWithCandidates
 ---@param overwrite                     boolean|nil
 ---@return eve.builtin.command
 function M.define(raw_definition, overwrite)
@@ -52,7 +40,7 @@ function M.define(raw_definition, overwrite)
     return M
   end
 
-  ---@type eve.builtin.command.IDefinition
+  ---@type std.command.IDefinition
   local definition = {
     uuid = raw_definition.uuid,
     desc = raw_definition.desc,
@@ -100,7 +88,7 @@ function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtype = implementation.tabtype ---@type eve.builtin.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
-  local definition = definition_map[uuid] ---@type eve.builtin.command.IDefinition|nil
+  local definition = definition_map[uuid] ---@type std.command.IDefinition|nil
   if definition == nil then
     std.reporter.warn({
       from = __module_name__,
@@ -161,9 +149,9 @@ end
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"
 ---@param candidates                    ?string[]
----@return eve.builtin.command.IDefinition
+---@return std.command.IDefinition
 local function def(uuid, desc, nargs, candidates)
-  ---@type eve.builtin.command.IDefinition
+  ---@type std.command.IDefinition
   local definition = {
     uuid = uuid,
     desc = desc,
@@ -178,9 +166,9 @@ end
 ---@param desc                          string
 ---@param nargs                         1|"?"
 ---@param candidates                    string[]
----@return eve.builtin.command.IDefinitionWithCandidates
+---@return std.command.IDefinitionWithCandidates
 local function defc(uuid, desc, nargs, candidates)
-  ---@type eve.builtin.command.IDefinitionWithCandidates
+  ---@type std.command.IDefinitionWithCandidates
   local definition = {
     uuid = uuid,
     desc = desc,

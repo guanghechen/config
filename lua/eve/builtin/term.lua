@@ -286,7 +286,7 @@ function M.create(params)
 
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
-    local definition = eve.command.definitions.term["focus_" .. tostring(i)] ---@type eve.builtin.command.IDefinition
+    local definition = eve.command.definitions.term["focus_" .. tostring(i)] ---@type std.command.IDefinition
     keymaps[#keymaps + 1] = {
       modes = { "i", "n", "t", "x" },
       key = key,
