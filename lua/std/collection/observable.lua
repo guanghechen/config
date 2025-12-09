@@ -86,7 +86,7 @@ function M:next(value, options)
   if self:isdisposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "next",
         message = "Don't update a disposed observable.",

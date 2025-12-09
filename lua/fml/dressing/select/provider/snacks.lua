@@ -1,6 +1,6 @@
 ---@param text                          string
 ---@return string
----@return std.t.IHighlightInline[]
+---@return ark.t.IHighlightInline[]
 local function generate_highlights(text)
   local matches = {} ---@type {pos: integer, end_pos: integer, content: string, group: string}[]
 
@@ -39,7 +39,7 @@ local function generate_highlights(text)
   end)
 
   local line_text = "" ---@type string
-  local highlights = {} ---@type std.t.IHighlightInline[]
+  local highlights = {} ---@type ark.t.IHighlightInline[]
   local last_pos = 1 ---@type integer
   local current_col = 0 ---@type integer
 
@@ -84,7 +84,7 @@ local function snacks_provider(items, opts)
     local raw_text = format_item(item) or (type(item) == "table" and item.text) or tostring(item) ---@type string
     raw_text = raw_text:gsub("\n", "\\n")
 
-    local text, highlights = generate_highlights(raw_text) ---@type string, std.t.IHighlightInline[]
+    local text, highlights = generate_highlights(raw_text) ---@type string, ark.t.IHighlightInline[]
     local text_len = #text ---@type integer
     if text_len > width then
       width = text_len

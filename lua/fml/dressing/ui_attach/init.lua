@@ -144,7 +144,7 @@ local function ui_attach_callback(event, kind, ...)
     local ignoreable = IGNOREABLE_EVENTS[event] == true ---@type boolean
     local silent = ignoreable
 
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       message = string.format("unhandled | %s", event),
       details = { event, kind, ... },

@@ -25,7 +25,7 @@ local M = {}
 ---@param err                           any
 ---@param unwatch                       fun():nil
 local function default_watch_on_error(filepath, err, unwatch)
-  std.reporter.error({
+  ark.reporter.error({
     from = __module_name__,
     subject = "watch_file",
     message = "Failed to watch file.",
@@ -51,7 +51,7 @@ function M.copy_file(filepath_source, filepath_target, force)
 
   local fin, err_open = io.open(filepath_source, "rb")
   if not fin then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "copy_file",
       message = "Failed to open source file.",
@@ -64,7 +64,7 @@ function M.copy_file(filepath_source, filepath_target, force)
   fin:close()
 
   if not content then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "copy_file",
       message = "Failed to read source file.",
@@ -77,7 +77,7 @@ function M.copy_file(filepath_source, filepath_target, force)
 
   local fout, err_create = io.open(filepath_target, "wb")
   if not fout then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "copy_file",
       message = "Failed to create target file.",
@@ -90,7 +90,7 @@ function M.copy_file(filepath_source, filepath_target, force)
   fout:close()
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "copy_file",
       message = "Failed to write to target file.",
@@ -122,7 +122,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
 
   local handle = vim.uv.fs_scandir(dirpath_source)
   if not handle then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "copy_directory",
       message = "Failed to open source directory.",
@@ -169,7 +169,7 @@ function M.read_file(params)
   local file = io.open(filepath, "rb") -- rb: read in binary mode
   if not file then
     if not silent then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "read_file",
         message = "Failed to open filepath.",
@@ -192,7 +192,7 @@ function M.read_file_as_base64(params)
   local file = io.open(filepath, "rb")
   if not file then
     if not silent then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "read_file_as_base64",
         message = "Failed to open filepath.",
@@ -215,7 +215,7 @@ function M.read_file_as_lines(params)
   local file = io.open(filepath, "r")
   if not file then
     if not silent then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "read_file_as_lines",
         message = "Failed to open filepath.",
@@ -256,7 +256,7 @@ function M.read_json(params)
   local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
   if not ok_to_decode_json then
     if not silent_on_bad_json then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "read_json",
         message = "Failed to decode json",
@@ -280,7 +280,7 @@ function M.touch(filepath)
       local current_time = vim.uv.hrtime() / 1e9 -- Get current time in seconds
       vim.uv.fs_utime(filepath, current_time, current_time, function(err)
         if err then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "touch",
             message = "Failed to touch file.",
@@ -345,7 +345,7 @@ function M.write_file(filepath, content)
 
   local file, err_open = io.open(filepath, "wb")
   if not file then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to open filepath.",
@@ -358,7 +358,7 @@ function M.write_file(filepath, content)
   file:close()
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "write_file",
       message = "Failed to write content.",
@@ -374,7 +374,7 @@ end
 function M.write_json(filepath, data, prettier)
   local ok_to_encode_json, json_text = pcall(prettier and std.json.stringify_prettier or std.json.stringify, data)
   if not ok_to_encode_json then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "write_json",
       message = "Failed to encode json data.",

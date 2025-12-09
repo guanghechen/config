@@ -27,7 +27,7 @@ elseif dot.env.IS_WIN then
     end
   end
 else
-  std.reporter.error({
+  ark.reporter.error({
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",

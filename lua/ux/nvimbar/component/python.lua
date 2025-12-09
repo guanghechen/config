@@ -22,7 +22,7 @@ std.fn.observe({ eve.context.lsp.python_venv_path }, function()
       python_version = vim.trim(output):match("(%d+%.%d+%.%d+)") or ""
     else
       python_version = nil
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         message = "Failed to run python version command.",
         details = { error = output, cmd = cmd, python_path = python_path },

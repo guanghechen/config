@@ -96,7 +96,7 @@ function M.to_md()
   local diagnostics = vim.diagnostic.get() ---@type vim.Diagnostic[]
 
   if #diagnostics == 0 then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "to_md",
       message = "No diagnostics found",
@@ -202,7 +202,7 @@ function M.to_md()
 
   local content = table.concat(lines, "\n")
   pcall(vim.fn.setreg, "+", content)
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "to_md",
     message = content,

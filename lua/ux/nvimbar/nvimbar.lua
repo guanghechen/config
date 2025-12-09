@@ -229,7 +229,7 @@ function M:place(position, raw_component, priority)
   local name = raw_component.name ---@type string
 
   if position ~= "left" and position ~= "center" and position ~= "right" then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "place",
       message = "Bad component position.",
@@ -382,7 +382,7 @@ function M:__render__(force)
         end
       end
     else
-      std.reporter.error({
+      ark.reporter.error({
         from = self.fullname,
         subject = "render",
         message = "Encounter error while render the nvimbar component.",

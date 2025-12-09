@@ -1,12 +1,5 @@
 ---@meta
 
----@alias std.e.LogLevelEnum
----| "TRACE"
----| "DEBUG"
----| "INFO"
----| "WARN"
----| "ERROR"
-
 ---@alias std.e.FindFileScope
 ---| "W"
 ---| "C"

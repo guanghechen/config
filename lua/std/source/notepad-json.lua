@@ -170,7 +170,7 @@ function M:load(force)
 
   -- Error handling for corrupted JSON
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Load Failed",
       message = "Failed to load notes from JSON file",
@@ -363,7 +363,7 @@ function M:update(uuid, patch)
     -- Check if new name conflicts with another note using index
     local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
     if has_conflict then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "Update Rejected",
         message = string.format("Note with name '%s' already exists", normalized_name),
@@ -411,7 +411,7 @@ function M:rename(uuid, new_name)
   -- Check if new name conflicts with another note using index
   local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
   if has_conflict then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "Rename Rejected",
       message = string.format("Note with name '%s' already exists", normalized_name),
@@ -470,7 +470,7 @@ function M:remove(uuid)
 
   -- Reject if last note
   if #state.orders <= 1 then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "Delete Rejected",
       message = "Cannot delete the last note",
@@ -639,7 +639,7 @@ function M:flush()
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Flush Failed",
       message = "Failed to write notes to JSON file",

@@ -171,7 +171,7 @@ function M:iterator()
         return termmeta, index
       end
 
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "Invalid termuuid",
         message = string.format("Cannot retrieve the termmeta by the given termuuid: %s", termuuid),
@@ -221,7 +221,7 @@ function M.create(params)
 
   local termmeta = metamap[termuuid] ---@type eve.builtin.term.IMeta|nil
   if termmeta ~= nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Duplicate UUID",
       message = string.format("A terminal with UUID '%s' already exists.", termuuid),

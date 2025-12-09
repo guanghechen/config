@@ -166,16 +166,16 @@ Each integration includes environment-specific:
 - Protected methods should be ordered alphabetically
 
 ### Error Reporting
-Use `std.reporter` for notifications instead of `vim.notify`:
+Use `ark.reporter` for notifications instead of `vim.notify`:
 
 ```lua
-std.reporter.error({
+ark.reporter.error({
   from = __module_name__,
   subject = "Operation Name",
   message = "Error message here",
   details = { key = "value" }, -- optional, displayed as JSON
 })
--- Same interface for std.reporter.{error|warn|info|debug}
+-- Same interface for ark.reporter.{error|warn|info|debug}
 ```
 
 ### Rust Integration

@@ -1,4 +1,4 @@
----@class std.reporter.Levels
+---@class ark.reporter.Levels
 local Levels = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -6,7 +6,7 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@class std.reporter.IOptions
+---@class ark.reporter.IOptions
 ---@field public from                   string
 ---@field public group                  ?string
 ---@field public subject                ?string
@@ -16,13 +16,13 @@ local Levels = {
 ---@field public silent                 ?boolean
 ---@field public title                  ?string
 ---@field public timeout                ?integer
----@field public highlights             ?std.t.IHighlight[]
+---@field public highlights             ?ark.t.IHighlight[]
 
----@class std.reporter
+---@class ark.reporter
 local M = {}
 
----@param level                         std.e.LogLevelEnum|integer
----@param options                       std.reporter.IOptions
+---@param level                         ark.e.LogLevelEnum|integer
+---@param options                       ark.reporter.IOptions
 ---@return nil
 function M.log(level, options)
   local group = options.group ---@type string|nil
@@ -30,7 +30,7 @@ function M.log(level, options)
   local anonymous = options.anonymous or false ---@type boolean
   local silent = options.silent or false ---@type boolean
   local timeout = options.timeout or 3000 ---@type integer
-  local highlights = options.highlights ---@type std.t.IHighlight[]|nil
+  local highlights = options.highlights ---@type ark.t.IHighlight[]|nil
 
   local title = options.title or options.from ---@type string
   if options.title == nil and options.subject ~= nil then
@@ -59,24 +59,24 @@ function M.log(level, options)
   })
 end
 
----@param options                       std.reporter.IOptions
+---@param options                       ark.reporter.IOptions
 function M.debug(options)
-  M.log("DEBUG", options)
+  M.log(vim.log.levels.DEBUG, options)
 end
 
----@param options                       std.reporter.IOptions
+---@param options                       ark.reporter.IOptions
 function M.info(options)
-  M.log("INFO", options)
+  M.log(vim.log.levels.INFO, options)
 end
 
----@param options                       std.reporter.IOptions
+---@param options                       ark.reporter.IOptions
 function M.warn(options)
-  M.log("WARN", options)
+  M.log(vim.log.levels.WARN, options)
 end
 
----@param options                       std.reporter.IOptions
+---@param options                       ark.reporter.IOptions
 function M.error(options)
-  M.log("ERROR", options)
+  M.log(vim.log.levels.ERROR, options)
 end
 
 return M

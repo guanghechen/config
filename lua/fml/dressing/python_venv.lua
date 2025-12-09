@@ -101,7 +101,7 @@ function M.activate_venv(venv_path)
 
   -- Make sure our python exists on disk before activating it, in case paths are wrong
   if vim.fn.executable(venv_python) == 0 then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "set_venv_and_system_paths",
       message = "The python path '" .. venv_python .. "' does not exist.",
@@ -109,7 +109,7 @@ function M.activate_venv(venv_path)
     return
   end
 
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "set_venv_and_system_paths",
     message = "Activated '" .. venv_python .. "'",

@@ -1,4 +1,5 @@
 _G.yoz = require("yoz") ---@type yoz
+_G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
 
 dot.setup_patches()

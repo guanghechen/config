@@ -68,7 +68,7 @@ local M = {}
 ---@return nil
 function M.find_git_not_committed()
   if not std.path.is_git_repo() then
-    std.reporter.error({
+    ark.reporter.error({
       from = name,
       subject = "find_git_not_committed",
       message = "Not a git repository",

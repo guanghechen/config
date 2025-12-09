@@ -143,7 +143,7 @@ function M:load(force)
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Load Failed",
       message = "Failed to load notes metadata",
@@ -344,7 +344,7 @@ function M:update(uuid, patch)
   if normalized_name ~= item.name then
     local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
     if has_conflict then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "Update Rejected",
         message = string.format("Note with name '%s' already exists", normalized_name),
@@ -398,7 +398,7 @@ function M:rename(uuid, new_name)
 
   local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
   if has_conflict then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "Rename Rejected",
       message = string.format("Note with name '%s' already exists", normalized_name),
@@ -460,7 +460,7 @@ function M:remove(uuid)
   local state = self:load(false) ---@type std.t.INotepadSourceFolderState
 
   if #state.orders <= 1 then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "Delete Rejected",
       message = "Cannot delete the last note",
@@ -589,7 +589,7 @@ function M:flush()
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Flush Failed",
       message = "Failed to write notes metadata",
@@ -751,7 +751,7 @@ function M:__rename_note_file__(old_name, new_name)
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Rename Failed",
       message = "Failed to rename note file",
@@ -777,7 +777,7 @@ function M:__save_note_content__(item)
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Save Failed",
       message = "Failed to save note content",

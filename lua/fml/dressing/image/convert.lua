@@ -457,7 +457,7 @@ function Convert:__on_done__()
   self._done = true
   if self._err and config.notify then
     local title = step and ("Conversion failed at step `%s`"):format(step.name) or "Conversion failed"
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = title,
       message = self._err,

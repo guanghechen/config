@@ -38,7 +38,7 @@ local function select_copy_filepath(params)
           local content = filepath ---@type string
 
           write_clipboard_registers(content)
-          std.reporter.info({
+          ark.reporter.info({
             from = __module_name__,
             message = "Copied absolute filepath: " .. content,
           })
@@ -47,19 +47,19 @@ local function select_copy_filepath(params)
           local content = std.path.relative(cwd, filepath, "/") ---@type string
 
           write_clipboard_registers(content)
-          std.reporter.info({
+          ark.reporter.info({
             from = __module_name__,
             message = "Copied relative filepath: " .. content,
           })
         elseif item.uuid == "filename" then
           local content = std.path.basename(filepath) ---@type string
           write_clipboard_registers(content)
-          std.reporter.info({
+          ark.reporter.info({
             from = __module_name__,
             message = "Copied filename: " .. content,
           })
         else
-          std.reporter.warn({
+          ark.reporter.warn({
             from = __module_name__,
             message = "Unknown item uuid: " .. item.uuid,
           })

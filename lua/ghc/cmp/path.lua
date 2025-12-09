@@ -118,7 +118,7 @@ function M:get_dirname(context)
   end)
 
   if not success then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "get_dirname",
       message = "Failed to parse directory path from context",
@@ -157,7 +157,7 @@ function M:get_last_path_part(path)
   end)
 
   if not success then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "get_last_path_part",
       message = "Failed to parse path part",
@@ -193,7 +193,7 @@ function M:get_text_edit_ranges(context)
   end)
 
   if not success then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "get_text_edit_ranges",
       message = "Failed to calculate text edit ranges",
@@ -235,7 +235,7 @@ function M:entry_to_completion_item(entry, dirname, range)
   end)
 
   if not success then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "entry_to_completion_item",
       message = "Failed to convert entry to completion item",
@@ -333,7 +333,7 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
     if success then
       safe_callback(result, nil)
     else
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "scan_directory",
         message = "Directory scan failed",
@@ -374,7 +374,7 @@ function M:get_completions(context, callback)
 
   -- Check rate limiting
   if not self:can_make_request() then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "rate_limit",
       message = string.format("Path completion rate limited, active scans: %d", self.context.active_scans),
@@ -416,7 +416,7 @@ function M:get_completions(context, callback)
     self.context.active_scans = math.max(0, self.context.active_scans - 1)
 
     if error then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "directory_scan_failed",
         message = "Failed to scan directory",
@@ -509,7 +509,7 @@ function M:read_file_async(full_path, timeout_ms, callback)
     end)
 
     if not success then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "read_file",
         message = "File read failed",
@@ -531,7 +531,7 @@ function M:resolve(item, callback)
   -- Use the new async file reader with timeout
   self:read_file_async(full_path, self.opts.request_timeout, function(content, error)
     if error then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "resolve_item",
         message = "Failed to read file for documentation",

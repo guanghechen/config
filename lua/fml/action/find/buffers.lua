@@ -90,7 +90,7 @@ local function create_buffer_item(bufnr, cwd)
     relative_filepath
   )
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = 5, hlname = "f_buf_nr" },
     { coll = 6, colr = 16, hlname = "f_buf_buftype" },

@@ -168,7 +168,7 @@ function M.locate_mason_bin_path(bin, silent)
   end
 
   if not silent then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "locate_mason_bin_path",
       message = string.format(
@@ -199,7 +199,7 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
 
   if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
     if not silent then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "locate_mason_pkg_path",
         message = string.format(
@@ -219,7 +219,7 @@ end
 
 ---@param filepath                      string
 ---@param offset                        integer
----@param highlights                    std.t.IHighlightInline[]
+---@param highlights                    ark.t.IHighlightInline[]
 ---@return string
 function M.calc_diagnostic_info(filepath, offset, highlights)
   local bufnr = eve.buf.locate_bufnr(filepath) ---@type integer|nil

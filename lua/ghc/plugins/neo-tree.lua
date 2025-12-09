@@ -183,7 +183,7 @@ return {
         local filepath = node.path ---@type string
         local stat = vim.uv.fs_stat(filepath)
         if not stat then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "show_file_info",
             message = "Failed to get file stats",

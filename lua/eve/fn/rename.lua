@@ -17,7 +17,7 @@ local function rename(params)
   local force = params.force or false ---@type boolean
 
   if not std.path.is_exist(from) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "source_not_exist",
       message = string.format("Source path does not exist: %s", from),
@@ -34,7 +34,7 @@ local function rename(params)
 
     if not move_success then
       local entity_type = isdir and "directory" or "file"
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "rename_failed",
         message = string.format("Failed to rename %s from %s to %s", entity_type, from, to),

@@ -16,7 +16,7 @@ function M.get_image_as_base64()
 
   local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "get_image_as_base64",
       message = "Failed to run command.",
@@ -40,7 +40,7 @@ function M.has_image()
   local output = vim.fn.system(cmd) ---@type string
   local exit_code = vim.v.shell_error ---@type integer
   if exit_code ~= 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "has_image",
       message = "Failed to run command.",
@@ -59,7 +59,7 @@ function M.paste_image_from_clipboard(filepath)
   local exit_code = vim.v.shell_error
 
   if exit_code ~= 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "paste_image_from_clipboard",
       message = "Failed to run command.",
@@ -84,7 +84,7 @@ if dot.env.IS_TMUX then
       return
     end
 
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       message = "Using fake clipboard:" .. fake_clipboard_filepath,
     })
@@ -95,7 +95,7 @@ if dot.env.IS_TMUX then
     local function read_from_fake_clipboard()
       local file = io.open(clipboard_file, "r")
       if file == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "read_from_fake_clipboard",
           message = "Unable to open fake clipboard file for reading.",
@@ -116,7 +116,7 @@ if dot.env.IS_TMUX then
     local function write_to_fake_clipboard(data)
       local file = io.open(clipboard_file, "w")
       if file == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "write_to_fake_clipboard",
           message = "Unable to open fake clipboard file for writing.",

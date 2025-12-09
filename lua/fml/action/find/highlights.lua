@@ -29,7 +29,7 @@ local function fetch_data()
   for lnum, hlname in ipairs(hlnames) do
     local hlid_str = std.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
     local text = string.format("%s xxx   %s", hlid_str, hlname) ---@type string
-    local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type std.t.IHighlightInline[]
+    local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type ark.t.IHighlightInline[]
 
     ---@type fml.action.find.highlights.IItemData
     local data = {

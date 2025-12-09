@@ -220,7 +220,7 @@ end
 function M.create_agent_pane(agent, cwd)
   local tool_config = config.tools[agent]
   if not tool_config then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "create_agent_pane",
       message = string.format("Unknown agent: %s", agent),
@@ -248,7 +248,7 @@ function M.create_agent_pane(agent, cwd)
   })
 
   if not result or #result == 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "create_agent_pane",
       message = string.format("Failed to create tmux session for %s.", agent),
@@ -258,7 +258,7 @@ function M.create_agent_pane(agent, cwd)
 
   local pane = parse_pane_format(result[1])
   if not pane then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "create_agent_pane",
       message = "Failed to parse tmux pane info.",

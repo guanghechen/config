@@ -236,7 +236,7 @@ function M.size(position)
 
       local text, err = yoz.fs.get_filesize(context.filepath)
       if err ~= nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "get_filesize failed",
           details = {

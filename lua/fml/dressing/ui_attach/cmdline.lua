@@ -4,10 +4,10 @@ local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@param entries                       table[]|nil
 ---@return string[]
----@return std.t.IHighlight[]
+---@return ark.t.IHighlight[]
 local function parse_block_entries(entries)
   local lines = {} ---@type string[]
-  local highlights = {} ---@type std.t.IHighlight[]
+  local highlights = {} ---@type ark.t.IHighlight[]
   if type(entries) ~= "table" then
     return lines, highlights
   end
@@ -444,7 +444,7 @@ function M._show_confirm(state, msg_show_task)
   local button_line_width = vim.api.nvim_strwidth(buttons_line) ---@type integer
 
   local message = "" ---@type string
-  local highlights = {} ---@type std.t.IHighlight[]
+  local highlights = {} ---@type ark.t.IHighlight[]
 
   ---! resolve the lines and highlights
   do
@@ -467,7 +467,7 @@ function M._show_confirm(state, msg_show_task)
           col_offset = 0
         end
         if #line > 0 then
-          ---@type std.t.IHighlight
+          ---@type ark.t.IHighlight
           local highlight = {
             lnum = lnum,
             coll = col_offset,
@@ -514,7 +514,7 @@ function M._show_confirm(state, msg_show_task)
     local buttons_offset = buttons_padding_width + 2 ---@type integer
     for index, button in ipairs(buttons) do
       local w = vim.api.nvim_strwidth(button) ---@type integer
-      ---@type std.t.IHighlight
+      ---@type ark.t.IHighlight
       local highlight = {
         lnum = lnum,
         coll = buttons_offset,

@@ -49,7 +49,7 @@ end
 ---@return nil
 local function fallback(lines, phase, silent)
   if not silent then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "fallback",
       message = "Did not handle paste, calling original vim.paste",

@@ -428,7 +428,7 @@ function M:calc_include_uuid_set(uuids)
     while uuid ~= nil and not uuidset[uuid] do
       local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
       if node == nil then
-        std.reporter.warn({
+        ark.reporter.warn({
           from = self.fullname,
           subject = "calc_include_uuid_set",
           message = string.format("Unknown node uuid: %s", uuid),
@@ -456,7 +456,7 @@ function M:empty(uuid)
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
   local node = nodemap[uuid] ---@type std.collection.tree.INode|nil
   if node == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "clear",
       message = string.format("Node with uuid '%s' does not exist.", uuid),
@@ -602,7 +602,7 @@ function M:remove(nodeuuid)
   local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
   local node = nodemap[nodeuuid] ---@type std.collection.tree.INode|nil
   if node == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "remove",
       message = string.format("Node with uuid '%s' does not exist.", nodeuuid),

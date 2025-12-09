@@ -241,7 +241,7 @@ function M.new(props)
     local start_col0 = type(locationstate.col) == "number" and math.floor(locationstate.col) or nil ---@type integer|nil
     local end_col0 = type(locationstate.col_end) == "number" and math.floor(locationstate.col_end) or nil ---@type integer|nil
 
-    local highlights = locationstate.highlights ---@type std.t.IHighlightInline[]|nil
+    local highlights = locationstate.highlights ---@type ark.t.IHighlightInline[]|nil
     if highlights ~= nil then
       for _, highlight in ipairs(highlights) do
         if start_col0 == nil and type(highlight.coll) == "number" then
@@ -703,7 +703,7 @@ function M.new(props)
 
         local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type std.collection.filetree.INode|nil
         if leafnode == nil then
-          std.reporter.error({
+          ark.reporter.error({
             from = self.fullname,
             subject = "replace_in_node",
             message = string.format("Cannot retrieve the leaf node by the given leafuuid (%s)", nodestate.leafuuid),
@@ -719,7 +719,7 @@ function M.new(props)
 
         local leafnodestate = treeview:retrieve(nodestate.leafuuid) ---@type ux.searcher.view.filetree.INodeState|nil
         if leafnodestate == nil then
-          std.reporter.error({
+          ark.reporter.error({
             from = self.fullname,
             subject = "replace_in_node",
             message = string.format(
@@ -742,7 +742,7 @@ function M.new(props)
         local locations = leafnodestate.locations ---@type ux.searcher.view.filetree.ILeafLocationState[]|nil
 
         if locations == nil then
-          std.reporter.error({
+          ark.reporter.error({
             from = self.fullname,
             subject = "replace_in_node",
             message = string.format("The leaf node (%s) has no locations", nodestate.leafuuid),
@@ -781,7 +781,7 @@ function M.new(props)
         })
         if advance_result == nil then
           if advance_error ~= nil then
-            std.reporter.error({
+            ark.reporter.error({
               from = self.fullname,
               subject = "replace_file_by_matches_advance",
               message = advance_error,
@@ -818,7 +818,7 @@ function M.new(props)
 
       local node = filetree:retrieve(nodeuuid) ---@type std.collection.filetree.INode|nil
       if node == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = self.fullname,
           subject = "replace_in_node",
           message = string.format("Cannot retrieve the filetree node by the given nodeuuid (%s)", nodeuuid),
@@ -1652,7 +1652,7 @@ function M:dispose()
     local ok6, error6 = pcall(on_dispose)
 
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-      std.reporter.error({
+      ark.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -1758,7 +1758,7 @@ function M:attach(rootuuid)
 
   local node = self._filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
   if node == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "attach",
       message = string.format("Cannot find node by the given uuid: %s", rootuuid),
@@ -1971,7 +1971,7 @@ function M:__search_internal__()
   local rootpath = self.rootpath:snapshot() ---@type string
 
   if not std.path.is_exist(rootpath) then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "__search__",
       message = string.format("Root path does not exist: %s", rootpath),
@@ -2072,7 +2072,7 @@ function M:__search_internal__()
 
       local leafnode = statemap[nodeuuid] ---@type ux.searcher.view.filetree.INodeState|nil
       if leafnode == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = self.fullname,
           subject = "__search__",
           message = string.format("Cannot retrieve node state by the given uuid: %s", nodeuuid),
@@ -2277,7 +2277,7 @@ function M:__replace_file__(cwd, node, nodestate)
     if succeed == true then
       treeview:remove_all_locations(nodestate)
     elseif replace_error ~= nil then
-      std.reporter.error({
+      ark.reporter.error({
         from = self.fullname,
         subject = "replace_file",
         message = replace_error,
@@ -2323,7 +2323,7 @@ function M:__replace_file__(cwd, node, nodestate)
     end
     std.table.truncate_inline(locations, k)
   elseif replace_error ~= nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "replace_file_by_matches",
       message = replace_error,

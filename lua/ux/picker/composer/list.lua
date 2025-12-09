@@ -32,7 +32,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public text_lower             string
----@field public highlights             std.t.IHighlightInline[]
+---@field public highlights             ark.t.IHighlightInline[]
 
 ---@class ux.picker.composer.list.IResetData
 ---@field public items                  ux.picker.composer.list.IItem[]
@@ -453,7 +453,7 @@ function M:dispose()
     local ok4, error4 = pcall(on_disposed)
 
     if not (ok1 and ok2 and ok3 and ok4) then
-      std.reporter.error({
+      ark.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -636,7 +636,7 @@ function M:__match__(input)
     }
     local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
     if search_err then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "search_in_lines failed",
         details = {

@@ -244,7 +244,7 @@ local function set_workspace_watchers(workspace)
         filepath = target,
         on_event = callback,
         on_error = function(path, err, unwatch_cb)
-          std.reporter.warn({
+          ark.reporter.warn({
             from = __module_name__,
             subject = subject,
             message = "Failed to watch git file changes.",
@@ -566,7 +566,7 @@ end
 ---@param filepath                      string
 ---@param filetype                      "file"|"directory"|nil
 ---@param offset                        integer
----@param highlights                    std.t.IHighlightInline[]
+---@param highlights                    ark.t.IHighlightInline[]
 ---@return string
 ---@return string|nil
 function M.calc_status_info(filepath, filetype, offset, highlights)

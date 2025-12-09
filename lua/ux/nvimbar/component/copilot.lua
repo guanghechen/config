@@ -43,7 +43,7 @@ local fn_show_message = eve.G.register_anonymous_fn(function()
     status = "Disconnected"
   end
 
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     details = { enabled = enabled, status = status },
   })

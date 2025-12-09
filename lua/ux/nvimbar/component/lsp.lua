@@ -23,7 +23,7 @@ end) or ""
 ---@type string
 local fn_show_error = eve.G.register_anonymous_fn(function(bufnr)
   local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- error",
     details = errors,
@@ -33,7 +33,7 @@ end)
 ---@type string
 local fn_show_warn = eve.G.register_anonymous_fn(function(bufnr)
   local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- warning",
     details = warns,
@@ -43,7 +43,7 @@ end)
 ---@type string
 local fn_show_hint = eve.G.register_anonymous_fn(function(bufnr)
   local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- hint",
     details = hints,
@@ -53,7 +53,7 @@ end)
 ---@type string
 local fn_show_info = eve.G.register_anonymous_fn(function(bufnr)
   local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- info",
     details = infos,

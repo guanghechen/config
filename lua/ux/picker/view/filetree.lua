@@ -32,7 +32,7 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
----@field public highlights             ?std.t.IHighlightInline[]
+---@field public highlights             ?ark.t.IHighlightInline[]
 
 ---@class ux.picker.view.filetree.IListviewRendererContext : ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -264,7 +264,7 @@ function M:match(params)
   }
   local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
   if search_err then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "search_in_lines failed",
       details = {
@@ -512,7 +512,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         return
       end
 
-      std.reporter.error({
+      ark.reporter.error({
         from = self.fullname,
         subject = "reset_filepaths",
         message = "Unexpected filetype",
@@ -613,7 +613,7 @@ function M:render_listview(params)
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or filetree.root ---@type string
   local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
   if rootnode == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "render_listview",
       message = "Cannot retrieve the root node",
@@ -728,7 +728,7 @@ function M.default_render_listview_leaf(ctx, node)
     or node.data.filepath:sub(#rootnode.data.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
   }
@@ -756,7 +756,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "f_ft_position" },
     { coll = offset, colr = -1, hlname = "f_ft_text" },
@@ -786,7 +786,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   if folded_depth < 1 then
     local text = string.format("%s %s", fileicon, basename) ---@type string
 
-    ---@type std.t.IHighlightInline[]
+    ---@type ark.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
       { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
@@ -816,7 +816,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     text = string.format("%s %s", fileicon, basenames[1]) ---@type string
   end
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
@@ -840,7 +840,7 @@ function M.default_render_treeview_leaf(_, node)
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local text = string.format("%s %s", fileicon, basename) ---@type string
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "f_ft_filename" },
@@ -866,7 +866,7 @@ function M.default_render_treeview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type std.t.IHighlightInline[]
+  ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "f_ft_position" },
     { coll = offset, colr = -1, hlname = "f_ft_text" },

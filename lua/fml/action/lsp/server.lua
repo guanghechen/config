@@ -8,7 +8,7 @@ function M.restart()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local clients = vim.lsp.get_clients({ bufnr = bufnr }) ---@type vim.lsp.Client[]
 
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "restart",
   })

@@ -274,7 +274,7 @@ local function fetch_diritem(dirpath, force)
   local raw_data, raw_err = yoz.fs.readdir(dirpath) ---@type yoz.fs.IReaddirResult|nil, yoz.fs.IReaddirError|nil
 
   if raw_data == nil and raw_err ~= nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = name,
       subject = "readdir failed",
       details = {
@@ -493,7 +493,7 @@ local function preview_render(composer, bufnr)
     end
   elseif fileitem.type == "directory" then
     local lines = {} ---@type string[]
-    local highlights = {} ---@type std.t.IHighlight[]
+    local highlights = {} ---@type ark.t.IHighlight[]
     local c_diritem = fetch_diritem(fileitem.path, false) ---@type fml.action.find.explorer.IDirItem
     for lnum, c_fileitem in ipairs(c_diritem.items) do
       local byte_pos = 0 ---@type integer

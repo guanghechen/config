@@ -196,7 +196,7 @@ function M:get_completions(context, callback)
   })
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "dictionary search",
       message = "Failed to execute yoz.dict.search",

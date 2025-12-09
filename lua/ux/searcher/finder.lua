@@ -89,7 +89,7 @@ function M:dispose()
   local ok2, error2 = pcall(eve.win.close, winnr)
   local ok3, error3 = pcall(eve.buf.close, bufnr)
   if not (ok1 and ok2 and ok3) then
-    std.reporter.error({
+    ark.reporter.error({
       from = fullname,
       subject = "dispose",
       message = "Failed to dispose",
@@ -243,7 +243,7 @@ function M:hide()
 
   local ok1, error1 = pcall(eve.win.close, winnr)
   if not ok1 then
-    std.reporter.error({
+    ark.reporter.error({
       from = self.fullname,
       subject = "hide",
       message = "Failed to hide",

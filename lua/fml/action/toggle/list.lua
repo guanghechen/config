@@ -99,7 +99,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "Unsupported buftype",
@@ -109,7 +109,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "File is modified without save, please save it first.",
@@ -214,7 +214,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "Unsupported buftype",
@@ -224,7 +224,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "File is modified without save, please save it first.",
@@ -507,7 +507,7 @@ local function fetch_data()
       text_flag
     )
 
-    ---@type std.t.IHighlightInline[]
+    ---@type ark.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #text_group + 1, hlname = "Special" },
       { coll = offset, colr = offset + #text_flag, hlname = hln_flag },

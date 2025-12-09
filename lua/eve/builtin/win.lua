@@ -522,7 +522,7 @@ function M.locate_symbols(winnr, callback)
         return
       end
 
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "locate_symbols",
         message = "Failed to request document symbols",

@@ -475,7 +475,7 @@ end
 function M:replace_current_match()
   local bufnr_source = self._bufnr_source ---@type integer|nil
   if bufnr_source == nil or not vim.api.nvim_buf_is_valid(bufnr_source) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "Source buffer is not valid",
@@ -485,7 +485,7 @@ function M:replace_current_match()
 
   local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "No matches found",
@@ -495,7 +495,7 @@ function M:replace_current_match()
 
   local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
   if not flag_replace then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "Replace mode is not enabled",
@@ -506,7 +506,7 @@ function M:replace_current_match()
   local search_pattern = self.o_search_pattern:snapshot() ---@type string
   local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
   if search_pattern == "" then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "Search pattern is empty",
@@ -516,7 +516,7 @@ function M:replace_current_match()
 
   local current_match_index = self.o_match_index:snapshot() ---@type integer
   if current_match_index <= 0 or current_match_index > #matches then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "No current match selected",
@@ -527,7 +527,7 @@ function M:replace_current_match()
   local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
   local current_match = matches[current_match_index] ---@type yoz.search.ITextMatch
   if current_match == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "Current match is invalid",
@@ -548,7 +548,7 @@ function M:replace_current_match()
   })
 
   if replaced_text == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = replace_err or "Failed to replace match",
@@ -573,13 +573,13 @@ function M:replace_current_match()
     -- Schedule search to refresh matches
     self._scheduler_search:schedule()
 
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "Replace Current Match",
       message = "Match replaced successfully",
     })
   else
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
       message = string.format("Failed to update buffer: %s", set_err),
@@ -591,7 +591,7 @@ end
 function M:replace_all_matches()
   local bufnr_source = self._bufnr_source ---@type integer|nil
   if bufnr_source == nil or not vim.api.nvim_buf_is_valid(bufnr_source) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = "Source buffer is not valid",
@@ -601,7 +601,7 @@ function M:replace_all_matches()
 
   local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = "No matches found",
@@ -611,7 +611,7 @@ function M:replace_all_matches()
 
   local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
   if not flag_replace then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = "Replace mode is not enabled",
@@ -622,7 +622,7 @@ function M:replace_all_matches()
   local search_pattern = self.o_search_pattern:snapshot() ---@type string
   local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
   if search_pattern == "" then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = "Search pattern is empty",
@@ -641,7 +641,7 @@ function M:replace_all_matches()
   })
 
   if replaced_text == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = replace_err or "Failed to replace matches",
@@ -663,13 +663,13 @@ function M:replace_all_matches()
     self.o_match_index:next(0)
     self.o_match_total:next(0)
 
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "Replace All Matches",
       message = string.format("Replaced %d matches successfully", #matches),
     })
   else
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
       message = string.format("Failed to update buffer: %s", set_err),
@@ -1249,7 +1249,7 @@ function M:__search__()
   local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, bufnr_source, 0, -1, false)
 
   if not ok_lines then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "search_in_buffer failed",
       details = {
@@ -1274,7 +1274,7 @@ function M:__search__()
     }
     local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
     if search_err then
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "search_in_lines failed",
         details = {
@@ -1416,7 +1416,7 @@ function M:__update_replace_preview__()
       })
 
       if replacement_text == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "Replace Preview",
           message = preview_err or "Failed to compute replacement preview",

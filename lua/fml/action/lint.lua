@@ -178,7 +178,7 @@ function M.apply_cspell_suggestion(bufnr, lnum, col, suggestion)
   vim.schedule(function()
     std.status.lint_schedule_nr:next(bufnr)
   end)
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "cspell_replace",
     message = string.format('Replaced "%s" with "%s".', context.text, replacement),
@@ -208,7 +208,7 @@ function M.spellcheck_register()
       words = { word },
     }
     std.fs.write_json(filepath, data, true)
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
       message = string.format("Created cspell.json file with word(s): %s.", word),
@@ -218,7 +218,7 @@ function M.spellcheck_register()
 
   local data = std.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
   if type(data) ~= "table" or type(data.words) ~= "table" then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "spellcheck_register",
       message = "Bad cspell.json format, missing the `words` field.",
@@ -242,7 +242,7 @@ function M.spellcheck_register()
   table.insert(data.words, word)
   table.sort(data.words)
   std.fs.write_json(filepath, data, true)
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "spellcheck_register",
     message = string.format("Added word(s) (%s) to cspell.json file.", word),

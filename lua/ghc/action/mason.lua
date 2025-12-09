@@ -70,7 +70,7 @@ local function do_install(packages, force, on_close)
   end
 
   if #invalid_packages > 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "Invalid packages",
       message = "The following packages do not exist in mason registry",
@@ -95,7 +95,7 @@ local function do_install(packages, force, on_close)
       count = count - 1
       if count < 1 then
         if #install_failed > 0 then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "Installation failed",
             message = "The following packages failed to install",

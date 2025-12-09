@@ -6,7 +6,7 @@ local __module_name__ = "lsp.rust_analyzer" ---@type string
 local function reload_workspace(bufnr)
   local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "rust_analyzer" })
   for _, client in ipairs(clients) do
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "reload_workspace",
       message = "Reloading Cargo workspace",
@@ -16,7 +16,7 @@ local function reload_workspace(bufnr)
       if err then
         error(tostring(err))
       end
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "reload_workspace",
         message = "Cargo workspace reloaded",
@@ -89,7 +89,7 @@ local function root_dir(bufnr, on_dir)
 
         on_dir(cargo_workspace_root or cargo_crate_dir)
       else
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "root_dir",
           message = "Failed to run cargo metadata.",
@@ -128,13 +128,13 @@ local function before_init(params, config)
     local result = proc:wait()
 
     if result.code == 0 then
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "runSingle",
         message = vim.trim(result.stdout or "Command completed."),
       })
     else
-      std.reporter.error({
+      ark.reporter.error({
         from = __module_name__,
         subject = "runSingle",
         message = "Command failed.",

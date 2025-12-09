@@ -73,7 +73,7 @@ function M:pick()
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = "ux.widget.colorpicker",
       subject = "pick",
       message = tostring(err),

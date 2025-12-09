@@ -79,7 +79,7 @@ local function fetch_data()
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 
-        ---@type std.t.IHighlightInline[]
+        ---@type ark.t.IHighlightInline[]
         local highlights = {
           { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "f_us_km_lhs" },
           { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "f_us_km_mode" },
@@ -122,7 +122,7 @@ local function fetch_data()
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 
-        ---@type std.t.IHighlightInline[]
+        ---@type ark.t.IHighlightInline[]
         local highlights = {
           { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "f_us_km_lhs" },
           { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "f_us_km_mode" },
@@ -296,7 +296,7 @@ local picker = ux.picker.ListComposer.new({
     local data = item.data
     if data.rhs and data.rhs ~= "" and data.rhs ~= "[callback]" then
       vim.fn.setreg("+", data.lhs)
-      std.reporter.info({
+      ark.reporter.info({
         from = name,
         subject = "Keymap copied",
         message = string.format("Copied '%s' to clipboard", data.lhs),

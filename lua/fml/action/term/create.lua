@@ -86,7 +86,7 @@ function M.rename()
   local termindex = eve.term.current() ---@type integer
   local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
   if termmeta == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "rename",
       message = "No active terminal found to rename.",

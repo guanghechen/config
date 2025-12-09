@@ -14,7 +14,7 @@ local function switch_source_header(bufnr, client)
   local method_name = "textDocument/switchSourceHeader"
   ---@diagnostic disable-next-line:param-type-mismatch
   if not client or not client:supports_method(method_name) then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "switch_source_header",
       message = string.format("method %s is not supported by any servers active on the current buffer", method_name),
@@ -28,7 +28,7 @@ local function switch_source_header(bufnr, client)
       error(tostring(err))
     end
     if not result then
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "switch_source_header",
         message = "corresponding file cannot be determined",
@@ -46,7 +46,7 @@ local function symbol_info(bufnr, client)
   local method_name = "textDocument/symbolInfo"
   ---@diagnostic disable-next-line:param-type-mismatch
   if not client or not client:supports_method(method_name) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "symbol_info",
       message = "Clangd client not found",

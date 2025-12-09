@@ -15,7 +15,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = filepath ---@type string
 
     write_clipboard_registers(content)
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
@@ -24,7 +24,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = std.path.relative(cwd, filepath, "/") ---@type string
 
     write_clipboard_registers(content)
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
@@ -32,12 +32,12 @@ local function copy_current_filepath(candidate, filepath)
     local content = std.path.basename(filepath) ---@type string
 
     write_clipboard_registers(content)
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filename to system clipboard!",
     })
   else
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },

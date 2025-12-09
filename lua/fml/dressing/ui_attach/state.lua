@@ -38,7 +38,7 @@
 
 ---@class fml.dressing.ui_attach.cmdline_block.IState
 ---@field public lines                  string[]
----@field public highlights             std.t.IHighlight[]
+---@field public highlights             ark.t.IHighlight[]
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 

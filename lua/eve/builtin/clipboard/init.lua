@@ -71,7 +71,7 @@ end
 function M.paste_image_as_base64(filepath_source)
   local filetype = vim.bo.filetype ---@type string
   if dot.filetype.is_not_sourcefile(filetype) then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Filetype does not support base64 encoding.",
@@ -88,7 +88,7 @@ function M.paste_image_as_base64(filepath_source)
   end
 
   if base64 == nil or type(base64) ~= "string" or #base64 < 1 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Could not get base64 string.",
@@ -100,7 +100,7 @@ function M.paste_image_as_base64(filepath_source)
   -- check if base64 string is too long (max_base64_size is in KB)
   local size_bytes = math.floor((string.len(base64) * 6) / 8)
   if size_bytes > MAX_BASE64_SIZE then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "paste_image_as_base64",
       message = "Base64 string is too large.",

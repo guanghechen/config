@@ -11,7 +11,7 @@ function M.search_in_buffer()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       message = "No valid source file window in current tab",
     })

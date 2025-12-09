@@ -41,7 +41,7 @@ local function refresh(force)
   end
 
   if bufnr_sourcefile ~= nil and not vim.api.nvim_buf_is_valid(bufnr_sourcefile) then
-    std.reporter.error({
+    ark.reporter.error({
       from = name,
       subject = "refresh",
       message = "Buffer is not valid or not set.",
@@ -135,7 +135,7 @@ local function refresh(force)
     end
 
     if leafnodestate.nodetype ~= "leaf" then
-      std.reporter.error({
+      ark.reporter.error({
         from = picker.fullname,
         subject = "refresh",
         message = "Expected leaf node state, but got: " .. leafnodestate.nodetype,
@@ -160,7 +160,7 @@ local function refresh(force)
     local locationuuid = string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations) ---@type string
 
     local text ---@type string
-    local highlights = {} ---@type std.t.IHighlightInline[]
+    local highlights = {} ---@type ark.t.IHighlightInline[]
 
     if diagnostic.code == nil then
       text = string.format("%s  : %s", dot.icon.diagnostic[severity], diagnostic.message) ---@type string

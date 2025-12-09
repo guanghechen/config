@@ -176,7 +176,7 @@ function M.show(task)
     std.status.msg_changes:next(message)
   end
 
-  local highlights = {} ---@type std.t.IHighlight[]
+  local highlights = {} ---@type ark.t.IHighlight[]
   local lnum, col_offset = 1, 0 ---@type integer, integer
   for _, item in ipairs(content) do
     local _, text, hlid = unpack(item) ---@type integer, string, integer
@@ -188,7 +188,7 @@ function M.show(task)
         col_offset = 0
       end
       if #line > 0 then
-        ---@type std.t.IHighlight
+        ---@type ark.t.IHighlight
         local highlight = {
           lnum = lnum,
           coll = col_offset,
@@ -208,7 +208,7 @@ function M.show(task)
 
   local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean
   local silent = KIND_MAP.CHANGES[kind] == true ---@type boolean
-  std.reporter.log(level, {
+  ark.reporter.log(level, {
     from = __module_name__,
     title = title,
     message = message,

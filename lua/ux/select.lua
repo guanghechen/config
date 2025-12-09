@@ -1,7 +1,7 @@
 ---@class ux.ISelectItem
 ---@field public uuid                   string
 ---@field public text                   string
----@field public highlights             std.t.IHighlightInline[]|nil
+---@field public highlights             ark.t.IHighlightInline[]|nil
 
 ---@class ux.ISelectProps
 ---@field public wincfg                 vim.api.keyset.win_config|nil

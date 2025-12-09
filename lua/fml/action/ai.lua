@@ -7,7 +7,7 @@ local M = {}
 function M.edit()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if vim.bo[bufnr].buftype ~= "" then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "edit",
       message = "Cannot edit non-standard buffer",
@@ -17,7 +17,7 @@ function M.edit()
 
   local filepath = vim.api.nvim_buf_get_name(0) ---@type string
   if filepath == "" then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "edit",
       message = "Cannot edit unnamed buffer",
@@ -54,7 +54,7 @@ function M.edit()
   end
 
   if location == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "edit",
       message = "Failed to format selection location.",
@@ -129,7 +129,7 @@ end
 function M.send_file()
   local filepath = vim.api.nvim_buf_get_name(0) ---@type string
   if filepath == "" then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "send_file",
       message = "Cannot send: buffer has no file path.",

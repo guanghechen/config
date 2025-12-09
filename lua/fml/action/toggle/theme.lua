@@ -106,7 +106,7 @@ local function apply_theme(theme)
     return result
   end)
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",

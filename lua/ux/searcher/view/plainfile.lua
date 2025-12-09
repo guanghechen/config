@@ -12,7 +12,7 @@ local __module_name__ = "ux.searcher.view.plainfile" ---@type string
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 
----@class ux.searcher.IPlainfileViewHighlight : std.t.IHighlight
+---@class ux.searcher.IPlainfileViewHighlight : ark.t.IHighlight
 ---@field public offset                 integer
 
 ---@class ux.searcher.IPlainfileViewData
@@ -121,7 +121,7 @@ function M:calc_preview_data(context)
 
     if preview_result == nil then
       if preview_error ~= nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "replace_file_preview_by_matches_advance",
           message = preview_error,
@@ -226,9 +226,9 @@ end
 
 ---@param context                       ux.searcher.IPlainfileViewContext
 ---@param data                          ux.searcher.IPlainfileViewData
----@return std.t.IHighlight[]
+---@return ark.t.IHighlight[]
 function M:patch_preview_data(context, data)
-  local highlights = {} ---@type std.t.IHighlight[]
+  local highlights = {} ---@type ark.t.IHighlight[]
   local flag_replace = context.flag_replace:snapshot() ---@type boolean
   local offset_current = context.offset_current ---@type integer
 
@@ -239,7 +239,7 @@ function M:patch_preview_data(context, data)
         resolved = true
         local is_search_match = hl.hlname == "f_sr_search" ---@type boolean
         local hlname = is_search_match and "f_sr_search_cur" or "f_sr_replace_cur" ---@type string
-        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type std.t.IHighlight
+        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
         break
@@ -251,7 +251,7 @@ function M:patch_preview_data(context, data)
       if offset_current == hl.offset then
         resolved = true
         local hlname = "f_sr_match_cur" ---@type string
-        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type std.t.IHighlight
+        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
         break
@@ -303,7 +303,7 @@ function M:render(context, bufnr, filepath, force)
 
   do
     local nsnr = dot.var.nsnr.searcher_searched_cur ---@type integer
-    local patched_highlights = self:patch_preview_data(context, data) ---@type std.t.IHighlight[]
+    local patched_highlights = self:patch_preview_data(context, data) ---@type ark.t.IHighlight[]
 
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     for _, hl in ipairs(patched_highlights) do

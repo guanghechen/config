@@ -32,7 +32,7 @@ function M.swap_conditional_branches()
   local filetype = vim.bo[bufnr_sourcefile].filetype
   local lang = vim.treesitter.language.get_lang(filetype)
   if not lang or not pcall(vim.treesitter.language.inspect, lang) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "swap conditional branches",
       message = "No treesitter parser for current language",

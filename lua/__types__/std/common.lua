@@ -19,17 +19,6 @@
 ---@alias std.t.IValidate
 ---| fun(element: T): boolean
 
----@class std.t.IHighlight
----@field public lnum                   integer
----@field public coll                   integer
----@field public colr                   integer
----@field public hlname                 string
-
----@class std.t.IHighlightInline
----@field public coll                   integer
----@field public colr                   integer
----@field public hlname                 string
-
 ---@class std.t.IKeymapOverridable
 ---@field public bufnr                  ?integer
 ---@field public nowait                 ?boolean

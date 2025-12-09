@@ -896,7 +896,7 @@ function M:dispose()
     local ok6, error6 = pcall(on_dispose)
 
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-      std.reporter.error({
+      ark.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -992,7 +992,7 @@ function M:attach(rootuuid)
 
   local node = self._tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
   if node == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "attach",
       message = string.format("Cannot find node by the given uuid: %s", rootuuid),

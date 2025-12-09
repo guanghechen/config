@@ -58,7 +58,7 @@ function M:dispose()
   self._disposables = {}
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "dispose",
       message = "Failed to dispose all registered disposables.",

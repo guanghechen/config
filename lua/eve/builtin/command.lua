@@ -31,7 +31,7 @@ local M = {
 ---@return eve.builtin.command
 function M.define(raw_definition, overwrite)
   if definition_map[raw_definition.uuid] ~= nil and not overwrite then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "define",
       message = "The definition with the uuid has already existed.",
@@ -90,7 +90,7 @@ function M.implement(implementation)
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type std.command.IDefinition|nil
   if definition == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "implement",
       message = "Cannot find the definition by the given uuid.",
@@ -101,7 +101,7 @@ function M.implement(implementation)
 
   local key = tabtype == nil and uuid or (uuid .. ":" .. tabtype) ---@type string
   if command_map[key] ~= nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "implement",
       message = "The command has already been implemented.",
@@ -132,7 +132,7 @@ function M.execute(uuid, args, silent)
 
   if command == nil then
     if not silent then
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "execute",
         message = "Cannot resolve the command by the given uuid",

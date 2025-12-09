@@ -261,7 +261,7 @@ function M:toggle_and_focus(params)
             vim.api.nvim_chan_send(termmeta.jobid, selected_text)
           end)
           if not ok then
-            std.reporter.error({
+            ark.reporter.error({
               from = __module_name__,
               subject = "toggle_and_focus",
               message = "Failed to send content to the target terminal",
@@ -395,7 +395,7 @@ function M:__start__(termmeta)
       detach = false,
       on_exit = function(jobid, code, event)
         if code ~= 0 and code ~= 129 then
-          std.reporter.error({
+          ark.reporter.error({
             from = __module_name__,
             subject = "terminal unexpected exit",
             details = {

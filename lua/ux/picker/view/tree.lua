@@ -238,7 +238,7 @@ function M:match(params)
   }
   local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
   if search_err then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "search_in_lines failed",
       details = {

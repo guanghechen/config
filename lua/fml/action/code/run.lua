@@ -74,11 +74,11 @@ local runners = {
       local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
       local output = "Starting HTTP request...\n" ---@type string
 
-      ---@param level                   ?std.e.LogLevelEnum
+      ---@param level                   ?ark.e.LogLevelEnum
       ---@return nil
       local function update_notification(level)
         local message = terminated and output or (output .. " " .. std.fn.spinner(spinner_step)) ---@type string
-        std.reporter.log(level or "INFO", {
+        ark.reporter.log(level or "INFO", {
           from = __module_name__,
           subject = filepath,
           message = message,
@@ -187,7 +187,7 @@ function M.run(force)
 
   local runner = runners[key]
   if runner == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",
@@ -216,7 +216,7 @@ function M.run_as_neovim_command()
   end)
 
   if not ok then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "run_as_neovim_command",
       message = err,

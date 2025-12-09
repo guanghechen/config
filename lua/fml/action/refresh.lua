@@ -58,7 +58,7 @@ function M.refresh_all()
     end, 100)
   end
 
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     message = "Refreshed all!",
   })

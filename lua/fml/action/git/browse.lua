@@ -78,7 +78,7 @@ local function system(cmd, cwd, err)
   table.insert(cmd, 3, cwd)
   local proc = vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "browse",
       message = err,
@@ -187,7 +187,7 @@ end
 ---@param remote                        fml.action.git.browse.IRemote
 local function open_remote(remote)
   if remote then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "browse",
       message = "Opening [" .. remote.name .. "](" .. remote.url .. ")",
@@ -292,7 +292,7 @@ function M.browse(opts)
   end
 
   if #remotes == 0 then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "browse",
       message = "No git remotes found",

@@ -30,7 +30,7 @@ local function fetch_data(winnr_sourcefile)
 
   local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       message = "No history found.",
       details = { cwd = cwd, winnr_source = winnr_sourcefile },
@@ -53,7 +53,7 @@ local function fetch_data(winnr_sourcefile)
       local filename = std.path.basename(filepath) ---@type string
       local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
-      ---@type std.t.IHighlightInline[]
+      ---@type ark.t.IHighlightInline[]
       local highlights = {
         {
           coll = ORDINAL_WIDTH + 1,
@@ -85,7 +85,7 @@ local function fetch_data(winnr_sourcefile)
         local filename = std.path.basename(filepath) ---@type string
         local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
-        ---@type std.t.IHighlightInline[]
+        ---@type ark.t.IHighlightInline[]
         local highlights = {
           {
             coll = ORDINAL_WIDTH + 1,
@@ -244,7 +244,7 @@ function M.history()
   local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
   if winnr_sourcefile == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "history",
       message = "Cannot resolve sourcefile winnr",
@@ -282,7 +282,7 @@ function M.history_backward()
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -293,7 +293,7 @@ function M.history_backward()
 
   local history = meta.history ---@type std.collection.IHistory|nil
   if history == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -349,7 +349,7 @@ function M.history_forward()
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil or meta.history == nil then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "history_forward",
       message = "No history found.",

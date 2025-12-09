@@ -14,7 +14,7 @@ local script_path = std.path.join(
 ---@return fml.dressing.im.InputMethod|nil
 function M.get_input_method()
   if not vim.fn.executable(script_path) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Not a executable file.",
@@ -25,7 +25,7 @@ function M.get_input_method()
 
   local handle = io.popen(vim.fn.fnameescape(script_path))
   if not handle then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Failed to run the executable file.",
@@ -48,7 +48,7 @@ function M.get_input_method()
     return "Chinese"
   end
 
-  std.reporter.error({
+  ark.reporter.error({
     from = __module_name__,
     subject = "get_input_method",
     message = "Unknown input method.",
@@ -60,7 +60,7 @@ end
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Not a executable file.",
@@ -75,7 +75,7 @@ function M.set_input_method(input_method)
   elseif input_method == "Chinese" then
     arg = "2052"
   else
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "get_input_method",
       message = "Unknown input method.",
@@ -86,7 +86,7 @@ function M.set_input_method(input_method)
 
   local handle = io.popen(vim.fn.fnameescape(script_path) .. " " .. arg)
   if not handle then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Failed to run the executable file.",
@@ -99,7 +99,7 @@ function M.set_input_method(input_method)
   handle:close()
 
   if output ~= nil and output ~= "" then
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "set_input_method",
       message = "Unexpected output from the executable file.",

@@ -100,7 +100,7 @@ source_picker = ux.picker.ListComposer.new({
     if item ~= nil then
       widget:attach(item.data.name)
       dirty_data = true
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "source_select",
         message = string.format("Switched to '%s' notepad source.", item.data.name),
@@ -174,7 +174,7 @@ function M.create()
     else
       item = source:retrieve_by_name(name, true)
       if item == nil then
-        std.reporter.error({
+        ark.reporter.error({
           from = __module_name__,
           subject = "create",
           message = string.format("Failed to create or retrieve notepad '%s'.", name),
@@ -192,13 +192,13 @@ function M.create()
 
     local ok = widget:flush()
     if ok then
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "create",
         message = string.format("Opened notepad '%s'.", item.name),
       })
     else
-      std.reporter.warn({
+      ark.reporter.warn({
         from = __module_name__,
         subject = "create",
         message = string.format("Opened notepad '%s', but failed to save.", item.name),
@@ -211,7 +211,7 @@ end
 function M.destroy()
   local item = widget:current_item() ---@type std.t.INotepadItemState|nil
   if item == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "destroy",
       message = "No notepad item available to destroy.",
@@ -244,13 +244,13 @@ function M.destroy()
     if widget:remove(item.uuid) then
       local ok = widget:flush()
       if ok then
-        std.reporter.info({
+        ark.reporter.info({
           from = __module_name__,
           subject = "destroy",
           message = string.format("Removed notepad '%s'.", item_name),
         })
       else
-        std.reporter.warn({
+        ark.reporter.warn({
           from = __module_name__,
           subject = "destroy",
           message = string.format("Removed notepad '%s', but failed to save.", item_name),
@@ -294,7 +294,7 @@ end
 function M.rename()
   local item = widget:current_item() ---@type std.t.INotepadItemState|nil
   if item == nil then
-    std.reporter.warn({
+    ark.reporter.warn({
       from = __module_name__,
       subject = "rename",
       message = "No notepad item available to rename.",
@@ -349,7 +349,7 @@ function M.rename()
 
     local name = vim.trim(input) ---@type string
     if widget:rename(item.uuid, name) then
-      std.reporter.info({
+      ark.reporter.info({
         from = __module_name__,
         subject = "rename",
         message = string.format("Renamed notepad to '%s'.", name),
@@ -421,13 +421,13 @@ function M.save()
   local ok = widget:save()
 
   if ok then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "save",
       message = "Notepad saved successfully.",
     })
   else
-    std.reporter.error({
+    ark.reporter.error({
       from = __module_name__,
       subject = "save",
       message = "Failed to save notepad.",
@@ -492,7 +492,7 @@ function M.source_prev()
   local prev_config = eve.state.notepad.source_configs[prev_index]
   widget:attach(prev_config.name)
   dirty_data = true
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "source_prev",
     message = string.format("Switched to '%s' notepad source.", prev_config.title),
@@ -523,7 +523,7 @@ function M.source_next()
   local next_config = eve.state.notepad.source_configs[next_index]
   widget:attach(next_config.name)
   dirty_data = true
-  std.reporter.info({
+  ark.reporter.info({
     from = __module_name__,
     subject = "source_next",
     message = string.format("Switched to '%s' notepad source.", next_config.title),
@@ -682,7 +682,7 @@ engine_picker = ux.picker.ListComposer.new({
       local current_config = eve.state.notepad.source_config_map[current_source.name]
 
       if current_config.engine == item.data.engine then
-        std.reporter.info({
+        ark.reporter.info({
           from = __module_name__,
           subject = "change_engine",
           message = string.format("Already using %s engine", item.data.engine),
@@ -744,7 +744,7 @@ end
 ---@return nil
 function M.go_backward()
   if not widget:go_backward() then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "go_backward",
       message = "No previous note in history",
@@ -756,7 +756,7 @@ end
 ---@return nil
 function M.go_forward()
   if not widget:go_forward() then
-    std.reporter.info({
+    ark.reporter.info({
       from = __module_name__,
       subject = "go_forward",
       message = "No next note in history",

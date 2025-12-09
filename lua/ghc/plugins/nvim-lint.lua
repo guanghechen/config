@@ -159,7 +159,7 @@ return {
 
           local linter = lint.linters[name]
           if not linter then
-            std.reporter.warn({
+            ark.reporter.warn({
               from = __module_name__,
               message = "Linter not found: " .. name,
             })

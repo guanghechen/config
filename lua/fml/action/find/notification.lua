@@ -25,7 +25,7 @@ local function fetch_data()
       string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), dot.icon.loglevel[task.level], task.title)
 
     local suffix = task.level:lower() ---@type string
-    ---@type std.t.IHighlightInline[]
+    ---@type ark.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
       { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },
@@ -166,7 +166,7 @@ picker = ux.picker.ListComposer.new({
     dirty_data = true
 
     local task = item.data.task ---@type eve.builtin.notifier.ITask
-    std.reporter.log(task.level, {
+    ark.reporter.log(task.level, {
       from = __module_name__,
       title = task.title,
       message = task.content,

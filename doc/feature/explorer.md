@@ -93,7 +93,7 @@
 ## Actions & Command Surface (`lua/fml/action/explorer/*.lua`)
 - Introduce an action module that lazily instantiates the explorer widget, mirroring the Notepad/Terminal pattern (`toggle.lua`, `focus.lua`, `open.lua`, `mark.lua`, `git.lua`).
 - Commands live under `eve.command.definitions.explorer` (e.g., `Fexplorertoggle`, `Fexplorerfocus`, `Fexplorerrefresh`, `Fexplorercreatefile`, `Fexplorercreatedir`, `Fexplorerdelete`, `Fexplorermark`, `Fexplorerstage`).
-- Actions reuse existing helpers (`std.fs.write_file`, `std.fs.move`, `eve.fn.rename`, `eve.buf.focus`, `eve.state.git`) and surface results through `std.reporter`.
+- Actions reuse existing helpers (`std.fs.write_file`, `std.fs.move`, `eve.fn.rename`, `eve.buf.focus`, `eve.state.git`) and surface results through `ark.reporter`.
 - Provide optional filters: `toggle_hidden`, `toggle_git_only`, `set_root` (prompted path), each flipping an observable the widget listens to.
 
 ## Lazy Loading & Pagination
