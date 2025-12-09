@@ -30,7 +30,6 @@ function ghc-update
         nvim-lazy \
         nvim-nvchad \
         ora \
-        plan \
         pm2 \
         pwsh \
         ripgrep \
