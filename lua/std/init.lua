@@ -36,6 +36,7 @@ local __mods = {
   nvim = "std.nvim",
   path = "std.path",
   reporter = "std.reporter",
+  status = "std.status",
   stdout = "std.stdout",
   string = "std.string",
   table = "std.table",
@@ -83,6 +84,7 @@ local __mods = {
 ---@field public nvim                   std.nvim
 ---@field public path                   std.path
 ---@field public reporter               std.reporter
+---@field public status                 std.status
 ---@field public stdout                 std.stdout
 ---@field public string                 std.string
 ---@field public table                  std.table

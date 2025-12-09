@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = eve.status.dirtier_statusline ---@type std.collection.IDirtier
+local dirtier = std.status.dirtier_statusline ---@type std.collection.IDirtier
 local position = "f_sl" ---@type ux.nvimbar.PositionEnum
 
 local statusline ---@type ux.nvimbar.Nvimbar

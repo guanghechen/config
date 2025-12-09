@@ -446,7 +446,7 @@ function M.on_bufs_close(tabnr, bufnrs)
       bufs[i] = nil
     end
   else
-    eve.status.dirtier_tabline:mark_dirty()
+    std.status.dirtier_tabline:mark_dirty()
   end
 end
 

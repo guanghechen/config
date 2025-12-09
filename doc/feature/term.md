@@ -41,7 +41,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 
 4. Default keymaps and commands stay aligned with the action layer:
    - `Ftermtoggle`, `Ftermcreate`, `Ftermrename`, `Ftermdestroy`, `Ftermfocus{1-9}`, `Ftermfocusleft`, `Ftermfocusright`, `Ftermswapleft`, `Ftermswapright`, and more live under `eve.command.definitions.term`.
-   - `lua/fml/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `eve.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
+   - `lua/fml/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `std.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
    - Each terminal profile includes its launch command and type; profiles can be selected via the UI picker defined in `fml/action/term/create.lua`.
 
 ----------------------------------------------------------------------------------------------------
@@ -58,12 +58,12 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 - `create.lua` handles profile selection, shell defaults, toggle behaviour, and rename prompts.
 - `destroy.lua` confirms deletions, picks a fallback terminal, and raises the dirtier when state changes.
 - `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `eve.term` navigation helpers.
-- Every action routes notifications through `std.reporter` and ensures `eve.status.dirtier_termline` is marked so the widget winbar stays current.
+- Every action routes notifications through `std.reporter` and ensures `std.status.dirtier_termline` is marked so the widget winbar stays current.
 
 ### Widget (`lua/eve/ux/widget/terminal.lua`)
 - Owns the floating window lifecycle, mask buffer, terminal buffer creation, and `jobstart` integration.
 - Implements the shared widget API (`focus`, `toggle`, `toggle_and_focus`, `hide`, `resize`, `isvisible`, `isfocused`).
-- Observes `eve.term.o_termuuid` to keep the visible buffer in sync and uses `eve.status.dirtier_termline` to throttle winbar renders.
+- Observes `eve.term.o_termuuid` to keep the visible buffer in sync and uses `std.status.dirtier_termline` to throttle winbar renders.
 - When autofocus is requested and text is provided, schedules `vim.api.nvim_chan_send` to feed the active terminal job.
 
 ### Nvimbar Component (`lua/eve/ux/nvimbar/component/term.lua`)

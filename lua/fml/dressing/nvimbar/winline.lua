@@ -188,7 +188,7 @@ local function render(winnr)
   end
 end
 
-eve.status.dirty_winline_nr:subscribe(
+std.status.dirty_winline_nr:subscribe(
   std.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

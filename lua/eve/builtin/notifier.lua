@@ -184,7 +184,7 @@ local scheduler = std.Scheduler.new({
   silent = std.fn.truthy,
   value = std.Observable.from_value(true),
   task = function()
-    local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
+    local notification_paused = std.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then
       return true
     end
@@ -257,12 +257,12 @@ end
 
 ---@return nil
 function M.pause()
-  eve.status.notification_paused:next(true)
+  std.status.notification_paused:next(true)
 end
 
 ---@return nil
 function M.resume()
-  eve.status.notification_paused:next(false)
+  std.status.notification_paused:next(false)
   M.schedule()
 end
 
@@ -310,8 +310,8 @@ function M.notify(params)
     timestamp = timestamp,
   }
 
-  local notification_paused = eve.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = eve.status.notification_level:snapshot() ---@type std.e.LogLevelEnum
+  local notification_paused = std.status.notification_paused:snapshot() ---@type boolean
+  local notification_level = std.status.notification_level:snapshot() ---@type std.e.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 

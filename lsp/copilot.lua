@@ -176,18 +176,18 @@ return {
 
       local client_id = ctx.client_id
       if res.status == "Error" then
-        eve.status.copilots[client_id] = "error"
+        std.status.copilots[client_id] = "error"
         std.reporter.warn({
           from = __module_name__,
           subject = "copilot_auth_error",
           message = "Please use `:Copilot auth` or `:LspCopilotSignIn` to sign in to Copilot",
         })
       elseif res.kind ~= "Normal" then
-        eve.status.copilots[client_id] = "error"
+        std.status.copilots[client_id] = "error"
       elseif res.busy then
-        eve.status.copilots[client_id] = "pending"
+        std.status.copilots[client_id] = "pending"
       else
-        eve.status.copilots[client_id] = "ok"
+        std.status.copilots[client_id] = "ok"
       end
     end,
   },

@@ -65,7 +65,7 @@ function M.msg_changes(position)
     name = "nvim:msg_changes",
     atomic = true,
     render = function()
-      local text = eve.status.msg_changes:snapshot() ---@type string
+      local text = std.status.msg_changes:snapshot() ---@type string
       if text == "" then
         return "", "", true
       end
@@ -101,7 +101,7 @@ function M.msg_command(position)
     name = "nvim:msg_command",
     atomic = true,
     render = function()
-      local text = eve.status.msg_command:snapshot() ---@type string
+      local text = std.status.msg_command:snapshot() ---@type string
       if text == "" then
         return "", "", true
       end
@@ -133,7 +133,7 @@ function M.msg_lsp(position)
     name = "nvim:msg_lsp",
     atomic = true,
     render = function()
-      local text = eve.status.msg_lsp:snapshot() ---@type string
+      local text = std.status.msg_lsp:snapshot() ---@type string
       if text == "" then
         return "", "", true
       end
@@ -155,7 +155,7 @@ function M.msg_mode(position)
     name = "nvim:msg_mode",
     atomic = true,
     render = function()
-      local text = eve.status.msg_mode:snapshot() ---@type string
+      local text = std.status.msg_mode:snapshot() ---@type string
       if text == "" then
         return "", "", true
       end
@@ -258,7 +258,7 @@ function M.tabs(position)
   ---@type string
   local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
     folded = not folded
-    eve.status.dirtier_tabline:mark_dirty()
+    std.status.dirtier_tabline:mark_dirty()
   end) or ""
 
   ---@type ux.nvimbar.IRawComponent

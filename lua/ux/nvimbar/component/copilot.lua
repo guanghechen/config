@@ -13,7 +13,7 @@ local function get_status()
     end
 
     -- Check tracked status from centralized status system
-    local client_status = eve.status.copilots[client.id]
+    local client_status = std.status.copilots[client.id]
     if client_status == "error" then
       return "Error"
     elseif client_status == "pending" then

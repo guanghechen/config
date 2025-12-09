@@ -1,4 +1,4 @@
----@class eve.builtin.status.data
+---@class std.status.data
 ---@field public msg_changes            string
 ---@field public msg_command            string
 ---@field public msg_lsp                string
@@ -10,7 +10,7 @@
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
----@class eve.builtin.status
+---@class std.status
 ---@field protected _disposables        std.collection.BatchDisposable
 ---
 ---
@@ -90,9 +90,9 @@ function M.dispose()
   M._disposables:dispose()
 end
 
----@return eve.builtin.status.data
+---@return std.status.data
 function M.dump()
-  ---@type eve.builtin.status.data
+  ---@type std.status.data
   local data = {
     msg_changes = M.msg_changes:snapshot(),
     msg_command = M.msg_command:snapshot(),
@@ -139,7 +139,7 @@ end
 ---@return integer|nil
 function M.get_winnr_command()
   local winnr_command = M.winnr_command:snapshot() ---@type integer
-  if winnr_command ~= 0 and eve.win.is_valid(winnr_command) then
+  if winnr_command > 0 and vim.api.nvim_win_is_valid(winnr_command) then
     return winnr_command
   else
     M.winnr_command:next(0)
@@ -152,9 +152,7 @@ end
 function M.set_winnr_command(winnr)
   if winnr == nil then
     M.winnr_command:next(0)
-    return
-  end
-  if eve.win.is_valid(winnr) then
+  elseif winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
     M.winnr_command:next(winnr)
   end
 end

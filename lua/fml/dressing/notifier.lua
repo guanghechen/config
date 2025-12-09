@@ -1,5 +1,5 @@
 vim.notify = eve.notifier
 
-std.fn.observe({ eve.status.notification_level, eve.status.notification_paused }, function()
+std.fn.observe({ std.status.notification_level, std.status.notification_paused }, function()
   eve.notifier.schedule()
 end)

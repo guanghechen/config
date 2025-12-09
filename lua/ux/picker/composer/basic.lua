@@ -956,7 +956,7 @@ function M:__resolve_builtin_keymaps_finder__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#finder: focus left",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
         end
       end,
@@ -978,7 +978,7 @@ function M:__resolve_builtin_keymaps_finder__()
           self:__focus_pane__("result")
           return
         end
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("l")
           return
         end
@@ -990,7 +990,7 @@ function M:__resolve_builtin_keymaps_finder__()
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#finder: focus up",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("k")
           return
         end
@@ -1110,7 +1110,7 @@ function M:__resolve_builtin_keymaps_result__()
           end
         end
 
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("j")
           return
         end
@@ -1124,7 +1124,7 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
         end
       end,
@@ -1144,7 +1144,7 @@ function M:__resolve_builtin_keymaps_result__()
           end
         end
 
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("l")
           return
         end
@@ -1250,7 +1250,7 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#preview: focus down",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("j")
           return
         end
@@ -1268,7 +1268,7 @@ function M:__resolve_builtin_keymaps_preview__()
           self:__focus_pane__(pane_focused)
           return
         end
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("h")
         end
       end,
@@ -1279,7 +1279,7 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
       callback = function()
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("l")
           return
         end
@@ -1300,7 +1300,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
 
-        if std.env.IS_TMUX and not eve.status.tmux_zen_mode:snapshot() then
+        if std.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
           std.tmux.change_pane("k")
           return
         end

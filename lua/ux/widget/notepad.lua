@@ -334,7 +334,7 @@ function M:__setup_subscriptions__()
     false
   )
 
-  self._subscription_winbar = eve.status.dirtier_notepadline:subscribe(
+  self._subscription_winbar = std.status.dirtier_notepadline:subscribe(
     std.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
@@ -409,7 +409,7 @@ end
 ---@protected
 ---@return nil
 function M:__mark_dirty__()
-  eve.status.dirtier_notepadline:mark_dirty()
+  std.status.dirtier_notepadline:mark_dirty()
 end
 
 ---@protected

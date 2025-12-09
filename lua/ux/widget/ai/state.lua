@@ -12,7 +12,7 @@ local _attached_sources = {}
 M.o_attached = std.Observable.from_value(0)
 
 std.fn.observe({ M.o_attached }, function()
-  eve.status.dirtier_statusline:mark_dirty()
+  std.status.dirtier_statusline:mark_dirty()
 end, true)
 
 ---@return ux.widget.ai.IAttachedSource[]

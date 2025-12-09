@@ -179,7 +179,7 @@ return {
       end,
     })
 
-    std.fn.observe({ eve.status.lint_schedule_nr }, function()
+    std.fn.observe({ std.status.lint_schedule_nr }, function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
       local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
       scheduler:schedule({ context = context })

@@ -73,7 +73,7 @@
 - Manual `refresh` command flushes outstanding mutations and forces a readdir even if the debounce queue is empty.
 
 ## Git Status Integration
-- Subscribe to `eve.state.git.refresh` notifications via a lightweight dirtier (`eve.status.dirtier_explorer_git`). Whenever git cache refreshes, iterate the visible UUIDs and update `git_display` / `git_highlight` using `eve.state.git.resolve_status(filepath, filetype)`.
+- Subscribe to `eve.state.git.refresh` notifications via a lightweight dirtier (`std.status.dirtier_explorer_git`). Whenever git cache refreshes, iterate the visible UUIDs and update `git_display` / `git_highlight` using `eve.state.git.resolve_status(filepath, filetype)`.
 - Directory badges mirror the aggregate display returned by `resolve_status(..., "directory")` so expanded folders reflect nested staged content.
 - Provide helper `IExplorerGitSnapshot { display, highlight, staged_bits, unstaged_bits }` so the renderer can align staging columns without recomputing per draw.
 - Expose actions to stage/unstage files by calling into existing git action modules (`fml/action/git/stage.lua`) instead of shelling out directly.

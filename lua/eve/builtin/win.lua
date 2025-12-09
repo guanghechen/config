@@ -517,7 +517,7 @@ function M.locate_symbols(winnr, callback)
         end
       end
 
-      if eve.status.suppress_warning:snapshot() then
+      if std.status.suppress_warning:snapshot() then
         settle(false)
         return
       end

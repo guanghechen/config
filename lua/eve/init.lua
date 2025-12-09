@@ -20,7 +20,6 @@ local __mods = {
   session = "eve.builtin.session",
   setting = "eve.builtin.setting",
   shell = "eve.builtin.shell",
-  status = "eve.builtin.status",
   tab = "eve.builtin.tab",
   term = "eve.builtin.term",
   var = "eve.builtin.var",
@@ -51,7 +50,6 @@ local __mods = {
 ---@field public session                eve.builtin.session
 ---@field public setting                eve.builtin.setting
 ---@field public shell                  eve.builtin.shell
----@field public status                 eve.builtin.status
 ---@field public tab                    eve.builtin.tab
 ---@field public term                   eve.builtin.term
 ---@field public var                    eve.builtin.var
