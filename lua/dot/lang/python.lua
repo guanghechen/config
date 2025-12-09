@@ -5,7 +5,7 @@ local function getenv(var)
   return v or ""
 end
 
----@class eve.constant.lang.python.IVenvManagerPaths
+---@class dot.lang.python.IVenvManagerPaths
 ---@field public Poetry                 string
 ---@field public PDM                    string
 ---@field public Pipenv                 string
@@ -56,8 +56,8 @@ local ALL_VENV_MANAGER_PATHS = {
   },
 }
 
----@class eve.constant.lang.python
----@field public paths                  eve.constant.lang.python.IVenvManagerPaths
+---@class dot.lang.python
+---@field public paths                  dot.lang.python.IVenvManagerPaths
 local M = {
   paths = ALL_VENV_MANAGER_PATHS[osname],
 }

@@ -1,7 +1,5 @@
 ---@see https://github.com/nvim-mini/mini.hipatterns/tree/add8d8abad602787377ec5d81f6b248605828e0f
 
-local tailwind = require("eve.constant.lang.tailwind")
-
 ---@type table<string, true>
 local css_filetypes = {
   ["astro"] = true,
@@ -157,7 +155,8 @@ return {
             end
 
             shade = tonumber(shade) or 0
-            local hex = vim.tbl_get(tailwind.palette, color, shade)
+            local colors = dot.lang.tailwind.palette[color]
+            local hex = colors and colors[shade] or nil ---@type string|nil
             if hex then
               return hipatterns.compute_hex_color_group(hex, "fg")
             end
@@ -211,11 +210,21 @@ return {
                 r, g, b = l, l, l
               else
                 local function hue2rgb(p, q, t)
-                  if t < 0 then t = t + 1 end
-                  if t > 1 then t = t - 1 end
-                  if t < 1 / 6 then return p + (q - p) * 6 * t end
-                  if t < 1 / 2 then return q end
-                  if t < 2 / 3 then return p + (q - p) * (2 / 3 - t) * 6 end
+                  if t < 0 then
+                    t = t + 1
+                  end
+                  if t > 1 then
+                    t = t - 1
+                  end
+                  if t < 1 / 6 then
+                    return p + (q - p) * 6 * t
+                  end
+                  if t < 1 / 2 then
+                    return q
+                  end
+                  if t < 2 / 3 then
+                    return p + (q - p) * (2 / 3 - t) * 6
+                  end
                   return p
                 end
                 local q = l < 0.5 and l * (1 + s) or l + s - l * s

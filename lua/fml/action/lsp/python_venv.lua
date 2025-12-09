@@ -1,7 +1,5 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
-local clp = require("eve.constant.lang.python")
-
 local dirty_data = true ---@type boolean
 local o_search_pattern = std.Observable.from_value("")
 local o_flag_fuzzy = std.Observable.from_value(true)
@@ -18,7 +16,7 @@ local function format_search_path(folder)
   end
 
   resolved_path = resolved_path:gsub(" ", "\\ ")
-  if folder == clp.paths.Hatch then
+  if folder == dot.lang.python.paths.Hatch then
     return resolved_path .. "/*/*"
   else
     return resolved_path
@@ -45,8 +43,8 @@ local function fetch_data()
   local uuid_set = {} ---@type table<string, true>
 
   do
-    local anaconda_base_path = format_search_path(clp.paths.AnacondaBase) ---@type string|nil
-    local anaconda_envs_path = format_search_path(clp.paths.AnacondaEnvs) ---@type string|nil
+    local anaconda_base_path = format_search_path(dot.lang.python.paths.AnacondaBase) ---@type string|nil
+    local anaconda_envs_path = format_search_path(dot.lang.python.paths.AnacondaEnvs) ---@type string|nil
 
     ---@type string[]
     local cmd = {
@@ -180,13 +178,13 @@ local function fetch_data()
   --- Search venv manager paths
   do
     local venv_manager_paths = {
-      clp.paths.Poetry,
-      clp.paths.PDM,
-      clp.paths.Pipenv,
-      clp.paths.Pyenv,
-      clp.paths.Hatch,
-      clp.paths.VenvWrapper,
-      clp.paths.AnacondaEnvs,
+      dot.lang.python.paths.Poetry,
+      dot.lang.python.paths.PDM,
+      dot.lang.python.paths.Pipenv,
+      dot.lang.python.paths.Pyenv,
+      dot.lang.python.paths.Hatch,
+      dot.lang.python.paths.VenvWrapper,
+      dot.lang.python.paths.AnacondaEnvs,
     }
     local search_paths = {} ---@type string[]
     for _, folder in ipairs(venv_manager_paths) do
@@ -252,9 +250,9 @@ local function fetch_data()
     end
 
     -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
-    if vim.fn.isdirectory(clp.paths.AnacondaBase) ~= 0 then
+    if vim.fn.isdirectory(dot.lang.python.paths.AnacondaBase) ~= 0 then
       local icon = "" ---@type string
-      local dirpath = std.string.remove_last_slash(clp.paths.AnacondaBase .. "/") ---@type string
+      local dirpath = std.string.remove_last_slash(dot.lang.python.paths.AnacondaBase .. "/") ---@type string
       if not uuid_set[dirpath] then
         uuid_set[dirpath] = true
         local text_content = icon .. " " .. dirpath

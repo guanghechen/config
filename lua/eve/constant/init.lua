@@ -35,28 +35,6 @@ local hlgroup = setmetatable({
   end,
 })
 
----@class eve.constant.lang.__mods
-local lang__mods = {
-  python = "eve.constant.lang.python",
-  tailwind = "eve.constant.lang.tailwind",
-}
-
----@class eve.constant.lang
----@field public __mods                 eve.constant.lang.__mods
----@field public python                 eve.constant.lang.python
----@field public tailwind               eve.constant.lang.tailwind
-local lang = setmetatable({
-  __mods = lang__mods,
-}, {
-  __index = function(t, k)
-    local m = lang__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
 ---@class eve.constant.theme.__mods
 local theme__mods = {
   ["catppuccin-frappe"] = "eve.constant.theme.catppuccin-frappe",
@@ -114,7 +92,6 @@ local theme = setmetatable({
 ---@class eve.constant
 ---@field public __mods                 eve.constant.__mods
 ---@field public hlgroup                eve.constant.hlgroup
----@field public lang                   eve.constant.lang
 ---@field public theme                  eve.constant.theme
 ---
 ---@field public diagnostic             eve.constant.diagnostic
@@ -122,7 +99,6 @@ local theme = setmetatable({
 local M = setmetatable({
   __mods = __mods,
   hlgroup = hlgroup,
-  lang = lang,
   theme = theme,
 }, {
   __index = function(t, k)
