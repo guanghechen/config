@@ -1,4 +1,4 @@
-local __module_name__ = "std.env"
+local __module_name__ = "dot.env"
 
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
@@ -22,7 +22,7 @@ local IS_KITTY = os.getenv("KITTY_PID") ~= nil or TERM:find("kitty", 1, true) ~=
 local IS_WEZTERM = os.getenv("WEZTERM_EXECUTABLE") ~= nil or TERM_PROGRAM == "wezterm"
 local IS_GHOSTTY = os.getenv("GHOSTTY_RESOURCES_DIR") ~= nil or TERM_PROGRAM == "ghostty"
 
----@class std.env
+---@class dot.env
 local M = {}
 
 ---@param dirpath                       string

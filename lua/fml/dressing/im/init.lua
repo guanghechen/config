@@ -1,4 +1,4 @@
-if std.env.IS_NIX then
+if dot.env.IS_NIX then
   return
 end
 
@@ -11,9 +11,9 @@ end
 ---@field public set_input_method       fun(input_method: fml.dressing.im.InputMethod): nil
 
 ---@type fml.dressing.im|nil
-local im = std.env.IS_MAC and require("fml.dressing.im.mac")
-  or std.env.IS_WSL and require("fml.dressing.im.wsl")
-  or std.env.IS_WIN and require("fml.dressing.im.win")
+local im = dot.env.IS_MAC and require("fml.dressing.im.mac")
+  or dot.env.IS_WSL and require("fml.dressing.im.wsl")
+  or dot.env.IS_WIN and require("fml.dressing.im.win")
   or nil
 
 if im then

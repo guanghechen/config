@@ -1,4 +1,4 @@
-if std.env.IS_WIN then
+if dot.env.IS_WIN then
   return
 end
 

@@ -1,9 +1,9 @@
-if std.env.IS_MAC then
+if dot.env.IS_MAC then
   -- vim.o.shell = "/bin/bash"
-elseif std.env.IS_NIX or std.env.IS_WSL then
+elseif dot.env.IS_NIX or dot.env.IS_WSL then
   -- vim.o.shell = "/usr/bin/bash"
   -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
-elseif std.env.IS_WIN then
+elseif dot.env.IS_WIN then
   vim.o.shell = "pwsh"
 
   -- Setting shell command flags

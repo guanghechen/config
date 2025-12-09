@@ -77,7 +77,7 @@ function M.paste_image_from_clipboard(filepath)
   return true
 end
 
-if std.env.IS_TMUX then
+if dot.env.IS_TMUX then
   function M.get_clipboard()
     local fake_clipboard_filepath = std.tmux.get_tmux_env_value("ghc_use_fake_clipboard")
     if fake_clipboard_filepath == nil or not std.path.is_exist(fake_clipboard_filepath) then

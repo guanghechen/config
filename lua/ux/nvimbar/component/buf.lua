@@ -117,8 +117,8 @@ local function resolve_disambiguations(bufs)
     depth = depth < next_depth and next_depth or depth ---@type integer
     if depth > 0 then
       local d = D1 - depth + 1 ---@type integer
-      local dirpath = D1 >= 1 and table.concat(dp1, std.env.PATH_SEP, d < 1 and 1 or d, D1) or "" ---@type string
-      disambiguated[item1.bufnr] = dirpath ~= std.env.PATH_SEP and dirpath .. std.env.PATH_SEP or dirpath ---@type string
+      local dirpath = D1 >= 1 and table.concat(dp1, dot.env.PATH_SEP, d < 1 and 1 or d, D1) or "" ---@type string
+      disambiguated[item1.bufnr] = dirpath ~= dot.env.PATH_SEP and dirpath .. dot.env.PATH_SEP or dirpath ---@type string
     end
     depth = next_depth
   end

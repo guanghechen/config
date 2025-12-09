@@ -5,7 +5,7 @@ local original_vim_paste = vim.paste
 ---@param lines                         string[]
 ---@param phase                         number
 local function unified_paste(lines, phase)
-  if std.env.IS_MAC and std.env.IS_TMUX then
+  if dot.env.IS_MAC and dot.env.IS_TMUX then
     local text = table.concat(lines, "\n"):gsub("\x1b%[106;5u", "\n")
     lines = vim.split(text, "\n")
   end
@@ -177,7 +177,7 @@ vim.paste = function(lines, phase)
 
     local basename_source = std.path.basename(filepath_source) ---@type string
     local filepath_default = std.path.join(dirpath, basename_source) ---@type string
-    local suffix = is_dirpath and std.env.PATH_SEP or "" ---@type string
+    local suffix = is_dirpath and dot.env.PATH_SEP or "" ---@type string
 
     local placeholder = std.path.relative(cwd, filepath_default) ---@type string
     if placeholder == "" then
@@ -211,7 +211,7 @@ vim.paste = function(lines, phase)
             local src = std.path.relative(dirpath, filepath_target, "/") ---@type string
             if #src > 1 then
               if string.sub(src, 1, 1) ~= "." then
-                src = "." .. std.env.PATH_SEP .. src
+                src = "." .. dot.env.PATH_SEP .. src
               end
               local filename = std.path.basename(filepath_target) ---@type string
               local alt = vim.fn.fnamemodify(filename, ":r") ---@type string

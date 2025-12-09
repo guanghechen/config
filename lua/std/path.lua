@@ -1,18 +1,18 @@
-local SEP = std.env.PATH_SEP ---@type string
-local HOME_CONFIG = std.env.HOME_CONFIG ---@type string
-local HOME_CONFIG_SHARED = std.env.HOME_CONFIG_SHARED ---@type string
-local HOME_NVIM_CACHE = std.env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = std.env.HOME_NVIM_CONFIG ---@type string
-local HOME_NVIM_DATA = std.env.HOME_NVIM_DATA ---@type string
-local HOME_CONTEXT = std.env.HOME_CONTEXT ---@type string
-local HOME_SHARED = std.env.HOME_SHARED ---@type string
+local SEP = dot.env.PATH_SEP ---@type string
+local HOME_CONFIG = dot.env.HOME_CONFIG ---@type string
+local HOME_CONFIG_SHARED = dot.env.HOME_CONFIG_SHARED ---@type string
+local HOME_NVIM_CACHE = dot.env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = dot.env.HOME_NVIM_CONFIG ---@type string
+local HOME_NVIM_DATA = dot.env.HOME_NVIM_DATA ---@type string
+local HOME_CONTEXT = dot.env.HOME_CONTEXT ---@type string
+local HOME_SHARED = dot.env.HOME_SHARED ---@type string
 
 local CWD ---@type string
 local WORKSPACE ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
-  local gitrepo = std.env.locate_gitroot(cwd) ---@type string|nil
+  local gitrepo = dot.env.locate_gitroot(cwd) ---@type string|nil
   CWD = cwd ---@type string
   WORKSPACE = gitrepo or cwd ---@type string
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean

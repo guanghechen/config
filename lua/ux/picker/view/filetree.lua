@@ -530,7 +530,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         local filepath, lnum, col, col_end = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
         if lnum ~= nil then
           if not std.path.is_absolute(filepath) then
-            filepath = cwd .. std.env.PATH_SEP .. filepath ---@type string
+            filepath = cwd .. dot.env.PATH_SEP .. filepath ---@type string
           end
 
           local fileuuid = std.Filetree.uuid(filepath) ---@type string

@@ -4,7 +4,7 @@ local __module_name__ = "eve.builtin.shell" ---@type string
 ---@field public format_command         fun(command?: string): string
 local M = {}
 
-if std.env.IS_MAC or std.env.IS_NIX or std.env.IS_WSL then
+if dot.env.IS_MAC or dot.env.IS_NIX or dot.env.IS_WSL then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -15,7 +15,7 @@ if std.env.IS_MAC or std.env.IS_NIX or std.env.IS_WSL then
       return "sh -c " .. vim.fn.shellescape(cmd)
     end
   end
-elseif std.env.IS_WIN then
+elseif dot.env.IS_WIN then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -31,7 +31,7 @@ else
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",
-    details = { env = std.env },
+    details = { env = dot.env },
   })
 end
 

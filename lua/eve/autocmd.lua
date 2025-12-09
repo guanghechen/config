@@ -137,7 +137,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
       std.status.dirtier_tabline:mark_dirty()
     end)
 
-    if std.env.IS_TMUX then
+    if dot.env.IS_TMUX then
       vim.schedule(function()
         local is_tmux_pane_zoomed = std.tmux.is_tmux_pane_zoomed() ---@type boolean
         std.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
@@ -168,7 +168,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
     vim.schedule(function()
-      if std.env.IS_TMUX then
+      if dot.env.IS_TMUX then
         vim.schedule(function()
           local is_tmux_pane_zoomed = std.tmux.is_tmux_pane_zoomed() ---@type boolean
           std.status.tmux_zen_mode:next(is_tmux_pane_zoomed)

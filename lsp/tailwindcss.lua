@@ -55,7 +55,7 @@ end
 ---@return string|nil
 local function detectLspServer()
   local _, binPath = eve.lsp.locate_lsp_root(
-    std.path.cwd() .. std.env.PATH_SEP .. "a.css",
+    std.path.cwd() .. dot.env.PATH_SEP .. "a.css",
     { "./node_modules/.bin/tailwindcss-language-server" }
   )
   if binPath ~= nil and vim.fn.executable(binPath) == 1 then

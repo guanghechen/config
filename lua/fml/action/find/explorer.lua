@@ -520,7 +520,7 @@ local function preview_render(composer, bufnr)
       text = text .. text_size
       byte_pos = byte_pos + byte_len_size
 
-      if not std.env.IS_WIN then
+      if not dot.env.IS_WIN then
         local text_owner = std.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. " "
         local byte_len_owner = string.len(text_owner) ---@type integer
         table.insert(

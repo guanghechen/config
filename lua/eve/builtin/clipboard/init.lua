@@ -12,16 +12,16 @@ local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
-if std.env.IS_MAC then
+if dot.env.IS_MAC then
   M = require("eve.builtin.clipboard.mac")
-  if std.env.IS_TMUX then
+  if dot.env.IS_TMUX then
     M.get_clipboard = require("eve.builtin.clipboard.tmux").get_clipboard
   end
-elseif std.env.IS_WSL then
+elseif dot.env.IS_WSL then
   M = require("eve.builtin.clipboard.wsl")
-elseif std.env.IS_NIX then
+elseif dot.env.IS_NIX then
   M = require("eve.builtin.clipboard.nix")
-elseif std.env.IS_WIN then
+elseif dot.env.IS_WIN then
   M = require("eve.builtin.clipboard.win")
 end
 
@@ -52,7 +52,7 @@ function M.paste_image(filepath_target)
       local src = std.path.relative(std.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
         if string.byte(src, 1, 1) ~= BYTE_DOT then
-          src = "." .. std.env.PATH_SEP .. src
+          src = "." .. dot.env.PATH_SEP .. src
         end
         local filename = std.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string

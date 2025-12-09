@@ -383,7 +383,7 @@ function M.new(props)
       local nodepath = filenode.data.filepath ---@type string
       local relpath = std.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. std.env.PATH_SEP ---@type string
+        relpath = relpath .. dot.env.PATH_SEP ---@type string
       end
 
       ---@param filepath                string|nil
@@ -425,7 +425,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(" New file / directory ", std.env.PATH_SEP),
+          prompt = string.format(" New file / directory ", dot.env.PATH_SEP),
           default = relpath,
           relative = "cursor",
         }, function(filepath)
@@ -505,7 +505,7 @@ function M.new(props)
       local rootpath = rootnode.data.filepath ---@type string
       local relpath = std.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. std.env.PATH_SEP ---@type string
+        relpath = relpath .. dot.env.PATH_SEP ---@type string
       end
 
       ---@param answer                  string|nil
@@ -1913,7 +1913,7 @@ function M:__match__(input)
     return
   end
 
-  local pattern = input:gsub("[/\\]", std.env.PATH_SEP) ---@type string
+  local pattern = input:gsub("[/\\]", dot.env.PATH_SEP) ---@type string
 
   ---@type string[]
   local uuids_order = treeview:match({
@@ -2150,7 +2150,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
 
     if result ~= nil and result.files ~= nil then
       for _, relative_filepath in ipairs(result.files) do
-        local to_filepath = to .. std.env.PATH_SEP .. relative_filepath ---@type string
+        local to_filepath = to .. dot.env.PATH_SEP .. relative_filepath ---@type string
         filepaths[#filepaths + 1] = to_filepath
       end
     end

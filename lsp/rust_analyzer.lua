@@ -28,7 +28,7 @@ end
 ---@param fname                         string
 ---@return string|nil
 local function is_library(fname)
-  local user_home = std.env.HOME_USER
+  local user_home = dot.env.HOME_USER
   local cargo_home = os.getenv("CARGO_HOME") or std.path.join(user_home, ".cargo")
 
   local registry = std.path.join(cargo_home, "registry/src")

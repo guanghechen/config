@@ -138,8 +138,8 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
       break
     end
 
-    local source_path = dirpath_source .. std.env.PATH_SEP .. name
-    local target_path = dirpath_target .. std.env.PATH_SEP .. name
+    local source_path = dirpath_source .. dot.env.PATH_SEP .. name
+    local target_path = dirpath_target .. dot.env.PATH_SEP .. name
 
     if type == "directory" then
       success = M.copy_directory(source_path, target_path, force) and success

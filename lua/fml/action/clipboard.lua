@@ -17,7 +17,7 @@ function M.paste()
   end
 
   local filename_default = os.date("%Y-%m-%d_%H-%M") .. ".png" ---@type string
-  local filepath_default = std.path.join(dirpath, "img" .. std.env.PATH_SEP .. filename_default) ---@type string
+  local filepath_default = std.path.join(dirpath, "img" .. dot.env.PATH_SEP .. filename_default) ---@type string
   local placeholder = std.path.relative(cwd, filepath_default) ---@type string
 
   vim.ui.input({

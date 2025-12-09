@@ -54,7 +54,7 @@ local M = {}
 ---@return eve.context.flight.data
 function M.defaults()
   local workspace = std.path.workspace() ---@type string
-  local is_home_config_dir = workspace == std.env.HOME_NVIM_CONFIG ---@type boolean
+  local is_home_config_dir = workspace == dot.env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = std.path.is_git_repo() ---@type boolean
   local is_thirdparty = std.path.is_repo_thirdparty() ---@type boolean
   local is_playground = std.path.is_repo_playground() ---@type boolean

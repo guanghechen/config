@@ -26,7 +26,7 @@ function M.setup_workspace()
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
 
-    local env = require("std.env")
+    local env = require("dot.env")
     local A = env.locate_gitroot(p)
     local B = env.locate_gitroot(cwd)
 

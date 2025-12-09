@@ -180,7 +180,7 @@ local commands = {
       vim.list_extend(args, { "-write", "{file}", "-identify", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{file}.info" })
       return {
         { cmd = "magick", args = args },
-        not std.env.IS_WIN and { cmd = "convert", args = args } or nil,
+        not dot.env.IS_WIN and { cmd = "convert", args = args } or nil,
       }
     end,
   },

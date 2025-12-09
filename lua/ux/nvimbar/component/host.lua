@@ -9,7 +9,7 @@ function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string
   local hln_sep = position .. "_host_username_sep" ---@type string
 
-  local text_with_icon = " " .. std.icon.os.current .. " " .. std.env.USERNAME ---@type string
+  local text_with_icon = " " .. std.icon.os.current .. " " .. dot.env.USERNAME ---@type string
   local text_icon_only = std.icon.os.current .. " " ---@type string
 
   ---@type ux.nvimbar.IRawComponent
