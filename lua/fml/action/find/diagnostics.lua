@@ -11,10 +11,6 @@
 ---@field public diagnostic             vim.Diagnostic
 ---@field public severity               fml.action.find.diagnostics.SeverityEnum
 
-local severity2prefixicon = eve.constant.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string> {
-local severity2texticon = eve.constant.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
-local severity2numhl = eve.constant.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
-
 local name = "fml.action.find.diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
@@ -280,13 +276,13 @@ picker = ux.picker.FiletreeComposer.new({
       virtual_text = false,
       virtual_lines = {
         format = function(diagnostic)
-          local icon = severity2prefixicon[diagnostic.severity] or ""
+          local icon = dot.diagnostic.severity2prefixicon[diagnostic.severity] or ""
           return string.format("%s %s", icon, diagnostic.message)
         end,
       },
       signs = {
-        text = severity2texticon,
-        numhl = severity2numhl,
+        text = dot.diagnostic.severity2texticon,
+        numhl = dot.diagnostic.severity2numhl,
       },
       severity_sort = true,
       underline = true,

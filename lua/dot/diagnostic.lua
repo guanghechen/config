@@ -1,4 +1,4 @@
----@class eve.constant.diagnostic
+---@class dot.diagnostic
 local M = {}
 
 local severity = vim.diagnostic.severity
