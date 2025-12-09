@@ -5,6 +5,9 @@ complete ghc-ghostty-shader --arguments "
   fireworks-rockets
   gears-and-belts
   inside-the-matrix
+  just-snow
+  matrix-hallway
+  mnoise
   sparks-from-fire
   starfield
 "
