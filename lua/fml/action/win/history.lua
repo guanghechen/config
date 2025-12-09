@@ -51,7 +51,7 @@ local function fetch_data(winnr_sourcefile)
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
       local filename = std.path.basename(filepath) ---@type string
-      local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
+      local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
       ---@type std.t.IHighlightInline[]
       local highlights = {
@@ -83,7 +83,7 @@ local function fetch_data(winnr_sourcefile)
         local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
         local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
         local filename = std.path.basename(filepath) ---@type string
-        local icon, icon_hln = std.fileicon.get_file_icon(filename) ---@type string, string
+        local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
         ---@type std.t.IHighlightInline[]
         local highlights = {

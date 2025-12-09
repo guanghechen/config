@@ -6,7 +6,7 @@ local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_directory
+---@class dot.fileicon.category_directory
 local ICONS_DIRECTORY = {
   [".cache"]              = { glyph = "󰪺", hl = "MiniIconsCyan"   },
   [".config"]             = { glyph = "󱁿", hl = "MiniIconsCyan"   },
@@ -81,7 +81,7 @@ local ICONS_DIRECTORY = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_extension
+---@class dot.fileicon.category_extension
 local ICONS_EXTENSION = {
   -- Extensions for which `vim.filetype.match()` mismatches or doesn"t work. Usually because matching depends on an actual buffer content.
   conf                    = "conf",
@@ -171,7 +171,7 @@ local ICONS_EXTENSION = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_file
+---@class dot.fileicon.category_file
 local ICONS_FILE = {
   [".DS_Store"]           = { glyph = "󰒓", hl = "MiniIconsRed"    },
   [".bash_profile"]       = { glyph = "󰒓", hl = "MiniIconsGreen"  },
@@ -273,7 +273,7 @@ local ICONS_FILE = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_filetype
+---@class dot.fileicon.category_filetype
 local ICONS_FILETYPE = {
   ["8th"]                 = { glyph = "󰭁", hl = "MiniIconsYellow" },
   a2ps                    = { glyph = "󰒓", hl = "MiniIconsCyan"   },
@@ -1207,7 +1207,7 @@ local ICONS_FILETYPE = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_lsp
+---@class dot.fileicon.category_lsp
 local ICONS_LSP = {
   array                   = { glyph = "󰅪", hl = "MiniIconsOrange" },
   boolean                 = { glyph = "󰨙", hl = "MiniIconsOrange" },
@@ -1248,7 +1248,7 @@ local ICONS_LSP = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class std.fileicon.category_os
+---@class dot.fileicon.category_os
 local ICONS_OS = {
   android                 = { glyph = "󰀲", hl = "MiniIconsGreen"  },
   arch                    = { glyph = "󰣇", hl = "MiniIconsAzure"  },
@@ -1271,13 +1271,13 @@ local ICONS_OS = {
 }
 -- stylua: ignore end
 
----@class std.fileicon.category_map
----@field public directory              std.fileicon.category_directory
----@field public extension              std.fileicon.category_extension
----@field public file                   std.fileicon.category_file
----@field public filetype               std.fileicon.category_filetype
----@field public lsp                    std.fileicon.category_lsp
----@field public os                     std.fileicon.category_os
+---@class dot.fileicon.category_map
+---@field public directory              dot.fileicon.category_directory
+---@field public extension              dot.fileicon.category_extension
+---@field public file                   dot.fileicon.category_file
+---@field public filetype               dot.fileicon.category_filetype
+---@field public lsp                    dot.fileicon.category_lsp
+---@field public os                     dot.fileicon.category_os
 local ICONS_CATEGORY_MAP = {
   -- stylua: ignore start
   directory = ICONS_DIRECTORY,
@@ -1289,10 +1289,10 @@ local ICONS_CATEGORY_MAP = {
   -- stylua: ignore end
 }
 
----@alias std.fileicon.get_icon
+---@alias dot.fileicon.get_icon
 ---| function(basename: string, filetype: string|nil): string, string, boolean
 
----@class std.fileicon
+---@class dot.fileicon
 local M = {}
 
 ---@param filepath                      string
@@ -1305,7 +1305,7 @@ function M.get_directory_icon(filepath)
     return item.glyph, item.hl, true
   end
 
-  local basename = std.path.basename(filepath) ---@type string
+  local basename = yoz.path.basename(filepath) ---@type string
   local item = ICONS_DIRECTORY[basename]
   if type(item) == "string" then
     item = ICONS_DIRECTORY[item]
@@ -1323,7 +1323,7 @@ end
 ---@return string
 ---@return boolean
 function M.get_extension_icon(filepath, filetype)
-  local filename = std.path.basename(filepath):lower() ---@type string
+  local filename = yoz.path.basename(filepath):lower() ---@type string
   local extname = filename ---@type string
   local item = ICONS_EXTENSION[extname]
 
@@ -1369,7 +1369,7 @@ function M.get_file_icon(filepath, filetype)
     return M.get_directory_icon(filepath)
   end
 
-  local filename = std.path.basename(filepath):lower() ---@type string
+  local filename = yoz.path.basename(filepath):lower() ---@type string
   local item = ICONS_FILE[filename]
 
   if type(item) == "string" then
@@ -1461,7 +1461,7 @@ local GET_ICON_MAP = {
 ---@return string
 ---@return boolean
 function M.get(category, name, filetype)
-  local get_icon = GET_ICON_MAP[category] ---@type std.fileicon.get_icon|nil
+  local get_icon = GET_ICON_MAP[category] ---@type dot.fileicon.get_icon|nil
   if get_icon == nil then
     return "󰟢", "MiniIconsGrey", true
   end

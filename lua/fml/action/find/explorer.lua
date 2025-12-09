@@ -44,7 +44,7 @@ local function create_file_item(raw_item, dirpath)
     icon = dot.icon.kind.Folder
     icon_hl = "f_fe_name_dir"
   else
-    icon, icon_hl = std.fileicon.get_file_icon(raw_item.name)
+    icon, icon_hl = dot.fileicon.get_file_icon(raw_item.name)
   end
 
   ---@type fml.action.find.explorer.IFileItem
