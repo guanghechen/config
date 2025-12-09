@@ -269,32 +269,4 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local BUFNR_DETECT_FILETYPE = -1 ---@type integer
-
----@return nil
-local function cleanup_filetype_buffer()
-  if BUFNR_DETECT_FILETYPE > 0 and vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
-    vim.api.nvim_buf_delete(BUFNR_DETECT_FILETYPE, { force = true })
-    BUFNR_DETECT_FILETYPE = -1
-  end
-end
-
----@param filename                      string
----@return string|nil
-function M.detect_filetype(filename)
-  if BUFNR_DETECT_FILETYPE < 1 or not vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
-    BUFNR_DETECT_FILETYPE = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(BUFNR_DETECT_FILETYPE, "guanghechen://detect-filetype/" .. BUFNR_DETECT_FILETYPE)
-
-    -- Set up cleanup when Neovim exits
-    vim.api.nvim_create_autocmd("VimLeavePre", {
-      callback = cleanup_filetype_buffer,
-      once = true,
-    })
-  end
-  return vim.filetype.match({ filename = filename, buf = BUFNR_DETECT_FILETYPE })
-end
-
-----------------------------------------------------------------------------------------------------
-
 return M

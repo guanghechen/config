@@ -275,42 +275,33 @@ local extnames = {
   },
 }
 
----@param filetype                      string|nil
----@return boolean
-function M.is_sourcefile(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
+local BUFNR_DETECT_FILETYPE = -1 ---@type integer
+
+---@return nil
+local function cleanup_filetype_buffer()
+  if BUFNR_DETECT_FILETYPE > 0 and vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
+    vim.api.nvim_buf_delete(BUFNR_DETECT_FILETYPE, { force = true })
+    BUFNR_DETECT_FILETYPE = -1
   end
-  return filetypes.not_sourcefile[filetype] ~= true
 end
 
----@param filetype                      string|nil
----@return boolean
-function M.is_not_sourcefile(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
+---@param filename                      string
+---@return string|nil
+function M.detect(filename)
+  if BUFNR_DETECT_FILETYPE < 1 or not vim.api.nvim_buf_is_valid(BUFNR_DETECT_FILETYPE) then
+    BUFNR_DETECT_FILETYPE = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(BUFNR_DETECT_FILETYPE, "guanghechen://detect-filetype/" .. BUFNR_DETECT_FILETYPE)
+
+    -- Set up cleanup when Neovim exits
+    vim.api.nvim_create_autocmd("VimLeavePre", {
+      callback = cleanup_filetype_buffer,
+      once = true,
+    })
   end
-  return filetypes.not_sourcefile[filetype] == true
+  return vim.filetype.match({ filename = filename, buf = BUFNR_DETECT_FILETYPE })
 end
 
----@param filetype                      string|nil
----@return boolean
-function M.is_language(filetype)
-  if filetype == nil or #filetype < 1 then
-    return false
-  end
-  return filetypes.language[filetype] == true
-end
-
----@return string[]
-function M.list_not_sourcefile_filetypes()
-  return vim.tbl_keys(filetypes.not_sourcefile)
-end
-
----@return string[]
-function M.list_code_filetypes()
-  return vim.tbl_keys(filetypes.code)
-end
+----------------------------------------------------------------------------------------------------
 
 ---@return string[]
 function M.get_hipattern_filetypes()
@@ -332,6 +323,8 @@ function M.get_quitable_with_q_filetypes()
   return vim.tbl_keys(filetypes.quitable_with_q)
 end
 
+---@param filetype                      string|nil
+---@return boolean
 function M.has_external_winline(filetype)
   if filetype == nil or #filetype < 1 then
     return false
@@ -339,6 +332,7 @@ function M.has_external_winline(filetype)
   return filetypes.has_external_winline[filetype]
 end
 
+---@param filetype                      string|nil
 ---@return boolean
 function M.is_cmp_enabled(filetype)
   if filetype == nil or #filetype < 1 then
@@ -348,6 +342,24 @@ function M.is_cmp_enabled(filetype)
     return true
   end
   return false
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_language(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.language[filetype] == true
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_not_sourcefile(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] == true
 end
 
 ---@param filename                      string
@@ -364,6 +376,25 @@ function M.is_printable_file(filename)
   end
 
   return true
+end
+
+---@param filetype                      string|nil
+---@return boolean
+function M.is_sourcefile(filetype)
+  if filetype == nil or #filetype < 1 then
+    return false
+  end
+  return filetypes.not_sourcefile[filetype] ~= true
+end
+
+---@return string[]
+function M.list_code_filetypes()
+  return vim.tbl_keys(filetypes.code)
+end
+
+---@return string[]
+function M.list_not_sourcefile_filetypes()
+  return vim.tbl_keys(filetypes.not_sourcefile)
 end
 
 return M
