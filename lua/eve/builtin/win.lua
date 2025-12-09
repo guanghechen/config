@@ -410,7 +410,7 @@ function M.resolve(winnr, force)
   if meta.history == nil then
     meta.history = std.History.new({
       name = "win#bufs",
-      capacity = eve.setting.WIN_BUF_HISTORY_CAPACITY,
+      capacity = dot.var.WIN_BUF_HISTORY_CAPACITY,
       ---@param x                       eve.builtin.win.IFilepathHistoryItem
       ---@param y                       eve.builtin.win.IFilepathHistoryItem
       equals = function(x, y)

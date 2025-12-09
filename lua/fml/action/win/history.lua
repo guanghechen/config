@@ -11,7 +11,7 @@ local __module_name__ = "fml.action.win.history" ---@type string
 ---@field public icon                   string
 ---@field public icon_hln               string
 
-local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(eve.setting.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
+local ORDINAL_WIDTH = vim.api.nvim_strwidth(tostring(dot.var.WIN_BUF_HISTORY_CAPACITY)) ---@type integer
 local ORDINAL_FORMAT = "%" .. tostring(ORDINAL_WIDTH) .. "d" ---@type string
 local last_winnr_sourcefile = nil ---@type integer|nil
 

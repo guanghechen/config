@@ -16,7 +16,7 @@ eve.setup_context(storage)
 
 local theme = vim.env.GHC_THEME or "catppuccin-mocha" ---@type dot.e.ThemeFullName
 
-if not vim.list_contains(eve.setting.themes, theme) then
+if not vim.list_contains(dot.var.theme, theme) then
   print("Unknown theme: " .. theme)
 else
   eve.context.theme.apply_theme({

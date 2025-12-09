@@ -4,9 +4,107 @@
 ---@field public N_WINLINE_DISABLED     string
 local M = {}
 
+M.BUF_UNTITLED = "untitled"
+M.EDITING_INPUT_PREFIX = "@#!eve!#@"
+M.WIN_BUF_HISTORY_CAPACITY = 99
+M.WIN_HISTORY_CAPACITY = 99
+
+----------------------------------------------------------------------------------------------------
+
 M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
 M.N_NEO_TREE_SOURCE = "neo_tree_source"
 M.N_WINLINE_DISABLED = "dot_winline_disabled"
+
+----------------------------------------------------------------------------------------------------
+
+---@class dot.var.session
+M.session = {
+  persistent_options = table.concat({
+    "blank",
+    "buffers",
+    "curdir",
+    "folds",
+    "globals",
+    "help",
+    "resize",
+    "slash",
+    "skiprtp",
+    "tabpages",
+    "unix",
+    "winpos",
+    "winsize",
+  }, ","),
+}
+
+---@class dot.var.theme
+M.theme = {
+  "catppuccin-frappe",
+  "catppuccin-latte",
+  "catppuccin-macchiato",
+  "catppuccin-mocha",
+  "gruvbox-dark",
+  "gruvbox-light",
+  "nord",
+  "onehalf-dark",
+  "onehalf-light",
+  "rosepine-dawn",
+  "rosepine-main",
+  "rosepine-moon",
+  "tokyonight-day",
+  "tokyonight-moon",
+  "tokyonight-night",
+  "tokyonight-storm",
+  "vsc-dark-modern",
+  "vsc-light-modern",
+}
+
+---@class dot.var.toggler
+M.toggler = {
+  "auto_im_behavior",
+  "bufs_relative_behavior",
+
+  "fileencoding_local",
+  "fileformat_local",
+  "hipatterns_local",
+  "markdown_local",
+  "wrap_local",
+
+  "expandtab_ux",
+  "notification_paused_ux",
+  "relativenumber_ux",
+  "transparency_ux",
+  "theme_ux",
+  "theme_variant_ux",
+  "username_ux",
+
+  "ai_flight",
+  "ai_nes_flight",
+  "autoformat_flight",
+  "autoload_flight",
+  "autosave_flight",
+  "devmode_flight",
+  "dressing_clipboard_flight",
+  "dressing_illumniate_flight",
+  "dressing_input_flight",
+  "dressing_select_flight",
+  "dressing_winsep_flight",
+  "gitdiff_expand_all_flight",
+
+  "code_lens_lsp",
+  "diagnostics_virt_lines_lsp",
+  "inlay_hints_lsp",
+  "python_debug_host_lsp",
+  "python_debug_port_lsp",
+  "python_venv_lsp",
+  "spellcheck_lsp",
+
+  "render_markdown_plugin",
+  "treesitter_context_plugin",
+
+  "maximize",
+}
+
+----------------------------------------------------------------------------------------------------
 
 local cn = vim.api.nvim_create_namespace
 
@@ -82,18 +180,6 @@ M.sign = {
   -- stylua: ignore end
 }
 
----@class dot.var.zindex
-M.zindex = {
-  BOARD = 100,
-  CMDLINE = 10000,
-  CMDLINE_BLOCK = 10500,
-  MESSAGES = 200,
-  NOTIFIER = 6000,
-  POPUPMENU = 1200,
-  TREESITTER_CONTEXT = 30,
-  WINSEP = 10,
-}
-
 -- stylua: ignore start
 local sd = vim.fn.sign_define
 sd(M.sign.DAP_BREAKPOINT,                   { text = dot.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
@@ -117,5 +203,19 @@ sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = dot.icon.ui.ArrowPresent,  
 sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = dot.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
 sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = dot.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
 -- stylua: ignore end
+
+----------------------------------------------------------------------------------------------------
+
+---@class dot.var.zindex
+M.zindex = {
+  BOARD = 100,
+  CMDLINE = 10000,
+  CMDLINE_BLOCK = 10500,
+  MESSAGES = 200,
+  NOTIFIER = 6000,
+  POPUPMENU = 1200,
+  TREESITTER_CONTEXT = 30,
+  WINSEP = 10,
+}
 
 return M
