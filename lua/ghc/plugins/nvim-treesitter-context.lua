@@ -13,7 +13,7 @@ return {
     multiwindow = true,
     separator = nil,
     trim_scope = "outer",
-    zindex = eve.constant.zindex.TREESITTER_CONTEXT,
+    zindex = dot.var.zindex.TREESITTER_CONTEXT,
   },
   config = function(_, opts)
     local tsc = require("treesitter-context")

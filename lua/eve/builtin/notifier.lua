@@ -444,7 +444,7 @@ function M.__create_win_as_needed__(win)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = eve.constant.zindex.NOTIFIER,
+    zindex = dot.var.zindex.NOTIFIER,
     relative = "editor",
     anchor = "NE",
     col = vim.o.columns - 1,

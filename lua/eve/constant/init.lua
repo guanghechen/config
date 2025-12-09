@@ -1,7 +1,5 @@
 ---@class eve.constant.__mods
-local __mods = {
-  zindex = "eve.constant.zindex",
-}
+local __mods = {}
 
 ---@class eve.constant.hlgroup.__mods
 local hlgroup__mods = {
@@ -92,8 +90,6 @@ local theme = setmetatable({
 ---@field public __mods                 eve.constant.__mods
 ---@field public hlgroup                eve.constant.hlgroup
 ---@field public theme                  eve.constant.theme
----
----@field public zindex                 eve.constant.zindex
 local M = setmetatable({
   __mods = __mods,
   hlgroup = hlgroup,

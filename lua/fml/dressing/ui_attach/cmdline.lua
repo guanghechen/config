@@ -231,7 +231,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = eve.constant.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level * 100,
     relative = "editor",
     width = width,
     height = 1,
@@ -366,7 +366,7 @@ function M._render_block(block)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = eve.constant.zindex.CMDLINE_BLOCK,
+    zindex = dot.var.zindex.CMDLINE_BLOCK,
     relative = "editor",
     width = width,
     height = height,
@@ -533,7 +533,7 @@ function M._show_confirm(state, msg_show_task)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = eve.constant.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level * 100,
     relative = "editor",
     width = width,
     height = height,

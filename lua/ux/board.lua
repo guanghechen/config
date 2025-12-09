@@ -26,7 +26,7 @@ local M = {}
 
 ---@type vim.api.keyset.win_config
 local DEFAULT_WIN_CFG = {
-  zindex = eve.constant.zindex.BOARD,
+  zindex = dot.var.zindex.BOARD,
   relative = "editor",
   style = "minimal",
   border = "rounded",

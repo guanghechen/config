@@ -1,7 +1,9 @@
 ---@class dot.var
+---@field public N_BUF_DISABLE_LINT     string
+---@field public N_NEO_TREE_SOURCE      string
+---@field public N_WINLINE_DISABLED     string
 local M = {}
 
----@class dot.var.Names
 M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
 M.N_NEO_TREE_SOURCE = "neo_tree_source"
 M.N_WINLINE_DISABLED = "dot_winline_disabled"
@@ -78,6 +80,18 @@ M.sign = {
   DAP_LOG_POINT                         = "DapLogPoint",
   DAP_STOPPED                           = "DapStopped",
   -- stylua: ignore end
+}
+
+---@class dot.var.zindex
+M.zindex = {
+  BOARD = 100,
+  CMDLINE = 10000,
+  CMDLINE_BLOCK = 10500,
+  MESSAGES = 200,
+  NOTIFIER = 6000,
+  POPUPMENU = 1200,
+  TREESITTER_CONTEXT = 30,
+  WINSEP = 10,
 }
 
 -- stylua: ignore start
