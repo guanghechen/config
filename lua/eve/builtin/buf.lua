@@ -187,7 +187,7 @@ function M.resolve(bufnr, force)
     return meta
   end
 
-  local dirpath_pieces = rstd.path.split(filepath, false) ---@type string[]
+  local dirpath_pieces = yoz.path.split(filepath, false) ---@type string[]
   dirpath_pieces[#dirpath_pieces] = nil
 
   local cwd = std.path.cwd() ---@type string

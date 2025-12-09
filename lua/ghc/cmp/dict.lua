@@ -187,7 +187,7 @@ function M:get_completions(context, callback)
     return callback(empty_response(true))
   end
 
-  local ok, results = pcall(rstd.dict.search, {
+  local ok, results = pcall(yoz.dict.search, {
     keyword = keyword,
     language = self.opts.language,
     match_mode = self.opts.match_mode,
@@ -199,7 +199,7 @@ function M:get_completions(context, callback)
     std.reporter.error({
       from = __module_name__,
       subject = "dictionary search",
-      message = "Failed to execute rstd.dict.search",
+      message = "Failed to execute yoz.dict.search",
       details = results,
     })
     return callback(empty_response(false))

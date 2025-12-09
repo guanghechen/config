@@ -133,7 +133,7 @@ impl FromLua for ISearchInFilesOptions {
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.search.ISearchInFilesOptions".into(),
+                to: "yoz.search.ISearchInFilesOptions".into(),
                 message: Some("expected table".into()),
             }),
         }

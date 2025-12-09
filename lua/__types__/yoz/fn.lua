@@ -1,7 +1,7 @@
 ---@meta
 
----@module 'rstd.fn'
----@class rstd.fn
+---@module 'yoz.fn'
+---@class yoz.fn
 local M = {}
 
 ---@return string

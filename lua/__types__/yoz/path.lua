@@ -1,7 +1,7 @@
 ---@meta
 
----@module 'rstd.path'
----@class rstd.path
+---@module 'yoz.path'
+---@class yoz.path
 local M = {}
 
 ---@type string

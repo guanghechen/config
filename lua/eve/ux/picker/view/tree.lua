@@ -228,7 +228,7 @@ function M:match(params)
     end
   end
 
-  ---@type rstd.search.ISearchInLinesOptions
+  ---@type yoz.search.ISearchInLinesOptions
   local search_params = {
     pattern = pattern,
     lines = lines,
@@ -236,7 +236,7 @@ function M:match(params)
     flag_regex = regex,
     flag_case_sensitive = case_sensitive,
   }
-  local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
+  local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
   if search_err then
     std.reporter.error({
       from = __module_name__,
@@ -249,7 +249,7 @@ function M:match(params)
     search_result = nil
   end
   if search_result ~= nil and search_result.lines ~= nil then
-    local line_matches = search_result.lines ---@type rstd.search.ISearchInLinesLineMatch[]
+    local line_matches = search_result.lines ---@type yoz.search.ISearchInLinesLineMatch[]
     table.sort(line_matches, function(a, b)
       if a.lnum == b.lnum then
         return a.score > b.score

@@ -32,7 +32,7 @@ function M.setup_workspace()
 
     if A == nil then
       local ok, err = pcall(function()
-        rstd.path.set_cwd(p)
+        yoz.path.set_cwd(p)
         vim.api.nvim_set_current_dir(p)
       end)
       if not ok then

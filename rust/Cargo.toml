@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "rstd",
+    "yoz",
 ]
 resolver = "3"
 

@@ -114,7 +114,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local picker_uuid = props.uuid or rstd.fn.uuid() ---@type string
+  local picker_uuid = props.uuid or yoz.fn.uuid() ---@type string
   local autosort = props.autosort ~= false ---@type boolean
   local permanent = props.permanent ---@type boolean
   local title = props.title ---@type string
@@ -626,7 +626,7 @@ function M:__match__(input)
       lines[#lines + 1] = case_sensitive and item.text or item.text_lower
     end
 
-    ---@type rstd.search.ISearchInLinesOptions
+    ---@type yoz.search.ISearchInLinesOptions
     local search_params = {
       pattern = search_pattern,
       lines = lines,
@@ -634,7 +634,7 @@ function M:__match__(input)
       flag_regex = use_regex,
       flag_case_sensitive = case_sensitive,
     }
-    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
+    local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
     if search_err then
       std.reporter.error({
         from = __module_name__,

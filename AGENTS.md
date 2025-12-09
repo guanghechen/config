@@ -4,7 +4,7 @@ This file provides guidance to Codex (OpenAI GPT-5) or any other autonomous agen
 
 ## Project Overview
 
-This is a sophisticated, deeply-customized Neovim configuration that combines Lua and Rust for enhanced performance. Rust-powered utilities are surfaced through the `rstd` native module, which exposes search, replace, filesystem, and string helpers to Lua. The architecture implements a completely custom framework with modular design patterns.
+This is a sophisticated, deeply-customized Neovim configuration that combines Lua and Rust for enhanced performance. Rust-powered utilities are surfaced through the `yoz` native module, which exposes search, replace, filesystem, and string helpers to Lua. The architecture implements a completely custom framework with modular design patterns.
 
 ## Architecture
 
@@ -15,7 +15,7 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `std/source/`: Notepad data source implementations (json, folder)
   - `std/types/`: Shared type definitions (common, enum, notepad, theme, ux)
   - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
-- `lua/rstd`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
+- `lua/yoz`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
   - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`
 - `lua/eve/`: Core application framework
   - `eve/builtin/`: Core modules (G, ai, buf, clipboard, command, lsp, notifier, etc.)
@@ -38,7 +38,7 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `integration/vscode/`: VSCode extension setup
 - Supporting directories:
   - `queries/`: TreeSitter queries for various languages
-  - `rust/rstd/`: Rust source code for performance-critical operations
+  - `rust/yoz/`: Rust source code for performance-critical operations
   - `lsp/`: Language server configurations
   - `doc/`: Documentation and issue tracking
   - `bin/`: Compiled Rust binaries (platform-specific)
@@ -49,7 +49,7 @@ The configuration exposes core modules globally via `_G` for convenient access:
 
 **Global Modules (accessible without require):**
 - `_G.std` → `require("std")` - Foundation utilities
-- `_G.rstd` → `require("rstd")` - Native Rust helpers (search, replace, filesystem, string)
+- `_G.yoz` → `require("yoz")` - Native Rust helpers (search, replace, filesystem, string)
 - `_G.eve` → `require("eve")` - Core framework
 
 **Module Access Patterns:**
@@ -72,8 +72,8 @@ Each integration includes environment-specific:
 - `autocmd.lua`: Auto commands (neovim only)
 
 ### Rust-Lua Bridge
-- **Compiled Library**: `lua/rstd` (`.so` on Unix, `.dll` on Windows)
-- **Source Code**: `rust/rstd/` (mlua integration)
+- **Compiled Library**: `lua/yoz` (`.so` on Unix, `.dll` on Windows)
+- **Source Code**: `rust/yoz/` (mlua integration)
 - **Build**: Run `./rust/build.sh --force` after Rust changes
 
 ## Code Conventions
@@ -179,7 +179,7 @@ std.reporter.error({
 ```
 
 ### Rust Integration
-When modifying `rust/rstd/src/`:
+When modifying `rust/yoz/src/`:
 - Follow existing mlua patterns for serialization/deserialization
 - Keep Lua-facing APIs synchronized with Lua call sites
 - Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)

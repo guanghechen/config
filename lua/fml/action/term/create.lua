@@ -21,7 +21,7 @@ local function apply_profile(profile)
   end
 
   eve.term.create({
-    uuid = rstd.fn.uuid(),
+    uuid = yoz.fn.uuid(),
     type = profile.type,
     name = profile.name,
     cmd = profile.cmd,
@@ -171,7 +171,7 @@ function M.toggle()
   local _, termmeta = eve.term.find_index_by_type("shell") ---@type integer, eve.builtin.term.IMeta|nil
   if termmeta == nil then
     terminal:toggle_and_focus({
-      uuid = rstd.fn.uuid(),
+      uuid = yoz.fn.uuid(),
       type = "shell",
       name = "shell",
       cwd = cwd,

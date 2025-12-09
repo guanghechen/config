@@ -178,7 +178,7 @@ M.__index = M
 ---@param props                         eve.ux.searcher.composer.IBasicProps
 ---@return eve.ux.searcher.BasicComposer
 function M.new(props)
-  local uuid = props.uuid or rstd.fn.uuid() ---@type string
+  local uuid = props.uuid or yoz.fn.uuid() ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean

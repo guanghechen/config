@@ -1,4 +1,4 @@
-_G.rstd = require("rstd") ---@type rstd
+_G.yoz = require("yoz") ---@type yoz
 
 require("std.bootstrap").setup_patches()
 require("std.bootstrap").setup_workspace()

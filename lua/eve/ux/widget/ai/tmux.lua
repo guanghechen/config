@@ -113,7 +113,7 @@ end
 ---@param cwd                           string
 ---@return string
 function M.get_session_name(agent, cwd)
-  local hash = rstd.fn.md5(cwd)
+  local hash = yoz.fn.md5(cwd)
   return string.format("%s-%s", agent, hash)
 end
 

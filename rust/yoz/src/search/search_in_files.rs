@@ -558,7 +558,7 @@ mod tests {
     impl TempWorkspace {
         fn new(prefix: &str) -> Self {
             let path =
-                std::env::temp_dir().join(format!("rstd-search-{}-{}", prefix, Uuid::new_v4()));
+                std::env::temp_dir().join(format!("yoz-search-{}-{}", prefix, Uuid::new_v4()));
             fs::create_dir_all(&path).expect("failed to create temp workspace");
             Self { path }
         }

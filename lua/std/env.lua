@@ -28,16 +28,16 @@ local M = {}
 ---@param dirpath                       string
 ---@return string|nil
 function M.locate_gitroot(dirpath)
-  local dot_git_path = rstd.path.locate_nearest(dirpath, { ".git" }) ---@type string|nil
+  local dot_git_path = yoz.path.locate_nearest(dirpath, { ".git" }) ---@type string|nil
   if dot_git_path ~= nil then
-    return rstd.path.dirname(dot_git_path, false, PATH_SEP)
+    return yoz.path.dirname(dot_git_path, false, PATH_SEP)
   end
 
   local ok, output = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
   local trimmed_output = vim.trim(output or "")
   local shell_error = vim.v.shell_error ---@type integer
 
-  if ok and shell_error == 0 and trimmed_output ~= "" and rstd.path.is_exist_dirpath(trimmed_output) then
+  if ok and shell_error == 0 and trimmed_output ~= "" and yoz.path.is_exist_dirpath(trimmed_output) then
     return trimmed_output
   end
 

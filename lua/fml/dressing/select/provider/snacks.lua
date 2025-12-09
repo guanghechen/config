@@ -91,7 +91,7 @@ local function snacks_provider(items, opts)
     end
 
     select_items[#select_items + 1] = {
-      uuid = item.name or rstd.fn.md5(text),
+      uuid = item.name or yoz.fn.md5(text),
       text = text,
       text_lower = text:lower(),
       data = { original_item = item },

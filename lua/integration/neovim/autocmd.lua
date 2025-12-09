@@ -75,8 +75,8 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
     local sep = package.config:sub(1, 1) ---@type string
     local filepath = event.match ---@type string
-    local dirpath = rstd.path.dirname(filepath, false, sep) ---@type string
-    rstd.path.mkdirs(dirpath)
+    local dirpath = yoz.path.dirname(filepath, false, sep) ---@type string
+    yoz.path.mkdirs(dirpath)
   end,
 })
 

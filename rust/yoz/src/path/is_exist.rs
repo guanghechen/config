@@ -37,7 +37,7 @@ mod tests {
 
     fn prepare_paths() -> PreparedPaths {
         let base_dir = std::env::temp_dir().join(format!(
-            "rstd_path_is_exist_{}_{}",
+            "yoz_path_is_exist_{}_{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

@@ -97,13 +97,13 @@ local fns = {
   ---@return string|nil
   find_stylua_config = function(dirname)
     local config_files = { ".stylua.toml", "stylua.toml" }
-    return rstd.path.locate_nearest(dirname, config_files)
+    return yoz.path.locate_nearest(dirname, config_files)
   end,
 
   ---@param dirname                     string
   ---@return string
   find_prettier_binpath = function(dirname)
-    local binpath = rstd.path.locate_nearest(dirname, { config.prettier_bin_path }) ---@type string|nil
+    local binpath = yoz.path.locate_nearest(dirname, { config.prettier_bin_path }) ---@type string|nil
     return binpath or eve.lsp.locate_mason_bin_path("prettier") ---@type string
   end,
 
@@ -122,7 +122,7 @@ local fns = {
       "prettier.config.mjs",
       "prettier.config.cjs",
     }
-    return rstd.path.locate_nearest(dirname, config_files)
+    return yoz.path.locate_nearest(dirname, config_files)
   end,
 
   ---@param config_table                table

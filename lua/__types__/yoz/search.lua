@@ -1,10 +1,10 @@
 ---@meta
 
----@module 'rstd.search'
----@class rstd.search
+---@module 'yoz.search'
+---@class yoz.search
 local M = {}
 
----@class rstd.search.ISearchInFilesOptions
+---@class yoz.search.ISearchInFilesOptions
 ---@field public cwd                    string|nil
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_gitignore         boolean
@@ -17,7 +17,7 @@ local M = {}
 ---@field public exclude_patterns       string
 ---@field public specified_filepath     string|nil
 
----@class rstd.search.ITextMatch
+---@class yoz.search.ITextMatch
 ---@field public lx                     integer
 ---@field public ly                     integer
 ---@field public cx                     integer
@@ -28,87 +28,87 @@ local M = {}
 ---@field public sx                     integer
 ---@field public sy                     integer
 
----@class rstd.search.IFileMatch
+---@class yoz.search.IFileMatch
 ---@field public p                      string
----@field public matches                rstd.search.ITextMatch[]
+---@field public matches                yoz.search.ITextMatch[]
 
----@class rstd.search.ISearchFileResult
+---@class yoz.search.ISearchFileResult
 ---@field public elapsed_time           integer
----@field public items                  rstd.search.IFileMatch[]
+---@field public items                  yoz.search.IFileMatch[]
 
----@class rstd.search.ISearchFailedResult
+---@class yoz.search.ISearchFailedResult
 ---@field public elapsed_time           integer
 ---@field public error                  string
 
----@class rstd.search.ISearchTextResult
+---@class yoz.search.ISearchTextResult
 ---@field public elapsed_time           integer
----@field public matches                rstd.search.ITextMatch[]
----@field public lines                  rstd.search.ISearchInLinesLineMatch[]
+---@field public matches                yoz.search.ITextMatch[]
+---@field public lines                  yoz.search.ISearchInLinesLineMatch[]
 
----@param options                       rstd.search.ISearchInFilesOptions
----@return rstd.search.ISearchFileResult|nil
----@return rstd.search.ISearchFailedResult|nil
+---@param options                       yoz.search.ISearchInFilesOptions
+---@return yoz.search.ISearchFileResult|nil
+---@return yoz.search.ISearchFailedResult|nil
 function M.search_in_files(options) end
 
----@alias rstd.search.ISearchInLinesLiteralMatchPoint rstd.search.ISearchInLinesMatchPoint
+---@alias yoz.search.ISearchInLinesLiteralMatchPoint yoz.search.ISearchInLinesMatchPoint
 
----@alias rstd.search.ISearchInLinesLiteralLineMatch rstd.search.ISearchInLinesLineMatch
+---@alias yoz.search.ISearchInLinesLiteralLineMatch yoz.search.ISearchInLinesLineMatch
 
----@class rstd.search.ISearchInLinesLiteralOptions
+---@class yoz.search.ISearchInLinesLiteralOptions
 ---@field public pattern                string
 ---@field public lines                  string[]
 ---@field public flag_fuzzy             boolean
 ---@field public flag_case_sensitive    boolean
 
----@param options                       rstd.search.ISearchInLinesLiteralOptions
----@return rstd.search.ISearchTextResult|nil
+---@param options                       yoz.search.ISearchInLinesLiteralOptions
+---@return yoz.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines_literal(options) end
 
----@alias rstd.search.ISearchInLinesRegexMatchPoint rstd.search.ISearchInLinesMatchPoint
+---@alias yoz.search.ISearchInLinesRegexMatchPoint yoz.search.ISearchInLinesMatchPoint
 
----@alias rstd.search.ISearchInLinesRegexLineMatch rstd.search.ISearchInLinesLineMatch
+---@alias yoz.search.ISearchInLinesRegexLineMatch yoz.search.ISearchInLinesLineMatch
 
----@class rstd.search.ISearchInLinesRegexOptions
+---@class yoz.search.ISearchInLinesRegexOptions
 ---@field public pattern                string
 ---@field public lines                  string[]
 ---@field public flag_case_sensitive    boolean
 
----@param options                       rstd.search.ISearchInLinesRegexOptions
----@return rstd.search.ISearchTextResult|nil
+---@param options                       yoz.search.ISearchInLinesRegexOptions
+---@return yoz.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines_regex(options) end
 
----@class rstd.search.ISearchInLinesMatchPoint
+---@class yoz.search.ISearchInLinesMatchPoint
 ---@field public l                      integer
 ---@field public r                      integer
 
----@class rstd.search.ISearchInLinesLineMatch
+---@class yoz.search.ISearchInLinesLineMatch
 ---@field public lnum                   integer
 ---@field public score                  integer
----@field public matches                rstd.search.ISearchInLinesMatchPoint[]
+---@field public matches                yoz.search.ISearchInLinesMatchPoint[]
 
----@class rstd.search.ISearchInLinesOptions
+---@class yoz.search.ISearchInLinesOptions
 ---@field public pattern                string
 ---@field public lines                  string[]
 ---@field public flag_fuzzy             boolean
 ---@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
 
----@param options                       rstd.search.ISearchInLinesOptions
----@return rstd.search.ISearchTextResult|nil
+---@param options                       yoz.search.ISearchInLinesOptions
+---@return yoz.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines(options) end
 
----@class rstd.search.ISearchInTextOptions
+---@class yoz.search.ISearchInTextOptions
 ---@field public pattern                string
 ---@field public text                   string
 ---@field public flag_fuzzy             boolean
 ---@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
 
----@param options                       rstd.search.ISearchInTextOptions
----@return rstd.search.ISearchTextResult|nil
+---@param options                       yoz.search.ISearchInTextOptions
+---@return yoz.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_text(options) end
 

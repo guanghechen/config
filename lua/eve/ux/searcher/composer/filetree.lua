@@ -142,7 +142,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local searcher_uuid = props.uuid or rstd.fn.uuid() ---@type string
+  local searcher_uuid = props.uuid or yoz.fn.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
@@ -770,7 +770,7 @@ function M.new(props)
         end
 
         local filepath = std.path.resolve(cwd, leafnode.data.filepath) ---@type string
-        local advance_result, advance_error = rstd.replace.replace_file_by_matches_advance({
+        local advance_result, advance_error = yoz.replace.replace_file_by_matches_advance({
           filepath = filepath,
           search_pattern = search_pattern,
           replace_pattern = replace_pattern,
@@ -2266,7 +2266,7 @@ function M:__replace_file__(cwd, node, nodestate)
 
   if count == L then
     local filepath = std.path.resolve(cwd, node.data.filepath) ---@type string
-    local succeed, replace_error = rstd.replace.replace_file({
+    local succeed, replace_error = yoz.replace.replace_file({
       filepath = filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
@@ -2299,7 +2299,7 @@ function M:__replace_file__(cwd, node, nodestate)
   end
 
   local filepath = std.path.resolve(cwd, node.data.filepath) ---@type string
-  local succeed, replace_error = rstd.replace.replace_file_by_matches({
+  local succeed, replace_error = yoz.replace.replace_file_by_matches({
     filepath = filepath,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,

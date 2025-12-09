@@ -152,7 +152,7 @@ function M:load(force)
   end
 
   if #orders == 0 then
-    local uuid = rstd.fn.uuid()
+    local uuid = yoz.fn.uuid()
     local now = std.notepad.now_iso_utc()
     local name = std.notepad.normalize_name(nil, self.default_item_name)
     local item = {
@@ -300,7 +300,7 @@ function M:create(name, content)
     return existing_item
   end
 
-  local uuid = rstd.fn.uuid()
+  local uuid = yoz.fn.uuid()
   local now = std.notepad.now_iso_utc()
   local initial_content = content or ""
   local item = {

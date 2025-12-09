@@ -26,7 +26,7 @@ local function rename(params)
   end
 
   eve.lsp.on_rename(from, to, function()
-    local move_success, move_err = rstd.fs.move({
+    local move_success, move_err = yoz.fs.move({
       old_path = from,
       new_path = to,
       force = force,

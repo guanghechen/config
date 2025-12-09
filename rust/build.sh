@@ -15,8 +15,8 @@ RESET='\033[0m'
 
 # Function to build a Rust package and deploy it
 # Args:
-#   $1 - source_name: original package name (e.g., rstd)
-#   $2 - target_name: target package name for output (e.g., rstd)
+#   $1 - source_name: original package name (e.g., yoz)
+#   $2 - target_name: target package name for output (e.g., yoz)
 ghc-rust-build() {
   cd $SCRIPT_DIR
 
@@ -114,6 +114,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-ghc-rust-build "rstd" "rstd" "$FORCE"
+ghc-rust-build "yoz" "yoz" "$FORCE"
 
 echo -e "${BLUE}[neovim build] done${RESET}"

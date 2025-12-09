@@ -234,7 +234,7 @@ function M.size(position)
         return "", "", true
       end
 
-      local text, err = rstd.fs.get_filesize(context.filepath)
+      local text, err = yoz.fs.get_filesize(context.filepath)
       if err ~= nil then
         std.reporter.error({
           from = __module_name__,

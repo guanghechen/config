@@ -42,7 +42,7 @@ impl FromLua for IFindFilesOptions {
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.find.IFindFilesOptions".into(),
+                to: "yoz.find.IFindFilesOptions".into(),
                 message: Some("expected table".into()),
             }),
         }

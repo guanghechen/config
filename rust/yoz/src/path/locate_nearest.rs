@@ -44,7 +44,7 @@ mod tests {
 
     fn unique_temp_dir(name: &str) -> std::path::PathBuf {
         std::env::temp_dir().join(format!(
-            "rstd_locate_nearest_{name}_{}_{}",
+            "yoz_locate_nearest_{name}_{}_{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

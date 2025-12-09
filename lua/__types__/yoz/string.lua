@@ -1,7 +1,7 @@
 ---@meta
 
----@module 'rstd.string'
----@class rstd.string
+---@module 'yoz.string'
+---@class yoz.string
 local M = {}
 
 ---@param text                          string

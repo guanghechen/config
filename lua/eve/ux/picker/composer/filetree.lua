@@ -140,7 +140,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local picker_uuid = props.uuid or rstd.fn.uuid() ---@type string
+  local picker_uuid = props.uuid or yoz.fn.uuid() ---@type string
   local permanent = props.permanent ---@type boolean
   local preview = props.preview ~= false ---@type boolean
   local title = props.title ---@type string
@@ -2135,7 +2135,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   local filepaths = {} ---@type string[]
 
   if isdir then
-    local result, err = rstd.fs.collect_files(to, true)
+    local result, err = yoz.fs.collect_files(to, true)
     if err ~= nil then
       std.reporter.error({
         from = __module_name__,

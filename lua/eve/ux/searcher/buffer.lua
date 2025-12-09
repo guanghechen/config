@@ -80,7 +80,7 @@ end
 ---@param bufnr                         integer
 ---@param namespace                     integer
 ---@param hlgroup                       string
----@param match                         rstd.search.ITextMatch
+---@param match                         yoz.search.ITextMatch
 ---@return nil
 local function highlight_text_match(bufnr, namespace, hlgroup, match)
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -167,7 +167,7 @@ end
 ---@field protected _bufnr_replacer     integer|nil
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
----@field protected _matches            rstd.search.ITextMatch[]|nil
+---@field protected _matches            yoz.search.ITextMatch[]|nil
 ---@field protected _scheduler_search   std.collection.Scheduler
 ---@field protected _nvimbar            eve.ux.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     std.t.IKeymap[]
@@ -383,7 +383,7 @@ end
 
 ---@return nil
 function M:goto_prev_match()
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil then
     return
   end
@@ -405,7 +405,7 @@ function M:goto_prev_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, -1, N) ---@type integer
-  local match_prev = matches[index] ---@type rstd.search.ITextMatch
+  local match_prev = matches[index] ---@type yoz.search.ITextMatch
   if match_prev then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lx or 1, match_prev.cx or 0 })
@@ -421,7 +421,7 @@ end
 
 ---@return nil
 function M:goto_next_match()
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil then
     return
   end
@@ -443,7 +443,7 @@ function M:goto_next_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = std.fn.navigate_circular(index_current, 1, N) ---@type integer
-  local match_next = matches[index] ---@type rstd.search.ITextMatch
+  local match_next = matches[index] ---@type yoz.search.ITextMatch
   if match_next then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lx or 1, match_next.cx or 0 })
@@ -483,7 +483,7 @@ function M:replace_current_match()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -525,7 +525,7 @@ function M:replace_current_match()
   end
 
   local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
-  local current_match = matches[current_match_index] ---@type rstd.search.ITextMatch
+  local current_match = matches[current_match_index] ---@type yoz.search.ITextMatch
   if current_match == nil then
     std.reporter.error({
       from = __module_name__,
@@ -537,7 +537,7 @@ function M:replace_current_match()
 
   local match_offset = current_match.ox ---@type integer
 
-  local replaced_text, replace_err = rstd.replace.replace_text_preview_by_matches({
+  local replaced_text, replace_err = yoz.replace.replace_text_preview_by_matches({
     text = text,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,
@@ -599,7 +599,7 @@ function M:replace_all_matches()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if matches == nil or #matches == 0 then
     std.reporter.error({
       from = __module_name__,
@@ -631,7 +631,7 @@ function M:replace_all_matches()
   end
 
   local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
-  local replaced_text, replace_err = rstd.replace.replace_text_preview({
+  local replaced_text, replace_err = yoz.replace.replace_text_preview({
     text = text,
     search_pattern = search_pattern,
     replace_pattern = replace_pattern,
@@ -1245,7 +1245,7 @@ function M:__search__()
   local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
   local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
 
-  local matches ---@type rstd.search.ITextMatch[]|nil
+  local matches ---@type yoz.search.ITextMatch[]|nil
   local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, bufnr_source, 0, -1, false)
 
   if not ok_lines then
@@ -1264,7 +1264,7 @@ function M:__search__()
       },
     })
   else
-    ---@type rstd.search.ISearchInLinesOptions
+    ---@type yoz.search.ISearchInLinesOptions
     local search_params = {
       pattern = pattern,
       lines = lines,
@@ -1272,7 +1272,7 @@ function M:__search__()
       flag_regex = flag_regex,
       flag_case_sensitive = flag_case_sensitive,
     }
-    local search_result, search_err = rstd.search.search_in_lines(search_params) ---@type rstd.search.ISearchTextResult|nil, string|nil
+    local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
     if search_err then
       std.reporter.error({
         from = __module_name__,
@@ -1388,7 +1388,7 @@ function M:__update_replace_preview__()
     return
   end
 
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
   if not matches or #matches == 0 then
     return
   end
@@ -1406,7 +1406,7 @@ function M:__update_replace_preview__()
 
     if end_offset > start_offset then
       local matched_text = string.sub(text, start_offset + 1, end_offset) ---@type string
-      local replacement_text, preview_err = rstd.replace.replace_text_preview({
+      local replacement_text, preview_err = yoz.replace.replace_text_preview({
         text = matched_text,
         search_pattern = search_pattern,
         replace_pattern = replace_pattern,
@@ -1482,7 +1482,7 @@ end
 ---@diagnostic disable-next-line: unused-local
 function M:__get_current_match_offset__(lines)
   local current_match_index = self.o_match_index:snapshot() ---@type integer
-  local matches = self._matches ---@type rstd.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
 
   if not matches or current_match_index <= 0 or current_match_index > #matches then
     return nil

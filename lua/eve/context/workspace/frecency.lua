@@ -65,7 +65,7 @@ local _defaults = M.defaults() ---@type eve.context.frecency.data
 M.files = std.Frecency.deserialize({
   data = _defaults.files,
   normalize = function(key)
-    return rstd.fn.md5(key)
+    return yoz.fn.md5(key)
   end,
 })
 

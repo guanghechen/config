@@ -109,7 +109,7 @@ function M:calc_preview_data(context)
   local highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
 
   if flag_replace then
-    local preview_result, preview_error = rstd.replace.replace_file_preview_by_matches_advance({
+    local preview_result, preview_error = yoz.replace.replace_file_preview_by_matches_advance({
       filepath = filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
@@ -132,8 +132,8 @@ function M:calc_preview_data(context)
     end
 
     local preview_text = preview_result.text ---@type string
-    local lwidths = rstd.string.calc_linewidths(preview_text) ---@type integer[]
-    lines = rstd.string.parse_lines(preview_text, lwidths) ---@type string[]
+    local lwidths = yoz.string.calc_linewidths(preview_text) ---@type integer[]
+    lines = yoz.string.parse_lines(preview_text, lwidths) ---@type string[]
     highlights = {} ---@type eve.ux.searcher.IPlainfileViewHighlight[]
     local matches = preview_result.matches ---@type std.t.IMatchPoint[]
 

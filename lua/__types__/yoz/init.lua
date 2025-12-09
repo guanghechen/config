@@ -1,0 +1,12 @@
+---@meta
+
+---@module 'yoz'
+---@class yoz
+---@field public string                 yoz.string
+---@field public fn                     yoz.fn
+---@field public dict                   yoz.dict
+---@field public path                   yoz.path
+---@field public fs                     yoz.fs
+---@field public replace                yoz.replace
+---@field public find                   yoz.find
+---@field public search                 yoz.search

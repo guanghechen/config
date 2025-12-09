@@ -94,7 +94,7 @@ local function refresh(picker, rootpath)
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and eve.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
-  ---@type rstd.find.IFindFilesOptions
+  ---@type yoz.find.IFindFilesOptions
   local find_files_options = {
     cwd = rootpath,
     flag_case_sensitive = false,
@@ -106,7 +106,7 @@ local function refresh(picker, rootpath)
   }
 
   local filepaths = {}
-  local result, err = rstd.find.find_files(find_files_options)
+  local result, err = yoz.find.find_files(find_files_options)
   if err ~= nil then
     std.reporter.warn({
       from = name,

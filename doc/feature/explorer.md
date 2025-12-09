@@ -9,7 +9,7 @@
 - Adopt Snacks’ sidebar sizing defaults (`width = 40`, `min_width = 40`, no preview pane) while exposing them through our settings overrides so teams can tune the sidebar width consistently.
 - Watch the root directory via libuv (`vim.uv.new_fs_event`) and extend watchers to expanded subdirectories so inserts, deletes, moves, and chmod mutations are propagated lazily.
 - Track git metadata for every visible node (staged vs unstaged badges) by leaning on `eve.state.git.resolve_status` rather than reimplementing porcelain parsing.
-- Avoid exhaustive `collect_files` scans; instead, call `rstd.fs.readdir` on demand per directory and cache the result until dirty markers indicate a refresh is needed.
+- Avoid exhaustive `collect_files` scans; instead, call `yoz.fs.readdir` on demand per directory and cache the result until dirty markers indicate a refresh is needed.
 - Always surface hidden and ignored files on expansion; filtering is handled in the UI rather than the filesystem layer so the explorer mirrors the on-disk hierarchy.
 - Keep the design modular so tree rendering, state management, and command wiring can evolve independently.
 
@@ -57,7 +57,7 @@
 ## State Layer (`lua/eve/state/explorer.lua`)
 - Owns the explorer store lifecycle. Provides `bootstrap(rootpath)`, `set_root(path)`, `expand(uuid, opts)`, `collapse(uuid)`, `refresh(uuid, opts)`, `mark(uuid, enabled)`, `open(uuid, open_opts)`.
 - Mirrors Snacks defaults by enabling `watch = true`, `follow_file = true`, `git_status = true`, `git_untracked = true`, and `diagnostics = true` out of the box; overrides flow through observables so integrations can opt out.
-- Wraps `rstd.fs.readdir` to fetch `(IExplorerEntry[])` where each entry contains type, name, absolute path, permissions, size, owner/group, timestamps, and precomputed icon data.
+- Wraps `yoz.fs.readdir` to fetch `(IExplorerEntry[])` where each entry contains type, name, absolute path, permissions, size, owner/group, timestamps, and precomputed icon data.
 - Persists expansion state per root inside `std.path.locate_workspace_filepath("explorer/state.json")` using `std.fs.write_json` so sessions survive restart; collapse is opt-in to avoid throttling disk writes.
 - Integrates with `std.collection.Dirtier` to coalesce rapid watcher events and with `std.collection.Scheduler` to defer heavy re-indexing to the main loop.
 - Publishes a `dispose()` hook to teardown watchers and clear caches when the widget closes or the root path changes.
@@ -97,7 +97,7 @@
 - Provide optional filters: `toggle_hidden`, `toggle_git_only`, `set_root` (prompted path), each flipping an observable the widget listens to.
 
 ## Lazy Loading & Pagination
-- `expand(uuid)` checks `meta.loaded`. If false, call `rstd.fs.readdir`, sort entries (`directories` before files, case-insensitive), create child nodes, set `loaded = true`, and attach watchers to directories marked `expanded`.
+- `expand(uuid)` checks `meta.loaded`. If false, call `yoz.fs.readdir`, sort entries (`directories` before files, case-insensitive), create child nodes, set `loaded = true`, and attach watchers to directories marked `expanded`.
 - Hidden/ignored files are included in the readdir result; presentation filters are applied downstream so the cache remains faithful to disk.
 - When a directory exceeds a threshold (default 500 entries), split rendering into pages managed by `IExplorerPaginationState` and a `std.collection.Scheduler` task that gradually appends children to avoid blocking the event loop.
 - Collapse operations retain the child cache but mark `loaded = false` if `opts.discard_cache` is requested (useful for huge directories or to reclaim memory).
@@ -106,7 +106,7 @@
 - Debounce watcher-triggered refreshes and git updates separately to avoid redundant `readdir` calls during mass changes (e.g., branch checkout).
 - Guard against stale nodes by verifying `vim.loop.fs_stat` before creating buffers; if the node disappeared, remove it from the tree and cancel associated watchers.
 - Detect symlink cycles using an `IExplorerVisited` set; skip recursive entry insertion when a path resolves to an ancestor.
-- Provide fallback behaviour when `rstd.fs.readdir` fails (permission issues): render a placeholder child explaining the error and allow a manual retry.
+- Provide fallback behaviour when `yoz.fs.readdir` fails (permission issues): render a placeholder child explaining the error and allow a manual retry.
 - Ensure teardown closes uv handles to prevent leaks when Neovim exits or the root path switches.
 
 ## Implementation Plan

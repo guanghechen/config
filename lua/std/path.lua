@@ -78,25 +78,25 @@ local M = {}
 ---@param filepath                      string
 ---@return string
 function M.basename(filepath)
-  return rstd.path.basename(filepath)
+  return yoz.path.basename(filepath)
 end
 
 ---@param filepath                      string
 ---@return string
 function M.dirname(filepath)
-  return rstd.path.dirname(filepath, false, "/")
+  return yoz.path.dirname(filepath, false, "/")
 end
 
 ---@param filename                      string
 ---@return string
 function M.extname(filename)
-  return rstd.path.extname(filename)
+  return yoz.path.extname(filename)
 end
 
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
-  return rstd.path.is_absolute(filepath)
+  return yoz.path.is_absolute(filepath)
 end
 
 ---@param filepath                      string
@@ -114,19 +114,19 @@ end
 ---@param filepath                      string
 ---@return boolean
 function M.is_exist(filepath)
-  return rstd.path.is_exist(filepath)
+  return yoz.path.is_exist(filepath)
 end
 
 ---@param dirpath                       string
 ---@return boolean
 function M.is_exist_dirpath(dirpath)
-  return rstd.path.is_exist_directory(dirpath)
+  return yoz.path.is_exist_directory(dirpath)
 end
 
 ---@param filepath                      string
 ---@return boolean
 function M.is_exist_filepath(filepath)
-  return rstd.path.is_exist_file(filepath)
+  return yoz.path.is_exist_file(filepath)
 end
 
 ---@return boolean
@@ -146,20 +146,20 @@ end
 ---@param to                            string
 ---@return boolean
 function M.is_descendant(from, to)
-  return rstd.path.is_descendant(from, to)
+  return yoz.path.is_descendant(from, to)
 end
 
 ---@param from                          string
 ---@param to                            string
 ---@return string
 function M.join(from, to)
-  return rstd.path.join(from, to, true, SEP)
+  return yoz.path.join(from, to, true, SEP)
 end
 
 ---@param dirpath                       string
 ---@return nil
 function M.mkdir_if_nonexist(dirpath)
-  return rstd.path.mkdirs(dirpath)
+  return yoz.path.mkdirs(dirpath)
 end
 
 ---@param filepath                      string
@@ -167,7 +167,7 @@ end
 ---@param sep                           ?'/'|'\'
 ---@return string
 function M.normalize(filepath, keep_trailing_slash, sep)
-  return rstd.path.normalize(filepath, keep_trailing_slash ~= false, sep or SEP)
+  return yoz.path.normalize(filepath, keep_trailing_slash ~= false, sep or SEP)
 end
 
 ---@param from                          string
@@ -175,13 +175,13 @@ end
 ---@param sep                           ?'/'|'\'
 ---@return string
 function M.relative(from, to, sep)
-  return rstd.path.relative(from, to, false, sep or SEP)
+  return yoz.path.relative(from, to, false, sep or SEP)
 end
 
 ---@param cwd                           string
 ---@param to                            string
 function M.resolve(cwd, to)
-  return rstd.path.resolve(cwd, to, true, SEP)
+  return yoz.path.resolve(cwd, to, true, SEP)
 end
 
 ---@param path                          string
@@ -199,7 +199,7 @@ function M.is_repo_personal_public()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = rstd.path.split(workspace, false) ---@type string[]
+  local pieces = yoz.path.split(workspace, false) ---@type string[]
   if #pieces <= 2 then
     return false
   end
@@ -217,7 +217,7 @@ function M.is_repo_playground()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = rstd.path.split(workspace, false) ---@type string[]
+  local pieces = yoz.path.split(workspace, false) ---@type string[]
   return vim.list_contains(pieces, "playground")
 end
 
@@ -228,7 +228,7 @@ function M.is_repo_thirdparty()
   end
 
   local workspace = M.workspace() ---@type string
-  local pieces = rstd.path.split(workspace, false) ---@type string[]
+  local pieces = yoz.path.split(workspace, false) ---@type string[]
   return vim.list_contains(pieces, "sourcecode") or vim.list_contains(pieces, "sourcecodes")
 end
 
@@ -262,7 +262,7 @@ function M.locate_cache_filepath(filename)
   local workspace_path = M.workspace()
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path)
 
-  local hash = rstd.fn.md5(workspace_path)
+  local hash = yoz.fn.md5(workspace_path)
 
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
@@ -311,7 +311,7 @@ end
 function M.locate_workspace_filepath(filename)
   local workspace_path = M.workspace() ---@type string
   local workspace_name = (workspace_path:match("([^/\\]+)[/\\]*$") or workspace_path) ---@type string
-  local hash = rstd.fn.md5(workspace_path) ---@type string
+  local hash = yoz.fn.md5(workspace_path) ---@type string
   local session_dir = workspace_name .. "@" .. hash ---@type string
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end

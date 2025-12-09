@@ -39,7 +39,7 @@ local __module_name__ = "eve.ux.searcher.view.filetree" ---@type string
 ---@class eve.ux.searcher.view.filetree.IResolvedFileMatch
 ---@field public filepath               string
 ---@field public relative               string
----@field public matches                rstd.search.ITextMatch[]
+---@field public matches                yoz.search.ITextMatch[]
 
 ---@class eve.ux.searcher.view.filetree.IListviewRendererContext : eve.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               std.collection.filetree.INode
@@ -224,8 +224,8 @@ function M:search(params)
   local search_pattern = params.search_pattern ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
-  ---@type rstd.search.ISearchFileResult|nil, rstd.search.ISearchFailedResult|nil
-  local results, err = rstd.search.search_in_files({
+  ---@type yoz.search.ISearchFileResult|nil, yoz.search.ISearchFailedResult|nil
+  local results, err = yoz.search.search_in_files({
     cwd = cwd,
     flag_case_sensitive = flag_case_sensitive,
     flag_gitignore = flag_gitignore,
@@ -306,7 +306,7 @@ function M:search(params)
         local match_real = decode_preview_text(match_chunk) ---@type string
         local replace_pattern_text = replace_pattern or "" ---@type string
 
-        local replacement_real, preview_err = rstd.replace.replace_text_preview({
+        local replacement_real, preview_err = yoz.replace.replace_text_preview({
           text = match_real,
           search_pattern = search_pattern,
           replace_pattern = replace_pattern_text,

@@ -133,7 +133,7 @@ function M.uuid(filepath)
       error(string.format("[%s.uuid] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
 
-    uuid = rstd.fn.md5(filepath) ---@type string
+    uuid = yoz.fn.md5(filepath) ---@type string
     if is_cwd_chain(filepath) then
       FILEPATH_TO_UUID[filepath] = uuid
     end
@@ -154,7 +154,7 @@ function M.resolve(filepath, filetype, force)
     if not std.path.is_absolute(filepath) then
       error(string.format("[%s.resolve] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
-    nodeuuid = rstd.fn.md5(filepath) ---@type string
+    nodeuuid = yoz.fn.md5(filepath) ---@type string
   end
 
   local nodedata = FILENODE_DATAMAP[nodeuuid]
@@ -238,7 +238,7 @@ function M:insert_directory_absolute(dirpath)
   local nodeuuid = M.uuid(dirpath) ---@type string
   local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
   if node == nil or node.data.filetype ~= "directory" then
-    local pieces = rstd.path.split(dirpath, false) ---@type string[]
+    local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
 
     local p = "" ---@type string
@@ -288,7 +288,7 @@ function M:insert_directory_relative(cwd, dirpath)
   local nodeuuid = M.uuid(cwd .. std.env.PATH_SEP .. dirpath) ---@type string
   local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
   if node == nil or node.data.filetype ~= "directory" then
-    local pieces = rstd.path.split(dirpath, false) ---@type string[]
+    local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
 
     local p = cwd ---@type string
@@ -320,7 +320,7 @@ function M:insert_file_absolute(filepath)
   local nodeuuid = M.uuid(filepath) ---@type string
   local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
   if node == nil or node.data.filetype ~= "file" then
-    local pieces = rstd.path.split(filepath, false) ---@type string[]
+    local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local p = "" ---@type string
@@ -380,7 +380,7 @@ function M:insert_file_relative(cwd, filepath)
   local nodeuuid = M.uuid(cwd .. std.env.PATH_SEP .. filepath) ---@type string
   local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
   if node == nil or node.data.filetype ~= "file" then
-    local pieces = rstd.path.split(filepath, false) ---@type string[]
+    local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
 
     local p = cwd ---@type string

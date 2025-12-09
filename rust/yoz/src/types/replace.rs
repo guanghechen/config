@@ -26,7 +26,7 @@ pub struct IReplaceFileParams {
 
 impl FromLua for IReplaceFileParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceFileParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceFileParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
             search_pattern: table.get("search_pattern")?,
@@ -49,7 +49,7 @@ pub struct IReplaceFileByMatchesParams {
 
 impl FromLua for IReplaceFileByMatchesParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceFileByMatchesParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceFileByMatchesParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
             search_pattern: table.get("search_pattern")?,
@@ -74,7 +74,7 @@ pub struct IReplaceFileByMatchesAdvanceParams {
 
 impl FromLua for IReplaceFileByMatchesAdvanceParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceFileByMatchesAdvanceParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceFileByMatchesAdvanceParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
             search_pattern: table.get("search_pattern")?,
@@ -99,7 +99,7 @@ pub struct IReplaceFilePreviewParams {
 
 impl FromLua for IReplaceFilePreviewParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceFilePreviewParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceFilePreviewParams")?;
         Ok(Self {
             filepath: table.get("filepath")?,
             search_pattern: table.get("search_pattern")?,
@@ -126,7 +126,7 @@ impl FromLua for IReplaceFilePreviewByMatchesAdvanceParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(
             value,
-            "rstd.replace.IReplaceFilePreviewByMatchesAdvanceParams",
+            "yoz.replace.IReplaceFilePreviewByMatchesAdvanceParams",
         )?;
         Ok(Self {
             filepath: table.get("filepath")?,
@@ -152,7 +152,7 @@ pub struct IReplaceTextPreviewParams {
 
 impl FromLua for IReplaceTextPreviewParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceTextPreviewParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceTextPreviewParams")?;
         Ok(Self {
             text: table.get("text")?,
             search_pattern: table.get("search_pattern")?,
@@ -177,7 +177,7 @@ pub struct IReplaceTextPreviewByMatchesParams {
 
 impl FromLua for IReplaceTextPreviewByMatchesParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceTextPreviewByMatchesParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceTextPreviewByMatchesParams")?;
         Ok(Self {
             text: table.get("text")?,
             search_pattern: table.get("search_pattern")?,
@@ -202,7 +202,7 @@ pub struct IReplaceTextPreviewAdvanceParams {
 
 impl FromLua for IReplaceTextPreviewAdvanceParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
-        let table = expect_table(value, "rstd.replace.IReplaceTextPreviewAdvanceParams")?;
+        let table = expect_table(value, "yoz.replace.IReplaceTextPreviewAdvanceParams")?;
         Ok(Self {
             text: table.get("text")?,
             search_pattern: table.get("search_pattern")?,
@@ -229,7 +229,7 @@ impl FromLua for IReplaceTextPreviewByMatchesAdvanceParams {
     fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
         let table = expect_table(
             value,
-            "rstd.replace.IReplaceTextPreviewByMatchesAdvanceParams",
+            "yoz.replace.IReplaceTextPreviewByMatchesAdvanceParams",
         )?;
         Ok(Self {
             text: table.get("text")?,

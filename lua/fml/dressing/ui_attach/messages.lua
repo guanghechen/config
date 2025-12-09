@@ -203,7 +203,7 @@ function M.show(task)
 
   ---@type string
   local group = replace_last and states.message.last_group
-    or rstd.fn.md5(string.format("%s:%s:%s", level, title, message))
+    or yoz.fn.md5(string.format("%s:%s:%s", level, title, message))
   states.message.last_group = group
 
   local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean

@@ -17,8 +17,8 @@ $RESET = "`e[0m"
 
 # Function to build a Rust package and deploy it
 # Parameters:
-#   SourceName - original package name (e.g., rstd)
-#   TargetName - target package name for output (e.g., rstd)
+#   SourceName - original package name (e.g., yoz)
+#   TargetName - target package name for output (e.g., yoz)
 #   ForceRebuild - whether to force rebuild
 function Invoke-GhcRustBuild {
     param(
@@ -98,6 +98,6 @@ function Invoke-GhcRustBuild {
 }
 
 # Build packages
-Invoke-GhcRustBuild -SourceName "rstd" -TargetName "rstd" -ForceRebuild $Force.IsPresent
+Invoke-GhcRustBuild -SourceName "yoz" -TargetName "yoz" -ForceRebuild $Force.IsPresent
 
 Write-Host "${BLUE}[neovim build] done${RESET}"

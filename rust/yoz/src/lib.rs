@@ -667,7 +667,7 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
 }
 
 #[mlua::lua_module]
-fn rstd(lua: &Lua) -> LuaResult<LuaTable> {
+fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("dict", dict_module(lua)?)?;
     exports.set("string", string_module(lua)?)?;

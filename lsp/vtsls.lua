@@ -248,8 +248,8 @@ return {
       },
     },
     typescript = {
-      tsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
-      globalTsdk = rstd.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
+      tsdk = yoz.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
+      globalTsdk = yoz.path.locate_nearest(std.path.cwd(), { std.path.normalize("node_modules/typescript/lib") }),
       updateImportsOnFileMove = { enabled = "always" },
       suggest = {
         completeFunctionCalls = true,

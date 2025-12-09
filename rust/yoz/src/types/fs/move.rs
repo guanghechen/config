@@ -24,7 +24,7 @@ impl FromLua for IFsMoveParams {
             }),
             other => Err(LuaError::FromLuaConversionError {
                 from: other.type_name(),
-                to: "rstd.fs.IFsMoveParams".into(),
+                to: "yoz.fs.IFsMoveParams".into(),
                 message: Some("expected table".into()),
             }),
         }

@@ -1,12 +1,6 @@
 {
-  "ignorePaths": [
-    "lsp/yamlls.lua",
-    "lua/std/dict/",
-    "lua/std/fileicon.lua"
-  ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "ignorePaths": ["lsp/yamlls.lua", "lua/std/dict/", "lua/std/fileicon.lua"],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -708,7 +702,6 @@
     "rootuuid",
     "rosepine",
     "rsplit",
-    "rstd",
     "rustup",
     "sbar",
     "scandir",
@@ -917,7 +910,9 @@
     "yarnrc",
     "yasb",
     "yazi",
+    "yoz",
     "zellij",
     "zindex"
   ]
 }
+

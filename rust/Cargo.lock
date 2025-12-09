@@ -545,22 +545,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
-name = "rstd"
-version = "0.1.0"
-dependencies = [
- "globset",
- "grep",
- "ignore",
- "libc",
- "md-5",
- "mlua",
- "regex",
- "serde",
- "time",
- "uuid",
-]
-
-[[package]]
 name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -824,6 +808,22 @@ name = "wit-bindgen"
 version = "0.46.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f17a85883d4e6d00e8a97c586de764dabcc06133f7f1d55dce5cdc070ad7fe59"
+
+[[package]]
+name = "yoz"
+version = "0.1.0"
+dependencies = [
+ "globset",
+ "grep",
+ "ignore",
+ "libc",
+ "md-5",
+ "mlua",
+ "regex",
+ "serde",
+ "time",
+ "uuid",
+]
 
 [[package]]
 name = "zerocopy"
