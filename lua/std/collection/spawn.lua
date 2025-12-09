@@ -62,32 +62,6 @@ function Proc:kill(signal)
   end
 end
 
----@param opts                          std.debug.ICmdParams|{}|nil
-function Proc:debug(opts)
-  ---@type std.debug.ICmdParams
-  opts = std.table.merge_config({}, opts or {}, {
-    cmd = self.opts.cmd,
-    args = self.opts.args,
-    cwd = self.opts.cwd,
-  })
-  opts.props = opts.props or {}
-  if not self:running() then
-    opts.props.code = ("`%d`"):format(self.code)
-    opts.props.signal = ("`%d`"):format(self.signal)
-    if self.aborted then
-      opts.props.aborted = "`true`"
-    end
-  end
-  if self:failed() then
-    opts.level = vim.log.levels.ERROR
-  end
-  local out = vim.trim(self:out() .. "\n" .. self:err())
-  if out ~= "" then
-    opts.footer = "# Output\n```\n" .. out .. "\n```"
-  end
-  return std.debug.cmd(opts)
-end
-
 ---@return nil
 function Proc:run()
   assert(not self.handle, "already running")
@@ -97,11 +71,6 @@ function Proc:run()
   self.stdout = assert(vim.uv.new_pipe())
   self.stderr = assert(vim.uv.new_pipe())
   self.data = { [self.stdout] = {}, [self.stderr] = {} }
-  if self.opts.debug then
-    vim.schedule(function()
-      self:debug()
-    end)
-  end
   local opts = vim.tbl_deep_extend("force", self.opts, {
     stdio = { nil, self.stdout, self.stderr },
     hide = true,
@@ -198,7 +167,6 @@ local M = {}
 ---@field public args                   ?(string|number)[]
 ---@field public timeout                ?number
 ---@field public run                    ?boolean
----@field public debug                  ?boolean
 ---@field public on_stdout              ?fun(proc: std.collection.spawn.Proc, data: string)
 ---@field public on_stderr              ?fun(proc: std.collection.spawn.Proc, data: string)
 ---@field public on_exit                ?fun(proc: std.collection.spawn.Proc, err: boolean)
@@ -227,15 +195,13 @@ function M.multi(procs, opts)
     current = current + 1
     assert(current <= #procs, "current > #procs")
     local proc = procs[current]
-    proc.opts = std.table.merge_config(vim.deepcopy(opts), proc.opts, {
-      on_exit = function(_, err)
-        if err or current == #procs then
-          done()
-        else
-          next()
-        end
-      end,
-    })
+    proc.opts.on_exit = function(_, err)
+      if err or current == #procs then
+        done()
+      else
+        next()
+      end
+    end
     proc:run()
   end
 

@@ -29,7 +29,6 @@ local __mods = {
   fn = "std.fn",
   fs = "std.fs",
   git = "std.git",
-  is = "std.is",
   job = "std.job",
   json = "std.json",
   notepad = "std.notepad",
@@ -75,7 +74,6 @@ local __mods = {
 ---@field public fn                     std.fn
 ---@field public fs                     std.fs
 ---@field public git                    std.git
----@field public is                     std.is
 ---@field public job                    std.job
 ---@field public json                   std.json
 ---@field public notepad                std.notepad
