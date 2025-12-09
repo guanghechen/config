@@ -146,7 +146,6 @@ local theme = {
 
 ---@class dot.__mods
 local __mods = {
-  diagnostic = "dot.diagnostic",
   env = "dot.env",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
@@ -160,7 +159,6 @@ local __mods = {
 ---@field public lang                   dot.lang
 ---@field public theme                  dot.theme
 ---
----@field public diagnostic             dot.diagnostic
 ---@field public env                    dot.env
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype

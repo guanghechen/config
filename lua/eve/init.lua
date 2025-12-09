@@ -113,9 +113,9 @@ end
 
 ---@return nil
 function M.setup_diagnostics()
-  local severity2numhl = dot.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
-  local severity2prefixicon = dot.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
-  local severity2texticon = dot.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+  local severity2numhl = dot.var.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+  local severity2prefixicon = dot.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
+  local severity2texticon = dot.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
 
   std.fn.observe({ eve.context.lsp.diagnostics_virt_lines }, function()
     ---@type vim.diagnostic.Opts

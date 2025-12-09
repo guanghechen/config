@@ -17,6 +17,71 @@ M.N_WINLINE_DISABLED = "dot_winline_disabled"
 
 ----------------------------------------------------------------------------------------------------
 
+local severity = vim.diagnostic.severity
+
+---@class dot.var.diagnostic
+M.diagnostic = {
+  ---@type table<vim.diagnostic.Severity, string>
+  severity2prefixicon = {
+    [severity.ERROR] = dot.icon.diagnostic.Error_alt,
+    [severity.WARN] = dot.icon.diagnostic.Warning_alt,
+    [severity.INFO] = dot.icon.diagnostic.Information_alt,
+    [severity.HINT] = dot.icon.diagnostic.Hint_alt,
+  },
+  ---@type table<vim.diagnostic.Severity, string>
+  severity2texticon = {
+    [severity.ERROR] = dot.icon.diagnostic.Error_alt,
+    [severity.WARN] = dot.icon.diagnostic.Warning_alt,
+    [severity.INFO] = dot.icon.diagnostic.Information_alt,
+    [severity.HINT] = dot.icon.diagnostic.Hint_alt,
+  },
+  ---@type table<vim.diagnostic.Severity, string>
+  severity2numhl = {
+    [severity.ERROR] = "f_lnum_error",
+    [severity.WARN] = "f_lnum_warn",
+    [severity.INFO] = "f_lnum_info",
+    [severity.HINT] = "f_lnum_hint",
+  },
+}
+
+----------------------------------------------------------------------------------------------------
+
+local cn = vim.api.nvim_create_namespace
+
+---@class dot.var.nsnr
+M.nsnr = {
+  -- stylua: ignore start
+  ai_prompt_preview     = cn("ux:ai:prompt:preview"),
+  attach                = cn("ux:attach"),
+  cmdline               = cn("ux:cmdline"),
+  diagnostic            = cn("ux:diagnostic"),
+  input_confirmation    = cn("ux:input:confirmation"),
+  matches               = cn("ux:matches"),
+  notify                = cn("ux:notify"),
+  picker                = cn("ux:picker"),
+  picker_matches        = cn("ux:picker:matches"),
+  picker_preview        = cn("ux:picker:preview"),
+  picker_preview_visual = cn("ux:picker:preview:visual"),
+  picker_result         = cn("ux:picker:result"),
+  searcher_matches      = cn("ux:searcher:matches"),
+  searcher_preview      = cn("ux:searcher:preview"),
+  searcher_result       = cn("ux:searcher:result"),
+  searcher_searched     = cn("ux:searcher:searched"),
+  searcher_searched_cur = cn("ux:searcher:searched:cur"),
+  search_count          = cn("ux:search_count"),
+  select                = cn("ux:select"),
+  popupmenu             = cn("ux:popupmenu"),
+  popupmenu_selected    = cn("ux:popupmenu_selected"),
+  view_plainfile        = cn("ux:view:plainfile"),
+  view_printer          = cn("ux:view:printer"),
+  view_tree             = cn("ux:view:tree"),
+  view_filetree_matches = cn("ux:view:filetree:matches"),
+  virtcolumn            = cn("ux:virtcolumn"),
+  -- stylua: ignore end
+}
+
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.var.session
 M.session = {
   persistent_options = table.concat({
@@ -105,40 +170,6 @@ M.toggler = {
 }
 
 ----------------------------------------------------------------------------------------------------
-
-local cn = vim.api.nvim_create_namespace
-
----@class dot.var.nsnr
-M.nsnr = {
-  -- stylua: ignore start
-  ai_prompt_preview     = cn("ux:ai:prompt:preview"),
-  attach                = cn("ux:attach"),
-  cmdline               = cn("ux:cmdline"),
-  diagnostic            = cn("ux:diagnostic"),
-  input_confirmation    = cn("ux:input:confirmation"),
-  matches               = cn("ux:matches"),
-  notify                = cn("ux:notify"),
-  picker                = cn("ux:picker"),
-  picker_matches        = cn("ux:picker:matches"),
-  picker_preview        = cn("ux:picker:preview"),
-  picker_preview_visual = cn("ux:picker:preview:visual"),
-  picker_result         = cn("ux:picker:result"),
-  searcher_matches      = cn("ux:searcher:matches"),
-  searcher_preview      = cn("ux:searcher:preview"),
-  searcher_result       = cn("ux:searcher:result"),
-  searcher_searched     = cn("ux:searcher:searched"),
-  searcher_searched_cur = cn("ux:searcher:searched:cur"),
-  search_count          = cn("ux:search_count"),
-  select                = cn("ux:select"),
-  popupmenu             = cn("ux:popupmenu"),
-  popupmenu_selected    = cn("ux:popupmenu_selected"),
-  view_plainfile        = cn("ux:view:plainfile"),
-  view_printer          = cn("ux:view:printer"),
-  view_tree             = cn("ux:view:tree"),
-  view_filetree_matches = cn("ux:view:filetree:matches"),
-  virtcolumn            = cn("ux:virtcolumn"),
-  -- stylua: ignore end
-}
 
 ---@class dot.var.sign
 M.sign = {
