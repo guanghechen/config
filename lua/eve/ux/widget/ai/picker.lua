@@ -13,17 +13,6 @@ local M = {}
 --- Picker utilities
 ----------------------------------------------------------------------------------------------------
 
----@param source                        eve.ux.widget.ai.ISource
----@return string|nil
-local function get_source_identifier(source)
-  local pane = source.tmux_pane
-  if pane then
-    local short_session = pane.session_name:sub(1, 16)
-    return string.format("%s:%s.%s", short_session, pane.window_name, pane.pane_id:gsub("^%%", ""))
-  end
-  return nil
-end
-
 ---@return std.collection.IObservable, std.collection.IObservable, std.collection.IObservable, std.collection.IObservable
 local function create_picker_flags()
   return std.Observable.from_value(""),
@@ -64,8 +53,10 @@ end
 ---@class eve.ux.widget.ai.picker.IAttachItemInfo
 ---@field public item                   eve.ux.widget.ai.ISelectItem
 ---@field public category               eve.ux.widget.ai.ItemCategory
+---@field public agent_label            string
 ---@field public identifier             string|nil
 ---@field public pane_cwd               string|nil
+---@field public uuid                   string
 
 ---@param info                          eve.ux.widget.ai.picker.IAttachItemInfo
 ---@return string
@@ -128,6 +119,7 @@ end
 ---@param items                         eve.ux.widget.ai.ISelectItem[]
 ---@return eve.ux.widget.ai.picker.IItem[], integer
 local function build_attach_picker_items(items)
+  local action = require("eve.ux.widget.ai.action")
   local tmux = require("eve.ux.widget.ai.tmux")
   local current_info = tmux.get_current_info()
   local current_session = current_info and current_info.session_name or ""
@@ -145,7 +137,7 @@ local function build_attach_picker_items(items)
   for _, item in ipairs(items) do
     local agent_label = config.agent_labels[item.agent] or item.agent
     local attached = item.source ~= nil and state.is_attached(item.source)
-    local identifier = item.source and get_source_identifier(item.source) or nil
+    local identifier = item.source and action.get_source_identifier(item.source) or nil
     local pane_cwd = item.source and std.path.shorten(item.source.cwd) or nil
 
     width_agent = math.max(width_agent, #agent_label)
@@ -174,12 +166,16 @@ local function build_attach_picker_items(items)
       category = "new_agent"
     end
 
+    local uuid = item.source and item.source.id or string.format("new:%s", item.agent)
+
     ---@type eve.ux.widget.ai.picker.IAttachItemInfo
     local info = {
       item = item,
       category = category,
+      agent_label = agent_label,
       identifier = identifier,
       pane_cwd = pane_cwd,
+      uuid = uuid,
     }
 
     if category == "attached" then
@@ -210,13 +206,12 @@ local function build_attach_picker_items(items)
 
   local picker_items = {} ---@type eve.ux.widget.ai.picker.IItem[]
 
-  for index, info in ipairs(sorted_infos) do
+  for _, info in ipairs(sorted_infos) do
     local item = info.item
-    local agent_label = config.agent_labels[item.agent] or item.agent
 
     local icon = info.category == "attached" and eve.icon.status.attached
       or (item.type == "running" and eve.icon.status.detached or " ")
-    local text_agent = std.string.pad_end(agent_label, width_agent, " ")
+    local text_agent = std.string.pad_end(info.agent_label, width_agent, " ")
     local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
       or ""
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
@@ -225,7 +220,7 @@ local function build_attach_picker_items(items)
     local hlname = get_item_hlname(info)
 
     picker_items[#picker_items + 1] = {
-      uuid = tostring(index),
+      uuid = info.uuid,
       text = text,
       text_lower = text:lower(),
       highlights = { { coll = 0, colr = #text, hlname = hlname } },
@@ -239,11 +234,14 @@ end
 ---@param attached                      eve.ux.widget.ai.IAttachedSource[]
 ---@return eve.ux.widget.ai.picker.IItem[], integer
 local function build_attached_picker_items(attached)
+  local action = require("eve.ux.widget.ai.action")
+
   local width_agent = 0 ---@type integer
   local width_identifier = 0 ---@type integer
 
   ---@class eve.ux.widget.ai.picker.IAttachedItemInfo
   ---@field public source               eve.ux.widget.ai.IAttachedSource
+  ---@field public agent_label          string
   ---@field public identifier           string|nil
   ---@field public pane_cwd             string|nil
 
@@ -251,7 +249,7 @@ local function build_attached_picker_items(attached)
 
   for _, source in ipairs(attached) do
     local agent_label = config.agent_labels[source.agent] or source.agent
-    local identifier = get_source_identifier(source)
+    local identifier = action.get_source_identifier(source)
     local pane_cwd = std.path.shorten(source.cwd)
 
     width_agent = math.max(width_agent, #agent_label)
@@ -259,23 +257,27 @@ local function build_attached_picker_items(attached)
       width_identifier = math.max(width_identifier, #identifier)
     end
 
-    item_infos[#item_infos + 1] = { source = source, identifier = identifier, pane_cwd = pane_cwd }
+    item_infos[#item_infos + 1] = {
+      source = source,
+      agent_label = agent_label,
+      identifier = identifier,
+      pane_cwd = pane_cwd,
+    }
   end
 
   local picker_items = {} ---@type eve.ux.widget.ai.picker.IItem[]
 
-  for index, info in ipairs(item_infos) do
+  for _, info in ipairs(item_infos) do
     local source = info.source
-    local agent_label = config.agent_labels[source.agent] or source.agent
 
-    local text_agent = std.string.pad_end(agent_label, width_agent, " ")
+    local text_agent = std.string.pad_end(info.agent_label, width_agent, " ")
     local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
       or ""
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
     local text = eve.icon.status.attached .. " " .. text_agent .. text_identifier .. text_pane_cwd
 
     picker_items[#picker_items + 1] = {
-      uuid = tostring(index),
+      uuid = source.id,
       text = text,
       text_lower = text:lower(),
       highlights = { { coll = 0, colr = #text, hlname = "f_us_ai_attached" } },
@@ -290,10 +292,16 @@ end
 --- Public picker functions
 ----------------------------------------------------------------------------------------------------
 
----@param on_select                     fun(item: eve.ux.widget.ai.ISelectItem): nil
----@param on_toggle                     ?fun(item: eve.ux.widget.ai.ISelectItem): nil
+---@class eve.ux.widget.ai.picker.IShowAttachParams
+---@field public on_select              fun(item: eve.ux.widget.ai.ISelectItem): nil
+---@field public on_toggle              ?fun(item: eve.ux.widget.ai.ISelectItem): nil
+
+---@param params                        eve.ux.widget.ai.picker.IShowAttachParams
 ---@return nil
-function M.show_attach(on_select, on_toggle)
+function M.show_attach(params)
+  local on_select = params.on_select
+  local on_toggle = params.on_toggle
+
   local action = require("eve.ux.widget.ai.action")
   local items = action.collect_items()
   local picker_items, width = build_attach_picker_items(items)
@@ -504,7 +512,7 @@ function M.show_send_target(attached, on_select)
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
-    result_isselected = isselected,
+    result_is_selected = isselected,
     keymaps_result = {
       { modes = { "n" }, key = "<Tab>", callback = toggle_current_selection, desc = "Toggle selection" },
       { modes = { "n" }, key = "<S-Tab>", callback = toggle_current_selection, desc = "Toggle selection" },

@@ -152,15 +152,17 @@ function M.send_to_attached(text, submit)
   local attached = state.get_attached()
 
   if #attached == 0 then
-    picker.show_attach(function(choice)
-      M.handle_selection(choice)
-      vim.schedule(function()
-        local new_attached = state.get_attached()
-        if #new_attached > 0 then
-          M.__send_to_sources__({ new_attached[#new_attached] }, text, submit)
-        end
-      end)
-    end)
+    picker.show_attach({
+      on_select = function(choice)
+        M.handle_selection(choice)
+        vim.schedule(function()
+          local new_attached = state.get_attached()
+          if #new_attached > 0 then
+            M.__send_to_sources__({ new_attached[#new_attached] }, text, submit)
+          end
+        end)
+      end,
+    })
     return
   end
 
@@ -211,7 +213,10 @@ end
 ---@return nil
 function M.show_attach_picker()
   local picker = require("eve.ux.widget.ai.picker")
-  picker.show_attach(M.handle_selection, M.handle_selection)
+  picker.show_attach({
+    on_select = M.handle_selection,
+    on_toggle = M.handle_selection,
+  })
 end
 
 ---@return nil
