@@ -1,14 +1,12 @@
 ---@class std.source.__mods
 local source__mods = {
   NotepadJsonSource = "std.source.notepad-json",
-  NotepadSqliteSource = "std.source.notepad-sqlite",
   NotepadFolderSource = "std.source.notepad-folder",
 }
 
 ---@class std.source
 ---@field public __mods                 std.source.__mods
 ---@field public NotepadJsonSource      std.source.NotepadJsonSource
----@field public NotepadSqliteSource    std.source.NotepadSqliteSource
 ---@field public NotepadFolderSource    std.source.NotepadFolderSource
 local source = setmetatable({ __mods = source__mods }, {
   __index = function(t, k)

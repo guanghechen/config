@@ -632,7 +632,7 @@ notes_picker = eve.ux.picker.ListComposer.new({
 })
 
 ---@class fml.action.notepad.IEngineItem : eve.ux.picker.composer.list.IItem
----@field public data                   { engine: 'json'|'sqlite', description: string }
+---@field public data                   { engine: 'json'|'folder', description: string }
 ---@field public text_lower             string
 
 local engine_picker ---@type eve.ux.picker.ListComposer|nil
@@ -719,13 +719,13 @@ function M.change_engine()
       },
     },
     {
-      uuid = "sqlite",
-      text = "sqlite",
-      text_lower = "sqlite",
+      uuid = "folder",
+      text = "folder",
+      text_lower = "folder",
       highlights = {},
       data = {
-        engine = "sqlite",
-        description = "SQLite database - Fast queries, full-text search, ACID transactions",
+        engine = "folder",
+        description = "Folder storage - One file per note, easy to manage",
       },
     },
   }

@@ -12,7 +12,7 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 - `lua/std/`: Foundation layer with algorithms, collections, and utilities
   - `std/collection/`: Data structures (Observable, Scheduler, etc.)
   - `std/lib/`: Library utilities (color, easing)
-  - `std/source/`: Notepad data source implementations (json, sqlite, folder)
+  - `std/source/`: Notepad data source implementations (json, folder)
   - `std/types/`: Shared type definitions (common, enum, notepad, theme, ux)
   - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
 - `lua/rstd`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)

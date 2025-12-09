@@ -309,7 +309,7 @@ function M.source(position, notepad)
       local source = notepad:get_source() ---@type std.t.INotepadSource
       local source_name = source.name ---@type string
       local _, config = eve.state.notepad.retrieve_source(source_name)
-      local engine = config.engine ---@type 'json'|'folder'|'sqlite'
+      local engine = config.engine ---@type 'json'|'folder'
 
       local text_source = source_name .. "@" .. engine .. " " .. icon_source .. " " ---@type string
       local text = text_sep_left .. text_source ---@type string
