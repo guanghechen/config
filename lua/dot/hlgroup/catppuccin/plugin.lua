@@ -7,7 +7,7 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
-  local mix = std.color.mix
+  local mix = dot.lib.color.mix
   local cmp_panel_bg = mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = mix(t and c.none or c.mantle, c.surface1, 60)
   local dap_virtual_bg = mix(t and c.none or c.surface0, c.peach, 25)

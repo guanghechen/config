@@ -16,7 +16,7 @@ end
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local cs = std.color
+  local cs = dot.lib.color
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
   return {

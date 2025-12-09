@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = std.color
+  local cs = dot.lib.color
   local c = context.scheme.palette.tokyonight ---@type dot.t.theme.TokyonightPalette
 
   return {

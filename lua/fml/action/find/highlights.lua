@@ -143,11 +143,11 @@ local picker = ux.picker.ListComposer.new({
         local line = "xxx   " .. std.string.pad_end(hlname, max_hlname_width, " ") ---@type string
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.get_hl_info
         if hlgroup.fg ~= nil then
-          local color_name = std.color.int2hex(hlgroup.fg) ---@type string
+          local color_name = dot.lib.color.int2hex(hlgroup.fg) ---@type string
           line = line .. " fg=" .. color_name
         end
         if hlgroup.bg ~= nil then
-          local color_name = std.color.int2hex(hlgroup.bg) ---@type string
+          local color_name = dot.lib.color.int2hex(hlgroup.bg) ---@type string
           line = line .. " bg=" .. color_name
         end
         if hlgroup.link ~= nil then

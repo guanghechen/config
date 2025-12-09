@@ -420,7 +420,7 @@ local function outInBounce(t, b, c, d)
   end
 end
 
----@class std.lib.easing
+---@class dot.lib.easing
 local M = {
   linear = linear,
   inQuad = inQuad,

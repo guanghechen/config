@@ -1,3 +1,25 @@
+---@class dot.lib.__mods
+local __lib__mods = {
+  color = "dot.lib.color",
+  easing = "dot.lib.easing",
+}
+
+---@class dot.lib
+---@field public __mods                 dot.lib.__mods
+---@field public color                  dot.lib.color
+---@field public easing                 dot.lib.easing
+local lib = setmetatable({
+  __mods = __lib__mods,
+}, {
+  __index = function(t, k)
+    local m = __lib__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
 ---@class dot.hlgroup.__mods
 local __hlgroup__mods = {
   basic = "dot.hlgroup.basic",
@@ -120,6 +142,7 @@ local __mods = {
 ---@field public __mods                 dot.__mods
 ---@field public hlgroup                dot.hlgroup
 ---@field public lang                   dot.lang
+---@field public lib                    dot.lib
 ---@field public theme                  dot.theme
 ---
 ---@field public diagnostic             dot.diagnostic
@@ -132,6 +155,7 @@ local M = setmetatable({
   __mods = __mods,
   hlgroup = hlgroup,
   lang = lang,
+  lib = lib,
   theme = theme,
 }, {
   __index = function(t, k)

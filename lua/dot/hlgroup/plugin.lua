@@ -14,7 +14,7 @@ function M.gen_hlgroup_map(context)
 end
 
 function M.default_gen_hlgroup_map(context)
-  local cs = std.color
+  local cs = dot.lib.color
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
 

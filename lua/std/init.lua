@@ -20,9 +20,6 @@ local source = setmetatable({ __mods = source__mods }, {
 
 ---@class std.__mods
 local __mods = {
-  color = "std.lib.color",
-  easing = "std.lib.easing",
-
   box = "std.box",
   debug = "std.debug",
   fn = "std.fn",
@@ -65,9 +62,6 @@ local __mods = {
 ---@class std
 ---@field public __mods                 std.__mods
 ---@field public source                 std.source
----
----@field public color                  std.lib.color
----@field public easing                 std.lib.easing
 ---
 ---@field public box                    std.box
 ---@field public debug                  std.debug

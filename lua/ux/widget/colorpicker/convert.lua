@@ -1,4 +1,4 @@
-local color = require("std.lib.color")
+local color = require("dot.lib.color")
 
 ---@class ux.widget.colorpicker.convert
 local M = {}

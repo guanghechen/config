@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = std.color
+  local cs = dot.lib.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
@@ -75,7 +75,7 @@ function M.gen_hlgroup_map(context)
     FlashCurrent = { fg = c.accentBlue, italic = true, bold = true },
     FlashLabel = { fg = t and c.none or c.base, bg = c.accentPurple, bold = true },
     FlashMatch = { fg = c.warning, italic = true },
-    FlashPrompt = { fg = c.text, bg = std.color.mix(t and c.none or c.overlay, c.border, 12) },
+    FlashPrompt = { fg = c.text, bg = cs.mix(t and c.none or c.overlay, c.border, 12) },
     FlashPromptIcon = { fg = c.accentOrange, bg = c.none },
 
     ---! gitsigns.nvim
@@ -90,15 +90,15 @@ function M.gen_hlgroup_map(context)
     GitSignsUntracked = { fg = c.textMuted },
     GitSignsUntrackedNr = { link = "GitSignsUntracked" },
     GitSignsCurrentLineBlame = { fg = c.textMuted, italic = true },
-    GitSignsStagedAdd = { fg = std.color.mix(c.base, c.success, 50) },
+    GitSignsStagedAdd = { fg = cs.mix(c.base, c.success, 50) },
     GitSignsStagedAddNr = { link = "GitSignsStagedAdd" },
-    GitSignsStagedChange = { fg = std.color.mix(c.base, c.accentBlue, 50) },
+    GitSignsStagedChange = { fg = cs.mix(c.base, c.accentBlue, 50) },
     GitSignsStagedChangeNr = { link = "GitSignsStagedChange" },
-    GitSignsStagedDelete = { fg = std.color.mix(c.base, c.accentRed, 50) },
+    GitSignsStagedDelete = { fg = cs.mix(c.base, c.accentRed, 50) },
     GitSignsStagedDeleteNr = { link = "GitSignsStagedDelete" },
-    GitSignsStagedTopdelete = { fg = std.color.mix(c.base, c.accentRed, 60) },
+    GitSignsStagedTopdelete = { fg = cs.mix(c.base, c.accentRed, 60) },
     GitSignsStagedTopdeleteNr = { link = "GitSignsStagedTopdelete" },
-    GitSignsStagedUntracked = { fg = std.color.mix(c.base, c.textDim, 50) },
+    GitSignsStagedUntracked = { fg = cs.mix(c.base, c.textDim, 50) },
     GitSignsStagedUntrackedNr = { link = "GitSignsStagedUntracked" },
 
     ---! lazy.nvim
@@ -165,7 +165,7 @@ function M.gen_hlgroup_map(context)
     NeoTreeGitIgnored = { fg = c.textMuted },
     NeoTreeGitModified = { fg = c.warning },
     NeoTreeGitUntracked = { fg = c.success },
-    NeoTreeIndentMarker = { fg = std.color.mix(t and c.none or c.base, c.border, 20) },
+    NeoTreeIndentMarker = { fg = cs.mix(t and c.none or c.base, c.border, 20) },
     NeoTreeNormal = { link = "Normal" },
     NeoTreeNormalNC = { link = "NormalNC" },
     NeoTreeRootName = { fg = c.text, bold = true },
@@ -191,7 +191,7 @@ function M.gen_hlgroup_map(context)
     DapBreakpointRejected = { fg = c.textMuted },
     DapLogPoint = { fg = c.accentBlue },
     DapStopped = { fg = c.accentOrange },
-    DapStoppedLine = { bg = std.color.mix(t and c.none or c.base, c.accentOrange, 18), blend = 40 },
+    DapStoppedLine = { bg = cs.mix(t and c.none or c.base, c.accentOrange, 18), blend = 40 },
 
     ---! nvim-dap-ui
     DapUIBreakpointsCurrentLine = { fg = c.success, bold = true },
@@ -239,12 +239,12 @@ function M.gen_hlgroup_map(context)
     ---! nvim-dap-virtual-text
     NvimDapVirtualText = {
       fg = c.textDim,
-      bg = t and c.none or std.color.mix(c.base, c.accentOrange, 30),
+      bg = t and c.none or cs.mix(c.base, c.accentOrange, 30),
       italic = true,
     },
     NvimDapVirtualTextChanged = {
       fg = c.text,
-      bg = t and c.none or std.color.mix(c.base, c.accentOrange, 30),
+      bg = t and c.none or cs.mix(c.base, c.accentOrange, 30),
       italic = true,
     },
 
