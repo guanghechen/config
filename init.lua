@@ -1,12 +1,12 @@
 _G.yoz = require("yoz") ---@type yoz
+_G.dot = require("dot") ---@type dot
 
-require("std.bootstrap").setup_patches()
-require("std.bootstrap").setup_workspace()
+dot.setup_patches()
+dot.setup_workspace()
 
-_G.dot = require("dot")
-_G.std = require("std")
-_G.eve = require("eve")
-_G.ux = require("ux")
+_G.std = require("std") ---@type std
+_G.eve = require("eve") ---@type eve
+_G.ux = require("ux") ---@type ux
 
 if std.path.is_git_repo() then
   local log_filepath = std.path.locate_workspace_filepath("log.json")
