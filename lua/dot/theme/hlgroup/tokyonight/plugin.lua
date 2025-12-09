@@ -1,4 +1,4 @@
----@class dot.hlgroup.tokyonight.plugin
+---@class dot.theme.hlgroup.tokyonight.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

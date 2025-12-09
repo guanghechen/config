@@ -1,8 +1,8 @@
----@class dot.hlgroup.one_half.basic
+---@class dot.theme.hlgroup.gruvbox.basic
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return dot.hlgroup.common.modes_color_map
+---@return dot.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local mc = {
@@ -27,6 +27,10 @@ function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local bg = t and c.none or c.bg0 ---@type string
 
+  local function mix_bg(color, ratio)
+    return cs.mix(bg, color, ratio or 20)
+  end
+
   ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ---Completion
@@ -36,8 +40,8 @@ function M.gen_hlgroup_map(context)
     ---cursor
     Cursor = { fg = c.bg1, bg = c.pink },
     CursorColumn = { bg = c.bg1, blend = t and 50 or 0 },
-    CursorLine = { bg = c.bg2, blend = t and 50 or 0 },
-    CursorLineNr = { fg = c.fg2, bg = c.bg2, bold = true, blend = t and 50 or 0 },
+    CursorLine = { bg = c.bg1, blend = t and 50 or 0 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true, blend = t and 50 or 0 },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
@@ -55,8 +59,8 @@ function M.gen_hlgroup_map(context)
     DiagnosticFloatingError = { fg = c.red },
     DiagnosticFloatingHint = { fg = c.purple },
     DiagnosticFloatingInfo = { fg = c.green },
+    DiagnosticFloatingWarn = { fg = c.yellow },
     DiagnosticFloatingOk = { fg = c.green },
-    DiagnosticFloatingWarn = { fg = c.orange },
     DiagnosticUnderlineError = { undercurl = true, sp = c.red },
     DiagnosticUnderlineHint = { undercurl = true, sp = c.purple },
     DiagnosticUnderlineInfo = { undercurl = true, sp = c.green },
@@ -64,8 +68,8 @@ function M.gen_hlgroup_map(context)
     DiagnosticVirtualTextError = { fg = c.red },
     DiagnosticVirtualTextHint = { fg = c.purple },
     DiagnosticVirtualTextInfo = { fg = c.green },
-    DiagnosticVirtualTextOk = { fg = c.green },
     DiagnosticVirtualTextWarn = { fg = c.yellow },
+    DiagnosticVirtualTextOk = { fg = c.green },
     DiagnosticVirtualLinesError = { fg = c.red, bg = t and c.none or cs.mix(c.bg0, c.red, 12), italic = true },
     DiagnosticVirtualLinesHint = { fg = c.purple, bg = t and c.none or cs.mix(c.bg0, c.purple, 12), italic = true },
     DiagnosticVirtualLinesInfo = { fg = c.green, bg = t and c.none or cs.mix(c.bg0, c.green, 12), italic = true },
@@ -75,8 +79,8 @@ function M.gen_hlgroup_map(context)
     DiagnosticSignError = { fg = c.red },
     DiagnosticSignHint = { fg = c.purple },
     DiagnosticSignInfo = { fg = c.green },
-    DiagnosticSignOk = { fg = c.green },
     DiagnosticSignWarn = { fg = c.yellow },
+    DiagnosticSignOk = { fg = c.green },
 
     ---diff
     DiffAddLeft = { bg = c.diffDel or cs.mix(bg, c.red, 30) },
@@ -88,10 +92,10 @@ function M.gen_hlgroup_map(context)
     DiffWordLeft = { bg = c.diffDelInline or cs.mix(bg, c.brightRed, 60) },
     DiffWordRight = { bg = c.diffAddInline or cs.mix(bg, c.brightGreen, 60) },
 
-    DiffAdd = { link = "DiffAddRight" },
-    DiffChange = { link = "DiffModRight" },
-    DiffDelete = { link = "DiffDelRight" },
-    DiffText = { link = "DiffWordRight" },
+    DiffAdd = { bg = mix_bg(c.green, 25) },
+    DiffChange = { bg = mix_bg(c.yellow, 25) },
+    DiffDelete = { bg = mix_bg(c.red, 25) },
+    DiffText = { bg = mix_bg(c.green, 45) },
     DiffAdded = { link = "DiffAdd" },
     DiffRemoved = { link = "DiffDelete" },
     DiffChanged = { link = "DiffChange" },
@@ -102,12 +106,12 @@ function M.gen_hlgroup_map(context)
     DiffIndexLine = { link = "diffChanged" },
 
     ---lsp
-    LspCodeLens = { fg = c.bg4, bg = c.none, italic = true },
-    LspInlayHint = { fg = c.fg4, bg = c.none, italic = true },
-    LspReferenceRead = { bold = true, underline = true, sp = c.purple },
-    LspReferenceText = { bold = true, underline = true, sp = c.purple },
-    LspReferenceWrite = { bold = true, underline = true, sp = c.purple },
-    LspSignatureActiveParameter = { italic = true, bold = true, underline = true, sp = c.pink },
+    LspCodeLens = { fg = c.bg4, italic = true },
+    LspInlayHint = { fg = c.bg4, bg = t and c.none or c.bg1, italic = true },
+    LspReferenceRead = { fg = c.yellow, bold = true },
+    LspReferenceText = { fg = c.yellow, bold = true },
+    LspReferenceWrite = { fg = c.orange, bold = true },
+    LspSignatureActiveParameter = { link = "Search" },
 
     RenamerBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     RenamerTitle = { link = t and "ms_b_bg0" or "ms_b_none" },
@@ -116,12 +120,12 @@ function M.gen_hlgroup_map(context)
     ErrorMsg = { fg = c.red, bold = true },
     ModeMsg = { fg = c.yellow, bold = true },
     MoreMsg = { fg = c.yellow, bold = true },
-    MsgArea = { fg = c.orange, bg = c.bg2 },
+    MsgArea = { link = "Normal" },
     WarningMsg = { fg = c.red, bold = true },
 
     ---spell
     healthError = { fg = c.red },
-    healthSuccess = { fg = c.bg0, bg = c.green },
+    healthSuccess = { fg = c.green },
     healthWarning = { fg = c.yellow },
     SpellBad = { undercurl = true, sp = c.red },
     SpellCap = { undercurl = true, sp = c.blue },
@@ -129,41 +133,41 @@ function M.gen_hlgroup_map(context)
     SpellRare = { undercurl = true, sp = c.purple },
 
     ---special
-    Delimiter = { fg = c.orange },
+    Delimiter = { fg = c.aqua },
     EndOfBuffer = { fg = c.bg2 },
-    NonText = { fg = cs.mix(bg, c.bg2, 45), italic = true },
+    NonText = { fg = c.bg4, italic = true },
     Whitespace = { fg = c.bg4 },
 
     ---syntax
-    Boolean = { fg = c.purple },
-    Builtin = { fg = c.purple },
-    Character = { fg = c.purple },
-    Conditional = { fg = c.red },
-    Constant = { fg = c.purple },
-    Define = { fg = c.aqua },
-    Float = { fg = c.purple },
-    Function = { fg = c.yellow, bold = true },
-    Identifier = { fg = c.red },
-    Include = { fg = c.purple },
-    Keyword = { fg = c.purple },
-    Label = { fg = c.red },
-    Macro = { fg = c.aqua },
-    Member = { fg = c.aqua },
-    Method = { fg = c.blue, bold = true },
-    Number = { fg = c.purple },
-    Operator = { fg = c.fg1 },
-    Parameter = { fg = c.blue },
-    PreCondit = { fg = c.aqua },
-    PreProc = { fg = c.yellow },
-    Repeat = { fg = c.red },
-    Special = { fg = c.aqua },
+    Boolean = { fg = c.brightPurple },
+    Builtin = { fg = c.brightPurple },
+    Character = { fg = c.brightPurple },
+    Conditional = { fg = c.brightRed },
+    Constant = { fg = c.brightPurple },
+    Define = { fg = c.brightAqua },
+    Float = { fg = c.brightPurple },
+    Function = { fg = c.brightAqua },
+    Identifier = { fg = c.brightBlue },
+    Include = { fg = c.brightRed },
+    Keyword = { fg = c.brightRed, bold = true },
+    Label = { fg = c.brightRed },
+    Macro = { fg = c.brightAqua },
+    Member = { fg = c.brightBlue },
+    Method = { fg = c.brightBlue },
+    Number = { fg = c.brightPurple },
+    Operator = { fg = c.brightRed },
+    Parameter = { fg = c.brightBlue },
+    PreCondit = { fg = c.brightAqua },
+    PreProc = { fg = c.brightYellow },
+    Repeat = { fg = c.brightRed },
+    Special = { fg = c.brightAqua },
     SpecialChar = { fg = c.brightRed },
-    Statement = { fg = c.red },
-    StorageClass = { fg = c.orange },
-    String = { fg = c.green },
-    Structure = { fg = c.aqua },
-    Type = { fg = c.yellow },
-    Typedef = { fg = c.yellow },
+    Statement = { fg = c.brightRed },
+    StorageClass = { fg = c.brightOrange },
+    String = { fg = c.brightGreen },
+    Structure = { fg = c.brightAqua },
+    Type = { fg = c.brightYellow },
+    Typedef = { fg = c.brightYellow },
     Variable = { fg = c.fg2 },
 
     ---tag
@@ -176,12 +180,12 @@ function M.gen_hlgroup_map(context)
     Bold = { bold = true },
     Changed = { fg = c.yellow },
     ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.pink, 20) },
-    Comment = { fg = cs.change_hex_lightness(c.bg4, 20), italic = true },
+    Comment = { fg = c.grey, italic = true },
     Conceal = { fg = c.blue },
     CurSearch = { fg = c.bg0, bg = c.orange },
     Debug = { fg = c.red },
     DevIconDefault = { fg = c.red },
-    Directory = { fg = c.blue, bold = true },
+    Directory = { fg = c.brightBlue, bold = true },
     Exception = { fg = c.red },
     FloatActiveBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
     FloatActiveTitle = { link = "ms_b_bg0" },
@@ -208,7 +212,7 @@ function M.gen_hlgroup_map(context)
     Removed = { fg = c.red },
     Search = { fg = c.bg0, bg = c.yellow, reverse = false },
     SignColumn = { bg = c.none },
-    SpecialKey = { fg = c.fg4 },
+    SpecialKey = { link = "NonText" },
     StatusColumnMark = { link = "DiagnosticHint", default = true },
     StatusLine = { fg = c.fg2, bg = c.none, reverse = false },
     StatusLineNC = { link = "StatusLine" },

@@ -1,4 +1,4 @@
----@class dot.hlgroup.common.modes_color_map
+---@class dot.theme.hlgroup.common.modes_color_map
 ---@field public command                dot.t.theme.IHlgroup
 ---@field public confirm                dot.t.theme.IHlgroup
 ---@field public insert                 dot.t.theme.IHlgroup
@@ -7,7 +7,7 @@
 ---@field public terminal               dot.t.theme.IHlgroup
 ---@field public visual                 dot.t.theme.IHlgroup
 
----@class dot.hlgroup.common.modes_map
+---@class dot.theme.hlgroup.common.modes_map
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
   ["no"] = { "normal", "NORMAL (no)" },
@@ -47,7 +47,7 @@ local modes_map = {
   ["!"] = { "terminal", "SHELL" },
 }
 
----@class dot.hlgroup.common
+---@class dot.theme.hlgroup.common
 local M = {}
 
 ---@type string[]
@@ -86,8 +86,8 @@ end
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
-  local basic = require("dot.hlgroup.basic") ---@type dot.hlgroup.basic
-  local mc = basic.gen_modes_color_map(context) ---@type dot.hlgroup.common.modes_color_map
+  local basic = require("dot.theme.hlgroup.basic") ---@type dot.theme.hlgroup.basic
+  local mc = basic.gen_modes_color_map(context) ---@type dot.theme.hlgroup.common.modes_color_map
 
   local hlgroup_map = {} ---@type table<string, dot.t.theme.IHlgroup>
   for _, color in ipairs(colors) do

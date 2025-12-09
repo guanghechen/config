@@ -1,4 +1,4 @@
----@class dot.hlgroup.tokyonight.treesitter
+---@class dot.theme.hlgroup.tokyonight.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

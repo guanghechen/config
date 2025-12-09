@@ -60,7 +60,7 @@ local function build_context(preset_context)
     return nil
   end
 
-  local mode, mode_name = dot.hlgroup.common.resolve_mode()
+  local mode, mode_name = dot.theme.hlgroup.common.resolve_mode()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local cwd = std.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

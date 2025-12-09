@@ -1,8 +1,8 @@
----@class dot.hlgroup.nvimbar
+---@class dot.theme.hlgroup.nvimbar
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return dot.hlgroup.nvimbar
+---@return dot.theme.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
   local cs = dot.lib.color
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
@@ -229,7 +229,7 @@ function M.gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type ux.nvimbar.PositionEnum[]
 
-  ---@class dot.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
+  ---@class dot.theme.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }

@@ -1,10 +1,10 @@
----@class dot.hlgroup.basic
+---@class dot.theme.hlgroup.basic
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return dot.hlgroup.common.modes_color_map
+---@return dot.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local md = string.format("dot.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local md = string.format("dot.theme.hlgroup.%s.basic", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_modes_color_map(context)
@@ -16,7 +16,7 @@ end
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("dot.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local md = string.format("dot.theme.hlgroup.%s.basic", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)
@@ -26,7 +26,7 @@ function M.gen_hlgroup_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return dot.hlgroup.common.modes_color_map
+---@return dot.theme.hlgroup.common.modes_color_map
 function M.default_gen_modes_color_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local mc = {

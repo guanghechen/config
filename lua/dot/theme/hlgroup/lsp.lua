@@ -1,10 +1,10 @@
----@class dot.hlgroup.lsp
+---@class dot.theme.hlgroup.lsp
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("dot.hlgroup.%s.lsp", context.scheme.theme) ---@type string
+  local md = string.format("dot.theme.hlgroup.%s.lsp", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)

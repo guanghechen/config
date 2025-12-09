@@ -1,4 +1,4 @@
----@class dot.hlgroup.vsc.widget
+---@class dot.theme.hlgroup.vsc.widget
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

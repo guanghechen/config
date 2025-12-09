@@ -1,4 +1,4 @@
----@class dot.hlgroup.gruvbox.treesitter
+---@class dot.theme.hlgroup.gruvbox.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

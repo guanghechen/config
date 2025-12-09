@@ -1,4 +1,4 @@
----@class dot.hlgroup.catppuccin.treesitter
+---@class dot.theme.hlgroup.catppuccin.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
