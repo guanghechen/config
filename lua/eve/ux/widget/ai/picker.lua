@@ -75,8 +75,10 @@ local function get_item_hlname(info)
     return "f_us_ai_attached"
   elseif category == "same_window" then
     return "f_us_ai_running_same_window"
-  elseif category == "same_session" or category == "other_tmux" then
-    return "f_us_ai_running"
+  elseif category == "same_session" then
+    return "f_us_ai_running_same_session"
+  elseif category == "other_tmux" then
+    return "f_us_ai_running_other_session"
   else
     return "f_us_ai_new"
   end
