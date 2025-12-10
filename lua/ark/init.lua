@@ -1,7 +1,7 @@
 ---@class ark.__mods
 local __mods = {
-  color = "ark.color",
-  easing = "ark.easing",
+  color = "ark.external.color",
+  easing = "ark.external.easing",
   reporter = "ark.reporter",
 }
 

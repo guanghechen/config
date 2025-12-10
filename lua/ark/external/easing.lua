@@ -420,7 +420,7 @@ local function outInBounce(t, b, c, d)
   end
 end
 
----@class ark.easing
+---@class ark.external.easing
 local M = {
   linear = linear,
   inQuad = inQuad,
