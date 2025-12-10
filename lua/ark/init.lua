@@ -39,6 +39,7 @@ local c = setmetatable({ __mods = c__mods }, {
 ---@class ark.__mods
 local __mods = {
   anim = "ark.anim",
+  box = "ark.box",
   color = "ark.external.color",
   easing = "ark.external.easing",
   fn = "ark.fn",
@@ -51,6 +52,7 @@ local __mods = {
 ---@class ark
 ---@field public __mods                 ark.__mods
 ---@field public anim                   ark.anim
+---@field public box                    ark.box
 ---@field public c                      ark.c
 ---@field public color                  ark.external.color
 ---@field public easing                 ark.external.easing
