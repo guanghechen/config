@@ -209,7 +209,12 @@ return {
     local vscode = require("dap.ext.vscode")
     local json = require("plenary.json")
     vscode.json_decode = function(text)
-      return vim.json.decode(json.json_strip_comments(text))
+      return vim.json.decode(json.json_strip_comments(text), {
+        luanil = {
+          object = true,
+          array = true,
+        },
+      })
     end
 
     setup_node()

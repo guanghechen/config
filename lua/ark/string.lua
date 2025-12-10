@@ -43,15 +43,7 @@ end
 ---@param text                          string
 ---@return string[]
 function M.parse_comma_list(text)
-  local result = {} ---@type string[]
-  local items = vim.split(text, ",", { plain = true })
-  for _, item in ipairs(items) do
-    local v = item:match("^%s*(.-)%s*$")
-    if #v > 0 then
-      table.insert(result, v)
-    end
-  end
-  return result
+  return vim.split(text, "%s*,%s*", { trimempty = true })
 end
 
 ---@param text                          string
@@ -78,13 +70,6 @@ function M.remove_last_slash(text)
     end
   end
   return text
-end
-
----@param text                          string
----@param word                          string
----@return boolean
-function M.starts_with(text, word)
-  return #text >= #word and string.sub(text, 1, #word) == word
 end
 
 return M

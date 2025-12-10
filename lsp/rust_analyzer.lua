@@ -80,7 +80,12 @@ local function root_dir(bufnr, on_dir)
     vim.schedule(function()
       if output.code == 0 then
         if output.stdout then
-          local result = vim.json.decode(output.stdout)
+          local result = vim.json.decode(output.stdout, {
+            luanil = {
+              object = true,
+              array = true,
+            },
+          })
           local workspace_root = result["workspace_root"] ---@type unknown
           if workspace_root ~= "" and type(workspace_root) == "string" then
             cargo_workspace_root = std.path.normalize(workspace_root, false)

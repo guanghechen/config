@@ -253,7 +253,12 @@ function M.read_json(params)
     return nil
   end
 
-  local ok_to_decode_json, data = pcall(vim.json.decode, json_text)
+  local ok_to_decode_json, data = pcall(vim.json.decode, json_text, {
+    luanil = {
+      object = true,
+      array = true,
+    },
+  })
   if not ok_to_decode_json then
     if not silent_on_bad_json then
       ark.reporter.warn({

@@ -177,7 +177,12 @@ end
 
 ---@return any
 function M:json()
-  return vim.json.decode(self:out())
+  return vim.json.decode(self:out(), {
+    luanil = {
+      object = true,
+      array = true,
+    },
+  })
 end
 
 ---@return string[]
