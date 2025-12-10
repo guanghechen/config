@@ -26,6 +26,31 @@ local M = {
   __command_map__ = command_map,
 }
 
+---@param uuid                          string
+---@param args                          ?string
+---@param silent                        ?boolean
+---@return nil
+function M.execute(uuid, args, silent)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
+  local key = uuid .. ":" .. tabtype ---@type string
+  local command = command_map[key] or command_map[uuid] ---@type dot.command.ICommand|nil
+
+  if command == nil then
+    if not silent then
+      ark.reporter.warn({
+        from = __module_name__,
+        subject = "execute",
+        message = "Cannot resolve the command by the given uuid",
+        details = { uuid = uuid, args = args },
+      })
+    end
+    return
+  end
+
+  command.action(args)
+end
+
 ---@param raw_definition                dot.command.IDefinition | dot.command.IDefinitionWithCandidates
 ---@param overwrite                     boolean|nil
 ---@return dot.command
@@ -120,29 +145,31 @@ function M.implement(implementation)
   return M
 end
 
----@param uuid                          string
----@param args                          ?string
----@param silent                        ?boolean
+---@param modes                         string[]
+---@param keys                          string|string[]
+---@param definition                    dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 ---@return nil
-function M.execute(uuid, args, silent)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
-  local key = uuid .. ":" .. tabtype ---@type string
-  local command = command_map[key] or command_map[uuid] ---@type dot.command.ICommand|nil
-
-  if command == nil then
-    if not silent then
-      ark.reporter.warn({
-        from = __module_name__,
-        subject = "execute",
-        message = "Cannot resolve the command by the given uuid",
-        details = { uuid = uuid, args = args },
-      })
-    end
-    return
+function M.shortcut(modes, keys, definition)
+  ---@return nil
+  local function callback()
+    M.execute(definition.uuid)
   end
 
-  command.action(args)
+  ---@type vim.keymap.set.Opts
+  local opts = {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    desc = definition.desc,
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, callback, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, callback, opts)
+    end
+  end
 end
 
 ---@param uuid                          string

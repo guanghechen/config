@@ -176,31 +176,4 @@ function M.make_keys(modes, keys, cmd, desc, expr)
   end
 end
 
----@param modes                         string[]
----@param keys                          string|string[]
----@param definition                    dot.command.IDefinition|dot.command.IDefinitionWithCandidates
----@return nil
-function M.make_shortcut(modes, keys, definition)
-  ---@return nil
-  local function callback()
-    dot.command.execute(definition.uuid)
-  end
-
-  ---@type vim.keymap.set.Opts
-  local opts = {
-    noremap = true,
-    silent = true,
-    nowait = true,
-    desc = definition.desc,
-  }
-
-  if type(keys) == "string" then
-    vim.keymap.set(modes, keys, callback, opts)
-  else
-    for _, key in ipairs(keys) do
-      vim.keymap.set(modes, key, callback, opts)
-    end
-  end
-end
-
 return M

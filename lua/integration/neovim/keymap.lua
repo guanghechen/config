@@ -1,4 +1,4 @@
-local ms = ark.nvim.make_shortcut
+local ms = dot.command.shortcut
 local K = dot.command.definitions ---@type dot.command.definitions
 
 --#[c]ommand----------------------------------------------------------------------------------------
