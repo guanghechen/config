@@ -335,8 +335,9 @@ function M.default_gen_hlgroup_map(context)
     f_us_ai_loc_row = { fg = u.purple },
     f_us_ai_new = { fg = u.fg2 },
     f_us_ai_prompt_header = { fg = u.purple, bold = true },
+    f_us_ai_running_agent_session = { fg = u.aqua, bold = true },
     f_us_ai_running_other_session = { fg = u.fg0, bold = true },
-    f_us_ai_running_same_session = { fg = u.aqua, bold = true },
+    f_us_ai_running_same_session = { fg = u.fg0, bold = true },
     f_us_ai_running_same_window = { fg = u.blue, bold = true },
     f_us_ai_send_to_all = { fg = u.red, bold = true },
 

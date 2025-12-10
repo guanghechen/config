@@ -11,9 +11,10 @@
 ---@alias ux.widget.ai.ItemCategory
 ---| "attached"
 ---| "same_window"
+---| "agent_session"
+---| "new_agent"
 ---| "same_session"
 ---| "other_tmux"
----| "new_agent"
 
 ---@class ux.widget.ai.IProc
 ---@field public pid                    integer

@@ -66,6 +66,10 @@ local function get_item_hlname(info)
     return "f_us_ai_attached"
   elseif category == "same_window" then
     return "f_us_ai_running_same_window"
+  elseif category == "agent_session" then
+    return "f_us_ai_running_agent_session"
+  elseif category == "new_agent" then
+    return "f_us_ai_new"
   elseif category == "same_session" then
     return "f_us_ai_running_same_session"
   elseif category == "other_tmux" then
@@ -130,9 +134,10 @@ local function build_attach_picker_items(items)
 
   local attached_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
   local same_window_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
+  local agent_session_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
+  local new_agent_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
   local same_session_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
   local other_tmux_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
-  local new_agent_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
 
   for _, item in ipairs(items) do
     local agent_label = config.agent_labels[item.agent] or item.agent
@@ -155,8 +160,11 @@ local function build_attach_picker_items(items)
     elseif pane then
       local same_session = pane.session_name == current_session
       local same_window = same_session and pane.window_name == current_window
+      local is_agent_session = tmux.is_agent_session(pane.session_name)
       if same_window then
         category = "same_window"
+      elseif is_agent_session and not same_session then
+        category = "agent_session"
       elseif same_session then
         category = "same_session"
       else
@@ -182,27 +190,31 @@ local function build_attach_picker_items(items)
       attached_infos[#attached_infos + 1] = info
     elseif category == "same_window" then
       same_window_infos[#same_window_infos + 1] = info
+    elseif category == "agent_session" then
+      agent_session_infos[#agent_session_infos + 1] = info
+    elseif category == "new_agent" then
+      new_agent_infos[#new_agent_infos + 1] = info
     elseif category == "same_session" then
       same_session_infos[#same_session_infos + 1] = info
-    elseif category == "other_tmux" then
-      other_tmux_infos[#other_tmux_infos + 1] = info
     else
-      new_agent_infos[#new_agent_infos + 1] = info
+      other_tmux_infos[#other_tmux_infos + 1] = info
     end
   end
 
   table.sort(attached_infos, compare_by_session_window_pane)
   table.sort(same_window_infos, compare_by_pane_id)
+  table.sort(agent_session_infos, compare_by_session_window_pane)
+  table.sort(new_agent_infos, compare_by_agent_name)
   table.sort(same_session_infos, compare_by_session_window_pane)
   table.sort(other_tmux_infos, compare_by_session_window_pane)
-  table.sort(new_agent_infos, compare_by_agent_name)
 
   local sorted_infos = {} ---@type ux.widget.ai.picker.IAttachItemInfo[]
   vim.list_extend(sorted_infos, attached_infos)
   vim.list_extend(sorted_infos, same_window_infos)
+  vim.list_extend(sorted_infos, agent_session_infos)
+  vim.list_extend(sorted_infos, new_agent_infos)
   vim.list_extend(sorted_infos, same_session_infos)
   vim.list_extend(sorted_infos, other_tmux_infos)
-  vim.list_extend(sorted_infos, new_agent_infos)
 
   local picker_items = {} ---@type ux.widget.ai.picker.IItem[]
 
