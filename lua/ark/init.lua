@@ -3,6 +3,7 @@ local c__mods = {
   BatchDisposable = "ark.c.batch_disposable",
   BatchHandler = "ark.c.batch_handler",
   CircularQueue = "ark.c.circular_queue",
+  CircularStack = "ark.c.circular_stack",
   Disposable = "ark.c.disposable",
 }
 
@@ -11,6 +12,7 @@ local c__mods = {
 ---@field public BatchDisposable        ark.c.BatchDisposable
 ---@field public BatchHandler           ark.c.BatchHandler
 ---@field public CircularQueue          ark.c.CircularQueue
+---@field public CircularStack          ark.c.CircularStack
 ---@field public Disposable             ark.c.Disposable
 local c = setmetatable({ __mods = c__mods }, {
   __index = function(t, k)

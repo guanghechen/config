@@ -38,7 +38,6 @@ local __mods = {
   tmux = "std.tmux",
   uri = "std.uri",
 
-  CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
   Filetree = "std.collection.filetree",
   Frecency = "std.collection.frecency",
@@ -76,7 +75,6 @@ local __mods = {
 ---@field public tmux                   std.tmux
 ---@field public uri                    std.uri
 ---
----@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier
 ---@field public Filetree               std.collection.Filetree
 ---@field public Frecency               std.collection.Frecency

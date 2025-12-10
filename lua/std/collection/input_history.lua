@@ -4,7 +4,7 @@ local __module_name__ = "std.collection.input_history" ---@type string
 ---@field public fullname               string
 ---@field public equals                 std.t.IEquals
 ---@field protected _present            integer
----@field protected _stack              std.collection.ICircularStack
+---@field protected _stack              ark.c.ICircularStack
 local M = {}
 M.__index = M
 
@@ -20,7 +20,7 @@ function M.new(props)
   self.fullname = fullname
   self.equals = equals
   self._present = 0
-  self._stack = std.CircularStack.new({ capacity = capacity })
+  self._stack = ark.c.CircularStack.new({ capacity = capacity })
   return self
 end
 
@@ -34,7 +34,7 @@ function M.deserialize(props)
   local self = setmetatable({}, M)
   self.fullname = fullname
   self.equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
-  self._stack = std.CircularStack.from_array(data.stack, props.capacity)
+  self._stack = ark.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
@@ -94,7 +94,7 @@ function M:fork(params)
   instance.fullname = fullname
   instance.equals = self.equals
   instance._present = self._present
-  instance._stack = std.CircularStack.from(self._stack)
+  instance._stack = ark.c.CircularStack.from(self._stack)
   return instance
 end
 
@@ -111,7 +111,7 @@ end
 ---@return std.t.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -134,13 +134,13 @@ end
 
 ---@return fun(): std.t.T, integer
 function M:iterator()
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator()
 end
 
 ---@return fun(): std.t.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator_reverse()
 end
 
@@ -178,7 +178,7 @@ function M:push(element)
     return
   end
 
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   self:rearrange(function(item)
     return not self.equals(item, element)
   end)
@@ -189,7 +189,7 @@ end
 ---@param filter                        std.t.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -217,14 +217,14 @@ end
 ---@return std.t.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   return stack:top(), stack:size()
 end
 
 ---@param element                       std.t.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type std.collection.ICircularStack
+  local stack = self._stack ---@type ark.c.ICircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)
