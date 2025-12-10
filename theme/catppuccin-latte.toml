@@ -46,13 +46,15 @@ count_cut               = { fg = "#DCE0E8",     bg = "#D20F39" }
 count_selected          = { fg = "#DCE0E8",     bg = "#EA76CB" }
 find_keyword            = { fg = "#DF8E1D",  bold = true, italic = true }
 find_position           = { fg = "#EA76CB",  bg = "reset", bold = true, italic = true }
-hovered                 = { fg = "#DCE0E8",     bg = "#EA76CB", bold = true }
 marker_copied           = { fg = "#40A02B",   bg = "#40A02B" }
 marker_cut              = { fg = "#D20F39",     bg = "#D20F39" }
 marker_marked           = { fg = "#179299",    bg = "#179299" }
 marker_selected         = { fg = "#EA76CB",    bg = "#EA76CB", dim = true, blink = true }
-preview_hovered         = { fg = "#EA76CB",    underline = true }
 syntect_theme           = ""
+
+[indicator]
+current                 = { fg = "#DCE0E8",     bg = "#EA76CB", bold = true }
+preview                 = { fg = "#EA76CB",    underline = true }
 
 [mode]
 normal_main             = { fg = "#DCE0E8",     bg = "#179299",    bold = true }
