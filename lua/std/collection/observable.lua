@@ -5,7 +5,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class std.collection.IObservable: std.collection.IBatchDisposable, std.collection.ISubscribable
+---@class std.collection.IObservable: ark.t.IBatchDisposable, std.collection.ISubscribable
 ---@field public equals                 std.t.IEquals
 ---@field public normalize              std.t.INormalize
 ---@field public snapshot               fun(self: std.collection.IObservable): std.t.T
@@ -28,7 +28,7 @@ local noop_unsubscribable = { unsubscribe = std.fn.noop }
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, std.BatchDisposable)
+setmetatable(M, ark.c.BatchDisposable)
 
 ---@param props                         std.collection.observable.IProps
 ---@return std.collection.Observable
@@ -38,7 +38,7 @@ function M.new(props)
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type std.t.T
 
-  local self = setmetatable(std.BatchDisposable.new(), M)
+  local self = setmetatable(ark.c.BatchDisposable.new(), M)
   ---@cast self                         std.collection.Observable
 
   self.equals = equals
@@ -68,7 +68,7 @@ function M:dispose()
     return
   end
 
-  std.BatchDisposable.dispose(self)
+  ark.c.BatchDisposable.dispose(self)
 
   -- Dispose subscribers
   self._subscribers:dispose()

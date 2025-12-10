@@ -38,7 +38,6 @@ local __mods = {
   tmux = "std.tmux",
   uri = "std.uri",
 
-  BatchDisposable = "std.collection.batch_disposable",
   CircularQueue = "std.collection.circular_queue",
   CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
@@ -78,7 +77,6 @@ local __mods = {
 ---@field public tmux                   std.tmux
 ---@field public uri                    std.uri
 ---
----@field public BatchDisposable        std.collection.BatchDisposable
 ---@field public CircularQueue          std.collection.CircularQueue
 ---@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier

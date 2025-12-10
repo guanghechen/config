@@ -1,26 +1,26 @@
-local __module_name__ = "std.collection.batch_disposable" ---@type string
+local __module_name__ = "ark.c.batch_disposable" ---@type string
 
----@class std.collection.IBatchDisposable : std.collection.IDisposable
----@field public dispose_all            fun(disposables: std.collection.IDisposable[]): nil
----@field public add_disposable         fun(self: std.collection.IBatchDisposable, disposable: std.collection.IDisposable): std.collection.IBatchDisposable
+---@class ark.t.IBatchDisposable : ark.t.IDisposable
+---@field public dispose_all            fun(disposables: ark.t.IDisposable[]): nil
+---@field public add_disposable         fun(self: ark.t.IBatchDisposable, disposable: ark.t.IDisposable): ark.t.IBatchDisposable
 
----@class std.collection.BatchDisposable : std.collection.IBatchDisposable
+---@class ark.c.BatchDisposable : ark.t.IBatchDisposable
 local M = {}
 M.__index = M
 
----@return std.collection.BatchDisposable
+---@return ark.c.BatchDisposable
 function M.new()
   local self = setmetatable({}, M)
 
   ---@type boolean
   self._disposed = false
 
-  ---@type std.collection.IDisposable[]
+  ---@type ark.t.IDisposable[]
   self._disposables = {}
   return self
 end
 
----@param disposables                   std.collection.IDisposable[]
+---@param disposables                   ark.t.IDisposable[]
 ---@return nil
 function M.dispose_all(disposables)
   if #disposables <= 0 then
@@ -33,7 +33,7 @@ function M.dispose_all(disposables)
       disposable:dispose()
     end)
   end
-  handler:summary("[std.collection.batch_disposable.dispose_all] Encountered error(s) while disposing.")
+  handler:summary("[ark.c.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean
@@ -68,8 +68,8 @@ function M:dispose()
   end
 end
 
----@param disposable                    std.collection.IDisposable
----@return std.collection.IBatchDisposable
+---@param disposable                    ark.t.IDisposable
+---@return ark.t.IBatchDisposable
 function M:add_disposable(disposable)
   if disposable:isdisposed() then
     return self

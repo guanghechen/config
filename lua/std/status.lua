@@ -11,7 +11,7 @@
 ---@field public tmux_zen_mode          boolean
 
 ---@class std.status
----@field protected _disposables        std.collection.BatchDisposable
+---@field protected _disposables        ark.c.BatchDisposable
 ---
 ---
 ---@field public winnr_command          std.collection.IObservable
@@ -36,7 +36,7 @@
 ---@field public suppress_warning       std.collection.IObservable
 ---@field public tmux_zen_mode          std.collection.IObservable
 local M = {
-  _disposables = std.BatchDisposable.new(),
+  _disposables = ark.c.BatchDisposable.new(),
 
   winnr_command = std.Observable.from_value(0),
 
