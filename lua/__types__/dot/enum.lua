@@ -1,9 +1,5 @@
 ---@meta
 
----@alias dot.e.BoxPosition
----| "cursor"
----| "center"
-
 ---@alias dot.e.TermPosition
 ---| "bottom"
 ---| "right"
