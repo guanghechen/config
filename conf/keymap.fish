@@ -8,4 +8,5 @@ for mode in default insert
     bind --mode $mode \e\[82\;6u fzf-history # Ctrl+Shift+R
     bind --mode $mode \e\[80\;6u fzf-processes # Ctrl+Shift+P
     bind --mode $mode \e\[69\;6u fzf-variables # Ctrl+Shift+E
+    bind --mode $mode \e\[90\;6u zi # Ctrl+Shift+Z
 end
