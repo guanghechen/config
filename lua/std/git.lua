@@ -65,6 +65,26 @@ local GIT_STATUS_ENUM = {
   ["!"] = 256,
 }
 
+---@param cmd                           string[]
+---@return boolean
+---@return string[]
+local function execute_command(cmd)
+  local lines = vim.fn.systemlist(cmd)
+
+  if vim.v.shell_error ~= 0 then
+    return false, {}
+  end
+
+  if #lines > 0 then
+    local line = lines[1] ---@type string
+    if string.sub(line, 1, 6) == "fatal:" then
+      return false, {}
+    end
+  end
+
+  return true, lines
+end
+
 ---@param stage_state                   std.git.StageState
 ---@param codes                         table<string, boolean>|nil
 ---@return table<string, boolean>
@@ -386,7 +406,7 @@ local function collect_status(opts)
   local status_groups = create_status_groups() ---@type table<string, table<string, boolean>>
 
   local cmd_staged = { "git", "-C", workspace, "diff", "--staged", "--name-status", base, "--" }
-  local ok_staged, staged_lines = std.job.execute_command(cmd_staged)
+  local ok_staged, staged_lines = execute_command(cmd_staged)
   if ok_staged then
     for _, line in ipairs(staged_lines) do
       local status, relative = parse_name_status_line(line)
@@ -399,7 +419,7 @@ local function collect_status(opts)
   end
 
   local cmd_unstaged = { "git", "-C", workspace, "diff", "--name-status" }
-  local ok_unstaged, unstaged_lines = std.job.execute_command(cmd_unstaged)
+  local ok_unstaged, unstaged_lines = execute_command(cmd_unstaged)
   if ok_unstaged then
     for _, line in ipairs(unstaged_lines) do
       local status, relative = parse_name_status_line(line)
@@ -413,7 +433,7 @@ local function collect_status(opts)
 
   if include_untracked then
     local cmd_untracked = { "git", "-C", workspace, "ls-files", "--exclude-standard", "--others" }
-    local ok_untracked, untracked_lines = std.job.execute_command(cmd_untracked)
+    local ok_untracked, untracked_lines = execute_command(cmd_untracked)
     if ok_untracked then
       for _, line in ipairs(untracked_lines) do
         if type(line) == "string" and #line > 0 then

@@ -23,7 +23,6 @@ local __mods = {
   debug = "std.debug",
   fs = "std.fs",
   git = "std.git",
-  job = "std.job",
   json = "std.json",
   notepad = "std.notepad",
   path = "std.path",
@@ -43,7 +42,6 @@ local __mods = {
 ---@field public debug                  std.debug
 ---@field public fs                     std.fs
 ---@field public git                    std.git
----@field public job                    std.job
 ---@field public json                   std.json
 ---@field public notepad                std.notepad
 ---@field public path                   std.path
