@@ -7,7 +7,7 @@ local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_
 
 ---@class ux.widget.colorpicker.IProps : ux.widget.colorpicker.ui.IProps
 
----@class ux.widget.colorpicker.ColorPicker : std.t.ux.IWidget
+---@class ux.widget.colorpicker.ColorPicker : dot.t.IWidget
 ---@field public name                   string
 ---@field protected _ui                 ux.widget.colorpicker.UI
 ---@field protected _color              ux.widget.colorpicker.Color

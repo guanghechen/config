@@ -119,7 +119,7 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?ux.picker.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?ux.picker.composer.basic.IOnResultRendered
 
----@class ux.picker.BasicComposer : std.t.ux.IWidget
+---@class ux.picker.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean

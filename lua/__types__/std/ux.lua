@@ -1,21 +1,21 @@
 ---@meta
 
----@class std.t.ux.IRawWidget
+---@class dot.t.IRawWidget
 ---@field public name                   string|nil
----@field public close                  fun(widget: std.t.ux.IWidget): nil
----@field public focus                  fun(widget: std.t.ux.IWidget): nil
----@field public hide                   fun(widget: std.t.ux.IWidget): nil
----@field public isdisposed             fun(self: std.t.ux.IWidget): boolean
----@field public isfocused              fun(self: std.t.ux.IWidget): boolean
----@field public isvisible              fun(self: std.t.ux.IWidget): boolean
----@field public resize                 fun(widget: std.t.ux.IWidget): nil
+---@field public close                  fun(widget: dot.t.IWidget): nil
+---@field public focus                  fun(widget: dot.t.IWidget): nil
+---@field public hide                   fun(widget: dot.t.IWidget): nil
+---@field public isdisposed             fun(self: dot.t.IWidget): boolean
+---@field public isfocused              fun(self: dot.t.IWidget): boolean
+---@field public isvisible              fun(self: dot.t.IWidget): boolean
+---@field public resize                 fun(widget: dot.t.IWidget): nil
 
----@class std.t.ux.IWidget
+---@class dot.t.IWidget
 ---@field public name                   string|nil
----@field public close                  fun(self: std.t.ux.IWidget): nil
----@field public focus                  fun(self: std.t.ux.IWidget): nil
----@field public hide                   fun(self: std.t.ux.IWidget): nil
----@field public isdisposed             fun(self: std.t.ux.IWidget): boolean
----@field public isfocused              fun(self: std.t.ux.IWidget): boolean
----@field public isvisible              fun(self: std.t.ux.IWidget): boolean
----@field public resize                 fun(self: std.t.ux.IWidget): nil
+---@field public close                  fun(self: dot.t.IWidget): nil
+---@field public focus                  fun(self: dot.t.IWidget): nil
+---@field public hide                   fun(self: dot.t.IWidget): nil
+---@field public isdisposed             fun(self: dot.t.IWidget): boolean
+---@field public isfocused              fun(self: dot.t.IWidget): boolean
+---@field public isvisible              fun(self: dot.t.IWidget): boolean
+---@field public resize                 fun(self: dot.t.IWidget): nil

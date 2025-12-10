@@ -23,7 +23,7 @@ function M.resume_last_widget()
   end
 
   if dot.state.widget.resume() then
-    local widget, widget_index = dot.state.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
+    local widget, widget_index = dot.state.widget.get_widget_visible() ---@type dot.t.IWidget|nil
     if widget ~= nil and widget_index ~= nil then
       widget:focus()
       dot.state.widget.history:go(widget_index)

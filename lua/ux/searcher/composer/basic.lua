@@ -142,7 +142,7 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?ux.searcher.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?ux.searcher.composer.basic.IOnResultRendered
 
----@class ux.searcher.BasicComposer : std.t.ux.IWidget
+---@class ux.searcher.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean

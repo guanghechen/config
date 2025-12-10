@@ -103,7 +103,7 @@ dot.state.status.dirtier_termline:subscribe(
   true
 )
 
----@class ux.widget.Terminal : std.t.ux.IWidget
+---@class ux.widget.Terminal : dot.t.IWidget
 local M = {}
 
 ---@return boolean

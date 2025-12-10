@@ -256,7 +256,7 @@ end
 ---@field public win_opts               ?table<string, any>
 ---@field public source                 ?std.t.INotepadSource
 
----@class ux.widget.Notepad : std.t.ux.IWidget
+---@class ux.widget.Notepad : dot.t.IWidget
 ---@field public name                   string|nil
 ---@field protected title               string
 ---@field protected bufname             string
