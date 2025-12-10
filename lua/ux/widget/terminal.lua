@@ -95,7 +95,7 @@ std.fn.observe({ eve.term.o_termuuid }, function()
 end, true)
 
 std.status.dirtier_termline:subscribe(
-  std.Subscriber.new({
+  ark.c.Subscriber.new({
     on_next = function()
       termline:render()
     end,

@@ -318,7 +318,7 @@ end
 ---@return nil
 function M:__setup_subscriptions__()
   self._subscription_active = eve.state.notepad.o_activated_uuid:subscribe(
-    std.Subscriber.new({
+    ark.c.Subscriber.new({
       on_next = function(next_uuid)
         self:__on_active_uuid_changed__(next_uuid)
       end,
@@ -327,7 +327,7 @@ function M:__setup_subscriptions__()
   )
 
   self._subscription_winbar = std.status.dirtier_notepadline:subscribe(
-    std.Subscriber.new({
+    ark.c.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
           self._nvimbar:render()
@@ -338,7 +338,7 @@ function M:__setup_subscriptions__()
   )
 
   self._subscription_source = eve.context.option.notepad_source:subscribe(
-    std.Subscriber.new({
+    ark.c.Subscriber.new({
       on_next = function(source_name)
         self:attach(source_name)
       end,

@@ -73,7 +73,7 @@ local function should_show_tabline()
 end
 
 local last_showtabline = 0 ---@type integer
-dirtier:subscribe(std.Subscriber.new({
+dirtier:subscribe(ark.c.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2

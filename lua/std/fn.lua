@@ -8,7 +8,7 @@ local M = {}
 function M.observe(observables, callback, ignore_initial)
   local unsubscribables = {} ---@type std.collection.IUnsubscribable[]
   for _, observable in ipairs(observables) do
-    local subscriber = std.Subscriber.new({
+    local subscriber = ark.c.Subscriber.new({
       on_next = function()
         vim.schedule(callback)
       end,

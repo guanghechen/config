@@ -189,7 +189,7 @@ local function render(winnr)
 end
 
 std.status.dirty_winline_nr:subscribe(
-  std.Subscriber.new({
+  ark.c.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)
       if winnr_prev ~= winnr then

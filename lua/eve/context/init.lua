@@ -344,7 +344,7 @@ function M.watch_changes()
     end,
   })
   ticker_editor:subscribe(
-    std.Subscriber.new({
+    ark.c.Subscriber.new({
       on_next = function()
         scheduler:schedule()
       end,

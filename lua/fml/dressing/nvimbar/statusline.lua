@@ -55,7 +55,7 @@ statusline
   :place("right", c.nvim.msg_changes(position), 85)
   :place("right", c.nvim.msg_lsp(position), 90)
 
-dirtier:subscribe(std.Subscriber.new({
+dirtier:subscribe(ark.c.Subscriber.new({
   on_next = function()
     if dirtier:is_dirty() then
       statusline:render()

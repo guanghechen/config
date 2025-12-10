@@ -1,7 +1,7 @@
 local __module_name__ = "std.collection.subscribers" ---@type string
 
 ---@class std.collection.ISubscribable
----@field public subscribe              fun(self: std.collection.ISubscribable, subscriber: std.collection.ISubscriber, ignoreInitial?: boolean): std.collection.IUnsubscribable
+---@field public subscribe              fun(self: std.collection.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): std.collection.IUnsubscribable
 
 ---@class std.collection.ISubscribers : std.collection.ISubscribable, std.collection.IDisposable
 ---@field public count                  fun(self: std.collection.ISubscribers): nil
@@ -11,7 +11,7 @@ local __module_name__ = "std.collection.subscribers" ---@type string
 ---@field public ARRANGE_THRESHOLD      ?number
 
 ---@class std.collection.subscribers.ISubscriberItem
----@field public subscriber             std.collection.ISubscriber
+---@field public subscriber             ark.c.ISubscriber
 ---@field public unsubscribed           boolean
 
 ---@type std.collection.IUnsubscribable
@@ -118,7 +118,7 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber                    std.collection.ISubscriber
+---@param subscriber                    ark.c.ISubscriber
 ---@return std.collection.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:isdisposed() then

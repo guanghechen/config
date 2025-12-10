@@ -111,7 +111,7 @@ function M:next(value, options)
   return false
 end
 
----@param subscriber                    std.collection.ISubscriber
+---@param subscriber                    ark.c.ISubscriber
 ---@param ignoreInitial                 boolean
 ---@return std.collection.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)

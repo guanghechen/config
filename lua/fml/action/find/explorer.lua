@@ -717,7 +717,7 @@ picker = ux.picker.ListComposer.new({
 })
 
 state_cwd:subscribe(
-  std.Subscriber.new({
+  ark.c.Subscriber.new({
     on_next = function()
       if picker and not picker:isdisposed() then
         local data = fetch_data()
