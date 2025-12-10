@@ -8,10 +8,10 @@ prepend_keymap = [
 ]
 keymap = [
   # Navigation
-  { on = "<Up>",              run = "arrow -1",                                       desc = "move: cursor up" },
-  { on = "<Down>",            run = "arrow 1",                                        desc = "move: cursor down" },
-  { on = "k",                 run = "arrow -1",                                       desc = "move: cursor up" },
-  { on = "j",                 run = "arrow 1",                                        desc = "move: cursor down" },
+  { on = "<Up>",              run = "arrow prev",                                     desc = "move: cursor up" },
+  { on = "<Down>",            run = "arrow next",                                     desc = "move: cursor down" },
+  { on = "k",                 run = "arrow prev",                                     desc = "move: cursor up" },
+  { on = "j",                 run = "arrow next",                                     desc = "move: cursor down" },
   { on = "<S-PageUp>",        run = "arrow -50%",                                     desc = "move: cursor up half page" },
   { on = "<S-PageDown>",      run = "arrow 50%",                                      desc = "move: cursor down half page" },
   { on = "<PageUp>",          run = "arrow -100%",                                    desc = "move: cursor up one page" },
@@ -131,7 +131,7 @@ keymap = [
   { on = ["t", "}"],          run = "tab_swap 1",                                     desc = "tab: swap right" },
 
   # Toggle
-  { on = "<Space>",           run = ["toggle", "arrow 1"],                            desc = "toggle: current selection state" },
+  { on = "<Space>",           run = ["toggle", "arrow next"],                         desc = "toggle: current selection state" },
   { on = "<C-a>",             run = "toggle_all --state=on",                          desc = "toggle: select all files" },
   { on = "<C-r>",             run = "toggle_all",                                     desc = "toggle: selection of all files" },
   { on = ".",                 run = "hidden toggle",                                  desc = "toggle: hidden files" },
