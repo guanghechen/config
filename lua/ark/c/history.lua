@@ -49,7 +49,7 @@ local __module_name__ = "ark.c.history" ---@type string
 ---@field public fullname               string
 ---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer
----@field protected _stack              ark.c.ICircularStack
+---@field protected _stack              ark.c.CircularStack
 local M = {}
 M.__index = M
 
@@ -156,7 +156,7 @@ end
 ---@return ark.t.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -179,13 +179,13 @@ end
 
 ---@return fun(): ark.t.T, integer
 function M:iterator()
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   return stack:iterator()
 end
 
 ---@return fun(): ark.t.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   return stack:iterator_reverse()
 end
 
@@ -219,7 +219,7 @@ end
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   local el_present = stack:at(present) ---@type ark.t.T|nil
   if el_present ~= nil and self.equals(el_present, element) then
     return
@@ -243,7 +243,7 @@ end
 ---@param filter                        ark.t.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -271,14 +271,14 @@ end
 ---@return ark.t.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   return stack:top(), stack:size()
 end
 
 ---@param element                       ark.t.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type ark.c.ICircularStack
+  local stack = self._stack ---@type ark.c.CircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)

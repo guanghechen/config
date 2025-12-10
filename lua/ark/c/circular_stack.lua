@@ -1,26 +1,9 @@
----@class ark.c.ICircularStack
----@field public capacity               fun(self: ark.c.ICircularStack): integer
----@field public size                   fun(self: ark.c.ICircularStack): integer
----@field public at                     fun(self: ark.c.ICircularStack, index: integer): ark.t.T|nil
----@field public clear                  fun(self: ark.c.ICircularStack): nil
----@field public collect                fun(self: ark.c.ICircularStack): ark.t.T[]
----@field public count                  fun(self: ark.c.ICircularStack, filter: ark.t.IFilter): integer
----@field public fork                   fun(self: ark.c.ICircularStack, filter: ark.t.IFilter): ark.c.ICircularStack
----@field public iterator               fun(self: ark.c.ICircularStack): fun(): ark.t.T|nil
----@field public iterator_reverse       fun(self: ark.c.ICircularStack): fun(): ark.t.T|nil
----@field public pop                    fun(self: ark.c.ICircularStack): ark.t.T|nil
----@field public push                   fun(self: ark.c.ICircularStack, element: ark.t.T): nil
----@field public rearrange              fun(self: ark.c.ICircularStack, filter: ark.t.IFilter): fun(): ark.t.T|nil
----@field public reset                  fun(self: ark.c.ICircularStack, elements: ark.t.T[]): boolean): fun(): ark.t.T|nil
----@field public top                    fun(self: ark.c.ICircularStack): ark.t.T|nil
----@field public update                 fun(self: ark.c.ICircularStack, index: integer, value: ark.t.T): nil
-
 ---@class ark.c.circular_stack.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type ark.t.T[]
 
----@class ark.c.CircularStack : ark.c.ICircularStack
+---@class ark.c.CircularStack
 ---@field protected _elements           ark.t.T[]
 ---@field protected _capacity           integer
 ---@field protected _size               integer
@@ -43,7 +26,7 @@ function M.new(props)
   return self
 end
 
----@param queue                         ark.c.ICircularStack
+---@param queue                         ark.c.CircularStack
 ---@return ark.c.CircularStack
 function M.from(queue)
   local elements = {} ---@type ark.t.T[]
