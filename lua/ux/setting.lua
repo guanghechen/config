@@ -58,7 +58,12 @@ function M.new(props)
   local function validate(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return std.json.parse(text)
+      return vim.json.decode(text, {
+        luanil = {
+          object = true,
+          array = true,
+        },
+      })
     end)
 
     if not ok then
@@ -75,7 +80,12 @@ function M.new(props)
   local function on_confirm(lines)
     local text = table.concat(lines, "\n") ---@type string
     local ok, data = pcall(function()
-      return std.json.parse(text)
+      return vim.json.decode(text, {
+        luanil = {
+          object = true,
+          array = true,
+        },
+      })
     end)
 
     if not ok then
@@ -117,7 +127,9 @@ end
 ---@param params                        ux.setting.IOpenParams
 ---@return nil
 function M:open(params)
-  local lines = std.json.stringify_prettier_lines(params.initial_value) ---@type string[]
+  local text = vim.json.encode(params.initial_value, { indent = "  ", sort_keys = false }) ---@type string
+  local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
+
   ---@type ux.textarea.IOpenParams
   local opts = {
     initial_lines = lines,

@@ -53,7 +53,7 @@ The configuration exposes core modules globally via `_G` for convenient access:
 - `_G.eve` → `require("eve")` - Core framework
 
 **Module Access Patterns:**
-- `std.*` → Access std utilities directly (e.g., `std.path.*`, `std.json.*`)
+- `std.*` → Access std utilities directly (e.g., `std.path.*`)
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
 - `eve.buf.*` → `require("eve.builtin.buf").*` (builtins mounted directly)
 - `eve.constant.*`, `eve.context.*`, `eve.state.*`, `eve.fn.*`, `eve.ux.*` follow the same pattern

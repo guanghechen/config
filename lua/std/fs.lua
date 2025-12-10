@@ -372,7 +372,12 @@ end
 ---@param prettier                      boolean
 ---@return nil
 function M.write_json(filepath, data, prettier)
-  local ok_to_encode_json, json_text = pcall(prettier and std.json.stringify_prettier or std.json.stringify, data)
+  local ok_to_encode_json, json_text = pcall(function()
+    if prettier then
+      return vim.json.encode(data, { indent = "  ", sort_keys = true })
+    end
+    return vim.json.encode(data, { indent = "", sort_keys = true })
+  end)
   if not ok_to_encode_json then
     ark.reporter.warn({
       from = __module_name__,

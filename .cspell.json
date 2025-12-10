@@ -1,6 +1,12 @@
 {
-  "ignorePaths": ["lsp/yamlls.lua", "lua/dot/dict/", "lua/dot/fileicon.lua"],
-  "import": ["~/.config/cspell/cspell.json"],
+  "ignorePaths": [
+    "lsp/yamlls.lua",
+    "lua/dot/dict/",
+    "lua/dot/fileicon.lua"
+  ],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -557,6 +563,7 @@
     "lstate",
     "luacheckrc",
     "luafile",
+    "luanil",
     "luap",
     "luarc",
     "lwidth",
