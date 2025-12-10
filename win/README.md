@@ -18,7 +18,7 @@
     * `error: linker `link.exe` not found`
 
       - Install [Visual Studio C++ Build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-        
+
         Need to install the Development C++ toolchain
 
 
