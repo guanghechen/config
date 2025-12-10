@@ -75,7 +75,7 @@ function M.new(props)
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
       desc = "select: noop",
-      callback = std.fn.noop,
+      callback = ark.fn.noop,
     },
     {
       modes = { "i", "n", "x" },

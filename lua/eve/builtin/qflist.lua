@@ -78,7 +78,7 @@ function M.push(qflist)
   end
 
   local qflist_cur = M.history:present() ---@type std.t.IQuickFixItem[]|nil
-  if qflist_cur == nil or not std.fn.equals_deep(qflist_cur, qflist) then
+  if qflist_cur == nil or not ark.fn.equals_deep(qflist_cur, qflist) then
     M.history:push(qflist)
     M.set_qflist(qflist)
   end

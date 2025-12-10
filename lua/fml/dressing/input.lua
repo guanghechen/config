@@ -205,8 +205,8 @@ function M.input(opts, on_confirm)
     },
     { modes = { "i", "n", "x" }, key = "<cr>", desc = "input: confirm", callback = action.confirm },
     { modes = { "n", "x" }, key = "q", desc = "input: quit", callback = action.cancel },
-    { modes = { "n", "x" }, key = "o", desc = "input: noop", callback = std.fn.noop },
-    { modes = { "n", "x" }, key = "O", desc = "input: noop", callback = std.fn.noop },
+    { modes = { "n", "x" }, key = "o", desc = "input: noop", callback = ark.fn.noop },
+    { modes = { "n", "x" }, key = "O", desc = "input: noop", callback = ark.fn.noop },
   }
 
   -- Add y/n/<Esc> keymaps for confirmation type inputs

@@ -44,9 +44,9 @@ local M = {
   dirtier_tabline = std.Dirtier.new({ dirty = true }),
   dirtier_termline = std.Dirtier.new({ dirty = true }),
   dirtier_notepadline = std.Dirtier.new({ dirty = true }),
-  dirty_winline_nr = std.Observable.from_value(0, std.fn.falsy),
+  dirty_winline_nr = std.Observable.from_value(0, ark.fn.falsy),
 
-  lint_schedule_nr = std.Observable.from_value(0, std.fn.falsy),
+  lint_schedule_nr = std.Observable.from_value(0, ark.fn.falsy),
 
   msg_changes = std.Observable.from_value(""),
   msg_command = std.Observable.from_value(""),

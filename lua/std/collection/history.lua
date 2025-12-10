@@ -59,7 +59,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
+  local equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -78,7 +78,7 @@ function M.deserialize(props)
 
   local self = setmetatable({}, M)
   self.fullname = fullname
-  self.equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
+  self.equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
   self._stack = ark.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self

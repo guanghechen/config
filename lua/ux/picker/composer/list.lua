@@ -136,13 +136,13 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local on_cancel = props.on_cancel or std.fn.noop ---@type ux.picker.composer.list.IOnCancel
-  local on_closed = props.on_closed or std.fn.noop ---@type ux.picker.composer.list.IOnClosed
+  local on_cancel = props.on_cancel or ark.fn.noop ---@type ux.picker.composer.list.IOnCancel
+  local on_closed = props.on_closed or ark.fn.noop ---@type ux.picker.composer.list.IOnClosed
   local on_confirm = props.on_confirm ---@type ux.picker.composer.list.IOnConfirm|nil
-  local on_disposed = props.on_disposed or std.fn.noop ---@type ux.picker.composer.list.IOnDisposed
-  local on_focused = props.on_focused or std.fn.noop ---@type ux.picker.composer.list.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type ux.picker.composer.list.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type ux.picker.composer.list.IOnRefresh
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type ux.picker.composer.list.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type ux.picker.composer.list.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type ux.picker.composer.list.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type ux.picker.composer.list.IOnRefresh
 
   ---@type ux.picker.composer.list.IRenderResult
   local render_result = props.render_result
@@ -206,7 +206,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local input = search_pattern:snapshot() ---@type string
@@ -297,7 +297,7 @@ function M.new(props)
       modes = { "i", "n", "x" },
       key = "<Tab>",
       desc = "list: noop",
-      callback = std.fn.noop,
+      callback = ark.fn.noop,
     },
   }
 

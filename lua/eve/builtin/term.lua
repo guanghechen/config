@@ -236,9 +236,9 @@ function M.create(params)
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local hidewipe = not not params.hidewipe ---@type boolean
-  local on_closed = params.on_closed or std.fn.noop ---@type fun(): nil|nil
-  local on_focused = params.on_focused or std.fn.noop ---@type fun(): nil|nil
-  local on_resized = params.on_resized or std.fn.noop ---@type fun(): nil|nil
+  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil|nil
+  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil|nil
+  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil|nil
   local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
 
   local bufnr = vim.api.nvim_create_buf(false, true)

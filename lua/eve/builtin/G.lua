@@ -5,7 +5,7 @@ local gfn = {} ---@type table<string, fun(...): nil>
 local M = {}
 setmetatable(M, { __index = gfn })
 
-M.noop = std.fn.noop
+M.noop = ark.fn.noop
 
 ---@param fn                            fun(...): nil
 ---@param fn_name                       string|nil

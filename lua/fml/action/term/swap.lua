@@ -11,7 +11,7 @@ function M.swap_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local N = eve.term.size() ---@type integer
-  local index_next = std.fn.navigate_circular(index_current, -step, N) ---@type integer
+  local index_next = ark.fn.navigate_circular(index_current, -step, N) ---@type integer
   local termuuid_next = eve.term.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then
@@ -33,7 +33,7 @@ function M.swap_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local N = eve.term.size() ---@type integer
-  local index_next = std.fn.navigate_circular(index_current, step, N) ---@type integer
+  local index_next = ark.fn.navigate_circular(index_current, step, N) ---@type integer
   local termuuid_next = eve.term.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then

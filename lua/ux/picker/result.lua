@@ -72,11 +72,11 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type ux.picker.result.IDraw
-  local isselected = props.isselected or std.fn.falsy ---@type ux.picker.result.IIsSelected
+  local isselected = props.isselected or ark.fn.falsy ---@type ux.picker.result.IIsSelected
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
-  local on_drawed = props.on_drawed or std.fn.noop ---@type ux.picker.result.IOnDrawed
+  local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.picker.result.IOnDrawed
   local augroup_CursorMoved = std.nvim.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
@@ -93,9 +93,9 @@ function M.new(props)
 
       local disabled ---@type fun(): boolean
       if raw_disabled == nil or raw_disabled == false then
-        disabled = std.fn.falsy
+        disabled = ark.fn.falsy
       elseif raw_disabled == true then
-        disabled = std.fn.truthy
+        disabled = ark.fn.truthy
       else
         ---@return boolean
         disabled = function()
@@ -129,7 +129,7 @@ function M.new(props)
       comp_sep_hlname = "f_wl_picker",
       comp_sep_hlname_active = "f_wl_picker",
       delay = 128,
-      silent = std.fn.falsy,
+      silent = ark.fn.falsy,
       get_max_width = function()
         local winnr = self._winnr ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -161,7 +161,7 @@ function M.new(props)
     mode = "throttle",
     delay = 32,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -191,7 +191,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -215,7 +215,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -240,7 +240,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -634,7 +634,7 @@ function M:movedown(step)
   local total = self.lnum_total:snapshot() ---@type integer
   if total > 1 then
     local lnum = self.lnum_current:snapshot() ---@type integer
-    local next_lnum = std.fn.navigate_circular(lnum, step, total) ---@type integer
+    local next_lnum = ark.fn.navigate_circular(lnum, step, total) ---@type integer
     self.lnum_current:next(next_lnum)
   end
 end

@@ -17,7 +17,7 @@ end
 local function select_copy_filepath(params)
   local filepath = params.filepath ---@type string
   local winopts = params.winopts or {} ---@type vim.api.keyset.win_config
-  local on_completed = params.on_completed or std.fn.noop ---@type fun(): nil
+  local on_completed = params.on_completed or ark.fn.noop ---@type fun(): nil
 
   local popup = ux.Select.new({
     wincfg = vim.tbl_extend("force", {

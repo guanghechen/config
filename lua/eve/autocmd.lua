@@ -289,7 +289,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
     local progress = ""
 
     if data.percentage then
-      local icon = std.fn.spinner() ---@type string
+      local icon = ark.fn.spinner() ---@type string
       progress = icon .. " " .. data.percentage .. "%% "
     end
 

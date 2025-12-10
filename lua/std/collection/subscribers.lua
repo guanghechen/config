@@ -15,7 +15,7 @@ local __module_name__ = "std.collection.subscribers" ---@type string
 ---@field public unsubscribed           boolean
 
 ---@type std.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = std.fn.noop }
+local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
 ---@class std.collection.Subscribers : std.collection.ISubscribers
 ---@field protected ARRANGE_THRESHOLD   number

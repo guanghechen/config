@@ -47,7 +47,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type ux.searcher.preview.IDraw
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local on_drawed = props.on_drawed or std.fn.noop ---@type ux.searcher.preview.IOnDrawed
+  local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.searcher.preview.IOnDrawed
 
   local self = setmetatable({}, M)
 
@@ -56,7 +56,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil

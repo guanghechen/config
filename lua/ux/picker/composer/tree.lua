@@ -158,14 +158,14 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf ---@type ux.picker.view.tree.ITreeviewLeafNodeRenderer
   local render_treeview_location = props.render_treeview_location ---@type ux.picker.view.tree.ITreeviewLeafLocationRenderer
 
-  local on_attached = props.on_attached or std.fn.noop ---@type ux.picker.composer.tree.IOnAttached
-  local on_closed = props.on_closed or std.fn.noop ---@type ux.picker.composer.tree.IOnClosed
-  local on_confirm = props.on_confirm or std.fn.noop ---@type ux.picker.composer.tree.IOnConfirm
-  local on_disposed = props.on_disposed or std.fn.noop ---@type ux.picker.composer.tree.IOnDisposed
+  local on_attached = props.on_attached or ark.fn.noop ---@type ux.picker.composer.tree.IOnAttached
+  local on_closed = props.on_closed or ark.fn.noop ---@type ux.picker.composer.tree.IOnClosed
+  local on_confirm = props.on_confirm or ark.fn.noop ---@type ux.picker.composer.tree.IOnConfirm
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type ux.picker.composer.tree.IOnDisposed
   local on_enter = props.on_enter ---@type ux.picker.composer.tree.IOnEnter|nil
-  local on_focused = props.on_focused or std.fn.noop ---@type ux.picker.composer.tree.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type ux.picker.composer.tree.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type ux.picker.composer.tree.IOnRefresh
+  local on_focused = props.on_focused or ark.fn.noop ---@type ux.picker.composer.tree.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type ux.picker.composer.tree.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type ux.picker.composer.tree.IOnRefresh
 
   local tree = std.Tree.new({
     name = fullname,
@@ -203,7 +203,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       local input = o_search_pattern:snapshot() ---@type string

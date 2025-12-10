@@ -84,7 +84,7 @@ return {
       },
       workspace = {
         checkThirdParty = false,
-        library = vim.tbl_filter(std.fn.boolean, {
+        library = vim.tbl_filter(ark.fn.boolean, {
           std.path.join(vim.env.VIMRUNTIME, "lua"),
           std.path.join(dot.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
           nvim_config,

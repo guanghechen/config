@@ -22,7 +22,7 @@ M.__index = M
 ---@param props                         std.collection.subscriber.IProps
 ---@return std.collection.Subscriber
 function M.new(props)
-  local on_dispose = props.on_dispose or std.fn.noop ---@type std.collection.subscriber.IOnDispose
+  local on_dispose = props.on_dispose or ark.fn.noop ---@type std.collection.subscriber.IOnDispose
   local on_next = props.on_next ---@type std.collection.subscriber.IOnNext
 
   local self = setmetatable({}, M)

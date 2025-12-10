@@ -63,7 +63,7 @@ function M.new(props)
   local value = props.value ---@type std.collection.IObservable
   local delay = props.delay ---@type integer
   local timeout = props.timeout ---@type integer
-  local silent = props.silent or std.fn.falsy ---@type fun(): boolean
+  local silent = props.silent or ark.fn.falsy ---@type fun(): boolean
 
   local self = setmetatable({}, M)
   self.fullname = fullname

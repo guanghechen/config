@@ -12,7 +12,7 @@ function M.focus_left(step)
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = std.fn.navigate_circular(index_current, -step, N) ---@type integer
+  local index_next = ark.fn.navigate_circular(index_current, -step, N) ---@type integer
   eve.term.focus(index_next)
 end
 
@@ -27,7 +27,7 @@ function M.focus_right(step)
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = std.fn.navigate_circular(index_current, step, N) ---@type integer
+  local index_next = ark.fn.navigate_circular(index_current, step, N) ---@type integer
   eve.term.focus(index_next)
 end
 

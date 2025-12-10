@@ -25,7 +25,7 @@ function M.swap_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufid_next = std.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end
@@ -66,7 +66,7 @@ function M.swap_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufid_next = std.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end

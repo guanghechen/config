@@ -1,5 +1,5 @@
 ---@type fun(w1: std.t.ux.IWidget, w2: std.t.ux.IWidget): boolean
-local equals = std.fn.equals_shallow
+local equals = ark.fn.equals_shallow
 
 ---@class eve.builtin.widget
 local M = {}

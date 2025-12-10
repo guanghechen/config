@@ -18,7 +18,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public readonly               ?boolean
 
 ---@type std.collection.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = std.fn.noop }
+local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
 ---@class std.collection.Observable : std.collection.IObservable
 ---@field protected _readonly           boolean
@@ -33,8 +33,8 @@ setmetatable(M, ark.c.BatchDisposable)
 ---@param props                         std.collection.observable.IProps
 ---@return std.collection.Observable
 function M.new(props)
-  local equals = props.equals or std.fn.equals_shallow ---@type std.t.IEquals
-  local normalize = props.normalize or std.fn.identity ---@type std.t.INormalize
+  local equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
+  local normalize = props.normalize or ark.fn.identity ---@type std.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type std.t.T
 

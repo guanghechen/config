@@ -70,7 +70,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
     flags[#flags + 1] = {
       desc = flag.desc,
       callback = eve.G.register_anonymous_fn(flag.callback) or "eve.G.noop",
-      disabled = std.fn.falsy,
+      disabled = ark.fn.falsy,
       snapshot = flag.snapshot,
     }
   end
@@ -210,7 +210,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       self:__search__()
@@ -404,7 +404,7 @@ function M:goto_prev_match()
   end
 
   local index_current = self.o_match_index:snapshot() ---@type integer
-  local index = std.fn.navigate_circular(index_current, -1, N) ---@type integer
+  local index = ark.fn.navigate_circular(index_current, -1, N) ---@type integer
   local match_prev = matches[index] ---@type yoz.search.ITextMatch
   if match_prev then
     self.o_match_index:next(index)
@@ -442,7 +442,7 @@ function M:goto_next_match()
   end
 
   local index_current = self.o_match_index:snapshot() ---@type integer
-  local index = std.fn.navigate_circular(index_current, 1, N) ---@type integer
+  local index = ark.fn.navigate_circular(index_current, 1, N) ---@type integer
   local match_next = matches[index] ---@type yoz.search.ITextMatch
   if match_next then
     self.o_match_index:next(index)
@@ -1044,7 +1044,7 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
       comp_sep_hlname = "f_wl_searcher",
       comp_sep_hlname_active = "f_wl_searcher",
       delay = 64,
-      silent = std.fn.falsy,
+      silent = ark.fn.falsy,
       get_max_width = function()
         local winnr = self._winnr_finder ---@type integer|nil
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then

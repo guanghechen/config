@@ -180,13 +180,13 @@ function M.new(props)
 
   local frecency = props.frecency ---@type std.collection.IFrecency|nil
 
-  local on_attached = props.on_attached or std.fn.noop ---@type ux.searcher.composer.filetree.IOnAttached
-  local on_closed = props.on_closed or std.fn.noop ---@type ux.searcher.composer.filetree.IOnClosed
+  local on_attached = props.on_attached or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnAttached
+  local on_closed = props.on_closed or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnClosed
   local on_confirm = props.on_confirm ---@type ux.searcher.composer.filetree.IOnConfirm|nil
-  local on_disposed = props.on_disposed or std.fn.noop ---@type ux.searcher.composer.filetree.IOnDisposed
-  local on_focused = props.on_focused or std.fn.noop ---@type ux.searcher.composer.filetree.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type ux.searcher.composer.filetree.IOnHidden
-  local _on_refresh = props.on_refresh or std.fn.noop ---@type ux.searcher.composer.filetree.IOnRefresh
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnHidden
+  local _on_refresh = props.on_refresh or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnRefresh
 
   local self = setmetatable({}, M)
 
@@ -312,7 +312,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = std.fn.falsy,
+    silent = ark.fn.falsy,
     value = std.Observable.from_value(true),
     task = function()
       self:__search__()

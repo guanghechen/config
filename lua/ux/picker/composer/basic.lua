@@ -177,14 +177,14 @@ function M.new(props)
   local render_preview = props.render_preview ---@type ux.picker.preview.IDraw|nil
   local render_result = props.render_result ---@type ux.picker.result.IDraw
 
-  local on_cancel = props.on_cancel or std.fn.noop ---@type ux.picker.composer.basic.IOnCancel
-  local on_closed = props.on_closed or std.fn.noop ---@type ux.picker.composer.basic.IOnClosed
-  local on_disposed = props.on_disposed or std.fn.noop ---@type ux.picker.composer.basic.IOnDisposed
-  local on_focused = props.on_focused or std.fn.noop ---@type ux.picker.composer.basic.IOnFocused
-  local on_hidden = props.on_hidden or std.fn.noop ---@type ux.picker.composer.basic.IOnHidden
-  local on_refresh = props.on_refresh or std.fn.noop ---@type ux.picker.composer.basic.IOnRefresh
-  local on_preview_rendered = props.on_preview_rendered or std.fn.noop ---@type ux.picker.composer.basic.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or std.fn.noop ---@type ux.picker.composer.basic.IOnResultRendered
+  local on_cancel = props.on_cancel or ark.fn.noop ---@type ux.picker.composer.basic.IOnCancel
+  local on_closed = props.on_closed or ark.fn.noop ---@type ux.picker.composer.basic.IOnClosed
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type ux.picker.composer.basic.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type ux.picker.composer.basic.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type ux.picker.composer.basic.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type ux.picker.composer.basic.IOnRefresh
+  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type ux.picker.composer.basic.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type ux.picker.composer.basic.IOnResultRendered
 
   local self = setmetatable({}, M)
   self.uuid = uuid
@@ -858,7 +858,7 @@ function M:__resolve_builtin_keymaps_finder__()
       modes = { "i" },
       key = "<enter>",
       desc = "picker#finder: noop",
-      callback = std.fn.noop,
+      callback = ark.fn.noop,
     },
     {
       modes = { "n", "x" },
@@ -1190,7 +1190,7 @@ function M:__resolve_builtin_keymaps_preview__()
       key = "d",
       aliases = { "dd", "X", "x" },
       desc = "picker#preview: noop",
-      callback = std.fn.noop,
+      callback = ark.fn.noop,
     },
     {
       modes = { "n", "x" },
