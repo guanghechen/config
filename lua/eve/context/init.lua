@@ -211,8 +211,8 @@ end
 
 ---@return nil
 function M.watch_changes()
-  local ticker_editor = std.Ticker.new({ start = 0 })
-  local ticker_workspace = std.Ticker.new({ start = 0 })
+  local ticker_editor = ark.c.Ticker.new({ start = 0 })
+  local ticker_workspace = ark.c.Ticker.new({ start = 0 })
 
   std.fn.observe({ M.theme.theme }, function()
     eve.context.theme.reload_theme(false, true)

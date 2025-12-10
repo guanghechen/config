@@ -40,7 +40,6 @@ local __mods = {
   Scheduler = "std.collection.scheduler",
   Spawn = "std.collection.spawn",
   Theme = "std.collection.theme",
-  Ticker = "std.collection.ticker",
   Tree = "std.collection.tree",
 }
 
@@ -68,7 +67,6 @@ local __mods = {
 ---@field public Scheduler              std.collection.Scheduler
 ---@field public Spawn                  std.collection.Spawn
 ---@field public Theme                  std.collection.Theme
----@field public Ticker                 std.collection.Ticker
 ---@field public Tree                   std.collection.Tree
 local M = setmetatable({
   __mods = __mods,

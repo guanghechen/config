@@ -11,6 +11,7 @@ local c__mods = {
   Observable = "ark.c.observable",
   Subscriber = "ark.c.subscriber",
   Subscribers = "ark.c.subscribers",
+  Ticker = "ark.c.ticker",
 }
 
 ---@class ark.c
@@ -26,6 +27,7 @@ local c__mods = {
 ---@field public Observable             ark.c.Observable
 ---@field public Subscriber             ark.c.Subscriber
 ---@field public Subscribers            ark.c.Subscribers
+---@field public Ticker                 ark.c.Ticker
 local c = setmetatable({ __mods = c__mods }, {
   __index = function(t, k)
     local m = c__mods[k] ---@type string|nil
