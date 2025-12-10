@@ -143,7 +143,8 @@ keymap = [
   { on = "V",                 run = "visual_mode --unset",                            desc = "visual: enter unset mode" },
 
   # Misc
-  { on = "z",                 run = "plugin zoxide",                                  desc = "Jump to a directory via zoxide" },
+  { on = "z",                 run = "plugin zoxide",                                  desc = "zoxide: jump to a directory" },
+  { on = "Z",                 run = "plugin fzf",                                     desc = "fzf: jump to a file/directory" },
   { on = ["f", "f"],          run = "plugin fzf",                                     desc = "Jump to a file/directory via fzf" },
 ]
 
