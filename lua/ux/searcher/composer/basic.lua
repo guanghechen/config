@@ -330,20 +330,20 @@ function M.new(props)
   self._flag_replace_unsub = nil
 
   if preview ~= nil then
-    std.fn.observe({ result.lnum_current, result.lnum_total }, function()
+    ark.fn.observe({ result.lnum_current, result.lnum_total }, function()
       self:mark_preview_dirty()
     end, true)
   end
 
   -- Set up auto-resize observers for finder and replacer
-  std.fn.observe({ finder.linecount }, function()
+  ark.fn.observe({ finder.linecount }, function()
     if self:isvisible() then
       self:resize()
     end
   end, true)
 
   if replacer ~= nil then
-    std.fn.observe({ replacer.linecount }, function()
+    ark.fn.observe({ replacer.linecount }, function()
       if self:isvisible() then
         self:resize()
       end
@@ -353,7 +353,7 @@ function M.new(props)
   -- Observer for flag_replace to toggle replacer window visibility
   local flag_replace_unsub = nil ---@type ark.c.IUnsubscribable|nil
   if flag_replace ~= nil then
-    flag_replace_unsub = std.fn.observe({ flag_replace }, function()
+    flag_replace_unsub = ark.fn.observe({ flag_replace }, function()
       if self:isvisible() then
         self:__toggle_replacer_visibility__(flag_replace:snapshot())
       end

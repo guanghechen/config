@@ -170,7 +170,7 @@ local scheduler = ark.c.Scheduler.new({
   end,
 })
 
-std.fn.observe({ eve.context.flight.dressing_virtcolumn }, function()
+ark.fn.observe({ eve.context.flight.dressing_virtcolumn }, function()
   local enabled = eve.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
   if not enabled then
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

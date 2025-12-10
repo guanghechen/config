@@ -321,7 +321,7 @@ function M.new(props)
   self._scheduler_lnum_present = scheduler_lnum_present
   self._scheduler_lnums_selected = scheduler_lnums_selected
 
-  std.fn.observe({ _o_lnum_total }, function()
+  ark.fn.observe({ _o_lnum_total }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
@@ -330,7 +330,7 @@ function M.new(props)
     end
   end)
 
-  std.fn.observe({ _o_lnum_current }, function()
+  ark.fn.observe({ _o_lnum_current }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
@@ -343,13 +343,13 @@ function M.new(props)
     self._scheduler_lnum_current:schedule()
   end)
 
-  std.fn.observe({ _o_lnum_current }, function()
+  ark.fn.observe({ _o_lnum_current }, function()
     if not self._disposed then
       self._scheduler_lnum_current:schedule()
     end
   end)
 
-  std.fn.observe({ _o_lnum_present }, function()
+  ark.fn.observe({ _o_lnum_present }, function()
     if not self._disposed then
       self._scheduler_lnum_present:schedule()
     end

@@ -1095,7 +1095,7 @@ function M:__setup_observers__(
   nvimbar,
   scheduler_search
 )
-  std.fn.observe({ o_search_pattern }, function()
+  ark.fn.observe({ o_search_pattern }, function()
     local pattern = o_search_pattern:snapshot() ---@type string
     if pattern == nil or pattern == "" then
       o_search_pattern_linecount:next(1)
@@ -1105,7 +1105,7 @@ function M:__setup_observers__(
     o_search_pattern_linecount:next(#lines)
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,
@@ -1116,7 +1116,7 @@ function M:__setup_observers__(
     nvimbar:render()
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,
@@ -1125,15 +1125,15 @@ function M:__setup_observers__(
     scheduler_search:schedule()
   end, true)
 
-  std.fn.observe({ o_search_pattern_linecount }, function()
+  ark.fn.observe({ o_search_pattern_linecount }, function()
     self:__resize__()
   end, true)
 
-  std.fn.observe({ o_flag_replace }, function()
+  ark.fn.observe({ o_flag_replace }, function()
     self:__toggle_replacer__(o_flag_replace:snapshot())
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,

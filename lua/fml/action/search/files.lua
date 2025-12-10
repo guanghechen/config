@@ -228,7 +228,7 @@ searcher = ux.searcher.FiletreeComposer.new({
   end,
 })
 
-std.fn.observe({ o_rootpath }, function()
+ark.fn.observe({ o_rootpath }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
   local workspace = std.path.workspace() ---@type string
   local cwd = std.path.cwd() ---@type string
@@ -242,12 +242,12 @@ std.fn.observe({ o_rootpath }, function()
   end
 end)
 
-std.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
+ark.fn.observe({ o_flag_exclude, o_flag_gitignore }, function()
   searcher:mark_result_flags_dirty()
   searcher:schedule_search()
 end, true)
 
-std.fn.observe({ o_includes, o_excludes }, function()
+ark.fn.observe({ o_includes, o_excludes }, function()
   searcher:mark_result_dirty()
 end)
 

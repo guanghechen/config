@@ -117,7 +117,7 @@ function M.setup_diagnostics()
   local severity2prefixicon = dot.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
   local severity2texticon = dot.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
 
-  std.fn.observe({ eve.context.lsp.diagnostics_virt_lines }, function()
+  ark.fn.observe({ eve.context.lsp.diagnostics_virt_lines }, function()
     ---@type vim.diagnostic.Opts
     local config = {
       float = {

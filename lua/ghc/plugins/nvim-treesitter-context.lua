@@ -19,7 +19,7 @@ return {
     local tsc = require("treesitter-context")
     tsc.setup(opts)
 
-    std.fn.observe({ eve.context.plugin.treesitter_context }, function()
+    ark.fn.observe({ eve.context.plugin.treesitter_context }, function()
       local flag = eve.context.plugin.treesitter_context:snapshot() ---@type boolean
       if flag then
         tsc.enable()

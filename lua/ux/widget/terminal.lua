@@ -71,7 +71,7 @@ local c = ux.nvimbar.component
 local position = "f_wl" ---@type ux.nvimbar.PositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
-std.fn.observe({ eve.term.o_termuuid }, function()
+ark.fn.observe({ eve.term.o_termuuid }, function()
   local winnr = _terminal_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return

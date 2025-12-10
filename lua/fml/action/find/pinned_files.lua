@@ -46,7 +46,7 @@ local picker = ux.picker.FiletreeComposer.new({
   end,
 })
 
-std.fn.observe({ eve.context.bookmark.pinned }, function()
+ark.fn.observe({ eve.context.bookmark.pinned }, function()
   refresh(picker)
 end, false)
 

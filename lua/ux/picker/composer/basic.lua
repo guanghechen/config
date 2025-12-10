@@ -269,7 +269,7 @@ function M.new(props)
   self._result_number = result_number ---@type boolean
 
   if preview ~= nil then
-    std.fn.observe({ result.lnum_current, result.lnum_total }, function()
+    ark.fn.observe({ result.lnum_current, result.lnum_total }, function()
       self:mark_preview_dirty()
     end, true)
   end

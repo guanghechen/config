@@ -1494,7 +1494,7 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({
+  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({
     o_search_pattern,
     o_flag_foldempty,
     o_flag_fuzzy,
@@ -1505,16 +1505,16 @@ function M.new(props)
   }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
+  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe(
+  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe(
     { o_search_pattern, o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive },
     function()
       scheduler_match:schedule()
     end
   )
-  observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ composer.result.lnum_current }, function()
+  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then

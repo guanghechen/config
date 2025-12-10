@@ -214,14 +214,14 @@ function M.watch_changes()
   local ticker_editor = ark.c.Ticker.new({ start = 0 })
   local ticker_workspace = ark.c.Ticker.new({ start = 0 })
 
-  std.fn.observe({ M.theme.theme }, function()
+  ark.fn.observe({ M.theme.theme }, function()
     eve.context.theme.reload_theme(false, true)
   end, true)
-  std.fn.observe({ M.theme.transparency }, function()
+  ark.fn.observe({ M.theme.transparency }, function()
     eve.context.theme.reload_theme(true, true)
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     M.option.expandtab,
   }, function()
     local flag = M.option.expandtab:snapshot() ---@type boolean
@@ -234,7 +234,7 @@ function M.watch_changes()
     end
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     M.option.relativenumber,
   }, function()
     local flag = M.option.relativenumber:snapshot() ---@type boolean
@@ -247,7 +247,7 @@ function M.watch_changes()
     end
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     M.behavior.auto_im,
     M.behavior.bufs_relative,
     M.theme.theme,
@@ -262,7 +262,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     M.plugin.render_markdown,
     M.plugin.treesitter_context,
     M.option.relativenumber,
@@ -296,13 +296,13 @@ function M.watch_changes()
     M.lsp.python_debug_port,
     M.lsp.python_venv_path,
   }
-  std.fn.observe(select_states, function()
+  ark.fn.observe(select_states, function()
     ticker_workspace:tick()
     dot.status.dirtier_statusline:mark_dirty()
     dot.status.dirtier_tabline:mark_dirty()
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     M.lsp.code_lens,
     M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
@@ -312,7 +312,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  std.fn.observe({
+  ark.fn.observe({
     dot.status.msg_lsp,
     dot.status.msg_mode,
   }, function()

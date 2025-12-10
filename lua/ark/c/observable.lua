@@ -108,7 +108,7 @@ function M:next(value, options)
 end
 
 ---@param subscriber                    ark.c.ISubscriber
----@param ignoreInitial                 boolean
+---@param ignoreInitial                 ?boolean
 ---@return ark.c.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   if subscriber:isdisposed() then

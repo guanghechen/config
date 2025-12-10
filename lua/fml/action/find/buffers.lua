@@ -267,7 +267,7 @@ picker = ux.picker.ListComposer.new({
   end,
 })
 
-std.fn.observe({ o_scope }, function()
+ark.fn.observe({ o_scope }, function()
   local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
   if scope == "A" then
     picker.finder:set_title("find buffers")
