@@ -6,7 +6,7 @@ local __module_name__ = "std.source.notepad-json" ---@type string
 
 ---@class std.source.NotepadJsonSource : std.t.INotepadSource
 ---@field protected default_item_name   fun(): string
----@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
+---@field protected flush_scheduler     ark.c.Scheduler|nil Debounced flush scheduler
 ---@field protected _state              std.t.INotepadSourceJsonState|nil Internal state cache
 local M = {}
 M.__index = M
@@ -49,7 +49,7 @@ function M.new(config)
   self._state = nil
 
   -- Create debounced flush scheduler
-  self.flush_scheduler = std.Scheduler.new({
+  self.flush_scheduler = ark.c.Scheduler.new({
     name = "notepad-json-flush",
     mode = "debounce",
     ---@diagnostic disable-next-line: unused-local

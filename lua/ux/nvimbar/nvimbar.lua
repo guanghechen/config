@@ -45,7 +45,7 @@ local __module_name__ = "ux.nvimbar" ---@type string
 ---@field protected _sep_width          integer
 ---@field protected _components         ux.nvimbar.IComponent[]
 ---@field protected _orders             integer[]
----@field protected _scheduler          std.collection.Scheduler
+---@field protected _scheduler          ark.c.Scheduler
 ---@field protected _get_max_width      fun(): integer
 ---@field protected _get_preset_context ux.nvimbar.IGetNvimbarPresetContext
 ---@field protected _isactive           fun(context: ux.nvimbar.INvimbarContext): boolean
@@ -117,8 +117,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type std.collection.Scheduler
-  local scheduler = std.Scheduler.new({
+  ---@type ark.c.Scheduler
+  local scheduler = ark.c.Scheduler.new({
     name = fullname,
     mode = "throttle",
     delay = delay,

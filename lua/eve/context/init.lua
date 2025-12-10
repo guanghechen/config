@@ -319,7 +319,7 @@ function M.watch_changes()
     std.status.dirtier_statusline:mark_dirty()
   end)
 
-  local scheduler = std.Scheduler.new({
+  local scheduler = ark.c.Scheduler.new({
     name = __module_name__,
     mode = "throttle",
     delay = 256,

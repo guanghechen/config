@@ -95,7 +95,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _composer           ux.picker.BasicComposer
 ---@field protected _retriever          ux.retriever.ListRetriever
----@field protected _scheduler_match    std.collection.Scheduler
+---@field protected _scheduler_match    ark.c.Scheduler
 ---
 ---@field protected _autosort           boolean
 ---@field protected _items              ux.picker.composer.list.IItem[]
@@ -201,7 +201,7 @@ function M.new(props)
     return uuid, lnum
   end
 
-  local scheduler_match = std.Scheduler.new({
+  local scheduler_match = ark.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
     delay = 64,

@@ -65,7 +65,7 @@ local linters = {
   },
 }
 
-local scheduler = nil ---@type std.collection.Scheduler|nil
+local scheduler = nil ---@type ark.c.Scheduler|nil
 
 return {
   name = "nvim-lint",
@@ -89,8 +89,8 @@ return {
       scheduler:dispose()
     end
 
-    ---@type std.collection.Scheduler
-    scheduler = std.Scheduler.new({
+    ---@type ark.c.Scheduler
+    scheduler = ark.c.Scheduler.new({
       name = __module_name__,
       mode = "debounce",
       delay = 128,

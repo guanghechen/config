@@ -58,10 +58,10 @@ local __module_name__ = "ux.picker.result" ---@type string
 ---@field protected _winnr              integer|nil
 ---@field protected _augroup_CursorMoved integer
 ---@field protected _nvimbar            ux.nvimbar.Nvimbar
----@field protected _scheduler_content  std.collection.Scheduler
----@field protected _scheduler_lnum_current std.collection.Scheduler
----@field protected _scheduler_lnum_present std.collection.Scheduler
----@field protected _scheduler_lnums_selected std.collection.Scheduler
+---@field protected _scheduler_content  ark.c.Scheduler
+---@field protected _scheduler_lnum_current ark.c.Scheduler
+---@field protected _scheduler_lnum_present ark.c.Scheduler
+---@field protected _scheduler_lnums_selected ark.c.Scheduler
 local M = {}
 M.__index = M
 
@@ -155,8 +155,8 @@ function M.new(props)
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
-  ---@type std.collection.Scheduler
-  local scheduler_lnum_current = std.Scheduler.new({
+  ---@type ark.c.Scheduler
+  local scheduler_lnum_current = ark.c.Scheduler.new({
     name = string.format("%s#lnum_current", fullname),
     mode = "throttle",
     delay = 32,
@@ -185,8 +185,8 @@ function M.new(props)
     end,
   })
 
-  ---@type std.collection.Scheduler
-  local scheduler_lnum_present = std.Scheduler.new({
+  ---@type ark.c.Scheduler
+  local scheduler_lnum_present = ark.c.Scheduler.new({
     name = string.format("%s#lnum_present", fullname),
     mode = "debounce",
     delay = 64,
@@ -209,8 +209,8 @@ function M.new(props)
     end,
   })
 
-  ---@type std.collection.Scheduler
-  local scheduler_lnums_selected = std.Scheduler.new({
+  ---@type ark.c.Scheduler
+  local scheduler_lnums_selected = ark.c.Scheduler.new({
     name = string.format("%s#lnums_selected", fullname),
     mode = "debounce",
     delay = 128,
@@ -234,8 +234,8 @@ function M.new(props)
     end,
   })
 
-  ---@type std.collection.Scheduler
-  local scheduler_content = std.Scheduler.new({
+  ---@type ark.c.Scheduler
+  local scheduler_content = ark.c.Scheduler.new({
     name = string.format("%s#content", fullname),
     mode = "debounce",
     delay = 128,
@@ -385,10 +385,10 @@ function M:dispose()
   local lnum_total = self.lnum_total ---@type ark.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type ux.nvimbar.Nvimbar
-  local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler
-  local scheduler_lnum_current = self._scheduler_lnum_current ---@type std.collection.Scheduler
-  local scheduler_lnum_present = self._scheduler_lnum_present ---@type std.collection.Scheduler
-  local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type std.collection.Scheduler
+  local scheduler_content = self._scheduler_content ---@type ark.c.Scheduler
+  local scheduler_lnum_current = self._scheduler_lnum_current ---@type ark.c.Scheduler
+  local scheduler_lnum_present = self._scheduler_lnum_present ---@type ark.c.Scheduler
+  local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type ark.c.Scheduler
 
   self.draw = nil
   self.keymaps = nil

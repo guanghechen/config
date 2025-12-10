@@ -6,7 +6,7 @@ local __module_name__ = "std.source.notepad-folder" ---@type string
 
 ---@class std.source.NotepadFolderSource : std.t.INotepadSource
 ---@field protected default_item_name   fun(): string
----@field protected flush_scheduler     std.collection.Scheduler|nil Debounced flush scheduler
+---@field protected flush_scheduler     ark.c.Scheduler|nil Debounced flush scheduler
 ---@field protected _state              std.t.INotepadSourceFolderState|nil Internal state cache
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
@@ -47,7 +47,7 @@ function M.new(config)
   self._dirty_orders = false
   self._dirty_active = false
 
-  self.flush_scheduler = std.Scheduler.new({
+  self.flush_scheduler = ark.c.Scheduler.new({
     name = "notepad-folder-flush",
     mode = "debounce",
     ---@diagnostic disable-next-line: unused-local

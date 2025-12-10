@@ -119,7 +119,7 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---@field protected _composer           ux.picker.BasicComposer
 ---@field protected _plainfile          ux.view.Plainfile
 ---@field protected _retriever          ux.retriever.TreeRetriever
----@field protected _scheduler_match    std.collection.Scheduler
+---@field protected _scheduler_match    ark.c.Scheduler
 ---@field protected _treeview           ux.picker.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
@@ -209,7 +209,7 @@ function M.new(props)
     name = fullname,
   })
 
-  local scheduler_match = std.Scheduler.new({
+  local scheduler_match = ark.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
     delay = 64,
@@ -1538,7 +1538,7 @@ function M:dispose()
   local composer = self._composer ---@type ux.picker.BasicComposer
   local plainfile = self._plainfile ---@type ux.view.Plainfile
   local retriever = self._retriever ---@type ux.retriever.TreeRetriever
-  local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
+  local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
   local treeview = self._treeview ---@type ux.picker.FiletreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil

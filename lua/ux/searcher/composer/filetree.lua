@@ -119,7 +119,7 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field protected _composer           ux.searcher.BasicComposer
 ---@field protected _plainfile          ux.searcher.PlainfileView
 ---@field protected _retriever          ux.retriever.TreeRetriever
----@field protected _scheduler_search   std.collection.Scheduler|nil
+---@field protected _scheduler_search   ark.c.Scheduler|nil
 ---@field protected _is_searching       boolean
 ---@field protected _search_pending     boolean
 ---@field protected _treeview           ux.searcher.FiletreeView
@@ -307,7 +307,7 @@ function M.new(props)
     name = fullname,
   })
 
-  local scheduler_search = std.Scheduler.new({
+  local scheduler_search = ark.c.Scheduler.new({
     name = string.format("%s#search", fullname),
     mode = "debounce",
     delay = 64,
@@ -1626,7 +1626,7 @@ function M:dispose()
   local composer = self._composer ---@type ux.searcher.BasicComposer
   local plainfile = self._plainfile ---@type ux.searcher.PlainfileView
   local retriever = self._retriever ---@type ux.retriever.TreeRetriever
-  local scheduler_search = self._scheduler_search ---@type std.collection.Scheduler
+  local scheduler_search = self._scheduler_search ---@type ark.c.Scheduler
   local treeview = self._treeview ---@type ux.searcher.FiletreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil

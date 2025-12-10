@@ -1,32 +1,32 @@
-local __module_name__ = "std.collection.scheduler" ---@type string
+local __module_name__ = "ark.c.scheduler" ---@type string
 
----@alias std.collection.scheduler.ScheduleModeEnum
+---@alias ark.c.scheduler.IModeEnum
 ---| "debounce"
 ---| "throttle"
 
----@alias std.collection.scheduler.ITaskCallback
+---@alias ark.c.scheduler.ITaskCallback
 ---| fun(ok: boolean, result: unknown|nil): nil
 
----@alias std.collection.scheduler.ITask
----| fun(scheduler: std.collection.Scheduler, context: unknown|nil, callback: std.collection.scheduler.ITaskCallback): unknown|nil
+---@alias ark.c.scheduler.ITask
+---| fun(scheduler: ark.c.Scheduler, context: unknown|nil, callback: ark.c.scheduler.ITaskCallback): unknown|nil
 
----@class std.collection.scheduler.IScheduleOpts
+---@class ark.c.scheduler.IScheduleOpts
 ---@field public immediate              ?boolean
 ---@field public rescheduled            ?boolean
 ---@field public context                ?unknown
 
----@class std.collection.scheduler.IProps
+---@class ark.c.scheduler.IProps
 ---@field public name                   string
----@field public mode                   std.collection.scheduler.ScheduleModeEnum
----@field public task                   std.collection.scheduler.ITask
+---@field public mode                   ark.c.scheduler.IModeEnum
+---@field public task                   ark.c.scheduler.ITask
 ---@field public value                  ark.c.Observable
 ---@field public delay                  integer
 ---@field public timeout                integer
 ---@field public silent                 ?fun(): boolean
 
----@class std.collection.Scheduler
+---@class ark.c.Scheduler
 ---@field public fullname               string
----@field public mode                   std.collection.scheduler.ScheduleModeEnum
+---@field public mode                   ark.c.scheduler.IModeEnum
 ---
 ---@field protected _disposed           boolean
 ---@field protected _timer_task         uv.uv_timer_t
@@ -40,15 +40,15 @@ local __module_name__ = "std.collection.scheduler" ---@type string
 ---@field protected _timeout            integer
 ---
 ---@field protected _silent             fun(): boolean
----@field protected _task               std.collection.scheduler.ITask
+---@field protected _task               ark.c.scheduler.ITask
 ---
 ---@field protected _context            unknown|nil
 ---@field protected _value              ark.c.Observable
 local M = {}
 M.__index = M
 
----@param props                         std.collection.scheduler.IProps
----@return std.collection.Scheduler
+---@param props                         ark.c.scheduler.IProps
+---@return ark.c.Scheduler
 function M.new(props)
   local timer_task = vim.uv.new_timer()
   local timer_timeout = vim.uv.new_timer()
@@ -58,8 +58,8 @@ function M.new(props)
 
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local mode = props.mode ---@type std.collection.scheduler.ScheduleModeEnum
-  local task = props.task ---@type std.collection.scheduler.ITask
+  local mode = props.mode ---@type ark.c.scheduler.IModeEnum
+  local task = props.task ---@type ark.c.scheduler.ITask
   local value = props.value ---@type ark.c.Observable
   local delay = props.delay ---@type integer
   local timeout = props.timeout ---@type integer
@@ -134,12 +134,12 @@ function M:isdisposed()
   return self._disposed
 end
 
----@param opts                          ?std.collection.scheduler.IScheduleOpts
----@return std.collection.Scheduler
+---@param opts                          ?ark.c.scheduler.IScheduleOpts
+---@return ark.c.Scheduler
 function M:schedule(opts)
   self:__health__()
 
-  opts = opts or {} ---@type std.collection.scheduler.IScheduleOpts
+  opts = opts or {} ---@type ark.c.scheduler.IScheduleOpts
   local immediate = not not opts.immediate ---@type boolean
   local rescheduled = not not opts.rescheduled ---@type boolean
   local context = opts.context ---@type unknown|nil
@@ -172,7 +172,7 @@ end
 ---@return table
 function M:__details__()
   local fullname = self.fullname ---@type string
-  local mode = self.mode ---@type std.collection.scheduler.ScheduleModeEnum
+  local mode = self.mode ---@type ark.c.scheduler.IModeEnum
   local context = self._context ---@type unknown|nil
   local disposed = self._disposed ---@type boolean
   local tick_freezed = self._tick_freezed ---@type integer
@@ -265,10 +265,10 @@ function M:__run__()
     end
   end
 
-  callback = vim.schedule_wrap(callback) ---@type std.collection.scheduler.ITaskCallback
+  callback = vim.schedule_wrap(callback) ---@type ark.c.scheduler.ITaskCallback
 
   vim.schedule(function()
-    local task = self._task ---@type std.collection.scheduler.ITask
+    local task = self._task ---@type ark.c.scheduler.ITask
     local ok, result = pcall(task, self, context, callback)
 
     local timeout = self._timeout ---@type integer
@@ -285,7 +285,7 @@ end
 
 ---@protected
 ---@param immediate                     boolean
----@return std.collection.Scheduler
+---@return ark.c.Scheduler
 function M:__schedule_debounce__(immediate)
   if immediate then
     self._timer_timeout:stop()
@@ -303,7 +303,7 @@ end
 
 ---@protected
 ---@param immediate                     boolean
----@return std.collection.Scheduler
+---@return ark.c.Scheduler
 function M:__schedule_throttle__(immediate)
   local tick = self._tick_pending ---@type integer
 

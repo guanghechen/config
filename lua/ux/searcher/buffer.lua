@@ -168,7 +168,7 @@ end
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
----@field protected _scheduler_search   std.collection.Scheduler
+---@field protected _scheduler_search   ark.c.Scheduler
 ---@field protected _nvimbar            ux.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     std.t.IKeymap[]
 ---@field protected _replacer_keymaps   std.t.IKeymap[]
@@ -205,7 +205,7 @@ function M.new(props)
 
   local nvimbar = self:__create_nvimbar__(o_match_index, o_match_total, flags)
 
-  local scheduler_search = std.Scheduler.new({
+  local scheduler_search = ark.c.Scheduler.new({
     name = string.format("%s#search", __module_name__),
     mode = "debounce",
     delay = 64,

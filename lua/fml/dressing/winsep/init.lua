@@ -98,8 +98,8 @@ local winsep = {
   end,
 }
 
----@type std.collection.Scheduler
-local scheduler = std.Scheduler.new({
+---@type ark.c.Scheduler
+local scheduler = ark.c.Scheduler.new({
   name = __module_name__,
   mode = "debounce",
   delay = 32,

@@ -59,7 +59,7 @@
 - Mirrors Snacks defaults by enabling `watch = true`, `follow_file = true`, `git_status = true`, `git_untracked = true`, and `diagnostics = true` out of the box; overrides flow through observables so integrations can opt out.
 - Wraps `yoz.fs.readdir` to fetch `(IExplorerEntry[])` where each entry contains type, name, absolute path, permissions, size, owner/group, timestamps, and precomputed icon data.
 - Persists expansion state per root inside `std.path.locate_workspace_filepath("explorer/state.json")` using `std.fs.write_json` so sessions survive restart; collapse is opt-in to avoid throttling disk writes.
-- Integrates with `std.collection.Dirtier` to coalesce rapid watcher events and with `std.collection.Scheduler` to defer heavy re-indexing to the main loop.
+- Integrates with `ark.c.Dirtier` to coalesce rapid watcher events and with `ark.c.Scheduler` to defer heavy re-indexing to the main loop.
 - Publishes a `dispose()` hook to teardown watchers and clear caches when the widget closes or the root path changes.
 
 ## Directory Watching & Refresh Strategy
@@ -99,7 +99,7 @@
 ## Lazy Loading & Pagination
 - `expand(uuid)` checks `meta.loaded`. If false, call `yoz.fs.readdir`, sort entries (`directories` before files, case-insensitive), create child nodes, set `loaded = true`, and attach watchers to directories marked `expanded`.
 - Hidden/ignored files are included in the readdir result; presentation filters are applied downstream so the cache remains faithful to disk.
-- When a directory exceeds a threshold (default 500 entries), split rendering into pages managed by `IExplorerPaginationState` and a `std.collection.Scheduler` task that gradually appends children to avoid blocking the event loop.
+- When a directory exceeds a threshold (default 500 entries), split rendering into pages managed by `IExplorerPaginationState` and a `ark.c.Scheduler` task that gradually appends children to avoid blocking the event loop.
 - Collapse operations retain the child cache but mark `loaded = false` if `opts.discard_cache` is requested (useful for huge directories or to reclaim memory).
 
 ## Performance & Resilience Considerations

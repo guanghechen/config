@@ -75,7 +75,7 @@ local function resolve_nvimbar(winnr, source)
 
   if source == "sourcefile" and winline ~= nil then
     if winline.locate_scheduler == nil or winline.locate_scheduler:isdisposed() then
-      local locate_scheduler = std.Scheduler.new({
+      local locate_scheduler = ark.c.Scheduler.new({
         name = string.format("locate_scheduler:%d", winnr),
         mode = "throttle",
         delay = 128,

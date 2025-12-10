@@ -36,7 +36,6 @@ local __mods = {
   uri = "std.uri",
 
   Filetree = "std.collection.filetree",
-  Scheduler = "std.collection.scheduler",
   Spawn = "std.collection.spawn",
   Theme = "std.collection.theme",
   Tree = "std.collection.tree",
@@ -62,7 +61,6 @@ local __mods = {
 ---@field public uri                    std.uri
 ---
 ---@field public Filetree               std.collection.Filetree
----@field public Scheduler              std.collection.Scheduler
 ---@field public Spawn                  std.collection.Spawn
 ---@field public Theme                  std.collection.Theme
 ---@field public Tree                   std.collection.Tree
