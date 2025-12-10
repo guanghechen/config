@@ -30,7 +30,7 @@ function M.toggle_pin()
   end
 
   eve.tab.add_buf(tabnr, buf.bufnr, not buf.pinned)
-  std.status.dirtier_tabline:mark_dirty()
+  dot.status.dirtier_tabline:mark_dirty()
 end
 
 return M

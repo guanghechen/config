@@ -143,7 +143,7 @@ function M.rename()
     end
 
     eve.term.update(termmeta, { name = new_name })
-    std.status.dirtier_termline:mark_dirty()
+    dot.status.dirtier_termline:mark_dirty()
   end)
 end
 

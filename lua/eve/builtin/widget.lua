@@ -61,7 +61,7 @@ function M.get_keymaps(widget)
       widget_visible:focus()
       M.history:go(widget_visible_index)
     else
-      local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+      local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
       if winnr_command ~= nil then
         vim.api.nvim_set_current_win(winnr_command)
       end

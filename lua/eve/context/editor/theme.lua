@@ -1,4 +1,4 @@
-local __module_name__ = "std.status.theme" ---@type string
+local __module_name__ = "eve.context.editor.theme" ---@type string
 
 ---@class eve.context.theme.ILoadIntegrationParams
 ---@field public theme                  dot.e.ThemeFullName

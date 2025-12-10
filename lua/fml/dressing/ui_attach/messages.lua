@@ -32,7 +32,7 @@ local M = {}
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
-  std.status.searching:next(true)
+  dot.status.searching:next(true)
 end
 
 ---@param task                          fml.dressing.ui_attach.ITask
@@ -147,7 +147,7 @@ function M.show(task)
   end
 
   if kind == "search_count" or kind == "search_cmd" then
-    std.status.searching:next(true)
+    dot.status.searching:next(true)
     local line = vim.fn.line(".") - 1
     local virt_text = {} ---@type string[][]
     for _, piece in ipairs(content) do
@@ -173,7 +173,7 @@ function M.show(task)
   end
 
   if KIND_MAP.CHANGES[kind] == true then
-    std.status.msg_changes:next(message)
+    dot.status.msg_changes:next(message)
   end
 
   local highlights = {} ---@type ark.t.IHighlight[]
@@ -236,8 +236,8 @@ function M.showcmd(task)
     local _, piece = unpack(item) ---@type integer, string
     text = text .. piece
   end
-  std.status.msg_command:next(text)
-  std.status.dirtier_statusline:mark_dirty()
+  dot.status.msg_command:next(text)
+  dot.status.dirtier_statusline:mark_dirty()
 end
 
 function M.ruler(task)
@@ -245,8 +245,8 @@ function M.ruler(task)
   ---@cast contents                     [integer, string, integer][]|nil
 
   if contents == nil or #contents < 1 then
-    std.status.msg_command:next("")
-    std.status.dirtier_statusline:mark_dirty()
+    dot.status.msg_command:next("")
+    dot.status.dirtier_statusline:mark_dirty()
     return
   end
 
@@ -256,8 +256,8 @@ function M.ruler(task)
     text = text .. piece
   end
 
-  std.status.msg_command:next(text)
-  std.status.dirtier_statusline:mark_dirty()
+  dot.status.msg_command:next(text)
+  dot.status.dirtier_statusline:mark_dirty()
 end
 
 function M.showmode(task)
@@ -269,7 +269,7 @@ function M.showmode(task)
     local _, piece = unpack(item) ---@type integer, string
     text = text .. piece
   end
-  std.status.msg_mode:next(text)
+  dot.status.msg_mode:next(text)
 end
 
 return M

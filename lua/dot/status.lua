@@ -1,4 +1,4 @@
----@class std.status.data
+---@class dot.status.data
 ---@field public msg_changes            string
 ---@field public msg_command            string
 ---@field public msg_lsp                string
@@ -10,7 +10,7 @@
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
----@class std.status
+---@class dot.status
 ---@field protected _disposables        ark.c.BatchDisposable
 ---
 ---
@@ -79,7 +79,7 @@ M._disposables
   :add_disposable(M.suppress_warning)
   :add_disposable(M.tmux_zen_mode)
 
----@param disposable                    std.collection.IDisposable
+---@param disposable                    ark.c.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)
@@ -90,9 +90,9 @@ function M.dispose()
   M._disposables:dispose()
 end
 
----@return std.status.data
+---@return dot.status.data
 function M.dump()
-  ---@type std.status.data
+  ---@type dot.status.data
   local data = {
     msg_changes = M.msg_changes:snapshot(),
     msg_command = M.msg_command:snapshot(),

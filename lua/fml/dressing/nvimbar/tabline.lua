@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = std.status.dirtier_tabline ---@type ark.c.Dirtier
+local dirtier = dot.status.dirtier_tabline ---@type ark.c.Dirtier
 local position = "f_tl" ---@type ux.nvimbar.PositionEnum
 
 local tabline ---@type ux.nvimbar.Nvimbar
@@ -99,7 +99,7 @@ dirtier:subscribe(ark.c.Subscriber.new({
       if last_showtabline ~= 0 then
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
-          std.status.dirty_winline_nr:next(winnr)
+          dot.status.dirty_winline_nr:next(winnr)
         end
       end
 

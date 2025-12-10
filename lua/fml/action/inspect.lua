@@ -50,7 +50,7 @@ function M.inspect_state()
         lsp = full_state.lsp,
         options = full_state.option,
         plugins = full_state.plugin,
-        status = std.status.dump(),
+        status = dot.status.dump(),
       },
     },
   })
@@ -86,7 +86,7 @@ function M.inspect_tab()
       details = {
         base = {
           tabnr = tabnr,
-          winnr_command = std.status.get_winnr_command(),
+          winnr_command = dot.status.get_winnr_command(),
         },
         meta = vim.NIL,
       },
@@ -100,7 +100,7 @@ function M.inspect_tab()
     details = {
       base = {
         tabnr = tabnr,
-        winnr_command = std.status.get_winnr_command(),
+        winnr_command = dot.status.get_winnr_command(),
         winnr_fixed = meta.winnr_fixed:snapshot(),
         winnr_float = meta.winnr_float:snapshot(),
         winnr_sourcefile = meta.winnr_sourcefile:snapshot(),

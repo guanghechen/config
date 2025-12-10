@@ -61,7 +61,7 @@ local group_flags = {
   ---ux
   ux = {
     expandtab = eve.context.option.expandtab,
-    notification_paused = std.status.notification_paused,
+    notification_paused = dot.status.notification_paused,
     relativenumber = eve.context.option.relativenumber,
     username = eve.context.theme.username,
     transparency = eve.context.theme.transparency,
@@ -81,7 +81,7 @@ local group_items = {
     fileencoding = {
       title = "fileencoding",
       snapshot = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -90,7 +90,7 @@ local group_items = {
         return encoding, "String"
       end,
       action = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -196,7 +196,7 @@ local group_items = {
     fileformat = {
       title = "fileformat",
       snapshot = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -205,7 +205,7 @@ local group_items = {
         return fileformat, "String"
       end,
       action = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -295,7 +295,7 @@ local group_items = {
         return "unknown", "Boolean"
       end,
       action = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command ~= nil then
           local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
           require("mini.hipatterns").toggle(bufnr)
@@ -316,7 +316,7 @@ local group_items = {
     wrap = {
       title = "wrap",
       snapshot = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "Boolean"
         end
@@ -325,7 +325,7 @@ local group_items = {
         return tostring(enabled), "Boolean"
       end,
       action = function()
-        local winnr_command = std.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end

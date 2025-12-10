@@ -29,7 +29,6 @@ local __mods = {
   notepad = "std.notepad",
   nvim = "std.nvim",
   path = "std.path",
-  status = "std.status",
   string = "std.string",
   table = "std.table",
   timer = "std.timer",
@@ -54,7 +53,6 @@ local __mods = {
 ---@field public notepad                std.notepad
 ---@field public nvim                   std.nvim
 ---@field public path                   std.path
----@field public status                 std.status
 ---@field public string                 std.string
 ---@field public table                  std.table
 ---@field public timer                  std.timer

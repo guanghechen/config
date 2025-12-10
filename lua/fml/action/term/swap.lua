@@ -20,7 +20,7 @@ function M.swap_left(step)
 
   eve.term.put(index_current, termuuid_next)
   eve.term.put(index_next, termuuid_current)
-  std.status.dirtier_termline:mark_dirty()
+  dot.status.dirtier_termline:mark_dirty()
 end
 
 ---@param step                          integer|nil
@@ -42,7 +42,7 @@ function M.swap_right(step)
 
   eve.term.put(index_current, termuuid_next)
   eve.term.put(index_next, termuuid_current)
-  std.status.dirtier_termline:mark_dirty()
+  dot.status.dirtier_termline:mark_dirty()
 end
 
 return M

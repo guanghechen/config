@@ -173,9 +173,9 @@ local function ui_attach_callback(event, kind, ...)
 end
 
 std.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
-  local searching = std.status.searching:snapshot() ---@type boolean
+  local searching = dot.status.searching:snapshot() ---@type boolean
   if searching then
-    std.status.searching:next(false)
+    dot.status.searching:next(false)
     vim.schedule(function()
       vim.cmd("noh")
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

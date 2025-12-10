@@ -12,7 +12,7 @@ local _attached_sources = {}
 M.o_attached = ark.c.Observable.from_value(0)
 
 std.fn.observe({ M.o_attached }, function()
-  std.status.dirtier_statusline:mark_dirty()
+  dot.status.dirtier_statusline:mark_dirty()
 end, true)
 
 ---@return ux.widget.ai.IAttachedSource[]

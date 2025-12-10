@@ -517,7 +517,7 @@ function M.locate_symbols(winnr, callback)
         end
       end
 
-      if std.status.suppress_warning:snapshot() then
+      if dot.status.suppress_warning:snapshot() then
         settle(false)
         return
       end

@@ -153,7 +153,7 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and std.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
-    std.status.reset()
+    dot.status.reset()
     M.tab.load(data_session.tab)
   end
 end
@@ -255,8 +255,8 @@ function M.watch_changes()
     M.theme.username,
   }, function()
     ticker_editor:tick()
-    std.status.dirtier_statusline:mark_dirty()
-    std.status.dirtier_tabline:mark_dirty()
+    dot.status.dirtier_statusline:mark_dirty()
+    dot.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -267,8 +267,8 @@ function M.watch_changes()
     M.plugin.treesitter_context,
     M.option.relativenumber,
   }, function()
-    std.status.dirtier_statusline:mark_dirty()
-    std.status.dirtier_tabline:mark_dirty()
+    dot.status.dirtier_statusline:mark_dirty()
+    dot.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -298,8 +298,8 @@ function M.watch_changes()
   }
   std.fn.observe(select_states, function()
     ticker_workspace:tick()
-    std.status.dirtier_statusline:mark_dirty()
-    std.status.dirtier_tabline:mark_dirty()
+    dot.status.dirtier_statusline:mark_dirty()
+    dot.status.dirtier_tabline:mark_dirty()
   end, true)
 
   std.fn.observe({
@@ -313,10 +313,10 @@ function M.watch_changes()
   end, true)
 
   std.fn.observe({
-    std.status.msg_lsp,
-    std.status.msg_mode,
+    dot.status.msg_lsp,
+    dot.status.msg_mode,
   }, function()
-    std.status.dirtier_statusline:mark_dirty()
+    dot.status.dirtier_statusline:mark_dirty()
   end)
 
   local scheduler = ark.c.Scheduler.new({
@@ -353,7 +353,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  std.status.add_disposable(ark.c.Disposable.new({
+  dot.status.add_disposable(ark.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -392,7 +392,7 @@ function M.watch_changes()
         })
       end,
     })
-    std.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
+    dot.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 
