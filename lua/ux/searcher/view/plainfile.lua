@@ -1,11 +1,11 @@
 local __module_name__ = "ux.searcher.view.plainfile" ---@type string
 
 ---@class ux.searcher.IPlainfileViewContext
----@field public flag_case_sensitive    std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_replace           std.collection.IObservable
----@field public search_pattern         std.collection.IObservable
----@field public replace_pattern        std.collection.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_replace           ark.c.IObservable
+---@field public search_pattern         ark.c.IObservable
+---@field public replace_pattern        ark.c.IObservable
 ---
 ---@field public filepath               string
 ---@field public filematch              ux.searcher.view.filetree.IResolvedFileMatch|nil

@@ -118,14 +118,14 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public search_pattern         std.collection.IObservable
+---@field public search_pattern         ark.c.IObservable
 ---@field public search_pattern_history ?std.collection.IHistory
 ---@field public finder_title           string
 ---
----@field public replace_pattern        ?std.collection.IObservable
+---@field public replace_pattern        ?ark.c.IObservable
 ---@field public replace_pattern_history ?std.collection.IHistory
 ---@field public replacer_title         ?string
----@field public flag_replace           ?std.collection.IObservable
+---@field public flag_replace           ?ark.c.IObservable
 ---
 ---@field public result_number          boolean
 ---@field public result_isselected      ?ux.searcher.result.IIsSelected
@@ -160,7 +160,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _flag_replace       std.collection.IObservable|nil
+---@field protected _flag_replace       ark.c.IObservable|nil
 ---@field protected _flag_replace_unsub ark.c.IUnsubscribable|nil
 ---
 ---@field protected _search_pattern_history ?std.collection.IHistory
@@ -196,14 +196,14 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
-  local search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern = props.search_pattern ---@type ark.c.IObservable
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
-  local replace_pattern = props.replace_pattern ---@type std.collection.IObservable|nil
+  local replace_pattern = props.replace_pattern ---@type ark.c.IObservable|nil
   local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
   local replacer_title = props.replacer_title and string.format(" %s ", vim.trim(props.replacer_title)) or " Replace " ---@type string
-  local flag_replace = props.flag_replace ---@type std.collection.IObservable|nil
+  local flag_replace = props.flag_replace ---@type ark.c.IObservable|nil
 
   local result_number = not not props.result_number ---@type boolean
   local result_isselected = props.result_isselected ---@type ux.searcher.result.IIsSelected|nil
@@ -999,7 +999,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       key = "tr",
       desc = "searcher: toggle replace mode",
       callback = function()
-        local flag = self._flag_replace ---@type std.collection.IObservable|nil
+        local flag = self._flag_replace ---@type ark.c.IObservable|nil
         if flag ~= nil then
           flag:next(not flag:snapshot())
         end

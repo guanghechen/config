@@ -96,7 +96,7 @@ return {
       delay = 128,
       timeout = 0,
       silent = ark.fn.falsy,
-      value = std.Observable.from_value(true),
+      value = ark.c.Observable.from_value(true),
       task = function(_, context)
         local spellcheck = eve.context.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then

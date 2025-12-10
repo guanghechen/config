@@ -315,11 +315,11 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = std.Observable.from_value(std.path.cwd()) ---@type std.collection.IObservable
-local search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
-local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
-local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local state_cwd = ark.c.Observable.from_value(std.path.cwd()) ---@type ark.c.IObservable
+local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.IObservable
+local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.IObservable
+local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
+local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
 
 ---@return string
 local function gen_title()

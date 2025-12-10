@@ -9,7 +9,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public col                    integer
 ---@field public col_end                integer
 
-local search_pattern = std.Observable.from_value("")
+local search_pattern = ark.c.Observable.from_value("")
 local flag_foldempty = eve.context.select.lsp_reference.flag_foldempty
 local flag_fuzzy = eve.context.select.lsp_reference.flag_fuzzy
 local flag_regex = eve.context.select.lsp_reference.flag_regex

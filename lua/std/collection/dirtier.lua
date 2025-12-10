@@ -1,4 +1,4 @@
----@class std.collection.IDirtier : std.collection.IObservable
+---@class std.collection.IDirtier : ark.c.IObservable
 ---@field public is_clean               fun(self: std.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: std.collection.IDirtier): boolean
 ---@field public mark_clean             fun(self: std.collection.IDirtier): nil
@@ -12,7 +12,7 @@
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, std.Observable)
+setmetatable(M, ark.c.Observable)
 
 ---@param props                         std.collection.dirtier.IProps
 ---@return std.collection.Dirtier
@@ -20,7 +20,7 @@ function M.new(props)
   local dirty = props.dirty ---@type boolean
   local equals = props.equals or ark.fn.falsy
 
-  local self = setmetatable(std.Observable.new({ initial_value = dirty, equals = equals }), M)
+  local self = setmetatable(ark.c.Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         std.collection.Dirtier
 
   return self

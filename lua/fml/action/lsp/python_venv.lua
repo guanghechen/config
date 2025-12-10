@@ -1,10 +1,10 @@
 local __module_name__ = "fml.action.lsp.python_venv" ---@type string
 
 local dirty_data = true ---@type boolean
-local o_search_pattern = std.Observable.from_value("")
-local o_flag_fuzzy = std.Observable.from_value(true)
-local o_flag_regex = std.Observable.from_value(false)
-local o_flag_case_sensitive = std.Observable.from_value(false)
+local o_search_pattern = ark.c.Observable.from_value("")
+local o_flag_fuzzy = ark.c.Observable.from_value(true)
+local o_flag_regex = ark.c.Observable.from_value(false)
+local o_flag_case_sensitive = ark.c.Observable.from_value(false)
 local o_python_venv_path = eve.context.lsp.python_venv_path
 
 ---@param folder                        string

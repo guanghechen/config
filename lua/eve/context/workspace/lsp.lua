@@ -18,14 +18,14 @@ local __module_name__ = "eve.context.workspace.lsp" ---@type string
 ---@field public spellcheck             boolean
 
 ---@class eve.context.lsp.state
----@field public breakpoints            std.collection.IObservable
----@field public code_lens              std.collection.IObservable
----@field public diagnostics_virt_lines std.collection.IObservable
----@field public inlay_hints            std.collection.IObservable
----@field public python_debug_host      std.collection.IObservable
----@field public python_debug_port      std.collection.IObservable
----@field public python_venv_path       std.collection.IObservable
----@field public spellcheck             std.collection.IObservable
+---@field public breakpoints            ark.c.IObservable
+---@field public code_lens              ark.c.IObservable
+---@field public diagnostics_virt_lines ark.c.IObservable
+---@field public inlay_hints            ark.c.IObservable
+---@field public python_debug_host      ark.c.IObservable
+---@field public python_debug_port      ark.c.IObservable
+---@field public python_venv_path       ark.c.IObservable
+---@field public spellcheck             ark.c.IObservable
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
@@ -153,14 +153,14 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local data = M.defaults() ---@type eve.context.lsp.data
-M.breakpoints = std.Observable.from_value(data.breakpoints)
-M.code_lens = std.Observable.from_value(data.code_lens)
-M.diagnostics_virt_lines = std.Observable.from_value(data.diagnostics_virt_lines)
-M.inlay_hints = std.Observable.from_value(data.inlay_hints)
-M.python_debug_host = std.Observable.from_value(data.python_debug_host)
-M.python_debug_port = std.Observable.from_value(data.python_debug_port)
-M.python_venv_path = std.Observable.from_value(data.python_venv_path)
-M.spellcheck = std.Observable.from_value(data.spellcheck)
+M.breakpoints = ark.c.Observable.from_value(data.breakpoints)
+M.code_lens = ark.c.Observable.from_value(data.code_lens)
+M.diagnostics_virt_lines = ark.c.Observable.from_value(data.diagnostics_virt_lines)
+M.inlay_hints = ark.c.Observable.from_value(data.inlay_hints)
+M.python_debug_host = ark.c.Observable.from_value(data.python_debug_host)
+M.python_debug_port = ark.c.Observable.from_value(data.python_debug_port)
+M.python_venv_path = ark.c.Observable.from_value(data.python_venv_path)
+M.spellcheck = ark.c.Observable.from_value(data.spellcheck)
 
 ---@return string|nil
 ---@return string|nil

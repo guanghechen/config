@@ -11,14 +11,14 @@ local __module_name__ = "ux.picker.finder" ---@type string
 ---@class ux.picker.IFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.IObservable
+---@field public input                  ark.c.IObservable
 ---@field public title                  string
 
 ---@class ux.picker.Finder
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.IObservable
----@field public linecount              std.collection.IObservable
+---@field public input                  ark.c.IObservable
+---@field public linecount              ark.c.IObservable
 ---@field public title                  string
 ---
 ---@field protected _disposed           boolean
@@ -33,8 +33,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local input = props.input ---@type std.collection.IObservable
-  local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local input = props.input ---@type ark.c.IObservable
+  local linecount = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
 
   local self = setmetatable({}, M)
@@ -60,7 +60,7 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local linecount = self.linecount ---@type std.collection.IObservable
+  local linecount = self.linecount ---@type ark.c.IObservable
 
   self.input = nil
   self.keymaps = nil

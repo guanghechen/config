@@ -182,7 +182,7 @@ local scheduler = std.Scheduler.new({
   delay = 256,
   timeout = 3000,
   silent = ark.fn.truthy,
-  value = std.Observable.from_value(true),
+  value = ark.c.Observable.from_value(true),
   task = function()
     local notification_paused = std.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then

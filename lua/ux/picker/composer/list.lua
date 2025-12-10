@@ -58,14 +58,14 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public flag_fuzzy             std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_case_sensitive    std.collection.IObservable
+---@field public flag_fuzzy             ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
 ---@field public flags_append           ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public search_pattern         std.collection.IObservable
+---@field public search_pattern         ark.c.IObservable
 ---@field public search_pattern_history ?std.collection.IHistory
 ---
 ---@field public render_preview         ?ux.picker.composer.list.IRenderPreview
@@ -88,9 +88,9 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field public result                 ux.picker.Result
 ---@field public preview                ux.picker.Preview|nil
 ---
----@field public flag_fuzzy             std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_case_sensitive    std.collection.IObservable
+---@field public flag_fuzzy             ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _composer           ux.picker.BasicComposer
@@ -121,7 +121,7 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local search_pattern = props.search_pattern ---@type ark.c.IObservable
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
@@ -129,9 +129,9 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
 
-  local flag_fuzzy = props.flag_fuzzy ---@type std.collection.IObservable
-  local flag_regex = props.flag_regex ---@type std.collection.IObservable
-  local flag_case_sensitive = props.flag_case_sensitive ---@type std.collection.IObservable
+  local flag_fuzzy = props.flag_fuzzy ---@type ark.c.IObservable
+  local flag_regex = props.flag_regex ---@type ark.c.IObservable
+  local flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.IObservable
   local flags_append = props.flags_append ---@type ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
@@ -207,7 +207,7 @@ function M.new(props)
     delay = 64,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local input = search_pattern:snapshot() ---@type string
       self:__match__(input)

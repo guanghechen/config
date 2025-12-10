@@ -58,7 +58,7 @@ local __mods = {
 ---@field public get_storage            fun(): eve.context.storage
 ---@field public set_storage            fun(storage: eve.context.storage): nil
 ---
----@field public observe                fun(observables: std.collection.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: ark.c.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.context.state.IWatchChangeParams): nil
@@ -274,7 +274,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ---@type std.collection.IObservable[]
+  ---@type ark.c.IObservable[]
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,
@@ -325,7 +325,7 @@ function M.watch_changes()
     delay = 256,
     timeout = 3000,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       if M._storage.editor then
         local raw_data = std.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}

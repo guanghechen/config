@@ -44,13 +44,13 @@ local DEFAULT_TERM_TYPE = "5fd8db97-7c8c-4629-a99a-a2696709018b" ---@type string
 
 local metamap = {} ---@type table<string, eve.builtin.term.IMeta>
 local termlist = {} ---@type string[]
-local o_termuuid = std.Observable.from_value("") ---@type std.collection.Observable
+local o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
 
 ---@class eve.builtin.term
----@field public o_termuuid             std.collection.IObservable
+---@field public o_termuuid             ark.c.IObservable
 local M = {}
 
-M.o_termuuid = o_termuuid ---@type std.collection.IObservable
+M.o_termuuid = o_termuuid ---@type ark.c.IObservable
 
 ---@param termuuid                      string
 ---@return boolean

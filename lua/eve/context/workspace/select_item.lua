@@ -14,18 +14,18 @@
 ---@field public search_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.select.item.state
----@field public flag_case_sensitive    std.collection.IObservable
----@field public flag_exclude           std.collection.IObservable
----@field public flag_foldempty         std.collection.IObservable
----@field public flag_fuzzy             std.collection.IObservable
----@field public flag_gitignore         std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_selected          std.collection.IObservable
----@field public flag_textonly          std.collection.IObservable
----@field public flag_viewtype          std.collection.IObservable
----@field public includes               std.collection.IObservable
----@field public excludes               std.collection.IObservable
----@field public search_pattern         std.collection.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
+---@field public flag_exclude           ark.c.IObservable
+---@field public flag_foldempty         ark.c.IObservable
+---@field public flag_fuzzy             ark.c.IObservable
+---@field public flag_gitignore         ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_selected          ark.c.IObservable
+---@field public flag_textonly          ark.c.IObservable
+---@field public flag_viewtype          ark.c.IObservable
+---@field public includes               ark.c.IObservable
+---@field public excludes               ark.c.IObservable
+---@field public search_pattern         ark.c.IObservable
 ---@field public search_pattern_history ark.c.History
 
 ---@class eve.context.select.item
@@ -157,18 +157,18 @@ function M.load(state, name, raw_data)
   if state == nil then
     ---@type eve.context.select.item.state
     state = {
-      flag_case_sensitive = std.Observable.from_value(data.flag_case_sensitive),
-      flag_exclude = std.Observable.from_value(data.flag_exclude),
-      flag_foldempty = std.Observable.from_value(data.flag_foldempty),
-      flag_fuzzy = std.Observable.from_value(data.flag_fuzzy),
-      flag_gitignore = std.Observable.from_value(data.flag_gitignore),
-      flag_regex = std.Observable.from_value(data.flag_regex),
-      flag_selected = std.Observable.from_value(data.flag_selected),
-      flag_textonly = std.Observable.from_value(data.flag_textonly),
-      flag_viewtype = std.Observable.from_value(data.flag_viewtype),
-      includes = std.Observable.from_value(data.includes),
-      excludes = std.Observable.from_value(data.excludes),
-      search_pattern = std.Observable.from_value(data.search_pattern),
+      flag_case_sensitive = ark.c.Observable.from_value(data.flag_case_sensitive),
+      flag_exclude = ark.c.Observable.from_value(data.flag_exclude),
+      flag_foldempty = ark.c.Observable.from_value(data.flag_foldempty),
+      flag_fuzzy = ark.c.Observable.from_value(data.flag_fuzzy),
+      flag_gitignore = ark.c.Observable.from_value(data.flag_gitignore),
+      flag_regex = ark.c.Observable.from_value(data.flag_regex),
+      flag_selected = ark.c.Observable.from_value(data.flag_selected),
+      flag_textonly = ark.c.Observable.from_value(data.flag_textonly),
+      flag_viewtype = ark.c.Observable.from_value(data.flag_viewtype),
+      includes = ark.c.Observable.from_value(data.includes),
+      excludes = ark.c.Observable.from_value(data.excludes),
+      search_pattern = ark.c.Observable.from_value(data.search_pattern),
       search_pattern_history = ark.c.History.deserialize({
         name = name,
         capacity = 100,

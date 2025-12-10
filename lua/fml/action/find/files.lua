@@ -1,6 +1,6 @@
 local name = "fml.action.find.files" ---@type string
 local title = "Find Files" ---@type string
-local o_rootpath = std.Observable.from_value(std.path.cwd())
+local o_rootpath = ark.c.Observable.from_value(std.path.cwd())
 
 local o_flag_exclude = eve.context.select.find_file.flag_exclude
 local o_flag_foldempty = eve.context.select.find_file.flag_foldempty

@@ -11,7 +11,7 @@ local __module_name__ = "ux.searcher.finder" ---@type string
 ---@class ux.searcher.IFinderProps
 ---@field public name                   string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.IObservable
+---@field public input                  ark.c.IObservable
 ---@field public title                  string
 ---@field public prompt_sign?           string
 ---@field public prompt_sign_hl?        string
@@ -19,8 +19,8 @@ local __module_name__ = "ux.searcher.finder" ---@type string
 ---@class ux.searcher.Finder
 ---@field public fullname               string
 ---@field public keymaps                std.t.IKeymap[]
----@field public input                  std.collection.IObservable
----@field public linecount              std.collection.IObservable
+---@field public input                  ark.c.IObservable
+---@field public linecount              ark.c.IObservable
 ---@field public title                  string
 ---@field public prompt_sign_group      string
 ---@field public prompt_sign_name       string
@@ -37,8 +37,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local keymaps = props.keymaps ---@type std.t.IKeymap[]
-  local input = props.input ---@type std.collection.IObservable
-  local linecount = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local input = props.input ---@type ark.c.IObservable
+  local linecount = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
   local prompt_sign = props.prompt_sign ---@type string|nil
   local prompt_sign_hl = props.prompt_sign_hl or "f_pk_finder_prompt" ---@type string
@@ -76,7 +76,7 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local linecount = self.linecount ---@type std.collection.IObservable
+  local linecount = self.linecount ---@type ark.c.IObservable
 
   self.input = nil
   self.keymaps = nil

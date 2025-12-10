@@ -306,12 +306,12 @@ local function get_treesitter_locals(bufnr)
   return roots
 end
 
-local o_search_pattern = eve.context.select.lsp_symbols.search_pattern ---@type std.collection.IObservable
-local o_flag_fuzzy = eve.context.select.lsp_symbols.flag_fuzzy ---@type std.collection.IObservable
-local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type std.collection.IObservable
-local o_flag_case_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type std.collection.IObservable
-local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type std.collection.IObservable
-local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type std.collection.IObservable
+local o_search_pattern = eve.context.select.lsp_symbols.search_pattern ---@type ark.c.IObservable
+local o_flag_fuzzy = eve.context.select.lsp_symbols.flag_fuzzy ---@type ark.c.IObservable
+local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type ark.c.IObservable
+local o_flag_case_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type ark.c.IObservable
+local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type ark.c.IObservable
+local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type ark.c.IObservable
 local picker ---@type ux.picker.TreeComposer
 
 ---@param kindname                      string
@@ -809,7 +809,7 @@ picker = ux.picker.TreeComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
-  flag_selected = std.Observable.from_value(false),
+  flag_selected = ark.c.Observable.from_value(false),
 
   render_listview_leaf = render_symbol,
   render_listview_location = render_location,

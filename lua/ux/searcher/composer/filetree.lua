@@ -56,21 +56,21 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public keymaps_replacer       ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public excludes               std.collection.IObservable
----@field public flag_exclude           std.collection.IObservable
----@field public flag_foldempty         std.collection.IObservable
----@field public flag_gitignore         std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_replace           std.collection.IObservable
----@field public flag_case_sensitive    std.collection.IObservable
----@field public flag_selected          std.collection.IObservable
----@field public flag_viewtype          std.collection.IObservable
----@field public includes               std.collection.IObservable
----@field public max_filesize           std.collection.IObservable
----@field public max_matches            std.collection.IObservable
----@field public replace_pattern        std.collection.IObservable
----@field public rootpath               std.collection.IObservable
----@field public search_pattern         std.collection.IObservable
+---@field public excludes               ark.c.IObservable
+---@field public flag_exclude           ark.c.IObservable
+---@field public flag_foldempty         ark.c.IObservable
+---@field public flag_gitignore         ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_replace           ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
+---@field public flag_selected          ark.c.IObservable
+---@field public flag_viewtype          ark.c.IObservable
+---@field public includes               ark.c.IObservable
+---@field public max_filesize           ark.c.IObservable
+---@field public max_matches            ark.c.IObservable
+---@field public replace_pattern        ark.c.IObservable
+---@field public rootpath               ark.c.IObservable
+---@field public search_pattern         ark.c.IObservable
 ---
 ---@field public flags_append           ux.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          ux.searcher.result.IFlagItemRaw[]|nil
@@ -98,20 +98,20 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public result                 ux.searcher.Result
 ---@field public preview                ux.searcher.Preview
 ---
----@field public excludes               std.collection.IObservable
----@field public flag_exclude           std.collection.IObservable
----@field public flag_foldempty         std.collection.IObservable
----@field public flag_gitignore         std.collection.IObservable
----@field public flag_regex             std.collection.IObservable
----@field public flag_replace           std.collection.IObservable
----@field public flag_case_sensitive    std.collection.IObservable
----@field public flag_selected          std.collection.IObservable
----@field public includes               std.collection.IObservable
----@field public max_filesize           std.collection.IObservable
----@field public max_matches            std.collection.IObservable
----@field public replace_pattern        std.collection.IObservable
----@field public rootpath               std.collection.IObservable
----@field public search_pattern         std.collection.IObservable
+---@field public excludes               ark.c.IObservable
+---@field public flag_exclude           ark.c.IObservable
+---@field public flag_foldempty         ark.c.IObservable
+---@field public flag_gitignore         ark.c.IObservable
+---@field public flag_regex             ark.c.IObservable
+---@field public flag_replace           ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.IObservable
+---@field public flag_selected          ark.c.IObservable
+---@field public includes               ark.c.IObservable
+---@field public max_filesize           ark.c.IObservable
+---@field public max_matches            ark.c.IObservable
+---@field public replace_pattern        ark.c.IObservable
+---@field public rootpath               ark.c.IObservable
+---@field public search_pattern         ark.c.IObservable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
@@ -149,21 +149,21 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local o_excludes = props.excludes ---@type std.collection.IObservable
-  local o_flag_exclude = props.flag_exclude ---@type std.collection.IObservable
-  local o_flag_foldempty = props.flag_foldempty ---@type std.collection.IObservable
-  local o_flag_gitignore = props.flag_gitignore ---@type std.collection.IObservable
-  local o_flag_regex = props.flag_regex ---@type std.collection.IObservable
-  local o_flag_replace = props.flag_replace ---@type std.collection.IObservable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type std.collection.IObservable
-  local o_flag_selected = props.flag_selected ---@type std.collection.IObservable
-  local o_flag_viewtype = props.flag_viewtype ---@type std.collection.IObservable
-  local o_includes = props.includes ---@type std.collection.IObservable
-  local o_max_filesize = props.max_filesize ---@type std.collection.IObservable
-  local o_max_matches = props.max_matches ---@type std.collection.IObservable
-  local o_replace_pattern = props.replace_pattern ---@type std.collection.IObservable
-  local o_rootpath = props.rootpath ---@type std.collection.IObservable
-  local o_search_pattern = props.search_pattern ---@type std.collection.IObservable
+  local o_excludes = props.excludes ---@type ark.c.IObservable
+  local o_flag_exclude = props.flag_exclude ---@type ark.c.IObservable
+  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.IObservable
+  local o_flag_gitignore = props.flag_gitignore ---@type ark.c.IObservable
+  local o_flag_regex = props.flag_regex ---@type ark.c.IObservable
+  local o_flag_replace = props.flag_replace ---@type ark.c.IObservable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.IObservable
+  local o_flag_selected = props.flag_selected ---@type ark.c.IObservable
+  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.IObservable
+  local o_includes = props.includes ---@type ark.c.IObservable
+  local o_max_filesize = props.max_filesize ---@type ark.c.IObservable
+  local o_max_matches = props.max_matches ---@type ark.c.IObservable
+  local o_replace_pattern = props.replace_pattern ---@type ark.c.IObservable
+  local o_rootpath = props.rootpath ---@type ark.c.IObservable
+  local o_search_pattern = props.search_pattern ---@type ark.c.IObservable
 
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
   local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
@@ -313,7 +313,7 @@ function M.new(props)
     delay = 64,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       self:__search__()
       treeview:mark_cache_treeview_dirty()

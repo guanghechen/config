@@ -2,7 +2,7 @@
 ---@field public pinned                 string[]
 
 ---@class eve.context.bookmark.state
----@field public pinned                 std.collection.IObservable
+---@field public pinned                 ark.c.IObservable
 
 ---@class eve.context.bookmark : eve.context.bookmark.state
 ---@field public defaults               fun(): eve.context.bookmark.data
@@ -54,6 +54,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.bookmark.data
-M.pinned = std.Observable.from_value(_defaults.pinned) ---@type std.collection.IObservable
+M.pinned = ark.c.Observable.from_value(_defaults.pinned) ---@type ark.c.IObservable
 
 return M

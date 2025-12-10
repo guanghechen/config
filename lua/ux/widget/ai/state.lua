@@ -8,8 +8,8 @@ local M = {}
 ---@type ux.widget.ai.IAttachedSource[]
 local _attached_sources = {}
 
----@type std.collection.IObservable
-M.o_attached = std.Observable.from_value(0)
+---@type ark.c.IObservable
+M.o_attached = ark.c.Observable.from_value(0)
 
 std.fn.observe({ M.o_attached }, function()
   std.status.dirtier_statusline:mark_dirty()

@@ -52,10 +52,10 @@ local function fetch_data()
   return { items = items }
 end
 
-local search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
-local flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
-local flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.IObservable
+local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.IObservable
+local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
+local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
 
 ---@type ux.picker.ListComposer
 local picker = ux.picker.ListComposer.new({

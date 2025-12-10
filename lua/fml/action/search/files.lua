@@ -1,6 +1,6 @@
 local name = "fml.action.search.files.searcher" ---@type string
 local title = "Search Files" ---@type string
-local o_rootpath = std.Observable.from_value(std.path.cwd())
+local o_rootpath = ark.c.Observable.from_value(std.path.cwd())
 
 local o_excludes = eve.context.select.search_file.excludes
 local o_flag_exclude = eve.context.select.search_file.flag_exclude

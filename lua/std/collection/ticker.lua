@@ -1,4 +1,4 @@
----@class std.collection.ITicker: std.collection.IObservable
+---@class std.collection.ITicker: ark.c.IObservable
 ---@field public tick                   fun(self: std.collection.ITicker): nil
 
 ---@class std.collection.ticker.IProps
@@ -8,13 +8,13 @@
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, std.Observable)
+setmetatable(M, ark.c.Observable)
 
 ---@param props                         ?std.collection.ticker.IProps
 ---@return std.collection.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
-  local self = setmetatable(std.Observable.from_value(start), M)
+  local self = setmetatable(ark.c.Observable.from_value(start), M)
   ---@cast self                         std.collection.Ticker
   return self
 end

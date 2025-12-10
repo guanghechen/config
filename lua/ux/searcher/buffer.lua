@@ -14,10 +14,10 @@ local function calculate_dynamic_height(pattern_line_count)
   return base_height + extra_lines
 end
 
----@param o_flag_fuzzy                  std.collection.IObservable
----@param o_flag_regex                  std.collection.IObservable
----@param o_flag_case_sensitive         std.collection.IObservable
----@param o_flag_replace                std.collection.IObservable
+---@param o_flag_fuzzy                  ark.c.IObservable
+---@param o_flag_regex                  ark.c.IObservable
+---@param o_flag_case_sensitive         ark.c.IObservable
+---@param o_flag_replace                ark.c.IObservable
 ---@param title                         string
 ---@return ux.searcher.result.IFlagItem[], ux.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
@@ -141,26 +141,26 @@ local function collect_buffer_content(bufnr)
 end
 
 ---@class ux.searcher.buffer.ISearcherProps
----@field public o_flag_fuzzy?          std.collection.IObservable
----@field public o_flag_regex?          std.collection.IObservable
----@field public o_flag_replace?        std.collection.IObservable
----@field public o_flag_case_sensitive? std.collection.IObservable
----@field public o_search_pattern?      std.collection.IObservable
+---@field public o_flag_fuzzy?          ark.c.IObservable
+---@field public o_flag_regex?          ark.c.IObservable
+---@field public o_flag_replace?        ark.c.IObservable
+---@field public o_flag_case_sensitive? ark.c.IObservable
+---@field public o_search_pattern?      ark.c.IObservable
 ---@field public o_search_pattern_history? std.collection.IHistory
----@field public o_replace_pattern?     std.collection.IObservable
+---@field public o_replace_pattern?     ark.c.IObservable
 ---@field public o_replace_pattern_history? std.collection.IHistory
 
 ---@class ux.searcher.buffer.Searcher
 ---@field public title                  string
----@field public o_flag_fuzzy           std.collection.IObservable
----@field public o_flag_regex           std.collection.IObservable
----@field public o_flag_replace         std.collection.IObservable
----@field public o_flag_case_sensitive  std.collection.IObservable
----@field public o_search_pattern       std.collection.IObservable
----@field public o_search_pattern_linecount std.collection.IObservable
----@field public o_replace_pattern      std.collection.IObservable
----@field public o_match_index          std.collection.IObservable
----@field public o_match_total          std.collection.IObservable
+---@field public o_flag_fuzzy           ark.c.IObservable
+---@field public o_flag_regex           ark.c.IObservable
+---@field public o_flag_replace         ark.c.IObservable
+---@field public o_flag_case_sensitive  ark.c.IObservable
+---@field public o_search_pattern       ark.c.IObservable
+---@field public o_search_pattern_linecount ark.c.IObservable
+---@field public o_replace_pattern      ark.c.IObservable
+---@field public o_match_index          ark.c.IObservable
+---@field public o_match_total          ark.c.IObservable
 ---@field protected _winnr_finder       integer|nil
 ---@field protected _bufnr_finder       integer|nil
 ---@field protected _winnr_replacer     integer|nil
@@ -183,15 +183,15 @@ M.__index = M
 ---@return ux.searcher.buffer.Searcher
 function M.new(props)
   props = props or {}
-  local o_flag_fuzzy = props.o_flag_fuzzy or std.Observable.from_value(false)
-  local o_flag_regex = props.o_flag_regex or std.Observable.from_value(false)
-  local o_flag_replace = props.o_flag_replace or std.Observable.from_value(false)
-  local o_flag_case_sensitive = props.o_flag_case_sensitive or std.Observable.from_value(true)
-  local o_search_pattern = props.o_search_pattern or std.Observable.from_value("")
-  local o_replace_pattern = props.o_replace_pattern or std.Observable.from_value("")
-  local o_search_pattern_linecount = std.Observable.from_value(1)
-  local o_match_index = std.Observable.from_value(0)
-  local o_match_total = std.Observable.from_value(0)
+  local o_flag_fuzzy = props.o_flag_fuzzy or ark.c.Observable.from_value(false)
+  local o_flag_regex = props.o_flag_regex or ark.c.Observable.from_value(false)
+  local o_flag_replace = props.o_flag_replace or ark.c.Observable.from_value(false)
+  local o_flag_case_sensitive = props.o_flag_case_sensitive or ark.c.Observable.from_value(true)
+  local o_search_pattern = props.o_search_pattern or ark.c.Observable.from_value("")
+  local o_replace_pattern = props.o_replace_pattern or ark.c.Observable.from_value("")
+  local o_search_pattern_linecount = ark.c.Observable.from_value(1)
+  local o_match_index = ark.c.Observable.from_value(0)
+  local o_match_total = ark.c.Observable.from_value(0)
 
   local self = setmetatable({}, M)
   self.title = "Search in Buffer"
@@ -211,7 +211,7 @@ function M.new(props)
     delay = 64,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       self:__search__()
     end,
@@ -1010,7 +1010,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       key = "tr",
       desc = string.format("%s: toggle replace mode", self.title),
       callback = function()
-        local flag = self.o_flag_replace ---@type std.collection.IObservable
+        local flag = self.o_flag_replace ---@type ark.c.IObservable
         flag:next(not flag:snapshot())
       end,
     }
@@ -1029,8 +1029,8 @@ function M:__create_keymaps__(raw_flags, window_type)
 end
 
 ---@protected
----@param o_match_index                 std.collection.IObservable
----@param o_match_total                 std.collection.IObservable
+---@param o_match_index                 ark.c.IObservable
+---@param o_match_total                 ark.c.IObservable
 ---@param flags                         ux.searcher.result.IFlagItem[]
 ---@return ux.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)

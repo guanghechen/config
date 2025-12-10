@@ -35,7 +35,7 @@ local COLORS_TO_DISPLAY = {
 
 local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = eve.command.definitions.toggle.theme.candidates ---@type string[]
-local o_theme = eve.context.theme.theme ---@type std.collection.IObservable
+local o_theme = eve.context.theme.theme ---@type ark.c.IObservable
 
 ---@type ux.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)

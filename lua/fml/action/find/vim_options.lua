@@ -20,10 +20,10 @@ local OFFSET_SCOPE = OFFSET_TYPE + WIDTH_TYPE ---@type integer
 local OFFSET_VALUE = OFFSET_SCOPE + WIDTH_SCOPE ---@type integer
 
 local dirty_data = true ---@type boolean
-local o_search_pattern = std.Observable.from_value("") ---@type std.collection.IObservable
-local o_flag_fuzzy = std.Observable.from_value(true) ---@type std.collection.IObservable
-local o_flag_regex = std.Observable.from_value(false) ---@type std.collection.IObservable
-local o_flag_case_sensitive = std.Observable.from_value(false) ---@type std.collection.IObservable
+local o_search_pattern = ark.c.Observable.from_value("") ---@type ark.c.IObservable
+local o_flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.IObservable
+local o_flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
+local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
 
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data()

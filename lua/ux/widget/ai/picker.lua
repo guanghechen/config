@@ -13,15 +13,15 @@ local M = {}
 --- Picker utilities
 ----------------------------------------------------------------------------------------------------
 
----@return std.collection.IObservable, std.collection.IObservable, std.collection.IObservable, std.collection.IObservable
+---@return ark.c.IObservable, ark.c.IObservable, ark.c.IObservable, ark.c.IObservable
 local function create_picker_flags()
-  return std.Observable.from_value(""),
-    std.Observable.from_value(true),
-    std.Observable.from_value(false),
-    std.Observable.from_value(false)
+  return ark.c.Observable.from_value(""),
+    ark.c.Observable.from_value(true),
+    ark.c.Observable.from_value(false),
+    ark.c.Observable.from_value(false)
 end
 
----@param flags                         std.collection.IObservable[]
+---@param flags                         ark.c.IObservable[]
 ---@return nil
 local function dispose_picker_flags(flags)
   for _, flag in ipairs(flags) do

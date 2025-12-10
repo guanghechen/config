@@ -1,45 +1,45 @@
-local __module_name__ = "std.collection.observable" ---@type string
+local __module_name__ = "ark.c.observable" ---@type string
 
----@class std.collection.observable.INextOptions
+---@class ark.c.observable.INextOptions
 ---@field public strict                 ?boolean Whether to throw an error if the observable disposed.
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class std.collection.IObservable: ark.c.BatchDisposable, ark.c.ISubscribable
----@field public equals                 std.t.IEquals
----@field public normalize              std.t.INormalize
----@field public snapshot               fun(self: std.collection.IObservable): std.t.T
----@field public next                   fun(self: std.collection.IObservable, value: std.t.T, options?: std.collection.observable.INextOptions):boolean
+---@class ark.c.IObservable: ark.c.BatchDisposable, ark.c.ISubscribable
+---@field public equals                 ark.t.IEquals
+---@field public normalize              ark.t.INormalize
+---@field public snapshot               fun(self: ark.c.IObservable): ark.t.T
+---@field public next                   fun(self: ark.c.IObservable, value: ark.t.T, options?: ark.c.observable.INextOptions):boolean
 
----@class std.collection.observable.IProps
----@field public initial_value          std.t.T           Initial value of the observable
----@field public equals                 ?std.t.IEquals    Determine whether the two values are equal.
----@field public normalize              ?std.t.INormalize Normalize the value before compare or update
+---@class ark.c.observable.IProps
+---@field public initial_value          ark.t.T           Initial value of the observable
+---@field public equals                 ?ark.t.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?ark.t.INormalize Normalize the value before compare or update
 ---@field public readonly               ?boolean
 
 ---@type ark.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
----@class std.collection.Observable : std.collection.IObservable
+---@class ark.c.Observable : ark.c.IObservable
 ---@field protected _readonly           boolean
----@field protected _value              std.t.T
----@field protected _value_last_notified std.t.T|nil
+---@field protected _value              ark.t.T
+---@field protected _value_last_notified ark.t.T|nil
 ---@field protected _subscribers        ark.c.Subscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
 setmetatable(M, ark.c.BatchDisposable)
 
----@param props                         std.collection.observable.IProps
----@return std.collection.Observable
+---@param props                         ark.c.observable.IProps
+---@return ark.c.Observable
 function M.new(props)
-  local equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
-  local normalize = props.normalize or ark.fn.identity ---@type std.t.INormalize
+  local equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
+  local normalize = props.normalize or ark.fn.identity ---@type ark.t.INormalize
   local readonly = not not props.readonly ---@type boolean
-  local initial_value = props.initial_value ---@type std.t.T
+  local initial_value = props.initial_value ---@type ark.t.T
 
   local self = setmetatable(ark.c.BatchDisposable.new(), M)
-  ---@cast self                         std.collection.Observable
+  ---@cast self                         ark.c.Observable
 
   self.equals = equals
   self.normalize = normalize
@@ -50,10 +50,10 @@ function M.new(props)
   return self
 end
 
----@param value                         std.t.T         Initial value of the observable
----@param equals                        ?std.t.IEquals  Determine whether the two values are equal.
----@param normalize                     ?std.t.INormalize Normalize the value before compare or update
----@return std.collection.Observable
+---@param value                         ark.t.T         Initial value of the observable
+---@param equals                        ?ark.t.IEquals  Determine whether the two values are equal.
+---@param normalize                     ?ark.t.INormalize Normalize the value before compare or update
+---@return ark.c.Observable
 function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
 end
@@ -74,15 +74,15 @@ function M:dispose()
   self._subscribers:dispose()
 end
 
----@param value                         std.t.T
----@param options                       ?std.collection.observable.INextOptions
+---@param value                         ark.t.T
+---@param options                       ?ark.c.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
   if self._readonly then
     return false
   end
 
-  options = options or {} ---@type std.collection.observable.INextOptions
+  options = options or {} ---@type ark.c.observable.INextOptions
   if self:isdisposed() then
     local strict = options.strict ~= false ---@type boolean
     if strict then
@@ -120,8 +120,8 @@ function M:subscribe(subscriber, ignoreInitial)
   end
 
   if not ignoreInitial then
-    local value_prev = self._value_last_notified ---@type std.t.T | nil
-    local value = self._value ---@type std.t.T
+    local value_prev = self._value_last_notified ---@type ark.t.T | nil
+    local value = self._value ---@type ark.t.T
     subscriber:next(value, value_prev)
   end
 
@@ -138,10 +138,10 @@ end
 ---@protected
 ---@return nil
 function M:__notify__()
-  ---@type std.t.T | nil
+  ---@type ark.t.T | nil
   local value_prev = self._value_last_notified
 
-  ---@type std.t.T
+  ---@type ark.t.T
   local value = self._value
 
   self._value_last_notified = value

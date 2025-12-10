@@ -55,7 +55,7 @@ function M.new(config)
       self:flush()
       callback(true, nil)
     end,
-    value = std.Observable.from_value(nil),
+    value = ark.c.Observable.from_value(nil),
     delay = FLUSH_DEBOUNCE_MS,
     timeout = 0,
   })

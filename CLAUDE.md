@@ -54,7 +54,7 @@ The configuration exposes core modules globally via `_G` for convenient access:
 
 **Module Access Patterns:**
 - `std.*` → Access std utilities directly (e.g., `std.path.*`, `std.json.*`)
-- `std.Observable` → `require("std.collection.observable")` (collections mounted directly)
+- `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
 - `eve.buf.*` → `require("eve.builtin.buf").*` (builtins mounted directly)
 - `eve.constant.*`, `eve.context.*`, `eve.state.*`, `eve.fn.*`, `eve.ux.*` follow the same pattern
 - `eve.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)

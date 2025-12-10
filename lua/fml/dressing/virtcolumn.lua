@@ -161,7 +161,7 @@ local scheduler = std.Scheduler.new({
   delay = 50,
   timeout = 0,
   silent = ark.fn.falsy,
-  value = std.Observable.from_value(true),
+  value = ark.c.Observable.from_value(true),
   task = function()
     local enabled = eve.context.flight.dressing_virtcolumn:snapshot()
     if enabled then

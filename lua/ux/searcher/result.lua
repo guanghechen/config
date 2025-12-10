@@ -50,9 +50,9 @@ local __module_name__ = "ux.searcher.result" ---@type string
 ---@field public draw                   ux.searcher.result.IDraw
 ---@field public flags                  ux.searcher.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
----@field public lnum_current           std.collection.IObservable
----@field public lnum_present           std.collection.IObservable
----@field public lnum_total             std.collection.IObservable
+---@field public lnum_current           ark.c.IObservable
+---@field public lnum_present           ark.c.IObservable
+---@field public lnum_total             ark.c.IObservable
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -79,9 +79,9 @@ function M.new(props)
   local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.searcher.result.IOnDrawed
   local augroup_CursorMoved = std.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
-  local _o_lnum_current = std.Observable.from_value(0) ---@type std.collection.IObservable
-  local _o_lnum_present = std.Observable.from_value(-1) ---@type std.collection.IObservable
-  local _o_lnum_total = std.Observable.from_value(0) ---@type std.collection.IObservable
+  local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
+  local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.IObservable
+  local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
 
   local flags = {} ---@type ux.searcher.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
@@ -162,7 +162,7 @@ function M.new(props)
     delay = 32,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -192,7 +192,7 @@ function M.new(props)
     delay = 64,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -216,7 +216,7 @@ function M.new(props)
     delay = 128,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -241,7 +241,7 @@ function M.new(props)
     delay = 128,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -380,9 +380,9 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local lnum_current = self.lnum_current ---@type std.collection.IObservable
-  local lnum_present = self.lnum_present ---@type std.collection.IObservable
-  local lnum_total = self.lnum_total ---@type std.collection.IObservable
+  local lnum_current = self.lnum_current ---@type ark.c.IObservable
+  local lnum_present = self.lnum_present ---@type ark.c.IObservable
+  local lnum_total = self.lnum_total ---@type ark.c.IObservable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type ux.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler

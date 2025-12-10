@@ -3,8 +3,8 @@
 ---@field public treesitter_context     boolean
 
 ---@class eve.context.plugin.state
----@field public render_markdown        std.collection.IObservable
----@field public treesitter_context     std.collection.IObservable
+---@field public render_markdown        ark.c.IObservable
+---@field public treesitter_context     ark.c.IObservable
 
 ---@class eve.context.plugin : eve.context.plugin.state
 ---@field public defaults               fun(): eve.context.plugin.data
@@ -60,7 +60,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.plugin.data
-M.render_markdown = std.Observable.from_value(_defaults.render_markdown)
-M.treesitter_context = std.Observable.from_value(_defaults.treesitter_context)
+M.render_markdown = ark.c.Observable.from_value(_defaults.render_markdown)
+M.treesitter_context = ark.c.Observable.from_value(_defaults.treesitter_context)
 
 return M

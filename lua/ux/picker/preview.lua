@@ -57,7 +57,7 @@ function M.new(props)
     delay = 128,
     timeout = 0,
     silent = ark.fn.falsy,
-    value = std.Observable.from_value(true),
+    value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then

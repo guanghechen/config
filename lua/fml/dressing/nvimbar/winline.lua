@@ -80,7 +80,7 @@ local function resolve_nvimbar(winnr, source)
         mode = "throttle",
         delay = 128,
         timeout = 10000,
-        value = std.Observable.from_value(false),
+        value = ark.c.Observable.from_value(false),
         silent = silent,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

@@ -18,9 +18,9 @@ local __module_name__ = "std.status.theme" ---@type string
 ---@field public username               boolean
 
 ---@class eve.context.theme.state
----@field public theme                  std.collection.IObservable
----@field public transparency           std.collection.IObservable
----@field public username               std.collection.IObservable
+---@field public theme                  ark.c.IObservable
+---@field public transparency           ark.c.IObservable
+---@field public username               ark.c.IObservable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---
@@ -104,9 +104,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.theme.data
-M.theme = std.Observable.from_value(_defaults.theme)
-M.transparency = std.Observable.from_value(_defaults.transparency)
-M.username = std.Observable.from_value(_defaults.username)
+M.theme = ark.c.Observable.from_value(_defaults.theme)
+M.transparency = ark.c.Observable.from_value(_defaults.transparency)
+M.username = ark.c.Observable.from_value(_defaults.username)
 
 ---@return integer
 function M.get_float_winblend()

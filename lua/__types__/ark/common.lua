@@ -11,6 +11,10 @@
 ---@alias ark.t.IFilter
 ---| fun(element: T, index: integer): boolean
 
+---@generic T
+---@alias ark.t.INormalize
+---| fun(x: T): T
+
 ---@class ark.t.IHighlight
 ---@field public lnum                   integer
 ---@field public coll                   integer

@@ -1,18 +1,18 @@
 local name = "fml.action.find.pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
-local search_pattern = std.Observable.from_value("")
+local search_pattern = ark.c.Observable.from_value("")
 local search_pattern_history = ark.c.InputHistory.new({
   name = name,
   capacity = 5,
   input = search_pattern,
 })
-local o_flag_foldempty = std.Observable.from_value(true)
-local o_flag_fuzzy = std.Observable.from_value(false)
-local o_flag_regex = std.Observable.from_value(false)
-local o_flag_case_sensitive = std.Observable.from_value(true)
-local o_flag_selected = std.Observable.from_value(false)
-local o_flag_viewtype = std.Observable.from_value("tree")
+local o_flag_foldempty = ark.c.Observable.from_value(true)
+local o_flag_fuzzy = ark.c.Observable.from_value(false)
+local o_flag_regex = ark.c.Observable.from_value(false)
+local o_flag_case_sensitive = ark.c.Observable.from_value(true)
+local o_flag_selected = ark.c.Observable.from_value(false)
+local o_flag_viewtype = ark.c.Observable.from_value("tree")
 
 ---@param picker                        ux.picker.FiletreeComposer
 ---@return nil

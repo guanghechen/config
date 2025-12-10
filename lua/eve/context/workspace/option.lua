@@ -4,9 +4,9 @@
 ---@field public notepad_source         string
 
 ---@class eve.context.option.state
----@field public expandtab              std.collection.IObservable
----@field public relativenumber         std.collection.IObservable
----@field public notepad_source         std.collection.IObservable
+---@field public expandtab              ark.c.IObservable
+---@field public relativenumber         ark.c.IObservable
+---@field public notepad_source         ark.c.IObservable
 
 ---@class eve.context.option : eve.context.option.state
 ---@field public defaults               fun(): eve.context.option.data
@@ -68,8 +68,8 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type eve.context.option.data
-M.expandtab = std.Observable.from_value(_defaults.expandtab)
-M.relativenumber = std.Observable.from_value(_defaults.relativenumber)
-M.notepad_source = std.Observable.from_value(_defaults.notepad_source)
+M.expandtab = ark.c.Observable.from_value(_defaults.expandtab)
+M.relativenumber = ark.c.Observable.from_value(_defaults.relativenumber)
+M.notepad_source = ark.c.Observable.from_value(_defaults.notepad_source)
 
 return M
