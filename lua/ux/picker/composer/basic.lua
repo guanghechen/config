@@ -101,7 +101,7 @@ local __highlights__ = {
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
 ---@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
@@ -136,7 +136,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _search_pattern_history ?std.collection.IHistory
+---@field protected _search_pattern_history ?ark.c.History
 ---
 ---@field protected _on_cancel          ux.picker.composer.basic.IOnCancel
 ---@field protected _on_closed          ux.picker.composer.basic.IOnClosed
@@ -168,7 +168,7 @@ function M.new(props)
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
   local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean

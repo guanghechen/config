@@ -65,7 +65,7 @@ local __module_name__ = "ux.picker.composer.tree" ---@type string
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
 ---
 ---@field public render_preview         ?ux.picker.preview.IDraw
 ---@field public render_listview_leaf   ux.picker.view.tree.IListviewLeafNodeRenderer
@@ -133,7 +133,7 @@ function M.new(props)
   local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
 
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil

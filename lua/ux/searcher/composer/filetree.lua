@@ -76,10 +76,10 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public flags_prepend          ux.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public frecency               ?std.collection.IFrecency
+---@field public frecency               ?ark.c.Frecency
 ---
----@field public search_pattern_history ?std.collection.IHistory
----@field public replace_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
+---@field public replace_pattern_history ?ark.c.History
 ---
 ---@field public on_attached            ?ux.searcher.composer.filetree.IOnAttached
 ---@field public on_closed              ?ux.searcher.composer.filetree.IOnClosed
@@ -115,7 +115,7 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
----@field protected _frecency           std.collection.IFrecency|nil
+---@field protected _frecency           ark.c.Frecency|nil
 ---@field protected _composer           ux.searcher.BasicComposer
 ---@field protected _plainfile          ux.searcher.PlainfileView
 ---@field protected _retriever          ux.retriever.TreeRetriever
@@ -165,8 +165,8 @@ function M.new(props)
   local o_rootpath = props.rootpath ---@type ark.c.Observable
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
 
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
-  local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type ark.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
@@ -178,7 +178,7 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type ux.searcher.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local frecency = props.frecency ---@type std.collection.IFrecency|nil
+  local frecency = props.frecency ---@type ark.c.Frecency|nil
 
   local on_attached = props.on_attached or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnAttached
   local on_closed = props.on_closed or ark.fn.noop ---@type ux.searcher.composer.filetree.IOnClosed
@@ -1801,7 +1801,7 @@ end
 function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
 
-  local frecency = self._frecency ---@type std.collection.IFrecency|nil
+  local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.searcher.FiletreeView
 
   cwd = std.path.normalize(cwd) ---@type string
@@ -1991,7 +1991,7 @@ function M:__search_internal__()
   local search_pattern = self.search_pattern:snapshot() ---@type string
 
   local filetree = self._filetree ---@type std.collection.Filetree
-  local frecency = self._frecency ---@type std.collection.IFrecency|nil
+  local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.searcher.FiletreeView
 
   if #search_pattern < 1 then

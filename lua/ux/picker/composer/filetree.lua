@@ -82,10 +82,10 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---@field public flags_prepend          ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public frecency               ?std.collection.IFrecency
+---@field public frecency               ?ark.c.Frecency
 ---
 ---@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
 ---
 ---@field public on_attached            ?ux.picker.composer.filetree.IOnAttached
 ---@field public on_closed              ?ux.picker.composer.filetree.IOnClosed
@@ -115,7 +115,7 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
----@field protected _frecency           std.collection.IFrecency|nil
+---@field protected _frecency           ark.c.Frecency|nil
 ---@field protected _composer           ux.picker.BasicComposer
 ---@field protected _plainfile          ux.view.Plainfile
 ---@field protected _retriever          ux.retriever.TreeRetriever
@@ -154,7 +154,7 @@ function M.new(props)
 
   local render_preview = props.render_preview ---@type ux.picker.preview.IDraw|nil
 
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
   local o_flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
   local o_flag_regex = props.flag_regex ---@type ark.c.Observable
@@ -167,7 +167,7 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type ux.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local frecency = props.frecency ---@type std.collection.IFrecency|nil
+  local frecency = props.frecency ---@type ark.c.Frecency|nil
 
   local on_attached = props.on_attached or ark.fn.noop ---@type ux.picker.composer.filetree.IOnAttached
   local on_closed = props.on_closed or ark.fn.noop ---@type ux.picker.composer.filetree.IOnClosed
@@ -1704,7 +1704,7 @@ end
 function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
-  local frecency = self._frecency ---@type std.collection.IFrecency|nil
+  local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.picker.FiletreeView
 
   cwd = std.path.normalize(cwd) ---@type string
@@ -1897,7 +1897,7 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local frecency = self._frecency ---@type std.collection.IFrecency|nil
+  local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.picker.FiletreeView
 
   if #input < 1 then

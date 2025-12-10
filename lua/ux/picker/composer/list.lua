@@ -66,7 +66,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
 ---
 ---@field public render_preview         ?ux.picker.composer.list.IRenderPreview
 ---@field public render_result          ?ux.picker.composer.list.IRenderResult
@@ -122,7 +122,7 @@ function M.new(props)
   local width = props.width ---@type number|nil
 
   local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil

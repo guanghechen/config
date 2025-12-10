@@ -37,7 +37,7 @@ function M.close()
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
-  local history = meta.history ---@type std.collection.IHistory|nil
+  local history = meta.history ---@type ark.c.History|nil
   if history == nil then
     eve.buf.close(bufnr)
     return

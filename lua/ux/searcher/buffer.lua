@@ -146,9 +146,9 @@ end
 ---@field public o_flag_replace?        ark.c.Observable
 ---@field public o_flag_case_sensitive? ark.c.Observable
 ---@field public o_search_pattern?      ark.c.Observable
----@field public o_search_pattern_history? std.collection.IHistory
+---@field public o_search_pattern_history? ark.c.History
 ---@field public o_replace_pattern?     ark.c.Observable
----@field public o_replace_pattern_history? std.collection.IHistory
+---@field public o_replace_pattern_history? ark.c.History
 
 ---@class ux.searcher.buffer.Searcher
 ---@field public title                  string

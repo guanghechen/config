@@ -119,11 +119,11 @@ local __highlights__ = {
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
 ---@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?std.collection.IHistory
+---@field public search_pattern_history ?ark.c.History
 ---@field public finder_title           string
 ---
 ---@field public replace_pattern        ?ark.c.Observable
----@field public replace_pattern_history ?std.collection.IHistory
+---@field public replace_pattern_history ?ark.c.History
 ---@field public replacer_title         ?string
 ---@field public flag_replace           ?ark.c.Observable
 ---
@@ -163,8 +163,8 @@ local __highlights__ = {
 ---@field protected _flag_replace       ark.c.Observable|nil
 ---@field protected _flag_replace_unsub ark.c.IUnsubscribable|nil
 ---
----@field protected _search_pattern_history ?std.collection.IHistory
----@field protected _replace_pattern_history ?std.collection.IHistory
+---@field protected _search_pattern_history ?ark.c.History
+---@field protected _replace_pattern_history ?ark.c.History
 ---
 ---@field protected _on_cancel          ux.searcher.composer.basic.IOnCancel
 ---@field protected _on_closed          ux.searcher.composer.basic.IOnClosed
@@ -197,11 +197,11 @@ function M.new(props)
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
   local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
+  local search_pattern_history = props.search_pattern_history ---@type ark.c.History
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local replace_pattern = props.replace_pattern ---@type ark.c.Observable|nil
-  local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type ark.c.History|nil
   local replacer_title = props.replacer_title and string.format(" %s ", vim.trim(props.replacer_title)) or " Replace " ---@type string
   local flag_replace = props.flag_replace ---@type ark.c.Observable|nil
 

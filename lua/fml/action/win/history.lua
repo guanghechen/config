@@ -291,7 +291,7 @@ function M.history_backward()
     return
   end
 
-  local history = meta.history ---@type std.collection.IHistory|nil
+  local history = meta.history ---@type ark.c.History|nil
   if history == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -359,7 +359,7 @@ function M.history_forward()
   end
 
   local bufnr_target = nil ---@type integer|nil
-  local history = meta.history ---@type std.collection.IHistory
+  local history = meta.history ---@type ark.c.History
   while true do
     local item, is_top = history:forward()
     ---@cast item                       eve.builtin.win.IFilepathHistoryItem|nil
