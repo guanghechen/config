@@ -989,7 +989,7 @@ function M.new(props)
     end,
     send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
-      local quickfix_items = {} ---@type std.t.IQuickFixItem[]
+      local quickfix_items = {} ---@type dot.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
       for lnum = 1, linecount, 1 do

@@ -58,12 +58,6 @@
 ---@field public l                      integer
 ---@field public r                      integer
 
----@class std.t.IQuickFixItem
----@field public filename               string
----@field public lnum                   ?integer
----@field public col                    ?integer
----@field public text                   ?string
-
 ---@class std.t.IScoredMatch
 ---@field public order                  integer
 ---@field public uuid                   string
