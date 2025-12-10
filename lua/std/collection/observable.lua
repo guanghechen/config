@@ -5,7 +5,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class std.collection.IObservable: ark.t.IBatchDisposable, ark.c.ISubscribable
+---@class std.collection.IObservable: ark.c.IBatchDisposable, ark.c.ISubscribable
 ---@field public equals                 std.t.IEquals
 ---@field public normalize              std.t.INormalize
 ---@field public snapshot               fun(self: std.collection.IObservable): std.t.T
@@ -17,7 +17,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public normalize              ?std.t.INormalize Normalize the value before compare or update
 ---@field public readonly               ?boolean
 
----@type ark.t.IUnsubscribable
+---@type ark.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
 ---@class std.collection.Observable : std.collection.IObservable
@@ -113,7 +113,7 @@ end
 
 ---@param subscriber                    ark.c.ISubscriber
 ---@param ignoreInitial                 boolean
----@return ark.t.IUnsubscribable
+---@return ark.c.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   if subscriber:isdisposed() then
     return noop_unsubscribable

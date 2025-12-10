@@ -161,7 +161,7 @@ local __highlights__ = {
 ---@field protected _recommended_width  number
 ---
 ---@field protected _flag_replace       std.collection.IObservable|nil
----@field protected _flag_replace_unsub ark.t.IUnsubscribable|nil
+---@field protected _flag_replace_unsub ark.c.IUnsubscribable|nil
 ---
 ---@field protected _search_pattern_history ?std.collection.IHistory
 ---@field protected _replace_pattern_history ?std.collection.IHistory
@@ -351,7 +351,7 @@ function M.new(props)
   end
 
   -- Observer for flag_replace to toggle replacer window visibility
-  local flag_replace_unsub = nil ---@type ark.t.IUnsubscribable|nil
+  local flag_replace_unsub = nil ---@type ark.c.IUnsubscribable|nil
   if flag_replace ~= nil then
     flag_replace_unsub = std.fn.observe({ flag_replace }, function()
       if self:isvisible() then
@@ -377,7 +377,7 @@ function M:dispose()
   local result = self.result ---@type ux.searcher.Result
   local preview = self.preview ---@type ux.searcher.Preview|nil
   local on_disposed = self._on_disposed ---@type ux.searcher.composer.basic.IOnDisposed
-  local flag_replace_unsub = self._flag_replace_unsub ---@type ark.t.IUnsubscribable|nil
+  local flag_replace_unsub = self._flag_replace_unsub ---@type ark.c.IUnsubscribable|nil
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)

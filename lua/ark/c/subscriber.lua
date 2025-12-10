@@ -6,7 +6,7 @@ local __module_name__ = "ark.c.subscriber" ---@type string
 ---@alias ark.c.subscriber.IOnNext
 ---| fun(value: any, value_prev: any|nil):nil
 
----@class ark.c.ISubscriber : ark.t.IDisposable
+---@class ark.c.ISubscriber : ark.c.IDisposable
 ---@field public next                   fun(self: ark.c.ISubscriber, value: ark.t.T, value_prev: ark.t.T| nil): nil
 
 ---@class ark.c.subscriber.IProps

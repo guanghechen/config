@@ -1,9 +1,9 @@
 local __module_name__ = "ark.c.subscribers" ---@type string
 
 ---@class ark.c.ISubscribable
----@field public subscribe              fun(self: ark.c.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): ark.t.IUnsubscribable
+---@field public subscribe              fun(self: ark.c.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): ark.c.IUnsubscribable
 
----@class ark.c.ISubscribers : ark.c.ISubscribable, ark.t.IDisposable
+---@class ark.c.ISubscribers : ark.c.ISubscribable, ark.c.IDisposable
 ---@field public count                  fun(self: ark.c.ISubscribers): nil
 ---@field public notify                 fun(self: ark.c.ISubscribers, value: ark.t.T, value_prev: ark.t.T | nil): nil
 
@@ -14,7 +14,7 @@ local __module_name__ = "ark.c.subscribers" ---@type string
 ---@field public subscriber             ark.c.ISubscriber
 ---@field public unsubscribed           boolean
 
----@type ark.t.IUnsubscribable
+---@type ark.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
 ---@class ark.c.Subscribers : ark.c.ISubscribers
@@ -119,7 +119,7 @@ function M:notify(value, value_prev)
 end
 
 ---@param subscriber                    ark.c.ISubscriber
----@return ark.t.IUnsubscribable
+---@return ark.c.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:isdisposed() then
     return noop_unsubscribable
@@ -136,7 +136,7 @@ function M:subscribe(subscriber)
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type ark.t.IUnsubscribable
+  ---@type ark.c.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then

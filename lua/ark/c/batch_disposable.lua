@@ -1,10 +1,10 @@
 local __module_name__ = "ark.c.batch_disposable" ---@type string
 
----@class ark.t.IBatchDisposable : ark.t.IDisposable
----@field public dispose_all            fun(disposables: ark.t.IDisposable[]): nil
----@field public add_disposable         fun(self: ark.t.IBatchDisposable, disposable: ark.t.IDisposable): ark.t.IBatchDisposable
+---@class ark.c.IBatchDisposable : ark.c.IDisposable
+---@field public dispose_all            fun(disposables: ark.c.IDisposable[]): nil
+---@field public add_disposable         fun(self: ark.c.IBatchDisposable, disposable: ark.c.IDisposable): ark.c.IBatchDisposable
 
----@class ark.c.BatchDisposable : ark.t.IBatchDisposable
+---@class ark.c.BatchDisposable : ark.c.IBatchDisposable
 local M = {}
 M.__index = M
 
@@ -15,12 +15,12 @@ function M.new()
   ---@type boolean
   self._disposed = false
 
-  ---@type ark.t.IDisposable[]
+  ---@type ark.c.IDisposable[]
   self._disposables = {}
   return self
 end
 
----@param disposables                   ark.t.IDisposable[]
+---@param disposables                   ark.c.IDisposable[]
 ---@return nil
 function M.dispose_all(disposables)
   if #disposables <= 0 then
@@ -68,8 +68,8 @@ function M:dispose()
   end
 end
 
----@param disposable                    ark.t.IDisposable
----@return ark.t.IBatchDisposable
+---@param disposable                    ark.c.IDisposable
+---@return ark.c.IBatchDisposable
 function M:add_disposable(disposable)
   if disposable:isdisposed() then
     return self
