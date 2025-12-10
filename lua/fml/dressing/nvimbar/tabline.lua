@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = std.status.dirtier_tabline ---@type std.collection.IDirtier
+local dirtier = std.status.dirtier_tabline ---@type ark.c.Dirtier
 local position = "f_tl" ---@type ux.nvimbar.PositionEnum
 
 local tabline ---@type ux.nvimbar.Nvimbar

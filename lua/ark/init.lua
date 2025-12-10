@@ -4,6 +4,7 @@ local c__mods = {
   BatchHandler = "ark.c.batch_handler",
   CircularQueue = "ark.c.circular_queue",
   CircularStack = "ark.c.circular_stack",
+  Dirtier = "ark.c.dirtier",
   Disposable = "ark.c.disposable",
   Frecency = "ark.c.frecency",
   History = "ark.c.history",
@@ -20,6 +21,7 @@ local c__mods = {
 ---@field public BatchHandler           ark.c.BatchHandler
 ---@field public CircularQueue          ark.c.CircularQueue
 ---@field public CircularStack          ark.c.CircularStack
+---@field public Dirtier                ark.c.Dirtier
 ---@field public Disposable             ark.c.Disposable
 ---@field public Frecency               ark.c.Frecency
 ---@field public History                ark.c.History

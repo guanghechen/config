@@ -35,7 +35,6 @@ local __mods = {
   timer = "std.timer",
   uri = "std.uri",
 
-  Dirtier = "std.collection.dirtier",
   Filetree = "std.collection.filetree",
   Scheduler = "std.collection.scheduler",
   Spawn = "std.collection.spawn",
@@ -62,7 +61,6 @@ local __mods = {
 ---@field public timer                  std.timer
 ---@field public uri                    std.uri
 ---
----@field public Dirtier                std.collection.Dirtier
 ---@field public Filetree               std.collection.Filetree
 ---@field public Scheduler              std.collection.Scheduler
 ---@field public Spawn                  std.collection.Spawn

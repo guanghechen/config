@@ -16,10 +16,10 @@
 ---
 ---@field public winnr_command          ark.c.Observable
 ---
----@field public dirtier_statusline     std.collection.IDirtier
----@field public dirtier_tabline        std.collection.IDirtier
----@field public dirtier_termline       std.collection.IDirtier
----@field public dirtier_notepadline    std.collection.IDirtier
+---@field public dirtier_statusline     ark.c.Dirtier
+---@field public dirtier_tabline        ark.c.Dirtier
+---@field public dirtier_termline       ark.c.Dirtier
+---@field public dirtier_notepadline    ark.c.Dirtier
 ---@field public dirty_winline_nr       ark.c.Observable
 ---
 ---@field public lint_schedule_nr       ark.c.Observable
@@ -40,10 +40,10 @@ local M = {
 
   winnr_command = ark.c.Observable.from_value(0),
 
-  dirtier_statusline = std.Dirtier.new({ dirty = true }),
-  dirtier_tabline = std.Dirtier.new({ dirty = true }),
-  dirtier_termline = std.Dirtier.new({ dirty = true }),
-  dirtier_notepadline = std.Dirtier.new({ dirty = true }),
+  dirtier_statusline = ark.c.Dirtier.new({ dirty = true }),
+  dirtier_tabline = ark.c.Dirtier.new({ dirty = true }),
+  dirtier_termline = ark.c.Dirtier.new({ dirty = true }),
+  dirtier_notepadline = ark.c.Dirtier.new({ dirty = true }),
   dirty_winline_nr = ark.c.Observable.from_value(0, ark.fn.falsy),
 
   lint_schedule_nr = ark.c.Observable.from_value(0, ark.fn.falsy),
