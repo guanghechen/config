@@ -6,10 +6,10 @@ local __module_name__ = "fml.action.notepad" ---@type string
 local widget = ux.widget.Notepad.new({ name = "notepad.default" })
 
 local dirty_data = true ---@type boolean
-local o_search_pattern = ark.c.Observable.from_value("") ---@type ark.c.IObservable
-local o_flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.IObservable
-local o_flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
-local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
+local o_search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
+local o_flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
+local o_flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
+local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 
 if widget:current_item() == nil then
   local first_uuid = widget:at(1) ---@type string|nil

@@ -14,27 +14,27 @@
 ---@field protected _disposables        ark.c.BatchDisposable
 ---
 ---
----@field public winnr_command          ark.c.IObservable
+---@field public winnr_command          ark.c.Observable
 ---
 ---@field public dirtier_statusline     std.collection.IDirtier
 ---@field public dirtier_tabline        std.collection.IDirtier
 ---@field public dirtier_termline       std.collection.IDirtier
 ---@field public dirtier_notepadline    std.collection.IDirtier
----@field public dirty_winline_nr       ark.c.IObservable
+---@field public dirty_winline_nr       ark.c.Observable
 ---
----@field public lint_schedule_nr       ark.c.IObservable
+---@field public lint_schedule_nr       ark.c.Observable
 ---
----@field public msg_changes            ark.c.IObservable
----@field public msg_command            ark.c.IObservable
----@field public msg_lsp                ark.c.IObservable
----@field public msg_mode               ark.c.IObservable
+---@field public msg_changes            ark.c.Observable
+---@field public msg_command            ark.c.Observable
+---@field public msg_lsp                ark.c.Observable
+---@field public msg_mode               ark.c.Observable
 ---
 ---@field public copilots               table<integer, string>
----@field public notification_paused    ark.c.IObservable
----@field public notification_level     ark.c.IObservable
----@field public searching              ark.c.IObservable
----@field public suppress_warning       ark.c.IObservable
----@field public tmux_zen_mode          ark.c.IObservable
+---@field public notification_paused    ark.c.Observable
+---@field public notification_level     ark.c.Observable
+---@field public searching              ark.c.Observable
+---@field public suppress_warning       ark.c.Observable
+---@field public tmux_zen_mode          ark.c.Observable
 local M = {
   _disposables = ark.c.BatchDisposable.new(),
 

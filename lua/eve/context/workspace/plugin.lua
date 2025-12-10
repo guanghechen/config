@@ -3,8 +3,8 @@
 ---@field public treesitter_context     boolean
 
 ---@class eve.context.plugin.state
----@field public render_markdown        ark.c.IObservable
----@field public treesitter_context     ark.c.IObservable
+---@field public render_markdown        ark.c.Observable
+---@field public treesitter_context     ark.c.Observable
 
 ---@class eve.context.plugin : eve.context.plugin.state
 ---@field public defaults               fun(): eve.context.plugin.data

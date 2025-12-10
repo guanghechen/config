@@ -1,11 +1,11 @@
 local __module_name__ = "ux.searcher.view.plainfile" ---@type string
 
 ---@class ux.searcher.IPlainfileViewContext
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_replace           ark.c.IObservable
----@field public search_pattern         ark.c.IObservable
----@field public replace_pattern        ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_replace           ark.c.Observable
+---@field public search_pattern         ark.c.Observable
+---@field public replace_pattern        ark.c.Observable
 ---
 ---@field public filepath               string
 ---@field public filematch              ux.searcher.view.filetree.IResolvedFileMatch|nil

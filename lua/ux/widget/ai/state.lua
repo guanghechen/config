@@ -8,7 +8,7 @@ local M = {}
 ---@type ux.widget.ai.IAttachedSource[]
 local _attached_sources = {}
 
----@type ark.c.IObservable
+---@type ark.c.Observable
 M.o_attached = ark.c.Observable.from_value(0)
 
 std.fn.observe({ M.o_attached }, function()

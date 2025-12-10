@@ -19,7 +19,7 @@ local __module_name__ = "std.collection.scheduler" ---@type string
 ---@field public name                   string
 ---@field public mode                   std.collection.scheduler.ScheduleModeEnum
 ---@field public task                   std.collection.scheduler.ITask
----@field public value                  ark.c.IObservable
+---@field public value                  ark.c.Observable
 ---@field public delay                  integer
 ---@field public timeout                integer
 ---@field public silent                 ?fun(): boolean
@@ -43,7 +43,7 @@ local __module_name__ = "std.collection.scheduler" ---@type string
 ---@field protected _task               std.collection.scheduler.ITask
 ---
 ---@field protected _context            unknown|nil
----@field protected _value              ark.c.IObservable
+---@field protected _value              ark.c.Observable
 local M = {}
 M.__index = M
 
@@ -60,7 +60,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local mode = props.mode ---@type std.collection.scheduler.ScheduleModeEnum
   local task = props.task ---@type std.collection.scheduler.ITask
-  local value = props.value ---@type ark.c.IObservable
+  local value = props.value ---@type ark.c.Observable
   local delay = props.delay ---@type integer
   local timeout = props.timeout ---@type integer
   local silent = props.silent or ark.fn.falsy ---@type fun(): boolean

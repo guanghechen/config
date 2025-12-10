@@ -1,4 +1,4 @@
----@class std.collection.IDirtier : ark.c.IObservable
+---@class std.collection.IDirtier : ark.c.Observable
 ---@field public is_clean               fun(self: std.collection.IDirtier): boolean
 ---@field public is_dirty               fun(self: std.collection.IDirtier): boolean
 ---@field public mark_clean             fun(self: std.collection.IDirtier): nil

@@ -47,10 +47,10 @@ local termlist = {} ---@type string[]
 local o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
 
 ---@class eve.builtin.term
----@field public o_termuuid             ark.c.IObservable
+---@field public o_termuuid             ark.c.Observable
 local M = {}
 
-M.o_termuuid = o_termuuid ---@type ark.c.IObservable
+M.o_termuuid = o_termuuid ---@type ark.c.Observable
 
 ---@param termuuid                      string
 ---@return boolean

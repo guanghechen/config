@@ -5,12 +5,6 @@ local __module_name__ = "ark.c.observable" ---@type string
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class ark.c.IObservable: ark.c.BatchDisposable, ark.c.ISubscribable
----@field public equals                 ark.t.IEquals
----@field public normalize              ark.t.INormalize
----@field public snapshot               fun(self: ark.c.IObservable): ark.t.T
----@field public next                   fun(self: ark.c.IObservable, value: ark.t.T, options?: ark.c.observable.INextOptions):boolean
-
 ---@class ark.c.observable.IProps
 ---@field public initial_value          ark.t.T           Initial value of the observable
 ---@field public equals                 ?ark.t.IEquals    Determine whether the two values are equal.
@@ -20,7 +14,9 @@ local __module_name__ = "ark.c.observable" ---@type string
 ---@type ark.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
----@class ark.c.Observable : ark.c.IObservable
+---@class ark.c.Observable : ark.c.BatchDisposable, ark.c.ISubscribable
+---@field public equals                 ark.t.IEquals
+---@field public normalize              ark.t.INormalize
 ---@field protected _readonly           boolean
 ---@field protected _value              ark.t.T
 ---@field protected _value_last_notified ark.t.T|nil

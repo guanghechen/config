@@ -50,9 +50,9 @@ local __module_name__ = "ux.picker.result" ---@type string
 ---@field public draw                   ux.picker.result.IDraw
 ---@field public flags                  ux.picker.result.IFlagItem[]
 ---@field public keymaps                std.t.IKeymap[]
----@field public lnum_current           ark.c.IObservable
----@field public lnum_present           ark.c.IObservable
----@field public lnum_total             ark.c.IObservable
+---@field public lnum_current           ark.c.Observable
+---@field public lnum_present           ark.c.Observable
+---@field public lnum_total             ark.c.Observable
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -79,9 +79,9 @@ function M.new(props)
   local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.picker.result.IOnDrawed
   local augroup_CursorMoved = std.nvim.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
-  local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
-  local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.IObservable
-  local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.IObservable
+  local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
+  local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
+  local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.Observable
 
   local flags = {} ---@type ux.picker.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
@@ -380,9 +380,9 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local lnum_current = self.lnum_current ---@type ark.c.IObservable
-  local lnum_present = self.lnum_present ---@type ark.c.IObservable
-  local lnum_total = self.lnum_total ---@type ark.c.IObservable
+  local lnum_current = self.lnum_current ---@type ark.c.Observable
+  local lnum_present = self.lnum_present ---@type ark.c.Observable
+  local lnum_total = self.lnum_total ---@type ark.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type ux.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type std.collection.Scheduler

@@ -8,9 +8,9 @@
 
 ---@class eve.builtin.tab.IMeta
 ---@field public bufs                   eve.builtin.tab.IBufItem[]
----@field public winnr_fixed            ark.c.IObservable
----@field public winnr_float            ark.c.IObservable
----@field public winnr_sourcefile       ark.c.IObservable
+---@field public winnr_fixed            ark.c.Observable
+---@field public winnr_float            ark.c.Observable
+---@field public winnr_sourcefile       ark.c.Observable
 ---@field public tabtype                eve.builtin.tab.TypeEnum
 
 ---@class eve.builtin.tab.Types
@@ -174,7 +174,7 @@ function M.retrieve_winnr_sourcefile(tabnr)
     return nil
   end
 
-  local o_winnr_sourcefile = meta.winnr_sourcefile ---@type ark.c.IObservable
+  local o_winnr_sourcefile = meta.winnr_sourcefile ---@type ark.c.Observable
   local winnr_sourcefile = o_winnr_sourcefile:snapshot() ---@type integer|nil
 
   if winnr_sourcefile == nil or not eve.win.is_sourcefile(winnr_sourcefile) then
@@ -335,8 +335,8 @@ function M.resolve(tabnr, force)
   local tabtype = M.resolve_type(tabnr, force) ---@type eve.builtin.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = ark.c.Observable.from_value(eve.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.IObservable
-  local winnr_float = ark.c.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type ark.c.IObservable
+  local winnr_fixed = ark.c.Observable.from_value(eve.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.Observable
+  local winnr_float = ark.c.Observable.from_value(eve.win.is_float(winnr) and winnr or 0) ---@type ark.c.Observable
   local winnr_sourcefile = ark.c.Observable.from_value(eve.win.is_sourcefile(winnr) and winnr or 0)
 
   ---@type eve.builtin.tab.IMeta

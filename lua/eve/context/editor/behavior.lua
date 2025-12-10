@@ -3,8 +3,8 @@
 ---@field public bufs_relative          boolean
 
 ---@class eve.context.behavior.state
----@field public auto_im                ark.c.IObservable
----@field public bufs_relative          ark.c.IObservable
+---@field public auto_im                ark.c.Observable
+---@field public bufs_relative          ark.c.Observable
 
 ---@class eve.context.behavior : eve.context.behavior.state
 ---@field public defaults               fun(): eve.context.behavior.data

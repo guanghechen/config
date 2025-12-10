@@ -1,4 +1,4 @@
----@class std.collection.ITicker: ark.c.IObservable
+---@class std.collection.ITicker: ark.c.Observable
 ---@field public tick                   fun(self: std.collection.ITicker): nil
 
 ---@class std.collection.ticker.IProps

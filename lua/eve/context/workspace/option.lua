@@ -4,9 +4,9 @@
 ---@field public notepad_source         string
 
 ---@class eve.context.option.state
----@field public expandtab              ark.c.IObservable
----@field public relativenumber         ark.c.IObservable
----@field public notepad_source         ark.c.IObservable
+---@field public expandtab              ark.c.Observable
+---@field public relativenumber         ark.c.Observable
+---@field public notepad_source         ark.c.Observable
 
 ---@class eve.context.option : eve.context.option.state
 ---@field public defaults               fun(): eve.context.option.data

@@ -14,18 +14,18 @@
 local name = "fml.action.find.diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
-local o_search_pattern = eve.context.select.find_diagnostics.search_pattern ---@type ark.c.IObservable
-local o_flag_foldempty = eve.context.select.find_diagnostics.flag_foldempty ---@type ark.c.IObservable
-local o_flag_fuzzy = eve.context.select.find_diagnostics.flag_fuzzy ---@type ark.c.IObservable
-local o_flag_regex = eve.context.select.find_diagnostics.flag_regex ---@type ark.c.IObservable
-local o_flag_case_sensitive = eve.context.select.find_diagnostics.flag_case_sensitive ---@type ark.c.IObservable
-local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type ark.c.IObservable
-local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type ark.c.IObservable
+local o_search_pattern = eve.context.select.find_diagnostics.search_pattern ---@type ark.c.Observable
+local o_flag_foldempty = eve.context.select.find_diagnostics.flag_foldempty ---@type ark.c.Observable
+local o_flag_fuzzy = eve.context.select.find_diagnostics.flag_fuzzy ---@type ark.c.Observable
+local o_flag_regex = eve.context.select.find_diagnostics.flag_regex ---@type ark.c.Observable
+local o_flag_case_sensitive = eve.context.select.find_diagnostics.flag_case_sensitive ---@type ark.c.Observable
+local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type ark.c.Observable
+local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type ark.c.Observable
 
 local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
-local o_bufnr_sourcefile = ark.c.Observable.from_value(nil)---@type ark.c.IObservable
-local o_rootpath = ark.c.Observable.from_value(std.path.cwd())---@type ark.c.IObservable
-local o_flag_buffer = ark.c.Observable.from_value(false)---@type ark.c.IObservable
+local o_bufnr_sourcefile = ark.c.Observable.from_value(nil)---@type ark.c.Observable
+local o_rootpath = ark.c.Observable.from_value(std.path.cwd())---@type ark.c.Observable
+local o_flag_buffer = ark.c.Observable.from_value(false)---@type ark.c.Observable
 local o_flag_severity = ark.c.Observable.from_value(nil)
 
 local picker ---@type ux.picker.FiletreeComposer

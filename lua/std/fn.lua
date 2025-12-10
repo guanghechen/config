@@ -1,7 +1,7 @@
 ---@class std.fn
 local M = {}
 
----@param observables                   ark.c.IObservable[]
+---@param observables                   ark.c.Observable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
 ---@return ark.c.IUnsubscribable

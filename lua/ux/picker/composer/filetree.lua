@@ -72,19 +72,19 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---
 ---@field public render_preview         ?ux.picker.preview.IDraw
 ---
----@field public flag_foldempty         ark.c.IObservable
----@field public flag_fuzzy             ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_selected          ark.c.IObservable
----@field public flag_viewtype          ark.c.IObservable
+---@field public flag_foldempty         ark.c.Observable
+---@field public flag_fuzzy             ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_selected          ark.c.Observable
+---@field public flag_viewtype          ark.c.Observable
 ---@field public flags_append           ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          ux.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public frecency               ?std.collection.IFrecency
 ---
----@field public search_pattern         ark.c.IObservable
+---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?std.collection.IHistory
 ---
 ---@field public on_attached            ?ux.picker.composer.filetree.IOnAttached
@@ -106,12 +106,12 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---@field public result                 ux.picker.Result
 ---@field public preview                ux.picker.Preview
 ---
----@field public flag_foldempty         ark.c.IObservable
----@field public flag_fuzzy             ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_selected          ark.c.IObservable
----@field public flag_viewtype          ark.c.IObservable
+---@field public flag_foldempty         ark.c.Observable
+---@field public flag_fuzzy             ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_selected          ark.c.Observable
+---@field public flag_viewtype          ark.c.Observable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
@@ -155,13 +155,13 @@ function M.new(props)
   local render_preview = props.render_preview ---@type ux.picker.preview.IDraw|nil
 
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
-  local o_search_pattern = props.search_pattern ---@type ark.c.IObservable
-  local o_flag_fuzzy = props.flag_fuzzy ---@type ark.c.IObservable
-  local o_flag_regex = props.flag_regex ---@type ark.c.IObservable
-  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.IObservable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.IObservable
-  local o_flag_selected = props.flag_selected ---@type ark.c.IObservable
-  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.IObservable
+  local o_search_pattern = props.search_pattern ---@type ark.c.Observable
+  local o_flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
+  local o_flag_regex = props.flag_regex ---@type ark.c.Observable
+  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.Observable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
+  local o_flag_selected = props.flag_selected ---@type ark.c.Observable
+  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
 
   local flags_append = props.flags_append ---@type ux.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type ux.picker.result.IFlagItemRaw[]|nil
@@ -1759,7 +1759,7 @@ function M:render_preview(bufnr, force)
   local filetree = self._filetree ---@type std.collection.Filetree
   local treeview = self._treeview ---@type ux.picker.FiletreeView
   local plainfile = self._plainfile ---@type ux.view.Plainfile
-  local o_flag_foldempty = self.flag_foldempty ---@type ark.c.IObservable
+  local o_flag_foldempty = self.flag_foldempty ---@type ark.c.Observable
 
   local node, nodestate = self:__retrieve__(nodeuuid)
 

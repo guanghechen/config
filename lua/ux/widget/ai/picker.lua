@@ -13,7 +13,7 @@ local M = {}
 --- Picker utilities
 ----------------------------------------------------------------------------------------------------
 
----@return ark.c.IObservable, ark.c.IObservable, ark.c.IObservable, ark.c.IObservable
+---@return ark.c.Observable, ark.c.Observable, ark.c.Observable, ark.c.Observable
 local function create_picker_flags()
   return ark.c.Observable.from_value(""),
     ark.c.Observable.from_value(true),
@@ -21,7 +21,7 @@ local function create_picker_flags()
     ark.c.Observable.from_value(false)
 end
 
----@param flags                         ark.c.IObservable[]
+---@param flags                         ark.c.Observable[]
 ---@return nil
 local function dispose_picker_flags(flags)
   for _, flag in ipairs(flags) do

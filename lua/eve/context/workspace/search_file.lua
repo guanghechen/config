@@ -6,10 +6,10 @@
 ---@field public replace_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.search_file.state
----@field public flag_replace           ark.c.IObservable
----@field public max_filesize           ark.c.IObservable
----@field public max_matches            ark.c.IObservable
----@field public replacement            ark.c.IObservable
+---@field public flag_replace           ark.c.Observable
+---@field public max_filesize           ark.c.Observable
+---@field public max_matches            ark.c.Observable
+---@field public replacement            ark.c.Observable
 ---@field public replace_pattern_history ark.c.History
 
 ---@class eve.context.search_file : eve.context.search_file.state

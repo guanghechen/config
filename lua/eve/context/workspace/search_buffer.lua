@@ -9,13 +9,13 @@
 ---@field public replace_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.search_buffer.state
----@field public flag_fuzzy             ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_replace           ark.c.IObservable
----@field public flag_case_sensitive    ark.c.IObservable
----@field public search_pattern         ark.c.IObservable
+---@field public flag_fuzzy             ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_replace           ark.c.Observable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ark.c.History
----@field public replace_pattern        ark.c.IObservable
+---@field public replace_pattern        ark.c.Observable
 ---@field public replace_pattern_history ark.c.History
 
 ---@class eve.context.search_buffer : eve.context.search_buffer.state

@@ -113,10 +113,10 @@ function M.select(items, opts, on_choice)
   title = (#title > 1 and string.sub(title, 1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
   local is_new_context = context == nil ---@type boolean
-  local search_pattern ---@type ark.c.IObservable
-  local flag_fuzzy ---@type ark.c.IObservable
-  local flag_regex ---@type ark.c.IObservable
-  local flag_case_sensitive ---@type ark.c.IObservable
+  local search_pattern ---@type ark.c.Observable
+  local flag_fuzzy ---@type ark.c.Observable
+  local flag_regex ---@type ark.c.Observable
+  local flag_case_sensitive ---@type ark.c.Observable
 
   if context then
     -- Use existing context observables

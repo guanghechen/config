@@ -100,7 +100,7 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public search_pattern         ark.c.IObservable
+---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?std.collection.IHistory
 ---@field public finder_title           string
 ---
@@ -167,7 +167,7 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
 
-  local search_pattern = props.search_pattern ---@type ark.c.IObservable
+  local search_pattern = props.search_pattern ---@type ark.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 

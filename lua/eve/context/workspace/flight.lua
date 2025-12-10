@@ -22,27 +22,27 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class eve.context.flight.state
----@field public ai                     ark.c.IObservable
----@field public ai_nes                 ark.c.IObservable
----@field public autoformat             ark.c.IObservable
----@field public autoload               ark.c.IObservable
----@field public autosave               ark.c.IObservable
----@field public devmode                ark.c.IObservable
+---@field public ai                     ark.c.Observable
+---@field public ai_nes                 ark.c.Observable
+---@field public autoformat             ark.c.Observable
+---@field public autoload               ark.c.Observable
+---@field public autosave               ark.c.Observable
+---@field public devmode                ark.c.Observable
 ---
----@field public dressing_clipboard     ark.c.IObservable
----@field public dressing_dim           ark.c.IObservable
----@field public dressing_illumniate    ark.c.IObservable
----@field public dressing_image         ark.c.IObservable
----@field public dressing_indent        ark.c.IObservable
----@field public dressing_input         ark.c.IObservable
----@field public dressing_scroll        ark.c.IObservable
----@field public dressing_select        ark.c.IObservable
----@field public dressing_trailspace    ark.c.IObservable
----@field public dressing_ui_attach     ark.c.IObservable
----@field public dressing_virtcolumn    ark.c.IObservable
----@field public dressing_winsep        ark.c.IObservable
+---@field public dressing_clipboard     ark.c.Observable
+---@field public dressing_dim           ark.c.Observable
+---@field public dressing_illumniate    ark.c.Observable
+---@field public dressing_image         ark.c.Observable
+---@field public dressing_indent        ark.c.Observable
+---@field public dressing_input         ark.c.Observable
+---@field public dressing_scroll        ark.c.Observable
+---@field public dressing_select        ark.c.Observable
+---@field public dressing_trailspace    ark.c.Observable
+---@field public dressing_ui_attach     ark.c.Observable
+---@field public dressing_virtcolumn    ark.c.Observable
+---@field public dressing_winsep        ark.c.Observable
 ---
----@field public gitdiff_expand_all     ark.c.IObservable
+---@field public gitdiff_expand_all     ark.c.Observable
 
 ---@class eve.context.flight : eve.context.flight.state
 ---@field public defaults               fun(): eve.context.flight.data

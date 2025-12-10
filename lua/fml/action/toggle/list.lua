@@ -19,7 +19,7 @@ local group_priorities = {
   plugin = 6,
 }
 
----@type table<string, table<string, ark.c.IObservable<boolean>>>
+---@type table<string, table<string, ark.c.Observable<boolean>>>
 local group_flags = {
   ---behavior
   behavior = {
@@ -479,10 +479,10 @@ do
 end
 
 local dirty_data = true ---@type boolean
-local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.IObservable
-local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.IObservable
-local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
-local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.IObservable
+local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
+local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
+local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
+local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data()

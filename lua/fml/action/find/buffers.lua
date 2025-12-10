@@ -15,11 +15,11 @@ local title = "Find Buffers" ---@type string
 ---@field public icon_hl                string
 
 local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
-local o_scope = eve.context.select.find_buffer_scope ---@type ark.c.IObservable
-local o_search_pattern = eve.context.select.find_buffer.search_pattern ---@type ark.c.IObservable
-local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type ark.c.IObservable
-local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type ark.c.IObservable
-local o_flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type ark.c.IObservable
+local o_scope = eve.context.select.find_buffer_scope ---@type ark.c.Observable
+local o_search_pattern = eve.context.select.find_buffer.search_pattern ---@type ark.c.Observable
+local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type ark.c.Observable
+local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type ark.c.Observable
+local o_flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type ark.c.Observable
 
 local IGNORED_FILETYPES = {
   dot.filetype.UX_PICKER_FINDER,

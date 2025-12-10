@@ -11,10 +11,10 @@ local MAX_HISTORY = 10
 ---@field public last_color             eve.context.colorpicker.IColorItem|nil
 
 ---@class eve.context.colorpicker.state
----@field public history                ark.c.IObservable
----@field public input_mode             ark.c.IObservable
----@field public output_mode            ark.c.IObservable
----@field public last_color             ark.c.IObservable
+---@field public history                ark.c.Observable
+---@field public input_mode             ark.c.Observable
+---@field public output_mode            ark.c.Observable
+---@field public last_color             ark.c.Observable
 
 ---@class eve.context.colorpicker : eve.context.colorpicker.state
 ---@field public defaults               fun(): eve.context.colorpicker.data
@@ -169,16 +169,16 @@ end
 
 local _defaults = M.defaults() ---@type eve.context.colorpicker.data
 
----@type ark.c.IObservable
+---@type ark.c.Observable
 M.history = ark.c.Observable.from_value(_defaults.history)
 
----@type ark.c.IObservable
+---@type ark.c.Observable
 M.input_mode = ark.c.Observable.from_value(_defaults.input_mode)
 
----@type ark.c.IObservable
+---@type ark.c.Observable
 M.output_mode = ark.c.Observable.from_value(_defaults.output_mode)
 
----@type ark.c.IObservable
+---@type ark.c.Observable
 M.last_color = ark.c.Observable.from_value(_defaults.last_color)
 
 return M

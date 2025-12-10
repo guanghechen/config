@@ -14,10 +14,10 @@ local function calculate_dynamic_height(pattern_line_count)
   return base_height + extra_lines
 end
 
----@param o_flag_fuzzy                  ark.c.IObservable
----@param o_flag_regex                  ark.c.IObservable
----@param o_flag_case_sensitive         ark.c.IObservable
----@param o_flag_replace                ark.c.IObservable
+---@param o_flag_fuzzy                  ark.c.Observable
+---@param o_flag_regex                  ark.c.Observable
+---@param o_flag_case_sensitive         ark.c.Observable
+---@param o_flag_replace                ark.c.Observable
 ---@param title                         string
 ---@return ux.searcher.result.IFlagItem[], ux.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
@@ -141,26 +141,26 @@ local function collect_buffer_content(bufnr)
 end
 
 ---@class ux.searcher.buffer.ISearcherProps
----@field public o_flag_fuzzy?          ark.c.IObservable
----@field public o_flag_regex?          ark.c.IObservable
----@field public o_flag_replace?        ark.c.IObservable
----@field public o_flag_case_sensitive? ark.c.IObservable
----@field public o_search_pattern?      ark.c.IObservable
+---@field public o_flag_fuzzy?          ark.c.Observable
+---@field public o_flag_regex?          ark.c.Observable
+---@field public o_flag_replace?        ark.c.Observable
+---@field public o_flag_case_sensitive? ark.c.Observable
+---@field public o_search_pattern?      ark.c.Observable
 ---@field public o_search_pattern_history? std.collection.IHistory
----@field public o_replace_pattern?     ark.c.IObservable
+---@field public o_replace_pattern?     ark.c.Observable
 ---@field public o_replace_pattern_history? std.collection.IHistory
 
 ---@class ux.searcher.buffer.Searcher
 ---@field public title                  string
----@field public o_flag_fuzzy           ark.c.IObservable
----@field public o_flag_regex           ark.c.IObservable
----@field public o_flag_replace         ark.c.IObservable
----@field public o_flag_case_sensitive  ark.c.IObservable
----@field public o_search_pattern       ark.c.IObservable
----@field public o_search_pattern_linecount ark.c.IObservable
----@field public o_replace_pattern      ark.c.IObservable
----@field public o_match_index          ark.c.IObservable
----@field public o_match_total          ark.c.IObservable
+---@field public o_flag_fuzzy           ark.c.Observable
+---@field public o_flag_regex           ark.c.Observable
+---@field public o_flag_replace         ark.c.Observable
+---@field public o_flag_case_sensitive  ark.c.Observable
+---@field public o_search_pattern       ark.c.Observable
+---@field public o_search_pattern_linecount ark.c.Observable
+---@field public o_replace_pattern      ark.c.Observable
+---@field public o_match_index          ark.c.Observable
+---@field public o_match_total          ark.c.Observable
 ---@field protected _winnr_finder       integer|nil
 ---@field protected _bufnr_finder       integer|nil
 ---@field protected _winnr_replacer     integer|nil
@@ -1010,7 +1010,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       key = "tr",
       desc = string.format("%s: toggle replace mode", self.title),
       callback = function()
-        local flag = self.o_flag_replace ---@type ark.c.IObservable
+        local flag = self.o_flag_replace ---@type ark.c.Observable
         flag:next(not flag:snapshot())
       end,
     }
@@ -1029,8 +1029,8 @@ function M:__create_keymaps__(raw_flags, window_type)
 end
 
 ---@protected
----@param o_match_index                 ark.c.IObservable
----@param o_match_total                 ark.c.IObservable
+---@param o_match_index                 ark.c.Observable
+---@param o_match_total                 ark.c.Observable
 ---@param flags                         ux.searcher.result.IFlagItem[]
 ---@return ux.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)

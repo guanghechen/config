@@ -18,14 +18,14 @@ local __module_name__ = "eve.context.workspace.lsp" ---@type string
 ---@field public spellcheck             boolean
 
 ---@class eve.context.lsp.state
----@field public breakpoints            ark.c.IObservable
----@field public code_lens              ark.c.IObservable
----@field public diagnostics_virt_lines ark.c.IObservable
----@field public inlay_hints            ark.c.IObservable
----@field public python_debug_host      ark.c.IObservable
----@field public python_debug_port      ark.c.IObservable
----@field public python_venv_path       ark.c.IObservable
----@field public spellcheck             ark.c.IObservable
+---@field public breakpoints            ark.c.Observable
+---@field public code_lens              ark.c.Observable
+---@field public diagnostics_virt_lines ark.c.Observable
+---@field public inlay_hints            ark.c.Observable
+---@field public python_debug_host      ark.c.Observable
+---@field public python_debug_port      ark.c.Observable
+---@field public python_venv_path       ark.c.Observable
+---@field public spellcheck             ark.c.Observable
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil

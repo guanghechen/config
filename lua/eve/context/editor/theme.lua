@@ -18,9 +18,9 @@ local __module_name__ = "std.status.theme" ---@type string
 ---@field public username               boolean
 
 ---@class eve.context.theme.state
----@field public theme                  ark.c.IObservable
----@field public transparency           ark.c.IObservable
----@field public username               ark.c.IObservable
+---@field public theme                  ark.c.Observable
+---@field public transparency           ark.c.Observable
+---@field public username               ark.c.Observable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---

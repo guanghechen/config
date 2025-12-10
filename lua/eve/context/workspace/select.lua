@@ -34,9 +34,9 @@ local select_item = require("eve.context.workspace.select_item")
 ---@field public lsp_symbols            eve.context.select.item.state
 ---@field public search_file            eve.context.select.item.state
 ---
----@field public find_buffer_scope      ark.c.IObservable
----@field public find_file_scope        ark.c.IObservable
----@field public search_file_scope      ark.c.IObservable
+---@field public find_buffer_scope      ark.c.Observable
+---@field public find_file_scope        ark.c.Observable
+---@field public search_file_scope      ark.c.Observable
 
 ---@class eve.context.select : eve.context.select.state
 ---@field public keys                   string[]

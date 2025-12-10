@@ -58,7 +58,7 @@ local __mods = {
 ---@field public get_storage            fun(): eve.context.storage
 ---@field public set_storage            fun(storage: eve.context.storage): nil
 ---
----@field public observe                fun(observables: ark.c.IObservable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: ark.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: eve.context.state.IWatchChangeParams): nil
@@ -274,7 +274,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ---@type ark.c.IObservable[]
+  ---@type ark.c.Observable[]
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,

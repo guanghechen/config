@@ -14,18 +14,18 @@
 ---@field public search_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.select.item.state
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_exclude           ark.c.IObservable
----@field public flag_foldempty         ark.c.IObservable
----@field public flag_fuzzy             ark.c.IObservable
----@field public flag_gitignore         ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_selected          ark.c.IObservable
----@field public flag_textonly          ark.c.IObservable
----@field public flag_viewtype          ark.c.IObservable
----@field public includes               ark.c.IObservable
----@field public excludes               ark.c.IObservable
----@field public search_pattern         ark.c.IObservable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_exclude           ark.c.Observable
+---@field public flag_foldempty         ark.c.Observable
+---@field public flag_fuzzy             ark.c.Observable
+---@field public flag_gitignore         ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_selected          ark.c.Observable
+---@field public flag_textonly          ark.c.Observable
+---@field public flag_viewtype          ark.c.Observable
+---@field public includes               ark.c.Observable
+---@field public excludes               ark.c.Observable
+---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ark.c.History
 
 ---@class eve.context.select.item

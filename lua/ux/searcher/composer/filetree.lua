@@ -56,21 +56,21 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public keymaps_replacer       ?std.t.IKeymap[]
 ---@field public keymaps_result         ?std.t.IKeymap[]
 ---
----@field public excludes               ark.c.IObservable
----@field public flag_exclude           ark.c.IObservable
----@field public flag_foldempty         ark.c.IObservable
----@field public flag_gitignore         ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_replace           ark.c.IObservable
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_selected          ark.c.IObservable
----@field public flag_viewtype          ark.c.IObservable
----@field public includes               ark.c.IObservable
----@field public max_filesize           ark.c.IObservable
----@field public max_matches            ark.c.IObservable
----@field public replace_pattern        ark.c.IObservable
----@field public rootpath               ark.c.IObservable
----@field public search_pattern         ark.c.IObservable
+---@field public excludes               ark.c.Observable
+---@field public flag_exclude           ark.c.Observable
+---@field public flag_foldempty         ark.c.Observable
+---@field public flag_gitignore         ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_replace           ark.c.Observable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_selected          ark.c.Observable
+---@field public flag_viewtype          ark.c.Observable
+---@field public includes               ark.c.Observable
+---@field public max_filesize           ark.c.Observable
+---@field public max_matches            ark.c.Observable
+---@field public replace_pattern        ark.c.Observable
+---@field public rootpath               ark.c.Observable
+---@field public search_pattern         ark.c.Observable
 ---
 ---@field public flags_append           ux.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          ux.searcher.result.IFlagItemRaw[]|nil
@@ -98,20 +98,20 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public result                 ux.searcher.Result
 ---@field public preview                ux.searcher.Preview
 ---
----@field public excludes               ark.c.IObservable
----@field public flag_exclude           ark.c.IObservable
----@field public flag_foldempty         ark.c.IObservable
----@field public flag_gitignore         ark.c.IObservable
----@field public flag_regex             ark.c.IObservable
----@field public flag_replace           ark.c.IObservable
----@field public flag_case_sensitive    ark.c.IObservable
----@field public flag_selected          ark.c.IObservable
----@field public includes               ark.c.IObservable
----@field public max_filesize           ark.c.IObservable
----@field public max_matches            ark.c.IObservable
----@field public replace_pattern        ark.c.IObservable
----@field public rootpath               ark.c.IObservable
----@field public search_pattern         ark.c.IObservable
+---@field public excludes               ark.c.Observable
+---@field public flag_exclude           ark.c.Observable
+---@field public flag_foldempty         ark.c.Observable
+---@field public flag_gitignore         ark.c.Observable
+---@field public flag_regex             ark.c.Observable
+---@field public flag_replace           ark.c.Observable
+---@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_selected          ark.c.Observable
+---@field public includes               ark.c.Observable
+---@field public max_filesize           ark.c.Observable
+---@field public max_matches            ark.c.Observable
+---@field public replace_pattern        ark.c.Observable
+---@field public rootpath               ark.c.Observable
+---@field public search_pattern         ark.c.Observable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _filetree           std.collection.Filetree
@@ -149,21 +149,21 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local o_excludes = props.excludes ---@type ark.c.IObservable
-  local o_flag_exclude = props.flag_exclude ---@type ark.c.IObservable
-  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.IObservable
-  local o_flag_gitignore = props.flag_gitignore ---@type ark.c.IObservable
-  local o_flag_regex = props.flag_regex ---@type ark.c.IObservable
-  local o_flag_replace = props.flag_replace ---@type ark.c.IObservable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.IObservable
-  local o_flag_selected = props.flag_selected ---@type ark.c.IObservable
-  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.IObservable
-  local o_includes = props.includes ---@type ark.c.IObservable
-  local o_max_filesize = props.max_filesize ---@type ark.c.IObservable
-  local o_max_matches = props.max_matches ---@type ark.c.IObservable
-  local o_replace_pattern = props.replace_pattern ---@type ark.c.IObservable
-  local o_rootpath = props.rootpath ---@type ark.c.IObservable
-  local o_search_pattern = props.search_pattern ---@type ark.c.IObservable
+  local o_excludes = props.excludes ---@type ark.c.Observable
+  local o_flag_exclude = props.flag_exclude ---@type ark.c.Observable
+  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.Observable
+  local o_flag_gitignore = props.flag_gitignore ---@type ark.c.Observable
+  local o_flag_regex = props.flag_regex ---@type ark.c.Observable
+  local o_flag_replace = props.flag_replace ---@type ark.c.Observable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
+  local o_flag_selected = props.flag_selected ---@type ark.c.Observable
+  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
+  local o_includes = props.includes ---@type ark.c.Observable
+  local o_max_filesize = props.max_filesize ---@type ark.c.Observable
+  local o_max_matches = props.max_matches ---@type ark.c.Observable
+  local o_replace_pattern = props.replace_pattern ---@type ark.c.Observable
+  local o_rootpath = props.rootpath ---@type ark.c.Observable
+  local o_search_pattern = props.search_pattern ---@type ark.c.Observable
 
   local search_pattern_history = props.search_pattern_history ---@type std.collection.IHistory|nil
   local replace_pattern_history = props.replace_pattern_history ---@type std.collection.IHistory|nil
