@@ -467,7 +467,7 @@ end
 ---@return nil
 function M:focus(pane)
   self:__health__()
-  eve.widget.push(self)
+  dot.state.widget.push(self)
 
   local has_new_created = self:__create_wins__()
   local pane_focused = has_new_created and "finder" or self._pane_focused ---@type ux.searcher.composer.basic.PaneEnum
@@ -1033,7 +1033,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     builtin_keymaps[N] = keymap
   end
 
-  for _, item in ipairs(eve.widget.get_keymaps(self)) do
+  for _, item in ipairs(dot.state.widget.get_keymaps(self)) do
     N = N + 1 ---@type integer
     builtin_keymaps[N] = item
   end

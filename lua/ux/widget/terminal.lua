@@ -132,7 +132,7 @@ end
 
 ---@return integer|nil
 function M:focus()
-  eve.widget.push(self)
+  dot.state.widget.push(self)
 
   local termindex = eve.term.current() ---@type integer
   local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil

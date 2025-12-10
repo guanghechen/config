@@ -22,11 +22,11 @@ function M.resume_last_widget()
     end
   end
 
-  if eve.widget.resume() then
-    local widget, widget_index = eve.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
+  if dot.state.widget.resume() then
+    local widget, widget_index = dot.state.widget.get_widget_visible() ---@type std.t.ux.IWidget|nil
     if widget ~= nil and widget_index ~= nil then
       widget:focus()
-      eve.widget.history:go(widget_index)
+      dot.state.widget.history:go(widget_index)
     else
       local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
       if winnr_command ~= nil then

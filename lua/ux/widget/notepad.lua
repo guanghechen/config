@@ -1161,7 +1161,7 @@ end
 
 ---@return nil
 function M:focus()
-  eve.widget.push(self)
+  dot.state.widget.push(self)
   local winnr = self:ensure_win()
   if vim.api.nvim_get_current_win() ~= winnr then
     vim.api.nvim_set_current_win(winnr)

@@ -1,7 +1,7 @@
 ---@type fun(w1: std.t.ux.IWidget, w2: std.t.ux.IWidget): boolean
 local equals = ark.fn.equals_shallow
 
----@class eve.builtin.widget
+---@class dot.state.widget
 local M = {}
 
 ---@type ark.c.History

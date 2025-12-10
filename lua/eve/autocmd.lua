@@ -175,7 +175,7 @@ vim.api.nvim_create_autocmd("VimResized", {
         end)
       end
 
-      eve.widget.resize()
+      dot.state.widget.resize()
       dot.state.status.dirtier_statusline:mark_dirty()
       dot.state.status.dirtier_tabline:mark_dirty()
     end)
