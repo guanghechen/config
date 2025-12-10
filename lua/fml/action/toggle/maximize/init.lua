@@ -8,7 +8,7 @@ function M.maximize()
     return
   end
 
-  local original_normal = eve.state.maximized.get_original_normal() ---@type eve.state.maximized.IOriginalNormalWindow|nil
+  local original_normal = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original_normal ~= nil and original_normal.float_winnr == winnr then
     require("fml.action.toggle.maximize.normal").close()
     return

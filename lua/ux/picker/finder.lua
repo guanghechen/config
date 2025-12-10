@@ -264,7 +264,7 @@ function M:resize(dimension)
   wincfg.width = dimension.width
   wincfg.height = dimension.height
 
-  local resize = eve.state.maximized.resolve_resize_config(winnr, wincfg) ---@type eve.state.maximized.ResolveResizeResult
+  local resize = dot.state.maximized.resolve_resize_config(winnr, wincfg) ---@type dot.state.maximized.ResolveResizeResult
   vim.api.nvim_win_set_config(winnr, resize.cfg)
   return self
 end

@@ -146,6 +146,7 @@ local theme = {
 
 ---@class dot.state.__mods
 local __state__mods = {
+  maximized = "dot.state.maximized",
   qflist = "dot.state.qflist",
   status = "dot.state.status",
   widget = "dot.state.widget",
@@ -153,6 +154,7 @@ local __state__mods = {
 
 ---@class dot.state
 ---@field public __mods                 dot.state.__mods
+---@field public maximized              dot.state.maximized
 ---@field public qflist                 dot.state.qflist
 ---@field public status                 dot.state.status
 ---@field public widget                 dot.state.widget

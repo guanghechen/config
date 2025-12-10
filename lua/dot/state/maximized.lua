@@ -1,46 +1,45 @@
----@class eve.state.maximized.IOriginalFloatWindow
+---@class dot.state.maximized.IOriginalFloatWindow
 ---@field public winnr                  integer
 ---@field public winblend               integer
 ---@field public winhighlight           string
 ---@field public wincfg                 vim.api.keyset.win_config
 
----@class eve.state.maximized.IOriginalNormalWindow
+---@class dot.state.maximized.IOriginalNormalWindow
 ---@field public parent_winnr           integer
 ---@field public float_winnr            integer
 ---@field public augroup                integer
 
----@class eve.state.maximized.IContext
----@field public original_float         eve.state.maximized.IOriginalFloatWindow|nil
----@field public original_normal        eve.state.maximized.IOriginalNormalWindow|nil
+---@class dot.state.maximized.IContext
+---@field public original_float         dot.state.maximized.IOriginalFloatWindow|nil
+---@field public original_normal        dot.state.maximized.IOriginalNormalWindow|nil
 
----@class eve.state.maximized.ResolveResizeOpts
+---@class dot.state.maximized.ResolveResizeOpts
 ---@field public winblend               integer|nil
 
----@class eve.state.maximized.ResolveResizeResult
+---@class dot.state.maximized.ResolveResizeResult
 ---@field public cfg                    vim.api.keyset.win_config
 ---@field public winblend               integer
 ---@field public maximized              boolean
 
----@type eve.state.maximized.IContext
+---@type dot.state.maximized.IContext
 local context = {
   original_float = nil,
   original_normal = nil,
 }
 
----@module 'eve.state.maximized'
----@class eve.state.maximized
----@field public context                eve.state.maximized.IContext
+---@class dot.state.maximized
+---@field public context                dot.state.maximized.IContext
 local M = {
   context = context,
 }
 
----@param original                      eve.state.maximized.IOriginalFloatWindow
+---@param original                      dot.state.maximized.IOriginalFloatWindow
 ---@return nil
 function M.set_original_float(original)
   context.original_float = original
 end
 
----@return eve.state.maximized.IOriginalFloatWindow|nil
+---@return dot.state.maximized.IOriginalFloatWindow|nil
 function M.get_original_float()
   return context.original_float
 end
@@ -50,13 +49,13 @@ function M.clear_original_float()
   context.original_float = nil
 end
 
----@param original                      eve.state.maximized.IOriginalNormalWindow
+---@param original                      dot.state.maximized.IOriginalNormalWindow
 ---@return nil
 function M.set_original_normal(original)
   context.original_normal = original
 end
 
----@return eve.state.maximized.IOriginalNormalWindow|nil
+---@return dot.state.maximized.IOriginalNormalWindow|nil
 function M.get_original_normal()
   return context.original_normal
 end
@@ -99,12 +98,12 @@ end
 
 ---@param winnr                         integer
 ---@param desired_cfg                   vim.api.keyset.win_config
----@param opts                          eve.state.maximized.ResolveResizeOpts|nil
----@return eve.state.maximized.ResolveResizeResult
+---@param opts                          dot.state.maximized.ResolveResizeOpts|nil
+---@return dot.state.maximized.ResolveResizeResult
 function M.resolve_resize_config(winnr, desired_cfg, opts)
   local winblend = opts and opts.winblend or nil ---@type integer|nil
 
-  local original = context.original_float ---@type eve.state.maximized.IOriginalFloatWindow|nil
+  local original = context.original_float ---@type dot.state.maximized.IOriginalFloatWindow|nil
   if original ~= nil and original.winnr == winnr then
     original.wincfg = vim.deepcopy(desired_cfg)
     original.winblend = original.winblend or winblend

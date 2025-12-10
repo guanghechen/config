@@ -1102,7 +1102,7 @@ function M:ensure_win()
     eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
-    local resize = eve.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
+    local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     winblend = resize.winblend or winblend
@@ -1206,7 +1206,7 @@ function M:resize()
   local rect = self:measure_rect()
   vim.wo[winnr].winfixbuf = false
 
-  local resize = eve.state.maximized.resolve_resize_config(winnr, {
+  local resize = dot.state.maximized.resolve_resize_config(winnr, {
     relative = "editor",
     anchor = "NW",
     row = rect.row,

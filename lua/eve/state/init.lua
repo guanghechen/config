@@ -1,7 +1,6 @@
 ---@class eve.state.__mods
 local __mods = {
   git = "eve.state.git",
-  maximized = "eve.state.maximized",
   notepad = "eve.state.notepad",
 }
 
@@ -9,7 +8,6 @@ local __mods = {
 ---@field public __mods                 eve.state.__mods
 ---
 ---@field public git                    eve.state.git
----@field public maximized              eve.state.maximized
 ---@field public notepad                eve.state.notepad
 local M = setmetatable({
   __mods = __mods,
