@@ -20,15 +20,15 @@ require("ghc.plugin")
 require("mason")
 local action = require("ghc.action.mason")
 
-std.stdout.info("[guanghechen]", "Installing Mason packages...")
+ark.stdout.info("[guanghechen]", "Installing Mason packages...")
 action.install_all(false, function()
-  std.stdout.success("[guanghechen]", "All Mason packages installed successfully!")
+  ark.stdout.success("[guanghechen]", "All Mason packages installed successfully!")
   local ok, err = pcall(function()
     vim.cmd("qa!")
   end)
 
   if not ok then
-    std.stdout.error("[guanghechen]", "Error during exit: " .. tostring(err))
+    ark.stdout.error("[guanghechen]", "Error during exit: " .. tostring(err))
     os.exit(1)
   end
 end)

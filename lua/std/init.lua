@@ -31,7 +31,6 @@ local __mods = {
   nvim = "std.nvim",
   path = "std.path",
   status = "std.status",
-  stdout = "std.stdout",
   string = "std.string",
   table = "std.table",
   timer = "std.timer",
@@ -62,7 +61,6 @@ local __mods = {
 ---@field public nvim                   std.nvim
 ---@field public path                   std.path
 ---@field public status                 std.status
----@field public stdout                 std.stdout
 ---@field public string                 std.string
 ---@field public table                  std.table
 ---@field public timer                  std.timer
