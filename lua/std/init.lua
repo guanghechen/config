@@ -43,7 +43,6 @@ local __mods = {
   CircularQueue = "std.collection.circular_queue",
   CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
-  Disposable = "std.collection.disposable",
   Filetree = "std.collection.filetree",
   Frecency = "std.collection.frecency",
   History = "std.collection.history",
@@ -85,7 +84,6 @@ local __mods = {
 ---@field public CircularQueue          std.collection.CircularQueue
 ---@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier
----@field public Disposable             std.collection.Disposable
 ---@field public Filetree               std.collection.Filetree
 ---@field public Frecency               std.collection.Frecency
 ---@field public History                std.collection.History

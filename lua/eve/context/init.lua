@@ -353,7 +353,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  std.status.add_disposable(std.Disposable.new({
+  std.status.add_disposable(ark.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -392,7 +392,7 @@ function M.watch_changes()
         })
       end,
     })
-    std.status.add_disposable(std.Disposable.new({ on_dispose = unwatch }))
+    std.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 
