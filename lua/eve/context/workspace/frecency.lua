@@ -2,7 +2,7 @@
 ---@field public files                  ark.c.frecency.ISerializedData
 
 ---@class eve.context.frecency.state
----@field public files                  ark.c.IFrecency
+---@field public files                  ark.c.Frecency
 
 ---@class eve.context.frecency : eve.context.frecency.state
 ---@field public defaults               fun(): eve.context.frecency.data
@@ -61,7 +61,7 @@ end
 
 local _defaults = M.defaults() ---@type eve.context.frecency.data
 
----@type ark.c.IFrecency
+---@type ark.c.Frecency
 M.files = ark.c.Frecency.deserialize({
   data = _defaults.files,
   normalize = function(key)

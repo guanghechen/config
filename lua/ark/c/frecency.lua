@@ -1,9 +1,3 @@
----@class ark.c.IFrecency
----@field public access                 fun(self: ark.c.IFrecency, key: string): nil
----@field public load                   fun(self: ark.c.IFrecency, data: ark.c.frecency.ISerializedData): nil
----@field public dump                   fun(self: ark.c.IFrecency): ark.c.frecency.ISerializedData
----@field public score                  fun(self: ark.c.IFrecency, key: string): number
-
 ---@class ark.c.frecency.IItem
 ---@field public timestamps             integer[]
 ---@field public idx                    integer
@@ -21,7 +15,7 @@
 ---@field public data                   ark.c.frecency.ISerializedData
 ---@field public normalize              ?fun(key: string): string
 
----@class ark.c.Frecency : ark.c.IFrecency
+---@class ark.c.Frecency
 ---@field public MAX_TIMESTAMPS         integer
 ---@field protected _items              table<string, ark.c.frecency.IItem>
 ---@field protected _normalize          fun(key: string): string
