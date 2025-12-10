@@ -10,7 +10,7 @@ if timer == nil then
   return
 end
 
-local tasks = std.CircularQueue.new({ capacity = 500 })
+local tasks = ark.c.CircularQueue.new({ capacity = 500 })
 local processing = false ---@type boolean
 
 ---@type table<string, boolean|nil>

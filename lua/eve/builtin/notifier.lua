@@ -103,8 +103,8 @@ local config = {
   },
 }
 
-local __TASKS__ = std.CircularQueue.new({ capacity = 50 })
-local __TASK_HISTORY__ = std.CircularQueue.new({ capacity = 200 })
+local __TASKS__ = ark.c.CircularQueue.new({ capacity = 50 })
+local __TASK_HISTORY__ = ark.c.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type eve.builtin.notifier.IWindow[]
 
 ---@param task                          eve.builtin.notifier.ITask

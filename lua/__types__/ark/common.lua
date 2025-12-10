@@ -1,5 +1,12 @@
 ---@meta
 
+---@alias ark.t.T
+---| any
+
+---@generic T
+---@alias ark.t.IFilter
+---| fun(element: T, index: integer): boolean
+
 ---@class ark.t.IHighlight
 ---@field public lnum                   integer
 ---@field public coll                   integer

@@ -1,30 +1,30 @@
----@class std.collection.ICircularQueue
----@field public capacity               fun(self: std.collection.ICircularQueue): integer
----@field public size                   fun(self: std.collection.ICircularQueue): integer
----@field public at                     fun(self: std.collection.ICircularQueue, index: integer): std.t.T|nil
----@field public back                   fun(self: std.collection.ICircularQueue): std.t.T|nil
----@field public clear                  fun(self: std.collection.ICircularQueue): nil
----@field public collect                fun(self: std.collection.ICircularQueue): std.t.T[]
----@field public count                  fun(self: std.collection.ICircularQueue, filter: std.t.IFilter): integer
----@field public dequeue                fun(self: std.collection.ICircularQueue): std.t.T|nil
----@field public dequeue_back           fun(self: std.collection.ICircularQueue): std.t.T|nil
----@field public enqueue                fun(self: std.collection.ICircularQueue, element: std.t.T): nil
----@field public enqueue_front          fun(self: std.collection.ICircularQueue, element: std.t.T): nil
----@field public fork                   fun(self: std.collection.ICircularQueue, filter: std.t.IFilter): std.collection.ICircularQueue
----@field public front                  fun(self: std.collection.ICircularQueue): std.t.T|nil
----@field public iterator               fun(self: std.collection.ICircularQueue): fun(): std.t.T|nil
----@field public iterator_reverse       fun(self: std.collection.ICircularQueue): fun(): std.t.T|nil
----@field public rearrange              fun(self: std.collection.ICircularQueue, filter: std.t.IFilter): fun(): std.t.T|nil
----@field public reset                  fun(self: std.collection.ICircularQueue, elements: std.t.T[]): boolean): fun(): std.t.T|nil
----@field public update                 fun(self: std.collection.ICircularQueue, index: integer, value: std.t.T): nil
+---@class ark.c.ICircularQueue
+---@field public capacity               fun(self: ark.c.ICircularQueue): integer
+---@field public size                   fun(self: ark.c.ICircularQueue): integer
+---@field public at                     fun(self: ark.c.ICircularQueue, index: integer): ark.t.T|nil
+---@field public back                   fun(self: ark.c.ICircularQueue): ark.t.T|nil
+---@field public clear                  fun(self: ark.c.ICircularQueue): nil
+---@field public collect                fun(self: ark.c.ICircularQueue): ark.t.T[]
+---@field public count                  fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): integer
+---@field public dequeue                fun(self: ark.c.ICircularQueue): ark.t.T|nil
+---@field public dequeue_back           fun(self: ark.c.ICircularQueue): ark.t.T|nil
+---@field public enqueue                fun(self: ark.c.ICircularQueue, element: ark.t.T): nil
+---@field public enqueue_front          fun(self: ark.c.ICircularQueue, element: ark.t.T): nil
+---@field public fork                   fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): ark.c.ICircularQueue
+---@field public front                  fun(self: ark.c.ICircularQueue): ark.t.T|nil
+---@field public iterator               fun(self: ark.c.ICircularQueue): fun(): ark.t.T|nil
+---@field public iterator_reverse       fun(self: ark.c.ICircularQueue): fun(): ark.t.T|nil
+---@field public rearrange              fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): fun(): ark.t.T|nil
+---@field public reset                  fun(self: ark.c.ICircularQueue, elements: ark.t.T[]): boolean): fun(): ark.t.T|nil
+---@field public update                 fun(self: ark.c.ICircularQueue, index: integer, value: ark.t.T): nil
 
----@class std.collection.circular_queue.IProps
+---@class ark.c.circular_queue.IProps
 ---@field public capacity               integer
 
-local _tmp_array = {} ---@type std.t.T[]
+local _tmp_array = {} ---@type ark.t.T[]
 
----@class std.collection.CircularQueue : std.collection.ICircularQueue
----@field protected _elements           std.t.T[]
+---@class ark.c.CircularQueue : ark.c.ICircularQueue
+---@field protected _elements           ark.t.T[]
 ---@field protected _capacity           integer
 ---@field protected _size               integer
 ---@field protected _start              integer
@@ -32,8 +32,8 @@ local _tmp_array = {} ---@type std.t.T[]
 local M = {}
 M.__index = M
 
----@param props                         std.collection.circular_queue.IProps
----@return std.collection.CircularQueue
+---@param props                         ark.c.circular_queue.IProps
+---@return ark.c.CircularQueue
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -46,10 +46,10 @@ function M.new(props)
   return self
 end
 
----@param queue                         std.collection.ICircularQueue
----@return std.collection.CircularQueue
+---@param queue                         ark.c.ICircularQueue
+---@return ark.c.CircularQueue
 function M.from(queue)
-  local elements = {} ---@type std.t.T[]
+  local elements = {} ---@type ark.t.T[]
   local size = 0 ---@type integer
   for element in queue:iterator() do
     size = size + 1
@@ -65,12 +65,12 @@ function M.from(queue)
   return self
 end
 
----@param arr                           std.t.T[]
+---@param arr                           ark.t.T[]
 ---@param capacity                      integer
----@return std.collection.CircularQueue
+---@return ark.c.CircularQueue
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
-  local elements = {} ---@type std.t.T[]
+  local elements = {} ---@type ark.t.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -98,7 +98,7 @@ function M:size()
 end
 
 ---@param index                         integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:at(index)
   if index < 1 or index > self._size then
     return
@@ -109,7 +109,7 @@ function M:at(index)
   return self._elements[idx]
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:back()
   return self._size > 0 and self._elements[self._end] or nil
 end
@@ -121,13 +121,13 @@ function M:clear()
   self._end = 0
 end
 
----@return std.t.T[]
+---@return ark.t.T[]
 function M:collect()
-  local elements = self._elements ---@type std.t.T[]
+  local elements = self._elements ---@type ark.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
-  local results = {} ---@type std.t.T[]
+  local results = {} ---@type ark.t.T[]
   local idx = self._start - 1 ---@type integer
 
   for index = 1, size, 1 do
@@ -137,10 +137,10 @@ function M:collect()
   return results
 end
 
----@param filter                        std.t.IFilter
+---@param filter                        ark.t.IFilter
 ---@return integer
 function M:count(filter)
-  local elements = self._elements ---@type std.t.T[]
+  local elements = self._elements ---@type ark.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
@@ -156,13 +156,13 @@ function M:count(filter)
   return count
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:dequeue()
   if self._size < 1 then
     return nil
   end
 
-  local target = self._elements[self._start] ---@type std.t.T|nil
+  local target = self._elements[self._start] ---@type ark.t.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
@@ -174,13 +174,13 @@ function M:dequeue()
   return target
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:dequeue_back()
   if self._size < 1 then
     return nil
   end
 
-  local target = self._elements[self._end] ---@type std.t.T|nil
+  local target = self._elements[self._end] ---@type ark.t.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
@@ -192,7 +192,7 @@ function M:dequeue_back()
   return target
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:enqueue(element)
   self._end = self._end == self._capacity and 1 or self._end + 1
@@ -205,7 +205,7 @@ function M:enqueue(element)
   end
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:enqueue_front(element)
   self._start = self._start == 1 and self._capacity or self._start - 1
@@ -218,10 +218,10 @@ function M:enqueue_front(element)
   end
 end
 
----@param filter                        fun(element: std.t.T, index: integer): boolean
----@return std.collection.CircularQueue
+---@param filter                        fun(element: ark.t.T, index: integer): boolean
+---@return ark.c.CircularQueue
 function M:fork(filter)
-  local clone = M.new({ capacity = self._capacity }) ---@type std.collection.CircularQueue
+  local clone = M.new({ capacity = self._capacity }) ---@type ark.c.CircularQueue
 
   for element, index in self:iterator() do
     if filter(element, index) then
@@ -232,21 +232,21 @@ function M:fork(filter)
   return clone
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:front()
   return self._size > 0 and self._elements[self._start] or nil
 end
 
----@return fun(): std.t.T|nil, integer|nil
+---@return fun(): ark.t.T|nil, integer|nil
 function M:iterator()
-  local elements = self._elements ---@type std.t.T[]
+  local elements = self._elements ---@type ark.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = 0 ---@type integer
   local idx = self._start - 1 ---@type integer
 
-  ---@return std.t.T|nil
+  ---@return ark.t.T|nil
   ---@return integer|nil
   return function()
     index = index + 1
@@ -257,16 +257,16 @@ function M:iterator()
   end
 end
 
----@return fun(): std.t.T|nil, integer|nil
+---@return fun(): ark.t.T|nil, integer|nil
 function M:iterator_reverse()
-  local elements = self._elements ---@type std.t.T[]
+  local elements = self._elements ---@type ark.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = size + 1 ---@type integer
   local idx = self._end + 1 ---@type integer
 
-  ---@return std.t.T|nil
+  ---@return ark.t.T|nil
   ---@return integer|nil
   return function()
     index = index - 1
@@ -277,7 +277,7 @@ function M:iterator_reverse()
   end
 end
 
----@param filter                        std.t.IFilter
+---@param filter                        ark.t.IFilter
 ---@return nil
 function M:rearrange(filter)
   if self._size < 1 then
@@ -292,7 +292,7 @@ function M:rearrange(filter)
     local idx = self._start - 1 ---@type integer
     for index = 1, self._size, 1 do
       idx = idx + 1
-      local element = self._elements[idx] ---@type std.t.T
+      local element = self._elements[idx] ---@type ark.t.T
       if filter(element, index) then
         size = size + 1
         self._elements[size] = element
@@ -311,7 +311,7 @@ function M:rearrange(filter)
   end
   for idx = self._start, self._capacity, 1 do
     index = index + 1
-    local element = self._elements[idx] ---@type std.t.T
+    local element = self._elements[idx] ---@type ark.t.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -319,7 +319,7 @@ function M:rearrange(filter)
   end
   for idx = 1, self._end, 1 do
     index = index + 1
-    local element = _tmp_array[idx] ---@type std.t.T
+    local element = _tmp_array[idx] ---@type ark.t.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -330,11 +330,11 @@ function M:rearrange(filter)
   self._end = size
 end
 
----@param arr                           std.t.T[]
+---@param arr                           ark.t.T[]
 ---@return nil
 function M:reset(arr)
   local capacity = self._capacity ---@type integer
-  local elements = self._elements ---@type std.t.T[]
+  local elements = self._elements ---@type ark.t.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -348,7 +348,7 @@ function M:reset(arr)
 end
 
 ---@param index                         integer
----@param value                         std.t.T
+---@param value                         ark.t.T
 ---@return nil
 function M:update(index, value)
   if index < 1 or index > self._size then
