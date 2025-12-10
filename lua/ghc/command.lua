@@ -1,5 +1,5 @@
-local command = eve.command ---@type eve.builtin.command
-local K = eve.command.definitions ---@type eve.builtin.command.definitions
+local command = dot.command ---@type dot.command
+local K = dot.command.definitions ---@type dot.command.definitions
 
 --[code] -------------------------------------------------------------------------------------------
 command.implement({

@@ -7,7 +7,7 @@ local function write_clipboard_registers(content)
   vim.fn.setreg("+", content)
 end
 
----@param candidate                     eve.builtin.command.definitions.copy.Scope
+---@param candidate                     dot.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
 local function copy_current_filepath(candidate, filepath)
@@ -65,7 +65,7 @@ function M.copy_filepath(arg)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local scopes = eve.command.definitions.copy.filepath.candidates
+  local scopes = dot.command.definitions.copy.filepath.candidates
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
   if vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)

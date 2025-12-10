@@ -1,5 +1,5 @@
 local ms = ark.nvim.make_shortcut
-local K = eve.command.definitions ---@type eve.builtin.command.definitions
+local K = dot.command.definitions ---@type dot.command.definitions
 
 --#[c]ommand----------------------------------------------------------------------------------------
 ms({ "n", "x" }, "<leader>:", K.code.run_as_neovim_command)

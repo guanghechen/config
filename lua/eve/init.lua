@@ -8,7 +8,6 @@ local __mods = {
   ai = "eve.builtin.ai",
   buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
-  command = "eve.builtin.command",
   git = "eve.state.git",
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
@@ -31,7 +30,6 @@ local __mods = {
 ---@field public ai                     eve.builtin.ai
 ---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard
----@field public command                eve.builtin.command
 ---@field public git                    eve.state.git
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action

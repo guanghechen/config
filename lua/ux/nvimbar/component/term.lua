@@ -1,7 +1,7 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 local decode_btn_args = ark.nvim.decode_btn_args
-local K = eve.command.definitions ---@type table<string, any>
+local K = dot.command.definitions ---@type table<string, any>
 
 ---@type string
 local fn_switch_term = eve.G.register_anonymous_fn(function(encoded)

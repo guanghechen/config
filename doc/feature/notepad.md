@@ -54,7 +54,7 @@ The current implementation assumes a single persistence backend (the active work
 
 ## Commands, Keymaps, and Persistence
 
-- Commands are defined under `eve.command.definitions.notepad.*` and wired via `fml/command.lua`. Most commands operate without arguments; focus/swap variants accept an optional numeric count.
+- Commands are defined under `dot.command.definitions.notepad.*` and wired via `fml/command.lua`. Most commands operate without arguments; focus/swap variants accept an optional numeric count.
 - Widget keymaps are buffer-local, installed each time a notepad buffer is created, and respect aliases for cross-platform modifier keys.
 - `Notepad.flush_to_disk()` creates parent directories when needed and emits a `ark.reporter.info` notification on success.
 - `eve.notepad.flush()` is safe to call during Neovim shutdown (e.g., autocmd hooks) to guarantee the debounce queue is emptied.

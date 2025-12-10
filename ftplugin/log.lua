@@ -1,8 +1,8 @@
 local bufnr = vim.api.nvim_get_current_buf()
-local K = eve.command.definitions
+local K = dot.command.definitions
 
 vim.keymap.set("n", "K", function()
-  eve.command.execute(K.log.preview_json_normal.uuid, nil, true)
+  dot.command.execute(K.log.preview_json_normal.uuid, nil, true)
 end, {
   buffer = bufnr,
   desc = "log: Preview JSON from current line",
@@ -11,7 +11,7 @@ end, {
 })
 
 vim.keymap.set("v", "K", function()
-  eve.command.execute(K.log.preview_json_visual.uuid, nil, true)
+  dot.command.execute(K.log.preview_json_visual.uuid, nil, true)
 end, {
   buffer = bufnr,
   desc = "log: Preview JSON from selection",

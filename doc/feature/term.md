@@ -40,7 +40,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
    - Width calculations call `vim.api.nvim_win_get_width(_terminal_winnr)` so re-renders match the float dimensions rather than the full screen.
 
 4. Default keymaps and commands stay aligned with the action layer:
-   - `Ftermtoggle`, `Ftermcreate`, `Ftermrename`, `Ftermdestroy`, `Ftermfocus{1-9}`, `Ftermfocusleft`, `Ftermfocusright`, `Ftermswapleft`, `Ftermswapright`, and more live under `eve.command.definitions.term`.
+   - `Ftermtoggle`, `Ftermcreate`, `Ftermrename`, `Ftermdestroy`, `Ftermfocus{1-9}`, `Ftermfocusleft`, `Ftermfocusright`, `Ftermswapleft`, `Ftermswapright`, and more live under `dot.command.definitions.term`.
    - `lua/fml/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `dot.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
    - Each terminal profile includes its launch command and type; profiles can be selected via the UI picker defined in `fml/action/term/create.lua`.
 

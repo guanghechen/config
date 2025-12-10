@@ -20,7 +20,7 @@
 - Window resizing keeps the stack pinned left: user-driven `:vertical resize` updates `explorer.width`, while the input window clamps its height to one row (plus optional winbar) and the tree window fills the remainder.
 - Renders a hierarchical tree with file and folder icons from `std.fileicon`, git badges appended to the right, and highlight groups pulled from `dot.hlgroup`.
 - Navigation mirrors our picker/searcher conventions: `<Enter>`/`l` open or expand, `<Backspace>`/`h` collapse or ascend, `<Tab>` toggles selection, `.` re-root on node, `oa`/`oA` forward to AI helpers, and we reuse existing `<leader>` bindings for visibility toggles and destructive actions. Git stage/unstage flows stay wired to the existing git action commands rather than new explorer-specific keys.
-- Supports multi-select via `m` to mark nodes and exposes batch actions (open, stage, yank paths). All keymaps flow through `eve.command.definitions` so they can be rebound centrally.
+- Supports multi-select via `m` to mark nodes and exposes batch actions (open, stage, yank paths). All keymaps flow through `dot.command.definitions` so they can be rebound centrally.
 - The widget cooperates with `eve.ux.nvimbar` to display breadcrumbs or quick filters when the window width permits.
 
 ### Shortcut Reference
@@ -92,7 +92,7 @@
 
 ## Actions & Command Surface (`lua/fml/action/explorer/*.lua`)
 - Introduce an action module that lazily instantiates the explorer widget, mirroring the Notepad/Terminal pattern (`toggle.lua`, `focus.lua`, `open.lua`, `mark.lua`, `git.lua`).
-- Commands live under `eve.command.definitions.explorer` (e.g., `Fexplorertoggle`, `Fexplorerfocus`, `Fexplorerrefresh`, `Fexplorercreatefile`, `Fexplorercreatedir`, `Fexplorerdelete`, `Fexplorermark`, `Fexplorerstage`).
+- Commands live under `dot.command.definitions.explorer` (e.g., `Fexplorertoggle`, `Fexplorerfocus`, `Fexplorerrefresh`, `Fexplorercreatefile`, `Fexplorercreatedir`, `Fexplorerdelete`, `Fexplorermark`, `Fexplorerstage`).
 - Actions reuse existing helpers (`std.fs.write_file`, `std.fs.move`, `eve.fn.rename`, `eve.buf.focus`, `eve.state.git`) and surface results through `ark.reporter`.
 - Provide optional filters: `toggle_hidden`, `toggle_git_only`, `set_root` (prompted path), each flipping an observable the widget listens to.
 

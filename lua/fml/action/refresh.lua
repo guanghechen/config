@@ -30,7 +30,7 @@ function M.refresh_all()
       require("plenary.reload").reload_module("dot.lang")
       require("plenary.reload").reload_module("dot.theme")
       require("plenary.reload").reload_module("dot.theme.hlgroup")
-      vim.cmd(eve.command.definitions.ux.reload_theme.uuid .. " force")
+      vim.cmd(dot.command.definitions.ux.reload_theme.uuid .. " force")
     end)
   end
 

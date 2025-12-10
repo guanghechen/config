@@ -4,7 +4,7 @@ local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
 local fn_select_python_venv = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.lsp.select_python_venv.uuid)
+  vim.cmd(dot.command.definitions.lsp.select_python_venv.uuid)
 end)
 
 local python_venv = "" ---@type string|nil

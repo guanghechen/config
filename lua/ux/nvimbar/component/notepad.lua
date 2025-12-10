@@ -8,7 +8,7 @@ local fn_switch_notepad = eve.G.register_anonymous_fn(function(encoded)
   local index = args[1] ---@type integer|nil
   if index ~= nil then
     local cmd_key = "focus_" .. tostring(index)
-    local cmd = eve.command.definitions.notepad[cmd_key]
+    local cmd = dot.command.definitions.notepad[cmd_key]
     if cmd ~= nil then
       vim.cmd(cmd.uuid)
     end
@@ -17,17 +17,17 @@ end) or "eve.G.noop"
 
 ---@type string
 local fn_add_notepad = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.notepad.create.uuid)
+  vim.cmd(dot.command.definitions.notepad.create.uuid)
 end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_prev_notepad = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.notepad.focus_left.uuid)
+  vim.cmd(dot.command.definitions.notepad.focus_left.uuid)
 end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_next_notepad = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.notepad.focus_right.uuid)
+  vim.cmd(dot.command.definitions.notepad.focus_right.uuid)
 end) or "eve.G.noop"
 
 ---@type table<string, fun(): nil>
@@ -292,7 +292,7 @@ function M.source(position, notepad)
 
   if fn_switch_source_registry[widget_id] == nil then
     fn_switch_source_registry[widget_id] = function()
-      vim.cmd(eve.command.definitions.notepad.source_select.uuid)
+      vim.cmd(dot.command.definitions.notepad.source_select.uuid)
     end
   end
 

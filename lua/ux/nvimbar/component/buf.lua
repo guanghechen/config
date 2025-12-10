@@ -7,17 +7,17 @@ local txt = ark.nvim.txt
 
 ---@type string
 local fn_active_buf = eve.G.register_anonymous_fn(function(bufnr)
-  vim.cmd(eve.command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
+  vim.cmd(dot.command.definitions.buf.open.uuid .. " " .. tostring(bufnr))
 end) or ""
 
 ---@type string
 local fn_focus_left_buf = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.buf.focus_left.uuid)
+  vim.cmd(dot.command.definitions.buf.focus_left.uuid)
 end) or ""
 
 ---@type string
 local fn_focus_right_buf = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.buf.focus_right.uuid)
+  vim.cmd(dot.command.definitions.buf.focus_right.uuid)
 end) or ""
 
 ---@param x                             ux.nvimbar.component.buf.IBufItem

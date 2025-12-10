@@ -308,7 +308,7 @@ function M.watch_changes()
     M.lsp.inlay_hints,
   }, function()
     pcall(function()
-      eve.command.execute(eve.command.definitions.lsp.restart.uuid)
+      dot.command.execute(dot.command.definitions.lsp.restart.uuid)
     end)
   end, true)
 

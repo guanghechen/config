@@ -13,7 +13,7 @@ local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" }
 local DEFAULT_ITEM_NAME = dot.var.BUF_UNTITLED
 local BUFFER_VAR_NAME = "eve_notepad_uuid"
 
-local K = eve.command.definitions
+local K = dot.command.definitions
 
 ---@type std.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {

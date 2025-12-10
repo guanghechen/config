@@ -17,12 +17,12 @@ local fileformat_icon_map = {
 
 ---@type string
 local fn_on_fileencoding_clicked = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileencoding_local")
+  vim.cmd(dot.command.definitions.toggle.list.uuid .. " fileencoding_local")
 end) or ""
 
 ---@type string
 local fn_on_fileformat_clicked = eve.G.register_anonymous_fn(function()
-  vim.cmd(eve.command.definitions.toggle.list.uuid .. " fileformat_local")
+  vim.cmd(dot.command.definitions.toggle.list.uuid .. " fileformat_local")
 end) or ""
 
 ---@class ux.nvimbar.component.file
