@@ -184,7 +184,7 @@ local scheduler = ark.c.Scheduler.new({
   silent = ark.fn.truthy,
   value = ark.c.Observable.from_value(true),
   task = function()
-    local notification_paused = dot.status.notification_paused:snapshot() ---@type boolean
+    local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then
       return true
     end
@@ -257,12 +257,12 @@ end
 
 ---@return nil
 function M.pause()
-  dot.status.notification_paused:next(true)
+  dot.state.status.notification_paused:next(true)
 end
 
 ---@return nil
 function M.resume()
-  dot.status.notification_paused:next(false)
+  dot.state.status.notification_paused:next(false)
   M.schedule()
 end
 
@@ -310,8 +310,8 @@ function M.notify(params)
     timestamp = timestamp,
   }
 
-  local notification_paused = dot.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = dot.status.notification_level:snapshot() ---@type ark.e.LogLevelEnum
+  local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
+  local notification_level = dot.state.status.notification_level:snapshot() ---@type ark.e.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 

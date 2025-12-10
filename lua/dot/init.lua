@@ -144,13 +144,34 @@ local theme = {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class dot.state.__mods
+local __state__mods = {
+  status = "dot.state.status",
+}
+
+---@class dot.state
+---@field public __mods                 dot.state.__mods
+---@field public status                 dot.state.status
+local state = setmetatable({
+  __mods = __state__mods,
+}, {
+  __index = function(t, k)
+    local m = __state__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.__mods
 local __mods = {
   env = "dot.env",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
   icon = "dot.icon",
-  status = "dot.status",
   var = "dot.var",
 }
 
@@ -158,18 +179,19 @@ local __mods = {
 ---@field public __mods                 dot.__mods
 ---@field public dict                   dot.dict
 ---@field public lang                   dot.lang
+---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---
 ---@field public env                    dot.env
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype
 ---@field public icon                   dot.icon
----@field public status                 dot.status
 ---@field public var                    dot.var
 local M = setmetatable({
   __mods = __mods,
   dict = dict,
   lang = lang,
+  state = state,
   theme = theme,
 }, {
   __index = function(t, k)

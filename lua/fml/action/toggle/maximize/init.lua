@@ -3,7 +3,7 @@ local M = {}
 
 ---@return nil
 function M.maximize()
-  local winnr = dot.status.get_winnr_command() ---@type integer|nil
+  local winnr = dot.state.status.get_winnr_command() ---@type integer|nil
   if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     return
   end

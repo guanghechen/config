@@ -91,10 +91,10 @@ ark.fn.observe({ eve.term.o_termuuid }, function()
   vim.wo[winnr].winfixbuf = false
   vim.api.nvim_win_set_buf(winnr, termmeta.bufnr)
   vim.wo[winnr].winfixbuf = true
-  dot.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 end, true)
 
-dot.status.dirtier_termline:subscribe(
+dot.state.status.dirtier_termline:subscribe(
   ark.c.Subscriber.new({
     on_next = function()
       termline:render()
@@ -372,7 +372,7 @@ function M:__create_win_as_needed__(termmeta)
 
   vim.wo[winnr].winblend = resize_result and resize_result.winblend or 0
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
-  dot.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()
   return winnr

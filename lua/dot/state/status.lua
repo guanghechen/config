@@ -1,4 +1,4 @@
----@class dot.status.data
+---@class dot.state.status.data
 ---@field public msg_changes            string
 ---@field public msg_command            string
 ---@field public msg_lsp                string
@@ -10,7 +10,7 @@
 ---@field public suppress_warning       boolean
 ---@field public tmux_zen_mode          boolean
 
----@class dot.status
+---@class dot.state.status
 ---@field protected _disposables        ark.c.BatchDisposable
 ---
 ---
@@ -90,9 +90,9 @@ function M.dispose()
   M._disposables:dispose()
 end
 
----@return dot.status.data
+---@return dot.state.status.data
 function M.dump()
-  ---@type dot.status.data
+  ---@type dot.state.status.data
   local data = {
     msg_changes = M.msg_changes:snapshot(),
     msg_command = M.msg_command:snapshot(),

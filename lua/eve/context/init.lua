@@ -153,7 +153,7 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and std.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
-    dot.status.reset()
+    dot.state.status.reset()
     M.tab.load(data_session.tab)
   end
 end
@@ -255,8 +255,8 @@ function M.watch_changes()
     M.theme.username,
   }, function()
     ticker_editor:tick()
-    dot.status.dirtier_statusline:mark_dirty()
-    dot.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -267,8 +267,8 @@ function M.watch_changes()
     M.plugin.treesitter_context,
     M.option.relativenumber,
   }, function()
-    dot.status.dirtier_statusline:mark_dirty()
-    dot.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -298,8 +298,8 @@ function M.watch_changes()
   }
   ark.fn.observe(select_states, function()
     ticker_workspace:tick()
-    dot.status.dirtier_statusline:mark_dirty()
-    dot.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
   end, true)
 
   ark.fn.observe({
@@ -313,10 +313,10 @@ function M.watch_changes()
   end, true)
 
   ark.fn.observe({
-    dot.status.msg_lsp,
-    dot.status.msg_mode,
+    dot.state.status.msg_lsp,
+    dot.state.status.msg_mode,
   }, function()
-    dot.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
   end)
 
   local scheduler = ark.c.Scheduler.new({
@@ -353,7 +353,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  dot.status.add_disposable(ark.c.Disposable.new({
+  dot.state.status.add_disposable(ark.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -392,7 +392,7 @@ function M.watch_changes()
         })
       end,
     })
-    dot.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
+    dot.state.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 
