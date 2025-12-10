@@ -28,20 +28,6 @@
   ],
   "actions": [
     {
-      "id": "ghc.input.tab",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[9;1u"
-      }
-    },
-    {
-      "id": "ghc.input.shift_tab",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[9;2u"
-      }
-    },
-    {
       "id": "ghc.input.escape",
       "command": {
         "action": "sendInput",
@@ -551,14 +537,6 @@
     }
   ],
   "keybindings": [
-    {
-      "id": "ghc.input.tab",
-      "keys": "tab"
-    },
-    {
-      "id": "ghc.input.shift_tab",
-      "keys": "shift+tab"
-    },
     {
       "id": "ghc.input.escape",
       "keys": "escape"
