@@ -1,8 +1,8 @@
 ---@class eve.context.frecency.data
----@field public files                  std.collection.frecency.ISerializedData
+---@field public files                  ark.t.IFrecencySerializedData
 
 ---@class eve.context.frecency.state
----@field public files                  std.collection.IFrecency
+---@field public files                  ark.t.IFrecency
 
 ---@class eve.context.frecency : eve.context.frecency.state
 ---@field public defaults               fun(): eve.context.frecency.data
@@ -25,7 +25,7 @@ function M.normalize(data)
   local resolved = M.defaults() ---@type eve.context.frecency.data
   if type(data) == "table" then
     for key, frecency in pairs(resolved) do
-      local data_frecency = data[key] ---@type std.collection.frecency.ISerializedData|nil
+      local data_frecency = data[key] ---@type ark.t.IFrecencySerializedData|nil
       if type(data_frecency) == "table" then
         if type(data_frecency.MAX_TIMESTAMPS) == "number" then
           frecency.MAX_TIMESTAMPS = data_frecency.MAX_TIMESTAMPS
@@ -61,8 +61,8 @@ end
 
 local _defaults = M.defaults() ---@type eve.context.frecency.data
 
----@type std.collection.IFrecency
-M.files = std.Frecency.deserialize({
+---@type ark.t.IFrecency
+M.files = ark.c.Frecency.deserialize({
   data = _defaults.files,
   normalize = function(key)
     return yoz.fn.md5(key)

@@ -5,6 +5,7 @@ local c__mods = {
   CircularQueue = "ark.c.circular_queue",
   CircularStack = "ark.c.circular_stack",
   Disposable = "ark.c.disposable",
+  Frecency = "ark.c.frecency",
   Subscriber = "ark.c.subscriber",
   Subscribers = "ark.c.subscribers",
 }
@@ -16,6 +17,7 @@ local c__mods = {
 ---@field public CircularQueue          ark.c.CircularQueue
 ---@field public CircularStack          ark.c.CircularStack
 ---@field public Disposable             ark.c.Disposable
+---@field public Frecency               ark.c.Frecency
 ---@field public Subscriber             ark.c.Subscriber
 ---@field public Subscribers            ark.c.Subscribers
 local c = setmetatable({ __mods = c__mods }, {

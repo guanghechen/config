@@ -1,40 +1,40 @@
----@class std.collection.IFrecency
----@field public access                 fun(self: std.collection.IFrecency, key: string): nil
----@field public load                   fun(self: std.collection.IFrecency, data: std.collection.frecency.ISerializedData): nil
----@field public dump                   fun(self: std.collection.IFrecency): std.collection.frecency.ISerializedData
----@field public score                  fun(self: std.collection.IFrecency, key: string): number
+---@class ark.t.IFrecency
+---@field public access                 fun(self: ark.t.IFrecency, key: string): nil
+---@field public load                   fun(self: ark.t.IFrecency, data: ark.t.IFrecencySerializedData): nil
+---@field public dump                   fun(self: ark.t.IFrecency): ark.t.IFrecencySerializedData
+---@field public score                  fun(self: ark.t.IFrecency, key: string): number
 
----@class std.collection.frecency.IItem
+---@class ark.t.IFrecencyItem
 ---@field public timestamps             integer[]
 ---@field public idx                    integer
 
----@class std.collection.frecency.ISerializedData
+---@class ark.t.IFrecencySerializedData
 ---@field public MAX_TIMESTAMPS         integer|nil
----@field public items                  std.collection.frecency.IItem[]
+---@field public items                  ark.t.IFrecencyItem[]
 
----@class std.collection.frecency.IProps
+---@class ark.t.IFrecencyProps
 ---@field public MAX_TIMESTAMPS         ?integer
----@field public items                  table<string, std.collection.frecency.IItem>
+---@field public items                  table<string, ark.t.IFrecencyItem>
 ---@field public normalize              ?fun(key: string): string
 
----@class std.collection.frecency.IDeserializeProps
----@field public data                   std.collection.frecency.ISerializedData
+---@class ark.t.IFrecencyDeserializeProps
+---@field public data                   ark.t.IFrecencySerializedData
 ---@field public normalize              ?fun(key: string): string
 
----@class std.collection.Frecency : std.collection.IFrecency
+---@class ark.c.Frecency : ark.t.IFrecency
 ---@field public MAX_TIMESTAMPS         integer
----@field protected _items              table<string, std.collection.frecency.IItem>
+---@field protected _items              table<string, ark.t.IFrecencyItem>
 ---@field protected _normalize          fun(key: string): string
 local M = {}
 M.__index = M
 
----@param props                         std.collection.frecency.IProps
----@return std.collection.Frecency
+---@param props                         ark.t.IFrecencyProps
+---@return ark.c.Frecency
 function M.new(props)
   local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
-  local items = props.items ---@type table<string, std.collection.frecency.IItem>
+  local items = props.items ---@type table<string, ark.t.IFrecencyItem>
   local normalize = props.normalize or ark.fn.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
@@ -44,10 +44,10 @@ function M.new(props)
   return self
 end
 
----@param props                         std.collection.frecency.IDeserializeProps
----@return std.collection.Frecency
+---@param props                         ark.t.IFrecencyDeserializeProps
+---@return ark.c.Frecency
 function M.deserialize(props)
-  local data = props.data ---@type std.collection.frecency.ISerializedData
+  local data = props.data ---@type ark.t.IFrecencySerializedData
   local normalize = props.normalize ---@type (fun(key: string): string)|nil
   return M.new({
     MAX_TIMESTAMPS = data.MAX_TIMESTAMPS,
@@ -61,9 +61,9 @@ end
 function M:access(key)
   key = self._normalize(key)
   local timestamp = os.time() ---@type integer
-  local item = self._items[key] ---@type std.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type ark.t.IFrecencyItem|nil
   if item == nil then
-    item = { timestamps = { timestamp }, idx = 1 } ---@type std.collection.frecency.IItem
+    item = { timestamps = { timestamp }, idx = 1 } ---@type ark.t.IFrecencyItem
     self._items[key] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
@@ -72,9 +72,9 @@ function M:access(key)
   end
 end
 
----@return std.collection.frecency.ISerializedData
+---@return ark.t.IFrecencySerializedData
 function M:dump()
-  ---@type std.collection.frecency.ISerializedData
+  ---@type ark.t.IFrecencySerializedData
   local data = {
     MAX_TIMESTAMPS = self.MAX_TIMESTAMPS,
     items = self._items,
@@ -82,10 +82,10 @@ function M:dump()
   return data
 end
 
----@param data                          std.collection.frecency.ISerializedData
+---@param data                          ark.t.IFrecencySerializedData
 ---@return nil
 function M:load(data)
-  local items = data.items ---@type std.collection.frecency.IItem[]
+  local items = data.items ---@type ark.t.IFrecencyItem[]
   self._items = items
 end
 
@@ -94,7 +94,7 @@ end
 function M:score(key)
   key = self._normalize(key)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[key] ---@type std.collection.frecency.IItem|nil
+  local item = self._items[key] ---@type ark.t.IFrecencyItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do
