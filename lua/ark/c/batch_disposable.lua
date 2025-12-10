@@ -1,5 +1,21 @@
 local __module_name__ = "ark.c.batch_disposable" ---@type string
 
+---@param disposables                   ark.c.IDisposable[]
+---@return nil
+local function dispose_all(disposables)
+  if #disposables <= 0 then
+    return
+  end
+
+  local handler = ark.c.BatchHandler.new()
+  for _, disposable in ipairs(disposables) do
+    handler:run(function()
+      disposable:dispose()
+    end)
+  end
+  handler:summary(string.format("[%s.dispose_all] Encountered error(s) while disposing.", __module_name__))
+end
+
 ---@class ark.c.BatchDisposable : ark.c.IDisposable
 local M = {}
 M.__index = M
@@ -14,22 +30,6 @@ function M.new()
   ---@type ark.c.IDisposable[]
   self._disposables = {}
   return self
-end
-
----@param disposables                   ark.c.IDisposable[]
----@return nil
-function M.dispose_all(disposables)
-  if #disposables <= 0 then
-    return
-  end
-
-  local handler = ark.c.BatchHandler.new()
-  for _, disposable in ipairs(disposables) do
-    handler:run(function()
-      disposable:dispose()
-    end)
-  end
-  handler:summary("[ark.c.batch_disposable.dispose_all] Encountered error(s) while disposing.")
 end
 
 ---@return boolean
@@ -49,7 +49,7 @@ function M:dispose()
   end
 
   local ok, result = pcall(function()
-    M.dispose_all(self._disposables)
+    dispose_all(self._disposables)
   end)
   self._disposables = {}
 
