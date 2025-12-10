@@ -44,6 +44,7 @@ local __mods = {
   fn = "ark.fn",
   reporter = "ark.reporter",
   time = "ark.time",
+  tmux = "ark.tmux",
 }
 
 ---@class ark
@@ -55,6 +56,7 @@ local __mods = {
 ---@field public fn                     ark.fn
 ---@field public reporter               ark.reporter
 ---@field public time                   ark.time
+---@field public tmux                   ark.tmux
 local M = setmetatable({
   __mods = __mods,
   c = c,

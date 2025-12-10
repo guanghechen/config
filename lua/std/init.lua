@@ -35,7 +35,6 @@ local __mods = {
   string = "std.string",
   table = "std.table",
   timer = "std.timer",
-  tmux = "std.tmux",
   uri = "std.uri",
 
   Dirtier = "std.collection.dirtier",
@@ -67,7 +66,6 @@ local __mods = {
 ---@field public string                 std.string
 ---@field public table                  std.table
 ---@field public timer                  std.timer
----@field public tmux                   std.tmux
 ---@field public uri                    std.uri
 ---
 ---@field public Dirtier                std.collection.Dirtier

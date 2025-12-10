@@ -1111,7 +1111,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "searcher#finder: focus left",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
+          ark.tmux.change_pane("h")
         end
       end,
     },
@@ -1133,7 +1133,7 @@ function M:__resolve_builtin_keymaps_finder__()
           return
         end
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("l")
+          ark.tmux.change_pane("l")
           return
         end
       end,
@@ -1145,7 +1145,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "searcher#finder: focus up",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("k")
+          ark.tmux.change_pane("k")
           return
         end
 
@@ -1366,7 +1366,7 @@ function M:__resolve_builtin_keymaps_result__()
         end
 
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("j")
+          ark.tmux.change_pane("j")
           return
         end
 
@@ -1382,7 +1382,7 @@ function M:__resolve_builtin_keymaps_result__()
       desc = "searcher#result: focus left",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
+          ark.tmux.change_pane("h")
         end
       end,
     },
@@ -1402,7 +1402,7 @@ function M:__resolve_builtin_keymaps_result__()
         end
 
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("l")
+          ark.tmux.change_pane("l")
           return
         end
       end,
@@ -1517,7 +1517,7 @@ function M:__resolve_builtin_keymaps_replacer__()
       desc = "searcher#replacer: focus left",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
+          ark.tmux.change_pane("h")
         end
       end,
     },
@@ -1539,7 +1539,7 @@ function M:__resolve_builtin_keymaps_replacer__()
           return
         end
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("l")
+          ark.tmux.change_pane("l")
           return
         end
       end,
@@ -1636,7 +1636,7 @@ function M:__resolve_builtin_keymaps_preview__()
       desc = "searcher#preview: focus down",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("j")
+          ark.tmux.change_pane("j")
           return
         end
       end,
@@ -1654,7 +1654,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("h")
+          ark.tmux.change_pane("h")
         end
       end,
     },
@@ -1665,7 +1665,7 @@ function M:__resolve_builtin_keymaps_preview__()
       desc = "searcher#result: focus right",
       callback = function()
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("l")
+          ark.tmux.change_pane("l")
           return
         end
 
@@ -1686,7 +1686,7 @@ function M:__resolve_builtin_keymaps_preview__()
         end
 
         if dot.env.IS_TMUX and not std.status.tmux_zen_mode:snapshot() then
-          std.tmux.change_pane("k")
+          ark.tmux.change_pane("k")
           return
         end
       end,
