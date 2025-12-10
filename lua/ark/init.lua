@@ -10,6 +10,7 @@ local c__mods = {
   History = "ark.c.history",
   InputHistory = "ark.c.input_history",
   Observable = "ark.c.observable",
+  Proc = "ark.c.proc",
   Scheduler = "ark.c.scheduler",
   Subscriber = "ark.c.subscriber",
   Subscribers = "ark.c.subscribers",
@@ -28,6 +29,7 @@ local c__mods = {
 ---@field public History                ark.c.History
 ---@field public InputHistory           ark.c.InputHistory
 ---@field public Observable             ark.c.Observable
+---@field public Proc                   ark.c.Proc
 ---@field public Scheduler              ark.c.Scheduler
 ---@field public Subscriber             ark.c.Subscriber
 ---@field public Subscribers            ark.c.Subscribers

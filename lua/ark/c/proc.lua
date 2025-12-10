@@ -8,8 +8,21 @@ local function close(handle)
   end
 end
 
----@class std.collection.spawn.Proc
----@field public opts                   std.collection.spawn.IOptions
+---@class ark.c.proc.IProps: uv.spawn.options,{}
+---@field public cmd                    string
+---@field public args                   ?(string|number)[]
+---@field public timeout                ?number
+---@field public run                    ?boolean
+---@field public on_stdout              ?fun(proc: ark.c.Proc, data: string)
+---@field public on_stderr              ?fun(proc: ark.c.Proc, data: string)
+---@field public on_exit                ?fun(proc: ark.c.Proc, err: boolean)
+
+---@class ark.c.proc.IMultiProps: ark.c.proc.IProps,{}
+---@field public cmd                    nil
+---@field public on_exit                ?fun(procs: ark.c.Proc[], err: boolean)
+
+---@class ark.c.Proc
+---@field public opts                   ark.c.proc.IProps
 ---@field public handle                 ?uv.uv_process_t
 ---@field public stdout                 uv.uv_pipe_t
 ---@field public stderr                 uv.uv_pipe_t
@@ -18,13 +31,13 @@ end
 ---@field public timer                  ?uv.uv_timer_t
 ---@field public aborted                ?boolean
 ---@field public data                   table<uv.uv_pipe_t, string[]>
-local Proc = {}
-Proc.__index = Proc
+local M = {}
+M.__index = M
 
----@param opts                          std.collection.spawn.IOptions
----@return std.collection.spawn.Proc
-function Proc.new(opts)
-  local self = setmetatable({}, Proc)
+---@param opts                          ark.c.proc.IProps
+---@return ark.c.Proc
+function M.new(opts)
+  local self = setmetatable({}, M)
   self.opts = opts
   self.code, self.signal = 0, 0
   self.data = {}
@@ -34,8 +47,54 @@ function Proc.new(opts)
   return self
 end
 
+---@param procs                         ark.c.Proc[]
+---@param opts                          ?ark.c.proc.IMultiProps
+function M.multi(procs, opts)
+  if #procs == 0 then
+    return
+  end
+
+  opts = opts or {}
+  local current = 0
+
+  local function done()
+    if opts.on_exit then
+      opts.on_exit(procs, procs[current]:failed())
+    end
+  end
+
+  local function next()
+    current = current + 1
+    assert(current <= #procs, "current > #procs")
+    local proc = procs[current]
+    proc.opts.on_exit = function(_, err)
+      if err or current == #procs then
+        done()
+      else
+        next()
+      end
+    end
+    proc:run()
+  end
+
+  ---@type ark.c.Proc|{procs: ark.c.Proc[]}
+  local ret = setmetatable({
+    procs = procs,
+    run = next,
+  }, {
+    __index = function(_, k)
+      return procs[current][k]
+    end,
+  })
+
+  if opts.run ~= false then
+    next()
+  end
+  return ret
+end
+
 ---@return boolean
-function Proc:failed()
+function M:failed()
   if self.aborted then
     return true
   end
@@ -46,13 +105,13 @@ function Proc:failed()
 end
 
 ---@return boolean
-function Proc:running()
+function M:running()
   return self.handle and not self.handle:is_closing() or false
 end
 
 ---@param signal                        string|number|nil
 ---@return nil
-function Proc:kill(signal)
+function M:kill(signal)
   close(self.stdout)
   close(self.stderr)
   if not self.handle then
@@ -63,7 +122,7 @@ function Proc:kill(signal)
 end
 
 ---@return nil
-function Proc:run()
+function M:run()
   assert(not self.handle, "already running")
   if self.aborted then
     return self:on_exit()
@@ -107,29 +166,29 @@ function Proc:run()
 end
 
 ---@return string
-function Proc:out()
+function M:out()
   return table.concat(self.data[self.stdout] or {})
 end
 
 ---@return string
-function Proc:err()
+function M:err()
   return table.concat(self.data[self.stderr] or {})
 end
 
 ---@return any
-function Proc:json()
+function M:json()
   return vim.json.decode(self:out())
 end
 
 ---@return string[]
-function Proc:lines()
+function M:lines()
   return vim.split(self:out(), "\n", { plain = true })
 end
 
 ---@param data                          string
 ---@param handle                        uv.uv_pipe_t
 ---@return nil
-function Proc:on_data(data, handle)
+function M:on_data(data, handle)
   table.insert(self.data[handle], data)
   if self.opts.on_stdout and handle == self.stdout then
     self.opts.on_stdout(self, data)
@@ -139,7 +198,7 @@ function Proc:on_data(data, handle)
 end
 
 ---@return nil
-function Proc:on_exit()
+function M:on_exit()
   close(self.timer)
   close(self.handle)
   local check = assert(vim.uv.new_check())
@@ -158,69 +217,5 @@ function Proc:on_exit()
     end
   end)
 end
-
----@class std.collection.Spawn
-local M = {}
-
----@class std.collection.spawn.IOptions: uv.spawn.options,{}
----@field public cmd                    string
----@field public args                   ?(string|number)[]
----@field public timeout                ?number
----@field public run                    ?boolean
----@field public on_stdout              ?fun(proc: std.collection.spawn.Proc, data: string)
----@field public on_stderr              ?fun(proc: std.collection.spawn.Proc, data: string)
----@field public on_exit                ?fun(proc: std.collection.spawn.Proc, err: boolean)
-
----@class std.collection.spawn.Multi: std.collection.spawn.IOptions,{}
----@field public cmd                    nil
----@field public on_exit                ?fun(procs: std.collection.spawn.Proc[], err: boolean)
-
----@param procs                         std.collection.spawn.Proc[]
----@param opts                          ?std.collection.spawn.Multi
-function M.multi(procs, opts)
-  if #procs == 0 then
-    return
-  end
-
-  opts = opts or {}
-  local current = 0
-
-  local function done()
-    if opts.on_exit then
-      opts.on_exit(procs, procs[current]:failed())
-    end
-  end
-
-  local function next()
-    current = current + 1
-    assert(current <= #procs, "current > #procs")
-    local proc = procs[current]
-    proc.opts.on_exit = function(_, err)
-      if err or current == #procs then
-        done()
-      else
-        next()
-      end
-    end
-    proc:run()
-  end
-
-  ---@type std.collection.spawn.Proc|{procs: std.collection.spawn.Proc[]}
-  local ret = setmetatable({
-    procs = procs,
-    run = next,
-  }, {
-    __index = function(_, k)
-      return procs[current][k]
-    end,
-  })
-
-  if opts.run ~= false then
-    next()
-  end
-  return ret
-end
-
-M.new = Proc.new
 
 return M

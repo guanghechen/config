@@ -34,7 +34,6 @@ local __mods = {
   uri = "std.uri",
 
   Filetree = "std.collection.filetree",
-  Spawn = "std.collection.spawn",
   Tree = "std.collection.tree",
 }
 
@@ -56,7 +55,6 @@ local __mods = {
 ---@field public uri                    std.uri
 ---
 ---@field public Filetree               std.collection.Filetree
----@field public Spawn                  std.collection.Spawn
 ---@field public Tree                   std.collection.Tree
 local M = setmetatable({
   __mods = __mods,

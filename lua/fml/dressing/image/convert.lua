@@ -43,7 +43,7 @@ local config = {
 ---@field public meta                    fml.dressing.image.meta
 ---@field public done                    ?boolean
 ---@field public err                     ?string
----@field public proc                    ?std.collection.spawn.Proc
+---@field public proc                    ?ark.c.Proc
 
 ---@class fml.dressing.image.cmd
 ---@field public cmd                     (fun(step: fml.dressing.image.step): (fml.dressing.image.Proc|fml.dressing.image.Proc[]))|fml.dressing.image.Proc|fml.dressing.image.Proc[]
@@ -189,7 +189,7 @@ local commands = {
 ---@type table<string, boolean>
 local have = {}
 
----@type std.collection.spawn.Proc[]
+---@type ark.c.Proc[]
 local proc_queue = {}
 
 ---@type integer
@@ -197,7 +197,7 @@ local proc_running = 0
 
 local MAX_PROCS = 3
 
----@param proc                           ?std.collection.spawn.Proc
+---@param proc                           ?ark.c.Proc
 ---@return nil
 local function schedule(proc)
   if proc then
@@ -504,7 +504,7 @@ function Convert:__step__()
     end
   end
 
-  step.proc = std.Spawn.new({
+  step.proc = ark.c.Proc.new({
     run = false,
     cwd = cmd.cwd and state.tpl(cmd.cwd, data) or nil,
     cmd = cmd.cmd,
