@@ -407,7 +407,7 @@ function M.on_attach(client, bufnr)
     end
   end
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

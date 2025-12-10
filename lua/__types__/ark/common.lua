@@ -25,3 +25,19 @@
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
+
+---@class ark.t.IKeymapOverridable
+---@field public bufnr                  ?integer
+---@field public nowait                 ?boolean
+---@field public noremap                ?boolean
+---@field public silent                 ?boolean
+---@field public expr                   ?boolean
+---@field public replace_keycodes       ?boolean
+
+---@class ark.t.IKeymap : ark.t.IKeymapOverridable
+---@field public disabled               boolean|nil
+---@field public modes                  dot.e.VimMode[]
+---@field public key                    string
+---@field public aliases                string[]|nil
+---@field public desc                   string|nil
+---@field public callback               string|(fun(): nil)|(fun(): string)

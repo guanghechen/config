@@ -170,8 +170,8 @@ end
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
 ---@field protected _scheduler_search   ark.c.Scheduler
 ---@field protected _nvimbar            ux.nvimbar.Nvimbar
----@field protected _finder_keymaps     std.t.IKeymap[]
----@field protected _replacer_keymaps   std.t.IKeymap[]
+---@field protected _finder_keymaps     ark.t.IKeymap[]
+---@field protected _replacer_keymaps   ark.t.IKeymap[]
 ---@field protected _preserve_match_index integer|nil
 ---@field protected _last_focused_window "finder"|"replacer"
 ---@field protected _last_search_pattern string|nil
@@ -874,7 +874,7 @@ end
 ---@protected
 ---@param raw_flags                     ux.searcher.result.IFlagItemRaw[]
 ---@param window_type                   "finder"|"replacer"
----@return std.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__create_keymaps__(raw_flags, window_type)
   local actions = {
     toggle_source_with_searcher = function()
@@ -891,7 +891,7 @@ function M:__create_keymaps__(raw_flags, window_type)
     end,
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local base_keymaps = {
     {
       modes = { "n" },

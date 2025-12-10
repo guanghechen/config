@@ -91,7 +91,7 @@ local function on_attach(client, bufnr)
 
   eve.lsp.on_attach(client, bufnr)
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

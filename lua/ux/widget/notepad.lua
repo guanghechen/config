@@ -15,7 +15,7 @@ local BUFFER_VAR_NAME = "eve_notepad_uuid"
 
 local K = dot.command.definitions
 
----@type std.t.IKeymap[]
+---@type ark.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "x" },

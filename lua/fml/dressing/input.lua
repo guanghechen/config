@@ -194,7 +194,7 @@ function M.input(opts, on_confirm)
   vim.fn.prompt_setcallback(bufnr, action.confirm)
   vim.fn.prompt_setinterrupt(bufnr, action.cancel)
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "x" },

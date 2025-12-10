@@ -209,7 +209,7 @@ return {
         vim.bo[bufnr].filetype = "markdown"
         vim.bo[bufnr].swapfile = false
 
-        ---@type std.t.IKeymap[]
+        ---@type ark.t.IKeymap[]
         local keymaps = {
           {
             modes = { "n" },
@@ -336,7 +336,7 @@ return {
         event = "neo_tree_popup_input_ready",
         ---@param args                  { bufnr: integer, winid: integer }
         handler = function(args)
-          ---@type std.t.IKeymap[]
+          ---@type ark.t.IKeymap[]
           local keymaps = {
             {
               modes = { "i" },

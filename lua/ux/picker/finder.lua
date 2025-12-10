@@ -10,13 +10,13 @@ local __module_name__ = "ux.picker.finder" ---@type string
 
 ---@class ux.picker.IFinderProps
 ---@field public name                   string
----@field public keymaps                std.t.IKeymap[]
+---@field public keymaps                ark.t.IKeymap[]
 ---@field public input                  ark.c.Observable
 ---@field public title                  string
 
 ---@class ux.picker.Finder
 ---@field public fullname               string
----@field public keymaps                std.t.IKeymap[]
+---@field public keymaps                ark.t.IKeymap[]
 ---@field public input                  ark.c.Observable
 ---@field public linecount              ark.c.Observable
 ---@field public title                  string
@@ -32,7 +32,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local keymaps = props.keymaps ---@type std.t.IKeymap[]
+  local keymaps = props.keymaps ---@type ark.t.IKeymap[]
   local input = props.input ---@type ark.c.Observable
   local linecount = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string

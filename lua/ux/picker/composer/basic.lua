@@ -95,10 +95,10 @@ local __highlights__ = {
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public keymaps_common         ?std.t.IKeymap[]
----@field public keymaps_finder         ?std.t.IKeymap[]
----@field public keymaps_preview        ?std.t.IKeymap[]
----@field public keymaps_result         ?std.t.IKeymap[]
+---@field public keymaps_common         ?ark.t.IKeymap[]
+---@field public keymaps_finder         ?ark.t.IKeymap[]
+---@field public keymaps_preview        ?ark.t.IKeymap[]
+---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?ark.c.History
@@ -162,10 +162,10 @@ function M.new(props)
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
-  local keymaps_common = props.keymaps_common or {} ---@type std.t.IKeymap[]
-  local keymaps_finder = props.keymaps_finder or {} ---@type std.t.IKeymap[]
-  local keymaps_preview = props.keymaps_preview or {} ---@type std.t.IKeymap[]
-  local keymaps_result = props.keymaps_result or {} ---@type std.t.IKeymap[]
+  local keymaps_common = props.keymaps_common or {} ---@type ark.t.IKeymap[]
+  local keymaps_finder = props.keymaps_finder or {} ---@type ark.t.IKeymap[]
+  local keymaps_preview = props.keymaps_preview or {} ---@type ark.t.IKeymap[]
+  local keymaps_result = props.keymaps_result or {} ---@type ark.t.IKeymap[]
 
   local search_pattern = props.search_pattern ---@type ark.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History
@@ -758,9 +758,9 @@ end
 
 ---@param flags                         ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@return std.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local builtin_keymaps = {
     {
       modes = { "n", "x" },
@@ -810,7 +810,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
 
   for _, item in ipairs(flags) do
     if index <= 9 then
-      ---@type std.t.IKeymap
+      ---@type ark.t.IKeymap
       local keymap = {
         modes = { "i", "n", "x" },
         key = string.format("<C-%d>", index),
@@ -821,7 +821,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       builtin_keymaps[N] = keymap
     end
 
-    ---@type std.t.IKeymap
+    ---@type ark.t.IKeymap
     local keymap = {
       modes = { "n", "x" },
       key = string.format(index_format, index),
@@ -842,9 +842,9 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
   return builtin_keymaps
 end
 
----@return std.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_finder__()
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local builtin_keymaps = {
     {
       modes = { "n", "x" },
@@ -1020,9 +1020,9 @@ function M:__resolve_builtin_keymaps_finder__()
   return builtin_keymaps
 end
 
----@return std.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_result__()
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local builtin_keymaps = {
     {
       modes = { "n", "x" },
@@ -1181,9 +1181,9 @@ function M:__resolve_builtin_keymaps_result__()
   return builtin_keymaps
 end
 
----@return std.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_preview__()
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local builtin_keymaps = {
     {
       modes = { "n", "x" },
@@ -1312,36 +1312,36 @@ end
 
 ---@param flags                         ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param keymaps                       std.t.IKeymap[]
----@return std.t.IKeymap[]
+---@param keymaps                       ark.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__() ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type std.t.IKeymap[]
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type ark.t.IKeymap[]
+  local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__() ---@type ark.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type ark.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end
 
 ---@param flags                         ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param keymaps                       std.t.IKeymap[]
----@return std.t.IKeymap[]
+---@param keymaps                       ark.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type std.t.IKeymap[]
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type ark.t.IKeymap[]
+  local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type ark.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type ark.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end
 
 ---@param flags                         ux.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
----@param keymaps                       std.t.IKeymap[]
----@return std.t.IKeymap[]
+---@param keymaps                       ark.t.IKeymap[]
+---@return ark.t.IKeymap[]
 function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type std.t.IKeymap[]
-  local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type std.t.IKeymap[]
-  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type std.t.IKeymap[]
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type ark.t.IKeymap[]
+  local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type ark.t.IKeymap[]
+  local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type ark.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
   return resolved_keymaps
 end

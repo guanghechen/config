@@ -93,7 +93,7 @@ local function on_attach(client, bufnr)
     vim.lsp.inline_completion.enable(true, { bufnr = bufnr })
   end)
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n" },

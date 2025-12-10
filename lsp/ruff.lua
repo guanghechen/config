@@ -15,7 +15,7 @@ local function on_attach(client, bufnr)
   client.server_capabilities.hoverProvider = false
   client.server_capabilities.completionProvider = nil
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

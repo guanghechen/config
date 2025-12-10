@@ -53,10 +53,10 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public keymaps_common         ?std.t.IKeymap[]
----@field public keymaps_finder         ?std.t.IKeymap[]
----@field public keymaps_preview        ?std.t.IKeymap[]
----@field public keymaps_result         ?std.t.IKeymap[]
+---@field public keymaps_common         ?ark.t.IKeymap[]
+---@field public keymaps_finder         ?ark.t.IKeymap[]
+---@field public keymaps_preview        ?ark.t.IKeymap[]
+---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
 ---@field public flag_fuzzy             ark.c.Observable
 ---@field public flag_regex             ark.c.Observable
@@ -124,10 +124,10 @@ function M.new(props)
   local search_pattern = props.search_pattern ---@type ark.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
 
-  local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
-  local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
-  local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
-  local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
+  local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
   local flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
   local flag_regex = props.flag_regex ---@type ark.c.Observable
@@ -271,7 +271,7 @@ function M.new(props)
     add_flags(flags, flags_append, name)
   end
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_ks_common = {
     {
       modes = { "i", "n", "x" },
@@ -301,13 +301,13 @@ function M.new(props)
     },
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_ks_finder = {}
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_ks_result = {}
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_ks_preview = {}
 
   local composer = ux.picker.BasicComposer.new({

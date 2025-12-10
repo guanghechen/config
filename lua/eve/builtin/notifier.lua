@@ -377,7 +377,7 @@ function M.__create_buf_as_needed__(win)
     vim.bo[bufnr].filetype = dot.filetype.NOTIFY
     vim.bo[bufnr].swapfile = false
 
-    ---@type std.t.IKeymap[]
+    ---@type ark.t.IKeymap[]
     local keymaps = {
       {
         modes = { "n", "x" },

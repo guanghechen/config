@@ -68,7 +68,7 @@ local function get_diff_lines_from_git(lnum, filepath)
   return dels, adds
 end
 
----@type std.t.IKeymap[]
+---@type ark.t.IKeymap[]
 local keymaps = {
   {
     modes = { "n" },
@@ -194,7 +194,7 @@ local keymaps = {
         :line(string.format("Changes added in %s | <remote url>", commit_hash), {})
         :lf()
 
-      ---@type std.t.IKeymap[]
+      ---@type ark.t.IKeymap[]
       local keymaps = {
         {
           modes = { "i", "n", "x" },

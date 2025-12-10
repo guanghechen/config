@@ -26,12 +26,12 @@ local __module_name__ = "ux.picker.preview" ---@type string
 ---@class ux.picker.IPreviewProps
 ---@field public name                   string
 ---@field public draw                   ux.picker.preview.IDraw
----@field public keymaps                std.t.IKeymap[]
+---@field public keymaps                ark.t.IKeymap[]
 ---@field public on_drawed              ?ux.picker.preview.IOnDrawed
 
 ---@class ux.picker.Preview
 ---@field public fullname               string
----@field public keymaps                std.t.IKeymap[]
+---@field public keymaps                ark.t.IKeymap[]
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -46,7 +46,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type ux.picker.preview.IDraw
-  local keymaps = props.keymaps ---@type std.t.IKeymap[]
+  local keymaps = props.keymaps ---@type ark.t.IKeymap[]
   local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.picker.preview.IOnDrawed
 
   local self = setmetatable({}, M)

@@ -5,7 +5,7 @@
 
 ---@class ux.ISelectProps
 ---@field public wincfg                 vim.api.keyset.win_config|nil
----@field public keymaps                std.t.IKeymap[]|nil
+---@field public keymaps                ark.t.IKeymap[]|nil
 ---@field public items                  ux.ISelectItem[]
 ---@field public item_present_uuid      string|nil
 ---@field public on_select              fun(widget: ux.ISelect, item: ux.ISelectItem|nil): nil
@@ -19,7 +19,7 @@
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _wincfg             vim.api.keyset.win_config
----@field protected _keymaps            std.t.IKeymap[]
+---@field protected _keymaps            ark.t.IKeymap[]
 ---@field protected _items              ux.ISelectItem[]
 ---@field protected _item_index_present integer
 ---@field protected _on_select          fun(widget: ux.ISelect, item: ux.ISelectItem)
@@ -68,7 +68,7 @@ function M.new(props)
     focusable = true,
   }, props.wincfg or {})
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = vim.list_extend({
     {
       modes = { "i", "n", "x" },
@@ -138,7 +138,7 @@ function M.new(props)
   self._bufnr = nil ---@type integer|nil
   self._winnr = nil ---@type integer|nil
   self._wincfg = wincfg ---@type vim.api.keyset.win_config
-  self._keymaps = keymaps ---@type std.t.IKeymap[]
+  self._keymaps = keymaps ---@type ark.t.IKeymap[]
   self._items = items ---@type ux.ISelectItem[]
   self._item_index_present = item_present_index ---@type integer
   self._on_select = on_select ---@type fun(item: ux.ISelectItem|nil): nil

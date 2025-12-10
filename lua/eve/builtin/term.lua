@@ -12,7 +12,7 @@ local DEFAULT_TERM_TYPE = "5fd8db97-7c8c-4629-a99a-a2696709018b" ---@type string
 ---@field public env                    table<string, string>|nil
 ---@field public permanent              boolean
 ---@field public hidewipe               boolean
----@field public keymaps                std.t.IKeymap[]
+---@field public keymaps                ark.t.IKeymap[]
 ---@field public jobid                  integer|nil
 ---@field public on_closed              fun(): nil
 ---@field public on_focused             fun(): nil
@@ -27,7 +27,7 @@ local DEFAULT_TERM_TYPE = "5fd8db97-7c8c-4629-a99a-a2696709018b" ---@type string
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
 ---@field public hidewipe               ?boolean
----@field public keymaps                ?std.t.IKeymap[]
+---@field public keymaps                ?ark.t.IKeymap[]
 ---@field public on_closed              ?fun(): nil
 ---@field public on_focused             ?fun(): nil
 ---@field public on_resized             ?fun(): nil
@@ -239,7 +239,7 @@ function M.create(params)
   local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil|nil
   local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil|nil
   local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil|nil
-  local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type std.t.IKeymap[]
+  local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type ark.t.IKeymap[]
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false

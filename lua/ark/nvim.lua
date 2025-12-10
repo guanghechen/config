@@ -66,8 +66,8 @@ function M.decode_btn_args(text)
   return result
 end
 
----@param keymaps                       std.t.IKeymap[]
----@param keymap_override               std.t.IKeymapOverridable
+---@param keymaps                       ark.t.IKeymap[]
+---@param keymap_override               ark.t.IKeymapOverridable
 function M.bindkeys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do
     if not keymap.disabled then

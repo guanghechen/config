@@ -45,7 +45,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field protected min_height          number|nil
 ---@field protected title               string
 ---@field protected filetype            string|nil
----@field protected keymaps             std.t.IKeymap[]
+---@field protected keymaps             ark.t.IKeymap[]
 ---@field protected win_opts            table<string, any>
 local M = {}
 M.__index = M
@@ -60,7 +60,7 @@ M.__index = M
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 ---@field public filetype               ?string
----@field public keymaps                ?std.t.IKeymap[]
+---@field public keymaps                ?ark.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
@@ -137,7 +137,7 @@ function M.new(props)
     end
   end
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "x" },

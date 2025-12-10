@@ -50,11 +50,11 @@ local __module_name__ = "ux.searcher.composer.filetree" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public keymaps_common         ?std.t.IKeymap[]
----@field public keymaps_finder         ?std.t.IKeymap[]
----@field public keymaps_preview        ?std.t.IKeymap[]
----@field public keymaps_replacer       ?std.t.IKeymap[]
----@field public keymaps_result         ?std.t.IKeymap[]
+---@field public keymaps_common         ?ark.t.IKeymap[]
+---@field public keymaps_finder         ?ark.t.IKeymap[]
+---@field public keymaps_preview        ?ark.t.IKeymap[]
+---@field public keymaps_replacer       ?ark.t.IKeymap[]
+---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
 ---@field public excludes               ark.c.Observable
 ---@field public flag_exclude           ark.c.Observable
@@ -168,11 +168,11 @@ function M.new(props)
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
   local replace_pattern_history = props.replace_pattern_history ---@type ark.c.History|nil
 
-  local keymaps_common = props.keymaps_common ---@type std.t.IKeymap[]|nil
-  local keymaps_finder = props.keymaps_finder ---@type std.t.IKeymap[]|nil
-  local keymaps_preview = props.keymaps_preview ---@type std.t.IKeymap[]|nil
-  local keymaps_replacer = props.keymaps_replacer ---@type std.t.IKeymap[]|nil
-  local keymaps_result = props.keymaps_result ---@type std.t.IKeymap[]|nil
+  local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
+  local keymaps_replacer = props.keymaps_replacer ---@type ark.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
   local flags_append = props.flags_append ---@type ux.searcher.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type ux.searcher.result.IFlagItemRaw[]|nil
@@ -979,7 +979,7 @@ function M.new(props)
     end,
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_keymaps_common = {
     {
       modes = { "i", "n", "x" },
@@ -989,7 +989,7 @@ function M.new(props)
     },
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_keymaps_finder = {
     {
       modes = { "n", "x" },
@@ -1090,7 +1090,7 @@ function M.new(props)
     },
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_keymaps_replacer = {
     {
       modes = { "n", "x" },
@@ -1191,7 +1191,7 @@ function M.new(props)
     },
   }
 
-  ---@type std.t.IKeymap[]
+  ---@type ark.t.IKeymap[]
   local preset_keymaps_result = {
     {
       modes = { "n", "x" },

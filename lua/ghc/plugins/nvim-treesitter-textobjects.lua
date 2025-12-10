@@ -74,7 +74,7 @@ return {
       },
     }
 
-    ---@type std.t.IKeymap[]
+    ---@type ark.t.IKeymap[]
     local keymaps = {}
 
     ---@type { key: string, query: string, source?: string, desc: string, modes?: string[] }[]
