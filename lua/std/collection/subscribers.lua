@@ -62,7 +62,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local handler = std.BatchHandler.new()
+  local handler = ark.c.BatchHandler.new()
   local items = self._items
 
   local i = 1
@@ -99,7 +99,7 @@ function M:notify(value, value_prev)
     return
   end
 
-  local handler = std.BatchHandler:new()
+  local handler = ark.c.BatchHandler.new()
   local items = self._items
 
   local i = 1

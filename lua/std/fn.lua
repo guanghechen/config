@@ -171,7 +171,7 @@ function M.observe(observables, callback, ignore_initial)
       end
       unsubscribed = true
 
-      local batcher = std.BatchHandler.new()
+      local batcher = ark.c.BatchHandler.new()
       for _, unsubscribable in ipairs(unsubscribables) do
         batcher:run(unsubscribable.unsubscribe, unsubscribable)
       end

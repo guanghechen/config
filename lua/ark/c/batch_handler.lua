@@ -1,13 +1,13 @@
----@class std.collection.IBatchHandler
----@field public cleanup                fun(self: std.collection.IBatchHandler): nil
----@field public run                    fun(self: std.collection.IBatchHandler, action: fun(): nil): nil
----@field public summary                fun(self: std.collection.IBatchHandler, title: string): nil): nil
+---@class ark.t.IBatchHandler
+---@field public cleanup                fun(self: ark.t.IBatchHandler): nil
+---@field public run                    fun(self: ark.t.IBatchHandler, action: fun(): nil): nil
+---@field public summary                fun(self: ark.t.IBatchHandler, title: string): nil): nil
 
----@class std.collection.BatchHandler : std.collection.IBatchHandler
+---@class ark.c.BatchHandler : ark.t.IBatchHandler
 local M = {}
 M.__index = M
 
----@return std.collection.BatchHandler
+---@return ark.c.BatchHandler
 function M.new()
   local self = setmetatable({}, M)
   self._errors = {} ---@type any[]

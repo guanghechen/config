@@ -1,10 +1,12 @@
 ---@class ark.c.__mods
 local c__mods = {
+  BatchHandler = "ark.c.batch_handler",
   Disposable = "ark.c.disposable",
 }
 
 ---@class ark.c
 ---@field public __mods                 ark.c.__mods
+---@field public BatchHandler           ark.c.BatchHandler
 ---@field public Disposable             ark.c.Disposable
 local c = setmetatable({ __mods = c__mods }, {
   __index = function(t, k)

@@ -27,7 +27,7 @@ function M.dispose_all(disposables)
     return
   end
 
-  local handler = std.BatchHandler.new()
+  local handler = ark.c.BatchHandler.new()
   for _, disposable in ipairs(disposables) do
     handler:run(function()
       disposable:dispose()

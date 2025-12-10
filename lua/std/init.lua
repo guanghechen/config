@@ -39,7 +39,6 @@ local __mods = {
   uri = "std.uri",
 
   BatchDisposable = "std.collection.batch_disposable",
-  BatchHandler = "std.collection.batch_handler",
   CircularQueue = "std.collection.circular_queue",
   CircularStack = "std.collection.circular_stack",
   Dirtier = "std.collection.dirtier",
@@ -80,7 +79,6 @@ local __mods = {
 ---@field public uri                    std.uri
 ---
 ---@field public BatchDisposable        std.collection.BatchDisposable
----@field public BatchHandler           std.collection.BatchHandler
 ---@field public CircularQueue          std.collection.CircularQueue
 ---@field public CircularStack          std.collection.CircularStack
 ---@field public Dirtier                std.collection.Dirtier
