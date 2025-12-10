@@ -22,7 +22,6 @@ end
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local wrapped = vim.schedule_wrap(fn)
-  local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
   local disposed = false ---@type boolean
 
@@ -92,7 +91,6 @@ function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local pending = false ---@type boolean
   local wrapped = vim.schedule_wrap(fn)
-  local unpack = table.unpack or unpack ---@type fun(list: table, i?: integer, j?: integer): ...
   local args ---@type table|nil
   local disposed = false ---@type boolean
 

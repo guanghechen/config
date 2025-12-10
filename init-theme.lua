@@ -1,10 +1,7 @@
-_G.yoz = require("yoz") ---@type yoz
+require("bootstrap").setup()
+
 _G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
-
-dot.setup_patches()
-dot.setup_workspace()
-
 _G.std = require("std") ---@type std
 _G.eve = require("eve") ---@type eve
 _G.ux = require("ux") ---@type ux

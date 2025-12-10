@@ -12,7 +12,7 @@ local WORKSPACE ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
-  local gitrepo = dot.env.locate_gitroot(cwd) ---@type string|nil
+  local gitrepo = vim.fn.locate_gitroot(cwd) ---@type string|nil
   CWD = cwd ---@type string
   WORKSPACE = gitrepo or cwd ---@type string
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean
