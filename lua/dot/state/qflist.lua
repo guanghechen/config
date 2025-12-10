@@ -1,4 +1,4 @@
----@class eve.builtin.qflist
+---@class dot.state.qflist
 local M = {}
 
 ---@type ark.c.History

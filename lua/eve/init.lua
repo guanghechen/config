@@ -13,7 +13,6 @@ local __mods = {
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
-  qflist = "eve.builtin.qflist",
   session = "eve.builtin.session",
   shell = "eve.builtin.shell",
   tab = "eve.builtin.tab",
@@ -38,7 +37,6 @@ local __mods = {
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
----@field public qflist                 eve.builtin.qflist
 ---@field public session                eve.builtin.session
 ---@field public shell                  eve.builtin.shell
 ---@field public tab                    eve.builtin.tab

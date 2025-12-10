@@ -146,11 +146,13 @@ local theme = {
 
 ---@class dot.state.__mods
 local __state__mods = {
+  qflist = "dot.state.qflist",
   status = "dot.state.status",
 }
 
 ---@class dot.state
 ---@field public __mods                 dot.state.__mods
+---@field public qflist                 dot.state.qflist
 ---@field public status                 dot.state.status
 local state = setmetatable({
   __mods = __state__mods,

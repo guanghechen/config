@@ -903,8 +903,8 @@ function M.new(props)
 
       if #quickfix_items > 0 then
         self._composer:close()
-        eve.qflist.push(quickfix_items)
-        eve.qflist.open_qflist()
+        dot.state.qflist.push(quickfix_items)
+        dot.state.qflist.open_qflist()
       end
     end,
     toggle_node = function()
