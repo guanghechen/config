@@ -136,6 +136,7 @@ ms({ "n", "x" }, "<leader>bt", K.find.bufs_term)
 --#[c]ode-------------------------------------------------------------------------------------------
 ms({ "i", "n", "x" }, "<F5>", K.code.run)
 ms({ "i", "n", "x" }, "<F17>", K.code.run_force) -- F5 mapped to F17
+ms({ "n", "x" }, "g;", K.code.insert_splitline)
 ms({ "n", "x" }, "gQ", K.code.format)
 ms({ "n", "x" }, "<leader>cR", K.lsp.restart)
 ms({ "n" }, "<leader>cs", K.code.swap_conditional_branches)

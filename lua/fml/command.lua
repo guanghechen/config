@@ -236,6 +236,12 @@ command
     end,
   })
   .implement({
+    uuid = K.code.insert_splitline.uuid,
+    action = function()
+      require("fml.action.code.splitline").insert_splitline()
+    end,
+  })
+  .implement({
     uuid = K.code.trim_trailspace.uuid,
     action = function()
       local trailspace = require("fml.dressing.trailspace")
@@ -623,12 +629,6 @@ command
     uuid = K.notepad.destroy.uuid,
     action = function()
       require("fml.action.notepad").destroy()
-    end,
-  })
-  .implement({
-    uuid = K.notepad.insert_splitline.uuid,
-    action = function()
-      require("fml.action.notepad").insert_splitline()
     end,
   })
   .implement({

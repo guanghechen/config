@@ -1,0 +1,36 @@
+---@alias fml.action.code.splitline.Content string|nil
+
+---@type table<string, fml.action.code.splitline.Content>
+local SPLITLINE_BY_FILETYPE = {
+  lua = string.rep("-", 100),
+  markdown = string.rep("-", 100),
+}
+
+---@class fml.action.code.splitline
+local M = {}
+
+---@return nil
+function M.insert_splitline()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+
+  if vim.bo[bufnr].readonly or not vim.bo[bufnr].modifiable then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("g;", true, false, true), "n", false)
+    return
+  end
+
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  local content = SPLITLINE_BY_FILETYPE[filetype] ---@type string|nil
+
+  if content == nil then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("g;", true, false, true), "n", false)
+    return
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
+  local row = cursor[1] ---@type integer
+  vim.api.nvim_buf_set_lines(bufnr, row, row, false, { "", content, "" })
+  vim.api.nvim_win_set_cursor(winnr, { row + 2, 0 })
+end
+
+return M

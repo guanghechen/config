@@ -293,6 +293,7 @@ M.definitions.clipboard = {
 ---@class eve.builtin.command.definitions.code
 M.definitions.code = {
   format = def("Fcodeformat", "code: format buffer"),
+  insert_splitline = def("Fcodeinsertsplitline", "code: insert splitline"),
   run = def("Fcoderun", "code: run"),
   run_as_neovim_command = def("Fcoderunasneovimcommand", "code: run selection/buffer as :cmd"),
   run_force = def("Fcoderunforce", "code: run (force)"),
@@ -410,7 +411,6 @@ M.definitions.notepad = {
   append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
   create = def("Fnotepadcreate", "notepad: create"),
   destroy = def("Fnotepaddestroy", "notepad: destroy"),
-  insert_splitline = def("Fnotapadinsertsplitline", "notepad: insert splitline"),
   rename = def("Fnotepadrename", "notepad: rename"),
   toggle = def("Fnotepadtoggle", "notepad: toggle"),
   save = def("Fnotepadsave", "notepad: save"),
