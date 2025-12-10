@@ -58,7 +58,6 @@ local __mods = {
   reporter = "ark.reporter",
   stdout = "ark.stdout",
   string = "ark.string",
-  Theme = "ark.theme",
   time = "ark.time",
   tmux = "ark.tmux",
 }
@@ -76,7 +75,6 @@ local __mods = {
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
 ---@field public string                 ark.string
----@field public Theme                  ark.Theme
 ---@field public time                   ark.time
 ---@field public tmux                   ark.tmux
 local M = setmetatable({

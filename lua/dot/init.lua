@@ -134,13 +134,31 @@ local scheme = setmetatable({
   end,
 })
 
+----------------------------------------------------------------------------------------------------
+
+---@class dot.theme.__mods
+local __theme__mods = {
+  Namespace = "dot.theme.namespace",
+}
+
 ---@class dot.theme
+---@field public __mods                 dot.theme.__mods
 ---@field public hlgroup                dot.theme.hlgroup
 ---@field public scheme                 dot.theme.scheme
-local theme = {
+---@field public Namespace              dot.theme.Namespace
+local theme = setmetatable({
+  __mods = __theme__mods,
   hlgroup = hlgroup,
   scheme = scheme,
-}
+}, {
+  __index = function(t, k)
+    local m = __theme__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
 
 ----------------------------------------------------------------------------------------------------
 

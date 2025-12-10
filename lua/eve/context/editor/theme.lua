@@ -132,7 +132,7 @@ function M.apply_integration(params)
     }
     local h = dot.theme.hlgroup[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
-    local uxTheme = ark.Theme.new()
+    local uxTheme = dot.theme.Namespace.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -158,7 +158,7 @@ function M.apply_theme(params)
       transparency = transparency,
     })
 
-    local uxTheme = ark.Theme.new()
+    local uxTheme = dot.theme.Namespace.new()
     for _, integration in ipairs(integrations) do
       local h = dot.theme.hlgroup[integration]
       ---@return table<string, ark.t.theme.IHlgroup>

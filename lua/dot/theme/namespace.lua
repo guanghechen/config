@@ -1,27 +1,27 @@
----@class ark.theme.IApplyParams
+---@class dot.theme.namespace.IApplyParams
 ---@field public scheme                 ark.t.theme.IScheme
 ---@field public nsnr                   integer
 
----@class ark.theme.ICompileParams
+---@class dot.theme.namespace.ICompileParams
 ---@field public scheme                 ark.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class ark.Theme
+---@class dot.theme.Namespace
 ---@field protected hlgroup_map         table<string, ark.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
 local BYTE_AT = 0x40 ---@type integer '@'
 
----@return ark.Theme
+---@return dot.theme.Namespace
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        ark.theme.IApplyParams
+---@param params                        dot.theme.namespace.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -32,14 +32,14 @@ end
 
 ---@param hlname                        string
 ---@param hlgroup                       ark.t.theme.IHlgroup
----@return ark.Theme
+---@return dot.theme.Namespace
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
 ---@param hlgroup_map                   table<string, ark.t.theme.IHlgroup|nil>
----@return ark.Theme
+---@return dot.theme.Namespace
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -49,7 +49,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        ark.theme.ICompileParams
+---@param params                        dot.theme.namespace.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string
