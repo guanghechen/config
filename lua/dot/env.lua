@@ -63,6 +63,17 @@ function M.locate_gitroot(dirpath)
   return nil
 end
 
+---@param filepath                      string
+---@param is_dir                        boolean
+---@return nil
+function M.mkdirs(filepath, is_dir)
+  if is_dir then
+    vim.fn.mkdir(filepath, "p")
+  else
+    vim.fn.mkdir(yoz.path.dirname(filepath, false, PATH_SEP), "p")
+  end
+end
+
 ---! OS settings
 M.IS_MAC = IS_MAC ---@type boolean
 M.IS_WIN = IS_WIN ---@type boolean

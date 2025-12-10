@@ -42,7 +42,7 @@ function M.copy_file(filepath_source, filepath_target, force)
   force = force or false
 
   -- Check if target already exists and confirm overwrite if not forced
-  if not force and std.path.is_exist(filepath_target) then
+  if not force and yoz.path.is_exist(filepath_target) then
     local choice = vim.fn.confirm(string.format("File already exists: %s\nOverwrite?", filepath_target), "&Yes\n&No", 2)
     if choice ~= 1 then
       return false
@@ -73,7 +73,7 @@ function M.copy_file(filepath_source, filepath_target, force)
     return false
   end
 
-  vim.fn.mkdir(std.path.dirname(filepath_target), "p")
+  dot.env.mkdirs(filepath_target, false)
 
   local fout, err_create = io.open(filepath_target, "wb")
   if not fout then
@@ -110,7 +110,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
   force = force or false
 
   -- Check if target already exists and confirm overwrite if not forced
-  if not force and std.path.is_exist(dirpath_target) then
+  if not force and yoz.path.is_exist(dirpath_target) then
     local choice =
       vim.fn.confirm(string.format("Directory already exists: %s\nOverwrite contents?", dirpath_target), "&Yes\n&No", 2)
     if choice ~= 1 then
@@ -118,7 +118,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
     end
   end
 
-  vim.fn.mkdir(dirpath_target, "p")
+  dot.env.mkdirs(dirpath_target, true)
 
   local handle = vim.uv.fs_scandir(dirpath_source)
   if not handle then
@@ -346,7 +346,7 @@ end
 ---@param content                       string
 ---@return nil
 function M.write_file(filepath, content)
-  vim.fn.mkdir(vim.fn.fnamemodify(filepath, ":p:h"), "p")
+  dot.env.mkdirs(filepath, false)
 
   local file, err_open = io.open(filepath, "wb")
   if not file then

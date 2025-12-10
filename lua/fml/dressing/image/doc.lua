@@ -298,7 +298,7 @@ local function make_img(ctx)
   end
   if img.content and not img.src then
     local root = s.tmpdir
-    vim.fn.mkdir(root, "p")
+    dot.env.mkdirs(root, true)
     img.src = root
       .. "/"
       .. (img.content_id or vim.fn.sha256(img.content):sub(1, 8))

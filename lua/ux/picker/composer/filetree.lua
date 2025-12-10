@@ -407,7 +407,7 @@ function M.new(props)
         end
 
         if isdir then
-          vim.fn.mkdir(filepath, "p")
+          dot.env.mkdirs(filepath, true)
           treeview:insert_dirpath(filepath)
         else
           std.path.mkdir_if_nonexist(std.path.dirname(filepath))
@@ -634,7 +634,7 @@ function M.new(props)
         -- Ensure destination directory exists
         local dest_dir = std.path.dirname(next_filepath)
         if not std.path.is_exist(dest_dir) then
-          vim.fn.mkdir(dest_dir, "p")
+          dot.env.mkdirs(dest_dir, true)
         end
 
         if std.path.is_exist(next_filepath) then
@@ -756,7 +756,7 @@ function M.new(props)
         -- Ensure destination directory exists
         local dest_dir = std.path.dirname(next_filepath)
         if not std.path.is_exist(dest_dir) then
-          vim.fn.mkdir(dest_dir, "p")
+          dot.env.mkdirs(dest_dir, true)
         end
 
         if std.path.is_exist(next_filepath) then

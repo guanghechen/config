@@ -254,7 +254,7 @@ Convert.__index = Convert
 function Convert.new(opts)
   local state = require("fml.dressing.image.state")
   local s = state.data
-  vim.fn.mkdir(s.tmpdir, "p")
+  dot.env.mkdirs(s.tmpdir, true)
   local self = setmetatable({}, Convert)
   opts.src, self.page = state.get_page(opts.src)
   opts.src = state.norm_src(opts.src)

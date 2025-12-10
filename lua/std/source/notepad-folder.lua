@@ -84,7 +84,7 @@ function M:load(force)
     return self._state
   end
 
-  vim.fn.mkdir(self._dirpath, "p")
+  dot.env.mkdirs(self._dirpath, true)
 
   local items_map = {} ---@type table<string, std.t.INotepadItemState>
   local name_to_uuid = {} ---@type table<string, string>
@@ -563,7 +563,7 @@ function M:flush()
     self.flush_scheduler:cancel()
   end
 
-  vim.fn.mkdir(self._dirpath, "p")
+  dot.env.mkdirs(self._dirpath, true)
 
   local items = {}
   for _, uuid in ipairs(self._state.orders) do

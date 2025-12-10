@@ -84,7 +84,7 @@ end
 ---@param filepath                      string
 ---@return string
 function M.dirname(filepath)
-  return yoz.path.dirname(filepath, false, "/")
+  return yoz.path.dirname(filepath, false, SEP)
 end
 
 ---@param filename                      string

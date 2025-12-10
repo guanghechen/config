@@ -585,7 +585,7 @@ function M:flush()
   -- Error handling for file write failures
   local ok, err = pcall(function()
     local dirpath = std.path.dirname(self.filepath)
-    vim.fn.mkdir(dirpath, "p")
+    dot.env.mkdirs(dirpath, true)
 
     cleanup_orders(self._state.items, self._state.orders)
 
