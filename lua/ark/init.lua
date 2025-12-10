@@ -36,6 +36,7 @@ local __mods = {
   easing = "ark.external.easing",
   fn = "ark.fn",
   reporter = "ark.reporter",
+  time = "ark.time",
 }
 
 ---@class ark
@@ -45,6 +46,7 @@ local __mods = {
 ---@field public easing                 ark.external.easing
 ---@field public fn                     ark.fn
 ---@field public reporter               ark.reporter
+---@field public time                   ark.time
 local M = setmetatable({
   __mods = __mods,
   c = c,
