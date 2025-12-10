@@ -402,7 +402,7 @@ function M._render_block(block)
 
   local padded = {} ---@type string[]
   for _, line in ipairs(block.lines) do
-    padded[#padded + 1] = std.string.pad_end(line, width, " ")
+    padded[#padded + 1] = ark.string.pad_end(line, width, " ")
   end
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, padded)

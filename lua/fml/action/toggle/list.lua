@@ -502,8 +502,8 @@ local function fetch_data()
     ---@type string
     local text = string.format(
       "%s %s %s",
-      std.string.pad_end(text_group, w_p_group, " "),
-      std.string.pad_end(item.title, w_p_title, " "),
+      ark.string.pad_end(text_group, w_p_group, " "),
+      ark.string.pad_end(item.title, w_p_title, " "),
       text_flag
     )
 

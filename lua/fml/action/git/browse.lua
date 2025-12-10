@@ -319,7 +319,7 @@ function M.browse(opts)
       width = 80,
     },
     format_item = function(remote)
-      local padded_name = std.string.pad_end(remote.name, max_name_width, " ")
+      local padded_name = ark.string.pad_end(remote.name, max_name_width, " ")
       return padded_name .. " │ " .. remote.url
     end,
     render_result = function(_, result_bufnr, itemmap, matches)

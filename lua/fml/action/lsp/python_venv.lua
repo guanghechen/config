@@ -85,7 +85,7 @@ local function fetch_data()
       for _, line in ipairs(lines) do
         if #line > 0 then
           local icon = "󰅬" ---@type string
-          local dirpath = std.string.remove_last_slash(line) ---@type string
+          local dirpath = ark.string.remove_last_slash(line) ---@type string
           if not uuid_set[dirpath] then
             uuid_set[dirpath] = true
             local resolved_dirpath = std.path.is_descendant(workspace, dirpath) and std.path.relative(cwd, dirpath)
@@ -151,7 +151,7 @@ local function fetch_data()
         for _, line in ipairs(lines) do
           if #line > 0 then
             local icon = "" ---@type string
-            local dirpath = std.string.remove_last_slash(line) ---@type string
+            local dirpath = ark.string.remove_last_slash(line) ---@type string
             if not uuid_set[dirpath] then
               uuid_set[dirpath] = true
               local text_content = icon .. " " .. dirpath
@@ -227,7 +227,7 @@ local function fetch_data()
         for _, line in ipairs(lines) do
           if #line > 0 then
             local icon = "" ---@type string
-            local dirpath = std.string.remove_last_slash(line) ---@type string
+            local dirpath = ark.string.remove_last_slash(line) ---@type string
             if not uuid_set[dirpath] then
               uuid_set[dirpath] = true
               local text_content = icon .. " " .. dirpath
@@ -252,7 +252,7 @@ local function fetch_data()
     -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
     if vim.fn.isdirectory(dot.lang.python.paths.AnacondaBase) ~= 0 then
       local icon = "" ---@type string
-      local dirpath = std.string.remove_last_slash(dot.lang.python.paths.AnacondaBase .. "/") ---@type string
+      local dirpath = ark.string.remove_last_slash(dot.lang.python.paths.AnacondaBase .. "/") ---@type string
       if not uuid_set[dirpath] then
         uuid_set[dirpath] = true
         local text_content = icon .. " " .. dirpath

@@ -26,7 +26,6 @@ local __mods = {
   json = "std.json",
   notepad = "std.notepad",
   path = "std.path",
-  string = "std.string",
   table = "std.table",
   timer = "std.timer",
   uri = "std.uri",
@@ -45,7 +44,6 @@ local __mods = {
 ---@field public json                   std.json
 ---@field public notepad                std.notepad
 ---@field public path                   std.path
----@field public string                 std.string
 ---@field public table                  std.table
 ---@field public timer                  std.timer
 ---@field public uri                    std.uri

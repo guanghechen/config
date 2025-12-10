@@ -191,10 +191,10 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     local fileitem = item.data.fileitem ---@type fml.action.find.explorer.IFileItem
     local filename = item.text ---@type string
 
-    local text_icon = std.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. "  " ---@type string
+    local text_icon = ark.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. "  " ---@type string
     local text_name, _ = format_filename(fileitem, diritem, result_width, filename)
-    local text_perm = std.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
-    local text_size = std.string.pad_start(fileitem.size, diritem.size_width, " ") .. "  " ---@type string
+    local text_perm = ark.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
+    local text_size = ark.string.pad_start(fileitem.size, diritem.size_width, " ") .. "  " ---@type string
     local text_date = fileitem.date .. "  " ---@type string
 
     lines[#lines + 1] = text_icon .. text_name .. text_perm .. text_size .. text_date
@@ -212,7 +212,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     local byte_pos = 0 ---@type integer
 
     -- Icon highlight
-    local text_icon = std.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. "  " ---@type string
+    local text_icon = ark.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. "  " ---@type string
     byte_pos = apply_highlight(bufnr, row, byte_pos, text_icon, fileitem.icon_hl)
 
     -- Filename highlight
@@ -235,7 +235,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     )
 
     -- Permission highlight
-    local text_perm = std.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
+    local text_perm = ark.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
     local perm_hl = fileitem.type == "directory" and "f_fe_perm_dir" or "f_fe_perm_file" ---@type string
     local nsnr_content = dot.var.nsnr.picker_result ---@type integer
     vim.hl.range(bufnr, nsnr_content, perm_hl, { row, byte_pos }, { row, byte_pos + 1 }, { priority = 10 })
@@ -250,7 +250,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     byte_pos = byte_pos + string.len(text_perm)
 
     -- Size highlight
-    local text_size = std.string.pad_start(fileitem.size, diritem.size_width, " ") .. "  " ---@type string
+    local text_size = ark.string.pad_start(fileitem.size, diritem.size_width, " ") .. "  " ---@type string
     byte_pos = apply_highlight(bufnr, row, byte_pos, text_size, "f_fe_size")
 
     -- Date highlight
@@ -499,7 +499,7 @@ local function preview_render(composer, bufnr)
       local byte_pos = 0 ---@type integer
       local text = "" ---@type string
 
-      local text_perm = std.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. "  "
+      local text_perm = ark.string.pad_start(c_fileitem.perm, c_diritem.perm_width, " ") .. "  "
       local byte_len_perm = string.len(text_perm) ---@type integer
       table.insert(highlights, {
         lnum = lnum,
@@ -514,14 +514,14 @@ local function preview_render(composer, bufnr)
       text = text .. text_perm
       byte_pos = byte_pos + byte_len_perm
 
-      local text_size = std.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. "  "
+      local text_size = ark.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. "  "
       local byte_len_size = string.len(text_size) ---@type integer
       table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_size, hlname = "f_fe_size" })
       text = text .. text_size
       byte_pos = byte_pos + byte_len_size
 
       if not dot.env.IS_WIN then
-        local text_owner = std.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. " "
+        local text_owner = ark.string.pad_start(c_fileitem.owner, c_diritem.owner_width, " ") .. " "
         local byte_len_owner = string.len(text_owner) ---@type integer
         table.insert(
           highlights,
@@ -530,7 +530,7 @@ local function preview_render(composer, bufnr)
         text = text .. text_owner
         byte_pos = byte_pos + byte_len_owner
 
-        local text_group = std.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. "  "
+        local text_group = ark.string.pad_end(c_fileitem.group, c_diritem.group_width, " ") .. "  "
         local byte_len_group = string.len(text_group) ---@type integer
         table.insert(
           highlights,
@@ -540,13 +540,13 @@ local function preview_render(composer, bufnr)
         byte_pos = byte_pos + byte_len_group
       end
 
-      local text_date = std.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. "  "
+      local text_date = ark.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. "  "
       local byte_len_date = string.len(text_date) ---@type integer
       table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_date, hlname = "f_fe_date" })
       text = text .. text_date
       byte_pos = byte_pos + byte_len_date
 
-      local text_name = std.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. "          "
+      local text_name = ark.string.pad_end(c_fileitem.name, c_diritem.name_width, " ") .. "          "
       local byte_len_name = string.len(text_name) ---@type integer
       table.insert(highlights, {
         lnum = lnum,

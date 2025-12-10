@@ -194,7 +194,7 @@ function M:match(params)
     and last_match_context.case_sensitive == case_sensitive
     and last_match_context.fuzzy == fuzzy
     and (last_match_context.regex == regex and not regex)
-    and std.string.starts_with(pattern, last_match_context.pattern)
+    and ark.string.starts_with(pattern, last_match_context.pattern)
   )
 
   local uuids ---@type string[]

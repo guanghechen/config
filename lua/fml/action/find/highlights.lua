@@ -27,7 +27,7 @@ local function fetch_data()
 
   local items = {} ---@type fml.action.find.highlights.IItem[]
   for lnum, hlname in ipairs(hlnames) do
-    local hlid_str = std.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
+    local hlid_str = ark.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
     local text = string.format("%s xxx   %s", hlid_str, hlname) ---@type string
     local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type ark.t.IHighlightInline[]
 
@@ -140,7 +140,7 @@ local picker = ux.picker.ListComposer.new({
       end
 
       for _, hlname in ipairs(hlnames) do
-        local line = "xxx   " .. std.string.pad_end(hlname, max_hlname_width, " ") ---@type string
+        local line = "xxx   " .. ark.string.pad_end(hlname, max_hlname_width, " ") ---@type string
         local hlgroup = hlgroups[hlname] or {} ---@type vim.api.keyset.get_hl_info
         if hlgroup.fg ~= nil then
           local color_name = ark.color.int2hex(hlgroup.fg) ---@type string

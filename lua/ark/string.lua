@@ -9,7 +9,7 @@ local convert_octal_char = function(octal)
   return string.char(tonumber(octal, 8))
 end
 
----@class std.string
+---@class ark.string
 local M = {}
 
 ---@param text                          string

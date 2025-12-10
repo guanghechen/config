@@ -213,7 +213,7 @@ function M:match(params)
     and last_match_context.case_sensitive == case_sensitive
     and last_match_context.fuzzy == fuzzy
     and (last_match_context.regex == regex and not regex)
-    and std.string.starts_with(pattern, last_match_context.pattern)
+    and ark.string.starts_with(pattern, last_match_context.pattern)
   )
 
   local uuids ---@type string[]
@@ -393,7 +393,7 @@ function M:insert_filepath(filepath, with_locations)
   local lnum, col, col_end ---@type integer|nil, integer|nil, integer|nil
 
   if with_locations then
-    filepath, lnum, col, col_end = std.string.parse_filepath_with_location(filepath)
+    filepath, lnum, col, col_end = ark.string.parse_filepath_with_location(filepath)
   end
 
   local filenode = filetree:insert_file_absolute(filepath)
@@ -527,7 +527,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
     if with_locations then
       for _, p in ipairs(filepaths) do
-        local filepath, lnum, col, col_end = std.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
+        local filepath, lnum, col, col_end = ark.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
         if lnum ~= nil then
           if not std.path.is_absolute(filepath) then
             filepath = cwd .. dot.env.PATH_SEP .. filepath ---@type string

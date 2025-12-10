@@ -223,8 +223,8 @@ local function build_attach_picker_items(items)
 
     local icon = info.category == "attached" and dot.icon.status.attached
       or (item.type == "running" and dot.icon.status.detached or " ")
-    local text_agent = std.string.pad_end(info.agent_label, width_agent, " ")
-    local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
+    local text_agent = ark.string.pad_end(info.agent_label, width_agent, " ")
+    local text_identifier = info.identifier and ("  " .. ark.string.pad_end(info.identifier, width_identifier, " "))
       or ""
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
     local text = icon .. " " .. text_agent .. text_identifier .. text_pane_cwd
@@ -282,8 +282,8 @@ local function build_attached_picker_items(attached)
   for _, info in ipairs(item_infos) do
     local source = info.source
 
-    local text_agent = std.string.pad_end(info.agent_label, width_agent, " ")
-    local text_identifier = info.identifier and ("  " .. std.string.pad_end(info.identifier, width_identifier, " "))
+    local text_agent = ark.string.pad_end(info.agent_label, width_agent, " ")
+    local text_identifier = info.identifier and ("  " .. ark.string.pad_end(info.identifier, width_identifier, " "))
       or ""
     local text_pane_cwd = info.pane_cwd and ("  " .. info.pane_cwd) or ""
     local text = dot.icon.status.attached .. " " .. text_agent .. text_identifier .. text_pane_cwd

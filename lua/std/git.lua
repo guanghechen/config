@@ -299,7 +299,7 @@ local function parse_name_status_line(line)
   end
 
   relative = relative:gsub('^"', ""):gsub('"$', "")
-  relative = std.string.octal_to_utf8(relative)
+  relative = ark.string.octal_to_utf8(relative)
   relative = std.path.normalize(relative)
 
   return status, relative
@@ -438,7 +438,7 @@ local function collect_status(opts)
       for _, line in ipairs(untracked_lines) do
         if type(line) == "string" and #line > 0 then
           local relative = line:gsub('^"', ""):gsub('"$', "")
-          relative = std.string.octal_to_utf8(relative)
+          relative = ark.string.octal_to_utf8(relative)
           relative = std.path.normalize(relative)
 
           local absolute = std.path.normalize(std.path.join(workspace, relative)) ---@type string
