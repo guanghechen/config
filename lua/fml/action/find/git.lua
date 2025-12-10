@@ -1,7 +1,7 @@
 local name = "fml.action.find.git" ---@type string
 local title = "Find Git" ---@type string
 
-local search_pattern_history = std.InputHistory.new({ name = name, capacity = 5 })
+local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
 local o_search_pattern = eve.context.select.find_git.search_pattern
 local o_flag_foldempty = eve.context.select.find_git.flag_foldempty
 local o_flag_fuzzy = eve.context.select.find_git.flag_fuzzy

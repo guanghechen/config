@@ -1,20 +1,20 @@
-local __module_name__ = "std.collection.input_history" ---@type string
+local __module_name__ = "ark.c.input_history" ---@type string
 
----@class std.collection.InputHistory : ark.c.IHistory
+---@class ark.c.InputHistory : ark.c.IHistory
 ---@field public fullname               string
----@field public equals                 std.t.IEquals
+---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer
 ---@field protected _stack              ark.c.ICircularStack
 local M = {}
 M.__index = M
 
 ---@param props                         ark.c.history.IProps
----@return std.collection.InputHistory
+---@return ark.c.InputHistory
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
+  local equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -25,7 +25,7 @@ function M.new(props)
 end
 
 ---@param props                         ark.c.history.IDeserializeProps
----@return std.collection.InputHistory
+---@return ark.c.InputHistory
 function M.deserialize(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -33,28 +33,28 @@ function M.deserialize(props)
 
   local self = setmetatable({}, M)
   self.fullname = fullname
-  self.equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
+  self.equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
   self._stack = ark.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
 
 ---@param index                         integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:at(index)
   return self._stack:at(index)
 end
 
 ---@param step                          ?integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return boolean
 function M:backward(step)
   local index = self._present - math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type std.t.T|nil, integer
+  local element, present = self:go(index) ---@type ark.t.T|nil, integer
   return element, present <= 1
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:bottom()
   return self._stack:at(1)
 end
@@ -70,7 +70,7 @@ function M:clear()
   self._stack:clear()
 end
 
----@return std.t.T[]
+---@return ark.t.T[]
 function M:collect()
   return self._stack:collect()
 end
@@ -85,7 +85,7 @@ function M:dump()
 end
 
 ---@param params                        ark.c.history.IForkParams
----@return std.collection.InputHistory
+---@return ark.c.InputHistory
 function M:fork(params)
   local name = params.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -99,16 +99,16 @@ function M:fork(params)
 end
 
 ---@param step                          ?integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return boolean
 function M:forward(step)
   local index = self._present + math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type std.t.T|nil, integer
+  local element, present = self:go(index) ---@type ark.t.T|nil, integer
   return element, present == self._stack:size()
 end
 
 ---@param index                         integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:go(index)
   local stack = self._stack ---@type ark.c.ICircularStack
@@ -132,13 +132,13 @@ function M:is_top()
   return self._present == self._stack:size()
 end
 
----@return fun(): std.t.T, integer
+---@return fun(): ark.t.T, integer
 function M:iterator()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator()
 end
 
----@return fun(): std.t.T, integer
+---@return fun(): ark.t.T, integer
 function M:iterator_reverse()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator_reverse()
@@ -147,13 +147,13 @@ end
 ---@param data                          ark.c.history.ISerializedData
 ---@return nil
 function M:load(data)
-  local stack = data.stack ---@type std.t.T[]
+  local stack = data.stack ---@type ark.t.T[]
   local present = data.present ---@type integer
   self._stack:reset(stack)
   self:go(present or math.huge)
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:present()
   return self._stack:at(self._present), self._present
@@ -162,7 +162,7 @@ end
 ---@return nil
 function M:print()
   local present = self._present ---@type integer
-  local stack = self._stack:collect() ---@type std.t.T
+  local stack = self._stack:collect() ---@type ark.t.T
   ark.reporter.info({
     from = self.fullname,
     subject = "print",
@@ -170,10 +170,10 @@ function M:print()
   })
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:push(element)
-  local present = self._stack:at(self._present) ---@type std.t.T|nil
+  local present = self._stack:at(self._present) ---@type ark.t.T|nil
   if present ~= nil and self.equals(present, element) then
     return
   end
@@ -186,7 +186,7 @@ function M:push(element)
   self._present = stack:size()
 end
 
----@param filter                        std.t.IFilter
+---@param filter                        ark.t.IFilter
 ---@return nil
 function M:rearrange(filter)
   local stack = self._stack ---@type ark.c.ICircularStack
@@ -214,14 +214,14 @@ function M:size()
   return self._stack:size()
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:top()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:top(), stack:size()
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:update_top(element)
   local stack = self._stack ---@type ark.c.ICircularStack

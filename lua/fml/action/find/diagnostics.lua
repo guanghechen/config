@@ -22,7 +22,7 @@ local o_flag_case_sensitive = eve.context.select.find_diagnostics.flag_case_sens
 local o_flag_selected = eve.context.select.find_diagnostics.flag_selected ---@type std.collection.IObservable
 local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@type std.collection.IObservable
 
-local search_pattern_history = std.InputHistory.new({ name = name, capacity = 5 })
+local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
 local o_bufnr_sourcefile = std.Observable.from_value(nil)---@type std.collection.IObservable
 local o_rootpath = std.Observable.from_value(std.path.cwd())---@type std.collection.IObservable
 local o_flag_buffer = std.Observable.from_value(false)---@type std.collection.IObservable

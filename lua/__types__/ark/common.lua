@@ -4,6 +4,10 @@
 ---| any
 
 ---@generic T
+---@alias ark.t.IEquals
+---| fun(x: T, y: T): boolean
+
+---@generic T
 ---@alias ark.t.IFilter
 ---| fun(element: T, index: integer): boolean
 

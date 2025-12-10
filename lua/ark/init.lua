@@ -7,6 +7,7 @@ local c__mods = {
   Disposable = "ark.c.disposable",
   Frecency = "ark.c.frecency",
   History = "ark.c.history",
+  InputHistory = "ark.c.input_history",
   Subscriber = "ark.c.subscriber",
   Subscribers = "ark.c.subscribers",
 }
@@ -20,6 +21,7 @@ local c__mods = {
 ---@field public Disposable             ark.c.Disposable
 ---@field public Frecency               ark.c.Frecency
 ---@field public History                ark.c.History
+---@field public InputHistory           ark.c.InputHistory
 ---@field public Subscriber             ark.c.Subscriber
 ---@field public Subscribers            ark.c.Subscribers
 local c = setmetatable({ __mods = c__mods }, {

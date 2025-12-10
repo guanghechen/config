@@ -2,7 +2,7 @@ local name = "fml.action.find.pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
 local search_pattern = std.Observable.from_value("")
-local search_pattern_history = std.InputHistory.new({
+local search_pattern_history = ark.c.InputHistory.new({
   name = name,
   capacity = 5,
   input = search_pattern,
