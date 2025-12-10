@@ -78,8 +78,8 @@ function M.compute_float_maximized_wincfg(wincfg)
 
   local editor_width = vim.o.columns ---@type integer
   local editor_height = vim.o.lines ---@type integer
-  local top_offset = std.nvim.is_tabline_visible() and 1 or 0 ---@type integer
-  local bottom_offset = std.nvim.is_statusline_visible() and 1 or 0 ---@type integer
+  local top_offset = ark.nvim.is_tabline_visible() and 1 or 0 ---@type integer
+  local bottom_offset = ark.nvim.is_statusline_visible() and 1 or 0 ---@type integer
   local available_height = math.max(1, editor_height - top_offset - bottom_offset) ---@type integer
 
   ---@type integer, integer

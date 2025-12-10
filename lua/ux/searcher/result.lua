@@ -77,7 +77,7 @@ function M.new(props)
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
   local on_drawed = props.on_drawed or ark.fn.noop ---@type ux.searcher.result.IOnDrawed
-  local augroup_CursorMoved = std.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
+  local augroup_CursorMoved = ark.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
@@ -495,7 +495,7 @@ function M:create_buf()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  std.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  ark.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   self._scheduler_content:schedule({ immediate = true })
   self._scheduler_lnum_current:schedule({ immediate = true })

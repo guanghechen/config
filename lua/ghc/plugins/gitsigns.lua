@@ -212,7 +212,7 @@ local keymaps = {
           end,
         },
       }
-      std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+      ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
       local height = printer:measure() ---@type integer
       printer:render(bufnr):dispose()
@@ -406,7 +406,7 @@ return {
       untracked = { text = "┆" },
     },
     on_attach = function(bufnr)
-      std.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
+      ark.nvim.bindkeys(keymaps, { buffer = bufnr, noremap = true, silent = true })
     end,
   },
 }

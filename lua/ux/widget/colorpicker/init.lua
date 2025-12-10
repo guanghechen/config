@@ -458,7 +458,7 @@ function M:__create_buf_as_needed__()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].swapfile = false
 
-  std.nvim.bindkeys(self._keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  ark.nvim.bindkeys(self._keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   return bufnr
 end

@@ -374,7 +374,7 @@ function M.create(params)
       M.on_closed(termmeta)
     end,
   }
-  std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid

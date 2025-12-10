@@ -1,4 +1,4 @@
-local ms = std.nvim.make_shortcut
+local ms = ark.nvim.make_shortcut
 local K = eve.command.definitions ---@type eve.builtin.command.definitions
 
 --#[c]ommand----------------------------------------------------------------------------------------

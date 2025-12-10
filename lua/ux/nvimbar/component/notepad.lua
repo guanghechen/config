@@ -1,6 +1,6 @@
-local btn = std.nvim.btn
-local txt = std.nvim.txt
-local decode_btn_args = std.nvim.decode_btn_args
+local btn = ark.nvim.btn
+local txt = ark.nvim.txt
+local decode_btn_args = ark.nvim.decode_btn_args
 
 ---@type string
 local fn_switch_notepad = eve.G.register_anonymous_fn(function(encoded)
@@ -56,7 +56,7 @@ function M.items(position, notepad)
   local icon_arrow_left = dot.icon.ui.Left ---@type string
   local icon_arrow_right = dot.icon.ui.Right ---@type string
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
-  local hln_arrow = std.nvim.make_bg_transparency(hln_button) ---@type string
+  local hln_arrow = ark.nvim.make_bg_transparency(hln_button) ---@type string
 
   ---@param item                        std.t.INotepadItemMeta
   ---@return string

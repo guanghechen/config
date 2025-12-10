@@ -5,8 +5,8 @@ local M = {}
 
 ---@return { row: integer, height: integer }
 local function calc_main_area()
-  local top = std.nvim.is_tabline_visible() and 1 or 0 ---@type integer
-  local bottom = vim.o.cmdheight + (std.nvim.is_statusline_visible() and 1 or 0) ---@type integer
+  local top = ark.nvim.is_tabline_visible() and 1 or 0 ---@type integer
+  local bottom = vim.o.cmdheight + (ark.nvim.is_statusline_visible() and 1 or 0) ---@type integer
   local height = vim.o.lines - top - bottom - 2 ---@type integer
   return { row = top, height = math.max(1, height) }
 end

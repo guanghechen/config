@@ -1,8 +1,8 @@
 local __module_name__ = "eve.builtin.lsp"
 
 local Methods = vim.lsp.protocol.Methods
-local augroup_codelens = std.nvim.augroup("eve.builtin.lsp.codelens") ---@type integer
-local augroup_illuminate = std.nvim.augroup("eve.builtin.lsp.illuminate") ---@type integer
+local augroup_codelens = ark.nvim.augroup("eve.builtin.lsp.codelens") ---@type integer
+local augroup_illuminate = ark.nvim.augroup("eve.builtin.lsp.illuminate") ---@type integer
 
 ---@class eve.builtin.lsp.ISymbolPos
 ---@field public line                   integer
@@ -559,7 +559,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto next reference",
     },
   }
-  std.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  ark.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 ---@param client                        vim.lsp.Client

@@ -246,7 +246,7 @@ function M.input(opts, on_confirm)
       callback = action.cancel,
     })
   end
-  std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_set_current_win(winnr)
   if prompt == "" then

@@ -64,7 +64,7 @@ dirtier:subscribe(ark.c.Subscriber.new({
 }))
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = std.nvim.augroup("statusline_on_ModeChanged"),
+  group = ark.nvim.augroup("statusline_on_ModeChanged"),
   callback = function(evt)
     local m = evt.match ---@type string
     if string.sub(m, 1, 2) == "c:" or string.sub(m, #m - 1, #m) == ":c" then

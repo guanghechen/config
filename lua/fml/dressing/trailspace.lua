@@ -72,7 +72,7 @@ local function trim_last_lines()
   end
 end
 
-local group = std.nvim.augroup("fml.dressing.trailspace")
+local group = ark.nvim.augroup("fml.dressing.trailspace")
 vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter", "InsertLeave" }, {
   group = group,
   callback = highlight,

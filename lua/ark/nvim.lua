@@ -1,6 +1,3 @@
-local BLOCKING_MODES = { "ic", "ix", "c", "no", "r%?", "rm" } ---@type string[]
-local UNDO = vim.api.nvim_replace_termcodes("<C-g>u", true, true, true) ---@type string
-
 ---@param num                           integer
 ---@return string
 local function encode_int(num)
@@ -15,7 +12,7 @@ local function decode_int(text)
   return num
 end
 
----@class std.nvim
+---@class ark.nvim
 local M = {}
 
 ---@param name                          string
@@ -102,14 +99,6 @@ function M.bindkeys(keymaps, keymap_override)
   end
 end
 
----@return nil
-function M.create_undo()
-  local mode = vim.api.nvim_get_mode().mode ---@type string
-  if mode == "i" then
-    vim.api.nvim_feedkeys(UNDO, "n", false)
-  end
-end
-
 ---@return table<string, integer>
 function M.filepath2bufnr()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
@@ -122,22 +111,6 @@ function M.filepath2bufnr()
     end
   end
   return filepath2bufnr
-end
-
----@return boolean
-function M.is_blocking()
-  local mode = vim.api.nvim_get_mode()
-  if mode.blocking then
-    return true
-  end
-
-  for _, m in ipairs(BLOCKING_MODES) do
-    if mode.mode:find(m) == 1 then
-      return true
-    end
-  end
-
-  return false
 end
 
 ---@return boolean
@@ -228,19 +201,6 @@ function M.make_shortcut(modes, keys, definition)
       vim.keymap.set(modes, key, callback, opts)
     end
   end
-end
-
----@param hlgroups                      string[]
----@param field                         "fg"|"bg"|"sp"
----@return string|nil
-function M.pick_color(hlgroups, field)
-  for _, hlgroup in ipairs(hlgroups) do
-    local hl = vim.api.nvim_get_hl(0, { name = hlgroup, link = false })
-    if hl[field] then
-      return string.format("#%06x", hl[field])
-    end
-  end
-  return nil
 end
 
 return M

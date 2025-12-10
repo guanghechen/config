@@ -104,7 +104,7 @@ local function create_buf(termmeta)
       end,
     },
   }
-  std.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   termmeta.bufnr = bufnr
   return bufnr

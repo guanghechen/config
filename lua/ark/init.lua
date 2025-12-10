@@ -51,6 +51,7 @@ local __mods = {
   color = "ark.external.color",
   easing = "ark.external.easing",
   fn = "ark.fn",
+  nvim = "ark.nvim",
   reporter = "ark.reporter",
   stdout = "ark.stdout",
   time = "ark.time",
@@ -65,6 +66,7 @@ local __mods = {
 ---@field public color                  ark.external.color
 ---@field public easing                 ark.external.easing
 ---@field public fn                     ark.fn
+---@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
 ---@field public time                   ark.time

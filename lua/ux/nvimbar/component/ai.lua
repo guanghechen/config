@@ -1,5 +1,5 @@
-local btn = std.nvim.btn
-local txt = std.nvim.txt
+local btn = ark.nvim.btn
+local txt = ark.nvim.txt
 
 local state = require("ux.widget.ai.state")
 local config = require("ux.widget.ai.config")

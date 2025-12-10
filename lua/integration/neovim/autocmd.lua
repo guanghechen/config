@@ -48,7 +48,7 @@ local ft_to_lsp_map = {
 local enabled_lsp_set = {}
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = std.nvim.augroup("lsp_setup"),
+  group = ark.nvim.augroup("lsp_setup"),
   callback = function(args)
     local ft = args.match ---@type string
     local lsp_servers = ft_to_lsp_map[ft]
@@ -67,7 +67,7 @@ vim.api.nvim_create_autocmd("FileType", {
 
 --- Auto create dirs when saving a file, in case some intermediate directory does not exist
 vim.api.nvim_create_autocmd("BufWritePre", {
-  group = std.nvim.augroup("auto_create_dirs"),
+  group = ark.nvim.augroup("auto_create_dirs"),
   callback = function(event)
     if event.match:match("^%w%w+:[\\/][\\/]") then
       return
@@ -82,7 +82,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 
 --- Go to last loc when opening a buffer
 vim.api.nvim_create_autocmd("BufReadPost", {
-  group = std.nvim.augroup("goto_last_location"),
+  group = ark.nvim.augroup("goto_last_location"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     if vim.b[bufnr].eve_last_loc then
@@ -115,7 +115,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 
 --- Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
-  group = std.nvim.augroup("highlight_on_yank"),
+  group = ark.nvim.augroup("highlight_on_yank"),
   callback = function()
     vim.hl.on_yank()
   end,
@@ -123,7 +123,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 
 --- Check if we need to reload the file when it changed
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
-  group = std.nvim.augroup("check_file_change"),
+  group = ark.nvim.augroup("check_file_change"),
   callback = function()
     if vim.bo.buftype == "" or vim.bo.buftype == "nowrite" then
       vim.cmd("checktime")
@@ -221,7 +221,7 @@ vim.filetype.add({
 
 --- Close some filetypes with q
 vim.api.nvim_create_autocmd("FileType", {
-  group = std.nvim.augroup("close_filetypes_with_q"),
+  group = ark.nvim.augroup("close_filetypes_with_q"),
   pattern = dot.filetype.get_quitable_with_q_filetypes(),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil

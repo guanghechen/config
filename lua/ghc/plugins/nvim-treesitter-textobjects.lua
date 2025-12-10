@@ -132,6 +132,6 @@ return {
       end
     end
 
-    std.nvim.bindkeys(keymaps, {})
+    ark.nvim.bindkeys(keymaps, {})
   end,
 }

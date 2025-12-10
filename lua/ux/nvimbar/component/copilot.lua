@@ -1,7 +1,7 @@
 local __module_name__ = "ux.nvimbar.component.copilot" ---@type string
 
-local btn = std.nvim.btn
-local txt = std.nvim.txt
+local btn = ark.nvim.btn
+local txt = ark.nvim.txt
 
 ---@return string
 local function get_status()

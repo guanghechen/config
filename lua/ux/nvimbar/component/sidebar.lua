@@ -1,4 +1,4 @@
-local txt = std.nvim.txt
+local txt = ark.nvim.txt
 
 ---@param filetype                      string
 ---@return integer

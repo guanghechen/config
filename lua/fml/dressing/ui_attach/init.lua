@@ -172,7 +172,7 @@ local function ui_attach_callback(event, kind, ...)
   return true
 end
 
-std.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
+ark.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
   local searching = dot.status.searching:snapshot() ---@type boolean
   if searching then
     dot.status.searching:next(false)

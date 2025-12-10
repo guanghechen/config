@@ -1,5 +1,5 @@
-local btn = std.nvim.btn
-local txt = std.nvim.txt
+local btn = ark.nvim.btn
+local txt = ark.nvim.txt
 
 local disabled_linters = {} ---@type table<string, boolean>
 

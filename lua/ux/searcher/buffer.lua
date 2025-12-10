@@ -699,7 +699,7 @@ function M:__create_finder_buffer_as_needed__()
   vim.bo[bufnr].swapfile = false
 
   -- Use finder keymaps
-  std.nvim.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_search_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })
@@ -745,7 +745,7 @@ function M:__create_replacer_buffer_as_needed__()
   vim.bo[bufnr].swapfile = false
 
   -- Use replacer keymaps
-  std.nvim.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_replace_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })

@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local txt = std.nvim.txt
+local txt = ark.nvim.txt
 local position = "f_wl" ---@type ux.nvimbar.PositionEnum
 
 ---@return boolean
