@@ -36,7 +36,7 @@
 
 ---@class ark.t.IKeymap : ark.t.IKeymapOverridable
 ---@field public disabled               boolean|nil
----@field public modes                  dot.e.VimMode[]
+---@field public modes                  ark.e.VimMode[]
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public desc                   string|nil

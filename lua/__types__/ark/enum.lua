@@ -10,3 +10,26 @@
 ---| "INFO"
 ---| "WARN"
 ---| "ERROR"
+
+---@alias ark.e.VimMode
+---| "c"
+---| "i"
+---| "n"
+---| "o"
+---| "s"
+---| "S"
+---| "t"
+---| "v"
+---| "V"
+---| "x"
+
+---@alias ark.e.VimModeName
+---| "normal"
+---| "visual"
+---| "insert"
+---| "terminal"
+---| "nterminal"
+---| "replace"
+---| "confirm"
+---| "command"
+---| "select"
