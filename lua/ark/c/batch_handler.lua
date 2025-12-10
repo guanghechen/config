@@ -1,9 +1,4 @@
----@class ark.c.IBatchHandler
----@field public cleanup                fun(self: ark.c.IBatchHandler): nil
----@field public run                    fun(self: ark.c.IBatchHandler, action: fun(): nil): nil
----@field public summary                fun(self: ark.c.IBatchHandler, title: string): nil): nil
-
----@class ark.c.BatchHandler : ark.c.IBatchHandler
+---@class ark.c.BatchHandler
 local M = {}
 M.__index = M
 
