@@ -34,7 +34,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public nvimbar                ux.nvimbar.Nvimbar
 
 ---@class eve.builtin.win.IMeta
----@field public history                std.collection.IHistory|nil
+---@field public history                ark.c.IHistory|nil
 ---@field public winline                eve.builtin.win.IWinline|nil
 ---@field public wintype                eve.builtin.win.TypeEnum|nil
 
@@ -379,7 +379,7 @@ function M.fork(winnr_source, winnr_target)
     if meta_target.history ~= nil then
       meta_target.history:clear()
     end
-    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type std.collection.IHistory
+    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type ark.c.IHistory
     meta_target.history = history_forked
   end
 
@@ -408,7 +408,7 @@ function M.resolve(winnr, force)
   end
 
   if meta.history == nil then
-    meta.history = std.History.new({
+    meta.history = ark.c.History.new({
       name = "win#bufs",
       capacity = dot.var.WIN_BUF_HISTORY_CAPACITY,
       ---@param x                       eve.builtin.win.IFilepathHistoryItem
@@ -726,7 +726,7 @@ function M.on_buf_enter(winnr, bufnr)
   end
 
   local filepath = meta_buf.filepath ---@type string
-  local history = meta_win.history ---@type std.collection.IHistory
+  local history = meta_win.history ---@type ark.c.IHistory
   local item = { bufnr = bufnr, filepath = filepath } ---@type eve.builtin.win.IFilepathHistoryItem
   history:push(item)
 end

@@ -40,7 +40,6 @@ local __mods = {
 
   Dirtier = "std.collection.dirtier",
   Filetree = "std.collection.filetree",
-  History = "std.collection.history",
   InputHistory = "std.collection.input_history",
   Observable = "std.collection.observable",
   Scheduler = "std.collection.scheduler",
@@ -74,7 +73,6 @@ local __mods = {
 ---
 ---@field public Dirtier                std.collection.Dirtier
 ---@field public Filetree               std.collection.Filetree
----@field public History                std.collection.History
 ---@field public InputHistory           std.collection.InputHistory
 ---@field public Observable             std.collection.Observable
 ---@field public Scheduler              std.collection.Scheduler

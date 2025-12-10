@@ -4,8 +4,8 @@ local equals = ark.fn.equals_shallow
 ---@class eve.builtin.widget
 local M = {}
 
----@type std.collection.History
-M.history = std.History.new({
+---@type ark.c.History
+M.history = ark.c.History.new({
   name = "widget",
   capacity = 100,
   equals = equals,

@@ -1,6 +1,6 @@
 local __module_name__ = "std.collection.input_history" ---@type string
 
----@class std.collection.InputHistory : std.collection.IHistory
+---@class std.collection.InputHistory : ark.c.IHistory
 ---@field public fullname               string
 ---@field public equals                 std.t.IEquals
 ---@field protected _present            integer
@@ -8,7 +8,7 @@ local __module_name__ = "std.collection.input_history" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         std.collection.history.IProps
+---@param props                         ark.c.history.IProps
 ---@return std.collection.InputHistory
 function M.new(props)
   local name = props.name ---@type string
@@ -24,12 +24,12 @@ function M.new(props)
   return self
 end
 
----@param props                         std.collection.history.IDeserializeProps
+---@param props                         ark.c.history.IDeserializeProps
 ---@return std.collection.InputHistory
 function M.deserialize(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local data = props.data ---@type std.collection.history.ISerializedData
+  local data = props.data ---@type ark.c.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -75,16 +75,16 @@ function M:collect()
   return self._stack:collect()
 end
 
----@return std.collection.history.ISerializedData
+---@return ark.c.history.ISerializedData
 function M:dump()
-  ---@type std.collection.history.ISerializedData
+  ---@type ark.c.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        std.collection.history.IForkParams
+---@param params                        ark.c.history.IForkParams
 ---@return std.collection.InputHistory
 function M:fork(params)
   local name = params.name ---@type string
@@ -144,7 +144,7 @@ function M:iterator_reverse()
   return stack:iterator_reverse()
 end
 
----@param data                          std.collection.history.ISerializedData
+---@param data                          ark.c.history.ISerializedData
 ---@return nil
 function M:load(data)
   local stack = data.stack ---@type std.t.T[]

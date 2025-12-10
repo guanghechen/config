@@ -1,65 +1,65 @@
-local __module_name__ = "std.collection.history" ---@type string
+local __module_name__ = "ark.c.history" ---@type string
 
----@class std.collection.IHistory
+---@class ark.c.IHistory
 ---@field public name                   string
----@field public equals                 std.t.IEquals
----@field public at                     fun(self: std.collection.IHistory, index: integer): std.t.T|nil
----@field public backward               fun(self: std.collection.IHistory, step?: integer): std.t.T|nil, boolean
----@field public bottom                 fun(self: std.collection.IHistory): std.t.T|nil
----@field public capacity               fun(self: std.collection.IHistory): integer
----@field public clear                  fun(self: std.collection.IHistory): nil
----@field public collect                fun(self: std.collection.IHistory): std.t.T[]
----@field public dump                   fun(self: std.collection.IHistory): std.collection.history.ISerializedData
----@field public fork                   fun(self: std.collection.IHistory, params: std.collection.history.IForkParams): std.collection.IHistory
----@field public forward                fun(self: std.collection.IHistory, step?: integer): std.t.T|nil, boolean
----@field public go                     fun(self: std.collection.IHistory, index: integer): std.t.T|nil, integer
----@field public is_bottom              fun(self: std.collection.IHistory): boolean
----@field public is_empty               fun(self: std.collection.IHistory): boolean
----@field public is_top                 fun(self: std.collection.IHistory): boolean
----@field public iterator               fun(self: std.collection.IHistory): fun(): std.t.T|nil, integer|nil
----@field public iterator_reverse       fun(self: std.collection.IHistory): fun(): std.t.T|nil, integer|nil
----@field public load                   fun(self: std.collection.IHistory, data: std.collection.history.ISerializedData): nil
----@field public present                fun(self: std.collection.IHistory): std.t.T|nil, integer
----@field public print                  fun(self: std.collection.IHistory): nil
----@field public push                   fun(self: std.collection.IHistory, element: std.t.T): nil
----@field public rearrange              fun(self: std.collection.IHistory, filter: std.t.IFilter): nil
----@field public size                   fun(self: std.collection.IHistory): integer
----@field public top                    fun(self: std.collection.IHistory): std.t.T|nil, integer
----@field public update_top             fun(self: std.collection.IHistory, element: std.t.T): nil
+---@field public equals                 ark.t.IEquals
+---@field public at                     fun(self: ark.c.IHistory, index: integer): ark.t.T|nil
+---@field public backward               fun(self: ark.c.IHistory, step?: integer): ark.t.T|nil, boolean
+---@field public bottom                 fun(self: ark.c.IHistory): ark.t.T|nil
+---@field public capacity               fun(self: ark.c.IHistory): integer
+---@field public clear                  fun(self: ark.c.IHistory): nil
+---@field public collect                fun(self: ark.c.IHistory): ark.t.T[]
+---@field public dump                   fun(self: ark.c.IHistory): ark.c.history.ISerializedData
+---@field public fork                   fun(self: ark.c.IHistory, params: ark.c.history.IForkParams): ark.c.IHistory
+---@field public forward                fun(self: ark.c.IHistory, step?: integer): ark.t.T|nil, boolean
+---@field public go                     fun(self: ark.c.IHistory, index: integer): ark.t.T|nil, integer
+---@field public is_bottom              fun(self: ark.c.IHistory): boolean
+---@field public is_empty               fun(self: ark.c.IHistory): boolean
+---@field public is_top                 fun(self: ark.c.IHistory): boolean
+---@field public iterator               fun(self: ark.c.IHistory): fun(): ark.t.T|nil, integer|nil
+---@field public iterator_reverse       fun(self: ark.c.IHistory): fun(): ark.t.T|nil, integer|nil
+---@field public load                   fun(self: ark.c.IHistory, data: ark.c.history.ISerializedData): nil
+---@field public present                fun(self: ark.c.IHistory): ark.t.T|nil, integer
+---@field public print                  fun(self: ark.c.IHistory): nil
+---@field public push                   fun(self: ark.c.IHistory, element: ark.t.T): nil
+---@field public rearrange              fun(self: ark.c.IHistory, filter: ark.t.IFilter): nil
+---@field public size                   fun(self: ark.c.IHistory): integer
+---@field public top                    fun(self: ark.c.IHistory): ark.t.T|nil, integer
+---@field public update_top             fun(self: ark.c.IHistory, element: ark.t.T): nil
 
----@class std.collection.history.IForkParams
+---@class ark.c.history.IForkParams
 ---@field public name                   ?string
 
----@class std.collection.history.ISerializedData
+---@class ark.c.history.ISerializedData
 ---@field public present                integer
----@field public stack                  std.t.T[]
+---@field public stack                  ark.t.T[]
 
----@class std.collection.history.IDeserializeProps
----@field public data                   std.collection.history.ISerializedData
+---@class ark.c.history.IDeserializeProps
+---@field public data                   ark.c.history.ISerializedData
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?std.t.IEquals
+---@field public equals                 ?ark.t.IEquals
 
----@class std.collection.history.IProps
+---@class ark.c.history.IProps
 ---@field public name                   string
 ---@field public capacity               integer
----@field public equals                 ?std.t.IEquals
+---@field public equals                 ?ark.t.IEquals
 
----@class std.collection.History : std.collection.IHistory
+---@class ark.c.History : ark.c.IHistory
 ---@field public fullname               string
----@field public equals                 std.t.IEquals
+---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer
 ---@field protected _stack              ark.c.ICircularStack
 local M = {}
 M.__index = M
 
----@param props                         std.collection.history.IProps
----@return std.collection.History
+---@param props                         ark.c.history.IProps
+---@return ark.c.History
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
+  local equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -69,37 +69,37 @@ function M.new(props)
   return self
 end
 
----@param props                         std.collection.history.IDeserializeProps
----@return std.collection.History
+---@param props                         ark.c.history.IDeserializeProps
+---@return ark.c.History
 function M.deserialize(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local data = props.data ---@type std.collection.history.ISerializedData
+  local data = props.data ---@type ark.c.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.fullname = fullname
-  self.equals = props.equals or ark.fn.equals_shallow ---@type std.t.IEquals
+  self.equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
   self._stack = ark.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
 
 ---@param index                         integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:at(index)
   return self._stack:at(index)
 end
 
 ---@param step                          ?integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return boolean
 function M:backward(step)
   local index = self._present - math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type std.t.T|nil, integer
+  local element, present = self:go(index) ---@type ark.t.T|nil, integer
   return element, present <= 1
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 function M:bottom()
   return self._stack:at(1)
 end
@@ -115,22 +115,22 @@ function M:clear()
   self._stack:clear()
 end
 
----@return std.t.T[]
+---@return ark.t.T[]
 function M:collect()
   return self._stack:collect()
 end
 
----@return std.collection.history.ISerializedData
+---@return ark.c.history.ISerializedData
 function M:dump()
-  ---@type std.collection.history.ISerializedData
+  ---@type ark.c.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        std.collection.history.IForkParams
----@return std.collection.History
+---@param params                        ark.c.history.IForkParams
+---@return ark.c.History
 function M:fork(params)
   local name = params.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -144,16 +144,16 @@ function M:fork(params)
 end
 
 ---@param step                          ?integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return boolean
 function M:forward(step)
   local index = self._present + math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type std.t.T|nil, integer
+  local element, present = self:go(index) ---@type ark.t.T|nil, integer
   return element, present == self._stack:size()
 end
 
 ---@param index                         integer
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:go(index)
   local stack = self._stack ---@type ark.c.ICircularStack
@@ -177,28 +177,28 @@ function M:is_top()
   return self._present == self._stack:size()
 end
 
----@return fun(): std.t.T, integer
+---@return fun(): ark.t.T, integer
 function M:iterator()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator()
 end
 
----@return fun(): std.t.T, integer
+---@return fun(): ark.t.T, integer
 function M:iterator_reverse()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:iterator_reverse()
 end
 
----@param data                          std.collection.history.ISerializedData
+---@param data                          ark.c.history.ISerializedData
 ---@return nil
 function M:load(data)
-  local stack = data.stack ---@type std.t.T[]
+  local stack = data.stack ---@type ark.t.T[]
   local present = data.present ---@type integer
   self._stack:reset(stack)
   self:go(present or math.huge)
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:present()
   return self._stack:at(self._present), self._present
@@ -207,7 +207,7 @@ end
 ---@return nil
 function M:print()
   local present = self._present ---@type integer
-  local stack = self._stack:collect() ---@type std.t.T
+  local stack = self._stack:collect() ---@type ark.t.T
   ark.reporter.info({
     from = self.fullname,
     subject = "print",
@@ -215,18 +215,18 @@ function M:print()
   })
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:push(element)
   local present = self._present ---@type integer
   local stack = self._stack ---@type ark.c.ICircularStack
-  local el_present = stack:at(present) ---@type std.t.T|nil
+  local el_present = stack:at(present) ---@type ark.t.T|nil
   if el_present ~= nil and self.equals(el_present, element) then
     return
   end
 
   if present < stack:size() then
-    local el_next = stack:at(present + 1) ---@type std.t.T
+    local el_next = stack:at(present + 1) ---@type ark.t.T
     if self.equals(el_next, element) then
       self._present = present + 1
       return
@@ -240,7 +240,7 @@ function M:push(element)
   self._present = stack:size()
 end
 
----@param filter                        std.t.IFilter
+---@param filter                        ark.t.IFilter
 ---@return nil
 function M:rearrange(filter)
   local stack = self._stack ---@type ark.c.ICircularStack
@@ -268,14 +268,14 @@ function M:size()
   return self._stack:size()
 end
 
----@return std.t.T|nil
+---@return ark.t.T|nil
 ---@return integer
 function M:top()
   local stack = self._stack ---@type ark.c.ICircularStack
   return stack:top(), stack:size()
 end
 
----@param element                       std.t.T
+---@param element                       ark.t.T
 ---@return nil
 function M:update_top(element)
   local stack = self._stack ---@type ark.c.ICircularStack

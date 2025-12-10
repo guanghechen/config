@@ -11,7 +11,7 @@
 ---@field public includes               string[]
 ---@field public excludes               string[]
 ---@field public search_pattern         string
----@field public search_pattern_history std.collection.history.ISerializedData
+---@field public search_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.select.item.state
 ---@field public flag_case_sensitive    std.collection.IObservable
@@ -26,7 +26,7 @@
 ---@field public includes               std.collection.IObservable
 ---@field public excludes               std.collection.IObservable
 ---@field public search_pattern         std.collection.IObservable
----@field public search_pattern_history std.collection.IHistory
+---@field public search_pattern_history ark.c.IHistory
 
 ---@class eve.context.select.item
 ---@field public defaults               fun(): eve.context.select.item.data
@@ -169,7 +169,7 @@ function M.load(state, name, raw_data)
       includes = std.Observable.from_value(data.includes),
       excludes = std.Observable.from_value(data.excludes),
       search_pattern = std.Observable.from_value(data.search_pattern),
-      search_pattern_history = std.History.deserialize({
+      search_pattern_history = ark.c.History.deserialize({
         name = name,
         capacity = 100,
         data = data.search_pattern_history,

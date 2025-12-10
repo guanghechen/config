@@ -3,14 +3,14 @@
 ---@field public max_filesize           string
 ---@field public max_matches            integer
 ---@field public replacement            string
----@field public replace_pattern_history std.collection.history.ISerializedData
+---@field public replace_pattern_history ark.c.history.ISerializedData
 
 ---@class eve.context.search_file.state
 ---@field public flag_replace           std.collection.IObservable
 ---@field public max_filesize           std.collection.IObservable
 ---@field public max_matches            std.collection.IObservable
 ---@field public replacement            std.collection.IObservable
----@field public replace_pattern_history std.collection.IHistory
+---@field public replace_pattern_history ark.c.IHistory
 
 ---@class eve.context.search_file : eve.context.search_file.state
 ---@field public defaults               fun(): eve.context.search_file.data
@@ -93,7 +93,7 @@ M.flag_replace = std.Observable.from_value(_defaults.flag_replace)
 M.max_filesize = std.Observable.from_value(_defaults.max_filesize)
 M.max_matches = std.Observable.from_value(_defaults.max_matches)
 M.replacement = std.Observable.from_value(_defaults.replacement)
-M.replace_pattern_history = std.History.deserialize({
+M.replace_pattern_history = ark.c.History.deserialize({
   name = "search_file.replace_pattern",
   capacity = 100,
   data = _defaults.replace_pattern_history,
