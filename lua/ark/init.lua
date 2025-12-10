@@ -54,6 +54,7 @@ local __mods = {
   nvim = "ark.nvim",
   reporter = "ark.reporter",
   stdout = "ark.stdout",
+  Theme = "ark.theme",
   time = "ark.time",
   tmux = "ark.tmux",
 }
@@ -69,6 +70,7 @@ local __mods = {
 ---@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
+---@field public Theme                  ark.Theme
 ---@field public time                   ark.time
 ---@field public tmux                   ark.tmux
 local M = setmetatable({

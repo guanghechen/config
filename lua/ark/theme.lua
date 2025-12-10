@@ -1,33 +1,27 @@
----@class std.collection.theme.IApplyParams
+---@class ark.theme.IApplyParams
 ---@field public scheme                 dot.t.theme.IScheme
 ---@field public nsnr                   integer
 
----@class std.collection.theme.ICompileParams
+---@class ark.theme.ICompileParams
 ---@field public scheme                 dot.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class std.collection.theme.ITheme
----@field public apply                  fun(self: std.collection.theme.ITheme, params: std.collection.theme.IApplyParams): nil
----@field public compile                fun(self: std.collection.theme.ITheme, params: std.collection.theme.ICompileParams): nil
----@field public register               fun(self: std.collection.theme.ITheme, hlname: string, hlgroup: dot.t.theme.IHlgroup): std.collection.theme.ITheme
----@field public registers              fun(self: std.collection.theme.ITheme, hlgroup_map: table<string, dot.t.theme.IHlgroup | nil>): std.collection.theme.ITheme
-
----@class std.collection.Theme : std.collection.theme.ITheme
+---@class ark.Theme
 ---@field protected hlgroup_map         table<string, dot.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
 local BYTE_AT = 0x40 ---@type integer '@'
 
----@return std.collection.Theme
+---@return ark.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        std.collection.theme.IApplyParams
+---@param params                        ark.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -38,14 +32,14 @@ end
 
 ---@param hlname                        string
 ---@param hlgroup                       dot.t.theme.IHlgroup
----@return std.collection.Theme
+---@return ark.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
 ---@param hlgroup_map                   table<string, dot.t.theme.IHlgroup|nil>
----@return std.collection.Theme
+---@return ark.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -55,7 +49,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        std.collection.theme.ICompileParams
+---@param params                        ark.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

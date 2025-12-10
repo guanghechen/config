@@ -35,7 +35,6 @@ local __mods = {
 
   Filetree = "std.collection.filetree",
   Spawn = "std.collection.spawn",
-  Theme = "std.collection.theme",
   Tree = "std.collection.tree",
 }
 
@@ -58,7 +57,6 @@ local __mods = {
 ---
 ---@field public Filetree               std.collection.Filetree
 ---@field public Spawn                  std.collection.Spawn
----@field public Theme                  std.collection.Theme
 ---@field public Tree                   std.collection.Tree
 local M = setmetatable({
   __mods = __mods,
