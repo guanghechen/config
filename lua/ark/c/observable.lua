@@ -126,7 +126,7 @@ function M:subscribe(subscriber, ignoreInitial)
     return noop_unsubscribable
   end
 
-  return self._subscribers:subscribe(subscriber, ignoreInitial)
+  return self._subscribers:subscribe(subscriber)
 end
 
 ----------------------------------------------------------------------------------------------------
