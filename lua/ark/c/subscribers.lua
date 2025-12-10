@@ -3,10 +3,6 @@ local __module_name__ = "ark.c.subscribers" ---@type string
 ---@class ark.c.ISubscribable
 ---@field public subscribe              fun(self: ark.c.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): ark.c.IUnsubscribable
 
----@class ark.c.ISubscribers : ark.c.ISubscribable, ark.c.IDisposable
----@field public count                  fun(self: ark.c.ISubscribers): nil
----@field public notify                 fun(self: ark.c.ISubscribers, value: ark.t.T, value_prev: ark.t.T | nil): nil
-
 ---@class ark.c.subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
@@ -17,7 +13,7 @@ local __module_name__ = "ark.c.subscribers" ---@type string
 ---@type ark.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
----@class ark.c.Subscribers : ark.c.ISubscribers
+---@class ark.c.Subscribers : ark.c.ISubscribable, ark.c.IDisposable
 ---@field protected ARRANGE_THRESHOLD   number
 ---@field protected _disposed           boolean
 ---@field protected _items              ark.c.subscribers.ISubscriberItem[]

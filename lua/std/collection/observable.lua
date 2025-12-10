@@ -24,7 +24,7 @@ local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 ---@field protected _readonly           boolean
 ---@field protected _value              std.t.T
 ---@field protected _value_last_notified std.t.T|nil
----@field protected _subscribers        ark.c.ISubscribers
+---@field protected _subscribers        ark.c.Subscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
