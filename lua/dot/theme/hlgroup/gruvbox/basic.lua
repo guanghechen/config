@@ -20,7 +20,7 @@ function M.gen_modes_color_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
@@ -31,7 +31,7 @@ function M.gen_hlgroup_map(context)
     return cs.mix(bg, color, ratio or 20)
   end
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ---Completion
     ComplHint = { fg = c.bg4, italic = true },

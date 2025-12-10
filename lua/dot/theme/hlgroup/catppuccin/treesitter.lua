@@ -2,12 +2,12 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     -- Comments
     ["@comment"] = { fg = c.overlay2, italic = true },

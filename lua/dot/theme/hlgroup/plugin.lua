@@ -2,7 +2,7 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("dot.theme.hlgroup.%s.plugin", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -24,7 +24,7 @@ function M.default_gen_hlgroup_map(context)
   local lazy_badge_fg = c.bg1 ---@type string
   local lazy_badge_bg = c.pink ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   return {
     ---! cmp
     BlinkCmpDoc = { bg = cmp_panel_bg },

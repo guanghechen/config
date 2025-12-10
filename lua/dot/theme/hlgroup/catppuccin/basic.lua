@@ -20,7 +20,7 @@ function M.gen_modes_color_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
@@ -29,7 +29,7 @@ function M.gen_hlgroup_map(context)
 
   local bg = t and c.none or c.base ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {
     ---Completion
     ComplHint = { fg = c.overlay1, italic = true },

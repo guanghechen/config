@@ -397,12 +397,12 @@ local group_items = {
       title = "theme variant",
       snapshot = function()
         local theme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = eve.context.theme.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+        local scheme = eve.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
         local theme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = eve.context.theme.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+        local scheme = eve.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         if scheme == nil or scheme.opposite == nil then
           return
         end

@@ -506,7 +506,7 @@
 ---@field public tokyonight             dot.t.theme.TokyonightPalette|nil
 ---@field public vsc                    dot.t.theme.IVscPalette|nil
 
----@class ark.t.theme.IScheme
+---@class dot.t.theme.IScheme
 ---@field public theme                  dot.e.ThemeFamily
 ---@field public variant                dot.e.ThemeVariant|nil
 ---@field public opposite               dot.e.ThemeVariant|nil
@@ -516,7 +516,7 @@
 ---@class dot.t.theme.IContext
 ---@field public theme                  string
 ---@field public variant                string|nil
----@field public scheme                 ark.t.theme.IScheme
+---@field public scheme                 dot.t.theme.IScheme
 ---@field public transparency           boolean
 
----@class ark.t.theme.IHlgroup : vim.api.keyset.highlight
+---@class dot.t.theme.IHlgroup : vim.api.keyset.highlight

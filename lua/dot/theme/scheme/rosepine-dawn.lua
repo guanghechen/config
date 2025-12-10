@@ -1,6 +1,6 @@
 --- rosepine-dawn
 
----@type ark.t.theme.IScheme
+---@type dot.t.theme.IScheme
 local M = {
   theme = "rosepine",
   variant = "dawn",

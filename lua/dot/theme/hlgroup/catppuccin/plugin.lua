@@ -2,7 +2,7 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
@@ -16,7 +16,7 @@ function M.gen_hlgroup_map(context)
   local lazy_badge_fg = u.bg1 ---@type string
   local lazy_badge_bg = u.pink ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, dot.t.theme.IHlgroup>
   return {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },
