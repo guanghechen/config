@@ -1,4 +1,4 @@
----@class std.debug.ICmdParams
+---@class ark.t.IDebugCmdParams
 ---@field public cmd                    string|string[]
 ---@field public level                  ?integer|nil
 ---@field public title                  ?string
@@ -10,7 +10,7 @@
 ---@field public header                 ?string
 ---@field public props                  ?table<string, string>
 
----@class std.debug
+---@class ark.debug
 local M = {}
 setmetatable(M, {
   ---@param title                       string|unknown
@@ -89,8 +89,8 @@ end
 
 ---@param title                         string|unknown
 ---@param message                       unknown|nil
----@param filename                      string|nil
-function M.log_to_file(title, message, filename)
+---@param filepath                      string
+function M.log_to_file(title, message, filepath)
   local text_title, text_content = "", "" ---@type string, string
   if type(title) == "string" then
     text_title = title
@@ -100,7 +100,6 @@ function M.log_to_file(title, message, filename)
     text_content = format_message(title)
   end
 
-  local filepath = std.path.locate_log_filepath(filename or "debug.log") ---@type string
   local timestamp = tostring(os.date("%Y-%m-%d %H:%M:%S")) ---@type string
   local log_line = string.format("[%s] [%s] %s\n", timestamp, text_title, text_content:gsub("\n", " "))
   local file = io.open(filepath, "a")
@@ -108,72 +107,6 @@ function M.log_to_file(title, message, filename)
     file:write(log_line)
     file:close()
   end
-end
-
----@param opts                          std.debug.ICmdParams
----@return string
-function M.cmd(opts)
-  local args = vim.deepcopy(opts.args or {})
-  local cmd = "" ---@type string
-  do
-    local _cmd = opts.cmd ---@type string|string[]
-    if type(_cmd) == "string" then
-      cmd = _cmd
-    elseif type(_cmd) == "table" then
-      vim.list_extend(args, _cmd, 2)
-      cmd = _cmd[1]
-    end
-    args = vim.tbl_map(tostring, args)
-  end
-
-  local lines = { cmd } ---@type string[]
-  for _, arg in ipairs(args or {}) do
-    arg = arg:find("[%$%s%?]") and vim.fn.shellescape(arg) or arg
-    if #arg + #lines[#lines] > 40 then
-      lines[#lines] = lines[#lines] .. " \\"
-      table.insert(lines, "  " .. arg)
-    else
-      lines[#lines] = lines[#lines] .. " " .. arg
-    end
-  end
-  local props = vim.deepcopy(opts.props or {})
-  props.cwd = props.cwd or vim.fn.fnamemodify(opts.cwd or vim.uv.cwd() or ".", ":~")
-  local prop_keys = vim.tbl_keys(props) ---@type string[]
-  table.sort(prop_keys)
-  local prop_lines = {} ---@type string[]
-  for _, key in ipairs(prop_keys) do
-    table.insert(prop_lines, ("- **%s**: %s"):format(key, props[key]))
-  end
-
-  lines = {
-    opts.header or "",
-    table.concat(prop_lines, "\n"),
-    "```sh",
-    table.concat(lines, " \n"),
-    "```",
-    opts.footer or "",
-  }
-  if opts.title and not opts.notify then
-    table.insert(lines, 1, ("# %s\n"):format(opts.title))
-  end
-
-  local msg = vim.trim(table.concat(lines, "\n")):gsub("\n\n+", "\n\n") ---@type string
-
-  if opts.notify ~= false then
-    vim.schedule(function()
-      local id = opts.group and ("std.debug.cmd." .. cmd) or nil
-      local level = opts.level or vim.log.levels.INFO
-      local title = opts.title or id or "Cmd Debug"
-      vim.notify(msg, level, {
-        group = id,
-        title = title,
-        message = msg,
-        timeout = 5000,
-        anonymous = false,
-      })
-    end)
-  end
-  return msg
 end
 
 return M

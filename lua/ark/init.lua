@@ -51,6 +51,7 @@ local __mods = {
   anim = "ark.anim",
   box = "ark.box",
   color = "ark.external.color",
+  debug = "ark.debug",
   easing = "ark.external.easing",
   fn = "ark.fn",
   nvim = "ark.nvim",
@@ -68,6 +69,7 @@ local __mods = {
 ---@field public box                    ark.box
 ---@field public c                      ark.c
 ---@field public color                  ark.external.color
+---@field public debug                  ark.debug
 ---@field public easing                 ark.external.easing
 ---@field public fn                     ark.fn
 ---@field public nvim                   ark.nvim

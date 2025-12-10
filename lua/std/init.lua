@@ -20,7 +20,6 @@ local source = setmetatable({ __mods = source__mods }, {
 
 ---@class std.__mods
 local __mods = {
-  debug = "std.debug",
   fs = "std.fs",
   git = "std.git",
   notepad = "std.notepad",
@@ -37,7 +36,6 @@ local __mods = {
 ---@field public __mods                 std.__mods
 ---@field public source                 std.source
 ---
----@field public debug                  std.debug
 ---@field public fs                     std.fs
 ---@field public git                    std.git
 ---@field public notepad                std.notepad
