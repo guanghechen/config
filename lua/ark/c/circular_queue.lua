@@ -1,29 +1,9 @@
----@class ark.c.ICircularQueue
----@field public capacity               fun(self: ark.c.ICircularQueue): integer
----@field public size                   fun(self: ark.c.ICircularQueue): integer
----@field public at                     fun(self: ark.c.ICircularQueue, index: integer): ark.t.T|nil
----@field public back                   fun(self: ark.c.ICircularQueue): ark.t.T|nil
----@field public clear                  fun(self: ark.c.ICircularQueue): nil
----@field public collect                fun(self: ark.c.ICircularQueue): ark.t.T[]
----@field public count                  fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): integer
----@field public dequeue                fun(self: ark.c.ICircularQueue): ark.t.T|nil
----@field public dequeue_back           fun(self: ark.c.ICircularQueue): ark.t.T|nil
----@field public enqueue                fun(self: ark.c.ICircularQueue, element: ark.t.T): nil
----@field public enqueue_front          fun(self: ark.c.ICircularQueue, element: ark.t.T): nil
----@field public fork                   fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): ark.c.ICircularQueue
----@field public front                  fun(self: ark.c.ICircularQueue): ark.t.T|nil
----@field public iterator               fun(self: ark.c.ICircularQueue): fun(): ark.t.T|nil
----@field public iterator_reverse       fun(self: ark.c.ICircularQueue): fun(): ark.t.T|nil
----@field public rearrange              fun(self: ark.c.ICircularQueue, filter: ark.t.IFilter): fun(): ark.t.T|nil
----@field public reset                  fun(self: ark.c.ICircularQueue, elements: ark.t.T[]): boolean): fun(): ark.t.T|nil
----@field public update                 fun(self: ark.c.ICircularQueue, index: integer, value: ark.t.T): nil
-
 ---@class ark.c.circular_queue.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type ark.t.T[]
 
----@class ark.c.CircularQueue : ark.c.ICircularQueue
+---@class ark.c.CircularQueue
 ---@field protected _elements           ark.t.T[]
 ---@field protected _capacity           integer
 ---@field protected _size               integer
@@ -46,7 +26,7 @@ function M.new(props)
   return self
 end
 
----@param queue                         ark.c.ICircularQueue
+---@param queue                         ark.c.CircularQueue
 ---@return ark.c.CircularQueue
 function M.from(queue)
   local elements = {} ---@type ark.t.T[]
