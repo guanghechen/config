@@ -273,9 +273,9 @@ end
 ---@field protected _suspend_sync       boolean
 ---@field protected _buf_autocmds       integer[]
 ---@field protected _nvimbar            ux.nvimbar.Nvimbar|nil
----@field protected _subscription_active std.collection.IUnsubscribable|nil
----@field protected _subscription_winbar std.collection.IUnsubscribable|nil
----@field protected _subscription_source std.collection.IUnsubscribable|nil
+---@field protected _subscription_active ark.t.IUnsubscribable|nil
+---@field protected _subscription_winbar ark.t.IUnsubscribable|nil
+---@field protected _subscription_source ark.t.IUnsubscribable|nil
 local M = {}
 M.__index = M
 

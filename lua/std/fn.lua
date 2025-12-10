@@ -4,9 +4,9 @@ local M = {}
 ---@param observables                   std.collection.IObservable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
----@return std.collection.IUnsubscribable
+---@return ark.t.IUnsubscribable
 function M.observe(observables, callback, ignore_initial)
-  local unsubscribables = {} ---@type std.collection.IUnsubscribable[]
+  local unsubscribables = {} ---@type ark.t.IUnsubscribable[]
   for _, observable in ipairs(observables) do
     local subscriber = ark.c.Subscriber.new({
       on_next = function()
@@ -19,7 +19,7 @@ function M.observe(observables, callback, ignore_initial)
 
   local unsubscribed = false ---@type boolean
 
-  ---@type std.collection.IUnsubscribable
+  ---@type ark.t.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if unsubscribed then

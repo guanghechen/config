@@ -106,7 +106,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---
 ---@field protected _on_confirm         ux.picker.composer.list.IOnConfirm|nil
 ---@field protected _on_disposed        ux.picker.composer.list.IOnDisposed
----@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    ark.t.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 ---@param props                         ux.picker.IListComposerProps
@@ -399,7 +399,7 @@ function M.new(props)
   self._on_disposed = on_disposed
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
+  local observer_unsubs = {} ---@type ark.t.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
@@ -431,7 +431,7 @@ function M:dispose()
   local composer = self._composer
   local retriever = self._retriever ---@type ux.retriever.ListRetriever
   local scheduler_match = self._scheduler_match
-  local observer_unsubs = self._observer_unsubs ---@type std.collection.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type ark.t.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean

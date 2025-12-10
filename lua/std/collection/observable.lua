@@ -5,7 +5,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class std.collection.IObservable: ark.t.IBatchDisposable, std.collection.ISubscribable
+---@class std.collection.IObservable: ark.t.IBatchDisposable, ark.c.ISubscribable
 ---@field public equals                 std.t.IEquals
 ---@field public normalize              std.t.INormalize
 ---@field public snapshot               fun(self: std.collection.IObservable): std.t.T
@@ -17,14 +17,14 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public normalize              ?std.t.INormalize Normalize the value before compare or update
 ---@field public readonly               ?boolean
 
----@type std.collection.IUnsubscribable
+---@type ark.t.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
 ---@class std.collection.Observable : std.collection.IObservable
 ---@field protected _readonly           boolean
 ---@field protected _value              std.t.T
 ---@field protected _value_last_notified std.t.T|nil
----@field protected _subscribers        std.collection.ISubscribers
+---@field protected _subscribers        ark.c.ISubscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
@@ -46,7 +46,7 @@ function M.new(props)
   self._readonly = readonly
   self._value = normalize(initial_value)
   self._value_last_notified = nil
-  self._subscribers = std.Subscribers.new()
+  self._subscribers = ark.c.Subscribers.new()
   return self
 end
 
@@ -113,7 +113,7 @@ end
 
 ---@param subscriber                    ark.c.ISubscriber
 ---@param ignoreInitial                 boolean
----@return std.collection.IUnsubscribable
+---@return ark.t.IUnsubscribable
 function M:subscribe(subscriber, ignoreInitial)
   if subscriber:isdisposed() then
     return noop_unsubscribable

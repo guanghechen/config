@@ -1,32 +1,32 @@
-local __module_name__ = "std.collection.subscribers" ---@type string
+local __module_name__ = "ark.c.subscribers" ---@type string
 
----@class std.collection.ISubscribable
----@field public subscribe              fun(self: std.collection.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): std.collection.IUnsubscribable
+---@class ark.c.ISubscribable
+---@field public subscribe              fun(self: ark.c.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): ark.t.IUnsubscribable
 
----@class std.collection.ISubscribers : std.collection.ISubscribable, std.collection.IDisposable
----@field public count                  fun(self: std.collection.ISubscribers): nil
----@field public notify                 fun(self: std.collection.ISubscribers, value: std.t.T, value_prev: std.t.T | nil): nil
+---@class ark.c.ISubscribers : ark.c.ISubscribable, ark.t.IDisposable
+---@field public count                  fun(self: ark.c.ISubscribers): nil
+---@field public notify                 fun(self: ark.c.ISubscribers, value: ark.t.T, value_prev: ark.t.T | nil): nil
 
----@class std.collection.subscribers.IProps
+---@class ark.c.subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class std.collection.subscribers.ISubscriberItem
+---@class ark.c.subscribers.ISubscriberItem
 ---@field public subscriber             ark.c.ISubscriber
 ---@field public unsubscribed           boolean
 
----@type std.collection.IUnsubscribable
+---@type ark.t.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = ark.fn.noop }
 
----@class std.collection.Subscribers : std.collection.ISubscribers
+---@class ark.c.Subscribers : ark.c.ISubscribers
 ---@field protected ARRANGE_THRESHOLD   number
 ---@field protected _disposed           boolean
----@field protected _items              std.collection.subscribers.ISubscriberItem[]
+---@field protected _items              ark.c.subscribers.ISubscriberItem[]
 ---@field protected _subscribing_count  integer
 local M = {}
 M.__index = M
 
----@param props                         ?std.collection.subscribers.IProps
----@return std.collection.Subscribers
+---@param props                         ?ark.c.subscribers.IProps
+---@return ark.c.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -36,7 +36,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type std.collection.subscribers.ISubscriberItem[]
+  ---@type ark.c.subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type integer
@@ -119,7 +119,7 @@ function M:notify(value, value_prev)
 end
 
 ---@param subscriber                    ark.c.ISubscriber
----@return std.collection.IUnsubscribable
+---@return ark.t.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:isdisposed() then
     return noop_unsubscribable
@@ -130,13 +130,13 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type std.collection.subscribers.ISubscriberItem
+  ---@type ark.c.subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type std.collection.IUnsubscribable
+  ---@type ark.t.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then
@@ -158,7 +158,7 @@ end
 function M:__arrange__()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type std.collection.subscribers.ISubscriberItem[]
+    ---@type ark.c.subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

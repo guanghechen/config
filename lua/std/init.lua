@@ -46,7 +46,6 @@ local __mods = {
   Observable = "std.collection.observable",
   Scheduler = "std.collection.scheduler",
   Spawn = "std.collection.spawn",
-  Subscribers = "std.collection.subscribers",
   Theme = "std.collection.theme",
   Ticker = "std.collection.ticker",
   Tree = "std.collection.tree",
@@ -82,7 +81,6 @@ local __mods = {
 ---@field public Observable             std.collection.Observable
 ---@field public Scheduler              std.collection.Scheduler
 ---@field public Spawn                  std.collection.Spawn
----@field public Subscribers            std.collection.Subscribers
 ---@field public Theme                  std.collection.Theme
 ---@field public Ticker                 std.collection.Ticker
 ---@field public Tree                   std.collection.Tree

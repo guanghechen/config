@@ -131,7 +131,7 @@ local __module_name__ = "ux.picker.composer.filetree" ---@type string
 ---@field protected _on_attached        ux.picker.composer.filetree.IOnAttached
 ---@field protected _on_confirm         ux.picker.composer.filetree.IOnConfirm|nil
 ---@field protected _on_disposed        ux.picker.composer.filetree.IOnDisposed
----@field protected _observer_unsubs    std.collection.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    ark.t.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -1492,7 +1492,7 @@ function M.new(props)
   self._on_disposed = on_disposed
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type std.collection.IUnsubscribable[]
+  local observer_unsubs = {} ---@type ark.t.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = std.fn.observe({
     o_search_pattern,
@@ -1540,7 +1540,7 @@ function M:dispose()
   local retriever = self._retriever ---@type ux.retriever.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type std.collection.Scheduler
   local treeview = self._treeview ---@type ux.picker.FiletreeView
-  local observer_unsubs = self._observer_unsubs ---@type std.collection.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type ark.t.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean
