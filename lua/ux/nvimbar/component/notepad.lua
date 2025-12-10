@@ -3,7 +3,7 @@ local txt = ark.nvim.txt
 local decode_btn_args = ark.nvim.decode_btn_args
 
 ---@type string
-local fn_switch_notepad = eve.G.register_anonymous_fn(function(encoded)
+local fn_switch_notepad = dot.G.register_anonymous_fn(function(encoded)
   local args = decode_btn_args(tostring(encoded)) ---@type integer[]
   local index = args[1] ---@type integer|nil
   if index ~= nil then
@@ -13,22 +13,22 @@ local fn_switch_notepad = eve.G.register_anonymous_fn(function(encoded)
       dot.command.execute(cmd.uuid)
     end
   end
-end) or "eve.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_add_notepad = eve.G.register_anonymous_fn(function()
+local fn_add_notepad = dot.G.register_anonymous_fn(function()
   dot.command.execute(dot.command.definitions.notepad.create.uuid)
-end) or "eve.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_focus_prev_notepad = eve.G.register_anonymous_fn(function()
+local fn_focus_prev_notepad = dot.G.register_anonymous_fn(function()
   dot.command.execute(dot.command.definitions.notepad.focus_left.uuid)
-end) or "eve.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_focus_next_notepad = eve.G.register_anonymous_fn(function()
+local fn_focus_next_notepad = dot.G.register_anonymous_fn(function()
   dot.command.execute(dot.command.definitions.notepad.focus_right.uuid)
-end) or "eve.G.noop"
+end) or "dot.G.noop"
 
 ---@type table<string, fun(): nil>
 local fn_switch_source_registry = {}
@@ -296,7 +296,7 @@ function M.source(position, notepad)
     end
   end
 
-  local fn_switch_source = eve.G.register_anonymous_fn(fn_switch_source_registry[widget_id]) or "eve.G.noop"
+  local fn_switch_source = dot.G.register_anonymous_fn(fn_switch_source_registry[widget_id]) or "dot.G.noop"
 
   local text_sep_left = dot.icon.symbols.sep_left ---@type string
   local icon_source = dot.icon.notepad.Source ---@type string

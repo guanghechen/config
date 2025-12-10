@@ -54,7 +54,7 @@ function M.neotree(position, neotree_position)
     return 0, 0
   end
 
-  local fn_focus_filesystem = eve.G.register_anonymous_fn(function()
+  local fn_focus_filesystem = dot.G.register_anonymous_fn(function()
     require("neo-tree.command").execute({
       source = "filesystem",
       position = neotree_position,
@@ -62,7 +62,7 @@ function M.neotree(position, neotree_position)
     })
   end)
 
-  local fn_focus_buffers = eve.G.register_anonymous_fn(function()
+  local fn_focus_buffers = dot.G.register_anonymous_fn(function()
     require("neo-tree.command").execute({
       source = "buffers",
       position = neotree_position,
@@ -70,7 +70,7 @@ function M.neotree(position, neotree_position)
     })
   end)
 
-  local fn_focus_git = eve.G.register_anonymous_fn(function()
+  local fn_focus_git = dot.G.register_anonymous_fn(function()
     require("neo-tree.command").execute({
       source = "git_status",
       position = neotree_position,

@@ -69,7 +69,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
   for _, flag in ipairs(raw_flags) do
     flags[#flags + 1] = {
       desc = flag.desc,
-      callback = eve.G.register_anonymous_fn(flag.callback) or "eve.G.noop",
+      callback = dot.G.register_anonymous_fn(flag.callback) or "dot.G.noop",
       disabled = ark.fn.falsy,
       snapshot = flag.snapshot,
     }

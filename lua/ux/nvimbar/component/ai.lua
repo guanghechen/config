@@ -5,7 +5,7 @@ local state = require("ux.widget.ai.state")
 local config = require("ux.widget.ai.config")
 
 ---@type string
-local fn_show_detach = eve.G.register_anonymous_fn(function()
+local fn_show_detach = dot.G.register_anonymous_fn(function()
   ux.widget.ai.action.show_detach_picker()
 end)
 

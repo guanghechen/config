@@ -103,7 +103,7 @@ function M.new(props)
         end
       end
 
-      local callback_fn = eve.G.register_anonymous_fn(callback) or "eve.G.noop" ---@type string
+      local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
 
       ---@type ux.searcher.result.IFlagItem
       local item = {

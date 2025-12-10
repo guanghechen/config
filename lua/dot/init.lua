@@ -174,6 +174,7 @@ local state = setmetatable({
 
 ---@class dot.__mods
 local __mods = {
+  G = "dot.G",
   command = "dot.command",
   env = "dot.env",
   fileicon = "dot.fileicon",
@@ -190,6 +191,7 @@ local __mods = {
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---
+---@field public G                      dot.G
 ---@field public command                dot.command
 ---@field public env                    dot.env
 ---@field public fileicon               dot.fileicon

@@ -251,12 +251,12 @@ function M.tabs(position)
   local last_tab_count = 0 ---@type integer
 
   ---@type string
-  local fn_active_tab = eve.G.register_anonymous_fn(function(tabid)
+  local fn_active_tab = dot.G.register_anonymous_fn(function(tabid)
     dot.command.execute(dot.command.definitions.tab.focus.uuid, tostring(tabid))
   end) or ""
 
   ---@type string
-  local fn_toggle_tabs_folded = eve.G.register_anonymous_fn(function()
+  local fn_toggle_tabs_folded = dot.G.register_anonymous_fn(function()
     folded = not folded
     dot.state.status.dirtier_tabline:mark_dirty()
   end) or ""

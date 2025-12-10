@@ -18,7 +18,7 @@ function M.path(position)
   local relpath_pieces = {} ---@type string[]
 
   ---@type string
-  local fn_open_explorer = eve.G.register_anonymous_fn(function(index)
+  local fn_open_explorer = dot.G.register_anonymous_fn(function(index)
     local dirpath = table.concat(relpath_pieces, dot.env.PATH_SEP, 1, index) ---@type string
     dot.command.execute(dot.command.definitions.find.explorer.uuid, vim.fn.fnameescape(dirpath))
   end) or ""

@@ -30,7 +30,7 @@ local function get_status()
 end
 
 ---@type string
-local fn_show_message = eve.G.register_anonymous_fn(function()
+local fn_show_message = dot.G.register_anonymous_fn(function()
   local enabled = eve.context.flight.ai:snapshot() ---@type boolean
   local status = "NIL" ---@type unknown
 

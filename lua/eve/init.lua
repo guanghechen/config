@@ -4,7 +4,6 @@ local __mods = {
   fn = "eve.fn",
   state = "eve.state",
 
-  G = "eve.builtin.G",
   ai = "eve.builtin.ai",
   buf = "eve.builtin.buf",
   clipboard = "eve.builtin.clipboard",
@@ -25,7 +24,6 @@ local __mods = {
 ---@field public fn                     eve.fn
 ---@field public state                  eve.state
 ---
----@field public G                      eve.builtin.G
 ---@field public ai                     eve.builtin.ai
 ---@field public buf                    eve.builtin.buf
 ---@field public clipboard              eve.builtin.clipboard

@@ -40,7 +40,7 @@ local function toggle_linter(name)
 end
 
 ---@type string
-local fn_open_selector = eve.G.register_anonymous_fn(function()
+local fn_open_selector = dot.G.register_anonymous_fn(function()
   local linters = get_available_linters() ---@type string[]
   if #linters == 0 then
     ark.reporter.info({
