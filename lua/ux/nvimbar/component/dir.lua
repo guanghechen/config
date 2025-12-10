@@ -20,7 +20,7 @@ function M.path(position)
   ---@type string
   local fn_open_explorer = eve.G.register_anonymous_fn(function(index)
     local dirpath = table.concat(relpath_pieces, dot.env.PATH_SEP, 1, index) ---@type string
-    vim.cmd(dot.command.definitions.find.explorer.uuid .. " " .. vim.fn.fnameescape(dirpath))
+    dot.command.execute(dot.command.definitions.find.explorer.uuid, vim.fn.fnameescape(dirpath))
   end) or ""
 
   ---@type ux.nvimbar.IRawComponent

@@ -14,17 +14,17 @@ end) or "eve.G.noop"
 
 ---@type string
 local fn_add_term = eve.G.register_anonymous_fn(function()
-  vim.cmd(K.term.create.uuid)
+  dot.command.execute(K.term.create.uuid)
 end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_prev_term = eve.G.register_anonymous_fn(function()
-  vim.cmd(K.term.focus_left.uuid)
+  dot.command.execute(K.term.focus_left.uuid)
 end) or "eve.G.noop"
 
 ---@type string
 local fn_focus_next_term = eve.G.register_anonymous_fn(function()
-  vim.cmd(K.term.focus_right.uuid)
+  dot.command.execute(K.term.focus_right.uuid)
 end) or "eve.G.noop"
 
 ---@class ux.nvimbar.component.term

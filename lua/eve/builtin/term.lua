@@ -286,13 +286,13 @@ function M.create(params)
 
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
-    local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type std.command.IDefinition
+    local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
     keymaps[#keymaps + 1] = {
       modes = { "i", "n", "t", "x" },
       key = key,
       desc = definition.desc,
       callback = function()
-        vim.cmd(definition.uuid)
+        dot.command.execute(definition.uuid)
       end,
     }
   end
@@ -302,7 +302,7 @@ function M.create(params)
     aliases = { "<C-[>" },
     desc = dot.command.definitions.term.focus_left.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.focus_left.uuid)
+      dot.command.execute(dot.command.definitions.term.focus_left.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -311,7 +311,7 @@ function M.create(params)
     aliases = { "<C-]>" },
     desc = dot.command.definitions.term.focus_right.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.focus_right.uuid)
+      dot.command.execute(dot.command.definitions.term.focus_right.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -320,7 +320,7 @@ function M.create(params)
     aliases = { "<C-S-[>" },
     desc = dot.command.definitions.term.swap_left.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.swap_left.uuid)
+      dot.command.execute(dot.command.definitions.term.swap_left.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -329,7 +329,7 @@ function M.create(params)
     aliases = { "<C-S-]>" },
     desc = dot.command.definitions.term.swap_right.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.swap_right.uuid)
+      dot.command.execute(dot.command.definitions.term.swap_right.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -337,7 +337,7 @@ function M.create(params)
     key = "<C-n>",
     desc = dot.command.definitions.term.rename.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.rename.uuid)
+      dot.command.execute(dot.command.definitions.term.rename.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -345,7 +345,7 @@ function M.create(params)
     key = "<C-/>",
     desc = dot.command.definitions.term.create.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.create.uuid)
+      dot.command.execute(dot.command.definitions.term.create.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -353,7 +353,7 @@ function M.create(params)
     key = "<C-d>",
     desc = dot.command.definitions.term.destroy.desc,
     callback = function()
-      vim.cmd(dot.command.definitions.term.destroy.uuid)
+      dot.command.execute(dot.command.definitions.term.destroy.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {

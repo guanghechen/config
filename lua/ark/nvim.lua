@@ -178,12 +178,12 @@ end
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]
----@param definition                    std.command.IDefinition|std.command.IDefinitionWithCandidates
+---@param definition                    dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 ---@return nil
 function M.make_shortcut(modes, keys, definition)
   ---@return nil
   local function callback()
-    vim.cmd(definition.uuid)
+    dot.command.execute(definition.uuid)
   end
 
   ---@type vim.keymap.set.Opts

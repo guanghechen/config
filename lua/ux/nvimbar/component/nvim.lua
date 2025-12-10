@@ -252,7 +252,7 @@ function M.tabs(position)
 
   ---@type string
   local fn_active_tab = eve.G.register_anonymous_fn(function(tabid)
-    vim.cmd(dot.command.definitions.tab.focus.uuid .. " " .. tostring(tabid))
+    dot.command.execute(dot.command.definitions.tab.focus.uuid, tostring(tabid))
   end) or ""
 
   ---@type string
