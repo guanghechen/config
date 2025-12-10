@@ -6,7 +6,7 @@ local M = {}
 ---@param cmd                           string
 ---@return string
 local function format_command(cmd)
-  return eve.shell.format_command(cmd) ---@type string
+  return dot.shell.format_command(cmd) ---@type string
 end
 
 ---@return boolean
