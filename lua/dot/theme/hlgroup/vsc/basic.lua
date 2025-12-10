@@ -19,14 +19,14 @@ function M.gen_modes_color_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
   local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
-  ---@type table<string, dot.t.theme.IHlgroup>
+  ---@type table<string, ark.t.theme.IHlgroup>
   local hlgroup_map = {
     ComplHint = { fg = c.muted, italic = true },
     ComplHintMore = { fg = c.descriptionForeground, italic = true },

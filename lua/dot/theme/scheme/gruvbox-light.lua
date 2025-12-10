@@ -1,6 +1,6 @@
 --- gruvbox-light
 
----@type dot.t.theme.IScheme
+---@type ark.t.theme.IScheme
 local M = {
   theme = "gruvbox",
   variant = "light",

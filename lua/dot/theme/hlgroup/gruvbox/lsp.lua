@@ -2,7 +2,7 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 

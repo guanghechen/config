@@ -1,6 +1,6 @@
 --- catppuccin-macchiato
 
----@type dot.t.theme.IScheme
+---@type ark.t.theme.IScheme
 local M = {
   theme = "catppuccin",
   variant = "macchiato",

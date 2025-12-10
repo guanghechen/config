@@ -1,6 +1,6 @@
 --- tokyonight-night
 
----@type dot.t.theme.IScheme
+---@type ark.t.theme.IScheme
 local M = {
   theme = "tokyonight",
   variant = "night",

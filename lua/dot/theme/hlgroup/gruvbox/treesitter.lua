@@ -2,7 +2,7 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
 
@@ -15,7 +15,7 @@ function M.gen_hlgroup_map(context)
     c.brightPurple,
   }
 
-  ---@type table<string, dot.t.theme.IHlgroup>
+  ---@type table<string, ark.t.theme.IHlgroup>
   local hlgroup_map = {
     ["@annotation"] = { fg = c.brightRed },
     ["@attribute"] = { fg = c.brightYellow },

@@ -1,14 +1,14 @@
 ---@class ark.theme.IApplyParams
----@field public scheme                 dot.t.theme.IScheme
+---@field public scheme                 ark.t.theme.IScheme
 ---@field public nsnr                   integer
 
 ---@class ark.theme.ICompileParams
----@field public scheme                 dot.t.theme.IScheme
+---@field public scheme                 ark.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
 ---@class ark.Theme
----@field protected hlgroup_map         table<string, dot.t.theme.IHlgroup>
+---@field protected hlgroup_map         table<string, ark.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -31,14 +31,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       dot.t.theme.IHlgroup
+---@param hlgroup                       ark.t.theme.IHlgroup
 ---@return ark.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, dot.t.theme.IHlgroup|nil>
+---@param hlgroup_map                   table<string, ark.t.theme.IHlgroup|nil>
 ---@return ark.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do

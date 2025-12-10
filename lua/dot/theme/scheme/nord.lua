@@ -1,6 +1,6 @@
 --- nord
 
----@type dot.t.theme.IScheme
+---@type ark.t.theme.IScheme
 local M = {
   theme = "nord",
   variant = nil,

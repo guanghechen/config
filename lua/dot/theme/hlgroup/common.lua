@@ -1,11 +1,11 @@
 ---@class dot.theme.hlgroup.common.modes_color_map
----@field public command                dot.t.theme.IHlgroup
----@field public confirm                dot.t.theme.IHlgroup
----@field public insert                 dot.t.theme.IHlgroup
----@field public normal                 dot.t.theme.IHlgroup
----@field public select                 dot.t.theme.IHlgroup
----@field public terminal               dot.t.theme.IHlgroup
----@field public visual                 dot.t.theme.IHlgroup
+---@field public command                ark.t.theme.IHlgroup
+---@field public confirm                ark.t.theme.IHlgroup
+---@field public insert                 ark.t.theme.IHlgroup
+---@field public normal                 ark.t.theme.IHlgroup
+---@field public select                 ark.t.theme.IHlgroup
+---@field public terminal               ark.t.theme.IHlgroup
+---@field public visual                 ark.t.theme.IHlgroup
 
 ---@class dot.theme.hlgroup.common.modes_map
 local modes_map = {
@@ -83,13 +83,13 @@ function M.resolve_mode()
 end
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local basic = require("dot.theme.hlgroup.basic") ---@type dot.theme.hlgroup.basic
   local mc = basic.gen_modes_color_map(context) ---@type dot.theme.hlgroup.common.modes_color_map
 
-  local hlgroup_map = {} ---@type table<string, dot.t.theme.IHlgroup>
+  local hlgroup_map = {} ---@type table<string, ark.t.theme.IHlgroup>
   for _, color in ipairs(colors) do
     for mode, mode_color in pairs(mc) do
       local suffix = string.format("_%s_%s", color, mode) ---@type string
