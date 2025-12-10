@@ -28,13 +28,6 @@
   ],
   "actions": [
     {
-      "id": "ghc.input.escape",
-      "command": {
-        "action": "sendInput",
-        "input": "\u001b[27;1u"
-      }
-    },
-    {
       "id": "ghc.input.shift_escape",
       "command": {
         "action": "sendInput",
@@ -537,10 +530,6 @@
     }
   ],
   "keybindings": [
-    {
-      "id": "ghc.input.escape",
-      "keys": "escape"
-    },
     {
       "id": "ghc.input.shift_escape",
       "keys": "shift+escape"
