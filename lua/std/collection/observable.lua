@@ -5,7 +5,7 @@ local __module_name__ = "std.collection.observable" ---@type string
 ---@field public force                  ?boolean  Force trigger the notification of subscribers even the next value is equals to the current value.
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
----@class std.collection.IObservable: ark.c.IBatchDisposable, ark.c.ISubscribable
+---@class std.collection.IObservable: ark.c.BatchDisposable, ark.c.ISubscribable
 ---@field public equals                 std.t.IEquals
 ---@field public normalize              std.t.INormalize
 ---@field public snapshot               fun(self: std.collection.IObservable): std.t.T

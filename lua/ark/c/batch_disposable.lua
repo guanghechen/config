@@ -1,10 +1,6 @@
 local __module_name__ = "ark.c.batch_disposable" ---@type string
 
----@class ark.c.IBatchDisposable : ark.c.IDisposable
----@field public dispose_all            fun(disposables: ark.c.IDisposable[]): nil
----@field public add_disposable         fun(self: ark.c.IBatchDisposable, disposable: ark.c.IDisposable): ark.c.IBatchDisposable
-
----@class ark.c.BatchDisposable : ark.c.IBatchDisposable
+---@class ark.c.BatchDisposable : ark.c.IDisposable
 local M = {}
 M.__index = M
 
@@ -69,7 +65,7 @@ function M:dispose()
 end
 
 ---@param disposable                    ark.c.IDisposable
----@return ark.c.IBatchDisposable
+---@return ark.c.BatchDisposable
 function M:add_disposable(disposable)
   if disposable:isdisposed() then
     return self
