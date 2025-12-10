@@ -26,7 +26,7 @@
 ---@field public includes               std.collection.IObservable
 ---@field public excludes               std.collection.IObservable
 ---@field public search_pattern         std.collection.IObservable
----@field public search_pattern_history ark.c.IHistory
+---@field public search_pattern_history ark.c.History
 
 ---@class eve.context.select.item
 ---@field public defaults               fun(): eve.context.select.item.data

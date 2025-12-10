@@ -1,7 +1,7 @@
 ---@class eve.builtin.qflist
 local M = {}
 
----@type ark.c.IHistory
+---@type ark.c.History
 M.history = ark.c.History.new({
   name = "qflist",
   capacity = 100,

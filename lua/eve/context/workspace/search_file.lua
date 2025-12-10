@@ -10,7 +10,7 @@
 ---@field public max_filesize           std.collection.IObservable
 ---@field public max_matches            std.collection.IObservable
 ---@field public replacement            std.collection.IObservable
----@field public replace_pattern_history ark.c.IHistory
+---@field public replace_pattern_history ark.c.History
 
 ---@class eve.context.search_file : eve.context.search_file.state
 ---@field public defaults               fun(): eve.context.search_file.data

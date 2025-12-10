@@ -1,6 +1,6 @@
 local __module_name__ = "ark.c.input_history" ---@type string
 
----@class ark.c.InputHistory : ark.c.IHistory
+---@class ark.c.InputHistory : ark.c.History
 ---@field public fullname               string
 ---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer

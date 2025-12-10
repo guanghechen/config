@@ -14,9 +14,9 @@
 ---@field public flag_replace           std.collection.IObservable
 ---@field public flag_case_sensitive    std.collection.IObservable
 ---@field public search_pattern         std.collection.IObservable
----@field public search_pattern_history ark.c.IHistory
+---@field public search_pattern_history ark.c.History
 ---@field public replace_pattern        std.collection.IObservable
----@field public replace_pattern_history ark.c.IHistory
+---@field public replace_pattern_history ark.c.History
 
 ---@class eve.context.search_buffer : eve.context.search_buffer.state
 ---@field public defaults               fun(): eve.context.search_buffer.data

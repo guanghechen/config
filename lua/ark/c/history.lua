@@ -1,32 +1,5 @@
 local __module_name__ = "ark.c.history" ---@type string
 
----@class ark.c.IHistory
----@field public name                   string
----@field public equals                 ark.t.IEquals
----@field public at                     fun(self: ark.c.IHistory, index: integer): ark.t.T|nil
----@field public backward               fun(self: ark.c.IHistory, step?: integer): ark.t.T|nil, boolean
----@field public bottom                 fun(self: ark.c.IHistory): ark.t.T|nil
----@field public capacity               fun(self: ark.c.IHistory): integer
----@field public clear                  fun(self: ark.c.IHistory): nil
----@field public collect                fun(self: ark.c.IHistory): ark.t.T[]
----@field public dump                   fun(self: ark.c.IHistory): ark.c.history.ISerializedData
----@field public fork                   fun(self: ark.c.IHistory, params: ark.c.history.IForkParams): ark.c.IHistory
----@field public forward                fun(self: ark.c.IHistory, step?: integer): ark.t.T|nil, boolean
----@field public go                     fun(self: ark.c.IHistory, index: integer): ark.t.T|nil, integer
----@field public is_bottom              fun(self: ark.c.IHistory): boolean
----@field public is_empty               fun(self: ark.c.IHistory): boolean
----@field public is_top                 fun(self: ark.c.IHistory): boolean
----@field public iterator               fun(self: ark.c.IHistory): fun(): ark.t.T|nil, integer|nil
----@field public iterator_reverse       fun(self: ark.c.IHistory): fun(): ark.t.T|nil, integer|nil
----@field public load                   fun(self: ark.c.IHistory, data: ark.c.history.ISerializedData): nil
----@field public present                fun(self: ark.c.IHistory): ark.t.T|nil, integer
----@field public print                  fun(self: ark.c.IHistory): nil
----@field public push                   fun(self: ark.c.IHistory, element: ark.t.T): nil
----@field public rearrange              fun(self: ark.c.IHistory, filter: ark.t.IFilter): nil
----@field public size                   fun(self: ark.c.IHistory): integer
----@field public top                    fun(self: ark.c.IHistory): ark.t.T|nil, integer
----@field public update_top             fun(self: ark.c.IHistory, element: ark.t.T): nil
-
 ---@class ark.c.history.IForkParams
 ---@field public name                   ?string
 
@@ -45,7 +18,8 @@ local __module_name__ = "ark.c.history" ---@type string
 ---@field public capacity               integer
 ---@field public equals                 ?ark.t.IEquals
 
----@class ark.c.History : ark.c.IHistory
+---@class ark.c.History
+---@field public name                   string
 ---@field public fullname               string
 ---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer
