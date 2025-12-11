@@ -206,7 +206,7 @@ vim.paste = function(lines, phase)
 
       if ok then
         if is_filepath and dot.filetype.is_sourcefile(filetype) then
-          local extname = std.path.extname(filepath_target_relative) ---@type string
+          local extname = yoz.path.extname(filepath_target_relative) ---@type string
           if IMAGE_EXTENSIONS[extname] then
             local src = std.path.relative(dirpath, filepath_target, "/") ---@type string
             if #src > 1 then

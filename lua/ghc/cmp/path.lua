@@ -550,7 +550,7 @@ function M:resolve(item, callback)
         value = "Binary file",
       }
     else
-      local ext = std.path.extname(item.data.path)
+      local ext = yoz.path.extname(item.data.path)
       item.documentation = {
         kind = "markdown",
         value = "```" .. ext .. "\n" .. content .. "```",

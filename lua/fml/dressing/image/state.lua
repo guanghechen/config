@@ -249,7 +249,7 @@ end
 ---@param filename                       string
 ---@return boolean
 function M.is_support_file(filename)
-  local extname = std.path.extname(filename) ---@type string
+  local extname = yoz.path.extname(filename) ---@type string
   return SUPPORTED_EXTNAME_SET[extname] == true
 end
 

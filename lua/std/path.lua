@@ -87,12 +87,6 @@ function M.dirname(filepath)
   return yoz.path.dirname(filepath, false, SEP)
 end
 
----@param filename                      string
----@return string
-function M.extname(filename)
-  return yoz.path.extname(filename)
-end
-
 ---@param filepath                      string
 ---@return boolean
 function M.is_absolute(filepath)
