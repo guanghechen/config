@@ -62,16 +62,16 @@ async function getCwdPart(data) {
 
 async function getGitPart(fullCwd) {
   try {
-    process.chdir(fullCwd)
-    const branch = execSync('git branch --show-current 2>/dev/null', {
+    const branch = execSync('git branch --show-current', {
+      cwd: fullCwd,
       encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore'],
+      stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
 
     if (branch) {
       return `\x1b[90m(\x1b[91m ${branch}\x1b[90m)\x1b[0m`
     }
-  } catch (err) {
+  } catch {
     // Not a git repository or git command failed
   }
   return ''
