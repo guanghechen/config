@@ -129,7 +129,7 @@ function M:dispose()
   self._last_result = nil
   self._scheduler_content = nil
 
-  local ok1, error1 = pcall(eve.win.close, winnr)
+  local ok1, error1 = pcall(era.win.close, winnr)
   local ok2, error2 = pcall(era.buf.close, bufnr)
   local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
   if not (ok1 and ok2 and ok3) then
@@ -240,7 +240,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  eve.win.set_type(winnr, eve.win.Types.PICKER_PREVIEW)
+  era.win.set_type(winnr, era.win.Types.PICKER_PREVIEW)
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
     dot.icon.listchars.eol,
@@ -300,7 +300,7 @@ function M:hide()
 
   self._winnr = nil
 
-  local ok1, error1 = pcall(eve.win.close, winnr)
+  local ok1, error1 = pcall(era.win.close, winnr)
   if not ok1 then
     ark.reporter.error({
       from = self.fullname,

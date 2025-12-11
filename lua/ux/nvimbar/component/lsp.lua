@@ -164,8 +164,8 @@ function M.symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
-      local winline = meta ~= nil and meta.winline or nil ---@type eve.builtin.win.IWinline|nil
+      local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
+      local winline = meta ~= nil and meta.winline or nil ---@type era.win.IWinline|nil
       if winline == nil then
         return "", "", false
       end

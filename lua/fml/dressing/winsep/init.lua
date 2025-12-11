@@ -144,7 +144,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = ark.nvim.augroup("winsep_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if eve.win.is_fixed(winnr) then
+    if era.win.is_fixed(winnr) then
       local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
       scheduler:schedule({ context = context })
     end

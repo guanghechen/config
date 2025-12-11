@@ -2196,7 +2196,7 @@ function M:__open_node__(nodeuuid)
 
       composer:close()
       composer:mark_result_dirty()
-      eve.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
+      era.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
     end
   end
@@ -2232,7 +2232,7 @@ function M:__open_node__(nodeuuid)
   end
 
   composer:close()
-  eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  era.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
 ---@param cwd                           string
@@ -2534,7 +2534,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
   end
 
   composer:close()
-  eve.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  era.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
 return M

@@ -30,6 +30,7 @@ local state = setmetatable({
 local __mods = {
   buf = "era.buf",
   command = "era.command",
+  win = "era.win",
 }
 
 ---@class era
@@ -37,6 +38,7 @@ local __mods = {
 ---@field public buf                    era.buf
 ---@field public command                era.command
 ---@field public state                  era.state
+---@field public win                    era.win
 local M = setmetatable({
   __mods = __mods,
   state = state,

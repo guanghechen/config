@@ -26,13 +26,13 @@ local M = {}
 ---@return nil
 function M.split(direction)
   local winnr_original = vim.api.nvim_get_current_win() ---@type integer
-  if eve.win.is_float(winnr_original) then
+  if era.win.is_float(winnr_original) then
     return
   end
 
-  if eve.win.is_sourcefile(winnr_original) then
+  if era.win.is_sourcefile(winnr_original) then
     local winnr_target = split(direction) ---@type integer
-    eve.win.fork(winnr_original, winnr_target)
+    era.win.fork(winnr_original, winnr_target)
     return
   end
 

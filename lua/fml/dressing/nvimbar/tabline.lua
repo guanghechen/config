@@ -84,7 +84,7 @@ dirtier:subscribe(ark.c.Subscriber.new({
         for _, winnr in ipairs(winnrs) do
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if vim.bo[bufnr].filetype == filetype then
-            if not eve.win.is_float(winnr) then
+            if not era.win.is_float(winnr) then
               vim.wo[winnr].winbar = nil
             end
           end

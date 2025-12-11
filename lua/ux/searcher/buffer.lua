@@ -791,7 +791,7 @@ function M:__create_finder_window_as_needed__()
 
   local bufnr = self:__create_finder_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = eve.win.resolve_zindex(),
+    zindex = era.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,
@@ -845,7 +845,7 @@ function M:__create_replacer_window_as_needed__()
 
   local bufnr = self:__create_replacer_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, false, {
-    zindex = eve.win.resolve_zindex(),
+    zindex = era.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,

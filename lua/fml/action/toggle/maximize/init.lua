@@ -14,7 +14,7 @@ function M.maximize()
     return
   end
 
-  if eve.win.is_float(winnr) then
+  if era.win.is_float(winnr) then
     require("fml.action.toggle.maximize.float").maximize(winnr)
   else
     require("fml.action.toggle.maximize.normal").maximize(winnr)

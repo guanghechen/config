@@ -459,12 +459,12 @@ function M.__create_win_as_needed__(win)
   local bufnr = M.__create_buf_as_needed__(win) ---@type integer
   local winnr = win.winnr ---@type integer|nil
 
-  if winnr == nil or not eve.win.is_valid(winnr) then
+  if winnr == nil or not era.win.is_valid(winnr) then
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
 
-    eve.win.set_type(winnr, eve.win.Types.NOTIFY)
+    era.win.set_type(winnr, era.win.Types.NOTIFY)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].conceallevel = 0
@@ -693,8 +693,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = ark.nvim.augroup("notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
-    if meta ~= nil and meta.wintype == eve.win.Types.NOTIFY then
+    local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
+    if meta ~= nil and meta.wintype == era.win.Types.NOTIFY then
       for _, win in ipairs(__WINS__) do
         if win.winnr == winnr then
           win.tick = win.tick + 1

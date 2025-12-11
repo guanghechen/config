@@ -127,7 +127,7 @@ function M.inspect_window()
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
   local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
-  local meta_win = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta_win = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
   local meta_buf = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
 
   ark.reporter.info({
@@ -143,10 +143,10 @@ function M.inspect_window()
         buftype = buftype or vim.NIL,
         filetype = filetype or vim.NIL,
         filepath = filepath or vim.NIL,
-        focusable = eve.win.is_focusable(winnr),
-        projectable = eve.win.is_projectable(winnr),
-        sourcefile = eve.win.is_sourcefile(winnr),
-        swappable = eve.win.is_swappable(winnr),
+        focusable = era.win.is_focusable(winnr),
+        projectable = era.win.is_projectable(winnr),
+        sourcefile = era.win.is_sourcefile(winnr),
+        swappable = era.win.is_swappable(winnr),
         winbar = vim.wo[winnr].winbar,
       },
       z_meta = {

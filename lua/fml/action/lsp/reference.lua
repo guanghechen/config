@@ -145,7 +145,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type fml.action.lsp.reference.IItem
-      eve.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+      era.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, { item })
       return
     end

@@ -14,7 +14,7 @@ local __mods = {
   session = "eve.builtin.session",
   tab = "eve.builtin.tab",
   term = "eve.builtin.term",
-  win = "eve.builtin.win",
+  win = "era.win",
   winpicker = "eve.builtin.winpicker",
 }
 
@@ -34,7 +34,7 @@ local __mods = {
 ---@field public session                eve.builtin.session
 ---@field public tab                    eve.builtin.tab
 ---@field public term                   eve.builtin.term
----@field public win                    eve.builtin.win
+---@field public win                    era.win
 ---@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
@@ -84,7 +84,7 @@ function M.setup_breakpoints()
   end
   local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
 
-  eve.win.open_filepaths(0, filepaths)
+  era.win.open_filepaths(0, filepaths)
 
   std.timer.set_timeout(function()
     local bps = require("dap.breakpoints")

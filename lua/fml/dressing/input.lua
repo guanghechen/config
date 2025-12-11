@@ -121,7 +121,7 @@ function M.input(opts, on_confirm)
   width = math.max(1, width)
 
   local zindex_source_winnr = relative_win or parent_winnr ---@type integer
-  local zindex = eve.win.resolve_zindex(zindex_source_winnr) ---@type integer
+  local zindex = era.win.resolve_zindex(zindex_source_winnr) ---@type integer
 
   ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
@@ -141,7 +141,7 @@ function M.input(opts, on_confirm)
     title_pos = "center",
   })
 
-  eve.win.set_type(winnr, eve.win.Types.INPUT)
+  era.win.set_type(winnr, era.win.Types.INPUT)
   vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
   vim.wo[winnr].cursorline = false

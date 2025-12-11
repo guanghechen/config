@@ -222,7 +222,7 @@ end
 function M.hide()
   local winnr = _winnr
   _winnr = nil
-  eve.win.close(winnr)
+  era.win.close(winnr)
 end
 
 ---@param termmeta                      ux.widget.ai.term.IMeta

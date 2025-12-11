@@ -1,8 +1,8 @@
-local __module_name__ = "eve.builtin.win"
+local __module_name__ = "era.win"
 
 local Methods = vim.lsp.protocol.Methods
 
----@alias eve.builtin.win.TypeEnum
+---@alias era.win.TypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
 ---| "ux:input"
@@ -19,26 +19,26 @@ local Methods = vim.lsp.protocol.Methods
 ---| "ux:textarea"
 ---| "ux:winpicker"
 ---| "ux:winsep"
----
+---|
 ---| "plugin:neotree"
 
----@class eve.builtin.win.IFilepathHistoryItem
+---@class era.win.IFilepathHistoryItem
 ---@field public bufnr                  integer|nil
 ---@field public filepath               string|nil
 
----@class eve.builtin.win.IWinline
+---@class era.win.IWinline
 ---@field public bufnr                  integer
 ---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       ark.c.Scheduler|nil
 ---@field public lsp_symbols            std.t.ILspSymbol[]|nil
 ---@field public nvimbar                ux.nvimbar.Nvimbar
 
----@class eve.builtin.win.IMeta
+---@class era.win.IMeta
 ---@field public history                ark.c.History|nil
----@field public winline                eve.builtin.win.IWinline|nil
----@field public wintype                eve.builtin.win.TypeEnum|nil
+---@field public winline                era.win.IWinline|nil
+---@field public wintype                era.win.TypeEnum|nil
 
----@class eve.builtin.win.Types
+---@class era.win.Types
 local Types = {
   -- stylua: ignore start
   BOARD             = "ux:board",
@@ -85,7 +85,7 @@ local wintype_attrs = {
   swappable = {},
 }
 
-local meta_map = {} ---@type table<integer, eve.builtin.win.IMeta|nil>
+local meta_map = {} ---@type table<integer, era.win.IMeta|nil>
 
 ---@param encoding                      string|nil
 ---@return string
@@ -141,7 +141,7 @@ local function position_to_byte_col(bufnr, position, encoding)
   return position.character or 0
 end
 
----@class eve.builtin.win
+---@class era.win
 local M = {}
 
 M.Types = vim.deepcopy(Types)
@@ -229,7 +229,7 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_focusable(winnr)
-  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     return false
   end
@@ -245,7 +245,7 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_projectable(winnr)
-  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     return false
   end
@@ -264,7 +264,7 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_sourcefile(winnr)
-  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     return false
   end
@@ -283,7 +283,7 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_swappable(winnr)
-  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     return false
   end
@@ -311,8 +311,8 @@ function M.resolve_zindex(winnr)
   winnr = winnr or vim.api.nvim_get_current_win()
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   local base_zindex = wincfg.zindex or 50 ---@type integer
-  local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
-  local wintype = meta and meta.wintype or nil ---@type eve.builtin.win.TypeEnum|nil
+  local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
+  local wintype = meta and meta.wintype or nil ---@type era.win.TypeEnum|nil
   if wintype == Types.CMDLINE or wintype == Types.NOTIFY then
     return base_zindex - 1
   end
@@ -352,7 +352,7 @@ end
 
 ---@param winnr_source                  integer
 ---@param winnr_target                  integer
----@return eve.builtin.win.IMeta|nil
+---@return era.win.IMeta|nil
 function M.fork(winnr_source, winnr_target)
   if
     winnr_source < 1
@@ -363,12 +363,12 @@ function M.fork(winnr_source, winnr_target)
     return nil
   end
 
-  local meta_source = M.resolve(winnr_source, false) ---@type eve.builtin.win.IMeta|nil
+  local meta_source = M.resolve(winnr_source, false) ---@type era.win.IMeta|nil
   if meta_source == nil then
     return nil
   end
 
-  local meta_target = meta_map[winnr_target] or {} ---@type eve.builtin.win.IMeta
+  local meta_target = meta_map[winnr_target] or {} ---@type era.win.IMeta
   meta_map[winnr_target] = meta_target
 
   if meta_source.wintype ~= nil then
@@ -388,21 +388,21 @@ end
 
 ---@param winnr                         integer|nil
 ---@param force                         boolean
----@return eve.builtin.win.IMeta|nil
+---@return era.win.IMeta|nil
 function M.resolve(winnr, force)
   if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
     return nil
   end
 
-  local meta = meta_map[winnr] ---@type eve.builtin.win.IMeta|nil
+  local meta = meta_map[winnr] ---@type era.win.IMeta|nil
   if meta ~= nil and not force then
     return meta
   end
 
-  meta = meta or {} ---@type eve.builtin.win.IMeta
+  meta = meta or {} ---@type era.win.IMeta
   meta_map[winnr] = meta
 
-  meta.wintype = vim.w[winnr].eve_type ---@type eve.builtin.win.TypeEnum|nil
+  meta.wintype = vim.w[winnr].eve_type ---@type era.win.TypeEnum|nil
   if meta.wintype ~= nil or M.is_float(winnr) then
     return meta
   end
@@ -411,8 +411,8 @@ function M.resolve(winnr, force)
     meta.history = ark.c.History.new({
       name = "win#bufs",
       capacity = dot.var.WIN_BUF_HISTORY_CAPACITY,
-      ---@param x                       eve.builtin.win.IFilepathHistoryItem
-      ---@param y                       eve.builtin.win.IFilepathHistoryItem
+      ---@param x                       era.win.IFilepathHistoryItem
+      ---@param y                       era.win.IFilepathHistoryItem
       equals = function(x, y)
         return x == y or (x.bufnr == y.bufnr and x.filepath == y.filepath)
       end,
@@ -422,12 +422,12 @@ function M.resolve(winnr, force)
 end
 
 ---@param winnr                         integer
----@param wintype                       eve.builtin.win.TypeEnum|nil
+---@param wintype                       era.win.TypeEnum|nil
 ---@return nil
 function M.set_type(winnr, wintype)
   vim.w[winnr].eve_type = wintype
   vim.schedule(function()
-    local meta = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+    local meta = M.resolve(winnr, false) ---@type era.win.IMeta|nil
     if meta ~= nil then
       meta.wintype = wintype
     end
@@ -465,7 +465,7 @@ function M.locate_symbols(winnr, callback)
     return cancel_request
   end
 
-  if winnr == nil or not eve.win.is_valid(winnr) then
+  if winnr == nil or not era.win.is_valid(winnr) then
     return abort()
   end
 
@@ -644,8 +644,8 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
 
   local tabnr = vim.api.nvim_win_get_tabpage(winnr) ---@type integer
   local last_bufnr ---@type integer|nil
-  for _, filepath in ipairs(filepaths) do
-    local bufnr = era.buf.loadfile(filepath) ---@type integer|nil
+  for _, fp in ipairs(filepaths) do
+    local bufnr = era.buf.loadfile(fp) ---@type integer|nil
     if bufnr ~= nil then
       last_bufnr = bufnr
       M.on_buf_enter(winnr, bufnr)
@@ -676,7 +676,7 @@ function M.on_close(winnr)
     return
   end
 
-  local meta = meta_map[winnr] ---@type eve.builtin.win.IMeta|nil
+  local meta = meta_map[winnr] ---@type era.win.IMeta|nil
   if meta == nil then
     return
   end
@@ -708,7 +708,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(winnr, bufnr)
-  local meta_win = M.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta_win = M.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta_win == nil or meta_win.history == nil then
     return
   end
@@ -725,9 +725,9 @@ function M.on_buf_enter(winnr, bufnr)
     end
   end
 
-  local filepath = meta_buf.filepath ---@type string
+  local fp = meta_buf.filepath ---@type string
   local history = meta_win.history ---@type ark.c.History
-  local item = { bufnr = bufnr, filepath = filepath } ---@type eve.builtin.win.IFilepathHistoryItem
+  local item = { bufnr = bufnr, filepath = fp } ---@type era.win.IFilepathHistoryItem
   history:push(item)
 end
 

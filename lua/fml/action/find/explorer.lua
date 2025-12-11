@@ -691,7 +691,7 @@ picker = ux.picker.ListComposer.new({
       end
 
       composer:close()
-      eve.win.open_filepath(winnr_sourcefile, fileitem.path)
+      era.win.open_filepath(winnr_sourcefile, fileitem.path)
     elseif fileitem.type == "directory" then
       local dirpath = fileitem.path ---@type string
       state_cwd:next(dirpath)

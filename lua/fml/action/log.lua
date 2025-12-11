@@ -71,7 +71,7 @@ local function show_json_preview(content)
   local col = math.floor((editor_width - width) / 2)
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = eve.win.resolve_zindex(),
+    zindex = era.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,

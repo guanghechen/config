@@ -218,7 +218,7 @@ local keymaps = {
       printer:render(bufnr):dispose()
 
       local opts = {
-        zindex = eve.win.resolve_zindex(),
+        zindex = era.win.resolve_zindex(),
         relative = "cursor",
         width = width,
         height = height,
@@ -229,7 +229,7 @@ local keymaps = {
       }
       local winnr = vim.api.nvim_open_win(bufnr, true, opts)
 
-      eve.win.set_type(winnr, eve.win.Types.BOARD)
+      era.win.set_type(winnr, era.win.Types.BOARD)
       vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
       vim.wo[winnr].wrap = false

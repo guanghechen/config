@@ -255,7 +255,7 @@ picker = ux.picker.ListComposer.new({
       composer:close()
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) or eve.win.pick_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) or era.win.pick_sourcefile() ---@type integer|nil
       if winnr_sourcefile ~= nil then
         vim.api.nvim_win_set_buf(winnr_sourcefile, item.data.bufnr)
       end

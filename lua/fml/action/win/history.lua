@@ -28,7 +28,7 @@ local function fetch_data(winnr_sourcefile)
   local items = {} ---@type fml.action.win.history.IItem[]
   local uuid_present = nil ---@type string|nil
 
-  local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = era.win.resolve(winnr_sourcefile, false) ---@type era.win.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -39,7 +39,7 @@ local function fetch_data(winnr_sourcefile)
     return { items = {} }
   end
 
-  local _, present_ordinal = meta.history:present() ---@type eve.builtin.win.IFilepathHistoryItem|nil, integer|nil
+  local _, present_ordinal = meta.history:present() ---@type era.win.IFilepathHistoryItem|nil, integer|nil
   if present_ordinal ~= nil then
     uuid_present = gen_uuid_from_ordinal(present_ordinal)
   end
@@ -194,7 +194,7 @@ local picker = ux.picker.ListComposer.new({
       local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
       if item_index ~= nil and winnr_sourcefile ~= nil then
-        local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
+        local meta = era.win.resolve(winnr_sourcefile, false) ---@type era.win.IMeta|nil
         if meta ~= nil then
           meta.history:go(item_index)
         end
@@ -206,9 +206,9 @@ local picker = ux.picker.ListComposer.new({
         composer:close()
 
         -- Find the history item by ordinal to get the associated data
-        local meta = eve.win.resolve(winnr_sourcefile, false) ---@type eve.builtin.win.IMeta|nil
+        local meta = era.win.resolve(winnr_sourcefile, false) ---@type era.win.IMeta|nil
         if meta ~= nil and item_index ~= nil then
-          local history_item = meta.history:at(item_index) ---@type eve.builtin.win.IFilepathHistoryItem|nil
+          local history_item = meta.history:at(item_index) ---@type era.win.IFilepathHistoryItem|nil
           if history_item ~= nil then
             if history_item.bufnr ~= nil and vim.api.nvim_buf_is_valid(history_item.bufnr) then
               vim.api.nvim_win_set_buf(winnr_sourcefile, history_item.bufnr)
@@ -280,7 +280,7 @@ function M.history_backward()
     return
   end
 
-  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -305,7 +305,7 @@ function M.history_backward()
   local bufnr_target = nil ---@type integer|nil
   while true do
     local item, is_bot = history:backward()
-    ---@cast item                       eve.builtin.win.IFilepathHistoryItem|nil
+    ---@cast item                       era.win.IFilepathHistoryItem|nil
     ---@cast is_bot                     boolean
 
     if item == nil then
@@ -347,7 +347,7 @@ function M.history_forward()
     return
   end
 
-  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil or meta.history == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -362,7 +362,7 @@ function M.history_forward()
   local history = meta.history ---@type ark.c.History
   while true do
     local item, is_top = history:forward()
-    ---@cast item                       eve.builtin.win.IFilepathHistoryItem|nil
+    ---@cast item                       era.win.IFilepathHistoryItem|nil
     ---@cast is_top                     boolean
 
     if item == nil then

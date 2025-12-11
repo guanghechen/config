@@ -4,7 +4,7 @@ local M = {}
 ---@return nil
 function M.mark_sourcefile()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  eve.win.set_type(winnr, nil)
+  era.win.set_type(winnr, nil)
 
   vim.wo[winnr].cursorline = true
   vim.wo[winnr].number = true

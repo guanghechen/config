@@ -17,7 +17,7 @@ local function restore(original)
     return false
   end
 
-  if not eve.win.is_float(winnr) then
+  if not era.win.is_float(winnr) then
     era.state.maximized.clear_original_float()
     return false
   end

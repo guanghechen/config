@@ -35,7 +35,7 @@ local function open_yazi(name, cwd, filepath)
         end
 
         if #filepaths > 0 then
-          eve.win.open_filepaths(nil, filepaths)
+          era.win.open_filepaths(nil, filepaths)
         end
       end)
     end,

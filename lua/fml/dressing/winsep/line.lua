@@ -204,7 +204,7 @@ function M:show()
     winnr = vim.api.nvim_open_win(bufnr, false, cfg)
     self._winnr = winnr
 
-    eve.win.set_type(winnr, eve.win.Types.WINSEP)
+    era.win.set_type(winnr, era.win.Types.WINSEP)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false

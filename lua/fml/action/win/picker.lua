@@ -4,7 +4,7 @@ local M = {}
 ---@return nil
 function M.focus()
   local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-  local winnr_target = eve.win.pick_focusable(winnr_source) ---@type integer|nil
+  local winnr_target = era.win.pick_focusable(winnr_source) ---@type integer|nil
   if winnr_target and winnr_target ~= winnr_source then
     vim.api.nvim_set_current_win(winnr_target)
   end
@@ -13,7 +13,7 @@ end
 ---@return nil
 function M.project()
   local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-  local winnr_target = eve.win.pick_projectable(winnr_source) ---@type integer|nil
+  local winnr_target = era.win.pick_projectable(winnr_source) ---@type integer|nil
   if winnr_target and winnr_target ~= winnr_source then
     local cursor_source = vim.api.nvim_win_get_cursor(winnr_source)
     local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
@@ -27,7 +27,7 @@ end
 ---@return nil
 function M.swap()
   local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-  local winnr_target = eve.win.pick_swappable(winnr_source) ---@type integer|nil
+  local winnr_target = era.win.pick_swappable(winnr_source) ---@type integer|nil
   if winnr_target and winnr_target ~= winnr_source then
     local wincfg_source = vim.api.nvim_win_get_config(winnr_source) ---@type vim.api.keyset.win_config
     local wincfg_target = vim.api.nvim_win_get_config(winnr_target) ---@type vim.api.keyset.win_config

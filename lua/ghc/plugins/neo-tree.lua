@@ -236,7 +236,7 @@ return {
         vim.bo[bufnr].readonly = true
 
         local wincfg = {
-          zindex = eve.win.resolve_zindex(),
+          zindex = era.win.resolve_zindex(),
           relative = "cursor",
           width = vim.api.nvim_strwidth(filepath_relative) + 12,
           height = 4,
@@ -249,7 +249,7 @@ return {
         }
         local winnr = vim.api.nvim_open_win(bufnr, true, wincfg) ---@type integer
 
-        eve.win.set_type(winnr, eve.win.Types.BOARD)
+        era.win.set_type(winnr, era.win.Types.BOARD)
         vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
         vim.wo[winnr].number = false

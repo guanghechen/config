@@ -132,7 +132,7 @@ function M._show(state)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    eve.win.set_type(winnr, eve.win.Types.POPUPMENU)
+    era.win.set_type(winnr, era.win.Types.POPUPMENU)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false

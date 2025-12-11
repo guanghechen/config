@@ -407,7 +407,7 @@ function M:dispose()
   local ok1, error1 = pcall(lnum_current.dispose, lnum_current)
   local ok2, error2 = pcall(lnum_present.dispose, lnum_present)
   local ok3, error3 = pcall(lnum_total.dispose, lnum_total)
-  local ok4, error4 = pcall(eve.win.close, winnr)
+  local ok4, error4 = pcall(era.win.close, winnr)
   local ok5, error5 = pcall(era.buf.close, bufnr)
   local ok6, error6 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   local ok7, error7 = pcall(nvimbar.dispose, nvimbar)
@@ -533,7 +533,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  eve.win.set_type(winnr, eve.win.Types.PICKER_RESULT)
+  era.win.set_type(winnr, era.win.Types.PICKER_RESULT)
 
   local lnum_total = self.lnum_total:snapshot() ---@type integer
   vim.wo[winnr].cursorline = lnum_total > 0
@@ -573,7 +573,7 @@ function M:hide()
 
   self._winnr = nil
 
-  local ok1, error1 = pcall(eve.win.close, winnr)
+  local ok1, error1 = pcall(era.win.close, winnr)
   if not ok1 then
     ark.reporter.error({
       from = self.fullname,

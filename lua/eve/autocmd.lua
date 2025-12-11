@@ -16,7 +16,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = event.buf ---@type integer
 
-    eve.win.on_buf_enter(winnr, bufnr)
+    era.win.on_buf_enter(winnr, bufnr)
     eve.tab.on_buf_enter(tabnr, bufnr)
 
     era.state.status.dirty_winline_nr:next(winnr)
@@ -37,7 +37,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     era.state.status.dirtier_statusline:mark_dirty()
 
-    if eve.win.is_sourcefile(winnr) then
+    if era.win.is_sourcefile(winnr) then
       era.state.status.dirty_winline_nr:next(winnr)
     end
   end,
@@ -186,7 +186,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
   group = ark.nvim.augroup("bootstrap_on_WinClosed"),
   callback = function(event)
     local winnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
-    eve.win.on_close(winnr)
+    era.win.on_close(winnr)
 
     era.state.status.dirtier_statusline:mark_dirty()
     era.state.status.dirtier_tabline:mark_dirty()
@@ -205,12 +205,12 @@ vim.api.nvim_create_autocmd("WinEnter", {
       end
 
       local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
-      if eve.win.is_sourcefile(winnr) then
+      if era.win.is_sourcefile(winnr) then
         if meta ~= nil then
           meta.winnr_sourcefile:next(winnr)
         end
       end
-      if eve.win.is_fixed(winnr) then
+      if era.win.is_fixed(winnr) then
         if meta ~= nil then
           meta.winnr_fixed:next(winnr)
         end
@@ -251,7 +251,7 @@ vim.api.nvim_create_autocmd("WinNew", {
       local filetype = vim.bo[bufnr].filetype ---@type string
 
       if filetype == "neo-tree" then
-        eve.win.set_type(winnr, eve.win.Types.NEOTREE)
+        era.win.set_type(winnr, era.win.Types.NEOTREE)
         return
       end
     end)

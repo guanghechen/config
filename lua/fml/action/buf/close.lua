@@ -29,7 +29,7 @@ function M.close()
     return
   end
 
-  local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
+  local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
   if meta == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     era.buf.close(bufnr)
@@ -45,7 +45,7 @@ function M.close()
 
   local bufnr_target = nil ---@type integer|nil
 
-  local item_present = history:present() ---@type eve.builtin.win.IFilepathHistoryItem|nil
+  local item_present = history:present() ---@type era.win.IFilepathHistoryItem|nil
   if
     item_present ~= nil
     and item_present.bufnr ~= nil
@@ -56,7 +56,7 @@ function M.close()
   else
     while true do
       local item, is_bot = history:backward()
-      ---@cast item eve.builtin.win.IFilepathHistoryItem|nil
+      ---@cast item era.win.IFilepathHistoryItem|nil
       ---@cast is_bot boolean
 
       if item == nil then
