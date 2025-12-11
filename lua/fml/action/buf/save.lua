@@ -63,10 +63,10 @@ function M.save(args)
 
       local winnrs = vim.api.nvim_list_wins() ---@type integer[]
       for _, winnr in ipairs(winnrs) do
-        dot.state.status.dirty_winline_nr:next(winnr)
+        era.state.status.dirty_winline_nr:next(winnr)
       end
-      dot.state.status.dirtier_statusline:mark_dirty()
-      dot.state.status.dirtier_tabline:mark_dirty()
+      era.state.status.dirtier_statusline:mark_dirty()
+      era.state.status.dirtier_tabline:mark_dirty()
     end
   end
 

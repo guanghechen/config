@@ -517,7 +517,7 @@ function M.locate_symbols(winnr, callback)
         end
       end
 
-      if dot.state.status.suppress_warning:snapshot() then
+      if era.state.status.suppress_warning:snapshot() then
         settle(false)
         return
       end

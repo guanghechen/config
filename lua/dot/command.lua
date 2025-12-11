@@ -78,7 +78,7 @@ function M.define(raw_definition, overwrite)
   ---@return nil
   local function handle(opts)
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    dot.state.status.set_winnr_command(winnr)
+    era.state.status.set_winnr_command(winnr)
     M.execute(definition.uuid, opts.args, false)
   end
 

@@ -91,10 +91,10 @@ ark.fn.observe({ eve.term.o_termuuid }, function()
   vim.wo[winnr].winfixbuf = false
   vim.api.nvim_win_set_buf(winnr, termmeta.bufnr)
   vim.wo[winnr].winfixbuf = true
-  dot.state.status.dirtier_termline:mark_dirty()
+  era.state.status.dirtier_termline:mark_dirty()
 end, true)
 
-dot.state.status.dirtier_termline:subscribe(
+era.state.status.dirtier_termline:subscribe(
   ark.c.Subscriber.new({
     on_next = function()
       termline:render()
@@ -132,7 +132,7 @@ end
 
 ---@return integer|nil
 function M:focus()
-  dot.state.widget.push(self)
+  era.state.widget.push(self)
 
   local termindex = eve.term.current() ---@type integer
   local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
@@ -339,7 +339,7 @@ function M:__create_win_as_needed__(termmeta)
     title_pos = "center",
   }
 
-  local resize_result = nil ---@type dot.state.maximized.ResolveResizeResult|nil
+  local resize_result = nil ---@type era.state.maximized.ResolveResizeResult|nil
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -363,8 +363,8 @@ function M:__create_win_as_needed__(termmeta)
     end)
   else
     vim.wo[winnr].winfixbuf = false
-    ---@type dot.state.maximized.ResolveResizeResult
-    resize_result = dot.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
+    ---@type era.state.maximized.ResolveResizeResult
+    resize_result = era.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
     vim.api.nvim_win_set_config(winnr, resize_result.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.wo[winnr].winfixbuf = true
@@ -372,7 +372,7 @@ function M:__create_win_as_needed__(termmeta)
 
   vim.wo[winnr].winblend = resize_result and resize_result.winblend or 0
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
-  dot.state.status.dirtier_termline:mark_dirty()
+  era.state.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()
   return winnr

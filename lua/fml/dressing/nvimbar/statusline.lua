@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = dot.state.status.dirtier_statusline ---@type ark.c.Dirtier
+local dirtier = era.state.status.dirtier_statusline ---@type ark.c.Dirtier
 local position = "f_sl" ---@type ux.nvimbar.PositionEnum
 
 local statusline ---@type ux.nvimbar.Nvimbar

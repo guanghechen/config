@@ -160,34 +160,6 @@ local theme = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.state.__mods
-local __state__mods = {
-  maximized = "dot.state.maximized",
-  qflist = "dot.state.qflist",
-  status = "dot.state.status",
-  widget = "dot.state.widget",
-}
-
----@class dot.state
----@field public __mods                 dot.state.__mods
----@field public maximized              dot.state.maximized
----@field public qflist                 dot.state.qflist
----@field public status                 dot.state.status
----@field public widget                 dot.state.widget
-local state = setmetatable({
-  __mods = __state__mods,
-}, {
-  __index = function(t, k)
-    local m = __state__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.__mods
 local __mods = {
   G = "dot.G",
@@ -204,7 +176,6 @@ local __mods = {
 ---@field public __mods                 dot.__mods
 ---@field public dict                   dot.dict
 ---@field public lang                   dot.lang
----@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---
 ---@field public G                      dot.G
@@ -219,7 +190,6 @@ local M = setmetatable({
   __mods = __mods,
   dict = dict,
   lang = lang,
-  state = state,
   theme = theme,
 }, {
   __index = function(t, k)

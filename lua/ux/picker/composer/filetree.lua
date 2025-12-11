@@ -989,7 +989,7 @@ function M.new(props)
     end,
     send_to_qflist = function()
       local cwd = std.path.cwd() ---@type string
-      local quickfix_items = {} ---@type dot.state.qflist.IItem[]
+      local quickfix_items = {} ---@type era.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
       for lnum = 1, linecount, 1 do
@@ -1024,8 +1024,8 @@ function M.new(props)
 
       if #quickfix_items > 0 then
         self._composer:close()
-        dot.state.qflist.push(quickfix_items)
-        dot.state.qflist.open_qflist()
+        era.state.qflist.push(quickfix_items)
+        era.state.qflist.open_qflist()
       end
     end,
     toggle_selection = function()

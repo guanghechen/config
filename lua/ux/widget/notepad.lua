@@ -326,7 +326,7 @@ function M:__setup_subscriptions__()
     false
   )
 
-  self._subscription_winbar = dot.state.status.dirtier_notepadline:subscribe(
+  self._subscription_winbar = era.state.status.dirtier_notepadline:subscribe(
     ark.c.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
@@ -401,7 +401,7 @@ end
 ---@protected
 ---@return nil
 function M:__mark_dirty__()
-  dot.state.status.dirtier_notepadline:mark_dirty()
+  era.state.status.dirtier_notepadline:mark_dirty()
 end
 
 ---@protected
@@ -1102,7 +1102,7 @@ function M:ensure_win()
     eve.win.set_type(winnr, eve.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
-    local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
+    local resize = era.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     winblend = resize.winblend or winblend
@@ -1161,7 +1161,7 @@ end
 
 ---@return nil
 function M:focus()
-  dot.state.widget.push(self)
+  era.state.widget.push(self)
   local winnr = self:ensure_win()
   if vim.api.nvim_get_current_win() ~= winnr then
     vim.api.nvim_set_current_win(winnr)
@@ -1206,7 +1206,7 @@ function M:resize()
   local rect = self:measure_rect()
   vim.wo[winnr].winfixbuf = false
 
-  local resize = dot.state.maximized.resolve_resize_config(winnr, {
+  local resize = era.state.maximized.resolve_resize_config(winnr, {
     relative = "editor",
     anchor = "NW",
     row = rect.row,

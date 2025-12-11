@@ -34,9 +34,9 @@ function M.refresh_all()
     end)
   end
 
-  dot.state.status.suppress_warning:next(true)
-  dot.state.status.dirtier_statusline:mark_dirty()
-  dot.state.status.dirtier_tabline:mark_dirty()
+  era.state.status.suppress_warning:next(true)
+  era.state.status.dirtier_statusline:mark_dirty()
+  era.state.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]

@@ -188,7 +188,7 @@ local function render(winnr)
   end
 end
 
-dot.state.status.dirty_winline_nr:subscribe(
+era.state.status.dirty_winline_nr:subscribe(
   ark.c.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

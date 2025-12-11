@@ -176,7 +176,7 @@ function M.apply_cspell_suggestion(bufnr, lnum, col, suggestion)
 
   vim.api.nvim_buf_set_text(bufnr, lnum, context.start_col, lnum, context.end_col, { replacement })
   vim.schedule(function()
-    dot.state.status.lint_schedule_nr:next(bufnr)
+    era.state.status.lint_schedule_nr:next(bufnr)
   end)
   ark.reporter.info({
     from = __module_name__,
@@ -194,7 +194,7 @@ function M.spellcheck_register()
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   vim.schedule(function()
-    dot.state.status.lint_schedule_nr:next(bufnr)
+    era.state.status.lint_schedule_nr:next(bufnr)
   end)
 
   local filepath_buf = vim.api.nvim_buf_get_name(bufnr) ---@type string

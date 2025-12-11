@@ -173,9 +173,9 @@ local function ui_attach_callback(event, kind, ...)
 end
 
 ark.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
-  local searching = dot.state.status.searching:snapshot() ---@type boolean
+  local searching = era.state.status.searching:snapshot() ---@type boolean
   if searching then
-    dot.state.status.searching:next(false)
+    era.state.status.searching:next(false)
     vim.schedule(function()
       vim.cmd("noh")
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

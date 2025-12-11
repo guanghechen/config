@@ -1206,7 +1206,7 @@ function M:__resize__()
   -- Only resize if height actually changed
   if current_config.height ~= new_height then
     current_config.height = new_height
-    local resize = dot.state.maximized.resolve_resize_config(winnr, current_config) ---@type dot.state.maximized.ResolveResizeResult
+    local resize = era.state.maximized.resolve_resize_config(winnr, current_config) ---@type era.state.maximized.ResolveResizeResult
     vim.api.nvim_win_set_config(winnr, resize.cfg)
   end
 end

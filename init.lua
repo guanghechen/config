@@ -2,6 +2,7 @@ require("bootstrap").setup()
 
 _G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
+_G.era = require("era") ---@type era
 _G.std = require("std") ---@type std
 _G.eve = require("eve") ---@type eve
 _G.ux = require("ux") ---@type ux
