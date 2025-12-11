@@ -19,10 +19,22 @@ If no arguments are provided, commit all staged/unstaged changes as usual.
 1. **Analyze current changes**: Run `git status` and `git diff` to understand what has been modified.
 2. **Review commit history**: Run `git log --oneline -10` to understand the existing commit message style and conventions.
 3. **Determine commit scope**: Based on the arguments above, decide which files to include in this commit.
-4. **Write commit message**:
-   - Follow the style and conventions of previous commits in this repository.
-   - Summarize the changes concisely and accurately.
-   - If hints are provided, incorporate them to make the commit message more descriptive.
+4. **Write commit message** following the **Conventional Commits** specification:
+   - **Format**: `<type>[optional scope]: <description>`
+   - **Types** (choose the most appropriate):
+     - `feat` / `feature`: A new feature
+     - `fix`: A bug fix
+     - `improve`: Enhancement to existing functionality
+     - `refactor`: Code change that neither fixes a bug nor adds a feature
+     - `doc`: Documentation only changes
+     - `test`: Adding or modifying tests
+     - `chore`: Maintenance tasks, dependency updates, etc.
+     - `rename`: Renaming files, variables, or functions
+     - `move`: Moving files or code to different locations
+     - `revert`: Reverting a previous commit
+   - **Scope** (optional): A noun describing the affected section in parentheses, e.g., `fix(parser):`, `feat(auth):`
+   - **Description**: A concise summary in imperative mood (e.g., "add user login" not "added user login")
+   - **Breaking changes**: Add `!` after type/scope for breaking changes, e.g., `feat(api)!: change response format`
    - The commit message **MUST** be written in English.
    - Use simple, clear vocabulary. Avoid overly complex words, except for technical terms which are always acceptable.
 5. **Stage and commit**: Stage only the relevant files (based on scope) and create the commit.
