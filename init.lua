@@ -1,7 +1,8 @@
-require("bootstrap").setup()
-
+_G.yoz = require("yoz") ---@type yoz
 _G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
+require("dot.bootstrap").setup()
+
 _G.era = require("era") ---@type era
 _G.std = require("std") ---@type std
 _G.eve = require("eve") ---@type eve

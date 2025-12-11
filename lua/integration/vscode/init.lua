@@ -1,5 +1,3 @@
-require("eve.option")
-require("eve.keymap")
 pcall(require, "integration.vscode.autocmd")
 pcall(require, "integration.local.autocmd")
 

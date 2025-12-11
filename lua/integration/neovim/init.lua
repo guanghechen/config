@@ -1,5 +1,3 @@
-require("eve.option")
-require("eve.keymap")
 require("eve.autocmd")
 require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")

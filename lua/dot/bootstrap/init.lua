@@ -1,13 +1,15 @@
-local __module_name__ = "bootstrap" ---@type string
+local __module_name__ = "dot.bootstrap" ---@type string
 
 ---@class bootstrap
 local M = {}
 
 ---@return nil
 function M.setup()
-  _G.yoz = require("yoz") ---@type yoz
   M.setup_patches()
   M.setup_workspace()
+
+  require("dot.bootstrap.option")
+  require("dot.bootstrap.keymap")
 end
 
 ---@return nil
