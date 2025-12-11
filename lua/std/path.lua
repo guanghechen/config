@@ -83,18 +83,6 @@ end
 
 ---@param filepath                      string
 ---@return boolean
-function M.is_dirpath(filepath)
-  local N = #filepath ---@type integer
-  if N < 1 then
-    return true
-  end
-
-  local tc = filepath:sub(N, N) ---@type string
-  return tc == "/" or tc == "\\"
-end
-
----@param filepath                      string
----@return boolean
 function M.is_exist(filepath)
   return yoz.path.is_exist(filepath)
 end

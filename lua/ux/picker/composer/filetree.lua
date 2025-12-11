@@ -393,7 +393,7 @@ function M.new(props)
           return
         end
 
-        local isdir = std.path.is_dirpath(filepath) ---@type boolean
+        local isdir = yoz.path.is_dirpath(filepath) ---@type boolean
         filepath = std.path.resolve(rootpath, filepath) ---@type string
 
         if std.path.is_exist(filepath) then
@@ -611,7 +611,7 @@ function M.new(props)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
-        local dest_is_dir = std.path.is_dirpath(next_filepath)
+        local dest_is_dir = yoz.path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
@@ -733,7 +733,7 @@ function M.new(props)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
-        local dest_is_dir = std.path.is_dirpath(next_filepath)
+        local dest_is_dir = yoz.path.is_dirpath(next_filepath)
 
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
