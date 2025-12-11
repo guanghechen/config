@@ -199,7 +199,7 @@ return {
         local mode = string.format("%o", stat.mode)
 
         local filepath_relative = std.path.relative(std.path.cwd(), filepath) ---@type string
-        local filename = std.path.basename(filepath) ---@type string
+        local filename = yoz.path.basename(filepath) ---@type string
         local icon = dot.fileicon.get_file_icon(filename)
 
         local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

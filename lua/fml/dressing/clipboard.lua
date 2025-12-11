@@ -126,12 +126,12 @@ vim.paste = function(lines, phase)
 
         local ok = pcall(function()
           for _, filepath_source in ipairs(filepaths) do
-            local basename_source = std.path.basename(filepath_source) ---@type string
+            local basename_source = yoz.path.basename(filepath_source) ---@type string
             local filepath_target = std.path.join(dirpath_container, basename_source) ---@type string
             std.fs.copy_file(filepath_source, filepath_target)
           end
           for _, dirpath_source in ipairs(dirpaths) do
-            local basename_source = std.path.basename(dirpath_source) ---@type string
+            local basename_source = yoz.path.basename(dirpath_source) ---@type string
             local dirpath_target = std.path.join(dirpath_container, basename_source) ---@type string
             std.fs.copy_directory(dirpath_source, dirpath_target)
           end
@@ -175,7 +175,7 @@ vim.paste = function(lines, phase)
       dirpath = std.path.dirname(filepath_cur) ---@type string
     end
 
-    local basename_source = std.path.basename(filepath_source) ---@type string
+    local basename_source = yoz.path.basename(filepath_source) ---@type string
     local filepath_default = std.path.join(dirpath, basename_source) ---@type string
     local suffix = is_dirpath and dot.env.PATH_SEP or "" ---@type string
 
@@ -213,7 +213,7 @@ vim.paste = function(lines, phase)
               if string.sub(src, 1, 1) ~= "." then
                 src = "." .. dot.env.PATH_SEP .. src
               end
-              local filename = std.path.basename(filepath_target) ---@type string
+              local filename = yoz.path.basename(filepath_target) ---@type string
               local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
               eve.clipboard.insert_markup(alt, src)
             end

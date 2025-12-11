@@ -54,7 +54,7 @@ function M.paste_image(filepath_target)
         if string.byte(src, 1, 1) ~= BYTE_DOT then
           src = "." .. dot.env.PATH_SEP .. src
         end
-        local filename = std.path.basename(filepath_target) ---@type string
+        local filename = yoz.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
 
         vim.schedule(function()
@@ -109,7 +109,7 @@ function M.paste_image_as_base64(filepath_source)
     return false
   end
 
-  local filename = std.path.basename(filepath_source) ---@type string
+  local filename = yoz.path.basename(filepath_source) ---@type string
   local src = "data:image/png;base64," .. base64
   return M.insert_markup(filename, src)
 end

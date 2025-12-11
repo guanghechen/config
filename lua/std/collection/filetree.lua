@@ -159,7 +159,7 @@ function M.resolve(filepath, filetype, force)
 
   local nodedata = FILENODE_DATAMAP[nodeuuid]
   if nodedata == nil then
-    local basename = std.path.basename(filepath) ---@type string
+    local basename = yoz.path.basename(filepath) ---@type string
     local fileicon, fileicon_hln ---@type string, string
     if filetype == "directory" then
       fileicon, fileicon_hln = dot.fileicon.get_directory_icon(basename) ---@type string, string

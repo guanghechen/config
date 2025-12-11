@@ -77,12 +77,6 @@ local M = {}
 
 ---@param filepath                      string
 ---@return string
-function M.basename(filepath)
-  return yoz.path.basename(filepath)
-end
-
----@param filepath                      string
----@return string
 function M.dirname(filepath)
   return yoz.path.dirname(filepath, false, SEP)
 end

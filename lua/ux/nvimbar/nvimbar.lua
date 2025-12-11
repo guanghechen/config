@@ -64,7 +64,7 @@ local function build_context(preset_context)
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local cwd = std.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local filename = std.path.basename(filepath) ---@type string
+  local filename = yoz.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
   local fileicon, fileicon_hl = dot.fileicon.get_file_icon(filename, filetype) ---@type string, string
 

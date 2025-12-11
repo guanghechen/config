@@ -597,7 +597,7 @@ function M.new(props)
       local filepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
       local dirname = std.path.dirname(filepath) ---@type string
-      local filename = std.path.basename(filepath) ---@type string
+      local filename = yoz.path.basename(filepath) ---@type string
 
       ---@param next_filename           string|nil
       ---@return nil
@@ -762,7 +762,7 @@ function M.new(props)
         if std.path.is_exist(next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
-            prompt = string.format('File "%s" already exists. Overwrite?', std.path.basename(next_filepath)),
+            prompt = string.format('File "%s" already exists. Overwrite?', yoz.path.basename(next_filepath)),
             format_item = function(item)
               return item
             end,
@@ -802,7 +802,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(' Move "%s" to: ', std.path.basename(filepath)),
+          prompt = string.format(' Move "%s" to: ', yoz.path.basename(filepath)),
           default = filepath,
           relative = "cursor",
         }, function(next_filepath)

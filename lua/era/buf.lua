@@ -191,7 +191,7 @@ function M.resolve(bufnr, force)
   dirpath_pieces[#dirpath_pieces] = nil
 
   local cwd = std.path.cwd() ---@type string
-  local filename = std.path.basename(filepath) ---@type string
+  local filename = yoz.path.basename(filepath) ---@type string
   local fileicon, fileicon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
   local relpath = std.path.relative(cwd, filepath) ---@type string
 

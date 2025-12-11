@@ -52,7 +52,7 @@ local function select_copy_filepath(params)
             message = "Copied relative filepath: " .. content,
           })
         elseif item.uuid == "filename" then
-          local content = std.path.basename(filepath) ---@type string
+          local content = yoz.path.basename(filepath) ---@type string
           write_clipboard_registers(content)
           ark.reporter.info({
             from = __module_name__,

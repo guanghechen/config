@@ -97,7 +97,7 @@ local group_items = {
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         local buftype = vim.bo[bufnr].buftype ---@type string
-        local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           ark.reporter.error({
             from = __module_name__,
@@ -118,7 +118,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = std.path.basename(std.path.cwd()) ---@type string
+        local cwd_name = yoz.path.basename(std.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileencoding_cur = vim.bo[bufnr].fileencoding ---@type string
 
@@ -212,7 +212,7 @@ local group_items = {
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
         local buftype = vim.bo[bufnr].buftype ---@type string
-        local filename = std.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
+        local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           ark.reporter.error({
             from = __module_name__,
@@ -233,7 +233,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = std.path.basename(std.path.cwd()) ---@type string
+        local cwd_name = yoz.path.basename(std.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 

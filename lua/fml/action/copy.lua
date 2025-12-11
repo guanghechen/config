@@ -29,7 +29,7 @@ local function copy_current_filepath(candidate, filepath)
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
   elseif candidate == "filename" then
-    local content = std.path.basename(filepath) ---@type string
+    local content = yoz.path.basename(filepath) ---@type string
 
     write_clipboard_registers(content)
     ark.reporter.info({

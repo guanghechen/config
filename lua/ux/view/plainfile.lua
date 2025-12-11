@@ -71,7 +71,7 @@ function M:render(bufnr, filepath, force)
 
   local data = self._last_data ---@type ux.view.plainfile.IData|nil
   if force or data == nil or data.filepath ~= filepath then
-    local filename = std.path.basename(filepath) ---@type string
+    local filename = yoz.path.basename(filepath) ---@type string
     local lines ---@type string[]
     local filetype ---@type string
 

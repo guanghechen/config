@@ -80,7 +80,7 @@ end
 ---@return ux.searcher.IPlainfileViewData
 function M:calc_preview_data(context)
   local filepath = context.filepath ---@type string
-  local filename = std.path.basename(filepath) ---@type string
+  local filename = yoz.path.basename(filepath) ---@type string
   if not dot.filetype.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 

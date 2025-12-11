@@ -50,7 +50,7 @@ local function fetch_data(winnr_sourcefile)
       local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
-      local filename = std.path.basename(filepath) ---@type string
+      local filename = yoz.path.basename(filepath) ---@type string
       local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
       ---@type ark.t.IHighlightInline[]
@@ -82,7 +82,7 @@ local function fetch_data(winnr_sourcefile)
       if filepath ~= nil and std.path.is_exist_filepath(filepath) then
         local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
         local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
-        local filename = std.path.basename(filepath) ---@type string
+        local filename = yoz.path.basename(filepath) ---@type string
         local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
         ---@type ark.t.IHighlightInline[]
