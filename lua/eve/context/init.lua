@@ -364,7 +364,7 @@ function M.watch_changes()
       }
 
       if autosave and M._storage.nvim_session_autosaved then
-        eve.session.save_session(M._storage.nvim_session_autosaved)
+        era.session.save_session(M._storage.nvim_session_autosaved)
       end
 
       M.save(storage)

@@ -1,4 +1,4 @@
----@class eve.builtin.session
+---@class era.session
 local M = {}
 
 ---@param filepath                      string

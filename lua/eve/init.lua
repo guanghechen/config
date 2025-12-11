@@ -11,7 +11,7 @@ local __mods = {
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
-  session = "eve.builtin.session",
+  session = "era.session",
   tab = "era.tab",
   term = "eve.builtin.term",
   win = "era.win",
@@ -31,7 +31,7 @@ local __mods = {
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
----@field public session                eve.builtin.session
+---@field public session                era.session
 ---@field public tab                    era.tab
 ---@field public term                   eve.builtin.term
 ---@field public win                    era.win

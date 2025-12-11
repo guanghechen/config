@@ -16,7 +16,7 @@ function M.restore()
     end
 
     if nvim_session_filepath then
-      eve.session.load_session(nvim_session_filepath)
+      era.session.load_session(nvim_session_filepath)
       eve.context.load({
         editor = storage.editor,
         session = storage.session,
@@ -38,7 +38,7 @@ function M.restore_autosaved()
     end
 
     if nvim_session_filepath then
-      eve.session.load_session(nvim_session_filepath)
+      era.session.load_session(nvim_session_filepath)
       eve.context.load({
         editor = storage.editor,
         session = storage.session,
@@ -57,7 +57,7 @@ function M.save()
       session = storage.session,
       workspace = storage.workspace,
     })
-    eve.session.save_session(storage.nvim_session)
+    era.session.save_session(storage.nvim_session)
 
     ark.reporter.info({
       from = __module_name__,
