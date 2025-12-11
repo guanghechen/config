@@ -141,14 +141,6 @@ function M.is_git_ignored(filepath)
   return vim.v.shell_error == 0
 end
 
----! Check if the `to` path is a descendant path of the `from` path.
----@param from                          string
----@param to                            string
----@return boolean
-function M.is_descendant(from, to)
-  return yoz.path.is_descendant(from, to)
-end
-
 ---@param from                          string
 ---@param to                            string
 ---@return string

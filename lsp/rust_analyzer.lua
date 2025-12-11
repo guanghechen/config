@@ -38,7 +38,7 @@ local function is_library(fname)
 
   local normalized_fname = std.path.normalize(fname, false)
   for _, item in ipairs({ toolchains, registry, git_registry }) do
-    if std.path.is_descendant(item, normalized_fname) then
+    if yoz.path.is_descendant(item, normalized_fname) then
       local clients = vim.lsp.get_clients({ name = "rust_analyzer" })
       return #clients > 0 and clients[#clients].config.root_dir or nil
     end
