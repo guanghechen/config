@@ -83,7 +83,7 @@ If no arguments are provided, commit all staged/unstaged changes as usual.
      | -          | `:pencil2:`               | Fix typos                               |
    - **Scope** (optional): A noun describing the affected section in parentheses, e.g., `:bug: fix(parser):`, `:sparkles: feat(auth):`
    - **Description**: A concise summary in imperative mood (e.g., "add user login" not "added user login")
-   - **Breaking changes**: Add `!` after type/scope, e.g., `:boom: feat(api)!: change response format`
+   - **Breaking changes**: Append exclamation mark after type/scope, e.g., `:boom: feat(api)!: change response format`
    - The commit message **MUST** be written in English.
    - Use simple, clear vocabulary. Avoid overly complex words, except for technical terms which are always acceptable.
 3. **Stage and commit**: Stage only the relevant files (based on scope) and create the commit.
