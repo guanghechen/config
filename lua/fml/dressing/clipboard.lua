@@ -122,7 +122,7 @@ vim.paste = function(lines, phase)
         end
 
         local dirpath_container = std.path.resolve(cwd, dirpath_container_relative) ---@type string
-        std.path.mkdir_if_nonexist(dirpath_container)
+        dot.env.mkdirs(dirpath_container, true)
 
         local ok = pcall(function()
           for _, filepath_source in ipairs(filepaths) do
@@ -194,7 +194,7 @@ vim.paste = function(lines, phase)
       end
 
       local filepath_target = std.path.resolve(cwd, filepath_target_relative) ---@type string
-      std.path.mkdir_if_nonexist(std.path.dirname(filepath_target))
+      dot.env.mkdirs(filepath_target, false)
 
       local ok = pcall(function()
         if is_filepath then

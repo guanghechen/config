@@ -410,7 +410,7 @@ function M.new(props)
           dot.env.mkdirs(filepath, true)
           treeview:insert_dirpath(filepath)
         else
-          std.path.mkdir_if_nonexist(std.path.dirname(filepath))
+          dot.env.mkdirs(filepath, false)
           vim.fn.writefile({}, filepath)
           treeview:insert_filepath(filepath, false)
 

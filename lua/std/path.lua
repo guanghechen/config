@@ -156,12 +156,6 @@ function M.join(from, to)
   return yoz.path.join(from, to, true, SEP)
 end
 
----@param dirpath                       string
----@return nil
-function M.mkdir_if_nonexist(dirpath)
-  return yoz.path.mkdirs(dirpath)
-end
-
 ---@param filepath                      string
 ---@param keep_trailing_slash           ?boolean
 ---@param sep                           ?'/'|'\'
@@ -266,7 +260,7 @@ function M.locate_cache_filepath(filename)
 
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
-  M.mkdir_if_nonexist(dirpath)
+  dot.env.mkdirs(dirpath, true)
   return filepath
 end
 

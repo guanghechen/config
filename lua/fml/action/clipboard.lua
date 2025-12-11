@@ -30,7 +30,7 @@ function M.paste()
     end
 
     local filepath_target = std.path.resolve(cwd, filepath_target_relative) ---@type string
-    std.path.mkdir_if_nonexist(std.path.dirname(filepath_target))
+    dot.env.mkdirs(filepath_target, false)
     eve.clipboard.paste_image(filepath_target)
   end)
 end
