@@ -2,7 +2,6 @@
 
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
 import path from 'node:path'
 
 await main()
@@ -37,7 +36,7 @@ async function getCwdPart(data) {
   let cwd = fullCwd
 
   // Replace home directory with ~
-  const home = homedir()
+  const home = process.env.HOME || process.env.USERPROFILE
   if (cwd.startsWith(home)) {
     cwd = '~' + cwd.slice(home.length)
   }
