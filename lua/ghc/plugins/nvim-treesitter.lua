@@ -79,7 +79,6 @@ local ensure_installed = {
   "jsdoc",
   "json",
   "json5",
-  "jsonc",
   -- "latex",
   "lua",
   "luadoc",
@@ -189,6 +188,7 @@ return {
     end, {})
 
     vim.treesitter.language.register("json", "excalidraw")
+    vim.treesitter.language.register("json", "jsonc")
     vim.api.nvim_create_autocmd("FileType", {
       pattern = ensure_filetypes,
       callback = function()
