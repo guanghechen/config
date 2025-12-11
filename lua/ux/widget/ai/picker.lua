@@ -598,25 +598,39 @@ function M.show_prompt(on_select)
       end
 
       local text_lines = {} ---@type string[]
-      for _, rich_line in ipairs(result.lines) do
+      local row_mapping = {} ---@type { rich_idx: integer, subline_idx: integer }[]
+      for rich_idx, rich_line in ipairs(result.lines) do
         local parts = {} ---@type string[]
         for _, chunk in ipairs(rich_line) do
           parts[#parts + 1] = chunk[1]
         end
-        text_lines[#text_lines + 1] = table.concat(parts)
+        local line = table.concat(parts)
+        local sublines = vim.split(line, "\n", { plain = true })
+        for subline_idx, subline in ipairs(sublines) do
+          text_lines[#text_lines + 1] = subline
+          row_mapping[#text_lines] = { rich_idx = rich_idx, subline_idx = subline_idx }
+        end
       end
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, text_lines)
 
       vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.ai_prompt_preview, 0, -1)
-      for row, rich_line in ipairs(result.lines) do
-        local col = 0
-        for _, chunk in ipairs(rich_line) do
-          local text = chunk[1]
-          local hlname = chunk[2]
-          if hlname and #text > 0 then
-            vim.hl.range(bufnr, dot.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + #text })
+      for row, mapping in ipairs(row_mapping) do
+        if mapping.subline_idx == 1 then
+          local rich_line = result.lines[mapping.rich_idx]
+          local col = 0
+          for _, chunk in ipairs(rich_line) do
+            local text = chunk[1]
+            local first_newline = text:find("\n")
+            local text_len = first_newline and (first_newline - 1) or #text
+            local hlname = chunk[2]
+            if hlname and text_len > 0 then
+              vim.hl.range(bufnr, dot.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + text_len })
+            end
+            if first_newline then
+              break
+            end
+            col = col + text_len
           end
-          col = col + #text
         end
       end
 
