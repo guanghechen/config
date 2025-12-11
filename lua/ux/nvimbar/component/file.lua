@@ -17,12 +17,12 @@ local fileformat_icon_map = {
 
 ---@type string
 local fn_on_fileencoding_clicked = dot.G.register_anonymous_fn(function()
-  dot.command.execute(dot.command.definitions.toggle.list.uuid, "fileencoding_local")
+  era.command.execute(era.command.definitions.toggle.list.uuid, "fileencoding_local")
 end) or ""
 
 ---@type string
 local fn_on_fileformat_clicked = dot.G.register_anonymous_fn(function()
-  dot.command.execute(dot.command.definitions.toggle.list.uuid, "fileformat_local")
+  era.command.execute(era.command.definitions.toggle.list.uuid, "fileformat_local")
 end) or ""
 
 ---@class ux.nvimbar.component.file

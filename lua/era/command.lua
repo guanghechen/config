@@ -1,26 +1,26 @@
-local __module_name__ = "dot.command" ---@type string
+local __module_name__ = "era.command" ---@type string
 
----@alias dot.command.definitions.copy.Scope
+---@alias era.command.definitions.copy.Scope
 ---| "absolute"
 ---| "relative"
 ---| "filename"
 
----@class dot.command.ICommand
+---@class era.command.ICommand
 ---@field public uuid                   string
 ---@field public tabtype                eve.builtin.tab.TypeEnum|nil
 ---@field public action                 fun(args?: string): nil
 
----@class dot.command.IImplementation
+---@class era.command.IImplementation
 ---@field public uuid                   string
 ---@field public tabtype                ?eve.builtin.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
-local definition_map = {} ---@type table<string, dot.command.IDefinition>
-local command_map = {} ---@type table<string, dot.command.ICommand>
+local definition_map = {} ---@type table<string, era.command.IDefinition>
+local command_map = {} ---@type table<string, era.command.ICommand>
 
----@class dot.command
----@field protected __definition_map__  table<string, dot.command.IDefinition>
----@field protected __command_map__     table<string, dot.command.ICommand>
+---@class era.command
+---@field protected __definition_map__  table<string, era.command.IDefinition>
+---@field protected __command_map__     table<string, era.command.ICommand>
 local M = {
   __definition_map__ = definition_map,
   __command_map__ = command_map,
@@ -34,7 +34,7 @@ function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
-  local command = command_map[key] or command_map[uuid] ---@type dot.command.ICommand|nil
+  local command = command_map[key] or command_map[uuid] ---@type era.command.ICommand|nil
 
   if command == nil then
     if not silent then
@@ -51,9 +51,9 @@ function M.execute(uuid, args, silent)
   command.action(args)
 end
 
----@param raw_definition                dot.command.IDefinition | dot.command.IDefinitionWithCandidates
+---@param raw_definition                era.command.IDefinition | era.command.IDefinitionWithCandidates
 ---@param overwrite                     boolean|nil
----@return dot.command
+---@return era.command
 function M.define(raw_definition, overwrite)
   if definition_map[raw_definition.uuid] ~= nil and not overwrite then
     ark.reporter.warn({
@@ -65,7 +65,7 @@ function M.define(raw_definition, overwrite)
     return M
   end
 
-  ---@type dot.command.IDefinition
+  ---@type era.command.IDefinition
   local definition = {
     uuid = raw_definition.uuid,
     desc = raw_definition.desc,
@@ -107,13 +107,13 @@ function M.define(raw_definition, overwrite)
   return M
 end
 
----@param implementation                dot.command.IImplementation
----@return dot.command
+---@param implementation                era.command.IImplementation
+---@return era.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtype = implementation.tabtype ---@type eve.builtin.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
-  local definition = definition_map[uuid] ---@type dot.command.IDefinition|nil
+  local definition = definition_map[uuid] ---@type era.command.IDefinition|nil
   if definition == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -135,7 +135,7 @@ function M.implement(implementation)
     return M
   end
 
-  ---@type dot.command.ICommand
+  ---@type era.command.ICommand
   local command = {
     uuid = uuid,
     tabtype = tabtype,
@@ -147,7 +147,7 @@ end
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]
----@param definition                    dot.command.IDefinition|dot.command.IDefinitionWithCandidates
+---@param definition                    era.command.IDefinition|era.command.IDefinitionWithCandidates
 ---@return nil
 function M.shortcut(modes, keys, definition)
   ---@return nil
@@ -176,9 +176,9 @@ end
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"
 ---@param candidates                    ?string[]
----@return dot.command.IDefinition
+---@return era.command.IDefinition
 local function def(uuid, desc, nargs, candidates)
-  ---@type dot.command.IDefinition
+  ---@type era.command.IDefinition
   local definition = {
     uuid = uuid,
     desc = desc,
@@ -193,9 +193,9 @@ end
 ---@param desc                          string
 ---@param nargs                         1|"?"
 ---@param candidates                    string[]
----@return dot.command.IDefinitionWithCandidates
+---@return era.command.IDefinitionWithCandidates
 local function defc(uuid, desc, nargs, candidates)
-  ---@type dot.command.IDefinitionWithCandidates
+  ---@type era.command.IDefinitionWithCandidates
   local definition = {
     uuid = uuid,
     desc = desc,
@@ -206,10 +206,10 @@ local function defc(uuid, desc, nargs, candidates)
   return definition
 end
 
----@class dot.command.definitions
+---@class era.command.definitions
 M.definitions = {}
 
----@class dot.command.definitions.ai
+---@class era.command.definitions.ai
 M.definitions.ai = {
   edit = def("Faiedit", "ai: edit"),
   attach_agent = def("Faiattachagent", "ai: attach agent"),
@@ -223,7 +223,7 @@ M.definitions.ai = {
   select_prompt = def("Faiselectprompt", "ai: select prompt"),
 }
 
----@class dot.command.definitions.buf
+---@class era.command.definitions.buf
 M.definitions.buf = {
   close = def("Fbufclose", "buf: close"),
   close_to_leftest = def("Fbufclosetoleftest", "buf: close to leftest"),
@@ -312,12 +312,12 @@ M.definitions.buf = {
   save_no_format = def("Fbufsavenoformat", "buf: save without format"),
 }
 
----@class dot.command.definitions.clipboard
+---@class era.command.definitions.clipboard
 M.definitions.clipboard = {
   paste = def("Fclipboardpaste", "clipboard: paste"),
 }
 
----@class dot.command.definitions.code
+---@class era.command.definitions.code
 M.definitions.code = {
   format = def("Fcodeformat", "code: format buffer"),
   insert_splitline = def("Fcodeinsertsplitline", "code: insert splitline"),
@@ -330,7 +330,7 @@ M.definitions.code = {
   trim_trailspace = def("Fcodetrimtrailspace", "code: trim trailing whitespace"),
 }
 
----@class dot.command.definitions.copy
+---@class era.command.definitions.copy
 M.definitions.copy = {
   char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
 
@@ -339,7 +339,7 @@ M.definitions.copy = {
   filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 
----@class dot.command.definitions.diagnostic
+---@class era.command.definitions.diagnostic
 M.definitions.diagnostic = {
   goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
   goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
@@ -360,7 +360,7 @@ M.definitions.diagnostic = {
   to_md = def("Fdiagnostictomd", "diagnostic: export to markdown"),
 }
 
----@class dot.command.definitions.explorer
+---@class era.command.definitions.explorer
 M.definitions.explorer = {
   fs_cwd = def("Fexplorerfscwd", "explorer: filesystem (cwd)"),
   fs_workspace = def("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
@@ -373,7 +373,7 @@ M.definitions.explorer = {
   toggle = def("Fexplorertoggle", "explorer: toggle"),
 }
 
----@class dot.command.definitions.find
+---@class era.command.definitions.find
 M.definitions.find = {
   bufs = def("Ffindbufs", "find: buffers"),
   bufs_file = def("Ffindbufsfile", "find: buffers (file)"),
@@ -395,7 +395,7 @@ M.definitions.find = {
   vim_options = def("Ffindvimoptions", "find: vim options"),
 }
 
----@class dot.command.definitions.git
+---@class era.command.definitions.git
 M.definitions.git = {
   browse = def("Fgitbrowse", "git: browse"),
   browse_permalink = def("Fgitbrowsepermalink", "git: browse (permalink)"),
@@ -405,7 +405,7 @@ M.definitions.git = {
   history_file = def("Fgithistoryfile", "git: history (file)"),
 }
 
----@class dot.command.definitions.inspect
+---@class era.command.definitions.inspect
 M.definitions.inspect = {
   inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
@@ -416,13 +416,13 @@ M.definitions.inspect = {
   inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
 }
 
----@class dot.command.definitions.log
+---@class era.command.definitions.log
 M.definitions.log = {
   preview_json_normal = def("Fjsonviewnormal", "json: preview current line"),
   preview_json_visual = def("Fjsonviewvisual", "json: preview selection"),
 }
 
----@class dot.command.definitions.lsp
+---@class era.command.definitions.lsp
 M.definitions.lsp = {
   goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
   goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
@@ -433,7 +433,7 @@ M.definitions.lsp = {
   select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
----@class dot.command.definitions.notepad
+---@class era.command.definitions.notepad
 M.definitions.notepad = {
   append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
   create = def("Fnotepadcreate", "notepad: create"),
@@ -483,12 +483,12 @@ M.definitions.notepad = {
   go_forward = def("Fnotepadgoforward", "notepad: go forward in history"),
 }
 
----@class dot.command.definitions.refresh
+---@class era.command.definitions.refresh
 M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),
 }
 
----@class dot.command.definitions.search
+---@class era.command.definitions.search
 M.definitions.search = {
   in_files = def("Fsearchinfiles", "search: in files", "?"),
   in_file = def("Fsearchinfile", "search: in file", "?"),
@@ -498,7 +498,7 @@ M.definitions.search = {
   in_workspace = def("Fsearchinworkspace", "search: in workspace"),
 }
 
----@class dot.command.definitions.session
+---@class era.command.definitions.session
 M.definitions.session = {
   restore = def("Fsessionrestore", "session: restore"),
   restore_autosaved = def("Fsessionrestoreautosaved", "session: restore autosaved"),
@@ -506,7 +506,7 @@ M.definitions.session = {
   save = def("Fsessionsave", "session: save"),
 }
 
----@class dot.command.definitions.tab
+---@class era.command.definitions.tab
 M.definitions.tab = {
   close = def("Ftabclose", "tab: close"),
   close_others = def("Ftabcloseothers", "tab: close others"),
@@ -531,7 +531,7 @@ M.definitions.tab = {
   new_with_buf = def("Ftabnewwithbuf", "tab: new with buf"),
 }
 
----@class dot.command.definitions.term
+---@class era.command.definitions.term
 M.definitions.term = {
   create = def("Ftermcreate", "term: create"),
   destroy = def("Ftermdestroy", "term: destroy"),
@@ -560,7 +560,7 @@ M.definitions.term = {
   swap_right = def("Ftermswapright", "term: swap right", "?"),
 }
 
----@class dot.command.definitions.toggle
+---@class era.command.definitions.toggle
 M.definitions.toggle = {
   dim = def("Ftoggledim", "toggle: dim"),
   expandtab = def("Ftoggleexpandtab", "toggle: expandtab"),
@@ -579,7 +579,7 @@ M.definitions.toggle = {
   wrap = def("Ftogglewrap", "toggle: wrap"),
 }
 
----@class dot.command.definitions.ux
+---@class era.command.definitions.ux
 M.definitions.ux = {
   color_picker = def("Fuxcolorpicker", "ux: color picker"),
   dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
@@ -587,7 +587,7 @@ M.definitions.ux = {
   resume_last_widget = def("Fuxresume", "ux: resume last widget"),
 }
 
----@class dot.command.definitions.win
+---@class era.command.definitions.win
 M.definitions.win = {
   close = def("Fwinclose", "win: close"),
   close_others = def("Fwincloseothers", "win: close others"),

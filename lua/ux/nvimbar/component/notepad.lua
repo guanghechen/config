@@ -8,26 +8,26 @@ local fn_switch_notepad = dot.G.register_anonymous_fn(function(encoded)
   local index = args[1] ---@type integer|nil
   if index ~= nil then
     local cmd_key = "focus_" .. tostring(index)
-    local cmd = dot.command.definitions.notepad[cmd_key]
+    local cmd = era.command.definitions.notepad[cmd_key]
     if cmd ~= nil then
-      dot.command.execute(cmd.uuid)
+      era.command.execute(cmd.uuid)
     end
   end
 end) or "dot.G.noop"
 
 ---@type string
 local fn_add_notepad = dot.G.register_anonymous_fn(function()
-  dot.command.execute(dot.command.definitions.notepad.create.uuid)
+  era.command.execute(era.command.definitions.notepad.create.uuid)
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_prev_notepad = dot.G.register_anonymous_fn(function()
-  dot.command.execute(dot.command.definitions.notepad.focus_left.uuid)
+  era.command.execute(era.command.definitions.notepad.focus_left.uuid)
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_next_notepad = dot.G.register_anonymous_fn(function()
-  dot.command.execute(dot.command.definitions.notepad.focus_right.uuid)
+  era.command.execute(era.command.definitions.notepad.focus_right.uuid)
 end) or "dot.G.noop"
 
 ---@type table<string, fun(): nil>
@@ -292,7 +292,7 @@ function M.source(position, notepad)
 
   if fn_switch_source_registry[widget_id] == nil then
     fn_switch_source_registry[widget_id] = function()
-      dot.command.execute(dot.command.definitions.notepad.source_select.uuid)
+      era.command.execute(era.command.definitions.notepad.source_select.uuid)
     end
   end
 

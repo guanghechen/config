@@ -1,5 +1,5 @@
-local command = dot.command ---@type dot.command
-local K = dot.command.definitions ---@type dot.command.definitions
+local command = era.command ---@type era.command
+local K = era.command.definitions ---@type era.command.definitions
 
 --[code] -------------------------------------------------------------------------------------------
 command.implement({

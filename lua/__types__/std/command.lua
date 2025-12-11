@@ -1,12 +1,12 @@
 ---@meta
 
----@class dot.command.IDefinition
+---@class era.command.IDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"
 ---@field public candidates             ?string[]
 
----@class dot.command.IDefinitionWithCandidates
+---@class era.command.IDefinitionWithCandidates
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  1|"?"

@@ -252,7 +252,7 @@ function M.tabs(position)
 
   ---@type string
   local fn_active_tab = dot.G.register_anonymous_fn(function(tabid)
-    dot.command.execute(dot.command.definitions.tab.focus.uuid, tostring(tabid))
+    era.command.execute(era.command.definitions.tab.focus.uuid, tostring(tabid))
   end) or ""
 
   ---@type string

@@ -378,7 +378,7 @@ local group_items = {
         return venv_path, "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.lsp.select_python_venv.uuid)
+        era.command.execute(era.command.definitions.lsp.select_python_venv.uuid)
       end,
     },
   },
@@ -390,7 +390,7 @@ local group_items = {
         return theme, "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.toggle.theme.uuid)
+        era.command.execute(era.command.definitions.toggle.theme.uuid)
       end,
     },
     theme_variant = {
@@ -408,7 +408,7 @@ local group_items = {
         end
 
         local next_theme = string.format("%s-%s", scheme.theme, scheme.opposite) ---@type dot.e.ThemeFullName
-        dot.command.execute(dot.command.definitions.toggle.theme.uuid, next_theme)
+        era.command.execute(era.command.definitions.toggle.theme.uuid, next_theme)
       end,
     },
   },
@@ -419,7 +419,7 @@ local group_items = {
         return "", "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.toggle.maximize.uuid)
+        era.command.execute(era.command.definitions.toggle.maximize.uuid)
       end,
     },
   },
@@ -583,9 +583,9 @@ local function render_result(_, bufnr, itemmap, matches)
   return { uuids = uuids }
 end
 
-dot.command.define({
-  uuid = dot.command.definitions.toggle.list.uuid,
-  desc = dot.command.definitions.toggle.list.desc,
+era.command.define({
+  uuid = era.command.definitions.toggle.list.uuid,
+  desc = era.command.definitions.toggle.list.desc,
   nargs = "?",
   candidates = toggle_item_names,
 }, true)

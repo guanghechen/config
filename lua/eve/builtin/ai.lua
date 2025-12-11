@@ -62,10 +62,10 @@ function M.add_locations_to_ai(locations)
   local append_success = false ---@type boolean
   local append_error ---@type string|nil
   local append_payload = payload .. "\n" ---@type string
-  if dot ~= nil and dot.command ~= nil and dot.command.definitions ~= nil then
-    local notepad_commands = dot.command.definitions.notepad ---@type dot.command.definitions.notepad|nil
+  if era ~= nil and era.command ~= nil and era.command.definitions ~= nil then
+    local notepad_commands = era.command.definitions.notepad ---@type era.command.definitions.notepad|nil
     if notepad_commands ~= nil and notepad_commands.append_content ~= nil then
-      local ok_append, append_err = pcall(dot.command.execute, notepad_commands.append_content.uuid, append_payload)
+      local ok_append, append_err = pcall(era.command.execute, notepad_commands.append_content.uuid, append_payload)
       append_success = ok_append
       if not ok_append then
         append_error = append_err

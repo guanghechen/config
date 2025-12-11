@@ -26,10 +26,26 @@ local state = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class era
----@field public state                  era.state
-local M = {
-  state = state,
+---@class era.__mods
+local __mods = {
+  command = "era.command",
 }
+
+---@class era
+---@field public __mods                 era.__mods
+---@field public command                era.command
+---@field public state                  era.state
+local M = setmetatable({
+  __mods = __mods,
+  state = state,
+}, {
+  __index = function(t, k)
+    local m = __mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
 
 return M

@@ -163,7 +163,6 @@ local theme = setmetatable({
 ---@class dot.__mods
 local __mods = {
   G = "dot.G",
-  command = "dot.command",
   env = "dot.env",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
@@ -179,7 +178,6 @@ local __mods = {
 ---@field public theme                  dot.theme
 ---
 ---@field public G                      dot.G
----@field public command                dot.command
 ---@field public env                    dot.env
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype

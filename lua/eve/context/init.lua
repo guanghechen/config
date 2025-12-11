@@ -308,7 +308,7 @@ function M.watch_changes()
     M.lsp.inlay_hints,
   }, function()
     pcall(function()
-      dot.command.execute(dot.command.definitions.lsp.restart.uuid)
+      era.command.execute(era.command.definitions.lsp.restart.uuid)
     end)
   end, true)
 
