@@ -35,7 +35,7 @@ function M.path(position)
 
       relpath_pieces = vim.split(meta.relpath, dot.env.PATH_SEP, { plain = true }) ---@type string[]
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
       local hl_text_sep = winnr_sourcefile == context.winnr and hl_focus_sep or hl_blur_sep ---@type string
 
@@ -74,7 +74,7 @@ function M.path_prominent(position)
     atomic = false,
     condition = function(context)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       return context.winnr == winnr_sourcefile
     end,
     will_change = function(context, prev_context)

@@ -36,7 +36,7 @@ local function refresh(force)
   local bufnr_sourcefile = nil ---@type integer|nil
   if o_flag_buffer:snapshot() then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+    bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
     o_bufnr_sourcefile:next(bufnr_sourcefile)
   end
 

@@ -12,7 +12,7 @@ local __mods = {
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
   session = "eve.builtin.session",
-  tab = "eve.builtin.tab",
+  tab = "era.tab",
   term = "eve.builtin.term",
   win = "era.win",
   winpicker = "eve.builtin.winpicker",
@@ -32,7 +32,7 @@ local __mods = {
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
 ---@field public session                eve.builtin.session
----@field public tab                    eve.builtin.tab
+---@field public tab                    era.tab
 ---@field public term                   eve.builtin.term
 ---@field public win                    era.win
 ---@field public winpicker              eve.builtin.winpicker

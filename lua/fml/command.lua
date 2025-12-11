@@ -734,7 +734,7 @@ command
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
-  tabtype = eve.tab.Types.NORMAL,
+  tabtype = era.tab.Types.NORMAL,
   action = function()
     require("fml.action.refresh").refresh_all()
   end,

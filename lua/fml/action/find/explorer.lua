@@ -384,7 +384,7 @@ local function fetch_data()
 
   local uuid_current = nil ---@type string|nil
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
   if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
     local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
@@ -685,7 +685,7 @@ picker = ux.picker.ListComposer.new({
 
     if fileitem.type == "file" then
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
         vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
       end
@@ -748,7 +748,7 @@ function M.find_explorer(specified_filepath)
   end
   if not dirpath_resolved then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil then
       local bufnr = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

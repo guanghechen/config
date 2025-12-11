@@ -277,7 +277,7 @@ end
 ---@return nil
 function M.find_files_in_directory()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_source = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_source = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_source ~= nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string

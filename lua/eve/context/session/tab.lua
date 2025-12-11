@@ -3,7 +3,7 @@
 ---@field public pinned                 boolean
 
 ---@class eve.context.tab.meta.data
----@field public tabtype                eve.builtin.tab.TypeEnum
+---@field public tabtype                era.tab.TypeEnum
 ---@field public bufs                   eve.context.tab.buf.data[]
 
 ---@class eve.context.tab.data
@@ -62,9 +62,9 @@ function M.dump()
   local list = {} ---@type eve.context.tab.meta.data[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
-    local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+    local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
     if meta ~= nil then
-      local tabtype = meta.tabtype ---@type  eve.builtin.tab.TypeEnum
+      local tabtype = meta.tabtype ---@type  era.tab.TypeEnum
       local bufs = {} ---@type eve.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type eve.context.tab.meta.data
       for _, buf in ipairs(meta.bufs) do
@@ -100,7 +100,7 @@ function M.load(raw_data)
       goto continue
     end
 
-    local meta = eve.tab.resolve(tabnr, true) ---@type eve.builtin.tab.IMeta|nil
+    local meta = era.tab.resolve(tabnr, true) ---@type era.tab.IMeta|nil
     if meta == nil then
       goto continue
     end
@@ -117,8 +117,8 @@ function M.load(raw_data)
       end
     end
 
-    eve.tab.refresh_bufs(meta.bufs)
-    eve.tab.rearrange_bufs(meta.bufs)
+    era.tab.refresh_bufs(meta.bufs)
+    era.tab.rearrange_bufs(meta.bufs)
     ::continue::
   end
 end

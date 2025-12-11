@@ -7,12 +7,12 @@ local __module_name__ = "era.command" ---@type string
 
 ---@class era.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                eve.builtin.tab.TypeEnum|nil
+---@field public tabtype                era.tab.TypeEnum|nil
 ---@field public action                 fun(args?: string): nil
 
 ---@class era.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?eve.builtin.tab.TypeEnum
+---@field public tabtype                ?era.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, era.command.IDefinition>
@@ -32,7 +32,7 @@ local M = {
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
+  local tabtype = era.tab.resolve_type(tabnr, false) ---@type era.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type era.command.ICommand|nil
 
@@ -111,7 +111,7 @@ end
 ---@return era.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype ---@type eve.builtin.tab.TypeEnum|nil
+  local tabtype = implementation.tabtype ---@type era.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type era.command.IDefinition|nil
   if definition == nil then

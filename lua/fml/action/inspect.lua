@@ -77,7 +77,7 @@ end
 ---@return nil
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
 
   if meta == nil then
     ark.reporter.info({
@@ -126,7 +126,7 @@ function M.inspect_window()
   local filetype = vim.bo[bufnr].filetype ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-  local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta_tab = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   local meta_win = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
   local meta_buf = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
 

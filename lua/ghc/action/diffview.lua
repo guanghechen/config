@@ -21,7 +21,7 @@ end
 ---@return nil
 function M.history_file()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = eve.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -37,9 +37,9 @@ end
 ---@return nil
 function M.toggle()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = eve.tab.resolve_type(tabnr, false) ---@type eve.builtin.tab.TypeEnum
+  local tabtype = era.tab.resolve_type(tabnr, false) ---@type era.tab.TypeEnum
 
-  if tabtype == eve.tab.Types.DIFFVIEW then
+  if tabtype == era.tab.Types.DIFFVIEW then
     require("diffview").emit("toggle_files")
   else
     require("diffview").open()

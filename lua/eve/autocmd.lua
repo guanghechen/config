@@ -3,7 +3,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
   callback = function(event)
     local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    eve.tab.on_buf_delete(tabnr)
+    era.tab.on_buf_delete(tabnr)
     era.buf.on_close(bufnr)
     eve.term.on_buf_deleted(bufnr)
   end,
@@ -17,7 +17,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     local bufnr = event.buf ---@type integer
 
     era.win.on_buf_enter(winnr, bufnr)
-    eve.tab.on_buf_enter(tabnr, bufnr)
+    era.tab.on_buf_enter(tabnr, bufnr)
 
     era.state.status.dirty_winline_nr:next(winnr)
     era.state.status.dirtier_statusline:mark_dirty()
@@ -87,7 +87,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
   group = ark.nvim.augroup("bootstrap_on_TabClosed"),
   callback = function(event)
     local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
-    eve.tab.on_close(tabnr)
+    era.tab.on_close(tabnr)
 
     era.state.status.dirtier_statusline:mark_dirty()
     era.state.status.dirtier_tabline:mark_dirty()
@@ -132,7 +132,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         end
       end
 
-      eve.tab.refresh()
+      era.tab.refresh()
       era.state.status.dirtier_statusline:mark_dirty()
       era.state.status.dirtier_tabline:mark_dirty()
     end)
@@ -161,7 +161,7 @@ vim.api.nvim_create_autocmd("VimResized", {
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    eve.tab.focus_win_fixed(tabnr)
+    era.tab.focus_win_fixed(tabnr)
 
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. tabnr)
@@ -204,7 +204,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
         return
       end
 
-      local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+      local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
       if era.win.is_sourcefile(winnr) then
         if meta ~= nil then
           meta.winnr_sourcefile:next(winnr)

@@ -123,7 +123,7 @@ local scheduler = ark.c.Scheduler.new({
 
 ark.fn.observe({ eve.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+  local winnr_fixed = era.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
   local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
   scheduler:schedule({ context = context })
 end, true)
@@ -133,7 +133,7 @@ vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
   callback = function()
     vim.schedule(function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_fixed = eve.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+      local winnr_fixed = era.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
       local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
       scheduler:schedule({ context = context })
     end)

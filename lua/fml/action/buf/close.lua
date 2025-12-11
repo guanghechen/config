@@ -8,9 +8,9 @@ local function close(tabnr, bufnrs)
     return
   end
 
-  eve.tab.on_bufs_close(tabnr, bufnrs)
+  era.tab.on_bufs_close(tabnr, bufnrs)
 
-  local bufnrs_unreferenced = eve.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+  local bufnrs_unreferenced = era.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
   for _, bufnr in ipairs(bufnrs_unreferenced) do
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
@@ -22,7 +22,7 @@ local M = {}
 ---@return nil
 function M.close()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     era.buf.close(bufnr)
@@ -91,7 +91,7 @@ end
 ---@return nil
 function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -102,17 +102,17 @@ function M.close_to_leftest()
     return
   end
 
-  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+  local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
-  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufs = meta.bufs ---@type era.tab.IBufItem[]
+  local bufnrs_visible = era.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile - 1, 1, -1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end
@@ -124,7 +124,7 @@ end
 ---@return nil
 function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -135,17 +135,17 @@ function M.close_to_rightest()
     return
   end
 
-  local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+  local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
-  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
-  local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufs = meta.bufs ---@type era.tab.IBufItem[]
+  local bufnrs_visible = era.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile + 1, #bufs, 1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
       table.insert(bufnrs_to_remove, buf.bufnr)
     end
@@ -157,7 +157,7 @@ end
 ---@return nil
 function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -169,7 +169,7 @@ function M.close_others()
   end
 
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = eve.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = era.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   for _, buf in ipairs(meta.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then

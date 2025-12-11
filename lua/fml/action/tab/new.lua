@@ -8,8 +8,8 @@ function M.new()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  eve.tab.set_type(tabnr, eve.tab.Types.NORMAL)
-  eve.tab.resolve(tabnr, false)
+  era.tab.set_type(tabnr, era.tab.Types.NORMAL)
+  era.tab.resolve(tabnr, false)
   return tabnr
 end
 
@@ -22,15 +22,15 @@ function M.new_with_buf()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  eve.tab.set_type(tabnr, eve.tab.Types.NORMAL)
+  era.tab.set_type(tabnr, era.tab.Types.NORMAL)
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
   if vim.bo[bufnr].buflisted then
-    eve.tab.add_buf(tabnr, bufnr, false)
+    era.tab.add_buf(tabnr, bufnr, false)
   end
 
-  eve.tab.resolve(tabnr, false)
+  era.tab.resolve(tabnr, false)
   return tabnr
 end
 

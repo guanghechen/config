@@ -191,7 +191,7 @@ local picker = ux.picker.ListComposer.new({
     if item ~= nil then
       local item_index = tonumber(item.uuid) ---@type integer|nil
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
       if item_index ~= nil and winnr_sourcefile ~= nil then
         local meta = era.win.resolve(winnr_sourcefile, false) ---@type era.win.IMeta|nil
@@ -241,7 +241,7 @@ local M = {}
 ---@return nil
 function M.history()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
   if winnr_sourcefile == nil then
     ark.reporter.error({

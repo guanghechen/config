@@ -47,7 +47,7 @@ local picker = ux.picker.FiletreeComposer.new({
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, buf_flagname, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
     callback(false)
     return

@@ -1,33 +1,33 @@
----@alias eve.builtin.tab.TypeEnum
+---@alias era.tab.TypeEnum
 ---| "diffview"
 ---| "normal"
 
----@class eve.builtin.tab.IBufItem
+---@class era.tab.IBufItem
 ---@field public bufnr                  integer
 ---@field public pinned                 boolean
 
----@class eve.builtin.tab.IMeta
----@field public bufs                   eve.builtin.tab.IBufItem[]
+---@class era.tab.IMeta
+---@field public bufs                   era.tab.IBufItem[]
 ---@field public winnr_fixed            ark.c.Observable
 ---@field public winnr_float            ark.c.Observable
 ---@field public winnr_sourcefile       ark.c.Observable
----@field public tabtype                eve.builtin.tab.TypeEnum
+---@field public tabtype                era.tab.TypeEnum
 
----@class eve.builtin.tab.Types
+---@class era.tab.Types
 local Types = {
   DIFFVIEW = "diffview",
   NORMAL = "normal",
 }
 
-local meta_map = {} ---@type table<integer, eve.builtin.tab.IMeta>
+local meta_map = {} ---@type table<integer, era.tab.IMeta>
 
----@class eve.builtin.tab
+---@class era.tab
 local M = {}
 
 M.Types = vim.deepcopy(Types)
 
 ---@param tabnr                         integer|nil
----@return eve.builtin.tab.TypeEnum|nil
+---@return era.tab.TypeEnum|nil
 function M.get_type(tabnr)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return nil
@@ -36,7 +36,7 @@ function M.get_type(tabnr)
 end
 
 ---@param tabnr                         integer
----@param tabtype                       eve.builtin.tab.TypeEnum|nil
+---@param tabtype                       era.tab.TypeEnum|nil
 ---@return nil
 function M.set_type(tabnr, tabtype)
   vim.t[tabnr].eve_type = tabtype
@@ -95,7 +95,7 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   local bufnr_set = {} ---@type table<integer, true>
   for _, tabnr in ipairs(tabnrs) do
-    local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+    local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
     if meta ~= nil then
       for _, buf in ipairs(meta.bufs) do
         bufnr_set[buf.bufnr] = true
@@ -114,10 +114,10 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
 end
 
 ---@param tabnr                         integer|nil
----@return eve.builtin.tab.IBufItem|nil
+---@return era.tab.IBufItem|nil
 ---@return integer|nil
 function M.retrieve_buf_sourcefile(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -148,14 +148,14 @@ end
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_fixed(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   return meta ~= nil and meta.winnr_fixed:snapshot() or nil ---@type integer|nil
 end
 
 ---@param tabnr                         integer|nil
 ---@return integer|nil
 function M.retrieve_winnr_float(tabnr)
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   return meta ~= nil and meta.winnr_float:snapshot() or nil ---@type integer|nil
 end
 
@@ -166,9 +166,9 @@ function M.retrieve_winnr_sourcefile(tabnr)
     return nil
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
-    meta = M.resolve(tabnr, true) ---@type eve.builtin.tab.IMeta|nil
+    meta = M.resolve(tabnr, true) ---@type era.tab.IMeta|nil
   end
   if meta == nil then
     return nil
@@ -196,7 +196,7 @@ end
 ---@param tabnr                         integer
 ---@param bufnr                         integer
 ---@param pinned                        boolean|nil
----@return eve.builtin.tab.IMeta|nil
+---@return era.tab.IMeta|nil
 function M.add_buf(tabnr, bufnr, pinned)
   if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.bo[bufnr].buflisted then
     return
@@ -217,7 +217,7 @@ function M.add_buf(tabnr, bufnr, pinned)
     end
   end
 
-  local buf = { bufnr = bufnr, pinned = pinned == true } ---@type eve.builtin.tab.IBufItem
+  local buf = { bufnr = bufnr, pinned = pinned == true } ---@type era.tab.IBufItem
   meta.bufs[#meta.bufs + 1] = buf
   if buf.pinned then
     M.rearrange_bufs(meta.bufs)
@@ -242,20 +242,20 @@ function M.has_buf(tabnr, bufnr)
   return false
 end
 
----@param bufs                          eve.builtin.tab.IBufItem[]
+---@param bufs                          era.tab.IBufItem[]
 ---@return nil
 function M.rearrange_bufs(bufs)
   local n, N = 0, #bufs ---@type integer, integer
-  local ordered = {} ---@type eve.builtin.tab.IBufItem[]
+  local ordered = {} ---@type era.tab.IBufItem[]
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if buf.pinned then
       n = n + 1
       ordered[n] = buf
     end
   end
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if not buf.pinned then
       n = n + 1
       ordered[n] = buf
@@ -279,12 +279,12 @@ function M.refresh()
   end
 end
 
----@param bufs                          eve.builtin.tab.IBufItem[]
+---@param bufs                          era.tab.IBufItem[]
 ---@return nil
 function M.refresh_bufs(bufs)
   local k, N = 1, #bufs ---@type integer, integer
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if vim.api.nvim_buf_is_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
@@ -298,22 +298,22 @@ end
 
 ---@param tabnr                         integer|nil
 ---@param force                         boolean
----@return eve.builtin.tab.IMeta|nil
+---@return era.tab.IMeta|nil
 function M.resolve(tabnr, force)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return nil
   end
 
-  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMeta|nil
+  local meta = meta_map[tabnr] ---@type era.tab.IMeta|nil
   if meta ~= nil and not force then
     return meta
   end
 
-  local bufs = {} ---@type eve.builtin.tab.IBufItem[]
+  local bufs = {} ---@type era.tab.IBufItem[]
   local bufnr_set = {} ---@type table<integer, boolean>
   if meta ~= nil then
     for _, buf in ipairs(meta.bufs) do
-      ---@cast buf                      eve.builtin.tab.IBufItem
+      ---@cast buf                      era.tab.IBufItem
       local bufnr = buf.bufnr ---@type integer
       local pinned = buf.pinned ---@type boolean
       if not bufnr_set[bufnr] and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buflisted then
@@ -332,14 +332,14 @@ function M.resolve(tabnr, force)
     end
   end
 
-  local tabtype = M.resolve_type(tabnr, force) ---@type eve.builtin.tab.TypeEnum
+  local tabtype = M.resolve_type(tabnr, force) ---@type era.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local winnr_fixed = ark.c.Observable.from_value(era.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.Observable
   local winnr_float = ark.c.Observable.from_value(era.win.is_float(winnr) and winnr or 0) ---@type ark.c.Observable
   local winnr_sourcefile = ark.c.Observable.from_value(era.win.is_sourcefile(winnr) and winnr or 0)
 
-  ---@type eve.builtin.tab.IMeta
+  ---@type era.tab.IMeta
   meta = {
     bufs = bufs,
     winnr_fixed = winnr_fixed,
@@ -353,9 +353,9 @@ end
 
 ---@param tabnr                         integer
 ---@param force                         boolean
----@return eve.builtin.tab.TypeEnum
+---@return era.tab.TypeEnum
 function M.resolve_type(tabnr, force)
-  local tabtype = M.get_type(tabnr) ---@type eve.builtin.tab.TypeEnum|nil
+  local tabtype = M.get_type(tabnr) ---@type era.tab.TypeEnum|nil
   if tabtype ~= nil and not force then
     return tabtype
   end
@@ -367,12 +367,12 @@ function M.resolve_type(tabnr, force)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == dot.filetype.DIFFVIEW_FILES or filetype == dot.filetype.DIFFVIEW_FILE_HISTORY then
-      tabtype = Types.DIFFVIEW ---@type eve.builtin.tab.TypeEnum
+      tabtype = Types.DIFFVIEW ---@type era.tab.TypeEnum
       break
     end
   end
 
-  tabtype = tabtype or Types.NORMAL ---@type eve.builtin.tab.TypeEnum
+  tabtype = tabtype or Types.NORMAL ---@type era.tab.TypeEnum
   M.set_type(tabnr, tabtype)
   return tabtype
 end
@@ -384,7 +384,7 @@ function M.on_buf_delete(tabnr)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -400,7 +400,7 @@ function M.on_buf_enter(tabnr, bufnr)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     return
   end
@@ -411,7 +411,7 @@ function M.on_buf_enter(tabnr, bufnr)
     end
   end
 
-  local buf = { bufnr = bufnr, pinned = false } ---@type eve.builtin.tab.IBufItem
+  local buf = { bufnr = bufnr, pinned = false } ---@type era.tab.IBufItem
   table.insert(meta.bufs, buf)
 end
 
@@ -427,15 +427,15 @@ function M.on_bufs_close(tabnr, bufnrs)
     return
   end
 
-  local meta = M.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+  local meta = M.resolve(tabnr, false) ---@type era.tab.IMeta|nil
   if meta == nil then
     return
   end
 
-  local bufs = meta.bufs ---@type eve.builtin.tab.IBufItem[]
+  local bufs = meta.bufs ---@type era.tab.IBufItem[]
   local k, N = 1, #bufs ---@type integer, integer
   for i = 1, N, 1 do
-    local buf = bufs[i] ---@type eve.builtin.tab.IBufItem
+    local buf = bufs[i] ---@type era.tab.IBufItem
     if not vim.list_contains(bufnrs, buf.bufnr) and vim.api.nvim_buf_is_valid(buf.bufnr) then
       bufs[k] = buf
       k = k + 1
@@ -457,7 +457,7 @@ function M.on_close(tabnr)
     return
   end
 
-  local meta = meta_map[tabnr] ---@type eve.builtin.tab.IMeta|nil
+  local meta = meta_map[tabnr] ---@type era.tab.IMeta|nil
   if meta ~= nil then
     meta_map[tabnr] = nil
     meta.winnr_fixed:dispose()

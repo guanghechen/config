@@ -649,7 +649,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     if bufnr ~= nil then
       last_bufnr = bufnr
       M.on_buf_enter(winnr, bufnr)
-      eve.tab.on_buf_enter(tabnr, bufnr)
+      era.tab.on_buf_enter(tabnr, bufnr)
     end
   end
 

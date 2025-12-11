@@ -55,7 +55,7 @@ end
 local rd_bufs = {} ---@type ux.nvimbar.component.buf.IBufItem[]
 
 ---Generate disambiguated filename display for buffers with same filenames
----@param bufs                          eve.builtin.tab.IBufItem[]
+---@param bufs                          era.tab.IBufItem[]
 ---@return table<integer, string> -- Map from bufnr to disambiguated filename
 local function resolve_disambiguations(bufs)
   local N = 0 ---@type integer
@@ -154,7 +154,7 @@ function M.bufs(position)
   local hln_bufc_hint = position .. "_bufc_hint" ---@type string
   local hln_bufc_info = position .. "_bufc_info" ---@type string
 
-  ---@param buf                         eve.builtin.tab.IBufItem
+  ---@param buf                         era.tab.IBufItem
   ---@param index                       integer
   ---@param total                       integer
   ---@param disambiguated_paths         table<integer, string>
@@ -256,7 +256,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@param buf                         eve.builtin.tab.IBufItem
+  ---@param buf                         era.tab.IBufItem
   ---@param index                       integer
   ---@param order                       integer
   ---@param marker                      string
@@ -362,19 +362,19 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
+      local meta_tab = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
       if meta_tab == nil then
         return "", "", false
       end
 
-      local bufs = meta_tab.bufs ---@type eve.builtin.tab.IBufItem[]
-      eve.tab.refresh_bufs(bufs)
+      local bufs = meta_tab.bufs ---@type era.tab.IBufItem[]
+      era.tab.refresh_bufs(bufs)
 
       if #bufs < 1 then
         return "", "", false
       end
 
-      local _, bufid_sourcefile = eve.tab.retrieve_buf_sourcefile(tabnr) ---@type eve.builtin.tab.IBufItem|nil, integer|nil
+      local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
       local bufid_middle = bufid_sourcefile or 1 ---@type integer
       local relative_orders = bufid_middle == bufid_sourcefile and eve.context.behavior.bufs_relative:snapshot() ---@type boolean
       local N = #bufs ---@type integer
