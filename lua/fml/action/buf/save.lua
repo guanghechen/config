@@ -17,7 +17,7 @@ function M.save(args)
   for _, bufnr in ipairs(bufnrs) do
     if vim.bo[bufnr].modified and vim.bo[bufnr].buftype == "" then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if #filepath > 0 and std.path.is_absolute(filepath) then
+      if #filepath > 0 and yoz.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)
 
         if not std.path.is_exist(filepath) then

@@ -83,12 +83,6 @@ end
 
 ---@param filepath                      string
 ---@return boolean
-function M.is_absolute(filepath)
-  return yoz.path.is_absolute(filepath)
-end
-
----@param filepath                      string
----@return boolean
 function M.is_dirpath(filepath)
   local N = #filepath ---@type integer
   if N < 1 then

@@ -271,7 +271,7 @@ function M:search(params)
     if relpath == nil or relpath == "" then
       return cwd
     end
-    if std.path.is_absolute(relpath) then
+    if yoz.path.is_absolute(relpath) then
       return relpath
     end
     return std.path.join(cwd, relpath)

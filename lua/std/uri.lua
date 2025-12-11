@@ -45,7 +45,7 @@ function M.file_location(location)
 
   ---@type string
   local relpath = (
-    std.path.is_absolute(filepath)
+    yoz.path.is_absolute(filepath)
     and yoz.path.is_descendant(std.path.workspace(), filepath)
     and std.path.relative(std.path.cwd(), filepath, "/")
   ) or filepath

@@ -529,7 +529,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
       for _, p in ipairs(filepaths) do
         local filepath, lnum, col, col_end = ark.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
         if lnum ~= nil then
-          if not std.path.is_absolute(filepath) then
+          if not yoz.path.is_absolute(filepath) then
             filepath = cwd .. dot.env.PATH_SEP .. filepath ---@type string
           end
 

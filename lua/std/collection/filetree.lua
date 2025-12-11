@@ -129,7 +129,7 @@ end
 function M.uuid(filepath)
   local uuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
   if uuid == nil then
-    if not std.path.is_absolute(filepath) then
+    if not yoz.path.is_absolute(filepath) then
       error(string.format("[%s.uuid] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
 
@@ -151,7 +151,7 @@ end
 function M.resolve(filepath, filetype, force)
   local nodeuuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
   if nodeuuid == nil then
-    if not std.path.is_absolute(filepath) then
+    if not yoz.path.is_absolute(filepath) then
       error(string.format("[%s.resolve] Cannot resolve UUID for relative path: %s", __module_name__, filepath))
     end
     nodeuuid = yoz.fn.md5(filepath) ---@type string
@@ -445,7 +445,7 @@ function M:reset(cwd, filepaths, with_locations)
   if with_locations then
     for _, p in ipairs(filepaths) do
       local filepath = ark.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
-      if std.path.is_absolute(filepath) then
+      if yoz.path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then
           self:insert_file_absolute(filepath)
         else
@@ -458,7 +458,7 @@ function M:reset(cwd, filepaths, with_locations)
     end
   else
     for _, filepath in ipairs(filepaths) do
-      if std.path.is_absolute(filepath) then
+      if yoz.path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then
           self:insert_file_absolute(filepath)
         else
