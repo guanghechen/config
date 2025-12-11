@@ -266,7 +266,7 @@ picker = ux.picker.FiletreeComposer.new({
       return
     end
 
-    local bufnr_sourcefile = eve.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
+    local bufnr_sourcefile = era.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
     if bufnr_sourcefile == nil then
       return
     end

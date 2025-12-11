@@ -275,7 +275,7 @@ function M:attach(winnr_source)
   if winnr_source == vim.api.nvim_get_current_win() then
     local mode = vim.fn.mode() ---@type string
     if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
-      local selected_text = eve.buf.retrieve_selected_text() ---@type string|nil
+      local selected_text = era.buf.retrieve_selected_text() ---@type string|nil
       if selected_text ~= nil and selected_text ~= "" then
         self.o_search_pattern:next(selected_text)
       end

@@ -6,7 +6,7 @@ local M = {}
 ---@return nil
 function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+  local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
 
   ark.reporter.info({
     from = __module_name__,
@@ -128,7 +128,7 @@ function M.inspect_window()
 
   local meta_tab = eve.tab.resolve(tabnr, false) ---@type eve.builtin.tab.IMeta|nil
   local meta_win = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
-  local meta_buf = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+  local meta_buf = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
 
   ark.reporter.info({
     from = __module_name__,

@@ -246,7 +246,7 @@ function M.on_closed(termmeta)
   state.detach_by_term_uuid(termmeta.uuid)
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    eve.buf.close(bufnr)
+    era.buf.close(bufnr)
   end
 
   if M.isvisible() then

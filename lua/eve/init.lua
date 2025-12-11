@@ -5,7 +5,7 @@ local __mods = {
   state = "eve.state",
 
   ai = "eve.builtin.ai",
-  buf = "eve.builtin.buf",
+  buf = "era.buf",
   clipboard = "eve.builtin.clipboard",
   git = "eve.state.git",
   lsp = "eve.builtin.lsp",
@@ -25,7 +25,7 @@ local __mods = {
 ---@field public state                  eve.state
 ---
 ---@field public ai                     eve.builtin.ai
----@field public buf                    eve.builtin.buf
+---@field public buf                    era.buf
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public git                    eve.state.git
 ---@field public lsp                    eve.builtin.lsp
@@ -89,7 +89,7 @@ function M.setup_breakpoints()
   std.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = eve.buf.loadfile(breakpoint.filepath) ---@type integer|nil
+      local bufnr = era.buf.loadfile(breakpoint.filepath) ---@type integer|nil
       if bufnr ~= nil then
         bps.set({
           condition = breakpoint.condition,

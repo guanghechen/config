@@ -219,7 +219,7 @@ picker = ux.picker.ListComposer.new({
         end
 
         local bufnr = item.data.bufnr ---@type integer
-        if not eve.buf.is_valid(bufnr) then
+        if not era.buf.is_valid(bufnr) then
           local data = fetch_data()
           picker:reset_data(data)
           return

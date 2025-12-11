@@ -177,7 +177,7 @@ function M.toggle()
       cwd = cwd,
       autofocus = true,
       permanent = true,
-      selected_text = eve.buf.retrieve_selected_text(),
+      selected_text = era.buf.retrieve_selected_text(),
     })
   else
     terminal:toggle_and_focus({
@@ -187,7 +187,7 @@ function M.toggle()
       cwd = termmeta.cwd,
       autofocus = true,
       permanent = true,
-      selected_text = eve.buf.retrieve_selected_text(),
+      selected_text = era.buf.retrieve_selected_text(),
     })
   end
 end

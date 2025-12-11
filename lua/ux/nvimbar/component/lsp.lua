@@ -63,7 +63,7 @@ end)
 ---@return string
 local function get_client_text()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if not eve.buf.is_valid(bufnr) then
+  if not era.buf.is_valid(bufnr) then
     return ""
   end
 

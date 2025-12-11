@@ -131,7 +131,7 @@ end
 ---@return nil
 function M.preview_json_visual()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local s_lnum, s_col, e_lnum, e_col = eve.buf.retrieve_visual_range()
+  local s_lnum, s_col, e_lnum, e_col = era.buf.retrieve_visual_range()
 
   local lines ---@type string[]
   if s_lnum == e_lnum then

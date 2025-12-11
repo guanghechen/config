@@ -4,7 +4,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     eve.tab.on_buf_delete(tabnr)
-    eve.buf.on_close(bufnr)
+    era.buf.on_close(bufnr)
     eve.term.on_buf_deleted(bufnr)
   end,
 })
@@ -119,10 +119,10 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local filepath = std.path.resolve(cwd, filename) ---@type string
         if std.path.is_exist_dirpath(filepath) then
-          local new_filepath = eve.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
+          local new_filepath = era.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true
-            if eve.buf.is_valid(bufnr) then
+            if era.buf.is_valid(bufnr) then
               local filetype = vim.bo[bufnr].filetype ---@type string
               vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
               vim.bo[bufnr].swapfile = false

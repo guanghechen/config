@@ -304,7 +304,7 @@ function M.__create_buf_as_needed__(termmeta)
         if _termmeta then
           eve.term.on_closed(_termmeta)
         else
-          eve.buf.close(bufnr)
+          era.buf.close(bufnr)
         end
       end)
     end,

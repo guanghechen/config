@@ -325,7 +325,7 @@ end
 ---@param tree                          std.collection.Tree
 ---@param callback                      fun(): nil
 local function fetch_symbols(tree, callback)
-  local bufnr = filepath_sourcefile and eve.buf.loadfile(filepath_sourcefile) or nil
+  local bufnr = filepath_sourcefile and era.buf.loadfile(filepath_sourcefile) or nil
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     callback()
     return
@@ -753,7 +753,7 @@ local function goto_symbol(nodeuuid)
   picker:close()
 
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  local target_bufnr = eve.buf.loadfile(filepath_sourcefile)
+  local target_bufnr = era.buf.loadfile(filepath_sourcefile)
   if not target_bufnr then
     return
   end

@@ -201,7 +201,7 @@ end
 
 ---@return nil
 function M.run_as_neovim_command()
-  local selected = eve.buf.retrieve_selected_text() ---@type string
+  local selected = era.buf.retrieve_selected_text() ---@type string
   if selected == "" then
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
     selected = table.concat(lines, "\n")

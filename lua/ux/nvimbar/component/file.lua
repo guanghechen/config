@@ -178,7 +178,7 @@ function M.path(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local meta = eve.buf.resolve(context.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+      local meta = era.buf.resolve(context.bufnr, false) ---@type era.buf.IMeta|nil
       if meta == nil then
         return "", "", true
       end

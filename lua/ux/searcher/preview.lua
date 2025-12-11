@@ -130,7 +130,7 @@ function M:dispose()
   self._scheduler_content = nil
 
   local ok1, error1 = pcall(eve.win.close, winnr)
-  local ok2, error2 = pcall(eve.buf.close, bufnr)
+  local ok2, error2 = pcall(era.buf.close, bufnr)
   local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
   if not (ok1 and ok2 and ok3) then
     ark.reporter.error({

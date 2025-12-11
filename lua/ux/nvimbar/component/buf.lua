@@ -1,6 +1,6 @@
 ---@class ux.nvimbar.component.buf.IBufItem
 ---@field public bufnr                  integer
----@field public meta                   eve.builtin.buf.IMeta
+---@field public meta                   era.buf.IMeta
 
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
@@ -24,8 +24,8 @@ end) or ""
 ---@param y                             ux.nvimbar.component.buf.IBufItem
 ---@return boolean
 local function cmp_rd_buf(x, y)
-  local mx = x.meta ---@type eve.builtin.buf.IMeta
-  local my = y.meta ---@type eve.builtin.buf.IMeta
+  local mx = x.meta ---@type era.buf.IMeta
+  local my = y.meta ---@type era.buf.IMeta
 
   if mx.filename ~= my.filename then
     return mx.filename < my.filename
@@ -60,7 +60,7 @@ local rd_bufs = {} ---@type ux.nvimbar.component.buf.IBufItem[]
 local function resolve_disambiguations(bufs)
   local N = 0 ---@type integer
   for _, buf in ipairs(bufs) do
-    local meta = eve.buf.resolve(buf.bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+    local meta = era.buf.resolve(buf.bufnr, false) ---@type era.buf.IMeta|nil
     if meta ~= nil then
       local item = { bufnr = buf.bufnr, meta = meta } ---@type ux.nvimbar.component.buf.IBufItem
       N = N + 1
@@ -162,7 +162,7 @@ function M.bufs(position)
   ---@return string
   local function render_bufc(buf, index, total, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
-    local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+    local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end
@@ -265,7 +265,7 @@ function M.bufs(position)
   ---@return string
   local function render_buf(buf, index, order, marker, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
-    local meta = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+    local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end

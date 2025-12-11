@@ -213,7 +213,7 @@ local picker = ux.picker.ListComposer.new({
             if history_item.bufnr ~= nil and vim.api.nvim_buf_is_valid(history_item.bufnr) then
               vim.api.nvim_win_set_buf(winnr_sourcefile, history_item.bufnr)
             elseif history_item.filepath ~= nil then
-              local bufnr_target = eve.buf.loadfile(history_item.filepath) ---@type integer|nil
+              local bufnr_target = era.buf.loadfile(history_item.filepath) ---@type integer|nil
               if bufnr_target ~= nil then
                 history_item.bufnr = bufnr_target ---@type integer
                 vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr_target)
@@ -319,7 +319,7 @@ function M.history_backward()
     end
 
     if item.filepath ~= nil then
-      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
+      bufnr_target = era.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer
         break
@@ -376,7 +376,7 @@ function M.history_forward()
     end
 
     if item.filepath ~= nil and std.path.is_exist_filepath(item.filepath) then
-      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
+      bufnr_target = era.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer
         break

@@ -596,7 +596,7 @@ end
 ---@param col                           ?integer
 ---@return boolean
 function M.open_filepath(winnr_source, filepath, lnum, col)
-  local bufnr = eve.buf.loadfile(filepath) ---@type integer|nil
+  local bufnr = era.buf.loadfile(filepath) ---@type integer|nil
   if bufnr == nil then
     return false
   end
@@ -645,7 +645,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
   local tabnr = vim.api.nvim_win_get_tabpage(winnr) ---@type integer
   local last_bufnr ---@type integer|nil
   for _, filepath in ipairs(filepaths) do
-    local bufnr = eve.buf.loadfile(filepath) ---@type integer|nil
+    local bufnr = era.buf.loadfile(filepath) ---@type integer|nil
     if bufnr ~= nil then
       last_bufnr = bufnr
       M.on_buf_enter(winnr, bufnr)
@@ -713,7 +713,7 @@ function M.on_buf_enter(winnr, bufnr)
     return
   end
 
-  local meta_buf = eve.buf.resolve(bufnr, false) ---@type eve.builtin.buf.IMeta|nil
+  local meta_buf = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
   if meta_buf == nil then
     return
   end

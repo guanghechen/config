@@ -201,14 +201,14 @@ local keymaps = {
           key = "<C-a>q",
           aliases = { "<D-q>", "<M-q>" },
           callback = function()
-            eve.buf.close(bufnr)
+            era.buf.close(bufnr)
           end,
         },
         {
           modes = { "n" },
           key = "q",
           callback = function()
-            eve.buf.close(bufnr)
+            era.buf.close(bufnr)
           end,
         },
       }
@@ -297,7 +297,7 @@ local keymaps = {
     key = "ghr",
     desc = "git: reset hunk",
     callback = function()
-      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      local lnum_start, lnum_end = era.buf.retrieve_visual_lnum_range() ---@type integer, integer
       require("gitsigns").reset_hunk({ lnum_start, lnum_end })
     end,
   },
@@ -314,7 +314,7 @@ local keymaps = {
     key = "ghs",
     desc = "git: stage hunk",
     callback = function()
-      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      local lnum_start, lnum_end = era.buf.retrieve_visual_lnum_range() ---@type integer, integer
       require("gitsigns").stage_hunk({ lnum_start, lnum_end })
     end,
   },
@@ -335,7 +335,7 @@ local keymaps = {
     key = "ghu",
     desc = "git: unstage hunk",
     callback = function()
-      local lnum_start, lnum_end = eve.buf.retrieve_visual_lnum_range()
+      local lnum_start, lnum_end = era.buf.retrieve_visual_lnum_range()
       require("gitsigns").stage_hunk({ lnum_start, lnum_end })
     end,
   },

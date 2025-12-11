@@ -253,7 +253,7 @@ end)
 
 ---@return nil
 local function focus()
-  local selected_text = eve.buf.retrieve_selected_text() ---@type string
+  local selected_text = era.buf.retrieve_selected_text() ---@type string
   searcher:focus()
 
   vim.schedule(function()

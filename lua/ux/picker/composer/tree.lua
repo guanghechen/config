@@ -1158,7 +1158,7 @@ function M:__retrieve_lnum_range__()
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
     if mode == "v" or mode == "V" or mode == "\22" then
-      local lnum_from, lnum_end = eve.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      local lnum_from, lnum_end = era.buf.retrieve_visual_lnum_range() ---@type integer, integer
       return lnum_from, lnum_end
     end
   end

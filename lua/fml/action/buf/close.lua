@@ -25,21 +25,21 @@ function M.close()
   local winnr = eve.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    eve.buf.close(bufnr)
+    era.buf.close(bufnr)
     return
   end
 
   local meta = eve.win.resolve(winnr, false) ---@type eve.builtin.win.IMeta|nil
   if meta == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    eve.buf.close(bufnr)
+    era.buf.close(bufnr)
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
   local history = meta.history ---@type ark.c.History|nil
   if history == nil then
-    eve.buf.close(bufnr)
+    era.buf.close(bufnr)
     return
   end
 
@@ -69,7 +69,7 @@ function M.close()
         break
       end
 
-      bufnr_target = eve.buf.loadfile(item.filepath) ---@type integer|nil
+      bufnr_target = era.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer
         break

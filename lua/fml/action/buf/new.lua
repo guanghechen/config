@@ -17,7 +17,7 @@ function M.new()
   vim.bo[bufnr].modifiable = true
 
   local cwd = std.path.cwd() ---@type string
-  local filepath = eve.buf.pick_filepath(cwd) ---@type string|nil
+  local filepath = era.buf.pick_filepath(cwd) ---@type string|nil
   if filepath ~= nil then
     vim.api.nvim_buf_set_name(bufnr, filepath)
   end

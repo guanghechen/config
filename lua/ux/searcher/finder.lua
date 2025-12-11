@@ -87,7 +87,7 @@ function M:dispose()
 
   local ok1, error1 = pcall(linecount.dispose, linecount)
   local ok2, error2 = pcall(eve.win.close, winnr)
-  local ok3, error3 = pcall(eve.buf.close, bufnr)
+  local ok3, error3 = pcall(era.buf.close, bufnr)
   if not (ok1 and ok2 and ok3) then
     ark.reporter.error({
       from = fullname,

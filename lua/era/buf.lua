@@ -1,6 +1,6 @@
-local __module_name__ = "eve.builtin.buf" ---@type string
+local __module_name__ = "era.buf" ---@type string
 
----@alias eve.builtin.buf.TypeEnum
+---@alias era.buf.TypeEnum
 ---| ""
 ---| "acwrite"
 ---| "help"
@@ -12,7 +12,7 @@ local __module_name__ = "eve.builtin.buf" ---@type string
 
 local BUFFER_CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
 
----@class eve.builtin.buf.Types
+---@class era.buf.Types
 local Types = {
   EMPTY = "",
   ACWRITE = "acwrite",
@@ -24,7 +24,7 @@ local Types = {
   PROMPT = "prompt",
 }
 
----@class eve.builtin.buf.IMeta
+---@class era.buf.IMeta
 ---@field public dirpath_pieces         string[]
 ---@field public filename               string
 ---@field public filepath               string
@@ -41,9 +41,9 @@ local buftype_attrs = {
   },
 }
 
-local meta_map = {} ---@type table<integer, eve.builtin.buf.IMeta|nil>
+local meta_map = {} ---@type table<integer, era.buf.IMeta|nil>
 
----@class eve.builtin.buf
+---@class era.buf
 local M = {}
 
 M.CONTENT_SPLITLINE = BUFFER_CONTENT_SPLITLINE ---@type string
@@ -167,7 +167,7 @@ end
 
 ---@param bufnr                         integer|nil
 ---@param force                         boolean
----@return eve.builtin.buf.IMeta|nil
+---@return era.buf.IMeta|nil
 function M.resolve(bufnr, force)
   if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return nil
@@ -182,7 +182,7 @@ function M.resolve(bufnr, force)
     return nil
   end
 
-  local meta = meta_map[bufnr] ---@type eve.builtin.buf.IMeta|nil
+  local meta = meta_map[bufnr] ---@type era.buf.IMeta|nil
   if meta ~= nil and meta.filepath == filepath and not force then
     return meta
   end
@@ -196,7 +196,7 @@ function M.resolve(bufnr, force)
   local relpath = std.path.relative(cwd, filepath) ---@type string
 
   if meta == nil then
-    ---@type eve.builtin.buf.IMeta
+    ---@type era.buf.IMeta
     meta = {
       dirpath_pieces = dirpath_pieces,
       filename = filename,
