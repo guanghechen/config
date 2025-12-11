@@ -30,6 +30,10 @@ function M.is_absolute(filepath) end
 ---@return boolean
 function M.is_descendant(from, to) end
 
+---@param filepath                      string
+---@return boolean
+function M.is_dirpath(filepath) end
+
 ---@param from                          string
 ---@param to                            string
 ---@param keep_trailing_slash           boolean

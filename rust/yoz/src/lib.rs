@@ -120,6 +120,10 @@ fn path_module(lua: &Lua) -> LuaResult<LuaTable> {
             })?,
         ),
         (
+            "is_dirpath",
+            f(lua, |_, filepath: String| Ok(path::is_dirpath(&filepath)))?,
+        ),
+        (
             "join",
             f(
                 lua,
