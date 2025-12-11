@@ -107,7 +107,7 @@ function M.save(args)
         return false
       end
 
-      if std.path.is_exist_dirpath(next_filepath) then
+      if yoz.path.is_exist_directory(next_filepath) then
         ark.reporter.error({
           from = __module_name__,
           subject = "save",

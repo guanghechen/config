@@ -275,7 +275,7 @@ local function set_workspace_watchers(workspace)
   end
 
   local logs_dir = std.path.join(git_dir, "logs") ---@type string
-  if std.path.is_exist_dirpath(logs_dir) then
+  if yoz.path.is_exist_directory(logs_dir) then
     local head_log_path = std.path.join(logs_dir, "HEAD") ---@type string
     if std.path.is_exist(head_log_path) then
       attach_watch(head_log_path, function()
@@ -284,7 +284,7 @@ local function set_workspace_watchers(workspace)
     end
   end
 
-  if std.path.is_exist_dirpath(workspace) then
+  if yoz.path.is_exist_directory(workspace) then
     attach_watch(workspace, function()
       refresh_debounced_fs()
     end, "watch_git_workspace")

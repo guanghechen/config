@@ -118,7 +118,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
       for _, bufnr in ipairs(bufnrs) do
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local filepath = std.path.resolve(cwd, filename) ---@type string
-        if std.path.is_exist_dirpath(filepath) then
+        if yoz.path.is_exist_directory(filepath) then
           local new_filepath = era.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true

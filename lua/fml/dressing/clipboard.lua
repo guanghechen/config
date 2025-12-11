@@ -87,7 +87,7 @@ vim.paste = function(lines, phase)
       if #text > 0 then
         if std.path.is_exist_filepath(text) then
           table.insert(filepaths, text)
-        elseif std.path.is_exist_dirpath(text) then
+        elseif yoz.path.is_exist_directory(text) then
           table.insert(dirpaths, text)
         else
           is_all_paths = false
@@ -161,7 +161,7 @@ vim.paste = function(lines, phase)
     :gsub("file://", "") -- remove "file://"
     :gsub("%c", "") -- remove control characters
   local is_filepath = #text > 0 and std.path.is_exist_filepath(text) ---@type boolean
-  local is_dirpath = #text > 0 and std.path.is_exist_dirpath(text) ---@type boolean
+  local is_dirpath = #text > 0 and yoz.path.is_exist_directory(text) ---@type boolean
   if is_filepath or is_dirpath then
     local cwd = std.path.cwd() ---@type string
     local dirpath = cwd ---@type string

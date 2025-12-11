@@ -281,7 +281,7 @@ function M.find_files_in_directory()
   if winnr_source ~= nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local dirpath = std.path.is_exist_dirpath(filepath) and filepath or std.path.dirname(filepath) ---@type string
+    local dirpath = yoz.path.is_exist_directory(filepath) and filepath or std.path.dirname(filepath) ---@type string
     attach(picker, dirpath)
   end
   picker:focus()

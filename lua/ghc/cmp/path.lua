@@ -355,7 +355,7 @@ function M:get_completions(context, callback)
   end
 
   -- Check if directory exists
-  if not std.path.is_exist_dirpath(dirname) then
+  if not yoz.path.is_exist_directory(dirname) then
     return callback({ is_incomplete_forward = false, is_incomplete_backward = false, items = {} })
   end
 

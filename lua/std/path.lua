@@ -117,12 +117,6 @@ function M.is_exist(filepath)
   return yoz.path.is_exist(filepath)
 end
 
----@param dirpath                       string
----@return boolean
-function M.is_exist_dirpath(dirpath)
-  return yoz.path.is_exist_directory(dirpath)
-end
-
 ---@param filepath                      string
 ---@return boolean
 function M.is_exist_filepath(filepath)

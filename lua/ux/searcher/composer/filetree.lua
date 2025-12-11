@@ -1982,7 +1982,7 @@ function M:__search_internal__()
   local cwd = rootpath ---@type string
   local specified_filepath = nil ---@type string|nil
 
-  if not std.path.is_exist_dirpath(rootpath) then
+  if not yoz.path.is_exist_directory(rootpath) then
     cwd = std.path.dirname(rootpath) ---@type string
     specified_filepath = rootpath ---@type string
   end
