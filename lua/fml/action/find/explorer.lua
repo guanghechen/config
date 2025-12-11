@@ -740,7 +740,7 @@ function M.find_explorer(specified_filepath)
       local dirpath = std.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
-    elseif std.path.is_exist_filepath(specified_filepath) then
+    elseif yoz.path.is_exist_file(specified_filepath) then
       local dirpath = std.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
@@ -755,7 +755,7 @@ function M.find_explorer(specified_filepath)
       if #filepath > 0 then
         if yoz.path.is_exist_directory(filepath) then
           state_cwd:next(filepath, { force = true })
-        elseif std.path.is_exist_filepath(filepath) then
+        elseif yoz.path.is_exist_file(filepath) then
           state_cwd:next(std.path.dirname(filepath), { force = true })
         end
       end

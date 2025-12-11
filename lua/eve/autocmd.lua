@@ -24,7 +24,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     era.state.status.dirtier_tabline:mark_dirty()
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if yoz.path.is_absolute(filepath) and std.path.is_exist_filepath(filepath) then
+    if yoz.path.is_absolute(filepath) and yoz.path.is_exist_file(filepath) then
       local uuid = std.Filetree.uuid(filepath) ---@type string
       eve.context.frecency.files:access(uuid)
     end

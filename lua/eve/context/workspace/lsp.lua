@@ -176,12 +176,12 @@ function M.get_python_bin_path()
   local python_path ---@type string
 
   python_path = std.path.join(venv_path, python_name) ---@type string
-  if std.path.is_exist_filepath(python_path) then
+  if yoz.path.is_exist_file(python_path) then
     return python_path, bin_home
   end
 
   python_path = std.path.join(bin_home, python_name) ---@type string
-  if std.path.is_exist_filepath(python_path) then
+  if yoz.path.is_exist_file(python_path) then
     return python_path, bin_home
   end
 

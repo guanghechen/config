@@ -154,7 +154,7 @@ end
 vim.list_extend(final_specs, require("ghc.plugins._extra"))
 
 local lazypath = std.path.normalize(dot.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-if not std.path.is_exist(std.path.join(lazypath, ".git")) then
+if not yoz.path.is_exist(std.path.join(lazypath, ".git")) then
   local repo = "https://github.com/guanghechen/mirror"
   vim.fn.system({
     "git",

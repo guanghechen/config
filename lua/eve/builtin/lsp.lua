@@ -112,7 +112,7 @@ end
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
     local filepath = dirpath .. dot.env.PATH_SEP .. filename ---@type string
-    if std.path.is_exist_filepath(filepath) then
+    if yoz.path.is_exist_file(filepath) then
       return filepath
     end
   end
@@ -163,7 +163,7 @@ function M.locate_mason_bin_path(bin, silent)
   local resolved_binname = dot.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
   local filepath = std.path.normalize(root .. "/bin/" .. resolved_binname) ---@type string
 
-  if std.path.is_exist_filepath(filepath) then
+  if yoz.path.is_exist_file(filepath) then
     return filepath
   end
 

@@ -524,7 +524,7 @@ end
 
 function M:resolve(item, callback)
   local full_path = item.data.full_path
-  if not full_path or not std.path.is_exist_filepath(full_path) then
+  if not full_path or not yoz.path.is_exist_file(full_path) then
     return callback(item)
   end
 

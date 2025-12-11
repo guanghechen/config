@@ -79,7 +79,7 @@ local function fetch_data(winnr_sourcefile)
       items[#items + 1] = item
     else
       local filepath = history_item.filepath ---@type string|nil
-      if filepath ~= nil and std.path.is_exist_filepath(filepath) then
+      if filepath ~= nil and yoz.path.is_exist_file(filepath) then
         local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
         local relative_filepath = std.path.relative(cwd, filepath, '/') ---@type string
         local filename = yoz.path.basename(filepath) ---@type string
@@ -375,7 +375,7 @@ function M.history_forward()
       break
     end
 
-    if item.filepath ~= nil and std.path.is_exist_filepath(item.filepath) then
+    if item.filepath ~= nil and yoz.path.is_exist_file(item.filepath) then
       bufnr_target = era.buf.loadfile(item.filepath) ---@type integer|nil
       if bufnr_target ~= nil then
         item.bufnr = bufnr_target ---@type integer

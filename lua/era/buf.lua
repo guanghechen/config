@@ -99,7 +99,7 @@ function M.loadfile(filepath)
     return bufnr_sourcefile
   end
 
-  if std.path.is_exist_filepath(filepath) then
+  if yoz.path.is_exist_file(filepath) then
     local bufnr = vim.fn.bufadd(filepath) ---@type integer
     if bufnr == 0 or not vim.api.nvim_buf_is_valid(bufnr) then
       return nil

@@ -234,7 +234,7 @@ local function set_workspace_watchers(workspace)
   end
 
   local git_dir = std.path.join(workspace, ".git") ---@type string
-  if not std.path.is_exist(git_dir) then
+  if not yoz.path.is_exist(git_dir) then
     return
   end
 
@@ -261,14 +261,14 @@ local function set_workspace_watchers(workspace)
   end
 
   local index_path = std.path.join(git_dir, "index") ---@type string
-  if std.path.is_exist(index_path) then
+  if yoz.path.is_exist(index_path) then
     attach_watch(index_path, function()
       refresh_debounced_general()
     end, "watch_git_index")
   end
 
   local head_path = std.path.join(git_dir, "HEAD") ---@type string
-  if std.path.is_exist(head_path) then
+  if yoz.path.is_exist(head_path) then
     attach_watch(head_path, function()
       refresh_debounced_general()
     end, "watch_git_head")
@@ -277,7 +277,7 @@ local function set_workspace_watchers(workspace)
   local logs_dir = std.path.join(git_dir, "logs") ---@type string
   if yoz.path.is_exist_directory(logs_dir) then
     local head_log_path = std.path.join(logs_dir, "HEAD") ---@type string
-    if std.path.is_exist(head_log_path) then
+    if yoz.path.is_exist(head_log_path) then
       attach_watch(head_log_path, function()
         refresh_debounced_general()
       end, "watch_git_logs")

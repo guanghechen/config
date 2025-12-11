@@ -81,18 +81,6 @@ function M.dirname(filepath)
   return yoz.path.dirname(filepath, false, SEP)
 end
 
----@param filepath                      string
----@return boolean
-function M.is_exist(filepath)
-  return yoz.path.is_exist(filepath)
-end
-
----@param filepath                      string
----@return boolean
-function M.is_exist_filepath(filepath)
-  return yoz.path.is_exist_file(filepath)
-end
-
 ---@return boolean
 function M.is_git_repo()
   return IS_GIT_REPO

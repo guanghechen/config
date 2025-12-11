@@ -16,7 +16,7 @@ local function rename(params)
   local isdir = params.isdir or false ---@type boolean
   local force = params.force or false ---@type boolean
 
-  if not std.path.is_exist(from) then
+  if not yoz.path.is_exist(from) then
     ark.reporter.error({
       from = __module_name__,
       subject = "source_not_exist",

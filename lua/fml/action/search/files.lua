@@ -316,13 +316,13 @@ end
 ---@param filepath                      string|nil
 ---@return nil
 function M.search_in_file(filepath)
-  if not filepath or not std.path.is_exist_filepath(filepath) then
+  if not filepath or not yoz.path.is_exist_file(filepath) then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_source = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_source ~= nil then
       local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
       filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if std.path.is_exist_filepath(filepath) then
+      if yoz.path.is_exist_file(filepath) then
         attach(searcher, filepath)
       end
     end

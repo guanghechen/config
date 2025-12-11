@@ -1970,7 +1970,7 @@ end
 function M:__search_internal__()
   local rootpath = self.rootpath:snapshot() ---@type string
 
-  if not std.path.is_exist(rootpath) then
+  if not yoz.path.is_exist(rootpath) then
     ark.reporter.error({
       from = self.fullname,
       subject = "__search__",

@@ -82,7 +82,7 @@ function M:render(bufnr, filepath, force)
       if filetype == "" then
         filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
       end
-    elseif std.path.is_exist_filepath(filepath) then
+    elseif yoz.path.is_exist_file(filepath) then
       lines = std.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
       filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
     else

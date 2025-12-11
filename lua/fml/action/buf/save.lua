@@ -20,7 +20,7 @@ function M.save(args)
       if #filepath > 0 and yoz.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)
 
-        if not std.path.is_exist(filepath) then
+        if not yoz.path.is_exist(filepath) then
           table.insert(bufnrs_new_file, bufnr)
         end
       end
@@ -95,7 +95,7 @@ function M.save(args)
         check()
       end
 
-      if std.path.is_exist_filepath(next_filepath) then
+      if yoz.path.is_exist_file(next_filepath) then
         vim.ui.select({ "Yes", "No" }, {
           name = __module_name__,
           prompt = "The file is already existed, do you want to override it?",

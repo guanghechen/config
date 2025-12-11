@@ -85,7 +85,7 @@ vim.paste = function(lines, phase)
         :gsub("file://", "") -- remove "file://"
         :gsub("%c", "") -- remove control characters
       if #text > 0 then
-        if std.path.is_exist_filepath(text) then
+        if yoz.path.is_exist_file(text) then
           table.insert(filepaths, text)
         elseif yoz.path.is_exist_directory(text) then
           table.insert(dirpaths, text)
@@ -160,7 +160,7 @@ vim.paste = function(lines, phase)
     :match("^'?(.-)'?$") -- remove single quotes
     :gsub("file://", "") -- remove "file://"
     :gsub("%c", "") -- remove control characters
-  local is_filepath = #text > 0 and std.path.is_exist_filepath(text) ---@type boolean
+  local is_filepath = #text > 0 and yoz.path.is_exist_file(text) ---@type boolean
   local is_dirpath = #text > 0 and yoz.path.is_exist_directory(text) ---@type boolean
   if is_filepath or is_dirpath then
     local cwd = std.path.cwd() ---@type string

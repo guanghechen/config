@@ -230,7 +230,7 @@ function M.size(position)
         return "", "", true
       end
 
-      if not std.path.is_exist(context.filepath) then
+      if not yoz.path.is_exist(context.filepath) then
         return "", "", true
       end
 

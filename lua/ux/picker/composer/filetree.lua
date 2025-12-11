@@ -396,7 +396,7 @@ function M.new(props)
         local isdir = yoz.path.is_dirpath(filepath) ---@type boolean
         filepath = std.path.resolve(rootpath, filepath) ---@type string
 
-        if std.path.is_exist(filepath) then
+        if yoz.path.is_exist(filepath) then
           ark.reporter.error({
             from = fullname,
             subject = "create_node",
@@ -633,11 +633,11 @@ function M.new(props)
 
         -- Ensure destination directory exists
         local dest_dir = std.path.dirname(next_filepath)
-        if not std.path.is_exist(dest_dir) then
+        if not yoz.path.is_exist(dest_dir) then
           dot.env.mkdirs(dest_dir, true)
         end
 
-        if std.path.is_exist(next_filepath) then
+        if yoz.path.is_exist(next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
             prompt = string.format('File "%s" already exists. Overwrite?', next_filename),
@@ -755,11 +755,11 @@ function M.new(props)
 
         -- Ensure destination directory exists
         local dest_dir = std.path.dirname(next_filepath)
-        if not std.path.is_exist(dest_dir) then
+        if not yoz.path.is_exist(dest_dir) then
           dot.env.mkdirs(dest_dir, true)
         end
 
-        if std.path.is_exist(next_filepath) then
+        if yoz.path.is_exist(next_filepath) then
           -- Ask user if they want to overwrite
           vim.ui.select({ "No", "Yes" }, {
             prompt = string.format('File "%s" already exists. Overwrite?', yoz.path.basename(next_filepath)),

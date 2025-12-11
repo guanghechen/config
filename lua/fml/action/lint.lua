@@ -201,7 +201,7 @@ function M.spellcheck_register()
   local filepath = yoz.path.locate_nearest(filepath_buf, { ".cspell.json" })
     or std.path.join(std.path.workspace(), ".cspell.json")
 
-  if not std.path.is_exist(filepath) then
+  if not yoz.path.is_exist(filepath) then
     local data = {
       version = "0.2",
       language = "en",
