@@ -1,3 +1,5 @@
+local __module_name__ = "dot.env" ---@type string
+
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
 local IS_MAC = os_name == "Darwin" ---@type boolean
@@ -58,6 +60,45 @@ M.HOME_MASON = vim.env.MASON or (M.HOME_NVIM_DATA .. PATH_SEP .. "mason") ---@ty
 M.HOME_MASON_BIN = M.HOME_MASON .. PATH_SEP .. "bin" ---@type string
 if not vim.g.vscode and vim.uv.fs_stat(M.HOME_MASON_BIN) then
   vim.env.PATH = M.HOME_MASON_BIN .. PATH_ENV_SEP .. vim.env.PATH
+end
+
+---@param dirpath                       string
+---@return string|nil
+function M.locate_gitroot(dirpath)
+  local git_path = yoz.path.locate_nearest(dirpath, { ".git" }) ---@type string|nil
+  if git_path ~= nil then
+    local SEP = package.config:sub(1, 1) ---@type string
+    return yoz.path.dirname(git_path, false, SEP)
+  end
+
+  local ok, output = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
+  local trimmed_output = vim.trim(output or "")
+  local shell_error = vim.v.shell_error ---@type integer
+
+  if ok and shell_error == 0 and trimmed_output ~= "" and yoz.path.is_exist_dirpath(trimmed_output) then
+    return trimmed_output
+  end
+
+  local message = "Failed to locate git root"
+  local detail_payload = {
+    dirpath = dirpath,
+    output = trimmed_output,
+    shell_error = shell_error,
+    error = ok and nil or output,
+  }
+  local ok_json, detail_json = pcall(vim.json.encode, detail_payload)
+  local details_text = ok_json and detail_json or vim.inspect(detail_payload, { newline = "\n", indent = "  " })
+  local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
+
+  vim.notify(text, vim.log.levels.WARN, {
+    title = string.format("%s │ locate_gitroot", __module_name__),
+    group = string.format("%s:locate_gitroot", __module_name__),
+    timeout = 3000,
+    message = text,
+    anonymous = false,
+    silent = true,
+  })
+  return nil
 end
 
 ---@param filepath                      string

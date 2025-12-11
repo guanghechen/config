@@ -1,44 +1,5 @@
 local __module_name__ = "bootstrap" ---@type string
 
----@param dirpath                       string
----@return string|nil
-function vim.fn.locate_gitroot(dirpath)
-  local git_path = yoz.path.locate_nearest(dirpath, { ".git" }) ---@type string|nil
-  if git_path ~= nil then
-    local SEP = package.config:sub(1, 1) ---@type string
-    return yoz.path.dirname(git_path, false, SEP)
-  end
-
-  local ok, output = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
-  local trimmed_output = vim.trim(output or "")
-  local shell_error = vim.v.shell_error ---@type integer
-
-  if ok and shell_error == 0 and trimmed_output ~= "" and yoz.path.is_exist_dirpath(trimmed_output) then
-    return trimmed_output
-  end
-
-  local message = "Failed to locate git root"
-  local detail_payload = {
-    dirpath = dirpath,
-    output = trimmed_output,
-    shell_error = shell_error,
-    error = ok and nil or output,
-  }
-  local ok_json, detail_json = pcall(vim.json.encode, detail_payload)
-  local details_text = ok_json and detail_json or vim.inspect(detail_payload, { newline = "\n", indent = "  " })
-  local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
-
-  vim.notify(text, vim.log.levels.WARN, {
-    title = string.format("%s │ locate_gitroot", __module_name__),
-    group = string.format("%s:locate_gitroot", __module_name__),
-    timeout = 3000,
-    message = text,
-    anonymous = false,
-    silent = true,
-  })
-  return nil
-end
-
 ---@class bootstrap
 local M = {}
 
@@ -72,8 +33,8 @@ function M.setup_workspace()
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
 
-    local A = vim.fn.locate_gitroot(p)
-    local B = vim.fn.locate_gitroot(cwd)
+    local A = dot.env.locate_gitroot(p)
+    local B = dot.env.locate_gitroot(cwd)
 
     if A == nil then
       local ok, err = pcall(function()
