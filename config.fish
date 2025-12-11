@@ -48,6 +48,7 @@ set -gx VIMRUNTIME "$NEOVIM_HOME/share/nvim/runtime"
 set -gx LG_CONFIG_FILE "$XDG_CONFIG_HOME/lazygit/config.yml,$XDG_CONFIG_HOME/lazygit/local/theme.yml"
 set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8
+set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
 set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
