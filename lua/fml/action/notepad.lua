@@ -29,8 +29,8 @@ local function fetch_source_data()
   local current_source = widget:get_source() ---@type std.t.INotepadSource
   local items = {} ---@type fml.action.notepad.ISourceItem[]
 
-  for _, config in ipairs(eve.state.notepad.source_configs) do
-    local source = eve.state.notepad.retrieve_source(config.name)
+  for _, config in ipairs(era.state.notepad.source_configs) do
+    local source = era.state.notepad.retrieve_source(config.name)
     items[#items + 1] = {
       uuid = config.name,
       text = config.name,
@@ -155,7 +155,7 @@ end
 ---@return nil
 function M.create()
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source, config = eve.state.notepad.retrieve_source(source_name)
+  local source, config = era.state.notepad.retrieve_source(source_name)
 
   local prefix = config.default_item_name() ---@type string
   local name_default = string.format("%s %d", prefix, math.max(1, widget:size() + 1)) ---@type string
@@ -415,7 +415,7 @@ function M.source_prev()
   local current_source = widget:get_source() ---@type std.t.INotepadSource
   local current_index = nil ---@type integer|nil
 
-  for i, config in ipairs(eve.state.notepad.source_configs) do
+  for i, config in ipairs(era.state.notepad.source_configs) do
     if config.name == current_source.name then
       current_index = i
       break
@@ -428,10 +428,10 @@ function M.source_prev()
 
   local prev_index = current_index - 1
   if prev_index < 1 then
-    prev_index = #eve.state.notepad.source_configs
+    prev_index = #era.state.notepad.source_configs
   end
 
-  local prev_config = eve.state.notepad.source_configs[prev_index]
+  local prev_config = era.state.notepad.source_configs[prev_index]
   widget:attach(prev_config.name)
   dirty_data = true
   ark.reporter.info({
@@ -446,7 +446,7 @@ function M.source_next()
   local current_source = widget:get_source() ---@type std.t.INotepadSource
   local current_index = nil ---@type integer|nil
 
-  for i, config in ipairs(eve.state.notepad.source_configs) do
+  for i, config in ipairs(era.state.notepad.source_configs) do
     if config.name == current_source.name then
       current_index = i
       break
@@ -458,11 +458,11 @@ function M.source_next()
   end
 
   local next_index = current_index + 1
-  if next_index > #eve.state.notepad.source_configs then
+  if next_index > #era.state.notepad.source_configs then
     next_index = 1
   end
 
-  local next_config = eve.state.notepad.source_configs[next_index]
+  local next_config = era.state.notepad.source_configs[next_index]
   widget:attach(next_config.name)
   dirty_data = true
   ark.reporter.info({
@@ -621,7 +621,7 @@ engine_picker = ux.picker.ListComposer.new({
     composer:close()
     if item ~= nil then
       local current_source = widget:get_source()
-      local current_config = eve.state.notepad.source_config_map[current_source.name]
+      local current_config = era.state.notepad.source_config_map[current_source.name]
 
       if current_config.engine == item.data.engine then
         ark.reporter.info({
@@ -632,7 +632,7 @@ engine_picker = ux.picker.ListComposer.new({
         return
       end
 
-      if eve.state.notepad.migrate_source_engine(current_source.name, item.data.engine) then
+      if era.state.notepad.migrate_source_engine(current_source.name, item.data.engine) then
         widget:attach(current_source.name)
         dirty_data = true
       end
@@ -646,7 +646,7 @@ engine_picker = ux.picker.ListComposer.new({
 ---@return nil
 function M.change_engine()
   local current_source = widget:get_source()
-  local current_config = eve.state.notepad.source_config_map[current_source.name]
+  local current_config = era.state.notepad.source_config_map[current_source.name]
 
   ---@type fml.action.notepad.IEngineItem[]
   local items = {

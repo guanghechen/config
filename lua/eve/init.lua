@@ -1,7 +1,6 @@
 ---@class eve.__mods
 local __mods = {
   fn = "eve.fn",
-  state = "eve.state",
 
   ai = "eve.builtin.ai",
   buf = "era.buf",
@@ -19,7 +18,6 @@ local __mods = {
 ---@class eve
 ---@field public __mods                 eve.__mods
 ---@field public fn                     eve.fn
----@field public state                  eve.state
 ---
 ---@field public ai                     eve.builtin.ai
 ---@field public buf                    era.buf

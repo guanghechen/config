@@ -302,7 +302,7 @@ function M.new(props)
   self._buf_autocmds = {}
 
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
+  local source = era.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
 
   source:load(false)
 
@@ -317,7 +317,7 @@ end
 ---@protected
 ---@return nil
 function M:__setup_subscriptions__()
-  self._subscription_active = eve.state.notepad.o_activated_uuid:subscribe(
+  self._subscription_active = era.state.notepad.o_activated_uuid:subscribe(
     ark.c.Subscriber.new({
       on_next = function(next_uuid)
         self:__on_active_uuid_changed__(next_uuid)
@@ -395,7 +395,7 @@ end
 function M:__notify_active_changed__()
   local source = self:get_source()
   local uuid = source:get_activated_uuid()
-  eve.state.notepad.focus_note(uuid)
+  era.state.notepad.focus_note(uuid)
 end
 
 ---@protected
@@ -429,7 +429,7 @@ end
 ---@return std.t.INotepadSource
 function M:get_source()
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source = eve.state.notepad.retrieve_source(source_name)
+  local source = era.state.notepad.retrieve_source(source_name)
   return source
 end
 
@@ -450,9 +450,9 @@ function M:attach(source_name)
 
   era.context.option.notepad_source:next(source_name)
 
-  local new_source = eve.state.notepad.retrieve_source(source_name)
+  local new_source = era.state.notepad.retrieve_source(source_name)
   local new_uuid = new_source:get_activated_uuid()
-  eve.state.notepad.focus_note(new_uuid)
+  era.state.notepad.focus_note(new_uuid)
 
   if bufnr ~= nil then
     self:__render_active_item__(bufnr)
@@ -562,7 +562,7 @@ function M:focus_uuid(uuid)
   source:push_history(uuid)
 
   -- Use state's focus_note to update source and notify observers
-  return eve.state.notepad.focus_note(uuid)
+  return era.state.notepad.focus_note(uuid)
 end
 
 ---@param index                         integer
@@ -662,7 +662,7 @@ function M:remove(uuid)
     local history_uuid = source:go_backward()
     if history_uuid ~= nil and history_uuid ~= uuid then
       -- Set the previous note from history
-      eve.state.notepad.focus_note(history_uuid)
+      era.state.notepad.focus_note(history_uuid)
     end
   end
 
@@ -674,7 +674,7 @@ function M:remove(uuid)
   if source:get_activated_uuid() == uuid then
     local fallback_uuid = state.orders[1]
     if fallback_uuid ~= nil then
-      eve.state.notepad.focus_note(fallback_uuid)
+      era.state.notepad.focus_note(fallback_uuid)
     end
   end
 
@@ -701,7 +701,7 @@ function M:go_backward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return eve.state.notepad.focus_note(uuid)
+  return era.state.notepad.focus_note(uuid)
 end
 
 ---@return boolean
@@ -723,7 +723,7 @@ function M:go_forward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return eve.state.notepad.focus_note(uuid)
+  return era.state.notepad.focus_note(uuid)
 end
 
 ---@param uuid                          string|nil
@@ -1066,7 +1066,7 @@ end
 ---@return string
 function M:__get_window_title__()
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local _, config = eve.state.notepad.retrieve_source(source_name)
+  local _, config = era.state.notepad.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end
 
@@ -1254,7 +1254,7 @@ end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME
 M.o_active_uuid = function()
-  return eve.state.notepad.o_activated_uuid
+  return era.state.notepad.o_activated_uuid
 end
 
 return M

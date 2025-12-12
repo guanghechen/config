@@ -2,6 +2,7 @@
 local __state__mods = {
   git = "era.state.git",
   maximized = "era.state.maximized",
+  notepad = "era.state.notepad",
   qflist = "era.state.qflist",
   status = "era.state.status",
   widget = "era.state.widget",
@@ -11,6 +12,7 @@ local __state__mods = {
 ---@field public __mods                 era.state.__mods
 ---@field public git                    era.state.git
 ---@field public maximized              era.state.maximized
+---@field public notepad                era.state.notepad
 ---@field public qflist                 era.state.qflist
 ---@field public status                 era.state.status
 ---@field public widget                 era.state.widget
