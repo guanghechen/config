@@ -1,5 +1,6 @@
 ---@class era.state.__mods
 local __state__mods = {
+  git = "era.state.git",
   maximized = "era.state.maximized",
   qflist = "era.state.qflist",
   status = "era.state.status",
@@ -8,6 +9,7 @@ local __state__mods = {
 
 ---@class era.state
 ---@field public __mods                 era.state.__mods
+---@field public git                    era.state.git
 ---@field public maximized              era.state.maximized
 ---@field public qflist                 era.state.qflist
 ---@field public status                 era.state.status

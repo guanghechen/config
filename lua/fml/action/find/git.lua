@@ -20,7 +20,7 @@ local function refresh(force)
     return
   end
 
-  local workspace, status = eve.state.git.status("HEAD") ---@type string, table<string, string>
+  local workspace, status = era.state.git.status("HEAD") ---@type string, table<string, string>
   local filepaths = {} ---@type string[]
   for filepath in pairs(status) do
     filepaths[#filepaths + 1] = filepath
@@ -57,7 +57,7 @@ picker = ux.picker.FiletreeComposer.new({
     refresh(false)
   end,
   on_refresh = function()
-    eve.state.git.refresh_git_status(true)
+    era.state.git.refresh_git_status(true)
     refresh(true)
   end,
 })

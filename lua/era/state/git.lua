@@ -1,4 +1,4 @@
-local __module_name__ = "eve.state.git" ---@type string
+local __module_name__ = "era.state.git" ---@type string
 
 local DEFAULT_GIT_STATUS_HL = "f_ft_git_other" ---@type string
 local REFRESH_INTERVAL_MS = 5 * 60 * 1000 ---@type integer
@@ -18,10 +18,10 @@ local GIT_STATUS_HIGHLIGHT = {
   ["!"] = "f_ft_git_ignored",
 }
 
----@class eve.state.git
+---@class era.state.git
 local M = {}
 
----@class eve.state.git.cache
+---@class era.state.git.cache
 ---@field public initialized            boolean
 ---@field public workspace              string|nil
 ---@field public last_refresh           integer
@@ -51,7 +51,7 @@ local cache = {
   dir_codes = {},
 }
 
----@class eve.state.git.watchers
+---@class era.state.git.watchers
 ---@field public workspace              string|nil
 ---@field public fs                     fun()[]
 ---@field public interval               uv.uv_timer_t|nil
@@ -134,14 +134,14 @@ local function git_status_now()
   return math.floor(vim.fn.reltimefloat(vim.fn.reltime()) * 1000)
 end
 
----@class eve.state.git.dirinfo
+---@class era.state.git.dirinfo
 ---@field public summary                string|nil
 ---@field public stage                  era.t.IStageState
 ---@field public codes                  table<string, boolean>
 
----@param dir_info                      table<string, eve.state.git.dirinfo>
+---@param dir_info                      table<string, era.state.git.dirinfo>
 ---@param path                          string
----@return                              eve.state.git.dirinfo
+---@return                              era.state.git.dirinfo
 local function dir_info_get(dir_info, path)
   local info = dir_info[path]
   if info == nil then
@@ -151,13 +151,13 @@ local function dir_info_get(dir_info, path)
   return info
 end
 
----@param info                          eve.state.git.dirinfo
+---@param info                          era.state.git.dirinfo
 ---@return string
 local function dir_info_collect_display(info)
   return era.git.codes_to_display(info.codes)
 end
 
----@param info                          eve.state.git.dirinfo
+---@param info                          era.state.git.dirinfo
 ---@param entry                         era.t.IStatusEntry
 local function dir_info_update(info, entry)
   local summary = entry.summary ---@type string|nil
@@ -176,7 +176,7 @@ end
 
 ---@param filepath                      string
 ---@param workspace                     string|nil
----@param dir_info                      table<string, eve.state.git.dirinfo>
+---@param dir_info                      table<string, era.state.git.dirinfo>
 ---@param entry                         era.t.IStatusEntry
 local function git_status_propagate_directory(filepath, workspace, dir_info, entry)
   local has_codes = type(entry.codes) == "table" and next(entry.codes) ~= nil ---@type boolean
@@ -310,7 +310,7 @@ local function setup_autocmd()
     return
   end
 
-  local group = vim.api.nvim_create_augroup("EveGitStatusCache", { clear = true }) ---@type integer
+  local group = vim.api.nvim_create_augroup("EraGitStatusCache", { clear = true }) ---@type integer
   watchers.autocmd_group = group
 
   vim.api.nvim_create_autocmd({ "BufWritePost", "FileChangedShellPost", "FocusGained", "DirChanged" }, {
@@ -354,7 +354,7 @@ local function apply_status(workspace, status_table, status_groups)
   local file_display = {} ---@type table<string, string>
   local file_summary = {} ---@type table<string, string|nil>
   local file_stage = {} ---@type table<string, "staged"|"unstaged"|"mixed"|nil>
-  local dir_info = {} ---@type table<string, eve.state.git.dirinfo>
+  local dir_info = {} ---@type table<string, era.state.git.dirinfo>
   local status_groups_copy = {} ---@type table<string, table<string, boolean>>
 
   for filepath, entry in pairs(status_table) do

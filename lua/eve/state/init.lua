@@ -1,13 +1,11 @@
 ---@class eve.state.__mods
 local __mods = {
-  git = "eve.state.git",
   notepad = "eve.state.notepad",
 }
 
 ---@class eve.state
 ---@field public __mods                 eve.state.__mods
 ---
----@field public git                    eve.state.git
 ---@field public notepad                eve.state.notepad
 local M = setmetatable({
   __mods = __mods,

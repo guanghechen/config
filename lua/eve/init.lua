@@ -6,7 +6,6 @@ local __mods = {
   ai = "eve.builtin.ai",
   buf = "era.buf",
   clipboard = "eve.builtin.clipboard",
-  git = "eve.state.git",
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
   notifier = "eve.builtin.notifier",
@@ -25,7 +24,6 @@ local __mods = {
 ---@field public ai                     eve.builtin.ai
 ---@field public buf                    era.buf
 ---@field public clipboard              eve.builtin.clipboard
----@field public git                    eve.state.git
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public notifier               eve.builtin.notifier
