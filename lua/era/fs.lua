@@ -1,24 +1,24 @@
-local __module_name__ = "std.fs" ---@type string
+local __module_name__ = "era.fs" ---@type string
 
----@class std.fs.IReadFileParams
+---@class era.t.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class std.fs.IReadFileAsBase64Params
+---@class era.t.IReadFileAsBase64Params
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class std.fs.IReadFileAsLinesParams
+---@class era.t.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class std.fs.IReadJsonParams
+---@class era.t.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
 
----@class std.fs
+---@class era.fs
 local M = {}
 
 ---@param filepath                      string
@@ -161,7 +161,7 @@ function M.edit_file(filepath)
   vim.bo.backupcopy = "yes"
 end
 
----@param params                        std.fs.IReadFileParams
+---@param params                        era.t.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -184,7 +184,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        std.fs.IReadFileAsBase64Params
+---@param params                        era.t.IReadFileAsBase64Params
 ---@return string|nil
 function M.read_file_as_base64(params)
   local filepath = params.filepath ---@type string
@@ -207,7 +207,7 @@ function M.read_file_as_base64(params)
   return vim.base64.encode(content)
 end
 
----@param params                        std.fs.IReadFileAsLinesParams
+---@param params                        era.t.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -238,7 +238,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        std.fs.IReadJsonParams
+---@param params                        era.t.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -297,12 +297,12 @@ function M.touch(filepath)
   end
 end
 
----@class std.fs.IWatchFileOptions
+---@class era.t.IWatchFileOptions
 ---@field public filepath               string
 ---@field public on_event               fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field public on_error               ?fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts                          std.fs.IWatchFileOptions
+---@param opts                          era.t.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath

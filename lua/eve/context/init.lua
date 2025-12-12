@@ -123,7 +123,7 @@ function M.load(storage, initialize)
     local data_editor = (
       storage.editor
       and vim.fn.filereadable(storage.editor) ~= 0
-      and std.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
+      and era.fs.read_json({ filepath = storage.editor, silent_on_bad_path = true })
     ) or {}
     M.behavior.load(data_editor.behavior)
     M.theme.load(data_editor.theme)
@@ -133,7 +133,7 @@ function M.load(storage, initialize)
     local data_workspace = (
       storage.workspace
       and vim.fn.filereadable(storage.workspace) ~= 0
-      and std.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
+      and era.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
     ) or {}
     M.bookmark.load(data_workspace.bookmark)
     M.colorpicker.load(data_workspace.colorpicker)
@@ -151,7 +151,7 @@ function M.load(storage, initialize)
     local data_session = (
       storage.session
       and vim.fn.filereadable(storage.session) ~= 0
-      and std.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
+      and era.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
     era.state.status.reset()
     M.tab.load(data_session.tab)
@@ -166,14 +166,14 @@ function M.save(storage)
       behavior = M.behavior.dump(),
       theme = M.theme.dump(),
     }
-    std.fs.write_json(storage.editor, data, true)
+    era.fs.write_json(storage.editor, data, true)
   end
 
   if storage.session then
     local data = {
       tab = M.tab.dump(),
     }
-    std.fs.write_json(storage.session, data, true)
+    era.fs.write_json(storage.session, data, true)
   end
 
   if storage.workspace then
@@ -194,7 +194,7 @@ function M.save(storage)
       search_file = M.search_file.dump(),
       select = M.select.dump(),
     }
-    std.fs.write_json(storage.workspace, data, true)
+    era.fs.write_json(storage.workspace, data, true)
   end
 end
 
@@ -328,7 +328,7 @@ function M.watch_changes()
     value = ark.c.Observable.from_value(true),
     task = function()
       if M._storage.editor then
-        local raw_data = std.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
+        local raw_data = era.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
         local data = { theme = M.theme.normalize(raw_data.theme) }
         local snapshot = { theme = M.theme.dump() }
 
@@ -373,7 +373,7 @@ function M.watch_changes()
 
   ---! watch the editor states file changes.
   if M._storage.editor and vim.fn.filereadable(M._storage.editor) then
-    local unwatch = std.fs.watch_file({
+    local unwatch = era.fs.watch_file({
       filepath = M._storage.editor,
       ---@diagnostic disable-next-line: unused-local
       on_event = function(p, event)

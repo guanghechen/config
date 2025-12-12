@@ -128,12 +128,12 @@ vim.paste = function(lines, phase)
           for _, filepath_source in ipairs(filepaths) do
             local basename_source = yoz.path.basename(filepath_source) ---@type string
             local filepath_target = era.path.join(dirpath_container, basename_source) ---@type string
-            std.fs.copy_file(filepath_source, filepath_target)
+            era.fs.copy_file(filepath_source, filepath_target)
           end
           for _, dirpath_source in ipairs(dirpaths) do
             local basename_source = yoz.path.basename(dirpath_source) ---@type string
             local dirpath_target = era.path.join(dirpath_container, basename_source) ---@type string
-            std.fs.copy_directory(dirpath_source, dirpath_target)
+            era.fs.copy_directory(dirpath_source, dirpath_target)
           end
         end)
 
@@ -198,9 +198,9 @@ vim.paste = function(lines, phase)
 
       local ok = pcall(function()
         if is_filepath then
-          std.fs.copy_file(filepath_source, filepath_target)
+          era.fs.copy_file(filepath_source, filepath_target)
         elseif is_dirpath then
-          std.fs.copy_directory(filepath_source, filepath_target)
+          era.fs.copy_directory(filepath_source, filepath_target)
         end
       end)
 
