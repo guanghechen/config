@@ -3,7 +3,7 @@ local __module_name__ = "eve.builtin.ai" ---@type string
 ---@class eve.builtin.ai
 local M = {}
 
----@param locations                     std.t.ILocation[]
+---@param locations                     era.t.ILocation[]
 ---@return nil
 function M.add_locations_to_ai(locations)
   if #locations < 1 then
@@ -16,7 +16,7 @@ function M.add_locations_to_ai(locations)
   end
 
   local lines = {} ---@type string[]
-  local failures = {} ---@type { index: integer, error: string, location: std.t.ILocation }[]
+  local failures = {} ---@type { index: integer, error: string, location: era.t.ILocation }[]
 
   for index, location in ipairs(locations) do
     local text, err = era.uri.file_location(location)

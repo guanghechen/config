@@ -1,3 +1,10 @@
+---@class era.t.ILocation
+---@field public filepath               string
+---@field public start_lnum             integer|nil
+---@field public start_col              integer|nil
+---@field public end_lnum               integer|nil
+---@field public end_col                integer|nil
+
 ---@class era.uri
 local M = {}
 

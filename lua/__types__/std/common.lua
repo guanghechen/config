@@ -25,7 +25,7 @@
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class std.t.ILocation
+---@class era.t.ILocation
 ---@field public filepath               string
 ---@field public start_lnum             ?integer
 ---@field public start_col              ?integer

@@ -233,7 +233,7 @@ function M.new(props)
 
   ---@param filepath                    string
   ---@param locationstate               ux.searcher.view.filetree.ILeafLocationState
-  ---@return std.t.ILocation
+  ---@return era.t.ILocation
   local function build_ai_location(filepath, locationstate)
     local start_lnum = type(locationstate.lnum) == "number" and math.floor(locationstate.lnum) or nil ---@type integer|nil
     local end_lnum = start_lnum ---@type integer|nil
@@ -275,7 +275,7 @@ function M.new(props)
     }
   end
 
-  ---@param target                      std.t.ILocation[]
+  ---@param target                      era.t.ILocation[]
   ---@param node                        std.collection.filetree.INode|nil
   ---@param nodestate                   ux.searcher.view.filetree.INodeState|nil
   ---@param include_directory           boolean
@@ -431,7 +431,7 @@ function M.new(props)
         return
       end
 
-      local locations = {} ---@type std.t.ILocation[]
+      local locations = {} ---@type era.t.ILocation[]
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
@@ -447,7 +447,7 @@ function M.new(props)
         return
       end
 
-      local locations = {} ---@type std.t.ILocation[]
+      local locations = {} ---@type era.t.ILocation[]
       local lnum = lnum_from ---@type integer
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil

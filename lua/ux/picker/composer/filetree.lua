@@ -845,7 +845,7 @@ function M.new(props)
         return
       end
 
-      local locations = {} ---@type std.t.ILocation[]
+      local locations = {} ---@type era.t.ILocation[]
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type std.collection.filetree.INode|nil
@@ -861,7 +861,7 @@ function M.new(props)
         return
       end
 
-      local locations = {} ---@type std.t.ILocation[]
+      local locations = {} ---@type era.t.ILocation[]
       local lnum = lnum_from ---@type integer
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
