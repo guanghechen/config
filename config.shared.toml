@@ -46,7 +46,8 @@ command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
 
 [profiles.github-copilot]
-model = "gpt-5.1-codex"
+# model = "gpt-5.1-codex"
+model = "gpt-5.2"
 model_reasoning_effort = "high"
 model_provider = "github-copilot"
 
