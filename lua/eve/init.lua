@@ -7,7 +7,6 @@ local __mods = {
   clipboard = "eve.builtin.clipboard",
   lsp = "eve.builtin.lsp",
   lsp_action = "eve.builtin.lsp_action",
-  notifier = "eve.builtin.notifier",
   session = "era.session",
   tab = "era.tab",
   term = "eve.builtin.term",
@@ -24,7 +23,6 @@ local __mods = {
 ---@field public clipboard              eve.builtin.clipboard
 ---@field public lsp                    eve.builtin.lsp
 ---@field public lsp_action             eve.builtin.lsp_action
----@field public notifier               eve.builtin.notifier
 ---@field public session                era.session
 ---@field public tab                    era.tab
 ---@field public term                   eve.builtin.term

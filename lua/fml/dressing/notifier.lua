@@ -1,5 +1,5 @@
-vim.notify = eve.notifier
+vim.notify = era.notifier
 
 ark.fn.observe({ era.state.status.notification_level, era.state.status.notification_paused }, function()
-  eve.notifier.schedule()
+  era.notifier.schedule()
 end)

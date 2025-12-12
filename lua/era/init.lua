@@ -37,6 +37,7 @@ local __mods = {
   context = "era.context",
   fs = "era.fs",
   git = "era.git",
+  notifier = "era.notifier",
   path = "era.path",
   session = "era.session",
   tab = "era.tab",
@@ -51,6 +52,7 @@ local __mods = {
 ---@field public context                era.context
 ---@field public fs                     era.fs
 ---@field public git                    era.git
+---@field public notifier               era.notifier
 ---@field public path                   era.path
 ---@field public session                era.session
 ---@field public state                  era.state

@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.find.notification"
 
 ---@class fml.action.find.notification.IItemData
----@field public task                   eve.builtin.notifier.ITask
+---@field public task                   era.t.INotifierTask
 
 ---@class fml.action.find.notification.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
@@ -17,10 +17,10 @@ local function fetch_data()
   dirty_data = false
 
   local items = {} ---@type fml.action.find.notification.IItem[]
-  local tasks = eve.notifier.history() ---@type eve.builtin.notifier.ITask[]
+  local tasks = era.notifier.history() ---@type era.t.INotifierTask[]
 
   for index = #tasks, 1, -1 do
-    local task = tasks[index] ---@type eve.builtin.notifier.ITask
+    local task = tasks[index] ---@type era.t.INotifierTask
     local text =
       string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), dot.icon.loglevel[task.level], task.title)
 

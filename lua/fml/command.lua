@@ -1080,7 +1080,7 @@ command
   .implement({
     uuid = K.ux.dismiss_notifications.uuid,
     action = function()
-      eve.notifier.dismiss_all()
+      era.notifier.dismiss_all()
     end,
   })
   .implement({
