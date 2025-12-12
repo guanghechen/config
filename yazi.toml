@@ -89,7 +89,7 @@ sort_translit       = false
 
 [open]
 prepend_rules = [
-  { mime = "video/*", use = "play" },
+  { mime = "video/*", use = "open" },
 ]
 append_rules = [
   { url = "*", use = [ "edit" ] },
