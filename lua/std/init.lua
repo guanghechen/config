@@ -25,7 +25,6 @@ local __mods = {
   notepad = "std.notepad",
   path = "std.path",
   table = "std.table",
-  timer = "std.timer",
   uri = "std.uri",
 
   Filetree = "std.collection.filetree",
@@ -41,7 +40,6 @@ local __mods = {
 ---@field public notepad                std.notepad
 ---@field public path                   std.path
 ---@field public table                  std.table
----@field public timer                  std.timer
 ---@field public uri                    std.uri
 ---
 ---@field public Filetree               std.collection.Filetree

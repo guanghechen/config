@@ -18,7 +18,7 @@ local im = dot.env.IS_MAC and require("fml.dressing.im.mac")
 
 if im then
   local augroup = ark.nvim.augroup("auto_toggle_im")
-  std.timer.set_timeout(function()
+  ark.timer.set_timeout(function()
     local previous_mode = "n" ---@type ark.e.VimMode
     local previous_input_method = nil ---@type fml.dressing.im.InputMethod|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {

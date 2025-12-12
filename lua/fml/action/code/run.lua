@@ -159,7 +159,7 @@ local runners = {
         permanent = false,
       })
 
-      std.timer.set_timeout(function()
+      ark.timer.set_timeout(function()
         local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
         if termmeta ~= nil then
           handle(termmeta)

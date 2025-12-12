@@ -136,7 +136,7 @@ function M.new(bufnr, src, opts)
   end
 
   local update_fn = self.update
-  local debounced = std.timer.debounce(function()
+  local debounced = ark.timer.debounce(function()
     update_fn(self)
   end, 10)
   self.update = function(_)

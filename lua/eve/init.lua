@@ -86,7 +86,7 @@ function M.setup_breakpoints()
 
   era.win.open_filepaths(0, filepaths)
 
-  std.timer.set_timeout(function()
+  ark.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
       local bufnr = era.buf.loadfile(breakpoint.filepath) ---@type integer|nil

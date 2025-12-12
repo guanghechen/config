@@ -1,10 +1,10 @@
----@class std.timer.IDisposableCallable
----@field public cancel                 fun(self: std.timer.IDisposableCallable):nil
----@field public dispose                fun(self: std.timer.IDisposableCallable):nil
----@field public stop                   fun(self: std.timer.IDisposableCallable):nil
+---@class ark.timer.IDisposableCallable
+---@field public cancel                 fun(self: ark.timer.IDisposableCallable):nil
+---@field public dispose                fun(self: ark.timer.IDisposableCallable):nil
+---@field public stop                   fun(self: ark.timer.IDisposableCallable):nil
 ---@operator call:any
 
----@class std.timer
+---@class ark.timer
 local M = {}
 
 ---@param timer                         uv.uv_timer_t|nil
@@ -18,7 +18,7 @@ end
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return std.timer.IDisposableCallable
+---@return ark.timer.IDisposableCallable
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local wrapped = vim.schedule_wrap(fn)
@@ -69,7 +69,7 @@ function M.debounce(fn, delay)
     end
   end
 
-  ---@type std.timer.IDisposableCallable
+  ---@type ark.timer.IDisposableCallable
   local callable = {
     cancel = cancel_pending,
     stop = cancel_pending,
@@ -86,7 +86,7 @@ end
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return std.timer.IDisposableCallable
+---@return ark.timer.IDisposableCallable
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   local pending = false ---@type boolean
@@ -139,7 +139,7 @@ function M.throttle(fn, delay)
     end
   end
 
-  ---@type std.timer.IDisposableCallable
+  ---@type ark.timer.IDisposableCallable
   local callable = {
     cancel = cancel_pending,
     stop = cancel_pending,

@@ -203,8 +203,8 @@ local function git_status_propagate_directory(filepath, workspace, dir_info, ent
 end
 
 local refresh_git_status_impl ---@type fun()
-local refresh_debounced_general ---@type std.timer.IDisposableCallable
-local refresh_debounced_fs ---@type std.timer.IDisposableCallable
+local refresh_debounced_general ---@type ark.timer.IDisposableCallable
+local refresh_debounced_fs ---@type ark.timer.IDisposableCallable
 
 local function clear_fs_watchers()
   for _, unwatch in ipairs(watchers.fs) do
@@ -215,7 +215,7 @@ end
 
 local function clear_interval()
   if watchers.interval ~= nil then
-    std.timer.clear_timer(watchers.interval)
+    ark.timer.clear_timer(watchers.interval)
     watchers.interval = nil
   end
 end
@@ -296,7 +296,7 @@ local function ensure_interval()
     return
   end
 
-  local timer = std.timer.set_interval(function()
+  local timer = ark.timer.set_interval(function()
     refresh_git_status_impl()
   end, REFRESH_INTERVAL_MS)
 
@@ -335,11 +335,11 @@ local function setup_autocmd()
   })
 end
 
-refresh_debounced_general = std.timer.debounce(function()
+refresh_debounced_general = ark.timer.debounce(function()
   refresh_git_status_impl()
 end, REFRESH_DEBOUNCE_MS)
 
-refresh_debounced_fs = std.timer.debounce(function()
+refresh_debounced_fs = ark.timer.debounce(function()
   refresh_git_status_impl()
 end, FS_WATCH_DEBOUNCE_MS)
 

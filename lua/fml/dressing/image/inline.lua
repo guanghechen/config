@@ -16,7 +16,7 @@ function M.new(bufnr)
   self.idx = {}
   local group = vim.api.nvim_create_augroup(__module_name__ .. "." .. bufnr, { clear = true })
 
-  local debounced = std.timer.debounce(function()
+  local debounced = ark.timer.debounce(function()
     self:update()
   end, 100)
 
