@@ -37,12 +37,12 @@ function M.edit()
     or col_end == nil
     or ((lnum_start == lnum_end) and (col_start == col_end))
   then
-    location, location_err = std.uri.file_location({
+    location, location_err = era.uri.file_location({
       filepath = filepath,
     })
     content = location or filepath
   else
-    location, location_err = std.uri.file_location({
+    location, location_err = era.uri.file_location({
       filepath = filepath,
       start_lnum = lnum_start,
       start_col = col_start,
@@ -137,7 +137,7 @@ function M.send_file()
     return
   end
 
-  local location, _ = std.uri.file_location({ filepath = filepath })
+  local location, _ = era.uri.file_location({ filepath = filepath })
   if location then
     ux.widget.ai.action.send_to_attached(location, false)
   end

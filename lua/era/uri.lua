@@ -1,4 +1,4 @@
----@class std.uri
+---@class era.uri
 local M = {}
 
 ---@param src                           string
@@ -30,7 +30,7 @@ local function normalize_index(value)
   return num ~= nil and math.max(math.floor(num), 1) or nil
 end
 
----@param location                      std.t.ILocation
+---@param location                      era.t.ILocation
 ---@return string|nil label
 ---@return string|nil err
 function M.file_location(location)

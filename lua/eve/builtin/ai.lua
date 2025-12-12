@@ -19,7 +19,7 @@ function M.add_locations_to_ai(locations)
   local failures = {} ---@type { index: integer, error: string, location: std.t.ILocation }[]
 
   for index, location in ipairs(locations) do
-    local text, err = std.uri.file_location(location)
+    local text, err = era.uri.file_location(location)
     if text ~= nil then
       lines[#lines + 1] = text
     else
