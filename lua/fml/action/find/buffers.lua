@@ -151,7 +151,7 @@ picker = ux.picker.ListComposer.new({
       desc = "find(buffer): toggle scope",
       callback = function()
         local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
-        local idx = std.table.find_index(scopes, scope) or 1 ---@type integer
+        local idx = ark.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
         local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
         eve.context.select.find_buffer_scope:next(next_scope)

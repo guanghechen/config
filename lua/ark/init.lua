@@ -58,6 +58,7 @@ local __mods = {
   reporter = "ark.reporter",
   stdout = "ark.stdout",
   string = "ark.string",
+  table = "ark.table",
   time = "ark.time",
   timer = "ark.timer",
   tmux = "ark.tmux",
@@ -76,6 +77,7 @@ local __mods = {
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
 ---@field public string                 ark.string
+---@field public table                  ark.table
 ---@field public time                   ark.time
 ---@field public timer                  ark.timer
 ---@field public tmux                   ark.tmux

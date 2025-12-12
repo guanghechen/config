@@ -86,7 +86,7 @@ function M:attach(bufnr, uuids)
   end
 
   if N1 > N2 then
-    std.table.truncate_inline(lnum2uuid, N2)
+    ark.table.truncate_inline(lnum2uuid, N2)
   end
 
   self._bufnr = bufnr

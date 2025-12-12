@@ -111,7 +111,7 @@ local data = {
   },
 }
 
-local SUPPORTED_EXTNAME_SET = std.table.to_string_set(data.extnames) ---@type table<string, boolean>
+local SUPPORTED_EXTNAME_SET = ark.table.to_string_set(data.extnames) ---@type table<string, boolean>
 
 ---@alias fml.dressing.image.Size         {width: integer, height: integer}
 

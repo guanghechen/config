@@ -94,7 +94,7 @@ return {
           return
         end
 
-        local index = std.table.find_index(sources, source) ---@type integer |nil
+        local index = ark.table.find_index(sources, source) ---@type integer |nil
         if index == nil then
           return
         end
@@ -112,7 +112,7 @@ return {
           return
         end
 
-        local index = std.table.find_index(sources, source) ---@type integer |nil
+        local index = ark.table.find_index(sources, source) ---@type integer |nil
         if index == nil then
           return
         end

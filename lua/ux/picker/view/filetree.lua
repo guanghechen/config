@@ -299,7 +299,7 @@ function M:match(params)
         local lnum = line_match.lnum ---@type integer
         uuids[index] = uuids[lnum] ---@type string
       end
-      std.table.truncate_inline(uuids, N)
+      ark.table.truncate_inline(uuids, N)
     end
   end
 

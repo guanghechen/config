@@ -24,7 +24,6 @@ local __mods = {
   git = "std.git",
   notepad = "std.notepad",
   path = "std.path",
-  table = "std.table",
   uri = "std.uri",
 
   Filetree = "std.collection.filetree",
@@ -39,7 +38,6 @@ local __mods = {
 ---@field public git                    std.git
 ---@field public notepad                std.notepad
 ---@field public path                   std.path
----@field public table                  std.table
 ---@field public uri                    std.uri
 ---
 ---@field public Filetree               std.collection.Filetree

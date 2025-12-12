@@ -451,7 +451,7 @@ function M.on_closed(termmeta)
       termlist[k] = termuuid ---@type string
     end
   end
-  std.table.truncate_inline(termlist, k)
+  ark.table.truncate_inline(termlist, k)
 
   if not termmeta.permanent then
     metamap[termmeta.uuid] = nil
