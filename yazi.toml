@@ -90,6 +90,7 @@ sort_translit       = false
 [open]
 prepend_rules = [
   { mime = "video/*", use = "open" },
+  { url = "*.{mp4,mkv,avi,mov,wmv,flv,webm,m4v,mpeg,mpg,3gp,ts,mts,m2ts,vob}", use = "open" },
 ]
 append_rules = [
   { url = "*", use = [ "edit" ] },
@@ -106,7 +107,7 @@ play = [
 ]
 open = [
   { run = 'xdg-open %s1', desc = "Open", for = "linux" },
-  { run = 'open %s',      desc = "Open", for = "macos" },
+  { run = 'open %s',      desc = "Open", for = "macos", orphan = true },
   { run = 'start "" %s1', desc = "Open", for = "windows", orphan = true },
 ]
 
