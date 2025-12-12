@@ -939,7 +939,7 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
-      if eve.term.focus(index) then
+      if era.term.focus(index) then
         ux.widget.Terminal:focus()
       end
     end,

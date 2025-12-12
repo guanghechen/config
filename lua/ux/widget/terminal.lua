@@ -1,6 +1,6 @@
 local __module_name__ = "ux.widget.terminal" ---@type string
 
----@class ux.widget.terminal.IToggleHardParams : eve.builtin.term.ICreateParams
+---@class ux.widget.terminal.IToggleHardParams : era.t.ITermCreateParams
 ---@field public selected_text          string|nil
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
@@ -71,14 +71,14 @@ local c = ux.nvimbar.component
 local position = "f_wl" ---@type ux.nvimbar.PositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
-ark.fn.observe({ eve.term.o_termuuid }, function()
+ark.fn.observe({ era.term.o_termuuid }, function()
   local winnr = _terminal_winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
 
-  local termuuid = eve.term.o_termuuid:snapshot() ---@type string
-  local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
+  local termuuid = era.term.o_termuuid:snapshot() ---@type string
+  local termmeta = era.term.get(termuuid) ---@type era.t.ITermMeta|nil
   if termmeta == nil or termmeta.bufnr <= 0 or not vim.api.nvim_buf_is_valid(termmeta.bufnr) then
     return
   end
@@ -134,8 +134,8 @@ end
 function M:focus()
   era.state.widget.push(self)
 
-  local termindex = eve.term.current() ---@type integer
-  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+  local termindex = era.term.current() ---@type integer
+  local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
   if termmeta == nil then
     era.win.close(_terminal_winnr)
     _terminal_winnr = nil
@@ -146,7 +146,7 @@ function M:focus()
   vim.api.nvim_set_current_win(winnr)
   self:__start__(termmeta)
 
-  eve.term.on_focused(termmeta)
+  era.term.on_focused(termmeta)
 end
 
 ---@return nil
@@ -163,8 +163,8 @@ end
 
 ---@return integer|nil
 function M:get_bufnr()
-  local termindex = eve.term.current() ---@type integer
-  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+  local termindex = era.term.current() ---@type integer
+  local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
   return termmeta and termmeta.bufnr or nil ---@type integer|nil
 end
 
@@ -176,8 +176,8 @@ end
 ---@return nil
 function M:resize()
   if self:isvisible() then
-    local termindex = eve.term.current() ---@type integer
-    local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+    local termindex = era.term.current() ---@type integer
+    local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
     if termmeta == nil then
       era.win.close(_terminal_winnr)
       _terminal_winnr = nil
@@ -196,7 +196,7 @@ function M:toggle()
   end
 end
 
----@class ux.widget.terminal.IToggleAndFocusParams : eve.builtin.term.ICreateParams
+---@class ux.widget.terminal.IToggleAndFocusParams : era.t.ITermCreateParams
 ---@field public selected_text          string|nil
 ---@field public autofocus              boolean|nil
 
@@ -207,11 +207,11 @@ function M:toggle_and_focus(params)
   local name = params.name ---@type string
   local typ = params.type ---@type string
   local autofocus = not not params.autofocus ---@type boolean
-  local _, termuuid_current = eve.term.current() ---@type integer, string|nil
+  local _, termuuid_current = era.term.current() ---@type integer, string|nil
 
-  local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
+  local termmeta = era.term.get(termuuid) ---@type era.t.ITermMeta|nil
   if termmeta == nil then
-    termmeta = eve.term.create({
+    termmeta = era.term.create({
       uuid = termuuid,
       type = typ,
       name = name,
@@ -226,7 +226,7 @@ function M:toggle_and_focus(params)
       on_resized = params.on_resized,
     })
   else
-    eve.term.update(termmeta, {
+    era.term.update(termmeta, {
       name = name,
       type = typ,
       cmd = params.cmd,
@@ -236,7 +236,7 @@ function M:toggle_and_focus(params)
       on_resized = params.on_resized,
     })
 
-    eve.term.append(termuuid)
+    era.term.append(termuuid)
   end
 
   if self:isvisible() then
@@ -247,7 +247,7 @@ function M:toggle_and_focus(params)
   end
 
   if autofocus then
-    eve.term.o_termuuid:next(termmeta.uuid)
+    era.term.o_termuuid:next(termmeta.uuid)
   end
 
   self:focus()
@@ -281,7 +281,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param termmeta                      eve.builtin.term.IMeta
+---@param termmeta                      era.t.ITermMeta
 ---@return integer
 function M.__create_buf_as_needed__(termmeta)
   local bufnr = termmeta.bufnr ---@type integer|nil
@@ -300,9 +300,9 @@ function M.__create_buf_as_needed__(termmeta)
     buffer = bufnr,
     callback = function()
       vim.schedule(function()
-        local _, _termmeta = eve.term.indexof_by_bufnr(bufnr)
+        local _, _termmeta = era.term.indexof_by_bufnr(bufnr)
         if _termmeta then
-          eve.term.on_closed(_termmeta)
+          era.term.on_closed(_termmeta)
         else
           era.buf.close(bufnr)
         end
@@ -316,7 +316,7 @@ function M.__create_buf_as_needed__(termmeta)
 end
 
 ---@protected
----@param termmeta                      eve.builtin.term.IMeta
+---@param termmeta                      era.t.ITermMeta
 ---@return integer
 function M:__create_win_as_needed__(termmeta)
   local width = vim.o.columns - 2 ---@type integer
@@ -379,7 +379,7 @@ function M:__create_win_as_needed__(termmeta)
 end
 
 ---@protected
----@param termmeta                      eve.builtin.term.IMeta
+---@param termmeta                      era.t.ITermMeta
 ---@return nil
 function M:__start__(termmeta)
   if termmeta.jobid == nil then
@@ -416,7 +416,7 @@ function M:__start__(termmeta)
 
         if termmeta.jobid == jobid then
           termmeta.jobid = nil
-          eve.term.on_closed(termmeta)
+          era.term.on_closed(termmeta)
         end
       end,
     })

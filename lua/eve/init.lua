@@ -9,7 +9,6 @@ local __mods = {
   lsp_action = "eve.builtin.lsp_action",
   session = "era.session",
   tab = "era.tab",
-  term = "eve.builtin.term",
   win = "era.win",
   winpicker = "eve.builtin.winpicker",
 }
@@ -25,7 +24,6 @@ local __mods = {
 ---@field public lsp_action             eve.builtin.lsp_action
 ---@field public session                era.session
 ---@field public tab                    era.tab
----@field public term                   eve.builtin.term
 ---@field public win                    era.win
 ---@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({ __mods = __mods }, {

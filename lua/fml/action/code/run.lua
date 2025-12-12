@@ -138,7 +138,7 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param termmeta                eve.builtin.term.IMeta
+      ---@param termmeta                era.t.ITermMeta
       ---@return nil
       local function handle(termmeta)
         local bufnr = termmeta.bufnr ---@type integer|nil
@@ -160,7 +160,7 @@ local runners = {
       })
 
       ark.timer.set_timeout(function()
-        local termmeta = eve.term.get(termuuid) ---@type eve.builtin.term.IMeta|nil
+        local termmeta = era.term.get(termuuid) ---@type era.t.ITermMeta|nil
         if termmeta ~= nil then
           handle(termmeta)
         end

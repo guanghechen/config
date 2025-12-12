@@ -5,7 +5,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     era.tab.on_buf_delete(tabnr)
     era.buf.on_close(bufnr)
-    eve.term.on_buf_deleted(bufnr)
+    era.term.on_buf_deleted(bufnr)
   end,
 })
 

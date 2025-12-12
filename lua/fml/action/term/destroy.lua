@@ -5,8 +5,8 @@ local M = {}
 
 ---@return nil
 function M.destroy()
-  local termindex = eve.term.current() ---@type integer
-  local _, termmeta = eve.term.at(termindex) ---@type string|nil, eve.builtin.term.IMeta|nil
+  local termindex = era.term.current() ---@type integer
+  local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
   if termmeta == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -32,13 +32,13 @@ function M.destroy()
       return
     end
 
-    local next_termmeta = eve.term.pick_next_term(termmeta.uuid) ---@type eve.builtin.term.IMeta|nil
+    local next_termmeta = era.term.pick_next_term(termmeta.uuid) ---@type era.t.ITermMeta|nil
     if next_termmeta ~= nil then
-      eve.term.o_termuuid:next(next_termmeta.uuid)
+      era.term.o_termuuid:next(next_termmeta.uuid)
     end
 
     vim.defer_fn(function()
-      eve.term.on_closed(termmeta)
+      era.term.on_closed(termmeta)
       era.state.status.dirtier_termline:mark_dirty()
     end, 100)
   end)

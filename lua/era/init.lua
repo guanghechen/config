@@ -41,6 +41,7 @@ local __mods = {
   path = "era.path",
   session = "era.session",
   tab = "era.tab",
+  term = "era.term",
   uri = "era.uri",
   win = "era.win",
 }
@@ -57,6 +58,7 @@ local __mods = {
 ---@field public session                era.session
 ---@field public state                  era.state
 ---@field public tab                    era.tab
+---@field public term                   era.term
 ---@field public uri                    era.uri
 ---@field public win                    era.win
 local M = setmetatable({
