@@ -21,7 +21,6 @@ local source = setmetatable({ __mods = source__mods }, {
 ---@class std.__mods
 local __mods = {
   fs = "std.fs",
-  git = "std.git",
   notepad = "std.notepad",
   path = "std.path",
   uri = "std.uri",
@@ -35,7 +34,6 @@ local __mods = {
 ---@field public source                 std.source
 ---
 ---@field public fs                     std.fs
----@field public git                    std.git
 ---@field public notepad                std.notepad
 ---@field public path                   std.path
 ---@field public uri                    std.uri

@@ -1,10 +1,10 @@
----@alias std.git.StageState
+---@alias era.t.IStageState
 ---| "staged"
 ---| "unstaged"
 ---| "mixed"
 ---| nil
 
----@class std.git.StatusEntry
+---@class era.t.IStatusEntry
 ---@field public path                   string
 ---@field public relative               string
 ---@field public staged                 table<string, boolean>
@@ -14,12 +14,12 @@
 ---@field public unstaged_bits          integer
 ---@field public display                string
 ---@field public summary                string|nil
----@field public stage                  std.git.StageState
+---@field public stage                  era.t.IStageState
 ---@field public categories             table<string, boolean>
 ---@field public staged_display         string
 ---@field public unstaged_display       string
 
----@class std.git.ICollectStatusOpts
+---@class era.t.ICollectStatusOpts
 ---@field public base                   string|nil
 ---@field public workspace              string|nil
 ---@field public include_untracked      boolean|nil
@@ -52,7 +52,7 @@ local STATUS_CATEGORY_LIST = {
   "ignored",
 }
 
----@enum std.git.StatusEnum
+---@enum era.t.IStatusEnum
 local GIT_STATUS_ENUM = {
   U = 1,
   ["?"] = 2,
@@ -85,7 +85,7 @@ local function execute_command(cmd)
   return true, lines
 end
 
----@param stage_state                   std.git.StageState
+---@param stage_state                   era.t.IStageState
 ---@param codes                         table<string, boolean>|nil
 ---@return table<string, boolean>
 local function collect_entry_categories(stage_state, codes)
@@ -250,7 +250,7 @@ local function collect_display_from_bits(bits, codes)
   return table.concat(chars)
 end
 
----@param entry                         std.git.StatusEntry
+---@param entry                         era.t.IStatusEntry
 ---@return string|nil
 local function resolve_entry_summary(entry)
   local summary_bits = bit.bor(entry.staged_bits or 0, entry.unstaged_bits or 0) ---@type integer
@@ -305,10 +305,10 @@ local function parse_name_status_line(line)
   return status, relative
 end
 
----@param status_map                    table<string, std.git.StatusEntry>
+---@param status_map                    table<string, era.t.IStatusEntry>
 ---@param absolute_path                 string
 ---@param relative_path                 string
----@return std.git.StatusEntry
+---@return era.t.IStatusEntry
 local function ensure_entry(status_map, absolute_path, relative_path)
   local entry = status_map[absolute_path]
   if entry == nil then
@@ -332,7 +332,7 @@ local function ensure_entry(status_map, absolute_path, relative_path)
   return entry
 end
 
----@param entry                         std.git.StatusEntry
+---@param entry                         era.t.IStatusEntry
 ---@param stage_key                     "staged"|"unstaged"
 ---@param status                        string|nil
 local function apply_status_code(entry, stage_key, status)
@@ -357,7 +357,7 @@ local function apply_status_code(entry, stage_key, status)
   end
 end
 
----@param entry                         std.git.StatusEntry
+---@param entry                         era.t.IStatusEntry
 local function finalize_entry(entry)
   local staged_bits = entry.staged_bits or 0 ---@type integer
   local unstaged_bits = entry.unstaged_bits or 0 ---@type integer
@@ -385,9 +385,9 @@ local function finalize_entry(entry)
   entry.categories = collect_entry_categories(entry.stage, entry.codes)
 end
 
----@param opts                          std.git.ICollectStatusOpts|nil
+---@param opts                          era.t.ICollectStatusOpts|nil
 ---@return string                       workspace
----@return table<string, std.git.StatusEntry>
+---@return table<string, era.t.IStatusEntry>
 ---@return table<string, table<string, boolean>>
 local function collect_status(opts)
   local workspace = opts and opts.workspace or std.path.workspace() ---@type string
@@ -402,7 +402,7 @@ local function collect_status(opts)
   local base = (opts and opts.base) or "HEAD" ---@type string
   local include_untracked = opts == nil or opts.include_untracked ~= false ---@type boolean
 
-  local status_map = {} ---@type table<string, std.git.StatusEntry>
+  local status_map = {} ---@type table<string, era.t.IStatusEntry>
   local status_groups = create_status_groups() ---@type table<string, table<string, boolean>>
 
   local cmd_staged = { "git", "-C", workspace, "diff", "--staged", "--name-status", base, "--" }
@@ -474,7 +474,7 @@ local function collect_status(opts)
   return workspace, status_map, status_groups
 end
 
----@class std.git
+---@class era.git
 local M = {}
 
 M.GIT_STATUS_ENUM = GIT_STATUS_ENUM
@@ -487,9 +487,9 @@ M.parse_name_status_line = parse_name_status_line
 M.collect_entry_categories = collect_entry_categories
 M.collect_status = collect_status
 
----@param existing                      std.git.StageState
----@param incoming                      std.git.StageState
----@return std.git.StageState
+---@param existing                      era.t.IStageState
+---@param incoming                      era.t.IStageState
+---@return era.t.IStageState
 function M.combine_stage(existing, incoming)
   if incoming == nil then
     return existing
