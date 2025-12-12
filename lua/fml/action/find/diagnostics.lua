@@ -24,7 +24,7 @@ local o_flag_viewtype = eve.context.select.find_diagnostics.flag_viewtype ---@ty
 
 local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
 local o_bufnr_sourcefile = ark.c.Observable.from_value(nil)---@type ark.c.Observable
-local o_rootpath = ark.c.Observable.from_value(std.path.cwd())---@type ark.c.Observable
+local o_rootpath = ark.c.Observable.from_value(era.path.cwd())---@type ark.c.Observable
 local o_flag_buffer = ark.c.Observable.from_value(false)---@type ark.c.Observable
 local o_flag_severity = ark.c.Observable.from_value(nil)
 
@@ -60,7 +60,7 @@ local function refresh(force)
   if bufnr_sourcefile ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if not yoz.path.is_descendant(rootpath, filepath) then
-      rootpath = std.path.dirname(filepath) ---@type string
+      rootpath = era.path.dirname(filepath) ---@type string
       o_rootpath:next(rootpath)
     end
   end
@@ -212,7 +212,7 @@ picker = ux.picker.FiletreeComposer.new({
       key = "tc",
       desc = string.format("%s: change root (cwd)", title),
       callback = function()
-        local cwd = std.path.cwd() ---@type string
+        local cwd = era.path.cwd() ---@type string
         o_rootpath:next(cwd)
         refresh(false)
       end,
@@ -222,7 +222,7 @@ picker = ux.picker.FiletreeComposer.new({
       key = "tw",
       desc = string.format("%s: change root (workspace)", title),
       callback = function()
-        local workspace = std.path.workspace() ---@type string
+        local workspace = era.path.workspace() ---@type string
         o_rootpath:next(workspace)
         refresh(false)
       end,
@@ -297,26 +297,26 @@ picker = ux.picker.FiletreeComposer.new({
 })
 
 ark.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
-  local cwd = std.path.cwd() ---@type string
+  local cwd = era.path.cwd() ---@type string
   local flag_buffer = o_flag_buffer:snapshot() ---@type boolean
   if flag_buffer then
     local bufnr = o_bufnr_sourcefile:snapshot() ---@type integer|nil
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relpath = std.path.relative(cwd, filepath) ---@type string
+      local relpath = era.path.relative(cwd, filepath) ---@type string
       picker.finder:set_title(string.format("%s (%s)", title, relpath))
       return
     end
   end
 
   local rootpath = o_rootpath:snapshot() ---@type string
-  local workspace = std.path.workspace() ---@type string
+  local workspace = era.path.workspace() ---@type string
   if rootpath == workspace then
     picker.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then
     picker.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = yoz.path.is_descendant(workspace, rootpath) and std.path.relative(cwd, rootpath) or rootpath ---@type string
+    local relative_path = yoz.path.is_descendant(workspace, rootpath) and era.path.relative(cwd, rootpath) or rootpath ---@type string
     picker.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)

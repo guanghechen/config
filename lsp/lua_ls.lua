@@ -2,11 +2,11 @@
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#lua_ls
 
 local nvim_config = nil ---@type string|nil
-local workspace = std.path.workspace() ---@type string
-if workspace == std.path.locate_app_config_home("nvim") then
-  nvim_config = std.path.join(workspace, "lua")
-elseif workspace == std.path.locate_app_config_home("nvim-nvchad") then
-  nvim_config = std.path.join(workspace, "lua")
+local workspace = era.path.workspace() ---@type string
+if workspace == era.path.locate_app_config_home("nvim") then
+  nvim_config = era.path.join(workspace, "lua")
+elseif workspace == era.path.locate_app_config_home("nvim-nvchad") then
+  nvim_config = era.path.join(workspace, "lua")
 end
 
 ---@param params                        lsp.InitializeParams
@@ -85,8 +85,8 @@ return {
       workspace = {
         checkThirdParty = false,
         library = vim.tbl_filter(ark.fn.boolean, {
-          std.path.join(vim.env.VIMRUNTIME, "lua"),
-          std.path.join(dot.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
+          era.path.join(vim.env.VIMRUNTIME, "lua"),
+          era.path.join(dot.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
           nvim_config,
           "${3rd}/luv/library",
         }),

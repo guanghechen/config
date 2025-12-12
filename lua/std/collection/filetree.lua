@@ -110,7 +110,7 @@ setmetatable(M, std.Tree)
 ---@param filepath                      string
 ---@return boolean
 local function is_cwd_chain(filepath)
-  local cwd = std.path.cwd() ---@type string
+  local cwd = era.path.cwd() ---@type string
   if cwd == filepath or filepath == FILETREE_ROOT_FILEPATH then
     return true
   end
@@ -426,7 +426,7 @@ function M:reset(cwd, filepaths, with_locations)
   local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type std.collection.filetree.INodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
-  cwd = std.path.normalize(cwd) ---@type string
+  cwd = era.path.normalize(cwd) ---@type string
   local P = cwd == "/" and "/" or (cwd .. dot.env.PATH_SEP) ---@type string
   local L = #P ---@type integer
 

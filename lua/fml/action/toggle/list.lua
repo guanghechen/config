@@ -118,7 +118,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = yoz.path.basename(std.path.cwd()) ---@type string
+        local cwd_name = yoz.path.basename(era.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileencoding_cur = vim.bo[bufnr].fileencoding ---@type string
 
@@ -233,7 +233,7 @@ local group_items = {
           return
         end
 
-        local cwd_name = yoz.path.basename(std.path.cwd()) ---@type string
+        local cwd_name = yoz.path.basename(era.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 

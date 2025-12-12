@@ -8,8 +8,8 @@ _G.std = require("std") ---@type std
 _G.eve = require("eve") ---@type eve
 _G.ux = require("ux") ---@type ux
 
-if std.path.is_git_repo() then
-  local log_filepath = std.path.locate_workspace_filepath("log.json")
+if era.path.is_git_repo() then
+  local log_filepath = era.path.locate_workspace_filepath("log.json")
   vim.env.NVIM_LOG_FILE = log_filepath
   vim.env.NVIM_LOG_LEVEL = vim.env.NVIM_LOG_LEVEL or "warn"
 end

@@ -353,7 +353,7 @@ return {
             score_offset = 200,
             timeout_ms = 2000,
             opts = {
-              ignore_root_slash = std.path.is_git_repo(),
+              ignore_root_slash = era.path.is_git_repo(),
               show_hidden_files_by_default = true,
             },
           },

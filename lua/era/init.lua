@@ -31,6 +31,7 @@ local __mods = {
   buf = "era.buf",
   command = "era.command",
   git = "era.git",
+  path = "era.path",
   session = "era.session",
   tab = "era.tab",
   win = "era.win",
@@ -41,6 +42,7 @@ local __mods = {
 ---@field public buf                    era.buf
 ---@field public command                era.command
 ---@field public git                    era.git
+---@field public path                   era.path
 ---@field public session                era.session
 ---@field public state                  era.state
 ---@field public tab                    era.tab

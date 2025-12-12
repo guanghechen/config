@@ -18,7 +18,7 @@ pcall(require, "integration.local.plugin")
 require("ghc.command")
 
 ---! Reload session if not specify file and current directory is a git repository.
-if std.path.is_git_repo() then
+if era.path.is_git_repo() then
   if eve.context.flight.autoload:snapshot() then
     era.session.load_session(eve.context.get_storage().nvim_session_autosaved)
     vim.schedule(era.tab.refresh)

@@ -7,8 +7,8 @@ local M = {}
 ---@return nil
 function M.save(args)
   local noformat = args == "noformat" ---@type boolean
-  local cwd = std.path.cwd() ---@type string
-  local workspace = std.path.workspace() ---@type string
+  local cwd = era.path.cwd() ---@type string
+  local workspace = era.path.workspace() ---@type string
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   local bufnrs_modified = {} ---@type integer[]
@@ -72,7 +72,7 @@ function M.save(args)
 
   for _, bufnr in ipairs(bufnrs_new_file) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local initial_text = yoz.path.is_descendant(workspace, filepath) and std.path.relative(cwd, filepath, "/")
+    local initial_text = yoz.path.is_descendant(workspace, filepath) and era.path.relative(cwd, filepath, "/")
       or filepath ---@type string
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
 
@@ -85,7 +85,7 @@ function M.save(args)
         return
       end
 
-      local next_filepath = std.path.resolve(cwd, text) ---@type string
+      local next_filepath = era.path.resolve(cwd, text) ---@type string
 
       ---@return nil
       local on_save = function()

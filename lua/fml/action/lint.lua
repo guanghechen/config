@@ -199,7 +199,7 @@ function M.spellcheck_register()
 
   local filepath_buf = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filepath = yoz.path.locate_nearest(filepath_buf, { ".cspell.json" })
-    or std.path.join(std.path.workspace(), ".cspell.json")
+    or era.path.join(era.path.workspace(), ".cspell.json")
 
   if not yoz.path.is_exist(filepath) then
     local data = {

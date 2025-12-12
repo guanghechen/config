@@ -315,7 +315,7 @@ local function fetch_diritem(dirpath, force)
   return diritem
 end
 
-local state_cwd = ark.c.Observable.from_value(std.path.cwd()) ---@type ark.c.Observable
+local state_cwd = ark.c.Observable.from_value(era.path.cwd()) ---@type ark.c.Observable
 local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
 local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
 local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
@@ -323,18 +323,18 @@ local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Ob
 
 ---@return string
 local function gen_title()
-  local cwd = std.path.cwd() ---@type string
+  local cwd = era.path.cwd() ---@type string
   local dirpath = state_cwd:snapshot() ---@type string
   if dirpath == cwd then
     return "File explorer (cwd)" ---@type string
   end
 
-  local relative_dirpath = std.path.relative(cwd, dirpath)
+  local relative_dirpath = era.path.relative(cwd, dirpath)
   if #relative_dirpath < 1 or relative_dirpath == "." then
     return "File explorer (cwd)" ---@type string
   end
 
-  local workspace = std.path.workspace() ---@type string
+  local workspace = era.path.workspace() ---@type string
   if dirpath == workspace then
     return "Find files (workspace)" ---@type string
   end
@@ -345,8 +345,8 @@ end
 
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data()
-  local dirpath = std.path.normalize(state_cwd:snapshot()) ---@type string
-  local parent_dirpath = std.path.dirname(dirpath) ---@type string
+  local dirpath = era.path.normalize(state_cwd:snapshot()) ---@type string
+  local parent_dirpath = era.path.dirname(dirpath) ---@type string
   local diritem = fetch_diritem(dirpath, false) ---@type fml.action.find.explorer.IDirItem
   fetch_diritem(parent_dirpath, false)
 
@@ -390,7 +390,7 @@ local function fetch_data()
     local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
     local filepath_sourcefile = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
     if #filepath_sourcefile > 0 then
-      filepath_sourcefile = std.path.normalize(filepath_sourcefile)
+      filepath_sourcefile = era.path.normalize(filepath_sourcefile)
       for _, item in ipairs(items) do
         if item.uuid == filepath_sourcefile then
           uuid_current = item.uuid
@@ -474,7 +474,7 @@ local function preview_render(composer, bufnr)
       local result = {
         cursorline = true,
         number = true,
-        title = std.path.relative(std.path.cwd(), fileitem.path),
+        title = era.path.relative(era.path.cwd(), fileitem.path),
         whitespaces = true,
         wrap = false,
       }
@@ -576,9 +576,9 @@ local function preview_render(composer, bufnr)
       end
     end
 
-    local result_title = std.path.relative(std.path.cwd(), fileitem.path) ---@type string
+    local result_title = era.path.relative(era.path.cwd(), fileitem.path) ---@type string
     if #result_title < 1 or string.sub(result_title, 1, 1) == "." then
-      result_title = std.path.normalize(fileitem.path)
+      result_title = era.path.normalize(fileitem.path)
     end
 
     ---@type ux.picker.preview.IDrawResult
@@ -708,7 +708,7 @@ picker = ux.picker.ListComposer.new({
       modes = { "n", "x" },
       key = "<Backspace>",
       callback = function()
-        local next_cwd = std.path.dirname(state_cwd:snapshot())
+        local next_cwd = era.path.dirname(state_cwd:snapshot())
         state_cwd:next(next_cwd)
       end,
       desc = "file explorer: goto the parent dir",
@@ -737,11 +737,11 @@ function M.find_explorer(specified_filepath)
   local dirpath_resolved = false ---@type boolean
   if specified_filepath ~= nil and #specified_filepath > 0 then
     if yoz.path.is_exist_directory(specified_filepath) then
-      local dirpath = std.path.normalize(specified_filepath) ---@type string
+      local dirpath = era.path.normalize(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     elseif yoz.path.is_exist_file(specified_filepath) then
-      local dirpath = std.path.dirname(specified_filepath) ---@type string
+      local dirpath = era.path.dirname(specified_filepath) ---@type string
       state_cwd:next(dirpath, { force = true })
       dirpath_resolved = true
     end
@@ -756,7 +756,7 @@ function M.find_explorer(specified_filepath)
         if yoz.path.is_exist_directory(filepath) then
           state_cwd:next(filepath, { force = true })
         elseif yoz.path.is_exist_file(filepath) then
-          state_cwd:next(std.path.dirname(filepath), { force = true })
+          state_cwd:next(era.path.dirname(filepath), { force = true })
         end
       end
     end

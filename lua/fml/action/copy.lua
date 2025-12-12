@@ -20,8 +20,8 @@ local function copy_current_filepath(candidate, filepath)
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
   elseif candidate == "relative" then
-    local cwd = std.path.cwd() ---@type string
-    local content = std.path.relative(cwd, filepath, "/") ---@type string
+    local cwd = era.path.cwd() ---@type string
+    local content = era.path.relative(cwd, filepath, "/") ---@type string
 
     write_clipboard_registers(content)
     ark.reporter.info({

@@ -49,7 +49,7 @@ function M.paste_image(filepath_target)
     local filetype = vim.bo.filetype ---@type string
     if dot.filetype.is_sourcefile(filetype) then
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
-      local src = std.path.relative(std.path.dirname(filepath_current), filepath_target, "/") ---@type string
+      local src = era.path.relative(era.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
         if string.byte(src, 1, 1) ~= BYTE_DOT then
           src = "." .. dot.env.PATH_SEP .. src

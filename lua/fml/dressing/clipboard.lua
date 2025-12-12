@@ -97,17 +97,17 @@ vim.paste = function(lines, phase)
     end
 
     if is_all_paths then
-      local cwd = std.path.cwd() ---@type string
+      local cwd = era.path.cwd() ---@type string
       local dirpath = cwd ---@type string
 
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
       local buftype = vim.bo[bufnr].buftype ---@type string
       if buftype == "" then
         local filepath_cur = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        dirpath = std.path.dirname(filepath_cur) ---@type string
+        dirpath = era.path.dirname(filepath_cur) ---@type string
       end
 
-      local placeholder = std.path.relative(cwd, dirpath) ---@type string
+      local placeholder = era.path.relative(cwd, dirpath) ---@type string
       if placeholder == "" then
         placeholder = "." ---@type string
       end
@@ -121,18 +121,18 @@ vim.paste = function(lines, phase)
           return
         end
 
-        local dirpath_container = std.path.resolve(cwd, dirpath_container_relative) ---@type string
+        local dirpath_container = era.path.resolve(cwd, dirpath_container_relative) ---@type string
         dot.env.mkdirs(dirpath_container, true)
 
         local ok = pcall(function()
           for _, filepath_source in ipairs(filepaths) do
             local basename_source = yoz.path.basename(filepath_source) ---@type string
-            local filepath_target = std.path.join(dirpath_container, basename_source) ---@type string
+            local filepath_target = era.path.join(dirpath_container, basename_source) ---@type string
             std.fs.copy_file(filepath_source, filepath_target)
           end
           for _, dirpath_source in ipairs(dirpaths) do
             local basename_source = yoz.path.basename(dirpath_source) ---@type string
-            local dirpath_target = std.path.join(dirpath_container, basename_source) ---@type string
+            local dirpath_target = era.path.join(dirpath_container, basename_source) ---@type string
             std.fs.copy_directory(dirpath_source, dirpath_target)
           end
         end)
@@ -163,29 +163,29 @@ vim.paste = function(lines, phase)
   local is_filepath = #text > 0 and yoz.path.is_exist_file(text) ---@type boolean
   local is_dirpath = #text > 0 and yoz.path.is_exist_directory(text) ---@type boolean
   if is_filepath or is_dirpath then
-    local cwd = std.path.cwd() ---@type string
+    local cwd = era.path.cwd() ---@type string
     local dirpath = cwd ---@type string
-    local filepath_source = std.path.normalize(text)
+    local filepath_source = era.path.normalize(text)
 
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     local buftype = vim.bo[bufnr].buftype ---@type string
     local filetype = vim.bo[bufnr].filetype ---@type string
     if buftype == "" then
       local filepath_cur = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      dirpath = std.path.dirname(filepath_cur) ---@type string
+      dirpath = era.path.dirname(filepath_cur) ---@type string
     end
 
     local basename_source = yoz.path.basename(filepath_source) ---@type string
-    local filepath_default = std.path.join(dirpath, basename_source) ---@type string
+    local filepath_default = era.path.join(dirpath, basename_source) ---@type string
     local suffix = is_dirpath and dot.env.PATH_SEP or "" ---@type string
 
-    local placeholder = std.path.relative(cwd, filepath_default) ---@type string
+    local placeholder = era.path.relative(cwd, filepath_default) ---@type string
     if placeholder == "" then
       placeholder = "." ---@type string
     end
 
     vim.ui.input({
-      prompt = string.format(" Copy %s to ", std.path.relative(cwd, filepath_source) .. suffix),
+      prompt = string.format(" Copy %s to ", era.path.relative(cwd, filepath_source) .. suffix),
       default = placeholder .. suffix,
       relative = "editor",
     }, function(filepath_target_relative)
@@ -193,7 +193,7 @@ vim.paste = function(lines, phase)
         return
       end
 
-      local filepath_target = std.path.resolve(cwd, filepath_target_relative) ---@type string
+      local filepath_target = era.path.resolve(cwd, filepath_target_relative) ---@type string
       dot.env.mkdirs(filepath_target, false)
 
       local ok = pcall(function()
@@ -208,7 +208,7 @@ vim.paste = function(lines, phase)
         if is_filepath and dot.filetype.is_sourcefile(filetype) then
           local extname = yoz.path.extname(filepath_target_relative) ---@type string
           if IMAGE_EXTENSIONS[extname] then
-            local src = std.path.relative(dirpath, filepath_target, "/") ---@type string
+            local src = era.path.relative(dirpath, filepath_target, "/") ---@type string
             if #src > 1 then
               if string.sub(src, 1, 1) ~= "." then
                 src = "." .. dot.env.PATH_SEP .. src

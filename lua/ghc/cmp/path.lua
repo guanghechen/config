@@ -99,17 +99,17 @@ function M:get_dirname(context)
     -- Handle '@' prefix for both initial and continued completion
     local at_match = line_before_cursor:match("@([^%s]*)")
     if at_match then
-      local cwd = std.path.cwd() ---@type string
+      local cwd = era.path.cwd() ---@type string
 
       -- For continued completion, don't remove the filename part if it's a directory
       -- Check if the path ends with '/' (indicating it's a directory path)
       if at_match:sub(-1) == "/" then
         -- Complete path ending with /, use as is
-        return std.path.resolve(cwd, at_match)
+        return era.path.resolve(cwd, at_match)
       else
         -- Remove filename part for directory completion
         local relative_path = at_match:gsub("[^/]*$", "")
-        return std.path.resolve(cwd, relative_path)
+        return era.path.resolve(cwd, relative_path)
       end
     end
 
@@ -230,7 +230,7 @@ function M:entry_to_completion_item(entry, dirname, range)
       insertText = insert_text,
       textEdit = { newText = insert_text, range = range },
       sortText = (is_dir and "1" or "2") .. entry.name:lower(), -- Sort directories before files
-      data = { path = entry.name, full_path = std.path.join(dirname, entry.name), type = entry.type },
+      data = { path = entry.name, full_path = era.path.join(dirname, entry.name), type = entry.type },
     }
   end)
 
@@ -305,7 +305,7 @@ function M:scan_directory_async(dirname, include_hidden, timeout_ms, callback)
           if not type or type == "unknown" then
             -- Only stat when we don't have type information
             local stat_success, stat_result = pcall(function()
-              return uv.fs_stat(std.path.join(dirname, name))
+              return uv.fs_stat(era.path.join(dirname, name))
             end)
             if stat_success and stat_result then
               type = stat_result.type

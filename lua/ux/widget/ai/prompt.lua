@@ -141,7 +141,7 @@ function M.get_ctx()
   return {
     winnr = winnr,
     bufnr = bufnr,
-    cwd = std.path.cwd(),
+    cwd = era.path.cwd(),
     filepath = filepath ~= "" and filepath or nil,
     filetype = vim.bo[bufnr].filetype,
     selection_range = selection_range,
@@ -155,7 +155,7 @@ local function get_selection_line(ctx)
   if not range or not ctx.filepath then
     return nil, nil
   end
-  local relpath = std.path.relative(ctx.cwd, ctx.filepath)
+  local relpath = era.path.relative(ctx.cwd, ctx.filepath)
   local text = string.format(
     "@%s L%d:C%d-L%d:C%d",
     relpath,
@@ -190,7 +190,7 @@ local function get_file_line(ctx)
   if not ctx.filepath then
     return nil, nil
   end
-  local relpath = std.path.relative(ctx.cwd, ctx.filepath)
+  local relpath = era.path.relative(ctx.cwd, ctx.filepath)
   local text = string.format("@%s", relpath)
   ---@type ux.widget.ai.ITextLine
   local line = {
@@ -260,7 +260,7 @@ local function get_diagnostics_all_lines(ctx)
     if vim.api.nvim_buf_is_loaded(bufnr) then
       local filepath = vim.api.nvim_buf_get_name(bufnr)
       if filepath ~= "" then
-        local relpath = std.path.relative(ctx.cwd, filepath)
+        local relpath = era.path.relative(ctx.cwd, filepath)
         for _, d in ipairs(vim.diagnostic.get(bufnr)) do
           local severity_name = SEVERITY_NAMES[d.severity] or "UNKNOWN"
           local severity_hl = SEVERITY_HL[d.severity] or "Comment"

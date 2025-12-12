@@ -71,9 +71,9 @@ local ignored = {
 
 ---@class ghc.plugin.conform.config
 local config = {
-  prettier_bin_path = dot.env.IS_WIN and std.path.normalize("node_modules/.bin/prettier.cmd")
-    or std.path.normalize("node_modules/.bin/prettier"),
-  stylua_fallback_config_path = std.path.locate_config_shared_filepath("stylua.toml"),
+  prettier_bin_path = dot.env.IS_WIN and era.path.normalize("node_modules/.bin/prettier.cmd")
+    or era.path.normalize("node_modules/.bin/prettier"),
+  stylua_fallback_config_path = era.path.locate_config_shared_filepath("stylua.toml"),
   prettier_fallback_config = {
     arrowParens = "avoid",
     bracketSameLine = false,

@@ -48,15 +48,15 @@ local M = setmetatable({ __mods = __mods }, {
 
 ---@return eve.context.storage
 function M.get_default_storage()
-  local is_git_repo = std.path.is_git_repo() ---@type boolean
+  local is_git_repo = era.path.is_git_repo() ---@type boolean
 
   ---@type eve.context.storage
   return {
-    editor = std.path.locate_context_filepath("editor.json"),
-    session = is_git_repo and std.path.locate_workspace_filepath("session.json") or nil,
-    workspace = is_git_repo and std.path.locate_workspace_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and std.path.locate_workspace_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and std.path.locate_workspace_filepath("session.autosaved.vim") or nil,
+    editor = era.path.locate_context_filepath("editor.json"),
+    session = is_git_repo and era.path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and era.path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and era.path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and era.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
 end
 

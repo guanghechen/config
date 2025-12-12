@@ -168,7 +168,7 @@ ms({ "n", "x" }, "<leader>et", K.explorer.toggle)
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------
-if std.path.is_git_repo() then
+if era.path.is_git_repo() then
   ms({ "n", "x" }, "<leader><leader>", K.find.files)
 else
   ms({ "n", "x" }, "<leader><leader>", K.find.explorer)

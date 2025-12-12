@@ -65,7 +65,7 @@ local runners = {
 
   http = {
     run = function(filepath)
-      local script_path = std.path.locate_app_config_home("ora/cli/http.mjs") ---@type string
+      local script_path = era.path.locate_app_config_home("ora/cli/http.mjs") ---@type string
       local cmd = { "node", script_path, filepath } ---@type string[]
 
       local group = yoz.fn.uuid() ---@type string
@@ -154,7 +154,7 @@ local runners = {
         uuid = termuuid,
         type = "runner",
         name = "code runner (mjs)",
-        cwd = std.path.cwd(),
+        cwd = era.path.cwd(),
         autofocus = true,
         permanent = false,
       })

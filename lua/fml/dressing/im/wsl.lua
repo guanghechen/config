@@ -3,8 +3,8 @@ local __module_name__ = "fml.dressing.im.wsl" ---@type string
 ---@class fml.dressing.im.wsl : fml.dressing.im
 local M = {}
 
-local app_home = std.path.locate_app_config_home("guanghechen")
-local script_path = std.path.join(
+local app_home = era.path.locate_app_config_home("guanghechen")
+local script_path = era.path.join(
   app_home,
   (dot.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
     or (dot.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")

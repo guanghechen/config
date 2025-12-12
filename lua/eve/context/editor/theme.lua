@@ -50,7 +50,7 @@ local integrations = {
 
 ---@return string
 local function get_theme_path()
-  return std.path.locate_context_filepath("theme")
+  return era.path.locate_context_filepath("theme")
 end
 
 ---@return eve.context.theme.data

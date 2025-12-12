@@ -53,12 +53,12 @@ local M = {}
 
 ---@return eve.context.flight.data
 function M.defaults()
-  local workspace = std.path.workspace() ---@type string
+  local workspace = era.path.workspace() ---@type string
   local is_home_config_dir = workspace == dot.env.HOME_NVIM_CONFIG ---@type boolean
-  local is_git_repo = std.path.is_git_repo() ---@type boolean
-  local is_thirdparty = std.path.is_repo_thirdparty() ---@type boolean
-  local is_playground = std.path.is_repo_playground() ---@type boolean
-  local is_personal_public = std.path.is_repo_personal_public() ---@type boolean
+  local is_git_repo = era.path.is_git_repo() ---@type boolean
+  local is_thirdparty = era.path.is_repo_thirdparty() ---@type boolean
+  local is_playground = era.path.is_repo_playground() ---@type boolean
+  local is_personal_public = era.path.is_repo_personal_public() ---@type boolean
 
   ---@type eve.context.flight.data
   return {

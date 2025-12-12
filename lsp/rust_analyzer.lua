@@ -29,14 +29,14 @@ end
 ---@return string|nil
 local function is_library(fname)
   local user_home = dot.env.HOME_USER
-  local cargo_home = os.getenv("CARGO_HOME") or std.path.join(user_home, ".cargo")
+  local cargo_home = os.getenv("CARGO_HOME") or era.path.join(user_home, ".cargo")
 
-  local registry = std.path.join(cargo_home, "registry/src")
-  local git_registry = std.path.join(cargo_home, "git/checkouts")
-  local rustup_home = os.getenv("RUSTUP_HOME") or std.path.join(user_home, ".rustup")
-  local toolchains = std.path.join(rustup_home, "toolchains")
+  local registry = era.path.join(cargo_home, "registry/src")
+  local git_registry = era.path.join(cargo_home, "git/checkouts")
+  local rustup_home = os.getenv("RUSTUP_HOME") or era.path.join(user_home, ".rustup")
+  local toolchains = era.path.join(rustup_home, "toolchains")
 
-  local normalized_fname = std.path.normalize(fname, false)
+  local normalized_fname = era.path.normalize(fname, false)
   for _, item in ipairs({ toolchains, registry, git_registry }) do
     if yoz.path.is_descendant(item, normalized_fname) then
       local clients = vim.lsp.get_clients({ name = "rust_analyzer" })
@@ -88,7 +88,7 @@ local function root_dir(bufnr, on_dir)
           })
           local workspace_root = result["workspace_root"] ---@type unknown
           if workspace_root ~= "" and type(workspace_root) == "string" then
-            cargo_workspace_root = std.path.normalize(workspace_root, false)
+            cargo_workspace_root = era.path.normalize(workspace_root, false)
           end
         end
 

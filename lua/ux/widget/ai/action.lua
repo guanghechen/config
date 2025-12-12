@@ -19,7 +19,7 @@ end
 function M.collect_items()
   local items = {} ---@type ux.widget.ai.ISelectItem[]
   local seen_ids = {} ---@type table<string, boolean>
-  local cwd = std.path.cwd()
+  local cwd = era.path.cwd()
   local has_agent_pane = {} ---@type table<ux.widget.ai.AgentName, boolean>
 
   for _, source in ipairs(state.get_attached()) do
@@ -98,7 +98,7 @@ function M.handle_selection(item)
       })
       return
     end
-    M.create_and_attach(item.agent, std.path.cwd())
+    M.create_and_attach(item.agent, era.path.cwd())
   end
 end
 

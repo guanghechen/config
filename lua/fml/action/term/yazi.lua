@@ -3,10 +3,10 @@
 ---@param filepath                      string
 ---@return nil
 local function open_yazi(name, cwd, filepath)
-  local tempname = std.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
+  local tempname = era.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
   local terminal = ux.widget.Terminal ---@type ux.widget.Terminal
 
-  local dirpath = std.path.dirname(filepath) ---@type string
+  local dirpath = era.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
   terminal:toggle_and_focus({
     uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
@@ -47,13 +47,13 @@ local M = {}
 
 ---@return nil
 function M.yazi_cwd()
-  local cwd = std.path.cwd() ---@type string
+  local cwd = era.path.cwd() ---@type string
   open_yazi("yazi_cwd", cwd, cwd)
 end
 
 ---@return nil
 function M.yazi_reveal()
-  local cwd = std.path.cwd() ---@type string
+  local cwd = era.path.cwd() ---@type string
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
@@ -66,7 +66,7 @@ end
 
 ---@return nil
 function M.yazi_workspace()
-  local workspace = std.path.workspace() ---@type string
+  local workspace = era.path.workspace() ---@type string
   open_yazi("yazi_workspace", workspace, workspace)
 end
 

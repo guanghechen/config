@@ -300,7 +300,7 @@ local function parse_name_status_line(line)
 
   relative = relative:gsub('^"', ""):gsub('"$', "")
   relative = ark.string.octal_to_utf8(relative)
-  relative = std.path.normalize(relative)
+  relative = era.path.normalize(relative)
 
   return status, relative
 end
@@ -390,12 +390,12 @@ end
 ---@return table<string, era.t.IStatusEntry>
 ---@return table<string, table<string, boolean>>
 local function collect_status(opts)
-  local workspace = opts and opts.workspace or std.path.workspace() ---@type string
+  local workspace = opts and opts.workspace or era.path.workspace() ---@type string
   if type(workspace) ~= "string" or #workspace == 0 then
-    workspace = std.path.workspace()
+    workspace = era.path.workspace()
   end
-  workspace = std.path.normalize(workspace)
-  if not std.path.is_git_repo() then
+  workspace = era.path.normalize(workspace)
+  if not era.path.is_git_repo() then
     return workspace, {}, create_status_groups()
   end
 
@@ -411,7 +411,7 @@ local function collect_status(opts)
     for _, line in ipairs(staged_lines) do
       local status, relative = parse_name_status_line(line)
       if status ~= nil and relative ~= nil then
-        local absolute = std.path.normalize(std.path.join(workspace, relative)) ---@type string
+        local absolute = era.path.normalize(era.path.join(workspace, relative)) ---@type string
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "staged", status)
       end
@@ -424,7 +424,7 @@ local function collect_status(opts)
     for _, line in ipairs(unstaged_lines) do
       local status, relative = parse_name_status_line(line)
       if status ~= nil and relative ~= nil then
-        local absolute = std.path.normalize(std.path.join(workspace, relative)) ---@type string
+        local absolute = era.path.normalize(era.path.join(workspace, relative)) ---@type string
         local entry = ensure_entry(status_map, absolute, relative)
         apply_status_code(entry, "unstaged", status)
       end
@@ -439,9 +439,9 @@ local function collect_status(opts)
         if type(line) == "string" and #line > 0 then
           local relative = line:gsub('^"', ""):gsub('"$', "")
           relative = ark.string.octal_to_utf8(relative)
-          relative = std.path.normalize(relative)
+          relative = era.path.normalize(relative)
 
-          local absolute = std.path.normalize(std.path.join(workspace, relative)) ---@type string
+          local absolute = era.path.normalize(era.path.join(workspace, relative)) ---@type string
           local entry = ensure_entry(status_map, absolute, relative)
           entry.codes["?"] = true
           entry.unstaged["?"] = true

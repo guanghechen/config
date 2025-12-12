@@ -105,7 +105,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
             ---@diagnostic disable-next-line: undefined-field
             local range = location.targetRange or location.range
             if uri ~= nil and range ~= nil then
-              local filepath = std.path.normalize(vim.uri_to_fname(uri)) ---@type string
+              local filepath = era.path.normalize(vim.uri_to_fname(uri)) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
               local last_item = items[#items] ---@type fml.action.lsp.reference.IItem|nil
@@ -179,7 +179,7 @@ local function focus(title, method, buf_flagname, additional_params)
       return
     end
 
-    local rootdir = std.path.cwd() ---@type string
+    local rootdir = era.path.cwd() ---@type string
     local filepaths = {} ---@type string[]
     for _, item in ipairs(items) do
       local filepath = string.format("%s:%d:%d:%d", item.filepath, item.lnum, item.col, item.col_end) ---@type string
@@ -187,7 +187,7 @@ local function focus(title, method, buf_flagname, additional_params)
 
       if string.sub(filepath, 1, #rootdir) ~= rootdir then
         while true do
-          local parent = std.path.dirname(rootdir) ---@type string
+          local parent = era.path.dirname(rootdir) ---@type string
           if parent == rootdir then
             break
           end

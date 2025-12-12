@@ -18,7 +18,7 @@ do
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean
 end
 
----@class std.path.reposcope_map
+---@class era.t.IReposcopeMap
 local repo_map = {
   public = {
     [".config"] = {
@@ -71,8 +71,8 @@ local repo_map = {
   },
 }
 
----@module 'std.path'
----@class std.path
+---@module 'era.path'
+---@class era.path
 local M = {}
 
 ---@param filepath                      string

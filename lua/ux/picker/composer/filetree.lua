@@ -381,7 +381,7 @@ function M.new(props)
 
       local rootpath = rootnode.data.filepath ---@type string
       local nodepath = filenode.data.filepath ---@type string
-      local relpath = std.path.relative(rootpath, nodepath) ---@type string
+      local relpath = era.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. dot.env.PATH_SEP ---@type string
       end
@@ -394,7 +394,7 @@ function M.new(props)
         end
 
         local isdir = yoz.path.is_dirpath(filepath) ---@type boolean
-        filepath = std.path.resolve(rootpath, filepath) ---@type string
+        filepath = era.path.resolve(rootpath, filepath) ---@type string
 
         if yoz.path.is_exist(filepath) then
           ark.reporter.error({
@@ -503,7 +503,7 @@ function M.new(props)
 
       local nodepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
-      local relpath = std.path.relative(rootpath, nodepath) ---@type string
+      local relpath = era.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
         relpath = relpath .. dot.env.PATH_SEP ---@type string
       end
@@ -596,7 +596,7 @@ function M.new(props)
 
       local filepath = filenode.data.filepath ---@type string
       local rootpath = rootnode.data.filepath ---@type string
-      local dirname = std.path.dirname(filepath) ---@type string
+      local dirname = era.path.dirname(filepath) ---@type string
       local filename = yoz.path.basename(filepath) ---@type string
 
       ---@param next_filename           string|nil
@@ -606,8 +606,8 @@ function M.new(props)
           return
         end
 
-        local next_filepath = next_filename:match("[/\\]") and std.path.resolve(rootpath, next_filename)
-          or std.path.join(dirname, next_filename)
+        local next_filepath = next_filename:match("[/\\]") and era.path.resolve(rootpath, next_filename)
+          or era.path.join(dirname, next_filename)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
@@ -632,7 +632,7 @@ function M.new(props)
         end
 
         -- Ensure destination directory exists
-        local dest_dir = std.path.dirname(next_filepath)
+        local dest_dir = era.path.dirname(next_filepath)
         if not yoz.path.is_exist(dest_dir) then
           dot.env.mkdirs(dest_dir, true)
         end
@@ -729,7 +729,7 @@ function M.new(props)
         end
 
         -- Normalize the new filepath to absolute path
-        next_filepath = std.path.normalize(next_filepath)
+        next_filepath = era.path.normalize(next_filepath)
 
         -- Validate that source and destination types match
         local source_is_dir = filenode.data.filetype == "directory"
@@ -754,7 +754,7 @@ function M.new(props)
         end
 
         -- Ensure destination directory exists
-        local dest_dir = std.path.dirname(next_filepath)
+        local dest_dir = era.path.dirname(next_filepath)
         if not yoz.path.is_exist(dest_dir) then
           dot.env.mkdirs(dest_dir, true)
         end
@@ -988,7 +988,7 @@ function M.new(props)
       self._composer:mark_result_dirty()
     end,
     send_to_qflist = function()
-      local cwd = std.path.cwd() ---@type string
+      local cwd = era.path.cwd() ---@type string
       local quickfix_items = {} ---@type era.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
@@ -998,7 +998,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = std.path.relative(cwd, filepath) ---@type string
+            local relative_filepath = era.path.relative(cwd, filepath) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type ux.picker.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type ux.picker.view.filetree.ILocationNodeState[]|nil
@@ -1707,7 +1707,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.picker.FiletreeView
 
-  cwd = std.path.normalize(cwd) ---@type string
+  cwd = era.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
   local uuid_cwd = std.Filetree.uuid(cwd) ---@type string
@@ -1768,7 +1768,7 @@ function M:render_preview(bufnr, force)
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type std.collection.filetree.INode|nil
   local filepath = node.data.filepath ---@type string
-  local relative_filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath or std.path.cwd(), filepath)
+  local relative_filepath = rootnode ~= nil and era.path.relative(rootnode.data.filepath or era.path.cwd(), filepath)
     or filepath
 
   if nodestate.nodetype == "container" then
@@ -2077,7 +2077,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and std.path.relative(rootnode.data.filepath, node.data.filepath)
+  local filepath = rootnode ~= nil and era.path.relative(rootnode.data.filepath, node.data.filepath)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

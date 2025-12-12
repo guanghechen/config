@@ -8,7 +8,7 @@ local source_configs = {
     name = "workspace:notes",
     title = "Notes (workspace)",
     engine = "json",
-    filepath = std.path.locate_workspace_filepath("notepad/notes.json"),
+    filepath = era.path.locate_workspace_filepath("notepad/notes.json"),
     default_item_name = function()
       return "Note"
     end,
@@ -17,7 +17,7 @@ local source_configs = {
     name = "shared:notes",
     title = "Notes (shared)",
     engine = "json",
-    filepath = std.path.locate_shared_filepath("notepad/notes.json"),
+    filepath = era.path.locate_shared_filepath("notepad/notes.json"),
     default_item_name = function()
       return "Note"
     end,
@@ -26,7 +26,7 @@ local source_configs = {
     name = "shared:todos",
     title = "Todos (shared)",
     engine = "folder",
-    filepath = std.path.locate_shared_filepath("notepad/todos"),
+    filepath = era.path.locate_shared_filepath("notepad/todos"),
     default_item_name = function()
       return tostring(os.date("%Y-%m-%d"))
     end,

@@ -184,9 +184,9 @@ local function git_status_propagate_directory(filepath, workspace, dir_info, ent
     return
   end
 
-  local dirpath = std.path.dirname(filepath) ---@type string|nil
+  local dirpath = era.path.dirname(filepath) ---@type string|nil
   while dirpath ~= nil and #dirpath > 0 do
-    local normalized_dir = std.path.normalize(dirpath) ---@type string
+    local normalized_dir = era.path.normalize(dirpath) ---@type string
     local info = dir_info_get(dir_info, normalized_dir)
     dir_info_update(info, entry)
 
@@ -194,7 +194,7 @@ local function git_status_propagate_directory(filepath, workspace, dir_info, ent
       break
     end
 
-    local parent = std.path.dirname(normalized_dir) ---@type string|nil
+    local parent = era.path.dirname(normalized_dir) ---@type string|nil
     if parent == nil or parent == "" or parent == normalized_dir then
       break
     end
@@ -233,7 +233,7 @@ local function set_workspace_watchers(workspace)
     return
   end
 
-  local git_dir = std.path.join(workspace, ".git") ---@type string
+  local git_dir = era.path.join(workspace, ".git") ---@type string
   if not yoz.path.is_exist(git_dir) then
     return
   end
@@ -260,23 +260,23 @@ local function set_workspace_watchers(workspace)
     end
   end
 
-  local index_path = std.path.join(git_dir, "index") ---@type string
+  local index_path = era.path.join(git_dir, "index") ---@type string
   if yoz.path.is_exist(index_path) then
     attach_watch(index_path, function()
       refresh_debounced_general()
     end, "watch_git_index")
   end
 
-  local head_path = std.path.join(git_dir, "HEAD") ---@type string
+  local head_path = era.path.join(git_dir, "HEAD") ---@type string
   if yoz.path.is_exist(head_path) then
     attach_watch(head_path, function()
       refresh_debounced_general()
     end, "watch_git_head")
   end
 
-  local logs_dir = std.path.join(git_dir, "logs") ---@type string
+  local logs_dir = era.path.join(git_dir, "logs") ---@type string
   if yoz.path.is_exist_directory(logs_dir) then
-    local head_log_path = std.path.join(logs_dir, "HEAD") ---@type string
+    local head_log_path = era.path.join(logs_dir, "HEAD") ---@type string
     if yoz.path.is_exist(head_log_path) then
       attach_watch(head_log_path, function()
         refresh_debounced_general()
@@ -347,7 +347,7 @@ end, FS_WATCH_DEBOUNCE_MS)
 ---@param status_table                  table<string, era.t.IStatusEntry>
 ---@param status_groups                 table<string, table<string, boolean>>|nil
 local function apply_status(workspace, status_table, status_groups)
-  local normalized_workspace = workspace ~= nil and std.path.normalize(workspace) or nil ---@type string|nil
+  local normalized_workspace = workspace ~= nil and era.path.normalize(workspace) or nil ---@type string|nil
 
   local status_entries = {} ---@type table<string, era.t.IStatusEntry>
   local file_status = {} ---@type table<string, string>
@@ -359,7 +359,7 @@ local function apply_status(workspace, status_table, status_groups)
 
   for filepath, entry in pairs(status_table) do
     if type(filepath) == "string" and type(entry) == "table" then
-      local normalized_filepath = std.path.normalize(filepath) ---@type string
+      local normalized_filepath = era.path.normalize(filepath) ---@type string
       local display = entry.display or "" ---@type string
       local summary = entry.summary ---@type string|nil
       local stage_state = entry.stage ---@type "staged"|"unstaged"|"mixed"|nil
@@ -407,7 +407,7 @@ local function apply_status(workspace, status_table, status_groups)
       if type(set) == "table" then
         for filepath, enabled in pairs(set) do
           if enabled then
-            local normalized_filepath = std.path.normalize(filepath) ---@type string
+            local normalized_filepath = era.path.normalize(filepath) ---@type string
             bucket[normalized_filepath] = true
           end
         end
@@ -462,7 +462,7 @@ refresh_git_status_impl = function()
   if ok and type(status_table) == "table" then
     apply_status(workspace, status_table, status_groups)
 
-    if std.path.is_git_repo() and cache.workspace ~= nil then
+    if era.path.is_git_repo() and cache.workspace ~= nil then
       set_workspace_watchers(cache.workspace)
     else
       set_workspace_watchers(nil)
@@ -490,7 +490,7 @@ end
 function M.status(base)
   local ok, workspace, status_table = pcall(era.git.collect_status, { base = base }) ---@type boolean, string, table<string, era.t.IStatusEntry>
   if not ok then
-    return std.path.workspace(), {}
+    return era.path.workspace(), {}
   end
   if type(status_table) ~= "table" then
     return workspace, {}
@@ -535,7 +535,7 @@ function M.resolve_status(filepath, filetype)
     return nil, nil
   end
 
-  local normalized_filepath = std.path.normalize(filepath) ---@type string
+  local normalized_filepath = era.path.normalize(filepath) ---@type string
   local kind = filetype or "file" ---@type string
 
   if kind == "directory" then
@@ -587,7 +587,7 @@ function M.calc_status_info(filepath, filetype, offset, highlights)
 
   local status_offset = leading_space_colr ---@type integer
   local staged_len = 0 ---@type integer
-  local normalized_filepath = std.path.normalize(filepath) ---@type string
+  local normalized_filepath = era.path.normalize(filepath) ---@type string
   local entry = cache.status_table[normalized_filepath] ---@type era.t.IStatusEntry|nil
   if entry ~= nil then
     staged_len = #(entry.staged_display or "")
