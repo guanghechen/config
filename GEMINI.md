@@ -17,6 +17,10 @@ The following rules are **supreme principles** that must be followed at **all ti
 7. **ALWAYS**: Recognize that the user is a skilled software engineer with strong engineering and algorithmic capabilities. When facing challenging problems or complex design decisions, proactively engage in discussion with the user to seek inspiration, explore ideas, and collaborate on better solutions.
 8. **ALWAYS**: Implement code in a concise, elegant, and efficient manner. Performance is crucial. Prioritize simplicity and elegance in your implementations. Caching should be the lowest priority consideration unless explicitly requested.
 
+## Documentation Guidances
+
+1. **ALWAYS**: When drawing tables or borders using symbols in Markdown, ensure separator lines are properly aligned. The user always uses a monospace font where CJK characters (e.g., Chinese) occupy 2 display units while ASCII characters occupy 1 unit. Account for this width difference to maintain visual alignment.
+
 ## Recommended Requirements
 
 The following rules are merely recommended for adoption and can be referenced at your discretion based on the circumstances.
