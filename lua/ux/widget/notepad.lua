@@ -301,7 +301,7 @@ function M.new(props)
   self._suspend_sync = false
   self._buf_autocmds = {}
 
-  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local source = eve.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
 
   source:load(false)
@@ -337,7 +337,7 @@ function M:__setup_subscriptions__()
     true
   )
 
-  self._subscription_source = eve.context.option.notepad_source:subscribe(
+  self._subscription_source = era.context.option.notepad_source:subscribe(
     ark.c.Subscriber.new({
       on_next = function(source_name)
         self:attach(source_name)
@@ -428,7 +428,7 @@ end
 
 ---@return std.t.INotepadSource
 function M:get_source()
-  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local source = eve.state.notepad.retrieve_source(source_name)
   return source
 end
@@ -448,7 +448,7 @@ function M:attach(source_name)
 
   self:flush()
 
-  eve.context.option.notepad_source:next(source_name)
+  era.context.option.notepad_source:next(source_name)
 
   local new_source = eve.state.notepad.retrieve_source(source_name)
   local new_uuid = new_source:get_activated_uuid()
@@ -1065,7 +1065,7 @@ end
 ---@protected
 ---@return string
 function M:__get_window_title__()
-  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local _, config = eve.state.notepad.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end
@@ -1074,7 +1074,7 @@ end
 function M:ensure_win()
   local bufnr = self:ensure_buf()
   local rect = self:measure_rect()
-  local winblend = eve.context.theme.get_float_winblend()
+  local winblend = era.context.theme.get_float_winblend()
 
   self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 

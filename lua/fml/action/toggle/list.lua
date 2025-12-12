@@ -23,54 +23,54 @@ local group_priorities = {
 local group_flags = {
   ---behavior
   behavior = {
-    auto_im = eve.context.behavior.auto_im,
-    bufs_relative = eve.context.behavior.bufs_relative,
+    auto_im = era.context.behavior.auto_im,
+    bufs_relative = era.context.behavior.bufs_relative,
   },
 
   ---flight
   flight = {
-    ai = eve.context.flight.ai,
-    ai_nes = eve.context.flight.ai_nes,
-    autoformat = eve.context.flight.autoformat,
-    autoload = eve.context.flight.autoload,
-    autosave = eve.context.flight.autosave,
-    devmode = eve.context.flight.devmode,
-    dressing_clipboard = eve.context.flight.dressing_clipboard,
-    dressing_dim = eve.context.flight.dressing_dim,
-    dressing_illumniate = eve.context.flight.dressing_illumniate,
-    dressing_image = eve.context.flight.dressing_image,
-    dressing_indent = eve.context.flight.dressing_indent,
-    dressing_input = eve.context.flight.dressing_input,
-    dressing_scroll = eve.context.flight.dressing_scroll,
-    dressing_select = eve.context.flight.dressing_select,
-    dressing_trailspace = eve.context.flight.dressing_trailspace,
-    dressing_ui_attach = eve.context.flight.dressing_ui_attach,
-    dressing_virtcolumn = eve.context.flight.dressing_virtcolumn,
-    dressing_winsep = eve.context.flight.dressing_winsep,
-    gitdiff_expand_all = eve.context.flight.gitdiff_expand_all,
+    ai = era.context.flight.ai,
+    ai_nes = era.context.flight.ai_nes,
+    autoformat = era.context.flight.autoformat,
+    autoload = era.context.flight.autoload,
+    autosave = era.context.flight.autosave,
+    devmode = era.context.flight.devmode,
+    dressing_clipboard = era.context.flight.dressing_clipboard,
+    dressing_dim = era.context.flight.dressing_dim,
+    dressing_illumniate = era.context.flight.dressing_illumniate,
+    dressing_image = era.context.flight.dressing_image,
+    dressing_indent = era.context.flight.dressing_indent,
+    dressing_input = era.context.flight.dressing_input,
+    dressing_scroll = era.context.flight.dressing_scroll,
+    dressing_select = era.context.flight.dressing_select,
+    dressing_trailspace = era.context.flight.dressing_trailspace,
+    dressing_ui_attach = era.context.flight.dressing_ui_attach,
+    dressing_virtcolumn = era.context.flight.dressing_virtcolumn,
+    dressing_winsep = era.context.flight.dressing_winsep,
+    gitdiff_expand_all = era.context.flight.gitdiff_expand_all,
   },
 
   ---lsp
   lsp = {
-    code_lens = eve.context.lsp.code_lens,
-    diagnostics_virt_lines = eve.context.lsp.diagnostics_virt_lines,
-    inlay_hints = eve.context.lsp.inlay_hints,
-    spellcheck = eve.context.lsp.spellcheck,
+    code_lens = era.context.lsp.code_lens,
+    diagnostics_virt_lines = era.context.lsp.diagnostics_virt_lines,
+    inlay_hints = era.context.lsp.inlay_hints,
+    spellcheck = era.context.lsp.spellcheck,
   },
 
   ---ux
   ux = {
-    expandtab = eve.context.option.expandtab,
+    expandtab = era.context.option.expandtab,
     notification_paused = era.state.status.notification_paused,
-    relativenumber = eve.context.option.relativenumber,
-    username = eve.context.theme.username,
-    transparency = eve.context.theme.transparency,
+    relativenumber = era.context.option.relativenumber,
+    username = era.context.theme.username,
+    transparency = era.context.theme.transparency,
   },
 
   ---plugin
   plugin = {
-    render_markdown = eve.context.plugin.render_markdown,
-    treesitter_context = eve.context.plugin.treesitter_context,
+    render_markdown = era.context.plugin.render_markdown,
+    treesitter_context = era.context.plugin.treesitter_context,
   },
 }
 
@@ -339,39 +339,39 @@ local group_items = {
     python_debug_host = {
       title = "python debug host",
       snapshot = function()
-        local host = eve.context.lsp.python_debug_host:snapshot() ---@type string
+        local host = era.context.lsp.python_debug_host:snapshot() ---@type string
         if host == nil then
           return "nil", "Keyword"
         end
         return host, "String"
       end,
       action = function()
-        local default_host = eve.context.lsp.python_debug_host:snapshot() or "" ---@type string
+        local default_host = era.context.lsp.python_debug_host:snapshot() or "" ---@type string
         local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
         local host = #input_host > 0 and input_host or default_host ---@type string
-        eve.context.lsp.python_debug_host:next(host)
+        era.context.lsp.python_debug_host:next(host)
       end,
     },
     python_debug_port = {
       title = "python debug port",
       snapshot = function()
-        local port = eve.context.lsp.python_debug_port:snapshot() ---@type integer
+        local port = era.context.lsp.python_debug_port:snapshot() ---@type integer
         if port == nil then
           return "nil", "Keyword"
         end
         return tostring(port), "Number"
       end,
       action = function()
-        local default_port = eve.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
+        local default_port = era.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
         local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
         local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
-        eve.context.lsp.python_debug_port:next(port)
+        era.context.lsp.python_debug_port:next(port)
       end,
     },
     python_venv = {
       title = "python venv path",
       snapshot = function()
-        local venv_path = eve.context.lsp.python_venv_path:snapshot() ---@type string
+        local venv_path = era.context.lsp.python_venv_path:snapshot() ---@type string
         if venv_path == nil then
           return "nil", "Keyword"
         end
@@ -386,7 +386,7 @@ local group_items = {
     theme = {
       title = "theme",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
         return theme, "String"
       end,
       action = function()
@@ -396,13 +396,13 @@ local group_items = {
     theme_variant = {
       title = "theme variant",
       snapshot = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = eve.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
+        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local scheme = era.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
-        local theme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = eve.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
+        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local scheme = era.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         if scheme == nil or scheme.opposite == nil then
           return
         end

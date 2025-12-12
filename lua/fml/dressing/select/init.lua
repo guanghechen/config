@@ -62,7 +62,7 @@ local function resolve_provider(opts)
   return providers.fallback
 end
 
----@type table<string, eve.context.select.item.state>
+---@type table<string, era.context.select.item.state>
 local states_by_title = {}
 
 ---@class fml.dressing.select
@@ -108,7 +108,7 @@ function M.select(items, opts, on_choice)
   end
 
   local winnr = vim.api.nvim_get_current_win()
-  local context = states_by_title[title] ---@type eve.context.select.item.state|nil
+  local context = states_by_title[title] ---@type era.context.select.item.state|nil
 
   title = (#title > 1 and string.sub(title, 1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
@@ -229,8 +229,8 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-ark.fn.observe({ eve.context.flight.dressing_select }, function()
-  local flag = eve.context.flight.dressing_select:snapshot() ---@type boolean
+ark.fn.observe({ era.context.flight.dressing_select }, function()
+  local flag = era.context.flight.dressing_select:snapshot() ---@type boolean
   if flag then
     vim.ui.select = M.select
   else

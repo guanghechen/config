@@ -33,7 +33,7 @@ end
 function M.inspect_state()
   local cwd = era.path.cwd() ---@type string
   local workspace = era.path.workspace() ---@type string
-  local full_state = eve.context.dump() ---@type eve.context.data
+  local full_state = era.context.dump() ---@type era.context.data
 
   ark.reporter.info({
     from = __module_name__,
@@ -69,7 +69,7 @@ function M.inspect_state_full()
         cwd = cwd,
         workspace = workspace,
       },
-      state = eve.context.dump(),
+      state = era.context.dump(),
     },
   })
 end

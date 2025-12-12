@@ -384,8 +384,8 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
-    ark.fn.observe({ eve.context.plugin.render_markdown }, function()
-      local flag = eve.context.plugin.render_markdown:snapshot() ---@type boolean
+    ark.fn.observe({ era.context.plugin.render_markdown }, function()
+      local flag = era.context.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
         plugin.enable()
       else

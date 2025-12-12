@@ -111,7 +111,7 @@ function M.resolve_resize_config(winnr, desired_cfg, opts)
     local maximize_cfg = M.compute_float_maximized_wincfg(desired_cfg) ---@type vim.api.keyset.win_config
     return {
       cfg = maximize_cfg,
-      winblend = eve.context.theme.get_float_winblend(),
+      winblend = era.context.theme.get_float_winblend(),
       maximized = true,
     }
   end

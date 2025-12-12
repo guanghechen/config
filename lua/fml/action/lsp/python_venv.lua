@@ -5,7 +5,7 @@ local o_search_pattern = ark.c.Observable.from_value("")
 local o_flag_fuzzy = ark.c.Observable.from_value(true)
 local o_flag_regex = ark.c.Observable.from_value(false)
 local o_flag_case_sensitive = ark.c.Observable.from_value(false)
-local o_python_venv_path = eve.context.lsp.python_venv_path
+local o_python_venv_path = era.context.lsp.python_venv_path
 
 ---@param folder                        string
 ---@return                              string|nil

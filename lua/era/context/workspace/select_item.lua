@@ -1,4 +1,4 @@
----@class eve.context.select.item.data
+---@class era.context.select.item.data
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
 ---@field public flag_foldempty         boolean
@@ -13,7 +13,7 @@
 ---@field public search_pattern         string
 ---@field public search_pattern_history ark.c.history.ISerializedData
 
----@class eve.context.select.item.state
+---@class era.context.select.item.state
 ---@field public flag_case_sensitive    ark.c.Observable
 ---@field public flag_exclude           ark.c.Observable
 ---@field public flag_foldempty         ark.c.Observable
@@ -28,16 +28,16 @@
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ark.c.History
 
----@class eve.context.select.item
----@field public defaults               fun(): eve.context.select.item.data
----@field public normalize              fun(data: unknown): eve.context.select.item.data
----@field public dump                   fun(state: eve.context.select.item.state): eve.context.select.item.data
----@field public load                   fun(state: eve.context.select.item.state|nil, name: string, data: unknown): eve.context.select.item.state
+---@class era.context.select.item
+---@field public defaults               fun(): era.context.select.item.data
+---@field public normalize              fun(data: unknown): era.context.select.item.data
+---@field public dump                   fun(state: era.context.select.item.state): era.context.select.item.data
+---@field public load                   fun(state: era.context.select.item.state|nil, name: string, data: unknown): era.context.select.item.state
 local M = {}
 
----@return eve.context.select.item.data
+---@return era.context.select.item.data
 function M.defaults()
-  ---@type eve.context.select.item.data
+  ---@type era.context.select.item.data
   return {
     flag_case_sensitive = false,
     flag_exclude = true,
@@ -70,9 +70,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return eve.context.select.item.data
+---@return era.context.select.item.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.context.select.item.data
+  local resolved = M.defaults() ---@type era.context.select.item.data
   if type(data) == "table" then
     if type(data.flag_case_sensitive) == "boolean" then
       resolved.flag_case_sensitive = data.flag_case_sensitive
@@ -122,14 +122,14 @@ function M.normalize(data)
     end
   end
 
-  ---@type eve.context.select.item.data
+  ---@type era.context.select.item.data
   return resolved
 end
 
----@param state                         eve.context.select.item.state
----@return eve.context.select.item.data
+---@param state                         era.context.select.item.state
+---@return era.context.select.item.data
 function M.dump(state)
-  ---@type eve.context.select.item.data
+  ---@type era.context.select.item.data
   return {
     flag_case_sensitive = state.flag_case_sensitive:snapshot(),
     flag_exclude = state.flag_exclude:snapshot(),
@@ -147,15 +147,15 @@ function M.dump(state)
   }
 end
 
----@param state                         eve.context.select.item.state|nil
+---@param state                         era.context.select.item.state|nil
 ---@param name                          string
 ---@param raw_data                      any
----@return eve.context.select.item.state
+---@return era.context.select.item.state
 function M.load(state, name, raw_data)
-  local data = M.normalize(raw_data) ---@type eve.context.select.item.data
+  local data = M.normalize(raw_data) ---@type era.context.select.item.data
 
   if state == nil then
-    ---@type eve.context.select.item.state
+    ---@type era.context.select.item.state
     state = {
       flag_case_sensitive = ark.c.Observable.from_value(data.flag_case_sensitive),
       flag_exclude = ark.c.Observable.from_value(data.flag_exclude),

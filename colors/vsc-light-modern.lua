@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("vsc-light-modern")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("vsc-light-modern")
+era.context.theme.reload_theme(false, false)

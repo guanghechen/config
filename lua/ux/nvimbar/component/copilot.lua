@@ -31,7 +31,7 @@ end
 
 ---@type string
 local fn_show_message = dot.G.register_anonymous_fn(function()
-  local enabled = eve.context.flight.ai:snapshot() ---@type boolean
+  local enabled = era.context.flight.ai:snapshot() ---@type boolean
   local status = "NIL" ---@type unknown
 
   -- Check native Copilot LSP status
@@ -60,10 +60,10 @@ function M.status(position)
     name = "copilot:status",
     atomic = true,
     condition = function()
-      return eve.context.flight.ai:snapshot()
+      return era.context.flight.ai:snapshot()
     end,
     render = function()
-      local enabled = eve.context.flight.ai:snapshot() ---@type boolean
+      local enabled = era.context.flight.ai:snapshot() ---@type boolean
       if not enabled then
         local text = dot.icon.app.Copilot .. " Copilot" ---@type string
         local hl_text = btn(text, fn_show_message)

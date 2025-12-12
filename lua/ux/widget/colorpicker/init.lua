@@ -53,7 +53,7 @@ function M:pick()
       self:__apply_color__(result.r, result.g, result.b, result.alpha)
     else
       self._range = { row, col, row, col }
-      local last = eve.context.colorpicker.get_last_color()
+      local last = era.context.colorpicker.get_last_color()
       if last then
         local r, g, b = convert.hex_parse(last.hex)
         if r and g and b then
@@ -433,8 +433,8 @@ function M:__complete__()
   if self._range and self._source_bufnr and vim.api.nvim_buf_is_valid(self._source_bufnr) then
     local hex = self._color:hex()
     local alpha = self._color:get_alpha()
-    eve.context.colorpicker.push(hex, alpha)
-    eve.context.colorpicker.set_last_color(hex, alpha)
+    era.context.colorpicker.push(hex, alpha)
+    era.context.colorpicker.set_last_color(hex, alpha)
 
     local text = self._color:str()
     local start_row, start_col, end_row, end_col = self._range[1] - 1, self._range[2], self._range[3] - 1, self._range[4]
@@ -509,7 +509,7 @@ end
 ---@protected
 ---@return nil
 function M:__goto_prev_history__()
-  local size = eve.context.colorpicker.size()
+  local size = era.context.colorpicker.size()
   if size == 0 then
     return
   end
@@ -529,7 +529,7 @@ end
 ---@param index                         integer
 ---@return nil
 function M:__load_history_item__(index)
-  local item = eve.context.colorpicker.get(index)
+  local item = era.context.colorpicker.get(index)
   if not item then
     return
   end

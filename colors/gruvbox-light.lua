@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("gruvbox-light")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("gruvbox-light")
+era.context.theme.reload_theme(false, false)

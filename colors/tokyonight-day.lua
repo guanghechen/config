@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("tokyonight-day")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("tokyonight-day")
+era.context.theme.reload_theme(false, false)

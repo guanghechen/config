@@ -260,8 +260,8 @@ local function disable()
   vim.cmd("redraw!")
 end
 
-ark.fn.observe({ eve.context.flight.dressing_dim }, function()
-  if eve.context.flight.dressing_dim:snapshot() then
+ark.fn.observe({ era.context.flight.dressing_dim }, function()
+  if era.context.flight.dressing_dim:snapshot() then
     enable()
   else
     disable()

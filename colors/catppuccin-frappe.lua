@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("catppuccin-frappe")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("catppuccin-frappe")
+era.context.theme.reload_theme(false, false)

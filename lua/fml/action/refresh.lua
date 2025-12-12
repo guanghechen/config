@@ -7,7 +7,7 @@ local M = {}
 function M.refresh_all()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd("checktime")
   era.tab.refresh()

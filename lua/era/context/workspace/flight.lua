@@ -1,4 +1,4 @@
----@class eve.context.flight.data
+---@class era.context.flight.data
 ---@field public ai                     boolean
 ---@field public ai_nes                 boolean
 ---@field public autoformat             boolean
@@ -21,7 +21,7 @@
 ---
 ---@field public gitdiff_expand_all     boolean
 
----@class eve.context.flight.state
+---@class era.context.flight.state
 ---@field public ai                     ark.c.Observable
 ---@field public ai_nes                 ark.c.Observable
 ---@field public autoformat             ark.c.Observable
@@ -44,14 +44,14 @@
 ---
 ---@field public gitdiff_expand_all     ark.c.Observable
 
----@class eve.context.flight : eve.context.flight.state
----@field public defaults               fun(): eve.context.flight.data
----@field public dump                   fun(): eve.context.flight.data
+---@class era.context.flight : era.context.flight.state
+---@field public defaults               fun(): era.context.flight.data
+---@field public dump                   fun(): era.context.flight.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.context.flight.data
+---@field public normalize              fun(data: unknown): era.context.flight.data
 local M = {}
 
----@return eve.context.flight.data
+---@return era.context.flight.data
 function M.defaults()
   local workspace = era.path.workspace() ---@type string
   local is_home_config_dir = workspace == dot.env.HOME_NVIM_CONFIG ---@type boolean
@@ -60,7 +60,7 @@ function M.defaults()
   local is_playground = era.path.is_repo_playground() ---@type boolean
   local is_personal_public = era.path.is_repo_personal_public() ---@type boolean
 
-  ---@type eve.context.flight.data
+  ---@type era.context.flight.data
   return {
     ai = is_thirdparty or is_playground or is_personal_public,
     ai_nes = false,
@@ -87,9 +87,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return eve.context.flight.data
+---@return era.context.flight.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.context.flight.data
+  local resolved = M.defaults() ---@type era.context.flight.data
   if type(data) == "table" then
     if type(data.ai) == "boolean" then
       resolved.ai = data.ai
@@ -154,9 +154,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return eve.context.flight.data
+---@return era.context.flight.data
 function M.dump()
-  ---@type eve.context.flight.data
+  ---@type era.context.flight.data
   return {
     ai = M.ai:snapshot(),
     ai_nes = M.ai_nes:snapshot(),
@@ -185,7 +185,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.context.flight.data
+  local data = M.normalize(raw_data) ---@type era.context.flight.data
 
   M.ai:next(data.ai)
   M.ai_nes:next(data.ai_nes)
@@ -212,7 +212,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type eve.context.flight.data
+local _defaults = M.defaults() ---@type era.context.flight.data
 M.ai = ark.c.Observable.from_value(_defaults.ai)
 M.ai_nes = ark.c.Observable.from_value(_defaults.ai_nes)
 M.autoformat = ark.c.Observable.from_value(_defaults.autoformat)

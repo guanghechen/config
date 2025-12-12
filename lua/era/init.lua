@@ -30,6 +30,7 @@ local state = setmetatable({
 local __mods = {
   buf = "era.buf",
   command = "era.command",
+  context = "era.context",
   fs = "era.fs",
   git = "era.git",
   path = "era.path",
@@ -43,6 +44,7 @@ local __mods = {
 ---@field public __mods                 era.__mods
 ---@field public buf                    era.buf
 ---@field public command                era.command
+---@field public context                era.context
 ---@field public fs                     era.fs
 ---@field public git                    era.git
 ---@field public path                   era.path

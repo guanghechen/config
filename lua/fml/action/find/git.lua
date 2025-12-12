@@ -2,13 +2,13 @@ local name = "fml.action.find.git" ---@type string
 local title = "Find Git" ---@type string
 
 local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
-local o_search_pattern = eve.context.select.find_git.search_pattern
-local o_flag_foldempty = eve.context.select.find_git.flag_foldempty
-local o_flag_fuzzy = eve.context.select.find_git.flag_fuzzy
-local o_flag_regex = eve.context.select.find_git.flag_regex
-local o_flag_case_sensitive = eve.context.select.find_git.flag_case_sensitive
-local o_flag_selected = eve.context.select.find_git.flag_selected
-local o_flag_viewtype = eve.context.select.find_git.flag_viewtype
+local o_search_pattern = era.context.select.find_git.search_pattern
+local o_flag_foldempty = era.context.select.find_git.flag_foldempty
+local o_flag_fuzzy = era.context.select.find_git.flag_fuzzy
+local o_flag_regex = era.context.select.find_git.flag_regex
+local o_flag_case_sensitive = era.context.select.find_git.flag_case_sensitive
+local o_flag_selected = era.context.select.find_git.flag_selected
+local o_flag_viewtype = era.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
 local picker ---@type ux.picker.FiletreeComposer
@@ -32,7 +32,7 @@ end
 
 picker = ux.picker.FiletreeComposer.new({
   name = name,
-  frecency = eve.context.frecency.files,
+  frecency = era.context.frecency.files,
   permanent = true,
   title = string.format("%s (not committed)", title),
   height = 0.90,

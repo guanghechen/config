@@ -306,12 +306,12 @@ local function get_treesitter_locals(bufnr)
   return roots
 end
 
-local o_search_pattern = eve.context.select.lsp_symbols.search_pattern ---@type ark.c.Observable
-local o_flag_fuzzy = eve.context.select.lsp_symbols.flag_fuzzy ---@type ark.c.Observable
-local o_flag_regex = eve.context.select.lsp_symbols.flag_regex ---@type ark.c.Observable
-local o_flag_case_sensitive = eve.context.select.lsp_symbols.flag_case_sensitive ---@type ark.c.Observable
-local o_flag_viewtype = eve.context.select.lsp_symbols.flag_viewtype ---@type ark.c.Observable
-local o_flag_foldempty = eve.context.select.lsp_symbols.flag_foldempty ---@type ark.c.Observable
+local o_search_pattern = era.context.select.lsp_symbols.search_pattern ---@type ark.c.Observable
+local o_flag_fuzzy = era.context.select.lsp_symbols.flag_fuzzy ---@type ark.c.Observable
+local o_flag_regex = era.context.select.lsp_symbols.flag_regex ---@type ark.c.Observable
+local o_flag_case_sensitive = era.context.select.lsp_symbols.flag_case_sensitive ---@type ark.c.Observable
+local o_flag_viewtype = era.context.select.lsp_symbols.flag_viewtype ---@type ark.c.Observable
+local o_flag_foldempty = era.context.select.lsp_symbols.flag_foldempty ---@type ark.c.Observable
 local picker ---@type ux.picker.TreeComposer
 
 ---@param kindname                      string

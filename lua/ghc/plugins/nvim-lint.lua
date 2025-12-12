@@ -98,7 +98,7 @@ return {
       silent = ark.fn.falsy,
       value = ark.c.Observable.from_value(true),
       task = function(_, context)
-        local spellcheck = eve.context.lsp.spellcheck:snapshot() ---@type boolean
+        local spellcheck = era.context.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then
           return
         end

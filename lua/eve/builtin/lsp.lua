@@ -360,7 +360,7 @@ function M.on_attach(client, bufnr)
   if vim.bo[bufnr].buftype == "" then
     -- code lens
     if support_codelens == 1 then
-      local enable_code_lens = eve.context.lsp.code_lens:snapshot() ---@type boolean
+      local enable_code_lens = era.context.lsp.code_lens:snapshot() ---@type boolean
       if enable_code_lens then
         vim.lsp.codelens.refresh({ bufnr = bufnr })
         vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
@@ -376,7 +376,7 @@ function M.on_attach(client, bufnr)
 
   -- inlay hints
   if support_inlayhint == 1 then
-    local enable_inlay_hints = eve.context.lsp.inlay_hints:snapshot() ---@type boolean
+    local enable_inlay_hints = era.context.lsp.inlay_hints:snapshot() ---@type boolean
     vim.lsp.inlay_hint.enable(enable_inlay_hints, { bufnr = bufnr })
   end
 
@@ -391,7 +391,7 @@ function M.on_attach(client, bufnr)
 
   -- illuminate
   if support_documentHighlight == 1 then
-    local enabled = eve.context.flight.dressing_illumniate:snapshot() ---@type boolean
+    local enabled = era.context.flight.dressing_illumniate:snapshot() ---@type boolean
     if enabled then
       vim.api.nvim_create_autocmd({ "CursorHold" }, {
         group = augroup_illuminate,

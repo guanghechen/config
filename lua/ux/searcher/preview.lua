@@ -222,7 +222,7 @@ function M:create_win(winopts, dimension)
 
   local result = self._last_result ---@type ux.searcher.preview.IDrawResult|nil
   local bufnr = self:create_buf() ---@type integer
-  local winblend = eve.context.theme.get_float_winblend() ---@type integer
+  local winblend = era.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
     relative = "editor",
     row = dimension.row,

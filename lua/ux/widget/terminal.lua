@@ -41,7 +41,7 @@ local termline = ux.nvimbar.Nvimbar.new({
   comp_sep_hlname_active = "f_wl_bg",
   delay = 128,
   silent = function()
-    local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
+    local devmode = era.context.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()

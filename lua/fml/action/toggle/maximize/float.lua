@@ -60,7 +60,7 @@ function M.maximize(winnr)
     return
   end
 
-  vim.wo[winnr].winblend = eve.context.theme.get_float_winblend()
+  vim.wo[winnr].winblend = era.context.theme.get_float_winblend()
   vim.wo[winnr].winhighlight = WINHIGHLIGHT
 end
 

@@ -5,7 +5,7 @@ local position = "f_wl" ---@type ux.nvimbar.PositionEnum
 
 ---@return boolean
 local function silent()
-  local devmode = eve.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
   return not devmode
 end
 

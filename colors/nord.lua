@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("nord")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("nord")
+era.context.theme.reload_theme(false, false)

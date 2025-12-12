@@ -87,7 +87,7 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].filetype = dot.filetype.UX_INPUT
   vim.bo[bufnr].swapfile = false
 
-  local winblend = eve.context.theme.get_float_winblend() ---@type integer
+  local winblend = era.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor" ---@type "editor"|"cursor"|"win"
   local relative_win = opts.win ---@type integer|nil
 
@@ -298,8 +298,8 @@ function M.input(opts, on_confirm)
 end
 
 local original_input = vim.ui.input
-ark.fn.observe({ eve.context.flight.dressing_input }, function()
-  local flag = eve.context.flight.dressing_input:snapshot() ---@type boolean
+ark.fn.observe({ era.context.flight.dressing_input }, function()
+  local flag = era.context.flight.dressing_input:snapshot() ---@type boolean
   if flag then
     vim.ui.input = M.input
   else

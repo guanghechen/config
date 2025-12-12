@@ -8,8 +8,8 @@ _G.std = require("std") ---@type std
 _G.eve = require("eve") ---@type eve
 _G.ux = require("ux") ---@type ux
 
-local default_storage = eve.get_default_storage() ---@type eve.context.storage
-local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type eve.context.storage
+local default_storage = eve.get_default_storage() ---@type era.context.storage
+local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type era.context.storage
 eve.setup_context(storage)
 
 require("ghc.plugin")

@@ -107,7 +107,7 @@ local scheduler = ark.c.Scheduler.new({
   silent = ark.fn.falsy,
   value = ark.c.Observable.from_value(true),
   task = function(_, context)
-    local enabled = eve.context.flight.dressing_winsep:snapshot() ---@type boolean
+    local enabled = era.context.flight.dressing_winsep:snapshot() ---@type boolean
     if not enabled then
       winsep:hide()
       return
@@ -121,7 +121,7 @@ local scheduler = ark.c.Scheduler.new({
   end,
 })
 
-ark.fn.observe({ eve.context.flight.dressing_winsep }, function()
+ark.fn.observe({ era.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = era.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
   local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext

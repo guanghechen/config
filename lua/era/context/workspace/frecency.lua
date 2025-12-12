@@ -1,28 +1,28 @@
----@class eve.context.frecency.data
+---@class era.context.frecency.data
 ---@field public files                  ark.c.frecency.ISerializedData
 
----@class eve.context.frecency.state
+---@class era.context.frecency.state
 ---@field public files                  ark.c.Frecency
 
----@class eve.context.frecency : eve.context.frecency.state
----@field public defaults               fun(): eve.context.frecency.data
----@field public dump                   fun(): eve.context.frecency.data
+---@class era.context.frecency : era.context.frecency.state
+---@field public defaults               fun(): era.context.frecency.data
+---@field public dump                   fun(): era.context.frecency.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.context.frecency.data
+---@field public normalize              fun(data: unknown): era.context.frecency.data
 local M = {}
 
----@return eve.context.frecency.data
+---@return era.context.frecency.data
 function M.defaults()
-  ---@type eve.context.frecency.data
+  ---@type era.context.frecency.data
   return {
     files = { items = {} },
   }
 end
 
 ---@param data                          any
----@return eve.context.frecency.data
+---@return era.context.frecency.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.context.frecency.data
+  local resolved = M.defaults() ---@type era.context.frecency.data
   if type(data) == "table" then
     for key, frecency in pairs(resolved) do
       local data_frecency = data[key] ---@type ark.c.frecency.ISerializedData|nil
@@ -37,13 +37,13 @@ function M.normalize(data)
     end
   end
 
-  ---@type eve.context.frecency.data
+  ---@type era.context.frecency.data
   return resolved
 end
 
----@return eve.context.frecency.data
+---@return era.context.frecency.data
 function M.dump()
-  ---@type eve.context.frecency.data
+  ---@type era.context.frecency.data
   return {
     files = M.files:dump(),
   }
@@ -52,14 +52,14 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.context.frecency.data
+  local data = M.normalize(raw_data) ---@type era.context.frecency.data
 
   M.files:load(data.files)
 end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type eve.context.frecency.data
+local _defaults = M.defaults() ---@type era.context.frecency.data
 
 ---@type ark.c.Frecency
 M.files = ark.c.Frecency.deserialize({

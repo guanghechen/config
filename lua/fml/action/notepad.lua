@@ -154,7 +154,7 @@ end
 
 ---@return nil
 function M.create()
-  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local source, config = eve.state.notepad.retrieve_source(source_name)
 
   local prefix = config.default_item_name() ---@type string

@@ -1,6 +1,5 @@
 ---@class eve.__mods
 local __mods = {
-  context = "eve.context",
   fn = "eve.fn",
   state = "eve.state",
 
@@ -20,7 +19,6 @@ local __mods = {
 
 ---@class eve
 ---@field public __mods                 eve.__mods
----@field public context                eve.context
 ---@field public fn                     eve.fn
 ---@field public state                  eve.state
 ---
@@ -46,11 +44,11 @@ local M = setmetatable({ __mods = __mods }, {
   end,
 })
 
----@return eve.context.storage
+---@return era.context.storage
 function M.get_default_storage()
   local is_git_repo = era.path.is_git_repo() ---@type boolean
 
-  ---@type eve.context.storage
+  ---@type era.context.storage
   return {
     editor = era.path.locate_context_filepath("editor.json"),
     session = is_git_repo and era.path.locate_workspace_filepath("session.json") or nil,
@@ -60,20 +58,20 @@ function M.get_default_storage()
   }
 end
 
----@param storage                       eve.context.storage|nil
+---@param storage                       era.context.storage|nil
 ---@return nil
 function M.setup_context(storage)
-  storage = storage or M.get_default_storage() ---@type eve.context.storage
-  eve.context.set_storage(storage)
-  eve.context.load(storage, false)
+  storage = storage or M.get_default_storage() ---@type era.context.storage
+  era.context.set_storage(storage)
+  era.context.load(storage, false)
 
-  local colorscheme = eve.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+  local colorscheme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
   vim.cmd.colorscheme(colorscheme)
 end
 
 ---@return nil
 function M.setup_breakpoints()
-  local breakpoints = eve.context.lsp.breakpoints:snapshot() ---@type eve.context.lsp.IBreakpointData
+  local breakpoints = era.context.lsp.breakpoints:snapshot() ---@type era.context.lsp.IBreakpointData
   if #breakpoints < 1 then
     return
   end
@@ -107,7 +105,7 @@ function M.setup_diagnostics()
   local severity2prefixicon = dot.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
   local severity2texticon = dot.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
 
-  ark.fn.observe({ eve.context.lsp.diagnostics_virt_lines }, function()
+  ark.fn.observe({ era.context.lsp.diagnostics_virt_lines }, function()
     ---@type vim.diagnostic.Opts
     local config = {
       float = {
@@ -140,7 +138,7 @@ function M.setup_diagnostics()
       },
     }
 
-    local enable_diagnostic_virt_lines = eve.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+    local enable_diagnostic_virt_lines = era.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
     if not enable_diagnostic_virt_lines then
       config.virtual_lines = false
       config.virtual_text.current_line = nil
@@ -173,7 +171,7 @@ function M.setup_lsp()
   -- }
   -- vim.lsp.enable(lsp_servers)
 
-  if not vim.g.vscode and eve.context.flight.ai:snapshot() then
+  if not vim.g.vscode and era.context.flight.ai:snapshot() then
     vim.lsp.enable("copilot")
   end
 

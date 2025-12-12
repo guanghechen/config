@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("rosepine-main")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("rosepine-main")
+era.context.theme.reload_theme(false, false)

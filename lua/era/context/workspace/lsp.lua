@@ -1,14 +1,14 @@
-local __module_name__ = "eve.context.workspace.lsp" ---@type string
+local __module_name__ = "era.context.workspace.lsp" ---@type string
 
----@class eve.context.lsp.IBreakpointData
+---@class era.context.lsp.IBreakpointData
 ---@field public filepath               string
 ---@field public lnum                   integer
 ---@field public condition              ?string
 ---@field public hit_condition          ?string
 ---@field public log_message            ?string
 
----@class eve.context.lsp.data
----@field public breakpoints            eve.context.lsp.IBreakpointData[]
+---@class era.context.lsp.data
+---@field public breakpoints            era.context.lsp.IBreakpointData[]
 ---@field public code_lens              boolean
 ---@field public diagnostics_virt_lines boolean
 ---@field public inlay_hints            boolean
@@ -17,7 +17,7 @@ local __module_name__ = "eve.context.workspace.lsp" ---@type string
 ---@field public python_venv_path       string|nil
 ---@field public spellcheck             boolean
 
----@class eve.context.lsp.state
+---@class era.context.lsp.state
 ---@field public breakpoints            ark.c.Observable
 ---@field public code_lens              ark.c.Observable
 ---@field public diagnostics_virt_lines ark.c.Observable
@@ -30,11 +30,11 @@ local __module_name__ = "eve.context.workspace.lsp" ---@type string
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
 
----@class eve.context.lsp : eve.context.lsp.state
----@field public defaults               fun(): eve.context.lsp.data
----@field public dump                   fun(): eve.context.lsp.data
+---@class era.context.lsp : era.context.lsp.state
+---@field public defaults               fun(): era.context.lsp.data
+---@field public dump                   fun(): era.context.lsp.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): eve.context.lsp.data
+---@field public normalize              fun(data: unknown): era.context.lsp.data
 local M = {}
 
 ---@param workspace                     string
@@ -54,12 +54,12 @@ local function is_valid_breakpoint(workspace, breakpoint)
   return false
 end
 
----@return eve.context.lsp.data
+---@return era.context.lsp.data
 function M.defaults()
   local is_git_repo = era.path.is_git_repo() ---@type boolean
   local is_repo_personal = era.path.is_repo_personal_public() ---@type boolean
 
-  ---@type eve.context.lsp.data
+  ---@type era.context.lsp.data
   return {
     breakpoints = {},
     code_lens = false,
@@ -73,15 +73,15 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return eve.context.lsp.data
+---@return era.context.lsp.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type eve.context.lsp.data
+  local resolved = M.defaults() ---@type era.context.lsp.data
   local workspace = era.path.workspace() ---@type string
   if type(data) == "table" then
     if type(data.breakpoints) == "table" then
-      resolved.breakpoints = {} ---@type eve.context.lsp.IBreakpointData[]
+      resolved.breakpoints = {} ---@type era.context.lsp.IBreakpointData[]
       for _, raw_breakpoint in ipairs(data.breakpoints) do
-        ---@type eve.context.lsp.IBreakpointData
+        ---@type era.context.lsp.IBreakpointData
         local breakpoint = {
           filepath = raw_breakpoint.filepath,
           lnum = raw_breakpoint.lnum,
@@ -119,9 +119,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return eve.context.lsp.data
+---@return era.context.lsp.data
 function M.dump()
-  ---@type eve.context.lsp.data
+  ---@type era.context.lsp.data
   return {
     breakpoints = M.breakpoints:snapshot(),
     code_lens = M.code_lens:snapshot(),
@@ -135,9 +135,9 @@ function M.dump()
 end
 
 ---@param raw_data                      any
----@return eve.context.lsp.state
+---@return era.context.lsp.state
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type eve.context.lsp.data
+  local data = M.normalize(raw_data) ---@type era.context.lsp.data
 
   M.breakpoints:next(data.breakpoints)
   M.code_lens:next(data.code_lens)
@@ -152,7 +152,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local data = M.defaults() ---@type eve.context.lsp.data
+local data = M.defaults() ---@type era.context.lsp.data
 M.breakpoints = ark.c.Observable.from_value(data.breakpoints)
 M.code_lens = ark.c.Observable.from_value(data.code_lens)
 M.diagnostics_virt_lines = ark.c.Observable.from_value(data.diagnostics_virt_lines)
@@ -196,12 +196,12 @@ function M.refresh_breakpoints()
   end
 
   local raw_breakpoints_list = bps.get()
-  local breakpoints = {} ---@type eve.context.lsp.IBreakpointData[]
+  local breakpoints = {} ---@type era.context.lsp.IBreakpointData[]
   local workspace = era.path.workspace() ---@type string
   for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     for _, raw_breakpoint in ipairs(raw_breakpoints) do
-      ---@type eve.context.lsp.IBreakpointData
+      ---@type era.context.lsp.IBreakpointData
       local breakpoint = {
         filepath = filepath,
         lnum = raw_breakpoint.line,

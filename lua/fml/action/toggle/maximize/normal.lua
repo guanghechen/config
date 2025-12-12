@@ -56,9 +56,9 @@ function M.maximize(winnr)
 
   local wo = vim.wo[float_winnr]
   wo.winhighlight = WINHIGHLIGHT
-  wo.winblend = eve.context.theme.get_float_winblend()
+  wo.winblend = era.context.theme.get_float_winblend()
   wo.number = true
-  wo.relativenumber = eve.context.option.relativenumber:snapshot()
+  wo.relativenumber = era.context.option.relativenumber:snapshot()
   wo.signcolumn = "yes"
   wo.cursorline = true
   wo.wrap = false

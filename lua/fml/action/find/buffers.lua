@@ -14,12 +14,12 @@ local title = "Find Buffers" ---@type string
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local scopes = vim.list_slice(eve.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
-local o_scope = eve.context.select.find_buffer_scope ---@type ark.c.Observable
-local o_search_pattern = eve.context.select.find_buffer.search_pattern ---@type ark.c.Observable
-local o_flag_fuzzy = eve.context.select.find_buffer.flag_fuzzy ---@type ark.c.Observable
-local o_flag_regex = eve.context.select.find_buffer.flag_regex ---@type ark.c.Observable
-local o_flag_case_sensitive = eve.context.select.find_buffer.flag_case_sensitive ---@type ark.c.Observable
+local scopes = vim.list_slice(era.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
+local o_scope = era.context.select.find_buffer_scope ---@type ark.c.Observable
+local o_search_pattern = era.context.select.find_buffer.search_pattern ---@type ark.c.Observable
+local o_flag_fuzzy = era.context.select.find_buffer.flag_fuzzy ---@type ark.c.Observable
+local o_flag_regex = era.context.select.find_buffer.flag_regex ---@type ark.c.Observable
+local o_flag_case_sensitive = era.context.select.find_buffer.flag_case_sensitive ---@type ark.c.Observable
 
 local IGNORED_FILETYPES = {
   dot.filetype.UX_PICKER_FINDER,
@@ -112,7 +112,7 @@ end
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   local cwd = era.path.cwd() ---@type string
-  local scope = eve.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
+  local scope = era.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
   local items = {} ---@type fml.action.find.buffers.IItem[]
@@ -154,7 +154,7 @@ picker = ux.picker.ListComposer.new({
         local idx = ark.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
         local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
-        eve.context.select.find_buffer_scope:next(next_scope)
+        era.context.select.find_buffer_scope:next(next_scope)
         local data = fetch_data()
         picker:reset_data(data)
       end,

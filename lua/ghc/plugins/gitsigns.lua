@@ -271,7 +271,7 @@ local keymaps = {
         and type(wincfg.title[1]) == "table"
         and wincfg.title[1][1] == config.win.preview_hunk.title
       then
-        local winblend = eve.context.theme.get_float_winblend() ---@type integer
+        local winblend = era.context.theme.get_float_winblend() ---@type integer
         vim.wo[winnr].number = false
         vim.wo[winnr].relativenumber = false
         vim.wo[winnr].signcolumn = "yes"

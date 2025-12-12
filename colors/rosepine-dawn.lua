@@ -1,2 +1,2 @@
-eve.context.theme.theme:next("rosepine-dawn")
-eve.context.theme.reload_theme(false, false)
+era.context.theme.theme:next("rosepine-dawn")
+era.context.theme.reload_theme(false, false)

@@ -1,85 +1,85 @@
-local __module_name__ = "eve.context" ---@type string
+local __module_name__ = "era.context" ---@type string
 
----@class eve.context.__mods
+---@class era.context.__mods
 local __mods = {
-  behavior = "eve.context.editor.behavior",
-  theme = "eve.context.editor.theme",
+  behavior = "era.context.editor.behavior",
+  theme = "era.context.editor.theme",
 
   --------------------------------------------------------------------------------------------------
 
-  tab = "eve.context.session.tab",
+  tab = "era.context.session.tab",
 
   --------------------------------------------------------------------------------------------------
 
-  bookmark = "eve.context.workspace.bookmark",
-  colorpicker = "eve.context.workspace.colorpicker",
-  flight = "eve.context.workspace.flight",
-  frecency = "eve.context.workspace.frecency",
-  lsp = "eve.context.workspace.lsp",
-  option = "eve.context.workspace.option",
-  plugin = "eve.context.workspace.plugin",
-  search_buffer = "eve.context.workspace.search_buffer",
-  search_file = "eve.context.workspace.search_file",
-  select = "eve.context.workspace.select",
+  bookmark = "era.context.workspace.bookmark",
+  colorpicker = "era.context.workspace.colorpicker",
+  flight = "era.context.workspace.flight",
+  frecency = "era.context.workspace.frecency",
+  lsp = "era.context.workspace.lsp",
+  option = "era.context.workspace.option",
+  plugin = "era.context.workspace.plugin",
+  search_buffer = "era.context.workspace.search_buffer",
+  search_file = "era.context.workspace.search_file",
+  select = "era.context.workspace.select",
 }
 
----@class eve.context.state.IWatchChangeParams
+---@class era.context.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
----@class eve.context.storage
+---@class era.context.storage
 ---@field public editor                 ?string
 ---@field public session                ?string
 ---@field public workspace              ?string
 ---@field public nvim_session           ?string
 ---@field public nvim_session_autosaved ?string
 
----@class eve.context.data
----@field public behavior               eve.context.behavior.data
----@field public theme                  eve.context.theme.data
+---@class era.context.data
+---@field public behavior               era.context.behavior.data
+---@field public theme                  era.context.theme.data
 ---
----@field public tab                    eve.context.tab.data
+---@field public tab                    era.context.tab.data
 ---
----@field public bookmark               eve.context.bookmark.data
----@field public colorpicker            eve.context.colorpicker.data
----@field public flight                 eve.context.flight.data
----@field public frecency               eve.context.frecency.data
----@field public lsp                    eve.context.lsp.data
----@field public option                 eve.context.option.data
----@field public plugin                 eve.context.plugin.data
----@field public search_buffer          eve.context.search_buffer.data
----@field public search_file            eve.context.search_file.data
----@field public select                 eve.context.select.data
+---@field public bookmark               era.context.bookmark.data
+---@field public colorpicker            era.context.colorpicker.data
+---@field public flight                 era.context.flight.data
+---@field public frecency               era.context.frecency.data
+---@field public lsp                    era.context.lsp.data
+---@field public option                 era.context.option.data
+---@field public plugin                 era.context.plugin.data
+---@field public search_buffer          era.context.search_buffer.data
+---@field public search_file            era.context.search_file.data
+---@field public select                 era.context.select.data
 
----@class eve.context.state
+---@class era.context.state
 ---
----@field public dump                   fun(): eve.context.data
----@field public load                   fun(storage: eve.context.storage): nil
----@field public save                   fun(storage: eve.context.storage): nil
----@field public get_storage            fun(): eve.context.storage
----@field public set_storage            fun(storage: eve.context.storage): nil
+---@field public dump                   fun(): era.context.data
+---@field public load                   fun(storage: era.context.storage): nil
+---@field public save                   fun(storage: era.context.storage): nil
+---@field public get_storage            fun(): era.context.storage
+---@field public set_storage            fun(storage: era.context.storage): nil
 ---
 ---@field public observe                fun(observables: ark.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
----@field public watch_changes          fun(params: eve.context.state.IWatchChangeParams): nil
+---@field public watch_changes          fun(params: era.context.state.IWatchChangeParams): nil
 
----@class eve.context : eve.context.state
----@field public behavior               eve.context.behavior
----@field public theme                  eve.context.theme
+---@class era.context : era.context.state
+---@field public behavior               era.context.behavior
+---@field public theme                  era.context.theme
 ---
----@field public tab                    eve.context.tab
+---@field public tab                    era.context.tab
 ---
----@field public bookmark               eve.context.bookmark
----@field public colorpicker            eve.context.colorpicker
----@field public flight                 eve.context.flight
----@field public frecency               eve.context.frecency
----@field public lsp                    eve.context.lsp
----@field public option                 eve.context.option
----@field public plugin                 eve.context.plugin
----@field public search_buffer          eve.context.search_buffer
----@field public search_file            eve.context.search_file
----@field public select                 eve.context.select
----@field protected _storage            eve.context.storage
+---@field public bookmark               era.context.bookmark
+---@field public colorpicker            era.context.colorpicker
+---@field public flight                 era.context.flight
+---@field public frecency               era.context.frecency
+---@field public lsp                    era.context.lsp
+---@field public option                 era.context.option
+---@field public plugin                 era.context.plugin
+---@field public search_buffer          era.context.search_buffer
+---@field public search_file            era.context.search_file
+---@field public select                 era.context.select
+---@field protected _storage            era.context.storage
 local M = setmetatable({
   _storage = {},
 }, {
@@ -92,9 +92,9 @@ local M = setmetatable({
   end,
 })
 
----@return eve.context.data
+---@return era.context.data
 function M.dump()
-  ---@type eve.context.data
+  ---@type era.context.data
   local data = {
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
@@ -115,7 +115,7 @@ function M.dump()
   return data
 end
 
----@param storage                       eve.context.storage
+---@param storage                       era.context.storage
 ---@param initialize                    boolean
 ---@return nil
 function M.load(storage, initialize)
@@ -158,7 +158,7 @@ function M.load(storage, initialize)
   end
 end
 
----@param storage                       eve.context.storage
+---@param storage                       era.context.storage
 ---@return nil
 function M.save(storage)
   if storage.editor then
@@ -198,12 +198,12 @@ function M.save(storage)
   end
 end
 
----@return eve.context.storage
+---@return era.context.storage
 function M.get_storage()
   return M._storage
 end
 
----@param storage                       eve.context.storage
+---@param storage                       era.context.storage
 ---@return nil
 function M.set_storage(storage)
   M._storage = storage
@@ -215,10 +215,10 @@ function M.watch_changes()
   local ticker_workspace = ark.c.Ticker.new({ start = 0 })
 
   ark.fn.observe({ M.theme.theme }, function()
-    eve.context.theme.reload_theme(false, true)
+    era.context.theme.reload_theme(false, true)
   end, true)
   ark.fn.observe({ M.theme.transparency }, function()
-    eve.context.theme.reload_theme(true, true)
+    era.context.theme.reload_theme(true, true)
   end, true)
 
   ark.fn.observe({
@@ -357,7 +357,7 @@ function M.watch_changes()
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
-      ---@type eve.context.storage
+      ---@type era.context.storage
       local storage = {
         session = autosave and M._storage.session or nil,
         workspace = M._storage.workspace,

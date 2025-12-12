@@ -194,7 +194,7 @@ end
 ---@param uuid                          string|nil Note UUID to focus
 ---@return boolean success
 function M.focus_note(uuid)
-  local source_name = eve.context.option.notepad_source:snapshot() ---@type string
+  local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local source = M.retrieve_source(source_name)
 
   -- Update the source's activated UUID
