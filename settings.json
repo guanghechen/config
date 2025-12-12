@@ -13,7 +13,8 @@
     "disableUpdateNag": false,
     "enablePromptCompletion": true,
     "preferredEditor": "nvim",
-    "vimMode": true
+    "vimMode": true,
+    "previewFeatures": true
   },
   "privacy": {
     "usageStatisticsEnabled": false
@@ -28,9 +29,14 @@
     "hideBanner": true,
     "hideTips": true,
     "hideWindowTitle": true,
+    "showModelInfoInChat": true,
     "showStatusInTitle": true,
-    "theme": "$GEMINI_CONFIG_DIR/local/theme.json"
+    "theme": "$GEMINI_CONFIG_DIR/local/theme.json",
+    "footer": {
+      "hideContextPercentage": false
+    }
   },
   "useSmartEdit": true,
   "useWriteTodos": true
 }
+
