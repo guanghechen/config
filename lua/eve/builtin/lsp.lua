@@ -540,24 +540,6 @@ function M.on_attach(client, bufnr)
       end,
       desc = "lsp: rename",
     },
-    {
-      disabled = support_documentHighlight ~= 1,
-      modes = { "n", "x" },
-      key = "[[",
-      callback = function()
-        require("fml.dressing.illumniate").jump(-vim.v.count1, true)
-      end,
-      desc = "lsp: goto prev reference",
-    },
-    {
-      disabled = support_documentHighlight ~= 1,
-      modes = { "n", "x" },
-      key = "]]",
-      callback = function()
-        require("fml.dressing.illumniate").jump(vim.v.count1, true)
-      end,
-      desc = "lsp: goto next reference",
-    },
   }
   ark.nvim.bindkeys(keymaps, { bufnr = bufnr })
 end

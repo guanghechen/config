@@ -99,6 +99,8 @@
     "Floatwin",
     "Flspgotodefinitions",
     "Flspgotoimplementations",
+    "Flspgotonextreference",
+    "Flspgotoprevreference",
     "Flspgotoreferences",
     "Flspgototypedefinitions",
     "Flsprename",

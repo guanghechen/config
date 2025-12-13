@@ -429,6 +429,9 @@ M.definitions.lsp = {
   goto_references = def("Flspgotoreferences", "lsp: goto references"),
   goto_type_definitions = def("Flspgototypedefinitions", "lsp: goto type definitions"),
 
+  goto_prev_reference = def("Flspgotoprevreference", "lsp: goto prev reference"),
+  goto_next_reference = def("Flspgotonextreference", "lsp: goto next reference"),
+
   restart = def("Flsprestart", "lsp: restart"),
   select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
 }

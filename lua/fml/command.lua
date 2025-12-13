@@ -573,6 +573,20 @@ command
     end,
   })
   .implement({
+    uuid = K.lsp.goto_prev_reference.uuid,
+    action = function()
+      local step = vim.v.count1 ---@type integer
+      require("fml.dressing.illumniate").jump(-step, true)
+    end,
+  })
+  .implement({
+    uuid = K.lsp.goto_next_reference.uuid,
+    action = function()
+      local step = vim.v.count1 ---@type integer
+      require("fml.dressing.illumniate").jump(step, true)
+    end,
+  })
+  .implement({
     uuid = K.lsp.restart.uuid,
     action = function()
       require("fml.action.lsp.server").restart()
