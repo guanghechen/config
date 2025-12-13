@@ -1,15 +1,24 @@
-local __module_name__ = "dot.bootstrap" ---@type string
+local __module_name__ = "integration.bootstrap" ---@type string
 
----@class bootstrap
+---@class integration.bootstrap
 local M = {}
 
 ---@return nil
 function M.setup()
+  _G.yoz = require("yoz") ---@type yoz
+
   M.setup_patches()
   M.setup_workspace()
 
-  require("dot.bootstrap.option")
-  require("dot.bootstrap.keymap")
+  _G.ark = require("ark") ---@type ark
+  _G.dot = require("dot") ---@type dot
+
+  require("integration.bootstrap.option")
+  require("integration.bootstrap.keymap")
+
+  _G.era = require("era") ---@type era
+  _G.std = require("std") ---@type std
+  _G.eve = require("eve") ---@type eve
 end
 
 ---@return nil
@@ -35,8 +44,9 @@ function M.setup_workspace()
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
 
-    local A = dot.env.locate_gitroot(p)
-    local B = dot.env.locate_gitroot(cwd)
+    local env = require("dot.env")
+    local A = env.locate_gitroot(p)
+    local B = env.locate_gitroot(cwd)
 
     if A == nil then
       local ok, err = pcall(function()
