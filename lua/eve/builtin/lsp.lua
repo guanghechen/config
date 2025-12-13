@@ -197,7 +197,7 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   local root = vim.env.MASON or (dot.env.HOME_NVIM_DATA .. dot.env.PATH_SEP .. "mason")
   local filepath = root .. "/packages/" .. pkg .. "/" .. pkg_path
 
-  if not vim.uv.fs_stat(filepath) and not require("lazy.core.config").headless() then
+  if not vim.uv.fs_stat(filepath) and not dot.env.IS_HEADLESS then
     if not silent then
       ark.reporter.warn({
         from = __module_name__,

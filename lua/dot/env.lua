@@ -22,6 +22,8 @@ local IS_KITTY = os.getenv("KITTY_PID") ~= nil or TERM:find("kitty", 1, true) ~=
 local IS_WEZTERM = os.getenv("WEZTERM_EXECUTABLE") ~= nil or TERM_PROGRAM == "wezterm"
 local IS_GHOSTTY = os.getenv("GHOSTTY_RESOURCES_DIR") ~= nil or TERM_PROGRAM == "ghostty"
 
+local IS_HEADLESS = #vim.api.nvim_list_uis() == 0 ---@type boolean
+
 ---@class dot.env
 local M = {}
 
@@ -41,6 +43,7 @@ M.TERM_PROGRAM = TERM_PROGRAM ---@type string
 M.IS_KITTY = IS_KITTY ---@type boolean
 M.IS_WEZTERM = IS_WEZTERM ---@type boolean
 M.IS_GHOSTTY = IS_GHOSTTY ---@type boolean
+M.IS_HEADLESS = IS_HEADLESS ---@type boolean
 
 M.PATH_ENV_SEP = PATH_ENV_SEP ---@type string
 M.PATH_SEP = PATH_SEP ---@type string
