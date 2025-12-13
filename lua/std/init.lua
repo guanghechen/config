@@ -20,8 +20,6 @@ local source = setmetatable({ __mods = source__mods }, {
 
 ---@class std.__mods
 local __mods = {
-  notepad = "std.notepad",
-
   Filetree = "std.collection.filetree",
   Tree = "std.collection.tree",
 }
@@ -29,8 +27,6 @@ local __mods = {
 ---@class std
 ---@field public __mods                 std.__mods
 ---@field public source                 std.source
----
----@field public notepad                std.notepad
 ---
 ---@field public Filetree               std.collection.Filetree
 ---@field public Tree                   std.collection.Tree

@@ -105,10 +105,10 @@ function M:load(force)
           if type(entry) == "table" then
             local uuid = type(entry.uuid) == "string" and entry.uuid or nil
             if uuid ~= nil and #uuid > 0 then
-              local created_at = type(entry.created_at) == "string" and entry.created_at or std.notepad.now_iso_utc()
+              local created_at = type(entry.created_at) == "string" and entry.created_at or era.state.notepad.now_iso_utc()
               local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
               local original_name = type(entry.name) == "string" and entry.name or nil
-              local name = std.notepad.normalize_name(original_name, self.default_item_name)
+              local name = era.state.notepad.normalize_name(original_name, self.default_item_name)
 
               items_map[uuid] = {
                 uuid = uuid,
@@ -153,8 +153,8 @@ function M:load(force)
 
   if #orders == 0 then
     local uuid = yoz.fn.uuid()
-    local now = std.notepad.now_iso_utc()
-    local name = std.notepad.normalize_name(nil, self.default_item_name)
+    local now = era.state.notepad.now_iso_utc()
+    local name = era.state.notepad.normalize_name(nil, self.default_item_name)
     local item = {
       uuid = uuid,
       name = name,
@@ -172,7 +172,7 @@ function M:load(force)
     active_uuid = orders[1]
   end
 
-  local history, history_index = std.notepad.initialize_history(active_uuid)
+  local history, history_index = era.state.notepad.initialize_history(active_uuid)
 
   self._state = {
     items = items_map,
@@ -267,7 +267,7 @@ function M:retrieve_by_name(name, createIfNonexistent)
     return nil
   end
 
-  local normalized_name = std.notepad.normalize_name(name, self.default_item_name)
+  local normalized_name = era.state.notepad.normalize_name(name, self.default_item_name)
   local state = self:load(false) ---@type std.t.INotepadSourceFolderState
 
   local uuid = state.name_to_uuid[normalized_name]
@@ -290,7 +290,7 @@ end
 ---@param content                       string|nil
 ---@return std.t.INotepadItemState
 function M:create(name, content)
-  local normalized_name = std.notepad.normalize_name(name, self.default_item_name)
+  local normalized_name = era.state.notepad.normalize_name(name, self.default_item_name)
   local state = self:load(false) ---@type std.t.INotepadSourceFolderState
 
   local existing_uuid = state.name_to_uuid[normalized_name]
@@ -301,7 +301,7 @@ function M:create(name, content)
   end
 
   local uuid = yoz.fn.uuid()
-  local now = std.notepad.now_iso_utc()
+  local now = era.state.notepad.now_iso_utc()
   local initial_content = content or ""
   local item = {
     uuid = uuid,
@@ -340,9 +340,9 @@ function M:update(uuid, patch)
   local name_changed = false
   local old_name = item.name
 
-  local normalized_name = std.notepad.normalize_name(patch.name, self.default_item_name)
+  local normalized_name = era.state.notepad.normalize_name(patch.name, self.default_item_name)
   if normalized_name ~= item.name then
-    local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+    local has_conflict = era.state.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
     if has_conflict then
       ark.reporter.warn({
         from = __module_name__,
@@ -352,7 +352,7 @@ function M:update(uuid, patch)
       return false
     end
 
-    std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
+    era.state.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
     item.name = normalized_name
     name_changed = true
     modified = true
@@ -364,7 +364,7 @@ function M:update(uuid, patch)
   end
 
   if modified then
-    item.updated_at = std.notepad.now_iso_utc()
+    item.updated_at = era.state.notepad.now_iso_utc()
     self:__save_note_content__(item)
 
     if name_changed then
@@ -390,13 +390,13 @@ function M:rename(uuid, new_name)
 
   self:__load_note_content__(item)
 
-  local normalized_name = std.notepad.normalize_name(new_name, self.default_item_name)
+  local normalized_name = era.state.notepad.normalize_name(new_name, self.default_item_name)
 
   if normalized_name == item.name then
     return false
   end
 
-  local has_conflict = std.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+  local has_conflict = era.state.notepad.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
   if has_conflict then
     ark.reporter.warn({
       from = __module_name__,
@@ -407,9 +407,9 @@ function M:rename(uuid, new_name)
   end
 
   local old_name = item.name
-  std.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
+  era.state.notepad.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
-  item.updated_at = std.notepad.now_iso_utc()
+  item.updated_at = era.state.notepad.now_iso_utc()
 
   self:__rename_note_file__(old_name, item.name)
   self:__schedule_flush__()
@@ -447,7 +447,7 @@ function M:append_content(uuid, text)
   end
 
   item.content = new_content
-  item.updated_at = std.notepad.now_iso_utc()
+  item.updated_at = era.state.notepad.now_iso_utc()
   self:__save_note_content__(item)
   self:__schedule_flush__()
 
@@ -474,7 +474,7 @@ function M:remove(uuid)
   end
 
   self:__delete_note_file__(item.name)
-  std.notepad.remove_from_name_index(state.name_to_uuid, item.name)
+  era.state.notepad.remove_from_name_index(state.name_to_uuid, item.name)
   state.items[uuid] = nil
   ark.table.filter_inline(state.orders, function(element)
     return element ~= uuid
@@ -646,9 +646,9 @@ function M:load_from_json(json_data)
     for _, entry in ipairs(json_data.items) do
       if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
         local uuid = entry.uuid
-        local created_at = type(entry.created_at) == "string" and entry.created_at or std.notepad.now_iso_utc()
+        local created_at = type(entry.created_at) == "string" and entry.created_at or era.state.notepad.now_iso_utc()
         local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
-        local name = std.notepad.normalize_name(entry.name, self.default_item_name)
+        local name = era.state.notepad.normalize_name(entry.name, self.default_item_name)
         local content = type(entry.content) == "string" and entry.content or ""
 
         items_map[uuid] = {
@@ -676,8 +676,8 @@ function M:load_from_json(json_data)
     active_uuid = orders[1]
   end
 
-  local name_to_uuid = std.notepad.build_name_index(items_map)
-  local history, history_index = std.notepad.initialize_history(active_uuid)
+  local name_to_uuid = era.state.notepad.build_name_index(items_map)
+  local history, history_index = era.state.notepad.initialize_history(active_uuid)
 
   self._state = {
     items = items_map,
