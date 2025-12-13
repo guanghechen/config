@@ -5,7 +5,6 @@ local __mods = {
   ai = "eve.builtin.ai",
   buf = "era.buf",
   git = "era.state.git",
-  lsp_action = "eve.builtin.lsp_action",
   session = "era.session",
   tab = "era.tab",
   win = "era.win",
@@ -18,7 +17,6 @@ local __mods = {
 ---@field public ai                     eve.builtin.ai
 ---@field public buf                    era.buf
 ---@field public git                    era.state.git
----@field public lsp_action             eve.builtin.lsp_action
 ---@field public session                era.session
 ---@field public tab                    era.tab
 ---@field public win                    era.win

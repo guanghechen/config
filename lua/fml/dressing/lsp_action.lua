@@ -1,5 +1,5 @@
-eve.lsp_action.setup()
-eve.lsp_action.register({
+era.lsp_action.setup()
+era.lsp_action.register({
   id = "cspell-add-word",
   source = "cspell",
   handler = function(ctx)
@@ -27,7 +27,7 @@ eve.lsp_action.register({
       return
     end
 
-    local actions = {} ---@type eve.builtin.lsp_action.ProviderAction[]
+    local actions = {} ---@type era.t.ILspActionProviderAction[]
 
     local suggestions = lint.cspell_suggestions_from_diagnostic(diagnostic) ---@type string[]
     if #suggestions > 0 then

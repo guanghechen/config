@@ -60,6 +60,7 @@ local __mods = {
   fs = "era.fs",
   git = "era.git",
   lsp = "era.lsp",
+  lsp_action = "era.lsp_action",
   notifier = "era.notifier",
   path = "era.path",
   session = "era.session",
@@ -78,6 +79,7 @@ local __mods = {
 ---@field public fs                     era.fs
 ---@field public git                    era.git
 ---@field public lsp                    era.lsp
+---@field public lsp_action             era.lsp_action
 ---@field public notifier               era.notifier
 ---@field public path                   era.path
 ---@field public session                era.session
