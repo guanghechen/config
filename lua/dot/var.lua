@@ -5,7 +5,7 @@
 local M = {}
 
 M.BUF_UNTITLED = "untitled"
-M.EDITING_INPUT_PREFIX = "@#!eve!#@"
+M.EDITING_INPUT_PREFIX = "@#!era!#@"
 M.WIN_BUF_HISTORY_CAPACITY = 99
 M.WIN_HISTORY_CAPACITY = 99
 

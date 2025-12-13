@@ -18,7 +18,6 @@ function M.setup()
 
   _G.era = require("era") ---@type era
   _G.std = require("std") ---@type std
-  _G.eve = require("eve") ---@type eve
 end
 
 ---@return nil

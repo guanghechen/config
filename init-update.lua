@@ -1,9 +1,9 @@
 require("integration.bootstrap").setup()
 _G.ux = require("ux") ---@type ux
 
-local default_storage = eve.get_default_storage() ---@type era.context.storage
+local default_storage = era.get_default_storage() ---@type era.context.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type era.context.storage
-eve.setup_context(storage)
+era.setup_context(storage)
 
 require("ghc.plugin")
 

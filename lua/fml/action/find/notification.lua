@@ -88,7 +88,7 @@ picker = ux.picker.ListComposer.new({
 
     ---@cast item fml.action.find.notification.IItem
 
-    local task = item.data.task ---@type eve.builtin.notifier.ITask
+    local task = item.data.task ---@type era.t.INotifierTask
 
     ---@type string[]
     local header_lines = {
@@ -165,7 +165,7 @@ picker = ux.picker.ListComposer.new({
 
     dirty_data = true
 
-    local task = item.data.task ---@type eve.builtin.notifier.ITask
+    local task = item.data.task ---@type era.t.INotifierTask
     ark.reporter.log(task.level, {
       from = __module_name__,
       title = task.title,
