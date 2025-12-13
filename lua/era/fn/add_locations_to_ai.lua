@@ -1,11 +1,8 @@
-local __module_name__ = "eve.builtin.ai" ---@type string
-
----@class eve.builtin.ai
-local M = {}
+local __module_name__ = "era.fn.add_locations_to_ai" ---@type string
 
 ---@param locations                     era.t.ILocation[]
 ---@return nil
-function M.add_locations_to_ai(locations)
+local function add_locations_to_ai(locations)
   if #locations < 1 then
     ark.reporter.warn({
       from = __module_name__,
@@ -105,4 +102,4 @@ function M.add_locations_to_ai(locations)
   end
 end
 
-return M
+return add_locations_to_ai
