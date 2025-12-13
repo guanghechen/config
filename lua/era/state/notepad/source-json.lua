@@ -1,13 +1,13 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "std.source.notepad-json" ---@type string
+local __module_name__ = "era.state.notepad.source-json" ---@type string
 
----@class std.t.INotepadSourceJsonState : std.t.INotepadSourceState
+---@class era.state.notepad.source.JsonState : std.t.INotepadSourceState
 ---JSON-specific state (inherits all fields from INotepadSourceState)
 
----@class std.source.NotepadJsonSource : std.t.INotepadSource
+---@class era.state.notepad.source.Json : std.t.INotepadSource
 ---@field protected default_item_name   fun(): string
 ---@field protected flush_scheduler     ark.c.Scheduler|nil Debounced flush scheduler
----@field protected _state              std.t.INotepadSourceJsonState|nil Internal state cache
+---@field protected _state              era.state.notepad.source.JsonState|nil Internal state cache
 local M = {}
 M.__index = M
 
@@ -40,7 +40,7 @@ local function cleanup_orders(items_map, orders)
 end
 
 ---@param config                        std.t.INotepadSourceConfig
----@return std.source.NotepadJsonSource
+---@return era.state.notepad.source.Json
 function M.new(config)
   local self = setmetatable({}, M)
   self.name = config.name
@@ -80,7 +80,7 @@ function M:mark_active_dirty()
 end
 
 ---@param force                         boolean
----@return std.t.INotepadSourceJsonState
+---@return era.state.notepad.source.JsonState
 function M:load(force)
   if self._state ~= nil and not force then
     return self._state
@@ -216,7 +216,7 @@ end
 
 ---@return std.t.INotepadItemMeta[]
 function M:list()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
   local result = {} ---@type std.t.INotepadItemMeta[]
 
   for _, uuid in ipairs(state.orders) do
@@ -236,14 +236,14 @@ end
 
 ---@return string|nil
 function M:get_activated_uuid()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
   return state.active_uuid
 end
 
 ---@param uuid                          string|nil
 ---@return boolean
 function M:set_activated_uuid(uuid)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   if uuid == nil then
     state.active_uuid = nil
@@ -268,7 +268,7 @@ end
 ---@param createIfNonexistent           boolean|nil
 ---@return std.t.INotepadItemState|nil
 function M:retrieve(uuid, createIfNonexistent)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
   local item = state.items[uuid]
 
   if item == nil and createIfNonexistent then
@@ -291,7 +291,7 @@ function M:retrieve_by_name(name, createIfNonexistent)
   end
 
   local normalized_name = era.state.notepad.normalize_name(name, self.default_item_name)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   local uuid = state.name_to_uuid[normalized_name]
   if uuid ~= nil then
@@ -314,7 +314,7 @@ end
 ---@return std.t.INotepadItemState
 function M:create(name, content)
   local normalized_name = era.state.notepad.normalize_name(name, self.default_item_name)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   -- Check if note with this name already exists using index
   local existing_uuid = state.name_to_uuid[normalized_name]
@@ -347,7 +347,7 @@ end
 ---@param patch                         std.t.INotepadItemPatch
 ---@return boolean
 function M:update(uuid, patch)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   local item = state.items[uuid]
   if item == nil then
@@ -393,7 +393,7 @@ end
 ---@param new_name                      string
 ---@return boolean
 function M:rename(uuid, new_name)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   local item = state.items[uuid]
   if item == nil then
@@ -436,7 +436,7 @@ function M:append_content(uuid, text)
     return false
   end
 
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   uuid = uuid or state.active_uuid
   if uuid == nil then
@@ -466,7 +466,7 @@ end
 ---@param uuid                          string
 ---@return boolean
 function M:remove(uuid)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   -- Reject if last note
   if #state.orders <= 1 then
@@ -497,7 +497,7 @@ end
 ---@param uuid                          string
 ---@return nil
 function M:push_history(uuid)
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   if state.items[uuid] == nil then
     return
@@ -521,19 +521,19 @@ end
 
 ---@return boolean
 function M:can_go_backward()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
   return state.history_index > 1
 end
 
 ---@return boolean
 function M:can_go_forward()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
   return state.history_index > 0 and state.history_index < #state.note_uuid_history
 end
 
 ---@return string|nil
 function M:go_backward()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   -- Keep going back until we find a valid note or reach the start
   while state.history_index > 1 do
@@ -551,7 +551,7 @@ end
 
 ---@return string|nil
 function M:go_forward()
-  local state = self:load(false) ---@type std.t.INotepadSourceJsonState
+  local state = self:load(false) ---@type era.state.notepad.source.JsonState
 
   -- Keep going forward until we find a valid note or reach the end
   while state.history_index < #state.note_uuid_history do

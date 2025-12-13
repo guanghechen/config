@@ -2,6 +2,9 @@
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'folder' Source engine type
 
+local NotepadJsonSource = require("era.state.notepad.source-json")
+local NotepadFolderSource = require("era.state.notepad.source-folder")
+
 ---@type era.state.notepad.ISourceConfig[]
 local source_configs = {
   {
@@ -156,9 +159,9 @@ function M.migrate_source_engine(name, target_engine)
 
   local new_source
   if target_engine == "folder" then
-    new_source = std.source.NotepadFolderSource.new(new_config)
+    new_source = NotepadFolderSource.new(new_config)
   else
-    new_source = std.source.NotepadJsonSource.new(new_config)
+    new_source = NotepadJsonSource.new(new_config)
   end
 
   if not new_source:load_from_json(json_data) then
@@ -232,9 +235,9 @@ function M.retrieve_source(name)
 
     local source
     if config.engine == "folder" then
-      source = std.source.NotepadFolderSource.new(config)
+      source = NotepadFolderSource.new(config)
     else
-      source = std.source.NotepadJsonSource.new(config)
+      source = NotepadJsonSource.new(config)
     end
     _source_cache[name] = source
     return source, config
@@ -243,7 +246,7 @@ function M.retrieve_source(name)
   local default_config = source_configs[1]
   local default_name = default_config.name
   if _source_cache[default_name] == nil then
-    _source_cache[default_name] = std.source.NotepadJsonSource.new(default_config)
+    _source_cache[default_name] = NotepadJsonSource.new(default_config)
   end
   return _source_cache[default_name], default_config
 end
