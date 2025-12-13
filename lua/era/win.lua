@@ -465,7 +465,7 @@ function M.locate_symbols(winnr, callback)
     return cancel_request
   end
 
-  if winnr == nil or not era.win.is_valid(winnr) then
+  if winnr == nil or not M.is_valid(winnr) then
     return abort()
   end
 
@@ -581,7 +581,8 @@ function M.locate_symbols(winnr, callback)
 
   ---! Make the request to the LSP server
   local requests
-  requests, cancel_lsp = vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
+  requests, cancel_lsp =
+    vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
   cancel_lsp = cancel_lsp or ark.fn.noop
   if requests == nil or next(requests) == nil then
     return abort()
