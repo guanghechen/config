@@ -4,25 +4,25 @@
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  eve.lsp.before_init(params, config)
+  era.lsp.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  eve.lsp.on_attach(client, bufnr)
+  era.lsp.on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  eve.lsp.on_detach(client, bufnr)
+  era.lsp.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  eve.lsp.on_init(client, config)
+  era.lsp.on_init(client, config)
 
   --- https://github.com/neovim/nvim-lspconfig/pull/4016
   --- Since formatting is disabled by default if you check `client:supports_method('textDocument/formatting')`
@@ -33,7 +33,7 @@ end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = eve.lsp.get_capabilities(),
+  capabilities = era.lsp.get_capabilities(),
   cmd = { "yaml-language-server", "--stdio" },
   filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab", "yaml.helm-values" },
   root_markers = { ".git" },

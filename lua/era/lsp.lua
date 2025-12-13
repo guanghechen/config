@@ -1,29 +1,29 @@
-local __module_name__ = "eve.builtin.lsp"
+local __module_name__ = "era.lsp"
 
 local Methods = vim.lsp.protocol.Methods
-local augroup_codelens = ark.nvim.augroup("eve.builtin.lsp.codelens") ---@type integer
-local augroup_illuminate = ark.nvim.augroup("eve.builtin.lsp.illuminate") ---@type integer
+local augroup_codelens = ark.nvim.augroup("era.lsp.codelens") ---@type integer
+local augroup_illuminate = ark.nvim.augroup("era.lsp.illuminate") ---@type integer
 
----@class eve.builtin.lsp.ISymbolPos
+---@class era.t.ISymbolPos
 ---@field public line                   integer
 ---@field public character              integer
 
 ---! Check if cursor is within range
----@param cursor                        eve.builtin.lsp.ISymbolPos
----@param range                         { start: eve.builtin.lsp.ISymbolPos, end: eve.builtin.lsp.ISymbolPos }
+---@param cursor                        era.t.ISymbolPos
+---@param range                         { start: era.t.ISymbolPos, end: era.t.ISymbolPos }
 ---@return boolean
 local function is_within_range(cursor, range)
-  local start = range.start ---@type eve.builtin.lsp.ISymbolPos
-  local finish = range["end"] ---@type eve.builtin.lsp.ISymbolPos
+  local start = range.start ---@type era.t.ISymbolPos
+  local finish = range["end"] ---@type era.t.ISymbolPos
   return (cursor.line > start.line or (cursor.line == start.line and cursor.character >= start.character))
     and (cursor.line < finish.line or (cursor.line == finish.line and cursor.character <= finish.character))
 end
 
----@class eve.builtin.lsp
+---@class era.lsp
 local M = {}
 
 ---! Find the symbol path recursively
----@param cursor                        eve.builtin.lsp.ISymbolPos
+---@param cursor                        era.t.ISymbolPos
 ---@param symbols                       any[]|nil
 ---@return any[]|nil
 function M.find_symbol_path(cursor, symbols)

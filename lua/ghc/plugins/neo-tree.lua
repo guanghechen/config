@@ -549,7 +549,7 @@ return {
     require("fml.dressing.plugin").mock_winpicker()
 
     local function on_move(data)
-      eve.lsp.on_rename(data.source, data.destination)
+      era.lsp.on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")

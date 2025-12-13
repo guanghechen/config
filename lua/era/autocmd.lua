@@ -277,7 +277,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
     local client = vim.lsp.get_client_by_id(client_id)
     local bufnr = args.buf
     if client ~= nil then
-      eve.lsp.on_detach(client, bufnr)
+      era.lsp.on_detach(client, bufnr)
     end
   end,
 })
