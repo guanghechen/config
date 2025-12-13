@@ -1,3 +1,25 @@
+---@class era.fn.__mods
+local __fn__mods = {
+  winpicker = "era.fn.winpicker",
+}
+
+---@class era.fn
+---@field public __mods                 era.fn.__mods
+---@field public winpicker              era.fn.winpicker
+local fn = setmetatable({
+  __mods = __fn__mods,
+}, {
+  __index = function(t, k)
+    local m = __fn__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class era.state.__mods
 local __state__mods = {
   git = "era.state.git",
@@ -51,6 +73,7 @@ local __mods = {
 ---@field public buf                    era.buf
 ---@field public command                era.command
 ---@field public context                era.context
+---@field public fn                     era.fn
 ---@field public fs                     era.fs
 ---@field public git                    era.git
 ---@field public notifier               era.notifier
@@ -63,6 +86,7 @@ local __mods = {
 ---@field public win                    era.win
 local M = setmetatable({
   __mods = __mods,
+  fn = fn,
   state = state,
 }, {
   __index = function(t, k)

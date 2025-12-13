@@ -324,13 +324,13 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
-  return eve.winpicker.pick_window(M.is_focusable, winnr_candidate, false) ---@type integer|nil
+  return era.fn.winpicker(M.is_focusable, winnr_candidate, false) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
-  return eve.winpicker.pick_window(M.is_projectable, winnr_candidate, false) ---@type integer|nil
+  return era.fn.winpicker(M.is_projectable, winnr_candidate, false) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
@@ -339,13 +339,13 @@ function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and M.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
-  return eve.winpicker.pick_window(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
+  return era.fn.winpicker(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
-  return eve.winpicker.pick_window(M.is_swappable, winnr_candidate, false) ---@type integer|nil
+  return era.fn.winpicker(M.is_swappable, winnr_candidate, false) ---@type integer|nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -637,7 +637,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     and M.is_sourcefile(winnr_source)
   )
       and winnr_source
-    or eve.winpicker.pick_window(M.is_sourcefile, winnr_source, true)
+    or era.fn.winpicker(M.is_sourcefile, winnr_source, true)
 
   if winnr == nil then
     return

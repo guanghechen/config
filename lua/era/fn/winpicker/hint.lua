@@ -1,4 +1,4 @@
----@class eve.builtin.winpicker.hint
+---@class era.fn.winpicker.hint
 local M = {
   a = {
     "    █████╗    ",

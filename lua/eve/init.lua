@@ -10,7 +10,6 @@ local __mods = {
   session = "era.session",
   tab = "era.tab",
   win = "era.win",
-  winpicker = "eve.builtin.winpicker",
 }
 
 ---@class eve
@@ -25,7 +24,6 @@ local __mods = {
 ---@field public session                era.session
 ---@field public tab                    era.tab
 ---@field public win                    era.win
----@field public winpicker              eve.builtin.winpicker
 local M = setmetatable({ __mods = __mods }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
