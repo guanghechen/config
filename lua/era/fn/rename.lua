@@ -1,15 +1,15 @@
-local __module_name__ = "eve.fn.rename" ---@type string
+local __module_name__ = "era.fn.rename" ---@type string
 
----@alias eve.fn.rename
----| function(params: eve.fn.rename.IParams): boolean
+---@alias era.fn.rename
+---| fun(params: era.t.IRenameParams): boolean
 
----@class eve.fn.rename.IParams
+---@class era.t.IRenameParams
 ---@field public from                   string
 ---@field public to                     string
 ---@field public isdir                  ?boolean
 ---@field public force                  ?boolean
 
----@type eve.fn.rename
+---@type era.fn.rename
 local function rename(params)
   local from = params.from ---@type string
   local to = params.to ---@type string

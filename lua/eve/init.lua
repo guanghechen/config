@@ -1,7 +1,5 @@
 ---@class eve.__mods
 local __mods = {
-  fn = "eve.fn",
-
   buf = "era.buf",
   git = "era.state.git",
   session = "era.session",
@@ -11,8 +9,6 @@ local __mods = {
 
 ---@class eve
 ---@field public __mods                 eve.__mods
----@field public fn                     eve.fn
----
 ---@field public buf                    era.buf
 ---@field public git                    era.state.git
 ---@field public session                era.session

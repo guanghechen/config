@@ -1,12 +1,14 @@
 ---@class era.fn.__mods
 local __fn__mods = {
   add_locations_to_ai = "era.fn.add_locations_to_ai",
+  rename = "era.fn.rename",
   winpicker = "era.fn.winpicker",
 }
 
 ---@class era.fn
 ---@field public __mods                 era.fn.__mods
 ---@field public add_locations_to_ai    fun(locations: era.t.ILocation[]): nil
+---@field public rename                 era.fn.rename
 ---@field public winpicker              era.fn.winpicker
 local fn = setmetatable({
   __mods = __fn__mods,

@@ -647,7 +647,7 @@ function M.new(props)
           }, function(choice)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
-              local success = eve.fn.rename({
+              local success = era.fn.rename({
                 from = filepath,
                 to = next_filepath,
                 isdir = isdir,
@@ -663,14 +663,14 @@ function M.new(props)
         end
 
         local isdir = filenode.data.filetype == "directory"
-        local success = eve.fn.rename({
+        local success = era.fn.rename({
           from = filepath,
           to = next_filepath,
           isdir = isdir,
         })
 
         if not success then
-          -- Error already reported by eve.fn.rename, just return
+          -- Error already reported by era.fn.rename, just return
           return
         end
 
@@ -769,7 +769,7 @@ function M.new(props)
           }, function(choice)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
-              local success = eve.fn.rename({
+              local success = era.fn.rename({
                 from = filepath,
                 to = next_filepath,
                 isdir = isdir,
@@ -785,14 +785,14 @@ function M.new(props)
         end
 
         local isdir = filenode.data.filetype == "directory"
-        local success = eve.fn.rename({
+        local success = era.fn.rename({
           from = filepath,
           to = next_filepath,
           isdir = isdir,
         })
 
         if not success then
-          -- Error already reported by eve.fn.rename, just return
+          -- Error already reported by era.fn.rename, just return
           return
         end
 
