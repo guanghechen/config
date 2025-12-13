@@ -1,4 +1,4 @@
-require("eve.autocmd")
+require("era.autocmd")
 require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
