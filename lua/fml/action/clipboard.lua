@@ -3,7 +3,8 @@ local M = {}
 
 ---@return nil
 function M.paste()
-  if not eve.clipboard.has_image() then
+  local clipboard = require("fml.dressing.clipboard")
+  if not clipboard.has_image() then
     return
   end
 
@@ -31,7 +32,7 @@ function M.paste()
 
     local filepath_target = era.path.resolve(cwd, filepath_target_relative) ---@type string
     dot.env.mkdirs(filepath_target, false)
-    eve.clipboard.paste_image(filepath_target)
+    clipboard.paste_image(filepath_target)
   end)
 end
 

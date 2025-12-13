@@ -25,6 +25,7 @@ vim.g.mapleader = " "
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
 vim.g.bigfile_line_length = 2500
 vim.g.qf_disable_statusline = true
+vim.g.clipboard = require("integration.bootstrap.clipboard")
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim

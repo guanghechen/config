@@ -1,28 +1,24 @@
 ---see https://github.com/hakonharnes/img-clip.nvim/blob/08a02e14c8c0d42fa7a92c30a98fd04d6993b35d/lua/img-clip/init.lua#L1
 
-local __module_name__ = "eve.builtin.clipboard" ---@type string
+local __module_name__ = "fml.dressing.clipboard" ---@type string
 
 local BYTE_DOT = 0x2e ---@type integer '.'
 local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 
----@class eve.builtin.clipboard
----@field public get_clipboard          fun(): table|nil
+---@class fml.dressing.clipboard
 ---@field public get_image_as_base64    fun(): string|nil
 ---@field public has_image              fun(): boolean
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
 if dot.env.IS_MAC then
-  M = require("eve.builtin.clipboard.mac")
-  if dot.env.IS_TMUX then
-    M.get_clipboard = require("eve.builtin.clipboard.tmux").get_clipboard
-  end
+  M = require("fml.dressing.clipboard.mac")
 elseif dot.env.IS_WSL then
-  M = require("eve.builtin.clipboard.wsl")
+  M = require("fml.dressing.clipboard.wsl")
 elseif dot.env.IS_NIX then
-  M = require("eve.builtin.clipboard.nix")
+  M = require("fml.dressing.clipboard.nix")
 elseif dot.env.IS_WIN then
-  M = require("eve.builtin.clipboard.win")
+  M = require("fml.dressing.clipboard.win")
 end
 
 ---@param alt                           string

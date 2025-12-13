@@ -1,6 +1,6 @@
-local __module_name__ = "eve.builtin.clipboard.win" ---@type string
+local __module_name__ = "fml.dressing.clipboard.wsl" ---@type string
 
----@class eve.builtin.clipboard.win
+---@class fml.dressing.clipboard.wsl
 local M = {}
 
 ---@param cmd                           string
@@ -92,11 +92,6 @@ function M.paste_image_from_clipboard(filepath)
   end
 
   return true
-end
-
----@type nil
-function M.get_clipboard()
-  return nil
 end
 
 return M
