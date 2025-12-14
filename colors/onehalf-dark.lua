@@ -1,2 +1,2 @@
-era.context.theme.theme:next("onehalf-dark")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("onehalf-dark")
+dot.context.theme.reload_theme(false, false)

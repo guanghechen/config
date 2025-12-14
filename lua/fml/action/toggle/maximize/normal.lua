@@ -13,12 +13,12 @@ end
 
 ---@return nil
 local function close()
-  local original = era.state.maximized.get_original_normal() ---@type era.state.maximized.IOriginalNormalWindow|nil
+  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original == nil then
     return
   end
 
-  era.state.maximized.clear_original_normal()
+  dot.state.maximized.clear_original_normal()
   pcall(vim.api.nvim_del_augroup_by_id, original.augroup)
 
   if vim.api.nvim_win_is_valid(original.float_winnr) then
@@ -33,7 +33,7 @@ end
 ---@param winnr                         integer
 ---@return nil
 function M.maximize(winnr)
-  local original = era.state.maximized.get_original_normal() ---@type era.state.maximized.IOriginalNormalWindow|nil
+  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original ~= nil and vim.api.nvim_win_is_valid(original.float_winnr) then
     close()
     return
@@ -56,9 +56,9 @@ function M.maximize(winnr)
 
   local wo = vim.wo[float_winnr]
   wo.winhighlight = WINHIGHLIGHT
-  wo.winblend = era.context.theme.get_float_winblend()
+  wo.winblend = dot.context.theme.get_float_winblend()
   wo.number = true
-  wo.relativenumber = era.context.option.relativenumber:snapshot()
+  wo.relativenumber = dot.context.option.relativenumber:snapshot()
   wo.signcolumn = "yes"
   wo.cursorline = true
   wo.wrap = false
@@ -67,7 +67,7 @@ function M.maximize(winnr)
   vim.fn.winrestview(view)
 
   local augroup = vim.api.nvim_create_augroup("fml_maximize_normal", { clear = true }) ---@type integer
-  era.state.maximized.set_original_normal({
+  dot.state.maximized.set_original_normal({
     parent_winnr = winnr,
     float_winnr = float_winnr,
     augroup = augroup,
@@ -76,7 +76,7 @@ function M.maximize(winnr)
   vim.api.nvim_create_autocmd("CursorMoved", {
     group = augroup,
     callback = function()
-      local o = era.state.maximized.get_original_normal()
+      local o = dot.state.maximized.get_original_normal()
       if o ~= nil and vim.api.nvim_win_is_valid(o.parent_winnr) then
         local cursor = vim.api.nvim_win_get_cursor(o.float_winnr) ---@type integer[]
         pcall(vim.api.nvim_win_set_cursor, o.parent_winnr, cursor)
@@ -87,7 +87,7 @@ function M.maximize(winnr)
   vim.api.nvim_create_autocmd("BufWinEnter", {
     group = augroup,
     callback = function()
-      local o = era.state.maximized.get_original_normal()
+      local o = dot.state.maximized.get_original_normal()
       if o ~= nil and vim.api.nvim_win_is_valid(o.parent_winnr) then
         local buf = vim.api.nvim_win_get_buf(o.float_winnr) ---@type integer
         pcall(vim.api.nvim_win_set_buf, o.parent_winnr, buf)
@@ -98,7 +98,7 @@ function M.maximize(winnr)
   vim.api.nvim_create_autocmd("WinEnter", {
     group = augroup,
     callback = function()
-      local o = era.state.maximized.get_original_normal()
+      local o = dot.state.maximized.get_original_normal()
       if o == nil then
         return
       end
@@ -124,7 +124,7 @@ function M.maximize(winnr)
   vim.api.nvim_create_autocmd("VimResized", {
     group = augroup,
     callback = function()
-      local o = era.state.maximized.get_original_normal()
+      local o = dot.state.maximized.get_original_normal()
       if o == nil or not vim.api.nvim_win_is_valid(o.float_winnr) then
         return
       end
@@ -143,13 +143,13 @@ end
 
 ---@return boolean
 function M.is_zoomed()
-  local original = era.state.maximized.get_original_normal() ---@type era.state.maximized.IOriginalNormalWindow|nil
+  local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original == nil then
     return false
   end
 
   if not vim.api.nvim_win_is_valid(original.float_winnr) then
-    era.state.maximized.clear_original_normal()
+    dot.state.maximized.clear_original_normal()
     return false
   end
 

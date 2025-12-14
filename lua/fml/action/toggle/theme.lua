@@ -35,7 +35,7 @@ local COLORS_TO_DISPLAY = {
 
 local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = era.command.definitions.toggle.theme.candidates ---@type string[]
-local o_theme = era.context.theme.theme ---@type ark.c.Observable
+local o_theme = dot.context.theme.theme ---@type ark.c.Observable
 
 ---@type ux.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)
@@ -91,7 +91,7 @@ end
 ---@param theme                         string
 ---@return nil
 local function apply_theme(theme)
-  local scheme = era.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
+  local scheme = dot.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
   if scheme == nil then
     return
   end

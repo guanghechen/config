@@ -39,7 +39,7 @@ function M.destroy()
 
     vim.defer_fn(function()
       era.term.on_closed(termmeta)
-      era.state.status.dirtier_termline:mark_dirty()
+      dot.state.status.dirtier_termline:mark_dirty()
     end, 100)
   end)
 end

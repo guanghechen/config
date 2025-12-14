@@ -2,20 +2,20 @@ local name = "fml.action.find.files" ---@type string
 local title = "Find Files" ---@type string
 local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
 
-local o_flag_exclude = era.context.select.find_file.flag_exclude
-local o_flag_foldempty = era.context.select.find_file.flag_foldempty
-local o_flag_fuzzy = era.context.select.find_file.flag_fuzzy
-local o_flag_gitignore = era.context.select.find_file.flag_gitignore
-local o_flag_regex = era.context.select.find_file.flag_regex
-local o_flag_case_sensitive = era.context.select.find_file.flag_case_sensitive
-local o_flag_selected = era.context.select.find_file.flag_selected
-local o_flag_textonly = era.context.select.find_file.flag_textonly
-local o_flag_viewtype = era.context.select.find_file.flag_viewtype
+local o_flag_exclude = dot.context.select.find_file.flag_exclude
+local o_flag_foldempty = dot.context.select.find_file.flag_foldempty
+local o_flag_fuzzy = dot.context.select.find_file.flag_fuzzy
+local o_flag_gitignore = dot.context.select.find_file.flag_gitignore
+local o_flag_regex = dot.context.select.find_file.flag_regex
+local o_flag_case_sensitive = dot.context.select.find_file.flag_case_sensitive
+local o_flag_selected = dot.context.select.find_file.flag_selected
+local o_flag_textonly = dot.context.select.find_file.flag_textonly
+local o_flag_viewtype = dot.context.select.find_file.flag_viewtype
 
-local o_search_pattern = era.context.select.find_file.search_pattern
-local o_search_pattern_history = era.context.select.find_file.search_pattern_history
-local o_excludes = era.context.select.find_file.excludes
-local o_includes = era.context.select.find_file.includes
+local o_search_pattern = dot.context.select.find_file.search_pattern
+local o_search_pattern_history = dot.context.select.find_file.search_pattern_history
+local o_excludes = dot.context.select.find_file.excludes
+local o_includes = dot.context.select.find_file.includes
 
 ---@class fml.action.find.files.ISettingData
 ---@field public keyword                string
@@ -92,7 +92,7 @@ local function refresh(picker, rootpath)
   local rootuuid = era.Filetree.uuid(rootpath) ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
-  local excludes = enabled_exclude and era.context.select.find_file.excludes:snapshot() or {} ---@type string[]
+  local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
 
   ---@type yoz.find.IFindFilesOptions
   local find_files_options = {
@@ -137,7 +137,7 @@ end
 local picker ---@type ux.picker.FiletreeComposer
 picker = ux.picker.FiletreeComposer.new({
   name = name,
-  frecency = era.context.frecency.files,
+  frecency = dot.context.frecency.files,
   permanent = true,
   title = title,
   height = 0.90,

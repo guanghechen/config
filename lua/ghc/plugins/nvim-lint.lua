@@ -98,7 +98,7 @@ return {
       silent = ark.fn.falsy,
       value = ark.c.Observable.from_value(true),
       task = function(_, context)
-        local spellcheck = era.context.lsp.spellcheck:snapshot() ---@type boolean
+        local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
         if not spellcheck then
           return
         end
@@ -179,7 +179,7 @@ return {
       end,
     })
 
-    ark.fn.observe({ era.state.status.lint_schedule_nr }, function()
+    ark.fn.observe({ dot.state.status.lint_schedule_nr }, function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
       local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
       scheduler:schedule({ context = context })

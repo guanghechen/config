@@ -7,7 +7,7 @@ local M = {}
 function M.refresh_all()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
-  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
 
   vim.cmd("checktime")
   dot.tab.refresh()
@@ -34,9 +34,9 @@ function M.refresh_all()
     end)
   end
 
-  era.state.status.suppress_warning:next(true)
-  era.state.status.dirtier_statusline:mark_dirty()
-  era.state.status.dirtier_tabline:mark_dirty()
+  dot.state.status.suppress_warning:next(true)
+  dot.state.status.dirtier_statusline:mark_dirty()
+  dot.state.status.dirtier_tabline:mark_dirty()
   vim.cmd("redraw!")
 
   local clients = vim.lsp.get_clients({ bufnr = bufnr_sourcefile }) ---@type vim.lsp.Client[]

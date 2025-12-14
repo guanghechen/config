@@ -1,85 +1,85 @@
-local __module_name__ = "era.context" ---@type string
+local __module_name__ = "dot.context" ---@type string
 
----@class era.context.__mods
+---@class dot.context.__mods
 local __mods = {
-  behavior = "era.context.editor.behavior",
-  theme = "era.context.editor.theme",
+  behavior = "dot.context.editor.behavior",
+  theme = "dot.context.editor.theme",
 
   --------------------------------------------------------------------------------------------------
 
-  tab = "era.context.session.tab",
+  tab = "dot.context.session.tab",
 
   --------------------------------------------------------------------------------------------------
 
-  bookmark = "era.context.workspace.bookmark",
-  colorpicker = "era.context.workspace.colorpicker",
-  flight = "era.context.workspace.flight",
-  frecency = "era.context.workspace.frecency",
-  lsp = "era.context.workspace.lsp",
-  option = "era.context.workspace.option",
-  plugin = "era.context.workspace.plugin",
-  search_buffer = "era.context.workspace.search_buffer",
-  search_file = "era.context.workspace.search_file",
-  select = "era.context.workspace.select",
+  bookmark = "dot.context.workspace.bookmark",
+  colorpicker = "dot.context.workspace.colorpicker",
+  flight = "dot.context.workspace.flight",
+  frecency = "dot.context.workspace.frecency",
+  lsp = "dot.context.workspace.lsp",
+  option = "dot.context.workspace.option",
+  plugin = "dot.context.workspace.plugin",
+  search_buffer = "dot.context.workspace.search_buffer",
+  search_file = "dot.context.workspace.search_file",
+  select = "dot.context.workspace.select",
 }
 
----@class era.context.state.IWatchChangeParams
+---@class dot.context.state.IWatchChangeParams
 ---@field public on_theme_changed       ?fun(): nil
 
----@class era.context.storage
+---@class dot.context.storage
 ---@field public editor                 ?string
 ---@field public session                ?string
 ---@field public workspace              ?string
 ---@field public nvim_session           ?string
 ---@field public nvim_session_autosaved ?string
 
----@class era.context.data
----@field public behavior               era.context.behavior.data
----@field public theme                  era.context.theme.data
+---@class dot.context.data
+---@field public behavior               dot.context.behavior.data
+---@field public theme                  dot.context.theme.data
 ---
----@field public tab                    era.context.tab.data
+---@field public tab                    dot.context.tab.data
 ---
----@field public bookmark               era.context.bookmark.data
----@field public colorpicker            era.context.colorpicker.data
----@field public flight                 era.context.flight.data
----@field public frecency               era.context.frecency.data
----@field public lsp                    era.context.lsp.data
----@field public option                 era.context.option.data
----@field public plugin                 era.context.plugin.data
----@field public search_buffer          era.context.search_buffer.data
----@field public search_file            era.context.search_file.data
----@field public select                 era.context.select.data
+---@field public bookmark               dot.context.bookmark.data
+---@field public colorpicker            dot.context.colorpicker.data
+---@field public flight                 dot.context.flight.data
+---@field public frecency               dot.context.frecency.data
+---@field public lsp                    dot.context.lsp.data
+---@field public option                 dot.context.option.data
+---@field public plugin                 dot.context.plugin.data
+---@field public search_buffer          dot.context.search_buffer.data
+---@field public search_file            dot.context.search_file.data
+---@field public select                 dot.context.select.data
 
----@class era.context.state
+---@class dot.context.state
 ---
----@field public dump                   fun(): era.context.data
----@field public load                   fun(storage: era.context.storage): nil
----@field public save                   fun(storage: era.context.storage): nil
----@field public get_storage            fun(): era.context.storage
----@field public set_storage            fun(storage: era.context.storage): nil
+---@field public dump                   fun(): dot.context.data
+---@field public load                   fun(storage: dot.context.storage): nil
+---@field public save                   fun(storage: dot.context.storage): nil
+---@field public get_storage            fun(): dot.context.storage
+---@field public set_storage            fun(storage: dot.context.storage): nil
 ---
 ---@field public observe                fun(observables: ark.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
----@field public watch_changes          fun(params: era.context.state.IWatchChangeParams): nil
+---@field public watch_changes          fun(params: dot.context.state.IWatchChangeParams): nil
 
----@class era.context : era.context.state
----@field public behavior               era.context.behavior
----@field public theme                  era.context.theme
+---@class dot.context : dot.context.state
+---@field public behavior               dot.context.behavior
+---@field public theme                  dot.context.theme
 ---
----@field public tab                    era.context.tab
+---@field public tab                    dot.context.tab
 ---
----@field public bookmark               era.context.bookmark
----@field public colorpicker            era.context.colorpicker
----@field public flight                 era.context.flight
----@field public frecency               era.context.frecency
----@field public lsp                    era.context.lsp
----@field public option                 era.context.option
----@field public plugin                 era.context.plugin
----@field public search_buffer          era.context.search_buffer
----@field public search_file            era.context.search_file
----@field public select                 era.context.select
----@field protected _storage            era.context.storage
+---@field public bookmark               dot.context.bookmark
+---@field public colorpicker            dot.context.colorpicker
+---@field public flight                 dot.context.flight
+---@field public frecency               dot.context.frecency
+---@field public lsp                    dot.context.lsp
+---@field public option                 dot.context.option
+---@field public plugin                 dot.context.plugin
+---@field public search_buffer          dot.context.search_buffer
+---@field public search_file            dot.context.search_file
+---@field public select                 dot.context.select
+---@field protected _storage            dot.context.storage
 local M = setmetatable({
   _storage = {},
 }, {
@@ -92,9 +92,9 @@ local M = setmetatable({
   end,
 })
 
----@return era.context.data
+---@return dot.context.data
 function M.dump()
-  ---@type era.context.data
+  ---@type dot.context.data
   local data = {
     behavior = M.behavior.dump(),
     theme = M.theme.dump(),
@@ -115,7 +115,7 @@ function M.dump()
   return data
 end
 
----@param storage                       era.context.storage
+---@param storage                       dot.context.storage
 ---@param initialize                    boolean
 ---@return nil
 function M.load(storage, initialize)
@@ -153,12 +153,12 @@ function M.load(storage, initialize)
       and vim.fn.filereadable(storage.session) ~= 0
       and ark.fs.read_json({ filepath = storage.session, silent_on_bad_path = true })
     ) or {}
-    era.state.status.reset()
+    dot.state.status.reset()
     M.tab.load(data_session.tab)
   end
 end
 
----@param storage                       era.context.storage
+---@param storage                       dot.context.storage
 ---@return nil
 function M.save(storage)
   if storage.editor then
@@ -198,12 +198,12 @@ function M.save(storage)
   end
 end
 
----@return era.context.storage
+---@return dot.context.storage
 function M.get_storage()
   return M._storage
 end
 
----@param storage                       era.context.storage
+---@param storage                       dot.context.storage
 ---@return nil
 function M.set_storage(storage)
   M._storage = storage
@@ -215,10 +215,10 @@ function M.watch_changes()
   local ticker_workspace = ark.c.Ticker.new({ start = 0 })
 
   ark.fn.observe({ M.theme.theme }, function()
-    era.context.theme.reload_theme(false, true)
+    dot.context.theme.reload_theme(false, true)
   end, true)
   ark.fn.observe({ M.theme.transparency }, function()
-    era.context.theme.reload_theme(true, true)
+    dot.context.theme.reload_theme(true, true)
   end, true)
 
   ark.fn.observe({
@@ -255,8 +255,8 @@ function M.watch_changes()
     M.theme.username,
   }, function()
     ticker_editor:tick()
-    era.state.status.dirtier_statusline:mark_dirty()
-    era.state.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -267,8 +267,8 @@ function M.watch_changes()
     M.plugin.treesitter_context,
     M.option.relativenumber,
   }, function()
-    era.state.status.dirtier_statusline:mark_dirty()
-    era.state.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
     vim.schedule(function()
       vim.cmd("redraw!")
     end)
@@ -298,8 +298,8 @@ function M.watch_changes()
   }
   ark.fn.observe(select_states, function()
     ticker_workspace:tick()
-    era.state.status.dirtier_statusline:mark_dirty()
-    era.state.status.dirtier_tabline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
   end, true)
 
   ark.fn.observe({
@@ -313,10 +313,10 @@ function M.watch_changes()
   end, true)
 
   ark.fn.observe({
-    era.state.status.msg_lsp,
-    era.state.status.msg_mode,
+    dot.state.status.msg_lsp,
+    dot.state.status.msg_mode,
   }, function()
-    era.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_statusline:mark_dirty()
   end)
 
   local scheduler = ark.c.Scheduler.new({
@@ -353,11 +353,11 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  era.state.status.add_disposable(ark.c.Disposable.new({
+  dot.state.status.add_disposable(ark.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
-      ---@type era.context.storage
+      ---@type dot.context.storage
       local storage = {
         session = autosave and M._storage.session or nil,
         workspace = M._storage.workspace,
@@ -392,7 +392,7 @@ function M.watch_changes()
         })
       end,
     })
-    era.state.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
+    dot.state.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

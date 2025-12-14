@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = era.state.status.dirtier_statusline ---@type ark.c.Dirtier
+local dirtier = dot.state.status.dirtier_statusline ---@type ark.c.Dirtier
 local position = "f_sl" ---@type ux.nvimbar.PositionEnum
 
 local statusline ---@type ux.nvimbar.Nvimbar
@@ -11,7 +11,7 @@ statusline = ux.nvimbar.Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   delay = 256,
   silent = function()
-    local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()

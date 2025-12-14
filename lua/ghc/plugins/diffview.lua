@@ -73,7 +73,7 @@ return {
       },
       hooks = {
         diff_buf_win_enter = function(_, _, ctx)
-          if era.context.flight.gitdiff_expand_all:snapshot() then
+          if dot.context.flight.gitdiff_expand_all:snapshot() then
             vim.opt_local.foldlevel = 99
           end
 

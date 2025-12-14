@@ -9,11 +9,11 @@ end)
 
 local python_venv = "" ---@type string|nil
 local python_version = "" ---@type string|nil
-ark.fn.observe({ era.context.lsp.python_venv_path }, function()
-  local python_venv_path = era.context.lsp.python_venv_path:snapshot() ---@type string
+ark.fn.observe({ dot.context.lsp.python_venv_path }, function()
+  local python_venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
   python_venv = python_venv_path ~= nil and yoz.path.basename(python_venv_path) or nil ---@type string|nil
 
-  local python_path = era.context.lsp.get_python_bin_path() ---@type string|nil
+  local python_path = dot.context.lsp.get_python_bin_path() ---@type string|nil
   if python_path ~= nil then
     local cmd = { python_path, "--version" } ---@type string[]
     local ok, output = pcall(vim.fn.system, cmd)

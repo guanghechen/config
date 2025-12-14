@@ -184,7 +184,7 @@ local scheduler = ark.c.Scheduler.new({
   silent = ark.fn.truthy,
   value = ark.c.Observable.from_value(true),
   task = function()
-    local notification_paused = era.state.status.notification_paused:snapshot() ---@type boolean
+    local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then
       return true
     end
@@ -257,12 +257,12 @@ end
 
 ---@return nil
 function M.pause()
-  era.state.status.notification_paused:next(true)
+  dot.state.status.notification_paused:next(true)
 end
 
 ---@return nil
 function M.resume()
-  era.state.status.notification_paused:next(false)
+  dot.state.status.notification_paused:next(false)
   M.schedule()
 end
 
@@ -310,8 +310,8 @@ function M.notify(params)
     timestamp = timestamp,
   }
 
-  local notification_paused = era.state.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = era.state.status.notification_level:snapshot() ---@type ark.e.LogLevelEnum
+  local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
+  local notification_level = dot.state.status.notification_level:snapshot() ---@type ark.e.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 
@@ -482,7 +482,7 @@ function M.__create_win_as_needed__(win)
   end
 
   local winbar = M.__gen_winbar__(task, width) ---@type string
-  local winblend = era.context.theme.get_float_winblend() ---@type integer
+  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local winhighlight = config.winhighlight[task.level] ---@type string
 
   vim.wo[winnr].winbar = winbar

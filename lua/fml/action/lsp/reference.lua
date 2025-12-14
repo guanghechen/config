@@ -10,17 +10,17 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public col_end                integer
 
 local search_pattern = ark.c.Observable.from_value("")
-local flag_foldempty = era.context.select.lsp_reference.flag_foldempty
-local flag_fuzzy = era.context.select.lsp_reference.flag_fuzzy
-local flag_regex = era.context.select.lsp_reference.flag_regex
-local flag_case_sensitive = era.context.select.lsp_reference.flag_case_sensitive
-local flag_selected = era.context.select.lsp_reference.flag_selected
-local flag_viewtype = era.context.select.lsp_reference.flag_viewtype
+local flag_foldempty = dot.context.select.lsp_reference.flag_foldempty
+local flag_fuzzy = dot.context.select.lsp_reference.flag_fuzzy
+local flag_regex = dot.context.select.lsp_reference.flag_regex
+local flag_case_sensitive = dot.context.select.lsp_reference.flag_case_sensitive
+local flag_selected = dot.context.select.lsp_reference.flag_selected
+local flag_viewtype = dot.context.select.lsp_reference.flag_viewtype
 
 local picker = ux.picker.FiletreeComposer.new({
   name = "lsp:reference",
   permanent = true,
-  frecency = era.context.frecency.files,
+  frecency = dot.context.frecency.files,
   title = "LSP References",
   height = 0.80,
   width = 0.85,

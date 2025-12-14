@@ -1,2 +1,2 @@
-era.context.theme.theme:next("catppuccin-mocha")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("catppuccin-mocha")
+dot.context.theme.reload_theme(false, false)

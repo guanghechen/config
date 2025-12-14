@@ -24,7 +24,7 @@ if im then
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       group = augroup,
       callback = function()
-        if not era.context.behavior.auto_im:snapshot() then
+        if not dot.context.behavior.auto_im:snapshot() then
           return
         end
 

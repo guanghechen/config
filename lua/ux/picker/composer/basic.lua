@@ -361,7 +361,7 @@ end
 ---@return nil
 function M:focus(pane)
   self:__health__()
-  era.state.widget.push(self)
+  dot.state.widget.push(self)
 
   local has_new_created = self:__create_wins__()
   local pane_focused = self._pane_focused ---@type ux.picker.composer.basic.PaneEnum
@@ -834,7 +834,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     builtin_keymaps[N] = keymap
   end
 
-  for _, item in ipairs(era.state.widget.get_keymaps(self)) do
+  for _, item in ipairs(dot.state.widget.get_keymaps(self)) do
     N = N + 1 ---@type integer
     builtin_keymaps[N] = item
   end
@@ -956,7 +956,7 @@ function M:__resolve_builtin_keymaps_finder__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#finder: focus left",
       callback = function()
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("h")
         end
       end,
@@ -978,7 +978,7 @@ function M:__resolve_builtin_keymaps_finder__()
           self:__focus_pane__("result")
           return
         end
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("l")
           return
         end
@@ -990,7 +990,7 @@ function M:__resolve_builtin_keymaps_finder__()
       aliases = { "<D-k>", "<M-k>" },
       desc = "picker#finder: focus up",
       callback = function()
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("k")
           return
         end
@@ -1110,7 +1110,7 @@ function M:__resolve_builtin_keymaps_result__()
           end
         end
 
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("j")
           return
         end
@@ -1124,7 +1124,7 @@ function M:__resolve_builtin_keymaps_result__()
       aliases = { "<D-h>", "<M-h>" },
       desc = "picker#result: focus left",
       callback = function()
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("h")
         end
       end,
@@ -1144,7 +1144,7 @@ function M:__resolve_builtin_keymaps_result__()
           end
         end
 
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("l")
           return
         end
@@ -1250,7 +1250,7 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-j>", "<M-j>" },
       desc = "picker#preview: focus down",
       callback = function()
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("j")
           return
         end
@@ -1268,7 +1268,7 @@ function M:__resolve_builtin_keymaps_preview__()
           self:__focus_pane__(pane_focused)
           return
         end
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("h")
         end
       end,
@@ -1279,7 +1279,7 @@ function M:__resolve_builtin_keymaps_preview__()
       aliases = { "<D-l>", "<M-l>" },
       desc = "picker#result: focus right",
       callback = function()
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("l")
           return
         end
@@ -1300,7 +1300,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
 
-        if ark.env.IS_TMUX and not era.state.status.tmux_zen_mode:snapshot() then
+        if ark.env.IS_TMUX and not dot.state.status.tmux_zen_mode:snapshot() then
           ark.tmux.change_pane("k")
           return
         end

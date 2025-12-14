@@ -46,7 +46,7 @@ local function create_widget(params)
     end
   end
 
-  return era.state.widget.wrap({
+  return dot.state.widget.wrap({
     name = name,
     close = hide,
     hide = hide,

@@ -5,7 +5,7 @@ local position = "f_wl" ---@type ux.nvimbar.PositionEnum
 
 ---@return boolean
 local function silent()
-  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
   return not devmode
 end
 
@@ -188,7 +188,7 @@ local function render(winnr)
   end
 end
 
-era.state.status.dirty_winline_nr:subscribe(
+dot.state.status.dirty_winline_nr:subscribe(
   ark.c.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)

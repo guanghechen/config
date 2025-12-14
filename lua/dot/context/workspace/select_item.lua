@@ -1,4 +1,4 @@
----@class era.context.select.item.data
+---@class dot.context.select.item.data
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
 ---@field public flag_foldempty         boolean
@@ -13,7 +13,7 @@
 ---@field public search_pattern         string
 ---@field public search_pattern_history ark.c.history.ISerializedData
 
----@class era.context.select.item.state
+---@class dot.context.select.item.state
 ---@field public flag_case_sensitive    ark.c.Observable
 ---@field public flag_exclude           ark.c.Observable
 ---@field public flag_foldempty         ark.c.Observable
@@ -28,16 +28,16 @@
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ark.c.History
 
----@class era.context.select.item
----@field public defaults               fun(): era.context.select.item.data
----@field public normalize              fun(data: unknown): era.context.select.item.data
----@field public dump                   fun(state: era.context.select.item.state): era.context.select.item.data
----@field public load                   fun(state: era.context.select.item.state|nil, name: string, data: unknown): era.context.select.item.state
+---@class dot.context.select.item
+---@field public defaults               fun(): dot.context.select.item.data
+---@field public normalize              fun(data: unknown): dot.context.select.item.data
+---@field public dump                   fun(state: dot.context.select.item.state): dot.context.select.item.data
+---@field public load                   fun(state: dot.context.select.item.state|nil, name: string, data: unknown): dot.context.select.item.state
 local M = {}
 
----@return era.context.select.item.data
+---@return dot.context.select.item.data
 function M.defaults()
-  ---@type era.context.select.item.data
+  ---@type dot.context.select.item.data
   return {
     flag_case_sensitive = false,
     flag_exclude = true,
@@ -70,9 +70,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.select.item.data
+---@return dot.context.select.item.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.select.item.data
+  local resolved = M.defaults() ---@type dot.context.select.item.data
   if type(data) == "table" then
     if type(data.flag_case_sensitive) == "boolean" then
       resolved.flag_case_sensitive = data.flag_case_sensitive
@@ -122,14 +122,14 @@ function M.normalize(data)
     end
   end
 
-  ---@type era.context.select.item.data
+  ---@type dot.context.select.item.data
   return resolved
 end
 
----@param state                         era.context.select.item.state
----@return era.context.select.item.data
+---@param state                         dot.context.select.item.state
+---@return dot.context.select.item.data
 function M.dump(state)
-  ---@type era.context.select.item.data
+  ---@type dot.context.select.item.data
   return {
     flag_case_sensitive = state.flag_case_sensitive:snapshot(),
     flag_exclude = state.flag_exclude:snapshot(),
@@ -147,15 +147,15 @@ function M.dump(state)
   }
 end
 
----@param state                         era.context.select.item.state|nil
+---@param state                         dot.context.select.item.state|nil
 ---@param name                          string
 ---@param raw_data                      any
----@return era.context.select.item.state
+---@return dot.context.select.item.state
 function M.load(state, name, raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.select.item.data
+  local data = M.normalize(raw_data) ---@type dot.context.select.item.data
 
   if state == nil then
-    ---@type era.context.select.item.state
+    ---@type dot.context.select.item.state
     state = {
       flag_case_sensitive = ark.c.Observable.from_value(data.flag_case_sensitive),
       flag_exclude = ark.c.Observable.from_value(data.flag_exclude),

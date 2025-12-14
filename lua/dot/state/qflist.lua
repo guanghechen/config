@@ -1,10 +1,10 @@
----@class era.state.qflist.IItem
+---@class dot.state.qflist.IItem
 ---@field public filename               string
 ---@field public lnum                   ?integer
 ---@field public col                    ?integer
 ---@field public text                   ?string
 
----@class era.state.qflist
+---@class dot.state.qflist
 local M = {}
 
 ---@type ark.c.History
@@ -15,12 +15,12 @@ M.history = ark.c.History.new({
 
 ---@return nil
 function M.backward()
-  local qflist_cur = M.history:present() ---@type era.state.qflist.IItem[]|nil
+  local qflist_cur = M.history:present() ---@type dot.state.qflist.IItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_prev = M.history:backward() ---@type era.state.qflist.IItem[]|nil
+  local qflist_prev = M.history:backward() ---@type dot.state.qflist.IItem[]|nil
   if qflist_prev == nil or qflist_prev == qflist_cur then
     return
   end
@@ -32,12 +32,12 @@ end
 
 ---@return nil
 function M.forward()
-  local qflist_cur = M.history:present() ---@type era.state.qflist.IItem[]|nil
+  local qflist_cur = M.history:present() ---@type dot.state.qflist.IItem[]|nil
   if qflist_cur == nil then
     return
   end
 
-  local qflist_next = M.history:forward() ---@type era.state.qflist.IItem[]|nil
+  local qflist_next = M.history:forward() ---@type dot.state.qflist.IItem[]|nil
   if qflist_next == nil or qflist_next == qflist_cur then
     return
   end
@@ -65,7 +65,7 @@ function M.open_qflist()
   vim.cmd([[botright copen]])
 end
 
----@param qflist                        era.state.qflist.IItem[]|nil
+---@param qflist                        dot.state.qflist.IItem[]|nil
 ---@return nil
 function M.set_qflist(qflist)
   if qflist ~= nil and #qflist > 0 then
@@ -76,14 +76,14 @@ function M.set_qflist(qflist)
   end
 end
 
----@param qflist                        era.state.qflist.IItem[]|nil
+---@param qflist                        dot.state.qflist.IItem[]|nil
 ---@return nil
 function M.push(qflist)
   if qflist == nil or #qflist < 1 then
     return
   end
 
-  local qflist_cur = M.history:present() ---@type era.state.qflist.IItem[]|nil
+  local qflist_cur = M.history:present() ---@type dot.state.qflist.IItem[]|nil
   if qflist_cur == nil or not ark.fn.equals_deep(qflist_cur, qflist) then
     M.history:push(qflist)
     M.set_qflist(qflist)

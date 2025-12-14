@@ -83,7 +83,7 @@ local function setup_python()
   local dap = require("dap")
 
   local function resolve_python_path()
-    local python_path = era.context.lsp.get_python_bin_path() ---@type string|nil
+    local python_path = dot.context.lsp.get_python_bin_path() ---@type string|nil
     return python_path
   end
 
@@ -123,8 +123,8 @@ local function setup_python()
       description = "python: attach",
       cwd = "${workspaceFolder}",
       connect = function()
-        local host = era.context.lsp.python_debug_host:snapshot() ---@type string
-        local port = era.context.lsp.python_debug_port:snapshot() ---@type integer
+        local host = dot.context.lsp.python_debug_host:snapshot() ---@type string
+        local port = dot.context.lsp.python_debug_port:snapshot() ---@type integer
         return { host = host, port = port }
       end,
     },

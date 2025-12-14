@@ -2,24 +2,24 @@ local name = "fml.action.search.files.searcher" ---@type string
 local title = "Search Files" ---@type string
 local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
 
-local o_excludes = era.context.select.search_file.excludes
-local o_flag_exclude = era.context.select.search_file.flag_exclude
-local o_flag_foldempty = era.context.select.search_file.flag_foldempty
-local o_flag_fuzzy = era.context.select.search_file.flag_fuzzy
-local o_flag_gitignore = era.context.select.search_file.flag_gitignore
-local o_flag_regex = era.context.select.search_file.flag_regex
-local o_flag_replace = era.context.search_file.flag_replace
-local o_flag_case_sensitive = era.context.select.search_file.flag_case_sensitive
-local o_flag_selected = era.context.select.search_file.flag_selected
-local o_flag_viewtype = era.context.select.search_file.flag_viewtype
-local o_includes = era.context.select.search_file.includes
-local o_max_filesize = era.context.search_file.max_filesize
-local o_max_matches = era.context.search_file.max_matches
-local o_search_pattern = era.context.select.search_file.search_pattern
-local o_replace_pattern = era.context.search_file.replacement
+local o_excludes = dot.context.select.search_file.excludes
+local o_flag_exclude = dot.context.select.search_file.flag_exclude
+local o_flag_foldempty = dot.context.select.search_file.flag_foldempty
+local o_flag_fuzzy = dot.context.select.search_file.flag_fuzzy
+local o_flag_gitignore = dot.context.select.search_file.flag_gitignore
+local o_flag_regex = dot.context.select.search_file.flag_regex
+local o_flag_replace = dot.context.search_file.flag_replace
+local o_flag_case_sensitive = dot.context.select.search_file.flag_case_sensitive
+local o_flag_selected = dot.context.select.search_file.flag_selected
+local o_flag_viewtype = dot.context.select.search_file.flag_viewtype
+local o_includes = dot.context.select.search_file.includes
+local o_max_filesize = dot.context.search_file.max_filesize
+local o_max_matches = dot.context.search_file.max_matches
+local o_search_pattern = dot.context.select.search_file.search_pattern
+local o_replace_pattern = dot.context.search_file.replacement
 
-local o_search_pattern_history = era.context.select.search_file.search_pattern_history
-local o_replace_pattern_history = era.context.search_file.replace_pattern_history
+local o_search_pattern_history = dot.context.select.search_file.search_pattern_history
+local o_replace_pattern_history = dot.context.search_file.replace_pattern_history
 
 ---@class fml.action.search.files.searcher.ISettingData
 ---@field public search_pattern         string
@@ -135,7 +135,7 @@ end
 local searcher ---@type ux.searcher.FiletreeComposer
 searcher = ux.searcher.FiletreeComposer.new({
   name = name,
-  frecency = era.context.frecency.files,
+  frecency = dot.context.frecency.files,
   permanent = true,
   title = title,
   height = 0.90,

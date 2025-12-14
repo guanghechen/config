@@ -301,8 +301,8 @@ function M.new(props)
   self._suspend_sync = false
   self._buf_autocmds = {}
 
-  local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source = era.state.notepad.retrieve_source(source_name) ---@type era.t.INotepadSource
+  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source = dot.state.notepad.retrieve_source(source_name) ---@type era.t.INotepadSource
 
   source:load(false)
 
@@ -317,7 +317,7 @@ end
 ---@protected
 ---@return nil
 function M:__setup_subscriptions__()
-  self._subscription_active = era.state.notepad.o_activated_uuid:subscribe(
+  self._subscription_active = dot.state.notepad.o_activated_uuid:subscribe(
     ark.c.Subscriber.new({
       on_next = function(next_uuid)
         self:__on_active_uuid_changed__(next_uuid)
@@ -326,7 +326,7 @@ function M:__setup_subscriptions__()
     false
   )
 
-  self._subscription_winbar = era.state.status.dirtier_notepadline:subscribe(
+  self._subscription_winbar = dot.state.status.dirtier_notepadline:subscribe(
     ark.c.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
@@ -337,7 +337,7 @@ function M:__setup_subscriptions__()
     true
   )
 
-  self._subscription_source = era.context.option.notepad_source:subscribe(
+  self._subscription_source = dot.context.option.notepad_source:subscribe(
     ark.c.Subscriber.new({
       on_next = function(source_name)
         self:attach(source_name)
@@ -395,13 +395,13 @@ end
 function M:__notify_active_changed__()
   local source = self:get_source()
   local uuid = source:get_activated_uuid()
-  era.state.notepad.focus_note(uuid)
+  dot.state.notepad.focus_note(uuid)
 end
 
 ---@protected
 ---@return nil
 function M:__mark_dirty__()
-  era.state.status.dirtier_notepadline:mark_dirty()
+  dot.state.status.dirtier_notepadline:mark_dirty()
 end
 
 ---@protected
@@ -428,8 +428,8 @@ end
 
 ---@return era.t.INotepadSource
 function M:get_source()
-  local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source = era.state.notepad.retrieve_source(source_name)
+  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source = dot.state.notepad.retrieve_source(source_name)
   return source
 end
 
@@ -448,11 +448,11 @@ function M:attach(source_name)
 
   self:flush()
 
-  era.context.option.notepad_source:next(source_name)
+  dot.context.option.notepad_source:next(source_name)
 
-  local new_source = era.state.notepad.retrieve_source(source_name)
+  local new_source = dot.state.notepad.retrieve_source(source_name)
   local new_uuid = new_source:get_activated_uuid()
-  era.state.notepad.focus_note(new_uuid)
+  dot.state.notepad.focus_note(new_uuid)
 
   if bufnr ~= nil then
     self:__render_active_item__(bufnr)
@@ -562,7 +562,7 @@ function M:focus_uuid(uuid)
   source:push_history(uuid)
 
   -- Use state's focus_note to update source and notify observers
-  return era.state.notepad.focus_note(uuid)
+  return dot.state.notepad.focus_note(uuid)
 end
 
 ---@param index                         integer
@@ -662,7 +662,7 @@ function M:remove(uuid)
     local history_uuid = source:go_backward()
     if history_uuid ~= nil and history_uuid ~= uuid then
       -- Set the previous note from history
-      era.state.notepad.focus_note(history_uuid)
+      dot.state.notepad.focus_note(history_uuid)
     end
   end
 
@@ -674,7 +674,7 @@ function M:remove(uuid)
   if source:get_activated_uuid() == uuid then
     local fallback_uuid = state.orders[1]
     if fallback_uuid ~= nil then
-      era.state.notepad.focus_note(fallback_uuid)
+      dot.state.notepad.focus_note(fallback_uuid)
     end
   end
 
@@ -701,7 +701,7 @@ function M:go_backward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return era.state.notepad.focus_note(uuid)
+  return dot.state.notepad.focus_note(uuid)
 end
 
 ---@return boolean
@@ -723,7 +723,7 @@ function M:go_forward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return era.state.notepad.focus_note(uuid)
+  return dot.state.notepad.focus_note(uuid)
 end
 
 ---@param uuid                          string|nil
@@ -1065,8 +1065,8 @@ end
 ---@protected
 ---@return string
 function M:__get_window_title__()
-  local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local _, config = era.state.notepad.retrieve_source(source_name)
+  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local _, config = dot.state.notepad.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end
 
@@ -1074,7 +1074,7 @@ end
 function M:ensure_win()
   local bufnr = self:ensure_buf()
   local rect = self:measure_rect()
-  local winblend = era.context.theme.get_float_winblend()
+  local winblend = dot.context.theme.get_float_winblend()
 
   self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 
@@ -1102,7 +1102,7 @@ function M:ensure_win()
     dot.win.set_type(winnr, dot.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
-    local resize = era.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
+    local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     winblend = resize.winblend or winblend
@@ -1161,7 +1161,7 @@ end
 
 ---@return nil
 function M:focus()
-  era.state.widget.push(self)
+  dot.state.widget.push(self)
   local winnr = self:ensure_win()
   if vim.api.nvim_get_current_win() ~= winnr then
     vim.api.nvim_set_current_win(winnr)
@@ -1206,7 +1206,7 @@ function M:resize()
   local rect = self:measure_rect()
   vim.wo[winnr].winfixbuf = false
 
-  local resize = era.state.maximized.resolve_resize_config(winnr, {
+  local resize = dot.state.maximized.resolve_resize_config(winnr, {
     relative = "editor",
     anchor = "NW",
     row = rect.row,
@@ -1254,7 +1254,7 @@ end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME
 M.o_active_uuid = function()
-  return era.state.notepad.o_activated_uuid
+  return dot.state.notepad.o_activated_uuid
 end
 
 return M

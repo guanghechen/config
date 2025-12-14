@@ -1,2 +1,2 @@
-era.context.theme.theme:next("gruvbox-dark")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("gruvbox-dark")
+dot.context.theme.reload_theme(false, false)

@@ -1,2 +1,2 @@
-era.context.theme.theme:next("tokyonight-night")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("tokyonight-night")
+dot.context.theme.reload_theme(false, false)

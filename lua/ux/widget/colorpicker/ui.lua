@@ -274,7 +274,7 @@ end
 ---@protected
 ---@return { [1]: string, [2]: string }[]
 function M:__build_footer__()
-  local history = era.context.colorpicker.history:snapshot()
+  local history = dot.context.colorpicker.history:snapshot()
   local output = self._color:output()
   local current_hex = self._color:hex()
 

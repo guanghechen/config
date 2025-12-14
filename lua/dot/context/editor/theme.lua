@@ -1,40 +1,40 @@
-local __module_name__ = "era.context.editor.theme" ---@type string
+local __module_name__ = "dot.context.editor.theme" ---@type string
 
----@class era.context.theme.ILoadIntegrationParams
+---@class dot.context.theme.ILoadIntegrationParams
 ---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public integration            dot.e.ThemeIntegration
 ---@field public nsnr                   ?integer
 
----@class era.context.theme.ILoadThemeParams
+---@class dot.context.theme.ILoadThemeParams
 ---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public persistent             boolean
 ---@field public nsnr                   ?integer
 
----@class era.context.theme.data
+---@class dot.context.theme.data
 ---@field public theme                  dot.e.ThemeFullName
 ---@field public transparency           boolean
 ---@field public username               boolean
 
----@class era.context.theme.state
+---@class dot.context.theme.state
 ---@field public theme                  ark.c.Observable
 ---@field public transparency           ark.c.Observable
 ---@field public username               ark.c.Observable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---
----@field public apply_integration      fun(params: era.context.theme.ILoadIntegrationParams): nil
----@field public apply_theme            fun(params: era.context.theme.ILoadThemeParams): nil
+---@field public apply_integration      fun(params: dot.context.theme.ILoadIntegrationParams): nil
+---@field public apply_theme            fun(params: dot.context.theme.ILoadThemeParams): nil
 ---@field public get_scheme             fun(theme: dot.e.ThemeFullName): dot.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
 ---@field public set_term_colors        fun(scheme: dot.t.theme.IScheme): nil
 
----@class era.context.theme :  era.context.theme.state
----@field public defaults               fun(): era.context.theme.data
----@field public dump                   fun(): era.context.theme.data
+---@class dot.context.theme :  dot.context.theme.state
+---@field public defaults               fun(): dot.context.theme.data
+---@field public dump                   fun(): dot.context.theme.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.theme.data
+---@field public normalize              fun(data: unknown): dot.context.theme.data
 local M = {}
 
 ---@type dot.e.ThemeIntegration[]
@@ -53,9 +53,9 @@ local function get_theme_path()
   return dot.path.locate_context_filepath("theme")
 end
 
----@return era.context.theme.data
+---@return dot.context.theme.data
 function M.defaults()
-  ---@type era.context.theme.data
+  ---@type dot.context.theme.data
   return {
     theme = "gruvbox-dark",
     transparency = true,
@@ -64,9 +64,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.theme.data
+---@return dot.context.theme.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.theme.data
+  local resolved = M.defaults() ---@type dot.context.theme.data
   if type(data) == "table" then
     if type(data.theme) == "string" and vim.list_contains(dot.var.theme, data.theme) then
       resolved.theme = data.theme
@@ -79,13 +79,13 @@ function M.normalize(data)
     end
   end
 
-  ---@type era.context.theme.data
+  ---@type dot.context.theme.data
   return resolved
 end
 
----@return era.context.theme.data
+---@return dot.context.theme.data
 function M.dump()
-  ---@type era.context.theme.data
+  ---@type dot.context.theme.data
   return {
     theme = M.theme:snapshot(),
     transparency = M.transparency:snapshot(),
@@ -95,7 +95,7 @@ end
 
 ---@param raw_data                      any
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.theme.data
+  local data = M.normalize(raw_data) ---@type dot.context.theme.data
   M.theme:next(data.theme)
   M.transparency:next(data.transparency)
   M.username:next(data.username)
@@ -103,7 +103,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.theme.data
+local _defaults = M.defaults() ---@type dot.context.theme.data
 M.theme = ark.c.Observable.from_value(_defaults.theme)
 M.transparency = ark.c.Observable.from_value(_defaults.transparency)
 M.username = ark.c.Observable.from_value(_defaults.username)
@@ -113,7 +113,7 @@ function M.get_float_winblend()
   return M.transparency:snapshot() and 5 or 0 ---@type integer
 end
 
----@param params                        era.context.theme.ILoadIntegrationParams
+---@param params                        dot.context.theme.ILoadIntegrationParams
 ---@return nil
 function M.apply_integration(params)
   local theme = params.theme ---@type dot.e.ThemeFullName
@@ -138,7 +138,7 @@ function M.apply_integration(params)
   end
 end
 
----@param params                        era.context.theme.ILoadThemeParams
+---@param params                        dot.context.theme.ILoadThemeParams
 ---@return nil
 function M.apply_theme(params)
   local theme = params.theme ---@type dot.e.ThemeFullName

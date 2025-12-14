@@ -6,7 +6,7 @@ local M = {}
 ---@return nil
 function M.restore()
   if dot.path.is_git_repo() then
-    local storage = era.context.get_storage() ---@type era.context.storage
+    local storage = dot.context.get_storage() ---@type dot.context.storage
 
     local nvim_session_filepath = nil ---@type string|nil
     if storage.nvim_session and vim.fn.filereadable(storage.nvim_session) ~= 0 then
@@ -17,7 +17,7 @@ function M.restore()
 
     if nvim_session_filepath then
       era.session.load_session(nvim_session_filepath)
-      era.context.load({
+      dot.context.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
@@ -30,7 +30,7 @@ end
 ---@return nil
 function M.restore_autosaved()
   if dot.path.is_git_repo() then
-    local storage = era.context.get_storage() ---@type era.context.storage
+    local storage = dot.context.get_storage() ---@type dot.context.storage
 
     local nvim_session_filepath = nil ---@type string|nil
     if storage.nvim_session_autosaved and vim.fn.filereadable(storage.nvim_session_autosaved) ~= 0 then
@@ -39,7 +39,7 @@ function M.restore_autosaved()
 
     if nvim_session_filepath then
       era.session.load_session(nvim_session_filepath)
-      era.context.load({
+      dot.context.load({
         editor = storage.editor,
         session = storage.session,
         workspace = storage.workspace,
@@ -52,8 +52,8 @@ end
 ---@return nil
 function M.save()
   if dot.path.is_git_repo() then
-    local storage = era.context.get_storage() ---@type era.context.storage
-    era.context.save({
+    local storage = dot.context.get_storage() ---@type dot.context.storage
+    dot.context.save({
       session = storage.session,
       workspace = storage.workspace,
     })

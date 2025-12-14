@@ -41,7 +41,7 @@ local termline = ux.nvimbar.Nvimbar.new({
   comp_sep_hlname_active = "f_wl_bg",
   delay = 128,
   silent = function()
-    local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()
@@ -91,10 +91,10 @@ ark.fn.observe({ era.term.o_termuuid }, function()
   vim.wo[winnr].winfixbuf = false
   vim.api.nvim_win_set_buf(winnr, termmeta.bufnr)
   vim.wo[winnr].winfixbuf = true
-  era.state.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 end, true)
 
-era.state.status.dirtier_termline:subscribe(
+dot.state.status.dirtier_termline:subscribe(
   ark.c.Subscriber.new({
     on_next = function()
       termline:render()
@@ -132,7 +132,7 @@ end
 
 ---@return integer|nil
 function M:focus()
-  era.state.widget.push(self)
+  dot.state.widget.push(self)
 
   local termindex = era.term.current() ---@type integer
   local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
@@ -339,7 +339,7 @@ function M:__create_win_as_needed__(termmeta)
     title_pos = "center",
   }
 
-  local resize_result = nil ---@type era.state.maximized.ResolveResizeResult|nil
+  local resize_result = nil ---@type dot.state.maximized.ResolveResizeResult|nil
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -363,8 +363,8 @@ function M:__create_win_as_needed__(termmeta)
     end)
   else
     vim.wo[winnr].winfixbuf = false
-    ---@type era.state.maximized.ResolveResizeResult
-    resize_result = era.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
+    ---@type dot.state.maximized.ResolveResizeResult
+    resize_result = dot.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
     vim.api.nvim_win_set_config(winnr, resize_result.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.wo[winnr].winfixbuf = true
@@ -372,7 +372,7 @@ function M:__create_win_as_needed__(termmeta)
 
   vim.wo[winnr].winblend = resize_result and resize_result.winblend or 0
   vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
-  era.state.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()
   return winnr

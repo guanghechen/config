@@ -36,7 +36,7 @@ end
 ---@param name                          string
 local function toggle_linter(name)
   disabled_linters[name] = not disabled_linters[name]
-  era.state.status.dirtier_statusline:mark_dirty()
+  dot.state.status.dirtier_statusline:mark_dirty()
 end
 
 ---@type string

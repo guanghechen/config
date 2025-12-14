@@ -23,54 +23,54 @@ local group_priorities = {
 local group_flags = {
   ---behavior
   behavior = {
-    auto_im = era.context.behavior.auto_im,
-    bufs_relative = era.context.behavior.bufs_relative,
+    auto_im = dot.context.behavior.auto_im,
+    bufs_relative = dot.context.behavior.bufs_relative,
   },
 
   ---flight
   flight = {
-    ai = era.context.flight.ai,
-    ai_nes = era.context.flight.ai_nes,
-    autoformat = era.context.flight.autoformat,
-    autoload = era.context.flight.autoload,
-    autosave = era.context.flight.autosave,
-    devmode = era.context.flight.devmode,
-    dressing_clipboard = era.context.flight.dressing_clipboard,
-    dressing_dim = era.context.flight.dressing_dim,
-    dressing_illumniate = era.context.flight.dressing_illumniate,
-    dressing_image = era.context.flight.dressing_image,
-    dressing_indent = era.context.flight.dressing_indent,
-    dressing_input = era.context.flight.dressing_input,
-    dressing_scroll = era.context.flight.dressing_scroll,
-    dressing_select = era.context.flight.dressing_select,
-    dressing_trailspace = era.context.flight.dressing_trailspace,
-    dressing_ui_attach = era.context.flight.dressing_ui_attach,
-    dressing_virtcolumn = era.context.flight.dressing_virtcolumn,
-    dressing_winsep = era.context.flight.dressing_winsep,
-    gitdiff_expand_all = era.context.flight.gitdiff_expand_all,
+    ai = dot.context.flight.ai,
+    ai_nes = dot.context.flight.ai_nes,
+    autoformat = dot.context.flight.autoformat,
+    autoload = dot.context.flight.autoload,
+    autosave = dot.context.flight.autosave,
+    devmode = dot.context.flight.devmode,
+    dressing_clipboard = dot.context.flight.dressing_clipboard,
+    dressing_dim = dot.context.flight.dressing_dim,
+    dressing_illumniate = dot.context.flight.dressing_illumniate,
+    dressing_image = dot.context.flight.dressing_image,
+    dressing_indent = dot.context.flight.dressing_indent,
+    dressing_input = dot.context.flight.dressing_input,
+    dressing_scroll = dot.context.flight.dressing_scroll,
+    dressing_select = dot.context.flight.dressing_select,
+    dressing_trailspace = dot.context.flight.dressing_trailspace,
+    dressing_ui_attach = dot.context.flight.dressing_ui_attach,
+    dressing_virtcolumn = dot.context.flight.dressing_virtcolumn,
+    dressing_winsep = dot.context.flight.dressing_winsep,
+    gitdiff_expand_all = dot.context.flight.gitdiff_expand_all,
   },
 
   ---lsp
   lsp = {
-    code_lens = era.context.lsp.code_lens,
-    diagnostics_virt_lines = era.context.lsp.diagnostics_virt_lines,
-    inlay_hints = era.context.lsp.inlay_hints,
-    spellcheck = era.context.lsp.spellcheck,
+    code_lens = dot.context.lsp.code_lens,
+    diagnostics_virt_lines = dot.context.lsp.diagnostics_virt_lines,
+    inlay_hints = dot.context.lsp.inlay_hints,
+    spellcheck = dot.context.lsp.spellcheck,
   },
 
   ---ux
   ux = {
-    expandtab = era.context.option.expandtab,
-    notification_paused = era.state.status.notification_paused,
-    relativenumber = era.context.option.relativenumber,
-    username = era.context.theme.username,
-    transparency = era.context.theme.transparency,
+    expandtab = dot.context.option.expandtab,
+    notification_paused = dot.state.status.notification_paused,
+    relativenumber = dot.context.option.relativenumber,
+    username = dot.context.theme.username,
+    transparency = dot.context.theme.transparency,
   },
 
   ---plugin
   plugin = {
-    render_markdown = era.context.plugin.render_markdown,
-    treesitter_context = era.context.plugin.treesitter_context,
+    render_markdown = dot.context.plugin.render_markdown,
+    treesitter_context = dot.context.plugin.treesitter_context,
   },
 }
 
@@ -81,7 +81,7 @@ local group_items = {
     fileencoding = {
       title = "fileencoding",
       snapshot = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -90,7 +90,7 @@ local group_items = {
         return encoding, "String"
       end,
       action = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -196,7 +196,7 @@ local group_items = {
     fileformat = {
       title = "fileformat",
       snapshot = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "String"
         end
@@ -205,7 +205,7 @@ local group_items = {
         return fileformat, "String"
       end,
       action = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -295,7 +295,7 @@ local group_items = {
         return "unknown", "Boolean"
       end,
       action = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command ~= nil then
           local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
           require("mini.hipatterns").toggle(bufnr)
@@ -316,7 +316,7 @@ local group_items = {
     wrap = {
       title = "wrap",
       snapshot = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return "unknown", "Boolean"
         end
@@ -325,7 +325,7 @@ local group_items = {
         return tostring(enabled), "Boolean"
       end,
       action = function()
-        local winnr_command = era.state.status.get_winnr_command() ---@type integer|nil
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
         if winnr_command == nil then
           return
         end
@@ -339,39 +339,39 @@ local group_items = {
     python_debug_host = {
       title = "python debug host",
       snapshot = function()
-        local host = era.context.lsp.python_debug_host:snapshot() ---@type string
+        local host = dot.context.lsp.python_debug_host:snapshot() ---@type string
         if host == nil then
           return "nil", "Keyword"
         end
         return host, "String"
       end,
       action = function()
-        local default_host = era.context.lsp.python_debug_host:snapshot() or "" ---@type string
+        local default_host = dot.context.lsp.python_debug_host:snapshot() or "" ---@type string
         local input_host = vim.fn.input("host [" .. default_host .. "]", default_host)
         local host = #input_host > 0 and input_host or default_host ---@type string
-        era.context.lsp.python_debug_host:next(host)
+        dot.context.lsp.python_debug_host:next(host)
       end,
     },
     python_debug_port = {
       title = "python debug port",
       snapshot = function()
-        local port = era.context.lsp.python_debug_port:snapshot() ---@type integer
+        local port = dot.context.lsp.python_debug_port:snapshot() ---@type integer
         if port == nil then
           return "nil", "Keyword"
         end
         return tostring(port), "Number"
       end,
       action = function()
-        local default_port = era.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
+        local default_port = dot.context.lsp.python_debug_port:snapshot() or 0 ---@type integer
         local input_port = vim.fn.input("port [" .. tostring(default_port) .. "]", tostring(default_port))
         local port = #input_port > 0 and tonumber(input_port) or default_port ---@type integer
-        era.context.lsp.python_debug_port:next(port)
+        dot.context.lsp.python_debug_port:next(port)
       end,
     },
     python_venv = {
       title = "python venv path",
       snapshot = function()
-        local venv_path = era.context.lsp.python_venv_path:snapshot() ---@type string
+        local venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
         if venv_path == nil then
           return "nil", "Keyword"
         end
@@ -386,7 +386,7 @@ local group_items = {
     theme = {
       title = "theme",
       snapshot = function()
-        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local theme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
         return theme, "String"
       end,
       action = function()
@@ -396,13 +396,13 @@ local group_items = {
     theme_variant = {
       title = "theme variant",
       snapshot = function()
-        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = era.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
+        local theme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local scheme = dot.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
-        local theme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = era.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
+        local theme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+        local scheme = dot.context.theme.get_scheme(theme) ---@type dot.t.theme.IScheme|nil
         if scheme == nil or scheme.opposite == nil then
           return
         end

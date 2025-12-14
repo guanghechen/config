@@ -66,8 +66,8 @@ return {
     local indent = require("blink.indent")
     indent.setup(opts)
 
-    ark.fn.observe({ era.context.flight.dressing_indent }, function()
-      local flag = era.context.flight.dressing_indent:snapshot() ---@type boolean
+    ark.fn.observe({ dot.context.flight.dressing_indent }, function()
+      local flag = dot.context.flight.dressing_indent:snapshot() ---@type boolean
       indent.enable(flag)
     end, false)
   end,

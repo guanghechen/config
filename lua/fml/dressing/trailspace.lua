@@ -4,7 +4,7 @@ local match_ids = {} ---@type table<integer, integer>
 
 ---@return nil
 local function highlight()
-  local enabled = era.context.flight.dressing_trailspace:snapshot()
+  local enabled = dot.context.flight.dressing_trailspace:snapshot()
   if not enabled then
     return
   end
@@ -82,8 +82,8 @@ vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave", "InsertEnter" }, {
   callback = unhighlight,
 })
 
-ark.fn.observe({ era.context.flight.dressing_trailspace }, function()
-  local enabled = era.context.flight.dressing_trailspace:snapshot()
+ark.fn.observe({ dot.context.flight.dressing_trailspace }, function()
+  local enabled = dot.context.flight.dressing_trailspace:snapshot()
   if enabled then
     highlight()
   else

@@ -1,2 +1,2 @@
-era.context.theme.theme:next("rosepine-dawn")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("rosepine-dawn")
+dot.context.theme.reload_theme(false, false)

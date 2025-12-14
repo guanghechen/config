@@ -1,11 +1,11 @@
----@class era.state.notepad.ISourceConfig : era.t.INotepadSourceConfig
+---@class dot.state.notepad.ISourceConfig : era.t.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'folder' Source engine type
 
-local NotepadJsonSource = require("era.state.notepad.source-json")
-local NotepadFolderSource = require("era.state.notepad.source-folder")
+local NotepadJsonSource = require("dot.state.notepad.source-json")
+local NotepadFolderSource = require("dot.state.notepad.source-folder")
 
----@type era.state.notepad.ISourceConfig[]
+---@type dot.state.notepad.ISourceConfig[]
 local source_configs = {
   {
     name = "workspace:notes",
@@ -36,7 +36,7 @@ local source_configs = {
   },
 }
 
----@type table<string, era.state.notepad.ISourceConfig>
+---@type table<string, dot.state.notepad.ISourceConfig>
 local source_config_map = {}
 for _, config in ipairs(source_configs) do
   source_config_map[config.name] = config
@@ -49,9 +49,9 @@ local _source_cache = {}
 ---@type ark.c.Observable
 local o_activated_uuid = ark.c.Observable.from_value("")
 
----@class era.state.notepad
----@field public source_configs         era.state.notepad.ISourceConfig[]
----@field public source_config_map      table<string, era.state.notepad.ISourceConfig>
+---@class dot.state.notepad
+---@field public source_configs         dot.state.notepad.ISourceConfig[]
+---@field public source_config_map      table<string, dot.state.notepad.ISourceConfig>
 ---@field public o_activated_uuid       ark.c.Observable Observable for activated note UUID
 local M = {
   source_configs = source_configs,
@@ -88,7 +88,7 @@ end
 ---@param uuid                          string|nil Note UUID to focus
 ---@return boolean success
 function M.focus_note(uuid)
-  local source_name = era.context.option.notepad_source:snapshot() ---@type string
+  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
   local source = M.retrieve_source(source_name)
 
   if not source:set_activated_uuid(uuid) then
@@ -119,7 +119,7 @@ function M.migrate_source_engine(name, target_engine)
   local config = M.source_config_map[name]
   if config == nil then
     ark.reporter.error({
-      from = "era.state.notepad",
+      from = "dot.state.notepad",
       subject = "Migration Failed",
       message = string.format("Source '%s' not found", name),
     })
@@ -128,7 +128,7 @@ function M.migrate_source_engine(name, target_engine)
 
   if config.engine == target_engine then
     ark.reporter.warn({
-      from = "era.state.notepad",
+      from = "dot.state.notepad",
       subject = "Migration Skipped",
       message = string.format("Source '%s' is already using %s engine", name, target_engine),
     })
@@ -166,7 +166,7 @@ function M.migrate_source_engine(name, target_engine)
 
   if not new_source:load_from_json(json_data) then
     ark.reporter.error({
-      from = "era.state.notepad",
+      from = "dot.state.notepad",
       subject = "Migration Failed",
       message = string.format("Failed to import data to %s engine", target_engine),
     })
@@ -184,7 +184,7 @@ function M.migrate_source_engine(name, target_engine)
   _source_cache[name] = new_source
 
   ark.reporter.info({
-    from = "era.state.notepad",
+    from = "dot.state.notepad",
     subject = "Migration Complete",
     message = string.format("Migrated '%s' from %s to %s", config.title, source_engine, target_engine),
   })
@@ -224,7 +224,7 @@ end
 
 ---@param name                          string
 ---@return era.t.INotepadSource
----@return era.state.notepad.ISourceConfig
+---@return dot.state.notepad.ISourceConfig
 function M.retrieve_source(name)
   local config = M.source_config_map[name]
 
@@ -258,7 +258,7 @@ function M.toggle_source_engine(name)
   local config = M.source_config_map[name]
   if config == nil then
     ark.reporter.error({
-      from = "era.state.notepad",
+      from = "dot.state.notepad",
       subject = "Toggle Failed",
       message = string.format("Source '%s' not found", name),
     })

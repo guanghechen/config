@@ -17,7 +17,7 @@ function M.username(position)
     name = "host:username",
     atomic = true,
     render = function()
-      local show_username = era.context.theme.username:snapshot() ---@type boolean
+      local show_username = dot.context.theme.username:snapshot() ---@type boolean
       if not show_username then
         local text = text_icon_only ---@type string
         local hl_text = txt(text, hln_text) ---@type string

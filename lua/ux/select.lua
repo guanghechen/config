@@ -192,7 +192,7 @@ end
 function M:create_win_as_needed()
   local bufnr = self:create_buf_as_needed() ---@type integer
   local winnr = self._winnr ---@type integer|nil
-  local winblend = era.context.theme.get_float_winblend() ---@type integer
+  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local winnr_new_created = false ---@type boolean
 
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -212,8 +212,8 @@ function M:create_win_as_needed()
     vim.wo[winnr].wrap = false
   else
     vim.wo[winnr].winfixbuf = false
-    ---@type era.state.maximized.ResolveResizeResult
-    local resize = era.state.maximized.resolve_resize_config(winnr, self._wincfg, { winblend = winblend })
+    ---@type dot.state.maximized.ResolveResizeResult
+    local resize = dot.state.maximized.resolve_resize_config(winnr, self._wincfg, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     winblend = resize.winblend or winblend

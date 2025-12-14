@@ -24,82 +24,36 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class era.state.__mods
-local __state__mods = {
-  git = "era.state.git",
-  maximized = "era.state.maximized",
-  notepad = "era.state.notepad",
-  qflist = "era.state.qflist",
-  status = "era.state.status",
-  widget = "era.state.widget",
-}
-
----@class era.state
----@field public __mods                 era.state.__mods
----@field public git                    era.state.git
----@field public maximized              era.state.maximized
----@field public notepad                era.state.notepad
----@field public qflist                 era.state.qflist
----@field public status                 era.state.status
----@field public widget                 era.state.widget
-local state = setmetatable({
-  __mods = __state__mods,
-}, {
-  __index = function(t, k)
-    local m = __state__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class era.__mods
 local __mods = {
   Filetree = "era.filetree",
   Tree = "era.tree",
-  buf = "dot.buf",
   command = "era.command",
-  context = "era.context",
-  fs = "ark.fs",
   git = "era.git",
   lsp = "era.lsp",
   lsp_action = "era.lsp_action",
   notifier = "era.notifier",
-  path = "dot.path",
   session = "era.session",
-  tab = "dot.tab",
   term = "era.term",
   uri = "era.uri",
-  win = "dot.win",
 }
 
 ---@class era
 ---@field public __mods                 era.__mods
 ---@field public Filetree               era.Filetree
 ---@field public Tree                   era.Tree
----@field public buf                    dot.buf
 ---@field public command                era.command
----@field public context                era.context
 ---@field public fn                     era.fn
----@field public fs                     ark.fs
 ---@field public git                    era.git
 ---@field public lsp                    era.lsp
 ---@field public lsp_action             era.lsp_action
 ---@field public notifier               era.notifier
----@field public path                   dot.path
 ---@field public session                era.session
----@field public state                  era.state
----@field public tab                    dot.tab
 ---@field public term                   era.term
 ---@field public uri                    era.uri
----@field public win                    dot.win
 local M = setmetatable({
   __mods = __mods,
   fn = fn,
-  state = state,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
@@ -110,11 +64,11 @@ local M = setmetatable({
   end,
 })
 
----@return era.context.storage
+---@return dot.context.storage
 function M.get_default_storage()
   local is_git_repo = dot.path.is_git_repo() ---@type boolean
 
-  ---@type era.context.storage
+  ---@type dot.context.storage
   return {
     editor = dot.path.locate_context_filepath("editor.json"),
     session = is_git_repo and dot.path.locate_workspace_filepath("session.json") or nil,
@@ -126,7 +80,7 @@ end
 
 ---@return nil
 function M.setup_breakpoints()
-  local breakpoints = era.context.lsp.breakpoints:snapshot() ---@type era.context.lsp.IBreakpointData
+  local breakpoints = dot.context.lsp.breakpoints:snapshot() ---@type dot.context.lsp.IBreakpointData
   if #breakpoints < 1 then
     return
   end
@@ -154,14 +108,14 @@ function M.setup_breakpoints()
   end, 100)
 end
 
----@param storage                       era.context.storage|nil
+---@param storage                       dot.context.storage|nil
 ---@return nil
 function M.setup_context(storage)
-  storage = storage or M.get_default_storage() ---@type era.context.storage
-  era.context.set_storage(storage)
-  era.context.load(storage, false)
+  storage = storage or M.get_default_storage() ---@type dot.context.storage
+  dot.context.set_storage(storage)
+  dot.context.load(storage, false)
 
-  local colorscheme = era.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+  local colorscheme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
   vim.cmd.colorscheme(colorscheme)
 end
 
@@ -171,7 +125,7 @@ function M.setup_diagnostics()
   local severity2prefixicon = dot.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
   local severity2texticon = dot.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
 
-  ark.fn.observe({ era.context.lsp.diagnostics_virt_lines }, function()
+  ark.fn.observe({ dot.context.lsp.diagnostics_virt_lines }, function()
     ---@type vim.diagnostic.Opts
     local config = {
       float = {
@@ -204,7 +158,7 @@ function M.setup_diagnostics()
       },
     }
 
-    local enable_diagnostic_virt_lines = era.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+    local enable_diagnostic_virt_lines = dot.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
     if not enable_diagnostic_virt_lines then
       config.virtual_lines = false
       config.virtual_text.current_line = nil
@@ -215,7 +169,7 @@ end
 
 ---@return nil
 function M.setup_lsp()
-  if not vim.g.vscode and era.context.flight.ai:snapshot() then
+  if not vim.g.vscode and dot.context.flight.ai:snapshot() then
     vim.lsp.enable("copilot")
   end
 

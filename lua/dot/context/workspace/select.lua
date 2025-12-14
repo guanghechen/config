@@ -1,58 +1,58 @@
-local select_item = require("era.context.workspace.select_item")
+local select_item = require("dot.context.workspace.select_item")
 
----@class era.context.select.data
----@field public find_buffer            era.context.select.item.data
----@field public find_diagnostics       era.context.select.item.data
----@field public find_explorer          era.context.select.item.data
----@field public find_file              era.context.select.item.data
----@field public find_git               era.context.select.item.data
----@field public find_highlight         era.context.select.item.data
----@field public find_keymap            era.context.select.item.data
----@field public find_pinned_file       era.context.select.item.data
----@field public find_python_venv       era.context.select.item.data
----@field public find_vim_option        era.context.select.item.data
----@field public lsp_reference          era.context.select.item.data
----@field public lsp_symbols            era.context.select.item.data
----@field public search_file            era.context.select.item.data
+---@class dot.context.select.data
+---@field public find_buffer            dot.context.select.item.data
+---@field public find_diagnostics       dot.context.select.item.data
+---@field public find_explorer          dot.context.select.item.data
+---@field public find_file              dot.context.select.item.data
+---@field public find_git               dot.context.select.item.data
+---@field public find_highlight         dot.context.select.item.data
+---@field public find_keymap            dot.context.select.item.data
+---@field public find_pinned_file       dot.context.select.item.data
+---@field public find_python_venv       dot.context.select.item.data
+---@field public find_vim_option        dot.context.select.item.data
+---@field public lsp_reference          dot.context.select.item.data
+---@field public lsp_symbols            dot.context.select.item.data
+---@field public search_file            dot.context.select.item.data
 ---
 ---@field public find_buffer_scope      era.e.FindBufferScope
 ---@field public find_file_scope        era.e.FindFileScope
 ---@field public search_file_scope      era.e.SearchFileScope
 
----@class era.context.select.state
----@field public find_buffer            era.context.select.item.state
----@field public find_diagnostics       era.context.select.item.state
----@field public find_explorer          era.context.select.item.state
----@field public find_file              era.context.select.item.state
----@field public find_git               era.context.select.item.state
----@field public find_highlight         era.context.select.item.state
----@field public find_keymap            era.context.select.item.state
----@field public find_pinned_file       era.context.select.item.state
----@field public find_python_venv       era.context.select.item.state
----@field public find_vim_option        era.context.select.item.state
----@field public lsp_reference          era.context.select.item.state
----@field public lsp_symbols            era.context.select.item.state
----@field public search_file            era.context.select.item.state
+---@class dot.context.select.state
+---@field public find_buffer            dot.context.select.item.state
+---@field public find_diagnostics       dot.context.select.item.state
+---@field public find_explorer          dot.context.select.item.state
+---@field public find_file              dot.context.select.item.state
+---@field public find_git               dot.context.select.item.state
+---@field public find_highlight         dot.context.select.item.state
+---@field public find_keymap            dot.context.select.item.state
+---@field public find_pinned_file       dot.context.select.item.state
+---@field public find_python_venv       dot.context.select.item.state
+---@field public find_vim_option        dot.context.select.item.state
+---@field public lsp_reference          dot.context.select.item.state
+---@field public lsp_symbols            dot.context.select.item.state
+---@field public search_file            dot.context.select.item.state
 ---
 ---@field public find_buffer_scope      ark.c.Observable
 ---@field public find_file_scope        ark.c.Observable
 ---@field public search_file_scope      ark.c.Observable
 
----@class era.context.select : era.context.select.state
+---@class dot.context.select : dot.context.select.state
 ---@field public keys                   string[]
 ---@field public find_buffer_scopes     era.e.FindBufferScope[]
 ---@field public find_file_scopes       era.e.FindFileScope[]
 ---@field public search_file_scopes     era.e.SearchFileScope[]
 ---
----@field public defaults               fun(): era.context.select.data
----@field public dump                   fun(): era.context.select.data
+---@field public defaults               fun(): dot.context.select.data
+---@field public dump                   fun(): dot.context.select.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.select.data
+---@field public normalize              fun(data: unknown): dot.context.select.data
 local M = {}
 
----@return era.context.select.data
+---@return dot.context.select.data
 function M.defaults()
-  ---@type era.context.select.data
+  ---@type dot.context.select.data
   return {
     find_buffer = select_item.defaults(),
     find_diagnostics = select_item.defaults(),
@@ -75,11 +75,11 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.select.data
+---@return dot.context.select.data
 function M.normalize(data)
   data = type(data) == "table" and data or {}
 
-  ---@type era.context.select.data
+  ---@type dot.context.select.data
   local resolved = {
     find_buffer = select_item.normalize(data.find_buffer),
     find_diagnostics = select_item.normalize(data.find_diagnostics),
@@ -112,9 +112,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return era.context.select.data
+---@return dot.context.select.data
 function M.dump()
-  ---@type era.context.select.data
+  ---@type dot.context.select.data
   return {
     find_buffer = select_item.dump(M.find_buffer),
     find_diagnostics = select_item.dump(M.find_diagnostics),
@@ -139,7 +139,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.select.data
+  local data = M.normalize(raw_data) ---@type dot.context.select.data
 
   M.find_buffer = select_item.load(M.find_buffer, "find_buffer", data.find_buffer)
   M.find_diagnostics = select_item.load(M.find_diagnostics, "find_diagnostics", data.find_diagnostics)
@@ -162,7 +162,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.select.data
+local _defaults = M.defaults() ---@type dot.context.select.data
 M.find_buffer = select_item.load(nil, "find_buffer", _defaults.find_buffer)
 M.find_diagnostics = select_item.load(nil, "find_diagnostics", _defaults.find_diagnostics)
 M.find_explorer = select_item.load(nil, "find_explorer", _defaults.find_explorer)

@@ -19,10 +19,10 @@ local OFFSET_MODE = OFFSET_LHS + WIDTH_LHS ---@type integer
 local OFFSET_DESC = OFFSET_MODE + WIDTH_MODE ---@type integer
 
 local dirty_data = true ---@type boolean
-local o_search_pattern = era.context.select.find_keymap.search_pattern
-local o_flag_fuzzy = era.context.select.find_keymap.flag_fuzzy
-local o_flag_regex = era.context.select.find_keymap.flag_regex
-local o_flag_case_sensitive = era.context.select.find_keymap.flag_case_sensitive
+local o_search_pattern = dot.context.select.find_keymap.search_pattern
+local o_flag_fuzzy = dot.context.select.find_keymap.flag_fuzzy
+local o_flag_regex = dot.context.select.find_keymap.flag_regex
+local o_flag_case_sensitive = dot.context.select.find_keymap.flag_case_sensitive
 
 ---@param lhs                           string
 ---@return string

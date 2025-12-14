@@ -1,23 +1,23 @@
----@class era.context.plugin.data
+---@class dot.context.plugin.data
 ---@field public render_markdown        boolean
 ---@field public treesitter_context     boolean
 
----@class era.context.plugin.state
+---@class dot.context.plugin.state
 ---@field public render_markdown        ark.c.Observable
 ---@field public treesitter_context     ark.c.Observable
 
----@class era.context.plugin : era.context.plugin.state
----@field public defaults               fun(): era.context.plugin.data
----@field public dump                   fun(): era.context.plugin.data
+---@class dot.context.plugin : dot.context.plugin.state
+---@field public defaults               fun(): dot.context.plugin.data
+---@field public dump                   fun(): dot.context.plugin.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.plugin.data
+---@field public normalize              fun(data: unknown): dot.context.plugin.data
 local M = {}
 
----@return era.context.plugin.data
+---@return dot.context.plugin.data
 function M.defaults()
   local is_git_repo = dot.path.is_git_repo() ---@type boolean
 
-  ---@type era.context.plugin.data
+  ---@type dot.context.plugin.data
   return {
     render_markdown = false,
     treesitter_context = is_git_repo,
@@ -25,9 +25,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.plugin.data
+---@return dot.context.plugin.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.plugin.data
+  local resolved = M.defaults() ---@type dot.context.plugin.data
   if type(data) == "table" then
     if type(data.render_markdown) == "boolean" then
       resolved.render_markdown = data.render_markdown
@@ -39,9 +39,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return era.context.plugin.data
+---@return dot.context.plugin.data
 function M.dump()
-  ---@type era.context.plugin.data
+  ---@type dot.context.plugin.data
   return {
     render_markdown = M.render_markdown:snapshot(),
     treesitter_context = M.treesitter_context:snapshot(),
@@ -51,7 +51,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.plugin.data
+  local data = M.normalize(raw_data) ---@type dot.context.plugin.data
 
   M.render_markdown:next(data.render_markdown)
   M.treesitter_context:next(data.treesitter_context)
@@ -59,7 +59,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.plugin.data
+local _defaults = M.defaults() ---@type dot.context.plugin.data
 M.render_markdown = ark.c.Observable.from_value(_defaults.render_markdown)
 M.treesitter_context = ark.c.Observable.from_value(_defaults.treesitter_context)
 

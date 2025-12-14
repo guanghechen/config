@@ -376,7 +376,7 @@ function M.bufs(position)
 
       local _, bufid_sourcefile = dot.tab.retrieve_buf_sourcefile(tabnr) ---@type dot.tab.IBufItem|nil, integer|nil
       local bufid_middle = bufid_sourcefile or 1 ---@type integer
-      local relative_orders = bufid_middle == bufid_sourcefile and era.context.behavior.bufs_relative:snapshot() ---@type boolean
+      local relative_orders = bufid_middle == bufid_sourcefile and dot.context.behavior.bufs_relative:snapshot() ---@type boolean
       local N = #bufs ---@type integer
 
       -- Generate disambiguated filenames for all buffers

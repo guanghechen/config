@@ -143,7 +143,7 @@ function M.rename()
     end
 
     era.term.update(termmeta, { name = new_name })
-    era.state.status.dirtier_termline:mark_dirty()
+    dot.state.status.dirtier_termline:mark_dirty()
   end)
 end
 

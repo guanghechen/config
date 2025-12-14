@@ -5,8 +5,8 @@ _G.dot = require("dot") ---@type dot
 _G.era = require("era") ---@type era
 _G.ux = require("ux") ---@type ux
 
-local default_storage = era.get_default_storage() ---@type era.context.storage
-local storage = { editor = default_storage.editor } ---@type era.context.storage
+local default_storage = era.get_default_storage() ---@type dot.context.storage
+local storage = { editor = default_storage.editor } ---@type dot.context.storage
 era.setup_context(storage)
 
 local theme = vim.env.GHC_THEME or "catppuccin-mocha" ---@type dot.e.ThemeFullName
@@ -14,12 +14,12 @@ local theme = vim.env.GHC_THEME or "catppuccin-mocha" ---@type dot.e.ThemeFullNa
 if not vim.list_contains(dot.var.theme, theme) then
   print("Unknown theme: " .. theme)
 else
-  era.context.theme.apply_theme({
+  dot.context.theme.apply_theme({
     theme = theme,
-    transparency = era.context.theme.transparency:snapshot(),
+    transparency = dot.context.theme.transparency:snapshot(),
     persistent = true,
   })
 
-  era.context.theme.theme:next(theme)
-  era.context.save(storage)
+  dot.context.theme.theme:next(theme)
+  dot.context.save(storage)
 end

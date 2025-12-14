@@ -82,7 +82,7 @@ return {
   settings = {
     python = {
       enabled = true,
-      pythonPath = era.context.lsp.get_python_bin_path(),
+      pythonPath = dot.context.lsp.get_python_bin_path(),
       analysis = {
         typeCheckingMode = "standard",
         autoImportCompletions = true,

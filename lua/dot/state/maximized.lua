@@ -1,45 +1,45 @@
----@class era.state.maximized.IOriginalFloatWindow
+---@class dot.state.maximized.IOriginalFloatWindow
 ---@field public winnr                  integer
 ---@field public winblend               integer
 ---@field public winhighlight           string
 ---@field public wincfg                 vim.api.keyset.win_config
 
----@class era.state.maximized.IOriginalNormalWindow
+---@class dot.state.maximized.IOriginalNormalWindow
 ---@field public parent_winnr           integer
 ---@field public float_winnr            integer
 ---@field public augroup                integer
 
----@class era.state.maximized.IContext
----@field public original_float         era.state.maximized.IOriginalFloatWindow|nil
----@field public original_normal        era.state.maximized.IOriginalNormalWindow|nil
+---@class dot.state.maximized.IContext
+---@field public original_float         dot.state.maximized.IOriginalFloatWindow|nil
+---@field public original_normal        dot.state.maximized.IOriginalNormalWindow|nil
 
----@class era.state.maximized.ResolveResizeOpts
+---@class dot.state.maximized.ResolveResizeOpts
 ---@field public winblend               integer|nil
 
----@class era.state.maximized.ResolveResizeResult
+---@class dot.state.maximized.ResolveResizeResult
 ---@field public cfg                    vim.api.keyset.win_config
 ---@field public winblend               integer
 ---@field public maximized              boolean
 
----@type era.state.maximized.IContext
+---@type dot.state.maximized.IContext
 local context = {
   original_float = nil,
   original_normal = nil,
 }
 
----@class era.state.maximized
----@field public context                era.state.maximized.IContext
+---@class dot.state.maximized
+---@field public context                dot.state.maximized.IContext
 local M = {
   context = context,
 }
 
----@param original                      era.state.maximized.IOriginalFloatWindow
+---@param original                      dot.state.maximized.IOriginalFloatWindow
 ---@return nil
 function M.set_original_float(original)
   context.original_float = original
 end
 
----@return era.state.maximized.IOriginalFloatWindow|nil
+---@return dot.state.maximized.IOriginalFloatWindow|nil
 function M.get_original_float()
   return context.original_float
 end
@@ -49,13 +49,13 @@ function M.clear_original_float()
   context.original_float = nil
 end
 
----@param original                      era.state.maximized.IOriginalNormalWindow
+---@param original                      dot.state.maximized.IOriginalNormalWindow
 ---@return nil
 function M.set_original_normal(original)
   context.original_normal = original
 end
 
----@return era.state.maximized.IOriginalNormalWindow|nil
+---@return dot.state.maximized.IOriginalNormalWindow|nil
 function M.get_original_normal()
   return context.original_normal
 end
@@ -98,12 +98,12 @@ end
 
 ---@param winnr                         integer
 ---@param desired_cfg                   vim.api.keyset.win_config
----@param opts                          era.state.maximized.ResolveResizeOpts|nil
----@return era.state.maximized.ResolveResizeResult
+---@param opts                          dot.state.maximized.ResolveResizeOpts|nil
+---@return dot.state.maximized.ResolveResizeResult
 function M.resolve_resize_config(winnr, desired_cfg, opts)
   local winblend = opts and opts.winblend or nil ---@type integer|nil
 
-  local original = context.original_float ---@type era.state.maximized.IOriginalFloatWindow|nil
+  local original = context.original_float ---@type dot.state.maximized.IOriginalFloatWindow|nil
   if original ~= nil and original.winnr == winnr then
     original.wincfg = vim.deepcopy(desired_cfg)
     original.winblend = original.winblend or winblend
@@ -111,7 +111,7 @@ function M.resolve_resize_config(winnr, desired_cfg, opts)
     local maximize_cfg = M.compute_float_maximized_wincfg(desired_cfg) ---@type vim.api.keyset.win_config
     return {
       cfg = maximize_cfg,
-      winblend = era.context.theme.get_float_winblend(),
+      winblend = dot.context.theme.get_float_winblend(),
       maximized = true,
     }
   end

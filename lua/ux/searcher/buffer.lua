@@ -778,7 +778,7 @@ function M:__create_finder_window_as_needed__()
     return winnr, false
   end
 
-  local winblend = era.context.theme.get_float_winblend() ---@type integer
+  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local pattern_line_count = self.o_search_pattern_linecount:snapshot() ---@type integer
   local height = calculate_dynamic_height(pattern_line_count) ---@type integer
   local width = math.min(60, math.floor(vim.o.columns * 0.9)) ---@type integer
@@ -837,7 +837,7 @@ function M:__create_replacer_window_as_needed__()
   end
 
   local finder_config = vim.api.nvim_win_get_config(finder_winnr)
-  local winblend = era.context.theme.get_float_winblend() ---@type integer
+  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local width = finder_config.width ---@type integer
   local height = 3 ---@type integer -- Fixed height for replacer
   local row = finder_config.row + finder_config.height + 1 ---@type integer
@@ -1206,7 +1206,7 @@ function M:__resize__()
   -- Only resize if height actually changed
   if current_config.height ~= new_height then
     current_config.height = new_height
-    local resize = era.state.maximized.resolve_resize_config(winnr, current_config) ---@type era.state.maximized.ResolveResizeResult
+    local resize = dot.state.maximized.resolve_resize_config(winnr, current_config) ---@type dot.state.maximized.ResolveResizeResult
     vim.api.nvim_win_set_config(winnr, resize.cfg)
   end
 end

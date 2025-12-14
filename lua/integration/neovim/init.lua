@@ -18,8 +18,8 @@ require("ghc.command")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if dot.path.is_git_repo() then
-  if era.context.flight.autoload:snapshot() then
-    era.session.load_session(era.context.get_storage().nvim_session_autosaved)
+  if dot.context.flight.autoload:snapshot() then
+    era.session.load_session(dot.context.get_storage().nvim_session_autosaved)
     vim.schedule(dot.tab.refresh)
   end
 end
@@ -50,5 +50,5 @@ vim.schedule(function()
   era.setup_breakpoints()
   era.setup_diagnostics()
   era.setup_lsp()
-  era.context.watch_changes()
+  dot.context.watch_changes()
 end)

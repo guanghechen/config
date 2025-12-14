@@ -19,7 +19,7 @@ function M.search_in_buffer()
   end
 
   if searcher == nil then
-    local context = era.context.search_buffer ---@type era.context.search_buffer
+    local context = dot.context.search_buffer ---@type dot.context.search_buffer
     searcher = ux.searcher.BufferSearcher.new({
       o_flag_fuzzy = context.flag_fuzzy,
       o_flag_regex = context.flag_regex,

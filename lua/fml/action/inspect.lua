@@ -33,7 +33,7 @@ end
 function M.inspect_state()
   local cwd = dot.path.cwd() ---@type string
   local workspace = dot.path.workspace() ---@type string
-  local full_state = era.context.dump() ---@type era.context.data
+  local full_state = dot.context.dump() ---@type dot.context.data
 
   ark.reporter.info({
     from = __module_name__,
@@ -50,7 +50,7 @@ function M.inspect_state()
         lsp = full_state.lsp,
         options = full_state.option,
         plugins = full_state.plugin,
-        status = era.state.status.dump(),
+        status = dot.state.status.dump(),
       },
     },
   })
@@ -69,7 +69,7 @@ function M.inspect_state_full()
         cwd = cwd,
         workspace = workspace,
       },
-      state = era.context.dump(),
+      state = dot.context.dump(),
     },
   })
 end
@@ -86,7 +86,7 @@ function M.inspect_tab()
       details = {
         base = {
           tabnr = tabnr,
-          winnr_command = era.state.status.get_winnr_command(),
+          winnr_command = dot.state.status.get_winnr_command(),
         },
         meta = vim.NIL,
       },
@@ -100,7 +100,7 @@ function M.inspect_tab()
     details = {
       base = {
         tabnr = tabnr,
-        winnr_command = era.state.status.get_winnr_command(),
+        winnr_command = dot.state.status.get_winnr_command(),
         winnr_fixed = meta.winnr_fixed:snapshot(),
         winnr_float = meta.winnr_float:snapshot(),
         winnr_sourcefile = meta.winnr_sourcefile:snapshot(),

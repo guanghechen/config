@@ -519,7 +519,7 @@ end
 ---@param bufnr                          integer
 ---@return nil
 function M.attach(bufnr)
-  if not era.context.flight.dressing_image:snapshot() then
+  if not dot.context.flight.dressing_image:snapshot() then
     return
   end
   if vim.b[bufnr].fml_image_attached then

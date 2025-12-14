@@ -1,4 +1,4 @@
----@class era.context.search_buffer.data
+---@class dot.context.search_buffer.data
 ---@field public flag_fuzzy             boolean
 ---@field public flag_regex             boolean
 ---@field public flag_replace           boolean
@@ -8,7 +8,7 @@
 ---@field public replace_pattern        string
 ---@field public replace_pattern_history ark.c.history.ISerializedData
 
----@class era.context.search_buffer.state
+---@class dot.context.search_buffer.state
 ---@field public flag_fuzzy             ark.c.Observable
 ---@field public flag_regex             ark.c.Observable
 ---@field public flag_replace           ark.c.Observable
@@ -18,16 +18,16 @@
 ---@field public replace_pattern        ark.c.Observable
 ---@field public replace_pattern_history ark.c.History
 
----@class era.context.search_buffer : era.context.search_buffer.state
----@field public defaults               fun(): era.context.search_buffer.data
----@field public dump                   fun(): era.context.search_buffer.data
+---@class dot.context.search_buffer : dot.context.search_buffer.state
+---@field public defaults               fun(): dot.context.search_buffer.data
+---@field public dump                   fun(): dot.context.search_buffer.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.search_buffer.data
+---@field public normalize              fun(data: unknown): dot.context.search_buffer.data
 local M = {}
 
----@return era.context.search_buffer.data
+---@return dot.context.search_buffer.data
 function M.defaults()
-  ---@type era.context.search_buffer.data
+  ---@type dot.context.search_buffer.data
   return {
     flag_fuzzy = false,
     flag_regex = false,
@@ -41,9 +41,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.search_buffer.data
+---@return dot.context.search_buffer.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.search_buffer.data
+  local resolved = M.defaults() ---@type dot.context.search_buffer.data
   if type(data) == "table" then
     if type(data.flag_fuzzy) == "boolean" then
       resolved.flag_fuzzy = data.flag_fuzzy
@@ -81,13 +81,13 @@ function M.normalize(data)
     end
   end
 
-  ---@type era.context.search_buffer.data
+  ---@type dot.context.search_buffer.data
   return resolved
 end
 
----@return era.context.search_buffer.data
+---@return dot.context.search_buffer.data
 function M.dump()
-  ---@type era.context.search_buffer.data
+  ---@type dot.context.search_buffer.data
   return {
     flag_fuzzy = M.flag_fuzzy:snapshot(),
     flag_regex = M.flag_regex:snapshot(),
@@ -103,7 +103,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.search_buffer.data
+  local data = M.normalize(raw_data) ---@type dot.context.search_buffer.data
 
   M.flag_fuzzy:next(data.flag_fuzzy)
   M.flag_regex:next(data.flag_regex)
@@ -117,7 +117,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.search_buffer.data
+local _defaults = M.defaults() ---@type dot.context.search_buffer.data
 M.flag_fuzzy = ark.c.Observable.from_value(_defaults.flag_fuzzy)
 M.flag_regex = ark.c.Observable.from_value(_defaults.flag_regex)
 M.flag_replace = ark.c.Observable.from_value(_defaults.flag_replace)

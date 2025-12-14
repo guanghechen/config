@@ -1,40 +1,40 @@
 local MAX_HISTORY = 10
 
----@class era.context.colorpicker.IColorItem
+---@class dot.context.colorpicker.IColorItem
 ---@field public hex                    string
 ---@field public alpha                  number|nil
 
----@class era.context.colorpicker.data
----@field public history                era.context.colorpicker.IColorItem[]
+---@class dot.context.colorpicker.data
+---@field public history                dot.context.colorpicker.IColorItem[]
 ---@field public input_mode             ux.widget.colorpicker.InputModeName|nil
 ---@field public output_mode            ux.widget.colorpicker.OutputModeName|nil
----@field public last_color             era.context.colorpicker.IColorItem|nil
+---@field public last_color             dot.context.colorpicker.IColorItem|nil
 
----@class era.context.colorpicker.state
+---@class dot.context.colorpicker.state
 ---@field public history                ark.c.Observable
 ---@field public input_mode             ark.c.Observable
 ---@field public output_mode            ark.c.Observable
 ---@field public last_color             ark.c.Observable
 
----@class era.context.colorpicker : era.context.colorpicker.state
----@field public defaults               fun(): era.context.colorpicker.data
----@field public dump                   fun(): era.context.colorpicker.data
+---@class dot.context.colorpicker : dot.context.colorpicker.state
+---@field public defaults               fun(): dot.context.colorpicker.data
+---@field public dump                   fun(): dot.context.colorpicker.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.colorpicker.data
+---@field public normalize              fun(data: unknown): dot.context.colorpicker.data
 ---@field public push                   fun(hex: string, alpha: number|nil): nil
----@field public get                    fun(index: integer): era.context.colorpicker.IColorItem|nil
+---@field public get                    fun(index: integer): dot.context.colorpicker.IColorItem|nil
 ---@field public size                   fun(): integer
 ---@field public set_input_mode         fun(mode: ux.widget.colorpicker.InputModeName): nil
 ---@field public get_input_mode         fun(): ux.widget.colorpicker.InputModeName|nil
 ---@field public set_output_mode        fun(mode: ux.widget.colorpicker.OutputModeName): nil
 ---@field public get_output_mode        fun(): ux.widget.colorpicker.OutputModeName|nil
 ---@field public set_last_color         fun(hex: string, alpha: number|nil): nil
----@field public get_last_color         fun(): era.context.colorpicker.IColorItem|nil
+---@field public get_last_color         fun(): dot.context.colorpicker.IColorItem|nil
 local M = {}
 
----@return era.context.colorpicker.data
+---@return dot.context.colorpicker.data
 function M.defaults()
-  ---@type era.context.colorpicker.data
+  ---@type dot.context.colorpicker.data
   return {
     history = {},
     input_mode = nil,
@@ -44,9 +44,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.colorpicker.data
+---@return dot.context.colorpicker.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.colorpicker.data
+  local resolved = M.defaults() ---@type dot.context.colorpicker.data
   if type(data) == "table" then
     if type(data.history) == "table" then
       for _, item in ipairs(data.history) do
@@ -74,9 +74,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return era.context.colorpicker.data
+---@return dot.context.colorpicker.data
 function M.dump()
-  ---@type era.context.colorpicker.data
+  ---@type dot.context.colorpicker.data
   return {
     history = M.history:snapshot(),
     input_mode = M.input_mode:snapshot(),
@@ -88,7 +88,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.colorpicker.data
+  local data = M.normalize(raw_data) ---@type dot.context.colorpicker.data
   M.history:next(data.history)
   M.input_mode:next(data.input_mode)
   M.output_mode:next(data.output_mode)
@@ -99,10 +99,10 @@ end
 ---@param alpha                         number|nil
 ---@return nil
 function M.push(hex, alpha)
-  local history = M.history:snapshot() ---@type era.context.colorpicker.IColorItem[]
-  local new_history = {} ---@type era.context.colorpicker.IColorItem[]
+  local history = M.history:snapshot() ---@type dot.context.colorpicker.IColorItem[]
+  local new_history = {} ---@type dot.context.colorpicker.IColorItem[]
 
-  ---@type era.context.colorpicker.IColorItem
+  ---@type dot.context.colorpicker.IColorItem
   local new_item = { hex = hex, alpha = alpha }
   table.insert(new_history, new_item)
 
@@ -119,15 +119,15 @@ function M.push(hex, alpha)
 end
 
 ---@param index                         integer
----@return era.context.colorpicker.IColorItem|nil
+---@return dot.context.colorpicker.IColorItem|nil
 function M.get(index)
-  local history = M.history:snapshot() ---@type era.context.colorpicker.IColorItem[]
+  local history = M.history:snapshot() ---@type dot.context.colorpicker.IColorItem[]
   return history[index]
 end
 
 ---@return integer
 function M.size()
-  local history = M.history:snapshot() ---@type era.context.colorpicker.IColorItem[]
+  local history = M.history:snapshot() ---@type dot.context.colorpicker.IColorItem[]
   return #history
 end
 
@@ -160,14 +160,14 @@ function M.set_last_color(hex, alpha)
   M.last_color:next({ hex = hex, alpha = alpha })
 end
 
----@return era.context.colorpicker.IColorItem|nil
+---@return dot.context.colorpicker.IColorItem|nil
 function M.get_last_color()
   return M.last_color:snapshot()
 end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.colorpicker.data
+local _defaults = M.defaults() ---@type dot.context.colorpicker.data
 
 ---@type ark.c.Observable
 M.history = ark.c.Observable.from_value(_defaults.history)

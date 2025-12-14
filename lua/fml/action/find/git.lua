@@ -2,13 +2,13 @@ local name = "fml.action.find.git" ---@type string
 local title = "Find Git" ---@type string
 
 local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
-local o_search_pattern = era.context.select.find_git.search_pattern
-local o_flag_foldempty = era.context.select.find_git.flag_foldempty
-local o_flag_fuzzy = era.context.select.find_git.flag_fuzzy
-local o_flag_regex = era.context.select.find_git.flag_regex
-local o_flag_case_sensitive = era.context.select.find_git.flag_case_sensitive
-local o_flag_selected = era.context.select.find_git.flag_selected
-local o_flag_viewtype = era.context.select.find_git.flag_viewtype
+local o_search_pattern = dot.context.select.find_git.search_pattern
+local o_flag_foldempty = dot.context.select.find_git.flag_foldempty
+local o_flag_fuzzy = dot.context.select.find_git.flag_fuzzy
+local o_flag_regex = dot.context.select.find_git.flag_regex
+local o_flag_case_sensitive = dot.context.select.find_git.flag_case_sensitive
+local o_flag_selected = dot.context.select.find_git.flag_selected
+local o_flag_viewtype = dot.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
 local picker ---@type ux.picker.FiletreeComposer
@@ -20,7 +20,7 @@ local function refresh(force)
     return
   end
 
-  local workspace, status = era.state.git.status("HEAD") ---@type string, table<string, string>
+  local workspace, status = dot.state.git.status("HEAD") ---@type string, table<string, string>
   local filepaths = {} ---@type string[]
   for filepath in pairs(status) do
     filepaths[#filepaths + 1] = filepath
@@ -32,7 +32,7 @@ end
 
 picker = ux.picker.FiletreeComposer.new({
   name = name,
-  frecency = era.context.frecency.files,
+  frecency = dot.context.frecency.files,
   permanent = true,
   title = string.format("%s (not committed)", title),
   height = 0.90,
@@ -57,7 +57,7 @@ picker = ux.picker.FiletreeComposer.new({
     refresh(false)
   end,
   on_refresh = function()
-    era.state.git.refresh_git_status(true)
+    dot.state.git.refresh_git_status(true)
     refresh(true)
   end,
 })

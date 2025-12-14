@@ -1,2 +1,2 @@
-era.context.theme.theme:next("nord")
-era.context.theme.reload_theme(false, false)
+dot.context.theme.theme:next("nord")
+dot.context.theme.reload_theme(false, false)

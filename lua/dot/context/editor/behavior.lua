@@ -1,21 +1,21 @@
----@class era.context.behavior.data
+---@class dot.context.behavior.data
 ---@field public auto_im                boolean
 ---@field public bufs_relative          boolean
 
----@class era.context.behavior.state
+---@class dot.context.behavior.state
 ---@field public auto_im                ark.c.Observable
 ---@field public bufs_relative          ark.c.Observable
 
----@class era.context.behavior : era.context.behavior.state
----@field public defaults               fun(): era.context.behavior.data
----@field public dump                   fun(): era.context.behavior.data
+---@class dot.context.behavior : dot.context.behavior.state
+---@field public defaults               fun(): dot.context.behavior.data
+---@field public dump                   fun(): dot.context.behavior.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.behavior.data
+---@field public normalize              fun(data: unknown): dot.context.behavior.data
 local M = {}
 
----@return era.context.behavior.data
+---@return dot.context.behavior.data
 function M.defaults()
-  ---@type era.context.behavior.data
+  ---@type dot.context.behavior.data
   return {
     auto_im = true,
     bufs_relative = true,
@@ -23,9 +23,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.behavior.data
+---@return dot.context.behavior.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.behavior.data
+  local resolved = M.defaults() ---@type dot.context.behavior.data
   if type(data) == "table" then
     if type(data.auto_im) == "boolean" then
       resolved.auto_im = data.auto_im
@@ -37,9 +37,9 @@ function M.normalize(data)
   return resolved
 end
 
----@return era.context.behavior.data
+---@return dot.context.behavior.data
 function M.dump()
-  ---@type era.context.behavior.data
+  ---@type dot.context.behavior.data
   return {
     auto_im = M.auto_im:snapshot(),
     bufs_relative = M.bufs_relative:snapshot(),
@@ -49,14 +49,14 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.behavior.data
+  local data = M.normalize(raw_data) ---@type dot.context.behavior.data
   M.auto_im:next(data.auto_im)
   M.bufs_relative:next(data.bufs_relative)
 end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.behavior.data
+local _defaults = M.defaults() ---@type dot.context.behavior.data
 M.auto_im = ark.c.Observable.from_value(_defaults.auto_im)
 M.bufs_relative = ark.c.Observable.from_value(_defaults.bufs_relative)
 return M

@@ -1,6 +1,6 @@
 local __module_name__ = "fml.dressing.ui_attach" ---@type string
 
-local enabled = era.context.flight.dressing_ui_attach:snapshot() ---@type boolean
+local enabled = dot.context.flight.dressing_ui_attach:snapshot() ---@type boolean
 if not enabled then
   return
 end
@@ -122,7 +122,7 @@ local schedule_process = vim.schedule_wrap(process_queue) ---@type fun(): nil
 ---@param ...                           any
 ---@return boolean|nil
 local function ui_attach_callback(event, kind, ...)
-  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
     if not DEVMODE_IGNORED_EVENTS[event] then
       ark.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
@@ -173,9 +173,9 @@ local function ui_attach_callback(event, kind, ...)
 end
 
 ark.nvim.make_keys({ "i", "n", "s" }, "<esc>", function()
-  local searching = era.state.status.searching:snapshot() ---@type boolean
+  local searching = dot.state.status.searching:snapshot() ---@type boolean
   if searching then
-    era.state.status.searching:next(false)
+    dot.state.status.searching:next(false)
     vim.schedule(function()
       vim.cmd("noh")
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

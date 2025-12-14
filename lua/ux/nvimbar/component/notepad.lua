@@ -308,7 +308,7 @@ function M.source(position, notepad)
     render = function(_, remain_width)
       local source = notepad:get_source() ---@type era.t.INotepadSource
       local source_name = source.name ---@type string
-      local _, config = era.state.notepad.retrieve_source(source_name)
+      local _, config = dot.state.notepad.retrieve_source(source_name)
       local engine = config.engine ---@type 'json'|'folder'
 
       local text_source = source_name .. "@" .. engine .. " " .. icon_source .. " " ---@type string

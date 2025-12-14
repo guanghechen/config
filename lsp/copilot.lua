@@ -176,18 +176,18 @@ return {
 
       local client_id = ctx.client_id
       if res.status == "Error" then
-        era.state.status.copilots[client_id] = "error"
+        dot.state.status.copilots[client_id] = "error"
         ark.reporter.warn({
           from = __module_name__,
           subject = "copilot_auth_error",
           message = "Please use `:Copilot auth` or `:LspCopilotSignIn` to sign in to Copilot",
         })
       elseif res.kind ~= "Normal" then
-        era.state.status.copilots[client_id] = "error"
+        dot.state.status.copilots[client_id] = "error"
       elseif res.busy then
-        era.state.status.copilots[client_id] = "pending"
+        dot.state.status.copilots[client_id] = "pending"
       else
-        era.state.status.copilots[client_id] = "ok"
+        dot.state.status.copilots[client_id] = "ok"
       end
     end,
   },

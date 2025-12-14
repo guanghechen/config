@@ -517,7 +517,7 @@ function M:create_win(winopts, dimension)
   end
 
   local bufnr = self:create_buf() ---@type integer
-  local winblend = era.context.theme.get_float_winblend() ---@type integer
+  local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
     relative = "editor",
     row = dimension.row,
@@ -607,7 +607,7 @@ function M:resize(dimension)
   wincfg.width = dimension.width
   wincfg.height = dimension.height
 
-  local resize = era.state.maximized.resolve_resize_config(winnr, wincfg) ---@type era.state.maximized.ResolveResizeResult
+  local resize = dot.state.maximized.resolve_resize_config(winnr, wincfg) ---@type dot.state.maximized.ResolveResizeResult
   vim.api.nvim_win_set_config(winnr, resize.cfg)
   return self
 end

@@ -1,6 +1,6 @@
 local c = ux.nvimbar.component
 
-local dirtier = era.state.status.dirtier_tabline ---@type ark.c.Dirtier
+local dirtier = dot.state.status.dirtier_tabline ---@type ark.c.Dirtier
 local position = "f_tl" ---@type ux.nvimbar.PositionEnum
 
 local tabline ---@type ux.nvimbar.Nvimbar
@@ -11,7 +11,7 @@ tabline = ux.nvimbar.Nvimbar.new({
   comp_sep_hlname_active = position .. "_bg",
   delay = 256,
   silent = function()
-    local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+    local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
     return not devmode
   end,
   get_max_width = function()
@@ -57,7 +57,7 @@ tabline
 
 ---@return boolean
 local function should_show_tabline()
-  local devmode = era.context.flight.devmode:snapshot() ---@type boolean
+  local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
     return true
   end
@@ -99,7 +99,7 @@ dirtier:subscribe(ark.c.Subscriber.new({
       if last_showtabline ~= 0 then
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
-          era.state.status.dirty_winline_nr:next(winnr)
+          dot.state.status.dirty_winline_nr:next(winnr)
         end
       end
 

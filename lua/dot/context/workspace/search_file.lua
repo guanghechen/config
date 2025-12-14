@@ -1,27 +1,27 @@
----@class era.context.search_file.data
+---@class dot.context.search_file.data
 ---@field public flag_replace           boolean
 ---@field public max_filesize           string
 ---@field public max_matches            integer
 ---@field public replacement            string
 ---@field public replace_pattern_history ark.c.history.ISerializedData
 
----@class era.context.search_file.state
+---@class dot.context.search_file.state
 ---@field public flag_replace           ark.c.Observable
 ---@field public max_filesize           ark.c.Observable
 ---@field public max_matches            ark.c.Observable
 ---@field public replacement            ark.c.Observable
 ---@field public replace_pattern_history ark.c.History
 
----@class era.context.search_file : era.context.search_file.state
----@field public defaults               fun(): era.context.search_file.data
----@field public dump                   fun(): era.context.search_file.data
+---@class dot.context.search_file : dot.context.search_file.state
+---@field public defaults               fun(): dot.context.search_file.data
+---@field public dump                   fun(): dot.context.search_file.data
 ---@field public load                   fun(data: unknown): nil
----@field public normalize              fun(data: unknown): era.context.search_file.data
+---@field public normalize              fun(data: unknown): dot.context.search_file.data
 local M = {}
 
----@return era.context.search_file.data
+---@return dot.context.search_file.data
 function M.defaults()
-  ---@type era.context.search_file.data
+  ---@type dot.context.search_file.data
   return {
     flag_replace = false,
     max_filesize = "1M",
@@ -32,9 +32,9 @@ function M.defaults()
 end
 
 ---@param data                          any
----@return era.context.search_file.data
+---@return dot.context.search_file.data
 function M.normalize(data)
-  local resolved = M.defaults() ---@type era.context.search_file.data
+  local resolved = M.defaults() ---@type dot.context.search_file.data
   if type(data) == "table" then
     if type(data.flag_replace) == "boolean" then
       resolved.flag_replace = data.flag_replace
@@ -58,13 +58,13 @@ function M.normalize(data)
     end
   end
 
-  ---@type era.context.search_file.data
+  ---@type dot.context.search_file.data
   return resolved
 end
 
----@return era.context.search_file.data
+---@return dot.context.search_file.data
 function M.dump()
-  ---@type era.context.search_file.data
+  ---@type dot.context.search_file.data
   return {
     flag_replace = M.flag_replace:snapshot(),
     max_matches = M.max_matches:snapshot(),
@@ -77,7 +77,7 @@ end
 ---@param raw_data                      any
 ---@return nil
 function M.load(raw_data)
-  local data = M.normalize(raw_data) ---@type era.context.search_file.data
+  local data = M.normalize(raw_data) ---@type dot.context.search_file.data
 
   M.flag_replace:next(data.flag_replace)
   M.max_filesize:next(data.max_filesize)
@@ -88,7 +88,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local _defaults = M.defaults() ---@type era.context.search_file.data
+local _defaults = M.defaults() ---@type dot.context.search_file.data
 M.flag_replace = ark.c.Observable.from_value(_defaults.flag_replace)
 M.max_filesize = ark.c.Observable.from_value(_defaults.max_filesize)
 M.max_matches = ark.c.Observable.from_value(_defaults.max_matches)

@@ -17,7 +17,7 @@ function M.toggle_pin()
   local buf = meta.bufs[bufid_sourcefile] ---@type dot.tab.IBufItem
   local filepath = vim.api.nvim_buf_get_name(buf.bufnr) ---@type string
 
-  local pinned_list = era.context.bookmark.pinned:snapshot() ---@type string[]
+  local pinned_list = dot.context.bookmark.pinned:snapshot() ---@type string[]
   local k = ark.table.find_index(pinned_list, filepath) ---@type integer|nil
   if k == nil then
     table.insert(pinned_list, filepath)
@@ -30,7 +30,7 @@ function M.toggle_pin()
   end
 
   dot.tab.add_buf(tabnr, buf.bufnr, not buf.pinned)
-  era.state.status.dirtier_tabline:mark_dirty()
+  dot.state.status.dirtier_tabline:mark_dirty()
 end
 
 return M

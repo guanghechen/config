@@ -48,14 +48,14 @@ end
 
 ---@return ux.widget.colorpicker.IInputMode
 function M:input()
-  local name = era.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
   local idx = get_input_idx(name) ---@type integer
   return INPUTS[idx]
 end
 
 ---@return ux.widget.colorpicker.IOutputMode
 function M:output()
-  local name = era.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
   local idx = get_output_idx(name) ---@type integer
   return OUTPUTS[idx]
 end
@@ -63,33 +63,33 @@ end
 ---@return nil
 function M:cycle_input()
   local r, g, b = self:get_rgb() ---@type integer, integer, integer
-  local name = era.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
   local idx = get_input_idx(name) % #INPUTS + 1 ---@type integer
-  era.context.colorpicker.set_input_mode(INPUTS[idx].name)
+  dot.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
 end
 
 ---@return nil
 function M:cycle_input_reverse()
   local r, g, b = self:get_rgb() ---@type integer, integer, integer
-  local name = era.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
+  local name = dot.context.colorpicker.get_input_mode() ---@type ux.widget.colorpicker.InputModeName|nil
   local idx = (get_input_idx(name) - 2) % #INPUTS + 1 ---@type integer
-  era.context.colorpicker.set_input_mode(INPUTS[idx].name)
+  dot.context.colorpicker.set_input_mode(INPUTS[idx].name)
   self:set_rgb(r, g, b)
 end
 
 ---@return nil
 function M:cycle_output()
-  local name = era.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
   local idx = get_output_idx(name) % #OUTPUTS + 1 ---@type integer
-  era.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
+  dot.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
 
 ---@return nil
 function M:cycle_output_reverse()
-  local name = era.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
+  local name = dot.context.colorpicker.get_output_mode() ---@type ux.widget.colorpicker.OutputModeName|nil
   local idx = (get_output_idx(name) - 2) % #OUTPUTS + 1 ---@type integer
-  era.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
+  dot.context.colorpicker.set_output_mode(OUTPUTS[idx].name)
 end
 
 ---@return integer[]

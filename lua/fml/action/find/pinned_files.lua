@@ -18,13 +18,13 @@ local o_flag_viewtype = ark.c.Observable.from_value("tree")
 ---@return nil
 local function refresh(picker)
   local cwd = dot.path.cwd() ---@type string
-  local filepaths = era.context.bookmark.pinned:snapshot() ---@type string[]
+  local filepaths = dot.context.bookmark.pinned:snapshot() ---@type string[]
   picker:reset_filepaths(cwd, filepaths, false)
 end
 
 local picker = ux.picker.FiletreeComposer.new({
   name = name,
-  frecency = era.context.frecency.files,
+  frecency = dot.context.frecency.files,
   permanent = true,
   title = title,
   height = 0.9,
@@ -46,7 +46,7 @@ local picker = ux.picker.FiletreeComposer.new({
   end,
 })
 
-ark.fn.observe({ era.context.bookmark.pinned }, function()
+ark.fn.observe({ dot.context.bookmark.pinned }, function()
   refresh(picker)
 end, false)
 

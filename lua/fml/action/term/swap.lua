@@ -20,7 +20,7 @@ function M.swap_left(step)
 
   era.term.put(index_current, termuuid_next)
   era.term.put(index_next, termuuid_current)
-  era.state.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 end
 
 ---@param step                          integer|nil
@@ -42,7 +42,7 @@ function M.swap_right(step)
 
   era.term.put(index_current, termuuid_next)
   era.term.put(index_next, termuuid_current)
-  era.state.status.dirtier_termline:mark_dirty()
+  dot.state.status.dirtier_termline:mark_dirty()
 end
 
 return M
