@@ -48,7 +48,7 @@ local function is_valid_breakpoint(workspace, breakpoint)
     and (breakpoint.hit_condition == nil or type(breakpoint.hit_condition) == "string")
     and (breakpoint.log_message == nil or type(breakpoint.log_message) == "string")
   then
-    breakpoint.filepath = era.path.resolve(workspace, breakpoint.filepath) ---@type string
+    breakpoint.filepath = dot.path.resolve(workspace, breakpoint.filepath) ---@type string
     return vim.fn.filereadable(breakpoint.filepath) == 1
   end
   return false
@@ -56,8 +56,8 @@ end
 
 ---@return era.context.lsp.data
 function M.defaults()
-  local is_git_repo = era.path.is_git_repo() ---@type boolean
-  local is_repo_personal = era.path.is_repo_personal_public() ---@type boolean
+  local is_git_repo = dot.path.is_git_repo() ---@type boolean
+  local is_repo_personal = dot.path.is_repo_personal_public() ---@type boolean
 
   ---@type era.context.lsp.data
   return {
@@ -76,7 +76,7 @@ end
 ---@return era.context.lsp.data
 function M.normalize(data)
   local resolved = M.defaults() ---@type era.context.lsp.data
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   if type(data) == "table" then
     if type(data.breakpoints) == "table" then
       resolved.breakpoints = {} ---@type era.context.lsp.IBreakpointData[]
@@ -172,15 +172,15 @@ function M.get_python_bin_path()
 
   local python_name = ark.env.IS_WIN and "python.exe" or "python" ---@type string
   local bin_home_name = ark.env.IS_WIN and "Scripts" or "bin" ---@type string
-  local bin_home = era.path.join(venv_path, bin_home_name) ---@type string
+  local bin_home = dot.path.join(venv_path, bin_home_name) ---@type string
   local python_path ---@type string
 
-  python_path = era.path.join(venv_path, python_name) ---@type string
+  python_path = dot.path.join(venv_path, python_name) ---@type string
   if yoz.path.is_exist_file(python_path) then
     return python_path, bin_home
   end
 
-  python_path = era.path.join(bin_home, python_name) ---@type string
+  python_path = dot.path.join(bin_home, python_name) ---@type string
   if yoz.path.is_exist_file(python_path) then
     return python_path, bin_home
   end
@@ -197,7 +197,7 @@ function M.refresh_breakpoints()
 
   local raw_breakpoints_list = bps.get()
   local breakpoints = {} ---@type era.context.lsp.IBreakpointData[]
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   for bufnr, raw_breakpoints in pairs(raw_breakpoints_list) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     for _, raw_breakpoint in ipairs(raw_breakpoints) do
@@ -210,7 +210,7 @@ function M.refresh_breakpoints()
         log_message = raw_breakpoint.log_message,
       }
       if is_valid_breakpoint(workspace, breakpoint) then
-        breakpoint.filepath = era.path.relative(workspace, breakpoint.filepath) ---@type string
+        breakpoint.filepath = dot.path.relative(workspace, breakpoint.filepath) ---@type string
         table.insert(breakpoints, breakpoint)
       end
     end

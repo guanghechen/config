@@ -53,12 +53,12 @@ local M = {}
 
 ---@return era.context.flight.data
 function M.defaults()
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   local is_home_config_dir = workspace == ark.env.HOME_NVIM_CONFIG ---@type boolean
-  local is_git_repo = era.path.is_git_repo() ---@type boolean
-  local is_thirdparty = era.path.is_repo_thirdparty() ---@type boolean
-  local is_playground = era.path.is_repo_playground() ---@type boolean
-  local is_personal_public = era.path.is_repo_personal_public() ---@type boolean
+  local is_git_repo = dot.path.is_git_repo() ---@type boolean
+  local is_thirdparty = dot.path.is_repo_thirdparty() ---@type boolean
+  local is_playground = dot.path.is_repo_playground() ---@type boolean
+  local is_personal_public = dot.path.is_repo_personal_public() ---@type boolean
 
   ---@type era.context.flight.data
   return {

@@ -32,7 +32,7 @@ end
 ---@field public resolve                 ?fun(file: string, src: string): string|nil
 ---@field public wo                      ?table<string, any>
 local data = {
-  tmpdir = era.path.join(vim.fn.stdpath("cache"), "image/"),
+  tmpdir = dot.path.join(vim.fn.stdpath("cache"), "image/"),
   convert = {
     notify = true,
     ---@type fml.dressing.image.args
@@ -142,7 +142,7 @@ local M = {
 ---@param file                           string
 ---@return fml.dressing.image.Size
 function M.dim(file)
-  file = era.path.normalize(file)
+  file = dot.path.normalize(file)
   if dims[file] then
     return dims[file]
   end
@@ -226,7 +226,7 @@ function M.norm_src(src)
     src = vim.uri_to_fname(src)
   end
   src = era.uri.decode(src)
-  return era.path.normalize(vim.fn.fnamemodify(src, ":p"))
+  return dot.path.normalize(vim.fn.fnamemodify(src, ":p"))
 end
 
 ---@param src                            string

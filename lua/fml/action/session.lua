@@ -5,7 +5,7 @@ local M = {}
 
 ---@return nil
 function M.restore()
-  if era.path.is_git_repo() then
+  if dot.path.is_git_repo() then
     local storage = era.context.get_storage() ---@type era.context.storage
 
     local nvim_session_filepath = nil ---@type string|nil
@@ -29,7 +29,7 @@ end
 
 ---@return nil
 function M.restore_autosaved()
-  if era.path.is_git_repo() then
+  if dot.path.is_git_repo() then
     local storage = era.context.get_storage() ---@type era.context.storage
 
     local nvim_session_filepath = nil ---@type string|nil
@@ -51,7 +51,7 @@ end
 
 ---@return nil
 function M.save()
-  if era.path.is_git_repo() then
+  if dot.path.is_git_repo() then
     local storage = era.context.get_storage() ---@type era.context.storage
     era.context.save({
       session = storage.session,

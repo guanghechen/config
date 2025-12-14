@@ -123,7 +123,7 @@ end
 ---@return string|nil
 ---@return string|nil
 function M.locate_lsp_root(filepath, config_filenames)
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   do
     local config_filepath = M.find_filepath(cwd, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -131,7 +131,7 @@ function M.locate_lsp_root(filepath, config_filenames)
     end
   end
 
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   if cwd ~= workspace then
     local config_filepath = M.find_filepath(workspace, config_filenames) ---@type string|nil
     if config_filepath ~= nil then
@@ -161,7 +161,7 @@ end
 function M.locate_mason_bin_path(bin, silent)
   local root = vim.env.MASON or (ark.env.HOME_NVIM_DATA .. ark.env.PATH_SEP .. "mason")
   local resolved_binname = ark.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
-  local filepath = era.path.normalize(root .. "/bin/" .. resolved_binname) ---@type string
+  local filepath = dot.path.normalize(root .. "/bin/" .. resolved_binname) ---@type string
 
   if yoz.path.is_exist_file(filepath) then
     return filepath

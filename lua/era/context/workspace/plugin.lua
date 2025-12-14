@@ -15,7 +15,7 @@ local M = {}
 
 ---@return era.context.plugin.data
 function M.defaults()
-  local is_git_repo = era.path.is_git_repo() ---@type boolean
+  local is_git_repo = dot.path.is_git_repo() ---@type boolean
 
   ---@type era.context.plugin.data
   return {

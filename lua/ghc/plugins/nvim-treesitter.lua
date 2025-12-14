@@ -177,7 +177,7 @@ return {
     folds = { enable = true },
     highlight = { enable = true },
     indent = { enable = true },
-    install_dir = era.path.locate_data_filepath("treesitter"),
+    install_dir = dot.path.locate_data_filepath("treesitter"),
   },
   config = function(_, opts)
     require("nvim-treesitter").setup(opts)

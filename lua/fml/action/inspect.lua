@@ -31,8 +31,8 @@ end
 
 ---@return nil
 function M.inspect_state()
-  local cwd = era.path.cwd() ---@type string
-  local workspace = era.path.workspace() ---@type string
+  local cwd = dot.path.cwd() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   local full_state = era.context.dump() ---@type era.context.data
 
   ark.reporter.info({
@@ -58,8 +58,8 @@ end
 
 ---@return nil
 function M.inspect_state_full()
-  local cwd = era.path.cwd() ---@type string
-  local workspace = era.path.workspace() ---@type string
+  local cwd = dot.path.cwd() ---@type string
+  local workspace = dot.path.workspace() ---@type string
 
   ark.reporter.info({
     from = __module_name__,

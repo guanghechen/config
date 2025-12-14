@@ -218,11 +218,11 @@ function M.browse(opts)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
-  filepath = filepath ~= "" and era.path.normalize(filepath) or nil
+  filepath = filepath ~= "" and dot.path.normalize(filepath) or nil
   local stat = filepath and vim.uv.fs_stat(filepath) or nil
   local is_file = stat and stat.type == "file" or false
 
-  local cwd = is_file and vim.fn.fnamemodify(filepath --[[@as string]], ":h") or era.path.cwd()
+  local cwd = is_file and vim.fn.fnamemodify(filepath --[[@as string]], ":h") or dot.path.cwd()
 
   local git_file = is_file and get_git_file_path(filepath --[[@as string]], cwd) or nil
 

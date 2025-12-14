@@ -137,7 +137,7 @@ return {
         local node = state.tree:get_node()
 
         if node.type == "file" then
-          local dirpath = era.path.dirname(node:get_id()) ---@type string
+          local dirpath = dot.path.dirname(node:get_id()) ---@type string
           require("fml.action.find.files"):reset_input()
           era.command.execute(era.command.definitions.find.files.uuid, dirpath)
           return
@@ -198,7 +198,7 @@ return {
         local modified = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec)
         local mode = string.format("%o", stat.mode)
 
-        local filepath_relative = era.path.relative(era.path.cwd(), filepath) ---@type string
+        local filepath_relative = dot.path.relative(dot.path.cwd(), filepath) ---@type string
         local filename = yoz.path.basename(filepath) ---@type string
         local icon = dot.fileicon.get_file_icon(filename)
 

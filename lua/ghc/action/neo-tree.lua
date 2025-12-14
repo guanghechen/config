@@ -81,12 +81,12 @@ local widgets = {
   git_cwd = create_widget({
     name = "git-cwd",
     source = "git_status",
-    cwd = era.path.cwd,
+    cwd = dot.path.cwd,
   }),
   git_workspace = create_widget({
     name = "git-workspace",
     source = "git_status",
-    cwd = era.path.workspace,
+    cwd = dot.path.workspace,
   }),
 }
 
@@ -102,7 +102,7 @@ function M.fs_cwd()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = era.path.cwd(),
+    dir = dot.path.cwd(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -118,7 +118,7 @@ function M.fs_workspace()
   require("neo-tree.command").execute({
     action = "focus",
     source = "filesystem",
-    dir = era.path.workspace(),
+    dir = dot.path.workspace(),
     position = "left",
     reveal = false,
     toggle = toggle,
@@ -131,7 +131,7 @@ function M.fs_reveal()
     action = "focus",
     source = "filesystem",
     position = "left",
-    reveal = check_could_reveal(era.path.workspace()),
+    reveal = check_could_reveal(dot.path.workspace()),
     toggle = false,
   })
 end

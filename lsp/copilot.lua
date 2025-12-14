@@ -69,7 +69,7 @@ end
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if #filepath > #workspace and filepath:sub(1, #workspace) == workspace then
     on_dir(workspace)

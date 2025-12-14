@@ -118,9 +118,9 @@ return {
           return
         end
 
-        local workspace = era.path.workspace() ---@type string
+        local workspace = dot.path.workspace() ---@type string
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath_relative = era.path.relative(workspace, filepath, "/") ---@type string
+        local filepath_relative = dot.path.relative(workspace, filepath, "/") ---@type string
         if yoz.path.is_absolute(filepath_relative) then
           return true
         end

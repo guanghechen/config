@@ -1,6 +1,6 @@
 local name = "fml.action.search.files.searcher" ---@type string
 local title = "Search Files" ---@type string
-local o_rootpath = ark.c.Observable.from_value(era.path.cwd())
+local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
 
 local o_excludes = era.context.select.search_file.excludes
 local o_flag_exclude = era.context.select.search_file.flag_exclude
@@ -147,7 +147,7 @@ searcher = ux.searcher.FiletreeComposer.new({
       key = "tc",
       desc = string.format("%s: change root (cwd)", title),
       callback = function()
-        local cwd = era.path.cwd() ---@type string
+        local cwd = dot.path.cwd() ---@type string
         attach(searcher, cwd)
       end,
     },
@@ -156,7 +156,7 @@ searcher = ux.searcher.FiletreeComposer.new({
       key = "tw",
       desc = string.format("%s: change root (workspace)", title),
       callback = function()
-        local workspace = era.path.workspace() ---@type string
+        local workspace = dot.path.workspace() ---@type string
         attach(searcher, workspace)
       end,
     },
@@ -230,14 +230,14 @@ searcher = ux.searcher.FiletreeComposer.new({
 
 ark.fn.observe({ o_rootpath }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
-  local workspace = era.path.workspace() ---@type string
-  local cwd = era.path.cwd() ---@type string
+  local workspace = dot.path.workspace() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   if rootpath == workspace then
     searcher.finder:set_title(string.format("%s (workspace)", title))
   elseif rootpath == cwd then
     searcher.finder:set_title(string.format("%s (cwd)", title))
   else
-    local relative_path = yoz.path.is_descendant(workspace, rootpath) and era.path.relative(cwd, rootpath) or rootpath ---@type string
+    local relative_path = yoz.path.is_descendant(workspace, rootpath) and dot.path.relative(cwd, rootpath) or rootpath ---@type string
     searcher.finder:set_title(string.format("%s (%s)", title, relative_path))
   end
 end)
@@ -283,7 +283,7 @@ end
 
 ---@return nil
 function M.search_in_cwd()
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   if searcher:isfocused() then
     searcher:hide()
     return
@@ -300,7 +300,7 @@ function M.search_in_directory()
   if winnr_source ~= nil then
     local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local dirpath = yoz.path.is_exist_directory(filepath) and filepath or era.path.dirname(filepath) ---@type string
+    local dirpath = yoz.path.is_exist_directory(filepath) and filepath or dot.path.dirname(filepath) ---@type string
     attach(searcher, dirpath)
   end
   focus()
@@ -308,7 +308,7 @@ end
 
 ---@return nil
 function M.search_in_workspace()
-  local workspace = era.path.workspace() ---@type string
+  local workspace = dot.path.workspace() ---@type string
   attach(searcher, workspace)
   focus()
 end

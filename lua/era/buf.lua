@@ -151,13 +151,13 @@ function M.pick_filepath(cwd, existed_paths)
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     for _, bufnr in ipairs(bufnrs) do
       local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local filepath = era.path.resolve(cwd, filename) ---@type string
+      local filepath = dot.path.resolve(cwd, filename) ---@type string
       existed_paths[filepath] = true
     end
   end
 
   for i = 1, 100 do
-    local filepath = era.path.join(cwd, dot.var.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    local filepath = dot.path.join(cwd, dot.var.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
     if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
       return filepath
     end
@@ -190,10 +190,10 @@ function M.resolve(bufnr, force)
   local dirpath_pieces = yoz.path.split(filepath, false) ---@type string[]
   dirpath_pieces[#dirpath_pieces] = nil
 
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
   local fileicon, fileicon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
-  local relpath = era.path.relative(cwd, filepath) ---@type string
+  local relpath = dot.path.relative(cwd, filepath) ---@type string
 
   if meta == nil then
     ---@type era.buf.IMeta

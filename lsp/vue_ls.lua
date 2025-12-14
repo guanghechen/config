@@ -54,7 +54,7 @@ return {
   root_markers = { "package.json", "tsconfig.json", "jsconfig.json", ".git" },
   init_options = {
     typescript = {
-      tsdk = yoz.path.locate_nearest(era.path.cwd(), { era.path.normalize("node_modules/typescript/lib") }),
+      tsdk = yoz.path.locate_nearest(dot.path.cwd(), { dot.path.normalize("node_modules/typescript/lib") }),
     },
   },
   root_dir = root_dir,

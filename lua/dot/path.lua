@@ -71,8 +71,8 @@ local repo_map = {
   },
 }
 
----@module 'era.path'
----@class era.path
+---@module 'dot.path'
+---@class dot.path
 local M = {}
 
 ---@param filepath                      string

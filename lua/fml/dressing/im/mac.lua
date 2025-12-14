@@ -3,8 +3,8 @@ local __module_name__ = "fml.dressing.im.mac" ---@type string
 ---@class fml.dressing.im.mac : fml.dressing.im
 local M = {}
 
-local app_home = era.path.locate_app_config_home("guanghechen")
-local script_path = era.path.join(app_home, "bin/im-select/osx/im-select")
+local app_home = dot.path.locate_app_config_home("guanghechen")
+local script_path = dot.path.join(app_home, "bin/im-select/osx/im-select")
 
 ---@return fml.dressing.im.InputMethod|nil
 function M.get_input_method()

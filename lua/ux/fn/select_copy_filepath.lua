@@ -43,8 +43,8 @@ local function select_copy_filepath(params)
             message = "Copied absolute filepath: " .. content,
           })
         elseif item.uuid == "relative" then
-          local cwd = era.path.cwd() ---@type string
-          local content = era.path.relative(cwd, filepath, "/") ---@type string
+          local cwd = dot.path.cwd() ---@type string
+          local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
           write_clipboard_registers(content)
           ark.reporter.info({

@@ -769,7 +769,7 @@ function M.new(props)
           end
         end
 
-        local filepath = era.path.resolve(cwd, leafnode.data.filepath) ---@type string
+        local filepath = dot.path.resolve(cwd, leafnode.data.filepath) ---@type string
         local advance_result, advance_error = yoz.replace.replace_file_by_matches_advance({
           filepath = filepath,
           search_pattern = search_pattern,
@@ -867,7 +867,7 @@ function M.new(props)
       end
     end,
     send_to_qflist = function()
-      local cwd = era.path.cwd() ---@type string
+      local cwd = dot.path.cwd() ---@type string
       local quickfix_items = {} ---@type era.state.qflist.IItem[]
 
       local linecount = retriever:linecount() ---@type integer
@@ -877,7 +877,7 @@ function M.new(props)
           local node = filetree:retrieve(uuid) ---@type era.t.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
-            local relative_filepath = era.path.relative(cwd, filepath) ---@type string
+            local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
 
             local nodestate = treeview:retrieve(uuid) ---@type ux.searcher.view.filetree.INodeState|nil
             local locations = nodestate and nodestate.locations or nil ---@type ux.searcher.view.filetree.ILeafLocationState[]|nil
@@ -1420,7 +1420,7 @@ function M.new(props)
           local rootnode = filetree:retrieve(self._uuid_root) ---@type era.t.IFiletreeNode|nil
           local filepath = node.data.filepath ---@type string
           local relative_filepath = rootnode ~= nil
-              and era.path.relative(rootnode.data.filepath or era.path.cwd(), filepath)
+              and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
             or filepath
 
           if nodestate.nodetype == "container" then
@@ -1804,7 +1804,7 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   local frecency = self._frecency ---@type ark.c.Frecency|nil
   local treeview = self._treeview ---@type ux.searcher.FiletreeView
 
-  cwd = era.path.normalize(cwd) ---@type string
+  cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
 
   local uuid_root = era.Filetree.uuid(rootpath) ---@type string
@@ -1983,7 +1983,7 @@ function M:__search_internal__()
   local specified_filepath = nil ---@type string|nil
 
   if not yoz.path.is_exist_directory(rootpath) then
-    cwd = era.path.dirname(rootpath) ---@type string
+    cwd = dot.path.dirname(rootpath) ---@type string
     specified_filepath = rootpath ---@type string
   end
 
@@ -2265,7 +2265,7 @@ function M:__replace_file__(cwd, node, nodestate)
   local replace_pattern = self.replace_pattern:snapshot() ---@type string
 
   if count == L then
-    local filepath = era.path.resolve(cwd, node.data.filepath) ---@type string
+    local filepath = dot.path.resolve(cwd, node.data.filepath) ---@type string
     local succeed, replace_error = yoz.replace.replace_file({
       filepath = filepath,
       search_pattern = search_pattern,
@@ -2298,7 +2298,7 @@ function M:__replace_file__(cwd, node, nodestate)
     end
   end
 
-  local filepath = era.path.resolve(cwd, node.data.filepath) ---@type string
+  local filepath = dot.path.resolve(cwd, node.data.filepath) ---@type string
   local succeed, replace_error = yoz.replace.replace_file_by_matches({
     filepath = filepath,
     search_pattern = search_pattern,
@@ -2371,7 +2371,7 @@ function M:__resolve_confirmation__(nodeuuid)
     end
   end
 
-  local filepath = rootnode ~= nil and era.path.relative(rootnode.data.filepath, node.data.filepath)
+  local filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath, node.data.filepath)
     or node.data.filepath
   composer:close()
   self._on_confirm(self, { filepath })

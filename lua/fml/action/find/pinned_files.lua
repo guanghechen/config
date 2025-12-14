@@ -17,7 +17,7 @@ local o_flag_viewtype = ark.c.Observable.from_value("tree")
 ---@param picker                        ux.picker.FiletreeComposer
 ---@return nil
 local function refresh(picker)
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   local filepaths = era.context.bookmark.pinned:snapshot() ---@type string[]
   picker:reset_filepaths(cwd, filepaths, false)
 end

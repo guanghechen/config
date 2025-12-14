@@ -50,7 +50,7 @@ local integrations = {
 
 ---@return string
 local function get_theme_path()
-  return era.path.locate_context_filepath("theme")
+  return dot.path.locate_context_filepath("theme")
 end
 
 ---@return era.context.theme.data

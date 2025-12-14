@@ -40,7 +40,7 @@ function M.new(config)
   local self = setmetatable({}, M)
   self.name = config.name
   self._dirpath = config.filepath
-  self._metadata_path = era.path.join(self._dirpath, METADATA_FILENAME)
+  self._metadata_path = dot.path.join(self._dirpath, METADATA_FILENAME)
   self.filepath = self._metadata_path
   self.default_item_name = config.default_item_name
   self._state = nil
@@ -713,7 +713,7 @@ end
 ---@param name                          string
 ---@return string
 function M:__get_note_path__(name)
-  return era.path.join(self._dirpath, name_to_filename(name))
+  return dot.path.join(self._dirpath, name_to_filename(name))
 end
 
 ---@protected

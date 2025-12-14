@@ -91,7 +91,7 @@ Each integration includes environment-specific:
 - Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
-- Use `era.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
+- Use `dot.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
 - Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
 - Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
 

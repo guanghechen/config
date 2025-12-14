@@ -23,13 +23,13 @@ local M = {}
 
 ---@return nil
 function M.lazygit_cwd()
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   open_lazygit("lazygit", cwd)
 end
 
 ---@return nil
 function M.lazygit_file_history()
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local args = { "-f", vim.fn.shellescape(filepath) } ---@type string[]

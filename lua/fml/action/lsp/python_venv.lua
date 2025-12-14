@@ -36,8 +36,8 @@ end
 local function fetch_data()
   dirty_data = false
 
-  local cwd = era.path.cwd() ---@type string
-  local workspace = era.path.workspace() ---@type string
+  local cwd = dot.path.cwd() ---@type string
+  local workspace = dot.path.workspace() ---@type string
 
   local items = {} ---@type fml.action.lsp.python_venv.IItem[]
   local uuid_set = {} ---@type table<string, true>
@@ -88,7 +88,7 @@ local function fetch_data()
           local dirpath = ark.string.remove_last_slash(line) ---@type string
           if not uuid_set[dirpath] then
             uuid_set[dirpath] = true
-            local resolved_dirpath = yoz.path.is_descendant(workspace, dirpath) and era.path.relative(cwd, dirpath)
+            local resolved_dirpath = yoz.path.is_descendant(workspace, dirpath) and dot.path.relative(cwd, dirpath)
               or dirpath
             local text_content = icon .. " " .. resolved_dirpath
 

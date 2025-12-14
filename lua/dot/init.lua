@@ -166,6 +166,7 @@ local __mods = {
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
   icon = "dot.icon",
+  path = "dot.path",
   shell = "dot.shell",
   var = "dot.var",
 }
@@ -180,6 +181,7 @@ local __mods = {
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype
 ---@field public icon                   dot.icon
+---@field public path                   dot.path
 ---@field public shell                  dot.shell
 ---@field public var                    dot.var
 local M = setmetatable({

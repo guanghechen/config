@@ -274,7 +274,7 @@ function M:search(params)
     if yoz.path.is_absolute(relpath) then
       return relpath
     end
-    return era.path.join(cwd, relpath)
+    return dot.path.join(cwd, relpath)
   end
 
   local items = {} ---@type ux.searcher.view.filetree.ISearchedItem[]

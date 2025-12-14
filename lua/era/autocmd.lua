@@ -106,18 +106,18 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
   group = ark.nvim.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
-      local cwd = era.path.cwd() ---@type string
+      local cwd = dot.path.cwd() ---@type string
       local existed_filepaths = {} ---@type table<string, boolean>
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
       for _, bufnr in ipairs(bufnrs) do
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath = era.path.resolve(cwd, filename) ---@type string
+        local filepath = dot.path.resolve(cwd, filename) ---@type string
         existed_filepaths[filepath] = true
       end
 
       for _, bufnr in ipairs(bufnrs) do
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath = era.path.resolve(cwd, filename) ---@type string
+        local filepath = dot.path.resolve(cwd, filename) ---@type string
         if yoz.path.is_exist_directory(filepath) then
           local new_filepath = era.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then

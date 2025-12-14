@@ -143,7 +143,7 @@ local function build_attach_picker_items(items)
     local agent_label = config.agent_labels[item.agent] or item.agent
     local attached = item.source ~= nil and state.is_attached(item.source)
     local identifier = item.source and action.get_source_identifier(item.source) or nil
-    local pane_cwd = item.source and era.path.shorten(item.source.cwd) or nil
+    local pane_cwd = item.source and dot.path.shorten(item.source.cwd) or nil
 
     width_agent = math.max(width_agent, #agent_label)
     if identifier then
@@ -262,7 +262,7 @@ local function build_attached_picker_items(attached)
   for _, source in ipairs(attached) do
     local agent_label = config.agent_labels[source.agent] or source.agent
     local identifier = action.get_source_identifier(source)
-    local pane_cwd = era.path.shorten(source.cwd)
+    local pane_cwd = dot.path.shorten(source.cwd)
 
     width_agent = math.max(width_agent, #agent_label)
     if identifier then

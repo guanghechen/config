@@ -24,7 +24,7 @@ end
 ---@param winnr_sourcefile              integer
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data(winnr_sourcefile)
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   local items = {} ---@type fml.action.win.history.IItem[]
   local uuid_present = nil ---@type string|nil
 
@@ -49,7 +49,7 @@ local function fetch_data(winnr_sourcefile)
     if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
       local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local relative_filepath = era.path.relative(cwd, filepath, '/') ---@type string
+      local relative_filepath = dot.path.relative(cwd, filepath, '/') ---@type string
       local filename = yoz.path.basename(filepath) ---@type string
       local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
@@ -81,7 +81,7 @@ local function fetch_data(winnr_sourcefile)
       local filepath = history_item.filepath ---@type string|nil
       if filepath ~= nil and yoz.path.is_exist_file(filepath) then
         local uuid = gen_uuid_from_ordinal(ordinal) ---@type string
-        local relative_filepath = era.path.relative(cwd, filepath, '/') ---@type string
+        local relative_filepath = dot.path.relative(cwd, filepath, '/') ---@type string
         local filename = yoz.path.basename(filepath) ---@type string
         local icon, icon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
 
@@ -139,14 +139,14 @@ local picker = ux.picker.ListComposer.new({
   render_result = function(composer, bufnr, _, matches)
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
-    local cwd = era.path.cwd() ---@type string
+    local cwd = dot.path.cwd() ---@type string
 
     local itemmap = composer._itemmap ---@type table<string, ux.picker.composer.list.IItem>
     ---@cast itemmap                    table<string, fml.action.win.history.IItem>
 
     for _, match in ipairs(matches) do
       local item = itemmap[match.uuid] ---@type fml.action.win.history.IItem
-      local relative_filepath = era.path.relative(cwd, item.data.filepath, '/') ---@type string
+      local relative_filepath = dot.path.relative(cwd, item.data.filepath, '/') ---@type string
       local text_displayed = string.format("%s %s %s", item.uuid, item.data.icon, relative_filepath) ---@type string
       lines[#lines + 1] = text_displayed
       uuids[#uuids + 1] = item.uuid

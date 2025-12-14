@@ -110,7 +110,7 @@ setmetatable(M, era.Tree)
 ---@param filepath                      string
 ---@return boolean
 local function is_cwd_chain(filepath)
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   if cwd == filepath or filepath == FILETREE_ROOT_FILEPATH then
     return true
   end
@@ -426,7 +426,7 @@ function M:reset(cwd, filepaths, with_locations)
   local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type era.t.IFiletreeNodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
-  cwd = era.path.normalize(cwd) ---@type string
+  cwd = dot.path.normalize(cwd) ---@type string
   local P = cwd == "/" and "/" or (cwd .. ark.env.PATH_SEP) ---@type string
   local L = #P ---@type integer
 

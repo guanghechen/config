@@ -232,7 +232,7 @@ function M.create(params)
 
   local name = params.name ---@type string
   local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string[]|string
-  local cwd = params.cwd or era.path.cwd() ---@type string
+  local cwd = params.cwd or dot.path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local hidewipe = not not params.hidewipe ---@type boolean

@@ -220,7 +220,7 @@ end
 ---@return string
 function M.resolve(bufnr, src)
   local s = require("fml.dressing.image.state").data
-  local file = era.path.normalize(vim.api.nvim_buf_get_name(bufnr))
+  local file = dot.path.normalize(vim.api.nvim_buf_get_name(bufnr))
   local resolved = s.resolve and s.resolve(file, src) or nil
   if resolved then
     return resolved
@@ -242,7 +242,7 @@ function M.resolve(bufnr, src)
       break
     end
   end
-  return era.path.normalize(src)
+  return dot.path.normalize(src)
 end
 
 ---@param ctx                            fml.dressing.image.ctx

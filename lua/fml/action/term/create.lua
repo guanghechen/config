@@ -149,7 +149,7 @@ end
 
 ---@return nil
 function M.toggle()
-  local cwd = era.path.cwd()
+  local cwd = dot.path.cwd()
   local terminal = ux.widget.Terminal ---@type ux.widget.Terminal
 
   if terminal:isvisible() then

@@ -62,7 +62,7 @@ local function build_context(preset_context)
 
   local mode, mode_name = dot.theme.hlgroup.common.resolve_mode()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local cwd = era.path.cwd() ---@type string
+  local cwd = dot.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string

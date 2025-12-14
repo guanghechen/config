@@ -38,7 +38,7 @@ function M.file_location(location)
     return nil, "Location must be a table."
   end
 
-  local filepath = era.path.normalize(location.filepath, false, "/")
+  local filepath = dot.path.normalize(location.filepath, false, "/")
   if type(filepath) ~= "string" or #vim.trim(filepath) == 0 then
     return nil, "Invalid filepath."
   end
@@ -46,8 +46,8 @@ function M.file_location(location)
   ---@type string
   local relpath = (
     yoz.path.is_absolute(filepath)
-    and yoz.path.is_descendant(era.path.workspace(), filepath)
-    and era.path.relative(era.path.cwd(), filepath, "/")
+    and yoz.path.is_descendant(dot.path.workspace(), filepath)
+    and dot.path.relative(dot.path.cwd(), filepath, "/")
   ) or filepath
 
   local start_lnum = normalize_index(location.start_lnum)

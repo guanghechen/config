@@ -68,7 +68,7 @@ local __mods = {
   lsp = "era.lsp",
   lsp_action = "era.lsp_action",
   notifier = "era.notifier",
-  path = "era.path",
+  path = "dot.path",
   session = "era.session",
   tab = "era.tab",
   term = "era.term",
@@ -89,7 +89,7 @@ local __mods = {
 ---@field public lsp                    era.lsp
 ---@field public lsp_action             era.lsp_action
 ---@field public notifier               era.notifier
----@field public path                   era.path
+---@field public path                   dot.path
 ---@field public session                era.session
 ---@field public state                  era.state
 ---@field public tab                    era.tab
@@ -112,15 +112,15 @@ local M = setmetatable({
 
 ---@return era.context.storage
 function M.get_default_storage()
-  local is_git_repo = era.path.is_git_repo() ---@type boolean
+  local is_git_repo = dot.path.is_git_repo() ---@type boolean
 
   ---@type era.context.storage
   return {
-    editor = era.path.locate_context_filepath("editor.json"),
-    session = is_git_repo and era.path.locate_workspace_filepath("session.json") or nil,
-    workspace = is_git_repo and era.path.locate_workspace_filepath("workspace.json") or nil,
-    nvim_session = is_git_repo and era.path.locate_workspace_filepath("session.vim") or nil,
-    nvim_session_autosaved = is_git_repo and era.path.locate_workspace_filepath("session.autosaved.vim") or nil,
+    editor = dot.path.locate_context_filepath("editor.json"),
+    session = is_git_repo and dot.path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and dot.path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and dot.path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and dot.path.locate_workspace_filepath("session.autosaved.vim") or nil,
   }
 end
 
