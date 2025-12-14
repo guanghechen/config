@@ -1,28 +1,28 @@
-local convert = require("dot.ux.widget.colorpicker.convert")
-local Color = require("dot.ux.widget.colorpicker.color")
-local UI = require("dot.ux.widget.colorpicker.ui")
-local picker = require("dot.ux.widget.colorpicker.picker")
+local convert = require("dot.module.colorpicker.convert")
+local Color = require("dot.module.colorpicker.color")
+local UI = require("dot.module.colorpicker.ui")
+local picker = require("dot.module.colorpicker.picker")
 
 local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_cp_normal"
 
----@class dot.ux.widget.colorpicker.IProps : dot.ux.widget.colorpicker.ui.IProps
+---@class dot.module.colorpicker.IProps : dot.module.colorpicker.ui.IProps
 
----@class dot.ux.widget.colorpicker.ColorPicker : dot.t.IWidget
+---@class dot.module.colorpicker.ColorPicker : dot.t.IWidget
 ---@field public name                   string
----@field protected _ui                 dot.ux.widget.colorpicker.UI
----@field protected _color              dot.ux.widget.colorpicker.Color
+---@field protected _ui                 dot.module.colorpicker.UI
+---@field protected _color              dot.module.colorpicker.Color
 ---@field protected _range              integer[]|nil
 ---@field protected _source_bufnr       integer|nil
 ---@field protected _history_index      integer
----@field protected _saved_color        dot.ux.widget.colorpicker.Color|nil
+---@field protected _saved_color        dot.module.colorpicker.Color|nil
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _keymaps            ark.t.IKeymap[]
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.widget.colorpicker.IProps|nil
----@return dot.ux.widget.colorpicker.ColorPicker
+---@param props                         dot.module.colorpicker.IProps|nil
+---@return dot.module.colorpicker.ColorPicker
 function M.new(props)
   local self = setmetatable({}, M)
   self.name = "colorpicker"
@@ -36,6 +36,17 @@ function M.new(props)
   self._winnr = nil
   self._keymaps = self:__build_keymaps__()
   return self
+end
+
+---@type dot.module.colorpicker.ColorPicker|nil
+local _instance = nil
+
+---@return dot.module.colorpicker.ColorPicker
+function M.instance()
+  if _instance == nil then
+    _instance = M.new()
+  end
+  return _instance
 end
 
 ---@return nil
@@ -74,7 +85,7 @@ function M:pick()
 
   if not ok then
     ark.reporter.error({
-      from = "dot.ux.widget.colorpicker",
+      from = "dot.module.colorpicker",
       subject = "pick",
       message = tostring(err),
     })
@@ -154,7 +165,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param source                        dot.ux.widget.colorpicker.Color
+---@param source                        dot.module.colorpicker.Color
 ---@return nil
 function M:__restore_from__(source)
   local r, g, b = source:get_rgb()
@@ -648,7 +659,7 @@ end
 
 ---@protected
 ---@param value                         integer
----@param point                         dot.ux.widget.colorpicker.IPoint
+---@param point                         dot.module.colorpicker.IPoint
 ---@return nil
 function M:__set_value__(value, point)
   if point.type == "color" and point.index then

@@ -1,11 +1,11 @@
-local convert = require("dot.ux.widget.colorpicker.convert")
+local convert = require("dot.module.colorpicker.convert")
 
----@class dot.ux.widget.colorpicker.picker
+---@class dot.module.colorpicker.picker
 local M = {}
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return dot.ux.widget.colorpicker.IPickResult|nil
+---@return dot.module.colorpicker.IPickResult|nil
 function M.pick_hex(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -57,7 +57,7 @@ end
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return dot.ux.widget.colorpicker.IPickResult|nil
+---@return dot.module.colorpicker.IPickResult|nil
 function M.pick_css_rgb(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -110,7 +110,7 @@ end
 
 ---@param line                          string
 ---@param cursor_col                    integer
----@return dot.ux.widget.colorpicker.IPickResult|nil
+---@return dot.module.colorpicker.IPickResult|nil
 function M.pick_css_hsl(line, cursor_col)
   local init = 1
   while init <= #line do
@@ -163,7 +163,7 @@ function M.pick_css_hsl(line, cursor_col)
   return nil
 end
 
----@return dot.ux.widget.colorpicker.IPickResult|nil
+---@return dot.module.colorpicker.IPickResult|nil
 function M.pick()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_win_get_buf(winnr)

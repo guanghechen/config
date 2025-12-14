@@ -1,4 +1,4 @@
----@class dot.ux.widget.colorpicker.convert
+---@class dot.module.colorpicker.convert
 local M = {}
 
 ---@param n                             number

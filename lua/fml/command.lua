@@ -1098,7 +1098,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      dot.ux.widget.ColorPicker:pick()
+      require("dot.module.colorpicker").instance():pick()
     end,
   })
   .implement({
