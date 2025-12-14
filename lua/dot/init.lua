@@ -166,7 +166,6 @@ local __mods = {
   buf = "dot.buf",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
-  fs = "dot.fs",
   icon = "dot.icon",
   path = "dot.path",
   shell = "dot.shell",
@@ -185,7 +184,6 @@ local __mods = {
 ---@field public buf                    dot.buf
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype
----@field public fs                     dot.fs
 ---@field public icon                   dot.icon
 ---@field public path                   dot.path
 ---@field public shell                  dot.shell

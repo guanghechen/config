@@ -63,7 +63,7 @@ local __mods = {
   buf = "dot.buf",
   command = "era.command",
   context = "era.context",
-  fs = "dot.fs",
+  fs = "ark.fs",
   git = "era.git",
   lsp = "era.lsp",
   lsp_action = "era.lsp_action",
@@ -84,7 +84,7 @@ local __mods = {
 ---@field public command                era.command
 ---@field public context                era.context
 ---@field public fn                     era.fn
----@field public fs                     dot.fs
+---@field public fs                     ark.fs
 ---@field public git                    era.git
 ---@field public lsp                    era.lsp
 ---@field public lsp_action             era.lsp_action

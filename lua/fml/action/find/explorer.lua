@@ -463,7 +463,7 @@ local function preview_render(composer, bufnr)
     local is_text_file = dot.filetype.is_printable_file(fileitem.name) ---@type boolean
     if is_text_file then
       local filetype = vim.filetype.match({ filename = fileitem.name }) ---@type string|nil
-      local lines = dot.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
+      local lines = ark.fs.read_file_as_lines({ filepath = fileitem.path, max_lines = 300, silent = true }) ---@type string[]
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
       if filetype then

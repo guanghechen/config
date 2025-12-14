@@ -1,24 +1,24 @@
-local __module_name__ = "dot.fs" ---@type string
+local __module_name__ = "ark.fs" ---@type string
 
----@class dot.t.IReadFileParams
+---@class ark.t.IReadFileParams
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class dot.t.IReadFileAsBase64Params
+---@class ark.t.IReadFileAsBase64Params
 ---@field public filepath               string
 ---@field public silent                 ?boolean
 
----@class dot.t.IReadFileAsLinesParams
+---@class ark.t.IReadFileAsLinesParams
 ---@field public filepath               string
 ---@field public max_lines              ?integer
 ---@field public silent                 ?boolean
 
----@class dot.t.IReadJsonParams
+---@class ark.t.IReadJsonParams
 ---@field public filepath               string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
 
----@class dot.fs
+---@class ark.fs
 local M = {}
 
 ---@param filepath                      string
@@ -161,7 +161,7 @@ function M.edit_file(filepath)
   vim.bo.backupcopy = "yes"
 end
 
----@param params                        dot.t.IReadFileParams
+---@param params                        ark.t.IReadFileParams
 ---@return string|nil
 function M.read_file(params)
   local filepath = params.filepath ---@type string
@@ -184,7 +184,7 @@ function M.read_file(params)
   return content -- Assuming the content is UTF-8 encoded, it can now be used as a string
 end
 
----@param params                        dot.t.IReadFileAsBase64Params
+---@param params                        ark.t.IReadFileAsBase64Params
 ---@return string|nil
 function M.read_file_as_base64(params)
   local filepath = params.filepath ---@type string
@@ -207,7 +207,7 @@ function M.read_file_as_base64(params)
   return vim.base64.encode(content)
 end
 
----@param params                        dot.t.IReadFileAsLinesParams
+---@param params                        ark.t.IReadFileAsLinesParams
 ---@return string[]
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
@@ -238,7 +238,7 @@ function M.read_file_as_lines(params)
   return lines
 end
 
----@param params                        dot.t.IReadJsonParams
+---@param params                        ark.t.IReadJsonParams
 ---@return any|nil
 function M.read_json(params)
   local filepath = params.filepath ---@type string
@@ -297,12 +297,12 @@ function M.touch(filepath)
   end
 end
 
----@class dot.t.IWatchFileOptions
+---@class ark.t.IWatchFileOptions
 ---@field public filepath               string
 ---@field public on_event               fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field public on_error               ?fun(filepath:string, err: any, unwatch:fun():nil):nil
 
----@param opts                          dot.t.IWatchFileOptions
+---@param opts                          ark.t.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath

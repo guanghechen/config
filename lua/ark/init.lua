@@ -55,6 +55,7 @@ local __mods = {
   easing = "ark.external.easing",
   env = "ark.env",
   fn = "ark.fn",
+  fs = "ark.fs",
   nvim = "ark.nvim",
   reporter = "ark.reporter",
   stdout = "ark.stdout",
@@ -75,6 +76,7 @@ local __mods = {
 ---@field public easing                 ark.external.easing
 ---@field public env                    ark.env
 ---@field public fn                     ark.fn
+---@field public fs                     ark.fs
 ---@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout

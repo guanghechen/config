@@ -240,7 +240,7 @@ local function set_workspace_watchers(workspace)
 
   local function attach_watch(target, callback, subject)
     local ok, unwatch = pcall(function()
-      return dot.fs.watch_file({
+      return ark.fs.watch_file({
         filepath = target,
         on_event = callback,
         on_error = function(path, err, unwatch_cb)
