@@ -1,6 +1,6 @@
-local __module_name__ = "integration.bootstrap" ---@type string
+local __module_name__ = "bot" ---@type string
 
----@class integration.bootstrap
+---@class bot
 local M = {}
 
 ---@return nil
@@ -8,15 +8,11 @@ function M.setup()
   _G.yoz = require("yoz") ---@type yoz
 
   M.setup_patches()
+  M.setup_shell()
   M.setup_workspace()
 
-  _G.ark = require("ark") ---@type ark
-  _G.dot = require("dot") ---@type dot
-
-  require("integration.bootstrap.option")
-  require("integration.bootstrap.keymap")
-
-  _G.era = require("era") ---@type era
+  require("bot.option")
+  require("bot.keymap")
 end
 
 ---@return nil
@@ -26,6 +22,77 @@ function M.setup_patches()
     for k in pairs(map) do
       map[k] = nil
     end
+  end
+end
+
+---@return nil
+function M.setup_clipboard()
+  local function tmux_clipboard()
+    return {
+      name = "OSC 52",
+      copy = {
+        ["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+      },
+      paste = {
+        ["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+        ["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+      },
+    }
+  end
+
+  local function wsl_clipboard()
+    return {
+      name = "WslClipboard",
+      copy = {
+        ["+"] = "clip.exe",
+        ["*"] = "clip.exe",
+      },
+      paste = {
+        ["+"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+        ["*"] = 'pwsh.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+      },
+      cache_enabled = 0,
+    }
+  end
+
+  local env = require("ark.env")
+  if env.IS_MAC then
+    if env.IS_TMUX then
+      vim.g.clipboard = tmux_clipboard()
+    end
+    return
+  end
+
+  if env.IS_WSL then
+    vim.g.clipboard = wsl_clipboard()
+  end
+end
+
+---@return nil
+function M.setup_shell()
+  local env = require("ark.env")
+  if env.IS_MAC then
+  -- vim.o.shell = "/bin/bash"
+  elseif env.IS_NIX or env.IS_WSL then
+  -- vim.o.shell = "/usr/bin/bash"
+  -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
+  elseif env.IS_WIN then
+    vim.o.shell = "pwsh"
+
+    -- Setting shell command flags
+    vim.o.shellcmdflag =
+      "-NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='plaintext';Remove-Alias -Force -ErrorAction SilentlyContinue tee;"
+
+    -- Setting shell redirection
+    vim.o.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
+
+    -- Setting shell pipe
+    vim.o.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
+
+    -- Setting shell quote options
+    vim.o.shellquote = ""
+    vim.o.shellxquote = ""
   end
 end
 

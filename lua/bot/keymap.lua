@@ -1,4 +1,27 @@
-local mk = ark.nvim.make_keys
+---@param modes                         string[]
+---@param keys                          string|string[]
+---@param cmd                           string|fun(): string|nil
+---@param desc                          ?string
+---@param expr                          ?boolean
+---@return nil
+local function mk(modes, keys, cmd, desc, expr)
+  ---@type vim.keymap.set.Opts
+  local opts = {
+    noremap = true,
+    silent = true,
+    nowait = true,
+    desc = desc,
+    expr = expr,
+  }
+
+  if type(keys) == "string" then
+    vim.keymap.set(modes, keys, cmd, opts)
+  else
+    for _, key in ipairs(keys) do
+      vim.keymap.set(modes, key, cmd, opts)
+    end
+  end
+end
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 mk({ "n" }, "n", "'Nn'[v:searchforward].'zv'", "search: next result", true)

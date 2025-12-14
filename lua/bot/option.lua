@@ -1,36 +1,30 @@
-if ark.env.IS_MAC then
-  -- vim.o.shell = "/bin/bash"
-elseif ark.env.IS_NIX or ark.env.IS_WSL then
-  -- vim.o.shell = "/usr/bin/bash"
-  -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
-elseif ark.env.IS_WIN then
-  vim.o.shell = "pwsh"
-
-  -- Setting shell command flags
-  vim.o.shellcmdflag =
-    "-NoLogo -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='plaintext';Remove-Alias -Force -ErrorAction SilentlyContinue tee;"
-
-  -- Setting shell redirection
-  vim.o.shellredir = '2>&1 | %%{ "$_" } | Out-File %s; exit $LastExitCode'
-
-  -- Setting shell pipe
-  vim.o.shellpipe = '2>&1 | %%{ "$_" } | tee %s; exit $LastExitCode'
-
-  -- Setting shell quote options
-  vim.o.shellquote = ""
-  vim.o.shellxquote = ""
-end
-
 vim.g.mapleader = " "
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
 vim.g.bigfile_line_length = 2500
 vim.g.qf_disable_statusline = true
-vim.g.clipboard = require("integration.bootstrap.clipboard")
 
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true }) --Don't show the intro message when starting nvim
-vim.opt.fillchars:append(dot.icon.fillchars)
-vim.opt.listchars:append(dot.icon.listchars)
+vim.opt.fillchars:append({
+  diff = " ",
+  eob = " ",
+  foldopen = "",
+  foldclose = "",
+  fold = " ",
+  foldsep = " ",
+  msgsep = "─",
+  vert = "│",
+})
+vim.opt.listchars:append({
+  eol = "↲",
+  extends = "»",
+  lead = " ",
+  nbsp = "·",
+  precedes = "«",
+  space = "·",
+  tab = " ",
+  trail = "•",
+})
 
 vim.o.foldcolumn = "0"
 vim.o.foldenable = true

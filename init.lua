@@ -1,4 +1,8 @@
-require("integration.bootstrap").setup()
+require("bot").setup()
+
+_G.ark = require("ark") ---@type ark
+_G.dot = require("dot") ---@type dot
+_G.era = require("era") ---@type era
 _G.ux = require("ux") ---@type ux
 
 if era.path.is_git_repo() then
