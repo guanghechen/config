@@ -15,11 +15,11 @@ local __module_name__ = "dot.command" ---@type string
 ---@field public tabtype                ?dot.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
-local definition_map = {} ---@type table<string, dot.command.IDefinition>
+local definition_map = {} ---@type table<string, dot.command.IRawDefinition>
 local command_map = {} ---@type table<string, dot.command.ICommand>
 
 ---@class dot.command
----@field protected __definition_map__  table<string, dot.command.IDefinition>
+---@field protected __definition_map__  table<string, dot.command.IRawDefinition>
 ---@field protected __command_map__     table<string, dot.command.ICommand>
 local M = {
   __definition_map__ = definition_map,
@@ -51,7 +51,7 @@ function M.execute(uuid, args, silent)
   command.action(args)
 end
 
----@param raw_definition                dot.command.IDefinition | dot.command.IDefinitionWithCandidates
+---@param raw_definition                dot.command.IRawDefinition
 ---@param overwrite                     boolean|nil
 ---@return dot.command
 function M.define(raw_definition, overwrite)
@@ -65,7 +65,7 @@ function M.define(raw_definition, overwrite)
     return M
   end
 
-  ---@type dot.command.IDefinition
+  ---@type dot.command.IRawDefinition
   local definition = {
     uuid = raw_definition.uuid,
     desc = raw_definition.desc,
@@ -113,7 +113,7 @@ function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtype = implementation.tabtype ---@type dot.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
-  local definition = definition_map[uuid] ---@type dot.command.IDefinition|nil
+  local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil
   if definition == nil then
     ark.reporter.warn({
       from = __module_name__,

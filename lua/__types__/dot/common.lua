@@ -54,11 +54,13 @@
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class dot.command.IDefinition
+---@class dot.command.IRawDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"|nil
 ---@field public candidates             string[]|nil
+
+---@class dot.command.IDefinition : dot.command.IRawDefinition
 ---@field public execute                fun(self: dot.command.IDefinition, args?: string, silent?: boolean): nil
 
 ---@class dot.command.IDefinitionWithCandidates : dot.command.IDefinition

@@ -162,15 +162,17 @@ local function refresh(force)
     local text ---@type string
     local highlights = {} ---@type ark.t.IHighlightInline[]
 
+    local message = diagnostic.message:gsub("\n", " ") ---@type string
+
     if diagnostic.code == nil then
-      text = string.format("%s  : %s", dot.icon.diagnostic[severity], diagnostic.message) ---@type string
+      text = string.format("%s  : %s", dot.icon.diagnostic[severity], message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
         colr = #dot.icon.diagnostic[severity],
         hlname = string.format("Diagnostic_%s", severity),
       }
     else
-      text = string.format("%s %s : %s", dot.icon.diagnostic[severity], tostring(diagnostic.code), diagnostic.message) ---@type string
+      text = string.format("%s %s : %s", dot.icon.diagnostic[severity], tostring(diagnostic.code), message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
         colr = #dot.icon.diagnostic[severity],
