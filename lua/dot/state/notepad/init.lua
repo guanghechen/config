@@ -88,7 +88,7 @@ end
 ---@param uuid                          string|nil Note UUID to focus
 ---@return boolean success
 function M.focus_note(uuid)
-  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source_name = dot.context.module.notepad_source:snapshot() ---@type string
   local source = M.retrieve_source(source_name)
 
   if not source:set_activated_uuid(uuid) then

@@ -16,6 +16,7 @@ local __mods = {
   flight = "dot.context.workspace.flight",
   frecency = "dot.context.workspace.frecency",
   lsp = "dot.context.workspace.lsp",
+  module = "dot.context.workspace.module",
   option = "dot.context.workspace.option",
   plugin = "dot.context.workspace.plugin",
   search_buffer = "dot.context.workspace.search_buffer",
@@ -44,6 +45,7 @@ local __mods = {
 ---@field public flight                 dot.context.flight.data
 ---@field public frecency               dot.context.frecency.data
 ---@field public lsp                    dot.context.lsp.data
+---@field public module                 dot.context.module.data
 ---@field public option                 dot.context.option.data
 ---@field public plugin                 dot.context.plugin.data
 ---@field public search_buffer          dot.context.search_buffer.data
@@ -74,6 +76,7 @@ local __mods = {
 ---@field public flight                 dot.context.flight
 ---@field public frecency               dot.context.frecency
 ---@field public lsp                    dot.context.lsp
+---@field public module                 dot.context.module
 ---@field public option                 dot.context.option
 ---@field public plugin                 dot.context.plugin
 ---@field public search_buffer          dot.context.search_buffer
@@ -106,6 +109,7 @@ function M.dump()
     flight = M.flight.dump(),
     frecency = M.frecency.dump(),
     lsp = M.lsp.dump(),
+    module = M.module.dump(),
     option = M.option.dump(),
     plugin = M.plugin.dump(),
     search_buffer = M.search_buffer.dump(),
@@ -140,6 +144,7 @@ function M.load(storage, initialize)
     M.flight.load(data_workspace.flight)
     M.frecency.load(data_workspace.frecency)
     M.lsp.load(data_workspace.lsp)
+    M.module.load(data_workspace.module)
     M.option.load(data_workspace.option)
     M.plugin.load(data_workspace.plugin)
     M.search_buffer.load(data_workspace.search_buffer)
@@ -187,6 +192,7 @@ function M.save(storage)
       flight = M.flight.dump(),
       frecency = M.frecency.dump(),
       lsp = M.lsp.dump(),
+      module = M.module.dump(),
       option = M.option.dump(),
       plugin = M.plugin.dump(),
       search = M.search_file.dump(),

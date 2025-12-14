@@ -52,17 +52,11 @@ local function paste()
   end
 
   local cwd = dot.path.cwd() ---@type string
-  local dirpath = cwd ---@type string
+  local workspace = dot.path.workspace() ---@type string
 
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if vim.bo[bufnr].buftype == "" then
-    local filepath_cur = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    dirpath = dot.path.dirname(filepath_cur) ---@type string
-  end
-
-  local filename_default = os.date("%Y-%m-%d_%H-%M") .. ".png" ---@type string
-  local filepath_default = dot.path.join(dirpath, "img" .. ark.env.PATH_SEP .. filename_default) ---@type string
-  local placeholder = dot.path.relative(cwd, filepath_default) ---@type string
+  local filepath_relative = dot.context.module.paste_image_filepath:snapshot() ---@type string
+  local filepath_absolute = dot.path.join(workspace, filepath_relative) ---@type string
+  local placeholder = dot.path.relative(cwd, filepath_absolute) ---@type string
 
   vim.ui.input({
     prompt = "Save image to",
@@ -75,7 +69,12 @@ local function paste()
 
     local filepath_target = dot.path.resolve(cwd, filepath_target_relative) ---@type string
     ark.env.mkdirs(filepath_target, false)
-    paste_image(filepath_target)
+
+    local ok = paste_image(filepath_target) ---@type boolean
+    if ok then
+      local new_filepath_relative = dot.path.relative(workspace, filepath_target) ---@type string
+      dot.context.module.paste_image_filepath:next(new_filepath_relative)
+    end
   end)
 end
 

@@ -301,7 +301,7 @@ function M.new(props)
   self._suspend_sync = false
   self._buf_autocmds = {}
 
-  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source_name = dot.context.module.notepad_source:snapshot() ---@type string
   local source = dot.state.notepad.retrieve_source(source_name) ---@type dot.t.INotepadSource
 
   source:load(false)
@@ -337,7 +337,7 @@ function M:__setup_subscriptions__()
     true
   )
 
-  self._subscription_source = dot.context.option.notepad_source:subscribe(
+  self._subscription_source = dot.context.module.notepad_source:subscribe(
     ark.c.Subscriber.new({
       on_next = function(source_name)
         self:attach(source_name)
@@ -428,7 +428,7 @@ end
 
 ---@return dot.t.INotepadSource
 function M:get_source()
-  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source_name = dot.context.module.notepad_source:snapshot() ---@type string
   local source = dot.state.notepad.retrieve_source(source_name)
   return source
 end
@@ -448,7 +448,7 @@ function M:attach(source_name)
 
   self:flush()
 
-  dot.context.option.notepad_source:next(source_name)
+  dot.context.module.notepad_source:next(source_name)
 
   local new_source = dot.state.notepad.retrieve_source(source_name)
   local new_uuid = new_source:get_activated_uuid()
@@ -1065,7 +1065,7 @@ end
 ---@protected
 ---@return string
 function M:__get_window_title__()
-  local source_name = dot.context.option.notepad_source:snapshot() ---@type string
+  local source_name = dot.context.module.notepad_source:snapshot() ---@type string
   local _, config = dot.state.notepad.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end

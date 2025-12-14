@@ -1,12 +1,10 @@
 ---@class dot.context.option.data
 ---@field public expandtab              boolean
 ---@field public relativenumber         boolean
----@field public notepad_source         string
 
 ---@class dot.context.option.state
 ---@field public expandtab              ark.c.Observable
 ---@field public relativenumber         ark.c.Observable
----@field public notepad_source         ark.c.Observable
 
 ---@class dot.context.option : dot.context.option.state
 ---@field public defaults               fun(): dot.context.option.data
@@ -21,7 +19,6 @@ function M.defaults()
   return {
     expandtab = true,
     relativenumber = true,
-    notepad_source = "workspace",
   }
 end
 
@@ -36,9 +33,6 @@ function M.normalize(data)
     if type(data.relativenumber) == "boolean" then
       resolved.relativenumber = data.relativenumber
     end
-    if type(data.notepad_source) == "string" then
-      resolved.notepad_source = data.notepad_source
-    end
   end
 
   ---@type dot.context.option.data
@@ -51,7 +45,6 @@ function M.dump()
   return {
     expandtab = M.expandtab:snapshot(),
     relativenumber = M.relativenumber:snapshot(),
-    notepad_source = M.notepad_source:snapshot(),
   }
 end
 
@@ -62,7 +55,6 @@ function M.load(raw_data)
 
   M.expandtab:next(data.expandtab)
   M.relativenumber:next(data.relativenumber)
-  M.notepad_source:next(data.notepad_source)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -70,6 +62,5 @@ end
 local _defaults = M.defaults() ---@type dot.context.option.data
 M.expandtab = ark.c.Observable.from_value(_defaults.expandtab)
 M.relativenumber = ark.c.Observable.from_value(_defaults.relativenumber)
-M.notepad_source = ark.c.Observable.from_value(_defaults.notepad_source)
 
 return M
