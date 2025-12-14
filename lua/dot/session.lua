@@ -1,4 +1,4 @@
----@class era.session
+---@class dot.session
 local M = {}
 
 ---@param filepath                      string

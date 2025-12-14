@@ -34,7 +34,7 @@ function M.resume_last_widget()
       end
     end
   else
-    era.command.execute(era.command.definitions.find.files.uuid)
+    dot.command.execute(dot.command.definitions.find.files.uuid)
   end
 end
 

@@ -28,12 +28,10 @@ local fn = setmetatable({
 local __mods = {
   Filetree = "era.filetree",
   Tree = "era.tree",
-  command = "era.command",
   git = "era.git",
   lsp = "era.lsp",
   lsp_action = "era.lsp_action",
   notifier = "era.notifier",
-  session = "era.session",
   term = "era.term",
   uri = "era.uri",
 }
@@ -42,13 +40,11 @@ local __mods = {
 ---@field public __mods                 era.__mods
 ---@field public Filetree               era.Filetree
 ---@field public Tree                   era.Tree
----@field public command                era.command
 ---@field public fn                     era.fn
 ---@field public git                    era.git
 ---@field public lsp                    era.lsp
 ---@field public lsp_action             era.lsp_action
 ---@field public notifier               era.notifier
----@field public session                era.session
 ---@field public term                   era.term
 ---@field public uri                    era.uri
 local M = setmetatable({

@@ -196,11 +196,13 @@ local state = setmetatable({
 local __mods = {
   G = "dot.G",
   buf = "dot.buf",
+  command = "dot.command",
   context = "dot.context",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
   icon = "dot.icon",
   path = "dot.path",
+  session = "dot.session",
   shell = "dot.shell",
   tab = "dot.tab",
   var = "dot.var",
@@ -209,9 +211,11 @@ local __mods = {
 
 ---@class dot
 ---@field public __mods                 dot.__mods
+---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public dict                   dot.dict
 ---@field public lang                   dot.lang
+---@field public session                dot.session
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---

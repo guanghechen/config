@@ -1,5 +1,5 @@
-local ms = era.command.shortcut
-local K = era.command.definitions ---@type era.command.definitions
+local ms = dot.command.shortcut
+local K = dot.command.definitions ---@type dot.command.definitions
 
 --#[c]ommand----------------------------------------------------------------------------------------
 ms({ "n", "x" }, "<leader>:", K.code.run_as_neovim_command)

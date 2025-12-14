@@ -73,7 +73,7 @@ function M.edit()
   vim.schedule(function()
     vim.fn.setreg('"', content)
   end)
-  era.command.execute(era.command.definitions.notepad.append_content.uuid, "\n" .. location .. " ")
+  dot.command.execute(dot.command.definitions.notepad.append_content.uuid, "\n" .. location .. " ")
 end
 
 ---@return nil

@@ -308,7 +308,7 @@ function M.watch_changes()
     M.lsp.inlay_hints,
   }, function()
     pcall(function()
-      era.command.execute(era.command.definitions.lsp.restart.uuid)
+      dot.command.execute(dot.command.definitions.lsp.restart.uuid)
     end)
   end, true)
 
@@ -364,7 +364,7 @@ function M.watch_changes()
       }
 
       if autosave and M._storage.nvim_session_autosaved then
-        era.session.save_session(M._storage.nvim_session_autosaved)
+        dot.session.save_session(M._storage.nvim_session_autosaved)
       end
 
       M.save(storage)

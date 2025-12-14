@@ -446,7 +446,7 @@ function M.on_attach(client, bufnr)
       key = "gd",
       callback = function()
         vim.cmd("normal! m'")
-        era.command.execute(era.command.definitions.lsp.goto_definitions.uuid)
+        dot.command.execute(dot.command.definitions.lsp.goto_definitions.uuid)
       end,
       desc = "lsp: goto definition",
     },
@@ -456,7 +456,7 @@ function M.on_attach(client, bufnr)
       key = "gi",
       callback = function()
         vim.cmd("normal! m'")
-        era.command.execute(era.command.definitions.lsp.goto_implementations.uuid)
+        dot.command.execute(dot.command.definitions.lsp.goto_implementations.uuid)
       end,
       desc = "lsp: goto implementation",
     },
@@ -466,7 +466,7 @@ function M.on_attach(client, bufnr)
       key = "gr",
       callback = function()
         vim.cmd("normal! m'")
-        era.command.execute(era.command.definitions.lsp.goto_references.uuid)
+        dot.command.execute(dot.command.definitions.lsp.goto_references.uuid)
       end,
       desc = "lsp: show references",
     },
@@ -476,7 +476,7 @@ function M.on_attach(client, bufnr)
       key = "gt",
       callback = function()
         vim.cmd("normal! m'")
-        era.command.execute(era.command.definitions.lsp.goto_type_definitions.uuid)
+        dot.command.execute(dot.command.definitions.lsp.goto_type_definitions.uuid)
       end,
       desc = "lsp: goto type definition",
     },

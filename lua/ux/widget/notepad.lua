@@ -13,7 +13,7 @@ local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" }
 local DEFAULT_ITEM_NAME = dot.var.BUF_UNTITLED
 local BUFFER_VAR_NAME = "eve_notepad_uuid"
 
-local K = era.command.definitions
+local K = dot.command.definitions
 
 ---@type ark.t.IKeymap[]
 local NOTEPAD_KEYMAPS = {
@@ -22,7 +22,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-s>",
     desc = K.notepad.save.desc,
     callback = function()
-      era.command.execute(K.notepad.save.uuid)
+      dot.command.execute(K.notepad.save.uuid)
     end,
   },
   {
@@ -31,7 +31,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<D-s>", "<M-s>" },
     desc = K.notepad.save.desc,
     callback = function()
-      era.command.execute(K.notepad.save.uuid)
+      dot.command.execute(K.notepad.save.uuid)
     end,
   },
   {
@@ -39,7 +39,7 @@ local NOTEPAD_KEYMAPS = {
     key = "q",
     desc = K.notepad.close.desc,
     callback = function()
-      era.command.execute(K.notepad.close.uuid)
+      dot.command.execute(K.notepad.close.uuid)
     end,
   },
   {
@@ -47,7 +47,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-n>",
     desc = K.notepad.rename.desc,
     callback = function()
-      era.command.execute(K.notepad.rename.uuid)
+      dot.command.execute(K.notepad.rename.uuid)
     end,
   },
   {
@@ -55,7 +55,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader><cr>",
     desc = K.ai.submit_buffer.desc,
     callback = function()
-      era.command.execute(K.ai.submit_buffer.uuid)
+      dot.command.execute(K.ai.submit_buffer.uuid)
     end,
   },
   {
@@ -63,7 +63,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader><cr>",
     desc = K.ai.submit_selection.desc,
     callback = function()
-      era.command.execute(K.ai.submit_selection.uuid)
+      dot.command.execute(K.ai.submit_selection.uuid)
     end,
   },
   {
@@ -71,7 +71,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-/>",
     desc = K.notepad.create.desc,
     callback = function()
-      era.command.execute(K.notepad.create.uuid)
+      dot.command.execute(K.notepad.create.uuid)
     end,
   },
   {
@@ -79,7 +79,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-d>",
     desc = K.notepad.destroy.desc,
     callback = function()
-      era.command.execute(K.notepad.destroy.uuid)
+      dot.command.execute(K.notepad.destroy.uuid)
     end,
   },
   {
@@ -87,7 +87,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>dd",
     desc = K.notepad.destroy.desc,
     callback = function()
-      era.command.execute(K.notepad.destroy.uuid)
+      dot.command.execute(K.notepad.destroy.uuid)
     end,
   },
   {
@@ -95,7 +95,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-,>",
     desc = K.notepad.source_prev.desc,
     callback = function()
-      era.command.execute(K.notepad.source_prev.uuid)
+      dot.command.execute(K.notepad.source_prev.uuid)
     end,
   },
   {
@@ -103,7 +103,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-.>",
     desc = K.notepad.source_next.desc,
     callback = function()
-      era.command.execute(K.notepad.source_next.uuid)
+      dot.command.execute(K.notepad.source_next.uuid)
     end,
   },
   {
@@ -111,7 +111,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-[>",
     desc = K.notepad.focus_left.desc,
     callback = function()
-      era.command.execute(K.notepad.focus_left.uuid)
+      dot.command.execute(K.notepad.focus_left.uuid)
     end,
   },
   {
@@ -119,7 +119,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-]>",
     desc = K.notepad.focus_right.desc,
     callback = function()
-      era.command.execute(K.notepad.focus_right.uuid)
+      dot.command.execute(K.notepad.focus_right.uuid)
     end,
   },
   {
@@ -127,7 +127,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>[",
     desc = K.notepad.focus_left.desc,
     callback = function()
-      era.command.execute(K.notepad.focus_left.uuid)
+      dot.command.execute(K.notepad.focus_left.uuid)
     end,
   },
   {
@@ -135,7 +135,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>]",
     desc = K.notepad.focus_right.desc,
     callback = function()
-      era.command.execute(K.notepad.focus_right.uuid)
+      dot.command.execute(K.notepad.focus_right.uuid)
     end,
   },
   {
@@ -144,7 +144,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<C-S-[>" },
     desc = K.notepad.swap_left.desc,
     callback = function()
-      era.command.execute(K.notepad.swap_left.uuid)
+      dot.command.execute(K.notepad.swap_left.uuid)
     end,
   },
   {
@@ -153,7 +153,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<C-S-]>" },
     desc = K.notepad.swap_right.desc,
     callback = function()
-      era.command.execute(K.notepad.swap_right.uuid)
+      dot.command.execute(K.notepad.swap_right.uuid)
     end,
   },
   {
@@ -161,7 +161,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>0",
     desc = K.notepad.change_engine.desc,
     callback = function()
-      era.command.execute(K.notepad.change_engine.uuid)
+      dot.command.execute(K.notepad.change_engine.uuid)
     end,
   },
   {
@@ -169,7 +169,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>1",
     desc = K.notepad.source_select.desc,
     callback = function()
-      era.command.execute(K.notepad.source_select.uuid)
+      dot.command.execute(K.notepad.source_select.uuid)
     end,
   },
   {
@@ -177,7 +177,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>2",
     desc = K.notepad.note_select.desc,
     callback = function()
-      era.command.execute(K.notepad.note_select.uuid)
+      dot.command.execute(K.notepad.note_select.uuid)
     end,
   },
   {
@@ -185,7 +185,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<M-i>",
     desc = K.notepad.go_backward.desc,
     callback = function()
-      era.command.execute(K.notepad.go_backward.uuid)
+      dot.command.execute(K.notepad.go_backward.uuid)
     end,
   },
   {
@@ -193,7 +193,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<M-o>",
     desc = K.notepad.go_forward.desc,
     callback = function()
-      era.command.execute(K.notepad.go_forward.uuid)
+      dot.command.execute(K.notepad.go_forward.uuid)
     end,
   },
   {
@@ -215,7 +215,7 @@ for index = 1, 9 do
     key = string.format("<C-%d>", index),
     desc = definition.desc,
     callback = function()
-      era.command.execute(definition.uuid)
+      dot.command.execute(definition.uuid)
     end,
   }
 end
@@ -227,7 +227,7 @@ for index = 1, 9 do
     key = string.format("[%d", index),
     desc = definition_left.desc,
     callback = function()
-      era.command.execute(definition_left.uuid)
+      dot.command.execute(definition_left.uuid)
     end,
   }
 
@@ -237,7 +237,7 @@ for index = 1, 9 do
     key = string.format("]%d", index),
     desc = definition_right.desc,
     callback = function()
-      era.command.execute(definition_right.uuid)
+      dot.command.execute(definition_right.uuid)
     end,
   }
 end

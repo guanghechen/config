@@ -286,13 +286,13 @@ function M.create(params)
 
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
-    local definition = era.command.definitions.term["focus_" .. tostring(i)] ---@type era.command.IDefinition
+    local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
     keymaps[#keymaps + 1] = {
       modes = { "i", "n", "t", "x" },
       key = key,
       desc = definition.desc,
       callback = function()
-        era.command.execute(definition.uuid)
+        dot.command.execute(definition.uuid)
       end,
     }
   end
@@ -300,60 +300,60 @@ function M.create(params)
     modes = { "i", "n", "t", "x" },
     key = "<C-,>",
     aliases = { "<C-[>" },
-    desc = era.command.definitions.term.focus_left.desc,
+    desc = dot.command.definitions.term.focus_left.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.focus_left.uuid)
+      dot.command.execute(dot.command.definitions.term.focus_left.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-.>",
     aliases = { "<C-]>" },
-    desc = era.command.definitions.term.focus_right.desc,
+    desc = dot.command.definitions.term.focus_right.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.focus_right.uuid)
+      dot.command.execute(dot.command.definitions.term.focus_right.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-S-,>",
     aliases = { "<C-S-[>" },
-    desc = era.command.definitions.term.swap_left.desc,
+    desc = dot.command.definitions.term.swap_left.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.swap_left.uuid)
+      dot.command.execute(dot.command.definitions.term.swap_left.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-S-.>",
     aliases = { "<C-S-]>" },
-    desc = era.command.definitions.term.swap_right.desc,
+    desc = dot.command.definitions.term.swap_right.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.swap_right.uuid)
+      dot.command.execute(dot.command.definitions.term.swap_right.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-n>",
-    desc = era.command.definitions.term.rename.desc,
+    desc = dot.command.definitions.term.rename.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.rename.uuid)
+      dot.command.execute(dot.command.definitions.term.rename.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-/>",
-    desc = era.command.definitions.term.create.desc,
+    desc = dot.command.definitions.term.create.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.create.uuid)
+      dot.command.execute(dot.command.definitions.term.create.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-d>",
-    desc = era.command.definitions.term.destroy.desc,
+    desc = dot.command.definitions.term.destroy.desc,
     callback = function()
-      era.command.execute(era.command.definitions.term.destroy.uuid)
+      dot.command.execute(dot.command.definitions.term.destroy.uuid)
     end,
   }
   keymaps[#keymaps + 1] = {

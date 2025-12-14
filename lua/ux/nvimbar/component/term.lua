@@ -1,7 +1,7 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 local decode_btn_args = ark.nvim.decode_btn_args
-local K = era.command.definitions ---@type table<string, any>
+local K = dot.command.definitions ---@type table<string, any>
 
 ---@type string
 local fn_switch_term = dot.G.register_anonymous_fn(function(encoded)
@@ -14,17 +14,17 @@ end) or "dot.G.noop"
 
 ---@type string
 local fn_add_term = dot.G.register_anonymous_fn(function()
-  era.command.execute(K.term.create.uuid)
+  dot.command.execute(K.term.create.uuid)
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_prev_term = dot.G.register_anonymous_fn(function()
-  era.command.execute(K.term.focus_left.uuid)
+  dot.command.execute(K.term.focus_left.uuid)
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_next_term = dot.G.register_anonymous_fn(function()
-  era.command.execute(K.term.focus_right.uuid)
+  dot.command.execute(K.term.focus_right.uuid)
 end) or "dot.G.noop"
 
 ---@class ux.nvimbar.component.term

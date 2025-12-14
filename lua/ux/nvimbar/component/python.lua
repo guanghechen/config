@@ -4,7 +4,7 @@ local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
 local fn_select_python_venv = dot.G.register_anonymous_fn(function()
-  era.command.execute(era.command.definitions.lsp.select_python_venv.uuid)
+  dot.command.execute(dot.command.definitions.lsp.select_python_venv.uuid)
 end)
 
 local python_venv = "" ---@type string|nil

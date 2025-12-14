@@ -54,13 +54,13 @@
 ---@field public row                    integer
 ---@field public col                    integer
 
----@class era.command.IDefinition
+---@class dot.command.IDefinition
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"|nil
 ---@field public candidates             string[]|nil
 
----@class era.command.IDefinitionWithCandidates
+---@class dot.command.IDefinitionWithCandidates
 ---@field public uuid                   string
 ---@field public desc                   string
 ---@field public nargs                  1|"?"
