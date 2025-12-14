@@ -58,6 +58,7 @@ local state = setmetatable({
 
 ---@class era.__mods
 local __mods = {
+  Filetree = "era.filetree",
   Tree = "era.tree",
   buf = "era.buf",
   command = "era.command",
@@ -77,6 +78,7 @@ local __mods = {
 
 ---@class era
 ---@field public __mods                 era.__mods
+---@field public Filetree               era.Filetree
 ---@field public Tree                   era.Tree
 ---@field public buf                    era.buf
 ---@field public command                era.command

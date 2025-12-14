@@ -1,33 +1,33 @@
 ---@meta
 
----@alias std.e.FindFileScope
+---@alias era.e.FindFileScope
 ---| "W"
 ---| "C"
 ---| "D"
 
----@alias std.e.FindBufferScope
+---@alias era.e.FindBufferScope
 ---| "A"
 ---| "F"
 ---| "L"
 ---| "T"
 
----@alias std.e.SearchFileScope
+---@alias era.e.SearchFileScope
 ---| "W"
 ---| "C"
 ---| "D"
 ---| "B"
 
----@alias std.e.NvimbarCompPosition
+---@alias era.e.NvimbarCompPosition
 ---| "left"
 ---| "center"
 ---| "right"
 
----@alias std.e.WidgetStatus
+---@alias era.e.WidgetStatus
 ---| "visible"
 ---| "hidden"
 ---| "closed"
 
----@alias std.e.WidgetStatuslineItemType
+---@alias era.e.WidgetStatuslineItemType
 ---| "enum"
 ---| "flag"
 ---| "popup"

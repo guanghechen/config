@@ -1,31 +1,31 @@
-local __module_name__ = "std.collection.filetree" ---@type string
+local __module_name__ = "era.filetree" ---@type string
 
----@alias std.collection.filetree.ITraverseConditional
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer): era.t.ITreeTraverseConditionalEnum
+---@alias era.t.IFiletreeTraverseConditional
+---| fun(ctx: era.t.IFiletreeTraverseContext, node: era.t.IFiletreeNode, cur: integer): era.t.ITreeTraverseConditionalEnum
 
----@alias std.collection.filetree.ITraverseHandler
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
+---@alias era.t.IFiletreeTraverseHandler
+---| fun(ctx: era.t.IFiletreeTraverseContext, node: era.t.IFiletreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
 
----@alias std.collection.filetree.ITraverseRecursive
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer, is_lastchild: boolean): nil
+---@alias era.t.IFiletreeTraverseRecursive
+---| fun(ctx: era.t.IFiletreeTraverseContext, node: era.t.IFiletreeNode, cur: integer, is_lastchild: boolean): nil
 
----@alias std.collection.filetree.IQuickTraverseHandler
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer): nil
+---@alias era.t.IFiletreeQuickTraverseHandler
+---| fun(ctx: era.t.IFiletreeTraverseContext, node: era.t.IFiletreeNode, cur: integer): nil
 
----@alias std.collection.filetree.IQuickTraverseRecursive
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer): nil
+---@alias era.t.IFiletreeQuickTraverseRecursive
+---| fun(ctx: era.t.IFiletreeTraverseContext, node: era.t.IFiletreeNode, cur: integer): nil
 
----@alias std.collection.filetree.IUnsafeTraverseCallback
----| fun(ctx: std.collection.filetree.ITraverseContext): nil
+---@alias era.t.IFiletreeUnsafeTraverseCallback
+---| fun(ctx: era.t.IFiletreeTraverseContext): nil
 
----@class std.collection.filetree.ITraverseContext
----@field public nodemap                table<string, std.collection.filetree.INode>
----@field public rootnode               std.collection.filetree.INode
+---@class era.t.IFiletreeTraverseContext
+---@field public nodemap                table<string, era.t.IFiletreeNode>
+---@field public rootnode               era.t.IFiletreeNode
 
----@class std.collection.filetree.INode : era.t.ITreeNode
----@field public data                   std.collection.filetree.INodeData
+---@class era.t.IFiletreeNode : era.t.ITreeNode
+---@field public data                   era.t.IFiletreeNodeData
 
----@class std.collection.filetree.INodeData
+---@class era.t.IFiletreeNodeData
 ---@field public basename               string
 ---@field public fileicon               string
 ---@field public fileicon_hln           string
@@ -44,7 +44,7 @@ local FILEPATH_TO_UUID = {
 local FILETREE_ROOT_FILEPATH = dot.env.IS_WIN and "" or "/" ---@type string
 local FILETREE_ROOT_UUID = FILEPATH_TO_UUID[FILETREE_ROOT_FILEPATH] ---@type string
 
----@type table<string, std.collection.filetree.INodeData>
+---@type table<string, era.t.IFiletreeNodeData>
 local FILENODE_DATAMAP = {
   [FILETREE_ROOT_UUID] = {
     basename = FILETREE_ROOT_FILEPATH,
@@ -61,45 +61,45 @@ local FILETYPE_PRIORITY_MAP = {
   file = 3,
 }
 
----@class std.collection.IFiletreeProps
+---@class era.IFiletreeProps
 ---@field public name                   string
 
----@class std.collection.IReadonlyFiletree : era.IReadonlyTree
+---@class era.IReadonlyFiletree : era.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
----@field public isdisposed             fun(self: std.collection.IReadonlyFiletree): boolean
----@field public isdescendant           fun(self: std.collection.IReadonlyFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: std.collection.IReadonlyFiletree, uuid: string): boolean
----@field public retrieve               fun(self: std.collection.IReadonlyFiletree, uuid: string): std.collection.filetree.INode|nil
----@field public quick_traverse         fun(self: std.collection.IReadonlyFiletree, root: string|nil, fn: std.collection.filetree.IQuickTraverseHandler, conditional: std.collection.filetree.ITraverseConditional|nil): std.collection.IReadonlyFiletree
----@field public traverse               fun(self: std.collection.IReadonlyFiletree, root: string|nil, fn: std.collection.filetree.ITraverseHandler, conditional: std.collection.filetree.ITraverseConditional|nil): std.collection.IReadonlyFiletree
----@field public unsafe_traverse        fun(self: std.collection.IReadonlyFiletree, root: string|nil, traverse: std.collection.filetree.IUnsafeTraverseCallback): std.collection.IReadonlyFiletree
----@field public calc_include_uuid_set  fun(self: std.collection.IReadonlyFiletree, uuids: string[]): table<string, boolean>
+---@field public isdisposed             fun(self: era.IReadonlyFiletree): boolean
+---@field public isdescendant           fun(self: era.IReadonlyFiletree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: era.IReadonlyFiletree, uuid: string): boolean
+---@field public retrieve               fun(self: era.IReadonlyFiletree, uuid: string): era.t.IFiletreeNode|nil
+---@field public quick_traverse         fun(self: era.IReadonlyFiletree, root: string|nil, fn: era.t.IFiletreeQuickTraverseHandler, conditional: era.t.IFiletreeTraverseConditional|nil): era.IReadonlyFiletree
+---@field public traverse               fun(self: era.IReadonlyFiletree, root: string|nil, fn: era.t.IFiletreeTraverseHandler, conditional: era.t.IFiletreeTraverseConditional|nil): era.IReadonlyFiletree
+---@field public unsafe_traverse        fun(self: era.IReadonlyFiletree, root: string|nil, traverse: era.t.IFiletreeUnsafeTraverseCallback): era.IReadonlyFiletree
+---@field public calc_include_uuid_set  fun(self: era.IReadonlyFiletree, uuids: string[]): table<string, boolean>
 
----@class std.collection.IFiletree : era.ITree , std.collection.IReadonlyFiletree
+---@class era.IFiletree : era.ITree , era.IReadonlyFiletree
 ---@field public fullname               string
 ---@field public root                   string
----@field public clear                  fun(self: std.collection.IFiletree): std.collection.IFiletree
----@field public dispose                fun(self: std.collection.IFiletree): nil
----@field public isdisposed             fun(self: std.collection.IFiletree): boolean
----@field public isdescendant           fun(self: std.collection.IFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: std.collection.IFiletree, uuid: string): boolean
----@field public retrieve               fun(self: std.collection.IFiletree, uuid: string): std.collection.filetree.INode|nil
----@field public quick_traverse         fun(self: std.collection.IFiletree, root: string|nil, fn: std.collection.filetree.IQuickTraverseHandler, conditional: std.collection.filetree.ITraverseConditional|nil): std.collection.IFiletree
----@field public traverse               fun(self: std.collection.IFiletree, root: string|nil, fn: std.collection.filetree.ITraverseHandler, conditional: std.collection.filetree.ITraverseConditional|nil): std.collection.IFiletree
----@field public unsafe_traverse        fun(self: std.collection.IFiletree, root: string|nil, traverse: std.collection.filetree.IUnsafeTraverseCallback): std.collection.IFiletree
----@field public calc_include_uuid_set  fun(self: std.collection.IFiletree, uuids: string[]): table<string, boolean>
----@field public empty                  fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
----@field public insert                 fun(self: std.collection.IFiletree, parent: string, uuid: string, data: std.collection.filetree.INodeData): std.collection.filetree.INode
----@field public insert_directory_absolute fun(self: std.collection.IFiletree, dirpath: string): std.collection.filetree.INode
----@field public insert_directory_relative fun(self: std.collection.IFiletree, cwd: string, dirpath: string): std.collection.filetree.INode
----@field public insert_file_absolute   fun(self: std.collection.IFiletree, filepath: string): std.collection.filetree.INode
----@field public insert_file_relative   fun(self: std.collection.IFiletree, cwd: string, filepath: string): std.collection.filetree.INode
----@field public print                  fun(self: std.collection.IFiletree, rootuuid: string|nil): string[]
----@field public remove                 fun(self: std.collection.IFiletree, uuid: string): std.collection.IFiletree
----@field public reset                  fun(self: std.collection.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): std.collection.IFiletree
+---@field public clear                  fun(self: era.IFiletree): era.IFiletree
+---@field public dispose                fun(self: era.IFiletree): nil
+---@field public isdisposed             fun(self: era.IFiletree): boolean
+---@field public isdescendant           fun(self: era.IFiletree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: era.IFiletree, uuid: string): boolean
+---@field public retrieve               fun(self: era.IFiletree, uuid: string): era.t.IFiletreeNode|nil
+---@field public quick_traverse         fun(self: era.IFiletree, root: string|nil, fn: era.t.IFiletreeQuickTraverseHandler, conditional: era.t.IFiletreeTraverseConditional|nil): era.IFiletree
+---@field public traverse               fun(self: era.IFiletree, root: string|nil, fn: era.t.IFiletreeTraverseHandler, conditional: era.t.IFiletreeTraverseConditional|nil): era.IFiletree
+---@field public unsafe_traverse        fun(self: era.IFiletree, root: string|nil, traverse: era.t.IFiletreeUnsafeTraverseCallback): era.IFiletree
+---@field public calc_include_uuid_set  fun(self: era.IFiletree, uuids: string[]): table<string, boolean>
+---@field public empty                  fun(self: era.IFiletree, uuid: string): era.IFiletree
+---@field public insert                 fun(self: era.IFiletree, parent: string, uuid: string, data: era.t.IFiletreeNodeData): era.t.IFiletreeNode
+---@field public insert_directory_absolute fun(self: era.IFiletree, dirpath: string): era.t.IFiletreeNode
+---@field public insert_directory_relative fun(self: era.IFiletree, cwd: string, dirpath: string): era.t.IFiletreeNode
+---@field public insert_file_absolute   fun(self: era.IFiletree, filepath: string): era.t.IFiletreeNode
+---@field public insert_file_relative   fun(self: era.IFiletree, cwd: string, filepath: string): era.t.IFiletreeNode
+---@field public print                  fun(self: era.IFiletree, rootuuid: string|nil): string[]
+---@field public remove                 fun(self: era.IFiletree, uuid: string): era.IFiletree
+---@field public reset                  fun(self: era.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): era.IFiletree
 
----@class std.collection.Filetree : std.collection.IFiletree
+---@class era.Filetree : era.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
 ---@field protected _nodemap            table<string, era.t.ITreeNode>
@@ -146,7 +146,7 @@ end
 ---@param filepath                      string
 ---@param filetype                      "directory" | "file"
 ---@param force                         boolean
----@return std.collection.filetree.INodeData
+---@return era.t.IFiletreeNodeData
 ---@return string
 function M.resolve(filepath, filetype, force)
   local nodeuuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
@@ -167,7 +167,7 @@ function M.resolve(filepath, filetype, force)
       fileicon, fileicon_hln = dot.fileicon.get_file_icon(basename) ---@type string, string
     end
 
-    ---@type std.collection.filetree.INodeData
+    ---@type era.t.IFiletreeNodeData
     nodedata = {
       basename = basename,
       fileicon = fileicon,
@@ -197,8 +197,8 @@ function M.resolve(filepath, filetype, force)
   return nodedata, nodeuuid
 end
 
----@param props                         std.collection.IFiletreeProps
----@return std.collection.Filetree
+---@param props                         era.IFiletreeProps
+---@return era.Filetree
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
@@ -209,8 +209,8 @@ function M.new(props)
     fullname = fullname,
     rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
     node_sorter = function(left, right)
-      ---@cast left                     std.collection.filetree.INode
-      ---@cast right                    std.collection.filetree.INode
+      ---@cast left                     era.t.IFiletreeNode
+      ---@cast right                    era.t.IFiletreeNode
       if left.data.filetype == right.data.filetype then
         return left.data.basename < right.data.basename
       end
@@ -222,21 +222,21 @@ function M.new(props)
   })
 
   local self = setmetatable(tree, M)
-  ---@cast self                         std.collection.Filetree
+  ---@cast self                         era.Filetree
 
   return self
 end
 
 ---@param dirpath                       string
----@return std.collection.filetree.INode
+---@return era.t.IFiletreeNode
 function M:insert_directory_absolute(dirpath)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
-  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+  ---@cast nodemap                      table<string, era.t.IFiletreeNode>
 
   local nodeuuid = M.uuid(dirpath) ---@type string
-  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  local node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
     local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
@@ -247,7 +247,7 @@ function M:insert_directory_absolute(dirpath)
     if dot.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -258,7 +258,7 @@ function M:insert_directory_absolute(dirpath)
     for index = 2, N, 1 do
       p = p .. dot.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -272,21 +272,21 @@ end
 
 ---@param cwd                           string
 ---@param dirpath                       string
----@return std.collection.filetree.INode
+---@return era.t.IFiletreeNode
 function M:insert_directory_relative(cwd, dirpath)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
-  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+  ---@cast nodemap                      table<string, era.t.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string
-  local cwdnode = nodemap[cwduuid] ---@type std.collection.filetree.INode|nil
+  local cwdnode = nodemap[cwduuid] ---@type era.t.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. dot.env.PATH_SEP .. dirpath) ---@type string
-  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  local node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
     local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
@@ -297,7 +297,7 @@ function M:insert_directory_relative(cwd, dirpath)
     for index = 1, N, 1 do
       p = p .. dot.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -310,15 +310,15 @@ function M:insert_directory_relative(cwd, dirpath)
 end
 
 ---@param filepath                      string
----@return std.collection.filetree.INode
+---@return era.t.IFiletreeNode
 function M:insert_file_absolute(filepath)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
-  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+  ---@cast nodemap                      table<string, era.t.IFiletreeNode>
 
   local nodeuuid = M.uuid(filepath) ---@type string
-  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  local node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
     local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
@@ -329,7 +329,7 @@ function M:insert_file_absolute(filepath)
     if dot.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -340,7 +340,7 @@ function M:insert_file_absolute(filepath)
     for index = 2, N, 1 do
       p = p .. dot.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -352,7 +352,7 @@ function M:insert_file_absolute(filepath)
     local basename = pieces[N + 1] ---@type string
     p = p .. dot.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
-    node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+    node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
       node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -364,21 +364,21 @@ end
 
 ---@param cwd                           string
 ---@param filepath                      string
----@return std.collection.filetree.INode
+---@return era.t.IFiletreeNode
 function M:insert_file_relative(cwd, filepath)
   self:__health__()
 
   local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
-  ---@cast nodemap                      table<string, std.collection.filetree.INode>
+  ---@cast nodemap                      table<string, era.t.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string
-  local cwdnode = nodemap[cwduuid] ---@type std.collection.filetree.INode|nil
+  local cwdnode = nodemap[cwduuid] ---@type era.t.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. dot.env.PATH_SEP .. filepath) ---@type string
-  local node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+  local node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
     local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
@@ -389,7 +389,7 @@ function M:insert_file_relative(cwd, filepath)
     for index = 1, N, 1 do
       p = p .. dot.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+      node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -401,7 +401,7 @@ function M:insert_file_relative(cwd, filepath)
     local basename = pieces[N + 1] ---@type string
     p = p .. dot.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
-    node = nodemap[nodeuuid] ---@type std.collection.filetree.INode|nil
+    node = nodemap[nodeuuid] ---@type era.t.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
       node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -414,7 +414,7 @@ end
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_locations                boolean
----@return std.collection.Filetree
+---@return era.Filetree
 function M:reset(cwd, filepaths, with_locations)
   self:__health__()
   self:clear()
@@ -423,7 +423,7 @@ function M:reset(cwd, filepaths, with_locations)
     return self
   end
 
-  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type std.collection.filetree.INodeData, string
+  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type era.t.IFiletreeNodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
   cwd = era.path.normalize(cwd) ---@type string

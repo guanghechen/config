@@ -55,7 +55,7 @@ local __module_name__ = "ux.picker.view.tree" ---@type string
 
 ---@class ux.picker.view.tree.INodeMatchResultCache
 ---@field public score                  integer
----@field public matches                std.t.IMatchPoint[]
+---@field public matches                era.t.IMatchPoint[]
 
 ---@class ux.picker.view.tree.IMatchParams
 ---@field public rootuuid               string|nil
@@ -260,7 +260,7 @@ function M:match(params)
     for _, line_match in ipairs(line_matches) do
       local lnum = line_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
-      local matches = line_match.matches ---@type std.t.IMatchPoint[]
+      local matches = line_match.matches ---@type era.t.IMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
       state.cache_match = { score = line_match.score, matches = matches } ---@type ux.picker.view.tree.INodeMatchResultCache
@@ -346,7 +346,7 @@ function M:render_listview(params)
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 
-        local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+        local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
         for _, m in ipairs(matches) do
           local l = m.l ---@type integer
           local r = m.r ---@type integer
@@ -405,7 +405,7 @@ function M:render_treeview(params)
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 
-        local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+        local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
         for _, m in ipairs(matches) do
           local l = m.l ---@type integer
           local r = m.r ---@type integer

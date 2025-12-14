@@ -30,7 +30,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public bufnr                  integer
 ---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       ark.c.Scheduler|nil
----@field public lsp_symbols            std.t.ILspSymbol[]|nil
+---@field public lsp_symbols            era.t.ILspSymbol[]|nil
 ---@field public nvimbar                ux.nvimbar.Nvimbar
 
 ---@class era.win.IMeta
@@ -437,7 +437,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param winnr                         integer|nil
----@param callback                      fun(ok: boolean, symbols: std.t.ILspSymbol[]|nil): nil
+---@param callback                      fun(ok: boolean, symbols: era.t.ILspSymbol[]|nil): nil
 ---@return fun(): nil
 function M.locate_symbols(winnr, callback)
   local cancel_lsp = ark.fn.noop ---@type fun(): nil
@@ -551,7 +551,7 @@ function M.locate_symbols(winnr, callback)
     local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
     local cursor_pos = { line = cursor_line, character = cursor_character }
     local symbol_path = era.lsp.find_symbol_path(cursor_pos, symbols)
-    local lsp_symbols = {} ---@type std.t.ILspSymbol[]
+    local lsp_symbols = {} ---@type era.t.ILspSymbol[]
 
     local k = 1 ---@type integer
     if symbol_path then
@@ -563,7 +563,7 @@ function M.locate_symbols(winnr, callback)
         local pos = range and range.start or nil ---@type lsp.Position|nil
         if pos ~= nil then
           local byte_col = position_to_byte_col(bufnr, pos, encoding) ---@type integer
-          ---@type std.t.ILspSymbol
+          ---@type era.t.ILspSymbol
           local lsp_symbol = {
             kind = kind,
             name = name,

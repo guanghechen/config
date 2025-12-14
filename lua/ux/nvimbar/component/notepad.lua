@@ -58,7 +58,7 @@ function M.items(position, notepad)
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = ark.nvim.make_bg_transparency(hln_button) ---@type string
 
-  ---@param item                        std.t.INotepadItemMeta
+  ---@param item                        era.t.INotepadItemMeta
   ---@return string
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
@@ -71,7 +71,7 @@ function M.items(position, notepad)
     return name
   end
 
-  ---@param item                        std.t.INotepadItemMeta
+  ---@param item                        era.t.INotepadItemMeta
   ---@param index                       integer
   ---@param relative_distance           integer|nil
   ---@return string
@@ -95,7 +95,7 @@ function M.items(position, notepad)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@param item                        std.t.INotepadItemMeta
+  ---@param item                        era.t.INotepadItemMeta
   ---@param index                       integer
   ---@return string
   ---@return string
@@ -117,7 +117,7 @@ function M.items(position, notepad)
     name = "notepad:items",
     atomic = false,
     render = function(_, remain_width)
-      local entries = {} ---@type { item: std.t.INotepadItemMeta, index: integer }[]
+      local entries = {} ---@type { item: era.t.INotepadItemMeta, index: integer }[]
       for item, index in notepad:iterator() do
         entries[#entries + 1] = { item = item, index = index }
       end
@@ -306,7 +306,7 @@ function M.source(position, notepad)
     name = "notepad:source",
     atomic = true,
     render = function(_, remain_width)
-      local source = notepad:get_source() ---@type std.t.INotepadSource
+      local source = notepad:get_source() ---@type era.t.INotepadSource
       local source_name = source.name ---@type string
       local _, config = era.state.notepad.retrieve_source(source_name)
       local engine = config.engine ---@type 'json'|'folder'

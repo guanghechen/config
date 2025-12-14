@@ -537,10 +537,10 @@ function M:get_result_lnum()
   return self.result.lnum_current:snapshot()
 end
 
----@return std.t.IWinDimension
----@return std.t.IWinDimension|nil
----@return std.t.IWinDimension
----@return std.t.IWinDimension|nil
+---@return era.t.IWinDimension
+---@return era.t.IWinDimension|nil
+---@return era.t.IWinDimension
+---@return era.t.IWinDimension|nil
 function M:get_layout()
   self:__health__()
   return self:__layout__()
@@ -586,7 +586,7 @@ function M:resize()
   local should_show_replacer = self:__should_show_replacer__() ---@type boolean
   local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
 
-  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
+  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type era.t.IWinDimension, era.t.IWinDimension|nil, era.t.IWinDimension, era.t.IWinDimension|nil
   self.finder:resize(finder_dimension)
   if self.replacer ~= nil and replacer_dimension ~= nil then
     self.replacer:resize(replacer_dimension)
@@ -704,7 +704,7 @@ function M:__create_wins__()
     return false, finder_winnr, replacer_winnr, result_winnr, preview_winnr
   end
 
-  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type std.t.IWinDimension, std.t.IWinDimension|nil, std.t.IWinDimension, std.t.IWinDimension|nil
+  local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type era.t.IWinDimension, era.t.IWinDimension|nil, era.t.IWinDimension, era.t.IWinDimension|nil
   local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
   local zindex = era.win.resolve_zindex() ---@type integer
 
@@ -834,10 +834,10 @@ function M:__hide__()
   end
 end
 
----@return std.t.IWinDimension
----@return std.t.IWinDimension|nil
----@return std.t.IWinDimension
----@return std.t.IWinDimension|nil
+---@return era.t.IWinDimension
+---@return era.t.IWinDimension|nil
+---@return era.t.IWinDimension
+---@return era.t.IWinDimension|nil
 function M:__layout__()
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
@@ -892,7 +892,7 @@ function M:__layout__()
   end
   local total_input_height = finder_height + replacer_height ---@type integer
 
-  ---@type std.t.IWinDimension
+  ---@type era.t.IWinDimension
   local finder_dimension = {
     row = row,
     col = col,
@@ -900,7 +900,7 @@ function M:__layout__()
     width = finder_width,
   }
 
-  ---@type std.t.IWinDimension|nil
+  ---@type era.t.IWinDimension|nil
   local replacer_dimension = should_show_replacer
       and {
         row = row + finder_height + 1,
@@ -910,7 +910,7 @@ function M:__layout__()
       }
     or nil
 
-  ---@type std.t.IWinDimension
+  ---@type era.t.IWinDimension
   local result_dimension = {
     row = row + total_input_height + (should_show_replacer and 2 or 1),
     col = col,
@@ -918,7 +918,7 @@ function M:__layout__()
     width = finder_width,
   }
 
-  local preview_dimension = nil ---@type std.t.IWinDimension|nil
+  local preview_dimension = nil ---@type era.t.IWinDimension|nil
   if should_show_preview then
     if preview_on_bottom then
       local gap_result_preview = 1 ---@type integer

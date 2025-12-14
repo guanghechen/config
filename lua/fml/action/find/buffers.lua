@@ -14,7 +14,7 @@ local title = "Find Buffers" ---@type string
 ---@field public icon                   string
 ---@field public icon_hl                string
 
-local scopes = vim.list_slice(era.context.select.find_buffer_scopes) ---@type std.e.FindBufferScope[]
+local scopes = vim.list_slice(era.context.select.find_buffer_scopes) ---@type era.e.FindBufferScope[]
 local o_scope = era.context.select.find_buffer_scope ---@type ark.c.Observable
 local o_search_pattern = era.context.select.find_buffer.search_pattern ---@type ark.c.Observable
 local o_flag_fuzzy = era.context.select.find_buffer.flag_fuzzy ---@type ark.c.Observable
@@ -32,7 +32,7 @@ local IGNORED_FILETYPES = {
 }
 
 ---@param bufnr                         integer
----@param scope                         std.e.FindBufferScope
+---@param scope                         era.e.FindBufferScope
 ---@param tabnr                         integer
 ---@return boolean
 local function should_show_buffer(bufnr, scope, tabnr)
@@ -112,7 +112,7 @@ end
 ---@return ux.picker.composer.list.IResetData
 local function fetch_data()
   local cwd = era.path.cwd() ---@type string
-  local scope = era.context.select.find_buffer_scope:snapshot() ---@type std.e.FindBufferScope
+  local scope = era.context.select.find_buffer_scope:snapshot() ---@type era.e.FindBufferScope
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
   local items = {} ---@type fml.action.find.buffers.IItem[]
@@ -150,16 +150,16 @@ picker = ux.picker.ListComposer.new({
     {
       desc = "find(buffer): toggle scope",
       callback = function()
-        local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
+        local scope = o_scope:snapshot() ---@type era.e.FindBufferScope
         local idx = ark.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
-        local next_scope = scopes[idx_next] ---@type std.e.FindBufferScope
+        local next_scope = scopes[idx_next] ---@type era.e.FindBufferScope
         era.context.select.find_buffer_scope:next(next_scope)
         local data = fetch_data()
         picker:reset_data(data)
       end,
       snapshot = function()
-        local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
+        local scope = o_scope:snapshot() ---@type era.e.FindBufferScope
         return scope, "picker_flag_purple"
       end,
     },
@@ -268,7 +268,7 @@ picker = ux.picker.ListComposer.new({
 })
 
 ark.fn.observe({ o_scope }, function()
-  local scope = o_scope:snapshot() ---@type std.e.FindBufferScope
+  local scope = o_scope:snapshot() ---@type era.e.FindBufferScope
   if scope == "A" then
     picker.finder:set_title("find buffers")
   elseif scope == "F" then

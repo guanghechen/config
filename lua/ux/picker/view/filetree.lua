@@ -7,19 +7,19 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 ---| ux.picker.view.filetree.ILocationNodeState
 
 ---@alias ux.picker.view.filetree.IListviewFileRenderer
----| fun(ctx: ux.picker.view.filetree.IListviewRendererContext, node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.filetree.IListviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.filetree.IListviewLocationRenderer
----| fun(ctx: ux.picker.view.filetree.IListviewRendererContext, node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IFileNodeState, locationstate: ux.picker.view.filetree.ILocationNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.filetree.IListviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IFileNodeState, locationstate: ux.picker.view.filetree.ILocationNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.filetree.ITreeviewFileRenderer
----| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IFileNodeState, locationstate: ux.picker.view.filetree.ILocationNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IFileNodeState, locationstate: ux.picker.view.filetree.ILocationNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@class ux.picker.view.filetree.IDirectoryNodeState : ux.view.tree.IContainerNodeState
 
@@ -35,15 +35,15 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 ---@field public highlights             ?ark.t.IHighlightInline[]
 
 ---@class ux.picker.view.filetree.IListviewRendererContext : ux.view.tree.IListviewRendererContext
----@field public rootnode               std.collection.filetree.INode
+---@field public rootnode               era.t.IFiletreeNode
 ---@field public rootstate              ux.picker.view.filetree.IDirectoryNodeState
----@field public tree                   std.collection.IReadonlyFiletree
+---@field public tree                   era.IReadonlyFiletree
 ---@field public view                   ux.picker.FiletreeView
 
 ---@class ux.picker.view.filetree.ITreeviewRendererContext : ux.view.tree.IListviewRendererContext
----@field public rootnode               std.collection.filetree.INode
+---@field public rootnode               era.t.IFiletreeNode
 ---@field public rootstate              ux.picker.view.filetree.IDirectoryNodeState
----@field public tree                   std.collection.IReadonlyFiletree
+---@field public tree                   era.IReadonlyFiletree
 ---@field public view                   ux.picker.FiletreeView
 
 ---@class ux.picker.view.filetree.INodeMatchContext
@@ -59,7 +59,7 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 
 ---@class ux.picker.view.filetree.INodeMatchResultCache
 ---@field public score                  integer
----@field public matches                std.t.IMatchPoint[]
+---@field public matches                era.t.IMatchPoint[]
 
 ---@class ux.picker.view.filetree.IMatchParams
 ---@field public rootuuid               string|nil
@@ -73,7 +73,7 @@ local __module_name__ = "ux.picker.view.filetree" ---@type string
 local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 ---@class ux.picker.view.IFiletreeProps
 ---@field public name                   string
----@field public tree                   std.collection.IFiletree
+---@field public tree                   era.IFiletree
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
@@ -86,7 +86,7 @@ local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 local P = ux.view.Tree ---@type ux.view.Tree
 
 ---@class ux.picker.FiletreeView : ux.view.Tree
----@field protected _tree               std.collection.IFiletree
+---@field protected _tree               era.IFiletree
 ---@field protected _last_match_result  ux.picker.view.filetree.INodeMatchResult
 ---@field public insert                 fun(self: ux.picker.FiletreeView, uuid: string, state: ux.view.tree.INodeState): ux.picker.FiletreeView
 local M = {}
@@ -100,7 +100,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
-  local tree = props.tree ---@type std.collection.IFiletree
+  local tree = props.tree ---@type era.IFiletree
 
   local render_listview_leaf = props.render_listview_leaf or M.default_render_listview_leaf ---@type ux.picker.view.filetree.IListviewFileRenderer
   local render_listview_location = props.render_listview_location or M.default_render_listview_location ---@type ux.picker.view.filetree.IListviewLocationRenderer
@@ -181,7 +181,7 @@ end
 function M:match(params)
   self:__health__()
 
-  local tree = self._tree ---@type std.collection.IReadonlyFiletree
+  local tree = self._tree ---@type era.IReadonlyFiletree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
 
@@ -236,17 +236,17 @@ function M:match(params)
 
   local lines = {} ---@type string[]
   tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
+    local nodemap = ctx.nodemap ---@type table<string, era.t.IFiletreeNode>
     if case_sensitive then
       for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type std.collection.filetree.INode|nil
+        local node = nodemap[uuid] ---@type era.t.IFiletreeNode|nil
         if node ~= nil then
           lines[index] = node.data.filepath ---@type string
         end
       end
     else
       for index, uuid in ipairs(uuids) do
-        local node = nodemap[uuid] ---@type std.collection.filetree.INode|nil
+        local node = nodemap[uuid] ---@type era.t.IFiletreeNode|nil
         if node ~= nil then
           lines[index] = node.data.filepath_lower ---@type string
         end
@@ -286,7 +286,7 @@ function M:match(params)
     for _, line_match in ipairs(line_matches) do
       local lnum = line_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
-      local matches = line_match.matches ---@type std.t.IMatchPoint[]
+      local matches = line_match.matches ---@type era.t.IMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
       state.cache_match = { score = line_match.score, matches = matches } ---@type ux.picker.view.filetree.INodeMatchResultCache
@@ -304,12 +304,12 @@ function M:match(params)
   end
 
   tree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
+    local nodemap = ctx.nodemap ---@type table<string, era.t.IFiletreeNode>
     for _, uuid in ipairs(uuids) do
-      local o = nodemap[uuid] ---@type std.collection.filetree.INode
+      local o = nodemap[uuid] ---@type era.t.IFiletreeNode
 
       for _ = o.depth - 1, 1, -1 do
-        o = nodemap[o.parent] ---@type std.collection.filetree.INode
+        o = nodemap[o.parent] ---@type era.t.IFiletreeNode
 
         local s = statemap[o.uuid]
         if s.tick_matched == tick_matched then
@@ -336,7 +336,7 @@ end
 function M:insert_dirpath(dirpath)
   self:__health__()
 
-  local filetree = self._tree ---@type std.collection.IFiletree
+  local filetree = self._tree ---@type era.IFiletree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
 
@@ -345,7 +345,7 @@ function M:insert_dirpath(dirpath)
   local filestate = statemap[fileuuid] ---@type ux.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "container" then
-    local node = filetree:retrieve(filenode.parent) ---@type std.collection.filetree.INode|nil
+    local node = filetree:retrieve(filenode.parent) ---@type era.t.IFiletreeNode|nil
     while node ~= nil and node.uuid ~= node.parent do
       local nodestate = statemap[filenode.uuid] ---@type ux.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
@@ -362,7 +362,7 @@ function M:insert_dirpath(dirpath)
         tick_selected_maximum = 0,
       }
       statemap[node.uuid] = nodestate
-      node = filetree:retrieve(node.parent) ---@type std.collection.filetree.INode|nil
+      node = filetree:retrieve(node.parent) ---@type era.t.IFiletreeNode|nil
     end
 
     ---@type ux.picker.view.filetree.IDirectoryNodeState
@@ -386,7 +386,7 @@ end
 function M:insert_filepath(filepath, with_locations)
   self:__health__()
 
-  local filetree = self._tree ---@type std.collection.IFiletree
+  local filetree = self._tree ---@type era.IFiletree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
 
@@ -401,7 +401,7 @@ function M:insert_filepath(filepath, with_locations)
   local filestate = statemap[fileuuid] ---@type ux.picker.view.filetree.INodeState|nil
 
   if filestate == nil or filestate.nodetype ~= "leaf" then
-    local node = filetree:retrieve(filenode.parent) ---@type std.collection.filetree.INode|nil
+    local node = filetree:retrieve(filenode.parent) ---@type era.t.IFiletreeNode|nil
     while node ~= nil and node.uuid ~= node.parent do
       local nodestate = statemap[filenode.uuid] ---@type ux.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
@@ -418,7 +418,7 @@ function M:insert_filepath(filepath, with_locations)
         tick_selected_maximum = 0,
       }
       statemap[node.uuid] = nodestate
-      node = filetree:retrieve(node.parent) ---@type std.collection.filetree.INode|nil
+      node = filetree:retrieve(node.parent) ---@type era.t.IFiletreeNode|nil
     end
 
     ---@type ux.picker.view.filetree.IFileNodeState
@@ -465,17 +465,17 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
   local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
 
-  local filetree = self._tree ---@type std.collection.IFiletree
+  local filetree = self._tree ---@type era.IFiletree
   local tick_selected = self._tick_selected ---@type integer
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, with_locations)
   filetree:unsafe_traverse(filetree.root, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.filetree.INode>
-    local rootnode = ctx.rootnode ---@type std.collection.filetree.INode
+    local nodemap = ctx.nodemap ---@type table<string, era.t.IFiletreeNode>
+    local rootnode = ctx.rootnode ---@type era.t.IFiletreeNode
 
-    ---@param node                      std.collection.filetree.INode
+    ---@param node                      era.t.IFiletreeNode
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
@@ -491,7 +491,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         statemap[node.uuid] = nodestate
 
         for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type std.collection.filetree.INode|nil
+          local childnode = nodemap[uuid] ---@type era.t.IFiletreeNode|nil
           if childnode ~= nil then
             traverse(childnode)
           end
@@ -533,8 +533,8 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
             filepath = cwd .. dot.env.PATH_SEP .. filepath ---@type string
           end
 
-          local fileuuid = std.Filetree.uuid(filepath) ---@type string
-          local filenode = nodemap[fileuuid] ---@type std.collection.filetree.INode|nil
+          local fileuuid = era.Filetree.uuid(filepath) ---@type string
+          local filenode = nodemap[fileuuid] ---@type era.t.IFiletreeNode|nil
           local nodestate = statemap[fileuuid]
 
           if filenode ~= nil and nodestate ~= nil then
@@ -565,7 +565,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 end
 
 ---@param root                          string|nil
----@param handle                        fun(node: std.collection.filetree.INode, nodestate: ux.picker.view.filetree.IFileNodeState): nil
+---@param handle                        fun(node: era.t.IFiletreeNode, nodestate: ux.picker.view.filetree.IFileNodeState): nil
 ---@return string[]
 function M:traverse_filenode(root, handle)
   self:__health__()
@@ -604,14 +604,14 @@ function M:render_listview(params)
     return result
   end
 
-  local filetree = self._tree ---@type std.collection.IReadonlyFiletree
+  local filetree = self._tree ---@type era.IReadonlyFiletree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
 
   local tick_matched = self._tick_matched ---@type integer
 
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or filetree.root ---@type string
-  local rootnode = filetree:retrieve(rootuuid) ---@type std.collection.filetree.INode|nil
+  local rootnode = filetree:retrieve(rootuuid) ---@type era.t.IFiletreeNode|nil
   if rootnode == nil then
     ark.reporter.error({
       from = self.fullname,
@@ -631,7 +631,7 @@ function M:render_listview(params)
       local uuid = uuids[lnum] ---@type string
       local nodestate = statemap[uuid] ---@type ux.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-        local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+        local node = filetree:retrieve(uuid) ---@type era.t.IFiletreeNode|nil
         if node ~= nil then
           local row = lnum - 1 ---@type integer
           local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
@@ -640,7 +640,7 @@ function M:render_listview(params)
           local L = #displayed_filepath ---@type integer
           local offset_filepath = #node.data.filepath - L ---@type integer
 
-          local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+          local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
           for _, m in ipairs(matches) do
             local l = m.l - offset_filepath
             local r = m.r - offset_filepath
@@ -676,7 +676,7 @@ function M:render_treeview(params)
   end
 
   local indents = result.indents ---@type string[]
-  local filetree = self._tree ---@type std.collection.IReadonlyFiletree
+  local filetree = self._tree ---@type era.IReadonlyFiletree
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.filetree.INodeState>
@@ -691,7 +691,7 @@ function M:render_treeview(params)
         and nodestate.tick_matched == tick_matched
         and nodestate.cache_match ~= nil
       then
-        local node = filetree:retrieve(uuid) ---@type std.collection.filetree.INode|nil
+        local node = filetree:retrieve(uuid) ---@type era.t.IFiletreeNode|nil
         if node ~= nil then
           local row = lnum - 1 ---@type integer
           local offset_final = #indents[lnum] + #node.data.fileicon + 1 ---@type integer
@@ -699,7 +699,7 @@ function M:render_treeview(params)
           local L = #basename ---@type integer
           local offset_basename = #node.data.filepath - L ---@type integer
 
-          local matches = nodestate.cache_match.matches ---@type std.t.IMatchPoint[]
+          local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
           for _, m in ipairs(matches) do
             local l = m.l - offset_basename ---@type integer
             local r = m.r - offset_basename ---@type integer
@@ -721,7 +721,7 @@ end
 
 ---@type ux.picker.view.filetree.IListviewFileRenderer
 function M.default_render_listview_leaf(ctx, node)
-  local rootnode = ctx.rootnode ---@type std.collection.filetree.INode
+  local rootnode = ctx.rootnode ---@type era.t.IFiletreeNode
   local fileicon = node.data.fileicon ---@type string
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local filepath = #rootnode.data.filepath < 2 and node.data.filepath
@@ -795,15 +795,15 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     return { text = text, highlights = highlights }
   end
 
-  local tree = ctx.tree ---@type std.collection.IReadonlyFiletree
+  local tree = ctx.tree ---@type era.IReadonlyFiletree
 
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local o = node ---@type std.collection.filetree.INode
+  local o = node ---@type era.t.IFiletreeNode
   for index = folded_depth, 1, -1 do
     local uuid_parent = o.parent ---@type string
-    o = tree:retrieve(uuid_parent) or o ---@type std.collection.filetree.INode
+    o = tree:retrieve(uuid_parent) or o ---@type era.t.IFiletreeNode
     basenames[index] = o.data.basename ---@type string
   end
 

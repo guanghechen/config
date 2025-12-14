@@ -26,7 +26,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---| fun(self: ux.picker.ListComposer, bufnr: integer, force: boolean): ux.picker.preview.IDrawResult
 
 ---@alias ux.picker.composer.list.IRenderResult
----| fun(self: ux.picker.ListComposer, bufnr: integer, itemmap: table<string, ux.picker.composer.list.IItem>, matches: std.t.IScoredMatch[]): ux.picker.composer.list.IRenderResultData
+---| fun(self: ux.picker.ListComposer, bufnr: integer, itemmap: table<string, ux.picker.composer.list.IItem>, matches: era.t.IScoredMatch[]): ux.picker.composer.list.IRenderResultData
 
 ---@class ux.picker.composer.list.IItem
 ---@field public uuid                   string
@@ -100,7 +100,7 @@ local __module_name__ = "ux.picker.composer.list" ---@type string
 ---@field protected _autosort           boolean
 ---@field protected _items              ux.picker.composer.list.IItem[]
 ---@field protected _itemmap            table<string, ux.picker.composer.list.IItem>
----@field protected _matches            std.t.IScoredMatch[]
+---@field protected _matches            era.t.IScoredMatch[]
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuid_present       string|nil
 ---

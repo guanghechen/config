@@ -1,25 +1,25 @@
 ---@meta
 
----@alias std.t.T
+---@alias era.t.T
 ---| any
 
 ---@generic T
----@alias std.t.IEquals
+---@alias era.t.IEquals
 ---| fun(x: T, y: T): boolean
 
 ---@generic T
----@alias std.t.IFilter
+---@alias era.t.IFilter
 ---| fun(element: T, index: integer): boolean
 
 ---@generic T
----@alias std.t.INormalize
+---@alias era.t.INormalize
 ---| fun(x: T): T
 
 ---@generic T
----@alias std.t.IValidate
+---@alias era.t.IValidate
 ---| fun(element: T): boolean
 
----@class std.t.ILspSymbol
+---@class era.t.ILspSymbol
 ---@field public kind                   string
 ---@field public name                   string
 ---@field public row                    integer
@@ -32,23 +32,23 @@
 ---@field public end_lnum               ?integer
 ---@field public end_col                ?integer
 
----@class std.t.IMatchLocation
+---@class era.t.IMatchLocation
 ---@field public offset                 integer
 ---@field public lnum                   integer
 ---@field public col                    integer
 ---@field public line                   string
 
----@class std.t.IMatchPoint
+---@class era.t.IMatchPoint
 ---@field public l                      integer
 ---@field public r                      integer
 
----@class std.t.IScoredMatch
+---@class era.t.IScoredMatch
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public matches                std.t.IMatchPoint[]
+---@field public matches                era.t.IMatchPoint[]
 
----@class std.t.IWinDimension
+---@class era.t.IWinDimension
 ---@field public width                  integer
 ---@field public height                 integer
 ---@field public row                    integer

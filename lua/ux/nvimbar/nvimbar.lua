@@ -21,7 +21,7 @@ local __module_name__ = "ux.nvimbar" ---@type string
 
 ---@class ux.nvimbar.IItem
 ---@field public name                   string
----@field public position               std.e.NvimbarCompPosition
+---@field public position               era.e.NvimbarCompPosition
 
 ---@class ux.nvimbar.INvimbarProps
 ---@field public name                   string
@@ -218,7 +218,7 @@ function M:render(immediate)
   return self._scheduler:snapshot() or ""
 end
 
----@param position                      std.e.NvimbarCompPosition
+---@param position                      era.e.NvimbarCompPosition
 ---@param raw_component                 ux.nvimbar.IRawComponent
 ---@param priority                      ?integer
 ---@return ux.nvimbar.Nvimbar
@@ -345,7 +345,7 @@ function M:__render__(force)
     if ok then
       if width > 0 and width <= width_remain then
         local tight = component.tight ---@type boolean
-        local position = component.position ---@type std.e.NvimbarCompPosition
+        local position = component.position ---@type era.e.NvimbarCompPosition
         if position == "left" then
           if not hl or tight then
             hl = true
@@ -400,7 +400,7 @@ function M:__render__(force)
   for i = 1, N, 1 do
     local hltext = hltexts[i] ---@type string
     local component = components[i] ---@type ux.nvimbar.IComponent
-    local position = component.position ---@type std.e.NvimbarCompPosition
+    local position = component.position ---@type era.e.NvimbarCompPosition
     if position == "left" then
       tl = tl .. hltext
     elseif position == "center" then

@@ -124,7 +124,7 @@ end
 ---@return nil
 local function attach(searcher, rootpath)
   o_rootpath:next(rootpath)
-  local rootuuid = std.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = era.Filetree.uuid(rootpath) ---@type string
   if searcher:isexistent(rootuuid) then
     searcher:attach(rootuuid)
   else

@@ -1,5 +1,5 @@
 ## Overview
-- Deliver a native file explorer that reuses our `std.collection.Filetree` infrastructure but exposes its own widget-driven UX instead of leaning on the picker/searcher stacks.
+- Deliver a native file explorer that reuses our `era.Filetree` infrastructure but exposes its own widget-driven UX instead of leaning on the picker/searcher stacks.
 - Operates against the current working directory by default while allowing future multi-root sessions (workspace root, project roots discovered by LSP) without reinitialising UI state.
 - Responds to filesystem and git status changes in near real time so the tree always reflects staged/unstaged state, additions, removals, and renames with minimal manual refreshes.
 
@@ -18,7 +18,7 @@
 - The split contains two vertically-stacked windows in the Snacks.nvim style: a single-line input window on top (prompt, filter, breadcrumbs) and a scrollable result tree on the bottom.
 - The input window exposes command hints, fuzzy filter text, and quick toggles (hidden files, git-only, root selector). It mirrors state between the textfield and `IExplorerInputState` observable so external actions can edit the prompt without stealing focus.
 - Window resizing keeps the stack pinned left: user-driven `:vertical resize` updates `explorer.width`, while the input window clamps its height to one row (plus optional winbar) and the tree window fills the remainder.
-- Renders a hierarchical tree with file and folder icons from `std.fileicon`, git badges appended to the right, and highlight groups pulled from `dot.hlgroup`.
+- Renders a hierarchical tree with file and folder icons from `dot.fileicon`, git badges appended to the right, and highlight groups pulled from `dot.hlgroup`.
 - Navigation mirrors our picker/searcher conventions: `<Enter>`/`l` open or expand, `<Backspace>`/`h` collapse or ascend, `<Tab>` toggles selection, `.` re-root on node, `oa`/`oA` forward to AI helpers, and we reuse existing `<leader>` bindings for visibility toggles and destructive actions. Git stage/unstage flows stay wired to the existing git action commands rather than new explorer-specific keys.
 - Supports multi-select via `m` to mark nodes and exposes batch actions (open, stage, yank paths). All keymaps flow through `dot.command.definitions` so they can be rebound centrally.
 - The widget cooperates with `eve.ux.nvimbar` to display breadcrumbs or quick filters when the window width permits.
@@ -44,13 +44,13 @@
 
 ## Data Model
 ### Node Metadata
-- `IExplorerNodeMeta` augments `std.collection.filetree.INode` with explorer-specific state: `filepath`, `filetype`, `loaded` (children already fetched), `expanded`, `watcher_stop` (function|nil), `git_display`, `git_highlight`, `stat` (size, mtime), and `depth`.
+- `IExplorerNodeMeta` augments `era.t.IFiletreeNode` with explorer-specific state: `filepath`, `filetype`, `loaded` (children already fetched), `expanded`, `watcher_stop` (function|nil), `git_display`, `git_highlight`, `stat` (size, mtime), and `depth`.
 - `IExplorerPendingMutation` tracks queued filesystem events (`kind`, `target`, `source`, `is_directory`, `timestamp`).
 - `IExplorerSelectionState` stores the focused UUID, the last opened buffer, and a set of marked nodes.
 - `IExplorerInputState` holds the prompt text, cursor column, active filter tokens, and toggle flags (show_hidden, git_only, regex, case_sensitive).
 
 ### Tree Store
-- Backed by a dedicated `std.collection.Filetree` instance scoped to the explorer widget; the root UUID corresponds to the normalised root path (cwd by default).
+- Backed by a dedicated `era.Filetree` instance scoped to the explorer widget; the root UUID corresponds to the normalised root path (cwd by default).
 - Maintains `IExplorerNodeIndex` (filepath → UUID, UUID → metadata) so readdir results, git updates, and watcher events can resolve nodes without scanning the full tree.
 - Exposes observables: `o_rootpath`, `o_selection`, `o_marked`, `o_tree_dirty`, allowing other layers (widget, commands) to subscribe without internal coupling.
 
@@ -58,14 +58,14 @@
 - Owns the explorer store lifecycle. Provides `bootstrap(rootpath)`, `set_root(path)`, `expand(uuid, opts)`, `collapse(uuid)`, `refresh(uuid, opts)`, `mark(uuid, enabled)`, `open(uuid, open_opts)`.
 - Mirrors Snacks defaults by enabling `watch = true`, `follow_file = true`, `git_status = true`, `git_untracked = true`, and `diagnostics = true` out of the box; overrides flow through observables so integrations can opt out.
 - Wraps `yoz.fs.readdir` to fetch `(IExplorerEntry[])` where each entry contains type, name, absolute path, permissions, size, owner/group, timestamps, and precomputed icon data.
-- Persists expansion state per root inside `std.path.locate_workspace_filepath("explorer/state.json")` using `std.fs.write_json` so sessions survive restart; collapse is opt-in to avoid throttling disk writes.
+- Persists expansion state per root inside `yoz.path.locate_workspace_filepath("explorer/state.json")` using `yoz.fs.write_json` so sessions survive restart; collapse is opt-in to avoid throttling disk writes.
 - Integrates with `ark.c.Dirtier` to coalesce rapid watcher events and with `ark.c.Scheduler` to defer heavy re-indexing to the main loop.
 - Publishes a `dispose()` hook to teardown watchers and clear caches when the widget closes or the root path changes.
 
 ## Directory Watching & Refresh Strategy
-- Extend `std.fs.watch_file` (or add `std.fs.watch_directory`) so directories are watched with `{ watch_entry = true, recursive = false }` to pick up renames and in-place edits.
+- Extend `yoz.fs.watch_file` (or add `yoz.fs.watch_directory`) so directories are watched with `{ watch_entry = true, recursive = false }` to pick up renames and in-place edits.
 - The root directory is always watched; subdirectory watchers are attached on `expand` and removed on `collapse` or node eviction. `watcher_stop` closures are stored inside `IExplorerNodeMeta`.
-- Watch callbacks normalise absolute paths, push an `IExplorerPendingMutation` into a debounce queue, and schedule a refresh of the affected node using `std.timer.debounce` (~120 ms).
+- Watch callbacks normalise absolute paths, push an `IExplorerPendingMutation` into a debounce queue, and schedule a refresh of the affected node using `ark.timer.debounce` (~120 ms).
 - Event consolidation rules:
   - `rename` events carrying both old and new paths produce a single `move` mutation.
   - `delete` on a directory marks the subtree as dirty and recursively clears watchers.
@@ -93,7 +93,7 @@
 ## Actions & Command Surface (`lua/fml/action/explorer/*.lua`)
 - Introduce an action module that lazily instantiates the explorer widget, mirroring the Notepad/Terminal pattern (`toggle.lua`, `focus.lua`, `open.lua`, `mark.lua`, `git.lua`).
 - Commands live under `dot.command.definitions.explorer` (e.g., `Fexplorertoggle`, `Fexplorerfocus`, `Fexplorerrefresh`, `Fexplorercreatefile`, `Fexplorercreatedir`, `Fexplorerdelete`, `Fexplorermark`, `Fexplorerstage`).
-- Actions reuse existing helpers (`std.fs.write_file`, `std.fs.move`, `eve.fn.rename`, `eve.buf.focus`, `eve.state.git`) and surface results through `ark.reporter`.
+- Actions reuse existing helpers (`yoz.fs.write_file`, `yoz.fs.move`, `eve.fn.rename`, `eve.buf.focus`, `eve.state.git`) and surface results through `ark.reporter`.
 - Provide optional filters: `toggle_hidden`, `toggle_git_only`, `set_root` (prompted path), each flipping an observable the widget listens to.
 
 ## Lazy Loading & Pagination

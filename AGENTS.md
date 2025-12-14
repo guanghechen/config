@@ -9,21 +9,28 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 ## Architecture
 
 ### Core Module Structure
-- `lua/std/`: Foundation layer with algorithms, collections, and utilities
-  - `std/collection/`: Data structures (Observable, Scheduler, etc.)
-  - `std/lib/`: Library utilities (color, easing)
-  - `std/source/`: Notepad data source implementations (json, folder)
-  - `std/types/`: Shared type definitions (common, enum, notepad, theme, ux)
-  - Core utilities: bootstrap, debug, fs, path, json, timer, etc.
 - `lua/yoz`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
   - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`
-- `lua/eve/`: Core application framework
-  - `eve/builtin/`: Core modules (G, ai, buf, clipboard, command, lsp, notifier, etc.)
-  - `eve/constant/`: Constants and configurations (hlgroup themes, language configs)
-  - `eve/context/`: Context management (editor, session, workspace)
-  - `eve/state/`: Application state management
-  - `eve/fn/`: Framework functions
-  - `eve/ux/`: User experience components (picker, searcher, nvimbar, widgets)
+- `lua/ark/`: Foundational infrastructure layer
+  - `ark/c/`: Core collections (Observable, Scheduler, Dirtier, etc.)
+  - `ark/lib/`: Library utilities (color, easing)
+  - `ark/reporter.lua`: Notification reporting interface
+- `lua/dot/`: Configuration and constants layer
+  - `dot/command/`: Command definitions
+  - `dot/hlgroup/`: Highlight group themes
+  - `dot/keymap/`: Key mapping definitions
+  - `dot/var.lua`, `dot/env.lua`, `dot/status.lua`: Variables, environment, status
+- `lua/era/`: Core application framework
+  - `era/buf.lua`, `era/win.lua`: Buffer and window utilities
+  - `era/fn/`: Framework functions (rename, ai, lsp_action)
+  - `era/lsp.lua`: LSP utilities
+  - `era/state/`: Application state management (git, notepad, session)
+  - `era/filetree.lua`, `era/tree.lua`: Tree data structures
+- `lua/ux/`: User experience components
+  - `ux/picker/`: File and content picker
+  - `ux/searcher/`: Search and replace UI
+  - `ux/nvimbar/`: Status bar components
+  - `ux/widget/`: Floating widgets (notepad, terminal)
 - `lua/fml/`: Frontend configuration layer
   - `fml/action/`: Action handlers for various operations (buf, code, find, git, lsp, etc.)
   - `fml/dressing/`: UI styling and components (nvimbar, select, ui_attach, etc.)
@@ -48,16 +55,18 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 The configuration exposes core modules globally via `_G` for convenient access:
 
 **Global Modules (accessible without require):**
-- `_G.std` → `require("std")` - Foundation utilities
 - `_G.yoz` → `require("yoz")` - Native Rust helpers (search, replace, filesystem, string)
-- `_G.eve` → `require("eve")` - Core framework
+- `_G.ark` → `require("ark")` - Foundational infrastructure (collections, reporter)
+- `_G.dot` → `require("dot")` - Configuration and constants
+- `_G.era` → `require("era")` - Core application framework
 
 **Module Access Patterns:**
-- `std.*` → Access std utilities directly (e.g., `std.path.*`)
+- `yoz.*` → Access Rust-native utilities directly (e.g., `yoz.path.*`, `yoz.fs.*`)
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
-- `eve.buf.*` → `require("eve.builtin.buf").*` (builtins mounted directly)
-- `eve.constant.*`, `eve.context.*`, `eve.state.*`, `eve.fn.*`, `eve.ux.*` follow the same pattern
-- `eve.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
+- `era.buf.*` → Buffer utilities
+- `era.win.*` → Window utilities
+- `era.state.*`, `era.fn.*` → State management and framework functions
+- `era.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
 The configuration supports multiple environments through conditional loading in `init.lua`:
@@ -86,7 +95,7 @@ Each integration includes environment-specific:
 - Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
-- Use `std.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
+- Use `yoz.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
 - Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
 - Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
 - Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits
@@ -100,7 +109,7 @@ Each integration includes environment-specific:
   ```
 - Union type aliases must have each union item on its own line with `---| ` prefix, using double quotes for string literals:
   ```lua
-  ---@alias std.git.StageState
+  ---@alias era.git.StageState
   ---| "staged"
   ---| "unstaged"
   ---| "mixed"

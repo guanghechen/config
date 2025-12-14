@@ -254,7 +254,7 @@ end
 ---@field public min_height             ?number
 ---@field public filetype               ?string
 ---@field public win_opts               ?table<string, any>
----@field public source                 ?std.t.INotepadSource
+---@field public source                 ?era.t.INotepadSource
 
 ---@class ux.widget.Notepad : dot.t.IWidget
 ---@field public name                   string|nil
@@ -302,7 +302,7 @@ function M.new(props)
   self._buf_autocmds = {}
 
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
-  local source = era.state.notepad.retrieve_source(source_name) ---@type std.t.INotepadSource
+  local source = era.state.notepad.retrieve_source(source_name) ---@type era.t.INotepadSource
 
   source:load(false)
 
@@ -384,7 +384,7 @@ function M:__setup_nvimbar__()
 end
 
 ---@protected
----@return std.t.INotepadSourceState
+---@return era.t.INotepadSourceState
 function M:__ensure_state__()
   local source = self:get_source()
   return source:load(false)
@@ -422,11 +422,11 @@ end
 
 ---@return string
 function M:get_filepath()
-  local source = self:get_source() ---@type std.t.INotepadSource
+  local source = self:get_source() ---@type era.t.INotepadSource
   return source.filepath or ""
 end
 
----@return std.t.INotepadSource
+---@return era.t.INotepadSource
 function M:get_source()
   local source_name = era.context.option.notepad_source:snapshot() ---@type string
   local source = era.state.notepad.retrieve_source(source_name)
@@ -493,7 +493,7 @@ function M:indexof(uuid)
 end
 
 ---@param index                         integer
----@return string|nil, std.t.INotepadItemState|nil
+---@return string|nil, era.t.INotepadItemState|nil
 function M:at(index)
   local state = self:__ensure_state__()
   local uuid = state.orders[index]
@@ -507,7 +507,7 @@ function M:current()
   return self:indexof(active_uuid), active_uuid
 end
 
----@return std.t.INotepadItemState|nil
+---@return era.t.INotepadItemState|nil
 function M:current_item()
   local source = self:get_source()
   local active_uuid = source:get_activated_uuid()
@@ -518,13 +518,13 @@ function M:current_item()
 end
 
 ---@param uuid                          string
----@return std.t.INotepadItemState|nil
+---@return era.t.INotepadItemState|nil
 function M:get(uuid)
   local source = self:get_source()
   return source:retrieve(uuid, false)
 end
 
----@return fun():std.t.INotepadItemState|nil, integer|nil
+---@return fun():era.t.INotepadItemState|nil, integer|nil
 function M:iterator()
   local state = self:__ensure_state__()
   local index = 0
@@ -588,7 +588,7 @@ function M:focus_step(step)
 end
 
 ---@param name                          string|nil
----@return std.t.INotepadItemState
+---@return era.t.INotepadItemState
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
   local source = self:get_source()
@@ -599,7 +599,7 @@ function M:create(name)
 end
 
 ---@param name                          string
----@return std.t.INotepadItemState|nil
+---@return era.t.INotepadItemState|nil
 function M:find_first_by_name(name)
   if type(name) ~= "string" then
     return nil
@@ -620,7 +620,7 @@ function M:find_first_by_name(name)
 end
 
 ---@param name                          string
----@return std.t.INotepadItemState
+---@return era.t.INotepadItemState
 function M:ensure_named_item(name)
   local trimmed = vim.trim(type(name) == "string" and name or "")
   trimmed = #trimmed > 0 and trimmed or DEFAULT_ITEM_NAME

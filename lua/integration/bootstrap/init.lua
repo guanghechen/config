@@ -17,7 +17,6 @@ function M.setup()
   require("integration.bootstrap.keymap")
 
   _G.era = require("era") ---@type era
-  _G.std = require("std") ---@type std
 end
 
 ---@return nil

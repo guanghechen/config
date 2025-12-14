@@ -170,7 +170,7 @@ function M.symbols(position)
         return "", "", false
       end
 
-      local symbols = winline.lsp_symbols ---@type std.t.ILspSymbol[]|nil
+      local symbols = winline.lsp_symbols ---@type era.t.ILspSymbol[]|nil
       if symbols == nil or #symbols < 1 then
         return "", "", false
       end
