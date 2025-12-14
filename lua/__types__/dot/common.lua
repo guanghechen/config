@@ -59,10 +59,9 @@
 ---@field public desc                   string
 ---@field public nargs                  0|1|"?"|nil
 ---@field public candidates             string[]|nil
+---@field public execute                fun(self: dot.command.IDefinition, args?: string, silent?: boolean): nil
 
----@class dot.command.IDefinitionWithCandidates
----@field public uuid                   string
----@field public desc                   string
+---@class dot.command.IDefinitionWithCandidates : dot.command.IDefinition
 ---@field public nargs                  1|"?"
 ---@field public candidates             string[]
 

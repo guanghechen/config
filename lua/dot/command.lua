@@ -172,38 +172,31 @@ function M.shortcut(modes, keys, definition)
   end
 end
 
+---@class dot.command.Definition : dot.command.IDefinition
+local D = {}
+D.__index = D
+
 ---@param uuid                          string
 ---@param desc                          string
 ---@param nargs                         ?0|1|"?"
 ---@param candidates                    ?string[]
 ---@return dot.command.IDefinition
-local function def(uuid, desc, nargs, candidates)
-  ---@type dot.command.IDefinition
-  local definition = {
+function D.new(uuid, desc, nargs, candidates)
+  local definition = setmetatable({
     uuid = uuid,
     desc = desc,
     nargs = nargs or 0,
-    candidates = candidates,
-  }
+    candidates = candidates and vim.list_slice(candidates) or nil,
+  }, D)
   M.define(definition)
   return definition
 end
 
----@param uuid                          string
----@param desc                          string
----@param nargs                         1|"?"
----@param candidates                    string[]
----@return dot.command.IDefinitionWithCandidates
-local function defc(uuid, desc, nargs, candidates)
-  ---@type dot.command.IDefinitionWithCandidates
-  local definition = {
-    uuid = uuid,
-    desc = desc,
-    nargs = nargs,
-    candidates = vim.list_slice(candidates),
-  }
-  M.define(definition)
-  return definition
+---@param args                          ?string
+---@param silent                        ?boolean
+---@return nil
+function D:execute(args, silent)
+  M.execute(self.uuid, args, silent or false)
 end
 
 ---@class dot.command.definitions
@@ -213,439 +206,439 @@ M.definitions = {}
 ---@class dot.command.definitions.ai
 ---@field [string]                      dot.command.IDefinition
 M.definitions.ai = {
-  edit = def("Faiedit", "ai: edit"),
-  attach_agent = def("Faiattachagent", "ai: attach agent"),
-  detach_agent = def("Faidetachagent", "ai: detach agent"),
-  submit_buffer = def("Faisubmitbuffer", "ai: submit buffer"),
-  submit_selection = def("Faisubmitselection", "ai: submit selection"),
-  send_buffer = def("Faisendbuffer", "ai: send buffer"),
-  send_selection = def("Faisendselection", "ai: send selection"),
-  send_this = def("Faisendthis", "ai: send this"),
-  send_file = def("Faisendfile", "ai: send file"),
-  select_prompt = def("Faiselectprompt", "ai: select prompt"),
+  edit = D.new("Faiedit", "ai: edit"),
+  attach_agent = D.new("Faiattachagent", "ai: attach agent"),
+  detach_agent = D.new("Faidetachagent", "ai: detach agent"),
+  submit_buffer = D.new("Faisubmitbuffer", "ai: submit buffer"),
+  submit_selection = D.new("Faisubmitselection", "ai: submit selection"),
+  send_buffer = D.new("Faisendbuffer", "ai: send buffer"),
+  send_selection = D.new("Faisendselection", "ai: send selection"),
+  send_this = D.new("Faisendthis", "ai: send this"),
+  send_file = D.new("Faisendfile", "ai: send file"),
+  select_prompt = D.new("Faiselectprompt", "ai: select prompt"),
 }
 
 ---@class dot.command.definitions.buf
 ---@field [string]                      dot.command.IDefinition
 M.definitions.buf = {
-  close = def("Fbufclose", "buf: close"),
-  close_to_leftest = def("Fbufclosetoleftest", "buf: close to leftest"),
-  close_to_rightest = def("Fbufclosetorightest", "buf: close to rightest"),
-  close_others = def("Fbufcloseothers", "buf: close others"),
+  close = D.new("Fbufclose", "buf: close"),
+  close_to_leftest = D.new("Fbufclosetoleftest", "buf: close to leftest"),
+  close_to_rightest = D.new("Fbufclosetorightest", "buf: close to rightest"),
+  close_others = D.new("Fbufcloseothers", "buf: close others"),
 
-  focus_left_1 = def("Fbuffocusleft1", "buf: focus left 1"),
-  focus_left_2 = def("Fbuffocusleft2", "buf: focus left 2"),
-  focus_left_3 = def("Fbuffocusleft3", "buf: focus left 3"),
-  focus_left_4 = def("Fbuffocusleft4", "buf: focus left 4"),
-  focus_left_5 = def("Fbuffocusleft5", "buf: focus left 5"),
-  focus_left_6 = def("Fbuffocusleft6", "buf: focus left 6"),
-  focus_left_7 = def("Fbuffocusleft7", "buf: focus left 7"),
-  focus_left_8 = def("Fbuffocusleft8", "buf: focus left 8"),
-  focus_left_9 = def("Fbuffocusleft9", "buf: focus left 9"),
-  focus_right_1 = def("Fbuffocusright1", "buf: focus right 1"),
-  focus_right_2 = def("Fbuffocusright2", "buf: focus right 2"),
-  focus_right_3 = def("Fbuffocusright3", "buf: focus right 3"),
-  focus_right_4 = def("Fbuffocusright4", "buf: focus right 4"),
-  focus_right_5 = def("Fbuffocusright5", "buf: focus right 5"),
-  focus_right_6 = def("Fbuffocusright6", "buf: focus right 6"),
-  focus_right_7 = def("Fbuffocusright7", "buf: focus right 7"),
-  focus_right_8 = def("Fbuffocusright8", "buf: focus right 8"),
-  focus_right_9 = def("Fbuffocusright9", "buf: focus right 9"),
-  focus_01 = def("Fbuffocus01", "buf: focus 1"),
-  focus_02 = def("Fbuffocus02", "buf: focus 2"),
-  focus_03 = def("Fbuffocus03", "buf: focus 3"),
-  focus_04 = def("Fbuffocus04", "buf: focus 4"),
-  focus_05 = def("Fbuffocus05", "buf: focus 5"),
-  focus_06 = def("Fbuffocus06", "buf: focus 6"),
-  focus_07 = def("Fbuffocus07", "buf: focus 7"),
-  focus_08 = def("Fbuffocus08", "buf: focus 8"),
-  focus_09 = def("Fbuffocus09", "buf: focus 9"),
-  focus_10 = def("Fbuffocus10", "buf: focus 10"),
-  focus_11 = def("Fbuffocus11", "buf: focus 11"),
-  focus_12 = def("Fbuffocus12", "buf: focus 12"),
-  focus_13 = def("Fbuffocus13", "buf: focus 13"),
-  focus_14 = def("Fbuffocus14", "buf: focus 14"),
-  focus_15 = def("Fbuffocus15", "buf: focus 15"),
-  focus_16 = def("Fbuffocus16", "buf: focus 16"),
-  focus_17 = def("Fbuffocus17", "buf: focus 17"),
-  focus_18 = def("Fbuffocus18", "buf: focus 18"),
-  focus_19 = def("Fbuffocus19", "buf: focus 19"),
-  focus_20 = def("Fbuffocus20", "buf: focus 20"),
-  focus_21 = def("Fbuffocus21", "buf: focus 21"),
-  focus_22 = def("Fbuffocus22", "buf: focus 22"),
-  focus_23 = def("Fbuffocus23", "buf: focus 23"),
-  focus_24 = def("Fbuffocus24", "buf: focus 24"),
-  focus_25 = def("Fbuffocus25", "buf: focus 25"),
-  focus_26 = def("Fbuffocus26", "buf: focus 26"),
-  focus_27 = def("Fbuffocus27", "buf: focus 27"),
-  focus_28 = def("Fbuffocus28", "buf: focus 28"),
-  focus_29 = def("Fbuffocus29", "buf: focus 29"),
-  focus_30 = def("Fbuffocus30", "buf: focus 30"),
-  focus_31 = def("Fbuffocus31", "buf: focus 31"),
-  focus_32 = def("Fbuffocus32", "buf: focus 32"),
-  focus_33 = def("Fbuffocus33", "buf: focus 33"),
-  focus_34 = def("Fbuffocus34", "buf: focus 34"),
-  focus_35 = def("Fbuffocus35", "buf: focus 35"),
-  focus_36 = def("Fbuffocus36", "buf: focus 36"),
-  focus_37 = def("Fbuffocus37", "buf: focus 37"),
-  focus_38 = def("Fbuffocus38", "buf: focus 38"),
-  focus_39 = def("Fbuffocus39", "buf: focus 39"),
-  focus_40 = def("Fbuffocus40", "buf: focus 40"),
-  focus_41 = def("Fbuffocus41", "buf: focus 41"),
-  focus_42 = def("Fbuffocus42", "buf: focus 42"),
-  focus_43 = def("Fbuffocus43", "buf: focus 43"),
-  focus_44 = def("Fbuffocus44", "buf: focus 44"),
-  focus_45 = def("Fbuffocus45", "buf: focus 45"),
-  focus_46 = def("Fbuffocus46", "buf: focus 46"),
-  focus_47 = def("Fbuffocus47", "buf: focus 47"),
-  focus_48 = def("Fbuffocus48", "buf: focus 48"),
-  focus_49 = def("Fbuffocus49", "buf: focus 49"),
+  focus_left_1 = D.new("Fbuffocusleft1", "buf: focus left 1"),
+  focus_left_2 = D.new("Fbuffocusleft2", "buf: focus left 2"),
+  focus_left_3 = D.new("Fbuffocusleft3", "buf: focus left 3"),
+  focus_left_4 = D.new("Fbuffocusleft4", "buf: focus left 4"),
+  focus_left_5 = D.new("Fbuffocusleft5", "buf: focus left 5"),
+  focus_left_6 = D.new("Fbuffocusleft6", "buf: focus left 6"),
+  focus_left_7 = D.new("Fbuffocusleft7", "buf: focus left 7"),
+  focus_left_8 = D.new("Fbuffocusleft8", "buf: focus left 8"),
+  focus_left_9 = D.new("Fbuffocusleft9", "buf: focus left 9"),
+  focus_right_1 = D.new("Fbuffocusright1", "buf: focus right 1"),
+  focus_right_2 = D.new("Fbuffocusright2", "buf: focus right 2"),
+  focus_right_3 = D.new("Fbuffocusright3", "buf: focus right 3"),
+  focus_right_4 = D.new("Fbuffocusright4", "buf: focus right 4"),
+  focus_right_5 = D.new("Fbuffocusright5", "buf: focus right 5"),
+  focus_right_6 = D.new("Fbuffocusright6", "buf: focus right 6"),
+  focus_right_7 = D.new("Fbuffocusright7", "buf: focus right 7"),
+  focus_right_8 = D.new("Fbuffocusright8", "buf: focus right 8"),
+  focus_right_9 = D.new("Fbuffocusright9", "buf: focus right 9"),
+  focus_01 = D.new("Fbuffocus01", "buf: focus 1"),
+  focus_02 = D.new("Fbuffocus02", "buf: focus 2"),
+  focus_03 = D.new("Fbuffocus03", "buf: focus 3"),
+  focus_04 = D.new("Fbuffocus04", "buf: focus 4"),
+  focus_05 = D.new("Fbuffocus05", "buf: focus 5"),
+  focus_06 = D.new("Fbuffocus06", "buf: focus 6"),
+  focus_07 = D.new("Fbuffocus07", "buf: focus 7"),
+  focus_08 = D.new("Fbuffocus08", "buf: focus 8"),
+  focus_09 = D.new("Fbuffocus09", "buf: focus 9"),
+  focus_10 = D.new("Fbuffocus10", "buf: focus 10"),
+  focus_11 = D.new("Fbuffocus11", "buf: focus 11"),
+  focus_12 = D.new("Fbuffocus12", "buf: focus 12"),
+  focus_13 = D.new("Fbuffocus13", "buf: focus 13"),
+  focus_14 = D.new("Fbuffocus14", "buf: focus 14"),
+  focus_15 = D.new("Fbuffocus15", "buf: focus 15"),
+  focus_16 = D.new("Fbuffocus16", "buf: focus 16"),
+  focus_17 = D.new("Fbuffocus17", "buf: focus 17"),
+  focus_18 = D.new("Fbuffocus18", "buf: focus 18"),
+  focus_19 = D.new("Fbuffocus19", "buf: focus 19"),
+  focus_20 = D.new("Fbuffocus20", "buf: focus 20"),
+  focus_21 = D.new("Fbuffocus21", "buf: focus 21"),
+  focus_22 = D.new("Fbuffocus22", "buf: focus 22"),
+  focus_23 = D.new("Fbuffocus23", "buf: focus 23"),
+  focus_24 = D.new("Fbuffocus24", "buf: focus 24"),
+  focus_25 = D.new("Fbuffocus25", "buf: focus 25"),
+  focus_26 = D.new("Fbuffocus26", "buf: focus 26"),
+  focus_27 = D.new("Fbuffocus27", "buf: focus 27"),
+  focus_28 = D.new("Fbuffocus28", "buf: focus 28"),
+  focus_29 = D.new("Fbuffocus29", "buf: focus 29"),
+  focus_30 = D.new("Fbuffocus30", "buf: focus 30"),
+  focus_31 = D.new("Fbuffocus31", "buf: focus 31"),
+  focus_32 = D.new("Fbuffocus32", "buf: focus 32"),
+  focus_33 = D.new("Fbuffocus33", "buf: focus 33"),
+  focus_34 = D.new("Fbuffocus34", "buf: focus 34"),
+  focus_35 = D.new("Fbuffocus35", "buf: focus 35"),
+  focus_36 = D.new("Fbuffocus36", "buf: focus 36"),
+  focus_37 = D.new("Fbuffocus37", "buf: focus 37"),
+  focus_38 = D.new("Fbuffocus38", "buf: focus 38"),
+  focus_39 = D.new("Fbuffocus39", "buf: focus 39"),
+  focus_40 = D.new("Fbuffocus40", "buf: focus 40"),
+  focus_41 = D.new("Fbuffocus41", "buf: focus 41"),
+  focus_42 = D.new("Fbuffocus42", "buf: focus 42"),
+  focus_43 = D.new("Fbuffocus43", "buf: focus 43"),
+  focus_44 = D.new("Fbuffocus44", "buf: focus 44"),
+  focus_45 = D.new("Fbuffocus45", "buf: focus 45"),
+  focus_46 = D.new("Fbuffocus46", "buf: focus 46"),
+  focus_47 = D.new("Fbuffocus47", "buf: focus 47"),
+  focus_48 = D.new("Fbuffocus48", "buf: focus 48"),
+  focus_49 = D.new("Fbuffocus49", "buf: focus 49"),
 
-  open = def("Fopen", "buf: open (bufnr)", 1),
-  focus = def("Fbuffocus", "buf: focus (bufid)", 1),
-  focus_left = def("Fbuffocusleft", "buf: focus left", "?"),
-  focus_right = def("Fbuffocusright", "buf: focus right", "?"),
+  open = D.new("Fopen", "buf: open (bufnr)", 1),
+  focus = D.new("Fbuffocus", "buf: focus (bufid)", 1),
+  focus_left = D.new("Fbuffocusleft", "buf: focus left", "?"),
+  focus_right = D.new("Fbuffocusright", "buf: focus right", "?"),
 
-  swap_left = def("Fbufswapleft", "buf: swap left"),
-  swap_right = def("Fbufswapright", "buf: swap right"),
+  swap_left = D.new("Fbufswapleft", "buf: swap left"),
+  swap_right = D.new("Fbufswapright", "buf: swap right"),
 
-  new = def("Fbufnew", "buf: new"),
-  pin = def("Fbufpin", "buf: pin"),
-  save = def("Fbufsave", "buf: save", "?"),
-  save_no_format = def("Fbufsavenoformat", "buf: save without format"),
+  new = D.new("Fbufnew", "buf: new"),
+  pin = D.new("Fbufpin", "buf: pin"),
+  save = D.new("Fbufsave", "buf: save", "?"),
+  save_no_format = D.new("Fbufsavenoformat", "buf: save without format"),
 }
 
 ---@class dot.command.definitions.clipboard
 ---@field [string]                      dot.command.IDefinition
 M.definitions.clipboard = {
-  paste = def("Fclipboardpaste", "clipboard: paste"),
+  paste = D.new("Fclipboardpaste", "clipboard: paste"),
 }
 
 ---@class dot.command.definitions.code
 ---@field [string]                      dot.command.IDefinition
 M.definitions.code = {
-  format = def("Fcodeformat", "code: format buffer"),
-  insert_splitline = def("Fcodeinsertsplitline", "code: insert splitline"),
-  run = def("Fcoderun", "code: run"),
-  run_as_neovim_command = def("Fcoderunasneovimcommand", "code: run selection/buffer as :cmd"),
-  run_force = def("Fcoderunforce", "code: run (force)"),
-  swap_conditional_branches = def("Fcodeswapconditionalbranches", "code: swap conditional branches"),
-  swap_next_parameter = def("Fcodeswapnextparameter", "code: swap next parameter"),
-  swap_prev_parameter = def("Fcodeswapprevparameter", "code: swap prev parameter"),
-  trim_trailspace = def("Fcodetrimtrailspace", "code: trim trailing whitespace"),
+  format = D.new("Fcodeformat", "code: format buffer"),
+  insert_splitline = D.new("Fcodeinsertsplitline", "code: insert splitline"),
+  run = D.new("Fcoderun", "code: run"),
+  run_as_neovim_command = D.new("Fcoderunasneovimcommand", "code: run selection/buffer as :cmd"),
+  run_force = D.new("Fcoderunforce", "code: run (force)"),
+  swap_conditional_branches = D.new("Fcodeswapconditionalbranches", "code: swap conditional branches"),
+  swap_next_parameter = D.new("Fcodeswapnextparameter", "code: swap next parameter"),
+  swap_prev_parameter = D.new("Fcodeswapprevparameter", "code: swap prev parameter"),
+  trim_trailspace = D.new("Fcodetrimtrailspace", "code: trim trailing whitespace"),
 }
 
 ---@class dot.command.definitions.copy
 ---@field [string]                      dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 M.definitions.copy = {
-  char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
+  char_under_cursor = D.new("Fcopycharundercursor", "copy: char under cursor"),
 
-  filepath = defc("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative", "filename" }),
-  filepath_absolute = def("Fcopyfilepathabsolute", "copy: current filepath (absolute)"),
-  filepath_relative = def("Fcopyfilepathrelative", "copy: current filepath (relative)"),
+  filepath = D.new("Fcopyfilepath", "copy: current filepath", "?", { "absolute", "relative", "filename" }),
+  filepath_absolute = D.new("Fcopyfilepathabsolute", "copy: current filepath (absolute)"),
+  filepath_relative = D.new("Fcopyfilepathrelative", "copy: current filepath (relative)"),
 }
 
 ---@class dot.command.definitions.diagnostic
 ---@field [string]                      dot.command.IDefinition
 M.definitions.diagnostic = {
-  goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
-  goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
-  goto_next_warn = def("Fdiagnosticgotonextwarn", "diagnostic: goto next (warn)"),
-  goto_next_hint = def("Fdiagnosticgotonexthint", "diagnostic: goto next (hint)"),
-  goto_next_info = def("Fdiagnosticgotonextinfo", "diagnostic: goto next (info)"),
-  goto_next_quickfix = def("Fdiagnosticgotonextquickfix", "diagnostic: goto next (quickfix)"),
+  goto_next = D.new("Fdiagnosticgotonext", "diagnostic: goto next"),
+  goto_next_error = D.new("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
+  goto_next_warn = D.new("Fdiagnosticgotonextwarn", "diagnostic: goto next (warn)"),
+  goto_next_hint = D.new("Fdiagnosticgotonexthint", "diagnostic: goto next (hint)"),
+  goto_next_info = D.new("Fdiagnosticgotonextinfo", "diagnostic: goto next (info)"),
+  goto_next_quickfix = D.new("Fdiagnosticgotonextquickfix", "diagnostic: goto next (quickfix)"),
 
-  goto_prev = def("Fdiagnosticgotoprev", "diagnostic: goto prev"),
-  goto_prev_error = def("Fdiagnosticgotopreverror", "diagnostic: goto prev (error)"),
-  goto_prev_warn = def("Fdiagnosticgotoprevwarn", "diagnostic: goto prev (warn)"),
-  goto_prev_hint = def("Fdiagnosticgotoprevhint", "diagnostic: goto prev (hint)"),
-  goto_prev_info = def("Fdiagnosticgotoprevinfo", "diagnostic: goto prev (info)"),
-  goto_prev_quickfix = def("Fdiagnosticgotoprevquickfix", "diagnostic: goto prev (quickfix)"),
+  goto_prev = D.new("Fdiagnosticgotoprev", "diagnostic: goto prev"),
+  goto_prev_error = D.new("Fdiagnosticgotopreverror", "diagnostic: goto prev (error)"),
+  goto_prev_warn = D.new("Fdiagnosticgotoprevwarn", "diagnostic: goto prev (warn)"),
+  goto_prev_hint = D.new("Fdiagnosticgotoprevhint", "diagnostic: goto prev (hint)"),
+  goto_prev_info = D.new("Fdiagnosticgotoprevinfo", "diagnostic: goto prev (info)"),
+  goto_prev_quickfix = D.new("Fdiagnosticgotoprevquickfix", "diagnostic: goto prev (quickfix)"),
 
-  line = def("Fdiagnosticline", "diagnostic: line"),
-  outline = def("Fdiagnosticoutline", "diagnostic: outline"),
-  to_md = def("Fdiagnostictomd", "diagnostic: export to markdown"),
+  line = D.new("Fdiagnosticline", "diagnostic: line"),
+  outline = D.new("Fdiagnosticoutline", "diagnostic: outline"),
+  to_md = D.new("Fdiagnostictomd", "diagnostic: export to markdown"),
 }
 
 ---@class dot.command.definitions.explorer
 ---@field [string]                      dot.command.IDefinition
 M.definitions.explorer = {
-  fs_cwd = def("Fexplorerfscwd", "explorer: filesystem (cwd)"),
-  fs_workspace = def("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
-  fs_reveal = def("Fexplorerfsreveal", "explorer: filesystem (reveal)"),
+  fs_cwd = D.new("Fexplorerfscwd", "explorer: filesystem (cwd)"),
+  fs_workspace = D.new("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
+  fs_reveal = D.new("Fexplorerfsreveal", "explorer: filesystem (reveal)"),
 
-  git_cwd = def("Fexplorergitcwd", "explorer: git (cwd)"),
-  git_workspace = def("Fexplorergitworkspace", "explorer: git (workspace)"),
+  git_cwd = D.new("Fexplorergitcwd", "explorer: git (cwd)"),
+  git_workspace = D.new("Fexplorergitworkspace", "explorer: git (workspace)"),
 
-  last = def("Fexplorerlast", "explorer: last"),
-  toggle = def("Fexplorertoggle", "explorer: toggle"),
+  last = D.new("Fexplorerlast", "explorer: last"),
+  toggle = D.new("Fexplorertoggle", "explorer: toggle"),
 }
 
 ---@class dot.command.definitions.find
 ---@field [string]                      dot.command.IDefinition
 M.definitions.find = {
-  bufs = def("Ffindbufs", "find: buffers"),
-  bufs_file = def("Ffindbufsfile", "find: buffers (file)"),
-  bufs_term = def("Ffindbufsterm", "find: buffers (term)"),
+  bufs = D.new("Ffindbufs", "find: buffers"),
+  bufs_file = D.new("Ffindbufsfile", "find: buffers (file)"),
+  bufs_term = D.new("Ffindbufsterm", "find: buffers (term)"),
 
-  diagnostics = def("Ffinddiagnostics", "find: diagnostics"),
-  diagnostics_in_workspace = def("Ffinddiagnosticsinworkspace", "find: diagnostics (workspace)"),
-  explorer = def("Ffindexplorer", "find: explorer", "?"),
-  files = def("Ffindfiles", "find: files", "?"),
-  files_in_cwd = def("Ffindfilesincwd", "find: files (cwd)"),
-  files_in_directory = def("Ffindfilesindirectory", "find: files (directory)"),
-  files_in_workspace = def("Ffindfilesinworkspace", "find: files (workspace)"),
-  git_not_committed = def("Ffindgitnotcommitted", "find: git not committed"),
-  highlights = def("Ffindhighlights", "find: highlights"),
-  keymaps = def("Ffindkeymaps", "find: keymaps"),
-  lsp_symbols = def("Ffindlspsymbols", "find: lsp symbols"),
-  notifications = def("Ffindnotifications", "find: notifications"),
-  pinned_files = def("Ffindpinnedfiles", "find: pinned files"),
-  vim_options = def("Ffindvimoptions", "find: vim options"),
+  diagnostics = D.new("Ffinddiagnostics", "find: diagnostics"),
+  diagnostics_in_workspace = D.new("Ffinddiagnosticsinworkspace", "find: diagnostics (workspace)"),
+  explorer = D.new("Ffindexplorer", "find: explorer", "?"),
+  files = D.new("Ffindfiles", "find: files", "?"),
+  files_in_cwd = D.new("Ffindfilesincwd", "find: files (cwd)"),
+  files_in_directory = D.new("Ffindfilesindirectory", "find: files (directory)"),
+  files_in_workspace = D.new("Ffindfilesinworkspace", "find: files (workspace)"),
+  git_not_committed = D.new("Ffindgitnotcommitted", "find: git not committed"),
+  highlights = D.new("Ffindhighlights", "find: highlights"),
+  keymaps = D.new("Ffindkeymaps", "find: keymaps"),
+  lsp_symbols = D.new("Ffindlspsymbols", "find: lsp symbols"),
+  notifications = D.new("Ffindnotifications", "find: notifications"),
+  pinned_files = D.new("Ffindpinnedfiles", "find: pinned files"),
+  vim_options = D.new("Ffindvimoptions", "find: vim options"),
 }
 
 ---@class dot.command.definitions.git
 ---@field [string]                      dot.command.IDefinition
 M.definitions.git = {
-  browse = def("Fgitbrowse", "git: browse"),
-  browse_permalink = def("Fgitbrowsepermalink", "git: browse (permalink)"),
-  browse_repo = def("Fgitbrowserepo", "git: browse (repo)"),
-  diffview = def("Fgitdiffview", "git: diffview"),
-  history = def("Fgithistory", "git: history (commits)"),
-  history_file = def("Fgithistoryfile", "git: history (file)"),
+  browse = D.new("Fgitbrowse", "git: browse"),
+  browse_permalink = D.new("Fgitbrowsepermalink", "git: browse (permalink)"),
+  browse_repo = D.new("Fgitbrowserepo", "git: browse (repo)"),
+  diffview = D.new("Fgitdiffview", "git: diffview"),
+  history = D.new("Fgithistory", "git: history (commits)"),
+  history_file = D.new("Fgithistoryfile", "git: history (file)"),
 }
 
 ---@class dot.command.definitions.inspect
 ---@field [string]                      dot.command.IDefinition
 M.definitions.inspect = {
-  inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
-  inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
-  inspect_state = def("Fdebuginspectstate", "debug: inspect state"),
-  inspect_state_full = def("Fdebuginspectstatefull", "debug: inspect state (full)"),
-  inspect_tab = def("Fdebuginspecttab", "debug: inspect tab"),
-  inspect_tree = def("Fdebuginspecttree", "debug: inspect tree"),
-  inspect_window = def("Fdebuginspectwindow", "debug: inspect window"),
+  inspect_buf = D.new("Fdebuginspectbuf", "debug: inspect buf"),
+  inspect_pos = D.new("Fdebuginspectpos", "debug: inspect pos"),
+  inspect_state = D.new("Fdebuginspectstate", "debug: inspect state"),
+  inspect_state_full = D.new("Fdebuginspectstatefull", "debug: inspect state (full)"),
+  inspect_tab = D.new("Fdebuginspecttab", "debug: inspect tab"),
+  inspect_tree = D.new("Fdebuginspecttree", "debug: inspect tree"),
+  inspect_window = D.new("Fdebuginspectwindow", "debug: inspect window"),
 }
 
 ---@class dot.command.definitions.log
 ---@field [string]                      dot.command.IDefinition
 M.definitions.log = {
-  preview_json_normal = def("Fjsonviewnormal", "json: preview current line"),
-  preview_json_visual = def("Fjsonviewvisual", "json: preview selection"),
+  preview_json_normal = D.new("Fjsonviewnormal", "json: preview current line"),
+  preview_json_visual = D.new("Fjsonviewvisual", "json: preview selection"),
 }
 
 ---@class dot.command.definitions.lsp
 ---@field [string]                      dot.command.IDefinition
 M.definitions.lsp = {
-  goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
-  goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
-  goto_references = def("Flspgotoreferences", "lsp: goto references"),
-  goto_type_definitions = def("Flspgototypedefinitions", "lsp: goto type definitions"),
+  goto_definitions = D.new("Flspgotodefinitions", "lsp: goto definitions"),
+  goto_implementations = D.new("Flspgotoimplementations", "lsp: goto implementations"),
+  goto_references = D.new("Flspgotoreferences", "lsp: goto references"),
+  goto_type_definitions = D.new("Flspgototypedefinitions", "lsp: goto type definitions"),
 
-  goto_prev_reference = def("Flspgotoprevreference", "lsp: goto prev reference"),
-  goto_next_reference = def("Flspgotonextreference", "lsp: goto next reference"),
+  goto_prev_reference = D.new("Flspgotoprevreference", "lsp: goto prev reference"),
+  goto_next_reference = D.new("Flspgotonextreference", "lsp: goto next reference"),
 
-  restart = def("Flsprestart", "lsp: restart"),
-  select_python_venv = def("Flspselectpythonvenv", "lsp: select python venv"),
+  restart = D.new("Flsprestart", "lsp: restart"),
+  select_python_venv = D.new("Flspselectpythonvenv", "lsp: select python venv"),
 }
 
 ---@class dot.command.definitions.notepad
 ---@field [string]                      dot.command.IDefinition
 M.definitions.notepad = {
-  append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
-  create = def("Fnotepadcreate", "notepad: create"),
-  destroy = def("Fnotepaddestroy", "notepad: destroy"),
-  rename = def("Fnotepadrename", "notepad: rename"),
-  toggle = def("Fnotepadtoggle", "notepad: toggle"),
-  save = def("Fnotepadsave", "notepad: save"),
-  show = def("Fnotepadshow", "notepad: show"),
-  close = def("Fnotepadclose", "notepad: close"),
-  focus_1 = def("Fnotepadfocus1", "notepad: focus 1"),
-  focus_2 = def("Fnotepadfocus2", "notepad: focus 2"),
-  focus_3 = def("Fnotepadfocus3", "notepad: focus 3"),
-  focus_4 = def("Fnotepadfocus4", "notepad: focus 4"),
-  focus_5 = def("Fnotepadfocus5", "notepad: focus 5"),
-  focus_6 = def("Fnotepadfocus6", "notepad: focus 6"),
-  focus_7 = def("Fnotepadfocus7", "notepad: focus 7"),
-  focus_8 = def("Fnotepadfocus8", "notepad: focus 8"),
-  focus_9 = def("Fnotepadfocus9", "notepad: focus 9"),
-  focus_left = def("Fnotepadfocusleft", "notepad: focus left", "?"),
-  focus_left_1 = def("Fnotepadfocusleft1", "notepad: focus left 1"),
-  focus_left_2 = def("Fnotepadfocusleft2", "notepad: focus left 2"),
-  focus_left_3 = def("Fnotepadfocusleft3", "notepad: focus left 3"),
-  focus_left_4 = def("Fnotepadfocusleft4", "notepad: focus left 4"),
-  focus_left_5 = def("Fnotepadfocusleft5", "notepad: focus left 5"),
-  focus_left_6 = def("Fnotepadfocusleft6", "notepad: focus left 6"),
-  focus_left_7 = def("Fnotepadfocusleft7", "notepad: focus left 7"),
-  focus_left_8 = def("Fnotepadfocusleft8", "notepad: focus left 8"),
-  focus_left_9 = def("Fnotepadfocusleft9", "notepad: focus left 9"),
-  focus_right = def("Fnotepadfocusright", "notepad: focus right", "?"),
-  focus_right_1 = def("Fnotepadfocusright1", "notepad: focus right 1"),
-  focus_right_2 = def("Fnotepadfocusright2", "notepad: focus right 2"),
-  focus_right_3 = def("Fnotepadfocusright3", "notepad: focus right 3"),
-  focus_right_4 = def("Fnotepadfocusright4", "notepad: focus right 4"),
-  focus_right_5 = def("Fnotepadfocusright5", "notepad: focus right 5"),
-  focus_right_6 = def("Fnotepadfocusright6", "notepad: focus right 6"),
-  focus_right_7 = def("Fnotepadfocusright7", "notepad: focus right 7"),
-  focus_right_8 = def("Fnotepadfocusright8", "notepad: focus right 8"),
-  focus_right_9 = def("Fnotepadfocusright9", "notepad: focus right 9"),
-  swap_left = def("Fnotepadswapleft", "notepad: swap left", "?"),
-  swap_right = def("Fnotepadswapright", "notepad: swap right", "?"),
-  source_select = def("Fnotepadsourceselect", "notepad: select source"),
-  note_select = def("Fnotepadnoteselect", "notepad: select note"),
-  source_prev = def("Fnotepadsourceprev", "notepad: previous source"),
-  source_next = def("Fnotepadsourcenext", "notepad: next source"),
-  change_engine = def("Fnotepadchangeengine", "notepad: change storage engine"),
-  go_backward = def("Fnotepadgobackward", "notepad: go backward in history"),
-  go_forward = def("Fnotepadgoforward", "notepad: go forward in history"),
+  append_content = D.new("Fnotepadappendcontent", "notepad: append content", 1),
+  create = D.new("Fnotepadcreate", "notepad: create"),
+  destroy = D.new("Fnotepaddestroy", "notepad: destroy"),
+  rename = D.new("Fnotepadrename", "notepad: rename"),
+  toggle = D.new("Fnotepadtoggle", "notepad: toggle"),
+  save = D.new("Fnotepadsave", "notepad: save"),
+  show = D.new("Fnotepadshow", "notepad: show"),
+  close = D.new("Fnotepadclose", "notepad: close"),
+  focus_1 = D.new("Fnotepadfocus1", "notepad: focus 1"),
+  focus_2 = D.new("Fnotepadfocus2", "notepad: focus 2"),
+  focus_3 = D.new("Fnotepadfocus3", "notepad: focus 3"),
+  focus_4 = D.new("Fnotepadfocus4", "notepad: focus 4"),
+  focus_5 = D.new("Fnotepadfocus5", "notepad: focus 5"),
+  focus_6 = D.new("Fnotepadfocus6", "notepad: focus 6"),
+  focus_7 = D.new("Fnotepadfocus7", "notepad: focus 7"),
+  focus_8 = D.new("Fnotepadfocus8", "notepad: focus 8"),
+  focus_9 = D.new("Fnotepadfocus9", "notepad: focus 9"),
+  focus_left = D.new("Fnotepadfocusleft", "notepad: focus left", "?"),
+  focus_left_1 = D.new("Fnotepadfocusleft1", "notepad: focus left 1"),
+  focus_left_2 = D.new("Fnotepadfocusleft2", "notepad: focus left 2"),
+  focus_left_3 = D.new("Fnotepadfocusleft3", "notepad: focus left 3"),
+  focus_left_4 = D.new("Fnotepadfocusleft4", "notepad: focus left 4"),
+  focus_left_5 = D.new("Fnotepadfocusleft5", "notepad: focus left 5"),
+  focus_left_6 = D.new("Fnotepadfocusleft6", "notepad: focus left 6"),
+  focus_left_7 = D.new("Fnotepadfocusleft7", "notepad: focus left 7"),
+  focus_left_8 = D.new("Fnotepadfocusleft8", "notepad: focus left 8"),
+  focus_left_9 = D.new("Fnotepadfocusleft9", "notepad: focus left 9"),
+  focus_right = D.new("Fnotepadfocusright", "notepad: focus right", "?"),
+  focus_right_1 = D.new("Fnotepadfocusright1", "notepad: focus right 1"),
+  focus_right_2 = D.new("Fnotepadfocusright2", "notepad: focus right 2"),
+  focus_right_3 = D.new("Fnotepadfocusright3", "notepad: focus right 3"),
+  focus_right_4 = D.new("Fnotepadfocusright4", "notepad: focus right 4"),
+  focus_right_5 = D.new("Fnotepadfocusright5", "notepad: focus right 5"),
+  focus_right_6 = D.new("Fnotepadfocusright6", "notepad: focus right 6"),
+  focus_right_7 = D.new("Fnotepadfocusright7", "notepad: focus right 7"),
+  focus_right_8 = D.new("Fnotepadfocusright8", "notepad: focus right 8"),
+  focus_right_9 = D.new("Fnotepadfocusright9", "notepad: focus right 9"),
+  swap_left = D.new("Fnotepadswapleft", "notepad: swap left", "?"),
+  swap_right = D.new("Fnotepadswapright", "notepad: swap right", "?"),
+  source_select = D.new("Fnotepadsourceselect", "notepad: select source"),
+  note_select = D.new("Fnotepadnoteselect", "notepad: select note"),
+  source_prev = D.new("Fnotepadsourceprev", "notepad: previous source"),
+  source_next = D.new("Fnotepadsourcenext", "notepad: next source"),
+  change_engine = D.new("Fnotepadchangeengine", "notepad: change storage engine"),
+  go_backward = D.new("Fnotepadgobackward", "notepad: go backward in history"),
+  go_forward = D.new("Fnotepadgoforward", "notepad: go forward in history"),
 }
 
 ---@class dot.command.definitions.refresh
 ---@field [string]                      dot.command.IDefinition
 M.definitions.refresh = {
-  all = def("Frefreshall", "refresh: all"),
+  all = D.new("Frefreshall", "refresh: all"),
 }
 
 ---@class dot.command.definitions.search
 ---@field [string]                      dot.command.IDefinition
 M.definitions.search = {
-  in_files = def("Fsearchinfiles", "search: in files", "?"),
-  in_file = def("Fsearchinfile", "search: in file", "?"),
-  in_buffer = def("Fsearchinbuffer", "search: in buffer"),
-  in_cwd = def("Fsearchincwd", "search: in cwd"),
-  in_directory = def("Fsearchindirectory", "search: in directory"),
-  in_workspace = def("Fsearchinworkspace", "search: in workspace"),
+  in_files = D.new("Fsearchinfiles", "search: in files", "?"),
+  in_file = D.new("Fsearchinfile", "search: in file", "?"),
+  in_buffer = D.new("Fsearchinbuffer", "search: in buffer"),
+  in_cwd = D.new("Fsearchincwd", "search: in cwd"),
+  in_directory = D.new("Fsearchindirectory", "search: in directory"),
+  in_workspace = D.new("Fsearchinworkspace", "search: in workspace"),
 }
 
 ---@class dot.command.definitions.session
 ---@field [string]                      dot.command.IDefinition
 M.definitions.session = {
-  restore = def("Fsessionrestore", "session: restore"),
-  restore_autosaved = def("Fsessionrestoreautosaved", "session: restore autosaved"),
+  restore = D.new("Fsessionrestore", "session: restore"),
+  restore_autosaved = D.new("Fsessionrestoreautosaved", "session: restore autosaved"),
 
-  save = def("Fsessionsave", "session: save"),
+  save = D.new("Fsessionsave", "session: save"),
 }
 
 ---@class dot.command.definitions.tab
 ---@field [string]                      dot.command.IDefinition
 M.definitions.tab = {
-  close = def("Ftabclose", "tab: close"),
-  close_others = def("Ftabcloseothers", "tab: close others"),
-  close_to_leftest = def("Ftabclosetoleftest", "tab: close to leftest"),
-  close_to_rightest = def("Ftabclosetorightest", "tab: close to rightest"),
+  close = D.new("Ftabclose", "tab: close"),
+  close_others = D.new("Ftabcloseothers", "tab: close others"),
+  close_to_leftest = D.new("Ftabclosetoleftest", "tab: close to leftest"),
+  close_to_rightest = D.new("Ftabclosetorightest", "tab: close to rightest"),
 
-  focus_1 = def("Ftabfocus1", "tab: focus 1"),
-  focus_2 = def("Ftabfocus2", "tab: focus 2"),
-  focus_3 = def("Ftabfocus3", "tab: focus 3"),
-  focus_4 = def("Ftabfocus4", "tab: focus 4"),
-  focus_5 = def("Ftabfocus5", "tab: focus 5"),
-  focus_6 = def("Ftabfocus6", "tab: focus 6"),
-  focus_7 = def("Ftabfocus7", "tab: focus 7"),
-  focus_8 = def("Ftabfocus8", "tab: focus 8"),
-  focus_9 = def("Ftabfocus9", "tab: focus 9"),
-  focus_10 = def("Ftabfocus10", "tab: focus 10"),
-  focus = def("Ftabfocus", "tab: focus", 1),
-  focus_left = def("Ftabfocusleft", "tab: focus left", "?"),
-  focus_right = def("Ftabfocusright", "tab: focus right", "?"),
+  focus_1 = D.new("Ftabfocus1", "tab: focus 1"),
+  focus_2 = D.new("Ftabfocus2", "tab: focus 2"),
+  focus_3 = D.new("Ftabfocus3", "tab: focus 3"),
+  focus_4 = D.new("Ftabfocus4", "tab: focus 4"),
+  focus_5 = D.new("Ftabfocus5", "tab: focus 5"),
+  focus_6 = D.new("Ftabfocus6", "tab: focus 6"),
+  focus_7 = D.new("Ftabfocus7", "tab: focus 7"),
+  focus_8 = D.new("Ftabfocus8", "tab: focus 8"),
+  focus_9 = D.new("Ftabfocus9", "tab: focus 9"),
+  focus_10 = D.new("Ftabfocus10", "tab: focus 10"),
+  focus = D.new("Ftabfocus", "tab: focus", 1),
+  focus_left = D.new("Ftabfocusleft", "tab: focus left", "?"),
+  focus_right = D.new("Ftabfocusright", "tab: focus right", "?"),
 
-  new = def("Ftabnew", "tab: new"),
-  new_with_buf = def("Ftabnewwithbuf", "tab: new with buf"),
+  new = D.new("Ftabnew", "tab: new"),
+  new_with_buf = D.new("Ftabnewwithbuf", "tab: new with buf"),
 }
 
 ---@class dot.command.definitions.term
 ---@field [string]                      dot.command.IDefinition
 M.definitions.term = {
-  create = def("Ftermcreate", "term: create"),
-  destroy = def("Ftermdestroy", "term: destroy"),
-  rename = def("Ftermrename", "term: rename"),
-  toggle = def("Ftermtoggle", "term: toggle"),
+  create = D.new("Ftermcreate", "term: create"),
+  destroy = D.new("Ftermdestroy", "term: destroy"),
+  rename = D.new("Ftermrename", "term: rename"),
+  toggle = D.new("Ftermtoggle", "term: toggle"),
 
-  lazygit_cwd = def("Ftermlazygitcwd", "term: lazygit (cwd)"),
-  lazygit_file_history = def("Ftermlazygitfilehistory", "term: lazygit (file history)"),
+  lazygit_cwd = D.new("Ftermlazygitcwd", "term: lazygit (cwd)"),
+  lazygit_file_history = D.new("Ftermlazygitfilehistory", "term: lazygit (file history)"),
 
-  yazi_cwd = def("Ftermyazicwd", "term: yazi (cwd)"),
-  yazi_reveal = def("Ftermyazireveal", "term: yazi (reveal)"),
-  yazi_workspace = def("Ftermyaziworkspace", "term: yazi (workspace)"),
+  yazi_cwd = D.new("Ftermyazicwd", "term: yazi (cwd)"),
+  yazi_reveal = D.new("Ftermyazireveal", "term: yazi (reveal)"),
+  yazi_workspace = D.new("Ftermyaziworkspace", "term: yazi (workspace)"),
 
-  focus_1 = def("Ftermfocus1", "term: focus 1"),
-  focus_2 = def("Ftermfocus2", "term: focus 2"),
-  focus_3 = def("Ftermfocus3", "term: focus 3"),
-  focus_4 = def("Ftermfocus4", "term: focus 4"),
-  focus_5 = def("Ftermfocus5", "term: focus 5"),
-  focus_6 = def("Ftermfocus6", "term: focus 6"),
-  focus_7 = def("Ftermfocus7", "term: focus 7"),
-  focus_8 = def("Ftermfocus8", "term: focus 8"),
-  focus_9 = def("Ftermfocus9", "term: focus 9"),
-  focus_left = def("Ftermfocusleft", "term: focus left", "?"),
-  focus_right = def("Ftermfocusright", "term: focus right", "?"),
-  swap_left = def("Ftermswapleft", "term: swap left", "?"),
-  swap_right = def("Ftermswapright", "term: swap right", "?"),
+  focus_1 = D.new("Ftermfocus1", "term: focus 1"),
+  focus_2 = D.new("Ftermfocus2", "term: focus 2"),
+  focus_3 = D.new("Ftermfocus3", "term: focus 3"),
+  focus_4 = D.new("Ftermfocus4", "term: focus 4"),
+  focus_5 = D.new("Ftermfocus5", "term: focus 5"),
+  focus_6 = D.new("Ftermfocus6", "term: focus 6"),
+  focus_7 = D.new("Ftermfocus7", "term: focus 7"),
+  focus_8 = D.new("Ftermfocus8", "term: focus 8"),
+  focus_9 = D.new("Ftermfocus9", "term: focus 9"),
+  focus_left = D.new("Ftermfocusleft", "term: focus left", "?"),
+  focus_right = D.new("Ftermfocusright", "term: focus right", "?"),
+  swap_left = D.new("Ftermswapleft", "term: swap left", "?"),
+  swap_right = D.new("Ftermswapright", "term: swap right", "?"),
 }
 
 ---@class dot.command.definitions.toggle
 ---@field [string]                      dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 M.definitions.toggle = {
-  dim = def("Ftoggledim", "toggle: dim"),
-  expandtab = def("Ftoggleexpandtab", "toggle: expandtab"),
-  indent = def("Ftoggleindent", "toggle: indent"),
-  list = defc("Ftoggle", "toggle: select", "?", dot.var.toggler),
-  markdown = def("Ftogglemarkdown", "toggle: markdown"),
-  maximize = def("Ftogglemaximize", "toggle: maximize"),
-  relativenumber = def("Ftogglerelativenumber", "toggle: relativenumber"),
-  scroll = def("Ftogglescroll", "toggle: scroll"),
-  theme = defc("Ftoggletheme", "toggle: theme", "?", dot.var.theme),
-  theme_variant = def("Ftogglethemevariant", "toggle: theme variant"),
-  trailspace = def("Ftoggletrailspace", "toggle: trailspace"),
-  transparency = def("Ftoggletransparency", "toggle: transparency"),
-  username = def("Ftoggleusername", "toggle: username"),
-  virtcolumn = def("Ftogglevirtcolumn", "toggle: virtcolumn"),
-  wrap = def("Ftogglewrap", "toggle: wrap"),
+  dim = D.new("Ftoggledim", "toggle: dim"),
+  expandtab = D.new("Ftoggleexpandtab", "toggle: expandtab"),
+  indent = D.new("Ftoggleindent", "toggle: indent"),
+  list = D.new("Ftoggle", "toggle: select", "?", dot.var.toggler),
+  markdown = D.new("Ftogglemarkdown", "toggle: markdown"),
+  maximize = D.new("Ftogglemaximize", "toggle: maximize"),
+  relativenumber = D.new("Ftogglerelativenumber", "toggle: relativenumber"),
+  scroll = D.new("Ftogglescroll", "toggle: scroll"),
+  theme = D.new("Ftoggletheme", "toggle: theme", "?", dot.var.theme),
+  theme_variant = D.new("Ftogglethemevariant", "toggle: theme variant"),
+  trailspace = D.new("Ftoggletrailspace", "toggle: trailspace"),
+  transparency = D.new("Ftoggletransparency", "toggle: transparency"),
+  username = D.new("Ftoggleusername", "toggle: username"),
+  virtcolumn = D.new("Ftogglevirtcolumn", "toggle: virtcolumn"),
+  wrap = D.new("Ftogglewrap", "toggle: wrap"),
 }
 
 ---@class dot.command.definitions.ux
 ---@field [string]                      dot.command.IDefinition
 M.definitions.ux = {
-  color_picker = def("Fuxcolorpicker", "ux: color picker"),
-  dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
-  reload_theme = def("Fuxreloadtheme", "ux: reload theme", "?"),
-  resume_last_widget = def("Fuxresume", "ux: resume last widget"),
+  color_picker = D.new("Fuxcolorpicker", "ux: color picker"),
+  dismiss_notifications = D.new("Fuxdismissnotifications", "ux: dismiss notifications"),
+  reload_theme = D.new("Fuxreloadtheme", "ux: reload theme", "?"),
+  resume_last_widget = D.new("Fuxresume", "ux: resume last widget"),
 }
 
 ---@class dot.command.definitions.win
 ---@field [string]                      dot.command.IDefinition
 M.definitions.win = {
-  close = def("Fwinclose", "win: close"),
-  close_others = def("Fwincloseothers", "win: close others"),
+  close = D.new("Fwinclose", "win: close"),
+  close_others = D.new("Fwincloseothers", "win: close others"),
 
-  focus_top = def("Fwinfocustop", "win: focus top"),
-  focus_right = def("Fwinfocusright", "win: focus right"),
-  focus_bottom = def("Fwinfocusbottom", "win: focus bottom"),
-  focus_left = def("Fwinfocusleft", "win: focus left"),
-  focus_prev = def("Fwinfocusprev", "win: focus prev"),
-  focus_next = def("Fwinfocusnext", "win: focus next"),
+  focus_top = D.new("Fwinfocustop", "win: focus top"),
+  focus_right = D.new("Fwinfocusright", "win: focus right"),
+  focus_bottom = D.new("Fwinfocusbottom", "win: focus bottom"),
+  focus_left = D.new("Fwinfocusleft", "win: focus left"),
+  focus_prev = D.new("Fwinfocusprev", "win: focus prev"),
+  focus_next = D.new("Fwinfocusnext", "win: focus next"),
 
-  history = def("Fwinhistory", "win: history"),
-  history_backward = def("Fwinhistorybackward", "win: history backward"),
-  history_forward = def("Fwinhistoryforward", "win: history forward"),
+  history = D.new("Fwinhistory", "win: history"),
+  history_backward = D.new("Fwinhistorybackward", "win: history backward"),
+  history_forward = D.new("Fwinhistoryforward", "win: history forward"),
 
-  resize_horizontal_minus = def("Fwinresizehorizontalminus", "win: resize horizontal (minus)"),
-  resize_horizontal_plus = def("Fwinresizehorizontalplus", "win: resize horizontal (plus)"),
-  resize_vertical_minus = def("Fwinresizeverticalminus", "win: resize vertical (minus)"),
-  resize_vertical_plus = def("Fwinresizeverticalplus", "win: resize vertical (plus)"),
+  resize_horizontal_minus = D.new("Fwinresizehorizontalminus", "win: resize horizontal (minus)"),
+  resize_horizontal_plus = D.new("Fwinresizehorizontalplus", "win: resize horizontal (plus)"),
+  resize_vertical_minus = D.new("Fwinresizeverticalminus", "win: resize vertical (minus)"),
+  resize_vertical_plus = D.new("Fwinresizeverticalplus", "win: resize vertical (plus)"),
 
-  split_above = def("Fwinsplitabove", "win: split above"),
-  split_right = def("Fwinsplitright", "win: split right"),
-  split_below = def("Fwinsplitbelow", "win: split below"),
-  split_left = def("Fwinsplitleft", "win: split left"),
+  split_above = D.new("Fwinsplitabove", "win: split above"),
+  split_right = D.new("Fwinsplitright", "win: split right"),
+  split_below = D.new("Fwinsplitbelow", "win: split below"),
+  split_left = D.new("Fwinsplitleft", "win: split left"),
 
-  focus = def("Fwinfocus", "win: focus (with picker)"),
-  project = def("Fwinproject", "win: project (with picker)"),
-  swap = def("Fwinswap", "win: swap (with picker)"),
+  focus = D.new("Fwinfocus", "win: focus (with picker)"),
+  project = D.new("Fwinproject", "win: project (with picker)"),
+  swap = D.new("Fwinswap", "win: swap (with picker)"),
 
-  mark_sourcefile = def("Fwinmarksoucefile", "win: mark sourcefile"),
+  mark_sourcefile = D.new("Fwinmarksoucefile", "win: mark sourcefile"),
 
-  scroll_down = def("Fwinscrolldown", "win: scroll down"),
-  scroll_up = def("Fwinscrollup", "win: scroll up"),
+  scroll_down = D.new("Fwinscrolldown", "win: scroll down"),
+  scroll_up = D.new("Fwinscrollup", "win: scroll up"),
 }
 
 return M
