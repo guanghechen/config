@@ -26,7 +26,7 @@ end
 local function fetch_source_data()
   dirty_data = false
 
-  local current_source = widget:get_source() ---@type era.t.INotepadSource
+  local current_source = widget:get_source() ---@type dot.t.INotepadSource
   local items = {} ---@type fml.action.notepad.ISourceItem[]
 
   for _, config in ipairs(dot.state.notepad.source_configs) do
@@ -168,7 +168,7 @@ function M.create()
     end
 
     local name = vim.trim(input) ---@type string
-    local item ---@type era.t.INotepadItemState|nil
+    local item ---@type dot.t.INotepadItemState|nil
     if #name == 0 then
       item = widget:create(nil)
     else
@@ -209,7 +209,7 @@ end
 
 ---@return nil
 function M.destroy()
-  local item = widget:current_item() ---@type era.t.INotepadItemState|nil
+  local item = widget:current_item() ---@type dot.t.INotepadItemState|nil
   if item == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -292,7 +292,7 @@ end
 
 ---@return nil
 function M.rename()
-  local item = widget:current_item() ---@type era.t.INotepadItemState|nil
+  local item = widget:current_item() ---@type dot.t.INotepadItemState|nil
   if item == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -412,7 +412,7 @@ end
 
 ---@return nil
 function M.source_prev()
-  local current_source = widget:get_source() ---@type era.t.INotepadSource
+  local current_source = widget:get_source() ---@type dot.t.INotepadSource
   local current_index = nil ---@type integer|nil
 
   for i, config in ipairs(dot.state.notepad.source_configs) do
@@ -443,7 +443,7 @@ end
 
 ---@return nil
 function M.source_next()
-  local current_source = widget:get_source() ---@type era.t.INotepadSource
+  local current_source = widget:get_source() ---@type dot.t.INotepadSource
   local current_index = nil ---@type integer|nil
 
   for i, config in ipairs(dot.state.notepad.source_configs) do
@@ -473,13 +473,13 @@ function M.source_next()
 end
 
 ---@class fml.action.notepad.INoteItem : ux.picker.composer.list.IItem
----@field public data                   era.t.INotepadItemMeta
+---@field public data                   dot.t.INotepadItemMeta
 ---@field public text_lower             string
 
 ---@return ux.picker.composer.list.IResetData
 local function fetch_notes_data()
-  local source = widget:get_source() ---@type era.t.INotepadSource
-  local current_item = widget:current_item() ---@type era.t.INotepadItemState|nil
+  local source = widget:get_source() ---@type dot.t.INotepadSource
+  local current_item = widget:current_item() ---@type dot.t.INotepadItemState|nil
   local items = {} ---@type fml.action.notepad.INoteItem[]
 
   for _, note_meta in ipairs(source:list()) do
@@ -529,8 +529,8 @@ notes_picker = ux.picker.ListComposer.new({
       }
     end
 
-    local source = widget:get_source() ---@type era.t.INotepadSource
-    local note = source:retrieve(item.data.uuid) ---@type era.t.INotepadItemState|nil
+    local source = widget:get_source() ---@type dot.t.INotepadSource
+    local note = source:retrieve(item.data.uuid) ---@type dot.t.INotepadItemState|nil
 
     if note == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Failed to load note content" })

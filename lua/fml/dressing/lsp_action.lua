@@ -1,5 +1,5 @@
-era.lsp_action.setup()
-era.lsp_action.register({
+dot.lsp_action.setup()
+dot.lsp_action.register({
   id = "cspell-add-word",
   source = "cspell",
   handler = function(ctx)
@@ -27,7 +27,7 @@ era.lsp_action.register({
       return
     end
 
-    local actions = {} ---@type era.t.ILspActionProviderAction[]
+    local actions = {} ---@type dot.t.ILspActionProviderAction[]
 
     local suggestions = lint.cspell_suggestions_from_diagnostic(diagnostic) ---@type string[]
     if #suggestions > 0 then

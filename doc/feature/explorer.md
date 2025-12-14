@@ -1,5 +1,5 @@
 ## Overview
-- Deliver a native file explorer that reuses our `era.Filetree` infrastructure but exposes its own widget-driven UX instead of leaning on the picker/searcher stacks.
+- Deliver a native file explorer that reuses our `dot.Filetree` infrastructure but exposes its own widget-driven UX instead of leaning on the picker/searcher stacks.
 - Operates against the current working directory by default while allowing future multi-root sessions (workspace root, project roots discovered by LSP) without reinitialising UI state.
 - Responds to filesystem and git status changes in near real time so the tree always reflects staged/unstaged state, additions, removals, and renames with minimal manual refreshes.
 
@@ -44,13 +44,13 @@
 
 ## Data Model
 ### Node Metadata
-- `IExplorerNodeMeta` augments `era.t.IFiletreeNode` with explorer-specific state: `filepath`, `filetype`, `loaded` (children already fetched), `expanded`, `watcher_stop` (function|nil), `git_display`, `git_highlight`, `stat` (size, mtime), and `depth`.
+- `IExplorerNodeMeta` augments `dot.t.IFiletreeNode` with explorer-specific state: `filepath`, `filetype`, `loaded` (children already fetched), `expanded`, `watcher_stop` (function|nil), `git_display`, `git_highlight`, `stat` (size, mtime), and `depth`.
 - `IExplorerPendingMutation` tracks queued filesystem events (`kind`, `target`, `source`, `is_directory`, `timestamp`).
 - `IExplorerSelectionState` stores the focused UUID, the last opened buffer, and a set of marked nodes.
 - `IExplorerInputState` holds the prompt text, cursor column, active filter tokens, and toggle flags (show_hidden, git_only, regex, case_sensitive).
 
 ### Tree Store
-- Backed by a dedicated `era.Filetree` instance scoped to the explorer widget; the root UUID corresponds to the normalised root path (cwd by default).
+- Backed by a dedicated `dot.Filetree` instance scoped to the explorer widget; the root UUID corresponds to the normalised root path (cwd by default).
 - Maintains `IExplorerNodeIndex` (filepath → UUID, UUID → metadata) so readdir results, git updates, and watcher events can resolve nodes without scanning the full tree.
 - Exposes observables: `o_rootpath`, `o_selection`, `o_marked`, `o_tree_dirty`, allowing other layers (widget, commands) to subscribe without internal coupling.
 

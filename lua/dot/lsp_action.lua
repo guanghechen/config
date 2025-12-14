@@ -1,10 +1,10 @@
-local __module_name__ = "era.lsp_action" ---@type string
+local __module_name__ = "dot.lsp_action" ---@type string
 
 local api = vim.api
 local lsp = vim.lsp
 local util = vim.lsp.util
 
----@class era.t.ILspActionProviderContext
+---@class dot.t.ILspActionProviderContext
 ---@field public bufnr                  integer
 ---@field public winnr                  integer
 ---@field public mode                   string
@@ -14,18 +14,18 @@ local util = vim.lsp.util
 ---@field public opts                   table
 ---@field public context                table
 
----@class era.t.ILspActionProviderAction
+---@class dot.t.ILspActionProviderAction
 ---@field public title                  string
 ---@field public kind                   string|nil
----@field public execute                fun(ctx: era.t.ILspActionProviderContext): nil
+---@field public execute                fun(ctx: dot.t.ILspActionProviderContext): nil
 ---@field public source                 string|nil
 
----@class era.t.ILspActionProviderSpec
+---@class dot.t.ILspActionProviderSpec
 ---@field public id                     string|nil
 ---@field public source                 string|nil
----@field public handler                fun(ctx: era.t.ILspActionProviderContext): era.t.ILspActionProviderAction|era.t.ILspActionProviderAction[]|nil
+---@field public handler                fun(ctx: dot.t.ILspActionProviderContext): dot.t.ILspActionProviderAction|dot.t.ILspActionProviderAction[]|nil
 
----@type era.t.ILspActionProviderSpec[]
+---@type dot.t.ILspActionProviderSpec[]
 local providers = {}
 
 ---@type fun(opts?: table): nil
@@ -66,14 +66,14 @@ local function range_from_selection(bufnr, mode)
   }
 end
 
----@param ctx                           era.t.ILspActionProviderContext
----@return { action: lsp.CodeAction, spec: era.t.ILspActionProviderAction, provider: era.t.ILspActionProviderSpec, ctx: era.t.ILspActionProviderContext }[]
+---@param ctx                           dot.t.ILspActionProviderContext
+---@return { action: lsp.CodeAction, spec: dot.t.ILspActionProviderAction, provider: dot.t.ILspActionProviderSpec, ctx: dot.t.ILspActionProviderContext }[]
 local function collect_provider_actions(ctx)
   if #providers < 1 then
     return {}
   end
 
-  local actions = {} ---@type { action: lsp.CodeAction, spec: era.t.ILspActionProviderAction, provider: era.t.ILspActionProviderSpec, ctx: era.t.ILspActionProviderContext }[]
+  local actions = {} ---@type { action: lsp.CodeAction, spec: dot.t.ILspActionProviderAction, provider: dot.t.ILspActionProviderSpec, ctx: dot.t.ILspActionProviderContext }[]
   for _, provider in ipairs(providers) do
     local handler = provider.handler ---@type function
     local ok, result = pcall(handler, ctx)
@@ -88,7 +88,7 @@ local function collect_provider_actions(ctx)
         },
       })
     elseif result ~= nil then
-      local items ---@type era.t.ILspActionProviderAction[]
+      local items ---@type dot.t.ILspActionProviderAction[]
       if vim.islist(result) then
         items = result
       else
@@ -131,7 +131,7 @@ end
 ---@param mode                          string
 ---@param lnum                          integer
 ---@param cursor                        { row: integer, col: integer }
----@return era.t.ILspActionProviderContext
+---@return dot.t.ILspActionProviderContext
 local function make_provider_context(opts, context, bufnr, winnr, mode, lnum, cursor)
   local selection ---@type { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }|nil
   if opts ~= nil and opts.range ~= nil then
@@ -261,7 +261,7 @@ local function custom_code_action(opts)
     end
 
     if choice.__provider_action ~= nil then
-      local spec = choice.__provider_action.spec ---@type era.t.ILspActionProviderAction
+      local spec = choice.__provider_action.spec ---@type dot.t.ILspActionProviderAction
       spec.execute(choice.__provider_action.ctx)
       return
     end
@@ -352,7 +352,7 @@ local function custom_code_action(opts)
       return true
     end
 
-    ---@type { action: lsp.Command|lsp.CodeAction, ctx: lsp.HandlerContext, __provider_action?: { action: lsp.CodeAction, spec: era.t.ILspActionProviderAction, provider: era.t.ILspActionProviderSpec, ctx: era.t.ILspActionProviderContext } }[]
+    ---@type { action: lsp.Command|lsp.CodeAction, ctx: lsp.HandlerContext, __provider_action?: { action: lsp.CodeAction, spec: dot.t.ILspActionProviderAction, provider: dot.t.ILspActionProviderSpec, ctx: dot.t.ILspActionProviderContext } }[]
     local actions = {}
     for _, result in pairs(results) do
       for _, action in pairs(result.result or {}) do
@@ -398,10 +398,10 @@ local function custom_code_action(opts)
   end
 end
 
----@class era.lsp_action
+---@class dot.lsp_action
 local M = {}
 
----@param spec                          era.t.ILspActionProviderSpec|fun(ctx: era.t.ILspActionProviderContext): era.t.ILspActionProviderAction|nil
+---@param spec                          dot.t.ILspActionProviderSpec|fun(ctx: dot.t.ILspActionProviderContext): dot.t.ILspActionProviderAction|nil
 ---@return nil
 function M.register(spec)
   if type(spec) == "function" then

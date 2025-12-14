@@ -1,11 +1,11 @@
-local hints = require("era.fn.winpicker.hint")
+local hints = require("dot.fn.winpicker.hint")
 
 local winhighlight = table.concat({
   "FloatBorder:FloatBorder",
   "Normal:NormalFloat",
 }, ",")
 
----@class era.fn.winpicker.Mask
+---@class dot.fn.winpicker.Mask
 ---@field public char                   string
 ---@field public hint                   string[]
 ---@field public bufnr_hint             integer|nil
@@ -14,10 +14,10 @@ local winhighlight = table.concat({
 local M = {}
 M.__index = M
 
-M.renderers = {} ---@type table<string, era.fn.winpicker.Mask>
+M.renderers = {} ---@type table<string, dot.fn.winpicker.Mask>
 
 ---@param char                          string
----@return era.fn.winpicker.Mask
+---@return dot.fn.winpicker.Mask
 function M.new(char)
   if M.renderers[char] ~= nil then
     return M.renderers[char]

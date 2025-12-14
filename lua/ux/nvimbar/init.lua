@@ -19,7 +19,7 @@
 ---@field public last_result_width      integer
 ---@field public atomic                 boolean
 ---@field public name                   string
----@field public position               era.e.NvimbarCompPosition
+---@field public position               dot.e.NvimbarCompPosition
 ---@field public priority               integer
 ---@field public tight                  boolean
 ---@field public condition              fun(context: ux.nvimbar.INvimbarContext, remain_width: integer): boolean

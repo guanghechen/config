@@ -57,15 +57,14 @@ The configuration exposes core modules globally via `_G` for convenient access:
 **Global Modules (accessible without require):**
 - `_G.yoz` → `require("yoz")` - Native Rust helpers (search, replace, filesystem, string)
 - `_G.ark` → `require("ark")` - Foundational infrastructure (collections, reporter)
-- `_G.dot` → `require("dot")` - Configuration and constants
-- `_G.era` → `require("era")` - Core application framework
+- `_G.dot` → `require("dot")` - Configuration, constants, and core framework
 
 **Module Access Patterns:**
 - `yoz.*` → Access Rust-native utilities directly (e.g., `yoz.path.*`, `yoz.fs.*`)
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
 - `dot.buf.*` → Buffer utilities
 - `dot.win.*` → Window utilities
-- `era.state.*`, `era.fn.*` → State management and framework functions
+- `dot.state.*`, `dot.fn.*` → State management and framework functions
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
@@ -109,7 +108,7 @@ Each integration includes environment-specific:
   ```
 - Union type aliases must have each union item on its own line with `---| ` prefix, using double quotes for string literals:
   ```lua
-  ---@alias era.git.StageState
+  ---@alias dot.git.StageState
   ---| "staged"
   ---| "unstaged"
   ---| "mixed"

@@ -1,7 +1,7 @@
 pcall(require, "integration.vscode.autocmd")
 pcall(require, "integration.local.autocmd")
 
-era.setup_context()
+dot.setup_context()
 
 require("integration.vscode.option")
 require("integration.vscode.keymap")

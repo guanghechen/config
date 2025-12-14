@@ -209,7 +209,7 @@ function M:create_buf()
 end
 
 ---@param winopts                       ux.searcher.preview.IWinOpts
----@param dimension                     era.t.IWinDimension
+---@param dimension                     dot.t.IWinDimension
 ---@return integer
 ---@return boolean
 function M:create_win(winopts, dimension)
@@ -316,7 +316,7 @@ function M:hide()
   return self
 end
 
----@param dimension                     era.t.IWinDimension,
+---@param dimension                     dot.t.IWinDimension,
 ---@return ux.searcher.Preview
 function M:resize(dimension)
   self:__health__()

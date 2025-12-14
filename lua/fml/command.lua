@@ -953,7 +953,7 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
-      if era.term.focus(index) then
+      if dot.term.focus(index) then
         ux.widget.Terminal:focus()
       end
     end,
@@ -1094,7 +1094,7 @@ command
   .implement({
     uuid = K.ux.dismiss_notifications.uuid,
     action = function()
-      era.notifier.dismiss_all()
+      dot.notifier.dismiss_all()
     end,
   })
   .implement({

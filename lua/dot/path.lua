@@ -18,7 +18,7 @@ do
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean
 end
 
----@class era.t.IReposcopeMap
+---@class dot.t.IReposcopeMap
 local repo_map = {
   public = {
     [".config"] = {

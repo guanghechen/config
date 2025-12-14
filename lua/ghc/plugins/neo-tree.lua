@@ -70,7 +70,7 @@ return {
         end
 
         local filepath = node:get_id() ---@type string
-        era.fn.add_locations_to_ai({ { filepath = filepath } })
+        dot.fn.add_locations_to_ai({ { filepath = filepath } })
       end,
       copy_filepath = function(state)
         local node = state.tree:get_node()
@@ -549,7 +549,7 @@ return {
     require("fml.dressing.plugin").mock_winpicker()
 
     local function on_move(data)
-      era.lsp.on_rename(data.source, data.destination)
+      dot.lsp.on_rename(data.source, data.destination)
     end
 
     local events = require("neo-tree.events")

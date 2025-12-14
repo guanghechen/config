@@ -25,7 +25,7 @@ local function open_filepath_within_yoz(filepath, force)
   local url = string.format(
     "https://localhost:%s/api/file/switch?filepath=%s&force=%s",
     YOZ_SERVER_PORT,
-    era.uri.encode(filepath),
+    dot.uri.encode(filepath),
     force and "true" or "false"
   )
   vim.system({ "curl", "-k", "-X", "POST", url }, { detach = true })
@@ -138,7 +138,7 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param termmeta                era.t.ITermMeta
+      ---@param termmeta                dot.t.ITermMeta
       ---@return nil
       local function handle(termmeta)
         local bufnr = termmeta.bufnr ---@type integer|nil
@@ -160,7 +160,7 @@ local runners = {
       })
 
       ark.timer.set_timeout(function()
-        local termmeta = era.term.get(termuuid) ---@type era.t.ITermMeta|nil
+        local termmeta = dot.term.get(termuuid) ---@type dot.t.ITermMeta|nil
         if termmeta ~= nil then
           handle(termmeta)
         end

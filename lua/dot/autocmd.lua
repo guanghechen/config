@@ -5,7 +5,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     dot.tab.on_buf_delete(tabnr)
     dot.buf.on_close(bufnr)
-    era.term.on_buf_deleted(bufnr)
+    dot.term.on_buf_deleted(bufnr)
   end,
 })
 
@@ -25,7 +25,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if yoz.path.is_absolute(filepath) and yoz.path.is_exist_file(filepath) then
-      local uuid = era.Filetree.uuid(filepath) ---@type string
+      local uuid = dot.Filetree.uuid(filepath) ---@type string
       dot.context.frecency.files:access(uuid)
     end
   end,
@@ -277,7 +277,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
     local client = vim.lsp.get_client_by_id(client_id)
     local bufnr = args.buf
     if client ~= nil then
-      era.lsp.on_detach(client, bufnr)
+      dot.lsp.on_detach(client, bufnr)
     end
   end,
 })

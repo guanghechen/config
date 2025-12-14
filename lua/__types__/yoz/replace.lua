@@ -18,7 +18,7 @@ local M = {}
 ---@field public remain_offsets         integer[]
 
 ---@class yoz.replace.IReplaceFileResult
----@field public locations              era.t.IMatchLocation[]
+---@field public locations              dot.t.IMatchLocation[]
 
 ---@class yoz.replace.IReplaceFilePreviewParams
 ---@field public filepath               string
@@ -44,7 +44,7 @@ local M = {}
 
 ---@class yoz.replace.IReplacePreviewResult
 ---@field public text                   string
----@field public matches                era.t.IMatchPoint[]
+---@field public matches                dot.t.IMatchPoint[]
 
 ---@param params                        yoz.replace.IReplaceFileParams
 ---@return boolean|nil

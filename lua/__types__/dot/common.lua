@@ -1,5 +1,71 @@
 ---@meta
 
+---@alias dot.t.T
+---| any
+
+---@generic T
+---@alias dot.t.IEquals
+---| fun(x: T, y: T): boolean
+
+---@generic T
+---@alias dot.t.IFilter
+---| fun(element: T, index: integer): boolean
+
+---@generic T
+---@alias dot.t.INormalize
+---| fun(x: T): T
+
+---@generic T
+---@alias dot.t.IValidate
+---| fun(element: T): boolean
+
+---@class dot.t.ILspSymbol
+---@field public kind                   string
+---@field public name                   string
+---@field public row                    integer
+---@field public col                    integer
+
+---@class dot.t.ILocation
+---@field public filepath               string
+---@field public start_lnum             ?integer
+---@field public start_col              ?integer
+---@field public end_lnum               ?integer
+---@field public end_col                ?integer
+
+---@class dot.t.IMatchLocation
+---@field public offset                 integer
+---@field public lnum                   integer
+---@field public col                    integer
+---@field public line                   string
+
+---@class dot.t.IMatchPoint
+---@field public l                      integer
+---@field public r                      integer
+
+---@class dot.t.IScoredMatch
+---@field public order                  integer
+---@field public uuid                   string
+---@field public score                  integer
+---@field public matches                dot.t.IMatchPoint[]
+
+---@class dot.t.IWinDimension
+---@field public width                  integer
+---@field public height                 integer
+---@field public row                    integer
+---@field public col                    integer
+
+---@class dot.command.IDefinition
+---@field public uuid                   string
+---@field public desc                   string
+---@field public nargs                  0|1|"?"|nil
+---@field public candidates             string[]|nil
+
+---@class dot.command.IDefinitionWithCandidates
+---@field public uuid                   string
+---@field public desc                   string
+---@field public nargs                  1|"?"
+---@field public candidates             string[]
+
 ---@class dot.t.IRawWidget
 ---@field public name                   string
 ---@field public close                  fun(self: dot.t.IWidget): nil

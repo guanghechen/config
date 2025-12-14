@@ -1,4 +1,4 @@
----@class dot.state.notepad.ISourceConfig : era.t.INotepadSourceConfig
+---@class dot.state.notepad.ISourceConfig : dot.t.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'folder' Source engine type
 
@@ -42,7 +42,7 @@ for _, config in ipairs(source_configs) do
   source_config_map[config.name] = config
 end
 
----@type table<string, era.t.INotepadSource>
+---@type table<string, dot.t.INotepadSource>
 local _source_cache = {}
 
 ---Observable for the currently activated note UUID
@@ -60,7 +60,7 @@ local M = {
 }
 
 ---Build name-to-uuid index from items
----@param items                         table<string, era.t.INotepadItemState>
+---@param items                         table<string, dot.t.INotepadItemState>
 ---@return table<string, string>
 function M.build_name_index(items)
   local name_to_uuid = {} ---@type table<string, string>
@@ -223,7 +223,7 @@ function M.remove_from_name_index(name_to_uuid, name)
 end
 
 ---@param name                          string
----@return era.t.INotepadSource
+---@return dot.t.INotepadSource
 ---@return dot.state.notepad.ISourceConfig
 function M.retrieve_source(name)
   local config = M.source_config_map[name]

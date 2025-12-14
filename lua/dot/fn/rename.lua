@@ -1,15 +1,15 @@
-local __module_name__ = "era.fn.rename" ---@type string
+local __module_name__ = "dot.fn.rename" ---@type string
 
----@alias era.fn.rename
----| fun(params: era.t.IRenameParams): boolean
+---@alias dot.fn.rename
+---| fun(params: dot.t.IRenameParams): boolean
 
----@class era.t.IRenameParams
+---@class dot.t.IRenameParams
 ---@field public from                   string
 ---@field public to                     string
 ---@field public isdir                  ?boolean
 ---@field public force                  ?boolean
 
----@type era.fn.rename
+---@type dot.fn.rename
 local function rename(params)
   local from = params.from ---@type string
   local to = params.to ---@type string
@@ -25,7 +25,7 @@ local function rename(params)
     return false
   end
 
-  era.lsp.on_rename(from, to, function()
+  dot.lsp.on_rename(from, to, function()
     local move_success, move_err = yoz.fs.move({
       old_path = from,
       new_path = to,
@@ -43,7 +43,7 @@ local function rename(params)
       return
     end
 
-    era.lsp.rename_buf(from, to)
+    dot.lsp.rename_buf(from, to)
   end)
 
   return true

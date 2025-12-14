@@ -7,7 +7,7 @@ local __module_name__ = "ux.setting" ---@type string
 ---@field public close                  fun(self: ux.ISetting): nil
 
 ---@class ux.setting.IOpenParams
----@field public initial_value          era.t.T
+---@field public initial_value          dot.t.T
 ---@field public row                    ?number
 ---@field public col                    ?number
 ---@field public width                  ?number
@@ -31,9 +31,9 @@ setmetatable(M, ux.Textarea)
 ---@field public min_height             ?number
 ---@field public keymaps                ?ark.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
----@field public validate               ?fun(value: era.t.T): string|nil
+---@field public validate               ?fun(value: dot.t.T): string|nil
 ---@field public on_close               ?fun(): nil
----@field public on_confirm             fun(value: era.t.T): boolean
+---@field public on_confirm             fun(value: dot.t.T): boolean
 
 ---@param props                         ux.setting.IProps
 ---@return ux.Setting
@@ -49,9 +49,9 @@ function M.new(props)
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 
-  local validate_from_props = props.validate ---@type (fun(value: era.t.T): string)|nil
+  local validate_from_props = props.validate ---@type (fun(value: dot.t.T): string)|nil
   local on_close_from_props = props.on_close ---@type (fun(): nil)
-  local on_confirm_from_props = props.on_confirm ---@type fun(text: era.t.T): boolean
+  local on_confirm_from_props = props.on_confirm ---@type fun(text: dot.t.T): boolean
 
   ---@param lines                       string[]
   ---@return string|nil

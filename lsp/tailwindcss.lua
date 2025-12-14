@@ -48,13 +48,13 @@ local filetypes = {
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
   local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = dot.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
 ---@return string|nil
 local function detectLspServer()
-  local _, binPath = era.lsp.locate_lsp_root(
+  local _, binPath = dot.lsp.locate_lsp_root(
     dot.path.cwd() .. ark.env.PATH_SEP .. "a.css",
     { "./node_modules/.bin/tailwindcss-language-server" }
   )
@@ -67,7 +67,7 @@ end
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  era.lsp.before_init(params, config)
+  dot.lsp.before_init(params, config)
 
   config.settings = config.settings or {}
   config.settings.editor = config.settings.editor or {}
@@ -77,26 +77,26 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  era.lsp.on_attach(client, bufnr)
+  dot.lsp.on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  era.lsp.on_detach(client, bufnr)
+  dot.lsp.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  era.lsp.on_init(client, config)
+  dot.lsp.on_init(client, config)
 end
 
 local lspBinPath = detectLspServer()
 
 ---@type vim.lsp.Config
 return {
-  capabilities = era.lsp.get_capabilities(),
+  capabilities = dot.lsp.get_capabilities(),
   cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,
   filetypes = filetypes,
   filetypes_exclude = { "markdown" },

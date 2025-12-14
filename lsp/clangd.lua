@@ -76,7 +76,7 @@ end
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  era.lsp.before_init(params, config)
+  dot.lsp.before_init(params, config)
 
   local capabilities = params.capabilities
   capabilities.textDocument = capabilities.textDocument or {}
@@ -90,7 +90,7 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  era.lsp.on_attach(client, bufnr)
+  dot.lsp.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspClangdSwitchSourceHeader", function()
     switch_source_header(bufnr, client)
@@ -104,7 +104,7 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  era.lsp.on_detach(client, bufnr)
+  dot.lsp.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
@@ -115,7 +115,7 @@ local function on_init(client, init_result)
   end
 end
 
-local capabilities = era.lsp.get_capabilities()
+local capabilities = dot.lsp.get_capabilities()
 capabilities.textDocument = capabilities.textDocument or {}
 capabilities.textDocument.completion = capabilities.textDocument.completion or {}
 ---@diagnostic disable-next-line: inject-field

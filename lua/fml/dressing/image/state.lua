@@ -219,13 +219,13 @@ end
 ---@param src                            string
 ---@return string
 function M.norm_src(src)
-  if era.uri.is_data_uri(src) then
+  if dot.uri.is_data_uri(src) then
     return src
   end
   if src:find("^file://") then
     src = vim.uri_to_fname(src)
   end
-  src = era.uri.decode(src)
+  src = dot.uri.decode(src)
   return dot.path.normalize(vim.fn.fnamemodify(src, ":p"))
 end
 

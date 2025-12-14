@@ -1,3 +1,29 @@
+---@class dot.fn.__mods
+local __fn__mods = {
+  add_locations_to_ai = "dot.fn.add_locations_to_ai",
+  rename = "dot.fn.rename",
+  winpicker = "dot.fn.winpicker",
+}
+
+---@class dot.fn
+---@field public __mods                 dot.fn.__mods
+---@field public add_locations_to_ai    fun(locations: dot.t.ILocation[]): nil
+---@field public rename                 dot.fn.rename
+---@field public winpicker              dot.fn.winpicker
+local fn = setmetatable({
+  __mods = __fn__mods,
+}, {
+  __index = function(t, k)
+    local m = __fn__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.dict.__mods
 local __dict__mods = {
   en = "dot.dict.en",
@@ -194,30 +220,47 @@ local state = setmetatable({
 
 ---@class dot.__mods
 local __mods = {
+  Filetree = "dot.filetree",
   G = "dot.G",
+  Tree = "dot.tree",
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
+  git = "dot.git",
   icon = "dot.icon",
+  lsp = "dot.lsp",
+  lsp_action = "dot.lsp_action",
+  notifier = "dot.notifier",
   path = "dot.path",
   session = "dot.session",
   shell = "dot.shell",
   tab = "dot.tab",
+  term = "dot.term",
+  uri = "dot.uri",
   var = "dot.var",
   win = "dot.win",
 }
 
 ---@class dot
 ---@field public __mods                 dot.__mods
+---@field public Filetree               dot.Filetree
+---@field public Tree                   dot.Tree
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public dict                   dot.dict
+---@field public fn                     dot.fn
+---@field public git                    dot.git
 ---@field public lang                   dot.lang
+---@field public lsp                    dot.lsp
+---@field public lsp_action             dot.lsp_action
+---@field public notifier               dot.notifier
 ---@field public session                dot.session
 ---@field public state                  dot.state
+---@field public term                   dot.term
 ---@field public theme                  dot.theme
+---@field public uri                    dot.uri
 ---
 ---@field public G                      dot.G
 ---@field public buf                    dot.buf
@@ -229,9 +272,16 @@ local __mods = {
 ---@field public tab                    dot.tab
 ---@field public var                    dot.var
 ---@field public win                    dot.win
+---
+---@field public get_default_storage    fun(): dot.context.storage
+---@field public setup_breakpoints      fun(): nil
+---@field public setup_context          fun(storage: dot.context.storage|nil): nil
+---@field public setup_diagnostics      fun(): nil
+---@field public setup_lsp              fun(): nil
 local M = setmetatable({
   __mods = __mods,
   dict = dict,
+  fn = fn,
   lang = lang,
   state = state,
   theme = theme,
@@ -244,5 +294,132 @@ local M = setmetatable({
     return require(m)
   end,
 })
+
+---@return dot.context.storage
+function M.get_default_storage()
+  local is_git_repo = M.path.is_git_repo() ---@type boolean
+
+  ---@type dot.context.storage
+  return {
+    editor = M.path.locate_context_filepath("editor.json"),
+    session = is_git_repo and M.path.locate_workspace_filepath("session.json") or nil,
+    workspace = is_git_repo and M.path.locate_workspace_filepath("workspace.json") or nil,
+    nvim_session = is_git_repo and M.path.locate_workspace_filepath("session.vim") or nil,
+    nvim_session_autosaved = is_git_repo and M.path.locate_workspace_filepath("session.autosaved.vim") or nil,
+  }
+end
+
+---@return nil
+function M.setup_breakpoints()
+  local breakpoints = M.context.lsp.breakpoints:snapshot() ---@type dot.context.lsp.IBreakpointData
+  if #breakpoints < 1 then
+    return
+  end
+
+  local filepath_set = {} ---@type table<string, true>
+  for _, breakpoint in ipairs(breakpoints) do
+    filepath_set[breakpoint.filepath] = true
+  end
+  local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
+
+  M.win.open_filepaths(0, filepaths)
+
+  ark.timer.set_timeout(function()
+    local bps = require("dap.breakpoints")
+    for _, breakpoint in ipairs(breakpoints) do
+      local bufnr = M.buf.loadfile(breakpoint.filepath) ---@type integer|nil
+      if bufnr ~= nil then
+        bps.set({
+          condition = breakpoint.condition,
+          hit_condition = breakpoint.hit_condition,
+          log_message = breakpoint.log_message,
+        }, bufnr, breakpoint.lnum)
+      end
+    end
+  end, 100)
+end
+
+---@param storage                       dot.context.storage|nil
+---@return nil
+function M.setup_context(storage)
+  storage = storage or M.get_default_storage() ---@type dot.context.storage
+  M.context.set_storage(storage)
+  M.context.load(storage, false)
+
+  local colorscheme = M.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
+  vim.cmd.colorscheme(colorscheme)
+end
+
+---@return nil
+function M.setup_diagnostics()
+  local severity2numhl = M.var.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+  local severity2prefixicon = M.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
+  local severity2texticon = M.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+
+  ark.fn.observe({ M.context.lsp.diagnostics_virt_lines }, function()
+    ---@type vim.diagnostic.Opts
+    local config = {
+      float = {
+        border = "rounded",
+        focus = true,
+        focusable = true,
+        source = true,
+      },
+      severity_sort = true,
+      signs = {
+        numhl = severity2numhl,
+        text = severity2texticon,
+      },
+      underline = true,
+      update_in_insert = false,
+      virtual_lines = {
+        current_line = true,
+        format = function(diagnostic)
+          local icon = severity2prefixicon[diagnostic.severity] or ""
+          return string.format("%s %s", icon, diagnostic.message)
+        end,
+      },
+      virtual_text = {
+        current_line = false,
+        prefix = function(diagnostic)
+          return severity2prefixicon[diagnostic.severity] or ""
+        end,
+        source = "if_many",
+        spacing = 4,
+      },
+    }
+
+    local enable_diagnostic_virt_lines = M.context.lsp.diagnostics_virt_lines:snapshot() ---@type boolean
+    if not enable_diagnostic_virt_lines then
+      config.virtual_lines = false
+      config.virtual_text.current_line = nil
+    end
+    vim.diagnostic.config(config)
+  end)
+end
+
+---@return nil
+function M.setup_lsp()
+  if not vim.g.vscode and M.context.flight.ai:snapshot() then
+    vim.lsp.enable("copilot")
+  end
+
+  local winnr_cur = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr_cur = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+  local filepath_cur = vim.api.nvim_buf_get_name(bufnr_cur) ---@type string
+  if filepath_cur ~= "" then
+    vim.schedule(function()
+      if vim.api.nvim_win_is_valid(winnr_cur) and not vim.wo[winnr_cur].winfixbuf then
+        local bufnr = vim.api.nvim_win_get_buf(winnr_cur) ---@type integer
+        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        if filepath == filepath_cur then
+          vim.api.nvim_win_call(winnr_cur, function()
+            vim.cmd.edit(filepath)
+          end)
+        end
+      end
+    end)
+  end
+end
 
 return M

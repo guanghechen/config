@@ -1,6 +1,6 @@
-local __module_name__ = "era.fn.add_locations_to_ai" ---@type string
+local __module_name__ = "dot.fn.add_locations_to_ai" ---@type string
 
----@param locations                     era.t.ILocation[]
+---@param locations                     dot.t.ILocation[]
 ---@return nil
 local function add_locations_to_ai(locations)
   if #locations < 1 then
@@ -13,10 +13,10 @@ local function add_locations_to_ai(locations)
   end
 
   local lines = {} ---@type string[]
-  local failures = {} ---@type { index: integer, error: string, location: era.t.ILocation }[]
+  local failures = {} ---@type { index: integer, error: string, location: dot.t.ILocation }[]
 
   for index, location in ipairs(locations) do
-    local text, err = era.uri.file_location(location)
+    local text, err = dot.uri.file_location(location)
     if text ~= nil then
       lines[#lines + 1] = text
     else

@@ -1,10 +1,10 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "dot.state.notepad.source-folder" ---@type string
 
----@class dot.state.notepad.source.FolderState : era.t.INotepadSourceState
+---@class dot.state.notepad.source.FolderState : dot.t.INotepadSourceState
 ---Folder-specific state (inherits all fields from INotepadSourceState)
 
----@class dot.state.notepad.source.Folder : era.t.INotepadSource
+---@class dot.state.notepad.source.Folder : dot.t.INotepadSource
 ---@field protected default_item_name   fun(): string
 ---@field protected flush_scheduler     ark.c.Scheduler|nil Debounced flush scheduler
 ---@field protected _state              dot.state.notepad.source.FolderState|nil Internal state cache
@@ -34,7 +34,7 @@ local function name_to_filename(name)
   return sanitize_filename(name) .. ".md"
 end
 
----@param config                        era.t.INotepadSourceConfig
+---@param config                        dot.t.INotepadSourceConfig
 ---@return dot.state.notepad.source.Folder
 function M.new(config)
   local self = setmetatable({}, M)
@@ -86,7 +86,7 @@ function M:load(force)
 
   ark.env.mkdirs(self._dirpath, true)
 
-  local items_map = {} ---@type table<string, era.t.INotepadItemState>
+  local items_map = {} ---@type table<string, dot.t.INotepadItemState>
   local name_to_uuid = {} ---@type table<string, string>
   local orders = {} ---@type string[]
   local active_uuid = nil ---@type string|nil
@@ -189,10 +189,10 @@ function M:load(force)
   return self._state
 end
 
----@return era.t.INotepadItemMeta[]
+---@return dot.t.INotepadItemMeta[]
 function M:list()
   local state = self:load(false) ---@type dot.state.notepad.source.FolderState
-  local result = {} ---@type era.t.INotepadItemMeta[]
+  local result = {} ---@type dot.t.INotepadItemMeta[]
 
   for _, uuid in ipairs(state.orders) do
     local item = state.items[uuid]
@@ -243,7 +243,7 @@ end
 
 ---@param uuid                          string
 ---@param createIfNonexistent           boolean|nil
----@return era.t.INotepadItemState|nil
+---@return dot.t.INotepadItemState|nil
 function M:retrieve(uuid, createIfNonexistent)
   local state = self:load(false) ---@type dot.state.notepad.source.FolderState
   local item = state.items[uuid]
@@ -261,7 +261,7 @@ end
 
 ---@param name                          string
 ---@param createIfNonexistent           boolean|nil
----@return era.t.INotepadItemState|nil
+---@return dot.t.INotepadItemState|nil
 function M:retrieve_by_name(name, createIfNonexistent)
   if type(name) ~= "string" or #name == 0 then
     return nil
@@ -288,7 +288,7 @@ end
 
 ---@param name                          string|nil
 ---@param content                       string|nil
----@return era.t.INotepadItemState
+---@return dot.t.INotepadItemState
 function M:create(name, content)
   local normalized_name = dot.state.notepad.normalize_name(name, self.default_item_name)
   local state = self:load(false) ---@type dot.state.notepad.source.FolderState
@@ -324,7 +324,7 @@ function M:create(name, content)
 end
 
 ---@param uuid                          string
----@param patch                         era.t.INotepadItemPatch
+---@param patch                         dot.t.INotepadItemPatch
 ---@return boolean
 function M:update(uuid, patch)
   local state = self:load(false) ---@type dot.state.notepad.source.FolderState
@@ -605,7 +605,7 @@ function M:flush()
 end
 
 ---Export to standard JSON format
----@return era.t.INotepadSourceData
+---@return dot.t.INotepadSourceData
 function M:dump_to_json()
   local state = self:load(false)
   local items = {}
@@ -632,7 +632,7 @@ function M:dump_to_json()
 end
 
 ---Import from standard JSON format
----@param json_data                     era.t.INotepadSourceData
+---@param json_data                     dot.t.INotepadSourceData
 ---@return boolean
 function M:load_from_json(json_data)
   if type(json_data) ~= "table" then
@@ -717,7 +717,7 @@ function M:__get_note_path__(name)
 end
 
 ---@protected
----@param item                          era.t.INotepadItemState
+---@param item                          dot.t.INotepadItemState
 ---@return nil
 function M:__load_note_content__(item)
   if item.original ~= nil then
@@ -763,7 +763,7 @@ function M:__rename_note_file__(old_name, new_name)
 end
 
 ---@protected
----@param item                          era.t.INotepadItemState
+---@param item                          dot.t.INotepadItemState
 ---@return boolean
 function M:__save_note_content__(item)
   if item.content == nil then

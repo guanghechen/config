@@ -25,7 +25,7 @@ local M = {}
 ---@field public initialized            boolean
 ---@field public workspace              string|nil
 ---@field public last_refresh           integer
----@field public status_table           table<string, era.t.IStatusEntry>
+---@field public status_table           table<string, dot.t.IStatusEntry>
 ---@field public status_groups          table<string, table<string, boolean>>
 ---@field public file_status            table<string, string>
 ---@field public file_display           table<string, string>
@@ -76,7 +76,7 @@ local pending_refresh = false ---@type boolean
 local function resolve_highlight(stage_state, codes, summary, display, categories)
   local resolved = categories ---@type table<string, boolean>|nil
   if type(resolved) ~= "table" then
-    resolved = era.git.collect_entry_categories(stage_state, codes)
+    resolved = dot.git.collect_entry_categories(stage_state, codes)
   end
 
   resolved = resolved or {}
@@ -136,7 +136,7 @@ end
 
 ---@class dot.state.git.dirinfo
 ---@field public summary                string|nil
----@field public stage                  era.t.IStageState
+---@field public stage                  dot.t.IStageState
 ---@field public codes                  table<string, boolean>
 
 ---@param dir_info                      table<string, dot.state.git.dirinfo>
@@ -154,17 +154,17 @@ end
 ---@param info                          dot.state.git.dirinfo
 ---@return string
 local function dir_info_collect_display(info)
-  return era.git.codes_to_display(info.codes)
+  return dot.git.codes_to_display(info.codes)
 end
 
 ---@param info                          dot.state.git.dirinfo
----@param entry                         era.t.IStatusEntry
+---@param entry                         dot.t.IStatusEntry
 local function dir_info_update(info, entry)
   local summary = entry.summary ---@type string|nil
   if summary ~= nil then
-    info.summary = era.git.merge_priority_status(info.summary, summary)
+    info.summary = dot.git.merge_priority_status(info.summary, summary)
   end
-  info.stage = era.git.combine_stage(info.stage, entry.stage)
+  info.stage = dot.git.combine_stage(info.stage, entry.stage)
 
   local set = info.codes ---@type table<string, boolean>
   for code, enabled in pairs(entry.codes) do
@@ -177,7 +177,7 @@ end
 ---@param filepath                      string
 ---@param workspace                     string|nil
 ---@param dir_info                      table<string, dot.state.git.dirinfo>
----@param entry                         era.t.IStatusEntry
+---@param entry                         dot.t.IStatusEntry
 local function git_status_propagate_directory(filepath, workspace, dir_info, entry)
   local has_codes = type(entry.codes) == "table" and next(entry.codes) ~= nil ---@type boolean
   if entry.summary == nil and entry.stage == nil and not has_codes then
@@ -344,12 +344,12 @@ refresh_debounced_fs = ark.timer.debounce(function()
 end, FS_WATCH_DEBOUNCE_MS)
 
 ---@param workspace                     string|nil
----@param status_table                  table<string, era.t.IStatusEntry>
+---@param status_table                  table<string, dot.t.IStatusEntry>
 ---@param status_groups                 table<string, table<string, boolean>>|nil
 local function apply_status(workspace, status_table, status_groups)
   local normalized_workspace = workspace ~= nil and dot.path.normalize(workspace) or nil ---@type string|nil
 
-  local status_entries = {} ---@type table<string, era.t.IStatusEntry>
+  local status_entries = {} ---@type table<string, dot.t.IStatusEntry>
   local file_status = {} ---@type table<string, string>
   local file_display = {} ---@type table<string, string>
   local file_summary = {} ---@type table<string, string|nil>
@@ -415,7 +415,7 @@ local function apply_status(workspace, status_table, status_groups)
       status_groups_copy[category] = bucket
     end
   end
-  local category_list = era.git.STATUS_CATEGORY_LIST ---@type string[]|nil
+  local category_list = dot.git.STATUS_CATEGORY_LIST ---@type string[]|nil
   if type(category_list) == "table" then
     for _, category in ipairs(category_list) do
       if status_groups_copy[category] == nil then
@@ -458,7 +458,7 @@ refresh_git_status_impl = function()
 
   refreshing = true
 
-  local ok, workspace, status_table, status_groups = pcall(era.git.collect_status, { base = "HEAD" })
+  local ok, workspace, status_table, status_groups = pcall(dot.git.collect_status, { base = "HEAD" })
   if ok and type(status_table) == "table" then
     apply_status(workspace, status_table, status_groups)
 
@@ -488,7 +488,7 @@ end
 ---@return string
 ---@return table<string, string>
 function M.status(base)
-  local ok, workspace, status_table = pcall(era.git.collect_status, { base = base }) ---@type boolean, string, table<string, era.t.IStatusEntry>
+  local ok, workspace, status_table = pcall(dot.git.collect_status, { base = base }) ---@type boolean, string, table<string, dot.t.IStatusEntry>
   if not ok then
     return dot.path.workspace(), {}
   end
@@ -506,7 +506,7 @@ function M.status(base)
   return workspace, result
 end
 
----@return table<string, era.t.IStatusEntry>
+---@return table<string, dot.t.IStatusEntry>
 function M.status_table()
   ensure_cache_ready()
   return cache.status_table
@@ -521,7 +521,7 @@ end
 ---@param status                        string
 ---@return string
 function M.extract_parent_status(status)
-  return era.git.extract_parent_status(status)
+  return dot.git.extract_parent_status(status)
 end
 
 ---@param filepath                      string
@@ -556,7 +556,7 @@ function M.resolve_status(filepath, filetype)
   end
   local summary = cache.file_summary[normalized_filepath] ---@type string|nil
   local stage_state = cache.file_stage[normalized_filepath] ---@type string|nil
-  local entry = cache.status_table[normalized_filepath] ---@type era.t.IStatusEntry|nil
+  local entry = cache.status_table[normalized_filepath] ---@type dot.t.IStatusEntry|nil
   local codes = entry and entry.codes or nil ---@type table<string, boolean>|nil
   local categories = entry and entry.categories or nil ---@type table<string, boolean>|nil
   local highlight = resolve_highlight(stage_state, codes, summary, display, categories) ---@type string|nil
@@ -588,7 +588,7 @@ function M.calc_status_info(filepath, filetype, offset, highlights)
   local status_offset = leading_space_colr ---@type integer
   local staged_len = 0 ---@type integer
   local normalized_filepath = dot.path.normalize(filepath) ---@type string
-  local entry = cache.status_table[normalized_filepath] ---@type era.t.IStatusEntry|nil
+  local entry = cache.status_table[normalized_filepath] ---@type dot.t.IStatusEntry|nil
   if entry ~= nil then
     staged_len = #(entry.staged_display or "")
   end

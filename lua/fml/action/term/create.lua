@@ -20,7 +20,7 @@ local function apply_profile(profile)
     return
   end
 
-  era.term.create({
+  dot.term.create({
     uuid = yoz.fn.uuid(),
     type = profile.type,
     name = profile.name,
@@ -83,8 +83,8 @@ end
 
 ---@return nil
 function M.rename()
-  local termindex = era.term.current() ---@type integer
-  local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
+  local termindex = dot.term.current() ---@type integer
+  local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
   if termmeta == nil then
     ark.reporter.warn({
       from = __module_name__,
@@ -142,7 +142,7 @@ function M.rename()
       return -- No change
     end
 
-    era.term.update(termmeta, { name = new_name })
+    dot.term.update(termmeta, { name = new_name })
     dot.state.status.dirtier_termline:mark_dirty()
   end)
 end
@@ -153,22 +153,22 @@ function M.toggle()
   local terminal = ux.widget.Terminal ---@type ux.widget.Terminal
 
   if terminal:isvisible() then
-    local termindex = era.term.current() ---@type integer
-    local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
+    local termindex = dot.term.current() ---@type integer
+    local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
     if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
       terminal:toggle()
       return
     end
   else
     terminal:focus()
-    local termindex = era.term.current() ---@type integer
-    local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
+    local termindex = dot.term.current() ---@type integer
+    local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
     if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
       return
     end
   end
 
-  local _, termmeta = era.term.find_index_by_type("shell") ---@type integer, era.t.ITermMeta|nil
+  local _, termmeta = dot.term.find_index_by_type("shell") ---@type integer, dot.t.ITermMeta|nil
   if termmeta == nil then
     terminal:toggle_and_focus({
       uuid = yoz.fn.uuid(),

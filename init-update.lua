@@ -2,12 +2,11 @@ require("bot").setup()
 
 _G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
-_G.era = require("era") ---@type era
 _G.ux = require("ux") ---@type ux
 
-local default_storage = era.get_default_storage() ---@type dot.context.storage
+local default_storage = dot.get_default_storage() ---@type dot.context.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type dot.context.storage
-era.setup_context(storage)
+dot.setup_context(storage)
 
 require("ghc.plugin")
 

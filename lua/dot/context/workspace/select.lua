@@ -15,9 +15,9 @@ local select_item = require("dot.context.workspace.select_item")
 ---@field public lsp_symbols            dot.context.select.item.data
 ---@field public search_file            dot.context.select.item.data
 ---
----@field public find_buffer_scope      era.e.FindBufferScope
----@field public find_file_scope        era.e.FindFileScope
----@field public search_file_scope      era.e.SearchFileScope
+---@field public find_buffer_scope      dot.e.FindBufferScope
+---@field public find_file_scope        dot.e.FindFileScope
+---@field public search_file_scope      dot.e.SearchFileScope
 
 ---@class dot.context.select.state
 ---@field public find_buffer            dot.context.select.item.state
@@ -40,9 +40,9 @@ local select_item = require("dot.context.workspace.select_item")
 
 ---@class dot.context.select : dot.context.select.state
 ---@field public keys                   string[]
----@field public find_buffer_scopes     era.e.FindBufferScope[]
----@field public find_file_scopes       era.e.FindFileScope[]
----@field public search_file_scopes     era.e.SearchFileScope[]
+---@field public find_buffer_scopes     dot.e.FindBufferScope[]
+---@field public find_file_scopes       dot.e.FindFileScope[]
+---@field public search_file_scopes     dot.e.SearchFileScope[]
 ---
 ---@field public defaults               fun(): dot.context.select.data
 ---@field public dump                   fun(): dot.context.select.data
@@ -197,8 +197,8 @@ M.keys = {
   "lsp_symbols",
   "search_file",
 }
-M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type era.e.FindBufferScope[]
-M.find_file_scopes = { "W", "C", "D" } ---@type era.e.FindFileScope[]
-M.search_file_scopes = { "W", "C", "D", "B" } ---@type era.e.SearchFileScope[]
+M.find_buffer_scopes = { "A", "F", "L", "T" } ---@type dot.e.FindBufferScope[]
+M.find_file_scopes = { "W", "C", "D" } ---@type dot.e.FindFileScope[]
+M.search_file_scopes = { "W", "C", "D", "B" } ---@type dot.e.SearchFileScope[]
 
 return M

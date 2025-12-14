@@ -1,4 +1,4 @@
----@class era.fn.winpicker.hint
+---@class dot.fn.winpicker.hint
 local M = {
   a = {
     "    █████╗    ",

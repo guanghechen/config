@@ -7,19 +7,19 @@ local __module_name__ = "ux.searcher.view.filetree" ---@type string
 ---| ux.searcher.view.filetree.ILeafLocationState
 
 ---@alias ux.searcher.view.filetree.IListviewFileRenderer
----| fun(ctx: ux.searcher.view.filetree.IListviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: ux.searcher.view.filetree.IListviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, locationstate: ux.searcher.view.filetree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, locationstate: ux.searcher.view.filetree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.searcher.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.searcher.view.filetree.ITreeviewFileRenderer
----| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: era.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, locationstate: ux.searcher.view.filetree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: ux.searcher.view.filetree.IFileNodeState, locationstate: ux.searcher.view.filetree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@class ux.searcher.view.filetree.IDirectoryNodeState : ux.view.tree.IContainerNodeState
 
@@ -42,15 +42,15 @@ local __module_name__ = "ux.searcher.view.filetree" ---@type string
 ---@field public matches                yoz.search.ITextMatch[]
 
 ---@class ux.searcher.view.filetree.IListviewRendererContext : ux.view.tree.IListviewRendererContext
----@field public rootnode               era.t.IFiletreeNode
+---@field public rootnode               dot.t.IFiletreeNode
 ---@field public rootstate              ux.searcher.view.filetree.IDirectoryNodeState
----@field public tree                   era.IReadonlyFiletree
+---@field public tree                   dot.IReadonlyFiletree
 ---@field public view                   ux.searcher.FiletreeView
 
 ---@class ux.searcher.view.filetree.ITreeviewRendererContext : ux.view.tree.IListviewRendererContext
----@field public rootnode               era.t.IFiletreeNode
+---@field public rootnode               dot.t.IFiletreeNode
 ---@field public rootstate              ux.searcher.view.filetree.IDirectoryNodeState
----@field public tree                   era.IReadonlyFiletree
+---@field public tree                   dot.IReadonlyFiletree
 ---@field public view                   ux.searcher.FiletreeView
 
 ---@class ux.searcher.view.filetree.ISearchParams
@@ -104,7 +104,7 @@ end
 
 ---@class ux.searcher.view.IFiletreeProps
 ---@field public name                   string
----@field public tree                   era.IFiletree
+---@field public tree                   dot.IFiletree
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
@@ -117,7 +117,7 @@ end
 local P = ux.view.Tree ---@type ux.view.Tree
 
 ---@class ux.searcher.FiletreeView : ux.view.Tree
----@field protected _tree               era.IFiletree
+---@field protected _tree               dot.IFiletree
 ---@field public statemap               table<string, ux.searcher.view.filetree.INodeState>
 ---@field public insert                 fun(self: ux.searcher.FiletreeView, uuid: string, state: ux.view.tree.INodeState): ux.searcher.FiletreeView
 local M = {}
@@ -131,7 +131,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
-  local tree = props.tree ---@type era.IFiletree
+  local tree = props.tree ---@type dot.IFiletree
 
   local render_listview_leaf = props.render_listview_leaf or M.default_render_listview_leaf ---@type ux.searcher.view.filetree.IListviewFileRenderer
   local render_listview_location = props.render_listview_location or M.default_render_listview_location ---@type ux.searcher.view.filetree.IListviewLocationRenderer
@@ -283,7 +283,7 @@ function M:search(params)
   for _, filematch in ipairs(results.items) do
     local relpath = filematch.p or "" ---@type string
     local filepath = resolve_filepath(relpath) ---@type string
-    local uuid = era.Filetree.uuid(filepath) ---@type string
+    local uuid = dot.Filetree.uuid(filepath) ---@type string
 
     filematch_map[uuid] = {
       filepath = filepath,
@@ -403,17 +403,17 @@ function M:reset_filepaths(cwd, filepaths)
   local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
 
-  local filetree = self._tree ---@type era.IFiletree
+  local filetree = self._tree ---@type dot.IFiletree
   local tick_selected = self._tick_selected ---@type integer
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.searcher.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, false)
   filetree:unsafe_traverse(filetree.root, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, era.t.IFiletreeNode>
-    local rootnode = ctx.rootnode ---@type era.t.IFiletreeNode
+    local nodemap = ctx.nodemap ---@type table<string, dot.t.IFiletreeNode>
+    local rootnode = ctx.rootnode ---@type dot.t.IFiletreeNode
 
-    ---@param node                      era.t.IFiletreeNode
+    ---@param node                      dot.t.IFiletreeNode
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
@@ -429,7 +429,7 @@ function M:reset_filepaths(cwd, filepaths)
         statemap[node.uuid] = nodestate
 
         for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type era.t.IFiletreeNode|nil
+          local childnode = nodemap[uuid] ---@type dot.t.IFiletreeNode|nil
           if childnode ~= nil then
             traverse(childnode)
           end
@@ -471,7 +471,7 @@ end
 
 ---@type ux.searcher.view.filetree.IListviewFileRenderer
 function M.default_render_listview_leaf(ctx, node)
-  local rootnode = ctx.rootnode ---@type era.t.IFiletreeNode
+  local rootnode = ctx.rootnode ---@type dot.t.IFiletreeNode
   local fileicon = node.data.fileicon ---@type string
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local filepath = #rootnode.data.filepath < 2 and node.data.filepath
@@ -526,15 +526,15 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     return { text = text, highlights = highlights }
   end
 
-  local tree = ctx.tree ---@type era.IReadonlyFiletree
+  local tree = ctx.tree ---@type dot.IReadonlyFiletree
 
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local o = node ---@type era.t.IFiletreeNode
+  local o = node ---@type dot.t.IFiletreeNode
   for index = folded_depth, 1, -1 do
     local uuid_parent = o.parent ---@type string
-    o = tree:retrieve(uuid_parent) or o ---@type era.t.IFiletreeNode
+    o = tree:retrieve(uuid_parent) or o ---@type dot.t.IFiletreeNode
     basenames[index] = o.data.basename ---@type string
   end
 

@@ -30,7 +30,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public bufnr                  integer
 ---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       ark.c.Scheduler|nil
----@field public lsp_symbols            era.t.ILspSymbol[]|nil
+---@field public lsp_symbols            dot.t.ILspSymbol[]|nil
 ---@field public nvimbar                ux.nvimbar.Nvimbar
 
 ---@class dot.win.IMeta
@@ -114,14 +114,14 @@ local function byte_col_to_client_character(bufnr, row, byte_col, encoding)
 
   local use_utf16 = normalized == "utf-16"
   ---@diagnostic disable-next-line: param-type-mismatch
-  local ok, character = pcall(vim.str_utfindex, line, byte_col, use_utf16)
+  local ok, character = pcall(vim.str_utfindex, line, byte_col, use_utf16) ---@spell-ignore: utfindex
   if ok and type(character) == "number" then
     return character
   end
 
   if normalized == "utf-32" then
     ---@diagnostic disable-next-line: param-type-mismatch
-    local fallback_ok, fallback_character = pcall(vim.str_utfindex, line, byte_col)
+    local fallback_ok, fallback_character = pcall(vim.str_utfindex, line, byte_col) ---@spell-ignore: utfindex
     if fallback_ok and type(fallback_character) == "number" then
       return fallback_character
     end
@@ -326,13 +326,13 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
-  return era.fn.winpicker(M.is_focusable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.winpicker(M.is_focusable, winnr_candidate, false) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
-  return era.fn.winpicker(M.is_projectable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.winpicker(M.is_projectable, winnr_candidate, false) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
@@ -341,13 +341,13 @@ function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and M.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
-  return era.fn.winpicker(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
+  return dot.fn.winpicker(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
-  return era.fn.winpicker(M.is_swappable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.winpicker(M.is_swappable, winnr_candidate, false) ---@type integer|nil
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -439,7 +439,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param winnr                         integer|nil
----@param callback                      fun(ok: boolean, symbols: era.t.ILspSymbol[]|nil): nil
+---@param callback                      fun(ok: boolean, symbols: dot.t.ILspSymbol[]|nil): nil
 ---@return fun(): nil
 function M.locate_symbols(winnr, callback)
   local cancel_lsp = ark.fn.noop ---@type fun(): nil
@@ -552,8 +552,8 @@ function M.locate_symbols(winnr, callback)
     local cursor_line = cursor_row - 1 ---@type integer
     local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
     local cursor_pos = { line = cursor_line, character = cursor_character }
-    local symbol_path = era.lsp.find_symbol_path(cursor_pos, symbols)
-    local lsp_symbols = {} ---@type era.t.ILspSymbol[]
+    local symbol_path = dot.lsp.find_symbol_path(cursor_pos, symbols)
+    local lsp_symbols = {} ---@type dot.t.ILspSymbol[]
 
     local k = 1 ---@type integer
     if symbol_path then
@@ -565,7 +565,7 @@ function M.locate_symbols(winnr, callback)
         local pos = range and range.start or nil ---@type lsp.Position|nil
         if pos ~= nil then
           local byte_col = position_to_byte_col(bufnr, pos, encoding) ---@type integer
-          ---@type era.t.ILspSymbol
+          ---@type dot.t.ILspSymbol
           local lsp_symbol = {
             kind = kind,
             name = name,
@@ -639,7 +639,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     and M.is_sourcefile(winnr_source)
   )
       and winnr_source
-    or era.fn.winpicker(M.is_sourcefile, winnr_source, true)
+    or dot.fn.winpicker(M.is_sourcefile, winnr_source, true)
 
   if winnr == nil then
     return

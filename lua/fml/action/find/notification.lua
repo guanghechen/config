@@ -1,7 +1,7 @@
 local __module_name__ = "fml.action.find.notification"
 
 ---@class fml.action.find.notification.IItemData
----@field public task                   era.t.INotifierTask
+---@field public task                   dot.t.INotifierTask
 
 ---@class fml.action.find.notification.IItem : ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
@@ -17,10 +17,10 @@ local function fetch_data()
   dirty_data = false
 
   local items = {} ---@type fml.action.find.notification.IItem[]
-  local tasks = era.notifier.history() ---@type era.t.INotifierTask[]
+  local tasks = dot.notifier.history() ---@type dot.t.INotifierTask[]
 
   for index = #tasks, 1, -1 do
-    local task = tasks[index] ---@type era.t.INotifierTask
+    local task = tasks[index] ---@type dot.t.INotifierTask
     local text =
       string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), dot.icon.loglevel[task.level], task.title)
 
@@ -88,7 +88,7 @@ picker = ux.picker.ListComposer.new({
 
     ---@cast item fml.action.find.notification.IItem
 
-    local task = item.data.task ---@type era.t.INotifierTask
+    local task = item.data.task ---@type dot.t.INotifierTask
 
     ---@type string[]
     local header_lines = {
@@ -165,7 +165,7 @@ picker = ux.picker.ListComposer.new({
 
     dirty_data = true
 
-    local task = item.data.task ---@type era.t.INotifierTask
+    local task = item.data.task ---@type dot.t.INotifierTask
     ark.reporter.log(task.level, {
       from = __module_name__,
       title = task.title,

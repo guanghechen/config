@@ -7,19 +7,19 @@ local __module_name__ = "ux.picker.view.tree" ---@type string
 ---| ux.picker.view.tree.ILeafLocationState
 
 ---@alias ux.picker.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: ux.picker.view.tree.IListviewRendererContext, node: era.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: ux.picker.view.tree.IListviewRendererContext, node: era.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, location: ux.picker.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, location: ux.picker.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: ux.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.picker.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, location: ux.picker.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: ux.picker.view.tree.ILeafNodeState, location: ux.picker.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@class ux.picker.view.tree.IContainerNodeState : ux.view.tree.IContainerNodeState
 
@@ -31,15 +31,15 @@ local __module_name__ = "ux.picker.view.tree" ---@type string
 ---@class ux.picker.view.tree.ILeafLocationState : ux.view.tree.ILeafLocationState
 
 ---@class ux.picker.view.tree.IListviewRendererContext : ux.view.tree.IListviewRendererContext
----@field public rootnode               era.t.ITreeNode
+---@field public rootnode               dot.t.ITreeNode
 ---@field public rootstate              ux.picker.view.tree.IContainerNodeState
----@field public tree                   era.IReadonlyTree
+---@field public tree                   dot.IReadonlyTree
 ---@field public view                   ux.picker.TreeView
 
 ---@class ux.picker.view.tree.ITreeviewRendererContext : ux.view.tree.ITreeviewRendererContext
----@field public rootnode               era.t.ITreeNode
+---@field public rootnode               dot.t.ITreeNode
 ---@field public rootstate              ux.picker.view.tree.IContainerNodeState
----@field public tree                   era.IReadonlyTree
+---@field public tree                   dot.IReadonlyTree
 ---@field public view                   ux.picker.TreeView
 
 ---@class ux.picker.view.tree.INodeMatchContext
@@ -55,7 +55,7 @@ local __module_name__ = "ux.picker.view.tree" ---@type string
 
 ---@class ux.picker.view.tree.INodeMatchResultCache
 ---@field public score                  integer
----@field public matches                era.t.IMatchPoint[]
+---@field public matches                dot.t.IMatchPoint[]
 
 ---@class ux.picker.view.tree.IMatchParams
 ---@field public rootuuid               string|nil
@@ -70,7 +70,7 @@ local __module_name__ = "ux.picker.view.tree" ---@type string
 ---@field public name                   string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
----@field public tree                   era.IReadonlyTree
+---@field public tree                   dot.IReadonlyTree
 ---@field public render_listview_leaf   ux.picker.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   ux.picker.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  ux.picker.view.tree.ITreeviewContainerNodeRenderer
@@ -92,7 +92,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
-  local tree = props.tree ---@type era.IReadonlyTree
+  local tree = props.tree ---@type dot.IReadonlyTree
   local render_listview_leaf = props.render_listview_leaf ---@type ux.picker.view.tree.IListviewLeafNodeRenderer
   local render_listview_location = props.render_listview_location ---@type ux.picker.view.tree.IListviewLeafLocationRenderer
   local render_treeview_container = props.render_treeview_container ---@type ux.picker.view.tree.ITreeviewContainerNodeRenderer
@@ -162,7 +162,7 @@ end
 function M:match(params)
   self:__health__()
 
-  local tree = self._tree ---@type era.IReadonlyTree
+  local tree = self._tree ---@type dot.IReadonlyTree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
   ---@cast statemap                     table<string, ux.picker.view.tree.INodeState>
 
@@ -204,7 +204,7 @@ function M:match(params)
     local k = 0 ---@type integer
     uuids = {} ---@type string[]
 
-    ---@type era.t.ITreeQuickTraverseHandler
+    ---@type dot.t.ITreeQuickTraverseHandler
     local collect = function(_, node)
       local state = statemap[node.uuid]
       if state.text ~= nil then
@@ -260,7 +260,7 @@ function M:match(params)
     for _, line_match in ipairs(line_matches) do
       local lnum = line_match.lnum ---@type integer
       local uuid = uuids[lnum] ---@type string
-      local matches = line_match.matches ---@type era.t.IMatchPoint[]
+      local matches = line_match.matches ---@type dot.t.IMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
       state.cache_match = { score = line_match.score, matches = matches } ---@type ux.picker.view.tree.INodeMatchResultCache
@@ -279,11 +279,11 @@ function M:match(params)
 
   for _, uuid in ipairs(uuids) do
     local o = tree:retrieve(uuid)
-    ---@cast o                          era.t.ITreeNode
+    ---@cast o                          dot.t.ITreeNode
 
     for _ = o.depth - 1, 1, -1 do
       o = tree:retrieve(o.parent)
-      ---@cast o                        era.t.ITreeNode
+      ---@cast o                        dot.t.ITreeNode
 
       local s = statemap[o.uuid]
       if s.tick_matched == tick_matched then
@@ -327,7 +327,7 @@ function M:render_listview(params)
     return result
   end
 
-  local tree = self._tree ---@type era.IReadonlyTree
+  local tree = self._tree ---@type dot.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
@@ -337,7 +337,7 @@ function M:render_listview(params)
     local uuid = uuids[lnum] ---@type string
     local nodestate = statemap[uuid] ---@type ux.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
+      local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
       if node ~= nil then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
@@ -346,7 +346,7 @@ function M:render_listview(params)
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 
-        local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
+        local matches = nodestate.cache_match.matches ---@type dot.t.IMatchPoint[]
         for _, m in ipairs(matches) do
           local l = m.l ---@type integer
           local r = m.r ---@type integer
@@ -386,7 +386,7 @@ function M:render_treeview(params)
     return result
   end
 
-  local tree = self._tree ---@type era.IReadonlyTree
+  local tree = self._tree ---@type dot.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
@@ -396,7 +396,7 @@ function M:render_treeview(params)
     local uuid = uuids[lnum] ---@type string
     local nodestate = statemap[uuid] ---@type ux.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
+      local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
       if node ~= nil then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
@@ -405,7 +405,7 @@ function M:render_treeview(params)
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 
-        local matches = nodestate.cache_match.matches ---@type era.t.IMatchPoint[]
+        local matches = nodestate.cache_match.matches ---@type dot.t.IMatchPoint[]
         for _, m in ipairs(matches) do
           local l = m.l ---@type integer
           local r = m.r ---@type integer

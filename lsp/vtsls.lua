@@ -23,14 +23,14 @@ local function root_dir(bufnr, on_dir)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = dot.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  era.lsp.before_init(params, config)
+  dot.lsp.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
@@ -89,7 +89,7 @@ local function on_attach(client, bufnr)
     end)
   end
 
-  era.lsp.on_attach(client, bufnr)
+  dot.lsp.on_attach(client, bufnr)
 
   ---@type ark.t.IKeymap[]
   local keymaps = {
@@ -191,17 +191,17 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  era.lsp.on_detach(client, bufnr)
+  dot.lsp.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  era.lsp.on_init(client, config)
+  dot.lsp.on_init(client, config)
 end
 
 local paths = {
-  vue_ls = era.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+  vue_ls = dot.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
 local vue_plugin = paths.vue_ls and {
@@ -219,7 +219,7 @@ end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = era.lsp.get_capabilities(),
+  capabilities = dot.lsp.get_capabilities(),
   cmd = { "vtsls", "--stdio" },
   filetypes = {
     "javascript",

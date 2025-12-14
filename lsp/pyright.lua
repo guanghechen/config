@@ -24,13 +24,13 @@ end
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  era.lsp.before_init(params, config)
+  dot.lsp.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  era.lsp.on_attach(client, bufnr)
+  dot.lsp.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspPyrightOrganizeImports", function()
     local params = {
@@ -56,18 +56,18 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  era.lsp.on_detach(client, bufnr)
+  dot.lsp.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  era.lsp.on_init(client, config)
+  dot.lsp.on_init(client, config)
 end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = era.lsp.get_capabilities(),
+  capabilities = dot.lsp.get_capabilities(),
   cmd = { "pyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {

@@ -1,8 +1,8 @@
-local __module_name__ = "era.fn.winpicker" ---@type string
+local __module_name__ = "dot.fn.winpicker" ---@type string
 
-local Mask = require("era.fn.winpicker.mask")
+local Mask = require("dot.fn.winpicker.mask")
 
----@class era.fn.winpicker.config
+---@class dot.fn.winpicker.config
 local config = {
   chars = {
     "F",
@@ -41,9 +41,12 @@ local function get_user_input_char()
   return vim.fn.nr2char(c)
 end
 
----@alias era.fn.winpicker fun(filter: fun(winnr: integer): boolean, winnr_candidate: integer|nil, split_as_needed: boolean): integer|nil
+---@alias dot.fn.winpicker.filter fun(winnr: integer): boolean
 
----@param filter                        fun(winnr: integer): boolean
+---@alias dot.fn.winpicker
+---| fun(filter: dot.fn.winpicker.filter, winnr_candidate: integer|nil, split_as_needed: boolean): integer|nil
+
+---@param filter                        dot.fn.winpicker.filter
 ---@param winnr_candidate               integer|nil
 ---@param split_as_needed               boolean
 ---@return integer|nil
@@ -92,14 +95,14 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
     return winnrs[1]
   end
 
-  local masks = {} ---@type table<integer, era.fn.winpicker.Mask>
+  local masks = {} ---@type table<integer, dot.fn.winpicker.Mask>
   local winnr_target = nil ---@type integer|nil
 
   pcall(function()
     for i = 1, N, 1 do
       local winnr = winnrs[i] ---@type integer
       local char = config.chars[i] ---@type string
-      local mask = Mask.new(char:lower()) ---@type era.fn.winpicker.Mask
+      local mask = Mask.new(char:lower()) ---@type dot.fn.winpicker.Mask
       masks[winnr] = mask
     end
 
@@ -134,5 +137,5 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
   return winnr_target
 end
 
----@type era.fn.winpicker
+---@type dot.fn.winpicker
 return pick_window
