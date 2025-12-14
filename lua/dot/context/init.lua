@@ -308,7 +308,7 @@ function M.watch_changes()
     M.lsp.inlay_hints,
   }, function()
     pcall(function()
-      dot.command.execute(dot.command.definitions.lsp.restart.uuid)
+      dot.command.definitions.lsp.restart:execute()
     end)
   end, true)
 

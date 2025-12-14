@@ -34,7 +34,7 @@ function M.resume_last_widget()
       end
     end
   else
-    dot.command.execute(dot.command.definitions.find.files.uuid)
+    dot.command.definitions.find.files:execute()
   end
 end
 

@@ -76,7 +76,7 @@ local function create_buf(termmeta)
       key = "<M-h>",
       desc = "ai term: navigate left",
       callback = function()
-        dot.command.execute(dot.command.definitions.win.focus_left.uuid)
+        dot.command.definitions.win.focus_left:execute()
       end,
     },
     {
@@ -84,7 +84,7 @@ local function create_buf(termmeta)
       key = "<M-j>",
       desc = "ai term: navigate down",
       callback = function()
-        dot.command.execute(dot.command.definitions.win.focus_bottom.uuid)
+        dot.command.definitions.win.focus_bottom:execute()
       end,
     },
     {
@@ -92,7 +92,7 @@ local function create_buf(termmeta)
       key = "<M-k>",
       desc = "ai term: navigate up",
       callback = function()
-        dot.command.execute(dot.command.definitions.win.focus_top.uuid)
+        dot.command.definitions.win.focus_top:execute()
       end,
     },
     {
@@ -100,7 +100,7 @@ local function create_buf(termmeta)
       key = "<M-l>",
       desc = "ai term: navigate right",
       callback = function()
-        dot.command.execute(dot.command.definitions.win.focus_right.uuid)
+        dot.command.definitions.win.focus_right:execute()
       end,
     },
   }

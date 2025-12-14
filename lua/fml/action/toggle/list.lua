@@ -378,7 +378,7 @@ local group_items = {
         return venv_path, "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.lsp.select_python_venv.uuid)
+        dot.command.definitions.lsp.select_python_venv:execute()
       end,
     },
   },
@@ -390,7 +390,7 @@ local group_items = {
         return theme, "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.toggle.theme.uuid)
+        dot.command.definitions.toggle.theme:execute()
       end,
     },
     theme_variant = {
@@ -408,7 +408,7 @@ local group_items = {
         end
 
         local next_theme = string.format("%s-%s", scheme.theme, scheme.opposite) ---@type dot.e.ThemeFullName
-        dot.command.execute(dot.command.definitions.toggle.theme.uuid, next_theme)
+        dot.command.definitions.toggle.theme:execute(next_theme)
       end,
     },
   },
@@ -419,7 +419,7 @@ local group_items = {
         return "", "String"
       end,
       action = function()
-        dot.command.execute(dot.command.definitions.toggle.maximize.uuid)
+        dot.command.definitions.toggle.maximize:execute()
       end,
     },
   },

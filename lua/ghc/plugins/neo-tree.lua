@@ -131,7 +131,7 @@ return {
         end
 
         local filepath = node:get_id() ---@type string
-        dot.command.execute(dot.command.definitions.find.explorer.uuid, filepath)
+        dot.command.definitions.find.explorer:execute(filepath)
       end,
       open_ghc_file_finder = function(state)
         local node = state.tree:get_node()
@@ -139,14 +139,14 @@ return {
         if node.type == "file" then
           local dirpath = dot.path.dirname(node:get_id()) ---@type string
           require("fml.action.find.files"):reset_input()
-          dot.command.execute(dot.command.definitions.find.files.uuid, dirpath)
+          dot.command.definitions.find.files:execute(dirpath)
           return
         end
 
         if node.type == "directory" then
           local dirpath = node:get_id() ---@type string
           require("fml.action.find.files"):reset_input()
-          dot.command.execute(dot.command.definitions.find.files.uuid, dirpath)
+          dot.command.definitions.find.files:execute(dirpath)
         end
       end,
       open_ghc_searcher = function(state)
@@ -156,7 +156,7 @@ return {
         end
 
         local filepath = node:get_id() ---@type string
-        dot.command.execute(dot.command.definitions.search.in_files.uuid, filepath)
+        dot.command.definitions.search.in_files:execute(filepath)
       end,
       recursively_toggle_all = function(neotree_state)
         local node = neotree_state.tree:get_node()

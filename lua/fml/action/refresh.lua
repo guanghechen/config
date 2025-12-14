@@ -30,7 +30,7 @@ function M.refresh_all()
       require("plenary.reload").reload_module("dot.lang")
       require("plenary.reload").reload_module("dot.theme")
       require("plenary.reload").reload_module("dot.theme.hlgroup")
-      dot.command.execute(dot.command.definitions.ux.reload_theme.uuid, "force")
+      dot.command.definitions.ux.reload_theme:execute("force")
     end)
   end
 

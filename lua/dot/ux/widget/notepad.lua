@@ -22,7 +22,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-s>",
     desc = K.notepad.save.desc,
     callback = function()
-      dot.command.execute(K.notepad.save.uuid)
+      K.notepad.save:execute()
     end,
   },
   {
@@ -31,7 +31,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<D-s>", "<M-s>" },
     desc = K.notepad.save.desc,
     callback = function()
-      dot.command.execute(K.notepad.save.uuid)
+      K.notepad.save:execute()
     end,
   },
   {
@@ -39,7 +39,7 @@ local NOTEPAD_KEYMAPS = {
     key = "q",
     desc = K.notepad.close.desc,
     callback = function()
-      dot.command.execute(K.notepad.close.uuid)
+      K.notepad.close:execute()
     end,
   },
   {
@@ -47,7 +47,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-n>",
     desc = K.notepad.rename.desc,
     callback = function()
-      dot.command.execute(K.notepad.rename.uuid)
+      K.notepad.rename:execute()
     end,
   },
   {
@@ -55,7 +55,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader><cr>",
     desc = K.ai.submit_buffer.desc,
     callback = function()
-      dot.command.execute(K.ai.submit_buffer.uuid)
+      K.ai.submit_buffer:execute()
     end,
   },
   {
@@ -63,7 +63,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader><cr>",
     desc = K.ai.submit_selection.desc,
     callback = function()
-      dot.command.execute(K.ai.submit_selection.uuid)
+      K.ai.submit_selection:execute()
     end,
   },
   {
@@ -71,7 +71,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-/>",
     desc = K.notepad.create.desc,
     callback = function()
-      dot.command.execute(K.notepad.create.uuid)
+      K.notepad.create:execute()
     end,
   },
   {
@@ -79,7 +79,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-d>",
     desc = K.notepad.destroy.desc,
     callback = function()
-      dot.command.execute(K.notepad.destroy.uuid)
+      K.notepad.destroy:execute()
     end,
   },
   {
@@ -87,7 +87,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>dd",
     desc = K.notepad.destroy.desc,
     callback = function()
-      dot.command.execute(K.notepad.destroy.uuid)
+      K.notepad.destroy:execute()
     end,
   },
   {
@@ -95,7 +95,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-,>",
     desc = K.notepad.source_prev.desc,
     callback = function()
-      dot.command.execute(K.notepad.source_prev.uuid)
+      K.notepad.source_prev:execute()
     end,
   },
   {
@@ -103,7 +103,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-.>",
     desc = K.notepad.source_next.desc,
     callback = function()
-      dot.command.execute(K.notepad.source_next.uuid)
+      K.notepad.source_next:execute()
     end,
   },
   {
@@ -111,7 +111,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-[>",
     desc = K.notepad.focus_left.desc,
     callback = function()
-      dot.command.execute(K.notepad.focus_left.uuid)
+      K.notepad.focus_left:execute()
     end,
   },
   {
@@ -119,7 +119,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<C-]>",
     desc = K.notepad.focus_right.desc,
     callback = function()
-      dot.command.execute(K.notepad.focus_right.uuid)
+      K.notepad.focus_right:execute()
     end,
   },
   {
@@ -127,7 +127,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>[",
     desc = K.notepad.focus_left.desc,
     callback = function()
-      dot.command.execute(K.notepad.focus_left.uuid)
+      K.notepad.focus_left:execute()
     end,
   },
   {
@@ -135,7 +135,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>]",
     desc = K.notepad.focus_right.desc,
     callback = function()
-      dot.command.execute(K.notepad.focus_right.uuid)
+      K.notepad.focus_right:execute()
     end,
   },
   {
@@ -144,7 +144,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<C-S-[>" },
     desc = K.notepad.swap_left.desc,
     callback = function()
-      dot.command.execute(K.notepad.swap_left.uuid)
+      K.notepad.swap_left:execute()
     end,
   },
   {
@@ -153,7 +153,7 @@ local NOTEPAD_KEYMAPS = {
     aliases = { "<C-S-]>" },
     desc = K.notepad.swap_right.desc,
     callback = function()
-      dot.command.execute(K.notepad.swap_right.uuid)
+      K.notepad.swap_right:execute()
     end,
   },
   {
@@ -161,7 +161,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>0",
     desc = K.notepad.change_engine.desc,
     callback = function()
-      dot.command.execute(K.notepad.change_engine.uuid)
+      K.notepad.change_engine:execute()
     end,
   },
   {
@@ -169,7 +169,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>1",
     desc = K.notepad.source_select.desc,
     callback = function()
-      dot.command.execute(K.notepad.source_select.uuid)
+      K.notepad.source_select:execute()
     end,
   },
   {
@@ -177,7 +177,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<leader>2",
     desc = K.notepad.note_select.desc,
     callback = function()
-      dot.command.execute(K.notepad.note_select.uuid)
+      K.notepad.note_select:execute()
     end,
   },
   {
@@ -185,7 +185,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<M-i>",
     desc = K.notepad.go_backward.desc,
     callback = function()
-      dot.command.execute(K.notepad.go_backward.uuid)
+      K.notepad.go_backward:execute()
     end,
   },
   {
@@ -193,7 +193,7 @@ local NOTEPAD_KEYMAPS = {
     key = "<M-o>",
     desc = K.notepad.go_forward.desc,
     callback = function()
-      dot.command.execute(K.notepad.go_forward.uuid)
+      K.notepad.go_forward:execute()
     end,
   },
   {
@@ -215,7 +215,7 @@ for index = 1, 9 do
     key = string.format("<C-%d>", index),
     desc = definition.desc,
     callback = function()
-      dot.command.execute(definition.uuid)
+      definition:execute()
     end,
   }
 end
@@ -227,7 +227,7 @@ for index = 1, 9 do
     key = string.format("[%d", index),
     desc = definition_left.desc,
     callback = function()
-      dot.command.execute(definition_left.uuid)
+      definition_left:execute()
     end,
   }
 
@@ -237,7 +237,7 @@ for index = 1, 9 do
     key = string.format("]%d", index),
     desc = definition_right.desc,
     callback = function()
-      dot.command.execute(definition_right.uuid)
+      definition_right:execute()
     end,
   }
 end

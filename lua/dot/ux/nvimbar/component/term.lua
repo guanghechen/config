@@ -14,17 +14,17 @@ end) or "dot.G.noop"
 
 ---@type string
 local fn_add_term = dot.G.register_anonymous_fn(function()
-  dot.command.execute(K.term.create.uuid)
+  K.term.create:execute()
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_prev_term = dot.G.register_anonymous_fn(function()
-  dot.command.execute(K.term.focus_left.uuid)
+  K.term.focus_left:execute()
 end) or "dot.G.noop"
 
 ---@type string
 local fn_focus_next_term = dot.G.register_anonymous_fn(function()
-  dot.command.execute(K.term.focus_right.uuid)
+  K.term.focus_right:execute()
 end) or "dot.G.noop"
 
 ---@class dot.ux.nvimbar.component.term

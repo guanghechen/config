@@ -292,7 +292,7 @@ function M.create(params)
       key = key,
       desc = definition.desc,
       callback = function()
-        dot.command.execute(definition.uuid)
+        definition:execute()
       end,
     }
   end
@@ -302,7 +302,7 @@ function M.create(params)
     aliases = { "<C-[>" },
     desc = dot.command.definitions.term.focus_left.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.focus_left.uuid)
+      dot.command.definitions.term.focus_left:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -311,7 +311,7 @@ function M.create(params)
     aliases = { "<C-]>" },
     desc = dot.command.definitions.term.focus_right.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.focus_right.uuid)
+      dot.command.definitions.term.focus_right:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -320,7 +320,7 @@ function M.create(params)
     aliases = { "<C-S-[>" },
     desc = dot.command.definitions.term.swap_left.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.swap_left.uuid)
+      dot.command.definitions.term.swap_left:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -329,7 +329,7 @@ function M.create(params)
     aliases = { "<C-S-]>" },
     desc = dot.command.definitions.term.swap_right.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.swap_right.uuid)
+      dot.command.definitions.term.swap_right:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -337,7 +337,7 @@ function M.create(params)
     key = "<C-n>",
     desc = dot.command.definitions.term.rename.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.rename.uuid)
+      dot.command.definitions.term.rename:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -345,7 +345,7 @@ function M.create(params)
     key = "<C-/>",
     desc = dot.command.definitions.term.create.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.create.uuid)
+      dot.command.definitions.term.create:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
@@ -353,7 +353,7 @@ function M.create(params)
     key = "<C-d>",
     desc = dot.command.definitions.term.destroy.desc,
     callback = function()
-      dot.command.execute(dot.command.definitions.term.destroy.uuid)
+      dot.command.definitions.term.destroy:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
