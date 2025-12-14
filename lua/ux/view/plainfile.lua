@@ -83,7 +83,7 @@ function M:render(bufnr, filepath, force)
         filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
       end
     elseif yoz.path.is_exist_file(filepath) then
-      lines = era.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
+      lines = dot.fs.read_file_as_lines({ filepath = filepath, silent = true }) ---@type string[]
       filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
     else
       ---@type string[]

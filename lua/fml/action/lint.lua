@@ -207,7 +207,7 @@ function M.spellcheck_register()
       language = "en",
       words = { word },
     }
-    era.fs.write_json(filepath, data, true)
+    dot.fs.write_json(filepath, data, true)
     ark.reporter.info({
       from = __module_name__,
       subject = "spellcheck_register",
@@ -216,7 +216,7 @@ function M.spellcheck_register()
     return
   end
 
-  local data = era.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
+  local data = dot.fs.read_json({ filepath = filepath, silent_on_bad_json = false, silent_on_bad_path = false })
   if type(data) ~= "table" or type(data.words) ~= "table" then
     ark.reporter.error({
       from = __module_name__,
@@ -241,7 +241,7 @@ function M.spellcheck_register()
 
   table.insert(data.words, word)
   table.sort(data.words)
-  era.fs.write_json(filepath, data, true)
+  dot.fs.write_json(filepath, data, true)
   ark.reporter.info({
     from = __module_name__,
     subject = "spellcheck_register",
