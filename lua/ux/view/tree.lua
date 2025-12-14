@@ -19,45 +19,45 @@ local __module_name__ = "ux.view.treeview" ---@type string
 ---| ux.view.tree.ILeafLocationState
 
 ---@alias ux.view.tree.IRenderListviewLeafNode
----| fun(leafnode: std.collection.tree.INode, leafstate: ux.view.tree.ILeafNodeState): nil
+---| fun(leafnode: era.t.ITreeNode, leafstate: ux.view.tree.ILeafNodeState): nil
 
 ---@alias ux.view.tree.IRenderListviewLeafLocations
----| fun(leafnode: std.collection.tree.INode, leafstate: ux.view.tree.ILeafNodeState): nil
+---| fun(leafnode: era.t.ITreeNode, leafstate: ux.view.tree.ILeafNodeState): nil
 
 ---@alias ux.view.tree.IRenderTreeviewContainerNode
----| fun(containernode: std.collection.tree.INode, containerstate: ux.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
+---| fun(containernode: era.t.ITreeNode, containerstate: ux.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
 
 ---@alias ux.view.tree.IRenderTreeviewLeafNode
----| fun(leafnode: std.collection.tree.INode, leafstate: ux.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
+---| fun(leafnode: era.t.ITreeNode, leafstate: ux.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
 
 ---@alias ux.view.tree.IRenderTreeviewLeafLocations
----| fun(leafnode: std.collection.tree.INode, leafstate: ux.view.tree.ILeafNodeState, leafindent: string): nil
+---| fun(leafnode: era.t.ITreeNode, leafstate: ux.view.tree.ILeafNodeState, leafindent: string): nil
 
 ---@alias ux.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: ux.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: ux.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.view.tree.IListviewRendererContext, node: era.t.ITreeNode, nodestate: ux.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: ux.view.tree.IListviewRendererContext, node: std.collection.tree.INode, nodestate: ux.view.tree.ILeafNodeState, location: ux.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.view.tree.IListviewRendererContext, node: era.t.ITreeNode, nodestate: ux.view.tree.ILeafNodeState, location: ux.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: ux.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: ux.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.view.tree.ILeafNodeState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@alias ux.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: std.collection.tree.INode, nodestate: ux.view.tree.ILeafNodeState, location: ux.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
+---| fun(ctx: ux.view.tree.ITreeviewRendererContext, node: era.t.ITreeNode, nodestate: ux.view.tree.ILeafNodeState, location: ux.view.tree.ILeafLocationState, lnum: integer): ux.view.tree.INodeRenderResult
 
 ---@class ux.view.tree.IListviewRendererContext
----@field public rootnode               std.collection.tree.INode
+---@field public rootnode               era.t.ITreeNode
 ---@field public rootstate              ux.view.tree.IContainerNodeState
----@field public tree                   std.collection.IReadonlyTree
+---@field public tree                   era.IReadonlyTree
 ---@field public view                   ux.view.Tree
 
 ---@class ux.view.tree.ITreeviewRendererContext
----@field public rootnode               std.collection.tree.INode
+---@field public rootnode               era.t.ITreeNode
 ---@field public rootstate              ux.view.tree.INodeState
----@field public tree                   std.collection.IReadonlyTree
+---@field public tree                   era.IReadonlyTree
 ---@field public view                   ux.view.Tree
 
 ---@class ux.view.tree.IContainerNodeState
@@ -179,7 +179,7 @@ end
 ---@field public fullname               ?string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
----@field public tree                   std.collection.IReadonlyTree
+---@field public tree                   era.IReadonlyTree
 ---@field public render_listview_leaf   ux.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   ux.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  ux.view.tree.ITreeviewContainerNodeRenderer
@@ -193,7 +193,7 @@ end
 ---@field protected _disposed           boolean
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
----@field protected _tree               std.collection.IReadonlyTree
+---@field protected _tree               era.IReadonlyTree
 ---
 ---@field protected _count_selected     integer
 ---@field protected _dirty_selected     boolean
@@ -218,7 +218,7 @@ function M.new(props)
   local fullname = props.fullname or string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent or "" ---@type string
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
-  local tree = props.tree ---@type std.collection.IReadonlyTree
+  local tree = props.tree ---@type era.IReadonlyTree
 
   local render_listview_leaf = props.render_listview_leaf ---@type ux.view.tree.IListviewLeafNodeRenderer
   local render_listview_location = props.render_listview_location ---@type ux.view.tree.IListviewLeafLocationRenderer
@@ -333,7 +333,7 @@ function M:render_listview(params)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -347,7 +347,7 @@ function M:render_listview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_listview = self._tick_render_listview ---@type integer
 
-  local rootnode = tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
+  local rootnode = tree:retrieve(rootuuid) ---@type era.t.ITreeNode|nil
   local rootstate = statemap[rootuuid] ---@type ux.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -467,10 +467,10 @@ function M:render_listview(params)
   end
 
   if orders == nil then
-    local conditional ---@type std.collection.tree.ITraverseConditional
+    local conditional ---@type era.t.ITreeTraverseConditional
     if only_matched then
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -484,7 +484,7 @@ function M:render_listview(params)
           return "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -499,7 +499,7 @@ function M:render_listview(params)
       end
     else
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -512,7 +512,7 @@ function M:render_listview(params)
           return "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -523,10 +523,10 @@ function M:render_listview(params)
       end
     end
 
-    local traverse ---@type std.collection.tree.ITraverseHandler
+    local traverse ---@type era.t.ITreeTraverseHandler
     if only_matched then
       if only_selected then
-        ---@type std.collection.tree.ITraverseHandler
+        ---@type era.t.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -540,7 +540,7 @@ function M:render_listview(params)
           end
         end
       else
-        ---@type std.collection.tree.ITraverseHandler
+        ---@type era.t.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -555,7 +555,7 @@ function M:render_listview(params)
       end
     else
       if only_selected then
-        ---@type std.collection.tree.ITraverseHandler
+        ---@type era.t.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -568,7 +568,7 @@ function M:render_listview(params)
           end
         end
       else
-        ---@type std.collection.tree.ITraverseHandler
+        ---@type era.t.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if nodestate ~= nil and nodestate.nodetype == "leaf" and nodestate.tick_invisible ~= tick_invisible then
@@ -583,7 +583,7 @@ function M:render_listview(params)
     if only_matched then
       if only_selected then
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+          local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ux.view.tree.INodeState|nil
           if
             node ~= nil
@@ -598,7 +598,7 @@ function M:render_listview(params)
         end
       else
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+          local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ux.view.tree.INodeState|nil
           if
             node ~= nil
@@ -614,7 +614,7 @@ function M:render_listview(params)
     else
       if only_selected then
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+          local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ux.view.tree.INodeState|nil
           if
             node ~= nil
@@ -628,7 +628,7 @@ function M:render_listview(params)
         end
       else
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type std.collection.tree.INode|nil
+          local node = tree:retrieve(uuid) ---@type era.t.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ux.view.tree.INodeState|nil
           if
             node ~= nil
@@ -677,7 +677,7 @@ function M:render_treeview(params)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local root = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -692,7 +692,7 @@ function M:render_treeview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_treeview = self._tick_render_treeview ---@type integer
 
-  local rootnode = tree:retrieve(root) ---@type std.collection.tree.INode|nil
+  local rootnode = tree:retrieve(root) ---@type era.t.ITreeNode|nil
   local rootstate = statemap[root] ---@type ux.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -938,11 +938,11 @@ function M:render_treeview(params)
     end
   end
 
-  local conditional ---@type std.collection.tree.ITraverseConditional
+  local conditional ---@type era.t.ITreeTraverseConditional
   if only_expanded then
     if only_matched then
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -956,7 +956,7 @@ function M:render_treeview(params)
           return nodestate.collapsed and "goodnode" or "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -971,7 +971,7 @@ function M:render_treeview(params)
       end
     else
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -984,7 +984,7 @@ function M:render_treeview(params)
           return nodestate.collapsed and "goodnode" or "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -997,7 +997,7 @@ function M:render_treeview(params)
   else
     if only_matched then
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -1011,7 +1011,7 @@ function M:render_treeview(params)
           return "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -1026,7 +1026,7 @@ function M:render_treeview(params)
       end
     else
       if only_selected then
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if
@@ -1039,7 +1039,7 @@ function M:render_treeview(params)
           return "goodroot"
         end
       else
-        ---@type std.collection.tree.ITraverseConditional
+        ---@type era.t.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -1051,9 +1051,9 @@ function M:render_treeview(params)
     end
   end
 
-  local traverse ---@type std.collection.tree.ITraverseHandler
+  local traverse ---@type era.t.ITreeTraverseHandler
   if foldempty then
-    ---@type std.collection.tree.ITraverseHandler
+    ---@type era.t.ITreeTraverseHandler
     traverse = function(_, node, cur, is_lastchild, onlychild)
       if cur < last_cur then
         for index = cur, last_cur, 1 do
@@ -1100,7 +1100,7 @@ function M:render_treeview(params)
       })
     end
   else
-    ---@type std.collection.tree.ITraverseHandler
+    ---@type era.t.ITreeTraverseHandler
     traverse = function(_, node, cur, is_lastchild)
       if cur < last_cur then
         for index = cur, last_cur, 1 do
@@ -1265,7 +1265,7 @@ function M:remove(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
 
   tree:quick_traverse(uuid, function(_, node)
     local state = statemap[node.uuid] ---@type ux.view.tree.INodeState|nil
@@ -1364,7 +1364,7 @@ function M:toggle_select(uuid, selected, only_visible)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
   local count_selected = self._count_selected ---@type integer
   local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
   local tick_selected = self._tick_selected ---@type integer
@@ -1409,7 +1409,7 @@ end
 function M:collapse(uuid, value, recursive)
   self:__health__()
 
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
   if not tree:isexistent(uuid) then
     ark.reporter.error({
       from = self.fullname,
@@ -1479,7 +1479,7 @@ function M:mark_subroot_invisible(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
   local tick_invisible = self._tick_invisible ---@type integer
 
   tree:quick_traverse(uuid, function(_, node)
@@ -1539,20 +1539,20 @@ function M:__refresh_selected_maximum__()
   end
   self._dirty_selected = false ---@type boolean
 
-  local tree = self._tree ---@type std.collection.IReadonlyTree
+  local tree = self._tree ---@type era.IReadonlyTree
   local statemap = self.statemap ---@type table<string, ux.view.tree.INodeState>
 
   tree:unsafe_traverse(nil, function(ctx)
-    local rootnode = ctx.rootnode ---@type std.collection.tree.INode
-    local nodemap = ctx.nodemap ---@type table<string, std.collection.tree.INode>
+    local rootnode = ctx.rootnode ---@type era.t.ITreeNode
+    local nodemap = ctx.nodemap ---@type table<string, era.t.ITreeNode>
 
-    ---@param node                      std.collection.tree.INode
+    ---@param node                      era.t.ITreeNode
     ---@return integer
     local function recursive(node)
       local childstate = statemap[node.uuid] ---@type ux.view.tree.INodeState
       local tick = childstate.tick_selected ---@type integer
       for _, childuuid in ipairs(node.children) do
-        local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+        local childnode = nodemap[childuuid] ---@type era.t.ITreeNode
         local t = recursive(childnode) ---@type integer
         tick = tick < t and t or tick ---@type integer
       end
@@ -1561,7 +1561,7 @@ function M:__refresh_selected_maximum__()
     end
 
     for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type std.collection.tree.INode
+      local childnode = nodemap[childuuid] ---@type era.t.ITreeNode
       recursive(childnode) ---@type integer
     end
   end)

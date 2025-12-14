@@ -1,7 +1,7 @@
 local __module_name__ = "std.collection.filetree" ---@type string
 
 ---@alias std.collection.filetree.ITraverseConditional
----| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer): std.collection.tree.TraverseConditionalEnum
+---| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer): era.t.ITreeTraverseConditionalEnum
 
 ---@alias std.collection.filetree.ITraverseHandler
 ---| fun(ctx: std.collection.filetree.ITraverseContext, node: std.collection.filetree.INode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
@@ -22,7 +22,7 @@ local __module_name__ = "std.collection.filetree" ---@type string
 ---@field public nodemap                table<string, std.collection.filetree.INode>
 ---@field public rootnode               std.collection.filetree.INode
 
----@class std.collection.filetree.INode : std.collection.tree.INode
+---@class std.collection.filetree.INode : era.t.ITreeNode
 ---@field public data                   std.collection.filetree.INodeData
 
 ---@class std.collection.filetree.INodeData
@@ -64,7 +64,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@class std.collection.IFiletreeProps
 ---@field public name                   string
 
----@class std.collection.IReadonlyFiletree : std.collection.IReadonlyTree
+---@class std.collection.IReadonlyFiletree : era.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: std.collection.IReadonlyFiletree): boolean
@@ -76,7 +76,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@field public unsafe_traverse        fun(self: std.collection.IReadonlyFiletree, root: string|nil, traverse: std.collection.filetree.IUnsafeTraverseCallback): std.collection.IReadonlyFiletree
 ---@field public calc_include_uuid_set  fun(self: std.collection.IReadonlyFiletree, uuids: string[]): table<string, boolean>
 
----@class std.collection.IFiletree : std.collection.ITree , std.collection.IReadonlyFiletree
+---@class std.collection.IFiletree : era.ITree , std.collection.IReadonlyFiletree
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public clear                  fun(self: std.collection.IFiletree): std.collection.IFiletree
@@ -102,10 +102,10 @@ local FILETYPE_PRIORITY_MAP = {
 ---@class std.collection.Filetree : std.collection.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
----@field protected _nodemap            table<string, std.collection.tree.INode>
+---@field protected _nodemap            table<string, era.t.ITreeNode>
 local M = {}
 M.__index = M
-setmetatable(M, std.Tree)
+setmetatable(M, era.Tree)
 
 ---@param filepath                      string
 ---@return boolean
@@ -203,8 +203,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  ---@type std.collection.Tree
-  local tree = std.Tree.new({
+  ---@type era.Tree
+  local tree = era.Tree.new({
     name = name,
     fullname = fullname,
     rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
@@ -232,7 +232,7 @@ end
 function M:insert_directory_absolute(dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
   ---@cast nodemap                      table<string, std.collection.filetree.INode>
 
   local nodeuuid = M.uuid(dirpath) ---@type string
@@ -276,7 +276,7 @@ end
 function M:insert_directory_relative(cwd, dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
   ---@cast nodemap                      table<string, std.collection.filetree.INode>
 
   local cwduuid = M.uuid(cwd) ---@type string
@@ -314,7 +314,7 @@ end
 function M:insert_file_absolute(filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
   ---@cast nodemap                      table<string, std.collection.filetree.INode>
 
   local nodeuuid = M.uuid(filepath) ---@type string
@@ -368,7 +368,7 @@ end
 function M:insert_file_relative(cwd, filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, std.collection.tree.INode>
+  local nodemap = self._nodemap ---@type table<string, era.t.ITreeNode>
   ---@cast nodemap                      table<string, std.collection.filetree.INode>
 
   local cwduuid = M.uuid(cwd) ---@type string

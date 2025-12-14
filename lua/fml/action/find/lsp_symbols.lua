@@ -322,7 +322,7 @@ local function get_icon(kindname)
   return icon, icon_hln
 end
 
----@param tree                          std.collection.Tree
+---@param tree                          era.Tree
 ---@param callback                      fun(): nil
 local function fetch_symbols(tree, callback)
   local bufnr = filepath_sourcefile and era.buf.loadfile(filepath_sourcefile) or nil
@@ -551,7 +551,7 @@ end
 
 ---@return nil
 local function refresh()
-  local tree = picker._tree ---@type std.collection.Tree
+  local tree = picker._tree ---@type era.Tree
   local treeview = picker._treeview ---@type ux.picker.TreeView
 
   _tick_refresh = _tick_refresh + 1
@@ -586,7 +586,7 @@ local function refresh()
 end
 
 ---@param _                             any
----@param node                          std.collection.tree.INode
+---@param node                          era.t.ITreeNode
 local function render_symbol(_, node)
   local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
   local icon = data.icon or "●"
@@ -608,7 +608,7 @@ local function render_treeview_container(_, node, _, _, folded_depth)
 
   local limit = folded_depth + 1
   local items = {} ---@type fml.action.find.lsp_symbols.ISymbolData[]
-  local curr = node ---@type std.collection.tree.INode|nil
+  local curr = node ---@type era.t.ITreeNode|nil
   while curr ~= nil and #items < limit do
     table.insert(items, 1, curr.data)
     local parentuuid = curr.parent
@@ -705,7 +705,7 @@ local function render_preview(bufnr, force)
     }
   end
 
-  local node = picker._tree:retrieve(nodeuuid) ---@type std.collection.tree.INode|nil
+  local node = picker._tree:retrieve(nodeuuid) ---@type era.t.ITreeNode|nil
   if node == nil or node.data == nil then
     if force then
       local lines = { "Invalid symbol data" }

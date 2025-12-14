@@ -223,7 +223,7 @@ function M:match(params)
     local k = 0 ---@type integer
     uuids = {} ---@type string[]
 
-    ---@type std.collection.tree.IQuickTraverseHandler
+    ---@type era.t.ITreeQuickTraverseHandler
     local collect = function(_, node)
       local state = statemap[node.uuid]
       if state.nodetype == "leaf" then

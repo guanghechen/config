@@ -47,7 +47,7 @@ local __module_name__ = "ux.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
----@field public node_sorter            std.collection.tree.INodeSorter
+---@field public node_sorter            era.t.ITreeNodeSorter
 ---
 ---@field public keymaps_common         ?ark.t.IKeymap[]
 ---@field public keymaps_finder         ?ark.t.IKeymap[]
@@ -100,7 +100,7 @@ local __module_name__ = "ux.picker.composer.tree" ---@type string
 ---@field public flag_viewtype          ark.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _tree               std.collection.Tree
+---@field protected _tree               era.Tree
 ---@field protected _composer           ux.picker.BasicComposer
 ---@field protected _plainfile          ux.view.Plainfile
 ---@field protected _retriever          ux.retriever.TreeRetriever
@@ -130,7 +130,7 @@ function M.new(props)
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
-  local node_sorter = props.node_sorter ---@type std.collection.tree.INodeSorter
+  local node_sorter = props.node_sorter ---@type era.t.ITreeNodeSorter
 
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
@@ -167,7 +167,7 @@ function M.new(props)
   local on_hidden = props.on_hidden or ark.fn.noop ---@type ux.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or ark.fn.noop ---@type ux.picker.composer.tree.IOnRefresh
 
-  local tree = std.Tree.new({
+  local tree = era.Tree.new({
     name = fullname,
     node_sorter = node_sorter,
   })
@@ -334,7 +334,7 @@ function M.new(props)
         end
 
         local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-        local leafnode = tree:retrieve(leafuuid) ---@type std.collection.tree.INode|nil
+        local leafnode = tree:retrieve(leafuuid) ---@type era.t.ITreeNode|nil
         if leafnode == nil then
           return
         end
@@ -347,7 +347,7 @@ function M.new(props)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
+      local rootnode = tree:retrieve(rootuuid) ---@type era.t.ITreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -990,7 +990,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._tree:retrieve(rootuuid) ---@type std.collection.tree.INode|nil
+  local node = self._tree:retrieve(rootuuid) ---@type era.t.ITreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1119,7 +1119,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return std.collection.tree.INode
+---@return era.t.ITreeNode
 ---@return ux.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type ux.view.tree.INodeState|nil
@@ -1128,7 +1128,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type std.collection.tree.INode|nil
+  ---@type era.t.ITreeNode|nil
   local node = self._tree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -1190,7 +1190,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  local node = self._tree:retrieve(nodeuuid) ---@type std.collection.tree.INode|nil
+  local node = self._tree:retrieve(nodeuuid) ---@type era.t.ITreeNode|nil
   if node == nil then
     return nil, nil
   end
