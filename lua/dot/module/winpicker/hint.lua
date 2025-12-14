@@ -1,4 +1,4 @@
----@class dot.fn.winpicker.hint
+---@class dot.module.winpicker.hint
 local M = {
   a = {
     "    █████╗    ",

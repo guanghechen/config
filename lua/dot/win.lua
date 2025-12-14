@@ -326,13 +326,13 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
-  return dot.fn.winpicker(M.is_focusable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.pick_win(M.is_focusable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
-  return dot.fn.winpicker(M.is_projectable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.pick_win(M.is_projectable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               integer|nil
@@ -341,13 +341,13 @@ function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and M.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
-  return dot.fn.winpicker(M.is_sourcefile, winnr_candidate, true) ---@type integer|nil
+  return dot.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
-  return dot.fn.winpicker(M.is_swappable, winnr_candidate, false) ---@type integer|nil
+  return dot.fn.pick_win(M.is_swappable, winnr_candidate, false)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -639,7 +639,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     and M.is_sourcefile(winnr_source)
   )
       and winnr_source
-    or dot.fn.winpicker(M.is_sourcefile, winnr_source, true)
+    or dot.fn.pick_win(M.is_sourcefile, winnr_source, true)
 
   if winnr == nil then
     return
