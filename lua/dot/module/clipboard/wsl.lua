@@ -1,6 +1,6 @@
-local __module_name__ = "fml.dressing.clipboard.wsl" ---@type string
+local __module_name__ = "dot.module.clipboard.wsl" ---@type string
 
----@class fml.dressing.clipboard.wsl
+---@class dot.module.clipboard.wsl
 local M = {}
 
 ---@param cmd                           string

@@ -1,6 +1,8 @@
 ---@class dot.fn.__mods
 local __fn__mods = {
   add_locations_to_ai = "dot.fn.add_locations_to_ai",
+  paste_image = "dot.fn.paste_image",
+  paste_image_as_base64 = "dot.fn.paste_image_as_base64",
   rename = "dot.fn.rename",
   winpicker = "dot.fn.winpicker",
 }
@@ -8,6 +10,8 @@ local __fn__mods = {
 ---@class dot.fn
 ---@field public __mods                 dot.fn.__mods
 ---@field public add_locations_to_ai    fun(locations: dot.t.ILocation[]): nil
+---@field public paste_image            fun(): nil
+---@field public paste_image_as_base64  fun(): string|nil
 ---@field public rename                 dot.fn.rename
 ---@field public winpicker              dot.fn.winpicker
 local fn = setmetatable({

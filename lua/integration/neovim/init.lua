@@ -35,7 +35,6 @@ vim.schedule(function()
   require("fml.dressing.virtcolumn")
   require("fml.dressing.winsep")
 
-  require("fml.dressing.clipboard")
   require("fml.dressing.dim")
   require("fml.dressing.illumniate")
   require("fml.dressing.im")

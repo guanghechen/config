@@ -311,7 +311,8 @@ M.definitions.buf = {
 ---@class dot.command.definitions.clipboard
 ---@field [string]                      dot.command.IDefinition
 M.definitions.clipboard = {
-  paste = D.new("Fclipboardpaste", "clipboard: paste"),
+  paste_image = D.new("Fclipboardpasteimage", "clipboard: paste image"),
+  paste_image_as_base64 = D.new("Fclipboardpasteimageasbase64", "clipboard: paste image as base64"),
 }
 
 ---@class dot.command.definitions.code

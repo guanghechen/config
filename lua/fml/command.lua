@@ -197,12 +197,22 @@ command
   })
 
 --[clipboard] paste---------------------------------------------------------------------------------
-command.implement({
-  uuid = K.clipboard.paste.uuid,
-  action = function()
-    require("fml.action.clipboard").paste()
-  end,
-})
+command
+  .implement({
+    uuid = K.clipboard.paste_image.uuid,
+    action = function()
+      dot.fn.paste_image()
+    end,
+  })
+  .implement({
+    uuid = K.clipboard.paste_image_as_base64.uuid,
+    action = function()
+      local base64 = dot.fn.paste_image_as_base64()
+      if base64 then
+        vim.api.nvim_put({ base64 }, "c", true, true)
+      end
+    end,
+  })
 
 --[code] run----------------------------------------------------------------------------------------
 command

@@ -1,17 +1,18 @@
-local __module_name__ = "fml.dressing.clipboard.nix" ---@type string
+local __module_name__ = "dot.module.clipboard.win" ---@type string
 
----@class fml.dressing.clipboard.nix
+---@class dot.module.clipboard.win
 local M = {}
 
 ---@param cmd                           string
 ---@return string
 local function format_command(cmd)
-  return dot.shell.format_command(cmd) ---@type string
+  return 'pwsh.exe -NoProfile -Command "' .. cmd:gsub('"', "'") .. '"'
 end
 
 ---@return boolean
 function M.has_image()
-  local cmd = format_command("xclip -selection clipboard -t TARGETS -o") ---@type string
+  local cmd =
+    format_command("Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage()")
   local output = vim.fn.system(cmd) ---@type string
 
   local exit_code = vim.v.shell_error
@@ -27,14 +28,19 @@ function M.has_image()
         shell_error = vim.v.shell_error,
       },
     })
+    return false
   end
 
-  return output:find("image/png") ~= nil
+  return output:find("Width") ~= nil
 end
 
 ---@return string|nil
 function M.get_image_as_base64()
-  local cmd = format_command("xclip -selection clipboard -o -t image/png | base64 | tr -d '\n'") ---@type string
+  local cmd = format_command(
+    [[Add-Type -AssemblyName System.Windows.Forms; $ms = New-Object System.IO.MemoryStream;]]
+      .. [[ [System.Windows.Forms.Clipboard]::GetImage().Save($ms, [System.Drawing.Imaging.ImageFormat]::Png);]]
+      .. [[ [System.Convert]::ToBase64String($ms.ToArray())]]
+  )
   local output = vim.fn.system(cmd) ---@type string
 
   local exit_code = vim.v.shell_error
@@ -60,10 +66,15 @@ end
 ---@param filepath                      string
 ---@return  boolean
 function M.paste_image_from_clipboard(filepath)
-  local cmd = format_command(string.format('xclip -selection clipboard -o -t image/png > "%s"', filepath))
-  local output = vim.fn.system(cmd) ---@type string|nil
-  local exit_code = vim.v.shell_error
+  local cmd = format_command(
+    string.format(
+      "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetImage().Save('%s')",
+      filepath
+    )
+  )
+  local output = vim.fn.system(cmd) ---@type string
 
+  local exit_code = vim.v.shell_error
   if exit_code ~= 0 then
     ark.reporter.error({
       from = __module_name__,

@@ -1,6 +1,6 @@
-local __module_name__ = "fml.dressing.clipboard.mac" ---@type string
+local __module_name__ = "dot.module.clipboard.mac" ---@type string
 
----@class fml.dressing.clipboard.mac
+---@class dot.module.clipboard.mac
 local M = {}
 
 ---@param cmd                           string
@@ -11,7 +11,7 @@ end
 
 ---@return string|nil
 function M.get_image_as_base64()
-  local cmd = format_command("pngpaste - | base64 | tr -d '\n'") ---@type string
+  local cmd = format_command("pngpaste - | base64 | tr -d '\\n'") ---@type string
   local output = vim.fn.system(cmd) ---@type string
 
   local exit_code = vim.v.shell_error
