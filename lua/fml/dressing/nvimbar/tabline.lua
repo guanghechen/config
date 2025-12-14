@@ -1,10 +1,10 @@
-local c = ux.nvimbar.component
+local c = dot.ux.nvimbar.component
 
 local dirtier = dot.state.status.dirtier_tabline ---@type ark.c.Dirtier
-local position = "f_tl" ---@type ux.nvimbar.PositionEnum
+local position = "f_tl" ---@type dot.ux.nvimbar.PositionEnum
 
-local tabline ---@type ux.nvimbar.Nvimbar
-tabline = ux.nvimbar.Nvimbar.new({
+local tabline ---@type dot.ux.nvimbar.Nvimbar
+tabline = dot.ux.nvimbar.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",

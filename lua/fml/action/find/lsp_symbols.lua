@@ -17,7 +17,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
-local plainfile = ux.view.Plainfile.new({ name = name }) ---@type ux.view.Plainfile
+local plainfile = dot.ux.view.Plainfile.new({ name = name }) ---@type dot.ux.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore
@@ -312,7 +312,7 @@ local o_flag_regex = dot.context.select.lsp_symbols.flag_regex ---@type ark.c.Ob
 local o_flag_case_sensitive = dot.context.select.lsp_symbols.flag_case_sensitive ---@type ark.c.Observable
 local o_flag_viewtype = dot.context.select.lsp_symbols.flag_viewtype ---@type ark.c.Observable
 local o_flag_foldempty = dot.context.select.lsp_symbols.flag_foldempty ---@type ark.c.Observable
-local picker ---@type ux.picker.TreeComposer
+local picker ---@type dot.ux.picker.TreeComposer
 
 ---@param kindname                      string
 ---@return string, string
@@ -552,7 +552,7 @@ end
 ---@return nil
 local function refresh()
   local tree = picker._tree ---@type dot.Tree
-  local treeview = picker._treeview ---@type ux.picker.TreeView
+  local treeview = picker._treeview ---@type dot.ux.picker.TreeView
 
   _tick_refresh = _tick_refresh + 1
   local tick_refresh = _tick_refresh
@@ -600,7 +600,7 @@ local function render_symbol(_, node)
   }
 end
 
----@type ux.picker.view.tree.ITreeviewContainerNodeRenderer
+---@type dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
 local function render_treeview_container(_, node, _, _, folded_depth)
   if folded_depth == 0 then
     return render_symbol(_, node)
@@ -775,7 +775,7 @@ local function goto_symbol(nodeuuid)
   vim.cmd("normal! zv zz")
 end
 
-picker = ux.picker.TreeComposer.new({
+picker = dot.ux.picker.TreeComposer.new({
   name = name,
   permanent = true,
   title = title,

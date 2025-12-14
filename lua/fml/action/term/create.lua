@@ -27,7 +27,7 @@ local function apply_profile(profile)
     cmd = profile.cmd,
     permanent = false,
   })
-  ux.widget.Terminal:focus()
+  dot.ux.widget.Terminal:focus()
 end
 
 ---@return nil
@@ -38,7 +38,7 @@ function M.show_profile_selector()
     return
   end
 
-  local items = {} ---@type ux.ISelectItem[]
+  local items = {} ---@type dot.ux.ISelectItem[]
   for _, profile in ipairs(profiles) do
     table.insert(items, {
       uuid = profile.name,
@@ -48,7 +48,7 @@ function M.show_profile_selector()
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local mouse = vim.fn.getmousepos()
-  local select_widget = ux.Select.new({
+  local select_widget = dot.ux.Select.new({
     items = items,
     wincfg = {
       title = "Select terminal profile:",
@@ -100,7 +100,7 @@ function M.rename()
     default = termmeta.name,
   }
 
-  local terminal_widget = ux.widget.Terminal ---@type ux.widget.Terminal
+  local terminal_widget = dot.ux.widget.Terminal ---@type dot.ux.widget.Terminal
   local winnr = terminal_widget:get_winnr() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local available_width = nil ---@type integer|nil
@@ -150,7 +150,7 @@ end
 ---@return nil
 function M.toggle()
   local cwd = dot.path.cwd()
-  local terminal = ux.widget.Terminal ---@type ux.widget.Terminal
+  local terminal = dot.ux.widget.Terminal ---@type dot.ux.widget.Terminal
 
   if terminal:isvisible() then
     local termindex = dot.term.current() ---@type integer

@@ -11,7 +11,7 @@ local o_flag_selected = dot.context.select.find_git.flag_selected
 local o_flag_viewtype = dot.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
-local picker ---@type ux.picker.FiletreeComposer
+local picker ---@type dot.ux.picker.FiletreeComposer
 
 ---@param force                         boolean
 ---@return nil
@@ -30,7 +30,7 @@ local function refresh(force)
   git_filepaths_dirty = false
 end
 
-picker = ux.picker.FiletreeComposer.new({
+picker = dot.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,

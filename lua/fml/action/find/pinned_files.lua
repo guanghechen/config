@@ -14,7 +14,7 @@ local o_flag_case_sensitive = ark.c.Observable.from_value(true)
 local o_flag_selected = ark.c.Observable.from_value(false)
 local o_flag_viewtype = ark.c.Observable.from_value("tree")
 
----@param picker                        ux.picker.FiletreeComposer
+---@param picker                        dot.ux.picker.FiletreeComposer
 ---@return nil
 local function refresh(picker)
   local cwd = dot.path.cwd() ---@type string
@@ -22,7 +22,7 @@ local function refresh(picker)
   picker:reset_filepaths(cwd, filepaths, false)
 end
 
-local picker = ux.picker.FiletreeComposer.new({
+local picker = dot.ux.picker.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,

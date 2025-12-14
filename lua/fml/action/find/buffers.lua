@@ -2,7 +2,7 @@
 local name = "fml.action.find.buffers" ---@type string
 local title = "Find Buffers" ---@type string
 
----@class fml.action.find.buffers.IItem : ux.picker.composer.list.IItem
+---@class fml.action.find.buffers.IItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.buffers.IItemData
 
 ---@class fml.action.find.buffers.IItemData
@@ -109,7 +109,7 @@ local function create_buffer_item(bufnr, cwd)
   }
 end
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_data()
   local cwd = dot.path.cwd() ---@type string
   local scope = dot.context.select.find_buffer_scope:snapshot() ---@type dot.e.FindBufferScope
@@ -128,12 +128,12 @@ local function fetch_data()
     return a.data.bufnr < b.data.bufnr
   end)
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker ---@type ux.picker.ListComposer
-picker = ux.picker.ListComposer.new({
+local picker ---@type dot.ux.picker.ListComposer
+picker = dot.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -200,7 +200,7 @@ picker = ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type ux.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type dot.ux.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -212,7 +212,7 @@ picker = ux.picker.ListComposer.new({
       callback = function()
         local lnum = picker._composer:get_result_lnum() ---@type integer
         local uuid = picker._retriever:retrieve_uuid(lnum) ---@type string|nil
-        local item = uuid and picker._itemmap[uuid] or nil ---@type ux.picker.composer.list.IItem|nil
+        local item = uuid and picker._itemmap[uuid] or nil ---@type dot.ux.picker.composer.list.IItem|nil
         ---@cast item                   fml.action.find.buffers.IItem|nil
         if item == nil then
           return
@@ -262,7 +262,7 @@ picker = ux.picker.ListComposer.new({
     end
   end,
   on_refresh = function(composer)
-    local data = fetch_data() ---@type ux.picker.composer.list.IResetData
+    local data = fetch_data() ---@type dot.ux.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

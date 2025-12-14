@@ -176,7 +176,7 @@ local keymaps = {
       vim.bo[bufnr].filetype = dot.filetype.TEMP_VIEWER
       vim.bo[bufnr].swapfile = false
 
-      local printer = ux.view.Printer
+      local printer = dot.ux.view.Printer
         .new({ name = "blame line", indent = "  " })
         :lf()
         :line(

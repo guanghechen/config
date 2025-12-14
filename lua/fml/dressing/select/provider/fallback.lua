@@ -8,7 +8,7 @@ end
 
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 ---@return integer
 local function normal_provider(items, opts)
   local format_item = opts.format_item or default_format_item ---@type fun(item): string
@@ -30,7 +30,7 @@ local function normal_provider(items, opts)
     select_items[#select_items + 1] = select_item
   end
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   local data = { items = select_items }
   return data, width
 end

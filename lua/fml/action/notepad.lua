@@ -2,8 +2,8 @@
 
 local __module_name__ = "fml.action.notepad" ---@type string
 
----@type ux.widget.Notepad
-local widget = ux.widget.Notepad.new({ name = "notepad.default" })
+---@type dot.ux.widget.Notepad
+local widget = dot.ux.widget.Notepad.new({ name = "notepad.default" })
 
 local dirty_data = true ---@type boolean
 local o_search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
@@ -18,11 +18,11 @@ if widget:current_item() == nil then
   end
 end
 
----@class fml.action.notepad.ISourceItem : ux.picker.composer.list.IItem
+---@class fml.action.notepad.ISourceItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   { name: string, title: string, filepath: string }
 ---@field public text_lower             string
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_source_data()
   dirty_data = false
 
@@ -44,7 +44,7 @@ local function fetch_source_data()
     }
   end
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   return {
     items = items,
     uuid_current = current_source.name,
@@ -52,8 +52,8 @@ local function fetch_source_data()
   }
 end
 
-local source_picker ---@type ux.picker.ListComposer|nil
-source_picker = ux.picker.ListComposer.new({
+local source_picker ---@type dot.ux.picker.ListComposer|nil
+source_picker = dot.ux.picker.ListComposer.new({
   name = __module_name__ .. ".source_select",
   permanent = true,
   title = "Select Notepad Source",
@@ -67,12 +67,12 @@ source_picker = ux.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.ISourceItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No source selected" })
-      ---@type ux.picker.preview.IDrawResult
+      ---@type dot.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -85,7 +85,7 @@ source_picker = ux.picker.ListComposer.new({
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    ---@type ux.picker.preview.IDrawResult
+    ---@type dot.ux.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = false,
@@ -472,11 +472,11 @@ function M.source_next()
   })
 end
 
----@class fml.action.notepad.INoteItem : ux.picker.composer.list.IItem
+---@class fml.action.notepad.INoteItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   dot.t.INotepadItemMeta
 ---@field public text_lower             string
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_notes_data()
   local source = widget:get_source() ---@type dot.t.INotepadSource
   local current_item = widget:current_item() ---@type dot.t.INotepadItemState|nil
@@ -492,7 +492,7 @@ local function fetch_notes_data()
     }
   end
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   return {
     items = items,
     uuid_current = current_item and current_item.uuid or nil,
@@ -500,8 +500,8 @@ local function fetch_notes_data()
   }
 end
 
-local notes_picker ---@type ux.picker.ListComposer|nil
-notes_picker = ux.picker.ListComposer.new({
+local notes_picker ---@type dot.ux.picker.ListComposer|nil
+notes_picker = dot.ux.picker.ListComposer.new({
   name = __module_name__ .. ".note_select",
   permanent = true,
   title = "Select Note",
@@ -515,12 +515,12 @@ notes_picker = ux.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.INoteItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No note selected" })
-      ---@type ux.picker.preview.IDrawResult
+      ---@type dot.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -534,7 +534,7 @@ notes_picker = ux.picker.ListComposer.new({
 
     if note == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Failed to load note content" })
-      ---@type ux.picker.preview.IDrawResult
+      ---@type dot.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -547,7 +547,7 @@ notes_picker = ux.picker.ListComposer.new({
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     vim.bo[bufnr].filetype = "markdown"
 
-    ---@type ux.picker.preview.IDrawResult
+    ---@type dot.ux.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = true,
@@ -573,12 +573,12 @@ notes_picker = ux.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.notepad.IEngineItem : ux.picker.composer.list.IItem
+---@class fml.action.notepad.IEngineItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   { engine: 'json'|'folder', description: string }
 ---@field public text_lower             string
 
-local engine_picker ---@type ux.picker.ListComposer|nil
-engine_picker = ux.picker.ListComposer.new({
+local engine_picker ---@type dot.ux.picker.ListComposer|nil
+engine_picker = dot.ux.picker.ListComposer.new({
   name = __module_name__ .. ".engine_select",
   permanent = true,
   title = "Select Storage Engine",
@@ -592,7 +592,7 @@ engine_picker = ux.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.IEngineItem|nil
 
     if item == nil then
@@ -672,7 +672,7 @@ function M.change_engine()
     },
   }
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   local data = {
     items = items,
     uuid_current = current_config.engine,

@@ -3,7 +3,7 @@ local __module_name__ = "fml.action.find.notification"
 ---@class fml.action.find.notification.IItemData
 ---@field public task                   dot.t.INotifierTask
 
----@class fml.action.find.notification.IItem : ux.picker.composer.list.IItem
+---@class fml.action.find.notification.IItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.notification.IItemData
 
 local dirty_data = true ---@type boolean
@@ -12,7 +12,7 @@ local o_flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
 local o_flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -43,12 +43,12 @@ local function fetch_data()
     items[#items + 1] = item
   end
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker ---@type ux.picker.ListComposer
-picker = ux.picker.ListComposer.new({
+local picker ---@type dot.ux.picker.ListComposer
+picker = dot.ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find Notifications",
@@ -65,7 +65,7 @@ picker = ux.picker.ListComposer.new({
 
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type ux.picker.preview.IDrawResult
+      ---@type dot.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -74,10 +74,10 @@ picker = ux.picker.ListComposer.new({
       }
     end
 
-    local item = composer:retrieve(lnum_current) ---@type ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type ux.picker.preview.IDrawResult
+      ---@type dot.ux.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -146,7 +146,7 @@ picker = ux.picker.ListComposer.new({
       end
     end
 
-    ---@type ux.picker.preview.IDrawResult
+    ---@type dot.ux.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = true,

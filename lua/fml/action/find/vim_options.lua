@@ -8,7 +8,7 @@ local title = "Find Vim Options" ---@type string
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class fml.action.find.vim_options.IItem : ux.picker.composer.list.IItem
+---@class fml.action.find.vim_options.IItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.find.vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
@@ -25,7 +25,7 @@ local o_flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
 local o_flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -76,11 +76,11 @@ local function fetch_data()
     return a.data.name < b.data.name
   end)
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker = ux.picker.ListComposer.new({
+local picker = dot.ux.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -129,7 +129,7 @@ local picker = ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type ux.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type dot.ux.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -149,7 +149,7 @@ local picker = ux.picker.ListComposer.new({
   end,
 
   on_refresh = function(composer)
-    local data = fetch_data() ---@type ux.picker.composer.list.IResetData
+    local data = fetch_data() ---@type dot.ux.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

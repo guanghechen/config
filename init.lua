@@ -2,7 +2,6 @@ require("bot").setup()
 
 _G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
-_G.ux = require("ux") ---@type ux
 
 if dot.path.is_git_repo() then
   local log_filepath = dot.path.locate_workspace_filepath("log.json")

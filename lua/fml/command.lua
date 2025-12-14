@@ -954,7 +954,7 @@ for index = 1, 9, 1 do
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
       if dot.term.focus(index) then
-        ux.widget.Terminal:focus()
+        dot.ux.widget.Terminal:focus()
       end
     end,
   })
@@ -1088,7 +1088,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      ux.widget.ColorPicker:pick()
+      dot.ux.widget.ColorPicker:pick()
     end,
   })
   .implement({

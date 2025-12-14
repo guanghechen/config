@@ -79,7 +79,7 @@ return {
         end
 
         local filepath = node:get_id()
-        ux.fn.select_copy_filepath({
+        dot.ux.fn.select_copy_filepath({
           filepath = filepath,
           winopts = {
             relative = "cursor",
@@ -223,7 +223,7 @@ return {
         }
         ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
-        ux.view.Printer
+        dot.ux.view.Printer
           .new({ name = "File info", indent = "" })
           :line("Size:      " .. size)
           :line("Created:   " .. created)

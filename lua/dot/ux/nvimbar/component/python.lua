@@ -1,0 +1,65 @@
+local __module_name__ = "dot.ux.nvimbar.component.python" ---@type string
+
+local btn = ark.nvim.btn
+local txt = ark.nvim.txt
+
+local fn_select_python_venv = dot.G.register_anonymous_fn(function()
+  dot.command.execute(dot.command.definitions.lsp.select_python_venv.uuid)
+end)
+
+local python_venv = "" ---@type string|nil
+local python_version = "" ---@type string|nil
+ark.fn.observe({ dot.context.lsp.python_venv_path }, function()
+  local python_venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
+  python_venv = python_venv_path ~= nil and yoz.path.basename(python_venv_path) or nil ---@type string|nil
+
+  local python_path = dot.context.lsp.get_python_bin_path() ---@type string|nil
+  if python_path ~= nil then
+    local cmd = { python_path, "--version" } ---@type string[]
+    local ok, output = pcall(vim.fn.system, cmd)
+    local exit_code = vim.v.shell_error
+    if ok and exit_code == 0 then
+      python_version = vim.trim(output):match("(%d+%.%d+%.%d+)") or ""
+    else
+      python_version = nil
+      ark.reporter.error({
+        from = __module_name__,
+        message = "Failed to run python version command.",
+        details = { error = output, cmd = cmd, python_path = python_path },
+      })
+    end
+  end
+end, false)
+
+---@class dot.ux.nvimbar.component.python
+local M = {}
+
+---@param position                      dot.ux.nvimbar.PositionEnum
+---@return dot.ux.nvimbar.IRawComponent
+function M.env(position)
+  local hln_text = position .. "_python_env_text" ---@type string
+
+  ---@type dot.ux.nvimbar.IRawComponent
+  local component = {
+    name = "python:env",
+    atomic = true,
+    tight = true,
+    condition = function(context)
+      return context.filetype == "python" or (python_venv ~= nil and python_version ~= nil)
+    end,
+    render = function()
+      local text ---@type string
+      if #python_version > 0 then
+        text = python_version .. " (" .. (python_venv or "unknown") .. ")  " ---@type string
+      else
+        text = "(" .. (python_venv or "unknown") .. ")  " ---@type string
+      end
+
+      local hl_text = btn(txt(text, hln_text), fn_select_python_venv) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+return M

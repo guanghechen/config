@@ -1,7 +1,7 @@
-local c = ux.nvimbar.component
+local c = dot.ux.nvimbar.component
 
 local txt = ark.nvim.txt
-local position = "f_wl" ---@type ux.nvimbar.PositionEnum
+local position = "f_wl" ---@type dot.ux.nvimbar.PositionEnum
 
 ---@return boolean
 local function silent()
@@ -11,13 +11,13 @@ end
 
 ---@param winnr                         integer
 ---@param source                        "sourcefile"|"neotree"
----@return ux.nvimbar.Nvimbar|nil
+---@return dot.ux.nvimbar.Nvimbar|nil
 local function resolve_nvimbar(winnr, source)
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
-    local nvimbar = nil ---@type ux.nvimbar.Nvimbar|nil
-    nvimbar = ux.nvimbar.Nvimbar.new({
+    local nvimbar = nil ---@type dot.ux.nvimbar.Nvimbar|nil
+    nvimbar = dot.ux.nvimbar.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = "f_wl_bg",
@@ -130,7 +130,7 @@ local function render(winnr)
 
   if filetype == dot.filetype.NEOTREE then
     if vim.o.showtabline == 0 or dot.win.is_float(winnr) then
-      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type ux.nvimbar.Nvimbar|nil
+      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type dot.ux.nvimbar.Nvimbar|nil
       if nvimbar ~= nil then
         nvimbar:render()
       end
@@ -176,7 +176,7 @@ local function render(winnr)
     return
   end
 
-  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type ux.nvimbar.Nvimbar|nil
+  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type dot.ux.nvimbar.Nvimbar|nil
   if nvimbar ~= nil then
     nvimbar:render()
     return

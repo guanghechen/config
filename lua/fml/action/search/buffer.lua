@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "fml.action.search.buffer" ---@type string
 
-local searcher ---@type ux.searcher.buffer.Searcher|nil
+local searcher ---@type dot.ux.searcher.buffer.Searcher|nil
 
 ---@class fml.action.search.buffer
 local M = {}
@@ -20,7 +20,7 @@ function M.search_in_buffer()
 
   if searcher == nil then
     local context = dot.context.search_buffer ---@type dot.context.search_buffer
-    searcher = ux.searcher.BufferSearcher.new({
+    searcher = dot.ux.searcher.BufferSearcher.new({
       o_flag_fuzzy = context.flag_fuzzy,
       o_flag_regex = context.flag_regex,
       o_flag_replace = context.flag_replace,
@@ -41,7 +41,7 @@ function M.search_in_buffer()
   end
 end
 
----@return ux.searcher.buffer.Searcher|nil
+---@return dot.ux.searcher.buffer.Searcher|nil
 function M.get_searcher()
   return searcher
 end

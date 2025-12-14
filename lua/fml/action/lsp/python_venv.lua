@@ -27,12 +27,12 @@ end
 ---@field public icon                   string
 ---@field public path                   string
 
----@class fml.action.lsp.python_venv.IItem : ux.picker.composer.list.IItem
+---@class fml.action.lsp.python_venv.IItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   fml.action.lsp.python_venv.IItemData
 ---@field public text_lower             string
 ---@field public highlights             table
 
----@return ux.picker.composer.list.IResetData
+---@return dot.ux.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -75,7 +75,7 @@ local function fetch_data()
         message = "Failed to run fd command.",
         details = { cmd = cmd, error = err or "Unknown error" },
       })
-      ---@type ux.picker.composer.list.IResetData
+      ---@type dot.ux.picker.composer.list.IResetData
       local result = { items = {} }
       return result
     end
@@ -141,7 +141,7 @@ local function fetch_data()
           message = "Failed to run fd command.",
           details = { cmd = cmd, error = err or "Unknown error" },
         })
-        ---@type ux.picker.composer.list.IResetData
+        ---@type dot.ux.picker.composer.list.IResetData
         local result = { items = {} }
         return result
       end
@@ -217,7 +217,7 @@ local function fetch_data()
           message = "Failed to run fd command.",
           details = { cmd = cmd, error = err or "Unknown error" },
         })
-        ---@type ux.picker.composer.list.IResetData
+        ---@type dot.ux.picker.composer.list.IResetData
         local result = { items = {} }
         return result
       end
@@ -273,7 +273,7 @@ local function fetch_data()
     end
   end
 
-  ---@type ux.picker.composer.list.IResetData
+  ---@type dot.ux.picker.composer.list.IResetData
   local result = {
     items = items,
     uuid_current = o_python_venv_path:snapshot(),
@@ -282,8 +282,8 @@ local function fetch_data()
   return result
 end
 
-local picker ---@type ux.picker.ListComposer|nil
-picker = ux.picker.ListComposer.new({
+local picker ---@type dot.ux.picker.ListComposer|nil
+picker = dot.ux.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find python venv",

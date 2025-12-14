@@ -227,7 +227,7 @@ function M.gen_hlgroup_map(context)
     widget_flag_popup_sep = { fg = c.bg1, bg = c.brightPurple },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type ux.nvimbar.PositionEnum[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type dot.ux.nvimbar.PositionEnum[]
 
   ---@class dot.theme.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
