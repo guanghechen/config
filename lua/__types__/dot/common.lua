@@ -1,0 +1,21 @@
+---@meta
+
+---@class dot.t.IRawWidget
+---@field public name                   string
+---@field public close                  fun(self: dot.t.IWidget): nil
+---@field public focus                  fun(self: dot.t.IWidget): nil
+---@field public hide                   fun(self: dot.t.IWidget): nil
+---@field public isdisposed             fun(self: dot.t.IWidget): boolean
+---@field public isfocused              fun(self: dot.t.IWidget): boolean
+---@field public isvisible              fun(self: dot.t.IWidget): boolean
+---@field public resize                 fun(self: dot.t.IWidget): nil
+
+---@class dot.t.IWidget
+---@field public name                   string
+---@field public close                  fun(): nil
+---@field public focus                  fun(): nil
+---@field public hide                   fun(): nil
+---@field public isdisposed             fun(): boolean
+---@field public isfocused              fun(): boolean
+---@field public isvisible              fun(): boolean
+---@field public resize                 fun(): nil

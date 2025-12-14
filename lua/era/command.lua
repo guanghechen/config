@@ -207,9 +207,11 @@ local function defc(uuid, desc, nargs, candidates)
 end
 
 ---@class era.command.definitions
+---@field [string]                      table<string, era.command.IDefinition>
 M.definitions = {}
 
 ---@class era.command.definitions.ai
+---@field [string]                      era.command.IDefinition
 M.definitions.ai = {
   edit = def("Faiedit", "ai: edit"),
   attach_agent = def("Faiattachagent", "ai: attach agent"),
@@ -224,6 +226,7 @@ M.definitions.ai = {
 }
 
 ---@class era.command.definitions.buf
+---@field [string]                      era.command.IDefinition
 M.definitions.buf = {
   close = def("Fbufclose", "buf: close"),
   close_to_leftest = def("Fbufclosetoleftest", "buf: close to leftest"),
@@ -313,11 +316,13 @@ M.definitions.buf = {
 }
 
 ---@class era.command.definitions.clipboard
+---@field [string]                      era.command.IDefinition
 M.definitions.clipboard = {
   paste = def("Fclipboardpaste", "clipboard: paste"),
 }
 
 ---@class era.command.definitions.code
+---@field [string]                      era.command.IDefinition
 M.definitions.code = {
   format = def("Fcodeformat", "code: format buffer"),
   insert_splitline = def("Fcodeinsertsplitline", "code: insert splitline"),
@@ -331,6 +336,7 @@ M.definitions.code = {
 }
 
 ---@class era.command.definitions.copy
+---@field [string]                      era.command.IDefinition|era.command.IDefinitionWithCandidates
 M.definitions.copy = {
   char_under_cursor = def("Fcopycharundercursor", "copy: char under cursor"),
 
@@ -340,6 +346,7 @@ M.definitions.copy = {
 }
 
 ---@class era.command.definitions.diagnostic
+---@field [string]                      era.command.IDefinition
 M.definitions.diagnostic = {
   goto_next = def("Fdiagnosticgotonext", "diagnostic: goto next"),
   goto_next_error = def("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
@@ -361,6 +368,7 @@ M.definitions.diagnostic = {
 }
 
 ---@class era.command.definitions.explorer
+---@field [string]                      era.command.IDefinition
 M.definitions.explorer = {
   fs_cwd = def("Fexplorerfscwd", "explorer: filesystem (cwd)"),
   fs_workspace = def("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
@@ -374,6 +382,7 @@ M.definitions.explorer = {
 }
 
 ---@class era.command.definitions.find
+---@field [string]                      era.command.IDefinition
 M.definitions.find = {
   bufs = def("Ffindbufs", "find: buffers"),
   bufs_file = def("Ffindbufsfile", "find: buffers (file)"),
@@ -396,6 +405,7 @@ M.definitions.find = {
 }
 
 ---@class era.command.definitions.git
+---@field [string]                      era.command.IDefinition
 M.definitions.git = {
   browse = def("Fgitbrowse", "git: browse"),
   browse_permalink = def("Fgitbrowsepermalink", "git: browse (permalink)"),
@@ -406,6 +416,7 @@ M.definitions.git = {
 }
 
 ---@class era.command.definitions.inspect
+---@field [string]                      era.command.IDefinition
 M.definitions.inspect = {
   inspect_buf = def("Fdebuginspectbuf", "debug: inspect buf"),
   inspect_pos = def("Fdebuginspectpos", "debug: inspect pos"),
@@ -417,12 +428,14 @@ M.definitions.inspect = {
 }
 
 ---@class era.command.definitions.log
+---@field [string]                      era.command.IDefinition
 M.definitions.log = {
   preview_json_normal = def("Fjsonviewnormal", "json: preview current line"),
   preview_json_visual = def("Fjsonviewvisual", "json: preview selection"),
 }
 
 ---@class era.command.definitions.lsp
+---@field [string]                      era.command.IDefinition
 M.definitions.lsp = {
   goto_definitions = def("Flspgotodefinitions", "lsp: goto definitions"),
   goto_implementations = def("Flspgotoimplementations", "lsp: goto implementations"),
@@ -437,6 +450,7 @@ M.definitions.lsp = {
 }
 
 ---@class era.command.definitions.notepad
+---@field [string]                      era.command.IDefinition
 M.definitions.notepad = {
   append_content = def("Fnotepadappendcontent", "notepad: append content", 1),
   create = def("Fnotepadcreate", "notepad: create"),
@@ -487,11 +501,13 @@ M.definitions.notepad = {
 }
 
 ---@class era.command.definitions.refresh
+---@field [string]                      era.command.IDefinition
 M.definitions.refresh = {
   all = def("Frefreshall", "refresh: all"),
 }
 
 ---@class era.command.definitions.search
+---@field [string]                      era.command.IDefinition
 M.definitions.search = {
   in_files = def("Fsearchinfiles", "search: in files", "?"),
   in_file = def("Fsearchinfile", "search: in file", "?"),
@@ -502,6 +518,7 @@ M.definitions.search = {
 }
 
 ---@class era.command.definitions.session
+---@field [string]                      era.command.IDefinition
 M.definitions.session = {
   restore = def("Fsessionrestore", "session: restore"),
   restore_autosaved = def("Fsessionrestoreautosaved", "session: restore autosaved"),
@@ -510,6 +527,7 @@ M.definitions.session = {
 }
 
 ---@class era.command.definitions.tab
+---@field [string]                      era.command.IDefinition
 M.definitions.tab = {
   close = def("Ftabclose", "tab: close"),
   close_others = def("Ftabcloseothers", "tab: close others"),
@@ -535,6 +553,7 @@ M.definitions.tab = {
 }
 
 ---@class era.command.definitions.term
+---@field [string]                      era.command.IDefinition
 M.definitions.term = {
   create = def("Ftermcreate", "term: create"),
   destroy = def("Ftermdestroy", "term: destroy"),
@@ -564,6 +583,7 @@ M.definitions.term = {
 }
 
 ---@class era.command.definitions.toggle
+---@field [string]                      era.command.IDefinition|era.command.IDefinitionWithCandidates
 M.definitions.toggle = {
   dim = def("Ftoggledim", "toggle: dim"),
   expandtab = def("Ftoggleexpandtab", "toggle: expandtab"),
@@ -583,6 +603,7 @@ M.definitions.toggle = {
 }
 
 ---@class era.command.definitions.ux
+---@field [string]                      era.command.IDefinition
 M.definitions.ux = {
   color_picker = def("Fuxcolorpicker", "ux: color picker"),
   dismiss_notifications = def("Fuxdismissnotifications", "ux: dismiss notifications"),
@@ -591,6 +612,7 @@ M.definitions.ux = {
 }
 
 ---@class era.command.definitions.win
+---@field [string]                      era.command.IDefinition
 M.definitions.win = {
   close = def("Fwinclose", "win: close"),
   close_others = def("Fwincloseothers", "win: close others"),

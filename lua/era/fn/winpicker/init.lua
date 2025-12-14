@@ -134,4 +134,5 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
   return winnr_target
 end
 
+---@type era.fn.winpicker
 return pick_window
