@@ -8,39 +8,60 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 
 ## Architecture
 
+### Module Dependency Order
+
+The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
+
+```
+yoz → ark → dot → fml → ghc → integration
+```
+
+- **yoz**: Rust-native standard library, completely independent Lua extension, does not depend on Neovim
+- **ark**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
+- **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/ark
+- **fml**: Actions and dressing (UI styling and components)
+- **ghc**: Plugin-related configurations
+- **integration**: Environment-specific entry points for neovim/neovide/vscode
+
+### Global Variables
+
+Three global variables are exposed via `_G`:
+- `_G.yoz` → `require("yoz")` - Rust-powered helpers (set in `bot/init.lua`)
+- `_G.ark` → `require("ark")` - Foundation utilities and collections (set in `init.lua`)
+- `_G.dot` → `require("dot")` - Configuration and core framework (set in `init.lua`)
+
 ### Core Module Structure
+
 - `lua/yoz`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
   - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`
 - `lua/ark/`: Foundation layer with algorithms, collections, and utilities
-  - `ark/c/`: Data structures (Observable, Scheduler, History, etc.)
-  - Core utilities: fn, nvim, timer, tmux, etc.
-- `lua/dot/`: Configuration constants and environment settings
-  - `dot/env.lua`: Environment configuration
-  - `dot/icon/`: Icon definitions
-  - `dot/filetype.lua`: Filetype configuration
-  - `dot/theme/`: Theme definitions
-- `lua/era/`: Core application framework
-  - `era/context/`: Context management (editor, session, workspace)
-  - `era/state/`: Application state management
-  - `era/fn/`: Framework functions
-  - Core modules: buf, command, git, lsp, notifier, path, tab, term, win, etc.
-- `lua/ux/`: User experience components
-  - `ux/picker/`: Picker UI components
-  - `ux/searcher/`: Searcher UI components
-  - `ux/nvimbar/`: Status/tab bar components
-  - `ux/widget/`: Various widgets (notepad, terminal, etc.)
+  - `ark/c/`: Data structures (Observable, Scheduler, History, Frecency, etc.)
+  - Core utilities: env, fn, fs, nvim, reporter, string, table, timer, tmux, etc.
+- `lua/dot/`: Configuration and core framework layer
+  - `dot/context/`: Context management (editor, session, workspace)
+  - `dot/state/`: Application state management (git, notepad, qflist, etc.)
+  - `dot/theme/`: Theme system (schemes, highlight groups, namespace)
+  - `dot/ux/`: User experience components
+    - `dot/ux/picker/`: Picker UI components
+    - `dot/ux/searcher/`: Search and replace UI
+    - `dot/ux/nvimbar/`: Status/tab/window bar components
+    - `dot/ux/widget/`: Widgets (ai, colorpicker, notepad, terminal)
+  - Core modules: buf, command, git, lsp, lsp_action, notifier, path, session, tab, term, win, etc.
 - `lua/fml/`: Frontend configuration layer
-  - `fml/action/`: Action handlers for various operations (buf, code, find, git, lsp, etc.)
-  - `fml/dressing/`: UI styling and components (nvimbar, select, ui_attach, etc.)
-  - `fml/command.lua`: Command definitions
+  - `fml/action/`: Action handlers (ai, buf, code, copy, diagnostic, find, git, lsp, search, tab, toggle, win)
+  - `fml/dressing/`: UI styling (clipboard, input, lsp_action, nvimbar, scroll, select, statuscolumn, trailspace, ui_attach, virtcolumn, winsep)
+  - `fml/command.lua`: Command definitions connecting dot.command to fml.action
 - `lua/ghc/`: Plugin ecosystem
   - `ghc/cmp/`: Completion configurations
   - `ghc/plugins/`: Individual plugin configurations
   - `ghc/action/`: Plugin-specific actions
+  - `ghc/plugin.lua`: Plugin repository and lazy loading setup
 - `lua/integration/`: Environment-specific entry points
   - `integration/neovim/`: Standard Neovim setup
   - `integration/neovide/`: Neovide GUI setup
   - `integration/vscode/`: VSCode extension setup
+- `lua/bot/`: Bootstrap module (loaded before ark/dot)
+  - Sets up `_G.yoz`, patches, shell, and workspace
 - Supporting directories:
   - `queries/`: TreeSitter queries for various languages
   - `rust/yoz/`: Rust source code for performance-critical operations
@@ -48,23 +69,16 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
   - `doc/`: Documentation and issue tracking
   - `bin/`: Compiled Rust binaries (platform-specific)
 
-### Global Module Access Pattern
+### Module Access Patterns
 
-The configuration exposes core modules globally via `_G` for convenient access:
-
-**Global Modules (accessible without require):**
-- `_G.yoz` → `require("yoz")` - Rust-powered helpers
-- `_G.ark` → `require("ark")` - Foundation utilities and collections
-- `_G.dot` → `require("dot")` - Configuration constants and core framework
-
-**Module Access Patterns:**
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
-- `dot.buf.*` → `require("dot.buf").*` (modules mounted directly)
-- `dot.context.*`, `dot.state.*`, `dot.fn.*` follow the same pattern
+- `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
+- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*` follow the same lazy-loading pattern
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
-The configuration supports multiple environments through conditional loading in `init.lua:15-25`:
+
+The configuration supports multiple environments through conditional loading in `init.lua:12-22`:
 - **Standard Neovim**: `integration/neovim/` (default path)
 - **Neovide GUI**: `integration/neovide/` (when `vim.g.neovide` is set)
 - **VSCode Extension**: `integration/vscode/` (when `vim.g.vscode` is set)
@@ -76,6 +90,7 @@ Each integration includes environment-specific:
 - `autocmd.lua`: Auto commands (neovim only)
 
 ### Rust-Lua Bridge
+
 - **Compiled Library**: `lua/yoz` (`.so` on Unix, `.dll` on Windows)
 - **Source Code**: `rust/yoz/` (mlua integration)
 - **Build**: Run `./rust/build.sh --force` after Rust changes
