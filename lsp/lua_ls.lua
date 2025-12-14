@@ -86,7 +86,7 @@ return {
         checkThirdParty = false,
         library = vim.tbl_filter(ark.fn.boolean, {
           era.path.join(vim.env.VIMRUNTIME, "lua"),
-          era.path.join(dot.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
+          era.path.join(ark.env.HOME_NVIM_DATA, "lazy/lazy.nvim"),
           nvim_config,
           "${3rd}/luv/library",
         }),

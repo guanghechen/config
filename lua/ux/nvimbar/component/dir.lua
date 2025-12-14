@@ -19,7 +19,7 @@ function M.path(position)
 
   ---@type string
   local fn_open_explorer = dot.G.register_anonymous_fn(function(index)
-    local dirpath = table.concat(relpath_pieces, dot.env.PATH_SEP, 1, index) ---@type string
+    local dirpath = table.concat(relpath_pieces, ark.env.PATH_SEP, 1, index) ---@type string
     era.command.execute(era.command.definitions.find.explorer.uuid, vim.fn.fnameescape(dirpath))
   end) or ""
 
@@ -33,7 +33,7 @@ function M.path(position)
         return "", "", true
       end
 
-      relpath_pieces = vim.split(meta.relpath, dot.env.PATH_SEP, { plain = true }) ---@type string[]
+      relpath_pieces = vim.split(meta.relpath, ark.env.PATH_SEP, { plain = true }) ---@type string[]
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local hln_text = winnr_sourcefile == context.winnr and hln_focus_text or hln_blur_text ---@type string
@@ -62,7 +62,7 @@ function M.path_prominent(position)
   local hln_text = position .. "_dir_path_prominent_text" ---@type string
 
   local icon = " " .. dot.icon.os.current .. " " ---@type string
-  local sep = dot.env.PATH_SEP ---@type string
+  local sep = ark.env.PATH_SEP ---@type string
   local hl_icon = txt(icon, hln_icon) ---@type string
 
   local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
@@ -86,7 +86,7 @@ function M.path_prominent(position)
         return "", "", false
       end
 
-      local relpath_pieces = vim.split(meta.relpath, dot.env.PATH_SEP, { plain = true }) ---@type string[]
+      local relpath_pieces = vim.split(meta.relpath, ark.env.PATH_SEP, { plain = true }) ---@type string[]
       local cwd_name = yoz.path.basename(context.cwd) ---@type string
       local N = #relpath_pieces - 1 ---@type integer
       if N < 1 then

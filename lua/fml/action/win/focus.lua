@@ -104,7 +104,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local navigate = dot.env.IS_TMUX and tmux_navigate or vim_navigate
+local navigate = ark.env.IS_TMUX and tmux_navigate or vim_navigate
 
 ---@class fml.action.win
 ---@field public navigate               fun(direction: "p"|"n"|"h"|"j"|"k"|"l"): nil

@@ -111,7 +111,7 @@ end
 ---@return string|nil
 function M.find_filepath(dirpath, config_filenames)
   for _, filename in ipairs(config_filenames) do
-    local filepath = dirpath .. dot.env.PATH_SEP .. filename ---@type string
+    local filepath = dirpath .. ark.env.PATH_SEP .. filename ---@type string
     if yoz.path.is_exist_file(filepath) then
       return filepath
     end
@@ -142,7 +142,7 @@ function M.locate_lsp_root(filepath, config_filenames)
   local pieces = yoz.path.split(filepath, false) ---@type string[]
   local k = #pieces - 1 ---@type integer
   while k >= 1 do
-    local dirpath = table.concat(pieces, dot.env.PATH_SEP, 1, k) ---@type string
+    local dirpath = table.concat(pieces, ark.env.PATH_SEP, 1, k) ---@type string
     if dirpath == cwd then
       break
     end
@@ -159,8 +159,8 @@ end
 ---@param silent                        ?boolean
 ---@return string|nil
 function M.locate_mason_bin_path(bin, silent)
-  local root = vim.env.MASON or (dot.env.HOME_NVIM_DATA .. dot.env.PATH_SEP .. "mason")
-  local resolved_binname = dot.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
+  local root = vim.env.MASON or (ark.env.HOME_NVIM_DATA .. ark.env.PATH_SEP .. "mason")
+  local resolved_binname = ark.env.IS_WIN and not bin:match("%.cmd$") and (bin .. ".cmd") or bin ---@type string
   local filepath = era.path.normalize(root .. "/bin/" .. resolved_binname) ---@type string
 
   if yoz.path.is_exist_file(filepath) then
@@ -194,10 +194,10 @@ end
 ---@return string|nil
 function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   pcall(require, "mason") -- make sure Mason is loaded. Will fail when generating docs
-  local root = vim.env.MASON or (dot.env.HOME_NVIM_DATA .. dot.env.PATH_SEP .. "mason")
+  local root = vim.env.MASON or (ark.env.HOME_NVIM_DATA .. ark.env.PATH_SEP .. "mason")
   local filepath = root .. "/packages/" .. pkg .. "/" .. pkg_path
 
-  if not vim.uv.fs_stat(filepath) and not dot.env.IS_HEADLESS then
+  if not vim.uv.fs_stat(filepath) and not ark.env.IS_HEADLESS then
     if not silent then
       ark.reporter.warn({
         from = __module_name__,

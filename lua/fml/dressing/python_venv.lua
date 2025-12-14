@@ -125,17 +125,17 @@ function M.activate_venv(venv_path)
 
   -- Remove previous bin path from path
   if prev_bin_path ~= nil then
-    current_system_path = string.gsub(current_system_path, escape_pattern(prev_bin_path .. dot.env.PATH_ENV_SEP), "")
+    current_system_path = string.gsub(current_system_path, escape_pattern(prev_bin_path .. ark.env.PATH_ENV_SEP), "")
   end
 
   -- Add new bin path to path
-  local new_system_path = bin_path .. dot.env.PATH_ENV_SEP .. current_system_path
+  local new_system_path = bin_path .. ark.env.PATH_ENV_SEP .. current_system_path
   vim.fn.setenv("PATH", new_system_path)
   _current_bin_path = bin_path
 
   -- Set VIRTUAL_ENV
   -- Set CONDA_PREFIX instead if we are on Windows and a conda environment is activated
-  if dot.env.IS_WIN then
+  if ark.env.IS_WIN then
     local venv_path_std = string.gsub(venv_path, "/", "\\")
     local conda_base_path_std = string.gsub(dot.lang.python.paths.AnacondaBase, "/", "\\")
     local conda_envs_path_std = string.gsub(dot.lang.python.paths.AnacondaEnvs, "/", "\\")
@@ -158,7 +158,7 @@ function M.deactivate_venv()
   local prev_bin_path = _current_bin_path
 
   if prev_bin_path ~= nil then
-    current_system_path = string.gsub(current_system_path, escape_pattern(prev_bin_path .. dot.env.PATH_ENV_SEP), "")
+    current_system_path = string.gsub(current_system_path, escape_pattern(prev_bin_path .. ark.env.PATH_ENV_SEP), "")
     vim.fn.setenv("PATH", current_system_path)
   end
 

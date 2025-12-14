@@ -18,7 +18,7 @@ function M.paste()
   end
 
   local filename_default = os.date("%Y-%m-%d_%H-%M") .. ".png" ---@type string
-  local filepath_default = era.path.join(dirpath, "img" .. dot.env.PATH_SEP .. filename_default) ---@type string
+  local filepath_default = era.path.join(dirpath, "img" .. ark.env.PATH_SEP .. filename_default) ---@type string
   local placeholder = era.path.relative(cwd, filepath_default) ---@type string
 
   vim.ui.input({
@@ -31,7 +31,7 @@ function M.paste()
     end
 
     local filepath_target = era.path.resolve(cwd, filepath_target_relative) ---@type string
-    dot.env.mkdirs(filepath_target, false)
+    ark.env.mkdirs(filepath_target, false)
     clipboard.paste_image(filepath_target)
   end)
 end

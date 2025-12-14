@@ -144,10 +144,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (dot.env.IS_NIX and "")
-    or (dot.env.IS_MAC and "")
-    or (dot.env.IS_WIN and "")
-    or (dot.env.IS_WSL and "")
+  current = (ark.env.IS_NIX and "")
+    or (ark.env.IS_MAC and "")
+    or (ark.env.IS_WIN and "")
+    or (ark.env.IS_WSL and "")
     or "",
 }
 

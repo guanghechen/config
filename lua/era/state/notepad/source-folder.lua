@@ -84,7 +84,7 @@ function M:load(force)
     return self._state
   end
 
-  dot.env.mkdirs(self._dirpath, true)
+  ark.env.mkdirs(self._dirpath, true)
 
   local items_map = {} ---@type table<string, era.t.INotepadItemState>
   local name_to_uuid = {} ---@type table<string, string>
@@ -563,7 +563,7 @@ function M:flush()
     self.flush_scheduler:cancel()
   end
 
-  dot.env.mkdirs(self._dirpath, true)
+  ark.env.mkdirs(self._dirpath, true)
 
   local items = {}
   for _, uuid in ipairs(self._state.orders) do

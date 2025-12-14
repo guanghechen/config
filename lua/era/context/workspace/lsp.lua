@@ -170,8 +170,8 @@ function M.get_python_bin_path()
     return nil, nil
   end
 
-  local python_name = dot.env.IS_WIN and "python.exe" or "python" ---@type string
-  local bin_home_name = dot.env.IS_WIN and "Scripts" or "bin" ---@type string
+  local python_name = ark.env.IS_WIN and "python.exe" or "python" ---@type string
+  local bin_home_name = ark.env.IS_WIN and "Scripts" or "bin" ---@type string
   local bin_home = era.path.join(venv_path, bin_home_name) ---@type string
   local python_path ---@type string
 

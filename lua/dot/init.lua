@@ -163,7 +163,7 @@ local theme = setmetatable({
 ---@class dot.__mods
 local __mods = {
   G = "dot.G",
-  env = "dot.env",
+  env = "ark.env",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
   icon = "dot.icon",
@@ -178,7 +178,7 @@ local __mods = {
 ---@field public theme                  dot.theme
 ---
 ---@field public G                      dot.G
----@field public env                    dot.env
+---@field public env                    ark.env
 ---@field public fileicon               dot.fileicon
 ---@field public filetype               dot.filetype
 ---@field public icon                   dot.icon

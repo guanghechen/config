@@ -27,14 +27,14 @@ local function wsl_clipboard()
   }
 end
 
-if dot.env.IS_MAC then
-  if dot.env.IS_TMUX then
+if ark.env.IS_MAC then
+  if ark.env.IS_TMUX then
     return tmux_clipboard()
   end
   return nil
 end
 
-if dot.env.IS_WSL then
+if ark.env.IS_WSL then
   return wsl_clipboard()
 end
 

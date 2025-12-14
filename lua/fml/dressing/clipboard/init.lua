@@ -11,13 +11,13 @@ local MAX_BASE64_SIZE = 24 * 1024 ---@type number
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
-if dot.env.IS_MAC then
+if ark.env.IS_MAC then
   M = require("fml.dressing.clipboard.mac")
-elseif dot.env.IS_WSL then
+elseif ark.env.IS_WSL then
   M = require("fml.dressing.clipboard.wsl")
-elseif dot.env.IS_NIX then
+elseif ark.env.IS_NIX then
   M = require("fml.dressing.clipboard.nix")
-elseif dot.env.IS_WIN then
+elseif ark.env.IS_WIN then
   M = require("fml.dressing.clipboard.win")
 end
 
@@ -48,7 +48,7 @@ function M.paste_image(filepath_target)
       local src = era.path.relative(era.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
         if string.byte(src, 1, 1) ~= BYTE_DOT then
-          src = "." .. dot.env.PATH_SEP .. src
+          src = "." .. ark.env.PATH_SEP .. src
         end
         local filename = yoz.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string

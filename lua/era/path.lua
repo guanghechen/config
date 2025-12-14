@@ -1,18 +1,18 @@
-local SEP = dot.env.PATH_SEP ---@type string
-local HOME_CONFIG = dot.env.HOME_CONFIG ---@type string
-local HOME_CONFIG_SHARED = dot.env.HOME_CONFIG_SHARED ---@type string
-local HOME_NVIM_CACHE = dot.env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = dot.env.HOME_NVIM_CONFIG ---@type string
-local HOME_NVIM_DATA = dot.env.HOME_NVIM_DATA ---@type string
-local HOME_CONTEXT = dot.env.HOME_CONTEXT ---@type string
-local HOME_SHARED = dot.env.HOME_SHARED ---@type string
+local SEP = ark.env.PATH_SEP ---@type string
+local HOME_CONFIG = ark.env.HOME_CONFIG ---@type string
+local HOME_CONFIG_SHARED = ark.env.HOME_CONFIG_SHARED ---@type string
+local HOME_NVIM_CACHE = ark.env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = ark.env.HOME_NVIM_CONFIG ---@type string
+local HOME_NVIM_DATA = ark.env.HOME_NVIM_DATA ---@type string
+local HOME_CONTEXT = ark.env.HOME_CONTEXT ---@type string
+local HOME_SHARED = ark.env.HOME_SHARED ---@type string
 
 local CWD ---@type string
 local WORKSPACE ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
-  local gitrepo = dot.env.locate_gitroot(cwd) ---@type string|nil
+  local gitrepo = ark.env.locate_gitroot(cwd) ---@type string|nil
   CWD = cwd ---@type string
   WORKSPACE = gitrepo or cwd ---@type string
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean
@@ -204,7 +204,7 @@ function M.locate_cache_filepath(filename)
 
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
-  dot.env.mkdirs(dirpath, true)
+  ark.env.mkdirs(dirpath, true)
   return filepath
 end
 

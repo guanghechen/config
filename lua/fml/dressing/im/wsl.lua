@@ -6,8 +6,8 @@ local M = {}
 local app_home = era.path.locate_app_config_home("guanghechen")
 local script_path = era.path.join(
   app_home,
-  (dot.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
-    or (dot.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
+  (ark.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
+    or (ark.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
     or "bin/im-select/win/x64/im-select.exe"
 )
 

@@ -1,4 +1,4 @@
-if dot.env.IS_WIN then
+if ark.env.IS_WIN then
   return
 end
 
