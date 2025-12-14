@@ -201,7 +201,7 @@ function M.to_md()
   end
 
   local content = table.concat(lines, "\n")
-  pcall(vim.fn.setreg, "+", content)
+  ark.nvim.copy(content)
   ark.reporter.info({
     from = __module_name__,
     subject = "to_md",

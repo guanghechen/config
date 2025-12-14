@@ -203,7 +203,7 @@ local picker = dot.ux.picker.ListComposer.new({
     if item ~= nil then
       ---@cast item fml.action.find.highlights.IItem
       composer:close()
-      vim.fn.setreg("+", item.uuid)
+      ark.nvim.copy(item.uuid)
     end
   end,
   on_refresh = function(composer)

@@ -1,12 +1,5 @@
 local __module_name__ = "dot.ux.fn.select_copy_filepath" ---@type string
 
----@param content                       string
----@return nil
-local function write_clipboard_registers(content)
-  vim.fn.setreg('"', content)
-  vim.fn.setreg("+", content)
-end
-
 ---@class dot.ux.fn.select_copy_filepath.IParams
 ---@field public filepath               string
 ---@field public winopts                vim.api.keyset.win_config|nil
@@ -37,7 +30,7 @@ local function select_copy_filepath(params)
         if item.uuid == "absolute" then
           local content = filepath ---@type string
 
-          write_clipboard_registers(content)
+          ark.nvim.copy(content)
           ark.reporter.info({
             from = __module_name__,
             message = "Copied absolute filepath: " .. content,
@@ -46,14 +39,14 @@ local function select_copy_filepath(params)
           local cwd = dot.path.cwd() ---@type string
           local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
-          write_clipboard_registers(content)
+          ark.nvim.copy(content)
           ark.reporter.info({
             from = __module_name__,
             message = "Copied relative filepath: " .. content,
           })
         elseif item.uuid == "filename" then
           local content = yoz.path.basename(filepath) ---@type string
-          write_clipboard_registers(content)
+          ark.nvim.copy(content)
           ark.reporter.info({
             from = __module_name__,
             message = "Copied filename: " .. content,

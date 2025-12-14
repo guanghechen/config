@@ -99,6 +99,13 @@ function M.bindkeys(keymaps, keymap_override)
   end
 end
 
+---@param content                       string
+---@return nil
+function M.copy(content)
+  vim.fn.setreg('"', content)
+  vim.fn.setreg("+", content)
+end
+
 ---@return table<string, integer>
 function M.filepath2bufnr()
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

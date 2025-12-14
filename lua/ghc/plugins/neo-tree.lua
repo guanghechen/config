@@ -2,13 +2,6 @@ local __module_name__ = "ghc.plugins.neo-tree" ---@type string
 
 local sources = { "filesystem", "buffers", "git_status" } ---@type string[]
 
----@param content                       string
----@return nil
-local function write_clipboard_registers(content)
-  vim.fn.setreg('"', content)
-  vim.fn.setreg("+", content)
-end
-
 return {
   name = "neo-tree.nvim",
   cmd = "Neotree",
@@ -451,7 +444,7 @@ return {
           function(state)
             local node = state.tree:get_node()
             local path = node:get_id()
-            write_clipboard_registers(path)
+            ark.nvim.copy(path)
           end,
           desc = "Copy Path to Clipboard",
         },

@@ -295,7 +295,7 @@ local picker = dot.ux.picker.ListComposer.new({
 
     local data = item.data
     if data.rhs and data.rhs ~= "" and data.rhs ~= "[callback]" then
-      vim.fn.setreg("+", data.lhs)
+      ark.nvim.copy(data.lhs)
       ark.reporter.info({
         from = name,
         subject = "Keymap copied",

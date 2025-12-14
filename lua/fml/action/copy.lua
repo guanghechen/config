@@ -1,12 +1,5 @@
 local __module_name__ = "fml.action.copy" ---@type string
 
----@param content                       string
----@return nil
-local function write_clipboard_registers(content)
-  vim.fn.setreg('"', content)
-  vim.fn.setreg("+", content)
-end
-
 ---@param candidate                     dot.command.definitions.copy.Scope
 ---@param filepath                      string
 ---@return nil
@@ -14,7 +7,7 @@ local function copy_current_filepath(candidate, filepath)
   if candidate == "absolute" then
     local content = filepath ---@type string
 
-    write_clipboard_registers(content)
+    ark.nvim.copy(content)
     ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
@@ -23,7 +16,7 @@ local function copy_current_filepath(candidate, filepath)
     local cwd = dot.path.cwd() ---@type string
     local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
-    write_clipboard_registers(content)
+    ark.nvim.copy(content)
     ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
@@ -31,7 +24,7 @@ local function copy_current_filepath(candidate, filepath)
   elseif candidate == "filename" then
     local content = yoz.path.basename(filepath) ---@type string
 
-    write_clipboard_registers(content)
+    ark.nvim.copy(content)
     ark.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filename to system clipboard!",
@@ -52,7 +45,7 @@ local M = {}
 function M.copy_char_under_cursor()
   local col = vim.fn.col(".")
   local char = vim.fn.getline("."):sub(col, col)
-  vim.fn.setreg("+", char)
+  ark.nvim.copy(char)
 end
 
 ---@param arg                           unknown|nil
