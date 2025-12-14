@@ -551,7 +551,7 @@ function M:__create_wins__()
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   if preview_winnr ~= nil and not should_show_preview then
-    era.win.close(preview_winnr)
+    dot.win.close(preview_winnr)
     preview_winnr = nil
   end
 
@@ -561,7 +561,7 @@ function M:__create_wins__()
 
   local finder_dimension, result_dimension, preview_dimension = self:__layout__() ---@type era.t.IWinDimension, era.t.IWinDimension, era.t.IWinDimension|nil
   local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
-  local zindex = era.win.resolve_zindex() ---@type integer
+  local zindex = dot.win.resolve_zindex() ---@type integer
 
   ---@type ux.picker.finder.IWinOpts
   local finder_winopts = {

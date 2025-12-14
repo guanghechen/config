@@ -250,7 +250,7 @@ function M._show(state)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    era.win.set_type(winnr, era.win.Types.CMDLINE)
+    dot.win.set_type(winnr, dot.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
@@ -385,7 +385,7 @@ function M._render_block(block)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     block.winnr = winnr
 
-    era.win.set_type(winnr, era.win.Types.CMDLINE)
+    dot.win.set_type(winnr, dot.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
@@ -552,7 +552,7 @@ function M._show_confirm(state, msg_show_task)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    era.win.set_type(winnr, era.win.Types.CMDLINE)
+    dot.win.set_type(winnr, dot.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false

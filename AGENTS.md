@@ -63,10 +63,10 @@ The configuration exposes core modules globally via `_G` for convenient access:
 **Module Access Patterns:**
 - `yoz.*` → Access Rust-native utilities directly (e.g., `yoz.path.*`, `yoz.fs.*`)
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
-- `era.buf.*` → Buffer utilities
-- `era.win.*` → Window utilities
+- `dot.buf.*` → Buffer utilities
+- `dot.win.*` → Window utilities
 - `era.state.*`, `era.fn.*` → State management and framework functions
-- `era.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
+- `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
 The configuration supports multiple environments through conditional loading in `init.lua`:

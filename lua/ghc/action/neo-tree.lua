@@ -2,7 +2,7 @@
 ---@return boolean
 local function check_could_reveal(cwd)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer|nil
-  if bufnr ~= nil and era.buf.is_valid(bufnr) then
+  if bufnr ~= nil and dot.buf.is_valid(bufnr) then
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     return yoz.path.is_descendant(cwd, filepath)
   end
@@ -25,7 +25,7 @@ local function create_widget(params)
   local function locate_neotree_winnr()
     local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
     for _, winnr in ipairs(winnrs) do
-      if era.win.is_float(winnr) then
+      if dot.win.is_float(winnr) then
         local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
         local filetype = vim.bo[bufnr].filetype ---@type string
         if filetype == dot.filetype.NEOTREE then
@@ -168,7 +168,7 @@ end
 
 ---@return nil
 function M.toggle()
-  if era.win.find_by_filetype(0, dot.filetype.NEOTREE) ~= nil then
+  if dot.win.find_by_filetype(0, dot.filetype.NEOTREE) ~= nil then
     require("neo-tree.command").execute({
       action = "close",
       source = "filesystem",

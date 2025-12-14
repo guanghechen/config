@@ -212,7 +212,7 @@ function M.browse(opts)
   opts = opts or {}
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr == nil then
     return
   end

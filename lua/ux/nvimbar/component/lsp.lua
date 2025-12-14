@@ -63,7 +63,7 @@ end)
 ---@return string
 local function get_client_text()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if not era.buf.is_valid(bufnr) then
+  if not dot.buf.is_valid(bufnr) then
     return ""
   end
 
@@ -164,8 +164,8 @@ function M.symbols(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local winnr = context.winnr ---@type integer
-      local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
-      local winline = meta ~= nil and meta.winline or nil ---@type era.win.IWinline|nil
+      local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
+      local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
       if winline == nil then
         return "", "", false
       end

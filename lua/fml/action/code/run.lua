@@ -176,7 +176,7 @@ local M = {}
 ---@return nil
 function M.run(force)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end
@@ -201,7 +201,7 @@ end
 
 ---@return nil
 function M.run_as_neovim_command()
-  local selected = era.buf.retrieve_selected_text() ---@type string
+  local selected = dot.buf.retrieve_selected_text() ---@type string
   if selected == "" then
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
     selected = table.concat(lines, "\n")

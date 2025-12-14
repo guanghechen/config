@@ -472,7 +472,7 @@ function M:__create_win_as_needed__(bufnr)
   end
 
   local win_opts = self._ui:get_win_opts()
-  win_opts.zindex = era.win.resolve_zindex()
+  win_opts.zindex = dot.win.resolve_zindex()
   local winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
   self._winnr = winnr
 

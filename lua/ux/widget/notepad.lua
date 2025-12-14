@@ -1079,7 +1079,7 @@ function M:ensure_win()
   self.win_opts.winhighlight = self:__normalize_winhighlight__(self.win_opts.winhighlight)
 
   local config = {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     anchor = "NW",
     row = rect.row,
@@ -1099,7 +1099,7 @@ function M:ensure_win()
   if winnr == nil then
     winnr = vim.api.nvim_open_win(bufnr, true, config)
     self._winnr = winnr
-    era.win.set_type(winnr, era.win.Types.TEXTAREA)
+    dot.win.set_type(winnr, dot.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
     local resize = era.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
@@ -1177,7 +1177,7 @@ end
 function M:hide()
   local winnr = self:get_winnr()
   self._winnr = nil
-  era.win.close(winnr)
+  dot.win.close(winnr)
 end
 
 ---@return nil

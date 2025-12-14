@@ -685,13 +685,13 @@ function M:__create_wins__()
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   if preview_winnr ~= nil and not should_show_preview then
-    era.win.close(preview_winnr)
+    dot.win.close(preview_winnr)
     preview_winnr = nil
   end
 
   local should_show_replacer = self:__should_show_replacer__() ---@type boolean
   if replacer_winnr ~= nil and not should_show_replacer then
-    era.win.close(replacer_winnr)
+    dot.win.close(replacer_winnr)
     replacer_winnr = nil
   end
 
@@ -706,7 +706,7 @@ function M:__create_wins__()
 
   local finder_dimension, replacer_dimension, result_dimension, preview_dimension = self:__layout__() ---@type era.t.IWinDimension, era.t.IWinDimension|nil, era.t.IWinDimension, era.t.IWinDimension|nil
   local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
-  local zindex = era.win.resolve_zindex() ---@type integer
+  local zindex = dot.win.resolve_zindex() ---@type integer
 
   ---@type ux.searcher.finder.IWinOpts
   local finder_winopts = {
@@ -1812,7 +1812,7 @@ function M:__toggle_replacer_visibility__(flag_replace)
         self.finder:focus()
       end
 
-      era.win.close(replacer_winnr)
+      dot.win.close(replacer_winnr)
       self:resize()
     end
   end

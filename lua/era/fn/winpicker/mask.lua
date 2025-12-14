@@ -68,7 +68,7 @@ function M:show(winnr)
 
   ---@type vim.api.keyset.win_config
   local wincfg_hint = {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "win",
     win = winnr,
     row = row,
@@ -87,7 +87,7 @@ function M:show(winnr)
     winnr_hint = vim.api.nvim_open_win(bufnr_hint, false, wincfg_hint) ---@type integer
     self.winnr_hint = winnr_hint
 
-    era.win.set_type(winnr_hint, era.win.Types.WINPICKER)
+    dot.win.set_type(winnr_hint, dot.win.Types.WINPICKER)
     vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr_hint].number = false

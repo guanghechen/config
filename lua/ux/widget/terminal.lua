@@ -137,7 +137,7 @@ function M:focus()
   local termindex = era.term.current() ---@type integer
   local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
   if termmeta == nil then
-    era.win.close(_terminal_winnr)
+    dot.win.close(_terminal_winnr)
     _terminal_winnr = nil
     return
   end
@@ -153,7 +153,7 @@ end
 function M:hide()
   local winnr = _terminal_winnr ---@type integer|nil
   _terminal_winnr = nil
-  era.win.close(winnr)
+  dot.win.close(winnr)
 end
 
 ---@return nil
@@ -179,7 +179,7 @@ function M:resize()
     local termindex = era.term.current() ---@type integer
     local _, termmeta = era.term.at(termindex) ---@type string|nil, era.t.ITermMeta|nil
     if termmeta == nil then
-      era.win.close(_terminal_winnr)
+      dot.win.close(_terminal_winnr)
       _terminal_winnr = nil
     else
       self:__create_win_as_needed__(termmeta)
@@ -304,7 +304,7 @@ function M.__create_buf_as_needed__(termmeta)
         if _termmeta then
           era.term.on_closed(_termmeta)
         else
-          era.buf.close(bufnr)
+          dot.buf.close(bufnr)
         end
       end)
     end,
@@ -326,7 +326,7 @@ function M:__create_win_as_needed__(termmeta)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     row = row,
     col = col,
@@ -345,7 +345,7 @@ function M:__create_win_as_needed__(termmeta)
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     local bufnr_mask = __create_mask_buf_as_needed__() ---@type integer
     winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
-    era.win.set_type(winnr, era.win.Types.TERMINAL)
+    dot.win.set_type(winnr, dot.win.Types.TERMINAL)
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
     vim.wo[winnr].cursorline = false

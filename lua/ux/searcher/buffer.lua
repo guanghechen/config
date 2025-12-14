@@ -275,7 +275,7 @@ function M:attach(winnr_source)
   if winnr_source == vim.api.nvim_get_current_win() then
     local mode = vim.fn.mode() ---@type string
     if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
-      local selected_text = era.buf.retrieve_selected_text() ---@type string|nil
+      local selected_text = dot.buf.retrieve_selected_text() ---@type string|nil
       if selected_text ~= nil and selected_text ~= "" then
         self.o_search_pattern:next(selected_text)
       end
@@ -791,7 +791,7 @@ function M:__create_finder_window_as_needed__()
 
   local bufnr = self:__create_finder_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,
@@ -845,7 +845,7 @@ function M:__create_replacer_window_as_needed__()
 
   local bufnr = self:__create_replacer_buffer_as_needed__() ---@type integer
   local popup_winnr = vim.api.nvim_open_win(bufnr, false, {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,

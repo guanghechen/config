@@ -7,7 +7,7 @@ local M = {}
 ---@return nil
 function M.open(bufnr)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) or era.win.pick_sourcefile() ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
   if winnr_sourcefile ~= nil then
     vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
   end
@@ -17,7 +17,7 @@ end
 ---@return nil
 function M.focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+  local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -28,7 +28,7 @@ function M.focus(bufid)
     return
   end
 
-  local bufs = meta.bufs ---@type era.tab.IBufItem[]
+  local bufs = meta.bufs ---@type dot.tab.IBufItem[]
   local bufid_next = ark.fn.navigate_limit(0, bufid, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
@@ -37,7 +37,7 @@ end
 ---@return nil
 function M.focus_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+  local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -48,14 +48,14 @@ function M.focus_left(step)
     return
   end
 
-  local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
+  local _, bufid_sourcefile = dot.tab.retrieve_buf_sourcefile(tabnr) ---@type dot.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
 
-  local bufs = meta.bufs ---@type era.tab.IBufItem[]
+  local bufs = meta.bufs ---@type dot.tab.IBufItem[]
   local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
@@ -64,7 +64,7 @@ end
 ---@return nil
 function M.focus_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+  local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -75,13 +75,13 @@ function M.focus_right(step)
     return
   end
 
-  local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
+  local _, bufid_sourcefile = dot.tab.retrieve_buf_sourcefile(tabnr) ---@type dot.tab.IBufItem|nil, integer|nil
   if bufid_sourcefile == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local bufs = meta.bufs ---@type era.tab.IBufItem[]
+  local bufs = meta.bufs ---@type dot.tab.IBufItem[]
   local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end

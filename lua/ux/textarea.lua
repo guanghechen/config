@@ -226,7 +226,7 @@ function M:open(params)
   if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
     ---@type integer
     local winnr = vim.api.nvim_open_win(self._bufnr, true, {
-      zindex = era.win.resolve_zindex(),
+      zindex = dot.win.resolve_zindex(),
       relative = "editor",
       anchor = "NW",
       row = rect.row,
@@ -241,7 +241,7 @@ function M:open(params)
     })
     self._winnr = winnr
 
-    era.win.set_type(winnr, era.win.Types.TEXTAREA)
+    dot.win.set_type(winnr, dot.win.Types.TEXTAREA)
     vim.api.nvim_win_set_cursor(winnr, { text_cursor_row, text_cursor_col })
   end
 

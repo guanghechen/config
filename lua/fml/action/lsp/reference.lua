@@ -47,7 +47,7 @@ local picker = ux.picker.FiletreeComposer.new({
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, buf_flagname, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil then
     callback(false)
     return
@@ -145,7 +145,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
 
     if #items == 1 then
       local item = items[1] ---@type fml.action.lsp.reference.IItem
-      era.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+      dot.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, { item })
       return
     end

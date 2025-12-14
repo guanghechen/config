@@ -36,7 +36,7 @@ local function refresh(force)
   local bufnr_sourcefile = nil ---@type integer|nil
   if o_flag_buffer:snapshot() then
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+    bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
     o_bufnr_sourcefile:next(bufnr_sourcefile)
   end
 
@@ -266,7 +266,7 @@ picker = ux.picker.FiletreeComposer.new({
       return
     end
 
-    local bufnr_sourcefile = era.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
+    local bufnr_sourcefile = dot.buf.loadfile(filenode.data.filepath) ---@type integer|nil)
     if bufnr_sourcefile == nil then
       return
     end

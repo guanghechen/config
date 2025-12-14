@@ -27,7 +27,7 @@ function M.edit()
 
   local location ---@type string|nil
   local location_err ---@type string|nil
-  local lnum_start, col_start, lnum_end, col_end = era.buf.retrieve_visual_range()
+  local lnum_start, col_start, lnum_end, col_end = dot.buf.retrieve_visual_range()
   local content ---@type string
 
   if
@@ -49,7 +49,7 @@ function M.edit()
       end_lnum = lnum_end,
       end_col = col_end,
     })
-    local lines = era.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
+    local lines = dot.buf.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
     content = table.concat(lines, "\n")
   end
 
@@ -89,13 +89,13 @@ end
 ---@return nil
 function M.submit_buffer()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local text = era.buf.retrieve_split_block(winnr) ---@type string
+  local text = dot.buf.retrieve_split_block(winnr) ---@type string
   ux.widget.ai.action.send_to_attached(text, true)
 end
 
 ---@return nil
 function M.submit_selection()
-  local text = era.buf.retrieve_selected_text() or ""
+  local text = dot.buf.retrieve_selected_text() or ""
   if #text > 0 then
     ux.widget.ai.action.send_to_attached(text, true)
   end
@@ -111,7 +111,7 @@ end
 
 ---@return nil
 function M.send_selection()
-  local text = era.buf.retrieve_selected_text() or ""
+  local text = dot.buf.retrieve_selected_text() or ""
   if #text > 0 then
     ux.widget.ai.action.send_to_attached(text, false)
   end

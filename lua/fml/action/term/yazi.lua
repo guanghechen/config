@@ -35,7 +35,7 @@ local function open_yazi(name, cwd, filepath)
         end
 
         if #filepaths > 0 then
-          era.win.open_filepaths(nil, filepaths)
+          dot.win.open_filepaths(nil, filepaths)
         end
       end)
     end,
@@ -55,7 +55,7 @@ end
 function M.yazi_reveal()
   local cwd = dot.path.cwd() ---@type string
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     open_yazi("yazi_cwd", cwd, cwd)
   else

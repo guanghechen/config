@@ -68,7 +68,7 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+  local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   return meta == nil or #meta.bufs > 1
 end
 
@@ -84,7 +84,7 @@ dirtier:subscribe(ark.c.Subscriber.new({
         for _, winnr in ipairs(winnrs) do
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if vim.bo[bufnr].filetype == filetype then
-            if not era.win.is_float(winnr) then
+            if not dot.win.is_float(winnr) then
               vim.wo[winnr].winbar = nil
             end
           end

@@ -1881,7 +1881,7 @@ end
 ---@return integer|nil
 function M:__focus_source_win__()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
     vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
   else
@@ -2196,7 +2196,7 @@ function M:__open_node__(nodeuuid)
 
       composer:close()
       composer:mark_result_dirty()
-      era.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
+      dot.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
     end
   end
@@ -2232,7 +2232,7 @@ function M:__open_node__(nodeuuid)
   end
 
   composer:close()
-  era.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  dot.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
 ---@param cwd                           string
@@ -2446,7 +2446,7 @@ function M:__retrieve_lnum_range__()
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
     if mode == "v" or mode == "V" or mode == "\22" then
-      local lnum_from, lnum_end = era.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      local lnum_from, lnum_end = dot.buf.retrieve_visual_lnum_range() ---@type integer, integer
       return lnum_from, lnum_end
     end
   end
@@ -2534,7 +2534,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
   end
 
   composer:close()
-  era.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
+  dot.win.open_filepath(winnr_sourcefile, node.data.filepath, lnum, col)
 end
 
 return M

@@ -298,7 +298,7 @@ return {
             opts = {
               get_bufnrs = function()
                 local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-                local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+                local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
                 if meta == nil then
                   return {}
                 end

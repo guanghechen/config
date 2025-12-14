@@ -13,8 +13,8 @@ end
 ---@param source                        "sourcefile"|"neotree"
 ---@return ux.nvimbar.Nvimbar|nil
 local function resolve_nvimbar(winnr, source)
-  local meta = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
-  local winline = meta ~= nil and meta.winline or nil ---@type era.win.IWinline|nil
+  local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
+  local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
     local nvimbar = nil ---@type ux.nvimbar.Nvimbar|nil
     nvimbar = ux.nvimbar.Nvimbar.new({
@@ -27,7 +27,7 @@ local function resolve_nvimbar(winnr, source)
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
           local width = vim.api.nvim_win_get_width(winnr) ---@type integer
-          return era.win.is_float(winnr) and width - 2 or width
+          return dot.win.is_float(winnr) and width - 2 or width
         end
         return 0
       end,
@@ -50,7 +50,7 @@ local function resolve_nvimbar(winnr, source)
     })
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_cancel = nil } ---@type era.win.IWinline
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_cancel = nil } ---@type dot.win.IWinline
 
     winline.nvimbar = nvimbar
     meta.winline = winline
@@ -67,7 +67,7 @@ local function resolve_nvimbar(winnr, source)
       ---
       -- :place("right", c.dirpath_prominent(position), 100)
     elseif source == "neotree" then
-      local is_floating = era.win.is_float(winnr) ---@type boolean
+      local is_floating = dot.win.is_float(winnr) ---@type boolean
       nvimbar:place("center", c.plugin.neotree(position, is_floating and "float" or "left"), 100)
     else
     end
@@ -89,7 +89,7 @@ local function resolve_nvimbar(winnr, source)
             winline.locate_cancel = nil
           end
 
-          winline.locate_cancel = era.win.locate_symbols(winnr, function(ok, symbols)
+          winline.locate_cancel = dot.win.locate_symbols(winnr, function(ok, symbols)
             winline.locate_cancel = nil
 
             if not ok or not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
@@ -118,7 +118,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not era.win.is_valid(winnr) then
+  if winnr == nil or not dot.win.is_valid(winnr) then
     return
   end
 
@@ -129,7 +129,7 @@ local function render(winnr)
   end
 
   if filetype == dot.filetype.NEOTREE then
-    if vim.o.showtabline == 0 or era.win.is_float(winnr) then
+    if vim.o.showtabline == 0 or dot.win.is_float(winnr) then
       local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type ux.nvimbar.Nvimbar|nil
       if nvimbar ~= nil then
         nvimbar:render()
@@ -172,7 +172,7 @@ local function render(winnr)
     return
   end
 
-  if not era.win.is_sourcefile(winnr) then
+  if not dot.win.is_sourcefile(winnr) then
     return
   end
 

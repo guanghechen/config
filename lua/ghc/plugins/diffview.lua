@@ -94,7 +94,7 @@ return {
         view_opened = function()
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
           vim.schedule(function()
-            era.tab.resolve(tabnr, true)
+            dot.tab.resolve(tabnr, true)
           end)
         end,
       },

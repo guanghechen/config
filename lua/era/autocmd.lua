@@ -3,8 +3,8 @@ vim.api.nvim_create_autocmd("BufDelete", {
   callback = function(event)
     local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    era.tab.on_buf_delete(tabnr)
-    era.buf.on_close(bufnr)
+    dot.tab.on_buf_delete(tabnr)
+    dot.buf.on_close(bufnr)
     era.term.on_buf_deleted(bufnr)
   end,
 })
@@ -16,8 +16,8 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
     local bufnr = event.buf ---@type integer
 
-    era.win.on_buf_enter(winnr, bufnr)
-    era.tab.on_buf_enter(tabnr, bufnr)
+    dot.win.on_buf_enter(winnr, bufnr)
+    dot.tab.on_buf_enter(tabnr, bufnr)
 
     era.state.status.dirty_winline_nr:next(winnr)
     era.state.status.dirtier_statusline:mark_dirty()
@@ -37,7 +37,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     era.state.status.dirtier_statusline:mark_dirty()
 
-    if era.win.is_sourcefile(winnr) then
+    if dot.win.is_sourcefile(winnr) then
       era.state.status.dirty_winline_nr:next(winnr)
     end
   end,
@@ -87,7 +87,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
   group = ark.nvim.augroup("bootstrap_on_TabClosed"),
   callback = function(event)
     local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
-    era.tab.on_close(tabnr)
+    dot.tab.on_close(tabnr)
 
     era.state.status.dirtier_statusline:mark_dirty()
     era.state.status.dirtier_tabline:mark_dirty()
@@ -119,10 +119,10 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
         local filepath = dot.path.resolve(cwd, filename) ---@type string
         if yoz.path.is_exist_directory(filepath) then
-          local new_filepath = era.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
+          local new_filepath = dot.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true
-            if era.buf.is_valid(bufnr) then
+            if dot.buf.is_valid(bufnr) then
               local filetype = vim.bo[bufnr].filetype ---@type string
               vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
               vim.bo[bufnr].swapfile = false
@@ -132,7 +132,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
         end
       end
 
-      era.tab.refresh()
+      dot.tab.refresh()
       era.state.status.dirtier_statusline:mark_dirty()
       era.state.status.dirtier_tabline:mark_dirty()
     end)
@@ -161,7 +161,7 @@ vim.api.nvim_create_autocmd("VimResized", {
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-    era.tab.focus_win_fixed(tabnr)
+    dot.tab.focus_win_fixed(tabnr)
 
     vim.cmd("tabdo wincmd =")
     vim.cmd("tabnext " .. tabnr)
@@ -186,7 +186,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
   group = ark.nvim.augroup("bootstrap_on_WinClosed"),
   callback = function(event)
     local winnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
-    era.win.on_close(winnr)
+    dot.win.on_close(winnr)
 
     era.state.status.dirtier_statusline:mark_dirty()
     era.state.status.dirtier_tabline:mark_dirty()
@@ -204,13 +204,13 @@ vim.api.nvim_create_autocmd("WinEnter", {
         return
       end
 
-      local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
-      if era.win.is_sourcefile(winnr) then
+      local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
+      if dot.win.is_sourcefile(winnr) then
         if meta ~= nil then
           meta.winnr_sourcefile:next(winnr)
         end
       end
-      if era.win.is_fixed(winnr) then
+      if dot.win.is_fixed(winnr) then
         if meta ~= nil then
           meta.winnr_fixed:next(winnr)
         end
@@ -251,7 +251,7 @@ vim.api.nvim_create_autocmd("WinNew", {
       local filetype = vim.bo[bufnr].filetype ---@type string
 
       if filetype == "neo-tree" then
-        era.win.set_type(winnr, era.win.Types.NEOTREE)
+        dot.win.set_type(winnr, dot.win.Types.NEOTREE)
         return
       end
     end)

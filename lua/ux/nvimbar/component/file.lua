@@ -123,7 +123,7 @@ function M.name(position)
     atomic = true,
     render = function(context)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
       local is_mod = vim.bo[context.bufnr].modified ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
@@ -178,7 +178,7 @@ function M.path(position)
       return prev_context == nil or context.filepath ~= prev_context.filepath
     end,
     render = function(context)
-      local meta = era.buf.resolve(context.bufnr, false) ---@type era.buf.IMeta|nil
+      local meta = dot.buf.resolve(context.bufnr, false) ---@type dot.buf.IMeta|nil
       if meta == nil then
         return "", "", true
       end

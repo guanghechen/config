@@ -60,9 +60,9 @@ The configuration exposes core modules globally via `_G` for convenient access:
 
 **Module Access Patterns:**
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
-- `era.buf.*` → `require("era.buf").*` (modules mounted directly)
+- `dot.buf.*` → `require("dot.buf").*` (modules mounted directly)
 - `era.context.*`, `era.state.*`, `era.fn.*` follow the same pattern
-- `era.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
+- `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
 The configuration supports multiple environments through conditional loading in `init.lua:15-25`:

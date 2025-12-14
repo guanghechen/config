@@ -7,7 +7,7 @@ local function get_pane_width(filetype)
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.bo[bufnr].filetype == filetype then
-      if not era.win.is_float(winnr) then
+      if not dot.win.is_float(winnr) then
         return vim.api.nvim_win_get_width(winnr)
       end
     end

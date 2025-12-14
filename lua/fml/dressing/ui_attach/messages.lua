@@ -113,7 +113,7 @@ function M.history_show(task)
 
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
-    era.win.set_type(winnr, era.win.Types.BOARD)
+    dot.win.set_type(winnr, dot.win.Types.BOARD)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = true

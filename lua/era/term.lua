@@ -260,7 +260,7 @@ function M.create(params)
         if _termmeta then
           M.on_closed(_termmeta)
         else
-          era.buf.close(bufnr)
+          dot.buf.close(bufnr)
         end
       end)
     end,
@@ -458,7 +458,7 @@ function M.on_closed(termmeta)
   end
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    era.buf.close(bufnr)
+    dot.buf.close(bufnr)
   end
   termmeta.on_closed()
 

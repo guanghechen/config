@@ -3,7 +3,7 @@
 ---@field public pinned                 boolean
 
 ---@class era.context.tab.meta.data
----@field public tabtype                era.tab.TypeEnum
+---@field public tabtype                dot.tab.TypeEnum
 ---@field public bufs                   era.context.tab.buf.data[]
 
 ---@class era.context.tab.data
@@ -62,9 +62,9 @@ function M.dump()
   local list = {} ---@type era.context.tab.meta.data[]
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
-    local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+    local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
     if meta ~= nil then
-      local tabtype = meta.tabtype ---@type  era.tab.TypeEnum
+      local tabtype = meta.tabtype ---@type  dot.tab.TypeEnum
       local bufs = {} ---@type era.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type era.context.tab.meta.data
       for _, buf in ipairs(meta.bufs) do
@@ -100,7 +100,7 @@ function M.load(raw_data)
       goto continue
     end
 
-    local meta = era.tab.resolve(tabnr, true) ---@type era.tab.IMeta|nil
+    local meta = dot.tab.resolve(tabnr, true) ---@type dot.tab.IMeta|nil
     if meta == nil then
       goto continue
     end
@@ -117,8 +117,8 @@ function M.load(raw_data)
       end
     end
 
-    era.tab.refresh_bufs(meta.bufs)
-    era.tab.rearrange_bufs(meta.bufs)
+    dot.tab.refresh_bufs(meta.bufs)
+    dot.tab.rearrange_bufs(meta.bufs)
     ::continue::
   end
 end

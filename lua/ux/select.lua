@@ -196,13 +196,13 @@ function M:create_win_as_needed()
   local winnr_new_created = false ---@type boolean
 
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    self._wincfg.zindex = era.win.resolve_zindex()
+    self._wincfg.zindex = dot.win.resolve_zindex()
     winnr = vim.api.nvim_open_win(bufnr, true, self._wincfg)
     self._winnr = winnr
 
     winnr_new_created = true
 
-    era.win.set_type(winnr, era.win.Types.SELECT)
+    dot.win.set_type(winnr, dot.win.Types.SELECT)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].number = false

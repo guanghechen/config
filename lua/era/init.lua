@@ -60,7 +60,7 @@ local state = setmetatable({
 local __mods = {
   Filetree = "era.filetree",
   Tree = "era.tree",
-  buf = "era.buf",
+  buf = "dot.buf",
   command = "era.command",
   context = "era.context",
   fs = "era.fs",
@@ -70,17 +70,17 @@ local __mods = {
   notifier = "era.notifier",
   path = "dot.path",
   session = "era.session",
-  tab = "era.tab",
+  tab = "dot.tab",
   term = "era.term",
   uri = "era.uri",
-  win = "era.win",
+  win = "dot.win",
 }
 
 ---@class era
 ---@field public __mods                 era.__mods
 ---@field public Filetree               era.Filetree
 ---@field public Tree                   era.Tree
----@field public buf                    era.buf
+---@field public buf                    dot.buf
 ---@field public command                era.command
 ---@field public context                era.context
 ---@field public fn                     era.fn
@@ -92,10 +92,10 @@ local __mods = {
 ---@field public path                   dot.path
 ---@field public session                era.session
 ---@field public state                  era.state
----@field public tab                    era.tab
+---@field public tab                    dot.tab
 ---@field public term                   era.term
 ---@field public uri                    era.uri
----@field public win                    era.win
+---@field public win                    dot.win
 local M = setmetatable({
   __mods = __mods,
   fn = fn,
@@ -137,12 +137,12 @@ function M.setup_breakpoints()
   end
   local filepaths = vim.tbl_keys(filepath_set) ---@type string[]
 
-  era.win.open_filepaths(0, filepaths)
+  dot.win.open_filepaths(0, filepaths)
 
   ark.timer.set_timeout(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
-      local bufnr = era.buf.loadfile(breakpoint.filepath) ---@type integer|nil
+      local bufnr = dot.buf.loadfile(breakpoint.filepath) ---@type integer|nil
       if bufnr ~= nil then
         bps.set({
           condition = breakpoint.condition,

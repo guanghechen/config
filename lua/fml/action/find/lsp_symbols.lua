@@ -325,7 +325,7 @@ end
 ---@param tree                          era.Tree
 ---@param callback                      fun(): nil
 local function fetch_symbols(tree, callback)
-  local bufnr = filepath_sourcefile and era.buf.loadfile(filepath_sourcefile) or nil
+  local bufnr = filepath_sourcefile and dot.buf.loadfile(filepath_sourcefile) or nil
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     callback()
     return
@@ -753,7 +753,7 @@ local function goto_symbol(nodeuuid)
   picker:close()
 
   local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
-  local target_bufnr = era.buf.loadfile(filepath_sourcefile)
+  local target_bufnr = dot.buf.loadfile(filepath_sourcefile)
   if not target_bufnr then
     return
   end
@@ -840,7 +840,7 @@ local M = {}
 ---@return nil
 function M.find_lsp_symbols()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local filepath = nil ---@type string|nil
 
   if bufnr ~= nil then

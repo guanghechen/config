@@ -6,7 +6,7 @@ local M = {}
 ---@return nil
 function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
+  local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
 
   ark.reporter.info({
     from = __module_name__,
@@ -77,7 +77,7 @@ end
 ---@return nil
 function M.inspect_tab()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local meta = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+  local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
 
   if meta == nil then
     ark.reporter.info({
@@ -126,9 +126,9 @@ function M.inspect_window()
   local filetype = vim.bo[bufnr].filetype ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-  local meta_tab = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
-  local meta_win = era.win.resolve(winnr, false) ---@type era.win.IMeta|nil
-  local meta_buf = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
+  local meta_tab = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
+  local meta_win = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
+  local meta_buf = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
 
   ark.reporter.info({
     from = __module_name__,
@@ -143,10 +143,10 @@ function M.inspect_window()
         buftype = buftype or vim.NIL,
         filetype = filetype or vim.NIL,
         filepath = filepath or vim.NIL,
-        focusable = era.win.is_focusable(winnr),
-        projectable = era.win.is_projectable(winnr),
-        sourcefile = era.win.is_sourcefile(winnr),
-        swappable = era.win.is_swappable(winnr),
+        focusable = dot.win.is_focusable(winnr),
+        projectable = dot.win.is_projectable(winnr),
+        sourcefile = dot.win.is_sourcefile(winnr),
+        swappable = dot.win.is_swappable(winnr),
         winbar = vim.wo[winnr].winbar,
       },
       z_meta = {

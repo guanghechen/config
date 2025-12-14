@@ -71,7 +71,7 @@ local function show_json_preview(content)
   local col = math.floor((editor_width - width) / 2)
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
-    zindex = era.win.resolve_zindex(),
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     width = width,
     height = height,
@@ -131,7 +131,7 @@ end
 ---@return nil
 function M.preview_json_visual()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local s_lnum, s_col, e_lnum, e_col = era.buf.retrieve_visual_range()
+  local s_lnum, s_col, e_lnum, e_col = dot.buf.retrieve_visual_range()
 
   local lines ---@type string[]
   if s_lnum == e_lnum then

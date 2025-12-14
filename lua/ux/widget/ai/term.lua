@@ -222,7 +222,7 @@ end
 function M.hide()
   local winnr = _winnr
   _winnr = nil
-  era.win.close(winnr)
+  dot.win.close(winnr)
 end
 
 ---@param termmeta                      ux.widget.ai.term.IMeta
@@ -246,7 +246,7 @@ function M.on_closed(termmeta)
   state.detach_by_term_uuid(termmeta.uuid)
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    era.buf.close(bufnr)
+    dot.buf.close(bufnr)
   end
 
   if M.isvisible() then

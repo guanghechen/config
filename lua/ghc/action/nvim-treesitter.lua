@@ -24,7 +24,7 @@ end
 ---@return nil
 function M.swap_conditional_branches()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local bufnr_sourcefile = era.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
+  local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
     return
   end

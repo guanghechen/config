@@ -20,7 +20,7 @@ require("ghc.command")
 if dot.path.is_git_repo() then
   if era.context.flight.autoload:snapshot() then
     era.session.load_session(era.context.get_storage().nvim_session_autosaved)
-    vim.schedule(era.tab.refresh)
+    vim.schedule(dot.tab.refresh)
   end
 end
 

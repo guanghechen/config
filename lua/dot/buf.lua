@@ -1,6 +1,6 @@
-local __module_name__ = "era.buf" ---@type string
+local __module_name__ = "dot.buf" ---@type string
 
----@alias era.buf.TypeEnum
+---@alias dot.buf.TypeEnum
 ---| ""
 ---| "acwrite"
 ---| "help"
@@ -12,7 +12,7 @@ local __module_name__ = "era.buf" ---@type string
 
 local BUFFER_CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
 
----@class era.buf.Types
+---@class dot.buf.Types
 local Types = {
   EMPTY = "",
   ACWRITE = "acwrite",
@@ -24,7 +24,7 @@ local Types = {
   PROMPT = "prompt",
 }
 
----@class era.buf.IMeta
+---@class dot.buf.IMeta
 ---@field public dirpath_pieces         string[]
 ---@field public filename               string
 ---@field public filepath               string
@@ -41,9 +41,9 @@ local buftype_attrs = {
   },
 }
 
-local meta_map = {} ---@type table<integer, era.buf.IMeta|nil>
+local meta_map = {} ---@type table<integer, dot.buf.IMeta|nil>
 
----@class era.buf
+---@class dot.buf
 local M = {}
 
 M.CONTENT_SPLITLINE = BUFFER_CONTENT_SPLITLINE ---@type string
@@ -167,7 +167,7 @@ end
 
 ---@param bufnr                         integer|nil
 ---@param force                         boolean
----@return era.buf.IMeta|nil
+---@return dot.buf.IMeta|nil
 function M.resolve(bufnr, force)
   if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return nil
@@ -182,7 +182,7 @@ function M.resolve(bufnr, force)
     return nil
   end
 
-  local meta = meta_map[bufnr] ---@type era.buf.IMeta|nil
+  local meta = meta_map[bufnr] ---@type dot.buf.IMeta|nil
   if meta ~= nil and meta.filepath == filepath and not force then
     return meta
   end
@@ -196,7 +196,7 @@ function M.resolve(bufnr, force)
   local relpath = dot.path.relative(cwd, filepath) ---@type string
 
   if meta == nil then
-    ---@type era.buf.IMeta
+    ---@type dot.buf.IMeta
     meta = {
       dirpath_pieces = dirpath_pieces,
       filename = filename,

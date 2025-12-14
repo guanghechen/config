@@ -1,6 +1,6 @@
 ---@class ux.nvimbar.component.buf.IBufItem
 ---@field public bufnr                  integer
----@field public meta                   era.buf.IMeta
+---@field public meta                   dot.buf.IMeta
 
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
@@ -24,8 +24,8 @@ end) or ""
 ---@param y                             ux.nvimbar.component.buf.IBufItem
 ---@return boolean
 local function cmp_rd_buf(x, y)
-  local mx = x.meta ---@type era.buf.IMeta
-  local my = y.meta ---@type era.buf.IMeta
+  local mx = x.meta ---@type dot.buf.IMeta
+  local my = y.meta ---@type dot.buf.IMeta
 
   if mx.filename ~= my.filename then
     return mx.filename < my.filename
@@ -55,12 +55,12 @@ end
 local rd_bufs = {} ---@type ux.nvimbar.component.buf.IBufItem[]
 
 ---Generate disambiguated filename display for buffers with same filenames
----@param bufs                          era.tab.IBufItem[]
+---@param bufs                          dot.tab.IBufItem[]
 ---@return table<integer, string> -- Map from bufnr to disambiguated filename
 local function resolve_disambiguations(bufs)
   local N = 0 ---@type integer
   for _, buf in ipairs(bufs) do
-    local meta = era.buf.resolve(buf.bufnr, false) ---@type era.buf.IMeta|nil
+    local meta = dot.buf.resolve(buf.bufnr, false) ---@type dot.buf.IMeta|nil
     if meta ~= nil then
       local item = { bufnr = buf.bufnr, meta = meta } ---@type ux.nvimbar.component.buf.IBufItem
       N = N + 1
@@ -154,7 +154,7 @@ function M.bufs(position)
   local hln_bufc_hint = position .. "_bufc_hint" ---@type string
   local hln_bufc_info = position .. "_bufc_info" ---@type string
 
-  ---@param buf                         era.tab.IBufItem
+  ---@param buf                         dot.tab.IBufItem
   ---@param index                       integer
   ---@param total                       integer
   ---@param disambiguated_paths         table<integer, string>
@@ -162,7 +162,7 @@ function M.bufs(position)
   ---@return string
   local function render_bufc(buf, index, total, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
-    local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
+    local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end
@@ -256,7 +256,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@param buf                         era.tab.IBufItem
+  ---@param buf                         dot.tab.IBufItem
   ---@param index                       integer
   ---@param order                       integer
   ---@param marker                      string
@@ -265,7 +265,7 @@ function M.bufs(position)
   ---@return string
   local function render_buf(buf, index, order, marker, disambiguated_paths)
     local bufnr = buf.bufnr ---@type integer
-    local meta = era.buf.resolve(bufnr, false) ---@type era.buf.IMeta|nil
+    local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
     if meta == nil then
       return "", ""
     end
@@ -362,19 +362,19 @@ function M.bufs(position)
     ---@diagnostic disable-next-line: unused-local
     render = function(context, remain_width)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local meta_tab = era.tab.resolve(tabnr, false) ---@type era.tab.IMeta|nil
+      local meta_tab = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
       if meta_tab == nil then
         return "", "", false
       end
 
-      local bufs = meta_tab.bufs ---@type era.tab.IBufItem[]
-      era.tab.refresh_bufs(bufs)
+      local bufs = meta_tab.bufs ---@type dot.tab.IBufItem[]
+      dot.tab.refresh_bufs(bufs)
 
       if #bufs < 1 then
         return "", "", false
       end
 
-      local _, bufid_sourcefile = era.tab.retrieve_buf_sourcefile(tabnr) ---@type era.tab.IBufItem|nil, integer|nil
+      local _, bufid_sourcefile = dot.tab.retrieve_buf_sourcefile(tabnr) ---@type dot.tab.IBufItem|nil, integer|nil
       local bufid_middle = bufid_sourcefile or 1 ---@type integer
       local relative_orders = bufid_middle == bufid_sourcefile and era.context.behavior.bufs_relative:snapshot() ---@type boolean
       local N = #bufs ---@type integer

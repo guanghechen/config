@@ -27,28 +27,28 @@ command.implement({
 command
   .implement({
     uuid = K.explorer.toggle.uuid,
-    tabtype = era.tab.Types.DIFFVIEW,
+    tabtype = dot.tab.Types.DIFFVIEW,
     action = function()
       require("ghc.action.diffview").toggle()
     end,
   })
   .implement({
     uuid = K.explorer.fs_cwd.uuid,
-    tabtype = era.tab.Types.NORMAL,
+    tabtype = dot.tab.Types.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_cwd()
     end,
   })
   .implement({
     uuid = K.explorer.fs_workspace.uuid,
-    tabtype = era.tab.Types.NORMAL,
+    tabtype = dot.tab.Types.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_workspace()
     end,
   })
   .implement({
     uuid = K.explorer.fs_reveal.uuid,
-    tabtype = era.tab.Types.NORMAL,
+    tabtype = dot.tab.Types.NORMAL,
     action = function()
       require("ghc.action.neo-tree").fs_reveal()
     end,
@@ -102,7 +102,7 @@ command
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
-  tabtype = era.tab.Types.DIFFVIEW,
+  tabtype = dot.tab.Types.DIFFVIEW,
   action = function()
     require("ghc.action.diffview").refresh()
   end,

@@ -4,7 +4,7 @@ local M = {}
 ---@return nil
 function M.new()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) or era.win.pick_sourcefile() ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
   if winnr_sourcefile == nil then
     return
   end
@@ -17,7 +17,7 @@ function M.new()
   vim.bo[bufnr].modifiable = true
 
   local cwd = dot.path.cwd() ---@type string
-  local filepath = era.buf.pick_filepath(cwd) ---@type string|nil
+  local filepath = dot.buf.pick_filepath(cwd) ---@type string|nil
   if filepath ~= nil then
     vim.api.nvim_buf_set_name(bufnr, filepath)
   end

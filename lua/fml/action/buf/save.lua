@@ -36,7 +36,7 @@ function M.save(args)
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) or era.win.pick_sourcefile() ---@type integer|nil
+  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
   if winnr_sourcefile == nil then
     ark.reporter.error({
       from = __module_name__,

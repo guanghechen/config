@@ -47,7 +47,7 @@ local function should_show_buffer(bufnr, scope, tabnr)
 
   local filetype = vim.bo[bufnr].filetype ---@type string
   if scope == "F" then
-    return era.tab.has_buf(tabnr, bufnr)
+    return dot.tab.has_buf(tabnr, bufnr)
   end
 
   for _, excluded in ipairs(IGNORED_FILETYPES) do
@@ -219,7 +219,7 @@ picker = ux.picker.ListComposer.new({
         end
 
         local bufnr = item.data.bufnr ---@type integer
-        if not era.buf.is_valid(bufnr) then
+        if not dot.buf.is_valid(bufnr) then
           local data = fetch_data()
           picker:reset_data(data)
           return
@@ -234,10 +234,10 @@ picker = ux.picker.ListComposer.new({
 
         local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
         for _, tabnr in ipairs(tabnrs) do
-          era.tab.on_bufs_close(tabnr, { bufnr })
+          dot.tab.on_bufs_close(tabnr, { bufnr })
         end
 
-        local bufnrs_unreferenced = era.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
+        local bufnrs_unreferenced = dot.tab.retrieve_unreferenced_bufnrs() ---@type integer[]
         if #bufnrs_unreferenced > 0 then
           for _, unreferenced_bufnr in ipairs(bufnrs_unreferenced) do
             vim.api.nvim_buf_delete(unreferenced_bufnr, { force = true })
@@ -255,7 +255,7 @@ picker = ux.picker.ListComposer.new({
       composer:close()
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_sourcefile = era.tab.retrieve_winnr_sourcefile(tabnr) or era.win.pick_sourcefile() ---@type integer|nil
+      local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
       if winnr_sourcefile ~= nil then
         vim.api.nvim_win_set_buf(winnr_sourcefile, item.data.bufnr)
       end
