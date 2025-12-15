@@ -249,7 +249,6 @@ function M:create_win(winopts, dimension)
     dot.icon.listchars.space,
     dot.icon.listchars.trail
   )
-  vim.wo[winnr].relativenumber = false
   vim.wo[winnr].spell = false
   vim.wo[winnr].signcolumn = "yes"
   vim.wo[winnr].winblend = winblend
@@ -259,6 +258,7 @@ function M:create_win(winopts, dimension)
   if result == nil then
     vim.wo[winnr].cursorline = true
     vim.wo[winnr].number = true
+    vim.wo[winnr].relativenumber = true
     vim.wo[winnr].wrap = false
     vim.wo[winnr].list = true
   else
@@ -267,6 +267,7 @@ function M:create_win(winopts, dimension)
     end
     if result.number ~= nil then
       vim.wo[winnr].number = result.number
+      vim.wo[winnr].relativenumber = result.number
     end
     if result.wrap ~= nil then
       vim.wo[winnr].wrap = result.wrap
