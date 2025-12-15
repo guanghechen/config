@@ -156,14 +156,8 @@ local function get_selection_line(ctx)
     return nil, nil
   end
   local relpath = dot.path.relative(ctx.cwd, ctx.filepath)
-  local text = string.format(
-    "@%s L%d:C%d-L%d:C%d",
-    relpath,
-    range.start_lnum,
-    range.start_col,
-    range.end_lnum,
-    range.end_col
-  )
+  local text =
+    string.format("@%s L%d:C%d-L%d:C%d", relpath, range.start_lnum, range.start_col, range.end_lnum, range.end_col)
   ---@type dot.module.ai.ITextLine
   local line = {
     { "@", "f_us_ai_loc_delim" },
@@ -347,41 +341,6 @@ M.list = {
     end,
   },
   {
-    name = "ask",
-    submit = false,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "About ", "f_us_ai_prompt_header" } }, target_line)
-      table.insert(lines[#lines], { ":", "f_us_ai_prompt_header" })
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "About " .. target_text .. ":\n", lines = lines }
-    end,
-  },
-  {
-    name = "explain",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Explain this code: ", "f_us_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Explain this code: " .. target_text, lines = lines }
-    end,
-  },
-  {
     name = "fix",
     submit = true,
     render = function(ctx)
@@ -447,37 +406,6 @@ M.list = {
         vim.list_extend(lines, content_lines)
       end
       return { text = "Review this code: " .. target_text, lines = lines }
-    end,
-  },
-  {
-    name = "review_changes",
-    submit = true,
-    render = function(ctx)
-      local git_lines, git_text = get_git_changes_lines(ctx)
-      if not git_lines then
-        return nil
-      end
-      local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = { { "Review my changes:", "f_us_ai_prompt_header" } }
-      vim.list_extend(lines, git_lines)
-      return { text = "Review my changes:\n" .. git_text, lines = lines }
-    end,
-  },
-  {
-    name = "test",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Write tests for: ", "f_us_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Write tests for: " .. target_text, lines = lines }
     end,
   },
 }
