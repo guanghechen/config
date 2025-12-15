@@ -8,7 +8,7 @@ elseif ark.env.IS_GHOSTTY then
   terminal_name = "ghostty"
 end
 
----@class fml.dressing.image.state.env
+---@class dot.module.image.state.env
 ---@field public name                    string
 ---@field public placeholders            boolean
 ---@field public remote                  boolean
@@ -28,19 +28,19 @@ if ark.env.IS_TMUX then
   end
 end
 
----@class fml.dressing.image.state.data
+---@class dot.module.image.state.data
 ---@field public resolve                 ?fun(file: string, src: string): string|nil
 ---@field public wo                      ?table<string, any>
 local data = {
   tmpdir = dot.path.join(vim.fn.stdpath("cache"), "image/"),
   convert = {
     notify = true,
-    ---@type fml.dressing.image.args
+    ---@type dot.module.image.args
     mermaid = function()
       local theme = vim.o.background == "light" and "neutral" or "dark"
       return { "-i", "{src}", "-o", "{file}", "-b", "transparent", "-t", theme, "-s", "{scale}" }
     end,
-    ---@type table<string, fml.dressing.image.args>
+    ---@type table<string, dot.module.image.args>
     magick = {
       default = { "{src}[0]", "-scale", "1920x1080>" },
       vector = { "-density", 192, "{src}[0]" },
@@ -55,7 +55,7 @@ local data = {
     max_width = 80,
     max_height = 40,
     ---@param lang                      string
-    ---@param type                      fml.dressing.image.Type
+    ---@param type                      dot.module.image.Type
     ---@return boolean
     ---@diagnostic disable-next-line: unused-local
     conceal = function(lang, type)
@@ -113,26 +113,26 @@ local data = {
 
 local SUPPORTED_EXTNAME_SET = ark.table.to_string_set(data.extnames) ---@type table<string, boolean>
 
----@alias fml.dressing.image.Size         {width: integer, height: integer}
+---@alias dot.module.image.Size         {width: integer, height: integer}
 
----@alias fml.dressing.image.Pos          {[1]: integer, [2]: integer}
+---@alias dot.module.image.Pos          {[1]: integer, [2]: integer}
 
----@alias fml.dressing.image.Loc          fml.dressing.image.Pos|fml.dressing.image.Size|{zindex?: integer}
+---@alias dot.module.image.Loc          dot.module.image.Pos|dot.module.image.Size|{zindex?: integer}
 
----@alias fml.dressing.image.Type         "image"|"math"|"chart"
+---@alias dot.module.image.Type         "image"|"math"|"chart"
 
----@class fml.dressing.image.Info
+---@class dot.module.image.Info
 ---@field public format                  string
----@field public size                    fml.dressing.image.Size
----@field public dpi                     fml.dressing.image.Size
+---@field public size                    dot.module.image.Size
+---@field public dpi                     dot.module.image.Size
 
----@type table<string, fml.dressing.image.Size>
+---@type table<string, dot.module.image.Size>
 local dims = {}
 
----@class fml.dressing.image.state
----@field public data                    fml.dressing.image.state.data
+---@class dot.module.image.state
+---@field public data                    dot.module.image.state.data
 ---@field public did_setup               boolean
----@field public env                     fml.dressing.image.state.env
+---@field public env                     dot.module.image.state.env
 local M = {
   data = data,
   did_setup = false,
@@ -140,7 +140,7 @@ local M = {
 }
 
 ---@param file                           string
----@return fml.dressing.image.Size
+---@return dot.module.image.Size
 function M.dim(file)
   file = dot.path.normalize(file)
   if dims[file] then
@@ -156,10 +156,10 @@ function M.dim(file)
   return dims[file]
 end
 
----@param size                           fml.dressing.image.Size
----@return fml.dressing.image.Size
+---@param size                           dot.module.image.Size
+---@return dot.module.image.Size
 function M.pixels_to_cells(size)
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   local term_size = terminal.size()
   return M.norm({
     width = size.width / term_size.cell_width,
@@ -167,8 +167,8 @@ function M.pixels_to_cells(size)
   })
 end
 
----@param size                           fml.dressing.image.Size
----@return fml.dressing.image.Size
+---@param size                           dot.module.image.Size
+---@return dot.module.image.Size
 function M.norm(size)
   return {
     width = math.max(1, math.ceil(size.width)),
@@ -177,13 +177,13 @@ function M.norm(size)
 end
 
 ---@param file                           string
----@param cells                          fml.dressing.image.Size
----@param opts                           ?{ full?: boolean, info?: fml.dressing.image.Info }
----@return fml.dressing.image.Size
+---@param cells                          dot.module.image.Size
+---@param opts                           ?{ full?: boolean, info?: dot.module.image.Info }
+---@return dot.module.image.Size
 function M.fit(file, cells, opts)
   opts = opts or {}
-  local terminal = require("fml.dressing.image.terminal")
-  local img_pixels ---@type fml.dressing.image.Size
+  local terminal = require("dot.module.image.terminal")
+  local img_pixels ---@type dot.module.image.Size
   if opts.info then
     local term_size = terminal.size()
     img_pixels = {}

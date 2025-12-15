@@ -1,12 +1,12 @@
----@class fml.dressing.image.Image
+---@class dot.module.image.Image
 ---@field public src                      string
 ---@field public file                     string
 ---@field public id                       integer
 ---@field public sent                     ?boolean
----@field public placements               table<integer, fml.dressing.image.Placement>
----@field public info                     ?fml.dressing.image.Info
+---@field public placements               table<integer, dot.module.image.Placement>
+---@field public info                     ?dot.module.image.Info
 ---@field public fsize                    ?integer
----@field public convert                  ?fml.dressing.image.Convert
+---@field public convert                  ?dot.module.image.Convert
 local M = {}
 M.__index = M
 
@@ -19,16 +19,16 @@ local _id = 30
 ---@type integer
 local nvim_id = 0
 
----@type table<string, fml.dressing.image.Image>
+---@type table<string, dot.module.image.Image>
 local images = {}
 
----@type {img: fml.dressing.image.Image, used: integer}[]
+---@type {img: dot.module.image.Image, used: integer}[]
 local lru = {}
 
 ---@type integer
 local lru_fsize = 0
 
----@param img                            fml.dressing.image.Image
+---@param img                            dot.module.image.Image
 ---@return nil
 local function use(img)
   if img.fsize == 0 then
@@ -54,7 +54,7 @@ local function use(img)
 end
 
 ---@param src                            string
----@return fml.dressing.image.Image
+---@return dot.module.image.Image
 function M.new(src)
   local self = setmetatable({}, M)
   self.src = src
@@ -107,13 +107,13 @@ function M:run()
   self.convert:run()
 end
 
----@param placement                      fml.dressing.image.Placement
+---@param placement                      dot.module.image.Placement
 ---@return nil
 function M:place(placement)
-  local _pid = require("fml.dressing.image.placement")._pid
+  local _pid = require("dot.module.image.placement")._pid
   if not placement.id then
     _pid = _pid + 1
-    require("fml.dressing.image.placement")._pid = _pid
+    require("dot.module.image.placement")._pid = _pid
     placement.id = _pid
   end
   self.placements[placement.id] = placement
@@ -127,7 +127,7 @@ end
 ---@param pid                            ?integer
 ---@return nil
 function M:del(pid)
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   for id, p in ipairs(pid and { pid } or vim.tbl_keys(self.placements)) do
     if self.placements[p] then
       terminal.request({ a = "d", d = "i", i = self.id, p = id })
@@ -149,7 +149,7 @@ end
 
 ---@return string
 function M:__convert__()
-  local convert = require("fml.dressing.image.convert")
+  local convert = require("dot.module.image.convert")
   self.convert = convert.convert({
     src = self.src,
     on_done = function(c)
@@ -191,7 +191,7 @@ end
 
 ---@return nil
 function M:__send__()
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   assert(not self.sent, "Image already sent")
   self.sent = true
   terminal.request({

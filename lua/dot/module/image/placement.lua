@@ -1,9 +1,9 @@
-local __module_name__ = "fml.dressing.image.placement" ---@type string
+local __module_name__ = "dot.module.image.placement" ---@type string
 
----@alias fml.dressing.image.Extmark      vim.api.keyset.set_extmark|{row: integer, col: integer}
+---@alias dot.module.image.Extmark      vim.api.keyset.set_extmark|{row: integer, col: integer}
 
----@class fml.dressing.image.Opts
----@field public pos                      ?fml.dressing.image.Pos
+---@class dot.module.image.Opts
+---@field public pos                      ?dot.module.image.Pos
 ---@field public range                    ?integer[]
 ---@field public conceal                  ?boolean
 ---@field public inline                   ?boolean
@@ -13,31 +13,31 @@ local __module_name__ = "fml.dressing.image.placement" ---@type string
 ---@field public height                   ?integer
 ---@field public min_height               ?integer
 ---@field public max_height               ?integer
----@field public on_update                ?fun(placement: fml.dressing.image.Placement)
----@field public on_update_pre            ?fun(placement: fml.dressing.image.Placement)
----@field public type                     ?fml.dressing.image.Type
+---@field public on_update                ?fun(placement: dot.module.image.Placement)
+---@field public on_update_pre            ?fun(placement: dot.module.image.Placement)
+---@field public type                     ?dot.module.image.Type
 ---@field public auto_resize              ?boolean
 
----@class fml.dressing.image.State
+---@class dot.module.image.State
 ---@field public hidden                   boolean
----@field public loc                      fml.dressing.image.Loc
+---@field public loc                      dot.module.image.Loc
 ---@field public wins                     integer[]
 
----@class fml.dressing.image.Placement
----@field public img                      fml.dressing.image.Image
+---@class dot.module.image.Placement
+---@field public img                      dot.module.image.Image
 ---@field public id                       integer
 ---@field public ns                       integer
 ---@field public bufnr                    integer
----@field public opts                     fml.dressing.image.Opts
+---@field public opts                     dot.module.image.Opts
 ---@field public augroup                  integer
 ---@field public hidden                   ?boolean
 ---@field public closed                   ?boolean
----@field public type                     ?fml.dressing.image.Type
+---@field public type                     ?dot.module.image.Type
 ---@field public eids                     integer[]
----@field public update                   fun(self: fml.dressing.image.Placement): nil
----@field protected _loc                  ?fml.dressing.image.Loc
----@field protected _state                ?fml.dressing.image.State
----@field protected _extmarks             ?fml.dressing.image.Extmark[]
+---@field public update                   fun(self: dot.module.image.Placement): nil
+---@field protected _loc                  ?dot.module.image.Loc
+---@field protected _state                ?dot.module.image.State
+---@field protected _extmarks             ?dot.module.image.Extmark[]
 local M = {}
 M.__index = M
 
@@ -45,7 +45,7 @@ local uv = vim.uv
 local ns = vim.api.nvim_create_namespace(__module_name__)
 local PLACEHOLDER = vim.fn.nr2char(0x10EEEE)
 
----@type table<integer, table<integer, fml.dressing.image.Placement>>
+---@type table<integer, table<integer, dot.module.image.Placement>>
 local placements = {}
 
 -- stylua: ignore
@@ -80,10 +80,10 @@ end
 
 ---@param bufnr                          integer
 ---@param src                            string
----@param opts                           ?fml.dressing.image.Opts
----@return fml.dressing.image.Placement
+---@param opts                           ?dot.module.image.Opts
+---@return dot.module.image.Placement
 function M.new(bufnr, src, opts)
-  local Image = require("fml.dressing.image.image")
+  local Image = require("dot.module.image.image")
   assert(type(bufnr) == "number", "`Image.new`: bufnr should be a number")
   assert(type(src) == "string", "`Image.new`: src should be a string")
   local self = setmetatable({}, M)
@@ -223,10 +223,10 @@ function M:find_line(row)
   return row
 end
 
----@param loc                            fml.dressing.image.Loc
+---@param loc                            dot.module.image.Loc
 ---@return nil
 function M:render_grid(loc)
-  local s = require("fml.dressing.image.state").data
+  local s = require("dot.module.image.state").data
   local hl = "f_image_" .. self.id
   vim.api.nvim_set_hl(0, hl, {
     fg = self.img.id,
@@ -263,7 +263,7 @@ function M:render_grid(loc)
   local has_after = lines[#lines]:sub(range[4] + 1):find("%S") ~= nil
   local has_before = lines[1]:sub(1, range[2]):find("%S") ~= nil
   local conceal = self.opts.conceal and "" or nil
-  local extmarks = {} ---@type fml.dressing.image.Extmark[]
+  local extmarks = {} ---@type dot.module.image.Extmark[]
 
   local can_overlay = (#lines > 1 or not has_after)
   for _, winnr in ipairs(can_overlay and self:wins() or {}) do
@@ -372,10 +372,10 @@ function M:render_grid(loc)
   end
 end
 
----@param state                          fml.dressing.image.State
+---@param state                          dot.module.image.State
 ---@return nil
 function M:render_fallback(state)
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   if not self.opts.inline then
     vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
   end
@@ -404,9 +404,9 @@ function M:render_fallback(state)
   end
 end
 
----@return fml.dressing.image.State
+---@return dot.module.image.State
 function M:state()
-  local state = require("fml.dressing.image.state")
+  local state = require("dot.module.image.state")
   local width, height = vim.o.columns, vim.o.lines
   local wins = {} ---@type integer[]
   local is_fallback = not state.env.placeholders
@@ -450,7 +450,7 @@ function M:state()
     size.height = 1
   end
 
-  ---@type fml.dressing.image.State
+  ---@type dot.module.image.State
   return {
     hidden = self.hidden or false,
     loc = {
@@ -473,9 +473,9 @@ end
 
 ---@return nil
 function M:update()
-  local state = require("fml.dressing.image.state")
+  local state = require("dot.module.image.state")
   local s = state.data
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   if not self:ready() then
     return
   end
@@ -595,7 +595,7 @@ function M:__progress__()
   )
 end
 
----@param extmarks                       fml.dressing.image.Extmark[]
+---@param extmarks                       dot.module.image.Extmark[]
 ---@return nil
 function M:__render__(extmarks)
   for _, e in ipairs(extmarks) do

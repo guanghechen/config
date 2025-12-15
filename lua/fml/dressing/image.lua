@@ -2,7 +2,7 @@ if ark.env.IS_WIN then
   return
 end
 
-local state = require("fml.dressing.image.state")
+local state = require("dot.module.image.state")
 if not state.is_support_terminal() then
   return
 end
@@ -17,7 +17,7 @@ vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
   group = group,
   callback = function(e)
     vim.schedule(function()
-      local Placement = require("fml.dressing.image.placement")
+      local Placement = require("dot.module.image.placement")
       Placement.clean(e.buf)
     end)
   end,
@@ -26,7 +26,7 @@ vim.api.nvim_create_autocmd({ "ExitPre" }, {
   group = group,
   once = true,
   callback = function()
-    local Placement = require("fml.dressing.image.placement")
+    local Placement = require("dot.module.image.placement")
     Placement.clean()
   end,
 })
@@ -48,7 +48,7 @@ vim.api.nvim_create_autocmd("BufReadCmd", {
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].modified = false
     else
-      local Placement = require("fml.dressing.image.placement")
+      local Placement = require("dot.module.image.placement")
       vim.bo[bufnr].filetype = "image"
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].modified = false
@@ -79,10 +79,11 @@ if state.data.doc.enabled then
       if vim.tbl_contains(supported_langs, lang) then
         vim.schedule(function()
           if vim.api.nvim_buf_is_valid(e.buf) then
-            require("fml.dressing.image.doc").attach(e.buf)
+            require("dot.module.image.doc").attach(e.buf)
           end
         end)
       end
     end,
   })
 end
+

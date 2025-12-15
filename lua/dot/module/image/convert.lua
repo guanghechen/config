@@ -1,16 +1,16 @@
-local __module_name__ = "fml.dressing.image.convert" ---@type string
+local __module_name__ = "dot.module.image.convert" ---@type string
 
----@class fml.dressing.image.convert
+---@class dot.module.image.convert
 local M = {}
 
 local uv = vim.uv
 
----@alias fml.dressing.image.args        (number|string)[] | fun(): ((number|string)[])
+---@alias dot.module.image.args        (number|string)[] | fun(): ((number|string)[])
 
----@class fml.dressing.image.convert.IConfig
+---@class dot.module.image.convert.IConfig
 ---@field public notify                  boolean
----@field public mermaid                 ?fml.dressing.image.args
----@field public magick                  ?table<string, fml.dressing.image.args>
+---@field public mermaid                 ?dot.module.image.args
+---@field public magick                  ?table<string, dot.module.image.args>
 local config = {
   notify = false,
   mermaid = function()
@@ -25,36 +25,36 @@ local config = {
   },
 }
 
----@class fml.dressing.image.meta
+---@class dot.module.image.meta
 ---@field public src                     string
----@field public info                    ?fml.dressing.image.Info
+---@field public info                    ?dot.module.image.Info
 ---@field public pdf                     ?string
 
----@class fml.dressing.image.Proc
+---@class dot.module.image.Proc
 ---@field public cmd                     string
 ---@field public cwd                     ?string
----@field public args                    fml.dressing.image.args
+---@field public args                    dot.module.image.args
 
----@class fml.dressing.image.step
+---@class dot.module.image.step
 ---@field public name                    string
 ---@field public file                    string
 ---@field public ft                      string
----@field public cmd                     fml.dressing.image.cmd
----@field public meta                    fml.dressing.image.meta
+---@field public cmd                     dot.module.image.cmd
+---@field public meta                    dot.module.image.meta
 ---@field public done                    ?boolean
 ---@field public err                     ?string
 ---@field public proc                    ?ark.c.Proc
 
----@class fml.dressing.image.cmd
----@field public cmd                     (fun(step: fml.dressing.image.step): (fml.dressing.image.Proc|fml.dressing.image.Proc[]))|fml.dressing.image.Proc|fml.dressing.image.Proc[]
+---@class dot.module.image.cmd
+---@field public cmd                     (fun(step: dot.module.image.step): (dot.module.image.Proc|dot.module.image.Proc[]))|dot.module.image.Proc|dot.module.image.Proc[]
 ---@field public ft                      ?string
----@field public file                    ?fun(convert: fml.dressing.image.Convert, meta: fml.dressing.image.meta): string
+---@field public file                    ?fun(convert: dot.module.image.Convert, meta: dot.module.image.meta): string
 ---@field public depends                 ?string[]
----@field public on_done                 ?fun(step: fml.dressing.image.step)
----@field public on_error                ?fun(step: fml.dressing.image.step): boolean?
+---@field public on_done                 ?fun(step: dot.module.image.step)
+---@field public on_error                ?fun(step: dot.module.image.step): boolean?
 ---@field public pipe                    ?boolean
 
----@type table<string, fml.dressing.image.cmd>
+---@type table<string, dot.module.image.cmd>
 local commands = {
   icns = {
     ft = "png",
@@ -77,7 +77,7 @@ local commands = {
   tex = {
     ft = "pdf",
     file = function(convert, ctx)
-      local s = require("fml.dressing.image.state").data
+      local s = require("dot.module.image.state").data
       ctx.pdf = s.tmpdir .. "/" .. vim.fs.basename(ctx.src):gsub("%.tex$", ".pdf")
       return convert:tmpfile("pdf")
     end,
@@ -212,13 +212,13 @@ local function schedule(proc)
   end
 end
 
----@param step                           fml.dressing.image.step
----@return fml.dressing.image.Proc|nil
+---@param step                           dot.module.image.step
+---@return dot.module.image.Proc|nil
 local function get_cmd(step)
   local cmd = step.cmd.cmd
   cmd = type(cmd) == "function" and cmd(step) or cmd
   local cmds = cmd.cmd and { cmd } or cmd
-  ---@cast cmds fml.dressing.image.Proc[]
+  ---@cast cmds dot.module.image.Proc[]
   for _, c in ipairs(cmds) do
     if have[c.cmd] == nil then
       have[c.cmd] = vim.fn.executable(c.cmd) == 1
@@ -229,14 +229,14 @@ local function get_cmd(step)
   end
 end
 
----@class fml.dressing.image.Convert
----@field public opts                    fml.dressing.image.convert.Opts
+---@class dot.module.image.Convert
+---@field public opts                    dot.module.image.convert.Opts
 ---@field public src                     string
 ---@field public page                    integer
 ---@field public file                    string
 ---@field public prefix                  string
----@field public meta                    fml.dressing.image.meta
----@field public steps                   fml.dressing.image.step[]
+---@field public meta                    dot.module.image.meta
+---@field public steps                   dot.module.image.step[]
 ---@field public aborted                 ?boolean
 ---@field protected _done                ?boolean
 ---@field protected _err                 ?string
@@ -245,14 +245,14 @@ end
 local Convert = {}
 Convert.__index = Convert
 
----@class fml.dressing.image.convert.Opts
+---@class dot.module.image.convert.Opts
 ---@field public src                     string
----@field public on_done                 ?fun(convert: fml.dressing.image.Convert)
+---@field public on_done                 ?fun(convert: dot.module.image.Convert)
 
----@param opts                           fml.dressing.image.convert.Opts
----@return fml.dressing.image.Convert
+---@param opts                           dot.module.image.convert.Opts
+---@return dot.module.image.Convert
 function Convert.new(opts)
-  local state = require("fml.dressing.image.state")
+  local state = require("dot.module.image.state")
   local s = state.data
   ark.env.mkdirs(s.tmpdir, true)
   local self = setmetatable({}, Convert)
@@ -270,7 +270,7 @@ function Convert.new(opts)
   self.prefix = vim.fn.sha256(self.opts.src .. self.page):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
   self.meta = { src = opts.src }
   self.steps = {}
-  local terminal = require("fml.dressing.image.terminal")
+  local terminal = require("dot.module.image.terminal")
   self._tpl_data = {
     tmpdir = s.tmpdir,
     bg = vim.o.background,
@@ -280,7 +280,7 @@ function Convert.new(opts)
   return self
 end
 
----@return fml.dressing.image.step|nil
+---@return dot.module.image.step|nil
 function Convert:current()
   return self.steps[self._step]
 end
@@ -303,7 +303,7 @@ end
 ---@param ft                             string
 ---@return string
 function Convert:tmpfile(ft)
-  local s = require("fml.dressing.image.state").data
+  local s = require("dot.module.image.state").data
   return s.tmpdir .. "/" .. self.prefix .. "." .. ft
 end
 
@@ -397,7 +397,7 @@ function Convert:__resolve_target__(target)
     self:__resolve_target__(dep)
   end
   local file = cmd.file and cmd.file(self, self.meta) or self:tmpfile(cmd.ft)
-  ---@type fml.dressing.image.step
+  ---@type dot.module.image.step
   local step = {
     name = target,
     file = file,
@@ -470,7 +470,7 @@ end
 
 ---@return nil
 function Convert:__step__()
-  local state = require("fml.dressing.image.state")
+  local state = require("dot.module.image.state")
   self._step = self._step + 1
   assert(self._step <= #self.steps, "No more steps")
 
@@ -520,8 +520,8 @@ function Convert:__step__()
   schedule(step.proc)
 end
 
----@param opts                           fml.dressing.image.convert.Opts
----@return fml.dressing.image.Convert
+---@param opts                           dot.module.image.convert.Opts
+---@return dot.module.image.Convert
 function M.convert(opts)
   return Convert.new(opts)
 end

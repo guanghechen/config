@@ -1,14 +1,14 @@
-local __module_name__ = "fml.dressing.image.inline" ---@type string
+local __module_name__ = "dot.module.image.inline" ---@type string
 
----@class fml.dressing.image.inline
+---@class dot.module.image.inline
 ---@field public bufnr                    integer
----@field public imgs                     table<integer, fml.dressing.image.Placement>
----@field public idx                      table<integer, fml.dressing.image.Placement>
+---@field public imgs                     table<integer, dot.module.image.Placement>
+---@field public idx                      table<integer, dot.module.image.Placement>
 local M = {}
 M.__index = M
 
 ---@param bufnr                           integer
----@return fml.dressing.image.inline
+---@return dot.module.image.inline
 function M.new(bufnr)
   local self = setmetatable({}, M)
   self.bufnr = bufnr
@@ -66,9 +66,9 @@ function M:conceal()
   end
 end
 
----@return table<integer, fml.dressing.image.Placement>
+---@return table<integer, dot.module.image.Placement>
 function M:visible()
-  local ret = {} ---@type table<integer, fml.dressing.image.Placement>
+  local ret = {} ---@type table<integer, dot.module.image.Placement>
   for _, winnr in ipairs(vim.fn.win_findbuf(self.bufnr)) do
     local info = vim.fn.getwininfo(winnr)[1]
     for k, v in pairs(self:get(math.max(info.topline - 1, 1), info.botline)) do
@@ -80,16 +80,16 @@ end
 
 ---@param from                           integer
 ---@param to                             integer
----@return table<integer, fml.dressing.image.Placement>
+---@return table<integer, dot.module.image.Placement>
 function M:get(from, to)
-  local placement = require("fml.dressing.image.placement")
-  local ret = {} ---@type table<integer, fml.dressing.image.Placement>
+  local placement = require("dot.module.image.placement")
+  local ret = {} ---@type table<integer, dot.module.image.Placement>
   local marks = vim.api.nvim_buf_get_extmarks(self.bufnr, placement.ns, { from - 1, 0 }, { to, -1 }, {
     overlap = true,
     hl_name = false,
   })
   for _, m in ipairs(marks) do
-    local p = self.idx[m[1]] ---@type fml.dressing.image.Placement|nil
+    local p = self.idx[m[1]] ---@type dot.module.image.Placement|nil
     if p and not self.imgs[p.id] then
       self.idx[m[1]] = nil
       p = nil
@@ -103,9 +103,9 @@ end
 
 ---@return nil
 function M:update()
-  local s = require("fml.dressing.image.state").data
-  local doc = require("fml.dressing.image.doc")
-  local placement = require("fml.dressing.image.placement")
+  local s = require("dot.module.image.state").data
+  local doc = require("dot.module.image.doc")
+  local placement = require("dot.module.image.placement")
 
   local conceal = s.doc.conceal
   conceal = type(conceal) ~= "function" and function()
@@ -115,7 +115,7 @@ function M:update()
   doc.find_visible(self.bufnr, function(imgs)
     local visible = self:visible()
     for _, i in ipairs(imgs) do
-      local img ---@type fml.dressing.image.Placement|nil
+      local img ---@type dot.module.image.Placement|nil
       for v, o in pairs(visible) do
         if o.img.src == i.src then
           img = o
@@ -133,7 +133,7 @@ function M:update()
             inline = true,
             conceal = vim.b[self.bufnr].fml_image_conceal or conceal(i.lang, i.type),
             type = i.type,
-            ---@param p fml.dressing.image.Placement
+            ---@param p dot.module.image.Placement
             on_update = function(p)
               for _, eid in ipairs(p.eids) do
                 self.idx[eid] = p

@@ -1,22 +1,22 @@
-local __module_name__ = "fml.dressing.image.doc" ---@type string
+local __module_name__ = "dot.module.image.doc" ---@type string
 
----@class fml.dressing.image.doc
+---@class dot.module.image.doc
 local M = {}
 
 ---@alias TSMatch                        {node: TSNode, meta: vim.treesitter.query.TSMetadata}
 
----@alias fml.dressing.image.transform   fun(match: fml.dressing.image.match, ctx: fml.dressing.image.ctx)
+---@alias dot.module.image.transform   fun(match: dot.module.image.match, ctx: dot.module.image.ctx)
 
----@alias fml.dressing.image.find        fun(matches: fml.dressing.image.match[])
+---@alias dot.module.image.find        fun(matches: dot.module.image.match[])
 
 ---@alias LinkDefinition                 {label: string, dest: string}
 
----@class fml.dressing.image.Hover
----@field public img                     fml.dressing.image.Placement
+---@class dot.module.image.Hover
+---@field public img                     dot.module.image.Placement
 ---@field public winnr                   integer
 ---@field public bufnr                   integer
 
----@class fml.dressing.image.ctx
+---@class dot.module.image.ctx
 ---@field public bufnr                   integer
 ---@field public lang                    string
 ---@field public meta                    vim.treesitter.query.TSMetadata
@@ -26,16 +26,16 @@ local M = {}
 ---@field public ref                     ?TSMatch
 ---@field public definition              ?LinkDefinition
 
----@class fml.dressing.image.match
+---@class dot.module.image.match
 ---@field public id                      string
----@field public pos                     fml.dressing.image.Pos
+---@field public pos                     dot.module.image.Pos
 ---@field public src                     ?string
 ---@field public content                 ?string
 ---@field public content_id              ?string
 ---@field public ext                     ?string
 ---@field public range                   ?integer[]
 ---@field public lang                    string
----@field public type                    fml.dressing.image.Type
+---@field public type                    dot.module.image.Type
 
 local META_EXT = "image.ext"
 local META_SRC = "image.src"
@@ -43,7 +43,7 @@ local META_TYPE = "image.type"
 local META_IGNORE = "image.ignore"
 local META_LANG = "image.lang"
 
----@type table<string, fml.dressing.image.transform>
+---@type table<string, dot.module.image.transform>
 M.transforms = {
   norg = function(img, ctx)
     local row, col = ctx.src.node:start()
@@ -54,7 +54,7 @@ M.transforms = {
     if not img.content then
       return
     end
-    local state = require("fml.dressing.image.state")
+    local state = require("dot.module.image.state")
     local s = state.data
     local color_val = vim.api.nvim_get_hl(0, { name = "f_image_math" }).fg
     local color = color_val and string.format("#%06x", color_val) or "#000000"
@@ -65,7 +65,7 @@ M.transforms = {
     })
   end,
   latex = function(img, ctx)
-    local state = require("fml.dressing.image.state")
+    local state = require("dot.module.image.state")
     local s = state.data
     if not (img.content and img.ext == "math.tex") then
       return
@@ -100,7 +100,7 @@ M.transforms = {
   end,
 }
 
----@type fml.dressing.image.Hover|nil
+---@type dot.module.image.Hover|nil
 local hover = nil
 
 local uv = vim.uv
@@ -219,7 +219,7 @@ end
 ---@param src                            string
 ---@return string
 function M.resolve(bufnr, src)
-  local s = require("fml.dressing.image.state").data
+  local s = require("dot.module.image.state").data
   local file = dot.path.normalize(vim.api.nvim_buf_get_name(bufnr))
   local resolved = s.resolve and s.resolve(file, src) or nil
   if resolved then
@@ -245,10 +245,10 @@ function M.resolve(bufnr, src)
   return dot.path.normalize(src)
 end
 
----@param ctx                            fml.dressing.image.ctx
----@return fml.dressing.image.match|nil
+---@param ctx                            dot.module.image.ctx
+---@return dot.module.image.match|nil
 local function make_img(ctx)
-  local s = require("fml.dressing.image.state").data
+  local s = require("dot.module.image.state").data
   ctx.pos = ctx.pos or ctx.src or ctx.content or ctx.ref
   assert(ctx.pos, "no image node")
 
@@ -259,7 +259,7 @@ local function make_img(ctx)
     local line = vim.api.nvim_buf_get_lines(ctx.bufnr, range[3], range[3] + 1, false)[1]
     range[4] = #line
   end
-  ---@type fml.dressing.image.match
+  ---@type dot.module.image.match
   local img = {
     ext = ctx.meta[META_EXT],
     src = ctx.meta[META_SRC],
@@ -314,10 +314,10 @@ local function make_img(ctx)
 end
 
 ---@param bufnr                          integer
----@param cb                             fml.dressing.image.find
+---@param cb                             dot.module.image.find
 ---@return nil
 function M.find_visible(bufnr, cb)
-  local ret = {} ---@type table<string, fml.dressing.image.match>
+  local ret = {} ---@type table<string, dot.module.image.match>
   local wins = vim.fn.win_findbuf(bufnr)
   local count = #wins
   for _, winnr in ipairs(wins) do
@@ -335,7 +335,7 @@ function M.find_visible(bufnr, cb)
 end
 
 ---@param bufnr                          integer
----@param cb                             fml.dressing.image.find
+---@param cb                             dot.module.image.find
 ---@param opts                           ?{from?: integer, to?: integer}
 ---@return nil
 function M.find(bufnr, cb, opts)
@@ -348,7 +348,7 @@ function M.find(bufnr, cb, opts)
   local link_definitions = M.get_link_definitions(bufnr)
 
   local function parse_callback()
-    local ret = {} ---@type fml.dressing.image.match[]
+    local ret = {} ---@type dot.module.image.match[]
     parser:for_each_tree(function(tstree, tree)
       if not tstree then
         return
@@ -359,7 +359,7 @@ function M.find(bufnr, cb, opts)
       end
       for _, match, meta in query:iter_matches(tstree:root(), bufnr, from and from - 1 or nil, to) do
         if not meta[META_IGNORE] then
-          ---@type fml.dressing.image.ctx
+          ---@type dot.module.image.ctx
           local ctx = {
             bufnr = bufnr,
             lang = tostring(meta[META_LANG] or meta["injection.language"] or tree:lang()),
@@ -415,7 +415,7 @@ function M.hover_close()
   end
 end
 
----@param cb                             fun(image_src?: string, image_pos?: fml.dressing.image.Pos)
+---@param cb                             fun(image_src?: string, image_pos?: dot.module.image.Pos)
 ---@return nil
 function M.at_cursor(cb)
   local cursor = vim.api.nvim_win_get_cursor(0)
@@ -464,8 +464,8 @@ function M.hover()
       return
     end
 
-    local s = require("fml.dressing.image.state").data
-    local placement = require("fml.dressing.image.placement")
+    local s = require("dot.module.image.state").data
+    local placement = require("dot.module.image.placement")
 
     local bufnr = vim.api.nvim_create_buf(false, true)
     local winnr = vim.api.nvim_open_win(bufnr, false, {
@@ -527,8 +527,8 @@ function M.attach(bufnr)
   end
   vim.b[bufnr].fml_image_attached = true
 
-  local state_mod = require("fml.dressing.image.state")
-  local inline_mod = require("fml.dressing.image.inline")
+  local state_mod = require("dot.module.image.state")
+  local inline_mod = require("dot.module.image.inline")
   local s = state_mod.data
 
   local inline = s.doc.inline and state_mod.env.placeholders

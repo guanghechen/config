@@ -1,7 +1,7 @@
----@class fml.dressing.image.terminal
+---@class dot.module.image.terminal
 local M = {}
 
----@class fml.dressing.image.terminal.Dim
+---@class dot.module.image.terminal.Dim
 ---@field public width                    integer
 ---@field public height                   integer
 ---@field public columns                  integer
@@ -10,17 +10,17 @@ local M = {}
 ---@field public cell_height              number
 ---@field public scale                    number
 
----@type fml.dressing.image.terminal.Dim|nil
+---@type dot.module.image.terminal.Dim|nil
 local _size = nil
 
 vim.api.nvim_create_autocmd("VimResized", {
-  group = vim.api.nvim_create_augroup("fml.dressing.image.terminal", { clear = true }),
+  group = vim.api.nvim_create_augroup("dot.module.image.terminal", { clear = true }),
   callback = function()
     _size = nil
   end,
 })
 
----@return fml.dressing.image.terminal.Dim
+---@return dot.module.image.terminal.Dim
 function M.size()
   if _size then
     return _size
@@ -45,7 +45,7 @@ function M.size()
   end
 
   local dw, dh = 9, 18
-  ---@type fml.dressing.image.terminal.Dim
+  ---@type dot.module.image.terminal.Dim
   _size = {
     width = vim.o.columns * dw,
     height = vim.o.lines * dh,
@@ -104,7 +104,7 @@ end
 ---@param data                            string
 ---@return nil
 function M.write(data)
-  local state = require("fml.dressing.image.state")
+  local state = require("dot.module.image.state")
   data = state.env.transform and state.env.transform(data) or data
   if vim.api.nvim_ui_send then
     vim.api.nvim_ui_send(data)
