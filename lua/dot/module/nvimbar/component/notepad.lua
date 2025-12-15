@@ -33,12 +33,12 @@ end) or "dot.G.noop"
 ---@type table<string, fun(): nil>
 local fn_switch_source_registry = {}
 
----@class dot.ux.nvimbar.component.notepad
+---@class dot.module.nvimbar.component.notepad
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param notepad                       dot.ux.widget.Notepad
----@return dot.ux.nvimbar.IRawComponent
+---@return dot.module.nvimbar.IRawComponent
 function M.items(position, notepad)
   local hln_button = position .. "_notepad_button" ---@type string
   local hln_name = position .. "_notepad_name" ---@type string
@@ -112,7 +112,7 @@ function M.items(position, notepad)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "notepad:items",
     atomic = false,
@@ -259,12 +259,12 @@ function M.items(position, notepad)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.add_button(position)
   local hln_button = position .. "_notepad_button" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "notepad:add_button",
     atomic = true,
@@ -282,9 +282,9 @@ function M.add_button(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param notepad                       dot.ux.widget.Notepad
----@return dot.ux.nvimbar.IRawComponent
+---@return dot.module.nvimbar.IRawComponent
 function M.source(position, notepad)
   local hln_source = position .. "_notepad_source" ---@type string
   local hln_source_sep = position .. "_notepad_source_sep" ---@type string
@@ -301,7 +301,7 @@ function M.source(position, notepad)
   local text_sep_left = dot.icon.symbols.sep_left ---@type string
   local icon_source = dot.icon.notepad.Source ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "notepad:source",
     atomic = true,

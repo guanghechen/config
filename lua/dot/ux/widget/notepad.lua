@@ -1,5 +1,8 @@
 ---@diagnostic disable: invisible
 
+local c = require("dot.module.nvimbar").component
+local Nvimbar = require("dot.module.nvimbar").Nvimbar
+
 local DEFAULT_WIDTH = 0.6
 local DEFAULT_HEIGHT = 0.6
 local MAX_WIDTH = 0.9
@@ -272,7 +275,7 @@ end
 ---@field protected _winnr              integer|nil
 ---@field protected _suspend_sync       boolean
 ---@field protected _buf_autocmds       integer[]
----@field protected _nvimbar            dot.ux.nvimbar.Nvimbar|nil
+---@field protected _nvimbar            dot.module.nvimbar.Nvimbar|nil
 ---@field protected _subscription_active ark.c.IUnsubscribable|nil
 ---@field protected _subscription_winbar ark.c.IUnsubscribable|nil
 ---@field protected _subscription_source ark.c.IUnsubscribable|nil
@@ -351,36 +354,35 @@ end
 ---@return nil
 function M:__setup_nvimbar__()
   local widget = self
-  self._nvimbar = dot.ux.nvimbar.Nvimbar
-    .new({
-      name = string.format("%s.winbar", self.name),
-      comp_sep = "",
-      comp_sep_hlname = "f_wl_bg",
-      comp_sep_hlname_active = "f_wl_bg",
-      delay = 128,
-      get_max_width = function()
-        local winnr = widget._winnr
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return math.max(0, vim.api.nvim_win_get_width(winnr))
-        end
-        return vim.o.columns - 2
-      end,
-      get_preset_context = function()
-        return { winnr = widget._winnr }
-      end,
-      is_active = function()
-        return widget._winnr ~= nil and vim.api.nvim_win_is_valid(widget._winnr)
-      end,
-      on_fulfilled = function(result)
-        local winnr = widget._winnr
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
-        end
-      end,
-    })
-    :place("left", dot.ux.nvimbar.component.notepad.items("f_wl", widget), 95)
-    :place("left", dot.ux.nvimbar.component.notepad.add_button("f_wl"), 100)
-    :place("right", dot.ux.nvimbar.component.notepad.source("f_wl", widget), 100)
+  self._nvimbar = Nvimbar.new({
+    name = string.format("%s.winbar", self.name),
+    comp_sep = "",
+    comp_sep_hlname = "f_wl_bg",
+    comp_sep_hlname_active = "f_wl_bg",
+    delay = 128,
+    get_max_width = function()
+      local winnr = widget._winnr
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        return math.max(0, vim.api.nvim_win_get_width(winnr))
+      end
+      return vim.o.columns - 2
+    end,
+    get_preset_context = function()
+      return { winnr = widget._winnr }
+    end,
+    is_active = function()
+      return widget._winnr ~= nil and vim.api.nvim_win_is_valid(widget._winnr)
+    end,
+    on_fulfilled = function(result)
+      local winnr = widget._winnr
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        vim.wo[winnr].winbar = result
+      end
+    end,
+  })
+    :place("left", c.notepad.items("f_wl", widget), 95)
+    :place("left", c.notepad.add_button("f_wl"), 100)
+    :place("right", c.notepad.source("f_wl", widget), 100)
 end
 
 ---@protected

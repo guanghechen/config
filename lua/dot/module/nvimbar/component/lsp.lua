@@ -1,4 +1,4 @@
-local __module_name__ = "dot.ux.nvimbar.component.lsp" ---@type string
+local __module_name__ = "dot.module.nvimbar.component.lsp" ---@type string
 
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
@@ -86,15 +86,15 @@ local function get_client_text()
   return " " .. client_names
 end
 
----@class dot.ux.nvimbar.component.lsp
+---@class dot.module.nvimbar.component.lsp
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.client(position)
   local hln_text = position .. "_client_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "lsp:client",
     atomic = true,
@@ -107,15 +107,15 @@ function M.client(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.diagnostics(position)
   local hln_diagnostics_error = position .. "_lsp_diagnostics_error" ---@type string
   local hln_diagnostics_warn = position .. "_lsp_diagnostics_warn" ---@type string
   local hln_diagnostics_hint = position .. "_lsp_diagnostics_hint" ---@type string
   local hln_diagnostics_info = position .. "_lsp_diagnostics_info" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "lsp:diagnostics",
     atomic = true,
@@ -147,8 +147,8 @@ function M.diagnostics(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.symbols(position)
   local hln_lsp_icon = position .. "_lsp_symbol_icon" ---@type string
   local hln_lsp_sep = position .. "_lsp_symbol_sep" ---@type string
@@ -157,7 +157,7 @@ function M.symbols(position)
   local sep = " " .. dot.icon.fillchars.foldclose .. " " ---@type string
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "lsp:symbols",
     atomic = false,

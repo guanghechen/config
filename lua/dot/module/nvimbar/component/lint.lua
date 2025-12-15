@@ -44,7 +44,7 @@ local fn_open_selector = dot.G.register_anonymous_fn(function()
   local linters = get_available_linters() ---@type string[]
   if #linters == 0 then
     ark.reporter.info({
-      from = "dot.ux.nvimbar.component.lint",
+      from = "dot.module.nvimbar.component.lint",
       message = "No linters available for this filetype",
     })
     return
@@ -68,20 +68,20 @@ local fn_open_selector = dot.G.register_anonymous_fn(function()
   end)
 end)
 
----@class dot.ux.nvimbar.component.lint
+---@class dot.module.nvimbar.component.lint
 local M = {}
 
 M.disabled_linters = disabled_linters
 M.is_linter_enabled = is_linter_enabled
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
   local hln_icon_active = position .. "_lint_icon_active" ---@type string
   local hln_icon_inactive = position .. "_lint_icon_inactive" ---@type string
   local hln_text = position .. "_lint_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "lint:status",
     atomic = true,

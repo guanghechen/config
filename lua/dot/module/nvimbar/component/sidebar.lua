@@ -15,20 +15,20 @@ local function get_pane_width(filetype)
   return 0
 end
 
----@class dot.ux.nvimbar.component.sidebar
+---@class dot.module.nvimbar.component.sidebar
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param filetype                      string
----@param get_title                     fun(context: dot.ux.nvimbar.INvimbarContext): string
----@return dot.ux.nvimbar.IRawComponent
+---@param get_title                     fun(context: dot.module.nvimbar.INvimbarContext): string
+---@return dot.module.nvimbar.IRawComponent
 function M.of(position, filetype, get_title)
   local hln_blank = position .. "_sidebar_blank" ---@type string
   local hln_split = position .. "_sidebar_split" ---@type string
   local hln_sep = "ms_b_none" ---@type string
   local hln_text = "mf_b_bg0" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "sidebar:of:" .. filetype,
     atomic = true,

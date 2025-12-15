@@ -1,14 +1,14 @@
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.git
+---@class dot.module.nvimbar.component.git
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.branch(position)
   local hln_text = position .. "_git_branch_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "git:branch",
     atomic = true,

@@ -1,15 +1,15 @@
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.cwd
+---@class dot.module.nvimbar.component.cwd
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.cwd(position)
   local hln_text = position .. "_cwd_text" ---@type string
   local hln_sep = position .. "_cwd_sep" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "cwd",
     atomic = true,

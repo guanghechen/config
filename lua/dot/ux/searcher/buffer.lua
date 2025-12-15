@@ -1,5 +1,9 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "dot.ux.searcher.buffer" ---@type string
+
+local c = require("dot.module.nvimbar").component
+local Nvimbar = require("dot.module.nvimbar").Nvimbar
+
 local NSNR_SEARCH = vim.api.nvim_create_namespace("dot.ux.searcher.buffer") ---@type integer
 local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("dot.ux.searcher.buffer.current") ---@type integer
 local NSNR_REPLACE_PREVIEW = vim.api.nvim_create_namespace("dot.ux.searcher.buffer.replace_preview") ---@type integer
@@ -169,7 +173,7 @@ end
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
 ---@field protected _scheduler_search   ark.c.Scheduler
----@field protected _nvimbar            dot.ux.nvimbar.Nvimbar
+---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     ark.t.IKeymap[]
 ---@field protected _replacer_keymaps   ark.t.IKeymap[]
 ---@field protected _preserve_match_index integer|nil
@@ -1032,50 +1036,48 @@ end
 ---@param o_match_index                 ark.c.Observable
 ---@param o_match_total                 ark.c.Observable
 ---@param flags                         dot.ux.searcher.result.IFlagItem[]
----@return dot.ux.nvimbar.Nvimbar
+---@return dot.module.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
-  local position = "f_wl" ---@type dot.ux.nvimbar.PositionEnum
-  local c = dot.ux.nvimbar.component
+  local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
 
-  return dot.ux.nvimbar.Nvimbar
-    .new({
-      name = string.format("%s#winbar", __module_name__),
-      comp_sep = "",
-      comp_sep_hlname = "f_wl_searcher",
-      comp_sep_hlname_active = "f_wl_searcher",
-      delay = 64,
-      silent = ark.fn.falsy,
-      get_max_width = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return vim.api.nvim_win_get_width(winnr)
-        end
-        return 0
-      end,
-      get_preset_context = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return { winnr = winnr }
-        end
-        return {}
-      end,
-      is_active = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
-      end,
-      on_fulfilled = function(result)
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
-        end
-      end,
-      validate = function()
-        local winnr = self._winnr_finder ---@type integer|nil
-        if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-          return "The window is not valid, winnr=" .. winnr .. "."
-        end
-      end,
-    })
+  return Nvimbar.new({
+    name = string.format("%s#winbar", __module_name__),
+    comp_sep = "",
+    comp_sep_hlname = "f_wl_searcher",
+    comp_sep_hlname_active = "f_wl_searcher",
+    delay = 64,
+    silent = ark.fn.falsy,
+    get_max_width = function()
+      local winnr = self._winnr_finder ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        return vim.api.nvim_win_get_width(winnr)
+      end
+      return 0
+    end,
+    get_preset_context = function()
+      local winnr = self._winnr_finder ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        return { winnr = winnr }
+      end
+      return {}
+    end,
+    is_active = function()
+      local winnr = self._winnr_finder ---@type integer|nil
+      return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+    end,
+    on_fulfilled = function(result)
+      local winnr = self._winnr_finder ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        vim.wo[winnr].winbar = result
+      end
+    end,
+    validate = function()
+      local winnr = self._winnr_finder ---@type integer|nil
+      if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+        return "The window is not valid, winnr=" .. winnr .. "."
+      end
+    end,
+  })
     :place("left", c.picker.result_pos(position, o_match_index, o_match_total), 100)
     :place("right", c.picker.result_flags(position, flags, 1), 100)
 end

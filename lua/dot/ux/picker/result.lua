@@ -57,7 +57,7 @@ local __module_name__ = "dot.ux.picker.result" ---@type string
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _augroup_CursorMoved integer
----@field protected _nvimbar            dot.ux.nvimbar.Nvimbar
+---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
 ---@field protected _scheduler_content  ark.c.Scheduler
 ---@field protected _scheduler_lnum_current ark.c.Scheduler
 ---@field protected _scheduler_lnum_present ark.c.Scheduler
@@ -116,42 +116,43 @@ function M.new(props)
     end
   end
 
-  local position = "f_wl" ---@type dot.ux.nvimbar.PositionEnum
-  local c = dot.ux.nvimbar.component
+  local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
+
+  local c = require("dot.module.nvimbar").component
+  local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
   local self = setmetatable({}, M)
 
-  ---@type dot.ux.nvimbar.Nvimbar
-  local nvimbar = dot.ux.nvimbar.Nvimbar
-    .new({
-      name = string.format("%s#winline", fullname),
-      comp_sep = "",
-      comp_sep_hlname = "f_wl_picker",
-      comp_sep_hlname_active = "f_wl_picker",
-      delay = 128,
-      silent = ark.fn.falsy,
-      get_max_width = function()
-        local winnr = self._winnr ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          return vim.api.nvim_win_get_width(winnr)
-        end
-        return 0
-      end,
-      get_preset_context = function()
-        local winnr = self._winnr ---@type integer|nil
-        return { winnr = winnr }
-      end,
-      is_active = function()
-        local winnr = self._winnr ---@type integer|nil
-        return winnr == vim.api.nvim_get_current_win()
-      end,
-      on_fulfilled = function(result)
-        local winnr = self._winnr ---@type integer|nil
-        if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
-        end
-      end,
-    })
+  ---@type dot.module.nvimbar.Nvimbar
+  local nvimbar = Nvimbar.new({
+    name = string.format("%s#winline", fullname),
+    comp_sep = "",
+    comp_sep_hlname = "f_wl_picker",
+    comp_sep_hlname_active = "f_wl_picker",
+    delay = 128,
+    silent = ark.fn.falsy,
+    get_max_width = function()
+      local winnr = self._winnr ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        return vim.api.nvim_win_get_width(winnr)
+      end
+      return 0
+    end,
+    get_preset_context = function()
+      local winnr = self._winnr ---@type integer|nil
+      return { winnr = winnr }
+    end,
+    is_active = function()
+      local winnr = self._winnr ---@type integer|nil
+      return winnr == vim.api.nvim_get_current_win()
+    end,
+    on_fulfilled = function(result)
+      local winnr = self._winnr ---@type integer|nil
+      if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+        vim.wo[winnr].winbar = result
+      end
+    end,
+  })
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
@@ -384,7 +385,7 @@ function M:dispose()
   local lnum_present = self.lnum_present ---@type ark.c.Observable
   local lnum_total = self.lnum_total ---@type ark.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
-  local nvimbar = self._nvimbar ---@type dot.ux.nvimbar.Nvimbar
+  local nvimbar = self._nvimbar ---@type dot.module.nvimbar.Nvimbar
   local scheduler_content = self._scheduler_content ---@type ark.c.Scheduler
   local scheduler_lnum_current = self._scheduler_lnum_current ---@type ark.c.Scheduler
   local scheduler_lnum_present = self._scheduler_lnum_present ---@type ark.c.Scheduler

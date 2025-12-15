@@ -1,10 +1,11 @@
-local c = dot.ux.nvimbar.component
+local c = require("dot.module.nvimbar").component
+local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
 local dirtier = dot.state.status.dirtier_statusline ---@type ark.c.Dirtier
-local position = "f_sl" ---@type dot.ux.nvimbar.PositionEnum
+local position = "f_sl" ---@type dot.module.nvimbar.PositionEnum
 
-local statusline ---@type dot.ux.nvimbar.Nvimbar
-statusline = dot.ux.nvimbar.Nvimbar.new({
+local statusline ---@type dot.module.nvimbar.Nvimbar
+statusline = Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",

@@ -1,4 +1,4 @@
----@class dot.ux.nvimbar.component.buf.IBufItem
+---@class dot.module.nvimbar.component.buf.IBufItem
 ---@field public bufnr                  integer
 ---@field public meta                   dot.buf.IMeta
 
@@ -20,8 +20,8 @@ local fn_focus_right_buf = dot.G.register_anonymous_fn(function()
   dot.command.definitions.buf.focus_right:execute()
 end) or ""
 
----@param x                             dot.ux.nvimbar.component.buf.IBufItem
----@param y                             dot.ux.nvimbar.component.buf.IBufItem
+---@param x                             dot.module.nvimbar.component.buf.IBufItem
+---@param y                             dot.module.nvimbar.component.buf.IBufItem
 ---@return boolean
 local function cmp_rd_buf(x, y)
   local mx = x.meta ---@type dot.buf.IMeta
@@ -52,7 +52,7 @@ local function cmp_rd_buf(x, y)
   return D1 < D2
 end
 
-local rd_bufs = {} ---@type dot.ux.nvimbar.component.buf.IBufItem[]
+local rd_bufs = {} ---@type dot.module.nvimbar.component.buf.IBufItem[]
 
 ---Generate disambiguated filename display for buffers with same filenames
 ---@param bufs                          dot.tab.IBufItem[]
@@ -62,7 +62,7 @@ local function resolve_disambiguations(bufs)
   for _, buf in ipairs(bufs) do
     local meta = dot.buf.resolve(buf.bufnr, false) ---@type dot.buf.IMeta|nil
     if meta ~= nil then
-      local item = { bufnr = buf.bufnr, meta = meta } ---@type dot.ux.nvimbar.component.buf.IBufItem
+      local item = { bufnr = buf.bufnr, meta = meta } ---@type dot.module.nvimbar.component.buf.IBufItem
       N = N + 1
       rd_bufs[N] = item
     end
@@ -77,12 +77,12 @@ local function resolve_disambiguations(bufs)
   local depth = 0 ---@type integer
   local disambiguated = {} ---@type table<integer, string>
   for index = 1, N, 1 do
-    local item1 = rd_bufs[index] ---@type dot.ux.nvimbar.component.buf.IBufItem
+    local item1 = rd_bufs[index] ---@type dot.module.nvimbar.component.buf.IBufItem
     local dp1 = item1.meta.dirpath_pieces ---@type string[]
     local D1 = #dp1 ---@type integer
 
     if index > 1 then
-      local item0 = rd_bufs[index - 1] ---@type dot.ux.nvimbar.component.buf.IBufItem
+      local item0 = rd_bufs[index - 1] ---@type dot.module.nvimbar.component.buf.IBufItem
       if item1.meta.filename ~= item0.meta.filename then
         depth = 0 ---@type integer
       end
@@ -90,7 +90,7 @@ local function resolve_disambiguations(bufs)
 
     local next_depth = 0 ---@type integer
     if index + 1 < N then
-      local item2 = rd_bufs[index + 1] ---@type dot.ux.nvimbar.component.buf.IBufItem
+      local item2 = rd_bufs[index + 1] ---@type dot.module.nvimbar.component.buf.IBufItem
       if item1.meta.filename == item2.meta.filename then
         local dp2 = item2.meta.dirpath_pieces ---@type string[]
         local D2 = #dp2 ---@type integer
@@ -126,11 +126,11 @@ local function resolve_disambiguations(bufs)
   return disambiguated
 end
 
----@class dot.ux.nvimbar.component.buf
+---@class dot.module.nvimbar.component.buf
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string
   local hln_buf_disambiguation = position .. "_buf_disambiguation" ---@type string
@@ -355,7 +355,7 @@ function M.bufs(position)
     return text, btn(hl_text, fn_active_buf, bufnr)
   end
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "buf:bufs",
     atomic = false,

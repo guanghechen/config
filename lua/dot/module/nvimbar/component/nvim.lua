@@ -20,18 +20,18 @@ local function calc_row_percentage()
   end
 end
 
----@class dot.ux.nvimbar.component.nvim
+---@class dot.module.nvimbar.component.nvim
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.mode(position)
   local hln_text = position .. "_nvim_mode_text" ---@type string
   local hln_sep = position .. "_nvim_mode_sep" ---@type string
 
   local icon = " " .. dot.icon.app.Vim .. " " ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:mode",
     atomic = true,
@@ -51,8 +51,8 @@ function M.mode(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.msg_changes(position)
   local hln_text = position .. "_nvim_msg_changes" ---@type string
 
@@ -60,7 +60,7 @@ function M.msg_changes(position)
   local last_timestamp = os.time() ---@type integer
   local timeout = 3 ---@type integer
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_changes",
     atomic = true,
@@ -87,8 +87,8 @@ function M.msg_changes(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.msg_command(position)
   local hln_text = position .. "_nvim_msg_command" ---@type string
 
@@ -96,7 +96,7 @@ function M.msg_command(position)
   local last_timestamp = os.time() ---@type integer
   local timeout = 3 ---@type integer
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_command",
     atomic = true,
@@ -123,12 +123,12 @@ function M.msg_command(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.msg_lsp(position)
   local hln_text = position .. "_nvim_msg_lsp" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_lsp",
     atomic = true,
@@ -145,12 +145,12 @@ function M.msg_lsp(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.msg_mode(position)
   local hln_text = position .. "_nvim_msg_mode" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:msg_mode",
     atomic = true,
@@ -167,12 +167,12 @@ function M.msg_mode(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.nr(position)
   local hln_text = position .. "_nvim_nr" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:nr",
     atomic = true,
@@ -187,12 +187,12 @@ function M.nr(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.pid(position)
   local hln_text = position .. "_nvim_pid" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:pid",
     atomic = true,
@@ -211,8 +211,8 @@ function M.pid(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_nvim_pos_sep" ---@type string
   local hln_text_anchor = position .. "_nvim_pos_text_anchor" ---@type string
@@ -221,7 +221,7 @@ function M.pos(position)
   local text_sep = dot.icon.symbols.sep_right ---@type string
   local hl_text_sep = txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "win:pos",
     atomic = true,
@@ -239,8 +239,8 @@ function M.pos(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.tabs(position)
   local hln_toggle = position .. "_nvim_tab_toggle" ---@type string
   local hln_tab_item = position .. "_nvim_tab_item" ---@type string
@@ -261,7 +261,7 @@ function M.tabs(position)
     dot.state.status.dirtier_tabline:mark_dirty()
   end) or ""
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:tabs",
     atomic = true,

@@ -1,10 +1,10 @@
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.host
+---@class dot.module.nvimbar.component.host
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string
   local hln_sep = position .. "_host_username_sep" ---@type string
@@ -12,7 +12,7 @@ function M.username(position)
   local text_with_icon = " " .. dot.icon.os.current .. " " .. ark.env.USERNAME ---@type string
   local text_icon_only = dot.icon.os.current .. " " ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "host:username",
     atomic = true,

@@ -1,5 +1,8 @@
 local __module_name__ = "dot.ux.widget.terminal" ---@type string
 
+local c = require("dot.module.nvimbar").component
+local Nvimbar = require("dot.module.nvimbar").Nvimbar
+
 ---@class dot.ux.widget.terminal.IToggleHardParams : dot.t.ITermCreateParams
 ---@field public selected_text          string|nil
 
@@ -33,8 +36,8 @@ local function __create_mask_buf_as_needed__()
   return bufnr
 end
 
----@type dot.ux.nvimbar.Nvimbar
-local termline = dot.ux.nvimbar.Nvimbar.new({
+---@type dot.module.nvimbar.Nvimbar
+local termline = Nvimbar.new({
   name = "termline",
   comp_sep = "",
   comp_sep_hlname = "f_wl_bg",
@@ -67,8 +70,7 @@ local termline = dot.ux.nvimbar.Nvimbar.new({
   end,
 })
 
-local c = dot.ux.nvimbar.component
-local position = "f_wl" ---@type dot.ux.nvimbar.PositionEnum
+local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
 ark.fn.observe({ dot.term.o_termuuid }, function()

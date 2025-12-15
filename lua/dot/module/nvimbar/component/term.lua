@@ -27,7 +27,7 @@ local fn_focus_next_term = dot.G.register_anonymous_fn(function()
   K.term.focus_right:execute()
 end) or "dot.G.noop"
 
----@class dot.ux.nvimbar.component.term
+---@class dot.module.nvimbar.component.term
 local M = {}
 
 ---@param termmeta                      dot.t.ITermMeta
@@ -43,8 +43,8 @@ local function format_name(termmeta)
   return name
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.items(position)
   local hln_button = position .. "_term_button" ---@type string
   local hln_name = position .. "_term_name" ---@type string
@@ -102,7 +102,7 @@ function M.items(position)
     return text, btn(hl_text, fn_switch_term, { index })
   end
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "term:items",
     atomic = false,
@@ -241,12 +241,12 @@ function M.items(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.add_button(position)
   local hln_button = position .. "_term_button" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "term:add_button",
     atomic = true,

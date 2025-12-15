@@ -1,15 +1,15 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.picker
+---@class dot.module.nvimbar.component.picker
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param flags                         dot.ux.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
----@return dot.ux.nvimbar.IRawComponent
+---@return dot.module.nvimbar.IRawComponent
 function M.result_flags(position, flags, flags_start_index)
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "picker:result_flags",
     atomic = true,
@@ -38,14 +38,14 @@ function M.result_flags(position, flags, flags_start_index)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param result_lnum                   ark.c.Observable
 ---@param result_total                  ark.c.Observable
----@return dot.ux.nvimbar.IRawComponent
+---@return dot.module.nvimbar.IRawComponent
 function M.result_pos(position, result_lnum, result_total)
   local hln_text = position .. "_picker_result_pos_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "picker:result_pos",
     atomic = true,

@@ -1,14 +1,14 @@
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.devmode
+---@class dot.module.nvimbar.component.devmode
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.devmode(position)
   local hln_devmode = position .. "_devmode_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "devmode:devmode",
     atomic = true,
@@ -25,14 +25,14 @@ function M.devmode(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.render_count(position)
   local hln_text = position .. "_devmode_render_count_text" ---@type string
   local hln_sep = position .. "_devmode_render_count_sep" ---@type string
   local count = 0 ---@type integer
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "debug_render_count",
     atomic = true,

@@ -1,12 +1,12 @@
-local __module_name__ = "dot.ux.nvimbar" ---@type string
+local __module_name__ = "dot.module.nvimbar" ---@type string
 
----@class dot.ux.nvimbar.INvimbarPresetContext
+---@class dot.module.nvimbar.INvimbarPresetContext
 ---@field public winnr                  ?integer
 
----@alias dot.ux.nvimbar.IGetNvimbarPresetContext
----| fun(): dot.ux.nvimbar.INvimbarPresetContext|nil
+---@alias dot.module.nvimbar.IGetNvimbarPresetContext
+---| fun(): dot.module.nvimbar.INvimbarPresetContext|nil
 
----@class dot.ux.nvimbar.INvimbarContext
+---@class dot.module.nvimbar.INvimbarContext
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
@@ -19,11 +19,11 @@ local __module_name__ = "dot.ux.nvimbar" ---@type string
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 
----@class dot.ux.nvimbar.IItem
+---@class dot.module.nvimbar.IItem
 ---@field public name                   string
 ---@field public position               dot.e.NvimbarCompPosition
 
----@class dot.ux.nvimbar.INvimbarProps
+---@class dot.module.nvimbar.INvimbarProps
 ---@field public name                   string
 ---@field public comp_sep               string
 ---@field public comp_sep_hlname        string
@@ -31,29 +31,29 @@ local __module_name__ = "dot.ux.nvimbar" ---@type string
 ---@field public delay                  ?integer
 ---@field public silent                 ?fun(): boolean
 ---@field public get_max_width          fun(): integer
----@field public get_preset_context     ?dot.ux.nvimbar.IGetNvimbarPresetContext
----@field public is_active              fun(context: dot.ux.nvimbar.INvimbarContext): boolean
+---@field public get_preset_context     ?dot.module.nvimbar.IGetNvimbarPresetContext
+---@field public is_active              fun(context: dot.module.nvimbar.INvimbarContext): boolean
 ---@field public on_fulfilled           ?fun(result: string): nil
 ---@field public validate               ?fun(): string|nil
 
----@class dot.ux.nvimbar.Nvimbar
+---@class dot.module.nvimbar.Nvimbar
 ---@field public fullname               string
 ---@field protected _value              ark.c.Observable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
 ---@field protected _sep_active         string
 ---@field protected _sep_width          integer
----@field protected _components         dot.ux.nvimbar.IComponent[]
+---@field protected _components         dot.module.nvimbar.IComponent[]
 ---@field protected _orders             integer[]
 ---@field protected _scheduler          ark.c.Scheduler
 ---@field protected _get_max_width      fun(): integer
----@field protected _get_preset_context dot.ux.nvimbar.IGetNvimbarPresetContext
----@field protected _isactive           fun(context: dot.ux.nvimbar.INvimbarContext): boolean
+---@field protected _get_preset_context dot.module.nvimbar.IGetNvimbarPresetContext
+---@field protected _isactive           fun(context: dot.module.nvimbar.INvimbarContext): boolean
 local M = {}
 M.__index = M
 
----@param preset_context                dot.ux.nvimbar.INvimbarPresetContext
----@return dot.ux.nvimbar.INvimbarContext|nil
+---@param preset_context                dot.module.nvimbar.INvimbarPresetContext
+---@return dot.module.nvimbar.INvimbarContext|nil
 local function build_context(preset_context)
   local winnr = preset_context.winnr ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
@@ -71,7 +71,7 @@ local function build_context(preset_context)
   local git = vim.b[bufnr].gitsigns_status_dict
   local git_branch = git and git.head or nil ---@type string|nil
 
-  ---@type dot.ux.nvimbar.INvimbarContext
+  ---@type dot.module.nvimbar.INvimbarContext
   local context = {
     winnr = winnr,
     bufnr = bufnr,
@@ -88,8 +88,8 @@ local function build_context(preset_context)
   return context
 end
 
----@param props                         dot.ux.nvimbar.INvimbarProps
----@return dot.ux.nvimbar.Nvimbar
+---@param props                         dot.module.nvimbar.INvimbarProps
+---@return dot.module.nvimbar.Nvimbar
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -101,17 +101,17 @@ function M.new(props)
   local get_max_width = props.get_max_width ---@type fun(): integer
   local value = ark.c.Observable.from_value("") ---@type ark.c.Observable
 
-  ---@type dot.ux.nvimbar.IGetNvimbarPresetContext
+  ---@type dot.module.nvimbar.IGetNvimbarPresetContext
   local get_preset_context = props.get_preset_context
     or function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
-      ---@type dot.ux.nvimbar.INvimbarPresetContext
+      ---@type dot.module.nvimbar.INvimbarPresetContext
       return {
         winnr = winnr,
       }
     end
 
-  local isactive = props.is_active ---@type fun(context: dot.ux.nvimbar.INvimbarContext): boolean
+  local isactive = props.is_active ---@type fun(context: dot.module.nvimbar.INvimbarContext): boolean
   local on_fulfilled = props.on_fulfilled or ark.fn.noop ---@type fun(result: string): nil
   local validate = props.validate or ark.fn.noop ---@type fun(): string|nil
 
@@ -219,9 +219,9 @@ function M:render(immediate)
 end
 
 ---@param position                      dot.e.NvimbarCompPosition
----@param raw_component                 dot.ux.nvimbar.IRawComponent
+---@param raw_component                 dot.module.nvimbar.IRawComponent
 ---@param priority                      ?integer
----@return dot.ux.nvimbar.Nvimbar
+---@return dot.module.nvimbar.Nvimbar
 function M:place(position, raw_component, priority)
   self:__health__()
 
@@ -238,11 +238,11 @@ function M:place(position, raw_component, priority)
     return self
   end
 
-  local components = self._components ---@type dot.ux.nvimbar.IComponent[]
+  local components = self._components ---@type dot.module.nvimbar.IComponent[]
   local orders = self._orders ---@type integer[]
   local k = #components ---@type integer
 
-  ---@type dot.ux.nvimbar.IComponent
+  ---@type dot.module.nvimbar.IComponent
   local component = {
     last_result_full = false,
     last_render_context = nil,
@@ -294,8 +294,8 @@ end
 ---@param force                         boolean
 ---@return string|nil
 function M:__render__(force)
-  local preset_context = self._get_preset_context() or {} ---@type dot.ux.nvimbar.INvimbarPresetContext
-  local context = build_context(preset_context) ---@type dot.ux.nvimbar.INvimbarContext|nil
+  local preset_context = self._get_preset_context() or {} ---@type dot.module.nvimbar.INvimbarPresetContext
+  local context = build_context(preset_context) ---@type dot.module.nvimbar.INvimbarContext|nil
   if context == nil then
     return nil
   end
@@ -312,7 +312,7 @@ function M:__render__(force)
   local wr = width_sep ---@type integer
   local width_remain = width_full - wl - wc - wr ---@type integer
 
-  local components = self._components ---@type dot.ux.nvimbar.IComponent[]
+  local components = self._components ---@type dot.module.nvimbar.IComponent[]
   local orders = self._orders ---@type integer[]
   local hltexts = {} ---@type string[]
 
@@ -320,7 +320,7 @@ function M:__render__(force)
   local hl, hc, hr = false, false, false ---@type boolean, boolean, boolean
   for _, order in ipairs(orders) do
     hltexts[order] = ""
-    local component = components[order] ---@type dot.ux.nvimbar.IComponent
+    local component = components[order] ---@type dot.module.nvimbar.IComponent
     local ok, hltext, width = pcall(function()
       if not component.condition(context, width_remain) then
         return "", 0
@@ -399,7 +399,7 @@ function M:__render__(force)
   local tl, tc, tr = "", "", "" ---@type string, string, string
   for i = 1, N, 1 do
     local hltext = hltexts[i] ---@type string
-    local component = components[i] ---@type dot.ux.nvimbar.IComponent
+    local component = components[i] ---@type dot.module.nvimbar.IComponent
     local position = component.position ---@type dot.e.NvimbarCompPosition
     if position == "left" then
       tl = tl .. hltext

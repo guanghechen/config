@@ -9,13 +9,13 @@ local fn_show_detach = dot.G.register_anonymous_fn(function()
   dot.ux.widget.ai.action.show_detach_picker()
 end)
 
----@class dot.ux.nvimbar.component.ai
+---@class dot.module.nvimbar.component.ai
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "ai:status",
     atomic = true,

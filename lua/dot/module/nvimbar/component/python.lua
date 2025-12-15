@@ -1,4 +1,4 @@
-local __module_name__ = "dot.ux.nvimbar.component.python" ---@type string
+local __module_name__ = "dot.module.nvimbar.component.python" ---@type string
 
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
@@ -31,15 +31,15 @@ ark.fn.observe({ dot.context.lsp.python_venv_path }, function()
   end
 end, false)
 
----@class dot.ux.nvimbar.component.python
+---@class dot.module.nvimbar.component.python
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.env(position)
   local hln_text = position .. "_python_env_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "python:env",
     atomic = true,

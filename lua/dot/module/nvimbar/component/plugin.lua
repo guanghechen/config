@@ -1,12 +1,12 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.plugin
+---@class dot.module.nvimbar.component.plugin
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
+---@param position                      dot.module.nvimbar.PositionEnum
 ---@param neotree_position              "left"|"right"|"float"
----@return dot.ux.nvimbar.IRawComponent
+---@return dot.module.nvimbar.IRawComponent
 function M.neotree(position, neotree_position)
   local filetype = dot.filetype.NEOTREE ---@type string
   local hln_text = position .. "_plugin_neotree_text" ---@type string
@@ -34,7 +34,7 @@ function M.neotree(position, neotree_position)
   local hl_buffers = hl_sep_left .. txt(title_buffers, hln_text) .. hl_sep_right ---@type string
   local hl_git_status = hl_sep_left .. txt(title_git_status, hln_text) .. hl_sep_right ---@type string
 
-  ---@param context                     dot.ux.nvimbar.INvimbarContext
+  ---@param context                     dot.module.nvimbar.INvimbarContext
   ---@return integer
   ---@return integer
   local function locate_neotree_pane(context)
@@ -78,7 +78,7 @@ function M.neotree(position, neotree_position)
     })
   end)
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "sidebar:neotree",
     atomic = true,

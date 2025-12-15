@@ -1,4 +1,4 @@
-local __module_name__ = "dot.ux.nvimbar.component.copilot" ---@type string
+local __module_name__ = "dot.module.nvimbar.component.copilot" ---@type string
 
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
@@ -49,13 +49,13 @@ local fn_show_message = dot.G.register_anonymous_fn(function()
   })
 end)
 
----@class dot.ux.nvimbar.component.copilot
+---@class dot.module.nvimbar.component.copilot
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "copilot:status",
     atomic = true,

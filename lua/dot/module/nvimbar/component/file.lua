@@ -7,7 +7,7 @@ local fileformat_text_map = {
   unix = "LF",
 }
 
-local __module_name__ = "dot.ux.nvimbar.component.file" ---@type string
+local __module_name__ = "dot.module.nvimbar.component.file" ---@type string
 
 local fileformat_icon_map = {
   dos = dot.icon.os.dos,
@@ -25,15 +25,15 @@ local fn_on_fileformat_clicked = dot.G.register_anonymous_fn(function()
   dot.command.definitions.toggle.list:execute("fileformat_local")
 end) or ""
 
----@class dot.ux.nvimbar.component.file
+---@class dot.module.nvimbar.component.file
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.encoding(position)
   local hln_text = position .. "_file_encoding_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:encoding",
     atomic = true,
@@ -57,12 +57,12 @@ function M.encoding(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.format(position)
   local hln_text = position .. "_file_format_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:format",
     atomic = true,
@@ -88,13 +88,13 @@ function M.format(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.indent(position)
   local hln_text = position .. "_file_indent_text" ---@type string
   local icon_shiftwidth = dot.icon.ui.Tab ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:indent",
     atomic = true,
@@ -111,13 +111,13 @@ function M.indent(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.name(position)
   local hln_text = position .. "_file_name_text" ---@type string
   local hln_text_active = position .. "_file_name_text_active" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:name",
     atomic = true,
@@ -146,8 +146,8 @@ function M.name(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.path(position)
   local hln_text = position .. "_file_path_text" ---@type string
 
@@ -167,7 +167,7 @@ function M.path(position)
     })
   end) or ""
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:path",
     atomic = true,
@@ -192,12 +192,12 @@ function M.path(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.readonly(position)
   local hln_readonly = position .. "_file_readonly" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:readonly",
     atomic = true,
@@ -213,12 +213,12 @@ function M.readonly(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.size(position)
   local hln_text = position .. "_file_size_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:size",
     atomic = true,
@@ -253,8 +253,8 @@ function M.size(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
   local hln_text = position .. "_file_status_text" ---@type string
 
@@ -280,7 +280,7 @@ function M.status(position)
     return text
   end
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:status",
     atomic = true,
@@ -297,12 +297,12 @@ function M.status(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.type(position)
   local hln_text = position .. "_file_type_text" ---@type string
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "file:type",
     atomic = true,

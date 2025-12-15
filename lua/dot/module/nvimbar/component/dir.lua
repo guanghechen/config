@@ -1,11 +1,11 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
----@class dot.ux.nvimbar.component.dir
+---@class dot.module.nvimbar.component.dir
 local M = {}
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.path(position)
   local hln_blur_sep = position .. "_dir_path_blur_sep" ---@type string
   local hln_blur_text = position .. "_dir_path_blur_text" ---@type string
@@ -23,7 +23,7 @@ function M.path(position)
     dot.command.definitions.find.explorer:execute(vim.fn.fnameescape(dirpath))
   end) or ""
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "dir:path",
     atomic = true,
@@ -55,8 +55,8 @@ function M.path(position)
   return component
 end
 
----@param position                      dot.ux.nvimbar.PositionEnum
----@return dot.ux.nvimbar.IRawComponent
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
 function M.path_prominent(position)
   local hln_icon = position .. "_dir_path_prominent_icon" ---@type string
   local hln_text = position .. "_dir_path_prominent_text" ---@type string
@@ -68,7 +68,7 @@ function M.path_prominent(position)
   local width_icon = vim.api.nvim_strwidth(icon) ---@type integer
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
-  ---@type dot.ux.nvimbar.IRawComponent
+  ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "dir:path_prominent",
     atomic = false,
