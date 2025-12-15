@@ -1,14 +1,14 @@
 --- https://github.com/folke/snacks.nvim/blob/d62e7527a5e9608ab0033bc63a329baf8757ea6d/lua/snacks/words.lua#L1
 
-local __module_name__ = "fml.dressing.illumniate" ---@type string
+local __module_name__ = "fml.dressing.illuminate" ---@type string
 
----@class fml.dressing.illumniate.ILspWord
+---@class fml.dressing.illuminate.ILspWord
 ---@field public from                   { [1]: number, [2]: number }
 ---@field public to                     { [1]: number, [2]: number }
 
 local nsnr = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
 
----@class fml.dressing.illumniate.IConfig
+---@class fml.dressing.illuminate.IConfig
 local config = {
   notify_jump = false, -- show a notification when jumping
   notify_end = true, -- show a notification when reaching the end
@@ -16,12 +16,12 @@ local config = {
   jumplist = true, -- set jump point before jumping
 }
 
----@return fml.dressing.illumniate.ILspWord[]
+---@return fml.dressing.illuminate.ILspWord[]
 ---@return integer|nil
 local function get_reference_words()
   local current = nil ---@type integer|nil
   local extmarks = {} ---@type vim.api.keyset.get_extmark_item[]
-  local words = {} ---@type fml.dressing.illumniate.ILspWord[]
+  local words = {} ---@type fml.dressing.illuminate.ILspWord[]
 
   local cursor = vim.api.nvim_win_get_cursor(0)
   vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(0, nsnr, 0, -1, { details = true }))
@@ -38,7 +38,7 @@ local function get_reference_words()
   return words, current
 end
 
----@class fml.dressing.illumniate
+---@class fml.dressing.illuminate
 local M = {}
 
 ---@param step                          integer

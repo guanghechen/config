@@ -1,12 +1,6 @@
 {
-  "ignorePaths": [
-    "lsp/yamlls.lua",
-    "lua/dot/dict/",
-    "lua/dot/fileicon.lua"
-  ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "ignorePaths": ["lsp/yamlls.lua", "lua/dot/dict/", "lua/dot/fileicon.lua"],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -482,7 +476,6 @@
     "ignorecase",
     "ikeymap",
     "ikeymaps",
-    "illumniate",
     "inccommand",
     "incsearch",
     "indentexpr",
@@ -925,3 +918,4 @@
     "zindex"
   ]
 }
+

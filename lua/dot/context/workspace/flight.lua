@@ -8,7 +8,7 @@
 ---
 ---@field public dressing_clipboard     boolean
 ---@field public dressing_dim           boolean
----@field public dressing_illumniate    boolean
+---@field public dressing_illuminate    boolean
 ---@field public dressing_image         boolean
 ---@field public dressing_indent        boolean
 ---@field public dressing_input         boolean
@@ -31,7 +31,7 @@
 ---
 ---@field public dressing_clipboard     ark.c.Observable
 ---@field public dressing_dim           ark.c.Observable
----@field public dressing_illumniate    ark.c.Observable
+---@field public dressing_illuminate    ark.c.Observable
 ---@field public dressing_image         ark.c.Observable
 ---@field public dressing_indent        ark.c.Observable
 ---@field public dressing_input         ark.c.Observable
@@ -71,7 +71,7 @@ function M.defaults()
 
     dressing_clipboard = false,
     dressing_dim = false,
-    dressing_illumniate = true,
+    dressing_illuminate = true,
     dressing_image = true,
     dressing_indent = true,
     dressing_input = true,
@@ -116,8 +116,8 @@ function M.normalize(data)
     if type(data.dressing_dim) == "boolean" then
       resolved.dressing_dim = data.dressing_dim
     end
-    if type(data.dressing_illumniate) == "boolean" then
-      resolved.dressing_illumniate = data.dressing_illumniate
+    if type(data.dressing_illuminate) == "boolean" then
+      resolved.dressing_illuminate = data.dressing_illuminate
     end
     if type(data.dressing_image) == "boolean" then
       resolved.dressing_image = data.dressing_image
@@ -167,7 +167,7 @@ function M.dump()
 
     dressing_clipboard = M.dressing_clipboard:snapshot(),
     dressing_dim = M.dressing_dim:snapshot(),
-    dressing_illumniate = M.dressing_illumniate:snapshot(),
+    dressing_illuminate = M.dressing_illuminate:snapshot(),
     dressing_image = M.dressing_image:snapshot(),
     dressing_indent = M.dressing_indent:snapshot(),
     dressing_input = M.dressing_input:snapshot(),
@@ -196,7 +196,7 @@ function M.load(raw_data)
 
   M.dressing_clipboard:next(data.dressing_clipboard)
   M.dressing_dim:next(data.dressing_dim)
-  M.dressing_illumniate:next(data.dressing_illumniate)
+  M.dressing_illuminate:next(data.dressing_illuminate)
   M.dressing_image:next(data.dressing_image)
   M.dressing_indent:next(data.dressing_indent)
   M.dressing_input:next(data.dressing_input)
@@ -222,7 +222,7 @@ M.devmode = ark.c.Observable.from_value(_defaults.devmode)
 
 M.dressing_clipboard = ark.c.Observable.from_value(_defaults.dressing_clipboard)
 M.dressing_dim = ark.c.Observable.from_value(_defaults.dressing_dim)
-M.dressing_illumniate = ark.c.Observable.from_value(_defaults.dressing_illumniate)
+M.dressing_illuminate = ark.c.Observable.from_value(_defaults.dressing_illuminate)
 M.dressing_image = ark.c.Observable.from_value(_defaults.dressing_image)
 M.dressing_indent = ark.c.Observable.from_value(_defaults.dressing_indent)
 M.dressing_input = ark.c.Observable.from_value(_defaults.dressing_input)
