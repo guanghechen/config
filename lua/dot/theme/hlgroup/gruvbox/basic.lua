@@ -108,9 +108,9 @@ function M.gen_hlgroup_map(context)
     ---lsp
     LspCodeLens = { fg = c.bg4, italic = true },
     LspInlayHint = { fg = c.bg4, bg = t and c.none or c.bg1, italic = true },
-    LspReferenceRead = { fg = c.yellow, bold = true },
-    LspReferenceText = { fg = c.yellow, bold = true },
-    LspReferenceWrite = { fg = c.orange, bold = true },
+    LspReferenceRead = { fg = c.yellow, bold = true, underline = true },
+    LspReferenceText = { fg = c.yellow, bold = true, underline = true },
+    LspReferenceWrite = { fg = c.orange, bold = true, underline = true },
     LspSignatureActiveParameter = { link = "Search" },
 
     RenamerBorder = { link = t and "ms_b_bg0" or "ms_b_none" },
