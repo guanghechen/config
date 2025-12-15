@@ -27,9 +27,9 @@ function M.refresh_all()
 
   if devmode then
     pcall(function()
-      require("plenary.reload").reload_module("dot.lang")
-      require("plenary.reload").reload_module("dot.theme")
-      require("plenary.reload").reload_module("dot.theme.hlgroup")
+      ark.hot.reload_module("dot.lang")
+      ark.hot.reload_module("dot.theme")
+      ark.hot.reload_module("dot.theme.hlgroup")
       dot.command.definitions.ux.reload_theme:execute("force")
     end)
   end
