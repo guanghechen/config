@@ -936,6 +936,34 @@ function M.new(props)
         vim.api.nvim_win_call(winnr_result, handle)
       end
     end,
+    copy_node_filepath_absolute = function()
+      local filenode = self:__retrieve_filenode__()
+      if filenode == nil then
+        return
+      end
+
+      local filepath = filenode.data.filepath
+      ark.nvim.copy(filepath)
+      ark.reporter.info({
+        from = fullname,
+        message = "Copied absolute filepath: " .. filepath,
+      })
+    end,
+    copy_node_filepath_relative = function()
+      local filenode = self:__retrieve_filenode__()
+      if filenode == nil then
+        return
+      end
+
+      local filepath = filenode.data.filepath
+      local cwd = dot.path.cwd()
+      local relative = dot.path.relative(cwd, filepath, "/")
+      ark.nvim.copy(relative)
+      ark.reporter.info({
+        from = fullname,
+        message = "Copied relative filepath: " .. relative,
+      })
+    end,
     goto_lnum_lastchild = function()
       local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
       if nodeuuid ~= nil then
@@ -1180,6 +1208,18 @@ function M.new(props)
     },
     {
       modes = { "n", "x" },
+      key = "oP",
+      desc = "filetree: copy filepath (absolute)",
+      callback = actions.copy_node_filepath_absolute,
+    },
+    {
+      modes = { "n", "x" },
+      key = "op",
+      desc = "filetree: copy filepath (relative)",
+      callback = actions.copy_node_filepath_relative,
+    },
+    {
+      modes = { "n", "x" },
       key = "od",
       desc = "filetree: remove node",
       callback = actions.remove_node,
@@ -1317,6 +1357,18 @@ function M.new(props)
       key = "oc",
       desc = "filetree: copy filepath",
       callback = actions.copy_node_filepath,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "oP",
+      desc = "filetree: copy filepath (absolute)",
+      callback = actions.copy_node_filepath_absolute,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "op",
+      desc = "filetree: copy filepath (relative)",
+      callback = actions.copy_node_filepath_relative,
     },
     {
       modes = { "i", "n", "x" },

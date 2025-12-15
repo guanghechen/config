@@ -81,6 +81,34 @@ return {
           },
         })
       end,
+      copy_filepath_absolute = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id()
+        ark.nvim.copy(filepath)
+        ark.reporter.info({
+          from = __module_name__,
+          message = "Copied absolute filepath: " .. filepath,
+        })
+      end,
+      copy_filepath_relative = function(state)
+        local node = state.tree:get_node()
+        if node.type ~= "file" and node.type ~= "directory" then
+          return
+        end
+
+        local filepath = node:get_id()
+        local cwd = dot.path.cwd()
+        local relative = dot.path.relative(cwd, filepath, "/")
+        ark.nvim.copy(relative)
+        ark.reporter.info({
+          from = __module_name__,
+          message = "Copied relative filepath: " .. relative,
+        })
+      end,
       goto_next_source = function(state)
         local source = vim.b[dot.var.N_NEO_TREE_SOURCE] ---@type string|nil
         if type(source) ~= "string" then
@@ -412,6 +440,8 @@ return {
         ["]]"] = "goto_next_source",
         ["oa"] = "add_locations_to_ai",
         ["oc"] = "copy_filepath",
+        ["oP"] = "copy_filepath_absolute",
+        ["op"] = "copy_filepath_relative",
         ["oe"] = "open_ghc_file_explorer",
         ["of"] = "open_ghc_file_finder",
         ["oi"] = "show_file_info",
