@@ -1,5 +1,4 @@
 require("dot.autocmd")
-require("integration.neovim.autocmd")
 pcall(require, "integration.local.autocmd")
 
 dot.setup_context()
@@ -40,6 +39,7 @@ vim.schedule(function()
   require("fml.dressing.illumniate")
   require("fml.dressing.im")
   require("fml.dressing.input")
+  require("fml.dressing.lsp")
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
