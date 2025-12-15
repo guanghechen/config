@@ -10,6 +10,9 @@ pcall(require, "integration.local.keymap")
 
 require("fml.dressing.notifier")
 require("fml.dressing.ui_attach")
+require("fml.dressing.statusline")
+require("fml.dressing.tabline")
+require("fml.dressing.winline")
 
 require("fml.command")
 require("ghc.plugin")
@@ -25,9 +28,6 @@ if dot.path.is_git_repo() then
 end
 
 vim.schedule(function()
-  require("fml.dressing.nvimbar.statusline")
-  require("fml.dressing.nvimbar.tabline")
-  require("fml.dressing.nvimbar.winline")
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
   require("fml.dressing.scroll")
