@@ -1,16 +1,16 @@
----@class dot.ux.fn.select_encoding.IItem : dot.ux.picker.composer.list.IItem
----@field public data                   dot.ux.fn.select_encoding.IItemData
+---@class dot.fn.select_encoding.IItem : dot.ux.picker.composer.list.IItem
+---@field public data                   dot.fn.select_encoding.IItemData
 
----@class dot.ux.fn.select_encoding.IItemData
+---@class dot.fn.select_encoding.IItemData
 ---@field public title                  string
 ---@field public encoding               string
 
----@class dot.ux.fn.select_encoding.IParams
+---@class dot.fn.select_encoding.IParams
 ---@field public present                string|nil
 ---@field public title                  string|nil
 ---@field public on_select              fun(encoding: string|nil): nil
 
----@class dot.ux.fn.select_encoding.fileencodings
+---@class dot.fn.select_encoding.fileencodings
 local fileencodings = {
   { title = "UTF-8", encoding = "utf8" },
   { title = "UTF-16 LE", encoding = "utf16le" },
@@ -64,13 +64,13 @@ local fileencodings = {
 ---@param present                       string|nil
 ---@return dot.ux.picker.composer.list.IResetData
 local function fetch_data(present)
-  local items = {} ---@type dot.ux.fn.select_encoding.IItem[]
+  local items = {} ---@type dot.fn.select_encoding.IItem[]
   local uuid_present = nil ---@type string|nil
 
   for _, fileencoding in ipairs(fileencodings) do
     local text = string.format("%s     %s", ark.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
 
-    ---@type dot.ux.fn.select_encoding.IItem
+    ---@type dot.fn.select_encoding.IItem
     local item = {
       uuid = fileencoding.encoding,
       text = text,
@@ -95,7 +95,7 @@ end
 ---@type dot.ux.picker.ListComposer|nil
 local picker = nil
 
----@param params                        dot.ux.fn.select_encoding.IParams
+---@param params                        dot.fn.select_encoding.IParams
 ---@return dot.ux.picker.ListComposer
 local function select_encoding(params)
   local present = params.present ---@type string|nil
@@ -131,7 +131,7 @@ local function select_encoding(params)
       if item == nil then
         on_select(nil)
       else
-        ---@cast item dot.ux.fn.select_encoding.IItem
+        ---@cast item dot.fn.select_encoding.IItem
         on_select(item.data.encoding)
       end
       composer:close()

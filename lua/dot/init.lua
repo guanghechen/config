@@ -6,6 +6,7 @@ local __fn__mods = {
   pick_win = "dot.fn.pick_win",
   rename = "dot.fn.rename",
   select_copy_filepath = "dot.fn.select_copy_filepath",
+  select_encoding = "dot.fn.select_encoding",
 }
 
 ---@class dot.fn
@@ -16,6 +17,7 @@ local __fn__mods = {
 ---@field public pick_win               dot.fn.pick_win
 ---@field public rename                 dot.fn.rename
 ---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
+---@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): dot.ux.picker.ListComposer
 local fn = setmetatable({
   __mods = __fn__mods,
 }, {

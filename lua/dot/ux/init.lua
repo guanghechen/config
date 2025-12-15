@@ -1,6 +1,5 @@
 ---@class dot.ux.__mods
 local __mods = {
-  fn = "dot.ux.fn",
   nvimbar = "dot.ux.nvimbar",
   picker = "dot.ux.picker",
   retriever = "dot.ux.retriever",
@@ -16,7 +15,6 @@ local __mods = {
 
 ---@class dot.ux
 ---@field public __mods                 dot.ux.__mods
----@field public fn                     dot.ux.fn
 ---@field public nvimbar                dot.ux.nvimbar
 ---@field public picker                 dot.ux.picker
 ---@field public retriever              dot.ux.retriever
