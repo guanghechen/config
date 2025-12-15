@@ -530,7 +530,7 @@ function M.new(props)
 
       ---@return nil
       local function handle()
-        dot.ux.fn.select_copy_filepath({
+        dot.fn.select_copy_filepath({
           filepath = filenode.data.filepath,
           winopts = {
             relative = "cursor",

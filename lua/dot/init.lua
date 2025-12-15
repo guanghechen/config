@@ -5,6 +5,7 @@ local __fn__mods = {
   paste_image_as_base64 = "dot.fn.paste_image_as_base64",
   pick_win = "dot.fn.pick_win",
   rename = "dot.fn.rename",
+  select_copy_filepath = "dot.fn.select_copy_filepath",
 }
 
 ---@class dot.fn
@@ -14,6 +15,7 @@ local __fn__mods = {
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               dot.fn.pick_win
 ---@field public rename                 dot.fn.rename
+---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
 local fn = setmetatable({
   __mods = __fn__mods,
 }, {

@@ -1,11 +1,11 @@
-local __module_name__ = "dot.ux.fn.select_copy_filepath" ---@type string
+local __module_name__ = "dot.fn.select_copy_filepath" ---@type string
 
----@class dot.ux.fn.select_copy_filepath.IParams
+---@class dot.fn.select_copy_filepath.IParams
 ---@field public filepath               string
 ---@field public winopts                vim.api.keyset.win_config|nil
 ---@field public on_completed           ?fun(): nil
 
----@param params                        dot.ux.fn.select_copy_filepath.IParams
+---@param params                        dot.fn.select_copy_filepath.IParams
 ---@return integer
 local function select_copy_filepath(params)
   local filepath = params.filepath ---@type string

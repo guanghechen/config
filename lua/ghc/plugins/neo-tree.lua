@@ -72,7 +72,7 @@ return {
         end
 
         local filepath = node:get_id()
-        dot.ux.fn.select_copy_filepath({
+        dot.fn.select_copy_filepath({
           filepath = filepath,
           winopts = {
             relative = "cursor",
