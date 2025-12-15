@@ -35,7 +35,6 @@ vim.schedule(function()
   require("fml.dressing.winsep")
 
   require("fml.dressing.dim")
-  require("fml.dressing.illuminate")
   require("fml.dressing.im")
   require("fml.dressing.input")
   require("fml.dressing.lsp")

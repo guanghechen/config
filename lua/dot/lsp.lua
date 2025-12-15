@@ -2,7 +2,6 @@ local __module_name__ = "dot.lsp"
 
 local Methods = vim.lsp.protocol.Methods
 local augroup_codelens = ark.nvim.augroup("dot.lsp.codelens") ---@type integer
-local augroup_illuminate = ark.nvim.augroup("dot.lsp.illuminate") ---@type integer
 
 ---@class dot.t.ISymbolPos
 ---@field public line                   integer
@@ -391,20 +390,7 @@ function M.on_attach(client, bufnr)
 
   -- illuminate
   if support_documentHighlight == 1 then
-    local enabled = dot.context.flight.dressing_illuminate:snapshot() ---@type boolean
-    if enabled then
-      vim.api.nvim_create_autocmd({ "CursorHold" }, {
-        group = augroup_illuminate,
-        buffer = bufnr,
-        callback = vim.lsp.buf.document_highlight,
-      })
-
-      vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-        group = augroup_illuminate,
-        buffer = bufnr,
-        callback = vim.lsp.buf.clear_references,
-      })
-    end
+    require("dot.module.illuminate").dressing(bufnr)
   end
 
   ---@type ark.t.IKeymap[]
@@ -583,11 +569,7 @@ function M.on_detach(client, bufnr)
     support_documentHighlight = support_documentHighlight - 1
 
     if support_documentHighlight == 0 then
-      vim.lsp.buf.clear_references()
-      vim.api.nvim_clear_autocmds({
-        group = augroup_illuminate,
-        buffer = bufnr,
-      })
+      require("dot.module.illuminate").undressing(bufnr)
     end
   end
   if support_documentSymbol > 0 and client:supports_method(Methods.textDocument_documentSymbol) then
