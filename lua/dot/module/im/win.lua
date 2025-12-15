@@ -1,6 +1,6 @@
-local __module_name__ = "fml.dressing.im.win" ---@type string
+local __module_name__ = "dot.module.im.win" ---@type string
 
----@class fml.dressing.im.win : fml.dressing.im
+---@class dot.module.im.win : dot.module.im
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")
@@ -11,7 +11,7 @@ local script_path = dot.path.join(
     or "bin/im-select/win/x64/im-select.exe"
 )
 
----@return fml.dressing.im.InputMethod|nil
+---@return dot.module.im.InputMethod|nil
 function M.get_input_method()
   if not vim.fn.executable(script_path) then
     ark.reporter.error({
@@ -56,7 +56,7 @@ function M.get_input_method()
   })
 end
 
----@param input_method                  fml.dressing.im.InputMethod
+---@param input_method                  dot.module.im.InputMethod
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then

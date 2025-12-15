@@ -1,17 +1,12 @@
-local __module_name__ = "fml.dressing.im.wsl" ---@type string
+local __module_name__ = "dot.module.im.mac" ---@type string
 
----@class fml.dressing.im.wsl : fml.dressing.im
+---@class dot.module.im.mac : dot.module.im
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")
-local script_path = dot.path.join(
-  app_home,
-  (ark.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
-    or (ark.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
-    or "bin/im-select/win/x64/im-select.exe"
-)
+local script_path = dot.path.join(app_home, "bin/im-select/osx/im-select")
 
----@return fml.dressing.im.InputMethod|nil
+---@return dot.module.im.InputMethod|nil
 function M.get_input_method()
   if not vim.fn.executable(script_path) then
     ark.reporter.error({
@@ -42,9 +37,9 @@ function M.get_input_method()
   end
 
   input_method = input_method:match("^%s*(.-)%s*$")
-  if input_method == "1033" then
+  if input_method == "com.apple.keylayout.ABC" then
     return "English"
-  elseif input_method == "2052" then
+  elseif input_method == "com.apple.inputmethod.SCIM.ITABC" then
     return "Chinese"
   end
 
@@ -56,7 +51,7 @@ function M.get_input_method()
   })
 end
 
----@param input_method                  fml.dressing.im.InputMethod
+---@param input_method                  dot.module.im.InputMethod
 ---@return nil
 function M.set_input_method(input_method)
   if not vim.fn.executable(script_path) then
@@ -71,9 +66,9 @@ function M.set_input_method(input_method)
 
   local arg = "" ---@type string
   if input_method == "English" then
-    arg = "1033"
+    arg = "com.apple.keylayout.ABC"
   elseif input_method == "Chinese" then
-    arg = "2052"
+    arg = "com.apple.inputmethod.SCIM.ITABC"
   else
     ark.reporter.error({
       from = __module_name__,
