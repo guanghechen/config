@@ -225,28 +225,6 @@ local filetypes = {
     [M.UX_CMDLINE] = true,
     [M.UX_POPUPMENU] = true,
   },
-  quitable_with_q = {
-    [M.CHECKHEALTH] = true,
-    [M.DAP_FLOAT] = true,
-    [M.DAP_UI_HOVER] = true,
-    [M.GITCOMMIT] = true,
-    [M.HELP] = true,
-    [M.IMAGE_VIEWER] = true,
-    [M.LAZY] = true,
-    [M.MAN] = true,
-    [M.MASON] = true,
-    [M.NEOTREE] = true,
-    [M.NEOTREE_POPUP] = true,
-    [M.NOTIFY] = true,
-    [M.LSPINFO] = true,
-    [M.PLENARY_TEST_POPUP] = true,
-    [M.QUICKFIX] = true,
-    [M.STARTUPTIME] = true,
-    [M.TEMP_VIEWER] = true,
-    [M.UX_INPUT] = true,
-    [M.UX_MESSAGE_HISTORY] = true,
-    [M.WINPICKER_MASK] = true,
-  },
 }
 
 local extnames = {
@@ -316,11 +294,6 @@ end
 ---@return string[]
 function M.get_no_flash_filetypes()
   return vim.tbl_keys(filetypes.no_flash)
-end
-
----@return string[]
-function M.get_quitable_with_q_filetypes()
-  return vim.tbl_keys(filetypes.quitable_with_q)
 end
 
 ---@param filetype                      string|nil

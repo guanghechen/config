@@ -13,6 +13,7 @@ function M.setup()
 
   require("bot.option")
   require("bot.keymap")
+  require("bot.autocmd")
 end
 
 ---@return nil
