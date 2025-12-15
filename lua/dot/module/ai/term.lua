@@ -1,8 +1,8 @@
-local __module_name__ = "dot.ux.widget.ai.term" ---@type string
+local __module_name__ = "dot.module.ai.term" ---@type string
 
----@class dot.ux.widget.ai.term.IMeta
+---@class dot.module.ai.term.IMeta
 ---@field public uuid                   string
----@field public agent                  dot.ux.widget.ai.AgentName
+---@field public agent                  dot.module.ai.AgentName
 ---@field public bufnr                  integer
 ---@field public cmd                    string[]|string
 ---@field public cwd                    string
@@ -11,11 +11,11 @@ local __module_name__ = "dot.ux.widget.ai.term" ---@type string
 
 local DEFAULT_WIDTH = 100
 
-local _metamap = {} ---@type table<string, dot.ux.widget.ai.term.IMeta>
+local _metamap = {} ---@type table<string, dot.module.ai.term.IMeta>
 local _winnr = nil ---@type integer|nil
 local _current_uuid = nil ---@type string|nil
 
----@class dot.ux.widget.ai.term
+---@class dot.module.ai.term
 local M = {}
 
 ---@return boolean
@@ -34,12 +34,12 @@ function M.get_current_uuid()
 end
 
 ---@param uuid                          string
----@return dot.ux.widget.ai.term.IMeta|nil
+---@return dot.module.ai.term.IMeta|nil
 function M.get(uuid)
   return _metamap[uuid]
 end
 
----@param termmeta                      dot.ux.widget.ai.term.IMeta
+---@param termmeta                      dot.module.ai.term.IMeta
 ---@return integer
 local function create_buf(termmeta)
   local bufnr = vim.api.nvim_create_buf(false, true)
@@ -110,7 +110,7 @@ local function create_buf(termmeta)
   return bufnr
 end
 
----@param termmeta                      dot.ux.widget.ai.term.IMeta
+---@param termmeta                      dot.module.ai.term.IMeta
 ---@return integer
 local function create_win(termmeta)
   local winnr = _winnr
@@ -150,7 +150,7 @@ local function create_win(termmeta)
   return winnr
 end
 
----@param termmeta                      dot.ux.widget.ai.term.IMeta
+---@param termmeta                      dot.module.ai.term.IMeta
 ---@return nil
 local function start_job(termmeta)
   if termmeta.jobid ~= nil then
@@ -183,15 +183,15 @@ local function start_job(termmeta)
   termmeta.jobid = channelid
 end
 
----@class dot.ux.widget.ai.term.IOpenParams
+---@class dot.module.ai.term.IOpenParams
 ---@field public uuid                   string
----@field public agent                  dot.ux.widget.ai.AgentName
+---@field public agent                  dot.module.ai.AgentName
 ---@field public cmd                    string[]|string
 ---@field public cwd                    string
 ---@field public env                    ?table<string, string|false>
 
----@param params                        dot.ux.widget.ai.term.IOpenParams
----@return dot.ux.widget.ai.term.IMeta
+---@param params                        dot.module.ai.term.IOpenParams
+---@return dot.module.ai.term.IMeta
 function M.open(params)
   local termmeta = params.uuid ~= "" and _metamap[params.uuid] or nil
 
@@ -225,10 +225,10 @@ function M.hide()
   dot.win.close(winnr)
 end
 
----@param termmeta                      dot.ux.widget.ai.term.IMeta
+---@param termmeta                      dot.module.ai.term.IMeta
 ---@return nil
 function M.on_closed(termmeta)
-  local state = require("dot.ux.widget.ai.state")
+  local state = require("dot.module.ai.state")
 
   if termmeta.jobid ~= nil then
     vim.fn.jobstop(termmeta.jobid)

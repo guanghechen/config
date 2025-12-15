@@ -1,11 +1,11 @@
-local __module_name__ = "dot.ux.widget.ai.state" ---@type string
+local __module_name__ = "dot.module.ai.state" ---@type string
 
-local config = require("dot.ux.widget.ai.config")
+local config = require("dot.module.ai.config")
 
----@class dot.ux.widget.ai.state
+---@class dot.module.ai.state
 local M = {}
 
----@type dot.ux.widget.ai.IAttachedSource[]
+---@type dot.module.ai.IAttachedSource[]
 local _attached_sources = {}
 
 ---@type ark.c.Observable
@@ -15,7 +15,7 @@ ark.fn.observe({ M.o_attached }, function()
   dot.state.status.dirtier_statusline:mark_dirty()
 end, true)
 
----@return dot.ux.widget.ai.IAttachedSource[]
+---@return dot.module.ai.IAttachedSource[]
 function M.get_attached()
   return vim.list_slice(_attached_sources)
 end
@@ -25,7 +25,7 @@ function M.get_attached_count()
   return #_attached_sources
 end
 
----@param source                        dot.ux.widget.ai.ISource
+---@param source                        dot.module.ai.ISource
 ---@return boolean
 function M.is_attached(source)
   for _, attached in ipairs(_attached_sources) do
@@ -36,7 +36,7 @@ function M.is_attached(source)
   return false
 end
 
----@param source                        dot.ux.widget.ai.ISource
+---@param source                        dot.module.ai.ISource
 ---@return nil
 function M.attach(source)
   if M.is_attached(source) then
@@ -58,8 +58,8 @@ end
 ---@param close_terminal                ?boolean
 ---@return nil
 function M.detach(source_id, close_terminal)
-  local new_sources = {} ---@type dot.ux.widget.ai.IAttachedSource[]
-  local detached_source ---@type dot.ux.widget.ai.IAttachedSource|nil
+  local new_sources = {} ---@type dot.module.ai.IAttachedSource[]
+  local detached_source ---@type dot.module.ai.IAttachedSource|nil
 
   for _, attached in ipairs(_attached_sources) do
     if attached.id ~= source_id then
@@ -81,7 +81,7 @@ function M.detach(source_id, close_terminal)
     })
 
     if close_terminal ~= false and detached_source.type == "tmux" and detached_source.tmux_pane then
-      local term = require("dot.ux.widget.ai.term")
+      local term = require("dot.module.ai.term")
       local term_uuid = string.format("ai:%s:%s", detached_source.agent, detached_source.tmux_pane.pane_id)
       local termmeta = term.get(term_uuid)
       if termmeta then

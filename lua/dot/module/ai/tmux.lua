@@ -1,9 +1,9 @@
-local __module_name__ = "dot.ux.widget.ai.tmux" ---@type string
+local __module_name__ = "dot.module.ai.tmux" ---@type string
 
-local config = require("dot.ux.widget.ai.config")
-local proc = require("dot.ux.widget.ai.proc")
+local config = require("dot.module.ai.config")
+local proc = require("dot.module.ai.proc")
 
----@class dot.ux.widget.ai.tmux
+---@class dot.module.ai.tmux
 local M = {}
 
 local PANE_FORMAT = table.concat({
@@ -29,7 +29,7 @@ local function exec(cmd, opts)
 end
 
 ---@param line                          string
----@return dot.ux.widget.ai.ITmuxPaneInfo|nil
+---@return dot.module.ai.ITmuxPaneInfo|nil
 local function parse_pane_format(line)
   local session_id, session_name, window_id, window_name, pane_id, pane_pid, pane_cwd =
     line:match("^(%$%d+):(.-):(@%d+):(.-):(%%.+):(%d+):(.*)")
@@ -49,7 +49,7 @@ local function parse_pane_format(line)
   }
 end
 
----@param tool_config                   dot.ux.widget.ai.IToolConfig
+---@param tool_config                   dot.module.ai.IToolConfig
 ---@param cwd                           string
 ---@return string
 local function build_shell_command(tool_config, cwd)
@@ -83,11 +83,11 @@ function M.is_inside_tmux()
   return vim.env.TMUX ~= nil
 end
 
----@class dot.ux.widget.ai.ITmuxCurrentInfo
+---@class dot.module.ai.ITmuxCurrentInfo
 ---@field public session_name           string
 ---@field public window_name            string
 
----@return dot.ux.widget.ai.ITmuxCurrentInfo|nil
+---@return dot.module.ai.ITmuxCurrentInfo|nil
 function M.get_current_info()
   if not M.is_inside_tmux() then
     return nil
@@ -109,7 +109,7 @@ end
 --- Naming conventions
 ----------------------------------------------------------------------------------------------------
 
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
 ---@return string
 function M.get_session_name(agent, cwd)
@@ -133,14 +133,14 @@ end
 --- Pane operations
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.widget.ai.ITmuxPaneInfo[]
+---@return dot.module.ai.ITmuxPaneInfo[]
 function M.list_panes()
   local lines = exec({ "tmux", "list-panes", "-a", "-F", PANE_FORMAT })
   if not lines then
     return {}
   end
 
-  local panes = {} ---@type dot.ux.widget.ai.ITmuxPaneInfo[]
+  local panes = {} ---@type dot.module.ai.ITmuxPaneInfo[]
   for _, line in ipairs(lines) do
     local pane = parse_pane_format(line)
     if pane then
@@ -151,7 +151,7 @@ function M.list_panes()
 end
 
 ---@param pane_id                       string
----@return dot.ux.widget.ai.ITmuxPaneInfo|nil
+---@return dot.module.ai.ITmuxPaneInfo|nil
 function M.get_pane(pane_id)
   for _, pane in ipairs(M.list_panes()) do
     if pane.pane_id == pane_id then
@@ -165,7 +165,7 @@ end
 --- Agent detection
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.widget.ai.ISource[]
+---@return dot.module.ai.ISource[]
 function M.find_running_agents()
   if not M.is_available() then
     return {}
@@ -173,7 +173,7 @@ function M.find_running_agents()
 
   local panes = M.list_panes()
   local procs = proc.Procs.new()
-  local sources = {} ---@type dot.ux.widget.ai.ISource[]
+  local sources = {} ---@type dot.module.ai.ISource[]
 
   for _, pane in ipairs(panes) do
     local agent = proc.detect_agent(procs, pane.pane_pid)
@@ -192,9 +192,9 @@ function M.find_running_agents()
   return sources
 end
 
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
----@return dot.ux.widget.ai.ITmuxPaneInfo|nil
+---@return dot.module.ai.ITmuxPaneInfo|nil
 function M.find_existing_agent_pane(agent, cwd)
   local session_name = M.get_session_name(agent, cwd)
   local procs = proc.Procs.new()
@@ -214,9 +214,9 @@ end
 --- Agent pane creation
 ----------------------------------------------------------------------------------------------------
 
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
----@return dot.ux.widget.ai.ITmuxPaneInfo|nil
+---@return dot.module.ai.ITmuxPaneInfo|nil
 function M.create_agent_pane(agent, cwd)
   local tool_config = config.tools[agent]
   if not tool_config then

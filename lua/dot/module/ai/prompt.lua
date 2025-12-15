@@ -1,4 +1,4 @@
----@class dot.ux.widget.ai.prompt.ICtx
+---@class dot.module.ai.prompt.ICtx
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
@@ -6,7 +6,7 @@
 ---@field public filetype               string|nil
 ---@field public selection_range        ?{ start_lnum: integer, start_col: integer, end_lnum: integer, end_col: integer }
 
----@class dot.ux.widget.ai.prompt
+---@class dot.module.ai.prompt
 local M = {}
 
 local SEVERITY_NAMES = { "ERROR", "WARN", "INFO", "HINT" }
@@ -21,7 +21,7 @@ local SEVERITY_HL = {
 --- Text utilities
 ----------------------------------------------------------------------------------------------------
 
----@param lines                         dot.ux.widget.ai.IText
+---@param lines                         dot.module.ai.IText
 ---@return string
 local function text_to_string(lines)
   local result = {} ---@type string[]
@@ -37,9 +37,9 @@ end
 
 ---@param lines                         string[]
 ---@param hlname                        ?string
----@return dot.ux.widget.ai.IText
+---@return dot.module.ai.IText
 local function plain_lines(lines, hlname)
-  local result = {} ---@type dot.ux.widget.ai.IText
+  local result = {} ---@type dot.module.ai.IText
   for _, line in ipairs(lines) do
     result[#result + 1] = { { line, hlname } }
   end
@@ -49,7 +49,7 @@ end
 ---@param bufnr                         integer
 ---@param start_row                     integer 0-indexed
 ---@param end_row                       integer 0-indexed, exclusive
----@return dot.ux.widget.ai.IText
+---@return dot.module.ai.IText
 local function get_highlighted_lines(bufnr, start_row, end_row)
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, false)
   local ft = vim.bo[bufnr].filetype
@@ -92,11 +92,11 @@ local function get_highlighted_lines(bufnr, start_row, end_row)
     end)
   end)
 
-  local result = {} ---@type dot.ux.widget.ai.IText
+  local result = {} ---@type dot.module.ai.IText
   for i, line in ipairs(lines) do
     local row = start_row + i - 1
     local row_marks = extmarks[row] or {}
-    local text_line = {} ---@type dot.ux.widget.ai.ITextLine
+    local text_line = {} ---@type dot.module.ai.ITextLine
     local from = 0
     local hl_group = nil ---@type string|nil
 
@@ -119,7 +119,7 @@ end
 --- Context helpers
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.widget.ai.prompt.ICtx
+---@return dot.module.ai.prompt.ICtx
 function M.get_ctx()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_win_get_buf(winnr)
@@ -148,8 +148,8 @@ function M.get_ctx()
   }
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.ITextLine|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.ITextLine|nil, string|nil
 local function get_selection_line(ctx)
   local range = ctx.selection_range
   if not range or not ctx.filepath then
@@ -164,7 +164,7 @@ local function get_selection_line(ctx)
     range.end_lnum,
     range.end_col
   )
-  ---@type dot.ux.widget.ai.ITextLine
+  ---@type dot.module.ai.ITextLine
   local line = {
     { "@", "f_us_ai_loc_delim" },
     { relpath, "f_us_ai_loc_file" },
@@ -184,15 +184,15 @@ local function get_selection_line(ctx)
   return line, text
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.ITextLine|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.ITextLine|nil, string|nil
 local function get_file_line(ctx)
   if not ctx.filepath then
     return nil, nil
   end
   local relpath = dot.path.relative(ctx.cwd, ctx.filepath)
   local text = string.format("@%s", relpath)
-  ---@type dot.ux.widget.ai.ITextLine
+  ---@type dot.module.ai.ITextLine
   local line = {
     { "@", "f_us_ai_loc_delim" },
     { relpath, "f_us_ai_loc_file" },
@@ -200,8 +200,8 @@ local function get_file_line(ctx)
   return line, text
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.ITextLine|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.ITextLine|nil, string|nil
 local function get_target_line(ctx)
   local line, text = get_selection_line(ctx)
   if line then
@@ -210,8 +210,8 @@ local function get_target_line(ctx)
   return get_file_line(ctx)
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.IText|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.IText|nil, string|nil
 local function get_selection_content(ctx)
   local range = ctx.selection_range
   if not range then
@@ -222,8 +222,8 @@ local function get_selection_content(ctx)
   return lines, text
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.IText|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.IText|nil, string|nil
 local function get_diagnostics_lines(ctx)
   if not ctx.bufnr or not vim.api.nvim_buf_is_valid(ctx.bufnr) then
     return nil, nil
@@ -232,7 +232,7 @@ local function get_diagnostics_lines(ctx)
   if #diagnostics == 0 then
     return nil, nil
   end
-  local lines = {} ---@type dot.ux.widget.ai.IText
+  local lines = {} ---@type dot.module.ai.IText
   local text_lines = {} ---@type string[]
   for _, d in ipairs(diagnostics) do
     local severity_name = SEVERITY_NAMES[d.severity] or "UNKNOWN"
@@ -251,10 +251,10 @@ local function get_diagnostics_lines(ctx)
   return lines, table.concat(text_lines, "\n")
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.IText|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.IText|nil, string|nil
 local function get_diagnostics_all_lines(ctx)
-  local lines = {} ---@type dot.ux.widget.ai.IText
+  local lines = {} ---@type dot.module.ai.IText
   local text_lines = {} ---@type string[]
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
@@ -282,15 +282,15 @@ local function get_diagnostics_all_lines(ctx)
   return #lines > 0 and lines or nil, #text_lines > 0 and table.concat(text_lines, "\n") or nil
 end
 
----@param ctx                           dot.ux.widget.ai.prompt.ICtx
----@return dot.ux.widget.ai.IText|nil, string|nil
+---@param ctx                           dot.module.ai.prompt.ICtx
+---@return dot.module.ai.IText|nil, string|nil
 local function get_git_changes_lines(ctx)
   local r = vim.system({ "git", "diff", "--stat" }, { cwd = ctx.cwd, text = true }):wait()
   if r.code ~= 0 or not r.stdout or r.stdout == "" then
     return nil, nil
   end
   local raw_lines = vim.split(r.stdout, "\n", { plain = true, trimempty = true })
-  local lines = {} ---@type dot.ux.widget.ai.IText
+  local lines = {} ---@type dot.module.ai.IText
   for _, line in ipairs(raw_lines) do
     local file, stats = line:match("^%s*(.-)%s*|(.+)$")
     if file and stats then
@@ -314,7 +314,7 @@ end
 --- Prompts
 ----------------------------------------------------------------------------------------------------
 
----@type dot.ux.widget.ai.IPrompt[]
+---@type dot.module.ai.IPrompt[]
 M.list = {
   {
     name = "diagnostics",
@@ -325,7 +325,7 @@ M.list = {
       if not file_line or not diag_lines then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Fix the diagnostics in ", "f_us_ai_prompt_header" } }, file_line)
       table.insert(lines[#lines], { ":", "f_us_ai_prompt_header" })
       vim.list_extend(lines, diag_lines)
@@ -340,7 +340,7 @@ M.list = {
       if not diag_lines then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = { { "Fix these diagnostics:", "f_us_ai_prompt_header" } }
       vim.list_extend(lines, diag_lines)
       return { text = "Fix these diagnostics:\n" .. diag_text, lines = lines }
@@ -354,7 +354,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "About ", "f_us_ai_prompt_header" } }, target_line)
       table.insert(lines[#lines], { ":", "f_us_ai_prompt_header" })
       local content_lines = get_selection_content(ctx)
@@ -372,7 +372,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Explain this code: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
@@ -389,7 +389,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Fix this code: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
@@ -406,7 +406,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Optimize this code: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
@@ -423,7 +423,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Refactor this code: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
@@ -440,7 +440,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Review this code: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
@@ -457,7 +457,7 @@ M.list = {
       if not git_lines then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = { { "Review my changes:", "f_us_ai_prompt_header" } }
       vim.list_extend(lines, git_lines)
       return { text = "Review my changes:\n" .. git_text, lines = lines }
@@ -471,7 +471,7 @@ M.list = {
       if not target_line then
         return nil
       end
-      local lines = {} ---@type dot.ux.widget.ai.IText
+      local lines = {} ---@type dot.module.ai.IText
       lines[#lines + 1] = vim.list_extend({ { "Write tests for: ", "f_us_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then

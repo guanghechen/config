@@ -78,26 +78,26 @@ end
 
 ---@return nil
 function M.attach_agent()
-  dot.ux.widget.ai.action.show_attach_picker()
+  require("dot.module.ai.action").show_attach_picker()
 end
 
 ---@return nil
 function M.detach_agent()
-  dot.ux.widget.ai.action.show_detach_picker()
+  require("dot.module.ai.action").show_detach_picker()
 end
 
 ---@return nil
 function M.submit_buffer()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local text = dot.buf.retrieve_split_block(winnr) ---@type string
-  dot.ux.widget.ai.action.send_to_attached(text, true)
+  require("dot.module.ai.action").send_to_attached(text, true)
 end
 
 ---@return nil
 function M.submit_selection()
   local text = dot.buf.retrieve_selected_text() or ""
   if #text > 0 then
-    dot.ux.widget.ai.action.send_to_attached(text, true)
+    require("dot.module.ai.action").send_to_attached(text, true)
   end
 end
 
@@ -106,14 +106,14 @@ function M.send_buffer()
   local bufnr = vim.api.nvim_get_current_buf()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local text = table.concat(lines, "\n")
-  dot.ux.widget.ai.action.send_to_attached(text, false)
+  require("dot.module.ai.action").send_to_attached(text, false)
 end
 
 ---@return nil
 function M.send_selection()
   local text = dot.buf.retrieve_selected_text() or ""
   if #text > 0 then
-    dot.ux.widget.ai.action.send_to_attached(text, false)
+    require("dot.module.ai.action").send_to_attached(text, false)
   end
 end
 
@@ -122,7 +122,7 @@ function M.send_this()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local text = table.concat(lines, "\n")
-  dot.ux.widget.ai.action.send_to_attached(text, false)
+  require("dot.module.ai.action").send_to_attached(text, false)
 end
 
 ---@return nil
@@ -139,13 +139,13 @@ function M.send_file()
 
   local location, _ = dot.uri.file_location({ filepath = filepath })
   if location then
-    dot.ux.widget.ai.action.send_to_attached(location, false)
+    require("dot.module.ai.action").send_to_attached(location, false)
   end
 end
 
 ---@return nil
 function M.select_prompt()
-  dot.ux.widget.ai.action.show_prompt_picker()
+  require("dot.module.ai.action").show_prompt_picker()
 end
 
 return M

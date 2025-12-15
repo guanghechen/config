@@ -1,12 +1,9 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
-local state = require("dot.ux.widget.ai.state")
-local config = require("dot.ux.widget.ai.config")
-
 ---@type string
 local fn_show_detach = dot.G.register_anonymous_fn(function()
-  dot.ux.widget.ai.action.show_detach_picker()
+  require("dot.module.ai.action").show_detach_picker()
 end)
 
 ---@class dot.module.nvimbar.component.ai
@@ -15,6 +12,9 @@ local M = {}
 ---@param position                      dot.module.nvimbar.PositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
+  local state = require("dot.module.ai.state")
+  local config = require("dot.module.ai.config")
+
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "ai:status",

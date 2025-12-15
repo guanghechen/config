@@ -1,12 +1,12 @@
-local __module_name__ = "dot.ux.widget.ai.picker" ---@type string
+local __module_name__ = "dot.module.ai.picker" ---@type string
 
-local config = require("dot.ux.widget.ai.config")
-local state = require("dot.ux.widget.ai.state")
+local config = require("dot.module.ai.config")
+local state = require("dot.module.ai.state")
 
----@class dot.ux.widget.ai.picker.IItem : dot.ux.picker.composer.list.IItem
+---@class dot.module.ai.picker.IItem : dot.ux.picker.composer.list.IItem
 ---@field public data                   any
 
----@class dot.ux.widget.ai.picker
+---@class dot.module.ai.picker
 local M = {}
 
 ----------------------------------------------------------------------------------------------------
@@ -50,15 +50,15 @@ end
 --- Item builders
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.widget.ai.picker.IAttachItemInfo
----@field public item                   dot.ux.widget.ai.ISelectItem
----@field public category               dot.ux.widget.ai.ItemCategory
+---@class dot.module.ai.picker.IAttachItemInfo
+---@field public item                   dot.module.ai.ISelectItem
+---@field public category               dot.module.ai.ItemCategory
 ---@field public agent_label            string
 ---@field public identifier             string|nil
 ---@field public pane_cwd               string|nil
 ---@field public uuid                   string
 
----@param info                          dot.ux.widget.ai.picker.IAttachItemInfo
+---@param info                          dot.module.ai.picker.IAttachItemInfo
 ---@return string
 local function get_item_hlname(info)
   local category = info.category
@@ -79,8 +79,8 @@ local function get_item_hlname(info)
   end
 end
 
----@param a                             dot.ux.widget.ai.picker.IAttachItemInfo
----@param b                             dot.ux.widget.ai.picker.IAttachItemInfo
+---@param a                             dot.module.ai.picker.IAttachItemInfo
+---@param b                             dot.module.ai.picker.IAttachItemInfo
 ---@return boolean
 local function compare_by_pane_id(a, b)
   local a_pane = a.item.source and a.item.source.tmux_pane
@@ -93,8 +93,8 @@ local function compare_by_pane_id(a, b)
   return false
 end
 
----@param a                             dot.ux.widget.ai.picker.IAttachItemInfo
----@param b                             dot.ux.widget.ai.picker.IAttachItemInfo
+---@param a                             dot.module.ai.picker.IAttachItemInfo
+---@param b                             dot.module.ai.picker.IAttachItemInfo
 ---@return boolean
 local function compare_by_session_window_pane(a, b)
   local a_pane = a.item.source and a.item.source.tmux_pane
@@ -113,18 +113,18 @@ local function compare_by_session_window_pane(a, b)
   return false
 end
 
----@param a                             dot.ux.widget.ai.picker.IAttachItemInfo
----@param b                             dot.ux.widget.ai.picker.IAttachItemInfo
+---@param a                             dot.module.ai.picker.IAttachItemInfo
+---@param b                             dot.module.ai.picker.IAttachItemInfo
 ---@return boolean
 local function compare_by_agent_name(a, b)
   return a.item.agent < b.item.agent
 end
 
----@param items                         dot.ux.widget.ai.ISelectItem[]
----@return dot.ux.widget.ai.picker.IItem[], integer
+---@param items                         dot.module.ai.ISelectItem[]
+---@return dot.module.ai.picker.IItem[], integer
 local function build_attach_picker_items(items)
-  local action = require("dot.ux.widget.ai.action")
-  local tmux = require("dot.ux.widget.ai.tmux")
+  local action = require("dot.module.ai.action")
+  local tmux = require("dot.module.ai.tmux")
   local current_info = tmux.get_current_info()
   local current_session = current_info and current_info.session_name or ""
   local current_window = current_info and current_info.window_name or ""
@@ -132,12 +132,12 @@ local function build_attach_picker_items(items)
   local width_agent = 0 ---@type integer
   local width_identifier = 0 ---@type integer
 
-  local attached_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
-  local same_window_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
-  local agent_session_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
-  local new_agent_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
-  local same_session_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
-  local other_tmux_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
+  local attached_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
+  local same_window_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
+  local agent_session_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
+  local new_agent_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
+  local same_session_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
+  local other_tmux_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
 
   for _, item in ipairs(items) do
     local agent_label = config.agent_labels[item.agent] or item.agent
@@ -151,7 +151,7 @@ local function build_attach_picker_items(items)
     end
 
     local pane = item.source and item.source.tmux_pane
-    local category ---@type dot.ux.widget.ai.ItemCategory
+    local category ---@type dot.module.ai.ItemCategory
 
     if attached then
       category = "attached"
@@ -176,7 +176,7 @@ local function build_attach_picker_items(items)
 
     local uuid = item.source and item.source.id or string.format("new:%s", item.agent)
 
-    ---@type dot.ux.widget.ai.picker.IAttachItemInfo
+    ---@type dot.module.ai.picker.IAttachItemInfo
     local info = {
       item = item,
       category = category,
@@ -208,7 +208,7 @@ local function build_attach_picker_items(items)
   table.sort(same_session_infos, compare_by_session_window_pane)
   table.sort(other_tmux_infos, compare_by_session_window_pane)
 
-  local sorted_infos = {} ---@type dot.ux.widget.ai.picker.IAttachItemInfo[]
+  local sorted_infos = {} ---@type dot.module.ai.picker.IAttachItemInfo[]
   vim.list_extend(sorted_infos, attached_infos)
   vim.list_extend(sorted_infos, same_window_infos)
   vim.list_extend(sorted_infos, agent_session_infos)
@@ -216,7 +216,7 @@ local function build_attach_picker_items(items)
   vim.list_extend(sorted_infos, same_session_infos)
   vim.list_extend(sorted_infos, other_tmux_infos)
 
-  local picker_items = {} ---@type dot.ux.widget.ai.picker.IItem[]
+  local picker_items = {} ---@type dot.module.ai.picker.IItem[]
 
   for _, info in ipairs(sorted_infos) do
     local item = info.item
@@ -243,21 +243,21 @@ local function build_attach_picker_items(items)
   return picker_items, 2 + width_agent + width_identifier + 50
 end
 
----@param attached                      dot.ux.widget.ai.IAttachedSource[]
----@return dot.ux.widget.ai.picker.IItem[], integer
+---@param attached                      dot.module.ai.IAttachedSource[]
+---@return dot.module.ai.picker.IItem[], integer
 local function build_attached_picker_items(attached)
-  local action = require("dot.ux.widget.ai.action")
+  local action = require("dot.module.ai.action")
 
   local width_agent = 0 ---@type integer
   local width_identifier = 0 ---@type integer
 
-  ---@class dot.ux.widget.ai.picker.IAttachedItemInfo
-  ---@field public source               dot.ux.widget.ai.IAttachedSource
+  ---@class dot.module.ai.picker.IAttachedItemInfo
+  ---@field public source               dot.module.ai.IAttachedSource
   ---@field public agent_label          string
   ---@field public identifier           string|nil
   ---@field public pane_cwd             string|nil
 
-  local item_infos = {} ---@type dot.ux.widget.ai.picker.IAttachedItemInfo[]
+  local item_infos = {} ---@type dot.module.ai.picker.IAttachedItemInfo[]
 
   for _, source in ipairs(attached) do
     local agent_label = config.agent_labels[source.agent] or source.agent
@@ -277,7 +277,7 @@ local function build_attached_picker_items(attached)
     }
   end
 
-  local picker_items = {} ---@type dot.ux.widget.ai.picker.IItem[]
+  local picker_items = {} ---@type dot.module.ai.picker.IItem[]
 
   for _, info in ipairs(item_infos) do
     local source = info.source
@@ -304,17 +304,17 @@ end
 --- Public picker functions
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.widget.ai.picker.IShowAttachParams
----@field public on_select              fun(item: dot.ux.widget.ai.ISelectItem): nil
----@field public on_toggle              ?fun(item: dot.ux.widget.ai.ISelectItem): nil
+---@class dot.module.ai.picker.IShowAttachParams
+---@field public on_select              fun(item: dot.module.ai.ISelectItem): nil
+---@field public on_toggle              ?fun(item: dot.module.ai.ISelectItem): nil
 
----@param params                        dot.ux.widget.ai.picker.IShowAttachParams
+---@param params                        dot.module.ai.picker.IShowAttachParams
 ---@return nil
 function M.show_attach(params)
   local on_select = params.on_select
   local on_toggle = params.on_toggle
 
-  local action = require("dot.ux.widget.ai.action")
+  local action = require("dot.module.ai.action")
   local items = action.collect_items()
   local picker_items, width = build_attach_picker_items(items)
   local winnr = vim.api.nvim_get_current_win()
@@ -332,7 +332,7 @@ function M.show_attach(params)
     local lnum = picker.result.lnum_current:snapshot()
     local item = picker:retrieve(lnum)
     if item then
-      ---@cast item dot.ux.widget.ai.picker.IItem
+      ---@cast item dot.module.ai.picker.IItem
       on_toggle(item.data)
       local new_items = action.collect_items()
       local new_picker_items = build_attach_picker_items(new_items)
@@ -364,7 +364,7 @@ function M.show_attach(params)
       restore_window(winnr)
       composer:close()
       if item ~= nil then
-        ---@cast item dot.ux.widget.ai.picker.IItem
+        ---@cast item dot.module.ai.picker.IItem
         on_select(item.data)
       end
     end,
@@ -377,8 +377,8 @@ function M.show_attach(params)
   picker:focus()
 end
 
----@param attached                      dot.ux.widget.ai.IAttachedSource[]
----@param on_select                     fun(item: dot.ux.widget.ai.IAttachedSource): nil
+---@param attached                      dot.module.ai.IAttachedSource[]
+---@param on_select                     fun(item: dot.module.ai.IAttachedSource): nil
 ---@return nil
 function M.show_detach(attached, on_select)
   local picker_items, width = build_attached_picker_items(attached)
@@ -404,7 +404,7 @@ function M.show_detach(attached, on_select)
       restore_window(winnr)
       composer:close()
       if item ~= nil then
-        ---@cast item dot.ux.widget.ai.picker.IItem
+        ---@cast item dot.module.ai.picker.IItem
         on_select(item.data)
       end
     end,
@@ -417,8 +417,8 @@ function M.show_detach(attached, on_select)
   picker:focus()
 end
 
----@param attached                      dot.ux.widget.ai.IAttachedSource[]
----@param on_select                     fun(items: dot.ux.widget.ai.IAttachedSource[]): nil
+---@param attached                      dot.module.ai.IAttachedSource[]
+---@param on_select                     fun(items: dot.module.ai.IAttachedSource[]): nil
 ---@return nil
 function M.show_send_target(attached, on_select)
   local picker_items, width = build_attached_picker_items(attached)
@@ -442,7 +442,7 @@ function M.show_send_target(attached, on_select)
   local picker_height, picker_width = calc_picker_dimensions(picker_items, width)
 
   local selected_set = {} ---@type table<string, boolean>
-  local source_map = {} ---@type table<string, dot.ux.widget.ai.IAttachedSource>
+  local source_map = {} ---@type table<string, dot.module.ai.IAttachedSource>
 
   for _, item in ipairs(picker_items) do
     if item.uuid ~= send_to_all_uuid then
@@ -472,7 +472,7 @@ function M.show_send_target(attached, on_select)
       return
     end
 
-    local results = {} ---@type dot.ux.widget.ai.IAttachedSource[]
+    local results = {} ---@type dot.module.ai.IAttachedSource[]
     local has_selection = next(selected_set) ~= nil
 
     if has_selection then
@@ -544,15 +544,15 @@ function M.show_send_target(attached, on_select)
   picker:focus()
 end
 
----@param on_select                     fun(prompt: dot.ux.widget.ai.IPrompt, result: dot.ux.widget.ai.IPromptRenderResult): nil
+---@param on_select                     fun(prompt: dot.module.ai.IPrompt, result: dot.module.ai.IPromptRenderResult): nil
 ---@return nil
 function M.show_prompt(on_select)
-  local prompt_mod = require("dot.ux.widget.ai.prompt")
+  local prompt_mod = require("dot.module.ai.prompt")
   local ctx = prompt_mod.get_ctx()
 
-  local picker_items = {} ---@type dot.ux.widget.ai.picker.IItem[]
-  local itemmap = {} ---@type table<string, dot.ux.widget.ai.IPrompt>
-  local result_map = {} ---@type table<string, dot.ux.widget.ai.IPromptRenderResult>
+  local picker_items = {} ---@type dot.module.ai.picker.IItem[]
+  local itemmap = {} ---@type table<string, dot.module.ai.IPrompt>
+  local result_map = {} ---@type table<string, dot.module.ai.IPromptRenderResult>
 
   for index, prompt in ipairs(prompt_mod.list) do
     local result = prompt.render(ctx)
@@ -643,7 +643,7 @@ function M.show_prompt(on_select)
       restore_window(winnr)
       composer:close()
       if item ~= nil then
-        ---@cast item dot.ux.widget.ai.picker.IItem
+        ---@cast item dot.module.ai.picker.IItem
         local result = result_map[item.uuid]
         if result then
           on_select(item.data, result)

@@ -1,17 +1,17 @@
-local config = require("dot.ux.widget.ai.config")
+local config = require("dot.module.ai.config")
 
----@class dot.ux.widget.ai.proc
+---@class dot.module.ai.proc
 local M = {}
 
 local have_ps = vim.fn.has("win32") == 0 and vim.fn.executable("ps") == 1
 
----@class dot.ux.widget.ai.IProcs
----@field protected _procs              table<integer, dot.ux.widget.ai.IProc>
+---@class dot.module.ai.IProcs
+---@field protected _procs              table<integer, dot.module.ai.IProc>
 ---@field protected _children           table<integer, integer[]>
 local Procs = {}
 Procs.__index = Procs
 
----@return dot.ux.widget.ai.IProcs
+---@return dot.module.ai.IProcs
 function Procs.new()
   local self = setmetatable({ _procs = {}, _children = {} }, Procs)
   self:__refresh__()
@@ -19,13 +19,13 @@ function Procs.new()
 end
 
 ---@param pid                           integer
----@return dot.ux.widget.ai.IProc|nil
+---@return dot.module.ai.IProc|nil
 function Procs:get(pid)
   return self._procs[pid]
 end
 
 ---@param pid                           integer
----@param callback                      fun(proc: dot.ux.widget.ai.IProc): boolean|nil
+---@param callback                      fun(proc: dot.module.ai.IProc): boolean|nil
 ---@return nil
 function Procs:walk(pid, callback)
   local queue = { pid }
@@ -87,8 +87,8 @@ end
 
 M.Procs = Procs
 
----@param proc                          dot.ux.widget.ai.IProc
----@param agent                         dot.ux.widget.ai.AgentName
+---@param proc                          dot.module.ai.IProc
+---@param agent                         dot.module.ai.AgentName
 ---@return boolean
 function M.is_agent(proc, agent)
   local tool_config = config.tools[agent]
@@ -104,9 +104,9 @@ function M.is_agent(proc, agent)
   return re:match_str(proc.cmd) ~= nil
 end
 
----@param procs                         dot.ux.widget.ai.IProcs
+---@param procs                         dot.module.ai.IProcs
 ---@param pid                           integer
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@return boolean
 function M.is_running_agent(procs, pid, agent)
   local found = false
@@ -120,11 +120,11 @@ function M.is_running_agent(procs, pid, agent)
   return found
 end
 
----@param procs                         dot.ux.widget.ai.IProcs
+---@param procs                         dot.module.ai.IProcs
 ---@param pid                           integer
----@return dot.ux.widget.ai.AgentName|nil
+---@return dot.module.ai.AgentName|nil
 function M.detect_agent(procs, pid)
-  local detected = nil ---@type dot.ux.widget.ai.AgentName|nil
+  local detected = nil ---@type dot.module.ai.AgentName|nil
   procs:walk(pid, function(proc)
     for _, agent in ipairs(config.agents) do
       if M.is_agent(proc, agent) then

@@ -1,26 +1,26 @@
-local __module_name__ = "dot.ux.widget.ai.action" ---@type string
+local __module_name__ = "dot.module.ai.action" ---@type string
 
-local config = require("dot.ux.widget.ai.config")
-local state = require("dot.ux.widget.ai.state")
-local term = require("dot.ux.widget.ai.term")
-local tmux = require("dot.ux.widget.ai.tmux")
+local config = require("dot.module.ai.config")
+local state = require("dot.module.ai.state")
+local term = require("dot.module.ai.term")
+local tmux = require("dot.module.ai.tmux")
 
----@class dot.ux.widget.ai.action
+---@class dot.module.ai.action
 local M = {}
 
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@return boolean
 function M.is_tool_installed(agent)
   local tool = config.tools[agent]
   return tool ~= nil and vim.fn.executable(tool.cmd) == 1
 end
 
----@return dot.ux.widget.ai.ISelectItem[]
+---@return dot.module.ai.ISelectItem[]
 function M.collect_items()
-  local items = {} ---@type dot.ux.widget.ai.ISelectItem[]
+  local items = {} ---@type dot.module.ai.ISelectItem[]
   local seen_ids = {} ---@type table<string, boolean>
   local cwd = dot.path.cwd()
-  local has_agent_pane = {} ---@type table<dot.ux.widget.ai.AgentName, boolean>
+  local has_agent_pane = {} ---@type table<dot.module.ai.AgentName, boolean>
 
   for _, source in ipairs(state.get_attached()) do
     seen_ids[source.id] = true
@@ -65,7 +65,7 @@ function M.collect_items()
   return items
 end
 
----@param source                        dot.ux.widget.ai.ISource
+---@param source                        dot.module.ai.ISource
 ---@return string
 function M.get_source_identifier(source)
   local pane = source.tmux_pane
@@ -75,7 +75,7 @@ function M.get_source_identifier(source)
   return source.id
 end
 
----@param item                          dot.ux.widget.ai.ISelectItem
+---@param item                          dot.module.ai.ISelectItem
 ---@return nil
 function M.handle_selection(item)
   if item.type == "running" and item.source then
@@ -102,7 +102,7 @@ function M.handle_selection(item)
   end
 end
 
----@param source                        dot.ux.widget.ai.ISource
+---@param source                        dot.module.ai.ISource
 ---@return nil
 function M.attach_to_source(source)
   state.attach(source)
@@ -133,7 +133,7 @@ function M.attach_to_source(source)
   })
 end
 
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
 ---@return nil
 function M.create_and_attach(agent, cwd)
@@ -148,7 +148,7 @@ end
 ---@param submit                        boolean
 ---@return nil
 function M.send_to_attached(text, submit)
-  local picker = require("dot.ux.widget.ai.picker")
+  local picker = require("dot.module.ai.picker")
   local attached = state.get_attached()
 
   if #attached == 0 then
@@ -176,7 +176,7 @@ function M.send_to_attached(text, submit)
   end)
 end
 
----@param source                        dot.ux.widget.ai.IAttachedSource
+---@param source                        dot.module.ai.IAttachedSource
 ---@param text                          string
 ---@param submit                        boolean
 ---@return boolean
@@ -212,7 +212,7 @@ end
 
 ---@return nil
 function M.show_attach_picker()
-  local picker = require("dot.ux.widget.ai.picker")
+  local picker = require("dot.module.ai.picker")
   picker.show_attach({
     on_select = M.handle_selection,
     on_toggle = M.handle_selection,
@@ -237,7 +237,7 @@ function M.show_detach_picker()
     return
   end
 
-  local picker = require("dot.ux.widget.ai.picker")
+  local picker = require("dot.module.ai.picker")
   picker.show_detach(attached, function(choice)
     state.detach(choice.id)
   end)
@@ -245,7 +245,7 @@ end
 
 ---@return nil
 function M.show_prompt_picker()
-  local picker = require("dot.ux.widget.ai.picker")
+  local picker = require("dot.module.ai.picker")
 
   picker.show_prompt(function(choice, result)
     M.send_to_attached(result.text, choice.submit)
@@ -255,7 +255,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
 ---@return nil
 function M.__create_and_attach_native__(agent, cwd)
@@ -274,7 +274,7 @@ function M.__create_and_attach_native__(agent, cwd)
     env = tool.env(),
   })
 
-  ---@type dot.ux.widget.ai.ISource
+  ---@type dot.module.ai.ISource
   local source = {
     id = termmeta.uuid,
     type = "terminal",
@@ -288,7 +288,7 @@ function M.__create_and_attach_native__(agent, cwd)
 end
 
 ---@protected
----@param agent                         dot.ux.widget.ai.AgentName
+---@param agent                         dot.module.ai.AgentName
 ---@param cwd                           string
 ---@return nil
 function M.__create_and_attach_tmux__(agent, cwd)
@@ -303,7 +303,7 @@ function M.__create_and_attach_tmux__(agent, cwd)
     return
   end
 
-  ---@type dot.ux.widget.ai.ISource
+  ---@type dot.module.ai.ISource
   local source = {
     id = string.format("tmux:%s", pane.pane_id),
     type = "tmux",
@@ -316,7 +316,7 @@ function M.__create_and_attach_tmux__(agent, cwd)
 end
 
 ---@protected
----@param sources                       dot.ux.widget.ai.IAttachedSource[]
+---@param sources                       dot.module.ai.IAttachedSource[]
 ---@param text                          string
 ---@param submit                        boolean
 ---@return nil

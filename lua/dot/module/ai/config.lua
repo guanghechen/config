@@ -1,10 +1,10 @@
----@class dot.ux.widget.ai.config
+---@class dot.module.ai.config
 local M = {}
 
----@type dot.ux.widget.ai.AgentName[]
+---@type dot.module.ai.AgentName[]
 M.agents = { "claude", "codex", "copilot", "gemini" }
 
----@type table<dot.ux.widget.ai.AgentName, string>
+---@type table<dot.module.ai.AgentName, string>
 M.agent_labels = {
   claude = "claude",
   codex = "codex",
@@ -12,7 +12,7 @@ M.agent_labels = {
   gemini = "gemini",
 }
 
----@type table<dot.ux.widget.ai.AgentName, dot.ux.widget.ai.IToolConfig>
+---@type table<dot.module.ai.AgentName, dot.module.ai.IToolConfig>
 M.tools = {
   claude = {
     cmd = "claude",
