@@ -74,11 +74,11 @@ function M.locate_gitroot(dirpath)
     return yoz.path.dirname(git_path, false, SEP)
   end
 
-  local ok, output = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
-  local trimmed_output = vim.trim(output or "")
+  local ok_gitroot, output_gitroot = pcall(vim.fn.system, { "git", "-C", dirpath, "rev-parse", "--show-toplevel" }) ---@type boolean, string
+  local trimmed_output = vim.trim(output_gitroot or "")
   local shell_error = vim.v.shell_error ---@type integer
 
-  if ok and shell_error == 0 and trimmed_output ~= "" and yoz.path.is_exist_dirpath(trimmed_output) then
+  if ok_gitroot and shell_error == 0 and trimmed_output ~= "" and yoz.path.is_exist_dirpath(trimmed_output) then
     return trimmed_output
   end
 
@@ -87,10 +87,9 @@ function M.locate_gitroot(dirpath)
     dirpath = dirpath,
     output = trimmed_output,
     shell_error = shell_error,
-    error = ok and nil or output,
+    error = ok_gitroot and nil or output_gitroot,
   }
-  local ok_json, detail_json = pcall(vim.json.encode, detail_payload)
-  local details_text = ok_json and detail_json or vim.inspect(detail_payload, { newline = "\n", indent = "  " })
+  local details_text = vim.json.encode(detail_payload, { indent = "  ", sort_keys = false })
   local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
 
   vim.schedule(function()
