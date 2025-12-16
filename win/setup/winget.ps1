@@ -13,6 +13,7 @@ winget install -e --source winget --id LLVM.LLVM
 winget install -e --source winget --id pnpm.pnpm
 winget install -e --source winget --id astral-sh.uv
 
+winget install -e --source winget --id Gyan.FFmpeg
 winget install -e --source winget --id ImageMagick.ImageMagick
 winget install -e --source winget --id junegunn.fzf
 winget install -e --source winget --id jqlang.jq
