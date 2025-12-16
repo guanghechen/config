@@ -9,6 +9,7 @@ winget install -e --source winget --id Microsoft.PowerToys
 winget install -e --source winget --id Neovim.Neovim
 
 winget install -e --source winget --id Schniz.fnm
+winget install -e --source winget --id LLVM.LLVM
 winget install -e --source winget --id pnpm.pnpm
 winget install -e --source winget --id astral-sh.uv
 
