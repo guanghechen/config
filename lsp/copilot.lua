@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/44201a94c6b2031f53bdcf645d5de72489e806b9/lsp/copilot.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/ad95655ec5d13ff7c728d731eb9fd39f34395a03/lsp/copilot.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#copilot
 
 local __module_name__ = "lsp.copilot" ---@type string
@@ -28,7 +28,7 @@ local function sign_in(bufnr, client)
         if continue == 1 then
           client:exec_cmd(command, { bufnr = bufnr }, function(cmd_err, cmd_result)
             if cmd_err then
-              vim.notify(err.message, vim.log.levels.ERROR)
+              vim.notify(cmd_err.message, vim.log.levels.ERROR)
               return
             end
             if cmd_result.status == "OK" then
