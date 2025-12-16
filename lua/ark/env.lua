@@ -93,15 +93,16 @@ function M.locate_gitroot(dirpath)
   local details_text = ok_json and detail_json or vim.inspect(detail_payload, { newline = "\n", indent = "  " })
   local text = string.format("%s\n\n```json\n%s\n```", message, details_text)
 
-  vim.notify(text, vim.log.levels.WARN, {
-    title = string.format("%s │ locate_gitroot", __module_name__),
-    group = string.format("%s:locate_gitroot", __module_name__),
-    timeout = 3000,
-    message = text,
-    anonymous = false,
-    silent = true,
-  })
-  return nil
+  vim.schedule(function()
+    vim.notify(text, vim.log.levels.WARN, {
+      title = string.format("%s │ locate_gitroot", __module_name__),
+      group = string.format("%s:locate_gitroot", __module_name__),
+      timeout = 3000,
+      message = text,
+      anonymous = false,
+      silent = true,
+    })
+  end)
 end
 
 ---@param filepath                      string
