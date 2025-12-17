@@ -29,6 +29,8 @@ git:
     - colorArg: always
       pager: delta --paging=never
   parseEmoji: true # Render emoji strings like :rocket: as 🚀
+  pull:
+    mode: ff-only # Only allow fast-forward, abort otherwise
   remoteBranchSortOrder: alphabetical # Sort remote branches alphabetically
   skipHookPrefix: WIP # Prefix to skip pre-commit hooks
   truncateCopiedCommitHashesTo: 40 # Copy full commit hash (40 chars)
