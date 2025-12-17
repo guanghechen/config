@@ -200,11 +200,9 @@ function D:execute(args, silent)
 end
 
 ---@class dot.command.definitions
----@field [string]                      table<string, dot.command.IDefinition>
 M.definitions = {}
 
 ---@class dot.command.definitions.ai
----@field [string]                      dot.command.IDefinition
 M.definitions.ai = {
   edit = D.new("Faiedit", "ai: edit"),
   attach_agent = D.new("Faiattachagent", "ai: attach agent"),
@@ -219,7 +217,6 @@ M.definitions.ai = {
 }
 
 ---@class dot.command.definitions.buf
----@field [string]                      dot.command.IDefinition
 M.definitions.buf = {
   close = D.new("Fbufclose", "buf: close"),
   close_to_leftest = D.new("Fbufclosetoleftest", "buf: close to leftest"),
@@ -309,14 +306,12 @@ M.definitions.buf = {
 }
 
 ---@class dot.command.definitions.clipboard
----@field [string]                      dot.command.IDefinition
 M.definitions.clipboard = {
   paste_image = D.new("Fclipboardpasteimage", "clipboard: paste image"),
   paste_image_as_base64 = D.new("Fclipboardpasteimageasbase64", "clipboard: paste image as base64"),
 }
 
 ---@class dot.command.definitions.code
----@field [string]                      dot.command.IDefinition
 M.definitions.code = {
   format = D.new("Fcodeformat", "code: format buffer"),
   insert_splitline = D.new("Fcodeinsertsplitline", "code: insert splitline"),
@@ -330,7 +325,6 @@ M.definitions.code = {
 }
 
 ---@class dot.command.definitions.copy
----@field [string]                      dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 M.definitions.copy = {
   char_under_cursor = D.new("Fcopycharundercursor", "copy: char under cursor"),
 
@@ -340,7 +334,6 @@ M.definitions.copy = {
 }
 
 ---@class dot.command.definitions.diagnostic
----@field [string]                      dot.command.IDefinition
 M.definitions.diagnostic = {
   goto_next = D.new("Fdiagnosticgotonext", "diagnostic: goto next"),
   goto_next_error = D.new("Fdiagnosticgotonexterror", "diagnostic: goto next (error)"),
@@ -362,7 +355,6 @@ M.definitions.diagnostic = {
 }
 
 ---@class dot.command.definitions.explorer
----@field [string]                      dot.command.IDefinition
 M.definitions.explorer = {
   fs_cwd = D.new("Fexplorerfscwd", "explorer: filesystem (cwd)"),
   fs_workspace = D.new("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
@@ -376,7 +368,6 @@ M.definitions.explorer = {
 }
 
 ---@class dot.command.definitions.find
----@field [string]                      dot.command.IDefinition
 M.definitions.find = {
   bufs = D.new("Ffindbufs", "find: buffers"),
   bufs_file = D.new("Ffindbufsfile", "find: buffers (file)"),
@@ -399,7 +390,6 @@ M.definitions.find = {
 }
 
 ---@class dot.command.definitions.git
----@field [string]                      dot.command.IDefinition
 M.definitions.git = {
   browse = D.new("Fgitbrowse", "git: browse"),
   browse_permalink = D.new("Fgitbrowsepermalink", "git: browse (permalink)"),
@@ -410,7 +400,6 @@ M.definitions.git = {
 }
 
 ---@class dot.command.definitions.inspect
----@field [string]                      dot.command.IDefinition
 M.definitions.inspect = {
   inspect_buf = D.new("Fdebuginspectbuf", "debug: inspect buf"),
   inspect_pos = D.new("Fdebuginspectpos", "debug: inspect pos"),
@@ -421,15 +410,18 @@ M.definitions.inspect = {
   inspect_window = D.new("Fdebuginspectwindow", "debug: inspect window"),
 }
 
+---@class dot.command.definitions.lint
+M.definitions.lint = {
+  spellcheck_register = D.new("Flintspellcheckregister", "lint: add word to cspell dictionary"),
+}
+
 ---@class dot.command.definitions.log
----@field [string]                      dot.command.IDefinition
 M.definitions.log = {
   preview_json_normal = D.new("Fjsonviewnormal", "json: preview current line"),
   preview_json_visual = D.new("Fjsonviewvisual", "json: preview selection"),
 }
 
 ---@class dot.command.definitions.lsp
----@field [string]                      dot.command.IDefinition
 M.definitions.lsp = {
   goto_definitions = D.new("Flspgotodefinitions", "lsp: goto definitions"),
   goto_implementations = D.new("Flspgotoimplementations", "lsp: goto implementations"),
@@ -444,7 +436,6 @@ M.definitions.lsp = {
 }
 
 ---@class dot.command.definitions.notepad
----@field [string]                      dot.command.IDefinition
 M.definitions.notepad = {
   append_content = D.new("Fnotepadappendcontent", "notepad: append content", 1),
   create = D.new("Fnotepadcreate", "notepad: create"),
@@ -495,13 +486,11 @@ M.definitions.notepad = {
 }
 
 ---@class dot.command.definitions.refresh
----@field [string]                      dot.command.IDefinition
 M.definitions.refresh = {
   all = D.new("Frefreshall", "refresh: all"),
 }
 
 ---@class dot.command.definitions.search
----@field [string]                      dot.command.IDefinition
 M.definitions.search = {
   in_files = D.new("Fsearchinfiles", "search: in files", "?"),
   in_file = D.new("Fsearchinfile", "search: in file", "?"),
@@ -512,7 +501,6 @@ M.definitions.search = {
 }
 
 ---@class dot.command.definitions.session
----@field [string]                      dot.command.IDefinition
 M.definitions.session = {
   restore = D.new("Fsessionrestore", "session: restore"),
   restore_autosaved = D.new("Fsessionrestoreautosaved", "session: restore autosaved"),
@@ -521,7 +509,6 @@ M.definitions.session = {
 }
 
 ---@class dot.command.definitions.tab
----@field [string]                      dot.command.IDefinition
 M.definitions.tab = {
   close = D.new("Ftabclose", "tab: close"),
   close_others = D.new("Ftabcloseothers", "tab: close others"),
@@ -547,7 +534,6 @@ M.definitions.tab = {
 }
 
 ---@class dot.command.definitions.term
----@field [string]                      dot.command.IDefinition
 M.definitions.term = {
   create = D.new("Ftermcreate", "term: create"),
   destroy = D.new("Ftermdestroy", "term: destroy"),
@@ -577,7 +563,6 @@ M.definitions.term = {
 }
 
 ---@class dot.command.definitions.toggle
----@field [string]                      dot.command.IDefinition|dot.command.IDefinitionWithCandidates
 M.definitions.toggle = {
   dim = D.new("Ftoggledim", "toggle: dim"),
   expandtab = D.new("Ftoggleexpandtab", "toggle: expandtab"),
@@ -597,7 +582,6 @@ M.definitions.toggle = {
 }
 
 ---@class dot.command.definitions.ux
----@field [string]                      dot.command.IDefinition
 M.definitions.ux = {
   color_picker = D.new("Fuxcolorpicker", "ux: color picker"),
   dismiss_notifications = D.new("Fuxdismissnotifications", "ux: dismiss notifications"),
@@ -606,7 +590,6 @@ M.definitions.ux = {
 }
 
 ---@class dot.command.definitions.win
----@field [string]                      dot.command.IDefinition
 M.definitions.win = {
   close = D.new("Fwinclose", "win: close"),
   close_others = D.new("Fwincloseothers", "win: close others"),
