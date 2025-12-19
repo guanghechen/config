@@ -320,6 +320,27 @@ local group_items = {
         dot.command.definitions.toggle.maximize:execute()
       end,
     },
+    relativenumber = {
+      title = "relativenumber",
+      snapshot = function()
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "Boolean"
+        end
+
+        local enabled = vim.wo[winnr_command].relativenumber ---@type boolean
+        return tostring(enabled), "Boolean"
+      end,
+      action = function()
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return
+        end
+
+        local flag = vim.wo[winnr_command].relativenumber ---@type boolean
+        vim.wo[winnr_command].relativenumber = not flag
+      end,
+    },
     wrap = {
       title = "wrap",
       snapshot = function()

@@ -1059,6 +1059,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.relativenumber_local.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("relativenumber_local")
+    end,
+  })
+  .implement({
     uuid = K.toggle.scroll.uuid,
     action = function()
       require("fml.action.toggle.list").list("dressing_scroll_flight")

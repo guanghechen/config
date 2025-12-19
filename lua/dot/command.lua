@@ -152,6 +152,8 @@ end
 function M.shortcut(modes, keys, definition)
   ---@return nil
   local function callback()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    dot.state.status.set_winnr_command(winnr)
     M.execute(definition.uuid)
   end
 
@@ -572,6 +574,7 @@ M.definitions.toggle = {
   markdown_local = D.new("Ftogglemarkdownlocal", "toggle: markdown (local)"),
   maximize = D.new("Ftogglemaximize", "toggle: maximize"),
   relativenumber = D.new("Ftogglerelativenumber", "toggle: relativenumber"),
+  relativenumber_local = D.new("Ftogglerelativenumberlocal", "toggle: relativenumber (local)"),
   scroll = D.new("Ftogglescroll", "toggle: scroll"),
   theme = D.new("Ftoggletheme", "toggle: theme", "?", dot.var.theme),
   theme_variant = D.new("Ftogglethemevariant", "toggle: theme variant"),
