@@ -11,9 +11,8 @@ local function silent()
 end
 
 ---@param winnr                         integer
----@param source                        "sourcefile"|"neotree"
 ---@return dot.module.nvimbar.Nvimbar|nil
-local function resolve_nvimbar(winnr, source)
+local function resolve_nvimbar(winnr)
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
@@ -56,25 +55,19 @@ local function resolve_nvimbar(winnr, source)
     winline.nvimbar = nvimbar
     meta.winline = winline
 
-    if source == "sourcefile" then
-      winline.lsp_symbols = {}
-      nvimbar
-        ---
-        :place("left", c.dir.path(position), 95)
-        :place("left", c.file.name(position), 100)
-        :place("left", c.lsp.symbols(position), 90)
-        ---
-        :place("center", c.devmode.render_count(position), 100)
+    winline.lsp_symbols = {}
+    nvimbar
       ---
-      -- :place("right", c.dirpath_prominent(position), 100)
-    elseif source == "neotree" then
-      local is_floating = dot.win.is_float(winnr) ---@type boolean
-      nvimbar:place("center", c.plugin.neotree(position, is_floating and "float" or "left"), 100)
-    else
-    end
+      :place("left", c.dir.path(position), 95)
+      :place("left", c.file.name(position), 100)
+      :place("left", c.lsp.symbols(position), 90)
+      ---
+      :place("center", c.devmode.render_count(position), 100)
+    ---
+    -- :place("right", c.dirpath_prominent(position), 100)
   end
 
-  if source == "sourcefile" and winline ~= nil then
+  if winline ~= nil then
     if winline.locate_scheduler == nil or winline.locate_scheduler:isdisposed() then
       local locate_scheduler = ark.c.Scheduler.new({
         name = string.format("locate_scheduler:%d", winnr),
@@ -129,18 +122,6 @@ local function render(winnr)
     return
   end
 
-  if filetype == dot.filetype.NEOTREE then
-    if vim.o.showtabline == 0 or dot.win.is_float(winnr) then
-      local nvimbar = resolve_nvimbar(winnr, "neotree") ---@type dot.module.nvimbar.Nvimbar|nil
-      if nvimbar ~= nil then
-        nvimbar:render()
-      end
-    else
-      vim.wo[winnr].winbar = nil
-    end
-    return
-  end
-
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if string.sub(filepath, 1, 11) == "diffview://" then
     local should_show_winline = string.sub(filepath, 1, 19) ~= "diffview:///panels/" ---@type boolean
@@ -177,7 +158,7 @@ local function render(winnr)
     return
   end
 
-  local nvimbar = resolve_nvimbar(winnr, "sourcefile") ---@type dot.module.nvimbar.Nvimbar|nil
+  local nvimbar = resolve_nvimbar(winnr) ---@type dot.module.nvimbar.Nvimbar|nil
   if nvimbar ~= nil then
     nvimbar:render()
     return

@@ -19,8 +19,6 @@ local Methods = vim.lsp.protocol.Methods
 ---| "ux:textarea"
 ---| "ux:winpicker"
 ---| "ux:winsep"
----|
----| "plugin:neotree"
 
 ---@class dot.win.IFilepathHistoryItem
 ---@field public bufnr                  integer|nil
@@ -57,8 +55,6 @@ local Types = {
   TEXTAREA          = "ux:textarea",
   WINPICKER         = "ux:winpicker",
   WINSEP            = "ux:winsep",
-
-  NEOTREE           = "plugin:neotree",
   -- stylua: ignore end
 }
 
@@ -77,8 +73,6 @@ local wintype_attrs = {
     [Types.SELECT] = true,
     [Types.TERMINAL] = true,
     [Types.TEXTAREA] = true,
-
-    [Types.NEOTREE] = true,
   },
   projectable = {},
   sourcefile = {},

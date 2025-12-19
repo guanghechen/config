@@ -149,8 +149,6 @@ vim.api.nvim_create_autocmd("FileType", {
     "lazy",
     "man",
     "mason",
-    "neo-tree",
-    "neo-tree-popup",
     "notify",
     "lspinfo",
     "qf",

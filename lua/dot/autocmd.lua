@@ -236,28 +236,6 @@ vim.api.nvim_create_autocmd("WinEnter", {
   end,
 })
 
-vim.api.nvim_create_autocmd("WinNew", {
-  group = ark.nvim.augroup("bootstrap_on_WinNew"),
-  callback = function(arg)
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr = tonumber(arg.file) or vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-
-    vim.schedule(function()
-      if not vim.api.nvim_win_is_valid(winnr) then
-        return
-      end
-
-      local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-      local filetype = vim.bo[bufnr].filetype ---@type string
-
-      if filetype == "neo-tree" then
-        dot.win.set_type(winnr, dot.win.Types.NEOTREE)
-        return
-      end
-    end)
-  end,
-})
-
 vim.api.nvim_create_autocmd("WinResized", {
   group = ark.nvim.augroup("bootstrap_on_WinResized"),
   callback = function()

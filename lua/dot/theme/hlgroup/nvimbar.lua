@@ -173,12 +173,6 @@ function M.gen_hlgroup_map(context)
     picker_flag_orange = { fg = c.bg0, bg = c.brightOrange, sp = c.pink, underline = true },
     picker_result_pos_text = { fg = c.fg4, bg = "bg_bar", sp = c.pink, underline = true },
 
-    ---! plugin
-    plugin_neotree_blank = { fg = c.fg1, bg = c.none },
-    plugin_neotree_sep = { fg = bg_pos, bg = c.none, bold = true },
-    plugin_neotree_split = { fg = c.bg4, bg = c.none },
-    plugin_neotree_text = { fg = c.fg4, bg = bg_pos, bold = true },
-
     ---! python
     python_env_text = { fg = c.fg2, bg = "bg_bar" },
 

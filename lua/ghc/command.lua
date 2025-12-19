@@ -24,59 +24,13 @@ command.implement({
 })
 
 --[explorer] -------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.explorer.toggle.uuid,
-    tabtype = dot.tab.Types.DIFFVIEW,
-    action = function()
-      require("ghc.action.diffview").toggle()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.fs_cwd.uuid,
-    tabtype = dot.tab.Types.NORMAL,
-    action = function()
-      require("ghc.action.neo-tree").fs_cwd()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.fs_workspace.uuid,
-    tabtype = dot.tab.Types.NORMAL,
-    action = function()
-      require("ghc.action.neo-tree").fs_workspace()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.fs_reveal.uuid,
-    tabtype = dot.tab.Types.NORMAL,
-    action = function()
-      require("ghc.action.neo-tree").fs_reveal()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.git_cwd.uuid,
-    action = function()
-      require("ghc.action.neo-tree").git_cwd()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.git_workspace.uuid,
-    action = function()
-      require("ghc.action.neo-tree").git_workspace()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.last.uuid,
-    action = function()
-      require("ghc.action.neo-tree").last()
-    end,
-  })
-  .implement({
-    uuid = K.explorer.toggle.uuid,
-    action = function()
-      require("ghc.action.neo-tree").toggle()
-    end,
-  })
+command.implement({
+  uuid = K.explorer.toggle.uuid,
+  tabtype = dot.tab.Types.DIFFVIEW,
+  action = function()
+    require("ghc.action.diffview").toggle()
+  end,
+})
 
 --[git] --------------------------------------------------------------------------------------------
 command

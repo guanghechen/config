@@ -25,7 +25,6 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  :place("left", c.plugin.neotree(position, "left"), 95)
   :place(
     "left",
     c.sidebar.of(position, dot.filetype.DIFFVIEW_FILES, function()
@@ -78,20 +77,6 @@ dirtier:subscribe(ark.c.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2
-
-      if last_showtabline == 0 then
-        local filetype = dot.filetype.NEOTREE ---@type string
-        local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-        for _, winnr in ipairs(winnrs) do
-          local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if vim.bo[bufnr].filetype == filetype then
-            if not dot.win.is_float(winnr) then
-              vim.wo[winnr].winbar = nil
-            end
-          end
-        end
-      end
-
       last_showtabline = 2
       tabline:render()
     else

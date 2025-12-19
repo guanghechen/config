@@ -70,7 +70,6 @@ local raw_specs = {
   { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode         },
   { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common             },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
-  { name = "neo-tree.nvim",               main = "neo-tree",                      cond = conds.not_vscode         },
   { name = "nui.nvim",                    main = "nui",                           cond = conds.not_vscode         },
   { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                },
   { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                },

@@ -1185,8 +1185,6 @@ local ICONS_FILETYPE = {
   harpoon                 = { glyph = "󱡀", hl = "MiniIconsCyan"   },
   lazy                    = { glyph = "󰒲", hl = "MiniIconsBlue"   },
   mason                   = { glyph = "󱌢", hl = "MiniIconsGrey"   },
-  ["neo-tree"]            = { glyph = "󰙅", hl = "MiniIconsYellow" },
-  ["neo-tree-popup"]      = { glyph = "󰙅", hl = "MiniIconsYellow" },
   neogitcommitselectview  = { glyph = "󰊢", hl = "MiniIconsOrange" },
   neogitcommitview        = { glyph = "󰊢", hl = "MiniIconsOrange" },
   neogitconsole           = { glyph = "󰊢", hl = "MiniIconsOrange" },

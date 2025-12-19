@@ -1,6 +1,5 @@
 ---@class dot.var
 ---@field public N_BUF_DISABLE_LINT     string
----@field public N_NEO_TREE_SOURCE      string
 ---@field public N_WINLINE_DISABLED     string
 local M = {}
 
@@ -16,7 +15,6 @@ M.K_CODE_INSERT_SPLITLINE = "g;"
 ----------------------------------------------------------------------------------------------------
 
 M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
-M.N_NEO_TREE_SOURCE = "neo_tree_source"
 M.N_WINLINE_DISABLED = "dot_winline_disabled"
 
 ----------------------------------------------------------------------------------------------------
