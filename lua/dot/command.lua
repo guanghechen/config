@@ -578,7 +578,7 @@ M.definitions.toggle = {
   transparency = D.new("Ftoggletransparency", "toggle: transparency"),
   username = D.new("Ftoggleusername", "toggle: username"),
   virtcolumn = D.new("Ftogglevirtcolumn", "toggle: virtcolumn"),
-  wrap = D.new("Ftogglewrap", "toggle: wrap"),
+  wrap_local = D.new("Ftogglewraplocal", "toggle: wrap (local)"),
 }
 
 ---@class dot.command.definitions.ux

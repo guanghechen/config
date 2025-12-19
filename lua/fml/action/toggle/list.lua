@@ -313,6 +313,15 @@ local group_items = {
         require("render-markdown").set(not enabled)
       end,
     },
+    maximize = {
+      title = "maximize",
+      snapshot = function()
+        return "", "String"
+      end,
+      action = function()
+        dot.command.definitions.toggle.maximize:execute()
+      end,
+    },
     wrap = {
       title = "wrap",
       snapshot = function()
@@ -412,17 +421,7 @@ local group_items = {
       end,
     },
   },
-  misc = {
-    maximize = {
-      title = "maximize",
-      snapshot = function()
-        return "", "String"
-      end,
-      action = function()
-        dot.command.definitions.toggle.maximize:execute()
-      end,
-    },
-  },
+  misc = {},
 }
 
 local toggle_item_map = {} ---@type table<string, fml.action.toggle.IItem>

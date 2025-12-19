@@ -1095,7 +1095,7 @@ command
     end,
   })
   .implement({
-    uuid = K.toggle.wrap.uuid,
+    uuid = K.toggle.wrap_local.uuid,
     action = function()
       require("fml.action.toggle.list").list("wrap_local")
     end,

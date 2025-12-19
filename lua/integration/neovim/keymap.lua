@@ -275,7 +275,7 @@ ms({ "n", "x" }, "<leader>uc", K.ux.color_picker)
 ms({ "n", "x" }, "<leader>un", K.ux.dismiss_notifications)
 ms({ "n", "x" }, "<leader>ut", K.toggle.theme)
 ms({ "n", "x" }, "<leader>uu", K.toggle.list)
-ms({ "n", "x" }, "<leader>uw", K.toggle.wrap)
+ms({ "n", "x" }, "<leader>uw", K.toggle.wrap_local)
 ms({ "n", "x" }, "<leader>uz", K.toggle.maximize)
 ---------------------------------------------------------------------------------------------#[u]x--
 
