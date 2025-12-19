@@ -362,6 +362,32 @@ local group_items = {
         vim.wo[winnr_command].relativenumber = not flag
       end,
     },
+    signcolumn = {
+      title = "signcolumn",
+      snapshot = function()
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return "unknown", "Boolean"
+        end
+
+        local signcolumn = vim.wo[winnr_command].signcolumn ---@type string
+        local enabled = signcolumn ~= "no"
+        return tostring(enabled), "Boolean"
+      end,
+      action = function()
+        local winnr_command = dot.state.status.get_winnr_command() ---@type integer|nil
+        if winnr_command == nil then
+          return
+        end
+
+        local signcolumn = vim.wo[winnr_command].signcolumn ---@type string
+        if signcolumn == "no" then
+          vim.wo[winnr_command].signcolumn = "yes"
+        else
+          vim.wo[winnr_command].signcolumn = "no"
+        end
+      end,
+    },
     wrap = {
       title = "wrap",
       snapshot = function()

@@ -1077,6 +1077,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.signcolumn_local.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("signcolumn_local")
+    end,
+  })
+  .implement({
     uuid = K.toggle.theme.uuid,
     action = function(arg)
       require("fml.action.toggle.theme").theme(arg)
