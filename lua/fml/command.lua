@@ -1035,6 +1035,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.markdown.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("render_markdown_plugin")
+    end,
+  })
+  .implement({
     uuid = K.toggle.markdown_local.uuid,
     action = function()
       require("fml.action.toggle.list").list("markdown_local")

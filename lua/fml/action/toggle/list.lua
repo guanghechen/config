@@ -305,12 +305,10 @@ local group_items = {
     markdown = {
       title = "markdown",
       snapshot = function()
-        local enabled = require("render-markdown").get() ---@type boolean
-        return tostring(enabled), "Boolean"
+        return "unknown", "Boolean"
       end,
       action = function()
-        local enabled = require("render-markdown").get() ---@type boolean
-        require("render-markdown").set(not enabled)
+        require("render-markdown").buf_toggle()
       end,
     },
     maximize = {
