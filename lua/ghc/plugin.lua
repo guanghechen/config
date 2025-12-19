@@ -70,7 +70,6 @@ local raw_specs = {
   { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode         },
   { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common             },
   { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
-  { name = "nui.nvim",                    main = "nui",                           cond = conds.not_vscode         },
   { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                },
   { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                },
   { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                },
@@ -79,7 +78,6 @@ local raw_specs = {
   { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.common             },
   { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context },
   { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.common             },
-  { name = "plenary.nvim",                main = "plenary",                       cond = conds.common             },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode         },
   { name = "which-key.nvim",              main = "which-key",                     cond = conds.common             },
   -- stylua: ignore end
@@ -116,9 +114,7 @@ end
 ---@type string[]
 local no_details_module_names = {
   "friendly-snippets",
-  "nui.nvim",
   "nvim-nio",
-  "plenary.nvim",
 }
 
 for index = 1, #specs, 1 do

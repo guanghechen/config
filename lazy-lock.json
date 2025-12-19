@@ -14,7 +14,6 @@
   "mini.indentscope": { "branch": "nvim@mini.indentscope", "commit": "0308f949f31769e509696af5d5f91cebb2159c69" },
   "mini.splitjoin": { "branch": "nvim@mini.splitjoin", "commit": "9fcd8856efb95a505090c3225726466494076127" },
   "mini.surround": { "branch": "nvim@mini.surround", "commit": "88c52297ed3e69ecf9f8652837888ecc727a28ee" },
-  "nui.nvim": { "branch": "nvim@nui.nvim", "commit": "de740991c12411b663994b2860f1a4fd0937c130" },
   "nvim-dap": { "branch": "nvim@nvim-dap", "commit": "5860c7c501eb428d3137ee22c522828d20cca0b3" },
   "nvim-dap-ui": { "branch": "nvim@nvim-dap-ui", "commit": "cf91d5e2d07c72903d052f5207511bf7ecdb7122" },
   "nvim-dap-virtual-text": { "branch": "nvim@nvim-dap-virtual-text", "commit": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6" },
@@ -23,7 +22,6 @@
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "4fc09bee78e91bf4ba471cdab4bf9dfa37fde51c" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "0d7c800fadcfe2d33089f5726cb8907fc846eece" },
-  "plenary.nvim": { "branch": "nvim@plenary.nvim", "commit": "b9fd5226c2f76c951fc8ed5923d85e4de065e509" },
   "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "07d088bf8bdadd159eb807b90eaee86a4778383f" },
   "which-key.nvim": { "branch": "nvim@which-key.nvim", "commit": "3aab2147e74890957785941f0c1ad87d0a44c15a" }
 }

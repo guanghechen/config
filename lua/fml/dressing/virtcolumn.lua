@@ -37,7 +37,6 @@ local DISABLED_FILETYPES = {
   [dot.filetype.MASON] = true,
   [dot.filetype.NOTIFY] = true,
   [dot.filetype.LSPINFO] = true,
-  [dot.filetype.PLENARY_TEST_POPUP] = true,
   [dot.filetype.QUICKFIX] = true,
   [dot.filetype.SELECT] = true,
   [dot.filetype.STARTUPTIME] = true,
