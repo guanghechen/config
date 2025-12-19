@@ -573,6 +573,7 @@ M.definitions.toggle = {
   markdown = D.new("Ftogglemarkdown", "toggle: markdown"),
   markdown_local = D.new("Ftogglemarkdownlocal", "toggle: markdown (local)"),
   maximize = D.new("Ftogglemaximize", "toggle: maximize"),
+  number_local = D.new("Ftogglenumberlocal", "toggle: number (local)"),
   relativenumber = D.new("Ftogglerelativenumber", "toggle: relativenumber"),
   relativenumber_local = D.new("Ftogglerelativenumberlocal", "toggle: relativenumber (local)"),
   scroll = D.new("Ftogglescroll", "toggle: scroll"),

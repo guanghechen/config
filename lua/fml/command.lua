@@ -1053,6 +1053,12 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.number_local.uuid,
+    action = function()
+      require("fml.action.toggle.list").list("number_local")
+    end,
+  })
+  .implement({
     uuid = K.toggle.relativenumber.uuid,
     action = function()
       require("fml.action.toggle.list").list("relativenumber_ux")
