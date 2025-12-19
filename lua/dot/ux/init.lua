@@ -4,7 +4,6 @@ local __mods = {
   retriever = "dot.ux.retriever",
   searcher = "dot.ux.searcher",
   view = "dot.ux.view",
-  widget = "dot.ux.widget",
 
   Board = "dot.ux.board",
   Select = "dot.ux.select",
@@ -18,7 +17,6 @@ local __mods = {
 ---@field public retriever              dot.ux.retriever
 ---@field public searcher               dot.ux.searcher
 ---@field public view                   dot.ux.view
----@field public widget                 dot.ux.widget
 ---
 ---@field public Board                  dot.ux.Board
 ---@field public Select                 dot.ux.Select

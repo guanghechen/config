@@ -972,7 +972,7 @@ for index = 1, 9, 1 do
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
       if dot.term.focus(index) then
-        dot.ux.widget.Terminal:focus()
+        dot.widget.Terminal:focus()
       end
     end,
   })

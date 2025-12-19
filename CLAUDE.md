@@ -41,11 +41,10 @@ Three global variables are exposed via `_G`:
   - `dot/context/`: Context management (editor, session, workspace)
   - `dot/state/`: Application state management (git, notepad, qflist, etc.)
   - `dot/theme/`: Theme system (schemes, highlight groups, namespace)
+  - `dot/widget/`: Widgets (notepad, terminal)
   - `dot/ux/`: User experience components
     - `dot/ux/picker/`: Picker UI components
     - `dot/ux/searcher/`: Search and replace UI
-    - `dot/ux/nvimbar/`: Status/tab/window bar components
-    - `dot/ux/widget/`: Widgets (ai, colorpicker, notepad, terminal)
   - Core modules: buf, command, git, lsp, lsp_action, notifier, path, session, tab, term, win, etc.
 - `lua/fml/`: Frontend configuration layer
   - `fml/action/`: Action handlers (ai, buf, code, copy, diagnostic, find, git, lsp, search, tab, toggle, win)
@@ -73,7 +72,7 @@ Three global variables are exposed via `_G`:
 
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
-- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*` follow the same lazy-loading pattern
+- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points

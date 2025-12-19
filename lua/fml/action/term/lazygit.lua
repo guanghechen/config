@@ -7,7 +7,7 @@ local function open_lazygit(name, cwd, args)
   local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
   local termuuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name)
 
-  dot.ux.widget.Terminal:toggle_and_focus({
+  dot.widget.Terminal:toggle_and_focus({
     uuid = termuuid,
     name = name,
     type = "lazygit",

@@ -1,9 +1,9 @@
-local __module_name__ = "dot.ux.widget.terminal" ---@type string
+local __module_name__ = "dot.widget.terminal" ---@type string
 
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
----@class dot.ux.widget.terminal.IToggleHardParams : dot.t.ITermCreateParams
+---@class dot.widget.terminal.IToggleHardParams : dot.t.ITermCreateParams
 ---@field public selected_text          string|nil
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
@@ -105,7 +105,7 @@ dot.state.status.dirtier_termline:subscribe(
   true
 )
 
----@class dot.ux.widget.Terminal : dot.t.IWidget
+---@class dot.widget.Terminal : dot.t.IWidget
 local M = {}
 
 ---@return boolean
@@ -198,11 +198,11 @@ function M:toggle()
   end
 end
 
----@class dot.ux.widget.terminal.IToggleAndFocusParams : dot.t.ITermCreateParams
+---@class dot.widget.terminal.IToggleAndFocusParams : dot.t.ITermCreateParams
 ---@field public selected_text          string|nil
 ---@field public autofocus              boolean|nil
 
----@param params                        dot.ux.widget.terminal.IToggleAndFocusParams
+---@param params                        dot.widget.terminal.IToggleAndFocusParams
 ---@return nil
 function M:toggle_and_focus(params)
   local termuuid = params.uuid ---@type string

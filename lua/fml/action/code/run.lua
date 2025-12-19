@@ -150,7 +150,7 @@ local runners = {
       end
 
       local termuuid = "9b2efac7-b9e3-4ee3-aa51-2dc394b500f5" ---@type string
-      dot.ux.widget.Terminal:toggle_and_focus({
+      dot.widget.Terminal:toggle_and_focus({
         uuid = termuuid,
         type = "runner",
         name = "code runner (mjs)",

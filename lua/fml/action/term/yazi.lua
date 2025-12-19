@@ -4,7 +4,7 @@
 ---@return nil
 local function open_yazi(name, cwd, filepath)
   local tempname = dot.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
-  local terminal = dot.ux.widget.Terminal ---@type dot.ux.widget.Terminal
+  local terminal = dot.widget.Terminal ---@type dot.widget.Terminal
 
   local dirpath = dot.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string

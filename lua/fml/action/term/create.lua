@@ -27,7 +27,7 @@ local function apply_profile(profile)
     cmd = profile.cmd,
     permanent = false,
   })
-  dot.ux.widget.Terminal:focus()
+  dot.widget.Terminal:focus()
 end
 
 ---@return nil
@@ -100,7 +100,7 @@ function M.rename()
     default = termmeta.name,
   }
 
-  local terminal_widget = dot.ux.widget.Terminal ---@type dot.ux.widget.Terminal
+  local terminal_widget = dot.widget.Terminal ---@type dot.widget.Terminal
   local winnr = terminal_widget:get_winnr() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local available_width = nil ---@type integer|nil
@@ -150,7 +150,7 @@ end
 ---@return nil
 function M.toggle()
   local cwd = dot.path.cwd()
-  local terminal = dot.ux.widget.Terminal ---@type dot.ux.widget.Terminal
+  local terminal = dot.widget.Terminal ---@type dot.widget.Terminal
 
   if terminal:isvisible() then
     local termindex = dot.term.current() ---@type integer
