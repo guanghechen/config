@@ -162,14 +162,17 @@ function M.gen_hlgroup_map(context)
     nvim_tab_toggle = { fg = c.bg1, bg = c.green },
 
     ---! explorer
-    explorer_flag_grey = { fg = c.fg3, bg = c.bg2 },
-    explorer_flag_red = { fg = c.bg0, bg = c.brightRed },
-    explorer_flag_green = { fg = c.bg0, bg = c.brightGreen },
-    explorer_flag_yellow = { fg = c.bg0, bg = c.brightYellow },
-    explorer_flag_blue = { fg = c.bg0, bg = c.brightBlue },
-    explorer_flag_purple = { fg = c.bg0, bg = c.brightPurple },
+    explorer_detached = { fg = c.red, bg = "bg_bar" },
     explorer_flag_aqua = { fg = c.bg0, bg = c.brightAqua },
+    explorer_flag_blue = { fg = c.bg0, bg = c.brightBlue },
+    explorer_flag_green = { fg = c.bg0, bg = c.brightGreen },
+    explorer_flag_grey = { fg = c.fg3, bg = c.bg2 },
     explorer_flag_orange = { fg = c.bg0, bg = c.brightOrange },
+    explorer_flag_purple = { fg = c.bg0, bg = c.brightPurple },
+    explorer_flag_red = { fg = c.bg0, bg = c.brightRed },
+    explorer_flag_yellow = { fg = c.bg0, bg = c.brightYellow },
+    explorer_path = { fg = c.pink, bg = "bg_bar", bold = true },
+    explorer_path_detached = { fg = c.red, bg = "bg_bar", bold = true },
 
     ---! picker
     picker = { sp = c.pink, underline = true },

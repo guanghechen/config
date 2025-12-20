@@ -300,6 +300,7 @@ M.ui = {
   Character = "",
   Check = "󰄳",
   Circle = "",
+  CircleMedium = "●",
   Close = "󰅖",
   Close_alt = "",
   CloudDownload = "",

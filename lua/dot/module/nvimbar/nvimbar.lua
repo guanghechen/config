@@ -30,6 +30,7 @@ local __module_name__ = "dot.module.nvimbar" ---@type string
 ---@field public comp_sep_hlname_active string
 ---@field public delay                  ?integer
 ---@field public silent                 ?fun(): boolean
+---@field public use_percent_fill       ?boolean
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?dot.module.nvimbar.IGetNvimbarPresetContext
 ---@field public is_active              fun(context: dot.module.nvimbar.INvimbarContext): boolean
@@ -43,6 +44,7 @@ local __module_name__ = "dot.module.nvimbar" ---@type string
 ---@field protected _sep                string
 ---@field protected _sep_active         string
 ---@field protected _sep_width          integer
+---@field protected _use_percent_fill   boolean
 ---@field protected _components         dot.module.nvimbar.IComponent[]
 ---@field protected _orders             integer[]
 ---@field protected _scheduler          ark.c.Scheduler
@@ -159,6 +161,7 @@ function M.new(props)
   self._sep = ark.nvim.txt(comp_sep, comp_sep_hlname)
   self._sep_active = ark.nvim.txt(comp_sep, comp_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(comp_sep)
+  self._use_percent_fill = props.use_percent_fill == true
   self._components = {}
   self._orders = {}
   self._scheduler = scheduler
@@ -412,13 +415,17 @@ function M:__render__(force)
 
   local width_half_left = math.floor(width_full / 2) ---@type integer
   local width_padding_left = width_half_left - wl - math.floor(wc / 2) ---@type integer
-  if width_padding_left > 0 and width_padding_left + 1 < width_remain then
+  local use_fixed_padding = hc or not self._use_percent_fill ---@type boolean
+  if use_fixed_padding and width_padding_left > 0 and width_padding_left + 1 < width_remain then
     local width_padding_right = width_remain - width_padding_left ---@type integer
     local padding_left = string.rep(" ", width_padding_left) ---@type string
     local padding_right = string.rep(" ", width_padding_right) ---@type string
     return tl .. sep .. padding_left .. sep .. tc .. sep .. padding_right .. sep .. tr
-  else
+  elseif self._use_percent_fill then
     return tl .. sep .. "%=" .. sep .. tc .. sep .. "%=" .. sep .. tr
+  else
+    local padding = string.rep(" ", math.max(0, width_remain)) ---@type string
+    return tl .. sep .. padding .. sep .. tr
   end
 end
 

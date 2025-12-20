@@ -35,6 +35,7 @@ local M = {}
 ---@field public dir_summary            table<string, string|nil>
 ---@field public dir_stage              table<string, "staged"|"unstaged"|"mixed"|nil>
 ---@field public dir_codes              table<string, table<string, boolean>>
+---@field public ignored                table<string, boolean>
 local cache = {
   initialized = false,
   workspace = nil,
@@ -49,6 +50,7 @@ local cache = {
   dir_summary = {},
   dir_stage = {},
   dir_codes = {},
+  ignored = {},
 }
 
 ---@class dot.state.git.watchers
@@ -628,6 +630,65 @@ M.refresh = M.refresh_git_status
 function M.last_refreshed_at()
   ensure_cache_ready()
   return cache.last_refresh
+end
+
+---@param filepath                      string
+---@return boolean
+function M.is_ignored(filepath)
+  if not dot.path.is_git_repo() then
+    return false
+  end
+
+  local normalized = dot.path.normalize(filepath) ---@type string
+  local cached = cache.ignored[normalized]
+  if cached ~= nil then
+    return cached
+  end
+
+  local is_ignored = dot.path.is_git_ignored(normalized) ---@type boolean
+  cache.ignored[normalized] = is_ignored
+  return is_ignored
+end
+
+---@param filepaths                     string[]
+---@return nil
+function M.preload_ignored(filepaths)
+  if not dot.path.is_git_repo() then
+    return
+  end
+
+  local uncached = {} ---@type string[]
+  for _, filepath in ipairs(filepaths) do
+    local normalized = dot.path.normalize(filepath) ---@type string
+    if cache.ignored[normalized] == nil then
+      uncached[#uncached + 1] = normalized
+    end
+  end
+
+  if #uncached == 0 then
+    return
+  end
+
+  local cmd = { "git", "check-ignore", "--stdin" }
+  local input = table.concat(uncached, "\n") ---@type string
+  local result = vim.fn.system(cmd, input) ---@type string
+
+  local ignored_set = {} ---@type table<string, boolean>
+  if vim.v.shell_error == 0 or vim.v.shell_error == 1 then
+    for line in result:gmatch("[^\r\n]+") do
+      local normalized = dot.path.normalize(line) ---@type string
+      ignored_set[normalized] = true
+    end
+  end
+
+  for _, filepath in ipairs(uncached) do
+    cache.ignored[filepath] = ignored_set[filepath] == true
+  end
+end
+
+---@return nil
+function M.clear_ignored_cache()
+  cache.ignored = {}
 end
 
 return M

@@ -25,6 +25,7 @@ tabline = Nvimbar.new({
 })
 
 tabline
+  :place("left", c.explorer.tabline(position), 95)
   :place(
     "left",
     c.sidebar.of(position, dot.filetype.DIFFVIEW_FILES, function()
@@ -77,12 +78,26 @@ dirtier:subscribe(ark.c.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2
+
+      if last_showtabline == 0 then
+        if dot.widget.explorer.widget ~= nil then
+          local winnr = dot.widget.explorer.widget:get_winnr() ---@type integer|nil
+          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+            vim.wo[winnr].winbar = nil
+          end
+        end
+      end
+
       last_showtabline = 2
       tabline:render()
     else
       vim.o.showtabline = 0
 
       if last_showtabline ~= 0 then
+        if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
+          dot.widget.explorer.widget:render_winbar()
+        end
+
         local winnrs = vim.api.nvim_list_wins() ---@type integer[]
         for _, winnr in ipairs(winnrs) do
           dot.state.status.dirty_winline_nr:next(winnr)

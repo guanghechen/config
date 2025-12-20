@@ -34,6 +34,7 @@ local __component__mods = {
   cwd = "dot.module.nvimbar.component.cwd",
   devmode = "dot.module.nvimbar.component.devmode",
   dir = "dot.module.nvimbar.component.dir",
+  explorer = "dot.module.nvimbar.component.explorer",
   file = "dot.module.nvimbar.component.file",
   git = "dot.module.nvimbar.component.git",
   host = "dot.module.nvimbar.component.host",
@@ -42,7 +43,6 @@ local __component__mods = {
   notepad = "dot.module.nvimbar.component.notepad",
   nvim = "dot.module.nvimbar.component.nvim",
   picker = "dot.module.nvimbar.component.picker",
-  plugin = "dot.module.nvimbar.component.plugin",
   python = "dot.module.nvimbar.component.python",
   sidebar = "dot.module.nvimbar.component.sidebar",
   term = "dot.module.nvimbar.component.term",
@@ -56,6 +56,7 @@ local __component__mods = {
 ---@field public cwd                    dot.module.nvimbar.component.cwd
 ---@field public devmode                dot.module.nvimbar.component.devmode
 ---@field public dir                    dot.module.nvimbar.component.dir
+---@field public explorer               dot.module.nvimbar.component.explorer
 ---@field public file                   dot.module.nvimbar.component.file
 ---@field public git                    dot.module.nvimbar.component.git
 ---@field public host                   dot.module.nvimbar.component.host
@@ -64,7 +65,6 @@ local __component__mods = {
 ---@field public notepad                dot.module.nvimbar.component.notepad
 ---@field public nvim                   dot.module.nvimbar.component.nvim
 ---@field public picker                 dot.module.nvimbar.component.picker
----@field public plugin                 dot.module.nvimbar.component.plugin
 ---@field public python                 dot.module.nvimbar.component.python
 ---@field public sidebar                dot.module.nvimbar.component.sidebar
 ---@field public term                   dot.module.nvimbar.component.term

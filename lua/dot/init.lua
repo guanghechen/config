@@ -6,6 +6,7 @@ local __fn__mods = {
   pick_win = "dot.fn.pick_win",
   rename = "dot.fn.rename",
   select_copy_filepath = "dot.fn.select_copy_filepath",
+  select_copy_filepaths = "dot.fn.select_copy_filepaths",
   select_encoding = "dot.fn.select_encoding",
 }
 
@@ -17,6 +18,7 @@ local __fn__mods = {
 ---@field public pick_win               dot.fn.pick_win
 ---@field public rename                 dot.fn.rename
 ---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
+---@field public select_copy_filepaths  fun(params: dot.fn.select_copy_filepaths.IParams): integer
 ---@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): dot.ux.picker.ListComposer
 local fn = setmetatable({
   __mods = __fn__mods,
@@ -226,6 +228,32 @@ local state = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class dot.widget.__mods
+local __widget__mods = {
+  explorer = "dot.widget.explorer",
+  Notepad = "dot.widget.notepad",
+  Terminal = "dot.widget.terminal",
+}
+
+---@class dot.widget
+---@field public __mods                 dot.widget.__mods
+---@field public explorer               dot.widget.explorer
+---@field public Notepad                dot.widget.Notepad
+---@field public Terminal               dot.widget.Terminal
+local widget = setmetatable({
+  __mods = __widget__mods,
+}, {
+  __index = function(t, k)
+    local m = __widget__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.__mods
 local __mods = {
   Filetree = "dot.filetree",
@@ -249,7 +277,6 @@ local __mods = {
   uri = "dot.uri",
   ux = "dot.ux",
   var = "dot.var",
-  widget = "dot.widget",
   win = "dot.win",
 }
 
@@ -297,6 +324,7 @@ local M = setmetatable({
   lang = lang,
   state = state,
   theme = theme,
+  widget = widget,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
