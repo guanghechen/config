@@ -102,7 +102,7 @@ local function update_highlight()
   timer:stop()
   timer:start(config.debounce, 0, function()
     vim.schedule(function()
-      if not vim.api.nvim_buf_is_valid(bufnr) or not attached_buffers[bufnr] then
+      if vim.api.nvim_get_current_buf() ~= bufnr or not attached_buffers[bufnr] then
         return
       end
       if not is_mode_enabled() or not has_highlight_capability(bufnr) then
