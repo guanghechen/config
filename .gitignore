@@ -1,5 +1,6 @@
 log/
 sessions/
+skills/
 
 config.toml
 history.jsonl
