@@ -358,14 +358,12 @@ M.definitions.diagnostic = {
 
 ---@class dot.command.definitions.explorer
 M.definitions.explorer = {
-  fs_cwd = D.new("Fexplorerfscwd", "explorer: filesystem (cwd)"),
-  fs_workspace = D.new("Fexplorerfsworkspace", "explorer: filesystem (workspace)"),
-  fs_reveal = D.new("Fexplorerfsreveal", "explorer: filesystem (reveal)"),
-
-  git_cwd = D.new("Fexplorergitcwd", "explorer: git (cwd)"),
-  git_workspace = D.new("Fexplorergitworkspace", "explorer: git (workspace)"),
-
-  last = D.new("Fexplorerlast", "explorer: last"),
+  focus = D.new("Fexplorerfocus", "explorer: focus"),
+  focus_cwd = D.new("Fexplorerfocuscwd", "explorer: focus cwd"),
+  focus_workspace = D.new("Fexplorerfocusworkspace", "explorer: focus workspace"),
+  hide = D.new("Fexplorerhide", "explorer: hide"),
+  refresh = D.new("Fexplorerrefresh", "explorer: refresh"),
+  reveal = D.new("Fexplorerreveal", "explorer: reveal current file"),
   toggle = D.new("Fexplorertoggle", "explorer: toggle"),
 }
 

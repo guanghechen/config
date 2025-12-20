@@ -1181,6 +1181,7 @@ local ICONS_FILETYPE = {
   dapui_watches           = { glyph = "󰃤", hl = "MiniIconsRed"    },
   dashboard               = { glyph = "󰕮", hl = "MiniIconsOrange" },
   edgy                    = { glyph = "󰛺", hl = "MiniIconsGrey"   },
+  explorer                = { glyph = "󰙅", hl = "MiniIconsYellow" },
   fzf                     = { glyph = "󱡠", hl = "MiniIconsAzure"  },
   harpoon                 = { glyph = "󱡀", hl = "MiniIconsCyan"   },
   lazy                    = { glyph = "󰒲", hl = "MiniIconsBlue"   },

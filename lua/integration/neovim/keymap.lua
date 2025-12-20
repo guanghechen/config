@@ -13,10 +13,9 @@ ms({ "n" }, { "<C-a>c", "<D-c>", "<M-c>" }, K.copy.char_under_cursor)
 ms({ "i", "n", "t", "x" }, { "<C-a>`", "<D-`>", "<M-`>" }, K.ux.resume_last_widget)
 ms({ "n", "x" }, "<leader>`", K.ux.resume_last_widget)
 ms({ "n", "x" }, "<leader>;", K.notepad.toggle)
-ms({ "n", "x" }, "<leader>1", K.explorer.fs_cwd)
+ms({ "n", "x" }, "<leader>1", K.explorer.toggle)
 ms({ "n", "x" }, "<leader>2", K.search.in_cwd)
 ms({ "n", "x" }, "<leader>3", K.find.git_not_committed)
-ms({ "n", "x" }, "<leader>4", K.explorer.git_cwd)
 ms({ "n", "x" }, "z;", K.toggle.maximize)
 ------------------------------------------------------------------------------------------#enhance--
 
@@ -159,12 +158,10 @@ ms({ "n", "x" }, "<leader>iw", K.inspect.inspect_window)
 ----------------------------------------------------------------------------------------#[i]nspect--
 
 --#[e]xplorer---------------------------------------------------------------------------------------
-ms({ "n", "x" }, "<leader>eF", K.explorer.fs_workspace)
-ms({ "n", "x" }, "<leader>ef", K.explorer.fs_cwd)
-ms({ "n", "x" }, "<leader>eG", K.explorer.git_workspace)
-ms({ "n", "x" }, "<leader>eg", K.explorer.git_cwd)
-ms({ "n", "x" }, "<leader>er", K.explorer.fs_reveal)
+ms({ "n", "x" }, "<leader>ec", K.explorer.focus_cwd)
+ms({ "n", "x" }, "<leader>er", K.explorer.reveal)
 ms({ "n", "x" }, "<leader>et", K.explorer.toggle)
+ms({ "n", "x" }, "<leader>ew", K.explorer.focus_workspace)
 ---------------------------------------------------------------------------------------#[e]xplorer--
 
 --#[f]ind-------------------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@alias dot.win.TypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
+---| "ux:explorer"
 ---| "ux:input"
 ---| "ux:picker-finder"
 ---| "ux:picker-preview"
@@ -41,6 +42,7 @@ local Types = {
   -- stylua: ignore start
   BOARD             = "ux:board",
   CMDLINE           = "ux:cmdline",
+  EXPLORER          = "ux:explorer",
   INPUT             = "ux:input",
   NOTIFY            = "ux:notify",
   PICKER_FINDER     = "ux:picker-finder",
@@ -61,6 +63,7 @@ local Types = {
 local wintype_attrs = {
   focusable = {
     [Types.BOARD] = true,
+    [Types.EXPLORER] = true,
     [Types.INPUT] = true,
     [Types.NOTIFY] = true,
     [Types.PICKER_FINDER] = true,

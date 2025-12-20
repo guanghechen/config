@@ -75,6 +75,19 @@ function M.default_gen_hlgroup_map(context)
     ---dim
     f_dim = { fg = u.fg4 },
 
+    ---explorer widget
+    f_explorer_bg = { fg = u.fg1, bg = bg },
+    f_explorer_border = { fg = u.bg3, bg = bg },
+    f_explorer_copy = { fg = u.yellow, italic = true },
+    f_explorer_cursorline = { bg = u.bg3 },
+    f_explorer_cursorline_blur = { bg = u.bg2 },
+    f_explorer_cut = { fg = u.red, italic = true },
+    f_explorer_eob = { fg = bg, bg = bg },
+    f_explorer_ignored = { fg = u.fg4 },
+    f_explorer_indent = { fg = u.bg3 },
+    f_explorer_selected = { fg = u.brightYellow, bold = true },
+    f_explorer_winbar = { fg = u.fg2, bg = u.bg1, bold = true },
+
     ---file explorer
     f_fe_date = { fg = u.fg4 },
     f_fe_group = { fg = u.red },

@@ -13,6 +13,7 @@ local __mods = {
 
   bookmark = "dot.context.workspace.bookmark",
   colorpicker = "dot.context.workspace.colorpicker",
+  explorer = "dot.context.workspace.explorer",
   flight = "dot.context.workspace.flight",
   frecency = "dot.context.workspace.frecency",
   lsp = "dot.context.workspace.lsp",
@@ -42,6 +43,7 @@ local __mods = {
 ---
 ---@field public bookmark               dot.context.bookmark.data
 ---@field public colorpicker            dot.context.colorpicker.data
+---@field public explorer               dot.context.explorer.data
 ---@field public flight                 dot.context.flight.data
 ---@field public frecency               dot.context.frecency.data
 ---@field public lsp                    dot.context.lsp.data
@@ -73,6 +75,7 @@ local __mods = {
 ---
 ---@field public bookmark               dot.context.bookmark
 ---@field public colorpicker            dot.context.colorpicker
+---@field public explorer               dot.context.explorer
 ---@field public flight                 dot.context.flight
 ---@field public frecency               dot.context.frecency
 ---@field public lsp                    dot.context.lsp
@@ -106,6 +109,7 @@ function M.dump()
 
     bookmark = M.bookmark.dump(),
     colorpicker = M.colorpicker.dump(),
+    explorer = M.explorer.dump(),
     flight = M.flight.dump(),
     frecency = M.frecency.dump(),
     lsp = M.lsp.dump(),
@@ -141,6 +145,7 @@ function M.load(storage, initialize)
     ) or {}
     M.bookmark.load(data_workspace.bookmark)
     M.colorpicker.load(data_workspace.colorpicker)
+    M.explorer.load(data_workspace.explorer)
     M.flight.load(data_workspace.flight)
     M.frecency.load(data_workspace.frecency)
     M.lsp.load(data_workspace.lsp)
@@ -189,6 +194,7 @@ function M.save(storage)
     local data = {
       bookmark = M.bookmark.dump(),
       colorpicker = M.colorpicker.dump(),
+      explorer = M.explorer.dump(),
       flight = M.flight.dump(),
       frecency = M.frecency.dump(),
       lsp = M.lsp.dump(),

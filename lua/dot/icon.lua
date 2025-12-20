@@ -79,13 +79,13 @@ M.listchars = {
 
 ---@class dot.icon.symbols
 M.symbols = {
-  setting = "",
   flag_buffer = "",
   flag_case_sensitive = "",
   flag_exclude = "",
   flag_fold_empty_path = "",
   flag_fuzzy = "",
   flag_gitignore = "",
+  flag_hidden = "󰘓",
   flag_included = "󱣬",
   flag_list = "",
   flag_regex = "󰑑",
@@ -96,6 +96,10 @@ M.symbols = {
   flag_tree = "",
   sep_left = "",
   sep_right = "",
+  selection = "▎",
+  selection_copy = "󰆏",
+  selection_cut = "󰆐",
+  setting = "",
 }
 
 ---@class dot.icon.status

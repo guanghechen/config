@@ -1,6 +1,12 @@
 {
-  "ignorePaths": ["lsp/yamlls.lua", "lua/dot/dict/", "lua/dot/fileicon.lua"],
-  "import": ["~/.config/cspell/cspell.json"],
+  "ignorePaths": [
+    "lsp/yamlls.lua",
+    "lua/dot/dict/",
+    "lua/dot/fileicon.lua"
+  ],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -65,12 +71,18 @@
     "Fdiagnosticgotoprevwarn",
     "Fdiagnosticline",
     "Fdiagnosticoutline",
+    "Fexplorerfocus",
+    "Fexplorerfocuscwd",
+    "Fexplorerfocusworkspace",
     "Fexplorerfscwd",
     "Fexplorerfsreveal",
     "Fexplorerfsworkspace",
     "Fexplorergitcwd",
     "Fexplorergitworkspace",
+    "Fexplorerhide",
     "Fexplorerlast",
+    "Fexplorerrefresh",
+    "Fexplorerreveal",
     "Fexplorertoggle",
     "Ffindbufs",
     "Ffindbufsfile",
@@ -271,9 +283,12 @@
     "chatbox",
     "checkhealth",
     "checktime",
+    "chidxmap",
     "childcount",
     "childindent",
+    "childindex",
     "childline",
+    "childname",
     "childstate",
     "childuuid",
     "clangd",
@@ -607,6 +622,7 @@
     "msgsep",
     "nanos",
     "nargs",
+    "neotree",
     "neovide",
     "netrw",
     "newcreated",
@@ -614,10 +630,13 @@
     "noautocmd",
     "nocombine",
     "nodedata",
+    "nodeindex",
+    "nodename",
     "nodepath",
     "noderoot",
     "nodestate",
     "nodetype",
+    "nodeuri",
     "nodeuuid",
     "nofile",
     "noformat",
@@ -662,6 +681,7 @@
     "osname",
     "parentindent",
     "parentleafs",
+    "parenturi",
     "parentuuid",
     "pathsep",
     "pathshorten",
@@ -712,9 +732,11 @@
     "rofile",
     "rootdata",
     "rootdir",
+    "rootname",
     "rootnode",
     "rootnodedata",
     "rootstate",
+    "rooturi",
     "rootuuid",
     "rosepine",
     "rsplit",
@@ -931,4 +953,3 @@
     "zindex"
   ]
 }
-

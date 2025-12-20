@@ -143,6 +143,7 @@ vim.api.nvim_create_autocmd("FileType", {
     "checkhealth",
     "dap-float",
     "dap-repl",
+    "explorer",
     "gitcommit",
     "help",
     "image-viewer",

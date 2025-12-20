@@ -203,6 +203,20 @@ When modifying `rust/yoz/src/`:
 - Keep Lua-facing APIs synchronized with Lua call sites
 - Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
 
+### Keymap Ordering
+When defining keymaps in a list/table, follow this ordering:
+1. Mouse keys (`<LeftMouse>`, `<2-LeftMouse>`, `<RightMouse>`, etc.)
+2. `<M-*>` (Meta/Alt keys)
+3. `<D-*>` (Command/Super keys)
+4. `<C-a>*` (Ctrl-a prefix keys)
+5. `<C-*>` (other Ctrl keys)
+6. Special keys (`<CR>`, `<Tab>`, `<BS>`, `<Esc>`, etc.)
+7. Uppercase letters (A-Z)
+8. Lowercase letters (a-z)
+9. Symbols and numbers
+
+Within each category, sort alphabetically.
+
 ## Plugin Management
 - **Lock File**: `lazy-lock.json` contains exact plugin versions
 - **Plugin Configs**: `ghc/plugins/` for individual plugin configurations
