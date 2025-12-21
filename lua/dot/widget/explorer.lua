@@ -43,8 +43,8 @@ function M.get_widget()
     M.widget = Widget.new({
       name = "explorer.default",
       width = dot.context.explorer.width:snapshot(),
-      o_foldempty = dot.context.explorer.flag_foldempty,
-      o_show_hidden = dot.context.explorer.flag_show_hidden,
+      o_flag_foldempty = dot.context.explorer.flag_foldempty,
+      o_flag_hidden = dot.context.explorer.flag_show_hidden,
       o_width = dot.context.explorer.width,
       flags = M.__get_flags__(),
     })

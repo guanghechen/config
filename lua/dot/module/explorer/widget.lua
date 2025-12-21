@@ -1544,22 +1544,22 @@ function M:__get_flags__()
   local state = self._tree.state ---@type dot.module.explorer.State
 
   ---@type dot.module.explorer.widget.IFlagItem[]
-  local flags = {
-    {
-      desc = "explorer: toggle hidden files",
-      callback = function()
-        state.o_flag_hidden:next(not state.o_flag_hidden:snapshot())
-      end,
-      snapshot = function()
-        local show_hidden = state.o_flag_hidden:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
-  }
+  local flags = {}
 
   for _, flag in ipairs(self._flags) do
     flags[#flags + 1] = flag
   end
+
+  flags[#flags + 1] = {
+    desc = "explorer: toggle hidden files",
+    callback = function()
+      state.o_flag_hidden:next(not state.o_flag_hidden:snapshot())
+    end,
+    snapshot = function()
+      local show_hidden = state.o_flag_hidden:snapshot() ---@type boolean
+      return dot.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
+    end,
+  }
 
   return flags
 end

@@ -64,8 +64,8 @@ function M.flags(position, flags)
 
           text = text .. piece_text ---@type string
           hl_text = hl_text .. btn(txt(piece_text, piece_hln), item.callback) ---@type string
-          index = index + 1 ---@type integer
         end
+        index = index + 1
       end
       return text, hl_text, true
     end,
@@ -135,8 +135,8 @@ function M.winbar(o_root_uri, position, flags, get_width)
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string
           flags_text = flags_text .. piece_text
           flags_hl_text = flags_hl_text .. btn(txt(piece_text, piece_hln), item.callback)
-          index = index + 1
         end
+        index = index + 1
       end
       flags_text = flags_text .. " "
       flags_hl_text = flags_hl_text .. txt(" ", hln_text)
@@ -318,8 +318,8 @@ function M.tabline(position)
       local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_digit ---@type string
       text = text .. flag_foldempty_piece_text
       hl_text = hl_text .. btn(txt(flag_foldempty_piece_text, flag_foldempty_piece_hln), flag_foldempty_callback)
-      index = index + 1
     end
+    index = index + 1
 
     local flag_hidden_icon = dot.icon.symbols.flag_hidden ---@type string
     local flag_hidden_hln = show_hidden and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
