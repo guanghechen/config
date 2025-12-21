@@ -86,7 +86,7 @@ function M.gen_hlgroup_map(context)
     f_explorer_cursorline_blur = { bg = u.bg2 },
     f_explorer_cut = { fg = c.accentRed, italic = true },
     f_explorer_eob = { fg = bg, bg = bg },
-    f_explorer_ignored = { fg = u.fg4 },
+    f_explorer_ignored = { fg = u.fg4, italic = true },
     f_explorer_indent = { fg = u.bg3 },
     f_explorer_selected = { fg = c.accentYellow, bold = true },
     f_explorer_winbar = { fg = c.text, bg = c.tab_inactiveBackground, bold = true },
@@ -104,7 +104,7 @@ function M.gen_hlgroup_map(context)
 
     ---filetree
     f_ft_dirname = { fg = u.brightBlue },
-    f_ft_filename = { fg = u.fg2 },
+    f_ft_filename = { fg = u.fg1 },
     f_ft_pathsep = { fg = u.fg4 },
     f_ft_position = { fg = u.bg4 },
     f_ft_reference = { fg = u.purple, bold = true, italic = true },
