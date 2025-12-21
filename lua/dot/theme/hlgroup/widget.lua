@@ -24,6 +24,11 @@ function M.default_gen_hlgroup_map(context)
   local bg_pane = t and u.bg0 or u.none ---@type string
 
   return {
+    ---board fileinfo
+    fb_fileinfo_label = { fg = u.fg3 },
+    fb_fileinfo_normal = { fg = u.fg1, bg = bg_pane },
+    fb_fileinfo_value = { fg = u.blue },
+
     ---board keysheet
     fb_keysheet_border = { fg = u.bg4, bg = bg_pane },
     fb_keysheet_cursorline = { bg = u.bg2 },

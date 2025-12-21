@@ -1272,30 +1272,6 @@ function M:__action_send_to_quickfix__()
 end
 
 ---@protected
----@param mode                          integer
----@return string
-function M:__format_permissions__(mode)
-  local perms = ""
-  local flags = mode % 512
-  for i = 8, 0, -1 do
-    local has = math.floor(flags / (2 ^ i)) % 2 == 1
-    if has then
-      local idx = 8 - i
-      if idx % 3 == 0 then
-        perms = perms .. "r"
-      elseif idx % 3 == 1 then
-        perms = perms .. "w"
-      else
-        perms = perms .. "x"
-      end
-    else
-      perms = perms .. "-"
-    end
-  end
-  return perms
-end
-
----@protected
 ---@return nil
 function M:__action_show_file_info__()
   local uri = self:get_cursor_uri() ---@type string|nil
@@ -1308,95 +1284,9 @@ function M:__action_show_file_info__()
     filepath = filepath:sub(1, -2)
   end
 
-  local stat = vim.uv.fs_stat(filepath) ---@type uv.fs_stat.result|nil
-  if stat == nil then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "File Info",
-      message = "Cannot get file information",
-    })
-    return
-  end
-
-  ---@class dot.module.explorer.widget.IFileInfoLine
-  ---@field public label                  string
-  ---@field public value                  string
-
-  local infos = {} ---@type dot.module.explorer.widget.IFileInfoLine[]
-  local workspace = dot.path.workspace() ---@type string
-  local relative_path = filepath:sub(#workspace + 2) ---@type string
-
-  infos[#infos + 1] = { label = "Path", value = relative_path }
-  infos[#infos + 1] = { label = "Type", value = stat.type }
-  infos[#infos + 1] = { label = "Size", value = yoz.fs.get_filesize(filepath) or "unknown" }
-  infos[#infos + 1] = { label = "Modified", value = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec) }
-  infos[#infos + 1] = { label = "Accessed", value = os.date("%Y-%m-%d %H:%M:%S", stat.atime.sec) }
-  if stat.birthtime and stat.birthtime.sec > 0 then
-    infos[#infos + 1] = { label = "Created", value = os.date("%Y-%m-%d %H:%M:%S", stat.birthtime.sec) }
-  end
-  infos[#infos + 1] = { label = "Mode", value = string.format("%s (%o)", self:__format_permissions__(stat.mode), stat.mode % 512) }
-
-  local label_width = 0 ---@type integer
-  for _, info in ipairs(infos) do
-    label_width = math.max(label_width, #info.label)
-  end
-
-  local lines = {} ---@type string[]
-  for _, info in ipairs(infos) do
-    lines[#lines + 1] = string.format("  %s:%s  %s", info.label, string.rep(" ", label_width - #info.label), info.value)
-  end
-  lines[#lines + 1] = ""
-
-  local width = 0 ---@type integer
-  for _, line in ipairs(lines) do
-    width = math.max(width, vim.api.nvim_strwidth(line))
-  end
-  width = width + 4
-
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].modifiable = true
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
-
-  local ns = vim.api.nvim_create_namespace("explorer_file_info") ---@type integer
-  for i, info in ipairs(infos) do
-    vim.hl.range(bufnr, ns, "Label", { i - 1, 2 }, { i - 1, 2 + #info.label })
-    vim.hl.range(bufnr, ns, "String", { i - 1, 2 + label_width + 3 }, { i - 1, #lines[i] })
-  end
-
-  local winblend = dot.context.theme.get_float_winblend() ---@type integer
-  local winnr = vim.api.nvim_open_win(bufnr, true, {
-    relative = "cursor",
-    row = 1,
-    col = 0,
-    width = width,
-    height = #lines,
-    border = "rounded",
-    style = "minimal",
-    focusable = true,
-    title = string.format(" %s File Info ", dot.icon.ui.Information),
-    title_pos = "center",
-  })
-
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder"
-
-  vim.keymap.set("n", "q", function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end, { buffer = bufnr, noremap = true, silent = true })
-
-  vim.keymap.set("n", "<Esc>", function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end, { buffer = bufnr, noremap = true, silent = true })
+  local Fileinfo = require("dot.module.board.fileinfo")
+  local fileinfo = Fileinfo.new({ filepath = filepath })
+  fileinfo:open()
 end
 
 ---@protected
