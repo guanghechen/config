@@ -1284,8 +1284,7 @@ function M:__action_show_file_info__()
     filepath = filepath:sub(1, -2)
   end
 
-  local Fileinfo = require("dot.module.board.fileinfo")
-  local fileinfo = Fileinfo.new({ filepath = filepath })
+  local fileinfo = dot.board.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
 end
 
@@ -1307,8 +1306,7 @@ end
 ---@protected
 ---@return nil
 function M:__action_show_keysheet__()
-  local Keysheet = require("dot.module.board.keysheet")
-  local keysheet = Keysheet.new({
+  local keysheet = dot.board.Keysheet.new({
     title = "Explorer Help",
     keymaps = self._keymaps,
   })
@@ -1378,7 +1376,7 @@ end
 ---@return nil
 function M:__action_goto_git_changed__(direction)
   self:__goto_matching_file__(direction, function(filepath)
-    local display, _ = dot.state.git.resolve_status(filepath, "file") ---@type string|nil, string|nil
+    local display, _ = dot.git.status.resolve(filepath, "file")
     return display ~= nil and #display > 0
   end)
 end

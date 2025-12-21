@@ -14,20 +14,28 @@ local git_filepaths_dirty = true
 local picker ---@type dot.ux.picker.FiletreeComposer
 
 ---@param force                         boolean
+---@param callback                      fun()|nil
 ---@return nil
-local function refresh(force)
+local function refresh(force, callback)
   if not force and not git_filepaths_dirty then
+    if callback then
+      callback()
+    end
     return
   end
 
-  local workspace, status = dot.state.git.status("HEAD") ---@type string, table<string, string>
-  local filepaths = {} ---@type string[]
-  for filepath in pairs(status) do
-    filepaths[#filepaths + 1] = filepath
-  end
+  dot.git.state.status_async("HEAD", function(workspace, status)
+    local filepaths = {} ---@type string[]
+    for filepath in pairs(status) do
+      filepaths[#filepaths + 1] = filepath
+    end
 
-  picker:reset_filepaths(workspace, filepaths, false)
-  git_filepaths_dirty = false
+    picker:reset_filepaths(workspace, filepaths, false)
+    git_filepaths_dirty = false
+    if callback then
+      callback()
+    end
+  end)
 end
 
 picker = dot.ux.picker.FiletreeComposer.new({
@@ -54,11 +62,12 @@ picker = dot.ux.picker.FiletreeComposer.new({
     git_filepaths_dirty = true
   end,
   on_focused = function()
-    refresh(false)
+    refresh(false, nil)
   end,
   on_refresh = function()
-    dot.state.git.refresh_git_status(true)
-    refresh(true)
+    dot.git.state.refresh_async(true, function()
+      refresh(true, nil)
+    end)
   end,
 })
 
@@ -81,8 +90,9 @@ function M.find_git_not_committed()
     return
   end
 
-  refresh(false)
-  picker:focus()
+  refresh(false, function()
+    picker:focus()
+  end)
 end
 
 return M

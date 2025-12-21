@@ -461,6 +461,18 @@ function M.default_gen_hlgroup_map(context)
     f_maximize_float_normal = { fg = u.fg1, bg = u.bg0 },
     f_maximize_float_border = { fg = u.bg4, bg = u.bg0 },
     f_maximize_normal = { fg = u.fg1, bg = u.bg0 },
+
+    ---module/git
+    fg_hunk_indicator = { fg = u.orange },
+    fg_inline_blame = { fg = u.fg4, italic = true },
+    fg_buffer_blame = { fg = u.bg4, italic = true },
+    fg_sign_add = { fg = u.green },
+    fg_sign_add_staged = { fg = cs.mix(u.bg0, u.green, 50) },
+    fg_sign_change = { fg = u.blue },
+    fg_sign_change_staged = { fg = cs.mix(u.bg0, u.blue, 50) },
+    fg_sign_delete = { fg = u.red },
+    fg_sign_delete_staged = { fg = cs.mix(u.bg0, u.red, 50) },
+    fg_sign_untracked = { fg = u.fg4 },
   }
 end
 

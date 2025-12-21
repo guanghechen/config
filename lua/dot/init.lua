@@ -198,7 +198,6 @@ local theme = setmetatable({
 
 ---@class dot.state.__mods
 local __state__mods = {
-  git = "dot.state.git",
   maximized = "dot.state.maximized",
   notepad = "dot.state.notepad",
   qflist = "dot.state.qflist",
@@ -208,7 +207,6 @@ local __state__mods = {
 
 ---@class dot.state
 ---@field public __mods                 dot.state.__mods
----@field public git                    dot.state.git
 ---@field public maximized              dot.state.maximized
 ---@field public notepad                dot.state.notepad
 ---@field public qflist                 dot.state.qflist
@@ -256,6 +254,9 @@ local widget = setmetatable({
 
 ---@class dot.__mods
 local __mods = {
+  board = "dot.module.board",
+  git = "dot.module.git",
+
   Filetree = "dot.filetree",
   G = "dot.G",
   Tree = "dot.tree",
@@ -264,7 +265,6 @@ local __mods = {
   context = "dot.context",
   fileicon = "dot.fileicon",
   filetype = "dot.filetype",
-  git = "dot.git",
   icon = "dot.icon",
   lsp = "dot.lsp",
   lsp_action = "dot.lsp_action",
@@ -282,13 +282,15 @@ local __mods = {
 
 ---@class dot
 ---@field public __mods                 dot.__mods
+---@field public board                  dot.module.board
+---@field public git                    dot.module.git
+---
 ---@field public Filetree               dot.Filetree
 ---@field public Tree                   dot.Tree
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public dict                   dot.dict
 ---@field public fn                     dot.fn
----@field public git                    dot.git
 ---@field public lang                   dot.lang
 ---@field public lsp                    dot.lsp
 ---@field public lsp_action             dot.lsp_action

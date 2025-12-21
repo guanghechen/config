@@ -70,8 +70,8 @@ local function build_context(preset_context)
   local filetype = vim.bo[bufnr].filetype ---@type string
   local fileicon, fileicon_hl = dot.fileicon.get_file_icon(filename, filetype) ---@type string, string
 
-  local git = vim.b[bufnr].gitsigns_status_dict
-  local git_branch = git and git.head or nil ---@type string|nil
+  local git_branch = dot.git.get_branch() ---@type string|nil
+  git_branch = git_branch ~= "" and git_branch or nil
 
   ---@type dot.module.nvimbar.INvimbarContext
   local context = {

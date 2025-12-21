@@ -480,19 +480,131 @@ command
   .implement({
     uuid = K.git.browse.uuid,
     action = function()
-      require("fml.action.git.browse").browse()
+      dot.git.browse.open()
     end,
   })
   .implement({
     uuid = K.git.browse_permalink.uuid,
     action = function()
-      require("fml.action.git.browse").browse({ what = "permalink" })
+      dot.git.browse.open({ what = "permalink" })
     end,
   })
   .implement({
     uuid = K.git.browse_repo.uuid,
     action = function()
-      require("fml.action.git.browse").browse({ what = "repo" })
+      dot.git.browse.open({ what = "repo" })
+    end,
+  })
+
+--[git] hunk----------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.git.blame.uuid,
+    action = function()
+      dot.git.blame.inline_toggle()
+    end,
+  })
+  .implement({
+    uuid = K.git.blame_buffer.uuid,
+    action = function()
+      dot.git.blame.buffer_toggle()
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_goto_prev.uuid,
+    action = function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        dot.git.hunk.nav("prev")
+      end
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_goto_next.uuid,
+    action = function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        dot.git.hunk.nav("next")
+      end
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_goto_prev_all.uuid,
+    action = function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        dot.git.hunk.nav_all("prev")
+      end
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_goto_next_all.uuid,
+    action = function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        dot.git.hunk.nav_all("next")
+      end
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_preview.uuid,
+    action = function()
+      dot.git.hunk.preview()
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_stage.uuid,
+    action = function()
+      dot.git.hunk.stage()
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_stage_visual.uuid,
+    action = function()
+      local lnum_start, lnum_end = dot.buf.retrieve_visual_lnum_range()
+      dot.git.hunk.stage({ lnum_start, lnum_end })
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_unstage.uuid,
+    action = function()
+      dot.git.hunk.unstage()
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_unstage_visual.uuid,
+    action = function()
+      local lnum_start, lnum_end = dot.buf.retrieve_visual_lnum_range()
+      dot.git.hunk.unstage({ lnum_start, lnum_end })
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_reset.uuid,
+    action = function()
+      dot.git.hunk.reset()
+    end,
+  })
+  .implement({
+    uuid = K.git.hunk_reset_visual.uuid,
+    action = function()
+      local lnum_start, lnum_end = dot.buf.retrieve_visual_lnum_range()
+      dot.git.hunk.reset({ lnum_start, lnum_end })
+    end,
+  })
+  .implement({
+    uuid = K.git.stage_buffer.uuid,
+    action = function()
+      dot.git.hunk.stage_buffer()
+    end,
+  })
+  .implement({
+    uuid = K.git.reset_buffer.uuid,
+    action = function()
+      dot.git.hunk.reset_buffer()
     end,
   })
 

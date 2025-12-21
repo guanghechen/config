@@ -12,8 +12,13 @@ require("fml.dressing.ui_attach")
 require("fml.dressing.statusline")
 require("fml.dressing.tabline")
 require("fml.dressing.winline")
-
+require("fml.dressing.statuscolumn")
 require("fml.command")
+
+if dot.path.is_git_repo() then
+  require("dot.module.git")
+end
+
 require("ghc.plugin")
 pcall(require, "integration.neovide.plugin")
 pcall(require, "integration.local.plugin")
@@ -31,7 +36,6 @@ vim.schedule(function()
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
   require("fml.dressing.scroll")
-  require("fml.dressing.statuscolumn")
   require("fml.dressing.virtcolumn")
   require("fml.dressing.winsep")
 

@@ -391,12 +391,27 @@ M.definitions.find = {
 
 ---@class dot.command.definitions.git
 M.definitions.git = {
+  blame = D.new("Fgitblame", "git: blame line"),
+  blame_buffer = D.new("Fgitblamebuffer", "git: blame buffer"),
   browse = D.new("Fgitbrowse", "git: browse"),
   browse_permalink = D.new("Fgitbrowsepermalink", "git: browse (permalink)"),
   browse_repo = D.new("Fgitbrowserepo", "git: browse (repo)"),
   diffview = D.new("Fgitdiffview", "git: diffview"),
   history = D.new("Fgithistory", "git: history (commits)"),
   history_file = D.new("Fgithistoryfile", "git: history (file)"),
+  hunk_goto_prev = D.new("Fgithunkgotoprev", "git: goto prev hunk"),
+  hunk_goto_next = D.new("Fgithunkgotonext", "git: goto next hunk"),
+  hunk_goto_prev_all = D.new("Fgithunkgotoprevall", "git: goto prev hunk (all)"),
+  hunk_goto_next_all = D.new("Fgithunkgotonextall", "git: goto next hunk (all)"),
+  hunk_preview = D.new("Fgithunkpreview", "git: preview hunk"),
+  hunk_stage = D.new("Fgithunkstage", "git: stage hunk"),
+  hunk_stage_visual = D.new("Fgithunkstagevisual", "git: stage hunk (visual)"),
+  hunk_unstage = D.new("Fgithunkunstage", "git: unstage hunk"),
+  hunk_unstage_visual = D.new("Fgithunkunstagevisual", "git: unstage hunk (visual)"),
+  hunk_reset = D.new("Fgithunkreset", "git: reset hunk"),
+  hunk_reset_visual = D.new("Fgithunkresetvisual", "git: reset hunk (visual)"),
+  stage_buffer = D.new("Fgitstagebuffer", "git: stage buffer"),
+  reset_buffer = D.new("Fgitresetbuffer", "git: reset buffer"),
 }
 
 ---@class dot.command.definitions.inspect

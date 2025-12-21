@@ -104,9 +104,10 @@ local function resolve_nvimbar(winnr)
       winline.locate_scheduler = locate_scheduler
     end
     winline.locate_scheduler:schedule()
+    return winline.nvimbar
   end
 
-  return winline.nvimbar
+  return nil
 end
 
 ---@param winnr                         integer|nil
@@ -135,16 +136,6 @@ local function render(winnr)
     end
     return
   end
-  if string.sub(filepath, 1, 11) == "gitsigns://" then
-    local text = string.sub(filepath, 12) ---@type string
-    if string.sub(text, 1, #ark.env.HOME_NVIM_CONFIG) == ark.env.HOME_NVIM_CONFIG then
-      text = "<NVIM_HOME>" .. string.sub(text, #ark.env.HOME_NVIM_CONFIG + 1)
-    end
-    local winbar = "gitsigns://" .. text
-    vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
-    return
-  end
-
   local buftype = vim.bo[bufnr].buftype ---@type string
   if buftype == "nofile" then
     return

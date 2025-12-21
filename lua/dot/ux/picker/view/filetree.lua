@@ -738,7 +738,7 @@ function M.default_render_listview_leaf(ctx, node)
 
   ---@type string, string|nil
   local git_text, git_name_highlight =
-    dot.state.git.calc_status_info(node.data.filepath, node.data.filetype, #text, highlights)
+    dot.git.status.calc_info(node.data.filepath, node.data.filetype, #text, highlights)
   if git_name_highlight ~= nil then
     highlights[highlight_index].hlname = git_name_highlight
   end
@@ -848,7 +848,7 @@ function M.default_render_treeview_leaf(_, node)
 
   ---@type string, string|nil
   local git_text, git_name_highlight =
-    dot.state.git.calc_status_info(node.data.filepath, node.data.filetype, #text, highlights)
+    dot.git.status.calc_info(node.data.filepath, node.data.filetype, #text, highlights)
   if git_name_highlight ~= nil then
     highlights[2].hlname = git_name_highlight
   end

@@ -261,21 +261,16 @@ function M.status(position)
   ---@param bufnr                       integer
   ---@return string
   local function get_filestatus(bufnr)
-    local gitsigns_head = vim.b[bufnr].gitsigns_head
-    local gitsigns_git_status = vim.b[bufnr].gitsigns_git_status
-    local gitsigns_status_dict = vim.b[bufnr].gitsigns_status_dict
-
+    local summary = dot.git.hunk.get_summary(bufnr) ---@type dot.module.git.HunkSummary
     local text = "" ---@type string
-    if gitsigns_head and gitsigns_status_dict and not gitsigns_git_status then
-      if gitsigns_status_dict.added and gitsigns_status_dict.added > 0 then
-        text = text .. " " .. dot.icon.git.Add .. " " .. gitsigns_status_dict.added ---@type string
-      end
-      if gitsigns_status_dict.changed and gitsigns_status_dict.changed > 0 then
-        text = text .. " " .. dot.icon.git.Mod_alt .. " " .. gitsigns_status_dict.changed ---@type string
-      end
-      if gitsigns_status_dict.removed and gitsigns_status_dict.removed > 0 then
-        text = text .. " " .. dot.icon.git.Remove .. " " .. gitsigns_status_dict.removed ---@type string
-      end
+    if summary.added > 0 then
+      text = text .. " " .. dot.icon.git.Add .. " " .. summary.added ---@type string
+    end
+    if summary.changed > 0 then
+      text = text .. " " .. dot.icon.git.Mod_alt .. " " .. summary.changed ---@type string
+    end
+    if summary.removed > 0 then
+      text = text .. " " .. dot.icon.git.Remove .. " " .. summary.removed ---@type string
     end
     return text
   end

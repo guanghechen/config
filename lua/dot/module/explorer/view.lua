@@ -443,7 +443,7 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
     local filepath = self:__uri_to_filepath__(node.uri) ---@type string
     if filepath ~= "" then
       local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
-      local _, git_hl = dot.state.git.resolve_status(filepath, filetype)
+      local _, git_hl = dot.git.status.resolve(filepath, filetype)
       if git_hl ~= nil then
         return git_hl
       end
@@ -470,7 +470,7 @@ function M:__get_git_status_info__(node, lnum)
   local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
   local highlights = {} ---@type ark.t.IHighlightInline[]
 
-  local git_text, _ = dot.state.git.calc_status_info(filepath, filetype, 0, highlights)
+  local git_text, _ = dot.git.status.calc_info(filepath, filetype, 0, highlights)
 
   if git_text == nil or #git_text < 1 then
     return nil
@@ -576,7 +576,7 @@ function M:__is_ignored__(node)
   if filepath == "" then
     return false
   end
-  return dot.state.git.is_ignored(filepath)
+  return dot.git.state.is_ignored(filepath)
 end
 
 ---@protected
@@ -661,7 +661,7 @@ function M:__precompute__(root, ctx)
   end
 
   if #filepaths > 0 then
-    dot.state.git.preload_ignored(filepaths)
+    dot.git.state.preload_ignored(filepaths)
   end
 end
 

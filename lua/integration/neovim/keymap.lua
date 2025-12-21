@@ -17,6 +17,11 @@ ms({ "n", "x" }, "<leader>1", K.explorer.toggle)
 ms({ "n", "x" }, "<leader>2", K.search.in_cwd)
 ms({ "n", "x" }, "<leader>3", K.find.git_not_committed)
 ms({ "n", "x" }, "z;", K.toggle.maximize)
+
+vim.keymap.set("n", "<leader><Esc>", function()
+  dot.git.hunk.clear_nav()
+  vim.cmd("nohlsearch")
+end, { silent = true, desc = "Clear search highlight and hunk nav" })
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
@@ -189,6 +194,21 @@ ms({ "n", "x" }, "<leader>?", K.find.keymaps)
 -------------------------------------------------------------------------------------------#[f]ind--
 
 --#[g]it--------------------------------------------------------------------------------------------
+ms({ "n" }, "[h", K.git.hunk_goto_prev)
+ms({ "n" }, "]h", K.git.hunk_goto_next)
+ms({ "n" }, "[H", K.git.hunk_goto_prev_all)
+ms({ "n" }, "]H", K.git.hunk_goto_next_all)
+ms({ "n" }, "ghb", K.git.blame)
+ms({ "n" }, "ghB", K.git.blame_buffer)
+ms({ "n", "x" }, "ghp", K.git.hunk_preview)
+ms({ "n" }, "ghr", K.git.hunk_reset)
+ms({ "x" }, "ghr", K.git.hunk_reset_visual)
+ms({ "n" }, "ghs", K.git.hunk_stage)
+ms({ "x" }, "ghs", K.git.hunk_stage_visual)
+ms({ "n" }, "ghu", K.git.hunk_unstage)
+ms({ "x" }, "ghu", K.git.hunk_unstage_visual)
+ms({ "n", "x" }, "ghS", K.git.stage_buffer)
+ms({ "n", "x" }, "ghR", K.git.reset_buffer)
 ms({ "n", "x" }, "<leader>gB", K.git.browse)
 ms({ "n", "x" }, "<leader>gP", K.git.browse_permalink)
 ms({ "n", "x" }, "<leader>gR", K.git.browse_repo)
