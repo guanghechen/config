@@ -1643,6 +1643,7 @@ function M:__render__()
   local render_result = self._view:render(bufnr, self._tree, root_node, {
     resource_manager = self._resource_manager,
     foldempty = self._tree.state.o_flag_foldempty:snapshot(),
+    only_selected = dot.context.explorer.flag_selected:snapshot(),
     show_git_status = true,
     show_icons = true,
     select_mode = self._tree.select_mode,

@@ -6,6 +6,7 @@ local __module_name__ = "dot.module.explorer.view" ---@type string
 ---@field public resource_manager       dot.module.explorer.resource.IManager|nil
 ---@field public tick_loaded            integer
 ---@field public foldempty              boolean
+---@field public only_selected          boolean
 ---@field public show_diagnostics       boolean
 ---@field public show_git_status        boolean
 ---@field public show_icons             boolean
@@ -45,6 +46,7 @@ local __module_name__ = "dot.module.explorer.view" ---@type string
 ---@class dot.module.explorer.view.IRenderOptions
 ---@field public resource_manager       ?dot.module.explorer.resource.IManager
 ---@field public foldempty              ?boolean
+---@field public only_selected          ?boolean
 ---@field public show_diagnostics       ?boolean
 ---@field public show_git_status        ?boolean
 ---@field public show_icons             ?boolean
@@ -91,6 +93,7 @@ function M:render(bufnr, tree, root, options)
     resource_manager = options.resource_manager,
     tick_loaded = tick_loaded,
     foldempty = options.foldempty ~= false,
+    only_selected = options.only_selected == true,
     show_diagnostics = options.show_diagnostics ~= false,
     show_git_status = options.show_git_status ~= false,
     show_icons = options.show_icons ~= false,
@@ -109,6 +112,23 @@ function M:render(bufnr, tree, root, options)
   local uri_to_lnum = {} ---@type table<string, integer>
   local lnum = 0 ---@type integer
   local indent_hln = self._indent_hln ---@type string
+  local only_selected = ctx.only_selected ---@type boolean
+
+  ---@param node                        dot.module.explorer.Node
+  ---@param rs_tick_selected_max        integer
+  ---@return boolean
+  local function has_selected_in_subtree(node, rs_tick_selected_max)
+    local node_rs_tick_selected_max = math.max(rs_tick_selected_max, node.rs.tick_selected) ---@type integer
+    if node_rs_tick_selected_max % 2 == 1 then
+      return true
+    end
+    for _, child in ipairs(node.children) do
+      if has_selected_in_subtree(child, node_rs_tick_selected_max) then
+        return true
+      end
+    end
+    return false
+  end
 
   ---@param node                        dot.module.explorer.Node
   ---@param prefix                      string
@@ -118,11 +138,20 @@ function M:render(bufnr, tree, root, options)
   ---@param rs_tick_selected_max        integer
   ---@return nil
   local function traverse(node, prefix, is_last, display_name, rs_tick_expanded_max, rs_tick_selected_max)
-    lnum = lnum + 1
-    local current_lnum = lnum ---@type integer
-
     local node_rs_tick_selected_max = math.max(rs_tick_selected_max, node.rs.tick_selected) ---@type integer
     local is_selected = node_rs_tick_selected_max % 2 == 1 ---@type boolean
+
+    if only_selected and not is_selected then
+      if node.nodetype == "F" then
+        return
+      end
+      if not has_selected_in_subtree(node, rs_tick_selected_max) then
+        return
+      end
+    end
+
+    lnum = lnum + 1
+    local current_lnum = lnum ---@type integer
 
     local node_rs_tick_expanded_max = math.max(rs_tick_expanded_max, node.rs.tick_expanded) ---@type integer
     local is_expanded = math.max(node_rs_tick_expanded_max, node.ns.tick_expanded) % 2 == 1 ---@type boolean
