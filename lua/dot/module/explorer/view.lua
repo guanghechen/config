@@ -388,18 +388,20 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
       local is_empty = is_loaded and #node.children == 0 ---@type boolean
       if is_empty then
         icon = dot.icon.filetype.FolderEmptyOpen
+        icon_hl = "f_ft_dirname"
       else
         icon = dot.icon.filetype.FolderOpen
+        icon_hl = "f_ft_dirname"
       end
     else
-      icon = dot.icon.filetype.Folder
-    end
-    local dir_icon, dir_hl = dot.fileicon.get_directory_icon(node.nodename) ---@type string, string
-    if dir_icon ~= nil and dir_icon ~= "" then
-      icon = dir_icon
-      icon_hl = dir_hl
-    else
-      icon_hl = "f_ft_dirname"
+      local dir_icon, dir_hl, is_fallback = dot.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
+      if not is_fallback then
+        icon = dir_icon
+        icon_hl = dir_hl
+      else
+        icon = dot.icon.filetype.Folder
+        icon_hl = "f_ft_dirname"
+      end
     end
     if is_ignored then
       icon_hl = "f_explorer_ignored"
