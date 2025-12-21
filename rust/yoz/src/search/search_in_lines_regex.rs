@@ -32,11 +32,11 @@ pub fn search_in_lines_regex(
             let start_pos = mat.start();
             let end_pos = mat.end();
             let line_num = locate_line(line_offsets, start_pos);
-            if line_num == 0 || (line_num as usize) > buffer.line_count() {
+            if line_num == 0 || line_num > buffer.line_count() {
                 continue;
             }
 
-            let line_index = (line_num - 1) as usize;
+            let line_index = line_num - 1;
             let line_start_pos = line_offsets[line_index];
             let relative_start = start_pos.saturating_sub(line_start_pos);
             let relative_end = end_pos.saturating_sub(line_start_pos);

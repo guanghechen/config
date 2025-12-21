@@ -1,5 +1,6 @@
 ---@class dot.module.board.__mods
 local __mods = {
+  Act = "dot.module.board.act",
   Fileinfo = "dot.module.board.fileinfo",
   GitHunk = "dot.module.board.git-hunk",
   Keysheet = "dot.module.board.keysheet",
@@ -7,6 +8,7 @@ local __mods = {
 
 ---@class dot.module.board
 ---@field public __mods                 dot.module.board.__mods
+---@field public Act                    dot.module.board.Act
 ---@field public Fileinfo               dot.module.board.Fileinfo
 ---@field public GitHunk                dot.module.board.GitHunk
 ---@field public Keysheet               dot.module.board.Keysheet

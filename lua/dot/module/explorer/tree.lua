@@ -100,10 +100,49 @@ function M:get_selected_nodes()
   return Node.collect_selected(self._superroot)
 end
 
+---@return dot.module.explorer.Node[]
+function M:get_selected_nodes_toplevel()
+  self:__health__()
+  return Node.collect_selected_toplevel(self._superroot)
+end
+
 ---@return string[]
 function M:get_selected_uris()
   self:__health__()
   return Node.collect_selected_uris(self._superroot)
+end
+
+---@param nodes                         ?dot.module.explorer.Node[]
+---@return string|nil
+function M:get_common_ancestor_path(nodes)
+  self:__health__()
+
+  nodes = nodes or self:get_selected_nodes_toplevel()
+  if #nodes == 0 then
+    return nil
+  end
+
+  local paths = {} ---@type string[]
+  for _, node in ipairs(nodes) do
+    local filepath = node.uri:sub(8) ---@type string
+    if filepath:sub(-1) == "/" then
+      filepath = filepath:sub(1, -2)
+    end
+    paths[#paths + 1] = filepath
+  end
+
+  local common = dot.path.dirname(paths[1]) ---@type string
+  for i = 2, #paths do
+    local path = paths[i] ---@type string
+    while not vim.startswith(path, common .. "/") and path ~= common do
+      common = dot.path.dirname(common)
+      if common == "" or common == "/" then
+        return "/"
+      end
+    end
+  end
+
+  return common
 end
 
 ---@param uri                           string
@@ -277,7 +316,7 @@ end
 ---@return nil
 function M:load_node(node, resource_manager, force)
   self:__health__()
-  local rm = resource_manager or self._resource_manager ---@type dot.module.explorer.resource.IManager
+  local _ = resource_manager or self._resource_manager ---@type dot.module.explorer.resource.IManager
   local force_load = not not force ---@type boolean
 
   if node.nodetype ~= "D" then
@@ -1020,7 +1059,10 @@ function M:__load__(node, nodeindex, uri, force)
 
   if node.nodetype ~= resource_node.nodetype then
     local parent = node.parent ---@type dot.module.explorer.Node|nil
-    local tick_expanded_even = self.state:next_tick_expanded_even() ---@type integer
+    if parent == nil then
+      error(string.format("[__load__] Parent is nil for node URI: '%s'.", uri))
+    end
+    local _ = self.state:next_tick_expanded_even() ---@type integer
 
     ---@type dot.module.explorer.node.IRootState
     local rs = {
@@ -1042,7 +1084,7 @@ function M:__load__(node, nodeindex, uri, force)
       parent = parent,
       children = {},
       chidxmap = {},
-      depth = parent == nil and 0 or parent.depth + 1,
+      depth = parent.depth + 1,
       rs = rs,
       ns = ns,
     }, Node)

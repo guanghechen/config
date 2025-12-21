@@ -238,6 +238,26 @@ function M.collect_selected(root)
 end
 
 ---@param root                          dot.module.explorer.Node
+---@return dot.module.explorer.Node[]
+function M.collect_selected_toplevel(root)
+  local result = {} ---@type dot.module.explorer.Node[]
+
+  ---@param node                        dot.module.explorer.Node
+  local function traverse(node)
+    if node:is_selected() then
+      result[#result + 1] = node
+      return
+    end
+    for _, child in ipairs(node.children) do
+      traverse(child)
+    end
+  end
+
+  traverse(root)
+  return result
+end
+
+---@param root                          dot.module.explorer.Node
 ---@return string[]
 function M.collect_selected_uris(root)
   local result = {} ---@type string[]
