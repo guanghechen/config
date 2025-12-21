@@ -5,7 +5,6 @@ local __mods = {
   searcher = "dot.ux.searcher",
   view = "dot.ux.view",
 
-  Board = "dot.ux.board",
   Select = "dot.ux.select",
   Setting = "dot.ux.setting",
   Textarea = "dot.ux.textarea",
@@ -18,7 +17,6 @@ local __mods = {
 ---@field public searcher               dot.ux.searcher
 ---@field public view                   dot.ux.view
 ---
----@field public Board                  dot.ux.Board
 ---@field public Select                 dot.ux.Select
 ---@field public Setting                dot.ux.Setting
 ---@field public Textarea               dot.ux.Textarea

@@ -24,6 +24,15 @@ function M.default_gen_hlgroup_map(context)
   local bg_pane = t and u.bg0 or u.none ---@type string
 
   return {
+    ---board keysheet
+    fb_keysheet_border = { fg = u.bg4, bg = bg_pane },
+    fb_keysheet_cursorline = { bg = u.bg2 },
+    fb_keysheet_desc = { fg = u.fg2 },
+    fb_keysheet_key = { fg = u.blue, bold = true },
+    fb_keysheet_mode = { fg = u.orange },
+    fb_keysheet_normal = { fg = u.fg1, bg = bg_pane },
+    fb_keysheet_title = { fg = u.purple, bg = bg_pane, bold = true },
+
     ---buffers
     f_buf_nr = { fg = u.fg4 },
     f_buf_filetype = { fg = u.fg3 },

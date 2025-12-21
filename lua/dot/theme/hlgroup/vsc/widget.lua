@@ -13,6 +13,15 @@ function M.gen_hlgroup_map(context)
   local bg_pane = t and u.bg0 or c.none ---@type string
 
   return {
+    ---board keysheet
+    fb_keysheet_border = { fg = c.widget_border, bg = bg_pane },
+    fb_keysheet_cursorline = { bg = u.bg2 },
+    fb_keysheet_desc = { fg = c.text },
+    fb_keysheet_key = { fg = c.accentBlue, bold = true },
+    fb_keysheet_mode = { fg = c.accentOrange },
+    fb_keysheet_normal = { fg = c.text, bg = bg_pane },
+    fb_keysheet_title = { fg = c.accentPurple, bg = bg_pane, bold = true },
+
     ---buffers
     f_buf_nr = { fg = u.fg4 },
     f_buf_filetype = { fg = u.fg3 },

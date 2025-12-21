@@ -3,6 +3,7 @@ local M = {}
 
 M.AI_TERMINAL = "ai_terminal"
 M.BIGFILE = "bigfile"
+M.BOARD = "board"
 M.CHECKHEALTH = "checkhealth"
 M.DAP_FLOAT = "dap-float"
 M.DAP_REPL = "dap-repl"
@@ -171,6 +172,7 @@ local filetypes = {
   },
   not_sourcefile = {
     [M.AI_TERMINAL] = true,
+    [M.BOARD] = true,
     [M.CHECKHEALTH] = true,
     [M.DAP_FLOAT] = true,
     [M.DAP_REPL] = true,

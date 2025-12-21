@@ -48,6 +48,7 @@ local ns_blur_cursorline = vim.api.nvim_create_namespace("explorer_blur_cursorli
 ---@field protected _width              integer
 ---@field protected _o_width            ark.c.Observable|nil
 ---@field protected _flags              dot.module.explorer.widget.IFlagItem[]
+---@field protected _keymaps            ark.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -90,6 +91,7 @@ function M.new(props)
   self._width = props.width or 40
   self._o_width = props.o_width
   self._flags = props.flags or {}
+  self._keymaps = {}
   self._nvimbar = self:__create_nvimbar__()
 
   self:__setup_subscriptions__()
@@ -1414,6 +1416,17 @@ end
 
 ---@protected
 ---@return nil
+function M:__action_show_keysheet__()
+  local Keysheet = require("dot.module.board.keysheet")
+  local keysheet = Keysheet.new({
+    title = "Explorer Help",
+    keymaps = self._keymaps,
+  })
+  keysheet:open()
+end
+
+---@protected
+---@return nil
 function M:__action_toggle_recursive__()
   local uri = self:get_cursor_uri() ---@type string|nil
   if uri == nil then
@@ -1780,6 +1793,7 @@ function M:__setup_keymaps__(bufnr)
     { modes = { "n" }, key = "<Tab>", callback = function() self:__action_select_toggle__() end, desc = "explorer: toggle selection" },
     -- Symbols
     { modes = { "n" }, key = ".", callback = function() self:__action_set_root__() end, desc = "explorer: set as root" },
+    { modes = { "n" }, key = "?", callback = function() self:__action_show_keysheet__() end, desc = "explorer: show keymap help" },
     { modes = { "n" }, key = "[d", callback = function() self:__action_goto_diagnostic__("prev") end, desc = "explorer: go to prev diagnostic file" },
     { modes = { "n" }, key = "[e", callback = function() self:__action_goto_diagnostic_error__("prev") end, desc = "explorer: go to prev diagnostic error file" },
     { modes = { "n" }, key = "[h", callback = function() self:__action_goto_git_changed__("prev") end, desc = "explorer: go to prev git changed file" },
@@ -1843,6 +1857,7 @@ function M:__setup_keymaps__(bufnr)
     keymaps[#keymaps + 1] = km
   end
 
+  self._keymaps = keymaps
   ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
