@@ -1,63 +1,63 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.view.tree" ---@type string
+local __module_name__ = "dot.module.picker.view.tree" ---@type string
 
----@alias dot.ux.picker.view.tree.INodeState
----| dot.ux.picker.view.tree.IContainerNodeState
----| dot.ux.picker.view.tree.ILeafNodeState
----| dot.ux.picker.view.tree.ILeafLocationState
+---@alias dot.module.picker.view.tree.INodeState
+---| dot.module.picker.view.tree.IContainerNodeState
+---| dot.module.picker.view.tree.ILeafNodeState
+---| dot.module.picker.view.tree.ILeafLocationState
 
----@alias dot.ux.picker.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: dot.ux.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.ux.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.picker.view.tree.IListviewLeafNodeRenderer
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.picker.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: dot.ux.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.ux.picker.view.tree.ILeafNodeState, location: dot.ux.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.picker.view.tree.IListviewLeafLocationRenderer
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: dot.ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.ux.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.picker.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: dot.ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.ux.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.picker.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: dot.ux.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.ux.picker.view.tree.ILeafNodeState, location: dot.ux.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@class dot.ux.picker.view.tree.IContainerNodeState : dot.ux.view.tree.IContainerNodeState
+---@class dot.module.picker.view.tree.IContainerNodeState : dot.ux.view.tree.IContainerNodeState
 
----@class dot.ux.picker.view.tree.ILeafNodeState : dot.ux.view.tree.ILeafNodeState
+---@class dot.module.picker.view.tree.ILeafNodeState : dot.ux.view.tree.ILeafNodeState
 ---@field public text                   string|nil
 ---@field public text_lower             string|nil
----@field public cache_match            dot.ux.picker.view.tree.INodeMatchResultCache|nil
+---@field public cache_match            dot.module.picker.view.tree.INodeMatchResultCache|nil
 
----@class dot.ux.picker.view.tree.ILeafLocationState : dot.ux.view.tree.ILeafLocationState
+---@class dot.module.picker.view.tree.ILeafLocationState : dot.ux.view.tree.ILeafLocationState
 
----@class dot.ux.picker.view.tree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.tree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.ITreeNode
----@field public rootstate              dot.ux.picker.view.tree.IContainerNodeState
+---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
 ---@field public tree                   dot.IReadonlyTree
----@field public view                   dot.ux.picker.TreeView
+---@field public view                   dot.module.picker.TreeView
 
----@class dot.ux.picker.view.tree.ITreeviewRendererContext : dot.ux.view.tree.ITreeviewRendererContext
+---@class dot.module.picker.view.tree.ITreeviewRendererContext : dot.ux.view.tree.ITreeviewRendererContext
 ---@field public rootnode               dot.t.ITreeNode
----@field public rootstate              dot.ux.picker.view.tree.IContainerNodeState
+---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
 ---@field public tree                   dot.IReadonlyTree
----@field public view                   dot.ux.picker.TreeView
+---@field public view                   dot.module.picker.TreeView
 
----@class dot.ux.picker.view.tree.INodeMatchContext
+---@class dot.module.picker.view.tree.INodeMatchContext
 ---@field public rootuuid               string
 ---@field public pattern                string
 ---@field public case_sensitive         boolean
 ---@field public fuzzy                  boolean
 ---@field public regex                  boolean
 
----@class dot.ux.picker.view.tree.INodeMatchResult
----@field public context                dot.ux.picker.view.tree.INodeMatchContext
+---@class dot.module.picker.view.tree.INodeMatchResult
+---@field public context                dot.module.picker.view.tree.INodeMatchContext
 ---@field public uuids                  string[]
 
----@class dot.ux.picker.view.tree.INodeMatchResultCache
+---@class dot.module.picker.view.tree.INodeMatchResultCache
 ---@field public score                  integer
 ---@field public matches                dot.t.IMatchPoint[]
 
----@class dot.ux.picker.view.tree.IMatchParams
+---@class dot.module.picker.view.tree.IMatchParams
 ---@field public rootuuid               string|nil
 ---@field public pattern                string
 ---@field public case_sensitive         boolean
@@ -66,38 +66,38 @@ local __module_name__ = "dot.ux.picker.view.tree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.view.ITreeProps
+---@class dot.module.picker.view.ITreeProps
 ---@field public name                   string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---@field public tree                   dot.IReadonlyTree
----@field public render_listview_leaf   dot.ux.picker.view.tree.IListviewLeafNodeRenderer
----@field public render_listview_location   dot.ux.picker.view.tree.IListviewLeafLocationRenderer
----@field public render_treeview_container  dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf   dot.ux.picker.view.tree.ITreeviewLeafNodeRenderer
----@field public render_treeview_location   dot.ux.picker.view.tree.ITreeviewLeafLocationRenderer
+---@field public render_listview_leaf   dot.module.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_location   dot.module.picker.view.tree.IListviewLeafLocationRenderer
+---@field public render_treeview_container  dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+---@field public render_treeview_leaf   dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_location   dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
 
 local P = dot.ux.view.Tree ---@type dot.ux.view.Tree
 
----@class dot.ux.picker.TreeView : dot.ux.view.Tree
----@field protected _last_match_result  dot.ux.picker.view.tree.INodeMatchResult
+---@class dot.module.picker.TreeView : dot.ux.view.Tree
+---@field protected _last_match_result  dot.module.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
 setmetatable(M, P)
 
----@param props                         dot.ux.picker.view.ITreeProps
----@return dot.ux.picker.TreeView
+---@param props                         dot.module.picker.view.ITreeProps
+---@return dot.module.picker.TreeView
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
   local tree = props.tree ---@type dot.IReadonlyTree
-  local render_listview_leaf = props.render_listview_leaf ---@type dot.ux.picker.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = props.render_listview_location ---@type dot.ux.picker.view.tree.IListviewLeafLocationRenderer
-  local render_treeview_container = props.render_treeview_container ---@type dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = props.render_treeview_leaf ---@type dot.ux.picker.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = props.render_treeview_location ---@type dot.ux.picker.view.tree.ITreeviewLeafLocationRenderer
+  local render_listview_leaf = props.render_listview_leaf ---@type dot.module.picker.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = props.render_listview_location ---@type dot.module.picker.view.tree.IListviewLeafLocationRenderer
+  local render_treeview_container = props.render_treeview_container ---@type dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = props.render_treeview_leaf ---@type dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = props.render_treeview_location ---@type dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
 
   local super = P.new({
     name = fullname,
@@ -112,7 +112,7 @@ function M.new(props)
   })
 
   local self = setmetatable(super, M)
-  ---@cast self                         dot.ux.picker.TreeView
+  ---@cast self                         dot.module.picker.TreeView
 
   self._last_match_result = nil
   return self
@@ -136,35 +136,35 @@ function M:dispose()
   self._last_match_result = nil
 end
 
----@return dot.ux.picker.TreeView
+---@return dot.module.picker.TreeView
 function M:mark_cache_match_dirty()
   self:__health__()
-  self._last_match_result = nil ---@type dot.ux.picker.view.tree.INodeMatchResult|nil
+  self._last_match_result = nil ---@type dot.module.picker.view.tree.INodeMatchResult|nil
   return self
 end
 
 ---@param uuid                          string
----@return dot.ux.picker.view.tree.INodeState|nil
+---@return dot.module.picker.view.tree.INodeState|nil
 function M:retrieve(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.tree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
-  local nodestate = statemap[uuid] ---@type dot.ux.picker.view.tree.INodeState|nil
+  local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
   return nodestate
 end
 
 ----------------------------------------------------------------------------------------------------
 
----@param params                        dot.ux.picker.view.tree.IMatchParams
+---@param params                        dot.module.picker.view.tree.IMatchParams
 ---@return string[]
 function M:match(params)
   self:__health__()
 
   local tree = self._tree ---@type dot.IReadonlyTree
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.tree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   local root = params.rootuuid or tree.root ---@type string
   local case_sensitive = params.case_sensitive ---@type boolean
@@ -172,7 +172,7 @@ function M:match(params)
   local regex = params.regex ---@type boolean
   local pattern = case_sensitive and params.pattern or params.pattern:lower() ---@type string
 
-  ---@type dot.ux.picker.view.tree.INodeMatchContext
+  ---@type dot.module.picker.view.tree.INodeMatchContext
   local context = {
     rootuuid = root,
     pattern = pattern,
@@ -181,8 +181,8 @@ function M:match(params)
     regex = regex,
   }
 
-  local last_match_result = self._last_match_result ---@type dot.ux.picker.view.tree.INodeMatchResult|nil
-  local last_match_context = last_match_result and last_match_result.context or nil ---@type dot.ux.picker.view.tree.INodeMatchContext|nil
+  local last_match_result = self._last_match_result ---@type dot.module.picker.view.tree.INodeMatchResult|nil
+  local last_match_context = last_match_result and last_match_result.context or nil ---@type dot.module.picker.view.tree.INodeMatchContext|nil
   local last_matched_uuids = last_match_result and last_match_result.uuids or nil ---@type string[]|nil
   local tick_matched = self._tick_matched + 1 ---@type integer
 
@@ -263,7 +263,7 @@ function M:match(params)
       local matches = line_match.matches ---@type dot.t.IMatchPoint[]
       local state = statemap[uuid]
       state.tick_matched = tick_matched ---@type integer
-      state.cache_match = { score = line_match.score, matches = matches } ---@type dot.ux.picker.view.tree.INodeMatchResultCache
+      state.cache_match = { score = line_match.score, matches = matches } ---@type dot.module.picker.view.tree.INodeMatchResultCache
     end
 
     local N = #line_matches ---@type integer
@@ -294,7 +294,7 @@ function M:match(params)
     end
   end
 
-  ---@type dot.ux.picker.view.tree.INodeMatchResult
+  ---@type dot.module.picker.view.tree.INodeMatchResult
   local match_result = {
     context = context,
     uuids = uuids,
@@ -331,11 +331,11 @@ function M:render_listview(params)
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.tree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
     local uuid = uuids[lnum] ---@type string
-    local nodestate = statemap[uuid] ---@type dot.ux.picker.view.tree.INodeState|nil
+    local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
       local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
       if node ~= nil then
@@ -390,11 +390,11 @@ function M:render_treeview(params)
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.tree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
     local uuid = uuids[lnum] ---@type string
-    local nodestate = statemap[uuid] ---@type dot.ux.picker.view.tree.INodeState|nil
+    local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
       local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
       if node ~= nil then

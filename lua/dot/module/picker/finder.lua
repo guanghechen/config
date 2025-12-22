@@ -1,114 +1,52 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.preview" ---@type string
+local __module_name__ = "dot.module.picker.finder" ---@type string
 
----@alias dot.ux.picker.preview.IDraw
----| fun(bufnr: integer, force: boolean): dot.ux.picker.preview.IDrawResult
-
----@alias dot.ux.picker.preview.IOnDrawed
----| fun(bufnr: integer): nil
-
----@class dot.ux.picker.preview.IDrawResult
----@field public cursorline             boolean
----@field public number                 boolean
----@field public title                  string
----@field public wrap                   boolean
----@field public whitespaces            ?boolean
----@field public lnum                   ?integer
----@field public col                    ?integer
-
----@class dot.ux.picker.preview.IWinOpts
+---@class dot.module.picker.finder.IWinOpts
 ---@field public border                 string|string[]
 ---@field public winhighlight           string
 ---@field public zindex                 ?integer
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.IPreviewProps
+---@class dot.module.picker.IFinderProps
 ---@field public name                   string
----@field public draw                   dot.ux.picker.preview.IDraw
 ---@field public keymaps                ark.t.IKeymap[]
----@field public on_drawed              ?dot.ux.picker.preview.IOnDrawed
+---@field public input                  ark.c.Observable
+---@field public title                  string
 
----@class dot.ux.picker.Preview
+---@class dot.module.picker.Finder
 ---@field public fullname               string
 ---@field public keymaps                ark.t.IKeymap[]
+---@field public input                  ark.c.Observable
+---@field public linecount              ark.c.Observable
+---@field public title                  string
+---
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _last_result        dot.ux.picker.preview.IDrawResult|nil
----@field protected _scheduler_content  ark.c.Scheduler
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.picker.IPreviewProps
----@return dot.ux.picker.Preview
+---@param props                         dot.module.picker.IFinderProps
+---@return dot.module.picker.Finder
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type dot.ux.picker.preview.IDraw
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
-  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.ux.picker.preview.IOnDrawed
+  local input = props.input ---@type ark.c.Observable
+  local linecount = ark.c.Observable.from_value(0) ---@type ark.c.Observable
+  local title = string.format(" %s ", vim.trim(props.title)) ---@type string
 
   local self = setmetatable({}, M)
-
-  local scheduler_content = ark.c.Scheduler.new({
-    name = string.format("%s#content", fullname),
-    mode = "debounce",
-    delay = 128,
-    timeout = 0,
-    silent = ark.fn.falsy,
-    value = ark.c.Observable.from_value(true),
-    task = function()
-      local bufnr = self._bufnr ---@type integer|nil
-      if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-      end
-
-      vim.bo[bufnr].modifiable = true
-      vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr, false) ---@type boolean, dot.ux.picker.preview.IDrawResult
-      vim.bo[bufnr].modifiable = false
-      vim.bo[bufnr].readonly = true
-
-      if not ok then
-        ark.reporter.error({
-          from = fullname,
-          subject = "draw",
-          message = "Failed to draw",
-          details = {
-            bufnr = bufnr,
-            error = result,
-          },
-        })
-        return
-      end
-
-      self._last_result = result
-      self:__update_winopts__()
-
-      local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
-      if not on_drawed_ok then
-        ark.reporter.error({
-          from = fullname,
-          subject = "on_drawed",
-          message = "Failed to call on_drawed",
-          details = {
-            bufnr = bufnr,
-            error = on_drawed_result,
-            title = result.title,
-          },
-        })
-      end
-    end,
-  })
-
-  self.fullname = name
+  self.fullname = fullname
   self.keymaps = keymaps
+  self.input = input
+  self.linecount = linecount
+  self.title = title
 
   self._disposed = false
   self._bufnr = nil
   self._winnr = nil
-  self._scheduler_content = scheduler_content
   return self
 end
 
@@ -122,16 +60,18 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local scheduler_content = self._scheduler_content ---@type ark.c.Scheduler
+  local linecount = self.linecount ---@type ark.c.Observable
 
+  self.input = nil
+  self.keymaps = nil
+  self.linecount = nil
+  self.title = nil
   self._bufnr = nil
   self._winnr = nil
-  self._last_result = nil
-  self._scheduler_content = nil
 
-  local ok1, error1 = pcall(dot.win.close, winnr)
-  local ok2, error2 = pcall(dot.buf.close, bufnr)
-  local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
+  local ok1, error1 = pcall(linecount.dispose, linecount)
+  local ok2, error2 = pcall(dot.win.close, winnr)
+  local ok3, error3 = pcall(dot.buf.close, bufnr)
   if not (ok1 and ok2 and ok3) then
     ark.reporter.error({
       from = fullname,
@@ -199,16 +139,37 @@ function M:create_buf()
   vim.b[bufnr].minihipatterns_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = dot.filetype.UX_PICKER_PREVIEW
+  vim.bo[bufnr].filetype = dot.filetype.UX_PICKER_FINDER
   vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
 
   ark.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+
+  local keyword = self.input:snapshot() ---@type string
+  local initial_lines = { keyword } ---@type string[]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, initial_lines)
+  self:__set_prompt__(bufnr)
+
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+    buffer = bufnr,
+    callback = function()
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+
+      if #lines > 1 then
+        local content = table.concat(lines, " ") ---@type string
+        self:set_content(content)
+        return
+      end
+
+      local content = lines[1] or "" ---@type string
+      self.input:next(content)
+      self.linecount:next(#lines)
+      self:__set_prompt__(bufnr)
+    end,
+  })
   return bufnr, true
 end
 
----@param winopts                       dot.ux.picker.preview.IWinOpts
+---@param winopts                       dot.module.picker.finder.IWinOpts
 ---@param dimension                     dot.t.IWinDimension
 ---@return integer
 ---@return boolean
@@ -220,7 +181,6 @@ function M:create_win(winopts, dimension)
     return winnr, false
   end
 
-  local result = self._last_result ---@type dot.ux.picker.preview.IDrawResult|nil
   local bufnr = self:create_buf() ---@type integer
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local wincfg = {
@@ -233,58 +193,29 @@ function M:create_win(winopts, dimension)
     style = "minimal",
     focusable = true,
     noautocmd = true,
-    title = result and result.title or nil,
-    title_pos = result and result.title and "center" or nil,
+    title = self.title,
+    title_pos = "center",
     zindex = winopts.zindex,
   }
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, dot.win.Types.PICKER_PREVIEW)
-  vim.wo[winnr].listchars = string.format(
-    "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-    dot.icon.listchars.eol,
-    dot.icon.listchars.lead,
-    dot.icon.listchars.nbsp,
-    dot.icon.listchars.space,
-    dot.icon.listchars.trail
-  )
-  vim.wo[winnr].spell = false
+  dot.win.set_type(winnr, dot.win.Types.PICKER_FINDER)
+  vim.wo[winnr].cursorline = false
+  vim.wo[winnr].number = false
+  vim.wo[winnr].relativenumber = false
   vim.wo[winnr].signcolumn = "yes"
+  vim.wo[winnr].spell = false
   vim.wo[winnr].winblend = winblend
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].winhighlight = winopts.winhighlight
-
-  if result == nil then
-    vim.wo[winnr].cursorline = true
-    vim.wo[winnr].number = true
-    vim.wo[winnr].relativenumber = true
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].list = true
-  else
-    if result.cursorline ~= nil then
-      vim.wo[winnr].cursorline = result.cursorline
-    end
-    if result.number ~= nil then
-      vim.wo[winnr].number = result.number
-      vim.wo[winnr].relativenumber = result.number
-    end
-    if result.wrap ~= nil then
-      vim.wo[winnr].wrap = result.wrap
-    end
-    if result.whitespaces ~= nil then
-      vim.wo[winnr].list = result.whitespaces
-    end
-    if result.lnum ~= nil then
-      pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
-    end
-  end
+  vim.wo[winnr].wrap = false
   return winnr, true
 end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.picker.Preview
+---@return dot.module.picker.Finder
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -294,7 +225,7 @@ function M:focus()
   return self
 end
 
----@return dot.ux.picker.Preview
+---@return dot.module.picker.Finder
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -318,7 +249,7 @@ function M:hide()
 end
 
 ---@param dimension                     dot.t.IWinDimension,
----@return dot.ux.picker.Preview
+---@return dot.module.picker.Finder
 function M:resize(dimension)
   self:__health__()
 
@@ -340,10 +271,47 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.picker.Preview
-function M:mark_content_dirty()
+---@param content                       string
+---@return nil
+function M:set_content(content)
   self:__health__()
-  self._scheduler_content:schedule()
+
+  local bufnr = self._bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  if content == self.input:snapshot() then
+    return
+  end
+
+  local lines = { content } ---@type  string[]
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  self.input:next(content)
+  self.linecount:next(#lines)
+  self:__set_prompt__(bufnr)
+
+  local winnr = self._winnr ---@type integer|nil
+  if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    local last_col = #lines[1] ---@type integer
+    vim.api.nvim_win_set_cursor(winnr, { 1, last_col })
+  end
+end
+
+---@param title                         string
+---@return dot.module.picker.Finder
+function M:set_title(title)
+  self:__health__()
+  if self.title ~= title then
+    self.title = string.format(" %s ", vim.trim(title))
+
+    local winnr = self._winnr ---@type integer|nil
+    if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
+      local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+      wincfg.title = self.title
+      vim.api.nvim_win_set_config(winnr, wincfg)
+    end
+  end
   return self
 end
 
@@ -357,39 +325,14 @@ function M:__health__()
   end
 end
 
----@return dot.ux.picker.Preview
-function M:__update_winopts__()
-  local result = self._last_result ---@type dot.ux.picker.preview.IDrawResult
-  if result == nil then
-    return self
+---@param bufnr                         integer
+---@return dot.module.picker.Finder
+function M:__set_prompt__(bufnr)
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    local group = dot.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string
+    local sign = dot.var.sign.PICKER_FINDER_PROMPT ---@type string
+    pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
   end
-
-  local winnr = self._winnr ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return self
-  end
-
-  local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  wincfg.title = result.title
-  wincfg.title_pos = #result.title > 0 and "center" or nil
-
-  if result.cursorline ~= nil then
-    vim.wo[winnr].cursorline = result.cursorline
-  end
-  if result.number ~= nil then
-    vim.wo[winnr].number = result.number
-  end
-  if result.wrap ~= nil then
-    vim.wo[winnr].wrap = result.wrap
-  end
-  if result.whitespaces ~= nil then
-    vim.wo[winnr].list = result.whitespaces
-  end
-  if result.lnum ~= nil then
-    pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
-  end
-
-  vim.api.nvim_win_set_config(winnr, wincfg)
   return self
 end
 

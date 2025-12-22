@@ -1,50 +1,50 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.composer.list" ---@type string
+local __module_name__ = "dot.module.picker.composer.list" ---@type string
 
----@alias dot.ux.picker.composer.list.IOnCancel
----| fun(self: dot.ux.picker.ListComposer): nil
+---@alias dot.module.picker.composer.list.IOnCancel
+---| fun(self: dot.module.picker.ListComposer): nil
 
----@alias dot.ux.picker.composer.list.IOnClosed
----| fun(self: dot.ux.picker.ListComposer): nil
+---@alias dot.module.picker.composer.list.IOnClosed
+---| fun(self: dot.module.picker.ListComposer): nil
 
----@alias dot.ux.picker.composer.list.IOnConfirm
----| fun(self: dot.ux.picker.ListComposer, item: dot.ux.picker.composer.list.IItem|nil): nil
+---@alias dot.module.picker.composer.list.IOnConfirm
+---| fun(self: dot.module.picker.ListComposer, item: dot.module.picker.composer.list.IItem|nil): nil
 
----@alias dot.ux.picker.composer.list.IOnDisposed
+---@alias dot.module.picker.composer.list.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.picker.composer.list.IOnFocused
----| fun(self: dot.ux.picker.ListComposer): nil
+---@alias dot.module.picker.composer.list.IOnFocused
+---| fun(self: dot.module.picker.ListComposer): nil
 
----@alias dot.ux.picker.composer.list.IOnHidden
----| fun(self: dot.ux.picker.ListComposer): nil
+---@alias dot.module.picker.composer.list.IOnHidden
+---| fun(self: dot.module.picker.ListComposer): nil
 
----@alias dot.ux.picker.composer.list.IOnRefresh
----| fun(self: dot.ux.picker.ListComposer, force: boolean): nil
+---@alias dot.module.picker.composer.list.IOnRefresh
+---| fun(self: dot.module.picker.ListComposer, force: boolean): nil
 
----@alias dot.ux.picker.composer.list.IRenderPreview
----| fun(self: dot.ux.picker.ListComposer, bufnr: integer, force: boolean): dot.ux.picker.preview.IDrawResult
+---@alias dot.module.picker.composer.list.IRenderPreview
+---| fun(self: dot.module.picker.ListComposer, bufnr: integer, force: boolean): dot.module.picker.preview.IDrawResult
 
----@alias dot.ux.picker.composer.list.IRenderResult
----| fun(self: dot.ux.picker.ListComposer, bufnr: integer, itemmap: table<string, dot.ux.picker.composer.list.IItem>, matches: dot.t.IScoredMatch[]): dot.ux.picker.composer.list.IRenderResultData
+---@alias dot.module.picker.composer.list.IRenderResult
+---| fun(self: dot.module.picker.ListComposer, bufnr: integer, itemmap: table<string, dot.module.picker.composer.list.IItem>, matches: dot.t.IScoredMatch[]): dot.module.picker.composer.list.IRenderResultData
 
----@class dot.ux.picker.composer.list.IItem
+---@class dot.module.picker.composer.list.IItem
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public text_lower             string
 ---@field public highlights             ark.t.IHighlightInline[]
 
----@class dot.ux.picker.composer.list.IResetData
----@field public items                  dot.ux.picker.composer.list.IItem[]
+---@class dot.module.picker.composer.list.IResetData
+---@field public items                  dot.module.picker.composer.list.IItem[]
 ---@field public uuid_present           string|nil
 ---@field public uuid_current           string|nil
 
----@class dot.ux.picker.composer.list.IRenderResultData
+---@class dot.module.picker.composer.list.IRenderResultData
 ---@field public uuids                  string[]
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.IListComposerProps
+---@class dot.module.picker.IListComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public autosort               ?boolean
@@ -61,56 +61,56 @@ local __module_name__ = "dot.ux.picker.composer.list" ---@type string
 ---@field public flag_fuzzy             ark.c.Observable
 ---@field public flag_regex             ark.c.Observable
 ---@field public flag_case_sensitive    ark.c.Observable
----@field public flags_append           dot.ux.picker.result.IFlagItemRaw[]|nil
----@field public flags_prepend          dot.ux.picker.result.IFlagItemRaw[]|nil
+---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
+---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?ark.c.History
 ---
----@field public render_preview         ?dot.ux.picker.composer.list.IRenderPreview
----@field public render_result          ?dot.ux.picker.composer.list.IRenderResult
+---@field public render_preview         ?dot.module.picker.composer.list.IRenderPreview
+---@field public render_result          ?dot.module.picker.composer.list.IRenderResult
 ---
----@field public on_cancel              ?dot.ux.picker.composer.list.IOnCancel
----@field public on_closed              ?dot.ux.picker.composer.list.IOnClosed
----@field public on_confirm             ?dot.ux.picker.composer.list.IOnConfirm
----@field public on_disposed            ?dot.ux.picker.composer.list.IOnDisposed
----@field public on_focused             ?dot.ux.picker.composer.list.IOnFocused
----@field public on_hidden              ?dot.ux.picker.composer.list.IOnHidden
----@field public on_refresh             ?dot.ux.picker.composer.list.IOnRefresh
+---@field public on_cancel              ?dot.module.picker.composer.list.IOnCancel
+---@field public on_closed              ?dot.module.picker.composer.list.IOnClosed
+---@field public on_confirm             ?dot.module.picker.composer.list.IOnConfirm
+---@field public on_disposed            ?dot.module.picker.composer.list.IOnDisposed
+---@field public on_focused             ?dot.module.picker.composer.list.IOnFocused
+---@field public on_hidden              ?dot.module.picker.composer.list.IOnHidden
+---@field public on_refresh             ?dot.module.picker.composer.list.IOnRefresh
 
----@class dot.ux.picker.ListComposer
+---@class dot.module.picker.ListComposer
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public title                  string
 ---
----@field public finder                 dot.ux.picker.Finder
----@field public result                 dot.ux.picker.Result
----@field public preview                dot.ux.picker.Preview|nil
+---@field public finder                 dot.module.picker.Finder
+---@field public result                 dot.module.picker.Result
+---@field public preview                dot.module.picker.Preview|nil
 ---
 ---@field public flag_fuzzy             ark.c.Observable
 ---@field public flag_regex             ark.c.Observable
 ---@field public flag_case_sensitive    ark.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _composer           dot.ux.picker.BasicComposer
+---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _retriever          dot.ux.retriever.ListRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler
 ---
 ---@field protected _autosort           boolean
----@field protected _items              dot.ux.picker.composer.list.IItem[]
----@field protected _itemmap            table<string, dot.ux.picker.composer.list.IItem>
+---@field protected _items              dot.module.picker.composer.list.IItem[]
+---@field protected _itemmap            table<string, dot.module.picker.composer.list.IItem>
 ---@field protected _matches            dot.t.IScoredMatch[]
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuid_present       string|nil
 ---
----@field protected _on_confirm         dot.ux.picker.composer.list.IOnConfirm|nil
----@field protected _on_disposed        dot.ux.picker.composer.list.IOnDisposed
+---@field protected _on_confirm         dot.module.picker.composer.list.IOnConfirm|nil
+---@field protected _on_disposed        dot.module.picker.composer.list.IOnDisposed
 ---@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
----@param props                         dot.ux.picker.IListComposerProps
----@return dot.ux.picker.ListComposer
+---@param props                         dot.module.picker.IListComposerProps
+---@return dot.module.picker.ListComposer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -132,26 +132,26 @@ function M.new(props)
   local flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
   local flag_regex = props.flag_regex ---@type ark.c.Observable
   local flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
-  local flags_append = props.flags_append ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
-  local flags_prepend = props.flags_prepend ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
+  local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
+  local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnCancel
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnClosed
-  local on_confirm = props.on_confirm ---@type dot.ux.picker.composer.list.IOnConfirm|nil
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnHidden
-  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.picker.composer.list.IOnRefresh
+  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.module.picker.composer.list.IOnCancel
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.picker.composer.list.IOnClosed
+  local on_confirm = props.on_confirm ---@type dot.module.picker.composer.list.IOnConfirm|nil
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.picker.composer.list.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.picker.composer.list.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.list.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.list.IOnRefresh
 
-  ---@type dot.ux.picker.composer.list.IRenderResult
+  ---@type dot.module.picker.composer.list.IRenderResult
   local render_result = props.render_result
     or function(_, bufnr, itemmap, matches)
       local lines = {} ---@type string[]
       local uuids = {} ---@type string[]
 
       for _, match in ipairs(matches) do
-        local item = itemmap[match.uuid] ---@type dot.ux.picker.composer.list.IItem
+        local item = itemmap[match.uuid] ---@type dot.module.picker.composer.list.IItem
         lines[#lines + 1] = item.text
         uuids[#uuids + 1] = item.uuid
       end
@@ -163,7 +163,7 @@ function M.new(props)
 
       for lnum, match in ipairs(matches) do
         local row = lnum - 1 ---@type integer
-        local item = itemmap[match.uuid] ---@type dot.ux.picker.composer.list.IItem
+        local item = itemmap[match.uuid] ---@type dot.module.picker.composer.list.IItem
 
         if item and item.highlights then
           for _, hl in ipairs(item.highlights) do
@@ -178,12 +178,12 @@ function M.new(props)
         end
       end
 
-      ---@type dot.ux.picker.composer.list.IRenderResultData
+      ---@type dot.module.picker.composer.list.IRenderResultData
       local data = { uuids = uuids }
       return data
     end
 
-  ---@type dot.ux.picker.composer.list.IRenderPreview|nil
+  ---@type dot.module.picker.composer.list.IRenderPreview|nil
   local render_preview = props.render_preview
 
   local self = setmetatable({}, M)
@@ -219,13 +219,13 @@ function M.new(props)
     on_confirm = function()
       if on_confirm ~= nil then
         local uuid = retrieve() ---@type string|nil
-        local item = uuid and self._itemmap[uuid] or nil ---@type dot.ux.picker.composer.list.IItem|nil
+        local item = uuid and self._itemmap[uuid] or nil ---@type dot.module.picker.composer.list.IItem|nil
         on_confirm(self, item)
       end
     end,
   }
 
-  local flags = {} ---@type dot.ux.picker.result.IFlagItemRaw[]
+  local flags = {} ---@type dot.module.picker.result.IFlagItemRaw[]
   do
     local function add_flags(target, source, prefix)
       if source then
@@ -310,7 +310,7 @@ function M.new(props)
   ---@type ark.t.IKeymap[]
   local preset_ks_preview = {}
 
-  local composer = dot.ux.picker.BasicComposer.new({
+  local composer = dot.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
     permanent = permanent,
@@ -343,7 +343,7 @@ function M.new(props)
       return { lnum_current = lnum_current, lnum_present = lnum_present }
     end,
 
-    ---@type dot.ux.picker.preview.IDraw|nil
+    ---@type dot.module.picker.preview.IDraw|nil
     render_preview = render_preview and function(bufnr, force)
       return render_preview(self, bufnr, force)
     end or nil,
@@ -427,7 +427,7 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname ---@type string
-  local on_disposed = self._on_disposed ---@type dot.ux.picker.composer.list.IOnDisposed
+  local on_disposed = self._on_disposed ---@type dot.module.picker.composer.list.IOnDisposed
   local composer = self._composer
   local retriever = self._retriever ---@type dot.ux.retriever.ListRetriever
   local scheduler_match = self._scheduler_match
@@ -529,22 +529,22 @@ function M:resize()
 end
 
 ---@param lnum                          integer
----@return dot.ux.picker.composer.list.IItem|nil
+---@return dot.module.picker.composer.list.IItem|nil
 function M:retrieve(lnum)
   self:__health__()
   local uuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
-  local item = uuid and self._itemmap[uuid] or nil ---@type dot.ux.picker.composer.list.IItem|nil
+  local item = uuid and self._itemmap[uuid] or nil ---@type dot.module.picker.composer.list.IItem|nil
   return item
 end
 
----@return dot.ux.picker.ListComposer
+---@return dot.module.picker.ListComposer
 function M:mark_result_dirty()
   self:__health__()
   self._composer:mark_result_dirty()
   return self
 end
 
----@return dot.ux.picker.ListComposer
+---@return dot.module.picker.ListComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self._composer:mark_result_flags_dirty()
@@ -552,7 +552,7 @@ function M:mark_result_flags_dirty()
 end
 
 ---@param uuid                          string|nil
----@return dot.ux.picker.ListComposer
+---@return dot.module.picker.ListComposer
 function M:reset_uuid_current(uuid)
   self:__health__()
   self._uuid_current = uuid ---@type string|nil
@@ -561,7 +561,7 @@ function M:reset_uuid_current(uuid)
 end
 
 ---@param uuid                          string|nil
----@return dot.ux.picker.ListComposer
+---@return dot.module.picker.ListComposer
 function M:reset_uuid_present(uuid)
   self:__health__()
   self._uuid_present = uuid ---@type string|nil
@@ -569,14 +569,14 @@ function M:reset_uuid_present(uuid)
   return self
 end
 
----@param data                          dot.ux.picker.composer.list.IResetData
----@return dot.ux.picker.ListComposer
+---@param data                          dot.module.picker.composer.list.IResetData
+---@return dot.module.picker.ListComposer
 function M:reset_data(data)
   self:__health__()
 
-  local items = data.items ---@type dot.ux.picker.composer.list.IItem[]
+  local items = data.items ---@type dot.module.picker.composer.list.IItem[]
   local lnum_total = #items ---@type integer
-  local itemmap = {} ---@type table<string, dot.ux.picker.composer.list.IItem>
+  local itemmap = {} ---@type table<string, dot.module.picker.composer.list.IItem>
   for _, item in ipairs(items) do
     itemmap[item.uuid] = item
   end

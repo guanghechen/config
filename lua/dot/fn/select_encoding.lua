@@ -1,4 +1,4 @@
----@class dot.fn.select_encoding.IItem : dot.ux.picker.composer.list.IItem
+---@class dot.fn.select_encoding.IItem : dot.module.picker.composer.list.IItem
 ---@field public data                   dot.fn.select_encoding.IItemData
 
 ---@class dot.fn.select_encoding.IItemData
@@ -62,7 +62,7 @@ local fileencodings = {
 }
 
 ---@param present                       string|nil
----@return dot.ux.picker.composer.list.IResetData
+---@return dot.module.picker.composer.list.IResetData
 local function fetch_data(present)
   local items = {} ---@type dot.fn.select_encoding.IItem[]
   local uuid_present = nil ---@type string|nil
@@ -88,15 +88,15 @@ local function fetch_data(present)
     end
   end
 
-  ---@type dot.ux.picker.composer.list.IResetData
+  ---@type dot.module.picker.composer.list.IResetData
   return { items = items, uuid_present = uuid_present, uuid_current = uuid_present }
 end
 
----@type dot.ux.picker.ListComposer|nil
+---@type dot.module.picker.ListComposer|nil
 local picker = nil
 
 ---@param params                        dot.fn.select_encoding.IParams
----@return dot.ux.picker.ListComposer
+---@return dot.module.picker.ListComposer
 local function select_encoding(params)
   local present = params.present ---@type string|nil
   local title = params.title or "Select Encoding" ---@type string
@@ -111,8 +111,8 @@ local function select_encoding(params)
     picker:dispose()
   end
 
-  ---@type dot.ux.picker.ListComposer
-  picker = dot.ux.picker.ListComposer.new({
+  ---@type dot.module.picker.ListComposer
+  picker = dot.picker.ListComposer.new({
     name = "select-encoding",
     permanent = false,
     title = title,
@@ -144,7 +144,7 @@ local function select_encoding(params)
     end,
   })
 
-  local data = fetch_data(present) ---@type dot.ux.picker.composer.list.IResetData
+  local data = fetch_data(present) ---@type dot.module.picker.composer.list.IResetData
   picker:reset_data(data)
   picker:focus()
   return picker

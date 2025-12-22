@@ -1,32 +1,32 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.result" ---@type string
+local __module_name__ = "dot.module.picker.result" ---@type string
 
----@alias dot.ux.picker.result.IDraw
----| fun(bufnr: integer): dot.ux.picker.result.IDrawResult
+---@alias dot.module.picker.result.IDraw
+---| fun(bufnr: integer): dot.module.picker.result.IDrawResult
 
----@alias dot.ux.picker.result.IIsSelected
+---@alias dot.module.picker.result.IIsSelected
 ---| fun(bufnr: integer, lnum: integer): boolean
 
----@alias dot.ux.picker.result.IOnDrawed
+---@alias dot.module.picker.result.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class dot.ux.picker.result.IDrawResult
+---@class dot.module.picker.result.IDrawResult
 ---@field public lnum_current           integer|nil
 ---@field public lnum_present           integer|nil
 
----@class dot.ux.picker.result.IFlagItemRaw
+---@class dot.module.picker.result.IFlagItemRaw
 ---@field public desc                   string
 ---@field public callback               fun(): nil
 ---@field public disabled               (fun(): boolean)|boolean|nil
 ---@field public snapshot               fun(): string, string
 
----@class dot.ux.picker.result.IFlagItem
+---@class dot.module.picker.result.IFlagItem
 ---@field public desc                   string
 ---@field public callback               string
 ---@field public disabled               fun(): boolean
 ---@field public snapshot               fun(): string, string
 
----@class dot.ux.picker.result.IWinOpts
+---@class dot.module.picker.result.IWinOpts
 ---@field public border                 string|string[]
 ---@field public number                 boolean
 ---@field public winhighlight           string
@@ -34,21 +34,21 @@ local __module_name__ = "dot.ux.picker.result" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.IResultProps
+---@class dot.module.picker.IResultProps
 ---@field public uuid                   string
 ---@field public name                   string
----@field public draw                   dot.ux.picker.result.IDraw
----@field public isselected             ?dot.ux.picker.result.IIsSelected
+---@field public draw                   dot.module.picker.result.IDraw
+---@field public isselected             ?dot.module.picker.result.IIsSelected
 ---@field public keymaps                ark.t.IKeymap[]
----@field public flags                  dot.ux.picker.result.IFlagItemRaw[]
+---@field public flags                  dot.module.picker.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
----@field public on_drawed              ?dot.ux.picker.result.IOnDrawed
+---@field public on_drawed              ?dot.module.picker.result.IOnDrawed
 
----@class dot.ux.picker.Result
+---@class dot.module.picker.Result
 ---@field public uuid                   string
 ---@field public fullname               string
----@field public draw                   dot.ux.picker.result.IDraw
----@field public flags                  dot.ux.picker.result.IFlagItem[]
+---@field public draw                   dot.module.picker.result.IDraw
+---@field public flags                  dot.module.picker.result.IFlagItem[]
 ---@field public keymaps                ark.t.IKeymap[]
 ---@field public lnum_current           ark.c.Observable
 ---@field public lnum_present           ark.c.Observable
@@ -65,28 +65,28 @@ local __module_name__ = "dot.ux.picker.result" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.picker.IResultProps
----@return dot.ux.picker.Result
+---@param props                         dot.module.picker.IResultProps
+---@return dot.module.picker.Result
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type dot.ux.picker.result.IDraw
-  local isselected = props.isselected or ark.fn.falsy ---@type dot.ux.picker.result.IIsSelected
+  local draw = props.draw ---@type dot.module.picker.result.IDraw
+  local isselected = props.isselected or ark.fn.falsy ---@type dot.module.picker.result.IIsSelected
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
-  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.ux.picker.result.IOnDrawed
+  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.module.picker.result.IOnDrawed
   local augroup_CursorMoved = ark.nvim.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
   local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.Observable
 
-  local flags = {} ---@type dot.ux.picker.result.IFlagItem[]
+  local flags = {} ---@type dot.module.picker.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
-      ---@cast flag                     dot.ux.picker.result.IFlagItemRaw
+      ---@cast flag                     dot.module.picker.result.IFlagItemRaw
       local raw_disabled = flag.disabled ---@type boolean|nil|(fun(): boolean)
       local callback = flag.callback ---@type fun(): nil
       local snapshot = flag.snapshot ---@type fun(): boolean, string
@@ -105,7 +105,7 @@ function M.new(props)
 
       local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
 
-      ---@type dot.ux.picker.result.IFlagItem
+      ---@type dot.module.picker.result.IFlagItem
       local item = {
         desc = flag.desc,
         callback = callback_fn,
@@ -251,7 +251,7 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr) ---@type boolean, dot.ux.picker.result.IDrawResult
+      local ok, result = pcall(draw, bufnr) ---@type boolean, dot.module.picker.result.IDrawResult
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
@@ -505,7 +505,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       dot.ux.picker.result.IWinOpts
+---@param winopts                       dot.module.picker.result.IWinOpts
 ---@param dimension                     dot.t.IWinDimension,
 ---@return integer
 ---@return boolean
@@ -557,7 +557,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -567,7 +567,7 @@ function M:focus()
   return self
 end
 
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -591,7 +591,7 @@ function M:hide()
 end
 
 ---@param dimension                     dot.t.IWinDimension,
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:resize(dimension)
   self:__health__()
 
@@ -615,14 +615,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
 end
 
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:mark_nvimbar_dirty()
   self:__health__()
   self._nvimbar:render()
@@ -651,7 +651,7 @@ function M:moveto(next_lnum)
 end
 
 ---@param lnum                          integer
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -661,7 +661,7 @@ function M:set_lnum_current(lnum)
 end
 
 ---@param lnum                          integer
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:set_lnum_present(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -670,7 +670,7 @@ function M:set_lnum_present(lnum)
   return self
 end
 
----@return dot.ux.picker.Result
+---@return dot.module.picker.Result
 function M:refresh_signs()
   self:__health__()
   self._scheduler_lnum_current:schedule()

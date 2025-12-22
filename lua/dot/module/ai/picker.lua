@@ -3,7 +3,7 @@ local __module_name__ = "dot.module.ai.picker" ---@type string
 local config = require("dot.module.ai.config")
 local state = require("dot.module.ai.state")
 
----@class dot.module.ai.picker.IItem : dot.ux.picker.composer.list.IItem
+---@class dot.module.ai.picker.IItem : dot.module.picker.composer.list.IItem
 ---@field public data                   any
 
 ---@class dot.module.ai.picker
@@ -37,7 +37,7 @@ local function restore_window(winnr)
   end
 end
 
----@param items                         dot.ux.picker.composer.list.IItem[]
+---@param items                         dot.module.picker.composer.list.IItem[]
 ---@param width                         integer
 ---@return integer, integer
 local function calc_picker_dimensions(items, width)
@@ -321,7 +321,7 @@ function M.show_attach(params)
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
   local picker_height, picker_width = calc_picker_dimensions(picker_items, width)
 
-  ---@type dot.ux.picker.ListComposer|nil
+  ---@type dot.module.picker.ListComposer|nil
   local picker = nil
 
   ---@return nil
@@ -340,7 +340,7 @@ function M.show_attach(params)
     end
   end
 
-  picker = dot.ux.picker.ListComposer.new({
+  picker = dot.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Select CLI tool ",
@@ -386,8 +386,8 @@ function M.show_detach(attached, on_select)
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
   local picker_height, picker_width = calc_picker_dimensions(picker_items, width)
 
-  ---@type dot.ux.picker.ListComposer
-  local picker = dot.ux.picker.ListComposer.new({
+  ---@type dot.module.picker.ListComposer
+  local picker = dot.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Detach agent ",
@@ -450,7 +450,7 @@ function M.show_send_target(attached, on_select)
     end
   end
 
-  ---@type dot.ux.picker.ListComposer|nil
+  ---@type dot.module.picker.ListComposer|nil
   local picker = nil
 
   ---@return nil
@@ -514,7 +514,7 @@ function M.show_send_target(attached, on_select)
     return item ~= nil and selected_set[item.uuid] == true
   end
 
-  picker = dot.ux.picker.ListComposer.new({
+  picker = dot.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Select target agents (Tab: toggle, Enter: confirm) ",
@@ -574,8 +574,8 @@ function M.show_prompt(on_select)
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
   local picker_height = math.min(#picker_items + 3, math.floor(vim.o.lines * 0.6))
 
-  ---@type dot.ux.picker.ListComposer
-  local picker = dot.ux.picker.ListComposer.new({
+  ---@type dot.module.picker.ListComposer
+  local picker = dot.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Select prompt ",

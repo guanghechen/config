@@ -1,38 +1,38 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.composer.basic" ---@type string
+local __module_name__ = "dot.module.picker.composer.basic" ---@type string
 
----@alias dot.ux.picker.composer.basic.PaneEnum
+---@alias dot.module.picker.composer.basic.PaneEnum
 ---| "finder"
 ---| "preview"
 ---| "result"
 
----@alias dot.ux.picker.composer.basic.IOnCancel
+---@alias dot.module.picker.composer.basic.IOnCancel
 ---| fun(): nil
 
----@alias dot.ux.picker.composer.basic.IOnClosed
----| fun(self: dot.ux.picker.BasicComposer): nil
+---@alias dot.module.picker.composer.basic.IOnClosed
+---| fun(self: dot.module.picker.BasicComposer): nil
 
----@alias dot.ux.picker.composer.basic.IOnDisposed
+---@alias dot.module.picker.composer.basic.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.picker.composer.basic.IOnFocused
----| fun(self: dot.ux.picker.BasicComposer): nil
+---@alias dot.module.picker.composer.basic.IOnFocused
+---| fun(self: dot.module.picker.BasicComposer): nil
 
----@alias dot.ux.picker.composer.basic.IOnHidden
----| fun(self: dot.ux.picker.BasicComposer): nil
+---@alias dot.module.picker.composer.basic.IOnHidden
+---| fun(self: dot.module.picker.BasicComposer): nil
 
----@alias dot.ux.picker.composer.basic.IOnRefresh
----| fun(self: dot.ux.picker.BasicComposer, force: boolean): nil
+---@alias dot.module.picker.composer.basic.IOnRefresh
+---| fun(self: dot.module.picker.BasicComposer, force: boolean): nil
 
----@alias dot.ux.picker.composer.basic.IOnResultRendered
----| fun(self: dot.ux.picker.BasicComposer, bufnr: integer): nil
+---@alias dot.module.picker.composer.basic.IOnResultRendered
+---| fun(self: dot.module.picker.BasicComposer, bufnr: integer): nil
 
----@alias dot.ux.picker.composer.basic.IOnPreviewRendered
----| fun(self: dot.ux.picker.BasicComposer, bufnr: integer): nil
+---@alias dot.module.picker.composer.basic.IOnPreviewRendered
+---| fun(self: dot.module.picker.BasicComposer, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.composer.basic.borders
+---@class dot.module.picker.composer.basic.borders
 ---@field public finder                 string[]
 ---@field public finder_with_preview    string[]
 ---@field public finder_without_result  string[]
@@ -54,7 +54,7 @@ local __borders__ = {
   -- stylua: ignore end
 }
 
----@class dot.ux.picker.composer.basic.highlights
+---@class dot.module.picker.composer.basic.highlights
 ---@field public finder                 string
 ---@field public result                 string
 ---@field public preview                string
@@ -85,12 +85,12 @@ local __highlights__ = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.composer.IBasicProps
+---@class dot.module.picker.composer.IBasicProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
 ---
----@field public flags                  ?dot.ux.picker.result.IFlagItemRaw[]
+---@field public flags                  ?dot.module.picker.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
 ---@field public height                 ?number
 ---@field public width                  ?number
@@ -105,60 +105,60 @@ local __highlights__ = {
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
----@field public result_isselected      ?dot.ux.picker.result.IIsSelected
+---@field public result_isselected      ?dot.module.picker.result.IIsSelected
 ---
----@field public render_preview         ?dot.ux.picker.preview.IDraw
----@field public render_result          dot.ux.picker.result.IDraw
+---@field public render_preview         ?dot.module.picker.preview.IDraw
+---@field public render_result          dot.module.picker.result.IDraw
 ---
----@field public on_cancel              ?dot.ux.picker.composer.basic.IOnCancel
----@field public on_closed              ?dot.ux.picker.composer.basic.IOnClosed
----@field public on_disposed            ?dot.ux.picker.composer.basic.IOnDisposed
----@field public on_focused             ?dot.ux.picker.composer.basic.IOnFocused
----@field public on_hidden              ?dot.ux.picker.composer.basic.IOnHidden
----@field public on_refresh             ?dot.ux.picker.composer.basic.IOnRefresh
----@field public on_preview_rendered    ?dot.ux.picker.composer.basic.IOnPreviewRendered
----@field public on_result_rendered     ?dot.ux.picker.composer.basic.IOnResultRendered
+---@field public on_cancel              ?dot.module.picker.composer.basic.IOnCancel
+---@field public on_closed              ?dot.module.picker.composer.basic.IOnClosed
+---@field public on_disposed            ?dot.module.picker.composer.basic.IOnDisposed
+---@field public on_focused             ?dot.module.picker.composer.basic.IOnFocused
+---@field public on_hidden              ?dot.module.picker.composer.basic.IOnHidden
+---@field public on_refresh             ?dot.module.picker.composer.basic.IOnRefresh
+---@field public on_preview_rendered    ?dot.module.picker.composer.basic.IOnPreviewRendered
+---@field public on_result_rendered     ?dot.module.picker.composer.basic.IOnResultRendered
 
----@class dot.ux.picker.BasicComposer : dot.t.IWidget
+---@class dot.module.picker.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean
 ---
----@field public finder                 dot.ux.picker.Finder
----@field public result                 dot.ux.picker.Result
----@field public preview                dot.ux.picker.Preview|nil
+---@field public finder                 dot.module.picker.Finder
+---@field public result                 dot.module.picker.Result
+---@field public preview                dot.module.picker.Preview|nil
 ---
 ---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
----@field protected _pane_focused       dot.ux.picker.composer.basic.PaneEnum
----@field protected _pane_last_focused  dot.ux.picker.composer.basic.PaneEnum
+---@field protected _pane_focused       dot.module.picker.composer.basic.PaneEnum
+---@field protected _pane_last_focused  dot.module.picker.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
 ---@field protected _search_pattern_history ?ark.c.History
 ---
----@field protected _on_cancel          dot.ux.picker.composer.basic.IOnCancel
----@field protected _on_closed          dot.ux.picker.composer.basic.IOnClosed
----@field protected _on_disposed        dot.ux.picker.composer.basic.IOnDisposed
----@field protected _on_focused         dot.ux.picker.composer.basic.IOnFocused
----@field protected _on_hidden          dot.ux.picker.composer.basic.IOnHidden
----@field protected _on_refresh         dot.ux.picker.composer.basic.IOnRefresh
+---@field protected _on_cancel          dot.module.picker.composer.basic.IOnCancel
+---@field protected _on_closed          dot.module.picker.composer.basic.IOnClosed
+---@field protected _on_disposed        dot.module.picker.composer.basic.IOnDisposed
+---@field protected _on_focused         dot.module.picker.composer.basic.IOnFocused
+---@field protected _on_hidden          dot.module.picker.composer.basic.IOnHidden
+---@field protected _on_refresh         dot.module.picker.composer.basic.IOnRefresh
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.picker.composer.IBasicProps
----@return dot.ux.picker.BasicComposer
+---@param props                         dot.module.picker.composer.IBasicProps
+---@return dot.module.picker.BasicComposer
 function M.new(props)
   local uuid = props.uuid or yoz.fn.uuid() ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean
 
-  local flags = props.flags ---@type dot.ux.picker.result.IFlagItemRaw[]
+  local flags = props.flags ---@type dot.module.picker.result.IFlagItemRaw[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
-  local pane_focused = "finder" ---@type dot.ux.picker.composer.basic.PaneEnum
-  local pane_last_focused = "finder" ---@type dot.ux.picker.composer.basic.PaneEnum
+  local pane_focused = "finder" ---@type dot.module.picker.composer.basic.PaneEnum
+  local pane_last_focused = "finder" ---@type dot.module.picker.composer.basic.PaneEnum
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
@@ -172,19 +172,19 @@ function M.new(props)
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean
-  local result_isselected = props.result_isselected ---@type dot.ux.picker.result.IIsSelected|nil
+  local result_isselected = props.result_isselected ---@type dot.module.picker.result.IIsSelected|nil
 
-  local render_preview = props.render_preview ---@type dot.ux.picker.preview.IDraw|nil
-  local render_result = props.render_result ---@type dot.ux.picker.result.IDraw
+  local render_preview = props.render_preview ---@type dot.module.picker.preview.IDraw|nil
+  local render_result = props.render_result ---@type dot.module.picker.result.IDraw
 
-  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnCancel
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnClosed
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnHidden
-  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnRefresh
-  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.ux.picker.composer.basic.IOnResultRendered
+  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnCancel
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnClosed
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnRefresh
+  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.module.picker.composer.basic.IOnResultRendered
 
   local self = setmetatable({}, M)
   self.uuid = uuid
@@ -196,15 +196,15 @@ function M.new(props)
   self._recommended_height = recommended_height
   self._recommended_width = recommended_width
   self._search_pattern_history = search_pattern_history
-  self._on_cancel = on_cancel ---@type dot.ux.picker.composer.basic.IOnCancel
-  self._on_closed = on_closed ---@type dot.ux.picker.composer.basic.IOnClosed
-  self._on_disposed = on_disposed ---@type dot.ux.picker.composer.basic.IOnDisposed
-  self._on_focused = on_focused ---@type dot.ux.picker.composer.basic.IOnFocused
-  self._on_hidden = on_hidden ---@type dot.ux.picker.composer.basic.IOnHidden
-  self._on_refresh = on_refresh ---@type dot.ux.picker.composer.basic.IOnRefresh
+  self._on_cancel = on_cancel ---@type dot.module.picker.composer.basic.IOnCancel
+  self._on_closed = on_closed ---@type dot.module.picker.composer.basic.IOnClosed
+  self._on_disposed = on_disposed ---@type dot.module.picker.composer.basic.IOnDisposed
+  self._on_focused = on_focused ---@type dot.module.picker.composer.basic.IOnFocused
+  self._on_hidden = on_hidden ---@type dot.module.picker.composer.basic.IOnHidden
+  self._on_refresh = on_refresh ---@type dot.module.picker.composer.basic.IOnRefresh
 
-  ---@type dot.ux.picker.Finder
-  local finder = dot.ux.picker.Finder.new({
+  ---@type dot.module.picker.Finder
+  local finder = dot.picker.Finder.new({
     name = name,
     keymaps = self:__resolve_keymaps_finder__(
       flags,
@@ -215,8 +215,8 @@ function M.new(props)
     title = finder_title,
   })
 
-  ---@type dot.ux.picker.Result
-  local result = dot.ux.picker.Result.new({
+  ---@type dot.module.picker.Result
+  local result = dot.picker.Result.new({
     uuid = uuid,
     name = name,
     draw = function(bufnr)
@@ -236,17 +236,17 @@ function M.new(props)
     ),
     flags = flags,
     flags_start_index = flags_start_index,
-    ---@type dot.ux.picker.result.IOnDrawed
+    ---@type dot.module.picker.result.IOnDrawed
     on_drawed = function(bufnr)
       self:mark_preview_dirty()
       on_result_rendered(self, bufnr)
     end,
   })
 
-  ---@type dot.ux.picker.Preview|nil
+  ---@type dot.module.picker.Preview|nil
   local preview = nil
   if render_preview ~= nil then
-    preview = dot.ux.picker.Preview.new({
+    preview = dot.picker.Preview.new({
       uuid = uuid,
       name = name,
       draw = render_preview,
@@ -255,7 +255,7 @@ function M.new(props)
         flags_start_index,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
-      ---@type dot.ux.picker.preview.IOnDrawed
+      ---@type dot.module.picker.preview.IOnDrawed
       on_drawed = function(bufnr)
         on_preview_rendered(self, bufnr)
       end,
@@ -284,10 +284,10 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname ---@type string
-  local finder = self.finder ---@type dot.ux.picker.Finder
-  local result = self.result ---@type dot.ux.picker.Result
-  local preview = self.preview ---@type dot.ux.picker.Preview|nil
-  local on_disposed = self._on_disposed ---@type dot.ux.picker.composer.basic.IOnDisposed
+  local finder = self.finder ---@type dot.module.picker.Finder
+  local result = self.result ---@type dot.module.picker.Result
+  local preview = self.preview ---@type dot.module.picker.Preview|nil
+  local on_disposed = self._on_disposed ---@type dot.module.picker.composer.basic.IOnDisposed
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
@@ -357,14 +357,14 @@ function M:close()
   end)
 end
 
----@param pane                          dot.ux.picker.composer.basic.PaneEnum|nil
+---@param pane                          dot.module.picker.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
   dot.state.widget.push(self)
 
   local has_new_created = self:__create_wins__()
-  local pane_focused = self._pane_focused ---@type dot.ux.picker.composer.basic.PaneEnum
+  local pane_focused = self._pane_focused ---@type dot.module.picker.composer.basic.PaneEnum
   if has_new_created and not self:__is_pane_valid__(pane_focused) then
     pane_focused = self:__is_pane_valid__(self._pane_last_focused) and self._pane_last_focused or "finder"
   end
@@ -438,7 +438,7 @@ function M:get_layout()
   return self:__layout__()
 end
 
----@return dot.ux.picker.BasicComposer
+---@return dot.module.picker.BasicComposer
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
@@ -448,7 +448,7 @@ function M:mark_result_dirty()
   return self
 end
 
----@return dot.ux.picker.BasicComposer
+---@return dot.module.picker.BasicComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self.result:mark_nvimbar_dirty()
@@ -504,14 +504,14 @@ function M:resize()
   if has_new_created then
     local current_focused_valid = self:__is_pane_valid__(self._pane_focused) ---@type boolean
     if not current_focused_valid then
-      local pane_to_focus = self:__is_pane_valid__(self._pane_last_focused) and self._pane_last_focused or "finder" ---@type dot.ux.picker.composer.basic.PaneEnum
+      local pane_to_focus = self:__is_pane_valid__(self._pane_last_focused) and self._pane_last_focused or "finder" ---@type dot.module.picker.composer.basic.PaneEnum
       self:__focus_pane__(pane_to_focus)
     end
   end
 end
 
 ---@param lnum                          integer
----@return dot.ux.picker.BasicComposer
+---@return dot.module.picker.BasicComposer
 function M:set_result_lnum(lnum)
   self:__health__()
   self.result:set_lnum_current(lnum)
@@ -526,9 +526,9 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local finder = self.finder ---@type dot.ux.picker.Finder
-  local result = self.result ---@type dot.ux.picker.Result
-  local preview = self.preview ---@type dot.ux.picker.Preview|nil
+  local finder = self.finder ---@type dot.module.picker.Finder
+  local result = self.result ---@type dot.module.picker.Result
+  local preview = self.preview ---@type dot.module.picker.Preview|nil
 
   local result_number = self._result_number ---@type boolean
 
@@ -563,7 +563,7 @@ function M:__create_wins__()
   local finder_border, result_border, preview_border = self:__get_borders__(preview_layout) ---@type string[], string[], string[]
   local zindex = dot.win.resolve_zindex() ---@type integer
 
-  ---@type dot.ux.picker.finder.IWinOpts
+  ---@type dot.module.picker.finder.IWinOpts
   local finder_winopts = {
     border = finder_border,
     winhighlight = __highlights__.finder,
@@ -571,7 +571,7 @@ function M:__create_wins__()
   }
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
-  ---@type dot.ux.picker.result.IWinOpts
+  ---@type dot.module.picker.result.IWinOpts
   local result_winopts = {
     border = result_border,
     number = result_number,
@@ -581,7 +581,7 @@ function M:__create_wins__()
   result_winnr = result:create_win(result_winopts, result_dimension)
 
   if preview ~= nil and preview_dimension ~= nil and should_show_preview then
-    ---@type dot.ux.picker.preview.IWinOpts
+    ---@type dot.module.picker.preview.IWinOpts
     local preview_winopts = {
       border = preview_border,
       winhighlight = __highlights__.preview,
@@ -596,7 +596,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param pane                          dot.ux.picker.composer.basic.PaneEnum|nil
+---@param pane                          dot.module.picker.composer.basic.PaneEnum|nil
 ---@return boolean
 function M:__is_pane_valid__(pane)
   if pane == nil then
@@ -621,7 +621,7 @@ function M:__is_pane_valid__(pane)
 end
 
 ---@protected
----@param pane_focused                  dot.ux.picker.composer.basic.PaneEnum
+---@param pane_focused                  dot.module.picker.composer.basic.PaneEnum
 ---@return nil
 function M:__focus_pane__(pane_focused)
   if pane_focused == "finder" then
@@ -654,9 +654,9 @@ end
 ---@protected
 ---@return nil
 function M:__hide__()
-  local finder = self.finder ---@type dot.ux.picker.Finder
-  local result = self.result ---@type dot.ux.picker.Result
-  local preview = self.preview ---@type dot.ux.picker.Preview|nil
+  local finder = self.finder ---@type dot.module.picker.Finder
+  local result = self.result ---@type dot.module.picker.Result
+  local preview = self.preview ---@type dot.module.picker.Preview|nil
 
   finder:hide()
   result:hide()
@@ -756,7 +756,7 @@ function M:__layout__()
   return finder_dimension, result_dimension, preview_dimension
 end
 
----@param flags                         dot.ux.picker.result.IFlagItemRaw[]
+---@param flags                         dot.module.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
@@ -1264,7 +1264,7 @@ function M:__resolve_builtin_keymaps_preview__()
       callback = function()
         local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
         if preview_layout == "right" then
-          local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.ux.picker.composer.basic.PaneEnum
+          local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.module.picker.composer.basic.PaneEnum
           self:__focus_pane__(pane_focused)
           return
         end
@@ -1284,7 +1284,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
 
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.ux.picker.composer.basic.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.module.picker.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },
@@ -1310,7 +1310,7 @@ function M:__resolve_builtin_keymaps_preview__()
   return builtin_keymaps
 end
 
----@param flags                         dot.ux.picker.result.IFlagItemRaw[]
+---@param flags                         dot.module.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
@@ -1322,7 +1322,7 @@ function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         dot.ux.picker.result.IFlagItemRaw[]
+---@param flags                         dot.module.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
@@ -1334,7 +1334,7 @@ function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         dot.ux.picker.result.IFlagItemRaw[]
+---@param flags                         dot.module.picker.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]

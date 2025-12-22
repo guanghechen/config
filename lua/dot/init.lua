@@ -19,7 +19,7 @@ local __fn__mods = {
 ---@field public rename                 dot.fn.rename
 ---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
 ---@field public select_copy_filepaths  fun(params: dot.fn.select_copy_filepaths.IParams): integer
----@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): dot.ux.picker.ListComposer
+---@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): dot.module.picker.ListComposer
 local fn = setmetatable({
   __mods = __fn__mods,
 }, {
@@ -256,6 +256,7 @@ local widget = setmetatable({
 local __mods = {
   board = "dot.module.board",
   git = "dot.module.git",
+  picker = "dot.module.picker",
 
   Filetree = "dot.filetree",
   G = "dot.G",
@@ -284,6 +285,7 @@ local __mods = {
 ---@field public __mods                 dot.__mods
 ---@field public board                  dot.module.board
 ---@field public git                    dot.module.git
+---@field public picker                 dot.module.picker
 ---
 ---@field public Filetree               dot.Filetree
 ---@field public Tree                   dot.Tree

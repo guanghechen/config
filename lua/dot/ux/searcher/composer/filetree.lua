@@ -2220,7 +2220,7 @@ function M:__open_node__(nodeuuid)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type dot.ux.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type dot.module.picker.view.filetree.ILocationNodeState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end
@@ -2522,7 +2522,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type dot.ux.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type dot.module.picker.view.filetree.ILocationNodeState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end

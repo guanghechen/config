@@ -1,6 +1,5 @@
 ---@class dot.ux.__mods
 local __mods = {
-  picker = "dot.ux.picker",
   retriever = "dot.ux.retriever",
   searcher = "dot.ux.searcher",
   view = "dot.ux.view",
@@ -12,7 +11,6 @@ local __mods = {
 
 ---@class dot.ux
 ---@field public __mods                 dot.ux.__mods
----@field public picker                 dot.ux.picker
 ---@field public retriever              dot.ux.retriever
 ---@field public searcher               dot.ux.searcher
 ---@field public view                   dot.ux.view

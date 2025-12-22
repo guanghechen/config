@@ -5,7 +5,7 @@ local txt = ark.nvim.txt
 local M = {}
 
 ---@param position                      dot.module.nvimbar.PositionEnum
----@param flags                         dot.ux.picker.result.IFlagItem[]
+---@param flags                         dot.module.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
 ---@return dot.module.nvimbar.IRawComponent
 function M.result_flags(position, flags, flags_start_index)

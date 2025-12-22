@@ -9,7 +9,7 @@ local title = "Find Keymaps" ---@type string
 ---@field public desc                   string
 ---@field public source                 string
 
----@class fml.action.find.keymaps.IItem : dot.ux.picker.composer.list.IItem
+---@class fml.action.find.keymaps.IItem : dot.module.picker.composer.list.IItem
 ---@field public data                   fml.action.find.keymaps.IItemData
 
 local WIDTH_LHS = 28 ---@type integer
@@ -55,7 +55,7 @@ local function get_sort_key(lhs)
   end
 end
 
----@return dot.ux.picker.composer.list.IResetData
+---@return dot.module.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -163,11 +163,11 @@ local function fetch_data()
     return a.data.mode < b.data.mode
   end)
 
-  ---@type dot.ux.picker.composer.list.IResetData
+  ---@type dot.module.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker = dot.ux.picker.ListComposer.new({
+local picker = dot.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -212,7 +212,7 @@ local picker = dot.ux.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type dot.ux.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type dot.module.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -223,7 +223,7 @@ local picker = dot.ux.picker.ListComposer.new({
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type dot.ux.picker.preview.IDrawResult
+      ---@type dot.module.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -233,13 +233,13 @@ local picker = dot.ux.picker.ListComposer.new({
       return result
     end
 
-    local item = composer:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
     ---@cast item fml.action.find.keymaps.IItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type dot.ux.picker.preview.IDrawResult
+      ---@type dot.module.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -275,7 +275,7 @@ local picker = dot.ux.picker.ListComposer.new({
     vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
     vim.hl.range(bufnr, nsnr_content, "f_us_km_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
 
-    ---@type dot.ux.picker.preview.IDrawResult
+    ---@type dot.module.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -306,7 +306,7 @@ local picker = dot.ux.picker.ListComposer.new({
 
   on_refresh = function(composer)
     dirty_data = true
-    local data = fetch_data() ---@type dot.ux.picker.composer.list.IResetData
+    local data = fetch_data() ---@type dot.module.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

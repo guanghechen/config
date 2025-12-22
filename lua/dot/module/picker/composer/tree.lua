@@ -1,31 +1,31 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.composer.tree" ---@type string
+local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 
----@alias dot.ux.picker.composer.tree.IOnAttached
----| fun(self: dot.ux.picker.TreeComposer, rootuuid: string): nil
+---@alias dot.module.picker.composer.tree.IOnAttached
+---| fun(self: dot.module.picker.TreeComposer, rootuuid: string): nil
 
----@alias dot.ux.picker.composer.tree.IOnClosed
----| fun(self: dot.ux.picker.TreeComposer): nil
+---@alias dot.module.picker.composer.tree.IOnClosed
+---| fun(self: dot.module.picker.TreeComposer): nil
 
----@alias dot.ux.picker.composer.tree.IOnConfirm
----| fun(self: dot.ux.picker.TreeComposer, uuids: string[]|nil): nil
+---@alias dot.module.picker.composer.tree.IOnConfirm
+---| fun(self: dot.module.picker.TreeComposer, uuids: string[]|nil): nil
 
----@alias dot.ux.picker.composer.tree.IOnDisposed
+---@alias dot.module.picker.composer.tree.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.picker.composer.tree.IOnEnter
----| fun(self: dot.ux.picker.TreeComposer, nodeuuid: string): boolean
+---@alias dot.module.picker.composer.tree.IOnEnter
+---| fun(self: dot.module.picker.TreeComposer, nodeuuid: string): boolean
 
----@alias dot.ux.picker.composer.tree.IOnFocused
----| fun(self: dot.ux.picker.TreeComposer): nil
+---@alias dot.module.picker.composer.tree.IOnFocused
+---| fun(self: dot.module.picker.TreeComposer): nil
 
----@alias dot.ux.picker.composer.tree.IOnHidden
----| fun(self: dot.ux.picker.TreeComposer): nil
+---@alias dot.module.picker.composer.tree.IOnHidden
+---| fun(self: dot.module.picker.TreeComposer): nil
 ---
----@alias dot.ux.picker.composer.tree.IOnRefresh
----| fun(self: dot.ux.picker.TreeComposer, force: boolean): nil
+---@alias dot.module.picker.composer.tree.IOnRefresh
+---| fun(self: dot.module.picker.TreeComposer, force: boolean): nil
 
----@class dot.ux.picker.composer.tree.actions
+---@class dot.module.picker.composer.tree.actions
 ---@field public attach_node            fun(): nil
 ---@field public attach_parent          fun(): nil
 ---@field public goto_lnum_lastchild    fun(): nil
@@ -40,7 +40,7 @@ local __module_name__ = "dot.ux.picker.composer.tree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.ITreeComposerProps
+---@class dot.module.picker.ITreeComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
@@ -60,37 +60,37 @@ local __module_name__ = "dot.ux.picker.composer.tree" ---@type string
 ---@field public flag_case_sensitive    ark.c.Observable
 ---@field public flag_selected          ark.c.Observable
 ---@field public flag_viewtype          ark.c.Observable
----@field public flags_append           dot.ux.picker.result.IFlagItemRaw[]|nil
----@field public flags_prepend          dot.ux.picker.result.IFlagItemRaw[]|nil
+---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
+---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?ark.c.History
 ---
----@field public render_preview         ?dot.ux.picker.preview.IDraw
----@field public render_listview_leaf   dot.ux.picker.view.tree.IListviewLeafNodeRenderer
----@field public render_listview_location   dot.ux.picker.view.tree.IListviewLeafLocationRenderer
----@field public render_treeview_container  dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
----@field public render_treeview_leaf   dot.ux.picker.view.tree.ITreeviewLeafNodeRenderer
----@field public render_treeview_location   dot.ux.picker.view.tree.ITreeviewLeafLocationRenderer
+---@field public render_preview         ?dot.module.picker.preview.IDraw
+---@field public render_listview_leaf   dot.module.picker.view.tree.IListviewLeafNodeRenderer
+---@field public render_listview_location   dot.module.picker.view.tree.IListviewLeafLocationRenderer
+---@field public render_treeview_container  dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+---@field public render_treeview_leaf   dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
+---@field public render_treeview_location   dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
 ---
----@field public on_attached            ?dot.ux.picker.composer.tree.IOnAttached
----@field public on_closed              ?dot.ux.picker.composer.tree.IOnClosed
----@field public on_confirm             ?dot.ux.picker.composer.tree.IOnConfirm
----@field public on_disposed            ?dot.ux.picker.composer.tree.IOnDisposed
----@field public on_enter               ?dot.ux.picker.composer.tree.IOnEnter
----@field public on_focused             ?dot.ux.picker.composer.tree.IOnFocused
----@field public on_hidden              ?dot.ux.picker.composer.tree.IOnHidden
----@field public on_refresh             ?dot.ux.picker.composer.tree.IOnRefresh
+---@field public on_attached            ?dot.module.picker.composer.tree.IOnAttached
+---@field public on_closed              ?dot.module.picker.composer.tree.IOnClosed
+---@field public on_confirm             ?dot.module.picker.composer.tree.IOnConfirm
+---@field public on_disposed            ?dot.module.picker.composer.tree.IOnDisposed
+---@field public on_enter               ?dot.module.picker.composer.tree.IOnEnter
+---@field public on_focused             ?dot.module.picker.composer.tree.IOnFocused
+---@field public on_hidden              ?dot.module.picker.composer.tree.IOnHidden
+---@field public on_refresh             ?dot.module.picker.composer.tree.IOnRefresh
 
----@class dot.ux.picker.TreeComposer
+---@class dot.module.picker.TreeComposer
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public title                  string
 ---
----@field public finder                 dot.ux.picker.Finder
----@field public result                 dot.ux.picker.Result
----@field public preview                dot.ux.picker.Preview
+---@field public finder                 dot.module.picker.Finder
+---@field public result                 dot.module.picker.Result
+---@field public preview                dot.module.picker.Preview
 ---
 ---@field public flag_foldempty         ark.c.Observable
 ---@field public flag_fuzzy             ark.c.Observable
@@ -101,27 +101,27 @@ local __module_name__ = "dot.ux.picker.composer.tree" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _tree               dot.Tree
----@field protected _composer           dot.ux.picker.BasicComposer
+---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          dot.ux.view.Plainfile
 ---@field protected _retriever          dot.ux.retriever.TreeRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler|nil
----@field protected _treeview           dot.ux.picker.TreeView
+---@field protected _treeview           dot.module.picker.TreeView
 ---
 ---@field protected _uuid_root          string|nil
 ---@field protected _uuid_current       string|nil
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_order        string[]
 ---
----@field protected _on_attached        dot.ux.picker.composer.tree.IOnAttached
----@field protected _on_confirm         dot.ux.picker.composer.tree.IOnConfirm
----@field protected _on_disposed        dot.ux.picker.composer.tree.IOnDisposed
----@field protected _on_enter           dot.ux.picker.composer.tree.IOnEnter|nil
+---@field protected _on_attached        dot.module.picker.composer.tree.IOnAttached
+---@field protected _on_confirm         dot.module.picker.composer.tree.IOnConfirm
+---@field protected _on_disposed        dot.module.picker.composer.tree.IOnDisposed
+---@field protected _on_enter           dot.module.picker.composer.tree.IOnEnter|nil
 ---@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.picker.ITreeComposerProps
----@return dot.ux.picker.TreeComposer
+---@param props                         dot.module.picker.ITreeComposerProps
+---@return dot.module.picker.TreeComposer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -147,25 +147,25 @@ function M.new(props)
   local o_flag_selected = props.flag_selected ---@type ark.c.Observable
   local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
 
-  local flags_append = props.flags_append ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
-  local flags_prepend = props.flags_prepend ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
+  local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
+  local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local render_preview = props.render_preview ---@type dot.ux.picker.preview.IDraw|nil
-  local render_listview_leaf = props.render_listview_leaf ---@type dot.ux.picker.view.tree.IListviewLeafNodeRenderer
-  local render_listview_location = props.render_listview_location ---@type dot.ux.picker.view.tree.IListviewLeafLocationRenderer
-  local render_treeview_container = props.render_treeview_container ---@type dot.ux.picker.view.tree.ITreeviewContainerNodeRenderer
-  local render_treeview_leaf = props.render_treeview_leaf ---@type dot.ux.picker.view.tree.ITreeviewLeafNodeRenderer
-  local render_treeview_location = props.render_treeview_location ---@type dot.ux.picker.view.tree.ITreeviewLeafLocationRenderer
+  local render_preview = props.render_preview ---@type dot.module.picker.preview.IDraw|nil
+  local render_listview_leaf = props.render_listview_leaf ---@type dot.module.picker.view.tree.IListviewLeafNodeRenderer
+  local render_listview_location = props.render_listview_location ---@type dot.module.picker.view.tree.IListviewLeafLocationRenderer
+  local render_treeview_container = props.render_treeview_container ---@type dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+  local render_treeview_leaf = props.render_treeview_leaf ---@type dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
+  local render_treeview_location = props.render_treeview_location ---@type dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
 
-  local on_attached = props.on_attached or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnAttached
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnClosed
-  local on_confirm = props.on_confirm or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnConfirm
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnDisposed
-  local on_enter = props.on_enter ---@type dot.ux.picker.composer.tree.IOnEnter|nil
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnHidden
-  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.picker.composer.tree.IOnRefresh
+  local on_attached = props.on_attached or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnAttached
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnClosed
+  local on_confirm = props.on_confirm or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnConfirm
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnDisposed
+  local on_enter = props.on_enter ---@type dot.module.picker.composer.tree.IOnEnter|nil
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnRefresh
 
   local tree = dot.Tree.new({
     name = fullname,
@@ -184,8 +184,8 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type dot.ux.picker.TreeView
-  local treeview = dot.ux.picker.TreeView.new({
+  ---@type dot.module.picker.TreeView
+  local treeview = dot.picker.TreeView.new({
     name = fullname,
     tree = tree,
     flag_foldempty = o_flag_foldempty,
@@ -213,7 +213,7 @@ function M.new(props)
     end,
   })
 
-  local flags = {} ---@type dot.ux.picker.result.IFlagItemRaw[]
+  local flags = {} ---@type dot.module.picker.result.IFlagItemRaw[]
   do
     if flags_prepend ~= nil then
       for _, flag in ipairs(flags_prepend) do
@@ -315,7 +315,7 @@ function M.new(props)
     end
   end
 
-  ---@type dot.ux.picker.composer.tree.actions
+  ---@type dot.module.picker.composer.tree.actions
   local actions = {
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -699,7 +699,7 @@ function M.new(props)
     },
   }
 
-  local composer = dot.ux.picker.BasicComposer.new({
+  local composer = dot.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
     permanent = permanent,
@@ -720,13 +720,13 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type dot.ux.picker.result.IIsSelected
+    ---@type dot.module.picker.result.IIsSelected
     result_isselected = function(_, lnum)
       local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
       return uuid ~= nil and treeview:isselected(uuid)
     end,
 
-    ---@type dot.ux.picker.result.IDraw
+    ---@type dot.module.picker.result.IDraw
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type dot.ux.view.tree.ViewtypeEnum
       local result ---@type dot.ux.view.tree.IRenderResult
@@ -759,11 +759,11 @@ function M.new(props)
 
       local uuid_current = self._uuid_current ---@type string|nil
       local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local ret = { lnum_current = lnum_current } ---@type dot.ux.picker.result.IDrawResult
+      local ret = { lnum_current = lnum_current } ---@type dot.module.picker.result.IDrawResult
       return ret
     end,
 
-    ---@type dot.ux.picker.preview.IDraw|nil
+    ---@type dot.module.picker.preview.IDraw|nil
     render_preview = render_preview,
 
     on_cancel = function()
@@ -866,12 +866,12 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname
-  local on_dispose = self._on_disposed ---@type dot.ux.picker.composer.tree.IOnDisposed
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
+  local on_dispose = self._on_disposed ---@type dot.module.picker.composer.tree.IOnDisposed
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
   local plainfile = self._plainfile ---@type dot.ux.view.Plainfile
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
@@ -983,7 +983,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param rootuuid                      string
----@return dot.ux.picker.TreeComposer
+---@return dot.module.picker.TreeComposer
 function M:attach(rootuuid)
   self:__health__()
   if self._uuid_root == rootuuid then
@@ -1000,7 +1000,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
@@ -1010,14 +1010,14 @@ function M:attach(rootuuid)
   return self
 end
 
----@return dot.ux.picker.TreeComposer
+---@return dot.module.picker.TreeComposer
 function M:mark_result_dirty()
   self:__health__()
   self._composer:mark_result_dirty()
   return self
 end
 
----@return dot.ux.picker.TreeComposer
+---@return dot.module.picker.TreeComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self._composer:mark_result_flags_dirty()
@@ -1037,7 +1037,7 @@ function M:__has_selected_node__()
     return false
   end
 
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1064,7 +1064,7 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   if #input < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
@@ -1086,9 +1086,9 @@ end
 ---@param nodeuuid                      string
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -1207,8 +1207,8 @@ end
 function M:__toggle_node__(nodeuuid, open, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
-  local treeview = self._treeview ---@type dot.ux.picker.TreeView
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
+  local treeview = self._treeview ---@type dot.module.picker.TreeView
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     composer:mark_result_dirty()

@@ -6,7 +6,7 @@ local __module_name__ = "fml.action.toggle.list" ---@type string
 ---@field public snapshot               fun(): string, string
 ---@field public action                 fun(): nil
 
----@class fml.action.toggle.IListItem : dot.ux.picker.composer.list.IItem
+---@class fml.action.toggle.IListItem : dot.module.picker.composer.list.IItem
 ---@field public data                   fml.action.toggle.IItem
 
 ---@type table<string, integer>
@@ -549,7 +549,7 @@ local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
 local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
 
----@return dot.ux.picker.composer.list.IResetData
+---@return dot.module.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -589,16 +589,16 @@ local function fetch_data()
     items[#items + 1] = list_item
   end
 
-  ---@type dot.ux.picker.composer.list.IResetData
+  ---@type dot.module.picker.composer.list.IResetData
   return { items = items }
 end
 
----@param picker                        dot.ux.picker.ListComposer
+---@param picker                        dot.module.picker.ListComposer
 ---@return nil
 local function execute_action(picker)
   local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
   if lnum_current >= 1 then
-    local item = picker:retrieve(lnum_current) ---@type dot.ux.picker.composer.list.IItem|nil
+    local item = picker:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
     if item then
       ---@cast item fml.action.toggle.IListItem
       item.data.action()
@@ -608,13 +608,13 @@ local function execute_action(picker)
   end
 end
 
----@type dot.ux.picker.composer.list.IRenderResult
+---@type dot.module.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)
   local lines = {} ---@type string[]
   local uuids = {} ---@type string[]
 
   for _, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type dot.ux.picker.composer.list.IItem
+    local item = itemmap[match.uuid] ---@type dot.module.picker.composer.list.IItem
     ---@cast item                       fml.action.toggle.IListItem
 
     lines[#lines + 1] = item.text
@@ -627,7 +627,7 @@ local function render_result(_, bufnr, itemmap, matches)
   local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
 
   for lnum, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type dot.ux.picker.composer.list.IItem
+    local item = itemmap[match.uuid] ---@type dot.module.picker.composer.list.IItem
     ---@cast item                       fml.action.toggle.IListItem
 
     local row = lnum - 1 ---@type integer
@@ -644,7 +644,7 @@ local function render_result(_, bufnr, itemmap, matches)
     end
   end
 
-  ---@type dot.ux.picker.composer.list.IRenderResultData
+  ---@type dot.module.picker.composer.list.IRenderResultData
   return { uuids = uuids }
 end
 
@@ -658,8 +658,8 @@ dot.command.define({
 ---@class fml.action.toggle.list
 local M = {}
 
-local picker ---@type dot.ux.picker.ListComposer
-picker = dot.ux.picker.ListComposer.new({
+local picker ---@type dot.module.picker.ListComposer
+picker = dot.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Toggle Select",

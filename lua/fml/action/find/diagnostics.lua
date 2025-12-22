@@ -28,7 +28,7 @@ local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())---@type ark.c.Obs
 local o_flag_buffer = ark.c.Observable.from_value(false)---@type ark.c.Observable
 local o_flag_severity = ark.c.Observable.from_value(nil)
 
-local picker ---@type dot.ux.picker.FiletreeComposer
+local picker ---@type dot.module.picker.FiletreeComposer
 
 ---@param force                         boolean
 ---@return nil
@@ -54,7 +54,7 @@ local function refresh(force)
   end
 
   local filetree = picker._filetree ---@type dot.Filetree
-  local treeview = picker._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = picker._treeview ---@type dot.module.picker.FiletreeView
   local rootpath = o_rootpath:snapshot() ---@type string
 
   if bufnr_sourcefile ~= nil then
@@ -117,7 +117,7 @@ local function refresh(force)
   picker:reset_filepaths(rootpath, filepaths, false)
 
   local statemap = treeview.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.filetree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   for _, diagnostic in ipairs(diagnostics) do
     local bufnr = diagnostic.bufnr
@@ -129,7 +129,7 @@ local function refresh(force)
     ---@cast severity                 fml.action.find.diagnostics.SeverityEnum
 
     local leafuuid = dot.Filetree.uuid(filepath) ---@type string
-    local leafnodestate = statemap[leafuuid] ---@type dot.ux.picker.view.filetree.INodeState|nil
+    local leafnodestate = statemap[leafuuid] ---@type dot.module.picker.view.filetree.INodeState|nil
     if leafnodestate == nil then
       goto continue
     end
@@ -147,7 +147,7 @@ local function refresh(force)
       goto continue
     end
 
-    local locations = leafnodestate.locations or {} ---@type dot.ux.picker.view.filetree.ILocationNodeState[]
+    local locations = leafnodestate.locations or {} ---@type dot.module.picker.view.filetree.ILocationNodeState[]
     leafnodestate.locations = locations
 
     ---@type fml.action.find.diagnostics.ILocationData
@@ -180,7 +180,7 @@ local function refresh(force)
       }
     end
 
-    ---@class dot.ux.picker.view.filetree.ILocationNodeState
+    ---@class dot.module.picker.view.filetree.ILocationNodeState
     local location = {
       nodetype = "location",
       leafuuid = leafuuid,
@@ -200,7 +200,7 @@ local function refresh(force)
   end
 end
 
-picker = dot.ux.picker.FiletreeComposer.new({
+picker = dot.picker.FiletreeComposer.new({
   name = name,
   permanent = true,
   title = title,

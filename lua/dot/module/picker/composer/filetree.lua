@@ -1,38 +1,38 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
+local __module_name__ = "dot.module.picker.composer.filetree" ---@type string
 
----@alias dot.ux.picker.composer.filetree.IOnAttached
----| fun(self: dot.ux.picker.FiletreeComposer, rootpath: string): nil
+---@alias dot.module.picker.composer.filetree.IOnAttached
+---| fun(self: dot.module.picker.FiletreeComposer, rootpath: string): nil
 
----@alias dot.ux.picker.composer.filetree.IOnClosed
----| fun(self: dot.ux.picker.FiletreeComposer): nil
+---@alias dot.module.picker.composer.filetree.IOnClosed
+---| fun(self: dot.module.picker.FiletreeComposer): nil
 
----@alias dot.ux.picker.composer.filetree.IOnConfirm
----| fun(self: dot.ux.picker.FiletreeComposer, selected_filepaths: string[]|nil): nil
+---@alias dot.module.picker.composer.filetree.IOnConfirm
+---| fun(self: dot.module.picker.FiletreeComposer, selected_filepaths: string[]|nil): nil
 
----@alias dot.ux.picker.composer.filetree.IOnDisposed
+---@alias dot.module.picker.composer.filetree.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.picker.composer.filetree.IOnFocused
----| fun(self: dot.ux.picker.FiletreeComposer): nil
+---@alias dot.module.picker.composer.filetree.IOnFocused
+---| fun(self: dot.module.picker.FiletreeComposer): nil
 
----@alias dot.ux.picker.composer.filetree.IOnHidden
----| fun(self: dot.ux.picker.FiletreeComposer): nil
+---@alias dot.module.picker.composer.filetree.IOnHidden
+---| fun(self: dot.module.picker.FiletreeComposer): nil
 ---
----@alias dot.ux.picker.composer.filetree.IOnRefresh
----| fun(self: dot.ux.picker.FiletreeComposer, force: boolean): nil
+---@alias dot.module.picker.composer.filetree.IOnRefresh
+---| fun(self: dot.module.picker.FiletreeComposer, force: boolean): nil
 
----@alias dot.ux.picker.composer.filetree.IOnResultRendered
----| fun(self: dot.ux.picker.FiletreeComposer, bufnr: integer): nil
+---@alias dot.module.picker.composer.filetree.IOnResultRendered
+---| fun(self: dot.module.picker.FiletreeComposer, bufnr: integer): nil
 
----@alias dot.ux.picker.composer.filetree.IOnPreviewRendered
----| fun(self: dot.ux.picker.FiletreeComposer, bufnr: integer): nil
+---@alias dot.module.picker.composer.filetree.IOnPreviewRendered
+---| fun(self: dot.module.picker.FiletreeComposer, bufnr: integer): nil
 
----@class dot.ux.picker.composer.filetree.ISelectedItemLocation
+---@class dot.module.picker.composer.filetree.ISelectedItemLocation
 ---@field public lnum                   integer
 ---@field public col                    integer|nil
 
----@class dot.ux.picker.composer.filetree.actions
+---@class dot.module.picker.composer.filetree.actions
 ---@field public attach_node            fun(): nil
 ---@field public create_node            fun(): nil
 ---@field public open_node              fun(): nil
@@ -56,7 +56,7 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.picker.IFiletreeComposerProps
+---@class dot.module.picker.IFiletreeComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
@@ -70,7 +70,7 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 ---@field public keymaps_preview        ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public render_preview         ?dot.ux.picker.preview.IDraw
+---@field public render_preview         ?dot.module.picker.preview.IDraw
 ---
 ---@field public flag_foldempty         ark.c.Observable
 ---@field public flag_fuzzy             ark.c.Observable
@@ -78,8 +78,8 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 ---@field public flag_case_sensitive    ark.c.Observable
 ---@field public flag_selected          ark.c.Observable
 ---@field public flag_viewtype          ark.c.Observable
----@field public flags_append           dot.ux.picker.result.IFlagItemRaw[]|nil
----@field public flags_prepend          dot.ux.picker.result.IFlagItemRaw[]|nil
+---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
+---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public frecency               ?ark.c.Frecency
@@ -87,24 +87,24 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 ---@field public search_pattern         ark.c.Observable
 ---@field public search_pattern_history ?ark.c.History
 ---
----@field public on_attached            ?dot.ux.picker.composer.filetree.IOnAttached
----@field public on_closed              ?dot.ux.picker.composer.filetree.IOnClosed
----@field public on_confirm             ?dot.ux.picker.composer.filetree.IOnConfirm
----@field public on_disposed            ?dot.ux.picker.composer.filetree.IOnDisposed
----@field public on_focused             ?dot.ux.picker.composer.filetree.IOnFocused
----@field public on_hidden              ?dot.ux.picker.composer.filetree.IOnHidden
----@field public on_refresh             ?dot.ux.picker.composer.filetree.IOnRefresh
----@field public on_preview_rendered    ?dot.ux.picker.composer.filetree.IOnPreviewRendered
----@field public on_result_rendered     ?dot.ux.picker.composer.filetree.IOnResultRendered
+---@field public on_attached            ?dot.module.picker.composer.filetree.IOnAttached
+---@field public on_closed              ?dot.module.picker.composer.filetree.IOnClosed
+---@field public on_confirm             ?dot.module.picker.composer.filetree.IOnConfirm
+---@field public on_disposed            ?dot.module.picker.composer.filetree.IOnDisposed
+---@field public on_focused             ?dot.module.picker.composer.filetree.IOnFocused
+---@field public on_hidden              ?dot.module.picker.composer.filetree.IOnHidden
+---@field public on_refresh             ?dot.module.picker.composer.filetree.IOnRefresh
+---@field public on_preview_rendered    ?dot.module.picker.composer.filetree.IOnPreviewRendered
+---@field public on_result_rendered     ?dot.module.picker.composer.filetree.IOnResultRendered
 
----@class dot.ux.picker.FiletreeComposer
+---@class dot.module.picker.FiletreeComposer
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public title                  string
 ---
----@field public finder                 dot.ux.picker.Finder
----@field public result                 dot.ux.picker.Result
----@field public preview                dot.ux.picker.Preview
+---@field public finder                 dot.module.picker.Finder
+---@field public result                 dot.module.picker.Result
+---@field public preview                dot.module.picker.Preview
 ---
 ---@field public flag_foldempty         ark.c.Observable
 ---@field public flag_fuzzy             ark.c.Observable
@@ -116,11 +116,11 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _filetree           dot.Filetree
 ---@field protected _frecency           ark.c.Frecency|nil
----@field protected _composer           dot.ux.picker.BasicComposer
+---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          dot.ux.view.Plainfile
 ---@field protected _retriever          dot.ux.retriever.TreeRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler
----@field protected _treeview           dot.ux.picker.FiletreeView
+---@field protected _treeview           dot.module.picker.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
 ---@field protected _uuid_root          string|nil
@@ -128,15 +128,15 @@ local __module_name__ = "dot.ux.picker.composer.filetree" ---@type string
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_order        string[]
 ---
----@field protected _on_attached        dot.ux.picker.composer.filetree.IOnAttached
----@field protected _on_confirm         dot.ux.picker.composer.filetree.IOnConfirm|nil
----@field protected _on_disposed        dot.ux.picker.composer.filetree.IOnDisposed
+---@field protected _on_attached        dot.module.picker.composer.filetree.IOnAttached
+---@field protected _on_confirm         dot.module.picker.composer.filetree.IOnConfirm|nil
+---@field protected _on_disposed        dot.module.picker.composer.filetree.IOnDisposed
 ---@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.picker.IFiletreeComposerProps
----@return dot.ux.picker.FiletreeComposer
+---@param props                         dot.module.picker.IFiletreeComposerProps
+---@return dot.module.picker.FiletreeComposer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -152,7 +152,7 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
-  local render_preview = props.render_preview ---@type dot.ux.picker.preview.IDraw|nil
+  local render_preview = props.render_preview ---@type dot.module.picker.preview.IDraw|nil
 
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
@@ -163,29 +163,29 @@ function M.new(props)
   local o_flag_selected = props.flag_selected ---@type ark.c.Observable
   local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
 
-  local flags_append = props.flags_append ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
-  local flags_prepend = props.flags_prepend ---@type dot.ux.picker.result.IFlagItemRaw[]|nil
+  local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
+  local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local frecency = props.frecency ---@type ark.c.Frecency|nil
 
-  local on_attached = props.on_attached or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnAttached
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnClosed
-  local on_confirm = props.on_confirm ---@type dot.ux.picker.composer.filetree.IOnConfirm|nil
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnHidden
-  local _on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnRefresh
-  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnResultRendered
-  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.ux.picker.composer.filetree.IOnPreviewRendered
+  local on_attached = props.on_attached or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnAttached
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnClosed
+  local on_confirm = props.on_confirm ---@type dot.module.picker.composer.filetree.IOnConfirm|nil
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnHidden
+  local _on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnRefresh
+  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnResultRendered
+  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.module.picker.composer.filetree.IOnPreviewRendered
 
   local self = setmetatable({}, M)
 
   ---@type dot.Filetree
   local filetree = dot.Filetree.new({ name = fullname })
 
-  ---@type dot.ux.picker.FiletreeView
-  local treeview = dot.ux.picker.FiletreeView.new({
+  ---@type dot.module.picker.FiletreeView
+  local treeview = dot.picker.FiletreeView.new({
     name = fullname,
     tree = filetree,
     flag_foldempty = o_flag_foldempty,
@@ -193,7 +193,7 @@ function M.new(props)
     indent_hln = "f_utw_indent_float",
   })
 
-  ---@type dot.ux.picker.composer.filetree.IOnRefresh
+  ---@type dot.module.picker.composer.filetree.IOnRefresh
   local function on_refresh(_, force)
     treeview:mark_cache_invisible_dirty()
     _on_refresh(self, force)
@@ -224,7 +224,7 @@ function M.new(props)
     end,
   })
 
-  local flags = {} ---@type dot.ux.picker.result.IFlagItemRaw[]
+  local flags = {} ---@type dot.module.picker.result.IFlagItemRaw[]
   do
     if flags_prepend ~= nil then
       for _, flag in ipairs(flags_prepend) do
@@ -326,7 +326,7 @@ function M.new(props)
     end
   end
 
-  ---@type dot.ux.picker.composer.filetree.actions
+  ---@type dot.module.picker.composer.filetree.actions
   local actions = {
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -334,7 +334,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
       if nodestate == nil then
         return
       end
@@ -463,7 +463,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
         treeview:collapse(nodeuuid, "collapse", true)
         treeview:mark_cache_listview_dirty()
@@ -993,7 +993,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
           if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -1028,8 +1028,8 @@ function M.new(props)
             local filepath = node.data.filepath ---@type string
             local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
 
-            local nodestate = treeview:retrieve(uuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
-            local locations = nodestate and nodestate.locations or nil ---@type dot.ux.picker.view.filetree.ILocationNodeState[]|nil
+            local nodestate = treeview:retrieve(uuid) ---@type dot.module.picker.view.filetree.INodeState|nil
+            local locations = nodestate and nodestate.locations or nil ---@type dot.module.picker.view.filetree.ILocationNodeState[]|nil
             if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
@@ -1068,7 +1068,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -1092,7 +1092,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -1106,7 +1106,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -1406,13 +1406,13 @@ function M.new(props)
   }
 
   if preview and render_preview == nil then
-    ---@type dot.ux.picker.preview.IDraw|nil
+    ---@type dot.module.picker.preview.IDraw|nil
     render_preview = function(bufnr, force)
       return self:render_preview(bufnr, force)
     end
   end
 
-  local composer = dot.ux.picker.BasicComposer.new({
+  local composer = dot.picker.BasicComposer.new({
     uuid = picker_uuid,
     name = fullname,
     permanent = permanent,
@@ -1433,13 +1433,13 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type dot.ux.picker.result.IIsSelected
+    ---@type dot.module.picker.result.IIsSelected
     result_isselected = function(_, lnum)
       local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
       return uuid ~= nil and treeview:isselected(uuid)
     end,
 
-    ---@type dot.ux.picker.result.IDraw
+    ---@type dot.module.picker.result.IDraw
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type dot.ux.view.tree.ViewtypeEnum
       local result ---@type dot.ux.view.tree.IRenderResult
@@ -1472,11 +1472,11 @@ function M.new(props)
 
       local uuid_current = self._uuid_current ---@type string|nil
       local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local ret = { lnum_current = lnum_current } ---@type dot.ux.picker.result.IDrawResult
+      local ret = { lnum_current = lnum_current } ---@type dot.module.picker.result.IDrawResult
       return ret
     end,
 
-    ---@type dot.ux.picker.preview.IDraw|nil
+    ---@type dot.module.picker.preview.IDraw|nil
     render_preview = render_preview,
 
     on_cancel = function()
@@ -1586,12 +1586,12 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname
-  local on_dispose = self._on_disposed ---@type dot.ux.picker.composer.filetree.IOnDisposed
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
+  local on_dispose = self._on_disposed ---@type dot.module.picker.composer.filetree.IOnDisposed
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
   local plainfile = self._plainfile ---@type dot.ux.view.Plainfile
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
@@ -1704,7 +1704,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param rootuuid                      string
----@return dot.ux.picker.FiletreeComposer
+---@return dot.module.picker.FiletreeComposer
 function M:attach(rootuuid)
   self:__health__()
   if self._uuid_root == rootuuid then
@@ -1722,7 +1722,7 @@ function M:attach(rootuuid)
   end
 
   local filetree = self._filetree ---@type dot.Filetree
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
@@ -1735,14 +1735,14 @@ function M:attach(rootuuid)
   return self
 end
 
----@return dot.ux.picker.FiletreeComposer
+---@return dot.module.picker.FiletreeComposer
 function M:mark_result_dirty()
   self:__health__()
   self._composer:mark_result_dirty()
   return self
 end
 
----@return dot.ux.picker.FiletreeComposer
+---@return dot.module.picker.FiletreeComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self._composer:mark_result_flags_dirty()
@@ -1752,12 +1752,12 @@ end
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_positions                boolean
----@return dot.ux.picker.FiletreeComposer
+---@return dot.module.picker.FiletreeComposer
 function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
   local frecency = self._frecency ---@type ark.c.Frecency|nil
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
@@ -1788,7 +1788,7 @@ end
 
 ---@param bufnr                         integer
 ---@param force                         boolean
----@return dot.ux.picker.preview.IDrawResult
+---@return dot.module.picker.preview.IDrawResult
 function M:render_preview(bufnr, force)
   local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
   if nodeuuid == nil then
@@ -1796,7 +1796,7 @@ function M:render_preview(bufnr, force)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     self._last_preview_filepath = nil
 
-    ---@type dot.ux.picker.preview.IDrawResult
+    ---@type dot.module.picker.preview.IDrawResult
     local result = {
       cursorline = true,
       number = true,
@@ -1809,7 +1809,7 @@ function M:render_preview(bufnr, force)
   end
 
   local filetree = self._filetree ---@type dot.Filetree
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local plainfile = self._plainfile ---@type dot.ux.view.Plainfile
   local o_flag_foldempty = self.flag_foldempty ---@type ark.c.Observable
 
@@ -1834,8 +1834,8 @@ function M:render_preview(bufnr, force)
       only_visible = false,
     })
 
-    ---@cast nodestate          dot.ux.picker.view.filetree.IDirectoryNodeState
-    ---@type dot.ux.picker.preview.IDrawResult
+    ---@cast nodestate          dot.module.picker.view.filetree.IDirectoryNodeState
+    ---@type dot.module.picker.preview.IDrawResult
     local result = {
       cursorline = true,
       number = true,
@@ -1848,17 +1848,17 @@ function M:render_preview(bufnr, force)
   end
 
   if nodestate.nodetype == "leaf" then
-    ---@cast nodestate          dot.ux.picker.view.filetree.IFileNodeState
+    ---@cast nodestate          dot.module.picker.view.filetree.IFileNodeState
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
       ---@diagnostic disable-next-line: cast-local-type
       nodestate = nodestate.locations[1]
     end
   end
-  ---@cast nodestate          dot.ux.picker.view.filetree.IFileNodeState|dot.ux.picker.view.filetree.ILocationNodeState
+  ---@cast nodestate          dot.module.picker.view.filetree.IFileNodeState|dot.module.picker.view.filetree.ILocationNodeState
 
   plainfile:render(bufnr, filepath, force)
 
-  ---@type dot.ux.picker.preview.IDrawResult
+  ---@type dot.module.picker.preview.IDrawResult
   local result = {
     cursorline = true,
     number = true,
@@ -1879,7 +1879,7 @@ function M:__collect_selected_lnums__()
   self:__health__()
 
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
@@ -1922,7 +1922,7 @@ function M:__has_selected_node__()
     return false
   end
 
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1950,7 +1950,7 @@ end
 ---@return nil
 function M:__match__(input)
   local frecency = self._frecency ---@type ark.c.Frecency|nil
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   if #input < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
@@ -1980,8 +1980,8 @@ function M:__match__(input)
     table.sort(uuids_order, function(a, b)
       local na = treeview:retrieve(a)
       local nb = treeview:retrieve(b)
-      ---@cast na                       dot.ux.picker.view.filetree.IFileNodeState
-      ---@cast nb                       dot.ux.picker.view.filetree.IFileNodeState
+      ---@cast na                       dot.module.picker.view.filetree.IFileNodeState
+      ---@cast nb                       dot.module.picker.view.filetree.IFileNodeState
 
       local sa = na.cache_match and na.cache_match.score or 0 + (frecency:score(a) or 0) ---@type integer
       local sb = nb.cache_match and nb.cache_match.score or 0 + (frecency:score(b) or 0) ---@type integer
@@ -1991,8 +1991,8 @@ function M:__match__(input)
     table.sort(uuids_order, function(a, b)
       local na = treeview:retrieve(a)
       local nb = treeview:retrieve(b)
-      ---@cast na                       dot.ux.picker.view.filetree.IFileNodeState
-      ---@cast nb                       dot.ux.picker.view.filetree.IFileNodeState
+      ---@cast na                       dot.module.picker.view.filetree.IFileNodeState
+      ---@cast nb                       dot.module.picker.view.filetree.IFileNodeState
 
       local sa = na.cache_match and na.cache_match.score or 0 ---@type integer
       local sb = nb.cache_match and nb.cache_match.score or 0 ---@type integer
@@ -2008,14 +2008,14 @@ end
 function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
   local filetree = self._filetree ---@type dot.Filetree
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
-    local last_nodestate = nil ---@type dot.ux.picker.view.filetree.IFileNodeState|nil
+    local last_nodestate = nil ---@type dot.module.picker.view.filetree.IFileNodeState|nil
     local filepaths = {} ---@type string[]
 
     for lnum = 1, linecount, 1 do
@@ -2028,9 +2028,9 @@ function M:__open_node__(nodeuuid)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
 
-            local s = treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+            local s = treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
             if s ~= nil then
-              ---@cast s                      dot.ux.picker.view.filetree.IFileNodeState
+              ---@cast s                      dot.module.picker.view.filetree.IFileNodeState
               last_nodestate = s
             end
           end
@@ -2039,9 +2039,9 @@ function M:__open_node__(nodeuuid)
     end
 
     if #filepaths > 0 then
-      ---@cast last_nodestate             dot.ux.picker.view.filetree.IFileNodeState
+      ---@cast last_nodestate             dot.module.picker.view.filetree.IFileNodeState
       local locations = last_nodestate.locations
-      local first_location = locations ~= nil and locations[1] or nil ---@type dot.ux.picker.view.filetree.ILocationNodeState|nil
+      local first_location = locations ~= nil and locations[1] or nil ---@type dot.module.picker.view.filetree.ILocationNodeState|nil
       local lnum = first_location and first_location.lnum or nil ---@type integer|nil
       local col = first_location and first_location.col or nil ---@type integer|nil
 
@@ -2076,7 +2076,7 @@ function M:__open_node__(nodeuuid)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type dot.ux.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type dot.module.picker.view.filetree.ILocationNodeState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end
@@ -2096,10 +2096,10 @@ end
 function M:__resolve_confirmation__(nodeuuid)
   local node = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
   local filetree = self._filetree ---@type dot.Filetree
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type dot.t.IFiletreeNode|nil
 
@@ -2137,9 +2137,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return dot.t.IFiletreeNode
----@return dot.ux.picker.view.filetree.INodeState
+---@return dot.module.picker.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type dot.ux.picker.view.filetree.INodeState|nil
+  ---@type dot.module.picker.view.filetree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
@@ -2166,7 +2166,7 @@ function M:__retrieve_filenode__()
     return
   end
 
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type dot.ux.picker.view.filetree.INodeState|nil
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type dot.module.picker.view.filetree.INodeState|nil
   if nodestate == nil then
     return
   end
@@ -2211,7 +2211,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   end
 
   local filetree = self._filetree ---@type dot.Filetree
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local selected_set = treeview:collect_selected() ---@type table<string, true>
   local scheduler_match = self._scheduler_match
 
@@ -2224,7 +2224,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
 
   local tick_selected = treeview._tick_selected ---@type integer
   local statemap = treeview.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.picker.view.filetree.INodeState>
+  ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   filetree:unsafe_traverse(to_nodeuuid, function(ctx)
     local nodemap = ctx.nodemap ---@type table<string, dot.t.IFiletreeNode>
@@ -2233,7 +2233,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
-        ---@type dot.ux.picker.view.filetree.IDirectoryNodeState
+        ---@type dot.module.picker.view.filetree.IDirectoryNodeState
         local nodestate = {
           nodetype = "container",
           collapsed = false,
@@ -2254,7 +2254,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
       end
 
       if node.data.filetype == "file" then
-        ---@type dot.ux.picker.view.filetree.IFileNodeState
+        ---@type dot.module.picker.view.filetree.IFileNodeState
         local nodestate = {
           nodetype = "leaf",
           collapsed = false,
@@ -2334,7 +2334,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return nil
   end
 
-  ---@type dot.ux.picker.view.filetree.INodeState|nil
+  ---@type dot.module.picker.view.filetree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     return nil
@@ -2364,8 +2364,8 @@ end
 function M:__toggle_node__(nodeuuid, open, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.picker.BasicComposer
-  local treeview = self._treeview ---@type dot.ux.picker.FiletreeView
+  local composer = self._composer ---@type dot.module.picker.BasicComposer
+  local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     composer:mark_result_dirty()
@@ -2389,7 +2389,7 @@ function M:__toggle_node__(nodeuuid, open, recursively)
     col = nodestate.col ---@type integer|nil
   else
     if nodestate.locations ~= nil and #nodestate.locations > 0 then
-      local first_location = nodestate.locations[1] ---@type dot.ux.picker.view.filetree.ILocationNodeState
+      local first_location = nodestate.locations[1] ---@type dot.module.picker.view.filetree.ILocationNodeState
       lnum = first_location.lnum ---@type integer|nil
       col = first_location.col ---@type integer|nil
     end

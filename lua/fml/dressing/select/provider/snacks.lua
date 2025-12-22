@@ -70,10 +70,10 @@ end
 
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
----@return dot.ux.picker.composer.list.IResetData
+---@return dot.module.picker.composer.list.IResetData
 ---@return integer
----@return dot.ux.picker.composer.list.IRenderResult|nil
----@return dot.ux.picker.composer.list.IRenderPreview|nil
+---@return dot.module.picker.composer.list.IRenderResult|nil
+---@return dot.module.picker.composer.list.IRenderPreview|nil
 local function snacks_provider(items, opts)
   local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or ark.fn.identity ---@type fun(item): string|nil
   local width = 0 ---@type integer
@@ -99,7 +99,7 @@ local function snacks_provider(items, opts)
     }
   end
 
-  local render_preview ---@type dot.ux.picker.composer.list.IRenderPreview|nil
+  local render_preview ---@type dot.module.picker.composer.list.IRenderPreview|nil
 
   ---@diagnostic disable-next-line: undefined-field
   if opts.snacks and opts.snacks.preview == "preview" then
