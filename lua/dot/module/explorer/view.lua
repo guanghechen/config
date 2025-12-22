@@ -42,6 +42,9 @@ local __module_name__ = "dot.module.explorer.view" ---@type string
 ---@field public sign_info_list         dot.module.explorer.view.ISignInfo[]
 ---@field public lnum_to_uri            table<integer, string>
 ---@field public uri_to_lnum            table<string, integer>
+---@field public diag_by_lnum           table<integer, dot.module.explorer.view.IDiagnosticInfo>
+---@field public git_by_lnum            table<integer, dot.module.explorer.view.IGitStatusInfo>
+---@field public sign_by_lnum           table<integer, dot.module.explorer.view.ISignInfo>
 
 ---@class dot.module.explorer.view.IRenderOptions
 ---@field public resource_manager       ?dot.module.explorer.resource.IManager
@@ -56,6 +59,7 @@ local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
+local VIRT_TEXT_ID_OFFSET = 1000000 ---@type integer
 
 ---@class dot.module.explorer.View
 ---@field protected _nsnr               integer
@@ -316,6 +320,7 @@ function M:render(bufnr, tree, root, options)
     end
 
     vim.api.nvim_buf_set_extmark(bufnr, self._nsnr, lnum_key - 1, 0, {
+      id = VIRT_TEXT_ID_OFFSET + lnum_key,
       virt_text = virt_text,
       virt_text_pos = "right_align",
       priority = 10,
@@ -331,12 +336,67 @@ function M:render(bufnr, tree, root, options)
     sign_info_list = sign_info_list,
     lnum_to_uri = lnum_to_uri,
     uri_to_lnum = uri_to_lnum,
+    diag_by_lnum = diag_by_lnum,
+    git_by_lnum = git_by_lnum,
+    sign_by_lnum = sign_by_lnum,
   }
 end
 
 ---@return integer
 function M:get_namespace()
   return self._nsnr
+end
+
+---@param bufnr                         integer
+---@param render_result                 dot.module.explorer.view.IRenderResult
+---@param lnum                          integer
+---@param cursorline_hlgroup            string|nil
+---@return nil
+function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
+  if lnum < 1 or lnum > #render_result.lines then
+    return
+  end
+
+  local diag_info = render_result.diag_by_lnum[lnum] ---@type dot.module.explorer.view.IDiagnosticInfo|nil
+  local git_info = render_result.git_by_lnum[lnum] ---@type dot.module.explorer.view.IGitStatusInfo|nil
+  local sign_info = render_result.sign_by_lnum[lnum] ---@type dot.module.explorer.view.ISignInfo|nil
+
+  local is_focused = cursorline_hlgroup == "f_explorer_cursorline" ---@type boolean
+  local hl_suffix = is_focused and "_cl" or "_clb" ---@type string
+
+  local virt_text = {} ---@type string[][]
+
+  if diag_info ~= nil then
+    local pos = 0 ---@type integer
+    for _, hl in ipairs(diag_info.highlights) do
+      local text = diag_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+      local hlname = cursorline_hlgroup and (hl.hlname .. hl_suffix) or hl.hlname ---@type string
+      virt_text[#virt_text + 1] = { text, hlname }
+    end
+  end
+
+  if git_info ~= nil then
+    local pos = 0 ---@type integer
+    for _, hl in ipairs(git_info.highlights) do
+      local text = git_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+      local hlname = cursorline_hlgroup and (hl.hlname .. hl_suffix) or hl.hlname ---@type string
+      virt_text[#virt_text + 1] = { text, hlname }
+    end
+  end
+
+  if sign_info ~= nil then
+    local hlname = cursorline_hlgroup and (sign_info.sign_hl_group .. hl_suffix) or sign_info.sign_hl_group ---@type string
+    virt_text[#virt_text + 1] = { " " .. sign_info.sign_text, hlname }
+  else
+    virt_text[#virt_text + 1] = { "  ", cursorline_hlgroup }
+  end
+
+  vim.api.nvim_buf_set_extmark(bufnr, self._nsnr, lnum - 1, 0, {
+    id = VIRT_TEXT_ID_OFFSET + lnum,
+    virt_text = virt_text,
+    virt_text_pos = "right_align",
+    priority = 10,
+  })
 end
 
 ----------------------------------------------------------------------------------------------------

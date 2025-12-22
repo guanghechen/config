@@ -5,8 +5,6 @@ local View = require("dot.module.explorer.view")
 local ResourceFileManager = require("dot.module.explorer.resource.file")
 
 local EXPLORER_WIN_HIGHLIGHT = table.concat({
-  "CursorLine:f_explorer_cursorline",
-  "CursorLineNr:f_explorer_cursorline",
   "EndOfBuffer:f_explorer_eob",
   "Normal:f_explorer_bg",
   "SignColumn:f_explorer_bg",
@@ -16,7 +14,7 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "WinSeparator:f_explorer_border",
 }, ",")
 
-local ns_blur_cursorline = vim.api.nvim_create_namespace("explorer_blur_cursorline") ---@type integer
+local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@type integer
 
 ---@class dot.module.explorer.widget.IFlagItem
 ---@field public desc                   string
@@ -48,7 +46,9 @@ local ns_blur_cursorline = vim.api.nvim_create_namespace("explorer_blur_cursorli
 ---@field protected _width              integer
 ---@field protected _o_width            ark.c.Observable|nil
 ---@field protected _flags              dot.module.explorer.widget.IFlagItem[]
+---@field protected _is_focused         boolean
 ---@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _prev_cursor_lnum   integer|nil
 local M = {}
 M.__index = M
 
@@ -91,7 +91,9 @@ function M.new(props)
   self._width = props.width or 40
   self._o_width = props.o_width
   self._flags = props.flags or {}
+  self._is_focused = false
   self._keymaps = {}
+  self._prev_cursor_lnum = nil
   self._nvimbar = self:__create_nvimbar__()
 
   self:__setup_subscriptions__()
@@ -132,7 +134,9 @@ function M:focus()
   local winnr = self:__create_win_as_needed__() ---@type integer
   vim.api.nvim_set_current_win(winnr)
 
+  self._is_focused = true
   self:__refresh__()
+  self:__update_cursorline__()
   return winnr
 end
 
@@ -1944,7 +1948,7 @@ function M:__create_win_as_needed__()
   })
   self._winnr = winnr
 
-  vim.wo[winnr].cursorline = true
+  vim.wo[winnr].cursorline = false
   vim.wo[winnr].foldcolumn = "0"
   vim.wo[winnr].foldlevel = 99
   vim.wo[winnr].list = false
@@ -1963,10 +1967,8 @@ function M:__create_win_as_needed__()
   local autocmd_id_buf_enter = vim.api.nvim_create_autocmd("BufEnter", {
     buffer = bufnr,
     callback = function()
-      if self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr) then
-        vim.wo[self._winnr].cursorline = true
-        vim.api.nvim_buf_clear_namespace(bufnr, ns_blur_cursorline, 0, -1)
-      end
+      self._is_focused = true
+      self:__update_cursorline__()
     end,
   })
   self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_buf_enter
@@ -1974,16 +1976,8 @@ function M:__create_win_as_needed__()
   local autocmd_id_buf_leave = vim.api.nvim_create_autocmd("BufLeave", {
     buffer = bufnr,
     callback = function()
-      if self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr) then
-        vim.wo[self._winnr].cursorline = false
-        local cursor = vim.api.nvim_win_get_cursor(self._winnr)
-        local lnum = cursor[1] - 1 ---@type integer
-        vim.api.nvim_buf_clear_namespace(bufnr, ns_blur_cursorline, 0, -1)
-        vim.api.nvim_buf_set_extmark(bufnr, ns_blur_cursorline, lnum, 0, {
-          line_hl_group = "f_explorer_cursorline_blur",
-          priority = 100,
-        })
-      end
+      self._is_focused = false
+      self:__update_cursorline__()
     end,
   })
   self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_buf_leave
@@ -1995,6 +1989,7 @@ function M:__create_win_as_needed__()
       if uri ~= nil then
         self._tree.state.o_cursor_uri:next(uri)
       end
+      self:__update_cursorline__()
     end,
   })
   self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_cursor_moved
@@ -2124,6 +2119,7 @@ function M:__render__()
   local cursor_uri = self._tree.state.o_cursor_uri:snapshot() ---@type string
   self:__sync_cursor_to_uri__(cursor_uri)
   self:__update_winbar__()
+  self:__update_cursorline__()
 end
 
 ---@protected
@@ -2413,6 +2409,42 @@ function M:__goto_matching_file__(direction, matcher)
       pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
     end
   end
+end
+
+---@protected
+---@return nil
+function M:__update_cursorline__()
+  local bufnr = self._bufnr ---@type integer|nil
+  local winnr = self._winnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local render_result = self._render_result ---@type dot.module.explorer.view.IRenderResult|nil
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local lnum = cursor[1] ---@type integer
+  local prev_lnum = self._prev_cursor_lnum ---@type integer|nil
+
+  vim.api.nvim_buf_clear_namespace(bufnr, ns_cursorline, 0, -1)
+
+  local hlgroup = self._is_focused and "f_explorer_cursorline" or "f_explorer_cursorline_blur" ---@type string
+  vim.api.nvim_buf_set_extmark(bufnr, ns_cursorline, lnum - 1, 0, {
+    line_hl_group = hlgroup,
+    priority = 100,
+  })
+
+  if render_result ~= nil then
+    if prev_lnum ~= nil and prev_lnum ~= lnum then
+      self._view:update_virt_text(bufnr, render_result, prev_lnum, nil)
+    end
+    local cursorline_hlgroup = self._is_focused and "f_explorer_cursorline" or "f_explorer_cursorline_blur" ---@type string
+    self._view:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
+  end
+
+  self._prev_cursor_lnum = lnum
 end
 
 ---@protected
