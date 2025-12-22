@@ -1,9 +1,9 @@
-local __module_name__ = "dot.ux.retriever.tree" ---@type string
+local __module_name__ = "dot.module.tree.retriever" ---@type string
 
----@class dot.ux.retriever.ITreeRetrieverProps
+---@class dot.module.tree.ITreeRetrieverProps
 ---@field public name                   string
 
----@class dot.ux.retriever.TreeRetriever
+---@class dot.module.tree.TreeRetriever
 ---@field public fullname               string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer
@@ -14,8 +14,8 @@ local __module_name__ = "dot.ux.retriever.tree" ---@type string
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.retriever.ITreeRetrieverProps
----@return dot.ux.retriever.TreeRetriever
+---@param props                         dot.module.tree.ITreeRetrieverProps
+---@return dot.module.tree.TreeRetriever
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
