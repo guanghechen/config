@@ -1,9 +1,4 @@
-local __module_name__ = "fml.dressing.winsep" ---@type string
-
 local Line = require("fml.dressing.winsep.line")
-
----@class fml.dressing.winsep.IScheduleContext
----@field public winnr                  integer|nil
 
 ---@class fml.dressing.Winsep
 ---@field public left                   fml.dressing.winsep.Line
@@ -98,34 +93,22 @@ local winsep = {
   end,
 }
 
----@type ark.c.Scheduler
-local scheduler = ark.c.Scheduler.new({
-  name = __module_name__,
-  mode = "debounce",
-  delay = 32,
-  timeout = 0,
-  silent = ark.fn.falsy,
-  value = ark.c.Observable.from_value(true),
-  task = function(_, context)
-    local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
-    if not enabled then
-      winsep:hide()
-      return
-    end
+local refresh_debounced = ark.timer.debounce(function(winnr)
+  local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
+  if not enabled then
+    winsep:hide()
+    return
+  end
 
-    context = context or {} ---@type fml.dressing.winsep.IScheduleContext
-    local winnr = context.winnr ---@type integer|nil
-    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-      winsep:show(winnr)
-    end
-  end,
-})
+  if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+    winsep:show(winnr)
+  end
+end, 32)
 
 ark.fn.observe({ dot.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-  local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
-  scheduler:schedule({ context = context })
+  refresh_debounced(winnr_fixed)
 end, true)
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
@@ -134,8 +117,7 @@ vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
     vim.schedule(function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-      local context = { winnr = winnr_fixed } ---@type fml.dressing.winsep.IScheduleContext
-      scheduler:schedule({ context = context })
+      refresh_debounced(winnr_fixed)
     end)
   end,
 })
@@ -145,8 +127,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if dot.win.is_fixed(winnr) then
-      local context = { winnr = winnr } ---@type fml.dressing.winsep.IScheduleContext
-      scheduler:schedule({ context = context })
+      refresh_debounced(winnr)
     end
   end,
 })

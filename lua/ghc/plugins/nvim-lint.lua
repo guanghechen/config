@@ -2,9 +2,6 @@
 
 local __module_name__ = "ghc.plugins.nvim-lint" ---@type string
 
----@class ghc.plugins.nvim_lint.IScheduleContext
----@field public bufnr                  ?integer
-
 local config = {
   excluded = {
     ".git/",
@@ -65,7 +62,89 @@ local linters = {
   },
 }
 
-local scheduler = nil ---@type ark.c.Scheduler|nil
+local lint_debounced = nil ---@type ark.timer.IDisposableCallable|nil
+
+---@param bufnr                         integer
+local function do_lint(bufnr)
+  local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
+  if not spellcheck then
+    return
+  end
+
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  if vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] then
+    return
+  end
+
+  local filetype = vim.bo[bufnr].filetype ---@type string
+  if dot.filetype.is_not_sourcefile(filetype) then
+    return
+  end
+
+  local workspace = dot.path.workspace() ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local filepath_relative = dot.path.relative(workspace, filepath, "/") ---@type string
+  if yoz.path.is_absolute(filepath_relative) then
+    return
+  end
+
+  for _, pattern in ipairs(config.excluded) do
+    if vim.fn.match(filepath, pattern) ~= -1 then
+      return
+    end
+  end
+
+  local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
+
+  local lint = require("lint")
+
+  -- Use nvim-lint's logic first:
+  -- * checks if linters exist for the full filetype first
+  -- * otherwise will split filetype by "." and add all those linters
+  -- * this differs from conform.nvim which only uses the first filetype that has a formatter
+  local names = lint._resolve_linter_by_ft(filetype) ---@type string[]
+
+  -- Create a copy of the names table to avoid modifying the original.
+  names = vim.list_slice(names)
+
+  -- Add fallback linters.
+  if #names == 0 then
+    vim.list_extend(names, lint.linters_by_ft["_"] or {})
+  end
+
+  -- Add global linters.
+  vim.list_extend(names, lint.linters_by_ft["*"] or {})
+
+  -- Filter out linters that don't exist or don't match the condition.
+  local ctx = { filename = filepath, dirname = dirpath }
+
+  local k = 1 ---@type integer
+  for i = 1, #names, 1 do
+    local name = names[i] ---@type string
+
+    local linter = lint.linters[name]
+    if not linter then
+      ark.reporter.warn({
+        from = __module_name__,
+        message = "Linter not found: " .. name,
+      })
+    elseif type(linter) ~= "table" or not linter.condition or linter.condition(ctx) then
+      names[k] = name
+      k = k + 1
+    end
+  end
+  for i = #names, k, -1 do
+    names[i] = nil
+  end
+
+  -- Run linters.
+  if #names > 0 then
+    lint.try_lint(names)
+  end
+end
 
 return {
   name = "nvim-lint",
@@ -85,112 +164,21 @@ return {
     end
     lint.linters_by_ft = linters_by_ft
 
-    if scheduler ~= nil then
-      scheduler:dispose()
+    if lint_debounced ~= nil then
+      lint_debounced:dispose()
     end
-
-    ---@type ark.c.Scheduler
-    scheduler = ark.c.Scheduler.new({
-      name = __module_name__,
-      mode = "debounce",
-      delay = 128,
-      timeout = 0,
-      silent = ark.fn.falsy,
-      value = ark.c.Observable.from_value(true),
-      task = function(_, context)
-        local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
-        if not spellcheck then
-          return
-        end
-
-        context = context or {} ---@type ghc.plugins.nvim_lint.IScheduleContext
-        local bufnr = context.bufnr ---@type integer|nil
-        if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-          return
-        end
-
-        if vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] then
-          return true
-        end
-
-        local filetype = vim.bo[bufnr].filetype ---@type string
-        if dot.filetype.is_not_sourcefile(filetype) then
-          return
-        end
-
-        local workspace = dot.path.workspace() ---@type string
-        local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        local filepath_relative = dot.path.relative(workspace, filepath, "/") ---@type string
-        if yoz.path.is_absolute(filepath_relative) then
-          return true
-        end
-
-        for _, pattern in ipairs(config.excluded) do
-          if vim.fn.match(filepath, pattern) ~= -1 then
-            return
-          end
-        end
-
-        local dirpath = vim.fn.fnamemodify(filepath, ":h") ---@type string
-
-        -- Use nvim-lint's logic first:
-        -- * checks if linters exist for the full filetype first
-        -- * otherwise will split filetype by "." and add all those linters
-        -- * this differs from conform.nvim which only uses the first filetype that has a formatter
-        local names = lint._resolve_linter_by_ft(filetype) ---@type string[]
-
-        -- Create a copy of the names table to avoid modifying the original.
-        names = vim.list_slice(names)
-
-        -- Add fallback linters.
-        if #names == 0 then
-          vim.list_extend(names, lint.linters_by_ft["_"] or {})
-        end
-
-        -- Add global linters.
-        vim.list_extend(names, lint.linters_by_ft["*"] or {})
-
-        -- Filter out linters that don't exist or don't match the condition.
-        local ctx = { filename = filepath, dirname = dirpath }
-
-        local k = 1 ---@type integer
-        for i = 1, #names, 1 do
-          local name = names[i] ---@type string
-
-          local linter = lint.linters[name]
-          if not linter then
-            ark.reporter.warn({
-              from = __module_name__,
-              message = "Linter not found: " .. name,
-            })
-          elseif type(linter) ~= "table" or not linter.condition or linter.condition(ctx) then
-            names[k] = name
-            k = k + 1
-          end
-        end
-        for i = #names, k, -1 do
-          names[i] = nil
-        end
-
-        -- Run linters.
-        if #names > 0 then
-          lint.try_lint(names)
-        end
-      end,
-    })
+    lint_debounced = ark.timer.debounce(do_lint, 128)
 
     ark.fn.observe({ dot.state.status.lint_schedule_nr }, function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-      local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
-      scheduler:schedule({ context = context })
+      lint_debounced(bufnr)
     end)
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
       group = ark.nvim.augroup("nvim-lint-on-file-load-save"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-        local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
-        scheduler:schedule({ context = context })
+        lint_debounced(bufnr)
       end,
     })
 
@@ -198,8 +186,7 @@ return {
       group = ark.nvim.augroup("nvim-lint-on-insert-leave"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-        local context = { bufnr = bufnr } ---@type ghc.plugins.nvim_lint.IScheduleContext
-        scheduler:schedule({ context = context })
+        lint_debounced(bufnr)
       end,
     })
   end,

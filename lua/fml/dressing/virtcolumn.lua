@@ -1,5 +1,3 @@
-local __module_name__ = "fml.dressing.virtcolumn" ---@type string
-
 ---@class fml.dressing.virtcolumn.config
 local config = {
   nsnr = dot.var.nsnr.virtcolumn,
@@ -152,21 +150,12 @@ local function refresh()
   end
 end
 
----@type ark.c.Scheduler
-local scheduler = ark.c.Scheduler.new({
-  name = __module_name__,
-  mode = "debounce",
-  delay = 50,
-  timeout = 0,
-  silent = ark.fn.falsy,
-  value = ark.c.Observable.from_value(true),
-  task = function()
-    local enabled = dot.context.flight.dressing_virtcolumn:snapshot()
-    if enabled then
-      refresh()
-    end
-  end,
-})
+local refresh_debounced = ark.timer.debounce(function()
+  local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
+  if enabled then
+    refresh()
+  end
+end, 50)
 
 ark.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
   local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
@@ -178,7 +167,7 @@ ark.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
     return
   end
 
-  scheduler:schedule()
+  refresh_debounced()
 end, true)
 
 vim.api.nvim_create_autocmd({
@@ -196,6 +185,6 @@ vim.api.nvim_create_autocmd({
 }, {
   group = ark.nvim.augroup("virtcolumn_refresh"),
   callback = function()
-    scheduler:schedule({})
+    refresh_debounced()
   end,
 })
