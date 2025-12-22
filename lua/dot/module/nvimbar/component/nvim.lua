@@ -1,29 +1,33 @@
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
+---@type string[]
+local location_levels = { "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" }
+
+local location_step = 100 / (#location_levels - 1) ---@type number
+
 ---@return integer
 ---@return integer
-local function calc_cursor_pos()
+---@return integer
+---@return string
+---@return integer
+local function calc_cursor_location()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
   local row = cursor[1] ---@type integer
   local col = cursor[2] + 1 ---@type integer
-  return row, col
-end
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local total_lines = math.max(vim.api.nvim_buf_line_count(bufnr), 1) ---@type integer
+  local denom = math.max(total_lines - 1, 1) ---@type integer
+  local percent = math.floor(math.max(total_lines - row, 0) * 100 / denom) ---@type integer
 
----@return string
-local function calc_location()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local total_lines = vim.fn.line("$") ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local row = cursor[1] ---@type integer
-  if row == 1 then
-    return "top"
-  elseif row == total_lines then
-    return "bot"
-  else
-    return ark.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
+  local icon_index = math.floor((percent / location_step) + 0.5) + 1 ---@type integer
+  if icon_index > #location_levels then
+    icon_index = #location_levels
   end
+
+  local location_icon = location_levels[icon_index] ---@type string
+  return row, col, percent, location_icon, icon_index
 end
 
 ---@class dot.module.nvimbar.component.nvim
@@ -229,33 +233,12 @@ function M.pos(position)
     atomic = true,
     tight = true,
     render = function()
-      local row, col = calc_cursor_pos() ---@type integer, integer
-      local location = calc_location() ---@type string
-      local content = dot.icon.ui.Location .. " " .. tostring(row) .. "·" .. tostring(col) .. " " .. location .. " " ---@type string
-      local text = dot.icon.symbols.sep_left .. content ---@type string
-      local hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) ---@type string
-      return text, hl_text, true
-    end,
-  }
-  return component
-end
-
----@param position                      dot.module.nvimbar.PositionEnum
----@return dot.module.nvimbar.IRawComponent
-function M.pos_primary(position)
-  local hln_sep = position .. "_nvim_pos_primary_sep" ---@type string
-  local hln_text = position .. "_nvim_pos_primary_text" ---@type string
-
-  ---@type dot.module.nvimbar.IRawComponent
-  local component = {
-    name = "nvim:pos_primary",
-    atomic = true,
-    tight = true,
-    render = function()
-      local row, col = calc_cursor_pos() ---@type integer, integer
-      local location = calc_location() ---@type string
-      local text = " " .. dot.icon.ui.Location .. " " .. location .. " " .. tostring(row) .. "·" .. tostring(col) .. " " .. dot.icon.symbols.sep_right ---@type string
-      local hl_text = txt(" " .. dot.icon.ui.Location .. " " .. location .. " " .. tostring(row) .. "·" .. tostring(col) .. " ", hln_text) .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
+      local row, col, _, location_icon, bar_index = calc_cursor_location() ---@type integer, integer, integer, string, integer
+      local hln_bar = position .. "_nvim_pos_bar_" .. tostring(bar_index) ---@type string
+      local prefix = string.format("%s %d·%d ", dot.icon.ui.Location, row, col) ---@type string
+      local bar = location_icon ---@type string
+      local text = dot.icon.symbols.sep_left .. prefix .. bar ---@type string
+      local hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. txt(prefix, hln_text) .. txt(bar, hln_bar) ---@type string
       return text, hl_text, true
     end,
   }
