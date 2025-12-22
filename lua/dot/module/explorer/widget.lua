@@ -2289,6 +2289,30 @@ function M:__setup_subscriptions__()
     false
   )
   self._subscriptions[#self._subscriptions + 1] = sub_flag_viewtype
+
+  local sub_git_staged = dot.git.state.o_staged_files:subscribe(
+    ark.c.Subscriber.new({
+      on_next = function()
+        if self:isvisible() then
+          self:__render__()
+        end
+      end,
+    }),
+    false
+  )
+  self._subscriptions[#self._subscriptions + 1] = sub_git_staged
+
+  local sub_git_unstaged = dot.git.state.o_unstaged_files:subscribe(
+    ark.c.Subscriber.new({
+      on_next = function()
+        if self:isvisible() then
+          self:__render__()
+        end
+      end,
+    }),
+    false
+  )
+  self._subscriptions[#self._subscriptions + 1] = sub_git_unstaged
 end
 
 ---@protected

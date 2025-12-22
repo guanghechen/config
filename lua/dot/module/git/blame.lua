@@ -421,7 +421,7 @@ local function inline_setup_autocmds()
     return
   end
 
-  vim.api.nvim_create_autocmd({ "BufEnter", "CursorMoved", "CursorMovedI" }, {
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     group = inline_augroup,
     callback = function(args)
       local bufnr = args.buf
@@ -666,12 +666,17 @@ function M.buffer_get_namespace()
   return buffer_ns
 end
 
+---@type ark.timer.IDisposableCallable
+local buffer_update_debounced = ark.timer.debounce(function(bufnr)
+  buffer_update_current_line(bufnr)
+end, 50)
+
 local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { clear = true })
 
 vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
   group = buffer_augroup,
   callback = function(args)
-    buffer_update_current_line(args.buf)
+    buffer_update_debounced(args.buf)
   end,
 })
 

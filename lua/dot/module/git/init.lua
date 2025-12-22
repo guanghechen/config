@@ -42,6 +42,13 @@ local M = setmetatable({}, {
 
 local augroup = vim.api.nvim_create_augroup("DotModuleGit", { clear = true })
 
+---@type ark.timer.IDisposableCallable
+local buf_enter_debounced = ark.timer.debounce(function(bufnr)
+  if M.buffer.is_dirty(bufnr) then
+    M.buffer.refresh(bufnr, true)
+  end
+end, 50)
+
 local function init_watcher()
   if not dot.path.is_git_repo() then
     return
@@ -76,9 +83,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup,
   callback = function(args)
-    if M.buffer.is_dirty(args.buf) then
-      M.buffer.refresh(args.buf, true)
-    end
+    buf_enter_debounced(args.buf)
   end,
 })
 
