@@ -276,34 +276,6 @@ local function get_diagnostics_all_lines(ctx)
   return #lines > 0 and lines or nil, #text_lines > 0 and table.concat(text_lines, "\n") or nil
 end
 
----@param ctx                           dot.module.ai.prompt.ICtx
----@return dot.module.ai.IText|nil, string|nil
-local function get_git_changes_lines(ctx)
-  local r = vim.system({ "git", "diff", "--stat" }, { cwd = ctx.cwd, text = true }):wait()
-  if r.code ~= 0 or not r.stdout or r.stdout == "" then
-    return nil, nil
-  end
-  local raw_lines = vim.split(r.stdout, "\n", { plain = true, trimempty = true })
-  local lines = {} ---@type dot.module.ai.IText
-  for _, line in ipairs(raw_lines) do
-    local file, stats = line:match("^%s*(.-)%s*|(.+)$")
-    if file and stats then
-      local insertions = stats:match("%+") and stats:gsub("[^+]", "") or ""
-      local deletions = stats:match("%-") and stats:gsub("[^-]", "") or ""
-      lines[#lines + 1] = {
-        { " ", nil },
-        { file, "f_us_ai_loc_file" },
-        { " | ", "Comment" },
-        { insertions, "DiffAdd" },
-        { deletions, "DiffDelete" },
-      }
-    else
-      lines[#lines + 1] = { { line, "Comment" } }
-    end
-  end
-  return lines, r.stdout
-end
-
 ----------------------------------------------------------------------------------------------------
 --- Prompts
 ----------------------------------------------------------------------------------------------------

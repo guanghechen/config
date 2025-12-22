@@ -58,11 +58,11 @@ function M.copy_filepath(arg)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-  local scopes = dot.command.definitions.copy.filepath.candidates
+  local scopes = dot.command.definitions.copy.filepath.candidates ---@type string[]|nil
   local scope = type(arg) == "string" and arg:lower() or "" ---@type string
-  if vim.list_contains(scopes, scope) then
+  if scopes and vim.list_contains(scopes, scope) then
     copy_current_filepath(scope, filepath)
-  else
+  elseif scopes then
     vim.ui.select(scopes, {
       name = __module_name__,
       prompt = "Copy Filepath",

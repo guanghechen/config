@@ -1,5 +1,3 @@
-local __module_name__ = "dot.module.board.keysheet" ---@type string
-
 ---@class dot.module.board.keysheet.IProps
 ---@field public title                  ?string
 ---@field public keymaps                ark.t.IKeymap[]

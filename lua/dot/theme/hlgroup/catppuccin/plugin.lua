@@ -12,7 +12,6 @@ function M.gen_hlgroup_map(context)
   local lazy_panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
   local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or cs.mix(c.base, c.sapphire, 65)
-  local indent_marker_fg = cs.mix(t and c.none or c.surface0, c.overlay0, 30)
   local lazy_badge_fg = u.bg1 ---@type string
   local lazy_badge_bg = u.pink ---@type string
 

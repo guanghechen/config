@@ -21,7 +21,7 @@ end
 ---@param filepath_target               string
 ---@return boolean
 local function paste_image(filepath_target)
-  local clipboard = require("dot.module.clipboard") ---@type dot.module.clipboard
+  local clipboard = require("dot.module.clipboard")
   local ok = clipboard.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
@@ -46,7 +46,7 @@ end
 
 ---@return nil
 local function paste()
-  local clipboard = require("dot.module.clipboard") ---@type dot.module.clipboard
+  local clipboard = require("dot.module.clipboard")
   if not clipboard.has_image() then
     return
   end

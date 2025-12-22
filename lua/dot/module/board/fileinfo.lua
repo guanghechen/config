@@ -230,10 +230,10 @@ function M:__render__(stat)
   infos[#infos + 1] = { label = "Path", value = relative_path }
   infos[#infos + 1] = { label = "Type", value = stat.type }
   infos[#infos + 1] = { label = "Size", value = yoz.fs.get_filesize(filepath) or "unknown" }
-  infos[#infos + 1] = { label = "Modified", value = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec) }
-  infos[#infos + 1] = { label = "Accessed", value = os.date("%Y-%m-%d %H:%M:%S", stat.atime.sec) }
+  infos[#infos + 1] = { label = "Modified", value = os.date("%Y-%m-%d %H:%M:%S", stat.mtime.sec) --[[@as string]] }
+  infos[#infos + 1] = { label = "Accessed", value = os.date("%Y-%m-%d %H:%M:%S", stat.atime.sec) --[[@as string]] }
   if stat.birthtime and stat.birthtime.sec > 0 then
-    infos[#infos + 1] = { label = "Created", value = os.date("%Y-%m-%d %H:%M:%S", stat.birthtime.sec) }
+    infos[#infos + 1] = { label = "Created", value = os.date("%Y-%m-%d %H:%M:%S", stat.birthtime.sec) --[[@as string]] }
   end
   infos[#infos + 1] = { label = "Mode", value = string.format("%s (%o)", self:__format_permissions__(stat.mode), stat.mode % 512) }
 

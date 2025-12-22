@@ -1,6 +1,6 @@
 ---@return string|nil
 local function paste_image_as_base64()
-  local clipboard = require("dot.module.clipboard") ---@type dot.module.clipboard
+  local clipboard = require("dot.module.clipboard")
   if not clipboard.has_image() then
     return nil
   end
