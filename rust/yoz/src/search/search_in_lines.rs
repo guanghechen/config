@@ -93,7 +93,7 @@ fn convert_line_matches(
 
     for line_match in line_matches {
         let line_number = line_match.lnum;
-        if line_number == 0 || (line_number as usize) > buffer.line_count() {
+        if line_number == 0 || line_number > buffer.line_count() {
             continue;
         }
         let line_start_abs = line_offsets[line_number - 1];
@@ -110,8 +110,8 @@ fn convert_line_matches(
             }
             let end_abs_inclusive = end_abs_exclusive - 1;
 
-            let start_line = locate_line(&line_offsets, start_abs);
-            let end_line = locate_line(&line_offsets, end_abs_inclusive);
+            let start_line = locate_line(line_offsets, start_abs);
+            let end_line = locate_line(line_offsets, end_abs_inclusive);
 
             let line_start = line_offsets[start_line - 1];
             let line_end_exclusive = line_offsets[end_line];

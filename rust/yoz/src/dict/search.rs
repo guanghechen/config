@@ -127,7 +127,7 @@ fn collect_fuzzy_candidates(
             if line_match.score == 0 {
                 return None;
             }
-            let index = line_match.lnum.checked_sub(1)? as usize;
+            let index = line_match.lnum.checked_sub(1)?;
             if index >= group.tails.len() {
                 return None;
             }

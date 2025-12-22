@@ -8,6 +8,7 @@ pub mod replace;
 pub mod search;
 pub mod string;
 pub mod types;
+pub mod uri;
 
 use mlua::FromLua;
 use mlua::FromLuaMulti;
@@ -670,6 +671,97 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
     ])
 }
 
+fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
+    lua.create_table_from([
+        (
+            "basename",
+            f(lua, |_, uri: String| Ok(uri::basename(&uri)))?,
+        ),
+        (
+            "build",
+            f(
+                lua,
+                |_, (protocol, path, hash): (String, String, Option<String>)| {
+                    Ok(uri::build(&protocol, &path, hash.as_deref()))
+                },
+            )?,
+        ),
+        (
+            "decode",
+            f(lua, |_, src: String| Ok(uri::decode(&src)))?,
+        ),
+        (
+            "encode",
+            f(lua, |_, src: String| Ok(uri::encode(&src)))?,
+        ),
+        (
+            "extname",
+            f(lua, |_, uri: String| Ok(uri::extname(&uri)))?,
+        ),
+        ("hash", f(lua, |_, uri: String| Ok(uri::hash(&uri)))?),
+        (
+            "is_data_uri",
+            f(lua, |_, src: String| Ok(uri::is_data_uri(&src)))?,
+        ),
+        (
+            "join",
+            f(lua, |_, (from_uri, to_path): (String, String)| {
+                Ok(uri::join(&from_uri, &to_path))
+            })?,
+        ),
+        (
+            "normalize",
+            f(lua, |_, uri: String| Ok(uri::normalize(&uri)))?,
+        ),
+        (
+            "parent",
+            f(lua, |_, uri: String| Ok(uri::parent(&uri)))?,
+        ),
+        (
+            "parse",
+            f(lua, |lua, uri: String| {
+                match uri::parse(&uri) {
+                    Some(parts) => {
+                        let table = lua.create_table()?;
+                        table.set("protocol", parts.protocol)?;
+                        table.set("path", parts.path)?;
+                        if let Some(hash) = parts.hash {
+                            table.set("hash", hash)?;
+                        }
+                        Ok(LuaValue::Table(table))
+                    }
+                    None => Ok(LuaValue::Nil),
+                }
+            })?,
+        ),
+        (
+            "pathname",
+            f(lua, |_, uri: String| Ok(uri::pathname(&uri)))?,
+        ),
+        (
+            "protocol",
+            f(lua, |_, uri: String| Ok(uri::protocol(&uri)))?,
+        ),
+        (
+            "relative",
+            f(lua, |_, (from_uri, to_uri): (String, String)| {
+                Ok(uri::relative(&from_uri, &to_uri))
+            })?,
+        ),
+        (
+            "split",
+            f(lua, |lua, path: String| {
+                let segments = uri::split(&path);
+                segments.into_lua(lua)
+            })?,
+        ),
+        (
+            "validate",
+            f(lua, |_, uri: String| Ok(uri::validate(&uri)))?,
+        ),
+    ])
+}
+
 #[mlua::lua_module]
 fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
@@ -681,5 +773,6 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("replace", replace_module(lua)?)?;
     exports.set("find", find_module(lua)?)?;
     exports.set("search", search_module(lua)?)?;
+    exports.set("uri", uri_module(lua)?)?;
     Ok(exports)
 }

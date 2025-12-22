@@ -10,3 +10,4 @@
 ---@field public replace                yoz.replace
 ---@field public find                   yoz.find
 ---@field public search                 yoz.search
+---@field public uri                    yoz.uri

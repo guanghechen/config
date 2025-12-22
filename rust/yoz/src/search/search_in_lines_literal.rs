@@ -38,7 +38,7 @@ pub fn search_in_lines_literal(
     if is_multiline_pattern {
         return search_multiline(
             buffer,
-            &pattern_bytes,
+            pattern_bytes,
             n_pattern_bytes,
             &fails,
             score_exact,
@@ -48,7 +48,7 @@ pub fn search_in_lines_literal(
 
     search_single_line(
         buffer,
-        &pattern_bytes,
+        pattern_bytes,
         &pattern_chars,
         n_pattern_bytes,
         n_pattern_chars,
@@ -86,11 +86,11 @@ fn search_multiline(
     for start_pos in points {
         let end_pos = start_pos + n_pattern_bytes;
         let line_num = locate_line(line_offsets, start_pos);
-        if line_num == 0 || (line_num as usize) > buffer.line_count() {
+        if line_num == 0 || line_num > buffer.line_count() {
             continue;
         }
 
-        let line_index = (line_num - 1) as usize;
+        let line_index = line_num - 1;
         let line_start_pos = line_offsets[line_index];
         let relative_start = start_pos.saturating_sub(line_start_pos);
         let relative_end = end_pos.saturating_sub(line_start_pos);
@@ -182,7 +182,7 @@ fn search_single_line(
 }
 
 fn fuzzy_match_line(
-    line_view: &Cow<'_, str>,
+    line_view: &str,
     pattern_chars: &[char],
     n_pattern_chars: usize,
     score_scalar: u32,
