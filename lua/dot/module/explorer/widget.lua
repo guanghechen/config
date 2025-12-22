@@ -981,6 +981,11 @@ function M:__action_open_selected__()
     dot.win.open_filepath(winnr_sourcefile, filepath)
   end
 
+  self._tree:clear_selection()
+  vim.schedule(function()
+    self:__render__()
+  end)
+
   ark.reporter.info({
     from = self.fullname,
     subject = "open selected",
