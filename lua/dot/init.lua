@@ -257,6 +257,7 @@ local __mods = {
   board = "dot.module.board",
   git = "dot.module.git",
   picker = "dot.module.picker",
+  searcher = "dot.module.searcher",
   tree = "dot.module.tree",
 
   G = "dot.G",
@@ -285,6 +286,7 @@ local __mods = {
 ---@field public board                  dot.module.board
 ---@field public git                    dot.module.git
 ---@field public picker                 dot.module.picker
+---@field public searcher               dot.module.searcher
 ---@field public tree                   dot.module.tree
 ---
 ---@field public command                dot.command

@@ -1,59 +1,59 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.searcher.view.filetree" ---@type string
+local __module_name__ = "dot.module.searcher.view.filetree" ---@type string
 
----@alias dot.ux.searcher.view.filetree.INodeState
----| dot.ux.searcher.view.filetree.IDirectoryNodeState
----| dot.ux.searcher.view.filetree.IFileNodeState
----| dot.ux.searcher.view.filetree.ILeafLocationState
+---@alias dot.module.searcher.view.filetree.INodeState
+---| dot.module.searcher.view.filetree.IDirectoryNodeState
+---| dot.module.searcher.view.filetree.IFileNodeState
+---| dot.module.searcher.view.filetree.ILeafLocationState
 
----@alias dot.ux.searcher.view.filetree.IListviewFileRenderer
----| fun(ctx: dot.ux.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.ux.searcher.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.searcher.view.filetree.IListviewFileRenderer
+---| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: dot.ux.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.ux.searcher.view.filetree.IFileNodeState, locationstate: dot.ux.searcher.view.filetree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.searcher.view.filetree.IListviewLocationRenderer
+---| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: dot.ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.ux.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.searcher.view.filetree.ITreeviewDirectoryRenderer
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.searcher.view.filetree.ITreeviewFileRenderer
----| fun(ctx: dot.ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.ux.searcher.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.searcher.view.filetree.ITreeviewFileRenderer
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@alias dot.ux.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: dot.ux.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.ux.searcher.view.filetree.IFileNodeState, locationstate: dot.ux.searcher.view.filetree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---@alias dot.module.searcher.view.filetree.ITreeviewLocationRenderer
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
 
----@class dot.ux.searcher.view.filetree.IDirectoryNodeState : dot.ux.view.tree.IContainerNodeState
+---@class dot.module.searcher.view.filetree.IDirectoryNodeState : dot.ux.view.tree.IContainerNodeState
 
----@class dot.ux.searcher.view.filetree.IFileNodeState : dot.ux.view.tree.ILeafNodeState
----@field public locations              dot.ux.searcher.view.filetree.ILeafLocationState|nil
----@field public filematch              dot.ux.searcher.view.filetree.IResolvedFileMatch|nil
+---@class dot.module.searcher.view.filetree.IFileNodeState : dot.ux.view.tree.ILeafNodeState
+---@field public locations              dot.module.searcher.view.filetree.ILeafLocationState|nil
+---@field public filematch              dot.module.searcher.view.filetree.IResolvedFileMatch|nil
 
----@class dot.ux.searcher.view.filetree.ILeafLocationState : dot.ux.view.tree.ILeafLocationState
+---@class dot.module.searcher.view.filetree.ILeafLocationState : dot.ux.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
 ---@field public highlights             ?ark.t.IHighlightInline[]
 ---
----@field public match                  dot.ux.searcher.view.filetree.ISearchedItem
+---@field public match                  dot.module.searcher.view.filetree.ISearchedItem
 
----@class dot.ux.searcher.view.filetree.IResolvedFileMatch
+---@class dot.module.searcher.view.filetree.IResolvedFileMatch
 ---@field public filepath               string
 ---@field public relative               string
 ---@field public matches                yoz.search.ITextMatch[]
 
----@class dot.ux.searcher.view.filetree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.searcher.view.filetree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.IFiletreeNode
----@field public rootstate              dot.ux.searcher.view.filetree.IDirectoryNodeState
+---@field public rootstate              dot.module.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   dot.IReadonlyFiletree
----@field public view                   dot.ux.searcher.FiletreeView
+---@field public view                   dot.module.searcher.FiletreeView
 
----@class dot.ux.searcher.view.filetree.ITreeviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.searcher.view.filetree.ITreeviewRendererContext : dot.ux.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.IFiletreeNode
----@field public rootstate              dot.ux.searcher.view.filetree.IDirectoryNodeState
+---@field public rootstate              dot.module.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   dot.IReadonlyFiletree
----@field public view                   dot.ux.searcher.FiletreeView
+---@field public view                   dot.module.searcher.FiletreeView
 
----@class dot.ux.searcher.view.filetree.ISearchParams
+---@class dot.module.searcher.view.filetree.ISearchParams
 ---@field public flag_case_sensitive    boolean
 ---@field public flag_exclude           boolean
 ---@field public flag_gitignore         boolean
@@ -70,17 +70,17 @@ local __module_name__ = "dot.ux.searcher.view.filetree" ---@type string
 ---@field public search_pattern         string
 ---@field public replace_pattern        string|nil
 
----@class dot.ux.searcher.view.filetree.ISearchResult
----@field public items                  dot.ux.searcher.view.filetree.ISearchedItem[]
----@field public filematch_map          table<string, dot.ux.searcher.view.filetree.IResolvedFileMatch>
+---@class dot.module.searcher.view.filetree.ISearchResult
+---@field public items                  dot.module.searcher.view.filetree.ISearchedItem[]
+---@field public filematch_map          table<string, dot.module.searcher.view.filetree.IResolvedFileMatch>
 
----@class dot.ux.searcher.view.filetree.ISearchedPreviewItem
+---@class dot.module.searcher.view.filetree.ISearchedPreviewItem
 ---@field public offset                 integer
 ---@field public lnum                   integer
 ---@field public col                    integer
 ---@field public content                string
 
----@class dot.ux.searcher.view.filetree.ISearchedItem
+---@class dot.module.searcher.view.filetree.ISearchedItem
 ---@field public filepath               string
 ---@field public uuid                   string
 ---
@@ -89,7 +89,7 @@ local __module_name__ = "dot.ux.searcher.view.filetree" ---@type string
 ---@field public text                   string
 ---@field public highlights             ark.t.IHighlightInline[]
 ---
----@field public preview                dot.ux.searcher.view.filetree.ISearchedPreviewItem
+---@field public preview                dot.module.searcher.view.filetree.ISearchedPreviewItem
 
 local function decode_preview_text(text)
   return text:gsub(dot.icon.listchars.eol, "\n")
@@ -102,30 +102,30 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.searcher.view.IFiletreeProps
+---@class dot.module.searcher.view.IFiletreeProps
 ---@field public name                   string
 ---@field public tree                   dot.IFiletree
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
----@field public render_listview_leaf   ?dot.ux.searcher.view.filetree.IListviewFileRenderer
----@field public render_listview_location   ?dot.ux.searcher.view.filetree.IListviewLocationRenderer
----@field public render_treeview_container  ?dot.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
----@field public render_treeview_leaf   ?dot.ux.searcher.view.filetree.ITreeviewFileRenderer
----@field public render_treeview_location   ?dot.ux.searcher.view.filetree.ITreeviewLocationRenderer
+---@field public render_listview_leaf   ?dot.module.searcher.view.filetree.IListviewFileRenderer
+---@field public render_listview_location   ?dot.module.searcher.view.filetree.IListviewLocationRenderer
+---@field public render_treeview_container  ?dot.module.searcher.view.filetree.ITreeviewDirectoryRenderer
+---@field public render_treeview_leaf   ?dot.module.searcher.view.filetree.ITreeviewFileRenderer
+---@field public render_treeview_location   ?dot.module.searcher.view.filetree.ITreeviewLocationRenderer
 
 local P = dot.ux.view.Tree ---@type dot.ux.view.Tree
 
----@class dot.ux.searcher.FiletreeView : dot.ux.view.Tree
+---@class dot.module.searcher.FiletreeView : dot.ux.view.Tree
 ---@field protected _tree               dot.IFiletree
----@field public statemap               table<string, dot.ux.searcher.view.filetree.INodeState>
----@field public insert                 fun(self: dot.ux.searcher.FiletreeView, uuid: string, state: dot.ux.view.tree.INodeState): dot.ux.searcher.FiletreeView
+---@field public statemap               table<string, dot.module.searcher.view.filetree.INodeState>
+---@field public insert                 fun(self: dot.module.searcher.FiletreeView, uuid: string, state: dot.ux.view.tree.INodeState): dot.module.searcher.FiletreeView
 local M = {}
 M.__index = M
 setmetatable(M, P)
 
----@param props                         dot.ux.searcher.view.IFiletreeProps
----@return dot.ux.searcher.FiletreeView
+---@param props                         dot.module.searcher.view.IFiletreeProps
+---@return dot.module.searcher.FiletreeView
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -133,11 +133,11 @@ function M.new(props)
   local indent_hln = props.indent_hln ---@type string|nil
   local tree = props.tree ---@type dot.IFiletree
 
-  local render_listview_leaf = props.render_listview_leaf or M.default_render_listview_leaf ---@type dot.ux.searcher.view.filetree.IListviewFileRenderer
-  local render_listview_location = props.render_listview_location or M.default_render_listview_location ---@type dot.ux.searcher.view.filetree.IListviewLocationRenderer
-  local render_treeview_container = props.render_treeview_container or M.default_render_treeview_container ---@type dot.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
-  local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type dot.ux.searcher.view.filetree.ITreeviewFileRenderer
-  local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type dot.ux.searcher.view.filetree.ITreeviewLocationRenderer
+  local render_listview_leaf = props.render_listview_leaf or M.default_render_listview_leaf ---@type dot.module.searcher.view.filetree.IListviewFileRenderer
+  local render_listview_location = props.render_listview_location or M.default_render_listview_location ---@type dot.module.searcher.view.filetree.IListviewLocationRenderer
+  local render_treeview_container = props.render_treeview_container or M.default_render_treeview_container ---@type dot.module.searcher.view.filetree.ITreeviewDirectoryRenderer
+  local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type dot.module.searcher.view.filetree.ITreeviewFileRenderer
+  local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type dot.module.searcher.view.filetree.ITreeviewLocationRenderer
 
   local super = dot.ux.view.Tree.new({
     name = name,
@@ -153,14 +153,14 @@ function M.new(props)
   })
 
   local self = setmetatable(super, M)
-  ---@cast self                         dot.ux.searcher.FiletreeView
+  ---@cast self                         dot.module.searcher.FiletreeView
 
   return self
 end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.searcher.FiletreeView
+---@return dot.module.searcher.FiletreeView
 function M:clear()
   self:__health__()
 
@@ -177,21 +177,21 @@ function M:dispose()
   P.dispose(self)
 end
 
----@return dot.ux.searcher.FiletreeView
+---@return dot.module.searcher.FiletreeView
 function M:mark_cache_match_dirty()
   self:__health__()
   return self
 end
 
 ---@param uuid                          string
----@return dot.ux.searcher.view.filetree.INodeState|nil
+---@return dot.module.searcher.view.filetree.INodeState|nil
 function M:retrieve(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.searcher.view.filetree.INodeState>
+  ---@cast statemap                     table<string, dot.module.searcher.view.filetree.INodeState>
 
-  local nodestate = statemap[uuid] ---@type dot.ux.searcher.view.filetree.INodeState|nil
+  local nodestate = statemap[uuid] ---@type dot.module.searcher.view.filetree.INodeState|nil
   return nodestate
 end
 
@@ -203,8 +203,8 @@ function M:collect_file_uuids(root)
   return self:collect_leafs(root)
 end
 
----@param params                        dot.ux.searcher.view.filetree.ISearchParams
----@return dot.ux.searcher.view.filetree.ISearchResult|nil
+---@param params                        dot.module.searcher.view.filetree.ISearchParams
+---@return dot.module.searcher.view.filetree.ISearchResult|nil
 function M:search(params)
   self:__health__()
 
@@ -277,8 +277,8 @@ function M:search(params)
     return dot.path.join(cwd, relpath)
   end
 
-  local items = {} ---@type dot.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = {} ---@type table<string, dot.ux.searcher.view.filetree.IResolvedFileMatch>
+  local items = {} ---@type dot.module.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = {} ---@type table<string, dot.module.searcher.view.filetree.IResolvedFileMatch>
 
   for _, filematch in ipairs(results.items) do
     local relpath = filematch.p or "" ---@type string
@@ -354,7 +354,7 @@ function M:search(params)
         }
       end
 
-      ---@type dot.ux.searcher.view.filetree.ISearchedItem
+      ---@type dot.module.searcher.view.filetree.ISearchedItem
       local item = {
         filepath = filepath,
         uuid = uuid,
@@ -386,7 +386,7 @@ function M:search(params)
     return a.preview.offset < b.preview.offset
   end)
 
-  ---@type dot.ux.searcher.view.filetree.ISearchResult
+  ---@type dot.module.searcher.view.filetree.ISearchResult
   local result = {
     items = items,
     filematch_map = filematch_map,
@@ -396,7 +396,7 @@ end
 
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@return dot.ux.searcher.FiletreeView
+---@return dot.module.searcher.FiletreeView
 function M:reset_filepaths(cwd, filepaths)
   self:__health__()
 
@@ -406,7 +406,7 @@ function M:reset_filepaths(cwd, filepaths)
   local filetree = self._tree ---@type dot.IFiletree
   local tick_selected = self._tick_selected ---@type integer
   local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
-  ---@cast statemap                     table<string, dot.ux.searcher.view.filetree.INodeState>
+  ---@cast statemap                     table<string, dot.module.searcher.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, false)
   filetree:unsafe_traverse(filetree.root, function(ctx)
@@ -417,7 +417,7 @@ function M:reset_filepaths(cwd, filepaths)
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
-        ---@type dot.ux.searcher.view.filetree.IDirectoryNodeState
+        ---@type dot.module.searcher.view.filetree.IDirectoryNodeState
         local nodestate = {
           nodetype = "container",
           collapsed = false,
@@ -438,7 +438,7 @@ function M:reset_filepaths(cwd, filepaths)
       end
 
       if node.data.filetype == "file" then
-        ---@type dot.ux.searcher.view.filetree.IFileNodeState
+        ---@type dot.module.searcher.view.filetree.IFileNodeState
         local nodestate = {
           nodetype = "leaf",
           collapsed = false,
@@ -469,7 +469,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@type dot.ux.searcher.view.filetree.IListviewFileRenderer
+---@type dot.module.searcher.view.filetree.IListviewFileRenderer
 function M.default_render_listview_leaf(ctx, node)
   local rootnode = ctx.rootnode ---@type dot.t.IFiletreeNode
   local fileicon = node.data.fileicon ---@type string
@@ -481,7 +481,7 @@ function M.default_render_listview_leaf(ctx, node)
   return { text = text, highlights = highlights }
 end
 
----@type dot.ux.searcher.view.filetree.IListviewLocationRenderer
+---@type dot.module.searcher.view.filetree.IListviewLocationRenderer
 function M.default_render_listview_location(_, _, _, locationstate)
   local lnum = locationstate.lnum ---@type integer
   local col = locationstate.col ---@type integer|nil
@@ -506,7 +506,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
   return { text = text, highlights = highlights }
 end
 
----@type dot.ux.searcher.view.filetree.ITreeviewDirectoryRenderer
+---@type dot.module.searcher.view.filetree.ITreeviewDirectoryRenderer
 function M.default_render_treeview_container(ctx, node, nodestate, _, folded_depth)
   local basename = node.data.basename ---@type string
   local fileicon = node.data.fileicon ---@type string
@@ -564,7 +564,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   return { text = text, highlights = highlights }
 end
 
----@type dot.ux.searcher.view.filetree.ITreeviewFileRenderer
+---@type dot.module.searcher.view.filetree.ITreeviewFileRenderer
 function M.default_render_treeview_leaf(_, node)
   local basename = node.data.basename ---@type string
   local fileicon = node.data.fileicon ---@type string
@@ -579,7 +579,7 @@ function M.default_render_treeview_leaf(_, node)
   return { text = text, highlights = highlights }
 end
 
----@type dot.ux.searcher.view.filetree.ITreeviewLocationRenderer
+---@type dot.module.searcher.view.filetree.ITreeviewLocationRenderer
 function M.default_render_treeview_location(_, _, _, locationstate)
   local lnum = locationstate.lnum ---@type integer
   local col = locationstate.col ---@type integer|nil

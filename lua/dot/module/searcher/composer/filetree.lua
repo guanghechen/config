@@ -1,28 +1,28 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
+local __module_name__ = "dot.module.searcher.composer.filetree" ---@type string
 
----@alias dot.ux.searcher.composer.filetree.IOnAttached
----| fun(self: dot.ux.searcher.FiletreeComposer, rootpath: string): nil
+---@alias dot.module.searcher.composer.filetree.IOnAttached
+---| fun(self: dot.module.searcher.FiletreeComposer, rootpath: string): nil
 
----@alias dot.ux.searcher.composer.filetree.IOnClosed
----| fun(self: dot.ux.searcher.FiletreeComposer): nil
+---@alias dot.module.searcher.composer.filetree.IOnClosed
+---| fun(self: dot.module.searcher.FiletreeComposer): nil
 
----@alias dot.ux.searcher.composer.filetree.IOnConfirm
----| fun(self: dot.ux.searcher.FiletreeComposer, selected_filepaths: string[]|nil): nil
+---@alias dot.module.searcher.composer.filetree.IOnConfirm
+---| fun(self: dot.module.searcher.FiletreeComposer, selected_filepaths: string[]|nil): nil
 
----@alias dot.ux.searcher.composer.filetree.IOnDisposed
+---@alias dot.module.searcher.composer.filetree.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.searcher.composer.filetree.IOnFocused
----| fun(self: dot.ux.searcher.FiletreeComposer): nil
+---@alias dot.module.searcher.composer.filetree.IOnFocused
+---| fun(self: dot.module.searcher.FiletreeComposer): nil
 
----@alias dot.ux.searcher.composer.filetree.IOnHidden
----| fun(self: dot.ux.searcher.FiletreeComposer): nil
+---@alias dot.module.searcher.composer.filetree.IOnHidden
+---| fun(self: dot.module.searcher.FiletreeComposer): nil
 ---
----@alias dot.ux.searcher.composer.filetree.IOnRefresh
----| fun(self: dot.ux.searcher.FiletreeComposer, force: boolean): nil
+---@alias dot.module.searcher.composer.filetree.IOnRefresh
+---| fun(self: dot.module.searcher.FiletreeComposer, force: boolean): nil
 
----@class dot.ux.searcher.composer.filetree.actions
+---@class dot.module.searcher.composer.filetree.actions
 ---@field public add_node_to_ai         fun(): nil
 ---@field public add_subtree_to_ai      fun(): nil
 ---@field public attach_node            fun(): nil
@@ -41,7 +41,7 @@ local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.searcher.IFiletreeComposerProps
+---@class dot.module.searcher.IFiletreeComposerProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
@@ -72,8 +72,8 @@ local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
 ---@field public rootpath               ark.c.Observable
 ---@field public search_pattern         ark.c.Observable
 ---
----@field public flags_append           dot.ux.searcher.result.IFlagItemRaw[]|nil
----@field public flags_prepend          dot.ux.searcher.result.IFlagItemRaw[]|nil
+---@field public flags_append           dot.module.searcher.result.IFlagItemRaw[]|nil
+---@field public flags_prepend          dot.module.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
 ---@field public frecency               ?ark.c.Frecency
@@ -81,22 +81,22 @@ local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
 ---@field public search_pattern_history ?ark.c.History
 ---@field public replace_pattern_history ?ark.c.History
 ---
----@field public on_attached            ?dot.ux.searcher.composer.filetree.IOnAttached
----@field public on_closed              ?dot.ux.searcher.composer.filetree.IOnClosed
----@field public on_confirm             ?dot.ux.searcher.composer.filetree.IOnConfirm
----@field public on_disposed            ?dot.ux.searcher.composer.filetree.IOnDisposed
----@field public on_focused             ?dot.ux.searcher.composer.filetree.IOnFocused
----@field public on_hidden              ?dot.ux.searcher.composer.filetree.IOnHidden
----@field public on_refresh             ?dot.ux.searcher.composer.filetree.IOnRefresh
+---@field public on_attached            ?dot.module.searcher.composer.filetree.IOnAttached
+---@field public on_closed              ?dot.module.searcher.composer.filetree.IOnClosed
+---@field public on_confirm             ?dot.module.searcher.composer.filetree.IOnConfirm
+---@field public on_disposed            ?dot.module.searcher.composer.filetree.IOnDisposed
+---@field public on_focused             ?dot.module.searcher.composer.filetree.IOnFocused
+---@field public on_hidden              ?dot.module.searcher.composer.filetree.IOnHidden
+---@field public on_refresh             ?dot.module.searcher.composer.filetree.IOnRefresh
 
----@class dot.ux.searcher.FiletreeComposer
+---@class dot.module.searcher.FiletreeComposer
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public title                  string
 ---
----@field public finder                 dot.ux.searcher.Finder
----@field public result                 dot.ux.searcher.Result
----@field public preview                dot.ux.searcher.Preview
+---@field public finder                 dot.module.searcher.Finder
+---@field public result                 dot.module.searcher.Result
+---@field public preview                dot.module.searcher.Preview
 ---
 ---@field public excludes               ark.c.Observable
 ---@field public flag_exclude           ark.c.Observable
@@ -116,13 +116,13 @@ local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _filetree           dot.Filetree
 ---@field protected _frecency           ark.c.Frecency|nil
----@field protected _composer           dot.ux.searcher.BasicComposer
----@field protected _plainfile          dot.ux.searcher.PlainfileView
+---@field protected _composer           dot.module.searcher.BasicComposer
+---@field protected _plainfile          dot.module.searcher.PlainfileView
 ---@field protected _retriever          dot.ux.retriever.TreeRetriever
 ---@field protected _scheduler_search   ark.c.Scheduler|nil
 ---@field protected _is_searching       boolean
 ---@field protected _search_pending     boolean
----@field protected _treeview           dot.ux.searcher.FiletreeView
+---@field protected _treeview           dot.module.searcher.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
 ---@field protected _uuid_root          string|nil
@@ -130,15 +130,15 @@ local __module_name__ = "dot.ux.searcher.composer.filetree" ---@type string
 ---@field protected _uuids_file         string[]
 ---@field protected _uuids_order        string[]
 ---
----@field protected _on_attached        dot.ux.searcher.composer.filetree.IOnAttached
----@field protected _on_confirm         dot.ux.searcher.composer.filetree.IOnConfirm|nil
----@field protected _on_disposed        dot.ux.searcher.composer.filetree.IOnDisposed
+---@field protected _on_attached        dot.module.searcher.composer.filetree.IOnAttached
+---@field protected _on_confirm         dot.module.searcher.composer.filetree.IOnConfirm|nil
+---@field protected _on_disposed        dot.module.searcher.composer.filetree.IOnDisposed
 ---@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.searcher.IFiletreeComposerProps
----@return dot.ux.searcher.FiletreeComposer
+---@param props                         dot.module.searcher.IFiletreeComposerProps
+---@return dot.module.searcher.FiletreeComposer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -174,27 +174,27 @@ function M.new(props)
   local keymaps_replacer = props.keymaps_replacer ---@type ark.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
-  local flags_append = props.flags_append ---@type dot.ux.searcher.result.IFlagItemRaw[]|nil
-  local flags_prepend = props.flags_prepend ---@type dot.ux.searcher.result.IFlagItemRaw[]|nil
+  local flags_append = props.flags_append ---@type dot.module.searcher.result.IFlagItemRaw[]|nil
+  local flags_prepend = props.flags_prepend ---@type dot.module.searcher.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local frecency = props.frecency ---@type ark.c.Frecency|nil
 
-  local on_attached = props.on_attached or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnAttached
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnClosed
-  local on_confirm = props.on_confirm ---@type dot.ux.searcher.composer.filetree.IOnConfirm|nil
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnHidden
-  local _on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.searcher.composer.filetree.IOnRefresh
+  local on_attached = props.on_attached or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnAttached
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnClosed
+  local on_confirm = props.on_confirm ---@type dot.module.searcher.composer.filetree.IOnConfirm|nil
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnHidden
+  local _on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnRefresh
 
   local self = setmetatable({}, M)
 
   ---@type dot.Filetree
   local filetree = dot.tree.Filetree.new({ name = fullname })
 
-  ---@type dot.ux.searcher.FiletreeView
-  local treeview = dot.ux.searcher.FiletreeView.new({
+  ---@type dot.module.searcher.FiletreeView
+  local treeview = dot.searcher.FiletreeView.new({
     name = fullname,
     tree = filetree,
     flag_foldempty = o_flag_foldempty,
@@ -202,7 +202,7 @@ function M.new(props)
     indent_hln = "f_utw_indent_float",
   })
 
-  ---@type dot.ux.searcher.composer.filetree.IOnRefresh
+  ---@type dot.module.searcher.composer.filetree.IOnRefresh
   local function on_refresh(_, force)
     treeview:mark_cache_invisible_dirty()
     _on_refresh(self, force)
@@ -215,13 +215,13 @@ function M.new(props)
 
   ---@param nodeuuid                    string
   ---@return dot.t.IFiletreeNode|nil
-  ---@return dot.ux.searcher.view.filetree.INodeState|nil
+  ---@return dot.module.searcher.view.filetree.INodeState|nil
   local function retrieve_node_and_state(nodeuuid)
-    local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+    local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
     local baseuuid = nodeuuid ---@type string
 
     if nodestate ~= nil and nodestate.nodetype == "location" then
-      ---@cast nodestate                    dot.ux.searcher.view.filetree.ILeafLocationState
+      ---@cast nodestate                    dot.module.searcher.view.filetree.ILeafLocationState
       if type(nodestate.leafuuid) == "string" then
         baseuuid = nodestate.leafuuid
       end
@@ -232,7 +232,7 @@ function M.new(props)
   end
 
   ---@param filepath                    string
-  ---@param locationstate               dot.ux.searcher.view.filetree.ILeafLocationState
+  ---@param locationstate               dot.module.searcher.view.filetree.ILeafLocationState
   ---@return dot.t.ILocation
   local function build_ai_location(filepath, locationstate)
     local start_lnum = type(locationstate.lnum) == "number" and math.floor(locationstate.lnum) or nil ---@type integer|nil
@@ -277,7 +277,7 @@ function M.new(props)
 
   ---@param target                      dot.t.ILocation[]
   ---@param node                        dot.t.IFiletreeNode|nil
-  ---@param nodestate                   dot.ux.searcher.view.filetree.INodeState|nil
+  ---@param nodestate                   dot.module.searcher.view.filetree.INodeState|nil
   ---@param include_directory           boolean
   local function append_location_payload(target, node, nodestate, include_directory)
     if node == nil then
@@ -292,7 +292,7 @@ function M.new(props)
     end
 
     if nodestate ~= nil and nodestate.nodetype == "location" and filetype == "file" then
-      ---@cast nodestate                    dot.ux.searcher.view.filetree.ILeafLocationState
+      ---@cast nodestate                    dot.module.searcher.view.filetree.ILeafLocationState
       target[#target + 1] = build_ai_location(filepath, nodestate)
       return
     end
@@ -302,8 +302,8 @@ function M.new(props)
     end
   end
 
-  ---@type dot.ux.searcher.PlainfileView
-  local plainfile = dot.ux.searcher.PlainfileView.new({
+  ---@type dot.module.searcher.PlainfileView
+  local plainfile = dot.searcher.PlainfileView.new({
     name = fullname,
   })
 
@@ -321,7 +321,7 @@ function M.new(props)
     end,
   })
 
-  local flags = {} ---@type dot.ux.searcher.result.IFlagItemRaw[]
+  local flags = {} ---@type dot.module.searcher.result.IFlagItemRaw[]
   do
     if flags_prepend ~= nil then
       for _, flag in ipairs(flags_prepend) do
@@ -423,7 +423,7 @@ function M.new(props)
     end
   end
 
-  ---@type dot.ux.searcher.composer.filetree.actions
+  ---@type dot.module.searcher.composer.filetree.actions
   local actions = {
     add_node_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
@@ -474,7 +474,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
       if nodestate == nil then
         return
       end
@@ -584,7 +584,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
           if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -626,7 +626,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
         treeview:collapse(nodeuuid, "collapse", true)
         treeview:mark_cache_listview_dirty()
@@ -661,10 +661,10 @@ function M.new(props)
         local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if leafuuid ~= nil then
           local leafnode = filetree:retrieve(leafuuid) ---@type dot.t.IFiletreeNode|nil
-          local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+          local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
           if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
             ---@cast leafnode         dot.t.IFiletreeNode
-            ---@cast leafnodestate    dot.ux.searcher.view.filetree.IFileNodeState
+            ---@cast leafnodestate    dot.module.searcher.view.filetree.IFileNodeState
             dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
           end
         end
@@ -681,7 +681,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
       if nodestate == nil then
         return
       end
@@ -699,7 +699,7 @@ function M.new(props)
       local replace_pattern = o_replace_pattern:snapshot() ---@type string
 
       if nodestate.nodetype == "location" then
-        ---@cast nodestate              dot.ux.searcher.view.filetree.ILeafLocationState
+        ---@cast nodestate              dot.module.searcher.view.filetree.ILeafLocationState
 
         local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type dot.t.IFiletreeNode|nil
         if leafnode == nil then
@@ -717,7 +717,7 @@ function M.new(props)
           return
         end
 
-        local leafnodestate = treeview:retrieve(nodestate.leafuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+        local leafnodestate = treeview:retrieve(nodestate.leafuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
         if leafnodestate == nil then
           ark.reporter.error({
             from = self.fullname,
@@ -735,11 +735,11 @@ function M.new(props)
           })
           return
         end
-        ---@cast leafnodestate          dot.ux.searcher.view.filetree.IFileNodeState
+        ---@cast leafnodestate          dot.module.searcher.view.filetree.IFileNodeState
 
         local offset_current = nodestate.match.preview.offset ---@type integer
         local offsets_remain = {} ---@type integer[]
-        local locations = leafnodestate.locations ---@type dot.ux.searcher.view.filetree.ILeafLocationState[]|nil
+        local locations = leafnodestate.locations ---@type dot.module.searcher.view.filetree.ILeafLocationState[]|nil
 
         if locations == nil then
           ark.reporter.error({
@@ -763,7 +763,7 @@ function M.new(props)
         end
 
         for i = st + 1, L, 1 do
-          local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+          local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
           if treeview:isvisible(location.locationuuid) then
             offsets_remain[#offsets_remain + 1] = location.match.preview.offset ---@type integer
           end
@@ -800,7 +800,7 @@ function M.new(props)
 
         local nt = 0 ---@type integer
         for i = st + 1, L, 1 do
-          local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+          local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
           if treeview:isvisible(location.locationuuid) then
             nt = nt + 1 ---@type integer
             local pl = preview_locations[nt] ---@type dot.t.IMatchLocation
@@ -833,7 +833,7 @@ function M.new(props)
       end
 
       if nodestate.nodetype == "leaf" then
-        ---@cast nodestate              dot.ux.searcher.view.filetree.IFileNodeState
+        ---@cast nodestate              dot.module.searcher.view.filetree.IFileNodeState
 
         local dirtied = self:__replace_file__(cwd, node, nodestate) ---@type boolean
         if dirtied then
@@ -850,10 +850,10 @@ function M.new(props)
           local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
           if leafuuid ~= nil then
             local leafnode = filetree:retrieve(leafuuid) ---@type dot.t.IFiletreeNode|nil
-            local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+            local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
             if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
               ---@cast leafnode         dot.t.IFiletreeNode
-              ---@cast leafnodestate    dot.ux.searcher.view.filetree.IFileNodeState
+              ---@cast leafnodestate    dot.module.searcher.view.filetree.IFileNodeState
               dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
             end
           end
@@ -879,8 +879,8 @@ function M.new(props)
             local filepath = node.data.filepath ---@type string
             local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
 
-            local nodestate = treeview:retrieve(uuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
-            local locations = nodestate and nodestate.locations or nil ---@type dot.ux.searcher.view.filetree.ILeafLocationState[]|nil
+            local nodestate = treeview:retrieve(uuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
+            local locations = nodestate and nodestate.locations or nil ---@type dot.module.searcher.view.filetree.ILeafLocationState[]|nil
             if locations == nil or #locations < 1 then
               table.insert(quickfix_items, {
                 filename = relative_filepath,
@@ -931,7 +931,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -955,7 +955,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -969,7 +969,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -1322,7 +1322,7 @@ function M.new(props)
     },
   }
 
-  local composer = dot.ux.searcher.BasicComposer.new({
+  local composer = dot.searcher.BasicComposer.new({
     uuid = searcher_uuid,
     name = fullname,
     permanent = permanent,
@@ -1350,13 +1350,13 @@ function M.new(props)
 
     result_number = true,
 
-    ---@type dot.ux.searcher.result.IIsSelected
+    ---@type dot.module.searcher.result.IIsSelected
     result_isselected = function(_, lnum)
       local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
       return uuid ~= nil and treeview:isselected(uuid)
     end,
 
-    ---@type dot.ux.searcher.result.IDraw
+    ---@type dot.module.searcher.result.IDraw
     render_result = function(bufnr)
       local viewtype = o_flag_viewtype:snapshot() ---@type dot.ux.view.tree.ViewtypeEnum
       local result ---@type dot.ux.view.tree.IRenderResult
@@ -1388,11 +1388,11 @@ function M.new(props)
 
       local uuid_current = self._uuid_current ---@type string|nil
       local lnum_current = uuid_current ~= nil and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local ret = { lnum_current = lnum_current } ---@type dot.ux.searcher.result.IDrawResult
+      local ret = { lnum_current = lnum_current } ---@type dot.module.searcher.result.IDrawResult
       return ret
     end,
 
-    ---@type dot.ux.searcher.preview.IDraw|nil
+    ---@type dot.module.searcher.preview.IDraw|nil
     render_preview = preview
         and function(bufnr)
           local nodeuuid, lnum = self:__retrieve_nodeuuid__() ---@type string|nil, integer
@@ -1401,7 +1401,7 @@ function M.new(props)
             vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
             self._last_preview_filepath = nil
 
-            ---@type dot.ux.searcher.preview.IDrawResult
+            ---@type dot.module.searcher.preview.IDrawResult
             local result = {
               cursorline = true,
               number = true,
@@ -1434,8 +1434,8 @@ function M.new(props)
               only_visible = false,
             })
 
-            ---@cast nodestate          dot.ux.searcher.view.filetree.IDirectoryNodeState
-            ---@type dot.ux.searcher.preview.IDrawResult
+            ---@cast nodestate          dot.module.searcher.view.filetree.IDirectoryNodeState
+            ---@type dot.module.searcher.preview.IDrawResult
             local result = {
               cursorline = true,
               number = true,
@@ -1448,41 +1448,41 @@ function M.new(props)
           end
 
           if nodestate.nodetype == "leaf" then
-            ---@cast nodestate          dot.ux.searcher.view.filetree.IFileNodeState
+            ---@cast nodestate          dot.module.searcher.view.filetree.IFileNodeState
             if nodestate.locations ~= nil and #nodestate.locations > 0 then
               ---@diagnostic disable-next-line: cast-local-type
               nodestate = nodestate.locations[1]
             end
           end
-          ---@cast nodestate            dot.ux.searcher.view.filetree.IFileNodeState|dot.ux.searcher.view.filetree.ILeafLocationState
+          ---@cast nodestate            dot.module.searcher.view.filetree.IFileNodeState|dot.module.searcher.view.filetree.ILeafLocationState
 
           local leafnode = nodestate.nodetype == "location" and treeview:retrieve(nodestate.leafuuid) or nodestate
-          ---@cast leafnode             dot.ux.searcher.view.filetree.IFileNodeState
+          ---@cast leafnode             dot.module.searcher.view.filetree.IFileNodeState
 
-          local locations = leafnode and leafnode.locations or nil ---@type dot.ux.searcher.view.filetree.ILeafLocationState[]|nil
+          local locations = leafnode and leafnode.locations or nil ---@type dot.module.searcher.view.filetree.ILeafLocationState[]|nil
           local match_offsets = {} ---@type integer[]
 
           if locations ~= nil then
             local L = #locations ---@type integer
             for i = 1, L, 1 do
-              local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+              local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
               if treeview:isvisible(location.locationuuid) then
                 match_offsets[#match_offsets + 1] = location.match.preview.offset
               end
             end
           end
 
-          local location_current ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+          local location_current ---@type dot.module.searcher.view.filetree.ILeafLocationState
           if nodestate.nodetype == "location" then
-            ---@cast nodestate          dot.ux.searcher.view.filetree.ILeafLocationState
+            ---@cast nodestate          dot.module.searcher.view.filetree.ILeafLocationState
             location_current = nodestate
           else
             if locations ~= nil and #locations > 0 then
-              location_current = locations[1] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+              location_current = locations[1] ---@type dot.module.searcher.view.filetree.ILeafLocationState
             end
           end
 
-          ---@type dot.ux.searcher.IPlainfileViewContext
+          ---@type dot.module.searcher.IPlainfileViewContext
           local plainfile_context = {
             flag_case_sensitive = o_flag_case_sensitive,
             flag_regex = o_flag_regex,
@@ -1497,7 +1497,7 @@ function M.new(props)
           }
           plainfile:render(plainfile_context, bufnr, filepath, force)
 
-          ---@type dot.ux.searcher.preview.IDrawResult
+          ---@type dot.module.searcher.preview.IDrawResult
           local result = {
             cursorline = true,
             number = true,
@@ -1622,12 +1622,12 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname
-  local on_dispose = self._on_disposed ---@type dot.ux.searcher.composer.filetree.IOnDisposed
-  local composer = self._composer ---@type dot.ux.searcher.BasicComposer
-  local plainfile = self._plainfile ---@type dot.ux.searcher.PlainfileView
+  local on_dispose = self._on_disposed ---@type dot.module.searcher.composer.filetree.IOnDisposed
+  local composer = self._composer ---@type dot.module.searcher.BasicComposer
+  local plainfile = self._plainfile ---@type dot.module.searcher.PlainfileView
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
   local scheduler_search = self._scheduler_search ---@type ark.c.Scheduler
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
@@ -1749,7 +1749,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param rootuuid                      string
----@return dot.ux.searcher.FiletreeComposer
+---@return dot.module.searcher.FiletreeComposer
 function M:attach(rootuuid)
   self:__health__()
   if self._uuid_root == rootuuid then
@@ -1767,7 +1767,7 @@ function M:attach(rootuuid)
   end
 
   local filetree = self._filetree ---@type dot.Filetree
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   treeview:mark_cache_listview_dirty()
   self._uuid_root = rootuuid
@@ -1780,14 +1780,14 @@ function M:attach(rootuuid)
   return self
 end
 
----@return dot.ux.searcher.FiletreeComposer
+---@return dot.module.searcher.FiletreeComposer
 function M:mark_result_dirty()
   self:__health__()
   self._composer:mark_result_dirty()
   return self
 end
 
----@return dot.ux.searcher.FiletreeComposer
+---@return dot.module.searcher.FiletreeComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self._composer:mark_result_flags_dirty()
@@ -1797,12 +1797,12 @@ end
 ---@param rootpath                      string
 ---@param cwd                           string
 ---@param filepaths                     string[]
----@return dot.ux.searcher.FiletreeComposer
+---@return dot.module.searcher.FiletreeComposer
 function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
 
   local frecency = self._frecency ---@type ark.c.Frecency|nil
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
@@ -1842,7 +1842,7 @@ function M:__collect_selected_lnums__()
   self:__health__()
 
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
@@ -1863,10 +1863,10 @@ function M:__collect_selected_lnums__()
 end
 
 ---@param offset_current                integer
----@param leafnodestate                 dot.ux.searcher.view.filetree.IFileNodeState
+---@param leafnodestate                 dot.module.searcher.view.filetree.IFileNodeState
 ---@return integer[]
 function M:__collect_remain_offsets__(offset_current, leafnodestate)
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
   local offsets_remain = {} ---@type integer[]
   if leafnodestate.locations ~= nil then
     for _, location in ipairs(leafnodestate.locations) do
@@ -1901,7 +1901,7 @@ function M:__has_selected_node__()
     return false
   end
 
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   for lnum = 1, linecount, 1 do
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
@@ -1992,7 +1992,7 @@ function M:__search_internal__()
 
   local filetree = self._filetree ---@type dot.Filetree
   local frecency = self._frecency ---@type ark.c.Frecency|nil
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   if #search_pattern < 1 then
     local uuids_order = vim.list_slice(self._uuids_file) ---@type string[]
@@ -2007,7 +2007,7 @@ function M:__search_internal__()
     return
   end
 
-  ---@type dot.ux.searcher.view.filetree.ISearchResult|nil
+  ---@type dot.module.searcher.view.filetree.ISearchResult|nil
   local result = treeview:search({
     cwd = cwd,
     specified_filepath = specified_filepath,
@@ -2030,15 +2030,15 @@ function M:__search_internal__()
     return
   end
 
-  local items = result.items ---@type dot.ux.searcher.view.filetree.ISearchedItem[]
-  local filematch_map = result.filematch_map ---@type table<string, dot.ux.searcher.view.filetree.IResolvedFileMatch>
+  local items = result.items ---@type dot.module.searcher.view.filetree.ISearchedItem[]
+  local filematch_map = result.filematch_map ---@type table<string, dot.module.searcher.view.filetree.IResolvedFileMatch>
 
   local filepaths = {} ---@type string[]
   local uuids = {} ---@type string[]
   do
     local N, i, j, k = #items, 1, 0, 0 ---@type integer, integer, integer
     while i <= N do
-      local item = items[i] ---@type dot.ux.searcher.view.filetree.ISearchedItem
+      local item = items[i] ---@type dot.module.searcher.view.filetree.ISearchedItem
       local nodeuuid = item.uuid ---@type string
 
       j = i + 1 ---@type integer
@@ -2058,7 +2058,7 @@ function M:__search_internal__()
   treeview:mark_cache_match_dirty()
 
   local tick_matched = treeview._tick_matched ---@type integer
-  local statemap = treeview.statemap ---@type table<string, dot.ux.searcher.view.filetree.INodeState>
+  local statemap = treeview.statemap ---@type table<string, dot.module.searcher.view.filetree.INodeState>
 
   do
     local N, i, j = #items, 1, 0 ---@type integer, integer, integer
@@ -2070,7 +2070,7 @@ function M:__search_internal__()
         j = j + 1
       end
 
-      local leafnode = statemap[nodeuuid] ---@type dot.ux.searcher.view.filetree.INodeState|nil
+      local leafnode = statemap[nodeuuid] ---@type dot.module.searcher.view.filetree.INodeState|nil
       if leafnode == nil then
         ark.reporter.error({
           from = self.fullname,
@@ -2086,11 +2086,11 @@ function M:__search_internal__()
         leafnode.filematch = filematch_map[nodeuuid]
 
         local L = 0 ---@type integer
-        local locations = leafnode.locations or {} ---@type dot.ux.searcher.view.filetree.ILeafLocationState[]
+        local locations = leafnode.locations or {} ---@type dot.module.searcher.view.filetree.ILeafLocationState[]
         for k = i, j - 1, 1 do
-          local item = items[k] ---@type dot.ux.searcher.view.filetree.ISearchedItem
+          local item = items[k] ---@type dot.module.searcher.view.filetree.ISearchedItem
 
-          ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+          ---@type dot.module.searcher.view.filetree.ILeafLocationState
           local location = {
             nodetype = "location",
             leafuuid = nodeuuid,
@@ -2152,14 +2152,14 @@ end
 function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.searcher.BasicComposer
+  local composer = self._composer ---@type dot.module.searcher.BasicComposer
   local filetree = self._filetree ---@type dot.Filetree
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
-    local last_nodestate = nil ---@type dot.ux.searcher.view.filetree.IFileNodeState|nil
+    local last_nodestate = nil ---@type dot.module.searcher.view.filetree.IFileNodeState|nil
     local filepaths = {} ---@type string[]
 
     for lnum = 1, linecount, 1 do
@@ -2172,9 +2172,9 @@ function M:__open_node__(nodeuuid)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
 
-            local s = treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+            local s = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
             if s ~= nil then
-              ---@cast s                      dot.ux.searcher.view.filetree.IFileNodeState
+              ---@cast s                      dot.module.searcher.view.filetree.IFileNodeState
               last_nodestate = s
             end
           end
@@ -2183,9 +2183,9 @@ function M:__open_node__(nodeuuid)
     end
 
     if #filepaths > 0 then
-      ---@cast last_nodestate             dot.ux.searcher.view.filetree.IFileNodeState
+      ---@cast last_nodestate             dot.module.searcher.view.filetree.IFileNodeState
       local locations = last_nodestate.locations
-      local first_location = locations ~= nil and locations[1] or nil ---@type dot.ux.searcher.view.filetree.ILeafLocationState|nil
+      local first_location = locations ~= nil and locations[1] or nil ---@type dot.module.searcher.view.filetree.ILeafLocationState|nil
       local lnum = first_location and first_location.lnum or nil ---@type integer|nil
       local col = first_location and first_location.col or nil ---@type integer|nil
 
@@ -2237,19 +2237,19 @@ end
 
 ---@param cwd                           string
 ---@param node                          dot.t.IFiletreeNode
----@param nodestate                     dot.ux.searcher.view.filetree.IFileNodeState
+---@param nodestate                     dot.module.searcher.view.filetree.IFileNodeState
 ---@return boolean
 function M:__replace_file__(cwd, node, nodestate)
-  local locations = nodestate.locations ---@type dot.ux.searcher.view.filetree.ILeafLocationState[]|nil
+  local locations = nodestate.locations ---@type dot.module.searcher.view.filetree.ILeafLocationState[]|nil
   if locations == nil then
     return false
   end
 
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
   local L = #locations ---@type integer
   local count = 0 ---@type integer
   for i = 1, L, 1 do
-    local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+    local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
     if treeview:isvisible(location.locationuuid) then
       count = count + 1
     end
@@ -2292,7 +2292,7 @@ function M:__replace_file__(cwd, node, nodestate)
 
   local match_offsets = {} ---@type integer[]
   for i = 1, L, 1 do
-    local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+    local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
     if treeview:isvisible(location.locationuuid) then
       match_offsets[#match_offsets + 1] = location.match.preview.offset
     end
@@ -2310,15 +2310,15 @@ function M:__replace_file__(cwd, node, nodestate)
 
   if succeed == true then
     local k = 0 ---@type integer
-    local statemap = treeview.statemap ---@type table<string, dot.ux.searcher.view.filetree.INodeState>
+    local statemap = treeview.statemap ---@type table<string, dot.module.searcher.view.filetree.INodeState>
 
     for i = 1, L, 1 do
-      local location = locations[i] ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+      local location = locations[i] ---@type dot.module.searcher.view.filetree.ILeafLocationState
       if treeview:isvisible(location.locationuuid) then
         statemap[location.locationuuid] = nil
       else
         k = k + 1 ---@type integer
-        locations[k] = location ---@type dot.ux.searcher.view.filetree.ILeafLocationState
+        locations[k] = location ---@type dot.module.searcher.view.filetree.ILeafLocationState
       end
     end
     ark.table.truncate_inline(locations, k)
@@ -2338,10 +2338,10 @@ end
 function M:__resolve_confirmation__(nodeuuid)
   local node = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.searcher.BasicComposer
+  local composer = self._composer ---@type dot.module.searcher.BasicComposer
   local filetree = self._filetree ---@type dot.Filetree
   local retriever = self._retriever ---@type dot.ux.retriever.TreeRetriever
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   local rootnode = filetree:retrieve(self._uuid_root) ---@type dot.t.IFiletreeNode|nil
 
@@ -2379,9 +2379,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return dot.t.IFiletreeNode
----@return dot.ux.searcher.view.filetree.INodeState
+---@return dot.module.searcher.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type dot.ux.searcher.view.filetree.INodeState|nil
+  ---@type dot.module.searcher.view.filetree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
@@ -2408,7 +2408,7 @@ function M:__retrieve_filenode__()
     return
   end
 
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type dot.ux.searcher.view.filetree.INodeState|nil
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
   if nodestate == nil then
     return
   end
@@ -2467,7 +2467,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return nil
   end
 
-  ---@type dot.ux.searcher.view.filetree.INodeState|nil
+  ---@type dot.module.searcher.view.filetree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     return nil
@@ -2497,8 +2497,8 @@ end
 function M:__toggle_node__(nodeuuid, open, recursively)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
-  local composer = self._composer ---@type dot.ux.searcher.BasicComposer
-  local treeview = self._treeview ---@type dot.ux.searcher.FiletreeView
+  local composer = self._composer ---@type dot.module.searcher.BasicComposer
+  local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
   if nodestate.nodetype == "container" then
     treeview:collapse(node.uuid, "toggle", recursively)
     composer:mark_result_dirty()

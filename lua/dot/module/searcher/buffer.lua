@@ -1,12 +1,12 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.searcher.buffer" ---@type string
+local __module_name__ = "dot.module.searcher.buffer" ---@type string
 
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
-local NSNR_SEARCH = vim.api.nvim_create_namespace("dot.ux.searcher.buffer") ---@type integer
-local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("dot.ux.searcher.buffer.current") ---@type integer
-local NSNR_REPLACE_PREVIEW = vim.api.nvim_create_namespace("dot.ux.searcher.buffer.replace_preview") ---@type integer
+local NSNR_SEARCH = vim.api.nvim_create_namespace("dot.module.searcher.buffer") ---@type integer
+local NSNR_SEARCH_CURRENT = vim.api.nvim_create_namespace("dot.module.searcher.buffer.current") ---@type integer
+local NSNR_REPLACE_PREVIEW = vim.api.nvim_create_namespace("dot.module.searcher.buffer.replace_preview") ---@type integer
 
 ----------------------------------------------------------------------------------------------------
 
@@ -23,9 +23,9 @@ end
 ---@param o_flag_case_sensitive         ark.c.Observable
 ---@param o_flag_replace                ark.c.Observable
 ---@param title                         string
----@return dot.ux.searcher.result.IFlagItem[], dot.ux.searcher.result.IFlagItemRaw[]
+---@return dot.module.searcher.result.IFlagItem[], dot.module.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
-  ---@type dot.ux.searcher.result.IFlagItemRaw[]
+  ---@type dot.module.searcher.result.IFlagItemRaw[]
   local raw_flags = {
     {
       desc = string.format("%s: toggle fuzzy search", title),
@@ -69,7 +69,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
     },
   }
 
-  local flags = {} ---@type dot.ux.searcher.result.IFlagItem[]
+  local flags = {} ---@type dot.module.searcher.result.IFlagItem[]
   for _, flag in ipairs(raw_flags) do
     flags[#flags + 1] = {
       desc = flag.desc,
@@ -144,7 +144,7 @@ local function collect_buffer_content(bufnr)
   return lines, table.concat(lines, "\n")
 end
 
----@class dot.ux.searcher.buffer.ISearcherProps
+---@class dot.module.searcher.buffer.ISearcherProps
 ---@field public o_flag_fuzzy?          ark.c.Observable
 ---@field public o_flag_regex?          ark.c.Observable
 ---@field public o_flag_replace?        ark.c.Observable
@@ -154,7 +154,7 @@ end
 ---@field public o_replace_pattern?     ark.c.Observable
 ---@field public o_replace_pattern_history? ark.c.History
 
----@class dot.ux.searcher.buffer.Searcher
+---@class dot.module.searcher.buffer.Searcher
 ---@field public title                  string
 ---@field public o_flag_fuzzy           ark.c.Observable
 ---@field public o_flag_regex           ark.c.Observable
@@ -183,8 +183,8 @@ end
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.searcher.buffer.ISearcherProps|nil
----@return dot.ux.searcher.buffer.Searcher
+---@param props                         dot.module.searcher.buffer.ISearcherProps|nil
+---@return dot.module.searcher.buffer.Searcher
 function M.new(props)
   props = props or {}
   local o_flag_fuzzy = props.o_flag_fuzzy or ark.c.Observable.from_value(false)
@@ -876,7 +876,7 @@ function M:__create_replacer_window_as_needed__()
 end
 
 ---@protected
----@param raw_flags                     dot.ux.searcher.result.IFlagItemRaw[]
+---@param raw_flags                     dot.module.searcher.result.IFlagItemRaw[]
 ---@param window_type                   "finder"|"replacer"
 ---@return ark.t.IKeymap[]
 function M:__create_keymaps__(raw_flags, window_type)
@@ -1035,7 +1035,7 @@ end
 ---@protected
 ---@param o_match_index                 ark.c.Observable
 ---@param o_match_total                 ark.c.Observable
----@param flags                         dot.ux.searcher.result.IFlagItem[]
+---@param flags                         dot.module.searcher.result.IFlagItem[]
 ---@return dot.module.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
   local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
@@ -1398,7 +1398,7 @@ function M:__update_replace_preview__()
   local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
   local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
   local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
-  local replacement_matches = {} ---@type dot.ux.searcher.buffer.IReplacementMatch[]
+  local replacement_matches = {} ---@type dot.module.searcher.buffer.IReplacementMatch[]
 
   local text_len = #text ---@type integer
 
@@ -1439,14 +1439,14 @@ function M:__update_replace_preview__()
   end
 end
 
----@class dot.ux.searcher.buffer.IReplacementMatch
+---@class dot.module.searcher.buffer.IReplacementMatch
 ---@field public l                      integer
 ---@field public r                      integer
 ---@field public text                   string
 
 ---@protected
 ---@param bufnr                         integer
----@param replacement_matches           dot.ux.searcher.buffer.IReplacementMatch[]
+---@param replacement_matches           dot.module.searcher.buffer.IReplacementMatch[]
 ---@return nil
 function M:__render_replacement_matches__(bufnr, replacement_matches)
   local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")

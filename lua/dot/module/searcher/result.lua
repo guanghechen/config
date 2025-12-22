@@ -1,35 +1,35 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.searcher.result" ---@type string
+local __module_name__ = "dot.module.searcher.result" ---@type string
 
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
----@alias dot.ux.searcher.result.IDraw
----| fun(bufnr: integer): dot.ux.searcher.result.IDrawResult
+---@alias dot.module.searcher.result.IDraw
+---| fun(bufnr: integer): dot.module.searcher.result.IDrawResult
 
----@alias dot.ux.searcher.result.IIsSelected
+---@alias dot.module.searcher.result.IIsSelected
 ---| fun(bufnr: integer, lnum: integer): boolean
 
----@alias dot.ux.searcher.result.IOnDrawed
+---@alias dot.module.searcher.result.IOnDrawed
 ---| fun(bufnr: integer): nil
 
----@class dot.ux.searcher.result.IDrawResult
+---@class dot.module.searcher.result.IDrawResult
 ---@field public lnum_current           integer|nil
 ---@field public lnum_present           integer|nil
 
----@class dot.ux.searcher.result.IFlagItemRaw
+---@class dot.module.searcher.result.IFlagItemRaw
 ---@field public desc                   string
 ---@field public callback               fun(): nil
 ---@field public disabled               (fun(): boolean)|boolean|nil
 ---@field public snapshot               fun(): string, string
 
----@class dot.ux.searcher.result.IFlagItem
+---@class dot.module.searcher.result.IFlagItem
 ---@field public desc                   string
 ---@field public callback               string
 ---@field public disabled               fun(): boolean
 ---@field public snapshot               fun(): string, string
 
----@class dot.ux.searcher.result.IWinOpts
+---@class dot.module.searcher.result.IWinOpts
 ---@field public border                 string|string[]
 ---@field public number                 boolean
 ---@field public winhighlight           string
@@ -37,21 +37,21 @@ local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.searcher.IResultProps
+---@class dot.module.searcher.IResultProps
 ---@field public uuid                   string
 ---@field public name                   string
----@field public draw                   dot.ux.searcher.result.IDraw
----@field public isselected             ?dot.ux.searcher.result.IIsSelected
+---@field public draw                   dot.module.searcher.result.IDraw
+---@field public isselected             ?dot.module.searcher.result.IIsSelected
 ---@field public keymaps                ark.t.IKeymap[]
----@field public flags                  dot.ux.searcher.result.IFlagItemRaw[]
+---@field public flags                  dot.module.searcher.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
----@field public on_drawed              ?dot.ux.searcher.result.IOnDrawed
+---@field public on_drawed              ?dot.module.searcher.result.IOnDrawed
 
----@class dot.ux.searcher.Result
+---@class dot.module.searcher.Result
 ---@field public uuid                   string
 ---@field public fullname               string
----@field public draw                   dot.ux.searcher.result.IDraw
----@field public flags                  dot.ux.searcher.result.IFlagItem[]
+---@field public draw                   dot.module.searcher.result.IDraw
+---@field public flags                  dot.module.searcher.result.IFlagItem[]
 ---@field public keymaps                ark.t.IKeymap[]
 ---@field public lnum_current           ark.c.Observable
 ---@field public lnum_present           ark.c.Observable
@@ -68,28 +68,28 @@ local Nvimbar = require("dot.module.nvimbar").Nvimbar
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.searcher.IResultProps
----@return dot.ux.searcher.Result
+---@param props                         dot.module.searcher.IResultProps
+---@return dot.module.searcher.Result
 function M.new(props)
   local uuid = props.uuid ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local draw = props.draw ---@type dot.ux.searcher.result.IDraw
-  local isselected = props.isselected or ark.fn.falsy ---@type dot.ux.searcher.result.IIsSelected
+  local draw = props.draw ---@type dot.module.searcher.result.IDraw
+  local isselected = props.isselected or ark.fn.falsy ---@type dot.module.searcher.result.IIsSelected
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
-  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.ux.searcher.result.IOnDrawed
+  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.module.searcher.result.IOnDrawed
   local augroup_CursorMoved = ark.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
   local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.Observable
 
-  local flags = {} ---@type dot.ux.searcher.result.IFlagItem[]
+  local flags = {} ---@type dot.module.searcher.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
     for _, flag in ipairs(props.flags) do
-      ---@cast flag                     dot.ux.searcher.result.IFlagItemRaw
+      ---@cast flag                     dot.module.searcher.result.IFlagItemRaw
       local raw_disabled = flag.disabled ---@type boolean|nil|(fun(): boolean)
       local callback = flag.callback ---@type fun(): nil
       local snapshot = flag.snapshot ---@type fun(): boolean, string
@@ -108,7 +108,7 @@ function M.new(props)
 
       local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
 
-      ---@type dot.ux.searcher.result.IFlagItem
+      ---@type dot.module.searcher.result.IFlagItem
       local item = {
         desc = flag.desc,
         callback = callback_fn,
@@ -251,7 +251,7 @@ function M.new(props)
 
       vim.bo[bufnr].modifiable = true
       vim.bo[bufnr].readonly = false
-      local ok, result = pcall(draw, bufnr) ---@type boolean, dot.ux.searcher.result.IDrawResult
+      local ok, result = pcall(draw, bufnr) ---@type boolean, dot.module.searcher.result.IDrawResult
       vim.bo[bufnr].modifiable = false
       vim.bo[bufnr].readonly = true
 
@@ -505,7 +505,7 @@ function M:create_buf()
   return bufnr, true
 end
 
----@param winopts                       dot.ux.searcher.result.IWinOpts
+---@param winopts                       dot.module.searcher.result.IWinOpts
 ---@param dimension                     dot.t.IWinDimension,
 ---@return integer
 ---@return boolean
@@ -557,7 +557,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:focus()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -567,7 +567,7 @@ function M:focus()
   return self
 end
 
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:hide()
   self:__health__()
   local winnr = self._winnr ---@type integer|nil
@@ -591,7 +591,7 @@ function M:hide()
 end
 
 ---@param dimension                     dot.t.IWinDimension,
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:resize(dimension)
   self:__health__()
 
@@ -615,14 +615,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
 end
 
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:mark_nvimbar_dirty()
   self:__health__()
   self._nvimbar:render()
@@ -651,7 +651,7 @@ function M:moveto(next_lnum)
 end
 
 ---@param lnum                          integer
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:set_lnum_current(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -661,7 +661,7 @@ function M:set_lnum_current(lnum)
 end
 
 ---@param lnum                          integer
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:set_lnum_present(lnum)
   self:__health__()
   local total = self.lnum_total:snapshot() ---@type integer
@@ -670,7 +670,7 @@ function M:set_lnum_present(lnum)
   return self
 end
 
----@return dot.ux.searcher.Result
+---@return dot.module.searcher.Result
 function M:refresh_signs()
   self:__health__()
   self._scheduler_lnum_current:schedule()

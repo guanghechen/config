@@ -1,6 +1,6 @@
-local __module_name__ = "dot.ux.searcher.view.plainfile" ---@type string
+local __module_name__ = "dot.module.searcher.view.plainfile" ---@type string
 
----@class dot.ux.searcher.IPlainfileViewContext
+---@class dot.module.searcher.IPlainfileViewContext
 ---@field public flag_case_sensitive    ark.c.Observable
 ---@field public flag_regex             ark.c.Observable
 ---@field public flag_replace           ark.c.Observable
@@ -8,34 +8,34 @@ local __module_name__ = "dot.ux.searcher.view.plainfile" ---@type string
 ---@field public replace_pattern        ark.c.Observable
 ---
 ---@field public filepath               string
----@field public filematch              dot.ux.searcher.view.filetree.IResolvedFileMatch|nil
+---@field public filematch              dot.module.searcher.view.filetree.IResolvedFileMatch|nil
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 
----@class dot.ux.searcher.IPlainfileViewHighlight : ark.t.IHighlight
+---@class dot.module.searcher.IPlainfileViewHighlight : ark.t.IHighlight
 ---@field public offset                 integer
 
----@class dot.ux.searcher.IPlainfileViewData
+---@class dot.module.searcher.IPlainfileViewData
 ---@field public filepath               string
 ---@field public filetype               string|nil
 ---@field public lines                  string[]
----@field public highlights             dot.ux.searcher.IPlainfileViewHighlight[]
+---@field public highlights             dot.module.searcher.IPlainfileViewHighlight[]
 ---@field public title                  string
 
----@class dot.ux.searcher.IPlainfileViewProps
+---@class dot.module.searcher.IPlainfileViewProps
 ---@field public name                   string
 
----@class dot.ux.searcher.PlainfileView
+---@class dot.module.searcher.PlainfileView
 ---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field protected _disposed           boolean
 ---@field protected _last_bufnr         integer|nil
----@field protected _last_data          dot.ux.searcher.IPlainfileViewData|nil
+---@field protected _last_data          dot.module.searcher.IPlainfileViewData|nil
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.searcher.IPlainfileViewProps
----@return dot.ux.searcher.PlainfileView
+---@param props                         dot.module.searcher.IPlainfileViewProps
+---@return dot.module.searcher.PlainfileView
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -49,7 +49,7 @@ function M.new(props)
   return self
 end
 
----@return dot.ux.searcher.PlainfileView
+---@return dot.module.searcher.PlainfileView
 function M:clear()
   self:__health__()
 
@@ -76,18 +76,18 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param context                       dot.ux.searcher.IPlainfileViewContext
----@return dot.ux.searcher.IPlainfileViewData
+---@param context                       dot.module.searcher.IPlainfileViewContext
+---@return dot.module.searcher.IPlainfileViewData
 function M:calc_preview_data(context)
   local filepath = context.filepath ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
   if not dot.filetype.is_printable_file(filename) then
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
-    ---@type dot.ux.searcher.IPlainfileViewHighlight[]
+    ---@type dot.module.searcher.IPlainfileViewHighlight[]
     local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_sr_error" } }
 
-    ---@type dot.ux.searcher.IPlainfileViewData
+    ---@type dot.module.searcher.IPlainfileViewData
     local result = {
       filepath = context.filepath,
       filetype = nil,
@@ -106,7 +106,7 @@ function M:calc_preview_data(context)
   local replace_pattern = context.replace_pattern:snapshot() ---@type string
   local match_offsets = context.match_offsets ---@type integer[]
   local lines = {} ---@type string[]
-  local highlights = {} ---@type dot.ux.searcher.IPlainfileViewHighlight[]
+  local highlights = {} ---@type dot.module.searcher.IPlainfileViewHighlight[]
 
   if flag_replace then
     local preview_result, preview_error = yoz.replace.replace_file_preview_by_matches_advance({
@@ -134,7 +134,7 @@ function M:calc_preview_data(context)
     local preview_text = preview_result.text ---@type string
     local lwidths = yoz.string.calc_linewidths(preview_text) ---@type integer[]
     lines = yoz.string.parse_lines(preview_text, lwidths) ---@type string[]
-    highlights = {} ---@type dot.ux.searcher.IPlainfileViewHighlight[]
+    highlights = {} ---@type dot.module.searcher.IPlainfileViewHighlight[]
     local matches = preview_result.matches ---@type dot.t.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer
@@ -175,7 +175,7 @@ function M:calc_preview_data(context)
     end
   else
     lines = ark.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
-    highlights = {} ---@type dot.ux.searcher.IPlainfileViewHighlight[]
+    highlights = {} ---@type dot.module.searcher.IPlainfileViewHighlight[]
 
     if context.filematch ~= nil then
       for _, match in ipairs(context.filematch.matches) do
@@ -205,7 +205,7 @@ function M:calc_preview_data(context)
     end
   end
 
-  ---@type dot.ux.searcher.IPlainfileViewData
+  ---@type dot.module.searcher.IPlainfileViewData
   local result = {
     filepath = filepath,
     filetype = filetype,
@@ -224,8 +224,8 @@ function M:mark_dirty()
   return self
 end
 
----@param context                       dot.ux.searcher.IPlainfileViewContext
----@param data                          dot.ux.searcher.IPlainfileViewData
+---@param context                       dot.module.searcher.IPlainfileViewContext
+---@param data                          dot.module.searcher.IPlainfileViewData
 ---@return ark.t.IHighlight[]
 function M:patch_preview_data(context, data)
   local highlights = {} ---@type ark.t.IHighlight[]
@@ -262,17 +262,17 @@ function M:patch_preview_data(context, data)
   return highlights
 end
 
----@param context                       dot.ux.searcher.IPlainfileViewContext
+---@param context                       dot.module.searcher.IPlainfileViewContext
 ---@param bufnr                         integer
 ---@param filepath                      string
 ---@param force                         boolean
----@return dot.ux.searcher.PlainfileView
+---@return dot.module.searcher.PlainfileView
 function M:render(context, bufnr, filepath, force)
   self:__health__()
 
-  local data = self._last_data ---@type dot.ux.searcher.IPlainfileViewData|nil
+  local data = self._last_data ---@type dot.module.searcher.IPlainfileViewData|nil
   if force or data == nil or data.filepath ~= filepath then
-    data = self:calc_preview_data(context) ---@type dot.ux.searcher.IPlainfileViewData
+    data = self:calc_preview_data(context) ---@type dot.module.searcher.IPlainfileViewData
     self._last_data = data
     force = true
   end

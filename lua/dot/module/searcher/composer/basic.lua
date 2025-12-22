@@ -1,39 +1,39 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.ux.searcher.composer.basic" ---@type string
+local __module_name__ = "dot.module.searcher.composer.basic" ---@type string
 
----@alias dot.ux.searcher.composer.basic.PaneEnum
+---@alias dot.module.searcher.composer.basic.PaneEnum
 ---| "finder"
 ---| "replacer"
 ---| "preview"
 ---| "result"
 
----@alias dot.ux.searcher.composer.basic.IOnCancel
+---@alias dot.module.searcher.composer.basic.IOnCancel
 ---| fun(): nil
 
----@alias dot.ux.searcher.composer.basic.IOnClosed
----| fun(self: dot.ux.searcher.BasicComposer): nil
+---@alias dot.module.searcher.composer.basic.IOnClosed
+---| fun(self: dot.module.searcher.BasicComposer): nil
 
----@alias dot.ux.searcher.composer.basic.IOnDisposed
+---@alias dot.module.searcher.composer.basic.IOnDisposed
 ---| fun(): nil
 
----@alias dot.ux.searcher.composer.basic.IOnFocused
----| fun(self: dot.ux.searcher.BasicComposer): nil
+---@alias dot.module.searcher.composer.basic.IOnFocused
+---| fun(self: dot.module.searcher.BasicComposer): nil
 
----@alias dot.ux.searcher.composer.basic.IOnHidden
----| fun(self: dot.ux.searcher.BasicComposer): nil
+---@alias dot.module.searcher.composer.basic.IOnHidden
+---| fun(self: dot.module.searcher.BasicComposer): nil
 
----@alias dot.ux.searcher.composer.basic.IOnRefresh
----| fun(self: dot.ux.searcher.BasicComposer, force: boolean): nil
+---@alias dot.module.searcher.composer.basic.IOnRefresh
+---| fun(self: dot.module.searcher.BasicComposer, force: boolean): nil
 
----@alias dot.ux.searcher.composer.basic.IOnResultRendered
----| fun(self: dot.ux.searcher.BasicComposer, bufnr: integer): nil
+---@alias dot.module.searcher.composer.basic.IOnResultRendered
+---| fun(self: dot.module.searcher.BasicComposer, bufnr: integer): nil
 
----@alias dot.ux.searcher.composer.basic.IOnPreviewRendered
----| fun(self: dot.ux.searcher.BasicComposer, bufnr: integer): nil
+---@alias dot.module.searcher.composer.basic.IOnPreviewRendered
+---| fun(self: dot.module.searcher.BasicComposer, bufnr: integer): nil
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.searcher.composer.basic.borders
+---@class dot.module.searcher.composer.basic.borders
 ---@field public finder                 string[]
 ---@field public finder_with_preview    string[]
 ---@field public finder_without_result  string[]
@@ -65,7 +65,7 @@ local __borders__ = {
   -- stylua: ignore end
 }
 
----@class dot.ux.searcher.composer.basic.highlights
+---@class dot.module.searcher.composer.basic.highlights
 ---@field public finder                 string
 ---@field public replacer               string
 ---@field public result                 string
@@ -102,12 +102,12 @@ local __highlights__ = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ux.searcher.composer.IBasicProps
+---@class dot.module.searcher.composer.IBasicProps
 ---@field public uuid                   ?string
 ---@field public name                   string
 ---@field public permanent              boolean
 ---
----@field public flags                  ?dot.ux.searcher.result.IFlagItemRaw[]
+---@field public flags                  ?dot.module.searcher.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
 ---@field public height                 ?number
 ---@field public width                  ?number
@@ -128,35 +128,35 @@ local __highlights__ = {
 ---@field public flag_replace           ?ark.c.Observable
 ---
 ---@field public result_number          boolean
----@field public result_isselected      ?dot.ux.searcher.result.IIsSelected
+---@field public result_isselected      ?dot.module.searcher.result.IIsSelected
 ---
----@field public render_preview         ?dot.ux.searcher.preview.IDraw
----@field public render_result          dot.ux.searcher.result.IDraw
+---@field public render_preview         ?dot.module.searcher.preview.IDraw
+---@field public render_result          dot.module.searcher.result.IDraw
 ---
----@field public on_cancel              ?dot.ux.searcher.composer.basic.IOnCancel
----@field public on_closed              ?dot.ux.searcher.composer.basic.IOnClosed
----@field public on_disposed            ?dot.ux.searcher.composer.basic.IOnDisposed
----@field public on_focused             ?dot.ux.searcher.composer.basic.IOnFocused
----@field public on_hidden              ?dot.ux.searcher.composer.basic.IOnHidden
----@field public on_refresh             ?dot.ux.searcher.composer.basic.IOnRefresh
----@field public on_preview_rendered    ?dot.ux.searcher.composer.basic.IOnPreviewRendered
----@field public on_result_rendered     ?dot.ux.searcher.composer.basic.IOnResultRendered
+---@field public on_cancel              ?dot.module.searcher.composer.basic.IOnCancel
+---@field public on_closed              ?dot.module.searcher.composer.basic.IOnClosed
+---@field public on_disposed            ?dot.module.searcher.composer.basic.IOnDisposed
+---@field public on_focused             ?dot.module.searcher.composer.basic.IOnFocused
+---@field public on_hidden              ?dot.module.searcher.composer.basic.IOnHidden
+---@field public on_refresh             ?dot.module.searcher.composer.basic.IOnRefresh
+---@field public on_preview_rendered    ?dot.module.searcher.composer.basic.IOnPreviewRendered
+---@field public on_result_rendered     ?dot.module.searcher.composer.basic.IOnResultRendered
 
----@class dot.ux.searcher.BasicComposer : dot.t.IWidget
+---@class dot.module.searcher.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
 ---@field public permanent              boolean
 ---
----@field public finder                 dot.ux.searcher.Finder
----@field public replacer               dot.ux.searcher.Finder|nil
----@field public result                 dot.ux.searcher.Result
----@field public preview                dot.ux.searcher.Preview|nil
+---@field public finder                 dot.module.searcher.Finder
+---@field public replacer               dot.module.searcher.Finder|nil
+---@field public result                 dot.module.searcher.Result
+---@field public preview                dot.module.searcher.Preview|nil
 ---
 ---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
----@field protected _pane_focused       dot.ux.searcher.composer.basic.PaneEnum
----@field protected _pane_last_focused  dot.ux.searcher.composer.basic.PaneEnum
+---@field protected _pane_focused       dot.module.searcher.composer.basic.PaneEnum
+---@field protected _pane_last_focused  dot.module.searcher.composer.basic.PaneEnum
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
@@ -166,27 +166,27 @@ local __highlights__ = {
 ---@field protected _search_pattern_history ?ark.c.History
 ---@field protected _replace_pattern_history ?ark.c.History
 ---
----@field protected _on_cancel          dot.ux.searcher.composer.basic.IOnCancel
----@field protected _on_closed          dot.ux.searcher.composer.basic.IOnClosed
----@field protected _on_disposed        dot.ux.searcher.composer.basic.IOnDisposed
----@field protected _on_focused         dot.ux.searcher.composer.basic.IOnFocused
----@field protected _on_hidden          dot.ux.searcher.composer.basic.IOnHidden
----@field protected _on_refresh         dot.ux.searcher.composer.basic.IOnRefresh
+---@field protected _on_cancel          dot.module.searcher.composer.basic.IOnCancel
+---@field protected _on_closed          dot.module.searcher.composer.basic.IOnClosed
+---@field protected _on_disposed        dot.module.searcher.composer.basic.IOnDisposed
+---@field protected _on_focused         dot.module.searcher.composer.basic.IOnFocused
+---@field protected _on_hidden          dot.module.searcher.composer.basic.IOnHidden
+---@field protected _on_refresh         dot.module.searcher.composer.basic.IOnRefresh
 local M = {}
 M.__index = M
 
----@param props                         dot.ux.searcher.composer.IBasicProps
----@return dot.ux.searcher.BasicComposer
+---@param props                         dot.module.searcher.composer.IBasicProps
+---@return dot.module.searcher.BasicComposer
 function M.new(props)
   local uuid = props.uuid or yoz.fn.uuid() ---@type string
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local permanent = not not props.permanent ---@type boolean
 
-  local flags = props.flags ---@type dot.ux.searcher.result.IFlagItemRaw[]
+  local flags = props.flags ---@type dot.module.searcher.result.IFlagItemRaw[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
-  local pane_focused = "finder" ---@type dot.ux.searcher.composer.basic.PaneEnum
-  local pane_last_focused = "finder" ---@type dot.ux.searcher.composer.basic.PaneEnum
+  local pane_focused = "finder" ---@type dot.module.searcher.composer.basic.PaneEnum
+  local pane_last_focused = "finder" ---@type dot.module.searcher.composer.basic.PaneEnum
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
   local recommended_width = math.max(0.1, props.width or 0.8) ---@type number
 
@@ -206,19 +206,19 @@ function M.new(props)
   local flag_replace = props.flag_replace ---@type ark.c.Observable|nil
 
   local result_number = not not props.result_number ---@type boolean
-  local result_isselected = props.result_isselected ---@type dot.ux.searcher.result.IIsSelected|nil
+  local result_isselected = props.result_isselected ---@type dot.module.searcher.result.IIsSelected|nil
 
-  local render_preview = props.render_preview ---@type dot.ux.searcher.preview.IDraw|nil
-  local render_result = props.render_result ---@type dot.ux.searcher.result.IDraw
+  local render_preview = props.render_preview ---@type dot.module.searcher.preview.IDraw|nil
+  local render_result = props.render_result ---@type dot.module.searcher.result.IDraw
 
-  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnCancel
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnClosed
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnHidden
-  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnRefresh
-  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnPreviewRendered
-  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.ux.searcher.composer.basic.IOnResultRendered
+  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnCancel
+  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnClosed
+  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnDisposed
+  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnFocused
+  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnHidden
+  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnRefresh
+  local on_preview_rendered = props.on_preview_rendered or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnPreviewRendered
+  local on_result_rendered = props.on_result_rendered or ark.fn.noop ---@type dot.module.searcher.composer.basic.IOnResultRendered
 
   local self = setmetatable({}, M)
   self.uuid = uuid
@@ -232,15 +232,15 @@ function M.new(props)
   self._search_pattern_history = search_pattern_history
   self._replace_pattern_history = replace_pattern_history
   self._flag_replace = flag_replace
-  self._on_cancel = on_cancel ---@type dot.ux.searcher.composer.basic.IOnCancel
-  self._on_closed = on_closed ---@type dot.ux.searcher.composer.basic.IOnClosed
-  self._on_disposed = on_disposed ---@type dot.ux.searcher.composer.basic.IOnDisposed
-  self._on_focused = on_focused ---@type dot.ux.searcher.composer.basic.IOnFocused
-  self._on_hidden = on_hidden ---@type dot.ux.searcher.composer.basic.IOnHidden
-  self._on_refresh = on_refresh ---@type dot.ux.searcher.composer.basic.IOnRefresh
+  self._on_cancel = on_cancel ---@type dot.module.searcher.composer.basic.IOnCancel
+  self._on_closed = on_closed ---@type dot.module.searcher.composer.basic.IOnClosed
+  self._on_disposed = on_disposed ---@type dot.module.searcher.composer.basic.IOnDisposed
+  self._on_focused = on_focused ---@type dot.module.searcher.composer.basic.IOnFocused
+  self._on_hidden = on_hidden ---@type dot.module.searcher.composer.basic.IOnHidden
+  self._on_refresh = on_refresh ---@type dot.module.searcher.composer.basic.IOnRefresh
 
-  ---@type dot.ux.searcher.Finder
-  local finder = dot.ux.searcher.Finder.new({
+  ---@type dot.module.searcher.Finder
+  local finder = dot.searcher.Finder.new({
     name = name,
     keymaps = self:__resolve_keymaps_finder__(
       flags,
@@ -251,10 +251,10 @@ function M.new(props)
     title = finder_title,
   })
 
-  ---@type dot.ux.searcher.Finder|nil
+  ---@type dot.module.searcher.Finder|nil
   local replacer = nil
   if replace_pattern ~= nil then
-    replacer = dot.ux.searcher.Finder.new({
+    replacer = dot.searcher.Finder.new({
       name = name .. " (replacer)",
       keymaps = self:__resolve_keymaps_replacer__(
         flags,
@@ -268,8 +268,8 @@ function M.new(props)
     })
   end
 
-  ---@type dot.ux.searcher.Result
-  local result = dot.ux.searcher.Result.new({
+  ---@type dot.module.searcher.Result
+  local result = dot.searcher.Result.new({
     uuid = uuid,
     name = name,
     draw = function(bufnr)
@@ -295,17 +295,17 @@ function M.new(props)
     ),
     flags = flags,
     flags_start_index = flags_start_index,
-    ---@type dot.ux.searcher.result.IOnDrawed
+    ---@type dot.module.searcher.result.IOnDrawed
     on_drawed = function(bufnr)
       self:mark_preview_dirty()
       on_result_rendered(self, bufnr)
     end,
   })
 
-  ---@type dot.ux.searcher.Preview|nil
+  ---@type dot.module.searcher.Preview|nil
   local preview = nil
   if render_preview ~= nil then
-    preview = dot.ux.searcher.Preview.new({
+    preview = dot.searcher.Preview.new({
       uuid = uuid,
       name = name,
       draw = render_preview,
@@ -314,7 +314,7 @@ function M.new(props)
         flags_start_index,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
-      ---@type dot.ux.searcher.preview.IOnDrawed
+      ---@type dot.module.searcher.preview.IOnDrawed
       on_drawed = function(bufnr)
         on_preview_rendered(self, bufnr)
       end,
@@ -372,11 +372,11 @@ function M:dispose()
   self._disposed = true
 
   local fullname = self.fullname ---@type string
-  local finder = self.finder ---@type dot.ux.searcher.Finder
-  local replacer = self.replacer ---@type dot.ux.searcher.Finder|nil
-  local result = self.result ---@type dot.ux.searcher.Result
-  local preview = self.preview ---@type dot.ux.searcher.Preview|nil
-  local on_disposed = self._on_disposed ---@type dot.ux.searcher.composer.basic.IOnDisposed
+  local finder = self.finder ---@type dot.module.searcher.Finder
+  local replacer = self.replacer ---@type dot.module.searcher.Finder|nil
+  local result = self.result ---@type dot.module.searcher.Result
+  local preview = self.preview ---@type dot.module.searcher.Preview|nil
+  local on_disposed = self._on_disposed ---@type dot.module.searcher.composer.basic.IOnDisposed
   local flag_replace_unsub = self._flag_replace_unsub ---@type ark.c.IUnsubscribable|nil
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
@@ -463,14 +463,14 @@ function M:close()
   end)
 end
 
----@param pane                          dot.ux.searcher.composer.basic.PaneEnum|nil
+---@param pane                          dot.module.searcher.composer.basic.PaneEnum|nil
 ---@return nil
 function M:focus(pane)
   self:__health__()
   dot.state.widget.push(self)
 
   local has_new_created = self:__create_wins__()
-  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type dot.ux.searcher.composer.basic.PaneEnum
+  local pane_focused = has_new_created and "finder" or self._pane_focused ---@type dot.module.searcher.composer.basic.PaneEnum
   self:__focus_pane__(pane or pane_focused)
 
   vim.schedule(function()
@@ -546,7 +546,7 @@ function M:get_layout()
   return self:__layout__()
 end
 
----@return dot.ux.searcher.BasicComposer
+---@return dot.module.searcher.BasicComposer
 function M:mark_result_dirty()
   self:__health__()
   self.result:mark_content_dirty()
@@ -556,7 +556,7 @@ function M:mark_result_dirty()
   return self
 end
 
----@return dot.ux.searcher.BasicComposer
+---@return dot.module.searcher.BasicComposer
 function M:mark_result_flags_dirty()
   self:__health__()
   self.result:mark_nvimbar_dirty()
@@ -601,7 +601,7 @@ function M:resize()
     local current_focused_exists = self:__is_pane_valid__(self._pane_focused) ---@type boolean
     if not current_focused_exists then
       -- Try to restore the last focused pane first, fallback to finder
-      local pane_to_focus = "finder" ---@type dot.ux.searcher.composer.basic.PaneEnum
+      local pane_to_focus = "finder" ---@type dot.module.searcher.composer.basic.PaneEnum
       if self:__is_pane_valid__(self._pane_last_focused) then
         pane_to_focus = self._pane_last_focused
       end
@@ -638,7 +638,7 @@ function M:resize()
 end
 
 ---@param lnum                          integer
----@return dot.ux.searcher.BasicComposer
+---@return dot.module.searcher.BasicComposer
 function M:set_result_lnum(lnum)
   self:__health__()
   self.result:set_lnum_current(lnum)
@@ -654,10 +654,10 @@ end
 ---@return integer
 ---@return integer|nil
 function M:__create_wins__()
-  local finder = self.finder ---@type dot.ux.searcher.Finder
-  local replacer = self.replacer ---@type dot.ux.searcher.Finder|nil
-  local result = self.result ---@type dot.ux.searcher.Result
-  local preview = self.preview ---@type dot.ux.searcher.Preview|nil
+  local finder = self.finder ---@type dot.module.searcher.Finder
+  local replacer = self.replacer ---@type dot.module.searcher.Finder|nil
+  local result = self.result ---@type dot.module.searcher.Result
+  local preview = self.preview ---@type dot.module.searcher.Preview|nil
 
   local result_number = self._result_number ---@type boolean
 
@@ -708,7 +708,7 @@ function M:__create_wins__()
   local replacer_border, result_border, preview_border = self:__get_borders__(preview_layout, should_show_replacer) ---@type string[], string[], string[]
   local zindex = dot.win.resolve_zindex() ---@type integer
 
-  ---@type dot.ux.searcher.finder.IWinOpts
+  ---@type dot.module.searcher.finder.IWinOpts
   local finder_winopts = {
     border = self:__get_finder_border__(should_show_replacer, should_show_preview and preview_layout == "right"),
     winhighlight = __highlights__.finder,
@@ -717,7 +717,7 @@ function M:__create_wins__()
   finder_winnr = finder:create_win(finder_winopts, finder_dimension)
 
   if replacer ~= nil and replacer_dimension ~= nil and should_show_replacer then
-    ---@type dot.ux.searcher.finder.IWinOpts
+    ---@type dot.module.searcher.finder.IWinOpts
     local replacer_winopts = {
       border = replacer_border,
       winhighlight = __highlights__.replacer,
@@ -726,7 +726,7 @@ function M:__create_wins__()
     replacer_winnr = replacer:create_win(replacer_winopts, replacer_dimension)
   end
 
-  ---@type dot.ux.searcher.result.IWinOpts
+  ---@type dot.module.searcher.result.IWinOpts
   local result_winopts = {
     border = result_border,
     number = result_number,
@@ -736,7 +736,7 @@ function M:__create_wins__()
   result_winnr = result:create_win(result_winopts, result_dimension)
 
   if preview ~= nil and preview_dimension ~= nil and should_show_preview then
-    ---@type dot.ux.searcher.preview.IWinOpts
+    ---@type dot.module.searcher.preview.IWinOpts
     local preview_winopts = {
       border = preview_border,
       winhighlight = __highlights__.preview,
@@ -751,7 +751,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param pane                          dot.ux.searcher.composer.basic.PaneEnum|nil
+---@param pane                          dot.module.searcher.composer.basic.PaneEnum|nil
 ---@return boolean
 function M:__is_pane_valid__(pane)
   if pane == nil then
@@ -782,7 +782,7 @@ function M:__is_pane_valid__(pane)
 end
 
 ---@protected
----@param pane_focused                  dot.ux.searcher.composer.basic.PaneEnum
+---@param pane_focused                  dot.module.searcher.composer.basic.PaneEnum
 ---@return nil
 function M:__focus_pane__(pane_focused)
   if pane_focused == "finder" then
@@ -819,10 +819,10 @@ end
 ---@protected
 ---@return nil
 function M:__hide__()
-  local finder = self.finder ---@type dot.ux.searcher.Finder
-  local replacer = self.replacer ---@type dot.ux.searcher.Finder|nil
-  local result = self.result ---@type dot.ux.searcher.Result
-  local preview = self.preview ---@type dot.ux.searcher.Preview|nil
+  local finder = self.finder ---@type dot.module.searcher.Finder
+  local replacer = self.replacer ---@type dot.module.searcher.Finder|nil
+  local result = self.result ---@type dot.module.searcher.Result
+  local preview = self.preview ---@type dot.module.searcher.Preview|nil
 
   finder:hide()
   if replacer ~= nil then
@@ -881,7 +881,7 @@ function M:__layout__()
     end
   end
 
-  local finder = self.finder ---@type dot.ux.searcher.Finder
+  local finder = self.finder ---@type dot.module.searcher.Finder
   local linecount = finder.linecount:snapshot() ---@type integer
   finder_height = math.max(1, math.min(5, math.floor(layout_height * 0.3), linecount)) ---@type integer
 
@@ -940,7 +940,7 @@ function M:__layout__()
   return finder_dimension, replacer_dimension, result_dimension, preview_dimension
 end
 
----@param flags                         dot.ux.searcher.result.IFlagItemRaw[]
+---@param flags                         dot.module.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@return ark.t.IKeymap[]
 function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
@@ -1649,7 +1649,7 @@ function M:__resolve_builtin_keymaps_preview__()
       callback = function()
         local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
         if preview_layout == "right" then
-          local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.ux.searcher.composer.basic.PaneEnum
+          local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.module.searcher.composer.basic.PaneEnum
           self:__focus_pane__(pane_focused)
           return
         end
@@ -1669,7 +1669,7 @@ function M:__resolve_builtin_keymaps_preview__()
           return
         end
 
-        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.ux.searcher.composer.basic.PaneEnum
+        local pane_focused = self._pane_last_focused == "result" and "result" or "finder" ---@type dot.module.searcher.composer.basic.PaneEnum
         self:__focus_pane__(pane_focused)
       end,
     },
@@ -1695,7 +1695,7 @@ function M:__resolve_builtin_keymaps_preview__()
   return builtin_keymaps
 end
 
----@param flags                         dot.ux.searcher.result.IFlagItemRaw[]
+---@param flags                         dot.module.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
@@ -1707,7 +1707,7 @@ function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         dot.ux.searcher.result.IFlagItemRaw[]
+---@param flags                         dot.module.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
@@ -1719,7 +1719,7 @@ function M:__resolve_keymaps_replacer__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         dot.ux.searcher.result.IFlagItemRaw[]
+---@param flags                         dot.module.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
@@ -1731,7 +1731,7 @@ function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
   return resolved_keymaps
 end
 
----@param flags                         dot.ux.searcher.result.IFlagItemRaw[]
+---@param flags                         dot.module.searcher.result.IFlagItemRaw[]
 ---@param flags_start_index             0|1
 ---@param keymaps                       ark.t.IKeymap[]
 ---@return ark.t.IKeymap[]
