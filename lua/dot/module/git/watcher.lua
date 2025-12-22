@@ -91,6 +91,26 @@ local function start_watcher(gitdir)
   end
 end
 
+local function init_watcher()
+  if not dot.path.is_git_repo() then
+    return
+  end
+
+  local workspace = dot.path.workspace() ---@type string
+  dot.git.repo.new(workspace, function(r)
+    if r then
+      dot.git.state.o_branch:next(r.abbrev_head)
+      M.update(r.gitdir)
+      dot.git.state.refresh_async()
+    end
+  end)
+end
+
+local function on_git_change()
+  dot.git.buffer.refresh_all()
+  dot.git.state.refresh_async()
+end
+
 function M.dispose()
   stop_watcher()
   on_change_callback = nil
@@ -101,9 +121,18 @@ function M.get_gitdir()
   return current_gitdir
 end
 
----@param callback                   fun()
-function M.setup(callback)
-  on_change_callback = callback
+function M.setup()
+  local augroup = vim.api.nvim_create_augroup("DotModuleGitWatcher", { clear = true }) ---@type integer
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = augroup,
+    callback = function()
+      M.dispose()
+    end,
+  })
+
+  on_change_callback = on_git_change
+  vim.schedule(init_watcher)
 end
 
 ---@param gitdir                     string|nil

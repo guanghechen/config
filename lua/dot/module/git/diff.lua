@@ -476,4 +476,6 @@ function M.compute_hunk_word_diff(hunk)
   return result
 end
 
+function M.setup() end
+
 return M

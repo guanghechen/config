@@ -693,4 +693,49 @@ function M.unstage_hunk(bufnr, range, callback)
   end)
 end
 
+function M.setup()
+  local augroup = vim.api.nvim_create_augroup("DotModuleGitBuffer", { clear = true }) ---@type integer
+
+  ---@type ark.timer.IDisposableCallable
+  local buf_enter_debounced = ark.timer.debounce(function(bufnr)
+    if M.is_dirty(bufnr) then
+      M.refresh(bufnr, true)
+    end
+  end, 50)
+
+  vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+    group = augroup,
+    callback = function(args)
+      M.attach(args.buf)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = augroup,
+    callback = function(args)
+      M.refresh(args.buf, true)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = augroup,
+    callback = function(args)
+      buf_enter_debounced(args.buf)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufDelete", {
+    group = augroup,
+    callback = function(args)
+      M.detach(args.buf)
+    end,
+  })
+
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_is_valid(buf) then
+      M.attach(buf)
+    end
+  end
+end
+
 return M

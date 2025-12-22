@@ -284,4 +284,6 @@ function M.contains_range(bufnr, start_lnum, end_lnum)
     or signs_staged:contains(bufnr, start_lnum, end_lnum)
 end
 
+function M.setup() end
+
 return M

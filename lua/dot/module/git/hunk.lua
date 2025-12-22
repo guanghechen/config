@@ -526,8 +526,24 @@ function M.nav_all(direction)
   nav_impl(direction, true)
 end
 
+---@type dot.module.board.GitHunk|nil
+local hunk_board = nil
+
 function M.preview()
-  dot.git.show_hunk()
+  if hunk_board and hunk_board:isvisible() then
+    hunk_board:close()
+    return
+  end
+
+  if hunk_board then
+    hunk_board:dispose()
+  end
+
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  hunk_board = dot.board.GitHunk.new({ bufnr = bufnr })
+  hunk_board:open()
 end
+
+function M.setup() end
 
 return M

@@ -773,4 +773,6 @@ function M.aggregate(workspace, status_table)
   }
 end
 
+function M.setup() end
+
 return M

@@ -251,4 +251,6 @@ function M.open(opts)
   end)
 end
 
+function M.setup() end
+
 return M

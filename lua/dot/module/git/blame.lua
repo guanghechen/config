@@ -111,126 +111,8 @@ local function parse_blame_output(output)
   return result
 end
 
----@param bufnr                      integer
----@param file                       string
----@param cwd                        string
----@param lnum                       integer|nil
----@param callback                   fun(blame: table<integer, dot.module.git.BlameInfo>|nil)
-function M.run_blame(bufnr, file, cwd, lnum, callback)
-  if running_procs[bufnr] then
-    running_procs[bufnr]:kill()
-    running_procs[bufnr] = nil
-  end
-
-  local args = { "-C", cwd, "blame", "--porcelain" }
-
-  if lnum then
-    vim.list_extend(args, { "-L", string.format("%d,%d", lnum, lnum) })
-  end
-
-  args[#args + 1] = "--"
-  args[#args + 1] = file
-
-  local proc = ark.c.Proc.new({
-    cmd = "git",
-    args = args,
-    timeout = 30000,
-    on_exit = function(p, err)
-      running_procs[bufnr] = nil
-      if err then
-        callback(nil)
-        return
-      end
-      local output = p:out()
-      local result = parse_blame_output(output)
-      callback(result)
-    end,
-  })
-
-  running_procs[bufnr] = proc
-end
-
----@param bufnr                      integer
----@return table<integer, dot.module.git.BlameInfo>|nil
-function M.get_cache(bufnr)
-  return cache[bufnr]
-end
-
----@param bufnr                      integer
----@param blame                      table<integer, dot.module.git.BlameInfo>
-function M.set_cache(bufnr, blame)
-  cache[bufnr] = blame
-end
-
----@param bufnr                      integer
-function M.clear_cache(bufnr)
-  cache[bufnr] = nil
-end
-
----@param bufnr                      integer
----@param lnum                       integer
----@return dot.module.git.BlameInfo|nil
-function M.get_blame_at(bufnr, lnum)
-  local buf_cache = cache[bufnr]
-  if not buf_cache then
-    return nil
-  end
-  return buf_cache[lnum]
-end
-
----@param info                       dot.module.git.BlameInfo|nil
----@return string
-function M.format_blame(info)
-  if not info then
-    return ""
-  end
-
-  if info.sha:match("^0+$") then
-    return "Not committed yet"
-  end
-
-  local author = info.author
-  if author == "Not Committed Yet" then
-    return "Not committed yet"
-  end
-
-  local time = info.author_time
-  local time_str = ""
-  if time > 0 then
-    local diff = os.time() - time
-    if diff < 60 then
-      time_str = "just now"
-    elseif diff < 3600 then
-      time_str = string.format("%d minutes ago", math.floor(diff / 60))
-    elseif diff < 86400 then
-      time_str = string.format("%d hours ago", math.floor(diff / 3600))
-    elseif diff < 604800 then
-      time_str = string.format("%d days ago", math.floor(diff / 86400))
-    elseif diff < 2592000 then
-      time_str = string.format("%d weeks ago", math.floor(diff / 604800))
-    elseif diff < 31536000 then
-      time_str = string.format("%d months ago", math.floor(diff / 2592000))
-    else
-      time_str = string.format("%d years ago", math.floor(diff / 31536000))
-    end
-  end
-
-  local summary = info.summary
-  if #summary > 50 then
-    summary = summary:sub(1, 47) .. "..."
-  end
-
-  return string.format("%s, %s - %s", author, time_str, summary)
-end
-
----@param bufnr                      integer
-function M.cancel(bufnr)
-  if running_procs[bufnr] then
-    running_procs[bufnr]:kill()
-    running_procs[bufnr] = nil
-  end
-end
-
+----------------------------------------------------------------------------------------------------
+-- Inline blame
 ----------------------------------------------------------------------------------------------------
 
 ---@class dot.module.git.blame.IInlineConfig
@@ -251,6 +133,9 @@ local inline_config = {
 
 ---@type integer
 local inline_ns = vim.api.nvim_create_namespace(NS_INLINE)
+
+---@type integer
+local inline_augroup = vim.api.nvim_create_augroup("DotModuleGitInlineBlame", { clear = true })
 
 ---@type table<integer, uv.uv_timer_t>
 local inline_timers = {}
@@ -325,6 +210,45 @@ local function inline_set_extmark(bufnr, lnum, info)
 end
 
 ---@param bufnr                      integer
+---@param file                       string
+---@param cwd                        string
+---@param lnum                       integer|nil
+---@param callback                   fun(blame: table<integer, dot.module.git.BlameInfo>|nil)
+local function run_blame(bufnr, file, cwd, lnum, callback)
+  if running_procs[bufnr] then
+    running_procs[bufnr]:kill()
+    running_procs[bufnr] = nil
+  end
+
+  local args = { "-C", cwd, "blame", "--porcelain" }
+
+  if lnum then
+    vim.list_extend(args, { "-L", string.format("%d,%d", lnum, lnum) })
+  end
+
+  args[#args + 1] = "--"
+  args[#args + 1] = file
+
+  local proc = ark.c.Proc.new({
+    cmd = "git",
+    args = args,
+    timeout = 30000,
+    on_exit = function(p, err)
+      running_procs[bufnr] = nil
+      if err then
+        callback(nil)
+        return
+      end
+      local output = p:out()
+      local result = parse_blame_output(output)
+      callback(result)
+    end,
+  })
+
+  running_procs[bufnr] = proc
+end
+
+---@param bufnr                      integer
 local function inline_update(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
@@ -359,7 +283,7 @@ local function inline_update(bufnr)
   local file = buf_cache.file ---@type string
   local cwd = buf_cache.repo.toplevel ---@type string
 
-  M.run_blame(bufnr, file, cwd, lnum, function(blame)
+  run_blame(bufnr, file, cwd, lnum, function(blame)
     vim.schedule(function()
       inline_running[bufnr] = nil
 
@@ -406,9 +330,6 @@ local function inline_schedule_update(bufnr)
   end)
 end
 
----@type integer
-local inline_augroup = vim.api.nvim_create_augroup("DotModuleGitInlineBlame", { clear = true })
-
 local function inline_setup_autocmds()
   vim.api.nvim_clear_autocmds({ group = inline_augroup })
 
@@ -437,49 +358,23 @@ local function inline_setup_autocmds()
       local bufnr = args.buf
       inline_reset(bufnr)
       inline_cancel_timer(bufnr)
-      M.cancel(bufnr)
+      if running_procs[bufnr] then
+        running_procs[bufnr]:kill()
+        running_procs[bufnr] = nil
+      end
     end,
   })
 end
 
-inline_setup_autocmds()
-
----@return boolean
-function M.inline_is_enabled()
-  return inline_config.enabled
-end
-
-function M.inline_enable()
-  inline_config.enabled = true
-  inline_setup_autocmds()
-end
-
-function M.inline_disable()
-  inline_config.enabled = false
-  inline_setup_autocmds()
-end
-
-function M.inline_toggle()
-  inline_config.enabled = not inline_config.enabled
-  inline_setup_autocmds()
-end
-
----@param opts                       dot.module.git.blame.IInlineConfig|nil
-function M.inline_configure(opts)
-  if opts then
-    inline_config = vim.tbl_deep_extend("force", inline_config, opts)
-  end
-end
-
----@return integer
-function M.inline_get_namespace()
-  return inline_ns
-end
-
+----------------------------------------------------------------------------------------------------
+-- Buffer blame
 ----------------------------------------------------------------------------------------------------
 
 ---@type integer
 local buffer_ns = vim.api.nvim_create_namespace(NS_BUFFER)
+
+---@type integer
+local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { clear = true })
 
 ---@class dot.module.git.blame.IBufferConfig
 ---@field public formatter           string
@@ -569,6 +464,42 @@ local function buffer_update_current_line(bufnr)
   buffer_render(bufnr, blame, lnum)
 end
 
+---@type ark.timer.IDisposableCallable
+local buffer_update_debounced = ark.timer.debounce(function(bufnr)
+  buffer_update_current_line(bufnr)
+end, 50)
+
+local function buffer_setup_autocmds()
+  vim.api.nvim_clear_autocmds({ group = buffer_augroup })
+
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    group = buffer_augroup,
+    callback = function(args)
+      buffer_update_debounced(args.buf)
+    end,
+  })
+end
+
+---@param bufnr                      integer|nil
+---@return boolean
+function M.buffer_is_visible(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  return buffer_blame_enabled[bufnr] == true
+end
+
+---@return integer
+function M.buffer_get_namespace()
+  return buffer_ns
+end
+
+---@param bufnr                      integer|nil
+function M.buffer_hide(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  buffer_blame_enabled[bufnr] = nil
+  buffer_current_lnum[bufnr] = nil
+  buffer_clear(bufnr)
+end
+
 ---@param bufnr                      integer|nil
 function M.buffer_show(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -638,14 +569,6 @@ function M.buffer_show(bufnr)
 end
 
 ---@param bufnr                      integer|nil
-function M.buffer_hide(bufnr)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  buffer_blame_enabled[bufnr] = nil
-  buffer_current_lnum[bufnr] = nil
-  buffer_clear(bufnr)
-end
-
----@param bufnr                      integer|nil
 function M.buffer_toggle(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   if buffer_blame_enabled[bufnr] then
@@ -655,31 +578,122 @@ function M.buffer_toggle(bufnr)
   end
 end
 
----@param bufnr                      integer|nil
----@return boolean
-function M.buffer_is_visible(bufnr)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  return buffer_blame_enabled[bufnr] == true
+---@param bufnr                      integer
+function M.cancel(bufnr)
+  if running_procs[bufnr] then
+    running_procs[bufnr]:kill()
+    running_procs[bufnr] = nil
+  end
+end
+
+---@param bufnr                      integer
+function M.clear_cache(bufnr)
+  cache[bufnr] = nil
+end
+
+---@param info                       dot.module.git.BlameInfo|nil
+---@return string
+function M.format_blame(info)
+  if not info then
+    return ""
+  end
+
+  if info.sha:match("^0+$") then
+    return "Not committed yet"
+  end
+
+  local author = info.author
+  if author == "Not Committed Yet" then
+    return "Not committed yet"
+  end
+
+  local time = info.author_time
+  local time_str = ""
+  if time > 0 then
+    local diff = os.time() - time
+    if diff < 60 then
+      time_str = "just now"
+    elseif diff < 3600 then
+      time_str = string.format("%d minutes ago", math.floor(diff / 60))
+    elseif diff < 86400 then
+      time_str = string.format("%d hours ago", math.floor(diff / 3600))
+    elseif diff < 604800 then
+      time_str = string.format("%d days ago", math.floor(diff / 86400))
+    elseif diff < 2592000 then
+      time_str = string.format("%d weeks ago", math.floor(diff / 604800))
+    elseif diff < 31536000 then
+      time_str = string.format("%d months ago", math.floor(diff / 2592000))
+    else
+      time_str = string.format("%d years ago", math.floor(diff / 31536000))
+    end
+  end
+
+  local summary = info.summary
+  if #summary > 50 then
+    summary = summary:sub(1, 47) .. "..."
+  end
+
+  return string.format("%s, %s - %s", author, time_str, summary)
+end
+
+---@param bufnr                      integer
+---@param lnum                       integer
+---@return dot.module.git.BlameInfo|nil
+function M.get_blame_at(bufnr, lnum)
+  local buf_cache = cache[bufnr]
+  if not buf_cache then
+    return nil
+  end
+  return buf_cache[lnum]
+end
+
+---@param bufnr                      integer
+---@return table<integer, dot.module.git.BlameInfo>|nil
+function M.get_cache(bufnr)
+  return cache[bufnr]
+end
+
+---@param opts                       dot.module.git.blame.IInlineConfig|nil
+function M.inline_configure(opts)
+  if opts then
+    inline_config = vim.tbl_deep_extend("force", inline_config, opts)
+  end
+end
+
+function M.inline_disable()
+  inline_config.enabled = false
+  inline_setup_autocmds()
+end
+
+function M.inline_enable()
+  inline_config.enabled = true
+  inline_setup_autocmds()
 end
 
 ---@return integer
-function M.buffer_get_namespace()
-  return buffer_ns
+function M.inline_get_namespace()
+  return inline_ns
 end
 
----@type ark.timer.IDisposableCallable
-local buffer_update_debounced = ark.timer.debounce(function(bufnr)
-  buffer_update_current_line(bufnr)
-end, 50)
+---@return boolean
+function M.inline_is_enabled()
+  return inline_config.enabled
+end
 
----@type integer
-local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { clear = true })
+function M.inline_toggle()
+  inline_config.enabled = not inline_config.enabled
+  inline_setup_autocmds()
+end
 
-vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-  group = buffer_augroup,
-  callback = function(args)
-    buffer_update_debounced(args.buf)
-  end,
-})
+---@param bufnr                      integer
+---@param blame                      table<integer, dot.module.git.BlameInfo>
+function M.set_cache(bufnr, blame)
+  cache[bufnr] = blame
+end
+
+function M.setup()
+  inline_setup_autocmds()
+  buffer_setup_autocmds()
+end
 
 return M

@@ -32,11 +32,6 @@ local state_cache = {
 ---@type boolean
 local refreshing = false
 
-local function on_git_change()
-  dot.git.buffer.refresh_all()
-  M.refresh_async()
-end
-
 ---@return dot.module.git.state.ICache
 function M.cache()
   if not state_cache.initialized then
@@ -184,6 +179,6 @@ function M.status_table()
   return state_cache.status_table
 end
 
-dot.git.watcher.setup(on_git_change)
+function M.setup() end
 
 return M
