@@ -153,7 +153,6 @@ local picker = dot.picker.ListComposer.new({
     end
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    composer._retriever:attach(bufnr, uuids)
 
     local nsnr_content = dot.var.nsnr.picker_result
     local nsnr_matches = dot.var.nsnr.picker_matches

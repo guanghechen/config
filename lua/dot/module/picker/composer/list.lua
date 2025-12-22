@@ -94,8 +94,10 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---
 ---@field protected _disposed           boolean
 ---@field protected _composer           dot.module.picker.BasicComposer
----@field protected _retriever          dot.ux.retriever.ListRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler
+---
+---@field protected _lnum2uuid          string[]
+---@field protected _uuid2lnum          table<string, integer>
 ---
 ---@field protected _autosort           boolean
 ---@field protected _items              dot.module.picker.composer.list.IItem[]
@@ -188,16 +190,11 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type dot.ux.retriever.ListRetriever
-  local retriever = dot.ux.retriever.ListRetriever.new({
-    name = fullname,
-  })
-
   ---@return string|nil
   ---@return integer
   local function retrieve()
     local lnum = self._composer:get_result_lnum() ---@type integer
-    local uuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+    local uuid = self._lnum2uuid[lnum] ---@type string|nil
     return uuid, lnum
   end
 
@@ -334,12 +331,31 @@ function M.new(props)
     render_result = function(bufnr)
       local data = render_result(self, bufnr, self._itemmap, self._matches)
       local uuids = data.uuids ---@type string[]
-      retriever:attach(bufnr, uuids)
+
+      local lnum2uuid = self._lnum2uuid ---@type string[]
+      local uuid2lnum = self._uuid2lnum ---@type table<string, integer>
+
+      local N1 = #lnum2uuid ---@type integer
+      for lnum = 1, N1, 1 do
+        local uuid = lnum2uuid[lnum] ---@type string
+        uuid2lnum[uuid] = nil
+      end
+
+      local N2 = #uuids ---@type integer
+      for lnum = 1, N2, 1 do
+        local uuid = uuids[lnum] ---@type string
+        lnum2uuid[lnum] = uuid
+        uuid2lnum[uuid] = lnum
+      end
+
+      if N1 > N2 then
+        ark.table.truncate_inline(lnum2uuid, N2)
+      end
 
       local uuid_current = self._uuid_current ---@type string|nil
       local uuid_present = self._uuid_present ---@type string|nil
-      local lnum_current = uuid_current and retriever:retrieve_lnum(uuid_current) or nil ---@type integer|nil
-      local lnum_present = uuid_present and retriever:retrieve_lnum(uuid_present) or nil ---@type integer|nil
+      local lnum_current = uuid_current and uuid2lnum[uuid_current] or nil ---@type integer|nil
+      local lnum_present = uuid_present and uuid2lnum[uuid_present] or nil ---@type integer|nil
       return { lnum_current = lnum_current, lnum_present = lnum_present }
     end,
 
@@ -385,8 +401,10 @@ function M.new(props)
 
   self._disposed = false
   self._composer = composer
-  self._retriever = retriever
   self._scheduler_match = scheduler_match
+
+  self._lnum2uuid = {}
+  self._uuid2lnum = {}
 
   self._autosort = autosort
   self._items = {}
@@ -409,7 +427,7 @@ function M.new(props)
   end)
   observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
-    local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
+    local uuid = self._lnum2uuid[lnum] ---@type string|nil
     if uuid ~= nil then
       self._uuid_current = uuid
     end
@@ -429,7 +447,6 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local on_disposed = self._on_disposed ---@type dot.module.picker.composer.list.IOnDisposed
   local composer = self._composer
-  local retriever = self._retriever ---@type dot.ux.retriever.ListRetriever
   local scheduler_match = self._scheduler_match
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
@@ -449,10 +466,9 @@ function M:dispose()
   vim.schedule(function()
     local ok1, error1 = pcall(scheduler_match.dispose, scheduler_match)
     local ok2, error2 = pcall(composer.dispose, composer)
-    local ok3, error3 = pcall(retriever.dispose, retriever)
-    local ok4, error4 = pcall(on_disposed)
+    local ok3, error3 = pcall(on_disposed)
 
-    if not (ok1 and ok2 and ok3 and ok4) then
+    if not (ok1 and ok2 and ok3) then
       ark.reporter.error({
         from = fullname,
         subject = "dispose",
@@ -461,14 +477,11 @@ function M:dispose()
           error1 = not ok1 and error1 or nil,
           error2 = not ok2 and error2 or nil,
           error3 = not ok3 and error3 or nil,
-          error4 = not ok4 and error4 or nil,
           error_observers = not ok_unsubs and error_unsubs or nil,
         },
       })
     end
   end)
-
-  self._retriever:dispose()
 
   self.finder = nil
   self.result = nil
@@ -479,8 +492,10 @@ function M:dispose()
   self.flag_case_sensitive = nil
 
   self._composer = nil
-  self._retriever = nil
   self._scheduler_match = nil
+
+  self._lnum2uuid = nil
+  self._uuid2lnum = nil
 
   self._autosort = nil
   self._items = nil
@@ -532,7 +547,7 @@ end
 ---@return dot.module.picker.composer.list.IItem|nil
 function M:retrieve(lnum)
   self:__health__()
-  local uuid = self._retriever:retrieve_uuid(lnum) ---@type string|nil
+  local uuid = self._lnum2uuid[lnum] ---@type string|nil
   local item = uuid and self._itemmap[uuid] or nil ---@type dot.module.picker.composer.list.IItem|nil
   return item
 end
@@ -676,7 +691,7 @@ function M:__refresh_uuid_current__()
     return
   end
 
-  local lnum = self._retriever:retrieve_lnum(uuid) ---@type integer|nil
+  local lnum = self._uuid2lnum[uuid] ---@type integer|nil
   if lnum then
     self._composer.result:set_lnum_current(lnum)
   end
@@ -690,7 +705,7 @@ function M:__refresh_uuid_present__()
     return
   end
 
-  local lnum = self._retriever:retrieve_lnum(uuid) ---@type integer|nil
+  local lnum = self._uuid2lnum[uuid] ---@type integer|nil
   if lnum then
     self._composer.result:set_lnum_present(lnum)
   end

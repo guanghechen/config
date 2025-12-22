@@ -179,7 +179,7 @@ local picker = dot.picker.ListComposer.new({
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
 
-  render_result = function(composer, bufnr, itemmap, matches)
+  render_result = function(_, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.keymaps.IItem>
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
@@ -190,7 +190,6 @@ local picker = dot.picker.ListComposer.new({
     end
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    composer._retriever:attach(bufnr, uuids)
 
     local nsnr_content = dot.var.nsnr.picker_result
     local nsnr_matches = dot.var.nsnr.picker_matches

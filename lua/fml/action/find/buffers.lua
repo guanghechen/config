@@ -166,7 +166,7 @@ picker = dot.picker.ListComposer.new({
   },
   flags_start_index = 0,
 
-  render_result = function(composer, bufnr, itemmap, matches)
+  render_result = function(_, bufnr, itemmap, matches)
     ---@cast itemmap                    table<string, fml.action.find.buffers.IItem>
     ---
     local lines = {} ---@type string[]
@@ -178,7 +178,6 @@ picker = dot.picker.ListComposer.new({
     end
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    composer._retriever:attach(bufnr, uuids)
 
     local nsnr_content = dot.var.nsnr.picker_result
     local nsnr_matches = dot.var.nsnr.picker_matches
@@ -211,8 +210,7 @@ picker = dot.picker.ListComposer.new({
       desc = "buffer: close",
       callback = function()
         local lnum = picker._composer:get_result_lnum() ---@type integer
-        local uuid = picker._retriever:retrieve_uuid(lnum) ---@type string|nil
-        local item = uuid and picker._itemmap[uuid] or nil ---@type dot.module.picker.composer.list.IItem|nil
+        local item = picker:retrieve(lnum) ---@type dot.module.picker.composer.list.IItem|nil
         ---@cast item                   fml.action.find.buffers.IItem|nil
         if item == nil then
           return

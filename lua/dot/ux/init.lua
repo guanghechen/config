@@ -1,6 +1,5 @@
 ---@class dot.ux.__mods
 local __mods = {
-  retriever = "dot.ux.retriever",
   view = "dot.ux.view",
 
   Select = "dot.ux.select",
@@ -10,7 +9,6 @@ local __mods = {
 
 ---@class dot.ux
 ---@field public __mods                 dot.ux.__mods
----@field public retriever              dot.ux.retriever
 ---@field public view                   dot.ux.view
 ---
 ---@field public Select                 dot.ux.Select
