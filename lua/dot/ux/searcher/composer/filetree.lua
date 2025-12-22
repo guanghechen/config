@@ -191,7 +191,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   ---@type dot.Filetree
-  local filetree = dot.Filetree.new({ name = fullname })
+  local filetree = dot.tree.Filetree.new({ name = fullname })
 
   ---@type dot.ux.searcher.FiletreeView
   local treeview = dot.ux.searcher.FiletreeView.new({
@@ -1807,8 +1807,8 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
 
-  local uuid_root = dot.Filetree.uuid(rootpath) ---@type string
-  local uuid_cwd = dot.Filetree.uuid(cwd) ---@type string
+  local uuid_root = dot.tree.Filetree.uuid(rootpath) ---@type string
+  local uuid_cwd = dot.tree.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 

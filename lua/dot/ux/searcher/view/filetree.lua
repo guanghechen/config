@@ -283,7 +283,7 @@ function M:search(params)
   for _, filematch in ipairs(results.items) do
     local relpath = filematch.p or "" ---@type string
     local filepath = resolve_filepath(relpath) ---@type string
-    local uuid = dot.Filetree.uuid(filepath) ---@type string
+    local uuid = dot.tree.Filetree.uuid(filepath) ---@type string
 
     filematch_map[uuid] = {
       filepath = filepath,

@@ -89,7 +89,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function refresh(picker, rootpath)
-  local rootuuid = dot.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = dot.tree.Filetree.uuid(rootpath) ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -126,7 +126,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function attach(picker, rootpath)
-  local rootuuid = dot.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = dot.tree.Filetree.uuid(rootpath) ---@type string
   if picker:isexistent(rootuuid) then
     picker:attach(rootuuid)
   else

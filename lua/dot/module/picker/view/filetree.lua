@@ -533,7 +533,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
             filepath = cwd .. ark.env.PATH_SEP .. filepath ---@type string
           end
 
-          local fileuuid = dot.Filetree.uuid(filepath) ---@type string
+          local fileuuid = dot.tree.Filetree.uuid(filepath) ---@type string
           local filenode = nodemap[fileuuid] ---@type dot.t.IFiletreeNode|nil
           local nodestate = statemap[fileuuid]
 

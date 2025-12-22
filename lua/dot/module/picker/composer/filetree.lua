@@ -182,7 +182,7 @@ function M.new(props)
   local self = setmetatable({}, M)
 
   ---@type dot.Filetree
-  local filetree = dot.Filetree.new({ name = fullname })
+  local filetree = dot.tree.Filetree.new({ name = fullname })
 
   ---@type dot.module.picker.FiletreeView
   local treeview = dot.picker.FiletreeView.new({
@@ -414,7 +414,7 @@ function M.new(props)
           vim.fn.writefile({}, filepath)
           treeview:insert_filepath(filepath, false)
 
-          local uuid = dot.Filetree.uuid(filepath)
+          local uuid = dot.tree.Filetree.uuid(filepath)
           table.insert(self._uuids_file, uuid)
           table.insert(self._uuids_order, uuid)
         end
@@ -1762,7 +1762,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
-  local uuid_cwd = dot.Filetree.uuid(cwd) ---@type string
+  local uuid_cwd = dot.tree.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 
@@ -2181,8 +2181,8 @@ end
 ---@param isdir                         boolean
 ---@return nil
 function M:__update_tree_after_rename__(from, to, isdir)
-  local from_nodeuuid = dot.Filetree.uuid(from) ---@type string
-  local to_nodeuuid = dot.Filetree.uuid(to) ---@type string
+  local from_nodeuuid = dot.tree.Filetree.uuid(from) ---@type string
+  local to_nodeuuid = dot.tree.Filetree.uuid(to) ---@type string
 
   local filepaths = {} ---@type string[]
 

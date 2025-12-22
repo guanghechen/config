@@ -1,4 +1,4 @@
-local __module_name__ = "dot.tree" ---@type string
+local __module_name__ = "dot.module.tree.tree" ---@type string
 
 ---@alias dot.t.ITreeTraverseConditionalEnum
 ---| "badroot"  -- Don't handle current node and its descendants

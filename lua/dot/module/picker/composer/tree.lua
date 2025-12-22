@@ -167,7 +167,7 @@ function M.new(props)
   local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnRefresh
 
-  local tree = dot.Tree.new({
+  local tree = dot.tree.Tree.new({
     name = fullname,
     node_sorter = node_sorter,
   })

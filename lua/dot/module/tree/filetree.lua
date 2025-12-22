@@ -1,4 +1,4 @@
-local __module_name__ = "dot.filetree" ---@type string
+local __module_name__ = "dot.module.tree.filetree" ---@type string
 
 ---@alias dot.t.IFiletreeTraverseConditional
 ---| fun(ctx: dot.t.IFiletreeTraverseContext, node: dot.t.IFiletreeNode, cur: integer): dot.t.ITreeTraverseConditionalEnum
@@ -105,7 +105,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@field protected _nodemap            table<string, dot.t.ITreeNode>
 local M = {}
 M.__index = M
-setmetatable(M, dot.Tree)
+setmetatable(M, dot.tree.Tree)
 
 ---@param filepath                      string
 ---@return boolean
@@ -204,7 +204,7 @@ function M.new(props)
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
   ---@type dot.Tree
-  local tree = dot.Tree.new({
+  local tree = dot.tree.Tree.new({
     name = name,
     fullname = fullname,
     rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),

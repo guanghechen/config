@@ -128,7 +128,7 @@ local function refresh(force)
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
     ---@cast severity                 fml.action.find.diagnostics.SeverityEnum
 
-    local leafuuid = dot.Filetree.uuid(filepath) ---@type string
+    local leafuuid = dot.tree.Filetree.uuid(filepath) ---@type string
     local leafnodestate = statemap[leafuuid] ---@type dot.module.picker.view.filetree.INodeState|nil
     if leafnodestate == nil then
       goto continue

@@ -257,10 +257,9 @@ local __mods = {
   board = "dot.module.board",
   git = "dot.module.git",
   picker = "dot.module.picker",
+  tree = "dot.module.tree",
 
-  Filetree = "dot.filetree",
   G = "dot.G",
-  Tree = "dot.tree",
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
@@ -286,9 +285,8 @@ local __mods = {
 ---@field public board                  dot.module.board
 ---@field public git                    dot.module.git
 ---@field public picker                 dot.module.picker
+---@field public tree                   dot.module.tree
 ---
----@field public Filetree               dot.Filetree
----@field public Tree                   dot.Tree
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public dict                   dot.dict
