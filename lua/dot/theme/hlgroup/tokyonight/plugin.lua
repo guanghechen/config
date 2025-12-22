@@ -10,7 +10,7 @@ function M.gen_hlgroup_map(context)
   local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
-  local treesitter_context_bg = t and c.none or cs.mix(c.bg_dark, c.blue1, 70) ---@type string
+  local treesitter_context_bg = t and c.none or c.bg_highlight ---@type string
   local lazy_badge_fg = u.bg1 ---@type string
   local lazy_badge_bg = u.pink ---@type string
 

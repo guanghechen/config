@@ -20,7 +20,7 @@ function M.default_gen_hlgroup_map(context)
 
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg0, c.bg2, 75) ---@type string
-  local treesitter_context_bg = t and c.none or cs.mix(c.bg0, c.brightBlue, 65) ---@type string
+  local treesitter_context_bg = t and c.none or c.bg2 ---@type string
   local lazy_badge_fg = c.bg1 ---@type string
   local lazy_badge_bg = c.pink ---@type string
 
