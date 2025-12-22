@@ -1,12 +1,15 @@
 debug/
 file-history/
 plan/
+plans/
 plugins/
 projects/
 shell-snapshots/
 statsig/
+telemetry/
 todos/
 
 .claude.json*
 *.local.json
 history.jsonl
+stats-cache.json
