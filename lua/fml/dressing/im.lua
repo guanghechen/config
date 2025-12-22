@@ -8,7 +8,7 @@ if not im.get_input_method or not im.set_input_method then
 end
 
 local augroup = ark.nvim.augroup("auto_toggle_im")
-ark.timer.set_timeout(function()
+ark.timer.delay(function()
   local previous_mode = "n" ---@type ark.e.VimMode
   local previous_input_method = nil ---@type dot.module.im.InputMethod|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {

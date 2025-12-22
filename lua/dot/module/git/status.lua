@@ -253,36 +253,6 @@ function M.codes_to_display(codes)
   return collect_display_from_bits(bits, codes)
 end
 
----@param status                     string
----@return string
-function M.extract_parent_status(status)
-  if type(status) ~= "string" or #status == 0 then
-    return status
-  end
-
-  if status == "AA" or status == "DD" or status:match("U") then
-    return "U"
-  elseif status:match("M") then
-    return "M"
-  elseif status:match("[ACR]") then
-    return "A"
-  elseif status:match("!$") then
-    return "!"
-  elseif status:match("?$") then
-    return "?"
-  end
-
-  local len = #status
-  while len > 0 do
-    local char = string.sub(status, len, len)
-    if char ~= " " then
-      return char
-    end
-    len = len - 1
-  end
-  return status
-end
-
 ---@return table<string, table<string, boolean>>
 local function create_status_groups()
   local groups = {} ---@type table<string, table<string, boolean>>
@@ -429,6 +399,7 @@ end
 
 ---@param opts                       dot.module.git.status.ICollectOpts|nil
 ---@param callback                   fun(workspace: string, status_map: table<string, dot.module.git.StatusEntry>, status_groups: table<string, table<string, boolean>>)
+---@return fun()                     cancel_fn
 function M.collect_async(opts, callback)
   local workspace = opts and opts.workspace or dot.path.workspace()
   if type(workspace) ~= "string" or #workspace == 0 then
@@ -437,7 +408,7 @@ function M.collect_async(opts, callback)
   workspace = dot.path.normalize(workspace)
   if not dot.path.is_git_repo() then
     callback(workspace, {}, create_status_groups())
-    return
+    return function() end
   end
 
   local base = (opts and opts.base) or "HEAD"
@@ -446,34 +417,72 @@ function M.collect_async(opts, callback)
   local status_map = {} ---@type table<string, dot.module.git.StatusEntry>
   local status_groups = create_status_groups()
 
+  local pending = include_untracked and 3 or 2 ---@type integer
+  local cancelled = false                  ---@type boolean
+  local cancel_fns = {}                    ---@type fun()[]
+
   local function finalize_all()
-    for _, entry in pairs(status_map) do
-      finalize_entry(entry)
-      local categories = entry.categories
-      if type(categories) == "table" then
-        for category, enabled in pairs(categories) do
-          if enabled then
-            local bucket = status_groups[category]
-            if bucket == nil then
-              bucket = {}
-              status_groups[category] = bucket
+    if not cancelled then
+      for _, entry in pairs(status_map) do
+        finalize_entry(entry)
+        local categories = entry.categories
+        if type(categories) == "table" then
+          for category, enabled in pairs(categories) do
+            if enabled then
+              local bucket = status_groups[category]
+              if bucket == nil then
+                bucket = {}
+                status_groups[category] = bucket
+              end
+              bucket[entry.path] = true
             end
-            bucket[entry.path] = true
           end
         end
       end
+      callback(workspace, status_map, status_groups)
     end
-    callback(workspace, status_map, status_groups)
   end
 
-  local function fetch_untracked()
-    if not include_untracked then
+  local function maybe_finalize()
+    pending = pending - 1
+    if pending == 0 then
       finalize_all()
-      return
     end
+  end
 
-    dot.git.cmd.run_async({ "ls-files", "--exclude-standard", "--others" }, { cwd = workspace }, function(lines, code)
-      if code == 0 then
+  local cancel_fn1 = dot.git.cmd.run_async({ "diff", "--staged", "--name-status", base, "--" }, { cwd = workspace }, function(lines, code)
+    if not cancelled and code == 0 then
+      for _, line in ipairs(lines) do
+        local status, relative = parse_name_status_line(line)
+        if status ~= nil and relative ~= nil then
+          local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+          local entry = ensure_entry(status_map, absolute, relative)
+          apply_status_code(entry, "staged", status)
+        end
+      end
+    end
+    maybe_finalize()
+  end)
+  cancel_fns[#cancel_fns + 1] = cancel_fn1
+
+  local cancel_fn2 = dot.git.cmd.run_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
+    if not cancelled and code == 0 then
+      for _, line in ipairs(lines) do
+        local status, relative = parse_name_status_line(line)
+        if status ~= nil and relative ~= nil then
+          local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+          local entry = ensure_entry(status_map, absolute, relative)
+          apply_status_code(entry, "unstaged", status)
+        end
+      end
+    end
+    maybe_finalize()
+  end)
+  cancel_fns[#cancel_fns + 1] = cancel_fn2
+
+  if include_untracked then
+    local cancel_fn3 = dot.git.cmd.run_async({ "ls-files", "--exclude-standard", "--others" }, { cwd = workspace }, function(lines, code)
+      if not cancelled and code == 0 then
         for _, line in ipairs(lines) do
           if type(line) == "string" and #line > 0 then
             local relative = line:gsub('^"', ""):gsub('"$', "")
@@ -491,39 +500,17 @@ function M.collect_async(opts, callback)
           end
         end
       end
-      finalize_all()
+      maybe_finalize()
     end)
+    cancel_fns[#cancel_fns + 1] = cancel_fn3
   end
 
-  local function fetch_unstaged()
-    dot.git.cmd.run_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
-      if code == 0 then
-        for _, line in ipairs(lines) do
-          local status, relative = parse_name_status_line(line)
-          if status ~= nil and relative ~= nil then
-            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
-            local entry = ensure_entry(status_map, absolute, relative)
-            apply_status_code(entry, "unstaged", status)
-          end
-        end
-      end
-      fetch_untracked()
-    end)
-  end
-
-  dot.git.cmd.run_async({ "diff", "--staged", "--name-status", base, "--" }, { cwd = workspace }, function(lines, code)
-    if code == 0 then
-      for _, line in ipairs(lines) do
-        local status, relative = parse_name_status_line(line)
-        if status ~= nil and relative ~= nil then
-          local absolute = dot.path.normalize(dot.path.join(workspace, relative))
-          local entry = ensure_entry(status_map, absolute, relative)
-          apply_status_code(entry, "staged", status)
-        end
-      end
+  return function()
+    cancelled = true
+    for _, cancel_fn in ipairs(cancel_fns) do
+      cancel_fn()
     end
-    fetch_unstaged()
-  end)
+  end
 end
 
 ---@param stage_state                dot.module.git.StageState
@@ -590,27 +577,24 @@ function M.resolve(filepath, filetype)
 
   local normalized_filepath = dot.path.normalize(filepath)
   local kind = filetype or "file"
-  local state_cache = dot.git.state.cache()
+  local aggregated = dot.git.state.aggregated()
 
   if kind == "directory" then
-    local display = state_cache.dir_display[normalized_filepath]
-    if display == nil or #display < 1 then
+    local dir_info = M.compute_dir_status(aggregated, normalized_filepath)
+    if not dir_info or not dir_info.display or #dir_info.display < 1 then
       return nil, nil
     end
-    local summary = state_cache.dir_summary[normalized_filepath]
-    local stage_state = state_cache.dir_stage[normalized_filepath]
-    local codes = state_cache.dir_codes[normalized_filepath]
-    local highlight = M.resolve_highlight(stage_state, codes, summary, display, nil)
-    return display, highlight
+    local highlight = M.resolve_highlight(dir_info.stage, dir_info.codes, dir_info.summary, dir_info.display, nil)
+    return dir_info.display, highlight
   end
 
-  local display = state_cache.file_display[normalized_filepath]
+  local display = aggregated.file_display[normalized_filepath]
   if display == nil or #display < 1 then
     return nil, nil
   end
-  local summary = state_cache.file_summary[normalized_filepath]
-  local stage_state = state_cache.file_stage[normalized_filepath]
-  local entry = state_cache.status_table[normalized_filepath]
+  local summary = aggregated.file_summary[normalized_filepath]
+  local stage_state = aggregated.file_stage[normalized_filepath]
+  local entry = aggregated.status_table[normalized_filepath]
   local codes = entry and entry.codes or nil
   local categories = entry and entry.categories or nil
   local highlight = M.resolve_highlight(stage_state, codes, summary, display, categories)
@@ -640,8 +624,8 @@ function M.calc_info(filepath, filetype, offset, highlights)
   local status_offset = leading_space_colr
   local staged_len = 0
   local normalized_filepath = dot.path.normalize(filepath)
-  local state_cache = dot.git.state.cache()
-  local entry = state_cache.status_table[normalized_filepath]
+  local aggregated = dot.git.state.aggregated()
+  local entry = aggregated.status_table[normalized_filepath]
   if entry ~= nil then
     staged_len = #(entry.staged_display or "")
   end
@@ -661,16 +645,20 @@ function M.calc_info(filepath, filetype, offset, highlights)
 end
 
 ---@class dot.module.git.status.IAggregatedCache
----@field public dir_codes          table<string, table<string, boolean>>
----@field public dir_display        table<string, string>
----@field public dir_stage          table<string, dot.module.git.StageState>
----@field public dir_summary        table<string, string|nil>
+---@field public dir_cache           table<string, dot.module.git.status.IDirInfo|false>
 ---@field public file_display       table<string, string>
 ---@field public file_stage         table<string, dot.module.git.StageState>
 ---@field public file_summary       table<string, string|nil>
 ---@field public staged_files       string[]
 ---@field public status_table       table<string, dot.module.git.StatusEntry>
 ---@field public unstaged_files     string[]
+---@field public workspace          string|nil
+
+---@class dot.module.git.status.IDirInfo
+---@field public codes              table<string, boolean>
+---@field public display            string
+---@field public stage              dot.module.git.StageState
+---@field public summary            string|nil
 
 ---@param workspace                  string|nil
 ---@param status_table               table<string, dot.module.git.StatusEntry>
@@ -678,7 +666,6 @@ end
 function M.aggregate(workspace, status_table)
   local normalized_workspace = workspace and dot.path.normalize(workspace) or nil
 
-  local dir_info = {} ---@type table<string, dot.module.git.state.dirinfo>
   local file_display = {} ---@type table<string, string>
   local file_stage = {} ---@type table<string, dot.module.git.StageState>
   local file_summary = {} ---@type table<string, string|nil>
@@ -710,67 +697,67 @@ function M.aggregate(workspace, status_table)
       unstaged_files[#unstaged_files + 1] = normalized_filepath
     end
 
-    local dirpath = dot.path.dirname(normalized_filepath)
-    while dirpath and #dirpath > 0 do
-      local normalized_dir = dot.path.normalize(dirpath)
-      local info = dir_info[normalized_dir]
-      if not info then
-        info = { codes = {}, stage = nil, summary = nil }
-        dir_info[normalized_dir] = info
-      end
-
-      if entry.summary then
-        info.summary = M.merge_priority_status(info.summary, entry.summary)
-      end
-      info.stage = M.combine_stage(info.stage, entry.stage)
-      for code, enabled in pairs(entry.codes or {}) do
-        if enabled then
-          info.codes[code] = true
-        end
-      end
-
-      if normalized_workspace and normalized_dir == normalized_workspace then
-        break
-      end
-
-      local parent = dot.path.dirname(normalized_dir)
-      if not parent or parent == "" or parent == normalized_dir then
-        break
-      end
-      dirpath = parent
-    end
-
     ::continue::
   end
 
-  local dir_codes = {} ---@type table<string, table<string, boolean>>
-  local dir_display_map = {} ---@type table<string, string>
-  local dir_stage = {} ---@type table<string, dot.module.git.StageState>
-  local dir_summary = {} ---@type table<string, string|nil>
-
-  for dirpath, info in pairs(dir_info) do
-    dir_display_map[dirpath] = M.codes_to_display(info.codes)
-    if info.summary then
-      dir_summary[dirpath] = info.summary
-    end
-    if info.stage then
-      dir_stage[dirpath] = info.stage
-    end
-    dir_codes[dirpath] = info.codes
-  end
-
   return {
-    dir_codes = dir_codes,
-    dir_display = dir_display_map,
-    dir_stage = dir_stage,
-    dir_summary = dir_summary,
+    dir_cache = {},
     file_display = file_display,
     file_stage = file_stage,
     file_summary = file_summary,
     staged_files = staged_files,
     status_table = status_entries,
     unstaged_files = unstaged_files,
+    workspace = normalized_workspace,
   }
+end
+
+---@param aggregated                 dot.module.git.status.IAggregatedCache
+---@param dirpath                    string
+---@return dot.module.git.status.IDirInfo|nil
+function M.compute_dir_status(aggregated, dirpath)
+  local normalized_dir = dot.path.normalize(dirpath)
+
+  local cached = aggregated.dir_cache[normalized_dir]
+  if cached ~= nil then
+    return cached or nil
+  end
+
+  local codes = {} ---@type table<string, boolean>
+  local stage = nil ---@type dot.module.git.StageState
+  local summary = nil ---@type string|nil
+  local has_status = false ---@type boolean
+
+  for filepath, entry in pairs(aggregated.status_table) do
+    if vim.startswith(filepath, normalized_dir .. "/") then
+      has_status = true
+      if entry.summary then
+        summary = M.merge_priority_status(summary, entry.summary)
+      end
+      stage = M.combine_stage(stage, entry.stage)
+      for code, enabled in pairs(entry.codes or {}) do
+        if enabled then
+          codes[code] = true
+        end
+      end
+    end
+  end
+
+  if not has_status then
+    aggregated.dir_cache[normalized_dir] = false
+    return nil
+  end
+
+  ---@type dot.module.git.status.IDirInfo
+  local info = {
+    codes = codes,
+    display = M.codes_to_display(codes),
+    stage = stage,
+    summary = summary,
+  }
+
+  aggregated.dir_cache[normalized_dir] = info
+  return info
 end
 
 function M.setup() end

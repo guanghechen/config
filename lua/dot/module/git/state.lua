@@ -4,44 +4,133 @@ local M = {}
 ---@type ark.c.Observable<string>
 M.o_branch = ark.c.Observable.from_value("")
 
----@type ark.c.Observable<dot.module.git.BlameInfo|nil>
-M.o_current_blame = ark.c.Observable.from_value(nil)
-
 ---@type ark.c.Observable<string[]>
 M.o_staged_files = ark.c.Observable.from_value({})
 
 ---@type ark.c.Observable<string[]>
 M.o_unstaged_files = ark.c.Observable.from_value({})
 
----@type dot.module.git.state.ICache
-local state_cache = {
-  dir_codes = {},
-  dir_display = {},
-  dir_stage = {},
-  dir_summary = {},
+---@type string|nil
+local user_name = nil
+
+---@type string|nil
+local user_email = nil
+
+local IGNORED_CACHE_CAPACITY = 2000 ---@type integer
+
+---@type dot.module.git.status.IAggregatedCache
+local aggregated_cache = {
+  dir_cache = {},
   file_display = {},
   file_stage = {},
   file_summary = {},
-  ignored = {},
-  initialized = false,
-  last_refresh = 0,
+  staged_files = {},
   status_table = {},
+  unstaged_files = {},
   workspace = nil,
 }
+
+---@type table<string, boolean>
+local ignored_cache = {}
+
+---@type integer
+local ignored_count = 0
+
+---@type boolean
+local initialized = false
+
+---@type integer
+local last_refresh = 0
 
 ---@type boolean
 local refreshing = false
 
----@return dot.module.git.state.ICache
-function M.cache()
-  if not state_cache.initialized then
-    M.refresh_async()
+local REFRESH_THROTTLE_MS = 800 ---@type integer
+
+---@type boolean
+local pending_refresh = false
+
+---@type boolean
+local pending_force = false
+
+---@type fun()[]
+local queued_callbacks = {}
+
+---@type ark.timer.IDisposableCallable
+local refresh_throttled
+
+local function run_queued_callbacks()
+  local callbacks = queued_callbacks
+  queued_callbacks = {}
+  for _, callback in ipairs(callbacks) do
+    callback()
   end
-  return state_cache
+end
+
+---@type fun()|nil
+local current_collect_cancel = nil
+
+local function do_refresh()
+  if refreshing then
+    pending_refresh = true
+    return
+  end
+
+  local force = pending_force ---@type boolean
+  pending_force = false
+  pending_refresh = false
+  refreshing = true
+
+  if force then
+    initialized = false
+  end
+
+  if current_collect_cancel then
+    current_collect_cancel()
+    current_collect_cancel = nil
+  end
+
+  current_collect_cancel = dot.git.status.collect_async({ base = "HEAD" }, function(workspace, status_table)
+    current_collect_cancel = nil
+
+    if type(status_table) == "table" then
+      local aggregated = dot.git.status.aggregate(workspace, status_table)
+
+      aggregated_cache.dir_cache = {}
+      aggregated_cache.file_display = aggregated.file_display
+      aggregated_cache.file_stage = aggregated.file_stage
+      aggregated_cache.file_summary = aggregated.file_summary
+      aggregated_cache.staged_files = aggregated.staged_files
+      aggregated_cache.status_table = aggregated.status_table
+      aggregated_cache.unstaged_files = aggregated.unstaged_files
+      aggregated_cache.workspace = aggregated.workspace
+
+      initialized = true
+      last_refresh = vim.uv.now()
+
+      M.o_staged_files:next(aggregated.staged_files)
+      M.o_unstaged_files:next(aggregated.unstaged_files)
+    end
+
+    refreshing = false
+    run_queued_callbacks()
+
+    if pending_refresh then
+      refresh_throttled()
+    end
+  end)
+end
+
+refresh_throttled = ark.timer.throttle(do_refresh, REFRESH_THROTTLE_MS)
+
+---@return dot.module.git.status.IAggregatedCache
+function M.aggregated()
+  return aggregated_cache
 end
 
 function M.clear_ignored_cache()
-  state_cache.ignored = {}
+  ignored_cache = {}
+  ignored_count = 0
 end
 
 ---@return string
@@ -49,9 +138,14 @@ function M.get_branch()
   return M.o_branch:snapshot()
 end
 
----@return dot.module.git.BlameInfo|nil
-function M.get_current_blame()
-  return M.o_current_blame:snapshot()
+---@return string|nil
+function M.get_user_email()
+  return user_email
+end
+
+---@return string|nil
+function M.get_user_name()
+  return user_name
 end
 
 ---@param filepath                   string
@@ -62,103 +156,105 @@ function M.is_ignored(filepath)
   end
 
   local normalized = dot.path.normalize(filepath)
-  local cached = state_cache.ignored[normalized]
+  local cached = ignored_cache[normalized]
   if cached ~= nil then
     return cached
   end
 
-  local is_ignored = dot.path.is_git_ignored(normalized)
-  state_cache.ignored[normalized] = is_ignored
-  return is_ignored
+  return false
+end
+
+---@return boolean
+function M.is_initialized()
+  return initialized
 end
 
 ---@return integer
 function M.last_refreshed_at()
-  if not state_cache.initialized then
-    M.refresh_async()
-  end
-  return state_cache.last_refresh
+  return last_refresh
 end
 
 ---@param filepaths                  string[]
-function M.preload_ignored(filepaths)
+---@param callback                   fun()|nil
+function M.preload_ignored(filepaths, callback)
   if not dot.path.is_git_repo() then
+    if callback then
+      callback()
+    end
     return
   end
 
-  local uncached = {}
+  local uncached = {} ---@type string[]
   for _, filepath in ipairs(filepaths) do
     local normalized = dot.path.normalize(filepath)
-    if state_cache.ignored[normalized] == nil then
+    if ignored_cache[normalized] == nil then
       uncached[#uncached + 1] = normalized
     end
   end
 
   if #uncached == 0 then
+    if callback then
+      callback()
+    end
     return
   end
 
+  if ignored_count + #uncached > IGNORED_CACHE_CAPACITY then
+    ignored_cache = {}
+    ignored_count = 0
+  end
+
   local input = table.concat(uncached, "\n")
-  local result = vim.fn.system({ "git", "check-ignore", "--stdin" }, input)
+  local workspace = dot.path.workspace() ---@type string
 
-  local ignored_set = {}
-  if vim.v.shell_error == 0 or vim.v.shell_error == 1 then
-    for line in result:gmatch("[^\r\n]+") do
-      ignored_set[dot.path.normalize(line)] = true
-    end
-  end
+  vim.system({ "git", "-C", workspace, "check-ignore", "--stdin" }, { stdin = input, text = true }, function(obj)
+    vim.schedule(function()
+      local ignored_set = {} ---@type table<string, boolean>
+      if obj.code == 0 or obj.code == 1 then
+        local stdout = obj.stdout or ""
+        for line in stdout:gmatch("[^\r\n]+") do
+          ignored_set[dot.path.normalize(line)] = true
+        end
+      elseif obj.code ~= 128 then
+        ark.reporter.warn({
+          from = "dot.module.git.state",
+          subject = "preload_ignored",
+          message = "git check-ignore failed",
+          details = { code = obj.code, stderr = obj.stderr },
+        })
+      end
 
-  for _, fp in ipairs(uncached) do
-    state_cache.ignored[fp] = ignored_set[fp] == true
-  end
+      for _, fp in ipairs(uncached) do
+        ignored_cache[fp] = ignored_set[fp] == true
+        ignored_count = ignored_count + 1
+      end
+
+      if callback then
+        callback()
+      end
+    end)
+  end)
 end
 
 ---@param force                      boolean|nil
 ---@param callback                   fun()|nil
 function M.refresh_async(force, callback)
-  if refreshing then
-    if callback then
-      callback()
-    end
-    return
+  if callback then
+    queued_callbacks[#queued_callbacks + 1] = callback
   end
 
   if force then
-    state_cache.initialized = false
+    pending_force = true
   end
 
-  refreshing = true
-  dot.git.status.collect_async({ base = "HEAD" }, function(workspace, status_table)
-    if type(status_table) == "table" then
-      local aggregated = dot.git.status.aggregate(workspace, status_table)
-
-      state_cache.dir_codes = aggregated.dir_codes
-      state_cache.dir_display = aggregated.dir_display
-      state_cache.dir_stage = aggregated.dir_stage
-      state_cache.dir_summary = aggregated.dir_summary
-      state_cache.file_display = aggregated.file_display
-      state_cache.file_stage = aggregated.file_stage
-      state_cache.file_summary = aggregated.file_summary
-      state_cache.initialized = true
-      state_cache.last_refresh = vim.uv.now()
-      state_cache.status_table = aggregated.status_table
-      state_cache.workspace = workspace and dot.path.normalize(workspace) or nil
-
-      M.o_staged_files:next(aggregated.staged_files)
-      M.o_unstaged_files:next(aggregated.unstaged_files)
-    end
-
-    refreshing = false
-    if callback then
-      callback()
-    end
-  end)
+  refresh_throttled()
 end
 
 ---@param base                       string|nil
 ---@param callback                   fun(workspace: string, result: table<string, string>)
+---@return fun()                     cancel_fn
 function M.status_async(base, callback)
-  dot.git.status.collect_async({ base = base }, function(workspace, status_table_result)
+  return dot.git.status.collect_async({ base = base }, function(workspace, status_table_result)
     local result = {}
     if type(status_table_result) == "table" then
       for filepath, entry in pairs(status_table_result) do
@@ -173,10 +269,25 @@ end
 
 ---@return table<string, dot.module.git.StatusEntry>
 function M.status_table()
-  if not state_cache.initialized then
-    M.refresh_async()
+  return aggregated_cache.status_table
+end
+
+function M.refresh_user_info()
+  if not dot.path.is_git_repo() then
+    return
   end
-  return state_cache.status_table
+
+  local workspace = dot.path.workspace() ---@type string
+  dot.git.cmd.run_async({ "config", "user.name" }, { cwd = workspace }, function(lines)
+    if #lines > 0 then
+      user_name = lines[1]
+    end
+  end)
+  dot.git.cmd.run_async({ "config", "user.email" }, { cwd = workspace }, function(lines)
+    if #lines > 0 then
+      user_email = lines[1]
+    end
+  end)
 end
 
 function M.setup() end

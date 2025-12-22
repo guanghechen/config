@@ -32,6 +32,20 @@ local function get_buf_lines(bufnr)
 end
 
 ---@param buf_cache                  dot.module.git.buffer.ICache
+local function mark_dirty_cache(buf_cache)
+  buf_cache.dirty = true
+  buf_cache.force_next_update = true
+end
+
+---@param buf_cache                  dot.module.git.buffer.ICache
+local function invalidate_compare_text_cache(buf_cache)
+  buf_cache.compare_text = nil
+  buf_cache.compare_text_index = nil
+  buf_cache.dirty = true
+  buf_cache.force_next_update = true
+end
+
+---@param buf_cache                  dot.module.git.buffer.ICache
 ---@param callback                   fun()|nil
 local function update_hunks(buf_cache, callback)
   local bufnr = buf_cache.bufnr ---@type integer
@@ -81,8 +95,13 @@ local function update_hunks(buf_cache, callback)
     local compare_text_head = buf_cache.compare_text or {}
 
     buf_cache.hunks = dot.git.diff.run_diff(compare_text_index, buf_lines)
-    local hunks_head = dot.git.diff.run_diff(compare_text_head, buf_lines)
-    buf_cache.hunks_staged = dot.git.diff.filter_common(hunks_head, buf_cache.hunks)
+
+    if compare_text_index == compare_text_head then
+      buf_cache.hunks_staged = nil
+    else
+      local hunks_head = dot.git.diff.run_diff(compare_text_head, buf_lines)
+      buf_cache.hunks_staged = dot.git.diff.filter_common(hunks_head, buf_cache.hunks)
+    end
 
     dot.git.hunk.set(bufnr, buf_cache.hunks)
     dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, { untracked = buf_cache.untracked })
@@ -94,30 +113,56 @@ local function update_hunks(buf_cache, callback)
     end
   end
 
-  local function fetch_index_text()
-    if buf_cache.compare_text_index then
-      finish()
-      return
-    end
+  local need_head = not buf_cache.compare_text ---@type boolean
+  local need_index = not buf_cache.compare_text_index ---@type boolean
+  local object_name = buf_cache.object_name ---@type string|nil
 
-    local object_name = buf_cache.object_name
-    if object_name then
-      dot.git.cmd.get_show_text_async(toplevel, object_name, function(lines)
-        buf_cache.compare_text_index = lines or buf_cache.compare_text
-        finish()
-      end)
-    else
-      buf_cache.compare_text_index = buf_cache.compare_text
+  if not need_head and not need_index then
+    finish()
+    return
+  end
+
+  if need_index and not object_name then
+    need_index = false
+  end
+
+  local pending = 0 ---@type integer
+  if need_head then
+    pending = pending + 1
+  end
+  if need_index then
+    pending = pending + 1
+  end
+
+  if pending == 0 then
+    if not buf_cache.compare_text_index then
+      buf_cache.compare_text_index = buf_cache.compare_text or {}
+    end
+    finish()
+    return
+  end
+
+  local function maybe_finish()
+    pending = pending - 1
+    if pending == 0 then
+      if not buf_cache.compare_text_index then
+        buf_cache.compare_text_index = buf_cache.compare_text or {}
+      end
       finish()
     end
   end
 
-  if buf_cache.compare_text then
-    fetch_index_text()
-  else
+  if need_head then
     dot.git.cmd.get_show_text_async(toplevel, "HEAD:" .. relpath, function(lines)
       buf_cache.compare_text = lines or {}
-      fetch_index_text()
+      maybe_finish()
+    end)
+  end
+
+  if need_index then
+    dot.git.cmd.get_show_text_async(toplevel, object_name --[[@as string]], function(lines)
+      buf_cache.compare_text_index = lines or buf_cache.compare_text
+      maybe_finish()
     end)
   end
 end
@@ -210,8 +255,10 @@ function M.attach(bufnr, opts)
           bc.force_next_update = true
         end
 
-        if bc.update_debounced then
+        if is_buf_visible(buf) and bc.update_debounced then
           bc.update_debounced()
+        else
+          bc.dirty = true
         end
       end,
       on_reload = function(_, buf)
@@ -220,13 +267,21 @@ function M.attach(bufnr, opts)
           return
         end
         bc.force_next_update = true
-        if bc.update_debounced then
+        if is_buf_visible(buf) and bc.update_debounced then
           bc.update_debounced()
+        else
+          bc.dirty = true
         end
       end,
     })
 
     if not ok then
+      ark.reporter.warn({
+        from = "dot.module.git.buffer",
+        subject = "attach",
+        message = "Failed to attach buffer",
+        details = { bufnr = bufnr, file = file },
+      })
       M.detach(bufnr)
       return
     end
@@ -297,13 +352,6 @@ function M.get_hunk_at(bufnr, lnum)
   return dot.git.hunk.find(lnum, buf_cache.hunks)
 end
 
----@param bufnr                      integer
----@return dot.module.git.Hunk[]|nil
-function M.get_hunks(bufnr)
-  local buf_cache = cache[bufnr]
-  return buf_cache and buf_cache.hunks
-end
-
 ---@return dot.module.git.Repo|nil
 function M.get_repo()
   return repo
@@ -337,6 +385,80 @@ function M.is_attached(bufnr)
   return buf_cache ~= nil and buf_cache.attached
 end
 
+function M.mark_dirty_all()
+  local visible_buffers = {}              ---@type integer[]
+
+  for bufnr, buf_cache in pairs(cache) do
+    if buf_cache then
+      mark_dirty_cache(buf_cache)
+      if is_buf_visible(bufnr) then
+        visible_buffers[#visible_buffers + 1] = bufnr
+      end
+    end
+  end
+
+  for index, bufnr in ipairs(visible_buffers) do
+    local buf_cache = cache[bufnr]
+    if buf_cache and buf_cache.update_debounced then
+      ark.timer.delay(function()
+        if cache[bufnr] and buf_cache.update_debounced then
+          buf_cache.update_debounced()
+        end
+      end, index * 10)
+    end
+  end
+end
+
+function M.invalidate_compare_text_all()
+  local visible_buffers = {}              ---@type integer[]
+
+  for bufnr, buf_cache in pairs(cache) do
+    if buf_cache then
+      invalidate_compare_text_cache(buf_cache)
+      if is_buf_visible(bufnr) then
+        visible_buffers[#visible_buffers + 1] = bufnr
+      end
+    end
+  end
+
+  for index, bufnr in ipairs(visible_buffers) do
+    local buf_cache = cache[bufnr]
+    if buf_cache and buf_cache.update_debounced then
+      ark.timer.delay(function()
+        if cache[bufnr] and buf_cache.update_debounced then
+          buf_cache.update_debounced()
+        end
+      end, index * 15)
+    end
+  end
+end
+
+function M.invalidate_index_all()
+  local visible_buffers = {}              ---@type integer[]
+
+  for bufnr, buf_cache in pairs(cache) do
+    if buf_cache then
+      buf_cache.compare_text_index = nil
+      buf_cache.dirty = true
+      buf_cache.force_next_update = true
+      if is_buf_visible(bufnr) then
+        visible_buffers[#visible_buffers + 1] = bufnr
+      end
+    end
+  end
+
+  for index, bufnr in ipairs(visible_buffers) do
+    local buf_cache = cache[bufnr]
+    if buf_cache and buf_cache.update_debounced then
+      ark.timer.delay(function()
+        if cache[bufnr] and buf_cache.update_debounced then
+          buf_cache.update_debounced()
+        end
+      end, index * 20)
+    end
+  end
+end
+
 ---@param bufnr                      integer
 ---@param invalidate_compare_text    boolean|nil
 ---@param callback                   fun()|nil
@@ -350,10 +472,6 @@ function M.refresh(bufnr, invalidate_compare_text, callback)
   end
 
   if invalidate_compare_text then
-    buf_cache.compare_text = nil
-    buf_cache.compare_text_index = nil
-    buf_cache.force_next_update = true
-
     dot.git.cmd.get_file_info_async(buf_cache.repo.toplevel, buf_cache.relpath, function(file_info)
       if not cache[bufnr] then
         if callback then
@@ -362,58 +480,22 @@ function M.refresh(bufnr, invalidate_compare_text, callback)
         return
       end
 
+      local new_object_name = file_info and file_info.object_name
+      local old_object_name = buf_cache.object_name
+
+      if new_object_name ~= old_object_name then
+        buf_cache.compare_text_index = nil
+      end
+
       buf_cache.mode_bits = file_info and file_info.mode_bits
-      buf_cache.object_name = file_info and file_info.object_name
+      buf_cache.object_name = new_object_name
+      buf_cache.force_next_update = true
 
       update_hunks(buf_cache, callback)
     end)
   else
     buf_cache.force_next_update = true
     update_hunks(buf_cache, callback)
-  end
-end
-
----@param callback                   fun()|nil
-function M.refresh_all(callback)
-  if repo then
-    dot.git.cmd.get_abbrev_head_async(repo.toplevel, function(abbrev_head)
-      if repo then
-        repo.abbrev_head = abbrev_head
-        dot.git.state.o_branch:next(abbrev_head)
-      end
-    end)
-  end
-
-  local bufnrs = vim.tbl_keys(cache)
-  local visible_bufnrs = {} ---@type integer[]
-  for _, bufnr in ipairs(bufnrs) do
-    local buf_cache = cache[bufnr]
-    if buf_cache then
-      if is_buf_visible(bufnr) then
-        buf_cache.dirty = false
-        visible_bufnrs[#visible_bufnrs + 1] = bufnr
-      else
-        buf_cache.dirty = true
-      end
-    end
-  end
-
-  local remaining = #visible_bufnrs
-
-  if remaining == 0 then
-    if callback then
-      callback()
-    end
-    return
-  end
-
-  for _, bufnr in ipairs(visible_bufnrs) do
-    M.refresh(bufnr, true, function()
-      remaining = remaining - 1
-      if remaining == 0 and callback then
-        callback()
-      end
-    end)
   end
 end
 

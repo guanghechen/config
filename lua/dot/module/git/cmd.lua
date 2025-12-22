@@ -1,11 +1,10 @@
-local __module_name__ = "dot.module.git.cmd"
-
 ---@class dot.module.git.cmd
 local M = {}
 
 ---@param args                       string[]
 ---@param opts                       { cwd: string|nil }|nil
 ---@param callback                   fun(lines: string[], code: integer)
+---@return fun()                     cancel_fn
 function M.run_async(args, opts, callback)
   local cmd = { "git" }
   if opts and opts.cwd then
@@ -16,18 +15,30 @@ function M.run_async(args, opts, callback)
     cmd[#cmd + 1] = arg
   end
 
-  vim.system(cmd, { text = true }, function(obj)
-    vim.schedule(function()
-      local lines = {}
-      if obj.code == 0 and obj.stdout then
-        lines = vim.split(obj.stdout, "\n", { plain = true })
-        if lines[#lines] == "" then
-          lines[#lines] = nil
+  local cancelled = false                  ---@type boolean
+  local proc = vim.system(cmd, { text = true }, function(obj)
+    if not cancelled then
+      vim.schedule(function()
+        if not cancelled then
+          local lines = {}
+          if obj.code == 0 and obj.stdout then
+            lines = vim.split(obj.stdout, "\n", { plain = true })
+            if lines[#lines] == "" then
+              lines[#lines] = nil
+            end
+          end
+          callback(lines, obj.code)
         end
-      end
-      callback(lines, obj.code)
-    end)
+      end)
+    end
   end)
+
+  return function()
+    cancelled = true
+    if proc then
+      proc:kill(9)
+    end
+  end
 end
 
 ---For user-triggered actions where blocking is acceptable (e.g., browse.lua)
@@ -85,7 +96,7 @@ function M.apply_patch_async(cwd, patch, reverse, callback)
       if obj.code ~= 0 then
         local err_msg = obj.stderr or ""
         ark.reporter.error({
-          from = __module_name__,
+          from = "dot.module.git.cmd",
           subject = "apply_patch",
           message = "Failed to apply patch.",
           details = { error = err_msg },
@@ -137,52 +148,38 @@ end
 ---@param relpath                    string
 ---@param callback                   fun(info: dot.module.git.FileInfo|nil)
 function M.get_file_info_async(cwd, relpath, callback)
-  ---@type dot.module.git.FileInfo
-  local info = {
-    has_conflicts = false,
-    mode_bits = nil,
-    object_name = nil,
-    relpath = relpath,
-  }
-
   vim.system(
-    { "git", "-C", cwd, "ls-files", "--stage", "-u", "--", relpath },
+    { "git", "-C", cwd, "ls-files", "--stage", "--", relpath },
     { text = true },
     function(obj)
       vim.schedule(function()
-        if obj.code == 0 then
-          for line in (obj.stdout or ""):gmatch("[^\n]+") do
-            if line:match("^%d+%s+%x+%s+[123]%s+") then
-              info.has_conflicts = true
-              break
+        ---@type dot.module.git.FileInfo
+        local info = {
+          has_conflicts = false,
+          mode_bits = nil,
+          object_name = nil,
+          relpath = relpath,
+        }
+
+        if obj.code == 0 and obj.stdout then
+          for line in obj.stdout:gmatch("[^\n]+") do
+            local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
+            if mode and object and stage then
+              if stage == "0" then
+                info.mode_bits = mode
+                info.object_name = object
+              else
+                info.has_conflicts = true
+              end
             end
           end
         end
 
-        vim.system(
-          { "git", "-C", cwd, "ls-files", "--stage", "--", relpath },
-          { text = true },
-          function(obj2)
-            vim.schedule(function()
-              if obj2.code == 0 then
-                local line = (obj2.stdout or ""):match("[^\n]+")
-                if line then
-                  local mode, object = line:match("^(%d+)%s+(%x+)%s+")
-                  if mode and object then
-                    info.mode_bits = mode
-                    info.object_name = object
-                  end
-                end
-              end
-
-              if not info.object_name and not info.has_conflicts then
-                callback(nil)
-              else
-                callback(info)
-              end
-            end)
-          end
-        )
+        if not info.object_name and not info.has_conflicts then
+          callback(nil)
+        else
+          callback(info)
+        end
       end)
     end
   )
@@ -267,6 +264,12 @@ function M.hash_object_async(cwd, file, lines, callback)
     function(obj)
       vim.schedule(function()
         if obj.code ~= 0 then
+          ark.reporter.warn({
+            from = "dot.module.git.cmd",
+            subject = "hash_object",
+            message = "Failed to hash object",
+            details = { file = file, code = obj.code, stderr = obj.stderr },
+          })
           callback(nil)
         else
           local hash = vim.trim(obj.stdout or "")
@@ -286,6 +289,14 @@ function M.stage_file_async(cwd, relpath, callback)
     {},
     function(obj)
       vim.schedule(function()
+        if obj.code ~= 0 then
+          ark.reporter.warn({
+            from = "dot.module.git.cmd",
+            subject = "stage_file",
+            message = "Failed to stage file",
+            details = { relpath = relpath, code = obj.code, stderr = obj.stderr },
+          })
+        end
         callback(obj.code == 0)
       end)
     end
@@ -301,6 +312,14 @@ function M.unstage_file_async(cwd, relpath, callback)
     {},
     function(obj)
       vim.schedule(function()
+        if obj.code ~= 0 then
+          ark.reporter.warn({
+            from = "dot.module.git.cmd",
+            subject = "unstage_file",
+            message = "Failed to unstage file",
+            details = { relpath = relpath, code = obj.code, stderr = obj.stderr },
+          })
+        end
         callback(obj.code == 0)
       end)
     end
@@ -318,6 +337,14 @@ function M.update_index_async(cwd, mode_bits, object_name, relpath, callback)
     {},
     function(obj)
       vim.schedule(function()
+        if obj.code ~= 0 then
+          ark.reporter.warn({
+            from = "dot.module.git.cmd",
+            subject = "update_index",
+            message = "Failed to update index",
+            details = { relpath = relpath, code = obj.code, stderr = obj.stderr },
+          })
+        end
         callback(obj.code == 0)
       end)
     end

@@ -203,15 +203,15 @@ function M.throttle(fn, delay)
 end
 
 ---@param fn                            function
----@param timeout                       integer
+---@param ms                            integer
 ---@return uv.uv_timer_t|nil
-function M.set_timeout(fn, timeout)
+function M.delay(fn, ms)
   local timer = vim.uv.new_timer()
   if timer ~= nil then
     local guard_ref = create_guard(timer) ---@type ark.timer.Guard|nil
     guard_map[timer] = guard_ref
     timer:start(
-      timeout,
+      ms,
       0,
       vim.schedule_wrap(function()
         guard_map[timer] = nil

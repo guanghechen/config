@@ -158,7 +158,7 @@ local runners = {
         permanent = false,
       })
 
-      ark.timer.set_timeout(function()
+      ark.timer.delay(function()
         local termmeta = dot.term.get(termuuid) ---@type dot.t.ITermMeta|nil
         if termmeta ~= nil then
           handle(termmeta)
