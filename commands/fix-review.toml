@@ -1,0 +1,25 @@
+description = "Fix issues identified in code review"
+prompt = """Please fix the issues identified in the code review. Below are the review comments:
+
+---
+
+**Review Comments:**
+
+``````text
+{{args}}
+``````
+
+---
+
+**Requirements:**
+
+1. **Address All Issues**: Fix every issue mentioned in the review comments
+2. **Maintain Context**: Understand the surrounding code before making changes
+3. **Code Quality**: Ensure fixes follow best practices and project conventions
+4. **No Side Effects**: Avoid introducing new bugs or breaking existing functionality
+5. **Minimal Changes**: Only modify what's necessary to address the review feedback
+
+After fixing, briefly summarize what changes were made for each review comment.
+
+**IMPORTANT**: Respond in Chinese, but keep all code snippets and technical terms in English.
+"""
