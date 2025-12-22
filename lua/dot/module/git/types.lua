@@ -23,6 +23,7 @@
 ---@field public changedtick        integer
 ---@field public compare_text       string[]|nil  HEAD content
 ---@field public compare_text_index string[]|nil  Index content
+---@field public dirty              boolean
 ---@field public file               string
 ---@field public force_next_update  boolean
 ---@field public hunks              dot.module.git.Hunk[]|nil  Index vs buffer (unstaged changes)

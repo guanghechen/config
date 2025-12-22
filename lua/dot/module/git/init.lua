@@ -73,6 +73,15 @@ vim.api.nvim_create_autocmd("BufWritePost", {
   end,
 })
 
+vim.api.nvim_create_autocmd("BufEnter", {
+  group = augroup,
+  callback = function(args)
+    if M.buffer.is_dirty(args.buf) then
+      M.buffer.refresh(args.buf, true)
+    end
+  end,
+})
+
 vim.api.nvim_create_autocmd("BufDelete", {
   group = augroup,
   callback = function(args)

@@ -13,6 +13,16 @@ local repo = nil
 local updating = {}
 
 ---@param bufnr                      integer
+---@return boolean
+local function is_buf_visible(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false
+  end
+  local wins = vim.fn.win_findbuf(bufnr)
+  return type(wins) == "table" and #wins > 0
+end
+
+---@param bufnr                      integer
 ---@return string[]
 local function get_buf_lines(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -77,6 +87,7 @@ local function update_hunks(buf_cache, callback)
     dot.git.hunk.set(bufnr, buf_cache.hunks)
     dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, { untracked = buf_cache.untracked })
 
+    buf_cache.dirty = false
     updating[bufnr] = nil
     if callback then
       callback()
@@ -162,6 +173,7 @@ function M.attach(bufnr, opts)
       changedtick = -1,
       compare_text = nil,
       compare_text_index = nil,
+      dirty = false,
       file = file,
       force_next_update = true,
       hunks = nil,
@@ -313,6 +325,13 @@ end
 
 ---@param bufnr                      integer
 ---@return boolean
+function M.is_dirty(bufnr)
+  local buf_cache = cache[bufnr]
+  return buf_cache ~= nil and buf_cache.dirty == true
+end
+
+---@param bufnr                      integer
+---@return boolean
 function M.is_attached(bufnr)
   local buf_cache = cache[bufnr]
   return buf_cache ~= nil and buf_cache.attached
@@ -366,7 +385,20 @@ function M.refresh_all(callback)
   end
 
   local bufnrs = vim.tbl_keys(cache)
-  local remaining = #bufnrs
+  local visible_bufnrs = {} ---@type integer[]
+  for _, bufnr in ipairs(bufnrs) do
+    local buf_cache = cache[bufnr]
+    if buf_cache then
+      if is_buf_visible(bufnr) then
+        buf_cache.dirty = false
+        visible_bufnrs[#visible_bufnrs + 1] = bufnr
+      else
+        buf_cache.dirty = true
+      end
+    end
+  end
+
+  local remaining = #visible_bufnrs
 
   if remaining == 0 then
     if callback then
@@ -375,7 +407,7 @@ function M.refresh_all(callback)
     return
   end
 
-  for _, bufnr in ipairs(bufnrs) do
+  for _, bufnr in ipairs(visible_bufnrs) do
     M.refresh(bufnr, true, function()
       remaining = remaining - 1
       if remaining == 0 and callback then
