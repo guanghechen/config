@@ -28,20 +28,6 @@ local config = {
 local Signs = {}
 Signs.__index = Signs
 
----@param sign_type                     dot.module.git.SignType
----@return string|nil
-function Signs:__get_sign_text__(sign_type)
-  local sign_config = self._config[sign_type]
-  return sign_config and sign_config.text
-end
-
----@param sign_type                     dot.module.git.SignType
----@return string|nil
-function Signs:__get_sign_hl__(sign_type)
-  local sign_config = self._config[sign_type]
-  return sign_config and sign_config.hl
-end
-
 ---@param bufnr                         integer
 ---@param signs                         dot.module.git.Sign[]
 ---@param filter                        (fun(lnum: integer): boolean)|nil
@@ -53,7 +39,7 @@ function Signs:add(bufnr, signs, filter)
   for _, sign in ipairs(signs) do
     local lnum = sign.lnum
     if lnum >= 1 and (not filter or filter(lnum)) and not self:contains(bufnr, lnum) then
-      local line = lnum - 1
+      local line = lnum - 1 ---@type integer
       local text = self:__get_sign_text__(sign.type)
       if text then
         pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns, line, 0, {
@@ -117,6 +103,22 @@ function Signs:get_namespace()
   return self._ns
 end
 
+----------------------------------------------------------------------------------------------------
+
+---@param sign_type                     dot.module.git.SignType
+---@return string|nil
+function Signs:__get_sign_hl__(sign_type)
+  local sign_config = self._config[sign_type]
+  return sign_config and sign_config.hl
+end
+
+---@param sign_type                     dot.module.git.SignType
+---@return string|nil
+function Signs:__get_sign_text__(sign_type)
+  local sign_config = self._config[sign_type]
+  return sign_config and sign_config.text
+end
+
 ---@param staged                        boolean|nil
 ---@return dot.module.git.sign.ISigns
 function Signs.__new__(staged)
@@ -154,9 +156,9 @@ local function on_win(bufnr, topline, botline)
     return false
   end
 
-  local top = topline + 1
-  local bot = botline + 1
-  local untracked = buf_cache.untracked
+  local top = topline + 1 ---@type integer
+  local bot = botline + 1 ---@type integer
+  local untracked = buf_cache.untracked ---@type boolean
 
   if hunks then
     local signs = dot.git.hunk.calc_signs_all(hunks, top, bot)
@@ -186,7 +188,7 @@ local function setup_decoration_provider()
   end
   decoration_provider_setup = true
 
-  local ns = vim.api.nvim_create_namespace("dot_module_git_sign_decor")
+  local ns = vim.api.nvim_create_namespace("dot_module_git_sign_decor") ---@type integer
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, _, bufnr, topline, botline)
       return on_win(bufnr, topline, botline)
@@ -236,7 +238,7 @@ function M.update(bufnr, hunks, hunks_staged, opts)
     end
   end
 
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
 
   if hunks and #hunks > 0 then
     local signs = dot.git.hunk.calc_signs_all(hunks, 1, line_count)

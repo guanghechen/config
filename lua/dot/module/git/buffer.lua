@@ -1,4 +1,4 @@
-local DEBOUNCE_MS = 200
+local DEBOUNCE_MS = 200 ---@type integer
 
 ---@class dot.module.git.buffer
 local M = {}
@@ -18,8 +18,8 @@ local function is_buf_visible(bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
-  local wins = vim.fn.win_findbuf(bufnr)
-  return type(wins) == "table" and #wins > 0
+  local winnrs = vim.fn.win_findbuf(bufnr) ---@type integer[]
+  return #winnrs > 0
 end
 
 ---@param bufnr                      integer
@@ -34,7 +34,7 @@ end
 ---@param buf_cache                  dot.module.git.buffer.ICache
 ---@param callback                   fun()|nil
 local function update_hunks(buf_cache, callback)
-  local bufnr = buf_cache.bufnr
+  local bufnr = buf_cache.bufnr ---@type integer
 
   if not vim.api.nvim_buf_is_valid(bufnr) then
     if callback then
@@ -50,7 +50,7 @@ local function update_hunks(buf_cache, callback)
     return
   end
 
-  local tick = vim.api.nvim_buf_get_changedtick(bufnr)
+  local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
   if tick == buf_cache.changedtick and not buf_cache.force_next_update then
     if callback then
       callback()
@@ -62,9 +62,9 @@ local function update_hunks(buf_cache, callback)
   buf_cache.changedtick = tick
   buf_cache.force_next_update = false
 
-  local buf_lines = get_buf_lines(bufnr)
-  local toplevel = buf_cache.repo.toplevel
-  local relpath = buf_cache.relpath
+  local buf_lines = get_buf_lines(bufnr) ---@type string[]
+  local toplevel = buf_cache.repo.toplevel ---@type string
+  local relpath = buf_cache.relpath ---@type string
 
   local function finish()
     if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
@@ -140,7 +140,7 @@ function M.attach(bufnr, opts)
     return false
   end
 
-  local file = vim.api.nvim_buf_get_name(bufnr)
+  local file = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if file == "" then
     return false
   end
@@ -246,7 +246,7 @@ function M.attach(bufnr, opts)
     return true
   end
 
-  local toplevel = dot.path.workspace()
+  local toplevel = dot.path.workspace() ---@type string
   dot.git.repo.new(toplevel, function(r)
     if r then
       repo = r
@@ -425,7 +425,7 @@ function M.reset_buffer(bufnr)
     return false
   end
 
-  local compare_text = buf_cache.compare_text or {}
+  local compare_text = buf_cache.compare_text or {} ---@type string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, compare_text)
   return true
 end
@@ -444,7 +444,8 @@ function M.reset_hunk(bufnr, range)
   if range then
     hunk = dot.git.hunk.create_partial(buf_cache.hunks, range[1], range[2])
   else
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
     hunk = dot.git.hunk.find(lnum, buf_cache.hunks)
   end
 
@@ -495,7 +496,8 @@ function M.stage_hunk(bufnr, range, callback)
   if range then
     hunk = dot.git.hunk.create_partial(buf_cache.hunks, range[1], range[2])
   else
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
     hunk = dot.git.hunk.find(lnum, buf_cache.hunks)
   end
 
@@ -640,14 +642,15 @@ function M.unstage_hunk(bufnr, range, callback)
   local selected_hunks = {} ---@type dot.module.git.Hunk[]
 
   if range then
-    local top, bot = range[1], range[2]
+    local top, bot = range[1], range[2] ---@type integer, integer
     for _, hunk in ipairs(hunks_staged) do
       if not (hunk.vend < top or hunk.added.start > bot) then
         selected_hunks[#selected_hunks + 1] = hunk
       end
     end
   else
-    local lnum = vim.api.nvim_win_get_cursor(0)[1]
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
     local hunk = dot.git.hunk.find(lnum, hunks_staged)
     if hunk then
       selected_hunks[1] = hunk

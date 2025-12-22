@@ -5,7 +5,9 @@
     "lua/dot/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": ["~/.config/cspell/cspell.json"],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -359,6 +361,7 @@
     "earch",
     "ebug",
     "efresh",
+    "eids",
     "emsg",
     "endof",
     "eplace",
@@ -604,6 +607,7 @@
     "menuone",
     "metamap",
     "metas",
+    "metatable",
     "miniai",
     "miniforge3",
     "minihipatterns",
@@ -954,4 +958,3 @@
     "zindex"
   ]
 }
-

@@ -171,11 +171,11 @@ function M.open_remote(remote)
   end
 end
 
----@param opts                       { what: string|nil, branch: string|nil, commit: string|nil, line_start: integer|nil, line_end: integer|nil }|nil
+---@param opts                       dot.module.git.browse.IOpenOpts|nil
 function M.open(opts)
   opts = opts or {}
 
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
   filepath = filepath ~= "" and dot.path.normalize(filepath) or nil
   local stat = filepath and vim.uv.fs_stat(filepath) or nil
@@ -184,22 +184,23 @@ function M.open(opts)
   local cwd = (is_file and filepath) and vim.fn.fnamemodify(filepath, ":h") or dot.path.cwd()
   local git_file = (is_file and filepath) and dot.path.relative(cwd, filepath) or nil
 
-  local line_start = opts.line_start
-  local line_end = opts.line_end
+  local line_start = opts.line_start ---@type integer|nil
+  local line_end = opts.line_end ---@type integer|nil
   if line_start == nil or line_end == nil then
     if vim.fn.mode():find("[vV]") then
       local s, e = dot.buf.retrieve_visual_lnum_range()
       line_start = s
       line_end = e
     else
-      line_start = vim.api.nvim_win_get_cursor(0)[1]
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      line_start = vim.api.nvim_win_get_cursor(winnr)[1]
       line_end = line_start
     end
   end
 
-  local commit = opts.commit
+  local commit = opts.commit ---@type string|nil
   if not commit then
-    local word = vim.fn.expand("<cword>")
+    local word = vim.fn.expand("<cword>") ---@type string
     if word and word:match("^[a-fA-F0-9]+$") then
       commit = word
     end
@@ -231,7 +232,7 @@ function M.open(opts)
     return
   end
 
-  local max_name_width = 0
+  local max_name_width = 0 ---@type integer
   for _, remote in ipairs(remotes) do
     max_name_width = math.max(max_name_width, vim.api.nvim_strwidth(remote.name))
   end

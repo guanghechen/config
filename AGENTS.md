@@ -107,7 +107,33 @@ Each integration includes environment-specific:
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
 - Use `yoz.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
 - Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
+- Use `winnrs` for window number arrays (not `wins`)
 - Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
+- Prefer `vim.api` over `vim.fn` when both provide equivalent functionality:
+  - Use `vim.api.nvim_get_current_buf()` instead of `vim.fn.bufnr()`
+  - Use `vim.api.nvim_get_current_win()` instead of `vim.fn.winnr()`
+  - Use `vim.api.nvim_buf_get_lines()` instead of `vim.fn.getline()`
+  - Use `vim.api.nvim_win_get_cursor()` instead of `vim.fn.getcurpos()`
+  - Note: Some `vim.fn` functions have no `vim.api` equivalent (e.g., `vim.fn.foldclosed`, `vim.fn.mode`, `vim.fn.expand`, `vim.fn.fnamemodify`); these are acceptable
+- Prefer explicit `tabnr`/`winnr` variables over magic number `0`:
+  ```lua
+  -- Bad
+  local winnrs = vim.api.nvim_tabpage_list_wins(0)
+
+  -- Good
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+
+  -- When tabnr is already available, use it to get winnr
+  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+  ```
+- Add type annotations for primitive local variables:
+  ```lua
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local name = "example" ---@type string
+  local enabled = true ---@type boolean
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+  ```
 - Format Lua with `stylua` using the repo `.stylua.toml` when making substantial edits
 
 ### Type Annotation Formatting

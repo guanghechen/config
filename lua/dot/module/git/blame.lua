@@ -334,14 +334,14 @@ local function inline_update(bufnr)
     return
   end
 
-  local winnr = vim.api.nvim_get_current_win()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
   if bufnr ~= vim.api.nvim_win_get_buf(winnr) then
     return
   end
 
-  local lnum = vim.api.nvim_win_get_cursor(winnr)[1]
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
 
-  local foldclosed = vim.fn.foldclosed(lnum)
+  local foldclosed = vim.fn.foldclosed(lnum) ---@type integer
   if foldclosed ~= -1 then
     return
   end
@@ -356,8 +356,8 @@ local function inline_update(bufnr)
   end
   inline_running[bufnr] = true
 
-  local file = buf_cache.file
-  local cwd = buf_cache.repo.toplevel
+  local file = buf_cache.file ---@type string
+  local cwd = buf_cache.repo.toplevel ---@type string
 
   M.run_blame(bufnr, file, cwd, lnum, function(blame)
     vim.schedule(function()
@@ -371,7 +371,7 @@ local function inline_update(bufnr)
         return
       end
 
-      local current_lnum = vim.api.nvim_win_get_cursor(winnr)[1]
+      local current_lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
       if current_lnum ~= lnum then
         return
       end
@@ -478,6 +478,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---@type integer
 local buffer_ns = vim.api.nvim_create_namespace(NS_BUFFER)
 
 ---@class dot.module.git.blame.IBufferConfig
@@ -516,7 +517,7 @@ local function buffer_render(bufnr, blame, skip_lnum)
 
   buffer_clear(bufnr)
 
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
   for lnum = 1, line_count do
     if lnum == skip_lnum then
       goto continue
@@ -554,12 +555,12 @@ local function buffer_update_current_line(bufnr)
     return
   end
 
-  local winnr = vim.fn.bufwinid(bufnr)
+  local winnr = vim.fn.bufwinid(bufnr) ---@type integer
   if winnr == -1 then
     return
   end
 
-  local lnum = vim.api.nvim_win_get_cursor(winnr)[1]
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
   if buffer_current_lnum[bufnr] == lnum then
     return
   end
@@ -593,10 +594,10 @@ function M.buffer_show(bufnr)
     running_buffer_procs[bufnr] = nil
   end
 
-  local file = buf_cache.file
-  local cwd = buf_cache.repo.toplevel
+  local file = buf_cache.file ---@type string
+  local cwd = buf_cache.repo.toplevel ---@type string
 
-  local args = { "-C", cwd, "blame", "--porcelain", "--", file }
+  local args = { "-C", cwd, "blame", "--porcelain", "--", file } ---@type string[]
 
   local proc = ark.c.Proc.new({
     cmd = "git",
@@ -620,12 +621,12 @@ function M.buffer_show(bufnr)
           return
         end
 
-        local output = p:out()
-        local blame = parse_blame_output(output)
+        local output = p:out() ---@type string
+        local blame = parse_blame_output(output) ---@type table<integer, dot.module.git.BlameInfo>
         if blame then
           cache[bufnr] = blame
-          local winnr = vim.fn.bufwinid(bufnr)
-          local lnum = winnr ~= -1 and vim.api.nvim_win_get_cursor(winnr)[1] or nil
+          local winnr = vim.fn.bufwinid(bufnr) ---@type integer
+          local lnum = winnr ~= -1 and vim.api.nvim_win_get_cursor(winnr)[1] or nil ---@type integer|nil
           buffer_current_lnum[bufnr] = lnum
           buffer_render(bufnr, blame, lnum)
         end
@@ -671,6 +672,7 @@ local buffer_update_debounced = ark.timer.debounce(function(bufnr)
   buffer_update_current_line(bufnr)
 end, 50)
 
+---@type integer
 local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { clear = true })
 
 vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {

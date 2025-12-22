@@ -4,6 +4,9 @@ local __module_name__ = "dot.module.image.inline" ---@type string
 ---@field public bufnr                    integer
 ---@field public imgs                     table<integer, dot.module.image.Placement>
 ---@field public idx                      table<integer, dot.module.image.Placement>
+---@field protected __call_debounced__    fun(self: dot.module.image.inline): nil
+---@field protected _debounced            ?ark.timer.IDisposableCallable
+---@field protected _augroup              integer
 local M = {}
 M.__index = M
 
@@ -14,23 +17,23 @@ function M.new(bufnr)
   self.bufnr = bufnr
   self.imgs = {}
   self.idx = {}
-  local group = vim.api.nvim_create_augroup(__module_name__ .. "." .. bufnr, { clear = true })
+  self._augroup = vim.api.nvim_create_augroup(__module_name__ .. "." .. bufnr, { clear = true })
 
-  local debounced = ark.timer.debounce(function()
+  self._debounced = ark.timer.debounce(function()
     self:update()
   end, 100)
 
   local function update()
-    debounced()
+    self:__call_debounced__() ---@diagnostic disable-line: invisible
   end
 
   vim.api.nvim_create_autocmd({ "BufWritePost", "WinScrolled", "BufWinEnter" }, {
-    group = group,
+    group = self._augroup,
     buffer = bufnr,
     callback = vim.schedule_wrap(update),
   })
   vim.api.nvim_create_autocmd({ "ModeChanged", "CursorMoved" }, {
-    group = group,
+    group = self._augroup,
     buffer = bufnr,
     callback = function(ev)
       if ev.buf == self.bufnr and ev.buf == vim.api.nvim_get_current_buf() then
@@ -45,6 +48,20 @@ function M.new(bufnr)
   })
   vim.schedule(update)
   return self
+end
+
+---@return nil
+function M:dispose()
+  if self._debounced then
+    self._debounced:dispose()
+    self._debounced = nil
+  end
+  pcall(vim.api.nvim_del_augroup_by_id, self._augroup)
+  for _, img in pairs(self.imgs) do
+    img:close()
+  end
+  self.imgs = {}
+  self.idx = {}
 end
 
 ---@return nil
@@ -156,6 +173,16 @@ function M:update()
       self.imgs[img.id] = nil
     end
   end)
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@return nil
+function M:__call_debounced__()
+  if self._debounced then
+    self._debounced()
+  end
 end
 
 return M

@@ -90,8 +90,7 @@ local runners = {
       local function clear_spinner()
         terminated = true
         if spinner_timer then
-          spinner_timer:stop()
-          spinner_timer:close()
+          ark.timer.clear_timer(spinner_timer)
           spinner_timer = nil
         end
       end

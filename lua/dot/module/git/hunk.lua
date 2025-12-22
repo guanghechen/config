@@ -357,7 +357,7 @@ end
 ---@param range                      { [1]: integer, [2]: integer }|nil
 ---@param callback                   fun(ok: boolean, err: string|nil)|nil
 function M.stage(range, callback)
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
   end
@@ -367,7 +367,7 @@ end
 ---@param range                      { [1]: integer, [2]: integer }|nil
 ---@param callback                   fun(ok: boolean, err: string|nil)|nil
 function M.unstage(range, callback)
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
   end
@@ -378,7 +378,7 @@ end
 ---@return boolean
 ---@return string|nil
 function M.reset(range)
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
   end
@@ -387,7 +387,7 @@ end
 
 ---@param callback                   fun(ok: boolean)|nil
 function M.stage_buffer(callback)
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
   end
@@ -408,16 +408,16 @@ end
 
 ---@return boolean
 function M.reset_buffer()
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
   end
   return dot.git.buffer.reset_buffer(bufnr)
 end
 
-local nav_ns = vim.api.nvim_create_namespace("dot_git_hunk_nav")
-local nav_autocmd_id = nil
-local nav_bufnr = nil
+local nav_ns = vim.api.nvim_create_namespace("dot_git_hunk_nav") ---@type integer
+local nav_autocmd_id = nil ---@type integer|nil
+local nav_bufnr = nil ---@type integer|nil
 
 local function clear_nav_indicator()
   if nav_bufnr and vim.api.nvim_buf_is_valid(nav_bufnr) then
@@ -438,7 +438,7 @@ local function show_nav_indicator(bufnr, lnum, index, total)
   clear_nav_indicator()
   nav_bufnr = bufnr
 
-  local text = string.format("[%d/%d]", index, total)
+  local text = string.format("[%d/%d]", index, total) ---@type string
   pcall(vim.api.nvim_buf_set_extmark, bufnr, nav_ns, lnum - 1, 0, {
     virt_text = { { text, "fg_hunk_indicator" } },
     virt_text_pos = "eol",
@@ -462,7 +462,7 @@ end
 ---@param direction                  "next"|"prev"
 ---@param include_staged             boolean
 local function nav_impl(direction, include_staged)
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
     return
@@ -473,11 +473,11 @@ local function nav_impl(direction, include_staged)
 
   local hunks = {} ---@type { lnum: integer, vend: integer }[]
   for _, hunk in ipairs(unstaged) do
-    local start = hunk.added.start == 0 and 1 or hunk.added.start
+    local start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     hunks[#hunks + 1] = { lnum = start, vend = hunk.vend == 0 and 1 or hunk.vend }
   end
   for _, hunk in ipairs(staged) do
-    local start = hunk.added.start == 0 and 1 or hunk.added.start
+    local start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     hunks[#hunks + 1] = { lnum = start, vend = hunk.vend == 0 and 1 or hunk.vend }
   end
 
@@ -489,7 +489,8 @@ local function nav_impl(direction, include_staged)
     return a.lnum < b.lnum
   end)
 
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
   local target_idx = nil ---@type integer|nil
 
   if direction == "next" then
@@ -511,7 +512,7 @@ local function nav_impl(direction, include_staged)
   end
 
   local target = hunks[target_idx]
-  vim.api.nvim_win_set_cursor(0, { target.lnum, 0 })
+  vim.api.nvim_win_set_cursor(winnr, { target.lnum, 0 })
   show_nav_indicator(bufnr, target.lnum, target_idx, #hunks)
 end
 

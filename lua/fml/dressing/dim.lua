@@ -145,9 +145,9 @@ local function check_scope(winnr)
   local from_start, to_start = anim.from, anim.to
   local elapsed = 0
 
-  if listener.timer and not listener.timer:is_closing() then
-    listener.timer:stop()
-    listener.timer:close()
+  if listener.timer then
+    ark.timer.clear_timer(listener.timer)
+    listener.timer = nil
   end
 
   local timer = vim.uv.new_timer()
@@ -159,10 +159,7 @@ local function check_scope(winnr)
   timer:start(0, config.step, function()
     vim.schedule(function()
       if not listener or listener.timer ~= timer then
-        if not timer:is_closing() then
-          timer:stop()
-          timer:close()
-        end
+        ark.timer.clear_timer(timer)
         return
       end
 
@@ -178,10 +175,7 @@ local function check_scope(winnr)
       end
 
       if progress >= 1 then
-        if not timer:is_closing() then
-          timer:stop()
-          timer:close()
-        end
+        ark.timer.clear_timer(timer)
         if listener and listener.timer == timer then
           listener.timer = nil
         end
@@ -249,9 +243,8 @@ local function disable()
   enabled = false
 
   if listener then
-    if listener.timer and not listener.timer:is_closing() then
-      listener.timer:stop()
-      listener.timer:close()
+    if listener.timer then
+      ark.timer.clear_timer(listener.timer)
     end
     listener = nil
   end

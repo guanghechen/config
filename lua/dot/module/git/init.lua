@@ -40,7 +40,7 @@ local M = setmetatable({}, {
   end,
 })
 
-local augroup = vim.api.nvim_create_augroup("DotModuleGit", { clear = true })
+local augroup = vim.api.nvim_create_augroup("DotModuleGit", { clear = true }) ---@type integer
 
 ---@type ark.timer.IDisposableCallable
 local buf_enter_debounced = ark.timer.debounce(function(bufnr)
@@ -54,7 +54,7 @@ local function init_watcher()
     return
   end
 
-  local workspace = dot.path.workspace()
+  local workspace = dot.path.workspace() ---@type string
   M.repo.new(workspace, function(r)
     if r then
       M.state.o_branch:next(r.abbrev_head)
@@ -125,7 +125,7 @@ function M.show_hunk()
     hunk_board:dispose()
   end
 
-  local bufnr = vim.api.nvim_get_current_buf()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   hunk_board = dot.board.GitHunk.new({ bufnr = bufnr })
   hunk_board:open()
 end
@@ -134,7 +134,7 @@ function M.toggle_blame()
   M.blame.inline_toggle()
 end
 
----@param opts                       { what: string|nil }|nil
+---@param opts                       dot.module.git.browse.IOpenOpts|nil
 function M.open_in_browser(opts)
   M.browse.open(opts)
 end

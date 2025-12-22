@@ -38,6 +38,7 @@ local __module_name__ = "dot.module.image.placement" ---@type string
 ---@field protected _loc                  ?dot.module.image.Loc
 ---@field protected _state                ?dot.module.image.State
 ---@field protected _extmarks             ?dot.module.image.Extmark[]
+---@field protected _debounced            ?ark.timer.IDisposableCallable
 local M = {}
 M.__index = M
 
@@ -139,6 +140,7 @@ function M.new(bufnr, src, opts)
   local debounced = ark.timer.debounce(function()
     update_fn(self)
   end, 10)
+  self._debounced = debounced
   self.update = function(_)
     debounced()
   end
@@ -173,10 +175,11 @@ end
 
 ---@return integer[]
 function M:wins()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   ---@param winnr integer
   return vim.tbl_filter(function(winnr)
     return vim.api.nvim_win_get_buf(winnr) == self.bufnr
-  end, vim.api.nvim_tabpage_list_wins(0))
+  end, vim.api.nvim_tabpage_list_wins(tabnr))
 end
 
 ---@return nil
@@ -186,6 +189,10 @@ function M:close()
   end
   placements[self.bufnr][self.id] = nil
   self.closed = true
+  if self._debounced then
+    self._debounced:dispose()
+    self._debounced = nil
+  end
   self:del()
   pcall(vim.api.nvim_del_augroup_by_id, self.augroup)
 end
@@ -575,10 +582,7 @@ function M:__progress__()
     80,
     vim.schedule_wrap(function()
       if self:ready() or self.img:failed() or not vim.api.nvim_buf_is_valid(self.bufnr) then
-        timer:stop()
-        if not timer:is_closing() then
-          timer:close()
-        end
+        ark.timer.clear_timer(timer)
         return
       end
       vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
