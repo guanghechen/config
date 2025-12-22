@@ -29,7 +29,6 @@ statusline = Nvimbar.new({
 statusline
   :place("left", c.host.username(position), 100)
   :place("left", c.nvim.mode(position), 100)
-  :place("left", c.nvim.pos(position), 100)
   :place("left", c.git.branch(position), 100)
   :place("left", c.file.readonly(position), 95)
   :place("left", c.file.path(position))
@@ -38,13 +37,13 @@ statusline
   --
   :place("center", c.devmode.render_count(position), 100)
   --
-  :place("right", c.cwd.cwd(position), 100)
+  :place("right", c.nvim.pos(position), 100)
+  :place("right", c.file.type_primary(position), 100)
   :place("right", c.nvim.pid(position), 100)
   :place("right", c.nvim.nr(position), 100)
   :place("right", c.file.format(position), 95)
   :place("right", c.file.indent(position), 95)
   :place("right", c.file.encoding(position), 100)
-  :place("right", c.file.type(position), 95)
   :place("right", c.python.env(position), 100)
   :place("right", c.lsp.client(position), 100)
   :place("right", c.lint.status(position), 95)

@@ -316,4 +316,32 @@ function M.type(position)
   return component
 end
 
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
+function M.type_primary(position)
+  local hln_sep = position .. "_file_type_primary_sep" ---@type string
+  local hln_text = position .. "_file_type_primary_text" ---@type string
+
+  ---@type dot.module.nvimbar.IRawComponent
+  local component = {
+    name = "file:type_primary",
+    atomic = true,
+    tight = true,
+    will_change = function(context, prev_context)
+      return prev_context == nil or context.filetype ~= prev_context.filetype
+    end,
+    render = function(context)
+      local filetype = context.filetype ---@type string
+      if filetype == nil or #filetype == 0 then
+        filetype = "unknown"
+      end
+      local content = context.fileicon .. " " .. filetype .. " " ---@type string
+      local text = dot.icon.symbols.sep_left .. content ---@type string
+      local hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
 return M

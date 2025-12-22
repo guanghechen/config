@@ -3,20 +3,26 @@ local txt = ark.nvim.txt
 
 ---@return integer
 ---@return integer
----@return string
-local function calc_row_percentage()
-  local total_lines = vim.fn.line("$")
-  local cursor = vim.api.nvim_win_get_cursor(0)
+local function calc_cursor_pos()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
   local row = cursor[1] ---@type integer
   local col = cursor[2] + 1 ---@type integer
+  return row, col
+end
 
+---@return string
+local function calc_location()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local total_lines = vim.fn.line("$") ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local row = cursor[1] ---@type integer
   if row == 1 then
-    return row, col, "top"
+    return "top"
   elseif row == total_lines then
-    return row, col, "bot"
+    return "bot"
   else
-    local text = ark.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%" ---@type string
-    return row, col, text
+    return ark.string.pad_start(tostring(math.floor(100 * row / total_lines)), 2, " ") .. "%"
   end
 end
 
@@ -215,24 +221,41 @@ end
 ---@return dot.module.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_nvim_pos_sep" ---@type string
-  local hln_text_anchor = position .. "_nvim_pos_text_anchor" ---@type string
-  local hln_text_percentage = position .. "_nvim_pos_text_percentage" ---@type string
-
-  local text_sep = dot.icon.symbols.sep_right ---@type string
-  local hl_text_sep = txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
+  local hln_text = position .. "_nvim_pos_text" ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
-    name = "win:pos",
+    name = "nvim:pos",
     atomic = true,
     tight = true,
     render = function()
-      local row, col, percentage = calc_row_percentage() ---@type integer, integer, string
-      local text_percentage = " " .. percentage ---@type string
-      local text_anchor = " " .. tostring(row) .. "·" .. tostring(col) ---@type string
+      local row, col = calc_cursor_pos() ---@type integer, integer
+      local location = calc_location() ---@type string
+      local content = dot.icon.ui.Location .. " " .. tostring(row) .. "·" .. tostring(col) .. " " .. location .. " " ---@type string
+      local text = dot.icon.symbols.sep_left .. content ---@type string
+      local hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
 
-      local text = text_percentage .. text_sep .. text_anchor ---@type string
-      local hl_text = txt(text_percentage, hln_text_percentage) .. hl_text_sep .. txt(text_anchor, hln_text_anchor) ---@type string
+---@param position                      dot.module.nvimbar.PositionEnum
+---@return dot.module.nvimbar.IRawComponent
+function M.pos_primary(position)
+  local hln_sep = position .. "_nvim_pos_primary_sep" ---@type string
+  local hln_text = position .. "_nvim_pos_primary_text" ---@type string
+
+  ---@type dot.module.nvimbar.IRawComponent
+  local component = {
+    name = "nvim:pos_primary",
+    atomic = true,
+    tight = true,
+    render = function()
+      local row, col = calc_cursor_pos() ---@type integer, integer
+      local location = calc_location() ---@type string
+      local text = " " .. dot.icon.ui.Location .. " " .. location .. " " .. tostring(row) .. "·" .. tostring(col) .. " " .. dot.icon.symbols.sep_right ---@type string
+      local hl_text = txt(" " .. dot.icon.ui.Location .. " " .. location .. " " .. tostring(row) .. "·" .. tostring(col) .. " ", hln_text) .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }

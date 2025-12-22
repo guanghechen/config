@@ -30,8 +30,6 @@ function M.gen_hlgroup_map(context)
     ai_copilot_status_Error = { fg = c.brightRed, bg = "bg_bar" },
     ai_copilot_status_Stopped = { fg = c.red, bg = "bg_bar" },
     ai_copilot_status_Busy = { fg = c.brightYellow, bg = "bg_bar" },
-    ai_copilot_status_Disconnected = { fg = c.red, bg = "bg_bar" },
-    ai_copilot_text = { fg = c.fg2, bg = "bg_bar" },
     ai_status_icon = { fg = c.brightGreen, bg = "bg_bar" },
     ai_status_text = { fg = c.fg2, bg = "bg_bar" },
 
@@ -62,6 +60,7 @@ function M.gen_hlgroup_map(context)
     cwd_sep = { link = "ms_b_none" },
 
     ---! devmode
+    devmode_text = { fg = c.bg0, bg = c.orange, bold = true },
     devmode_render_count_text = { fg = c.bg0, bg = c.orange, bold = true },
     devmode_render_count_sep = { fg = c.orange, bg = c.none, bold = true },
 
@@ -83,14 +82,17 @@ function M.gen_hlgroup_map(context)
     file_readonly = { fg = c.orange, bg = "bg_bar" },
     file_size_text = { fg = c.fg2, bg = "bg_bar" },
     file_status_text = { fg = c.fg2, bg = "bg_bar" },
+    file_type_primary_sep = { fg = bg_pos, bg = c.bg0 },
+    file_type_primary_text = { fg = c.fg2, bg = bg_pos, bold = true },
     file_type_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! git
-    git_branch_text = { fg = c.fg1, bg = "bg_bar" },
+    git_branch_sep = { fg = bg_pos, bg = "bg_bar" },
+    git_branch_text = { fg = c.fg2, bg = bg_pos, bold = true },
 
     ---! host
-    host_username_text = { link = "ms_b_none" },
     host_username_sep = { link = "mf_b_bg0" },
+    host_username_text = { link = "ms_b_none" },
 
     ---! lint
     lint_icon_active = { fg = c.green, bg = "bg_bar" },
@@ -145,18 +147,18 @@ function M.gen_hlgroup_map(context)
     lsp_symbol_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! nvim
-    nvim_mode_text = { link = "mf_b_bg0" },
     nvim_mode_sep = { link = "ms_b_bg2" },
+    nvim_mode_text = { link = "mf_b_bg0" },
     nvim_msg_changes = { fg = c.fg3, bg = "bg_bar" },
     nvim_msg_command = { fg = c.pink, bg = "bg_bar" },
     nvim_msg_lsp = { fg = c.fg4, bg = "bg_bar" },
     nvim_msg_mode = { fg = c.yellow, bg = "bg_bar" },
     nvim_nr = { fg = c.fg3, bg = "bg_bar" },
     nvim_pid = { fg = c.fg3, bg = "bg_bar" },
-    nvim_pos_sep = { fg = bg_pos, bg = "bg_bar" },
-    nvim_pos_text_anchor = { fg = c.fg2, bg = "bg_bar" },
-    nvim_pos_text_percentage = { fg = c.fg2, bg = bg_pos, bold = true },
-    nvim_tab_add = { fg = c.fg1, bg = c.bg3 },
+    nvim_pos_primary_sep = { fg = bg_pos, bg = "bg_bar" },
+    nvim_pos_primary_text = { fg = c.fg2, bg = bg_pos, bold = true },
+    nvim_pos_sep = { link = "ms_b_bg2" },
+    nvim_pos_text = { link = "mf_b_bg0" },
     nvim_tab_item = { fg = c.fg1, bg = "bg_bar" },
     nvim_tab_item_cur = { fg = c.red, bg = bg_bufc },
     nvim_tab_toggle = { fg = c.bg1, bg = c.green },
@@ -222,16 +224,6 @@ function M.gen_hlgroup_map(context)
     termc_sep_left = { link = "ms_b_none" },
     termc_sep_middle = { link = "mf_b_bg0" },
     termc_sep_right = { link = "ms_b_none" },
-
-    ---! widget
-    widget_flag = { fg = c.fg1, bg = t and c.bg2 or c.bg3 },
-    widget_flag_sep = { fg = c.bg4, bg = t and c.bg2 or c.bg3 },
-    widget_flag_enabled = { fg = c.bg1, bg = c.brightBlue },
-    widget_flag_enabled_sep = { fg = c.bg4, bg = c.brightBlue },
-    widget_flag_scope = { fg = c.bg1, bg = c.brightBlue },
-    widget_flag_scope_sep = { fg = c.bg4, bg = c.brightBlue },
-    widget_flag_popup = { fg = c.bg1, bg = c.brightPurple },
-    widget_flag_popup_sep = { fg = c.bg1, bg = c.brightPurple },
   }
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type dot.module.nvimbar.PositionEnum[]

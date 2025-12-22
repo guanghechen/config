@@ -92,7 +92,7 @@ local M = {}
 ---@param position                      dot.module.nvimbar.PositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.client(position)
-  local hln_text = position .. "_client_text" ---@type string
+  local hln_text = position .. "_lsp_client_text" ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
