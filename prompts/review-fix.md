@@ -19,5 +19,5 @@ If any issues remain unresolved, new problems have emerged, or improvements can 
 **Context from previous review (if any):**
 
 ``````text
-{{{ input }}}
+$ARGUMENTS
 ``````

@@ -5,7 +5,7 @@ Please fix the issues identified in the code review. Below are the review commen
 **Review Comments:**
 
 ``````text
-{{{ input }}}
+$ARGUMENTS
 ``````
 
 ---
