@@ -1,11 +1,11 @@
-local __module_name__ = "dot.ux.view.printer" ---@type string
+local __module_name__ = "dot.view.printer" ---@type string
 
----@class dot.ux.view.IPrinterProps
+---@class dot.view.IPrinterProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 ---@field public indent                 ?string
 
----@class dot.ux.view.Printer
+---@class dot.view.Printer
 ---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field protected _disposed           boolean
@@ -21,8 +21,8 @@ M.__index = M
 
 local NSNR_DEFAULT = dot.var.nsnr.view_printer ---@type integer
 
----@param props                         dot.ux.view.IPrinterProps
----@return dot.ux.view.Printer
+---@param props                         dot.view.IPrinterProps
+---@return dot.view.Printer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -44,7 +44,7 @@ function M.new(props)
   return self
 end
 
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:clear()
   self:health()
 
@@ -98,7 +98,7 @@ function M:measure()
 end
 
 ---@param bufnr                         integer
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:render(bufnr)
   self:health()
 
@@ -119,7 +119,7 @@ end
 
 ---@param lines                         string[]
 ---@param highlights                    ?ark.t.IHighlight[]
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:lines(lines, highlights)
   self:health()
 
@@ -174,7 +174,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?ark.t.IHighlightInline[]
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:line(content, highlights)
   self:health()
 
@@ -203,7 +203,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?ark.t.IHighlightInline[]
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:inline(content, highlights)
   self:health()
 
@@ -229,7 +229,7 @@ function M:inline(content, highlights)
   return self
 end
 
----@return dot.ux.view.Printer
+---@return dot.view.Printer
 function M:lf()
   self:health()
 

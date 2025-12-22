@@ -278,6 +278,7 @@ local __mods = {
   uri = "dot.uri",
   ux = "dot.ux",
   var = "dot.var",
+  view = "dot.view",
   win = "dot.win",
 }
 
@@ -303,6 +304,7 @@ local __mods = {
 ---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
 ---@field public ux                     dot.ux
+---@field public view                   dot.view
 ---@field public widget                 dot.widget
 ---
 ---@field public G                      dot.G

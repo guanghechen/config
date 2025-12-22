@@ -7,36 +7,36 @@ local __module_name__ = "dot.module.picker.view.tree" ---@type string
 ---| dot.module.picker.view.tree.ILeafLocationState
 
 ---@alias dot.module.picker.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
 
----@class dot.module.picker.view.tree.IContainerNodeState : dot.ux.view.tree.IContainerNodeState
+---@class dot.module.picker.view.tree.IContainerNodeState : dot.view.tree.IContainerNodeState
 
----@class dot.module.picker.view.tree.ILeafNodeState : dot.ux.view.tree.ILeafNodeState
+---@class dot.module.picker.view.tree.ILeafNodeState : dot.view.tree.ILeafNodeState
 ---@field public text                   string|nil
 ---@field public text_lower             string|nil
 ---@field public cache_match            dot.module.picker.view.tree.INodeMatchResultCache|nil
 
----@class dot.module.picker.view.tree.ILeafLocationState : dot.ux.view.tree.ILeafLocationState
+---@class dot.module.picker.view.tree.ILeafLocationState : dot.view.tree.ILeafLocationState
 
----@class dot.module.picker.view.tree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.tree.IListviewRendererContext : dot.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.ITreeNode
 ---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
 ---@field public tree                   dot.IReadonlyTree
 ---@field public view                   dot.module.picker.TreeView
 
----@class dot.module.picker.view.tree.ITreeviewRendererContext : dot.ux.view.tree.ITreeviewRendererContext
+---@class dot.module.picker.view.tree.ITreeviewRendererContext : dot.view.tree.ITreeviewRendererContext
 ---@field public rootnode               dot.t.ITreeNode
 ---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
 ---@field public tree                   dot.IReadonlyTree
@@ -77,9 +77,9 @@ local __module_name__ = "dot.module.picker.view.tree" ---@type string
 ---@field public render_treeview_leaf   dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
 ---@field public render_treeview_location   dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
 
-local P = dot.ux.view.Tree ---@type dot.ux.view.Tree
+local P = dot.view.Tree ---@type dot.view.Tree
 
----@class dot.module.picker.TreeView : dot.ux.view.Tree
+---@class dot.module.picker.TreeView : dot.view.Tree
 ---@field protected _last_match_result  dot.module.picker.view.tree.INodeMatchResult
 local M = {}
 M.__index = M
@@ -148,7 +148,7 @@ end
 function M:retrieve(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
@@ -163,7 +163,7 @@ function M:match(params)
   self:__health__()
 
   local tree = self._tree ---@type dot.IReadonlyTree
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   local root = params.rootuuid or tree.root ---@type string
@@ -304,8 +304,8 @@ function M:match(params)
   return uuids
 end
 
----@param params                        dot.ux.view.tree.IRenderListviewParams
----@return dot.ux.view.tree.IRenderResult
+---@param params                        dot.view.tree.IRenderListviewParams
+---@return dot.view.tree.IRenderResult
 function M:render_listview(params)
   self:__health__()
 
@@ -330,7 +330,7 @@ function M:render_listview(params)
   local tree = self._tree ---@type dot.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
@@ -342,7 +342,7 @@ function M:render_listview(params)
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
         local L = #text ---@type integer
-        local cache = nodestate.cache_listview ---@type dot.ux.view.tree.INodeListviewResultCache|nil
+        local cache = nodestate.cache_listview ---@type dot.view.tree.INodeListviewResultCache|nil
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 
@@ -363,8 +363,8 @@ function M:render_listview(params)
   return result
 end
 
----@param params                        dot.ux.view.tree.IRenderTreeviewParams
----@return dot.ux.view.tree.IRenderResult
+---@param params                        dot.view.tree.IRenderTreeviewParams
+---@return dot.view.tree.IRenderResult
 function M:render_treeview(params)
   self:__health__()
 
@@ -389,7 +389,7 @@ function M:render_treeview(params)
   local tree = self._tree ---@type dot.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
   for lnum = 1, N, 1 do
@@ -401,7 +401,7 @@ function M:render_treeview(params)
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
         local L = #text ---@type integer
-        local cache = nodestate.cache_treeview ---@type dot.ux.view.tree.INodeTreeviewResultCache|nil
+        local cache = nodestate.cache_treeview ---@type dot.view.tree.INodeTreeviewResultCache|nil
         local rendered_text = cache and cache.text or "" ---@type string
         local offset_final = #indents[lnum] + #rendered_text - L ---@type integer
 

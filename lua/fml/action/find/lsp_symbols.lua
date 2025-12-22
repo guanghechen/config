@@ -17,7 +17,7 @@ local Methods = vim.lsp.protocol.Methods
 ---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
-local plainfile = dot.ux.view.Plainfile.new({ name = name }) ---@type dot.ux.view.Plainfile
+local plainfile = dot.view.Plainfile.new({ name = name }) ---@type dot.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore

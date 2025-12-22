@@ -7,40 +7,40 @@ local __module_name__ = "dot.module.picker.view.filetree" ---@type string
 ---| dot.module.picker.view.filetree.ILocationNodeState
 
 ---@alias dot.module.picker.view.filetree.IListviewFileRenderer
----| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.IListviewLocationRenderer
----| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewFileRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): dot.ux.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: dot.t.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
----@class dot.module.picker.view.filetree.IDirectoryNodeState : dot.ux.view.tree.IContainerNodeState
+---@class dot.module.picker.view.filetree.IDirectoryNodeState : dot.view.tree.IContainerNodeState
 
----@class dot.module.picker.view.filetree.IFileNodeState : dot.ux.view.tree.ILeafNodeState
+---@class dot.module.picker.view.filetree.IFileNodeState : dot.view.tree.ILeafNodeState
 ---@field public locations              dot.module.picker.view.filetree.ILocationNodeState|nil
 ---@field public cache_match            dot.module.picker.view.filetree.INodeMatchResultCache|nil
 
----@class dot.module.picker.view.filetree.ILocationNodeState : dot.ux.view.tree.ILeafLocationState
+---@class dot.module.picker.view.filetree.ILocationNodeState : dot.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
 ---@field public highlights             ?ark.t.IHighlightInline[]
 
----@class dot.module.picker.view.filetree.IListviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.filetree.IListviewRendererContext : dot.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.IFiletreeNode
 ---@field public rootstate              dot.module.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   dot.IReadonlyFiletree
 ---@field public view                   dot.module.picker.FiletreeView
 
----@class dot.module.picker.view.filetree.ITreeviewRendererContext : dot.ux.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.filetree.ITreeviewRendererContext : dot.view.tree.IListviewRendererContext
 ---@field public rootnode               dot.t.IFiletreeNode
 ---@field public rootstate              dot.module.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   dot.IReadonlyFiletree
@@ -83,12 +83,12 @@ local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 ---@field public render_treeview_leaf   ?dot.module.picker.view.filetree.ITreeviewFileRenderer
 ---@field public render_treeview_location   ?dot.module.picker.view.filetree.ITreeviewLocationRenderer
 
-local P = dot.ux.view.Tree ---@type dot.ux.view.Tree
+local P = dot.view.Tree ---@type dot.view.Tree
 
----@class dot.module.picker.FiletreeView : dot.ux.view.Tree
+---@class dot.module.picker.FiletreeView : dot.view.Tree
 ---@field protected _tree               dot.IFiletree
 ---@field protected _last_match_result  dot.module.picker.view.filetree.INodeMatchResult
----@field public insert                 fun(self: dot.module.picker.FiletreeView, uuid: string, state: dot.ux.view.tree.INodeState): dot.module.picker.FiletreeView
+---@field public insert                 fun(self: dot.module.picker.FiletreeView, uuid: string, state: dot.view.tree.INodeState): dot.module.picker.FiletreeView
 local M = {}
 M.__index = M
 setmetatable(M, P)
@@ -108,7 +108,7 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type dot.module.picker.view.filetree.ITreeviewFileRenderer
   local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type dot.module.picker.view.filetree.ITreeviewLocationRenderer
 
-  local super = dot.ux.view.Tree.new({
+  local super = dot.view.Tree.new({
     name = name,
     fullname = fullname,
     indent = indent,
@@ -161,7 +161,7 @@ end
 function M:retrieve(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local nodestate = statemap[uuid] ---@type dot.module.picker.view.filetree.INodeState|nil
@@ -182,7 +182,7 @@ function M:match(params)
   self:__health__()
 
   local tree = self._tree ---@type dot.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local root = params.rootuuid or tree.root ---@type string
@@ -337,7 +337,7 @@ function M:insert_dirpath(dirpath)
   self:__health__()
 
   local filetree = self._tree ---@type dot.IFiletree
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local filenode = filetree:insert_directory_absolute(dirpath)
@@ -387,7 +387,7 @@ function M:insert_filepath(filepath, with_locations)
   self:__health__()
 
   local filetree = self._tree ---@type dot.IFiletree
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local lnum, col, col_end ---@type integer|nil, integer|nil, integer|nil
@@ -467,7 +467,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
   local filetree = self._tree ---@type dot.IFiletree
   local tick_selected = self._tick_selected ---@type integer
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, with_locations)
@@ -570,11 +570,11 @@ end
 function M:traverse_filenode(root, handle)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   local uuids = {} ---@type string[]
 
   self._tree:quick_traverse(root, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type dot.ux.view.tree.INodeState|nil
+    local nodestate = statemap[node.uuid] ---@type dot.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.nodetype == "leaf" then
       ---@cast nodestate                dot.module.picker.view.filetree.IFileNodeState
       handle(node, nodestate)
@@ -585,8 +585,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param params                        dot.ux.view.tree.IRenderListviewParams
----@return dot.ux.view.tree.IRenderResult
+---@param params                        dot.view.tree.IRenderListviewParams
+---@return dot.view.tree.IRenderResult
 function M:render_listview(params)
   self:__health__()
 
@@ -605,7 +605,7 @@ function M:render_listview(params)
   end
 
   local filetree = self._tree ---@type dot.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local tick_matched = self._tick_matched ---@type integer
@@ -657,8 +657,8 @@ function M:render_listview(params)
   return result
 end
 
----@param params                        dot.ux.view.tree.IRenderTreeviewParams
----@return dot.ux.view.tree.IRenderResult
+---@param params                        dot.view.tree.IRenderTreeviewParams
+---@return dot.view.tree.IRenderResult
 function M:render_treeview(params)
   self:__health__()
   local nsnr = DEFAULT_NSNR_MATCHES ---@type integer
@@ -678,7 +678,7 @@ function M:render_treeview(params)
   local indents = result.indents ---@type string[]
   local filetree = self._tree ---@type dot.IReadonlyFiletree
   local tick_matched = self._tick_matched ---@type integer
-  local statemap = self.statemap ---@type table<string, dot.ux.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   if only_matched then
