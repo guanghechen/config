@@ -253,19 +253,8 @@ function M:reveal(uri)
     root_uri = self._tree.state.o_root_uri:snapshot()
   end
 
-  local parts = {} ---@type string[]
-  local current = uri ---@type string
-  while current ~= root_uri and #current > #root_uri do
-    parts[#parts + 1] = current
-    current = self:__get_parent_uri__(current)
-  end
-
-  for i = #parts, 1, -1 do
-    local part_uri = parts[i] ---@type string
-    if part_uri:sub(-1) == "/" then
-      self._tree:toggle_expanded(part_uri, false, "expand")
-    end
-  end
+  local target_dir = uri:sub(-1) == "/" and uri or self:__get_parent_uri__(uri) ---@type string
+  self._tree:expand_path(target_dir)
 
   self._tree:refresh(false)
   self:__refresh__()

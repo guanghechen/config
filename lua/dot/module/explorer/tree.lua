@@ -212,18 +212,6 @@ end
 --- Mutations
 ----------------------------------------------------------------------------------------------------
 
----@return nil
-function M:clear()
-  self:__health__()
-
-  local rootname = self._superroot.nodename ---@type string
-  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
-  local superroot = Node.superroot(rootname, tick_expanded_odd) ---@type dot.module.explorer.Node
-  self._superroot = superroot
-  self._root = superroot
-  self.select_mode = "select"
-end
-
 ---@param uri                           string
 ---@return boolean
 function M:attach(uri)
@@ -244,6 +232,67 @@ function M:attach(uri)
   node:set_expanded(tick_expanded_odd, false)
   self._root = node
   return true
+end
+
+---@return nil
+function M:clear()
+  self:__health__()
+
+  local rootname = self._superroot.nodename ---@type string
+  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
+  local superroot = Node.superroot(rootname, tick_expanded_odd) ---@type dot.module.explorer.Node
+  self._superroot = superroot
+  self._root = superroot
+  self.select_mode = "select"
+end
+
+---@param uri                           string
+---@return nil
+function M:expand_path(uri)
+  self:__health__()
+
+  local root = self._root ---@type dot.module.explorer.Node
+  local root_uri = root.uri ---@type string
+
+  if not vim.startswith(uri, root_uri) then
+    return
+  end
+
+  local relative = uri:sub(#root_uri + 1) ---@type string
+  local pieces = vim.split(relative, "/", { plain = true }) ---@type string[]
+
+  local node = root ---@type dot.module.explorer.Node
+  local current_uri = root_uri ---@type string
+
+  if not node:is_loaded(self.state.tick_loaded) then
+    self:__load_children__(node, current_uri)
+  end
+
+  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
+  node:set_expanded(tick_expanded_odd, false)
+
+  for _, piece in ipairs(pieces) do
+    if piece == "" then
+      goto continue
+    end
+
+    local idx = node.chidxmap[piece] ---@type integer|nil
+    if idx == nil then
+      return
+    end
+
+    node = node.children[idx]
+    current_uri = current_uri .. piece .. (node.nodetype == "D" and "/" or "")
+
+    if node.nodetype == "D" then
+      if not node:is_loaded(self.state.tick_loaded) then
+        self:__load_children__(node, current_uri)
+      end
+      node:set_expanded(tick_expanded_odd, false)
+    end
+
+    ::continue::
+  end
 end
 
 ---@param parenturi                     string
