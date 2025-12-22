@@ -36,7 +36,7 @@ local __module_name__ = "dot.module.board.act" ---@type string
 ---@field protected _preview_winnr      integer|nil
 ---@field protected _ns                 integer
 ---@field protected _input              ark.c.Observable
----@field protected _scheduler_preview  ark.c.Scheduler
+---@field protected _preview_debounced  ark.timer.IDisposableCallable
 
 ---@class dot.module.board.Act : dot.module.board.act.IState
 ---@field public fullname               string
@@ -119,39 +119,30 @@ function M.new(props)
   self._recommended_width = recommended_width
   self._get_width = get_width
 
-  ---@type ark.c.Scheduler
-  self._scheduler_preview = ark.c.Scheduler.new({
-    name = string.format("%s#preview", fullname),
-    mode = "debounce",
-    delay = 64,
-    timeout = 0,
-    silent = ark.fn.falsy,
-    value = ark.c.Observable.from_value(true),
-    task = function()
-      local bufnr = self._preview_bufnr ---@type integer|nil
-      if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-      end
+  self._preview_debounced = ark.timer.debounce(function()
+    local bufnr = self._preview_bufnr ---@type integer|nil
+    if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
 
-      vim.bo[bufnr].modifiable = true
-      vim.bo[bufnr].readonly = false
-      local ok, result = pcall(render_preview, bufnr, input:snapshot())
-      vim.bo[bufnr].modifiable = false
-      vim.bo[bufnr].readonly = true
+    vim.bo[bufnr].modifiable = true
+    vim.bo[bufnr].readonly = false
+    local ok, result = pcall(render_preview, bufnr, input:snapshot())
+    vim.bo[bufnr].modifiable = false
+    vim.bo[bufnr].readonly = true
 
-      if not ok then
-        ark.reporter.error({
-          from = fullname,
-          subject = "render_preview",
-          message = "Failed to render preview",
-          details = { bufnr = bufnr, error = result },
-        })
-      end
-    end,
-  })
+    if not ok then
+      ark.reporter.error({
+        from = fullname,
+        subject = "render_preview",
+        message = "Failed to render preview",
+        details = { bufnr = bufnr, error = result },
+      })
+    end
+  end, 64)
 
   ark.fn.observe({ input }, function()
-    self._scheduler_preview:schedule()
+    self._preview_debounced()
     local ok, result = pcall(on_input_change, input:snapshot())
     if not ok then
       ark.reporter.error({
@@ -178,17 +169,17 @@ function M:dispose()
   local preview_bufnr = self._preview_bufnr ---@type integer|nil
   local preview_winnr = self._preview_winnr ---@type integer|nil
   local input = self._input ---@type ark.c.Observable
-  local scheduler_preview = self._scheduler_preview ---@type ark.c.Scheduler
+  local preview_debounced = self._preview_debounced ---@type ark.timer.IDisposableCallable
 
   self._input_bufnr = nil
   self._input_winnr = nil
   self._preview_bufnr = nil
   self._preview_winnr = nil
   self._input = nil
-  self._scheduler_preview = nil
+  self._preview_debounced = nil
 
   local ok1, error1 = pcall(input.dispose, input)
-  local ok2, error2 = pcall(scheduler_preview.dispose, scheduler_preview)
+  local ok2, error2 = pcall(preview_debounced.dispose, preview_debounced)
   local ok3, error3 = pcall(dot.win.close, input_winnr)
   local ok4, error4 = pcall(dot.win.close, preview_winnr)
   local ok5, error5 = pcall(dot.buf.close, input_bufnr)
@@ -350,7 +341,7 @@ function M:__create_wins__()
   vim.wo[preview_winnr].winhighlight = __highlights__.preview
   vim.wo[preview_winnr].wrap = false
 
-  self._scheduler_preview:schedule({ immediate = true })
+  self._preview_debounced()
 end
 
 ---@protected

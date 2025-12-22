@@ -6,7 +6,7 @@ local __module_name__ = "dot.state.notepad.source-folder" ---@type string
 
 ---@class dot.state.notepad.source.Folder : dot.t.INotepadSource
 ---@field protected default_item_name   fun(): string
----@field protected flush_scheduler     ark.c.Scheduler|nil Debounced flush scheduler
+---@field protected _flush_debounced    ark.timer.IDisposableCallable|nil Debounced flush
 ---@field protected _state              dot.state.notepad.source.FolderState|nil Internal state cache
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
@@ -47,18 +47,9 @@ function M.new(config)
   self._dirty_orders = false
   self._dirty_active = false
 
-  self.flush_scheduler = ark.c.Scheduler.new({
-    name = "notepad-folder-flush",
-    mode = "debounce",
-    ---@diagnostic disable-next-line: unused-local
-    task = function(scheduler, context, callback)
-      self:flush()
-      callback(true, nil)
-    end,
-    value = ark.c.Observable.from_value(nil),
-    delay = FLUSH_DEBOUNCE_MS,
-    timeout = 0,
-  })
+  self._flush_debounced = ark.timer.debounce(function()
+    self:flush()
+  end, FLUSH_DEBOUNCE_MS)
 
   return self
 end
@@ -559,8 +550,8 @@ function M:flush()
     return true
   end
 
-  if self.flush_scheduler ~= nil then
-    self.flush_scheduler:cancel()
+  if self._flush_debounced ~= nil then
+    self._flush_debounced:cancel()
   end
 
   ark.env.mkdirs(self._dirpath, true)
@@ -793,8 +784,8 @@ end
 ---@protected
 ---@return nil
 function M:__schedule_flush__()
-  if self.flush_scheduler ~= nil then
-    self.flush_scheduler:schedule()
+  if self._flush_debounced ~= nil then
+    self._flush_debounced()
   end
 end
 
