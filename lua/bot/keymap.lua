@@ -29,10 +29,10 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
-mk({ "n" }, "n", "'Nn'[v:searchforward].'zv'", "search: next result", true)
+mk({ "n" }, "n", "'Nn'[v:searchforward].'zzzv'", "search: next result", true)
 mk({ "x" }, "n", "'Nn'[v:searchforward]", "search: next result", true)
 mk({ "o" }, "n", "'Nn'[v:searchforward]", "search: next result", true)
-mk({ "n" }, "N", "'nN'[v:searchforward].'zv'", "search: prev result", true)
+mk({ "n" }, "N", "'nN'[v:searchforward].'zzzv'", "search: prev result", true)
 mk({ "x" }, "N", "'nN'[v:searchforward]", "search: prev result", true)
 mk({ "o" }, "N", "'nN'[v:searchforward]", "search: prev result", true)
 
