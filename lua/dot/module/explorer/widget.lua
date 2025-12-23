@@ -1571,6 +1571,24 @@ end
 
 ---@protected
 ---@return nil
+function M:__action_pick_win_open__()
+  local uri = self:get_cursor_uri() ---@type string|nil
+  if uri == nil or uri:sub(-1) == "/" then
+    return
+  end
+
+  local filepath = uri:sub(8) ---@type string
+  local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
+  if winnr == nil then
+    return
+  end
+
+  dot.win.open_filepath(winnr, filepath)
+  vim.api.nvim_set_current_win(winnr)
+end
+
+---@protected
+---@return nil
 function M:__action_pick_win_split__()
   local uri = self:get_cursor_uri() ---@type string|nil
   if uri == nil or uri:sub(-1) == "/" then
@@ -2181,6 +2199,7 @@ function M:__setup_keymaps__(bufnr)
     { modes = { "n" }, key = "p", callback = function() self:__action_paste__() end, desc = "explorer: paste" },
     { modes = { "n" }, key = "q", callback = function() self:hide() end, desc = "explorer: close" },
     { modes = { "n" }, key = "r", callback = function() self:__action_rename__() end, desc = "explorer: rename" },
+    { modes = { "n" }, key = "w", callback = function() self:__action_pick_win_open__() end, desc = "explorer: pick window and open" },
     { modes = { "n" }, key = "x", callback = function() self:__action_cut__() end, desc = "explorer: cut" },
     { modes = { "n" }, key = "z", callback = function() self:__action_toggle_recursive__() end, desc = "explorer: toggle expand/collapse recursively" },
     -- Visual mode
