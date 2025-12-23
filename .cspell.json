@@ -602,6 +602,7 @@
     "macroman",
     "mapclear",
     "mapleader",
+    "maplocalleader",
     "matchadd",
     "matchdelete",
     "matchparen",

@@ -23,6 +23,11 @@ local function mk(modes, keys, cmd, desc, expr)
   end
 end
 
+-- Leader Key --------------------------------------------------------------------------------------
+
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
 ---! https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
 mk({ "n" }, "n", "'Nn'[v:searchforward].'zv'", "search: next result", true)
 mk({ "x" }, "n", "'Nn'[v:searchforward]", "search: next result", true)
@@ -53,6 +58,8 @@ mk({ "x" }, "<", "<gv")
 mk({ "x" }, ">", ">gv")
 
 ---! better up/down
+mk({ "v" }, "J", ":m '>+1<CR>gv=gv", "move: move lines down in visual selection")
+mk({ "v" }, "K", ":m '<-2<CR>gv=gv", "move: move lines up in visual selection")
 mk({ "n", "x" }, { "j", "<Down>" }, "v:count == 0 ? 'gj' : 'j'", "navigate: down", true)
 mk({ "n", "x" }, { "k", "<Up>" }, "v:count == 0 ? 'gk' : 'k'", "navigate: up", true)
 
