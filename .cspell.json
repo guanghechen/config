@@ -931,6 +931,7 @@
     "winfixwidth",
     "winheight",
     "winhighlight",
+    "winhint",
     "winhl",
     "winid",
     "wininfo",
