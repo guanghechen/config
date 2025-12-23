@@ -155,7 +155,7 @@ return {
             end
 
             shade = tonumber(shade) or 0
-            local colors = dot.lang.tailwind.palette[color]
+            local colors = ark.lang.tailwind.palette[color]
             local hex = colors and colors[shade] or nil ---@type string|nil
             if hex then
               return hipatterns.compute_hex_color_group(hex, "fg")

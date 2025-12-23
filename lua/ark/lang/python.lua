@@ -5,7 +5,7 @@ local function getenv(var)
   return v or ""
 end
 
----@class dot.lang.python.IVenvManagerPaths
+---@class ark.lang.python.IVenvManagerPaths
 ---@field public Poetry                 string
 ---@field public PDM                    string
 ---@field public Pipenv                 string
@@ -56,8 +56,8 @@ local ALL_VENV_MANAGER_PATHS = {
   },
 }
 
----@class dot.lang.python
----@field public paths                  dot.lang.python.IVenvManagerPaths
+---@class ark.lang.python
+---@field public paths                  ark.lang.python.IVenvManagerPaths
 local M = {
   paths = ALL_VENV_MANAGER_PATHS[osname],
 }

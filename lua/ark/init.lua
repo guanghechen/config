@@ -66,6 +66,28 @@ local dict = setmetatable({ __mods = dict__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class ark.lang.__mods
+local lang__mods = {
+  python = "ark.lang.python",
+  tailwind = "ark.lang.tailwind",
+}
+
+---@class ark.lang
+---@field public __mods                 ark.lang.__mods
+---@field public python                 ark.lang.python
+---@field public tailwind               ark.lang.tailwind
+local lang = setmetatable({ __mods = lang__mods }, {
+  __index = function(t, k)
+    local m = lang__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class ark.__mods
 local __mods = {
   color = "ark.external.color",
@@ -107,6 +129,7 @@ local __mods = {
 ---@field public fs                     ark.fs
 ---@field public hot                    ark.hot
 ---@field public icon                   ark.icon
+---@field public lang                   ark.lang
 ---@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
@@ -119,6 +142,7 @@ local M = setmetatable({
   __mods = __mods,
   c = c,
   dict = dict,
+  lang = lang,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

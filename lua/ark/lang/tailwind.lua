@@ -1,7 +1,7 @@
----@class dot.lang.tailwind
+---@class ark.lang.tailwind
 local M = {}
 
----@class dot.lang.tailwind.palette
+---@class ark.lang.tailwind.palette
 M.palette = {
   slate = {
     [50] = "#F8FAFC",

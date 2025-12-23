@@ -34,30 +34,6 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.lang.__mods
-local __lang__mods = {
-  python = "dot.lang.python",
-  tailwind = "dot.lang.tailwind",
-}
-
----@class dot.lang
----@field public __mods                 dot.lang.__mods
----@field public python                 dot.lang.python
----@field public tailwind               dot.lang.tailwind
-local lang = setmetatable({
-  __mods = __lang__mods,
-}, {
-  __index = function(t, k)
-    local m = __lang__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.theme.hlgroup.__mods
 local __theme_hlgroup__mods = {
   basic = "dot.theme.hlgroup.basic",
@@ -268,7 +244,6 @@ local __mods = {
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public fn                     dot.fn
----@field public lang                   dot.lang
 ---@field public lsp                    dot.lsp
 ---@field public lsp_action             dot.lsp_action
 ---@field public notifier               dot.notifier
@@ -297,7 +272,6 @@ local __mods = {
 local M = setmetatable({
   __mods = __mods,
   fn = fn,
-  lang = lang,
   state = state,
   theme = theme,
   widget = widget,
