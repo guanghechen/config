@@ -22,6 +22,44 @@ local function is_buf_visible(bufnr)
   return #winnrs > 0
 end
 
+---@class dot.module.git.buffer.IBatchInvalidateOpts
+---@field public clear_compare_text     boolean|nil
+---@field public clear_compare_text_index boolean|nil
+---@field public clear_object_name      boolean|nil
+---@field public delay_interval         integer
+
+---@param opts                          dot.module.git.buffer.IBatchInvalidateOpts
+local function batch_invalidate_and_refresh(opts)
+  local visible_buffers = {} ---@type integer[]
+
+  for bufnr, buf_cache in pairs(cache) do
+    if buf_cache then
+      if opts.clear_compare_text then
+        buf_cache.compare_text = nil
+      end
+      if opts.clear_compare_text_index then
+        buf_cache.compare_text_index = nil
+      end
+      if opts.clear_object_name then
+        buf_cache.object_name = nil
+      end
+      buf_cache.dirty = true
+      buf_cache.force_next_update = true
+      if is_buf_visible(bufnr) then
+        visible_buffers[#visible_buffers + 1] = bufnr
+      end
+    end
+  end
+
+  for index, bufnr in ipairs(visible_buffers) do
+    ark.timer.delay(function()
+      if cache[bufnr] then
+        M.refresh(bufnr, true)
+      end
+    end, index * opts.delay_interval)
+  end
+end
+
 ---@param bufnr                      integer
 ---@return string[]
 local function get_buf_lines(bufnr)
@@ -371,86 +409,29 @@ function M.is_attached(bufnr)
   return buf_cache ~= nil and buf_cache.attached
 end
 
-function M.mark_dirty_all()
-  local visible_buffers = {}              ---@type integer[]
-
-  for bufnr, buf_cache in pairs(cache) do
-    if buf_cache then
-      buf_cache.compare_text_index = nil
-      buf_cache.object_name = nil
-      buf_cache.dirty = true
-      buf_cache.force_next_update = true
-      if is_buf_visible(bufnr) then
-        visible_buffers[#visible_buffers + 1] = bufnr
-      end
-    end
-  end
-
-  for index, bufnr in ipairs(visible_buffers) do
-    local buf_cache = cache[bufnr]
-    if buf_cache then
-      ark.timer.delay(function()
-        if cache[bufnr] then
-          M.refresh(bufnr, true)
-        end
-      end, index * 10)
-    end
-  end
-end
-
 function M.invalidate_compare_text_all()
-  local visible_buffers = {}              ---@type integer[]
-
-  for bufnr, buf_cache in pairs(cache) do
-    if buf_cache then
-      buf_cache.compare_text = nil
-      buf_cache.compare_text_index = nil
-      buf_cache.object_name = nil
-      buf_cache.dirty = true
-      buf_cache.force_next_update = true
-      if is_buf_visible(bufnr) then
-        visible_buffers[#visible_buffers + 1] = bufnr
-      end
-    end
-  end
-
-  for index, bufnr in ipairs(visible_buffers) do
-    local buf_cache = cache[bufnr]
-    if buf_cache then
-      ark.timer.delay(function()
-        if cache[bufnr] then
-          M.refresh(bufnr, true)
-        end
-      end, index * 15)
-    end
-  end
+  batch_invalidate_and_refresh({
+    clear_compare_text = true,
+    clear_compare_text_index = true,
+    clear_object_name = true,
+    delay_interval = 15,
+  })
 end
 
 function M.invalidate_index_all()
-  local visible_buffers = {}              ---@type integer[]
+  batch_invalidate_and_refresh({
+    clear_compare_text_index = true,
+    clear_object_name = true,
+    delay_interval = 20,
+  })
+end
 
-  for bufnr, buf_cache in pairs(cache) do
-    if buf_cache then
-      buf_cache.compare_text_index = nil
-      buf_cache.object_name = nil
-      buf_cache.dirty = true
-      buf_cache.force_next_update = true
-      if is_buf_visible(bufnr) then
-        visible_buffers[#visible_buffers + 1] = bufnr
-      end
-    end
-  end
-
-  for index, bufnr in ipairs(visible_buffers) do
-    local buf_cache = cache[bufnr]
-    if buf_cache then
-      ark.timer.delay(function()
-        if cache[bufnr] then
-          M.refresh(bufnr, true)
-        end
-      end, index * 20)
-    end
-  end
+function M.mark_dirty_all()
+  batch_invalidate_and_refresh({
+    clear_compare_text_index = true,
+    clear_object_name = true,
+    delay_interval = 10,
+  })
 end
 
 ---@param bufnr                      integer
