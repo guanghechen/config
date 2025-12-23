@@ -102,7 +102,7 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _tree               ark.c.Tree
 ---@field protected _composer           dot.module.picker.BasicComposer
----@field protected _plainfile          dot.view.Plainfile
+---@field protected _plainfile          ark.view.Plainfile
 ---@field protected _retriever          ark.c.TreeRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler|nil
 ---@field protected _treeview           dot.module.picker.TreeView
@@ -179,8 +179,8 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type dot.view.Plainfile
-  local plainfile = dot.view.Plainfile.new({
+  ---@type ark.view.Plainfile
+  local plainfile = ark.view.Plainfile.new({
     name = fullname,
   })
 
@@ -238,12 +238,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type ark.view.tree.ViewtypeEnum
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return ark.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -258,7 +258,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -320,7 +320,7 @@ function M.new(props)
     attach_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
       if nodeuuid ~= nil then
-        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -385,7 +385,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local nodestate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+          local nodestate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
           if nodestate ~= nil and (search_pattern == "" or nodestate.nodetype ~= "container") then
             treeview:mark_node_invisible(nodeuuid)
           end
@@ -413,7 +413,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" then
         if nodestate.collapsed then
           treeview:collapse(nodeuuid, "expand", true)
@@ -435,7 +435,7 @@ function M.new(props)
         return
       end
 
-      local nodestate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+      local nodestate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
       if nodestate ~= nil and nodestate.nodetype == "container" and not nodestate.collapsed then
         treeview:collapse(nodeuuid, "collapse", true)
         treeview:mark_cache_listview_dirty()
@@ -480,7 +480,7 @@ function M.new(props)
           return
         end
 
-        local nodestate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+        local nodestate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
         if nodestate == nil then
           return
         end
@@ -504,7 +504,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             local isselected = treeview:isselected(nodeuuid) ---@type boolean
             if not isselected then
@@ -518,7 +518,7 @@ function M.new(props)
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local childstate = treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+          local childstate = treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
           if childstate ~= nil and childstate.nodetype ~= "location" then
             treeview:set_selected(nodeuuid, next_selected)
           end
@@ -728,8 +728,8 @@ function M.new(props)
 
     ---@type dot.module.picker.result.IDraw
     render_result = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
-      local result ---@type dot.view.tree.IRenderResult
+      local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
+      local result ---@type ark.view.tree.IRenderResult
       local only_matched = o_search_pattern:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
@@ -868,7 +868,7 @@ function M:dispose()
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type dot.module.picker.composer.tree.IOnDisposed
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local plainfile = self._plainfile ---@type dot.view.Plainfile
+  local plainfile = self._plainfile ---@type ark.view.Plainfile
   local retriever = self._retriever ---@type ark.c.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
   local treeview = self._treeview ---@type dot.module.picker.TreeView
@@ -1120,9 +1120,9 @@ end
 
 ---@param nodeuuid                      string
 ---@return ark.c.ITreeNode
----@return dot.view.tree.INodeState
+---@return ark.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
-  ---@type dot.view.tree.INodeState|nil
+  ---@type ark.view.tree.INodeState|nil
   local nodestate = self._treeview:retrieve(nodeuuid)
   if nodestate == nil then
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
@@ -1179,7 +1179,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return nil
   end
 
-  local nodestate = self._treeview:retrieve(nodeuuid) ---@type dot.view.tree.INodeState|nil
+  local nodestate = self._treeview:retrieve(nodeuuid) ---@type ark.view.tree.INodeState|nil
   if nodestate == nil then
     return nil
   end

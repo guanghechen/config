@@ -346,12 +346,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type ark.view.tree.ViewtypeEnum
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return ark.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -366,7 +366,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -1358,8 +1358,8 @@ function M.new(props)
 
     ---@type dot.module.searcher.result.IDraw
     render_result = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type dot.view.tree.ViewtypeEnum
-      local result ---@type dot.view.tree.IRenderResult
+      local viewtype = o_flag_viewtype:snapshot() ---@type ark.view.tree.ViewtypeEnum
+      local result ---@type ark.view.tree.IRenderResult
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
       if viewtype == "list" then
