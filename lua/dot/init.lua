@@ -172,7 +172,6 @@ local __mods = {
   term = "dot.term",
   uri = "dot.uri",
   ux = "dot.ux",
-  var = "dot.var",
   view = "dot.view",
   win = "dot.win",
 }
@@ -205,7 +204,6 @@ local __mods = {
 ---@field public path                   dot.path
 ---@field public shell                  dot.shell
 ---@field public tab                    dot.tab
----@field public var                    dot.var
 ---@field public win                    dot.win
 ---
 ---@field public get_default_storage    fun(): dot.context.storage
@@ -286,9 +284,9 @@ end
 
 ---@return nil
 function M.setup_diagnostics()
-  local severity2numhl = M.var.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
-  local severity2prefixicon = M.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
-  local severity2texticon = M.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
+  local severity2numhl = ark.var.diagnostic.severity2numhl ---@type table<vim.diagnostic.Severity, string>
+  local severity2prefixicon = ark.var.diagnostic.severity2prefixicon ---@type table<vim.diagnostic.Severity, string>
+  local severity2texticon = ark.var.diagnostic.severity2texticon ---@type table<vim.diagnostic.Severity, string>
 
   ark.fn.observe({ M.context.lsp.diagnostics_virt_lines }, function()
     ---@type vim.diagnostic.Opts

@@ -210,7 +210,7 @@ function M:open(params)
     vim.bo[bufnr].buftype = "nofile"
     vim.bo[bufnr].filetype = self.filetype
     vim.bo[bufnr].swapfile = false
-    vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] = true
+    vim.b[bufnr][ark.var.N_BUF_DISABLE_LINT] = true
     ark.nvim.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     vim.schedule(function()

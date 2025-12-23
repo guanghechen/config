@@ -1,4 +1,4 @@
----@class dot.var
+---@class ark.var
 ---@field public N_BUF_DISABLE_LINT     string
 ---@field public N_WINLINE_DISABLED     string
 local M = {}
@@ -14,14 +14,14 @@ M.K_CODE_INSERT_SPLITLINE = "g;"
 
 ----------------------------------------------------------------------------------------------------
 
-M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
-M.N_WINLINE_DISABLED = "dot_winline_disabled"
+M.N_BUF_DISABLE_LINT = "ark_buf_disable_lint"
+M.N_WINLINE_DISABLED = "ark_winline_disabled"
 
 ----------------------------------------------------------------------------------------------------
 
 local severity = vim.diagnostic.severity
 
----@class dot.var.diagnostic
+---@class ark.var.diagnostic
 M.diagnostic = {
   ---@type table<vim.diagnostic.Severity, string>
   severity2prefixicon = {
@@ -50,7 +50,7 @@ M.diagnostic = {
 
 local cn = vim.api.nvim_create_namespace
 
----@class dot.var.nsnr
+---@class ark.var.nsnr
 M.nsnr = {
   -- stylua: ignore start
   ai_prompt_preview     = cn("ux:ai:prompt:preview"),
@@ -84,7 +84,7 @@ M.nsnr = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.var.session
+---@class ark.var.session
 M.session = {
   persistent_options = table.concat({
     "blank",
@@ -103,7 +103,7 @@ M.session = {
   }, ","),
 }
 
----@class dot.var.theme
+---@class ark.var.theme
 M.theme = {
   "catppuccin-frappe",
   "catppuccin-latte",
@@ -125,7 +125,7 @@ M.theme = {
   "vsc-light-modern",
 }
 
----@class dot.var.toggler
+---@class ark.var.toggler
 M.toggler = {
   "auto_im_behavior",
   "bufs_relative_behavior",
@@ -173,7 +173,7 @@ M.toggler = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.var.sign
+---@class ark.var.sign
 M.sign = {
   -- stylua: ignore start
   ---! picker
@@ -239,7 +239,7 @@ sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = ark.icon.ui.SelectedCurrent
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.var.zindex
+---@class ark.var.zindex
 M.zindex = {
   BOARD = 100,
   CMDLINE = 10000,

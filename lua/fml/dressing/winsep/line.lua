@@ -1,6 +1,6 @@
 ---@class fml.dressing.winsep.line.highlights
 local config = {
-  zindex = dot.var.zindex.WINSEP,
+  zindex = ark.var.zindex.WINSEP,
   h = {
     border = { " ", " ", "╭", "│", "╰", " ", " ", " " },
     winhighlight = table.concat({
@@ -205,7 +205,7 @@ function M:show()
     self._winnr = winnr
 
     dot.win.set_type(winnr, dot.win.Types.WINSEP)
-    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

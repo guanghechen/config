@@ -18,7 +18,7 @@ local __module_name__ = "dot.view.plainfile" ---@type string
 local M = {}
 M.__index = M
 
-local NSNR_DEFAULT = dot.var.nsnr.view_plainfile ---@type integer
+local NSNR_DEFAULT = ark.var.nsnr.view_plainfile ---@type integer
 
 ---@param props                         dot.view.IPlainfileProps
 ---@return dot.view.Plainfile

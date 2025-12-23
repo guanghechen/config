@@ -13,7 +13,7 @@ return {
     multiwindow = true,
     separator = nil,
     trim_scope = "outer",
-    zindex = dot.var.zindex.TREESITTER_CONTEXT,
+    zindex = ark.var.zindex.TREESITTER_CONTEXT,
   },
   config = function(_, opts)
     local tsc = require("treesitter-context")

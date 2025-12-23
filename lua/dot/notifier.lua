@@ -412,7 +412,7 @@ function M.__create_buf_as_needed__(win)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
 
     for _, highlight in ipairs(highlights) do
-      local nsnr = dot.var.nsnr.notify ---@type integer
+      local nsnr = ark.var.nsnr.notify ---@type integer
       vim.hl.range(bufnr, nsnr, highlight.hlname, { 0, highlight.coll }, { 0, highlight.colr })
     end
   else
@@ -423,7 +423,7 @@ function M.__create_buf_as_needed__(win)
   vim.bo[bufnr].readonly = true
 
   if win.task.highlights then
-    local nsnr = dot.var.nsnr.notify ---@type integer
+    local nsnr = ark.var.nsnr.notify ---@type integer
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     for _, hl in ipairs(win.task.highlights) do
       local row = hl.lnum ---@type integer
@@ -444,7 +444,7 @@ function M.__create_win_as_needed__(win)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = dot.var.zindex.NOTIFIER,
+    zindex = ark.var.zindex.NOTIFIER,
     relative = "editor",
     anchor = "NE",
     col = vim.o.columns - 1,
@@ -465,7 +465,7 @@ function M.__create_win_as_needed__(win)
     win.winnr = winnr
 
     dot.win.set_type(winnr, dot.win.Types.NOTIFY)
-    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].conceallevel = 0
     vim.wo[winnr].concealcursor = "n"

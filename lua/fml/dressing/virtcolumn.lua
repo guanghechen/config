@@ -1,6 +1,6 @@
 ---@class fml.dressing.virtcolumn.config
 local config = {
-  nsnr = dot.var.nsnr.virtcolumn,
+  nsnr = ark.var.nsnr.virtcolumn,
   virt_char = "╎",
   columns = { 100, 120 },
   hlgroups = { "h_virtcolumn_1", "h_virtcolumn_2" },

@@ -125,7 +125,7 @@ local __module_name__ = "dot.view.treeview" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
-local NSNR_DEFAULT = dot.var.nsnr.view_tree ---@type integer
+local NSNR_DEFAULT = ark.var.nsnr.view_tree ---@type integer
 
 ---@param childline                     integer[]
 ---@param location_lnums                integer[]

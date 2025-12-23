@@ -488,8 +488,8 @@ end
 ---@return nil
 function M:__set_prompt__(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
-    local group = dot.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string
-    local sign = dot.var.sign.PICKER_FINDER_PROMPT ---@type string
+    local group = ark.var.sign.GROUP_PICKER_FINDER_PROMPT ---@type string
+    local sign = ark.var.sign.PICKER_FINDER_PROMPT ---@type string
     pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = 1, priority = 10 })
   end
 end

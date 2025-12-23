@@ -470,8 +470,8 @@ function M:set_prompt()
     lnum = vim.fn.line("w0", winnr)
   end
 
-  local group = dot.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
-  local sign = dot.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
+  local group = ark.var.sign.GROUP_SEARCHER_BUFFER_PROMPT ---@type string
+  local sign = ark.var.sign.SEARCHER_BUFFER_PROMPT ---@type string
   pcall(vim.fn.sign_place, 1, group, sign, bufnr, { lnum = lnum, priority = 10 })
 end
 

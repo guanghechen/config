@@ -121,7 +121,7 @@ picker = dot.picker.ListComposer.new({
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    local nsnr_content = dot.var.nsnr.picker_preview ---@type integer
+    local nsnr_content = ark.var.nsnr.picker_preview ---@type integer
     if task.highlights then
       for _, hl in ipairs(task.highlights) do
         local preview_row = content_start_line + hl.lnum - 1 ---@type integer

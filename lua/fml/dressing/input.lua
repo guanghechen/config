@@ -21,7 +21,7 @@
 ---@field public completion             ?string
 
 local contexts = {} ---@type table<integer, fml.dressing.input.IContext>
-local NSNR_DEFAULT_CONFIRMATION = dot.var.nsnr.input_confirmation ---@type integer
+local NSNR_DEFAULT_CONFIRMATION = ark.var.nsnr.input_confirmation ---@type integer
 local MAX_WIDTH = 120 ---@type integer
 
 ---@type string
@@ -142,7 +142,7 @@ function M.input(opts, on_confirm)
   })
 
   dot.win.set_type(winnr, dot.win.Types.INPUT)
-  vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
+  vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false

@@ -128,7 +128,7 @@ local function snacks_provider(items, opts)
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
       if preview.extmarks then
-        local nsnr = dot.var.nsnr.picker_preview ---@type integer
+        local nsnr = ark.var.nsnr.picker_preview ---@type integer
         local line_count = #lines ---@type integer
         for i = 1, #preview.extmarks do
           local extmark = preview.extmarks[i]

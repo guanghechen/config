@@ -623,8 +623,8 @@ local function render_result(_, bufnr, itemmap, matches)
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr_content = dot.var.nsnr.picker_result ---@type integer
-  local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
+  local nsnr_content = ark.var.nsnr.picker_result ---@type integer
+  local nsnr_matches = ark.var.nsnr.picker_matches ---@type integer
 
   for lnum, match in ipairs(matches) do
     local item = itemmap[match.uuid] ---@type dot.module.picker.composer.list.IItem

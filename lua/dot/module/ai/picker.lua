@@ -613,7 +613,7 @@ function M.show_prompt(on_select)
       end
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, text_lines)
 
-      vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.ai_prompt_preview, 0, -1)
+      vim.api.nvim_buf_clear_namespace(bufnr, ark.var.nsnr.ai_prompt_preview, 0, -1)
       for row, mapping in ipairs(row_mapping) do
         if mapping.subline_idx == 1 then
           local rich_line = result.lines[mapping.rich_idx]
@@ -624,7 +624,7 @@ function M.show_prompt(on_select)
             local text_len = first_newline and (first_newline - 1) or #text
             local hlname = chunk[2]
             if hlname and text_len > 0 then
-              vim.hl.range(bufnr, dot.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + text_len })
+              vim.hl.range(bufnr, ark.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + text_len })
             end
             if first_newline then
               break

@@ -15,7 +15,7 @@ function M.insert_splitline()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
   if vim.bo[bufnr].readonly or not vim.bo[bufnr].modifiable then
-    local FEEDBACK_KEY = dot.var.K_CODE_INSERT_SPLITLINE ---@type string
+    local FEEDBACK_KEY = ark.var.K_CODE_INSERT_SPLITLINE ---@type string
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(FEEDBACK_KEY, true, false, true), "n", false)
     return
   end
@@ -24,7 +24,7 @@ function M.insert_splitline()
   local content = SPLITLINE_BY_FILETYPE[filetype] ---@type string|nil
 
   if content == nil then
-    local FEEDBACK_KEY = dot.var.K_CODE_INSERT_SPLITLINE ---@type string
+    local FEEDBACK_KEY = ark.var.K_CODE_INSERT_SPLITLINE ---@type string
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(FEEDBACK_KEY, true, false, true), "n", false)
     return
   end

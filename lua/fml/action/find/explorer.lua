@@ -126,7 +126,7 @@ end
 ---@param highlight_name                string
 ---@return integer
 local function apply_highlight(bufnr, row, byte_pos, text_part, highlight_name)
-  local nsnr_content = dot.var.nsnr.picker_result ---@type integer
+  local nsnr_content = ark.var.nsnr.picker_result ---@type integer
   local byte_len = string.len(text_part) ---@type integer
   vim.hl.range(bufnr, nsnr_content, highlight_name, { row, byte_pos }, { row, byte_pos + byte_len }, { priority = 10 })
   return byte_pos + byte_len
@@ -152,7 +152,7 @@ local function apply_match_highlights(
     return
   end
 
-  local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
+  local nsnr_matches = ark.var.nsnr.picker_matches ---@type integer
   local filename_display_width = vim.api.nvim_strwidth(filename) ---@type integer
   local was_truncated = filename_display_width > filename_max_display_width
   local display_filename_byte_len = string.len(display_filename) ---@type integer
@@ -237,7 +237,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     -- Permission highlight
     local text_perm = ark.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
     local perm_hl = fileitem.type == "directory" and "f_fe_perm_dir" or "f_fe_perm_file" ---@type string
-    local nsnr_content = dot.var.nsnr.picker_result ---@type integer
+    local nsnr_content = ark.var.nsnr.picker_result ---@type integer
     vim.hl.range(bufnr, nsnr_content, perm_hl, { row, byte_pos }, { row, byte_pos + 1 }, { priority = 10 })
     vim.hl.range(
       bufnr,
@@ -562,7 +562,7 @@ local function preview_render(composer, bufnr)
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    local nsnr_content = dot.var.nsnr.picker_preview ---@type integer
+    local nsnr_content = ark.var.nsnr.picker_preview ---@type integer
     for _, hl in ipairs(highlights) do
       if hl.lnum <= #lines then
         vim.hl.range(

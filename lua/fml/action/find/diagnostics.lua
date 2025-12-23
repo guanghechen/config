@@ -274,17 +274,17 @@ picker = dot.picker.FiletreeComposer.new({
     end
 
     local diagnostics = vim.diagnostic.get(bufnr_sourcefile) ---@type vim.Diagnostic[]
-    vim.diagnostic.set(dot.var.nsnr.diagnostic, bufnr, diagnostics, {
+    vim.diagnostic.set(ark.var.nsnr.diagnostic, bufnr, diagnostics, {
       virtual_text = false,
       virtual_lines = {
         format = function(diagnostic)
-          local icon = dot.var.diagnostic.severity2prefixicon[diagnostic.severity] or ""
+          local icon = ark.var.diagnostic.severity2prefixicon[diagnostic.severity] or ""
           return string.format("%s %s", icon, diagnostic.message)
         end,
       },
       signs = {
-        text = dot.var.diagnostic.severity2texticon,
-        numhl = dot.var.diagnostic.severity2numhl,
+        text = ark.var.diagnostic.severity2texticon,
+        numhl = ark.var.diagnostic.severity2numhl,
       },
       severity_sort = true,
       underline = true,
