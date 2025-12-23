@@ -1933,8 +1933,7 @@ function M:__create_nvimbar__()
         vim.wo[winnr].winbar = result
       end
     end,
-  })
-    :place("left", c.explorer.winbar(self._tree.state.o_root_uri, position, nvimbar_flags, get_width), 100)
+  }):place("left", c.explorer.winbar(self._tree.state.o_root_uri, position, nvimbar_flags, get_width), 100)
 
   return nvimbar
 end
@@ -2137,77 +2136,485 @@ function M:__setup_keymaps__(bufnr)
 
   ---@type ark.t.IKeymap[]
   local keymaps = {
-    -- Mouse
-    { modes = { "n" }, key = "<2-LeftMouse>", callback = function() self:__action_open__() end, desc = "explorer: open/toggle (double-click)" },
-    -- <M-*>
-    { modes = { "n" }, key = "<M-r>", callback = function() self:__render__() end, desc = "explorer: redraw" },
-    -- <D-*>
-    { modes = { "n" }, key = "<D-r>", callback = function() self:__render__() end, desc = "explorer: redraw" },
-    -- <C-a>*
-    { modes = { "n" }, key = "<C-a>r", callback = function() self:__render__() end, desc = "explorer: redraw" },
+    {
+      modes = { "n" },
+      key = "<2-LeftMouse>",
+      callback = function()
+        self:__action_open__()
+      end,
+      desc = "explorer: open/toggle (double-click)",
+    },
+    {
+      modes = { "n" },
+      key = "<C-a>r",
+      aliases = { "<D-r>", "<M-r>" },
+      callback = function()
+        self:refresh()
+      end,
+      desc = "explorer: redraw",
+    },
     -- <C-*>
-    { modes = { "n" }, key = "<C-q>", callback = function() self:__action_send_to_quickfix__() end, desc = "explorer: send selection to quickfix" },
-    { modes = { "n" }, key = "<C-t>", callback = function() self:__action_open_tab__() end, desc = "explorer: open in tab" },
-    { modes = { "n" }, key = "<C-v>", callback = function() self:__action_open_vsplit__() end, desc = "explorer: open in vsplit" },
-    { modes = { "n" }, key = "<C-x>", callback = function() self:__action_open_split__() end, desc = "explorer: open in split" },
+    {
+      modes = { "n" },
+      key = "<C-q>",
+      callback = function()
+        self:__action_send_to_quickfix__()
+      end,
+      desc = "explorer: send selection to quickfix",
+    },
+    {
+      modes = { "n" },
+      key = "<C-t>",
+      callback = function()
+        self:__action_open_tab__()
+      end,
+      desc = "explorer: open in tab",
+    },
+    {
+      modes = { "n" },
+      key = "<C-v>",
+      callback = function()
+        self:__action_open_vsplit__()
+      end,
+      desc = "explorer: open in vsplit",
+    },
+    {
+      modes = { "n" },
+      key = "<C-x>",
+      callback = function()
+        self:__action_open_split__()
+      end,
+      desc = "explorer: open in split",
+    },
     -- Special keys
-    { modes = { "n" }, key = "<BS>", callback = function() self:__action_go_parent__() end, desc = "explorer: go to parent directory" },
-    { modes = { "n" }, key = "<CR>", callback = function() self:__action_open__() end, desc = "explorer: open/toggle" },
-    { modes = { "n" }, key = "<Tab>", callback = function() self:__action_select_toggle__() end, desc = "explorer: toggle selection" },
+    {
+      modes = { "n" },
+      key = "<BS>",
+      callback = function()
+        self:__action_go_parent__()
+      end,
+      desc = "explorer: go to parent directory",
+    },
+    {
+      modes = { "n" },
+      key = "<CR>",
+      callback = function()
+        self:__action_open__()
+      end,
+      desc = "explorer: open/toggle",
+    },
+    {
+      modes = { "n" },
+      key = "<Tab>",
+      callback = function()
+        self:__action_select_toggle__()
+      end,
+      desc = "explorer: toggle selection",
+    },
     -- Symbols
-    { modes = { "n" }, key = ".", callback = function() self:__action_set_root__() end, desc = "explorer: set as root" },
-    { modes = { "n" }, key = "?", callback = function() self:__action_show_keysheet__() end, desc = "explorer: show keymap help" },
-    { modes = { "n" }, key = "[d", callback = function() self:__action_goto_diagnostic__("prev") end, desc = "explorer: go to prev diagnostic file" },
-    { modes = { "n" }, key = "[e", callback = function() self:__action_goto_diagnostic_error__("prev") end, desc = "explorer: go to prev diagnostic error file" },
-    { modes = { "n" }, key = "[h", callback = function() self:__action_goto_git_changed__("prev") end, desc = "explorer: go to prev git changed file" },
-    { modes = { "n" }, key = "[i", callback = function() self:__action_jump_parent__() end, desc = "explorer: jump to parent line" },
-    { modes = { "n" }, key = "[w", callback = function() self:__action_goto_diagnostic_warning__("prev") end, desc = "explorer: go to prev diagnostic warning file" },
-    { modes = { "n" }, key = "]d", callback = function() self:__action_goto_diagnostic__("next") end, desc = "explorer: go to next diagnostic file" },
-    { modes = { "n" }, key = "]e", callback = function() self:__action_goto_diagnostic_error__("next") end, desc = "explorer: go to next diagnostic error file" },
-    { modes = { "n" }, key = "]h", callback = function() self:__action_goto_git_changed__("next") end, desc = "explorer: go to next git changed file" },
-    { modes = { "n" }, key = "]i", callback = function() self:__action_jump_last_child__() end, desc = "explorer: jump to last child" },
-    { modes = { "n" }, key = "]w", callback = function() self:__action_goto_diagnostic_warning__("next") end, desc = "explorer: go to next diagnostic warning file" },
+    {
+      modes = { "n" },
+      key = ".",
+      callback = function()
+        self:__action_set_root__()
+      end,
+      desc = "explorer: set as root",
+    },
+    {
+      modes = { "n" },
+      key = "?",
+      callback = function()
+        self:__action_show_keysheet__()
+      end,
+      desc = "explorer: show keymap help",
+    },
+    {
+      modes = { "n" },
+      key = "[d",
+      callback = function()
+        self:__action_goto_diagnostic__("prev")
+      end,
+      desc = "explorer: go to prev diagnostic file",
+    },
+    {
+      modes = { "n" },
+      key = "[e",
+      callback = function()
+        self:__action_goto_diagnostic_error__("prev")
+      end,
+      desc = "explorer: go to prev diagnostic error file",
+    },
+    {
+      modes = { "n" },
+      key = "[h",
+      callback = function()
+        self:__action_goto_git_changed__("prev")
+      end,
+      desc = "explorer: go to prev git changed file",
+    },
+    {
+      modes = { "n" },
+      key = "[i",
+      callback = function()
+        self:__action_jump_parent__()
+      end,
+      desc = "explorer: jump to parent line",
+    },
+    {
+      modes = { "n" },
+      key = "[w",
+      callback = function()
+        self:__action_goto_diagnostic_warning__("prev")
+      end,
+      desc = "explorer: go to prev diagnostic warning file",
+    },
+    {
+      modes = { "n" },
+      key = "]d",
+      callback = function()
+        self:__action_goto_diagnostic__("next")
+      end,
+      desc = "explorer: go to next diagnostic file",
+    },
+    {
+      modes = { "n" },
+      key = "]e",
+      callback = function()
+        self:__action_goto_diagnostic_error__("next")
+      end,
+      desc = "explorer: go to next diagnostic error file",
+    },
+    {
+      modes = { "n" },
+      key = "]h",
+      callback = function()
+        self:__action_goto_git_changed__("next")
+      end,
+      desc = "explorer: go to next git changed file",
+    },
+    {
+      modes = { "n" },
+      key = "]i",
+      callback = function()
+        self:__action_jump_last_child__()
+      end,
+      desc = "explorer: jump to last child",
+    },
+    {
+      modes = { "n" },
+      key = "]w",
+      callback = function()
+        self:__action_goto_diagnostic_warning__("next")
+      end,
+      desc = "explorer: go to next diagnostic warning file",
+    },
     -- Uppercase letters
-    { modes = { "n" }, key = "A", callback = function() self:__action_create_directory__() end, desc = "explorer: create directory" },
-    { modes = { "n" }, key = "H", callback = function() self._tree.state.o_flag_hidden:next(not self._tree.state.o_flag_hidden:snapshot()) end, desc = "explorer: toggle hidden files" },
-    { modes = { "n" }, key = "J", callback = function() self:__action_pick_win_split__() end, desc = "explorer: pick window and split" },
-    { modes = { "n" }, key = "L", callback = function() self:__action_pick_win_vsplit__() end, desc = "explorer: pick window and vsplit" },
-    { modes = { "n" }, key = "O", callback = function() self:__action_open_system_explorer__() end, desc = "explorer: open in system explorer" },
-    { modes = { "n" }, key = "R", callback = function() self:refresh() end, desc = "explorer: refresh" },
-    { modes = { "n" }, key = "W", callback = function() self:__action_collapse_all__() end, desc = "explorer: collapse all" },
+    {
+      modes = { "n" },
+      key = "A",
+      callback = function()
+        self:__action_create_directory__()
+      end,
+      desc = "explorer: create directory",
+    },
+    {
+      modes = { "n" },
+      key = "H",
+      callback = function()
+        self._tree.state.o_flag_hidden:next(not self._tree.state.o_flag_hidden:snapshot())
+      end,
+      desc = "explorer: toggle hidden files",
+    },
+    {
+      modes = { "n" },
+      key = "J",
+      callback = function()
+        self:__action_pick_win_split__()
+      end,
+      desc = "explorer: pick window and split",
+    },
+    {
+      modes = { "n" },
+      key = "L",
+      callback = function()
+        self:__action_pick_win_vsplit__()
+      end,
+      desc = "explorer: pick window and vsplit",
+    },
+    {
+      modes = { "n" },
+      key = "O",
+      callback = function()
+        self:__action_open_system_explorer__()
+      end,
+      desc = "explorer: open in system explorer",
+    },
+    {
+      modes = { "n" },
+      key = "R",
+      callback = function()
+        self:refresh()
+      end,
+      desc = "explorer: refresh",
+    },
+    {
+      modes = { "n" },
+      key = "W",
+      callback = function()
+        self:__action_collapse_all__()
+      end,
+      desc = "explorer: collapse all",
+    },
     -- Lowercase letters
-    { modes = { "n" }, key = "a", callback = function() self:__action_create_file__() end, desc = "explorer: create file" },
-    { modes = { "n" }, key = "c", callback = function() self:__action_copy_node__() end, desc = "explorer: copy node" },
-    { modes = { "n" }, key = "d", callback = function() self:__action_delete__() end, desc = "explorer: delete" },
-    { modes = { "n" }, key = "gb", callback = function() self:__action_go_prev__() end, desc = "explorer: go to previous root" },
-    { modes = { "n" }, key = "gc", callback = function() self:__action_go_cwd__() end, desc = "explorer: go to cwd" },
-    { modes = { "n" }, key = "gw", callback = function() self:__action_go_home__() end, desc = "explorer: go to workspace root" },
-    { modes = { "n" }, key = "h", callback = function() self:__action_collapse_or_parent__() end, desc = "explorer: collapse/go parent" },
-    { modes = { "n" }, key = "l", callback = function() self:__action_open__() end, desc = "explorer: open/toggle" },
-    { modes = { "n" }, key = "mc", callback = function() self:__action_copy_selected__() end, desc = "explorer: copy selected to directory" },
-    { modes = { "n" }, key = "md", callback = function() self:__action_delete_selected__() end, desc = "explorer: delete selected" },
-    { modes = { "n" }, key = "mo", callback = function() self:__action_open_selected__() end, desc = "explorer: open selected files" },
-    { modes = { "n" }, key = "mx", callback = function() self:__action_move_selected__() end, desc = "explorer: move selected to directory" },
-    { modes = { "n" }, key = "o", callback = function() self:__action_open__() end, desc = "explorer: open/toggle" },
-    { modes = { "n" }, key = "oa", callback = function() self:__action_add_locations_to_ai__() end, desc = "explorer: add locations to ai" },
-    { modes = { "n" }, key = "oc", callback = function() self:__action_copy_path__() end, desc = "explorer: copy path" },
-    { modes = { "n" }, key = "oe", callback = function() self:__action_open_file_explorer__() end, desc = "explorer: open file explorer" },
-    { modes = { "n" }, key = "of", callback = function() self:__action_open_file_finder__() end, desc = "explorer: open file finder" },
-    { modes = { "n" }, key = "oi", callback = function() self:__action_show_file_info__() end, desc = "explorer: show file info" },
-    { modes = { "n" }, key = "oo", callback = function() self:__action_open_system_explorer__() end, desc = "explorer: open in system explorer" },
-    { modes = { "n" }, key = "os", callback = function() self:__action_open_searcher__() end, desc = "explorer: open searcher" },
-    { modes = { "n" }, key = "p", callback = function() self:__action_paste__() end, desc = "explorer: paste" },
-    { modes = { "n" }, key = "q", callback = function() self:hide() end, desc = "explorer: close" },
-    { modes = { "n" }, key = "r", callback = function() self:__action_rename__() end, desc = "explorer: rename" },
-    { modes = { "n" }, key = "w", callback = function() self:__action_pick_win_open__() end, desc = "explorer: pick window and open" },
-    { modes = { "n" }, key = "x", callback = function() self:__action_cut__() end, desc = "explorer: cut" },
-    { modes = { "n" }, key = "z", callback = function() self:__action_toggle_recursive__() end, desc = "explorer: toggle expand/collapse recursively" },
+    {
+      modes = { "n" },
+      key = "a",
+      callback = function()
+        self:__action_create_file__()
+      end,
+      desc = "explorer: create file",
+    },
+    {
+      modes = { "n" },
+      key = "c",
+      callback = function()
+        self:__action_copy_node__()
+      end,
+      desc = "explorer: copy node",
+    },
+    {
+      modes = { "n" },
+      key = "d",
+      callback = function()
+        self:__action_delete__()
+      end,
+      desc = "explorer: delete",
+    },
+    {
+      modes = { "n" },
+      key = "gb",
+      callback = function()
+        self:__action_go_prev__()
+      end,
+      desc = "explorer: go to previous root",
+    },
+    {
+      modes = { "n" },
+      key = "gc",
+      callback = function()
+        self:__action_go_cwd__()
+      end,
+      desc = "explorer: go to cwd",
+    },
+    {
+      modes = { "n" },
+      key = "gw",
+      callback = function()
+        self:__action_go_home__()
+      end,
+      desc = "explorer: go to workspace root",
+    },
+    {
+      modes = { "n" },
+      key = "h",
+      callback = function()
+        self:__action_collapse_or_parent__()
+      end,
+      desc = "explorer: collapse/go parent",
+    },
+    {
+      modes = { "n" },
+      key = "l",
+      callback = function()
+        self:__action_open__()
+      end,
+      desc = "explorer: open/toggle",
+    },
+    {
+      modes = { "n" },
+      key = "mc",
+      callback = function()
+        self:__action_copy_selected__()
+      end,
+      desc = "explorer: copy selected to directory",
+    },
+    {
+      modes = { "n" },
+      key = "md",
+      callback = function()
+        self:__action_delete_selected__()
+      end,
+      desc = "explorer: delete selected",
+    },
+    {
+      modes = { "n" },
+      key = "mo",
+      callback = function()
+        self:__action_open_selected__()
+      end,
+      desc = "explorer: open selected files",
+    },
+    {
+      modes = { "n" },
+      key = "mx",
+      callback = function()
+        self:__action_move_selected__()
+      end,
+      desc = "explorer: move selected to directory",
+    },
+    {
+      modes = { "n" },
+      key = "o",
+      callback = function()
+        self:__action_open__()
+      end,
+      desc = "explorer: open/toggle",
+    },
+    {
+      modes = { "n" },
+      key = "oa",
+      callback = function()
+        self:__action_add_locations_to_ai__()
+      end,
+      desc = "explorer: add locations to ai",
+    },
+    {
+      modes = { "n" },
+      key = "oc",
+      callback = function()
+        self:__action_copy_path__()
+      end,
+      desc = "explorer: copy path",
+    },
+    {
+      modes = { "n" },
+      key = "oe",
+      callback = function()
+        self:__action_open_file_explorer__()
+      end,
+      desc = "explorer: open file explorer",
+    },
+    {
+      modes = { "n" },
+      key = "of",
+      callback = function()
+        self:__action_open_file_finder__()
+      end,
+      desc = "explorer: open file finder",
+    },
+    {
+      modes = { "n" },
+      key = "oi",
+      callback = function()
+        self:__action_show_file_info__()
+      end,
+      desc = "explorer: show file info",
+    },
+    {
+      modes = { "n" },
+      key = "oo",
+      callback = function()
+        self:__action_open_system_explorer__()
+      end,
+      desc = "explorer: open in system explorer",
+    },
+    {
+      modes = { "n" },
+      key = "os",
+      callback = function()
+        self:__action_open_searcher__()
+      end,
+      desc = "explorer: open searcher",
+    },
+    {
+      modes = { "n" },
+      key = "p",
+      callback = function()
+        self:__action_paste__()
+      end,
+      desc = "explorer: paste",
+    },
+    {
+      modes = { "n" },
+      key = "q",
+      callback = function()
+        self:hide()
+      end,
+      desc = "explorer: close",
+    },
+    {
+      modes = { "n" },
+      key = "r",
+      callback = function()
+        self:__action_rename__()
+      end,
+      desc = "explorer: rename",
+    },
+    {
+      modes = { "n" },
+      key = "w",
+      callback = function()
+        self:__action_pick_win_open__()
+      end,
+      desc = "explorer: pick window and open",
+    },
+    {
+      modes = { "n" },
+      key = "x",
+      callback = function()
+        self:__action_cut__()
+      end,
+      desc = "explorer: cut",
+    },
+    {
+      modes = { "n" },
+      key = "z",
+      callback = function()
+        self:__action_toggle_recursive__()
+      end,
+      desc = "explorer: toggle expand/collapse recursively",
+    },
     -- Visual mode
-    { modes = { "x" }, key = "c", callback = function() self:__action_copy_visual__() end, desc = "explorer: copy (visual)" },
-    { modes = { "x" }, key = "d", callback = function() self:__action_delete_visual__() end, desc = "explorer: delete (visual)" },
-    { modes = { "x" }, key = "m", callback = function() self:__action_mark_visual__() end, desc = "explorer: mark (visual)" },
-    { modes = { "x" }, key = "oa", callback = function() self:__action_add_locations_to_ai_visual__() end, desc = "explorer: add locations to ai (visual)" },
-    { modes = { "x" }, key = "x", callback = function() self:__action_cut_visual__() end, desc = "explorer: cut (visual)" },
+    {
+      modes = { "x" },
+      key = "c",
+      callback = function()
+        self:__action_copy_visual__()
+      end,
+      desc = "explorer: copy (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "d",
+      callback = function()
+        self:__action_delete_visual__()
+      end,
+      desc = "explorer: delete (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "m",
+      callback = function()
+        self:__action_mark_visual__()
+      end,
+      desc = "explorer: mark (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "oa",
+      callback = function()
+        self:__action_add_locations_to_ai_visual__()
+      end,
+      desc = "explorer: add locations to ai (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "x",
+      callback = function()
+        self:__action_cut_visual__()
+      end,
+      desc = "explorer: cut (visual)",
+    },
   }
 
   local flags = self:__get_flags__() ---@type dot.module.explorer.widget.IFlagItem[]
