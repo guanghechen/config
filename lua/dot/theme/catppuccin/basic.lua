@@ -1,8 +1,8 @@
----@class dot.theme.hlgroup.catppuccin.basic
+---@class dot.theme.catppuccin.basic
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return dot.theme.hlgroup.common.modes_color_map
+---@return dot.theme.common.modes_color_map
 function M.gen_modes_color_map(context)
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local mc = {

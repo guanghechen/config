@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.vsc.plugin
+---@class dot.theme.vsc.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

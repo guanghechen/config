@@ -26,7 +26,7 @@ function M.refresh_all()
     pcall(function()
       ark.hot.reload_module("ark.lang")
       ark.hot.reload_module("ark.theme")
-      ark.hot.reload_module("dot.theme.hlgroup")
+      ark.hot.reload_module("dot.theme")
       dot.command.definitions.ux.reload_theme:execute("force")
     end)
   end

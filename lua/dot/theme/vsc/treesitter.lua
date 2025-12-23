@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.vsc.treesitter
+---@class dot.theme.vsc.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

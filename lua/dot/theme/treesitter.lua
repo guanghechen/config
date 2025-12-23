@@ -1,10 +1,10 @@
----@class dot.theme.hlgroup.treesitter
+---@class dot.theme.treesitter
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("dot.theme.hlgroup.%s.treesitter", context.scheme.theme) ---@type string
+  local md = string.format("dot.theme.%s.treesitter", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)

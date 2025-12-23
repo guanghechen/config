@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.catppuccin.plugin
+---@class dot.theme.catppuccin.plugin
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

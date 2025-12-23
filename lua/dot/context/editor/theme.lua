@@ -130,7 +130,7 @@ function M.apply_integration(params)
       scheme = scheme,
       transparency = transparency,
     }
-    local h = dot.theme.hlgroup[integration]
+    local h = dot.theme[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
     local uxTheme = ark.c.Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -151,8 +151,8 @@ function M.apply_theme(params)
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
 
-    ---@type dot.theme.hlgroup.nvimbar
-    local nvimbar_hlgroup_map = dot.theme.hlgroup.nvimbar.gen_hlgroup_map({
+    ---@type dot.theme.nvimbar
+    local nvimbar_hlgroup_map = dot.theme.nvimbar.gen_hlgroup_map({
       theme = theme,
       scheme = scheme,
       transparency = transparency,
@@ -160,7 +160,7 @@ function M.apply_theme(params)
 
     local uxTheme = ark.c.Theme.new()
     for _, integration in ipairs(integrations) do
-      local h = dot.theme.hlgroup[integration]
+      local h = dot.theme[integration]
       ---@return table<string, ark.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 

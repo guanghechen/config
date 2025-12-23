@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.vsc.lsp
+---@class dot.theme.vsc.lsp
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

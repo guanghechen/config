@@ -34,50 +34,29 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.theme.hlgroup.__mods
-local __theme_hlgroup__mods = {
-  basic = "dot.theme.hlgroup.basic",
-  common = "dot.theme.hlgroup.common",
-  lsp = "dot.theme.hlgroup.lsp",
-  nvimbar = "dot.theme.hlgroup.nvimbar",
-  plugin = "dot.theme.hlgroup.plugin",
-  treesitter = "dot.theme.hlgroup.treesitter",
-  widget = "dot.theme.hlgroup.widget",
-}
-
----@class dot.theme.hlgroup
----@field public __mods                 dot.theme.hlgroup.__mods
----@field public basic                  dot.theme.hlgroup.basic
----@field public common                 dot.theme.hlgroup.common
----@field public lsp                    dot.theme.hlgroup.lsp
----@field public nvimbar                dot.theme.hlgroup.nvimbar
----@field public plugin                 dot.theme.hlgroup.plugin
----@field public treesitter             dot.theme.hlgroup.treesitter
----@field public widget                 dot.theme.hlgroup.widget
-local hlgroup = setmetatable({
-  __mods = __theme_hlgroup__mods,
-}, {
-  __index = function(t, k)
-    local m = __theme_hlgroup__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.theme.__mods
-local __theme__mods = {}
+local __theme__mods = {
+  basic = "dot.theme.basic",
+  common = "dot.theme.common",
+  lsp = "dot.theme.lsp",
+  nvimbar = "dot.theme.nvimbar",
+  plugin = "dot.theme.plugin",
+  treesitter = "dot.theme.treesitter",
+  widget = "dot.theme.widget",
+}
 
 ---@class dot.theme
 ---@field public __mods                 dot.theme.__mods
----@field public hlgroup                dot.theme.hlgroup
+---@field public basic                  dot.theme.basic
+---@field public common                 dot.theme.common
+---@field public lsp                    dot.theme.lsp
+---@field public nvimbar                dot.theme.nvimbar
+---@field public plugin                 dot.theme.plugin
 ---@field public scheme                 ark.theme.scheme
+---@field public treesitter             dot.theme.treesitter
+---@field public widget                 dot.theme.widget
 local theme = setmetatable({
   __mods = __theme__mods,
-  hlgroup = hlgroup,
   scheme = ark.theme.scheme,
 }, {
   __index = function(t, k)

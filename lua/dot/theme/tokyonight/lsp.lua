@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.tokyonight.lsp
+---@class dot.theme.tokyonight.lsp
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

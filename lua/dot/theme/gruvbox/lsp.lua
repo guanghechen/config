@@ -1,4 +1,4 @@
----@class dot.theme.hlgroup.gruvbox.lsp
+---@class dot.theme.gruvbox.lsp
 local M = {}
 
 ---@param context                       dot.t.theme.IContext

@@ -70,7 +70,7 @@ vim.api.nvim_create_autocmd("FileType", {
 vim.api.nvim_create_autocmd("ModeChanged", {
   group = ark.nvim.augroup("bootstrap_on_ModeChanged"),
   callback = function()
-    dot.theme.hlgroup.common.on_mode_changed()
+    dot.theme.common.on_mode_changed()
   end,
 })
 
