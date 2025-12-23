@@ -215,6 +215,29 @@ M.git = {
   Conflict = "",
 }
 
+---@class ark.icon.lsp
+M.lsp = {
+  basedpyright = "",
+  bashls = "",
+  copilot = M.app.Copilot,
+  cssls = "",
+  docker_compose_language_service = "",
+  dockerls = "",
+  emmet_language_server = "",
+  eslint = "",
+  html = "󰌝",
+  jsonls = "",
+  lua_ls = "",
+  ruff = "󰄛",
+  rust_analyzer = "",
+  stylua = "󰢱",
+  tailwindcss = "󱏿",
+  taplo = "",
+  vtsls = "󰛦",
+  vue_ls = "󰡄",
+  yamlls = "",
+}
+
 ----------------------------------------------------------------------------------------------------
 
 ---@class ark.icon.kind

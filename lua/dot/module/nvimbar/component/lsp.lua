@@ -60,31 +60,67 @@ local fn_show_info = dot.G.register_anonymous_fn(function(bufnr)
   })
 end)
 
----@return string
-local function get_client_text()
+---@class dot.module.nvimbar.component.lsp.ILspIcon
+---@field public icon                   string
+---@field public hl                     string
+
+---@return                              string[]
+---@return                              dot.module.nvimbar.component.lsp.ILspIcon[]
+---@param position                      dot.module.nvimbar.PositionEnum
+local function get_lsp_clients(position)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.buf.is_valid(bufnr) then
-    return ""
+    return {}, {}
   end
 
-  local has_client = false ---@type boolean
-  local client_names = "" ---@type string
+  local hln_fallback = position .. "_lsp_client_text" ---@type string
+  local client_names = {} ---@type string[]
+  local client_icons = {} ---@type dot.module.nvimbar.component.lsp.ILspIcon[]
   for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
     if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
-      if has_client then
-        client_names = client_names .. "|" .. client.name
-      else
-        has_client = true
-        client_names = client.name
+      local icon = ark.icon.lsp[client.name] or "" ---@type string
+      local hln_icon = position .. "_lsp_icon_" .. client.name ---@type string
+      if vim.fn.hlexists(hln_icon) == 0 then
+        hln_icon = hln_fallback
       end
+      client_names[#client_names + 1] = client.name
+      client_icons[#client_icons + 1] = {
+        icon = icon,
+        hl = hln_icon,
+      }
     end
   end
 
-  if not has_client then
-    return ""
-  end
-  return " " .. client_names
+  return client_names, client_icons
 end
+
+---@return                              string[]
+local function get_lsp_client_names()
+  local names = {} ---@type string[]
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  if not dot.buf.is_valid(bufnr) then
+    return names
+  end
+
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
+      names[#names + 1] = client.name
+    end
+  end
+  return names
+end
+
+---@type string
+local fn_show_clients = dot.G.register_anonymous_fn(function()
+  local client_names = get_lsp_client_names() ---@type string[]
+  local message = #client_names > 0 and table.concat(client_names, "\n") or "No active LSP client attached." ---@type string
+
+  ark.reporter.info({
+    from = __module_name__,
+    subject = "lsp clients",
+    message = message,
+  })
+end) or ""
 
 ---@class dot.module.nvimbar.component.lsp
 local M = {}
@@ -93,14 +129,34 @@ local M = {}
 ---@return dot.module.nvimbar.IRawComponent
 function M.client(position)
   local hln_text = position .. "_lsp_client_text" ---@type string
+  local icon_sep = "│" ---@type string
+  local lsp_icon = "" ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "lsp:client",
     atomic = true,
     render = function()
-      local text = get_client_text() ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
+      local client_names, client_icons = get_lsp_clients(position) ---@type string[], dot.module.nvimbar.component.lsp.ILspIcon[]
+      if #client_names < 1 then
+        return "", "", true
+      end
+
+      local text = lsp_icon .. " (" ---@type string
+      local hl_text = txt(lsp_icon, hln_text) .. txt(" (", hln_text) ---@type string
+
+      for index, item in ipairs(client_icons) do
+        if index > 1 then
+          text = text .. icon_sep
+          hl_text = hl_text .. txt(icon_sep, hln_text)
+        end
+        text = text .. item.icon
+        hl_text = hl_text .. txt(item.icon, item.hl)
+      end
+
+      text = text .. ")" ---@type string
+      hl_text = hl_text .. txt(")", hln_text) ---@type string
+      hl_text = btn(hl_text, fn_show_clients) ---@type string
       return text, hl_text, true
     end,
   }
