@@ -1,4 +1,4 @@
-local name = "fml.action.find.files" ---@type string
+local name = "dot.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
 local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
 
@@ -17,7 +17,7 @@ local o_search_pattern_history = dot.context.select.find_file.search_pattern_his
 local o_excludes = dot.context.select.find_file.excludes
 local o_includes = dot.context.select.find_file.includes
 
----@class fml.action.find.files.ISettingData
+---@class dot.fn.find_files.ISettingData
 ---@field public keyword                string
 ---@field public includes               string[]
 ---@field public excludes               string[]
@@ -29,7 +29,7 @@ local function edit_setting(picker)
   local s_includes = o_includes:snapshot() ---@type string[]
   local s_excludes = o_excludes:snapshot() ---@type string[]
 
-  ---@type fml.action.find.files.ISettingData
+  ---@type dot.fn.find_files.ISettingData
   local data = {
     keyword = s_keyword,
     includes = s_includes,
@@ -45,7 +45,7 @@ local function edit_setting(picker)
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data               fml.action.find.files.ISettingData
+        ---@cast raw_data               dot.fn.find_files.ISettingData
 
         if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
           return "Invalid data.keyword, expect an string."
@@ -63,7 +63,7 @@ local function edit_setting(picker)
         vim.schedule(function()
           local last_keyword = o_search_pattern:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw                  fml.action.find.files.ISettingData
+          ---@cast raw                  dot.fn.find_files.ISettingData
 
           local keyword = raw.keyword ---@type string
           local includes = raw.includes ---@type string[]
@@ -251,47 +251,33 @@ ark.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, fun
   refresh(picker, rootpath)
 end, true)
 
----@class fml.action.find
-local M = {}
-
+---@param rootpath                      string|"cwd"|"directory"|"workspace"|nil
+---@param reset_input                   boolean|nil
 ---@return nil
-function M.reset_input()
-  picker.finder:set_content("")
-end
+local function find_files(rootpath, reset_input)
+  if reset_input then
+    picker.finder:set_content("")
+  end
 
----@param rootpath                      string|nil
----@return nil
-function M.find_files(rootpath)
+  if rootpath == "cwd" then
+    rootpath = dot.path.cwd()
+  elseif rootpath == "directory" then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_source ~= nil then
+      local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      rootpath = yoz.path.is_exist_directory(filepath) and filepath or dot.path.dirname(filepath)
+    else
+      rootpath = nil
+    end
+  elseif rootpath == "workspace" then
+    rootpath = dot.path.workspace()
+  end
+
   rootpath = (rootpath ~= nil and rootpath ~= "") and rootpath or o_rootpath:snapshot() ---@type string
   attach(picker, rootpath)
   picker:focus()
 end
 
----@return nil
-function M.find_files_in_cwd()
-  local cwd = dot.path.cwd() ---@type string
-  attach(picker, cwd)
-  picker:focus()
-end
-
----@return nil
-function M.find_files_in_directory()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_source ~= nil then
-    local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local dirpath = yoz.path.is_exist_directory(filepath) and filepath or dot.path.dirname(filepath) ---@type string
-    attach(picker, dirpath)
-  end
-  picker:focus()
-end
-
----@return nil
-function M.find_files_in_workspace()
-  local workspace = dot.path.workspace() ---@type string
-  attach(picker, workspace)
-  picker:focus()
-end
-
-return M
+return find_files

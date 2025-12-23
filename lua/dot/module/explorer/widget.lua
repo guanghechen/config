@@ -1411,7 +1411,7 @@ function M:__action_open_file_explorer__()
   if filepath:sub(-1) == "/" then
     filepath = filepath:sub(1, -2)
   end
-  dot.command.definitions.find.explorer:execute(filepath)
+  dot.fn.find_explorer(filepath)
 end
 
 ---@protected
@@ -1429,8 +1429,7 @@ function M:__action_open_file_finder__()
     dirpath = dot.path.dirname(uri:sub(8))
   end
 
-  require("fml.action.find.files"):reset_input()
-  dot.command.definitions.find.files:execute(dirpath)
+  dot.fn.find_files(dirpath, true)
 end
 
 ---@protected

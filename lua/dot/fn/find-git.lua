@@ -1,4 +1,4 @@
-local name = "fml.action.find.git" ---@type string
+local name = "dot.fn.find_git" ---@type string
 local title = "Find Git" ---@type string
 
 local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
@@ -71,15 +71,12 @@ picker = dot.picker.FiletreeComposer.new({
   end,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_git_not_committed()
+local function find_git()
   if not dot.path.is_git_repo() then
     ark.reporter.error({
       from = name,
-      subject = "find_git_not_committed",
+      subject = "find_git",
       message = "Not a git repository",
     })
     return
@@ -95,4 +92,4 @@ function M.find_git_not_committed()
   end)
 end
 
-return M
+return find_git

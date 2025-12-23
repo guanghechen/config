@@ -1,6 +1,17 @@
 ---@class dot.fn.__mods
 local __fn__mods = {
   add_locations_to_ai = "dot.fn.add_locations_to_ai",
+  find_buffers = "dot.fn.find-buffers",
+  find_diagnostics = "dot.fn.find-diagnostics",
+  find_explorer = "dot.fn.find-explorer",
+  find_files = "dot.fn.find-files",
+  find_git = "dot.fn.find-git",
+  find_highlights = "dot.fn.find-highlights",
+  find_keymaps = "dot.fn.find-keymaps",
+  find_lsp_symbols = "dot.fn.find-lsp-symbols",
+  find_notifications = "dot.fn.find-notifications",
+  find_pinned_files = "dot.fn.find-pinned-files",
+  find_vim_options = "dot.fn.find-vim-options",
   paste_image = "dot.fn.paste_image",
   paste_image_as_base64 = "dot.fn.paste_image_as_base64",
   pick_win = "dot.fn.pick_win",
@@ -13,6 +24,17 @@ local __fn__mods = {
 ---@class dot.fn
 ---@field public __mods                 dot.fn.__mods
 ---@field public add_locations_to_ai    fun(locations: dot.t.ILocation[]): nil
+---@field public find_buffers           fun(scope: dot.e.FindBufferScope|nil): nil
+---@field public find_diagnostics       fun(): nil
+---@field public find_explorer          fun(specified_filepath: string|nil): nil
+---@field public find_files             fun(rootpath: string|"cwd"|"directory"|"workspace"|nil, reset_input: boolean|nil): nil
+---@field public find_git               fun(): nil
+---@field public find_highlights        fun(): nil
+---@field public find_keymaps           fun(): nil
+---@field public find_lsp_symbols       fun(): nil
+---@field public find_notifications     fun(): nil
+---@field public find_pinned_files      fun(): nil
+---@field public find_vim_options       fun(): nil
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               dot.fn.pick_win

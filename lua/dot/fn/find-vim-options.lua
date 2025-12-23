@@ -1,15 +1,15 @@
-local name = "fml.action.find.vim_options" ---@type string
+local name = "dot.fn.find_vim_options" ---@type string
 local title = "Find Vim Options" ---@type string
 
----@class fml.action.find.vim_options.IItemData
+---@class dot.fn.find_vim_options.IItemData
 ---@field public name                   string
 ---@field public type                   string
 ---@field public scope                  string
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class fml.action.find.vim_options.IItem : dot.module.picker.composer.list.IItem
----@field public data                   fml.action.find.vim_options.IItemData
+---@class dot.fn.find_vim_options.IItem : dot.module.picker.composer.list.IItem
+---@field public data                   dot.fn.find_vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
 local WIDTH_TYPE = 12 ---@type integer
@@ -29,7 +29,7 @@ local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.
 local function fetch_data()
   dirty_data = false
 
-  local items = {} ---@type fml.action.find.vim_options.IItem[]
+  local items = {} ---@type dot.fn.find_vim_options.IItem[]
 
   for option_name, info in pairs(vim.api.nvim_get_all_options_info()) do
     local ok, value = pcall(vim.api.nvim_get_option_value, option_name, {})
@@ -52,7 +52,7 @@ local function fetch_data()
       { coll = OFFSET_VALUE, colr = -1, hlname = "f_us_vo_value" },
     }
 
-    ---@type fml.action.find.vim_options.IItemData
+    ---@type dot.fn.find_vim_options.IItemData
     local data = {
       name = option_name,
       scope = info.scope,
@@ -61,7 +61,7 @@ local function fetch_data()
       text = text,
     }
 
-    ---@type fml.action.find.vim_options.IItem
+    ---@type dot.fn.find_vim_options.IItem
     local item = {
       uuid = option_name,
       text = text_for_search,
@@ -93,11 +93,11 @@ local picker = dot.picker.ListComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, fml.action.find.vim_options.IItem>
+    ---@cast itemmap                    table<string, dot.fn.find_vim_options.IItem>
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type fml.action.find.vim_options.IItem
+      local item = itemmap[match.uuid] ---@type dot.fn.find_vim_options.IItem
       lines[#lines + 1] = item.data.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -138,12 +138,12 @@ local picker = dot.picker.ListComposer.new({
       return
     end
 
-    ---@cast item fml.action.find.vim_options.IItem
+    ---@cast item dot.fn.find_vim_options.IItem
     composer:close()
 
     dirty_data = false
 
-    local data = item.data ---@type fml.action.find.vim_options.IItemData
+    local data = item.data ---@type dot.fn.find_vim_options.IItemData
     local esc = vim.fn.mode() == "i" and vim.api.nvim_replace_termcodes("<esc>", true, false, true) or "" ---@type string
     vim.api.nvim_feedkeys(string.format("%s:set %s=%s", esc, data.name, data.value), "m", true)
   end,
@@ -154,11 +154,8 @@ local picker = dot.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_vim_options()
+local function find_vim_options()
   if dirty_data then
     local data = fetch_data()
     picker:reset_data(data)
@@ -166,4 +163,4 @@ function M.find_vim_options()
   picker:focus()
 end
 
-return M
+return find_vim_options

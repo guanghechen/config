@@ -1,4 +1,4 @@
-local name = "fml.action.find.pinned_files" ---@type string
+local name = "dot.fn.find_pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
 local search_pattern = ark.c.Observable.from_value("")
@@ -50,12 +50,9 @@ ark.fn.observe({ dot.context.bookmark.pinned }, function()
   refresh(picker)
 end, false)
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_pinned_files()
+local function find_pinned_files()
   picker:focus()
 end
 
-return M
+return find_pinned_files

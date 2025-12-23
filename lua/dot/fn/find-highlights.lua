@@ -1,11 +1,11 @@
 ---@diagnostic disable: invisible
-local name = "fml.action.find.highlights" ---@type string
+local name = "dot.fn.find_highlights" ---@type string
 local title = "Find Highlights" ---@type string
 
----@class fml.action.find.highlights.IItem : dot.module.picker.composer.list.IItem
----@field public data                   fml.action.find.highlights.IItemData
+---@class dot.fn.find_highlights.IItem : dot.module.picker.composer.list.IItem
+---@field public data                   dot.fn.find_highlights.IItemData
 
----@class fml.action.find.highlights.IItemData
+---@class dot.fn.find_highlights.IItemData
 ---@field public lnum                   integer
 ---@field public hlid                   integer
 
@@ -25,19 +25,19 @@ local function fetch_data()
   _hlnames = hlnames
   _hlgroups = hlgroups
 
-  local items = {} ---@type fml.action.find.highlights.IItem[]
+  local items = {} ---@type dot.fn.find_highlights.IItem[]
   for lnum, hlname in ipairs(hlnames) do
     local hlid_str = ark.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
     local text = string.format("%s xxx   %s", hlid_str, hlname) ---@type string
     local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type ark.t.IHighlightInline[]
 
-    ---@type fml.action.find.highlights.IItemData
+    ---@type dot.fn.find_highlights.IItemData
     local data = {
       lnum = lnum,
       hlid = vim.fn.hlID(hlname),
     }
 
-    ---@type fml.action.find.highlights.IItem
+    ---@type dot.fn.find_highlights.IItem
     local item = {
       uuid = hlname,
       text = text,
@@ -71,12 +71,12 @@ local picker = dot.picker.ListComposer.new({
   flag_case_sensitive = flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                         table<string, fml.action.find.highlights.IItem>
+    ---@cast itemmap                         table<string, dot.fn.find_highlights.IItem>
 
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type fml.action.find.highlights.IItem
+      local item = itemmap[match.uuid] ---@type dot.fn.find_highlights.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -181,7 +181,7 @@ local picker = dot.picker.ListComposer.new({
     end
 
     local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
-    ---@cast item                       fml.action.find.highlights.IItem|nil
+    ---@cast item                       dot.fn.find_highlights.IItem|nil
 
     local lnum_target = item and item.data.lnum or lnum_current ---@type integer
 
@@ -200,7 +200,7 @@ local picker = dot.picker.ListComposer.new({
 
   on_confirm = function(composer, item)
     if item ~= nil then
-      ---@cast item fml.action.find.highlights.IItem
+      ---@cast item dot.fn.find_highlights.IItem
       composer:close()
       ark.nvim.copy(item.uuid)
     end
@@ -211,11 +211,8 @@ local picker = dot.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_highlights()
+local function find_highlights()
   if _hlnames == nil or _hlgroups == nil then
     local data = fetch_data()
     picker:reset_data(data)
@@ -223,4 +220,4 @@ function M.find_highlights()
   picker:focus()
 end
 
-return M
+return find_highlights

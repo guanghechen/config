@@ -1,10 +1,10 @@
 ---@diagnostic disable: invisible
-local name = "fml.action.find.lsp_symbols" ---@type string
+local name = "dot.fn.find_lsp_symbols" ---@type string
 local title = "LSP Symbols" ---@type string
 
 local Methods = vim.lsp.protocol.Methods
 
----@class fml.action.find.lsp_symbols.ISymbolData
+---@class dot.fn.find_lsp_symbols.ISymbolData
 ---@field public name                   string
 ---@field public kind                   string
 ---@field public icon                   string
@@ -349,7 +349,7 @@ local function fetch_symbols(tree, callback)
   end
 
   ---@param parent_uuid                 string
-  ---@param data                        fml.action.find.lsp_symbols.ISymbolData
+  ---@param data                        dot.fn.find_lsp_symbols.ISymbolData
   ---@return string|nil
   local function insert_node(parent_uuid, data)
     -- Check for duplicate symbols at same position (handles C++ macros, etc.)
@@ -401,7 +401,7 @@ local function fetch_symbols(tree, callback)
         sel_col = fix_col_position(bufnr, sel_lnum, sel_col)
       end
 
-      ---@type fml.action.find.lsp_symbols.ISymbolData
+      ---@type dot.fn.find_lsp_symbols.ISymbolData
       local data = {
         name = clean_symbol_name(symbol.name or "Unknown"),
         kind = kindname,
@@ -457,7 +457,7 @@ local function fetch_symbols(tree, callback)
       sel_col = fix_col_position(bufnr, sel_lnum, sel_col)
     end
 
-    ---@type fml.action.find.lsp_symbols.ISymbolData
+    ---@type dot.fn.find_lsp_symbols.ISymbolData
     local data = {
       name = symbol_name,
       kind = kindname,
@@ -505,7 +505,7 @@ local function fetch_symbols(tree, callback)
 
       if kind and kind_filter[kind] and match.pos and match.end_pos then
         local icon, icon_hln = get_icon(kind)
-        ---@type fml.action.find.lsp_symbols.ISymbolData
+        ---@type dot.fn.find_lsp_symbols.ISymbolData
         local data = {
           name = match.text or "Unknown",
           kind = kind,
@@ -565,7 +565,7 @@ local function refresh()
       return
     end
     tree:quick_traverse(tree.root, function(_, node)
-      local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData|nil
+      local data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData|nil
       local text = data and data.name or ""
       local has_children = #node.children > 0
       treeview:insert(node.uuid, {
@@ -588,7 +588,7 @@ end
 ---@param _                             any
 ---@param node                          ark.c.ITreeNode
 local function render_symbol(_, node)
-  local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData
   local icon = data.icon or "●"
   local text = icon .. " " .. (data.name or "Unknown")
   return {
@@ -607,7 +607,7 @@ local function render_treeview_container(_, node, _, _, folded_depth)
   end
 
   local limit = folded_depth + 1
-  local items = {} ---@type fml.action.find.lsp_symbols.ISymbolData[]
+  local items = {} ---@type dot.fn.find_lsp_symbols.ISymbolData[]
   local curr = node ---@type ark.c.ITreeNode|nil
   while curr ~= nil and #items < limit do
     table.insert(items, 1, curr.data)
@@ -625,7 +625,7 @@ local function render_treeview_container(_, node, _, _, folded_depth)
 
   local sep = "  " ---@type string
   for i = 1, item_count, 1 do
-    local item = items[i] ---@type fml.action.find.lsp_symbols.ISymbolData
+    local item = items[i] ---@type dot.fn.find_lsp_symbols.ISymbolData
 
     if i > 1 then
       text = text .. sep
@@ -663,7 +663,7 @@ local function render_treeview_container(_, node, _, _, folded_depth)
 end
 
 local function render_location(_, node)
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local symbol_data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData
   if symbol_data and symbol_data.lnum then
     return {
       text = string.format(":%d", symbol_data.lnum),
@@ -726,7 +726,7 @@ local function render_preview(bufnr, force)
   local nsnr = ark.var.nsnr.picker_preview_visual ---@type integer
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
 
-  local data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData
   if data.end_lnum and data.end_col and data.lnum and data.col then
     vim.hl.range(bufnr, nsnr, "Visual", { data.lnum - 1, data.col }, { data.end_lnum - 1, data.end_col })
   end
@@ -752,7 +752,7 @@ local function goto_symbol(nodeuuid)
 
   picker:close()
 
-  local symbol_data = node.data ---@type fml.action.find.lsp_symbols.ISymbolData
+  local symbol_data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData
   local target_bufnr = dot.buf.loadfile(filepath_sourcefile)
   if not target_bufnr then
     return
@@ -782,8 +782,8 @@ picker = dot.picker.TreeComposer.new({
   height = 0.9,
   width = 0.9,
   node_sorter = function(a, b)
-    local ad = a.data or {} ---@type fml.action.find.lsp_symbols.ISymbolData
-    local bd = b.data or {} ---@type fml.action.find.lsp_symbols.ISymbolData
+    local ad = a.data or {} ---@type dot.fn.find_lsp_symbols.ISymbolData
+    local bd = b.data or {} ---@type dot.fn.find_lsp_symbols.ISymbolData
 
     local a_line = ad.lnum or 0
     local b_line = bd.lnum or 0
@@ -834,11 +834,8 @@ picker = dot.picker.TreeComposer.new({
   on_refresh = refresh,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_lsp_symbols()
+local function find_lsp_symbols()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local filepath = nil ---@type string|nil
@@ -863,4 +860,4 @@ function M.find_lsp_symbols()
   end
 end
 
-return M
+return find_lsp_symbols

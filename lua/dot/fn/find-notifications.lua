@@ -1,10 +1,10 @@
-local __module_name__ = "fml.action.find.notification"
+local __module_name__ = "dot.fn.find_notifications"
 
----@class fml.action.find.notification.IItemData
+---@class dot.fn.find_notifications.IItemData
 ---@field public task                   dot.t.INotifierTask
 
----@class fml.action.find.notification.IItem : dot.module.picker.composer.list.IItem
----@field public data                   fml.action.find.notification.IItemData
+---@class dot.fn.find_notifications.IItem : dot.module.picker.composer.list.IItem
+---@field public data                   dot.fn.find_notifications.IItemData
 
 local dirty_data = true ---@type boolean
 local o_search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
@@ -16,7 +16,7 @@ local o_flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.
 local function fetch_data()
   dirty_data = false
 
-  local items = {} ---@type fml.action.find.notification.IItem[]
+  local items = {} ---@type dot.fn.find_notifications.IItem[]
   local tasks = dot.notifier.history() ---@type dot.t.INotifierTask[]
 
   for index = #tasks, 1, -1 do
@@ -32,7 +32,7 @@ local function fetch_data()
       { coll = 13, colr = -1, hlname = "f_un_title_" .. suffix },
     }
 
-    ---@type fml.action.find.notification.IItem
+    ---@type dot.fn.find_notifications.IItem
     local item = {
       uuid = tostring(index),
       text = text,
@@ -86,7 +86,7 @@ picker = dot.picker.ListComposer.new({
       }
     end
 
-    ---@cast item fml.action.find.notification.IItem
+    ---@cast item dot.fn.find_notifications.IItem
 
     local task = item.data.task ---@type dot.t.INotifierTask
 
@@ -160,7 +160,7 @@ picker = dot.picker.ListComposer.new({
       return
     end
 
-    ---@cast item fml.action.find.notification.IItem
+    ---@cast item dot.fn.find_notifications.IItem
     composer:close()
 
     dirty_data = true
@@ -188,11 +188,8 @@ picker = dot.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_notifications()
+local function find_notifications()
   if dirty_data then
     local data = fetch_data()
     picker:reset_data(data)
@@ -200,4 +197,4 @@ function M.find_notifications()
   picker:focus()
 end
 
-return M
+return find_notifications

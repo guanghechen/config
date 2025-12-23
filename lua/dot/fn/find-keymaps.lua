@@ -1,16 +1,16 @@
 ---@diagnostic disable: invisible
-local name = "fml.action.find.keymaps" ---@type string
+local name = "dot.fn.find_keymaps" ---@type string
 local title = "Find Keymaps" ---@type string
 
----@class fml.action.find.keymaps.IItemData
+---@class dot.fn.find_keymaps.IItemData
 ---@field public mode                   string
 ---@field public lhs                    string
 ---@field public rhs                    string
 ---@field public desc                   string
 ---@field public source                 string
 
----@class fml.action.find.keymaps.IItem : dot.module.picker.composer.list.IItem
----@field public data                   fml.action.find.keymaps.IItemData
+---@class dot.fn.find_keymaps.IItem : dot.module.picker.composer.list.IItem
+---@field public data                   dot.fn.find_keymaps.IItemData
 
 local WIDTH_LHS = 28 ---@type integer
 local WIDTH_MODE = 4 ---@type integer
@@ -59,7 +59,7 @@ end
 local function fetch_data()
   dirty_data = false
 
-  local items = {} ---@type fml.action.find.keymaps.IItem[]
+  local items = {} ---@type dot.fn.find_keymaps.IItem[]
   local seen = {} ---@type table<string, boolean>
   local modes = { "n", "i", "x", "t", "o", "s" }
 
@@ -86,7 +86,7 @@ local function fetch_data()
           { coll = OFFSET_DESC, colr = -1, hlname = "f_us_km_desc" },
         }
 
-        ---@type fml.action.find.keymaps.IItemData
+        ---@type dot.fn.find_keymaps.IItemData
         local data = {
           mode = mode,
           lhs = lhs,
@@ -95,7 +95,7 @@ local function fetch_data()
           source = km.buffer and "buffer" or "global",
         }
 
-        ---@type fml.action.find.keymaps.IItem
+        ---@type dot.fn.find_keymaps.IItem
         local item = {
           uuid = key,
           text = text,
@@ -129,7 +129,7 @@ local function fetch_data()
           { coll = OFFSET_DESC, colr = -1, hlname = "f_us_km_desc" },
         }
 
-        ---@type fml.action.find.keymaps.IItemData
+        ---@type dot.fn.find_keymaps.IItemData
         local data = {
           mode = mode,
           lhs = lhs,
@@ -138,7 +138,7 @@ local function fetch_data()
           source = "buffer",
         }
 
-        ---@type fml.action.find.keymaps.IItem
+        ---@type dot.fn.find_keymaps.IItem
         local item = {
           uuid = key,
           text = text,
@@ -180,11 +180,11 @@ local picker = dot.picker.ListComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, fml.action.find.keymaps.IItem>
+    ---@cast itemmap                    table<string, dot.fn.find_keymaps.IItem>
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type fml.action.find.keymaps.IItem
+      local item = itemmap[match.uuid] ---@type dot.fn.find_keymaps.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -233,7 +233,7 @@ local picker = dot.picker.ListComposer.new({
     end
 
     local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
-    ---@cast item fml.action.find.keymaps.IItem|nil
+    ---@cast item dot.fn.find_keymaps.IItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
@@ -289,7 +289,7 @@ local picker = dot.picker.ListComposer.new({
       return
     end
 
-    ---@cast item fml.action.find.keymaps.IItem
+    ---@cast item dot.fn.find_keymaps.IItem
     composer:close()
 
     local data = item.data
@@ -310,11 +310,8 @@ local picker = dot.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_keymaps()
+local function find_keymaps()
   if dirty_data then
     local data = fetch_data()
     picker:reset_data(data)
@@ -322,4 +319,4 @@ function M.find_keymaps()
   picker:focus()
 end
 
-return M
+return find_keymaps

@@ -360,7 +360,7 @@ command
   .implement({
     uuid = K.diagnostic.outline.uuid,
     action = function()
-      require("fml.action.find.diagnostics").find_diagnostics()
+      dot.fn.find_diagnostics()
     end,
   })
   .implement({
@@ -375,103 +375,103 @@ command
   .implement({
     uuid = K.find.bufs.uuid,
     action = function()
-      require("fml.action.find.buffers").find_bufs()
+      dot.fn.find_buffers()
     end,
   })
   .implement({
     uuid = K.find.bufs_file.uuid,
     action = function()
-      require("fml.action.find.buffers").find_bufs_file()
+      dot.fn.find_buffers("F")
     end,
   })
   .implement({
     uuid = K.find.bufs_term.uuid,
     action = function()
-      require("fml.action.find.buffers").find_bufs_term()
+      dot.fn.find_buffers("T")
     end,
   })
   .implement({
     uuid = K.find.diagnostics.uuid,
     action = function()
-      require("fml.action.find.diagnostics").find_diagnostics()
+      dot.fn.find_diagnostics()
     end,
   })
   .implement({
     uuid = K.find.diagnostics_in_workspace.uuid,
     action = function()
-      require("fml.action.find.diagnostics").find_diagnostics()
+      dot.fn.find_diagnostics()
     end,
   })
   .implement({
     uuid = K.find.explorer.uuid,
     action = function(args)
-      require("fml.action.find.explorer").find_explorer(args)
+      dot.fn.find_explorer(args)
     end,
   })
   .implement({
     uuid = K.find.files.uuid,
     action = function(args)
-      require("fml.action.find.files").find_files(args)
+      dot.fn.find_files(args)
     end,
   })
   .implement({
     uuid = K.find.files_in_cwd.uuid,
     action = function()
-      require("fml.action.find.files").find_files_in_cwd()
+      dot.fn.find_files("cwd")
     end,
   })
   .implement({
     uuid = K.find.files_in_directory.uuid,
     action = function()
-      require("fml.action.find.files").find_files_in_directory()
+      dot.fn.find_files("directory")
     end,
   })
   .implement({
     uuid = K.find.files_in_workspace.uuid,
     action = function()
-      require("fml.action.find.files").find_files_in_workspace()
+      dot.fn.find_files("workspace")
     end,
   })
   .implement({
     uuid = K.find.git_not_committed.uuid,
     action = function()
-      require("fml.action.find.git").find_git_not_committed()
+      dot.fn.find_git()
     end,
   })
   .implement({
     uuid = K.find.highlights.uuid,
     action = function()
-      require("fml.action.find.highlights").find_highlights()
+      dot.fn.find_highlights()
     end,
   })
   .implement({
     uuid = K.find.notifications.uuid,
     action = function()
-      require("fml.action.find.notification").find_notifications()
+      dot.fn.find_notifications()
     end,
   })
   .implement({
     uuid = K.find.pinned_files.uuid,
     action = function()
-      require("fml.action.find.pinned_files").find_pinned_files()
+      dot.fn.find_pinned_files()
     end,
   })
   .implement({
     uuid = K.find.lsp_symbols.uuid,
     action = function()
-      require("fml.action.find.lsp_symbols").find_lsp_symbols()
+      dot.fn.find_lsp_symbols()
     end,
   })
   .implement({
     uuid = K.find.vim_options.uuid,
     action = function()
-      require("fml.action.find.vim_options").find_vim_options()
+      dot.fn.find_vim_options()
     end,
   })
   .implement({
     uuid = K.find.keymaps.uuid,
     action = function()
-      require("fml.action.find.keymaps").find_keymaps()
+      dot.fn.find_keymaps()
     end,
   })
 

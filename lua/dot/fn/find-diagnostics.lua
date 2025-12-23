@@ -1,17 +1,17 @@
 ---@diagnostic disable: invisible
 
----@alias fml.action.find.diagnostics.SeverityEnum
+---@alias dot.fn.find_diagnostics.SeverityEnum
 ---| "ERROR"
 ---| "WARN"
 ---| "INFO"
 ---| "HINT"
 
----@class fml.action.find.diagnostics.ILocationData
+---@class dot.fn.find_diagnostics.ILocationData
 ---@field public bufnr                  integer
 ---@field public diagnostic             vim.Diagnostic
----@field public severity               fml.action.find.diagnostics.SeverityEnum
+---@field public severity               dot.fn.find_diagnostics.SeverityEnum
 
-local name = "fml.action.find.diagnostics" ---@type string
+local name = "dot.fn.find_diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
 local o_search_pattern = dot.context.select.find_diagnostics.search_pattern ---@type ark.c.Observable
@@ -126,7 +126,7 @@ local function refresh(force)
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local severity_raw = diagnostic.severity ---@type vim.diagnostic.Severity
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
-    ---@cast severity                 fml.action.find.diagnostics.SeverityEnum
+    ---@cast severity                 dot.fn.find_diagnostics.SeverityEnum
 
     local leafuuid = ark.c.Filetree.uuid(filepath) ---@type string
     local leafnodestate = statemap[leafuuid] ---@type dot.module.picker.view.filetree.INodeState|nil
@@ -150,7 +150,7 @@ local function refresh(force)
     local locations = leafnodestate.locations or {} ---@type dot.module.picker.view.filetree.ILocationNodeState[]
     leafnodestate.locations = locations
 
-    ---@type fml.action.find.diagnostics.ILocationData
+    ---@type dot.fn.find_diagnostics.ILocationData
     local data = {
       bufnr = bufnr,
       diagnostic = diagnostic,
@@ -330,13 +330,10 @@ end, true)
 
 
 
----@class fml.action.find
-local M = {}
-
 ---@return nil
-function M.find_diagnostics()
+local function find_diagnostics()
   refresh(false)
   picker:focus()
 end
 
-return M
+return find_diagnostics

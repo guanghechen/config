@@ -1,11 +1,11 @@
 ---@diagnostic disable: invisible
-local name = "fml.action.find.buffers" ---@type string
+local name = "dot.fn.find_buffers" ---@type string
 local title = "Find Buffers" ---@type string
 
----@class fml.action.find.buffers.IItem : dot.module.picker.composer.list.IItem
----@field public data                   fml.action.find.buffers.IItemData
+---@class dot.fn.find_buffers.IItem : dot.module.picker.composer.list.IItem
+---@field public data                   dot.fn.find_buffers.IItemData
 
----@class fml.action.find.buffers.IItemData
+---@class dot.fn.find_buffers.IItemData
 ---@field public bufnr                  integer
 ---@field public buftype                string
 ---@field public filetype               string
@@ -61,7 +61,7 @@ end
 
 ---@param bufnr                         integer
 ---@param cwd                           string
----@return fml.action.find.buffers.IItem
+---@return dot.fn.find_buffers.IItem
 local function create_buffer_item(bufnr, cwd)
   local buftype = vim.bo[bufnr].buftype ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
@@ -70,7 +70,7 @@ local function create_buffer_item(bufnr, cwd)
   local filename = yoz.path.basename(filepath)
   local icon, icon_hl = ark.fileicon.get_file_icon(filename, filetype)
 
-  ---@type fml.action.find.buffers.IItemData
+  ---@type dot.fn.find_buffers.IItemData
   local data = {
     bufnr = bufnr,
     buftype = buftype,
@@ -99,7 +99,7 @@ local function create_buffer_item(bufnr, cwd)
     { coll = 35, colr = -1, hlname = "f_buf_filepath" },
   }
 
-  ---@type fml.action.find.buffers.IItem
+  ---@type dot.fn.find_buffers.IItem
   return {
     uuid = tostring(bufnr),
     text = text,
@@ -115,7 +115,7 @@ local function fetch_data()
   local scope = dot.context.select.find_buffer_scope:snapshot() ---@type dot.e.FindBufferScope
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
-  local items = {} ---@type fml.action.find.buffers.IItem[]
+  local items = {} ---@type dot.fn.find_buffers.IItem[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
@@ -167,12 +167,12 @@ picker = dot.picker.ListComposer.new({
   flags_start_index = 0,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, fml.action.find.buffers.IItem>
+    ---@cast itemmap                    table<string, dot.fn.find_buffers.IItem>
     ---
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type fml.action.find.buffers.IItem
+      local item = itemmap[match.uuid] ---@type dot.fn.find_buffers.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -211,7 +211,7 @@ picker = dot.picker.ListComposer.new({
       callback = function()
         local lnum = picker._composer:get_result_lnum() ---@type integer
         local item = picker:retrieve(lnum) ---@type dot.module.picker.composer.list.IItem|nil
-        ---@cast item                   fml.action.find.buffers.IItem|nil
+        ---@cast item                   dot.fn.find_buffers.IItem|nil
         if item == nil then
           return
         end
@@ -249,7 +249,7 @@ picker = dot.picker.ListComposer.new({
 
   on_confirm = function(composer, item)
     if item ~= nil then
-      ---@cast item fml.action.find.buffers.IItem
+      ---@cast item dot.fn.find_buffers.IItem
       composer:close()
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -278,33 +278,16 @@ ark.fn.observe({ o_scope }, function()
   end
 end, false)
 
----@class fml.action.find
-local M = {}
-
+---@param scope                         dot.e.FindBufferScope|nil
 ---@return nil
-function M.find_bufs()
+local function find_buffers(scope)
+  if scope ~= nil then
+    o_scope:next(scope)
+  end
   o_search_pattern:next("")
   local data = fetch_data()
   picker:reset_data(data)
   picker:focus()
 end
 
----@return nil
-function M.find_bufs_file()
-  o_scope:next("F")
-  o_search_pattern:next("")
-  local data = fetch_data()
-  picker:reset_data(data)
-  picker:focus()
-end
-
----@return nil
-function M.find_bufs_term()
-  o_scope:next("T")
-  o_search_pattern:next("")
-  local data = fetch_data()
-  picker:reset_data(data)
-  picker:focus()
-end
-
-return M
+return find_buffers
