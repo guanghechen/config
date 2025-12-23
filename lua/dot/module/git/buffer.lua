@@ -390,7 +390,10 @@ function M.mark_dirty_all()
 
   for bufnr, buf_cache in pairs(cache) do
     if buf_cache then
-      mark_dirty_cache(buf_cache)
+      buf_cache.compare_text_index = nil
+      buf_cache.object_name = nil
+      buf_cache.dirty = true
+      buf_cache.force_next_update = true
       if is_buf_visible(bufnr) then
         visible_buffers[#visible_buffers + 1] = bufnr
       end
@@ -399,10 +402,10 @@ function M.mark_dirty_all()
 
   for index, bufnr in ipairs(visible_buffers) do
     local buf_cache = cache[bufnr]
-    if buf_cache and buf_cache.update_debounced then
+    if buf_cache then
       ark.timer.delay(function()
-        if cache[bufnr] and buf_cache.update_debounced then
-          buf_cache.update_debounced()
+        if cache[bufnr] then
+          M.refresh(bufnr, true)
         end
       end, index * 10)
     end
@@ -414,7 +417,11 @@ function M.invalidate_compare_text_all()
 
   for bufnr, buf_cache in pairs(cache) do
     if buf_cache then
-      invalidate_compare_text_cache(buf_cache)
+      buf_cache.compare_text = nil
+      buf_cache.compare_text_index = nil
+      buf_cache.object_name = nil
+      buf_cache.dirty = true
+      buf_cache.force_next_update = true
       if is_buf_visible(bufnr) then
         visible_buffers[#visible_buffers + 1] = bufnr
       end
@@ -423,10 +430,10 @@ function M.invalidate_compare_text_all()
 
   for index, bufnr in ipairs(visible_buffers) do
     local buf_cache = cache[bufnr]
-    if buf_cache and buf_cache.update_debounced then
+    if buf_cache then
       ark.timer.delay(function()
-        if cache[bufnr] and buf_cache.update_debounced then
-          buf_cache.update_debounced()
+        if cache[bufnr] then
+          M.refresh(bufnr, true)
         end
       end, index * 15)
     end
@@ -439,6 +446,7 @@ function M.invalidate_index_all()
   for bufnr, buf_cache in pairs(cache) do
     if buf_cache then
       buf_cache.compare_text_index = nil
+      buf_cache.object_name = nil
       buf_cache.dirty = true
       buf_cache.force_next_update = true
       if is_buf_visible(bufnr) then
@@ -449,10 +457,10 @@ function M.invalidate_index_all()
 
   for index, bufnr in ipairs(visible_buffers) do
     local buf_cache = cache[bufnr]
-    if buf_cache and buf_cache.update_debounced then
+    if buf_cache then
       ark.timer.delay(function()
-        if cache[bufnr] and buf_cache.update_debounced then
-          buf_cache.update_debounced()
+        if cache[bufnr] then
+          M.refresh(bufnr, true)
         end
       end, index * 20)
     end
