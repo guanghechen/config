@@ -103,7 +103,7 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field protected _tree               ark.c.Tree
 ---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          dot.view.Plainfile
----@field protected _retriever          dot.module.tree.TreeRetriever
+---@field protected _retriever          ark.c.TreeRetriever
 ---@field protected _scheduler_match    ark.c.Scheduler|nil
 ---@field protected _treeview           dot.module.picker.TreeView
 ---
@@ -174,8 +174,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type dot.module.tree.TreeRetriever
-  local retriever = dot.tree.TreeRetriever.new({
+  ---@type ark.c.TreeRetriever
+  local retriever = ark.c.TreeRetriever.new({
     name = fullname,
   })
 
@@ -869,7 +869,7 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type dot.module.picker.composer.tree.IOnDisposed
   local composer = self._composer ---@type dot.module.picker.BasicComposer
   local plainfile = self._plainfile ---@type dot.view.Plainfile
-  local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
+  local retriever = self._retriever ---@type ark.c.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
   local treeview = self._treeview ---@type dot.module.picker.TreeView
   local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
@@ -1031,7 +1031,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
+  local retriever = self._retriever ---@type ark.c.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -1087,7 +1087,7 @@ end
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
+  local retriever = self._retriever ---@type ark.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   if self:__has_selected_node__() then
@@ -1153,7 +1153,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
+  local retriever = self._retriever ---@type ark.c.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()

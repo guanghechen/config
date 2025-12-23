@@ -1,11 +1,8 @@
 ---@class dot.module.tree.__mods
-local __mods = {
-  TreeRetriever = "dot.module.tree.retriever",
-}
+local __mods = {}
 
 ---@class dot.module.tree
 ---@field public __mods                 dot.module.tree.__mods
----@field public TreeRetriever          dot.module.tree.TreeRetriever
 local M = setmetatable({
   __mods = __mods,
 }, {

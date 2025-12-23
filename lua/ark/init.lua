@@ -17,6 +17,7 @@ local c__mods = {
   Subscribers = "ark.c.subscribers",
   Ticker = "ark.c.ticker",
   Tree = "ark.c.tree",
+  TreeRetriever = "ark.c.tree_retriever",
 }
 
 ---@class ark.c
@@ -38,6 +39,7 @@ local c__mods = {
 ---@field public Subscribers            ark.c.Subscribers
 ---@field public Ticker                 ark.c.Ticker
 ---@field public Tree                   ark.c.Tree
+---@field public TreeRetriever          ark.c.TreeRetriever
 local c = setmetatable({ __mods = c__mods }, {
   __index = function(t, k)
     local m = c__mods[k] ---@type string|nil
