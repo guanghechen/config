@@ -121,7 +121,7 @@ export const apps = [
   {
     name: 'nvim',
     home: path.join(XDG_CONFIG_HOME, 'nvim'),
-    themes: 'lua/dot/theme/scheme/',
+    themes: 'lua/ark/theme/scheme/',
     extname: '.lua',
     local: null,
     active: app => is_directory(app.home),
@@ -137,7 +137,7 @@ export const apps = [
   {
     name: 'nvim-nvchad',
     home: path.join(XDG_CONFIG_HOME, 'nvim-nvchad'),
-    themes: 'lua/dot/theme/scheme/',
+    themes: 'lua/ark/theme/scheme/',
     extname: '.lua',
     local: null,
     active: app => is_directory(app.home),
