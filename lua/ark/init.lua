@@ -216,6 +216,7 @@ local __mods = {
   fs = "ark.fs",
   hot = "ark.hot",
   icon = "ark.icon",
+  json = "ark.json",
   nvim = "ark.nvim",
   reporter = "ark.reporter",
   stdout = "ark.stdout",
@@ -244,6 +245,7 @@ local __mods = {
 ---@field public fs                     ark.fs
 ---@field public hot                    ark.hot
 ---@field public icon                   ark.icon
+---@field public json                   ark.json
 ---@field public lang                   ark.lang
 ---@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
