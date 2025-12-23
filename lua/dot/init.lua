@@ -34,28 +34,6 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.dict.__mods
-local __dict__mods = {
-  en = "dot.dict.en",
-}
-
----@class dot.dict
----@field public __mods                 dot.dict.__mods
----@field public en                     { [1]: string, [2]: string }[]
-local dict = setmetatable({
-  __mods = __dict__mods,
-}, {
-  __index = function(t, k)
-    local m = __dict__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.lang.__mods
 local __lang__mods = {
   python = "dot.lang.python",
@@ -289,7 +267,6 @@ local __mods = {
 ---
 ---@field public command                dot.command
 ---@field public context                dot.context
----@field public dict                   dot.dict
 ---@field public fn                     dot.fn
 ---@field public lang                   dot.lang
 ---@field public lsp                    dot.lsp
@@ -319,7 +296,6 @@ local __mods = {
 ---@field public setup_lsp              fun(): nil
 local M = setmetatable({
   __mods = __mods,
-  dict = dict,
   fn = fn,
   lang = lang,
   state = state,

@@ -118,7 +118,7 @@ function M.new(opts)
   local self = setmetatable({}, { __index = M })
 
   self.opts = vim.tbl_deep_extend("keep", opts or {}, defaults) ---@type ghc.cmp.dict.IConfig
-  local loaded = dot.dict.en ---@type { [1]: string, [2]: string }[]
+  local loaded = ark.dict.en ---@type { [1]: string, [2]: string }[]
   local entries = {} ---@type { word: string, documentation: string }[]
   for index, item in ipairs(loaded) do
     entries[index] = { word = item[1], documentation = item[2] }
