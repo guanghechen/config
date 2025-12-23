@@ -93,7 +93,7 @@ function M.loadfile(filepath)
     return nil
   end
 
-  local bufnr_sourcefile = M.locate_bufnr(filepath) ---@type integer|nil)
+  local bufnr_sourcefile = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
     vim.bo[bufnr_sourcefile].buflisted = true
     return bufnr_sourcefile
@@ -127,16 +127,6 @@ function M.loadfile(filepath)
     vim.bo[bufnr].swapfile = vim.o.swapfile
     -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
     -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
-    return bufnr
-  end
-end
-
----@param filepath                      string
----@return integer|nil
-function M.locate_bufnr(filepath)
-  local bufnr = vim.fn.bufnr(filepath) ---@type integer
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.bo[bufnr].buflisted = true
     return bufnr
   end
 end

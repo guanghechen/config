@@ -127,9 +127,9 @@ function M.is_statusline_visible()
     return true
   end
   if laststatus == 1 then
-    local tabpage = vim.api.nvim_get_current_tabpage()
-    local wins = vim.api.nvim_tabpage_list_wins(tabpage) ---@type integer[]
-    return #wins > 1
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    return #winnrs > 1
   end
   return false
 end
@@ -145,6 +145,15 @@ function M.is_tabline_visible()
     return tab_count > 1
   end
   return false
+end
+
+---@param filepath                      string
+---@return integer|nil
+function M.locate_bufnr(filepath)
+  local bufnr = vim.fn.bufnr(filepath) ---@type integer
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+    return bufnr
+  end
 end
 
 ---@param hlname                        string

@@ -75,7 +75,7 @@ function M:render(bufnr, filepath, force)
     local lines ---@type string[]
     local filetype ---@type string
 
-    local bufnr_sourcefile = dot.buf.locate_bufnr(filepath) ---@type integer|nil
+    local bufnr_sourcefile = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
     if bufnr_sourcefile ~= nil then
       lines = vim.api.nvim_buf_get_lines(bufnr_sourcefile, 0, -1, false) ---@type string[]
       filetype = vim.bo[bufnr_sourcefile].filetype ---@type string

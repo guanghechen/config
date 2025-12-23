@@ -221,7 +221,7 @@ end
 ---@param highlights                    ark.t.IHighlightInline[]
 ---@return string
 function M.calc_diagnostic_info(filepath, offset, highlights)
-  local bufnr = dot.buf.locate_bufnr(filepath) ---@type integer|nil
+  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
   if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return ""
   end
