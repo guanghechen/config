@@ -3,7 +3,7 @@ local winhighlight = table.concat({
   "Normal:NormalFloat",
 }, ",")
 
----@class dot.module.winpicker.Mask
+---@class dot.module.winpicker
 ---@field public char                   string
 ---@field public hint                   string[]
 ---@field public bufnr_hint             integer|nil
@@ -12,10 +12,10 @@ local winhighlight = table.concat({
 local M = {}
 M.__index = M
 
-M.renderers = {} ---@type table<string, dot.module.winpicker.Mask>
+M.renderers = {} ---@type table<string, dot.module.winpicker>
 
 ---@param char                          string
----@return dot.module.winpicker.Mask
+---@return dot.module.winpicker
 function M.new(char)
   if M.renderers[char] ~= nil then
     return M.renderers[char]

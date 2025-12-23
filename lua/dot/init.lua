@@ -156,6 +156,7 @@ local __mods = {
   git = "dot.module.git",
   picker = "dot.module.picker",
   searcher = "dot.module.searcher",
+  winpicker = "dot.module.winpicker",
 
   G = "dot.G",
   buf = "dot.buf",
@@ -181,6 +182,7 @@ local __mods = {
 ---@field public git                    dot.module.git
 ---@field public picker                 dot.module.picker
 ---@field public searcher               dot.module.searcher
+---@field public winpicker              dot.module.winpicker
 ---
 ---@field public command                dot.command
 ---@field public context                dot.context
