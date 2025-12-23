@@ -259,7 +259,7 @@ function Convert.new(opts)
   opts.src, self.page = state.get_page(opts.src)
   opts.src = state.norm_src(opts.src)
 
-  if dot.uri.is_data_uri(opts.src) then
+  if yoz.uri.is_data_uri(opts.src) then
     opts.src = self:__decode_data_uri__(opts.src, s.tmpdir)
   end
 
@@ -376,7 +376,7 @@ function Convert:__decode_data_uri__(data_uri, tmpdir)
   if encoding == "base64" then
     decoded = vim.base64.decode(data)
   else
-    decoded = dot.uri.decode(data)
+    decoded = yoz.uri.decode(data)
   end
 
   local fd = io.open(filepath, "wb")

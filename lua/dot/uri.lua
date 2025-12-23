@@ -1,28 +1,6 @@
 ---@class dot.uri
 local M = {}
 
----@param src                           string
----@return string
-function M.decode(src)
-  return (src:gsub("%%(%x%x)", function(hex)
-    return string.char(tonumber(hex, 16))
-  end))
-end
-
----@param src                           string
----@return string
-function M.encode(src)
-  return (src:gsub("([^%w%-_.~])", function(c)
-    return string.format("%%%02X", string.byte(c))
-  end))
-end
-
----@param src                           string
----@return boolean
-function M.is_data_uri(src)
-  return src:find("^data:") ~= nil
-end
-
 ---@param value                         unknown
 ---@return integer|nil
 local function normalize_index(value)
