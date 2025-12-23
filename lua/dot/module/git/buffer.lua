@@ -32,20 +32,6 @@ local function get_buf_lines(bufnr)
 end
 
 ---@param buf_cache                  dot.module.git.buffer.ICache
-local function mark_dirty_cache(buf_cache)
-  buf_cache.dirty = true
-  buf_cache.force_next_update = true
-end
-
----@param buf_cache                  dot.module.git.buffer.ICache
-local function invalidate_compare_text_cache(buf_cache)
-  buf_cache.compare_text = nil
-  buf_cache.compare_text_index = nil
-  buf_cache.dirty = true
-  buf_cache.force_next_update = true
-end
-
----@param buf_cache                  dot.module.git.buffer.ICache
 ---@param callback                   fun()|nil
 local function update_hunks(buf_cache, callback)
   local bufnr = buf_cache.bufnr ---@type integer
