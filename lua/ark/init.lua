@@ -54,6 +54,7 @@ local __mods = {
   debug = "ark.debug",
   easing = "ark.external.easing",
   env = "ark.env",
+  fileicon = "ark.fileicon",
   filetype = "ark.filetype",
   fn = "ark.fn",
   fs = "ark.fs",
@@ -77,6 +78,7 @@ local __mods = {
 ---@field public debug                  ark.debug
 ---@field public easing                 ark.external.easing
 ---@field public env                    ark.env
+---@field public fileicon               ark.fileicon
 ---@field public filetype               ark.filetype
 ---@field public fn                     ark.fn
 ---@field public fs                     ark.fs

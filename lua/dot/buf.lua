@@ -192,7 +192,7 @@ function M.resolve(bufnr, force)
 
   local cwd = dot.path.cwd() ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
-  local fileicon, fileicon_hln = dot.fileicon.get_file_icon(filename) ---@type string, string
+  local fileicon, fileicon_hln = ark.fileicon.get_file_icon(filename) ---@type string, string
   local relpath = dot.path.relative(cwd, filepath) ---@type string
 
   if meta == nil then

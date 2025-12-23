@@ -18,7 +18,7 @@ function M.mock_miniicons()
   ---@return string
   ---@return boolean
   function MiniIcons.get(category, name, filetype)
-    return dot.fileicon.get(category, name, filetype)
+    return ark.fileicon.get(category, name, filetype)
   end
 end
 
@@ -32,7 +32,7 @@ function M.mock_web_devicons()
     get_icon = function(name, ext, opts)
       local is_file = type(name) == "string"
       local category = is_file and "file" or "extension"
-      local icon, hl, is_default = dot.fileicon.get(category, is_file and name or ext)
+      local icon, hl, is_default = ark.fileicon.get(category, is_file and name or ext)
       if is_default and (opts == nil or not opts.default) then
         return nil, nil
       end

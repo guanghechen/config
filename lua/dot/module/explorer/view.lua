@@ -483,7 +483,7 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
         icon_hl = "f_ft_dirname"
       end
     else
-      local dir_icon, dir_hl, is_fallback = dot.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
+      local dir_icon, dir_hl, is_fallback = ark.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
       if not is_fallback then
         icon = dir_icon
         icon_hl = dir_hl
@@ -498,7 +498,7 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
     return icon, icon_hl
   end
 
-  local icon, icon_hl = dot.fileicon.get_file_icon(node.nodename) ---@type string, string
+  local icon, icon_hl = ark.fileicon.get_file_icon(node.nodename) ---@type string, string
   if is_ignored then
     icon_hl = "f_explorer_ignored"
   end
