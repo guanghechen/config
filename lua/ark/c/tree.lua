@@ -1,36 +1,36 @@
-local __module_name__ = "dot.module.tree.tree" ---@type string
+local __module_name__ = "ark.c.tree" ---@type string
 
----@alias dot.t.ITreeTraverseConditionalEnum
+---@alias ark.c.ITreeTraverseConditionalEnum
 ---| "badroot"  -- Don't handle current node and its descendants
 ---| "goodnode" -- Handle current node, but don't traverse its descendants
 ---| "goodroot" -- Handle current node and its descendants
 
----@alias dot.t.ITreeNodeSorter
----| fun(left: dot.t.ITreeNode, right: dot.t.ITreeNode): boolean
+---@alias ark.c.ITreeNodeSorter
+---| fun(left: ark.c.ITreeNode, right: ark.c.ITreeNode): boolean
 
----@alias dot.t.ITreeTraverseConditional
----| fun(ctx: dot.t.ITreeTraverseContext, node: dot.t.ITreeNode, cur: integer): dot.t.ITreeTraverseConditionalEnum
+---@alias ark.c.ITreeTraverseConditional
+---| fun(ctx: ark.c.ITreeTraverseContext, node: ark.c.ITreeNode, cur: integer): ark.c.ITreeTraverseConditionalEnum
 
----@alias dot.t.ITreeTraverseHandler
----| fun(ctx: dot.t.ITreeTraverseContext, node: dot.t.ITreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
+---@alias ark.c.ITreeTraverseHandler
+---| fun(ctx: ark.c.ITreeTraverseContext, node: ark.c.ITreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
 
----@alias dot.t.ITreeTraverseRecursive
----| fun(ctx: dot.t.ITreeTraverseContext, node: dot.t.ITreeNode, cur: integer, is_lastchild: boolean): nil
+---@alias ark.c.ITreeTraverseRecursive
+---| fun(ctx: ark.c.ITreeTraverseContext, node: ark.c.ITreeNode, cur: integer, is_lastchild: boolean): nil
 
----@alias dot.t.ITreeQuickTraverseHandler
----| fun(ctx: dot.t.ITreeTraverseContext, node: dot.t.ITreeNode, cur: integer): nil
+---@alias ark.c.ITreeQuickTraverseHandler
+---| fun(ctx: ark.c.ITreeTraverseContext, node: ark.c.ITreeNode, cur: integer): nil
 
----@alias dot.t.ITreeQuickTraverseRecursive
----| fun(ctx: dot.t.ITreeTraverseContext, node: dot.t.ITreeNode, cur: integer): nil
+---@alias ark.c.ITreeQuickTraverseRecursive
+---| fun(ctx: ark.c.ITreeTraverseContext, node: ark.c.ITreeNode, cur: integer): nil
 
----@alias dot.t.ITreeUnsafeTraverseCallback
----| fun(ctx: dot.t.ITreeTraverseContext): nil
+---@alias ark.c.ITreeUnsafeTraverseCallback
+---| fun(ctx: ark.c.ITreeTraverseContext): nil
 
----@class dot.t.ITreeTraverseContext
----@field public nodemap                table<string, dot.t.ITreeNode>
----@field public rootnode               dot.t.ITreeNode
+---@class ark.c.ITreeTraverseContext
+---@field public nodemap                table<string, ark.c.ITreeNode>
+---@field public rootnode               ark.c.ITreeNode
 
----@class dot.t.ITreeNode
+---@class ark.c.ITreeNode
 ---@field public uuid                   string
 ---@field public parent                 string
 ---@field public children               string[]
@@ -40,61 +40,61 @@ local __module_name__ = "dot.module.tree.tree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.ITreeProps
+---@class ark.c.ITreeProps
 ---@field public fullname               string|nil
 ---@field public name                   string
----@field public node_sorter            dot.t.ITreeNodeSorter
+---@field public node_sorter            ark.c.ITreeNodeSorter
 ---@field public rootnodedata           unknown|nil
 
----@class dot.IReadonlyTree
+---@class ark.c.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
----@field public isdisposed             fun(self: dot.IReadonlyTree): boolean
----@field public isdescendant           fun(self: dot.IReadonlyTree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: dot.IReadonlyTree, uuid: string): boolean
----@field public retrieve               fun(self: dot.IReadonlyTree, uuid: string): dot.t.ITreeNode|nil
----@field public quick_traverse         fun(self: dot.IReadonlyTree, root: string|nil, fn: dot.t.ITreeQuickTraverseHandler, conditional: dot.t.ITreeTraverseConditional|nil): dot.IReadonlyTree
----@field public traverse               fun(self: dot.IReadonlyTree, root: string|nil, fn: dot.t.ITreeTraverseHandler, conditional: dot.t.ITreeTraverseConditional|nil): dot.IReadonlyTree
----@field public unsafe_traverse        fun(self: dot.IReadonlyTree, root: string|nil, traverse: dot.t.ITreeUnsafeTraverseCallback): dot.IReadonlyTree
----@field public calc_include_uuid_set  fun(self: dot.IReadonlyTree, uuids: string[]): table<string, boolean>
+---@field public isdisposed             fun(self: ark.c.IReadonlyTree): boolean
+---@field public isdescendant           fun(self: ark.c.IReadonlyTree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: ark.c.IReadonlyTree, uuid: string): boolean
+---@field public retrieve               fun(self: ark.c.IReadonlyTree, uuid: string): ark.c.ITreeNode|nil
+---@field public quick_traverse         fun(self: ark.c.IReadonlyTree, root: string|nil, fn: ark.c.ITreeQuickTraverseHandler, conditional: ark.c.ITreeTraverseConditional|nil): ark.c.IReadonlyTree
+---@field public traverse               fun(self: ark.c.IReadonlyTree, root: string|nil, fn: ark.c.ITreeTraverseHandler, conditional: ark.c.ITreeTraverseConditional|nil): ark.c.IReadonlyTree
+---@field public unsafe_traverse        fun(self: ark.c.IReadonlyTree, root: string|nil, traverse: ark.c.ITreeUnsafeTraverseCallback): ark.c.IReadonlyTree
+---@field public calc_include_uuid_set  fun(self: ark.c.IReadonlyTree, uuids: string[]): table<string, boolean>
 
----@class dot.ITree : dot.IReadonlyTree
+---@class ark.c.ITree : ark.c.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
----@field public clear                  fun(self: dot.ITree): dot.ITree
----@field public dispose                fun(self: dot.ITree): nil
----@field public isdisposed             fun(self: dot.ITree): boolean
----@field public isdescendant           fun(self: dot.ITree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: dot.ITree, uuid: string): boolean
----@field public retrieve               fun(self: dot.ITree, uuid: string): dot.t.ITreeNode|nil
----@field public quick_traverse         fun(self: dot.ITree, root: string|nil, fn: dot.t.ITreeQuickTraverseHandler, conditional: dot.t.ITreeTraverseConditional|nil): dot.ITree
----@field public traverse               fun(self: dot.ITree, root: string|nil, fn: dot.t.ITreeTraverseHandler, conditional: dot.t.ITreeTraverseConditional|nil): dot.ITree
----@field public unsafe_traverse        fun(self: dot.ITree, root: string|nil, traverse: dot.t.ITreeUnsafeTraverseCallback): dot.ITree
----@field public calc_include_uuid_set  fun(self: dot.ITree, uuids: string[]): table<string, boolean>
----@field public empty                  fun(self: dot.ITree, uuid: string): dot.ITree
----@field public insert                 fun(self: dot.ITree, parent: string, uuid: string, data: table|nil): dot.t.ITreeNode
----@field public remove                 fun(self: dot.ITree, uuid: string): dot.ITree
+---@field public clear                  fun(self: ark.c.ITree): ark.c.ITree
+---@field public dispose                fun(self: ark.c.ITree): nil
+---@field public isdisposed             fun(self: ark.c.ITree): boolean
+---@field public isdescendant           fun(self: ark.c.ITree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: ark.c.ITree, uuid: string): boolean
+---@field public retrieve               fun(self: ark.c.ITree, uuid: string): ark.c.ITreeNode|nil
+---@field public quick_traverse         fun(self: ark.c.ITree, root: string|nil, fn: ark.c.ITreeQuickTraverseHandler, conditional: ark.c.ITreeTraverseConditional|nil): ark.c.ITree
+---@field public traverse               fun(self: ark.c.ITree, root: string|nil, fn: ark.c.ITreeTraverseHandler, conditional: ark.c.ITreeTraverseConditional|nil): ark.c.ITree
+---@field public unsafe_traverse        fun(self: ark.c.ITree, root: string|nil, traverse: ark.c.ITreeUnsafeTraverseCallback): ark.c.ITree
+---@field public calc_include_uuid_set  fun(self: ark.c.ITree, uuids: string[]): table<string, boolean>
+---@field public empty                  fun(self: ark.c.ITree, uuid: string): ark.c.ITree
+---@field public insert                 fun(self: ark.c.ITree, parent: string, uuid: string, data: table|nil): ark.c.ITreeNode
+---@field public remove                 fun(self: ark.c.ITree, uuid: string): ark.c.ITree
 
----@class dot.Tree : dot.ITree
+---@class ark.c.Tree : ark.c.ITree
 ---@field public fullname               string
 ---@field public root                   string
----@field public node_sorter            dot.t.ITreeNodeSorter
+---@field public node_sorter            ark.c.ITreeNodeSorter
 ---@field protected _disposed           boolean
----@field protected _nodemap            table<string, dot.t.ITreeNode>
----@field protected _rootnode           dot.t.ITreeNode
+---@field protected _nodemap            table<string, ark.c.ITreeNode>
+---@field protected _rootnode           ark.c.ITreeNode
 local M = {}
 M.__index = M
 
----@param props                         dot.ITreeProps
----@return dot.Tree
+---@param props                         ark.c.ITreeProps
+---@return ark.c.Tree
 function M.new(props)
   local name = props.name ---@type string
   local fullname = props.fullname or string.format("%s@%s", __module_name__, name) ---@type string
-  local node_sorter = props.node_sorter ---@type dot.t.ITreeNodeSorter
+  local node_sorter = props.node_sorter ---@type ark.c.ITreeNodeSorter
   local rootnodedata = props.rootnodedata or {} ---@type unknown
   local uuid_root = "__virtual_root__" ---@type string
 
-  ---@type dot.t.ITreeNode
+  ---@type ark.c.ITreeNode
   local noderoot = {
     uuid = uuid_root,
     parent = uuid_root,
@@ -104,7 +104,7 @@ function M.new(props)
     dirty_co = false,
   }
 
-  ---@type table<string, dot.t.ITreeNode>
+  ---@type table<string, ark.c.ITreeNode>
   local nodemap = {
     [uuid_root] = noderoot,
   }
@@ -119,14 +119,14 @@ function M.new(props)
   return self
 end
 
----@return dot.Tree
+---@return ark.c.Tree
 function M:clear()
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local rootnode = self._rootnode ---@type dot.t.ITreeNode
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local rootnode = self._rootnode ---@type ark.c.ITreeNode
   for _, childuuid in ipairs(rootnode.children) do
-    local child = nodemap[childuuid] ---@type dot.t.ITreeNode
+    local child = nodemap[childuuid] ---@type ark.c.ITreeNode
     self:__remove_recursive__(child)
   end
   rootnode.children = {}
@@ -166,10 +166,10 @@ function M:isdescendant(ancestor, uuid)
     return true
   end
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
 
-  local node = nodemap[uuid] ---@type dot.t.ITreeNode|nil
-  local node_ancestor = nodemap[ancestor] ---@type dot.t.ITreeNode|nil
+  local node = nodemap[uuid] ---@type ark.c.ITreeNode|nil
+  local node_ancestor = nodemap[ancestor] ---@type ark.c.ITreeNode|nil
   if node == nil or node_ancestor == nil then
     return false
   end
@@ -180,7 +180,7 @@ function M:isdescendant(ancestor, uuid)
 
   local distance = node.depth - node_ancestor.depth ---@type integer
   for _ = 1, distance, 1 do
-    node = nodemap[node.parent] ---@type dot.t.ITreeNode
+    node = nodemap[node.parent] ---@type ark.c.ITreeNode
   end
   return node.uuid == ancestor
 end
@@ -193,25 +193,25 @@ function M:isexistent(uuid)
 end
 
 ---@param uuid                          string
----@return dot.t.ITreeNode|nil
+---@return ark.c.ITreeNode|nil
 function M:retrieve(uuid)
   self:__health__()
-  return self._nodemap[uuid] ---@type dot.t.ITreeNode|nil
+  return self._nodemap[uuid] ---@type ark.c.ITreeNode|nil
 end
 
 ---@param root                          string
----@param fn                            dot.t.ITreeQuickTraverseHandler
----@param conditional                   ?dot.t.ITreeTraverseConditional
----@return dot.Tree
+---@param fn                            ark.c.ITreeQuickTraverseHandler
+---@param conditional                   ?ark.c.ITreeTraverseConditional
+---@return ark.c.Tree
 function M:quick_traverse(root, fn, conditional)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local recursive ---@type dot.t.ITreeQuickTraverseRecursive
-  local rootnode = root and nodemap[root] or self._rootnode ---@type dot.t.ITreeNode
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local recursive ---@type ark.c.ITreeQuickTraverseRecursive
+  local rootnode = root and nodemap[root] or self._rootnode ---@type ark.c.ITreeNode
 
   if conditional == nil then
-    ---@type dot.t.ITreeQuickTraverseRecursive
+    ---@type ark.c.ITreeQuickTraverseRecursive
     recursive = function(ctx, node, cur)
       fn(ctx, node, cur)
 
@@ -223,14 +223,14 @@ function M:quick_traverse(root, fn, conditional)
       local N = #node.children ---@type integer
       for index = 1, N, 1 do
         local childuuid = node.children[index] ---@type string
-        local child = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local child = nodemap[childuuid] ---@type ark.c.ITreeNode
         recursive(ctx, child, next_cur)
       end
     end
   else
-    ---@type dot.t.ITreeQuickTraverseRecursive
+    ---@type ark.c.ITreeQuickTraverseRecursive
     recursive = function(ctx, node, cur)
-      local condition = conditional(ctx, node, cur) ---@type dot.t.ITreeTraverseConditionalEnum
+      local condition = conditional(ctx, node, cur) ---@type ark.c.ITreeTraverseConditionalEnum
       if condition == "badroot" then
         return
       end
@@ -250,7 +250,7 @@ function M:quick_traverse(root, fn, conditional)
       local N = #node.children ---@type integer
       for index = 1, N, 1 do
         local childuuid = node.children[index] ---@type string
-        local child = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local child = nodemap[childuuid] ---@type ark.c.ITreeNode
         recursive(ctx, child, next_cur)
       end
     end
@@ -262,12 +262,12 @@ function M:quick_traverse(root, fn, conditional)
     end
 
     for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
-      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type dot.t.ITreeTraverseContext
+      local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type ark.c.ITreeTraverseContext
       recursive(ctx, childnode, 1)
     end
   else
-    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type dot.t.ITreeTraverseContext
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type ark.c.ITreeTraverseContext
     recursive(ctx, rootnode, 1)
   end
 
@@ -275,17 +275,17 @@ function M:quick_traverse(root, fn, conditional)
 end
 
 ---@param root                          string
----@param fn                            dot.t.ITreeTraverseHandler
----@param conditional                   ?dot.t.ITreeTraverseConditional
----@return dot.Tree
+---@param fn                            ark.c.ITreeTraverseHandler
+---@param conditional                   ?ark.c.ITreeTraverseConditional
+---@return ark.c.Tree
 function M:traverse(root, fn, conditional)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local recursive ---@type dot.t.ITreeTraverseRecursive
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local recursive ---@type ark.c.ITreeTraverseRecursive
 
   if conditional == nil then
-    ---@type dot.t.ITreeTraverseRecursive
+    ---@type ark.c.ITreeTraverseRecursive
     recursive = function(ctx, node, cur, is_lastchild)
       local N = #node.children ---@type integer
       local next_cur = cur + 1 ---@type integer
@@ -297,7 +297,7 @@ function M:traverse(root, fn, conditional)
 
       if N == 1 then
         local childuuid = node.children[1] ---@type string
-        local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
         fn(ctx, node, cur, is_lastchild, childuuid, N)
         return recursive(ctx, childnode, next_cur, true)
       end
@@ -310,14 +310,14 @@ function M:traverse(root, fn, conditional)
 
       for index = 1, N, 1 do
         local childuuid = node.children[index] ---@type string
-        local child = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local child = nodemap[childuuid] ---@type ark.c.ITreeNode
         recursive(ctx, child, next_cur, index == N)
       end
     end
   else
-    ---@type dot.t.ITreeTraverseRecursive
+    ---@type ark.c.ITreeTraverseRecursive
     recursive = function(ctx, node, cur, is_lastchild)
-      local condition = conditional(ctx, node, cur) ---@type dot.t.ITreeTraverseConditionalEnum
+      local condition = conditional(ctx, node, cur) ---@type ark.c.ITreeTraverseConditionalEnum
       if condition == "badroot" then
         return
       end
@@ -337,8 +337,8 @@ function M:traverse(root, fn, conditional)
       local first_child_index = nil ---@type integer|nil
       local last_child_index = #node.children ---@type integer
       for index, childuuid in ipairs(node.children) do
-        local child = nodemap[childuuid] ---@type dot.t.ITreeNode
-        local child_condition = conditional(ctx, child, next_cur) ---@type dot.t.ITreeTraverseConditionalEnum
+        local child = nodemap[childuuid] ---@type ark.c.ITreeNode
+        local child_condition = conditional(ctx, child, next_cur) ---@type ark.c.ITreeTraverseConditionalEnum
         if child_condition ~= "badroot" then
           N = N + 1 ---@type integer
           first_child_index = first_child_index or index ---@type integer
@@ -353,7 +353,7 @@ function M:traverse(root, fn, conditional)
 
       if N == 1 then
         local childuuid = node.children[first_child_index] ---@type string
-        local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
         fn(ctx, node, cur, is_lastchild, childuuid, N)
         return recursive(ctx, childnode, next_cur, true)
       end
@@ -362,25 +362,25 @@ function M:traverse(root, fn, conditional)
 
       for index = first_child_index, last_child_index, 1 do
         local childuuid = node.children[index] ---@type string
-        local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
+        local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
         recursive(ctx, childnode, next_cur, index == last_child_index)
       end
     end
   end
 
-  local rootnode = nodemap[root] or self._rootnode ---@type dot.t.ITreeNode
+  local rootnode = nodemap[root] or self._rootnode ---@type ark.c.ITreeNode
   if rootnode == self._rootnode then
     if rootnode.dirty_co then
       self:__sort_children__(rootnode)
     end
 
     for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
-      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type dot.t.ITreeTraverseContext
+      local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type ark.c.ITreeTraverseContext
       recursive(ctx, childnode, 1, true)
     end
   else
-    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type dot.t.ITreeTraverseContext
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type ark.c.ITreeTraverseContext
     recursive(ctx, rootnode, 1, true)
   end
 
@@ -388,25 +388,25 @@ function M:traverse(root, fn, conditional)
 end
 
 ---@param root                          string|nil
----@param traverse                      dot.t.ITreeUnsafeTraverseCallback
----@return dot.Tree
+---@param traverse                      ark.c.ITreeUnsafeTraverseCallback
+---@return ark.c.Tree
 function M:unsafe_traverse(root, traverse)
   self:__health__()
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
 
-  local rootnode = nodemap[root] or self._rootnode ---@type dot.t.ITreeNode
+  local rootnode = nodemap[root] or self._rootnode ---@type ark.c.ITreeNode
   if rootnode == self._rootnode then
     if rootnode.dirty_co then
       self:__sort_children__(rootnode)
     end
 
     for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
-      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type dot.t.ITreeTraverseContext
+      local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
+      local ctx = { nodemap = nodemap, rootnode = childnode } ---@type ark.c.ITreeTraverseContext
       traverse(ctx)
     end
   else
-    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type dot.t.ITreeTraverseContext
+    local ctx = { nodemap = nodemap, rootnode = rootnode } ---@type ark.c.ITreeTraverseContext
     traverse(ctx)
   end
 
@@ -421,12 +421,12 @@ function M:calc_include_uuid_set(uuids)
   self:__health__()
 
   local uuidset = {} ---@type table<string, boolean>
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   local N = #uuids ---@type integer
   for index = 1, N, 1 do
     local uuid = uuids[index] ---@type string
     while uuid ~= nil and not uuidset[uuid] do
-      local node = nodemap[uuid] ---@type dot.t.ITreeNode|nil
+      local node = nodemap[uuid] ---@type ark.c.ITreeNode|nil
       if node == nil then
         ark.reporter.warn({
           from = self.fullname,
@@ -444,17 +444,17 @@ function M:calc_include_uuid_set(uuids)
 end
 
 ---@param uuid                          string
----@return dot.Tree
+---@return ark.c.Tree
 function M:empty(uuid)
   self:__health__()
 
-  local rootnode = self._rootnode ---@type dot.t.ITreeNode
+  local rootnode = self._rootnode ---@type ark.c.ITreeNode
   if uuid == rootnode.uuid then
     return self:clear()
   end
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local node = nodemap[uuid] ---@type dot.t.ITreeNode|nil
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local node = nodemap[uuid] ---@type ark.c.ITreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = self.fullname,
@@ -468,7 +468,7 @@ function M:empty(uuid)
   end
 
   for _, childuuid in ipairs(node.children) do
-    local childnode = nodemap[childuuid] ---@type dot.t.ITreeNode
+    local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
     self:__remove_recursive__(childnode)
   end
   node.children = {}
@@ -481,18 +481,18 @@ end
 ---@param parent                        string
 ---@param uuid                          string
 ---@param data                          T
----@return dot.t.ITreeNode
+---@return ark.c.ITreeNode
 function M:insert(parent, uuid, data)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local node = nodemap[uuid] ---@type dot.t.ITreeNode|nil
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local node = nodemap[uuid] ---@type ark.c.ITreeNode|nil
 
-  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type dot.t.ITreeNode
+  local node_parent = parent ~= uuid and nodemap[parent] or self._rootnode ---@type ark.c.ITreeNode
   parent = node_parent.uuid ---@type string
 
   if node == nil then
-    ---@type dot.t.ITreeNode
+    ---@type ark.c.ITreeNode
     node = {
       uuid = uuid,
       parent = node_parent.uuid,
@@ -508,7 +508,7 @@ function M:insert(parent, uuid, data)
       return node
     end
 
-    local old_node_parent = nodemap[node.parent] ---@type dot.t.ITreeNode
+    local old_node_parent = nodemap[node.parent] ---@type ark.c.ITreeNode
     ark.table.filter_inline(old_node_parent.children, function(childuuid)
       return childuuid ~= node.uuid
     end)
@@ -529,11 +529,11 @@ end
 function M:print(rootuuid)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local rootnode = rootuuid and nodemap[rootuuid] or self._rootnode ---@type dot.t.ITreeNode
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local rootnode = rootuuid and nodemap[rootuuid] or self._rootnode ---@type ark.c.ITreeNode
   local lines = {} ---@type string[]
 
-  ---@param node                        dot.t.ITreeNode
+  ---@param node                        ark.c.ITreeNode
   ---@param indent                      string
   ---@param is_lastchild                boolean
   ---@param depth                       integer
@@ -549,7 +549,7 @@ function M:print(rootuuid)
     local N = #node.children ---@type integer
     for index = 1, N, 1 do
       local childuuid = node.children[index] ---@type string
-      local child = nodemap[childuuid] ---@type dot.t.ITreeNode
+      local child = nodemap[childuuid] ---@type ark.c.ITreeNode
       if child then
         recursive(child, childindent, index == N, depth + 1)
       end
@@ -590,17 +590,17 @@ function M:print(rootuuid)
 end
 
 ---@param nodeuuid                      string
----@return dot.Tree
+---@return ark.c.Tree
 function M:remove(nodeuuid)
   self:__health__()
 
-  local rootnode = self._rootnode ---@type dot.t.ITreeNode
+  local rootnode = self._rootnode ---@type ark.c.ITreeNode
   if nodeuuid == rootnode.uuid then
     return self:clear()
   end
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-  local node = nodemap[nodeuuid] ---@type dot.t.ITreeNode|nil
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+  local node = nodemap[nodeuuid] ---@type ark.c.ITreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = self.fullname,
@@ -613,7 +613,7 @@ function M:remove(nodeuuid)
     return self
   end
 
-  local node_parent = nodemap[node.parent] ---@type dot.t.ITreeNode
+  local node_parent = nodemap[node.parent] ---@type ark.c.ITreeNode
 
   self:__remove_recursive__(node)
   ark.table.filter_inline(node_parent.children, function(childuuid)
@@ -635,12 +635,12 @@ function M:__health__()
 end
 
 ---@protected
----@param node                          dot.t.ITreeNode
+---@param node                          ark.c.ITreeNode
 ---@return nil
 function M:__remove_recursive__(node)
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   for _, childuuid in ipairs(node.children) do
-    local child = nodemap[childuuid] ---@type dot.t.ITreeNode|nil
+    local child = nodemap[childuuid] ---@type ark.c.ITreeNode|nil
     if child ~= nil then
       self:__remove_recursive__(child)
     end
@@ -654,28 +654,28 @@ function M:__remove_recursive__(node)
 end
 
 ---@protected
----@param node                          dot.t.ITreeNode
+---@param node                          ark.c.ITreeNode
 ---@param depth                         integer
 ---@return nil
 function M:__resolve_depth_recursive__(node, depth)
   node.depth = depth
   for _, childuuid in ipairs(node.children) do
-    local child = self._nodemap[childuuid] ---@type dot.t.ITreeNode
+    local child = self._nodemap[childuuid] ---@type ark.c.ITreeNode
     self:__resolve_depth_recursive__(child, depth + 1)
   end
 end
 
 ---@protected
----@param node                          dot.t.ITreeNode
+---@param node                          ark.c.ITreeNode
 ---@return nil
 function M:__sort_children__(node)
   node.dirty_co = false
   if #node.children > 1 then
-    local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
-    local node_sorter = self.node_sorter ---@type dot.t.ITreeNodeSorter
+    local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
+    local node_sorter = self.node_sorter ---@type ark.c.ITreeNodeSorter
     table.sort(node.children, function(left_uuid, right_uuid)
-      local left = nodemap[left_uuid] ---@type dot.t.ITreeNode
-      local right = nodemap[right_uuid] ---@type dot.t.ITreeNode
+      local left = nodemap[left_uuid] ---@type ark.c.ITreeNode
+      local right = nodemap[right_uuid] ---@type ark.c.ITreeNode
       return node_sorter(left, right)
     end)
   end

@@ -47,7 +47,7 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
----@field public node_sorter            dot.t.ITreeNodeSorter
+---@field public node_sorter            ark.c.ITreeNodeSorter
 ---
 ---@field public keymaps_common         ?ark.t.IKeymap[]
 ---@field public keymaps_finder         ?ark.t.IKeymap[]
@@ -100,7 +100,7 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field public flag_viewtype          ark.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _tree               dot.Tree
+---@field protected _tree               ark.c.Tree
 ---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          dot.view.Plainfile
 ---@field protected _retriever          dot.module.tree.TreeRetriever
@@ -130,7 +130,7 @@ function M.new(props)
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
-  local node_sorter = props.node_sorter ---@type dot.t.ITreeNodeSorter
+  local node_sorter = props.node_sorter ---@type ark.c.ITreeNodeSorter
 
   local o_search_pattern = props.search_pattern ---@type ark.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
@@ -167,7 +167,7 @@ function M.new(props)
   local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.tree.IOnRefresh
 
-  local tree = dot.tree.Tree.new({
+  local tree = ark.c.Tree.new({
     name = fullname,
     node_sorter = node_sorter,
   })
@@ -334,7 +334,7 @@ function M.new(props)
         end
 
         local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-        local leafnode = tree:retrieve(leafuuid) ---@type dot.t.ITreeNode|nil
+        local leafnode = tree:retrieve(leafuuid) ---@type ark.c.ITreeNode|nil
         if leafnode == nil then
           return
         end
@@ -347,7 +347,7 @@ function M.new(props)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = tree:retrieve(rootuuid) ---@type dot.t.ITreeNode|nil
+      local rootnode = tree:retrieve(rootuuid) ---@type ark.c.ITreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -990,7 +990,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._tree:retrieve(rootuuid) ---@type dot.t.ITreeNode|nil
+  local node = self._tree:retrieve(rootuuid) ---@type ark.c.ITreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1119,7 +1119,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return dot.t.ITreeNode
+---@return ark.c.ITreeNode
 ---@return dot.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type dot.view.tree.INodeState|nil
@@ -1128,7 +1128,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type dot.t.ITreeNode|nil
+  ---@type ark.c.ITreeNode|nil
   local node = self._tree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -1190,7 +1190,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  local node = self._tree:retrieve(nodeuuid) ---@type dot.t.ITreeNode|nil
+  local node = self._tree:retrieve(nodeuuid) ---@type ark.c.ITreeNode|nil
   if node == nil then
     return nil, nil
   end

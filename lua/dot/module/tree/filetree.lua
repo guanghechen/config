@@ -1,7 +1,7 @@
 local __module_name__ = "dot.module.tree.filetree" ---@type string
 
 ---@alias dot.t.IFiletreeTraverseConditional
----| fun(ctx: dot.t.IFiletreeTraverseContext, node: dot.t.IFiletreeNode, cur: integer): dot.t.ITreeTraverseConditionalEnum
+---| fun(ctx: dot.t.IFiletreeTraverseContext, node: dot.t.IFiletreeNode, cur: integer): ark.c.ITreeTraverseConditionalEnum
 
 ---@alias dot.t.IFiletreeTraverseHandler
 ---| fun(ctx: dot.t.IFiletreeTraverseContext, node: dot.t.IFiletreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
@@ -22,7 +22,7 @@ local __module_name__ = "dot.module.tree.filetree" ---@type string
 ---@field public nodemap                table<string, dot.t.IFiletreeNode>
 ---@field public rootnode               dot.t.IFiletreeNode
 
----@class dot.t.IFiletreeNode : dot.t.ITreeNode
+---@class dot.t.IFiletreeNode : ark.c.ITreeNode
 ---@field public data                   dot.t.IFiletreeNodeData
 
 ---@class dot.t.IFiletreeNodeData
@@ -64,7 +64,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@class dot.IFiletreeProps
 ---@field public name                   string
 
----@class dot.IReadonlyFiletree : dot.IReadonlyTree
+---@class dot.IReadonlyFiletree : ark.c.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public isdisposed             fun(self: dot.IReadonlyFiletree): boolean
@@ -76,7 +76,7 @@ local FILETYPE_PRIORITY_MAP = {
 ---@field public unsafe_traverse        fun(self: dot.IReadonlyFiletree, root: string|nil, traverse: dot.t.IFiletreeUnsafeTraverseCallback): dot.IReadonlyFiletree
 ---@field public calc_include_uuid_set  fun(self: dot.IReadonlyFiletree, uuids: string[]): table<string, boolean>
 
----@class dot.IFiletree : dot.ITree , dot.IReadonlyFiletree
+---@class dot.IFiletree : ark.c.ITree , dot.IReadonlyFiletree
 ---@field public fullname               string
 ---@field public root                   string
 ---@field public clear                  fun(self: dot.IFiletree): dot.IFiletree
@@ -102,10 +102,10 @@ local FILETYPE_PRIORITY_MAP = {
 ---@class dot.Filetree : dot.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
----@field protected _nodemap            table<string, dot.t.ITreeNode>
+---@field protected _nodemap            table<string, ark.c.ITreeNode>
 local M = {}
 M.__index = M
-setmetatable(M, dot.tree.Tree)
+setmetatable(M, ark.c.Tree)
 
 ---@param filepath                      string
 ---@return boolean
@@ -203,8 +203,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  ---@type dot.Tree
-  local tree = dot.tree.Tree.new({
+  ---@type ark.c.Tree
+  local tree = ark.c.Tree.new({
     name = name,
     fullname = fullname,
     rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
@@ -232,7 +232,7 @@ end
 function M:insert_directory_absolute(dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   ---@cast nodemap                      table<string, dot.t.IFiletreeNode>
 
   local nodeuuid = M.uuid(dirpath) ---@type string
@@ -276,7 +276,7 @@ end
 function M:insert_directory_relative(cwd, dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   ---@cast nodemap                      table<string, dot.t.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string
@@ -314,7 +314,7 @@ end
 function M:insert_file_absolute(filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   ---@cast nodemap                      table<string, dot.t.IFiletreeNode>
 
   local nodeuuid = M.uuid(filepath) ---@type string
@@ -368,7 +368,7 @@ end
 function M:insert_file_relative(cwd, filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, dot.t.ITreeNode>
+  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
   ---@cast nodemap                      table<string, dot.t.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string

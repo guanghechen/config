@@ -7,19 +7,19 @@ local __module_name__ = "dot.module.picker.view.tree" ---@type string
 ---| dot.module.picker.view.tree.ILeafLocationState
 
 ---@alias dot.module.picker.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: ark.c.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.IListviewRendererContext, node: ark.c.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: dot.module.picker.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: dot.t.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: dot.module.picker.view.tree.ILeafNodeState, location: dot.module.picker.view.tree.ILeafLocationState, lnum: integer): dot.view.tree.INodeRenderResult
 
 ---@class dot.module.picker.view.tree.IContainerNodeState : dot.view.tree.IContainerNodeState
 
@@ -31,15 +31,15 @@ local __module_name__ = "dot.module.picker.view.tree" ---@type string
 ---@class dot.module.picker.view.tree.ILeafLocationState : dot.view.tree.ILeafLocationState
 
 ---@class dot.module.picker.view.tree.IListviewRendererContext : dot.view.tree.IListviewRendererContext
----@field public rootnode               dot.t.ITreeNode
+---@field public rootnode               ark.c.ITreeNode
 ---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
----@field public tree                   dot.IReadonlyTree
+---@field public tree                   ark.c.IReadonlyTree
 ---@field public view                   dot.module.picker.TreeView
 
 ---@class dot.module.picker.view.tree.ITreeviewRendererContext : dot.view.tree.ITreeviewRendererContext
----@field public rootnode               dot.t.ITreeNode
+---@field public rootnode               ark.c.ITreeNode
 ---@field public rootstate              dot.module.picker.view.tree.IContainerNodeState
----@field public tree                   dot.IReadonlyTree
+---@field public tree                   ark.c.IReadonlyTree
 ---@field public view                   dot.module.picker.TreeView
 
 ---@class dot.module.picker.view.tree.INodeMatchContext
@@ -70,7 +70,7 @@ local __module_name__ = "dot.module.picker.view.tree" ---@type string
 ---@field public name                   string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
----@field public tree                   dot.IReadonlyTree
+---@field public tree                   ark.c.IReadonlyTree
 ---@field public render_listview_leaf   dot.module.picker.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   dot.module.picker.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
@@ -92,7 +92,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
-  local tree = props.tree ---@type dot.IReadonlyTree
+  local tree = props.tree ---@type ark.c.IReadonlyTree
   local render_listview_leaf = props.render_listview_leaf ---@type dot.module.picker.view.tree.IListviewLeafNodeRenderer
   local render_listview_location = props.render_listview_location ---@type dot.module.picker.view.tree.IListviewLeafLocationRenderer
   local render_treeview_container = props.render_treeview_container ---@type dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
@@ -162,7 +162,7 @@ end
 function M:match(params)
   self:__health__()
 
-  local tree = self._tree ---@type dot.IReadonlyTree
+  local tree = self._tree ---@type ark.c.IReadonlyTree
   local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.tree.INodeState>
 
@@ -204,7 +204,7 @@ function M:match(params)
     local k = 0 ---@type integer
     uuids = {} ---@type string[]
 
-    ---@type dot.t.ITreeQuickTraverseHandler
+    ---@type ark.c.ITreeQuickTraverseHandler
     local collect = function(_, node)
       local state = statemap[node.uuid]
       if state.text ~= nil then
@@ -279,11 +279,11 @@ function M:match(params)
 
   for _, uuid in ipairs(uuids) do
     local o = tree:retrieve(uuid)
-    ---@cast o                          dot.t.ITreeNode
+    ---@cast o                          ark.c.ITreeNode
 
     for _ = o.depth - 1, 1, -1 do
       o = tree:retrieve(o.parent)
-      ---@cast o                        dot.t.ITreeNode
+      ---@cast o                        ark.c.ITreeNode
 
       local s = statemap[o.uuid]
       if s.tick_matched == tick_matched then
@@ -327,7 +327,7 @@ function M:render_listview(params)
     return result
   end
 
-  local tree = self._tree ---@type dot.IReadonlyTree
+  local tree = self._tree ---@type ark.c.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
@@ -337,7 +337,7 @@ function M:render_listview(params)
     local uuid = uuids[lnum] ---@type string
     local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
+      local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
       if node ~= nil then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
@@ -386,7 +386,7 @@ function M:render_treeview(params)
     return result
   end
 
-  local tree = self._tree ---@type dot.IReadonlyTree
+  local tree = self._tree ---@type ark.c.IReadonlyTree
   local indents = result.indents ---@type string[]
   local tick_matched = self._tick_matched ---@type integer
   local statemap = self.statemap ---@type table<string, dot.view.tree.INodeState>
@@ -396,7 +396,7 @@ function M:render_treeview(params)
     local uuid = uuids[lnum] ---@type string
     local nodestate = statemap[uuid] ---@type dot.module.picker.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.tick_matched == tick_matched and nodestate.cache_match ~= nil then
-      local node = tree:retrieve(uuid) ---@type dot.t.ITreeNode|nil
+      local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
       if node ~= nil then
         local row = lnum - 1 ---@type integer
         local text = nodestate.text or "" ---@type string
