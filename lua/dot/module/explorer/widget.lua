@@ -222,6 +222,11 @@ end
 function M:refresh()
   self._tree:refresh(true)
   self:__refresh__(true)
+  ark.reporter.info({
+    from = self.fullname,
+    subject = "refresh",
+    message = "Explorer refreshed",
+  })
 end
 
 ---@return nil
