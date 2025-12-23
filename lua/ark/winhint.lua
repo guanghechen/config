@@ -1,4 +1,4 @@
----@class dot.module.winpicker.hint
+---@class ark.winhint
 local M = {
   a = {
     "    █████╗    ",

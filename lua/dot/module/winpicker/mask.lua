@@ -1,5 +1,3 @@
-local hints = require("dot.module.winpicker.hint")
-
 local winhighlight = table.concat({
   "FloatBorder:FloatBorder",
   "Normal:NormalFloat",
@@ -23,7 +21,7 @@ function M.new(char)
     return M.renderers[char]
   end
 
-  local hint = hints[char] ---@type string[]
+  local hint = ark.winhint[char] ---@type string[]
 
   local self = setmetatable({}, M)
   self.char = char

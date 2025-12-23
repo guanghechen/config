@@ -193,6 +193,7 @@ local __mods = {
   timer = "ark.timer",
   tmux = "ark.tmux",
   var = "ark.var",
+  winhint = "ark.winhint",
 }
 
 ---@class ark
@@ -222,6 +223,7 @@ local __mods = {
 ---@field public timer                  ark.timer
 ---@field public tmux                   ark.tmux
 ---@field public var                    ark.var
+---@field public winhint                ark.winhint
 local M = setmetatable({
   __mods = __mods,
   c = c,
