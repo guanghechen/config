@@ -301,7 +301,7 @@ function M:__show_popup__(hunk, is_staged)
     border = "rounded",
     style = "minimal",
     focusable = true,
-    title = string.format(" %s Git Hunk%s", dot.icon.git.Diff, title_suffix),
+    title = string.format(" %s Git Hunk%s", ark.icon.git.Diff, title_suffix),
     title_pos = "center",
   })
   self._board_winnr = winnr

@@ -30,9 +30,9 @@ function M.foldtext()
   end
   table.insert(result, { text, hl })
   table.insert(result, { "  ", "f_transparent" })
-  table.insert(result, { dot.icon.symbols.sep_left, "f_fold_virt_text_inv" })
+  table.insert(result, { ark.icon.symbols.sep_left, "f_fold_virt_text_inv" })
   table.insert(result, { string.format("%s %d lines", "↙", linecount), "f_fold_virt_text" })
-  table.insert(result, { dot.icon.symbols.sep_right, "f_fold_virt_text_inv" })
+  table.insert(result, { ark.icon.symbols.sep_right, "f_fold_virt_text_inv" })
   return result
 end
 

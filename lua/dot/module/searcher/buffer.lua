@@ -34,7 +34,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
       snapshot = function()
         local enabled = o_flag_fuzzy:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_fuzzy, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -44,7 +44,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
       snapshot = function()
         local enabled = o_flag_regex:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_regex, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -54,7 +54,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
       snapshot = function()
         local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_case_sensitive, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -64,7 +64,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
       snapshot = function()
         local enabled = o_flag_replace:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_replace, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_replace, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   }
@@ -712,7 +712,7 @@ function M:__create_finder_buffer_as_needed__()
   -- Set up search icon sign
   local sign_group = "eve_ux_search_buffer_prompt"
   local sign_name = "SearchBufferPrompt"
-  vim.fn.sign_define(sign_name, { text = dot.icon.ui.Search, texthl = "f_pk_finder_prompt" })
+  vim.fn.sign_define(sign_name, { text = ark.icon.ui.Search, texthl = "f_pk_finder_prompt" })
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
@@ -758,7 +758,7 @@ function M:__create_replacer_buffer_as_needed__()
   -- Set up replace icon sign
   local sign_group = "eve_ux_replace_buffer_prompt"
   local sign_name = "ReplaceBufferPrompt"
-  vim.fn.sign_define(sign_name, { text = dot.icon.symbols.flag_replace, texthl = "f_pk_replacer_prompt" })
+  vim.fn.sign_define(sign_name, { text = ark.icon.symbols.flag_replace, texthl = "f_pk_replacer_prompt" })
   vim.fn.sign_place(1, sign_group, sign_name, bufnr, { lnum = 1, priority = 10 })
 
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {

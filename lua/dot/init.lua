@@ -264,7 +264,6 @@ local __mods = {
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
-  icon = "dot.icon",
   lsp = "dot.lsp",
   lsp_action = "dot.lsp_action",
   notifier = "dot.notifier",
@@ -307,7 +306,6 @@ local __mods = {
 ---
 ---@field public G                      dot.G
 ---@field public buf                    dot.buf
----@field public icon                   dot.icon
 ---@field public path                   dot.path
 ---@field public shell                  dot.shell
 ---@field public tab                    dot.tab

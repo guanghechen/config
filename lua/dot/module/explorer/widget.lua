@@ -1017,7 +1017,7 @@ function M:__action_delete_selected__()
   ---@type dot.module.board.Act
   local act = dot.board.Act.new({
     name = "explorer_delete",
-    title = string.format("%s Delete %d item(s)", dot.icon.diagnostic.Warning, #selected_nodes),
+    title = string.format("%s Delete %d item(s)", ark.icon.diagnostic.Warning, #selected_nodes),
     initial_input = "y",
     preview_lines = #preview_lines,
     render_preview = function(bufnr, _)
@@ -1124,7 +1124,7 @@ function M:__action_move_selected__()
   ---@type dot.module.board.Act
   local act = dot.board.Act.new({
     name = "explorer_move",
-    title = string.format("%s Move %d item(s)", dot.icon.symbols.selection_cut, #selected_nodes),
+    title = string.format("%s Move %d item(s)", ark.icon.symbols.selection_cut, #selected_nodes),
     initial_input = default_target,
     preview_lines = #selected_nodes,
     get_width = calc_content_width,
@@ -1292,7 +1292,7 @@ function M:__action_copy_selected__()
   ---@type dot.module.board.Act
   local act = dot.board.Act.new({
     name = "explorer_copy",
-    title = string.format("%s Copy %d item(s)", dot.icon.symbols.selection_copy, #selected_nodes),
+    title = string.format("%s Copy %d item(s)", ark.icon.symbols.selection_copy, #selected_nodes),
     initial_input = default_target,
     preview_lines = #selected_nodes,
     get_width = calc_content_width,
@@ -2012,7 +2012,7 @@ function M:__get_flags__()
     end,
     snapshot = function()
       local show_hidden = state.o_flag_hidden:snapshot() ---@type boolean
-      return dot.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
+      return ark.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
 

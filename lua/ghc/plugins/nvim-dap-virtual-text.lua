@@ -4,7 +4,7 @@ return {
     virt_text_pos = "eol",
     text_prefix = "",
     separator = ",",
-    error_prefix = " " .. dot.icon.diagnostic.Error_alt .. " ",
-    info_prefix = "  " .. dot.icon.diagnostic.Information_alt .. " ",
+    error_prefix = " " .. ark.icon.diagnostic.Error_alt .. " ",
+    info_prefix = "  " .. ark.icon.diagnostic.Information_alt .. " ",
   },
 }

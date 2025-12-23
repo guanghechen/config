@@ -243,11 +243,11 @@ function M:create_win(winopts, dimension)
   dot.win.set_type(winnr, dot.win.Types.PICKER_PREVIEW)
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-    dot.icon.listchars.eol,
-    dot.icon.listchars.lead,
-    dot.icon.listchars.nbsp,
-    dot.icon.listchars.space,
-    dot.icon.listchars.trail
+    ark.icon.listchars.eol,
+    ark.icon.listchars.lead,
+    ark.icon.listchars.nbsp,
+    ark.icon.listchars.space,
+    ark.icon.listchars.trail
   )
   vim.wo[winnr].relativenumber = false
   vim.wo[winnr].spell = false

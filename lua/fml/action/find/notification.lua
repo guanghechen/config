@@ -22,7 +22,7 @@ local function fetch_data()
   for index = #tasks, 1, -1 do
     local task = tasks[index] ---@type dot.t.INotifierTask
     local text =
-      string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), dot.icon.loglevel[task.level], task.title)
+      string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), ark.icon.loglevel[task.level], task.title)
 
     local suffix = task.level:lower() ---@type string
     ---@type ark.t.IHighlightInline[]

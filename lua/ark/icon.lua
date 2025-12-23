@@ -1,7 +1,7 @@
----@class dot.icon
+---@class ark.icon
 local M = {}
 
----@class dot.icon.digits_subscript
+---@class ark.icon.digits_subscript
 local digits_subscript = {
   "₀",
   "₁",
@@ -15,7 +15,7 @@ local digits_subscript = {
   "₉",
 }
 
----@class dot.icon.digits_supscript
+---@class ark.icon.digits_supscript
 local digits_supscript = {
   "⁰",
   "¹",
@@ -53,7 +53,7 @@ function M.todigit_supscript(num)
   return #result > 0 and result or digits_supscript[1]
 end
 
----@class dot.icon.fillchars
+---@class ark.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -65,7 +65,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class dot.icon.listchars
+---@class ark.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -77,7 +77,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class dot.icon.symbols
+---@class ark.icon.symbols
 M.symbols = {
   flag_buffer = "",
   flag_case_sensitive = "",
@@ -102,7 +102,7 @@ M.symbols = {
   setting = "",
 }
 
----@class dot.icon.status
+---@class ark.icon.status
 M.status = {
   attached = "󰖩",
   broadcast = "󰐼",
@@ -111,7 +111,7 @@ M.status = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.icon.app
+---@class ark.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -120,7 +120,7 @@ M.app = {
   Vim = "",
 }
 
----@class dot.icon.filetype
+---@class ark.icon.filetype
 M.filetype = {
   Default = "",
   File = "",
@@ -136,12 +136,12 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
----@class dot.icon.lang
+---@class ark.icon.lang
 M.lang = {
   python = " ",
 }
 
----@class dot.icon.os
+---@class ark.icon.os
 M.os = {
   dos = "",
   mac = "",
@@ -157,7 +157,7 @@ M.os = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.icon.dap
+---@class ark.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -175,7 +175,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class dot.icon.diagnostic
+---@class ark.icon.diagnostic
 M.diagnostic = {
   ERROR = "",
   WARN = "",
@@ -194,7 +194,7 @@ M.diagnostic = {
   Warning_alt = "",
 }
 
----@class dot.icon.git
+---@class ark.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -215,7 +215,7 @@ M.git = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.icon.kind
+---@class ark.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -270,7 +270,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class dot.icon.log
+---@class ark.icon.log
 M.loglevel = {
   TRACE = "",
   DEBUG = "",
@@ -279,13 +279,13 @@ M.loglevel = {
   ERROR = "",
 }
 
----@class dot.icon.notepad
+---@class ark.icon.notepad
 M.notepad = {
   Notebook = "󰠮",
   Source = "",
 }
 
----@class dot.icon.ui
+---@class ark.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

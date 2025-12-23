@@ -198,13 +198,13 @@ function M:render(bufnr, tree, root, options)
       local sign_text ---@type string
       local sign_hl_group ---@type string
       if ctx.select_mode == "cut" then
-        sign_text = dot.icon.symbols.selection_cut
+        sign_text = ark.icon.symbols.selection_cut
         sign_hl_group = "f_explorer_cut"
       elseif ctx.select_mode == "copy" then
-        sign_text = dot.icon.symbols.selection_copy
+        sign_text = ark.icon.symbols.selection_copy
         sign_hl_group = "f_explorer_copy"
       else
-        sign_text = dot.icon.symbols.selection
+        sign_text = ark.icon.symbols.selection
         sign_hl_group = "f_explorer_selected"
       end
       sign_info_list[#sign_info_list + 1] = {
@@ -476,10 +476,10 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
       local is_loaded = node:is_loaded(ctx.tick_loaded) ---@type boolean
       local is_empty = is_loaded and #node.children == 0 ---@type boolean
       if is_empty then
-        icon = dot.icon.filetype.FolderEmptyOpen
+        icon = ark.icon.filetype.FolderEmptyOpen
         icon_hl = "f_ft_dirname"
       else
-        icon = dot.icon.filetype.FolderOpen
+        icon = ark.icon.filetype.FolderOpen
         icon_hl = "f_ft_dirname"
       end
     else
@@ -488,7 +488,7 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
         icon = dir_icon
         icon_hl = dir_hl
       else
-        icon = dot.icon.filetype.Folder
+        icon = ark.icon.filetype.Folder
         icon_hl = "f_ft_dirname"
       end
     end
@@ -600,7 +600,7 @@ function M:__get_diagnostic_info__(ctx, node, lnum)
   local slots = 0 ---@type integer
 
   if count_error > 0 then
-    local part = " " .. dot.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
+    local part = " " .. ark.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
     text = text .. part
     highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_error" }
     col = col + #part
@@ -608,7 +608,7 @@ function M:__get_diagnostic_info__(ctx, node, lnum)
   end
 
   if count_warn > 0 then
-    local part = " " .. dot.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
+    local part = " " .. ark.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
     text = text .. part
     highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_warn" }
     col = col + #part
@@ -616,7 +616,7 @@ function M:__get_diagnostic_info__(ctx, node, lnum)
   end
 
   if count_hint > 0 and slots < 2 then
-    local part = " " .. dot.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
+    local part = " " .. ark.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
     text = text .. part
     highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_hint" }
     col = col + #part
@@ -624,7 +624,7 @@ function M:__get_diagnostic_info__(ctx, node, lnum)
   end
 
   if count_info > 0 and slots < 2 then
-    local part = " " .. dot.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
+    local part = " " .. ark.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
     text = text .. part
     highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_info" }
     col = col + #part

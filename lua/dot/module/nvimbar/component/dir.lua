@@ -12,7 +12,7 @@ function M.path(position)
   local hln_focus_sep = position .. "_dir_path_focus_sep" ---@type string
   local hln_focus_text = position .. "_dir_path_focus_text" ---@type string
 
-  local sep = dot.icon.fillchars.foldclose .. " " ---@type string
+  local sep = ark.icon.fillchars.foldclose .. " " ---@type string
   local hl_blur_sep = txt(sep, hln_blur_sep) ---@type string
   local hl_focus_sep = txt(sep, hln_focus_sep) ---@type string
   local relpath_pieces = {} ---@type string[]
@@ -61,7 +61,7 @@ function M.path_prominent(position)
   local hln_icon = position .. "_dir_path_prominent_icon" ---@type string
   local hln_text = position .. "_dir_path_prominent_text" ---@type string
 
-  local icon = " " .. dot.icon.os.current .. " " ---@type string
+  local icon = " " .. ark.icon.os.current .. " " ---@type string
   local sep = ark.env.PATH_SEP ---@type string
   local hl_icon = txt(icon, hln_icon) ---@type string
 

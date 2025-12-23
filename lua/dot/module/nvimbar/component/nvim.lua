@@ -39,7 +39,7 @@ function M.mode(position)
   local hln_text = position .. "_nvim_mode_text" ---@type string
   local hln_sep = position .. "_nvim_mode_sep" ---@type string
 
-  local icon = " " .. dot.icon.app.Vim .. " " ---@type string
+  local icon = " " .. ark.icon.app.Vim .. " " ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
@@ -53,8 +53,8 @@ function M.mode(position)
       local text = icon .. context.mode_name ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = text .. dot.icon.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
+      text = text .. ark.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(ark.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
@@ -235,10 +235,10 @@ function M.pos(position)
     render = function()
       local row, col, _, location_icon, bar_index = calc_cursor_location() ---@type integer, integer, integer, string, integer
       local hln_bar = position .. "_nvim_pos_bar_" .. tostring(bar_index) ---@type string
-      local prefix = string.format("%s %d·%d ", dot.icon.ui.Location, row, col) ---@type string
+      local prefix = string.format("%s %d·%d ", ark.icon.ui.Location, row, col) ---@type string
       local bar = location_icon ---@type string
-      local text = dot.icon.symbols.sep_left .. prefix .. bar ---@type string
-      local hl_text = txt(dot.icon.symbols.sep_left, hln_sep) .. txt(prefix, hln_text) .. txt(bar, hln_bar) ---@type string
+      local text = ark.icon.symbols.sep_left .. prefix .. bar ---@type string
+      local hl_text = txt(ark.icon.symbols.sep_left, hln_sep) .. txt(prefix, hln_text) .. txt(bar, hln_bar) ---@type string
       return text, hl_text, true
     end,
   }

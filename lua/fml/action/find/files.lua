@@ -181,7 +181,7 @@ picker = dot.picker.FiletreeComposer.new({
         edit_setting(picker)
       end,
       snapshot = function()
-        return dot.icon.symbols.setting, "picker_flag_purple"
+        return ark.icon.symbols.setting, "picker_flag_purple"
       end,
     },
   },
@@ -194,7 +194,7 @@ picker = dot.picker.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_exclude:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -205,7 +205,7 @@ picker = dot.picker.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -216,7 +216,7 @@ picker = dot.picker.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_textonly:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_textonly, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_textonly, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

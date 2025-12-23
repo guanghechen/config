@@ -58,7 +58,7 @@ function M.flags(position, flags)
       for _, item in ipairs(flags) do
         local flag_text, flag_hln = item.snapshot() ---@type string, string
         if flag_text ~= "" then
-          local digit = dot.icon.todigit_supscript(index) ---@type string
+          local digit = ark.icon.todigit_supscript(index) ---@type string
           local piece_text = " " .. flag_text .. digit ---@type string
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string
 
@@ -83,9 +83,9 @@ function M.winbar(o_root_uri, position, flags, get_width)
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string
-  local icon_cwd = dot.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = dot.icon.filetype.Folder ---@type string
-  local icon_detached = dot.icon.ui.CircleMedium ---@type string
+  local icon_cwd = ark.icon.filetype.FolderWithHeart ---@type string
+  local icon_folder = ark.icon.filetype.Folder ---@type string
+  local icon_detached = ark.icon.ui.CircleMedium ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
@@ -130,7 +130,7 @@ function M.winbar(o_root_uri, position, flags, get_width)
       for _, item in ipairs(flags) do
         local flag_text, flag_hln = item.snapshot() ---@type string, string
         if flag_text ~= "" then
-          local digit = dot.icon.todigit_supscript(index) ---@type string
+          local digit = ark.icon.todigit_supscript(index) ---@type string
           local piece_text = " " .. flag_text .. digit ---@type string
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string
           flags_text = flags_text .. piece_text
@@ -160,9 +160,9 @@ function M.path(o_root_uri)
   local hln_path = "f_tl_explorer_path" ---@type string
   local hln_path_detached = "f_tl_explorer_path_detached" ---@type string
   local hln_detached = "f_tl_explorer_detached" ---@type string
-  local icon_cwd = dot.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = dot.icon.filetype.Folder ---@type string
-  local icon_detached = dot.icon.ui.CircleMedium ---@type string
+  local icon_cwd = ark.icon.filetype.FolderWithHeart ---@type string
+  local icon_folder = ark.icon.filetype.Folder ---@type string
+  local icon_detached = ark.icon.ui.CircleMedium ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
@@ -212,9 +212,9 @@ function M.tabline(position)
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string
-  local icon_cwd = dot.icon.filetype.FolderWithHeart ---@type string
-  local icon_folder = dot.icon.filetype.Folder ---@type string
-  local icon_detached = dot.icon.ui.CircleMedium ---@type string
+  local icon_cwd = ark.icon.filetype.FolderWithHeart ---@type string
+  local icon_folder = ark.icon.filetype.Folder ---@type string
+  local icon_detached = ark.icon.ui.CircleMedium ---@type string
 
   ---@return string, string, boolean
   local function get_path_text()
@@ -277,21 +277,21 @@ function M.tabline(position)
     local index = 1 ---@type integer
 
     local flag_selected = dot.context.explorer.flag_selected:snapshot() ---@type boolean
-    local flag_selected_icon = dot.icon.symbols.flag_selected ---@type string
+    local flag_selected_icon = ark.icon.symbols.flag_selected ---@type string
     local flag_selected_hln = flag_selected and "explorer_flag_orange" or "explorer_flag_grey" ---@type string
     local flag_selected_piece_hln = string.format("%s_%s", position, flag_selected_hln) ---@type string
     local flag_selected_callback = dot.G.register_anonymous_fn(function()
       local current = dot.context.explorer.flag_selected:snapshot()
       dot.context.explorer.flag_selected:next(not current)
     end) or "dot.G.noop"
-    local flag_selected_digit = dot.icon.todigit_supscript(index) ---@type string
+    local flag_selected_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_selected_piece_text = " " .. flag_selected_icon .. flag_selected_digit ---@type string
     text = text .. flag_selected_piece_text
     hl_text = hl_text .. btn(txt(flag_selected_piece_text, flag_selected_piece_hln), flag_selected_callback)
     index = index + 1
 
     local flag_viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-    local flag_viewtype_icon = flag_viewtype == "tree" and dot.icon.symbols.flag_tree or dot.icon.symbols.flag_list ---@type string
+    local flag_viewtype_icon = flag_viewtype == "tree" and ark.icon.symbols.flag_tree or ark.icon.symbols.flag_list ---@type string
     local flag_viewtype_hln = "explorer_flag_blue" ---@type string
     local flag_viewtype_piece_hln = string.format("%s_%s", position, flag_viewtype_hln) ---@type string
     local flag_viewtype_callback = dot.G.register_anonymous_fn(function()
@@ -299,7 +299,7 @@ function M.tabline(position)
       local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
       dot.context.explorer.flag_viewtype:next(next_viewtype)
     end) or "dot.G.noop"
-    local flag_viewtype_digit = dot.icon.todigit_supscript(index) ---@type string
+    local flag_viewtype_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_viewtype_piece_text = " " .. flag_viewtype_icon .. flag_viewtype_digit ---@type string
     text = text .. flag_viewtype_piece_text
     hl_text = hl_text .. btn(txt(flag_viewtype_piece_text, flag_viewtype_piece_hln), flag_viewtype_callback)
@@ -307,25 +307,25 @@ function M.tabline(position)
 
     if flag_viewtype == "tree" then
       local flag_foldempty = dot.context.explorer.flag_foldempty:snapshot() ---@type boolean
-      local flag_foldempty_icon = dot.icon.symbols.flag_fold_empty_path ---@type string
+      local flag_foldempty_icon = ark.icon.symbols.flag_fold_empty_path ---@type string
       local flag_foldempty_hln = flag_foldempty and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
       local flag_foldempty_piece_hln = string.format("%s_%s", position, flag_foldempty_hln) ---@type string
       local flag_foldempty_callback = dot.G.register_anonymous_fn(function()
         local current = dot.context.explorer.flag_foldempty:snapshot()
         dot.context.explorer.flag_foldempty:next(not current)
       end) or "dot.G.noop"
-      local flag_foldempty_digit = dot.icon.todigit_supscript(index) ---@type string
+      local flag_foldempty_digit = ark.icon.todigit_supscript(index) ---@type string
       local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_digit ---@type string
       text = text .. flag_foldempty_piece_text
       hl_text = hl_text .. btn(txt(flag_foldempty_piece_text, flag_foldempty_piece_hln), flag_foldempty_callback)
     end
     index = index + 1
 
-    local flag_hidden_icon = dot.icon.symbols.flag_hidden ---@type string
+    local flag_hidden_icon = ark.icon.symbols.flag_hidden ---@type string
     local flag_hidden_hln = show_hidden and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
     local flag_hidden_piece_hln = string.format("%s_%s", position, flag_hidden_hln) ---@type string
     local flag_hidden_callback = dot.G.register_anonymous_fn(toggle_hidden_callback) or "dot.G.noop"
-    local flag_hidden_digit = dot.icon.todigit_supscript(index) ---@type string
+    local flag_hidden_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_hidden_piece_text = " " .. flag_hidden_icon .. flag_hidden_digit ---@type string
     text = text .. flag_hidden_piece_text
     hl_text = hl_text .. btn(txt(flag_hidden_piece_text, flag_hidden_piece_hln), flag_hidden_callback)

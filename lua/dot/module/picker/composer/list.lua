@@ -243,7 +243,7 @@ function M.new(props)
         flag_fuzzy:next(not flag_fuzzy:snapshot())
       end,
       snapshot = function()
-        return dot.icon.symbols.flag_fuzzy, flag_fuzzy:snapshot() and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_fuzzy, flag_fuzzy:snapshot() and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     flags[#flags + 1] = {
@@ -252,7 +252,7 @@ function M.new(props)
         flag_case_sensitive:next(not flag_case_sensitive:snapshot())
       end,
       snapshot = function()
-        return dot.icon.symbols.flag_case_sensitive,
+        return ark.icon.symbols.flag_case_sensitive,
           flag_case_sensitive:snapshot() and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
@@ -262,7 +262,7 @@ function M.new(props)
         flag_regex:next(not flag_regex:snapshot())
       end,
       snapshot = function()
-        return dot.icon.symbols.flag_regex, flag_regex:snapshot() and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_regex, flag_regex:snapshot() and "picker_flag_blue" or "picker_flag_grey"
       end,
     }
     add_flags(flags, flags_append, name)

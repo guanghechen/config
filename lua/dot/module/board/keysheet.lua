@@ -114,7 +114,7 @@ function M:open()
     border = "rounded",
     style = "minimal",
     focusable = true,
-    title = string.format(" %s %s ", dot.icon.ui.Keyboard, self._title),
+    title = string.format(" %s %s ", ark.icon.ui.Keyboard, self._title),
     title_pos = "center",
   })
   self._winnr = winnr

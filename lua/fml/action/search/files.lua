@@ -190,7 +190,7 @@ searcher = dot.searcher.FiletreeComposer.new({
         edit_setting(searcher)
       end,
       snapshot = function()
-        return dot.icon.symbols.setting, "picker_flag_purple"
+        return ark.icon.symbols.setting, "picker_flag_purple"
       end,
     },
   },
@@ -203,7 +203,7 @@ searcher = dot.searcher.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_exclude:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_exclude, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
     {
@@ -214,7 +214,7 @@ searcher = dot.searcher.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
-        return dot.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return ark.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

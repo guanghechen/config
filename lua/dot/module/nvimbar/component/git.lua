@@ -19,13 +19,13 @@ function M.branch(position)
     end,
     render = function(context)
       if context.git_branch == nil then
-        local text = " " .. dot.icon.symbols.sep_right ---@type string
-        local hl_text = txt(" ", hln_text) .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
+        local text = " " .. ark.icon.symbols.sep_right ---@type string
+        local hl_text = txt(" ", hln_text) .. txt(ark.icon.symbols.sep_right, hln_sep) ---@type string
         return text, hl_text, true
       end
 
-      local text = " " .. dot.icon.git.Branch .. " " .. context.git_branch .. dot.icon.symbols.sep_right ---@type string
-      local hl_text = txt(" " .. dot.icon.git.Branch .. " " .. context.git_branch, hln_text) .. txt(dot.icon.symbols.sep_right, hln_sep) ---@type string
+      local text = " " .. ark.icon.git.Branch .. " " .. context.git_branch .. ark.icon.symbols.sep_right ---@type string
+      local hl_text = txt(" " .. ark.icon.git.Branch .. " " .. context.git_branch, hln_text) .. txt(ark.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }
