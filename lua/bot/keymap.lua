@@ -58,10 +58,15 @@ mk({ "x" }, "<", "<gv")
 mk({ "x" }, ">", ">gv")
 
 ---! better up/down
-mk({ "v" }, "J", ":m '>+1<CR>gv=gv", "move: move lines down in visual selection")
-mk({ "v" }, "K", ":m '<-2<CR>gv=gv", "move: move lines up in visual selection")
 mk({ "n", "x" }, { "j", "<Down>" }, "v:count == 0 ? 'gj' : 'j'", "navigate: down", true)
 mk({ "n", "x" }, { "k", "<Up>" }, "v:count == 0 ? 'gk' : 'k'", "navigate: up", true)
+mk({ "n", "x" }, "<C-j>", "<C-d>zz", "scroll: half page down and center")
+mk({ "n", "x" }, "<C-k>", "<C-u>zz", "scroll: half page up and center")
+
+---! better join/move
+mk({ "n" }, "J", "mzJ`z", "join: merge lines without moving cursor")
+mk({ "v" }, "J", ":m '>+1<cr>gv=gv", "move: move lines down in visual selection")
+mk({ "v" }, "K", ":m '<-2<cr>gv=gv", "move: move lines up in visual selection")
 
 ---! better jump list
 mk({ "i", "n", "x" }, "<C-i>", "<C-o>", "jump back")

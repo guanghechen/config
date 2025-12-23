@@ -639,9 +639,6 @@ M.definitions.win = {
   swap = D.new("Fwinswap", "win: swap (with picker)"),
 
   mark_sourcefile = D.new("Fwinmarksoucefile", "win: mark sourcefile"),
-
-  scroll_down = D.new("Fwinscrolldown", "win: scroll down"),
-  scroll_up = D.new("Fwinscrollup", "win: scroll up"),
 }
 
 return M

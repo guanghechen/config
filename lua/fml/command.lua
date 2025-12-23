@@ -1395,21 +1395,6 @@ command
     end,
   })
 
---[win] scroll--------------------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.win.scroll_down.uuid,
-    action = function()
-      require("fml.action.win.scroll").scroll_down()
-    end,
-  })
-  .implement({
-    uuid = K.win.scroll_up.uuid,
-    action = function()
-      require("fml.action.win.scroll").scroll_up()
-    end,
-  })
-
 --[win] split---------------------------------------------------------------------------------------
 command
   .implement({
