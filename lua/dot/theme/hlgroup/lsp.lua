@@ -2,7 +2,7 @@
 local M = {}
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("dot.theme.hlgroup.%s.lsp", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -14,7 +14,7 @@ function M.gen_hlgroup_map(context)
 end
 
 ---@param context                       dot.t.theme.IContext
----@return table<string, dot.t.theme.IHlgroup>
+---@return table<string, ark.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
 

@@ -6,4 +6,4 @@
 ---@field public scheme                 ark.t.theme.IScheme
 ---@field public transparency           boolean
 
----@class dot.t.theme.IHlgroup : vim.api.keyset.highlight
+---@class ark.t.theme.IHlgroup : vim.api.keyset.highlight

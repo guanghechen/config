@@ -15,6 +15,7 @@ local c__mods = {
   Scheduler = "ark.c.scheduler",
   Subscriber = "ark.c.subscriber",
   Subscribers = "ark.c.subscribers",
+  Theme = "ark.c.theme",
   Ticker = "ark.c.ticker",
   Tree = "ark.c.tree",
   TreeRetriever = "ark.c.tree_retriever",
@@ -37,6 +38,7 @@ local c__mods = {
 ---@field public Scheduler              ark.c.Scheduler
 ---@field public Subscriber             ark.c.Subscriber
 ---@field public Subscribers            ark.c.Subscribers
+---@field public Theme                  ark.c.Theme
 ---@field public Ticker                 ark.c.Ticker
 ---@field public Tree                   ark.c.Tree
 ---@field public TreeRetriever          ark.c.TreeRetriever

@@ -132,7 +132,7 @@ function M.apply_integration(params)
     }
     local h = dot.theme.hlgroup[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
-    local uxTheme = dot.theme.Namespace.new()
+    local uxTheme = ark.c.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -158,14 +158,14 @@ function M.apply_theme(params)
       transparency = transparency,
     })
 
-    local uxTheme = dot.theme.Namespace.new()
+    local uxTheme = ark.c.Theme.new()
     for _, integration in ipairs(integrations) do
       local h = dot.theme.hlgroup[integration]
-      ---@return table<string, dot.t.theme.IHlgroup>
+      ---@return table<string, ark.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, dot.t.theme.IHlgroup>
+        local additional = {} ---@type table<string, ark.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if string.sub(hlname, 1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }

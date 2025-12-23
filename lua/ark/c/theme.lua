@@ -1,27 +1,27 @@
----@class dot.theme.namespace.IApplyParams
+---@class ark.c.theme.IApplyParams
 ---@field public scheme                 ark.t.theme.IScheme
 ---@field public nsnr                   integer
 
----@class dot.theme.namespace.ICompileParams
+---@class ark.c.theme.ICompileParams
 ---@field public scheme                 ark.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
----@class dot.theme.Namespace
----@field protected hlgroup_map         table<string, dot.t.theme.IHlgroup>
+---@class ark.c.Theme
+---@field protected hlgroup_map         table<string, ark.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
 local BYTE_AT = 0x40 ---@type integer '@'
 
----@return dot.theme.Namespace
+---@return ark.c.Theme
 function M.new()
   local self = setmetatable({}, M)
   self.hlgroup_map = {}
   return self
 end
 
----@param params                        dot.theme.namespace.IApplyParams
+---@param params                        ark.c.theme.IApplyParams
 ---@return nil
 function M:apply(params)
   local nsnr = params.nsnr ---@type integer
@@ -31,15 +31,15 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       dot.t.theme.IHlgroup
----@return dot.theme.Namespace
+---@param hlgroup                       ark.t.theme.IHlgroup
+---@return ark.c.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, dot.t.theme.IHlgroup|nil>
----@return dot.theme.Namespace
+---@param hlgroup_map                   table<string, ark.t.theme.IHlgroup|nil>
+---@return ark.c.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do
     if hlgroup ~= nil then
@@ -49,7 +49,7 @@ function M:registers(hlgroup_map)
   return self
 end
 
----@param params                        dot.theme.namespace.ICompileParams
+---@param params                        ark.c.theme.ICompileParams
 ---@return nil
 function M:compile(params)
   local filepath = params.filepath ---@type string

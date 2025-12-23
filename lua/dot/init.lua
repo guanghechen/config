@@ -69,15 +69,12 @@ local hlgroup = setmetatable({
 ----------------------------------------------------------------------------------------------------
 
 ---@class dot.theme.__mods
-local __theme__mods = {
-  Namespace = "dot.theme.namespace",
-}
+local __theme__mods = {}
 
 ---@class dot.theme
 ---@field public __mods                 dot.theme.__mods
 ---@field public hlgroup                dot.theme.hlgroup
 ---@field public scheme                 ark.theme.scheme
----@field public Namespace              dot.theme.Namespace
 local theme = setmetatable({
   __mods = __theme__mods,
   hlgroup = hlgroup,

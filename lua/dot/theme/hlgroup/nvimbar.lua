@@ -16,7 +16,7 @@ function M.gen_hlgroup_map(context)
     f_wl = c.none,
   }
 
-  ---@type table<string, dot.t.theme.IHlgroup>
+  ---@type table<string, ark.t.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
     text = { fg = c.fg2, bg = "bg_bar" },
@@ -253,7 +253,7 @@ function M.gen_hlgroup_map(context)
 
   local positions = { "f_sl", "f_tl", "f_wl" } ---@type dot.module.nvimbar.PositionEnum[]
 
-  ---@class dot.theme.hlgroup.nvimbar : table<string, dot.t.theme.IHlgroup>
+  ---@class dot.theme.hlgroup.nvimbar : table<string, ark.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }
