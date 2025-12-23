@@ -142,6 +142,13 @@ function M.client(position)
         return "", "", true
       end
 
+      if #client_names == 1 then
+        local name = client_names[1] ---@type string
+        local text = lsp_icon .. " " .. name ---@type string
+        local hl_text = btn(txt(lsp_icon, hln_text) .. txt(" " .. name, hln_text), fn_show_clients) ---@type string
+        return text, hl_text, true
+      end
+
       local text = lsp_icon .. " (" ---@type string
       local hl_text = txt(lsp_icon, hln_text) .. txt(" (", hln_text) ---@type string
 
