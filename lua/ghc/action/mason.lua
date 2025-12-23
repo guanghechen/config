@@ -12,6 +12,7 @@ function M.get_mason_ensure_installed()
     "copilot-language-server", -- copilot
     "css-lsp", -- cssls
     "dockerfile-language-server", -- docker
+    "emmet-language-server", -- emmet_language_server
     "docker-compose-language-service", -- docker_compose_language_service
     "eslint-lsp", -- eslint
     "html-lsp", -- html
