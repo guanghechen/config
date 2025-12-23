@@ -88,6 +88,81 @@ local lang = setmetatable({ __mods = lang__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class ark.theme.scheme.__mods
+local theme_scheme__mods = {
+  ["catppuccin-frappe"] = "ark.theme.scheme.catppuccin-frappe",
+  ["catppuccin-latte"] = "ark.theme.scheme.catppuccin-latte",
+  ["catppuccin-macchiato"] = "ark.theme.scheme.catppuccin-macchiato",
+  ["catppuccin-mocha"] = "ark.theme.scheme.catppuccin-mocha",
+  ["gruvbox-dark"] = "ark.theme.scheme.gruvbox-dark",
+  ["gruvbox-light"] = "ark.theme.scheme.gruvbox-light",
+  ["nord"] = "ark.theme.scheme.nord",
+  ["onehalf-dark"] = "ark.theme.scheme.onehalf-dark",
+  ["onehalf-light"] = "ark.theme.scheme.onehalf-light",
+  ["rosepine-dawn"] = "ark.theme.scheme.rosepine-dawn",
+  ["rosepine-main"] = "ark.theme.scheme.rosepine-main",
+  ["rosepine-moon"] = "ark.theme.scheme.rosepine-moon",
+  ["tokyonight-day"] = "ark.theme.scheme.tokyonight-day",
+  ["tokyonight-moon"] = "ark.theme.scheme.tokyonight-moon",
+  ["tokyonight-night"] = "ark.theme.scheme.tokyonight-night",
+  ["tokyonight-storm"] = "ark.theme.scheme.tokyonight-storm",
+  ["vsc-dark-modern"] = "ark.theme.scheme.vsc-dark-modern",
+  ["vsc-light-modern"] = "ark.theme.scheme.vsc-light-modern",
+}
+
+---@class ark.theme.scheme
+---@field public __mods                 ark.theme.scheme.__mods
+---@field public ["catppuccin-frappe"]  ark.t.theme.IScheme
+---@field public ["catppuccin-latte"]   ark.t.theme.IScheme
+---@field public ["catppuccin-macchiato"] ark.t.theme.IScheme
+---@field public ["catppuccin-mocha"]   ark.t.theme.IScheme
+---@field public ["gruvbox-dark"]       ark.t.theme.IScheme
+---@field public ["gruvbox-light"]      ark.t.theme.IScheme
+---@field public ["nord"]               ark.t.theme.IScheme
+---@field public ["onehalf-dark"]       ark.t.theme.IScheme
+---@field public ["onehalf-light"]      ark.t.theme.IScheme
+---@field public ["rosepine-dawn"]      ark.t.theme.IScheme
+---@field public ["rosepine-main"]      ark.t.theme.IScheme
+---@field public ["rosepine-moon"]      ark.t.theme.IScheme
+---@field public ["tokyonight-day"]     ark.t.theme.IScheme
+---@field public ["tokyonight-moon"]    ark.t.theme.IScheme
+---@field public ["tokyonight-night"]   ark.t.theme.IScheme
+---@field public ["tokyonight-storm"]   ark.t.theme.IScheme
+---@field public ["vsc-dark-modern"]    ark.t.theme.IScheme
+---@field public ["vsc-light-modern"]   ark.t.theme.IScheme
+local theme_scheme = setmetatable({ __mods = theme_scheme__mods }, {
+  __index = function(t, k)
+    local m = theme_scheme__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
+---@class ark.theme.__mods
+local theme__mods = {}
+
+---@class ark.theme
+---@field public __mods                 ark.theme.__mods
+---@field public scheme                 ark.theme.scheme
+local theme = setmetatable({
+  __mods = theme__mods,
+  scheme = theme_scheme,
+}, {
+  __index = function(t, k)
+    local m = theme__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class ark.__mods
 local __mods = {
   color = "ark.external.color",
@@ -135,6 +210,7 @@ local __mods = {
 ---@field public stdout                 ark.stdout
 ---@field public string                 ark.string
 ---@field public table                  ark.table
+---@field public theme                  ark.theme
 ---@field public time                   ark.time
 ---@field public timer                  ark.timer
 ---@field public tmux                   ark.tmux
@@ -143,6 +219,7 @@ local M = setmetatable({
   c = c,
   dict = dict,
   lang = lang,
+  theme = theme,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

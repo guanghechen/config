@@ -1,9 +1,9 @@
---- tokyonight-night
+--- tokyonight-storm
 
----@type dot.t.theme.IScheme
+---@type ark.t.theme.IScheme
 local M = {
   theme = "tokyonight",
-  variant = "night",
+  variant = "storm",
   opposite = "day",
   darken = true,
   -- stylua: ignore start
@@ -11,11 +11,11 @@ local M = {
     unified = {
       none          = "none",
 
-      bg0           = "#1a1b26",
-      bg1           = "#16161e",
-      bg2           = "#0c0e14",
+      bg0           = "#24283b",
+      bg1           = "#1f2335",
+      bg2           = "#1b1e2d",
       bg3           = "#292e42",
-      bg4           = "#283457",
+      bg4           = "#2e3c64",
 
       fg0           = "#c0caf5",
       fg1           = "#adb7e2",
@@ -42,19 +42,19 @@ local M = {
       grey          = "#565f89",
       pink          = "#bb9af7",
 
-      diffDel       = "#4a272f",
+      diffDel       = "#52313f",
       diffDelInline = "#914c54",
-      diffAdd       = "#243e4a",
+      diffAdd       = "#2b485a",
       diffAddInline = "#449dab",
     },
     tokyonight = {
       none          = "none",
 
-      bg            = "#1a1b26",
-      bg_dark       = "#16161e",
-      bg_dark1      = "#0C0E14",
+      bg            = "#24283b",
+      bg_dark       = "#1f2335",
+      bg_dark1      = "#1b1e2d",
       bg_highlight  = "#292e42",
-      bg_visual     = "#283457",
+      bg_visual     = "#2e3c64",
       fg            = "#c0caf5",
       fg_dark       = "#a9b1d6",
       fg_gutter     = "#3b4261",
@@ -82,15 +82,15 @@ local M = {
       teal          = "#1abc9c",
       yellow        = "#e0af68",
       terminal_black = "#414868",
-      black         = "#15161e",
-      border        = "#15161e",
-      border_highlight = "#27a1b9",
+      black         = "#1d202f",
+      border        = "#1d202f",
+      border_highlight = "#29a4bd",
       git_add       = "#449dab",
       git_change    = "#6183bb",
       git_delete    = "#914c54",
-      diff_add      = "#243e4a",
-      diff_change   = "#1f2231",
-      diff_delete   = "#4a272f",
+      diff_add      = "#2b485a",
+      diff_change   = "#272d43",
+      diff_delete   = "#52313f",
       diff_text     = "#394b70",
       hint          = "#1abc9c",
       info          = "#0db9d7",

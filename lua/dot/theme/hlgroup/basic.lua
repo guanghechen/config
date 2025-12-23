@@ -28,7 +28,7 @@ end
 ---@param context                       dot.t.theme.IContext
 ---@return dot.theme.hlgroup.common.modes_color_map
 function M.default_gen_modes_color_map(context)
-  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local mc = {
     command = c.brightBlue,
     confirm = c.brightAqua,
@@ -47,7 +47,7 @@ end
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local cs = ark.color
-  local c = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
   local bg = t and c.none or c.bg0 ---@type string
 

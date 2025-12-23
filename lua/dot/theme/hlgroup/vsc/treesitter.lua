@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       dot.t.theme.IContext
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
 
   ---@type table<string, dot.t.theme.IHlgroup>
   local hlgroup_map = {

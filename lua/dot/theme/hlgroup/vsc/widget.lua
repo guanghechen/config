@@ -5,8 +5,8 @@ local M = {}
 ---@return table<string, dot.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
-  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
-  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or u.bg0 ---@type string

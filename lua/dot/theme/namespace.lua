@@ -1,9 +1,9 @@
 ---@class dot.theme.namespace.IApplyParams
----@field public scheme                 dot.t.theme.IScheme
+---@field public scheme                 ark.t.theme.IScheme
 ---@field public nsnr                   integer
 
 ---@class dot.theme.namespace.ICompileParams
----@field public scheme                 dot.t.theme.IScheme
+---@field public scheme                 ark.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 

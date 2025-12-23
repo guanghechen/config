@@ -6,8 +6,8 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.vsc ---@type dot.t.theme.IVscPalette
-  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
+  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or c.overlay ---@type string
   local lazy_badge_fg = u.bg1 ---@type string

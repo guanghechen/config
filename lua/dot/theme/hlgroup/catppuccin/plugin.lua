@@ -6,8 +6,8 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type dot.t.theme.CatppuccinPalette
-  local u = context.scheme.palette.unified ---@type dot.t.theme.UnifiedPalette
+  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.CatppuccinPalette
+  local u = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
   local lazy_panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
   local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
