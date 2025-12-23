@@ -6,6 +6,7 @@ local c__mods = {
   CircularStack = "ark.c.circular_stack",
   Dirtier = "ark.c.dirtier",
   Disposable = "ark.c.disposable",
+  Filetree = "ark.c.filetree",
   Frecency = "ark.c.frecency",
   History = "ark.c.history",
   InputHistory = "ark.c.input_history",
@@ -26,6 +27,7 @@ local c__mods = {
 ---@field public CircularStack          ark.c.CircularStack
 ---@field public Dirtier                ark.c.Dirtier
 ---@field public Disposable             ark.c.Disposable
+---@field public Filetree               ark.c.Filetree
 ---@field public Frecency               ark.c.Frecency
 ---@field public History                ark.c.History
 ---@field public InputHistory           ark.c.InputHistory

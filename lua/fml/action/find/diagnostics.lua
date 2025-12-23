@@ -53,7 +53,7 @@ local function refresh(force)
     return
   end
 
-  local filetree = picker._filetree ---@type dot.Filetree
+  local filetree = picker._filetree ---@type ark.c.Filetree
   local treeview = picker._treeview ---@type dot.module.picker.FiletreeView
   local rootpath = o_rootpath:snapshot() ---@type string
 
@@ -128,7 +128,7 @@ local function refresh(force)
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
     ---@cast severity                 fml.action.find.diagnostics.SeverityEnum
 
-    local leafuuid = dot.tree.Filetree.uuid(filepath) ---@type string
+    local leafuuid = ark.c.Filetree.uuid(filepath) ---@type string
     local leafnodestate = statemap[leafuuid] ---@type dot.module.picker.view.filetree.INodeState|nil
     if leafnodestate == nil then
       goto continue
@@ -263,7 +263,7 @@ picker = dot.picker.FiletreeComposer.new({
   end,
 
   on_preview_rendered = function(_, bufnr)
-    local filenode = picker:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+    local filenode = picker:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
     if filenode == nil then
       return
     end

@@ -114,7 +114,7 @@ local __module_name__ = "dot.module.picker.composer.filetree" ---@type string
 ---@field public flag_viewtype          ark.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _filetree           dot.Filetree
+---@field protected _filetree           ark.c.Filetree
 ---@field protected _frecency           ark.c.Frecency|nil
 ---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          dot.view.Plainfile
@@ -181,8 +181,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type dot.Filetree
-  local filetree = dot.tree.Filetree.new({ name = fullname })
+  ---@type ark.c.Filetree
+  local filetree = ark.c.Filetree.new({ name = fullname })
 
   ---@type dot.module.picker.FiletreeView
   local treeview = dot.picker.FiletreeView.new({
@@ -352,7 +352,7 @@ function M.new(props)
       end
 
       local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local leafnode = filetree:retrieve(leafuuid) ---@type dot.t.IFiletreeNode|nil
+      local leafnode = filetree:retrieve(leafuuid) ---@type ark.c.IFiletreeNode|nil
       if leafnode == nil then
         return
       end
@@ -363,12 +363,12 @@ function M.new(props)
       on_attached(self, leafnode.data.filepath)
     end,
     create_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type dot.t.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -414,7 +414,7 @@ function M.new(props)
           vim.fn.writefile({}, filepath)
           treeview:insert_filepath(filepath, false)
 
-          local uuid = dot.tree.Filetree.uuid(filepath)
+          local uuid = ark.c.Filetree.uuid(filepath)
           table.insert(self._uuids_file, uuid)
           table.insert(self._uuids_order, uuid)
         end
@@ -485,12 +485,12 @@ function M.new(props)
       end
     end,
     remove_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type dot.t.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -578,12 +578,12 @@ function M.new(props)
       end
     end,
     rename_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type dot.t.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -703,12 +703,12 @@ function M.new(props)
       end
     end,
     move_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type dot.t.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -848,7 +848,7 @@ function M.new(props)
       local locations = {} ---@type dot.t.ILocation[]
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type dot.t.IFiletreeNode|nil
+        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type ark.c.IFiletreeNode|nil
         if node ~= nil and node.data.filetype == "file" then
           locations[#locations + 1] = { filepath = node.data.filepath }
         end
@@ -866,7 +866,7 @@ function M.new(props)
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local node = filetree:retrieve(nodeuuid) ---@type dot.t.IFiletreeNode|nil
+          local node = filetree:retrieve(nodeuuid) ---@type ark.c.IFiletreeNode|nil
           if node ~= nil then
             locations[#locations + 1] = { filepath = node.data.filepath }
 
@@ -885,7 +885,7 @@ function M.new(props)
 
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type dot.t.IFiletreeNode|nil
+      local rootnode = filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -898,7 +898,7 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type dot.t.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
@@ -1023,7 +1023,7 @@ function M.new(props)
       for lnum = 1, linecount, 1 do
         local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if uuid ~= nil then
-          local node = filetree:retrieve(uuid) ---@type dot.t.IFiletreeNode|nil
+          local node = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
             local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
@@ -1711,7 +1711,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._filetree:retrieve(rootuuid) ---@type dot.t.IFiletreeNode|nil
+  local node = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1721,7 +1721,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local filetree = self._filetree ---@type dot.Filetree
+  local filetree = self._filetree ---@type ark.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   treeview:mark_cache_listview_dirty()
@@ -1762,7 +1762,7 @@ function M:reset_filepaths(cwd, filepaths, with_positions)
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
-  local uuid_cwd = dot.tree.Filetree.uuid(cwd) ---@type string
+  local uuid_cwd = ark.c.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 
@@ -1808,7 +1808,7 @@ function M:render_preview(bufnr, force)
     return result
   end
 
-  local filetree = self._filetree ---@type dot.Filetree
+  local filetree = self._filetree ---@type ark.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local plainfile = self._plainfile ---@type dot.view.Plainfile
   local o_flag_foldempty = self.flag_foldempty ---@type ark.c.Observable
@@ -1818,7 +1818,7 @@ function M:render_preview(bufnr, force)
   force = force or node.data.filepath ~= self._last_preview_filepath ---@type boolean
   self._last_preview_filepath = node.data.filepath ---@type string|nil
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type dot.t.IFiletreeNode|nil
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
   local filepath = node.data.filepath ---@type string
   local relative_filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
     or filepath
@@ -2009,7 +2009,7 @@ function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local filetree = self._filetree ---@type dot.Filetree
+  local filetree = self._filetree ---@type ark.c.Filetree
   local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
@@ -2023,7 +2023,7 @@ function M:__open_node__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type dot.t.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2097,11 +2097,11 @@ function M:__resolve_confirmation__(nodeuuid)
   local node = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local filetree = self._filetree ---@type dot.Filetree
+  local filetree = self._filetree ---@type ark.c.Filetree
   local retriever = self._retriever ---@type dot.module.tree.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type dot.t.IFiletreeNode|nil
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -2112,7 +2112,7 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type dot.t.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2136,7 +2136,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return dot.t.IFiletreeNode
+---@return ark.c.IFiletreeNode
 ---@return dot.module.picker.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type dot.module.picker.view.filetree.INodeState|nil
@@ -2145,7 +2145,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type dot.t.IFiletreeNode|nil
+  ---@type ark.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -2154,7 +2154,7 @@ function M:__retrieve__(nodeuuid)
   return node, nodestate
 end
 
----@return dot.t.IFiletreeNode|nil
+---@return ark.c.IFiletreeNode|nil
 function M:__retrieve_filenode__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
@@ -2172,7 +2172,7 @@ function M:__retrieve_filenode__()
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type dot.t.IFiletreeNode|nil
+  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type ark.c.IFiletreeNode|nil
   return node
 end
 
@@ -2181,8 +2181,8 @@ end
 ---@param isdir                         boolean
 ---@return nil
 function M:__update_tree_after_rename__(from, to, isdir)
-  local from_nodeuuid = dot.tree.Filetree.uuid(from) ---@type string
-  local to_nodeuuid = dot.tree.Filetree.uuid(to) ---@type string
+  local from_nodeuuid = ark.c.Filetree.uuid(from) ---@type string
+  local to_nodeuuid = ark.c.Filetree.uuid(to) ---@type string
 
   local filepaths = {} ---@type string[]
 
@@ -2210,7 +2210,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
     filepaths[#filepaths + 1] = to ---@type string
   end
 
-  local filetree = self._filetree ---@type dot.Filetree
+  local filetree = self._filetree ---@type ark.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local selected_set = treeview:collect_selected() ---@type table<string, true>
   local scheduler_match = self._scheduler_match
@@ -2227,9 +2227,9 @@ function M:__update_tree_after_rename__(from, to, isdir)
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   filetree:unsafe_traverse(to_nodeuuid, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, dot.t.IFiletreeNode>
+    local nodemap = ctx.nodemap ---@type table<string, ark.c.IFiletreeNode>
 
-    ---@param node                      dot.t.IFiletreeNode
+    ---@param node                      ark.c.IFiletreeNode
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
@@ -2245,7 +2245,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
         statemap[node.uuid] = nodestate
 
         for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type dot.t.IFiletreeNode|nil
+          local childnode = nodemap[uuid] ---@type ark.c.IFiletreeNode|nil
           if childnode ~= nil then
             traverse(childnode)
           end
@@ -2285,10 +2285,10 @@ function M:__update_tree_after_rename__(from, to, isdir)
   scheduler_match:schedule()
 end
 
----@return dot.t.IFiletreeNode|nil
+---@return ark.c.IFiletreeNode|nil
 function M:__retrieve_rootnode__()
   local rootuuid = self._uuid_root ---@type string
-  local rootnode = self._filetree:retrieve(rootuuid) ---@type dot.t.IFiletreeNode|nil
+  local rootnode = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
   return rootnode
 end
 
@@ -2346,7 +2346,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  ---@type dot.t.IFiletreeNode|nil
+  ---@type ark.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodeuuid)
   if node == nil then
     return nil, nil

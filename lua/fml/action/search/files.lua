@@ -124,7 +124,7 @@ end
 ---@return nil
 local function attach(searcher, rootpath)
   o_rootpath:next(rootpath)
-  local rootuuid = dot.tree.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = ark.c.Filetree.uuid(rootpath) ---@type string
   if searcher:isexistent(rootuuid) then
     searcher:attach(rootuuid)
   else
