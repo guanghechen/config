@@ -32,49 +32,161 @@ Three global variables are exposed via `_G`:
 
 ### Core Module Structure
 
-- `lua/yoz`: Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper)
-  - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`
-- `lua/ark/`: Foundation layer with algorithms, collections, and utilities
-  - `ark/c/`: Data structures (Observable, Scheduler, History, Frecency, etc.)
-  - Core utilities: env, fn, fs, nvim, reporter, string, table, timer, tmux, etc.
-- `lua/dot/`: Configuration and core framework layer
-  - `dot/context/`: Context management (editor, session, workspace)
-  - `dot/state/`: Application state management (git, notepad, qflist, etc.)
-  - `dot/theme/`: Theme system (schemes, highlight groups, namespace)
-  - `dot/widget/`: Widgets (notepad, terminal)
-  - `dot/ux/`: User experience components (retriever, select, textarea, view)
-  - `dot/module/`: Modular UI components
-    - `dot/module/picker/`: Picker UI components
-    - `dot/module/searcher/`: Search and replace UI
-  - Core modules: buf, command, git, lsp, lsp_action, notifier, path, session, tab, term, win, etc.
-- `lua/fml/`: Frontend configuration layer
-  - `fml/action/`: Action handlers (ai, buf, code, copy, diagnostic, find, git, lsp, search, tab, toggle, win)
-  - `fml/dressing/`: UI styling (clipboard, input, lsp_action, nvimbar, scroll, select, statuscolumn, trailspace, ui_attach, virtcolumn, winsep)
-  - `fml/command.lua`: Command definitions connecting dot.command to fml.action
-- `lua/ghc/`: Plugin ecosystem
-  - `ghc/cmp/`: Completion configurations
-  - `ghc/plugins/`: Individual plugin configurations
-  - `ghc/action/`: Plugin-specific actions
-  - `ghc/plugin.lua`: Plugin repository and lazy loading setup
-- `lua/integration/`: Environment-specific entry points
-  - `integration/neovim/`: Standard Neovim setup
-  - `integration/neovide/`: Neovide GUI setup
-  - `integration/vscode/`: VSCode extension setup
-- `lua/bot/`: Bootstrap module (loaded before ark/dot)
-  - Sets up `_G.yoz`, patches, shell, and workspace
-- Supporting directories:
-  - `queries/`: TreeSitter queries for various languages
-  - `rust/yoz/`: Rust source code for performance-critical operations
-  - `lsp/`: Language server configurations
-  - `doc/`: Documentation and issue tracking
-  - `bin/`: Compiled Rust binaries (platform-specific)
+#### `lua/yoz` - Rust Native Module
+Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
+- Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`, `uri`
+- Type definitions: `lua/__types__/yoz/`
+
+#### `lua/ark/` - Foundation Layer
+Foundation layer with algorithms, collections, and utilities.
+
+- **`ark/c/`** - Data structures and classes:
+  - `BatchDisposable`, `BatchHandler` - Batch operations
+  - `CircularQueue`, `CircularStack` - Circular data structures
+  - `Dirtier`, `Disposable` - Resource management
+  - `Filetree`, `Tree`, `TreeRetriever` - Tree structures
+  - `Frecency`, `History`, `InputHistory` - Tracking utilities
+  - `Observable`, `Subscriber`, `Subscribers` - Reactive patterns
+  - `Proc`, `Scheduler`, `Ticker` - Process and timing
+  - `Theme` - Theme management class
+
+- **`ark/dict/`** - Dictionary data (e.g., `en` for English word pairs)
+- **`ark/external/`** - External utilities (`color`, `easing`)
+- **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
+- **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
+- **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)
+
+- **Core utilities**: `anim`, `box`, `debug`, `env`, `fileicon`, `filetype`, `fn`, `fs`, `hot`, `icon`, `json`, `nvim`, `reporter`, `stdout`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
+
+#### `lua/dot/` - Configuration and Core Framework Layer
+
+- **`dot/context/`** - Persistent context management:
+  - `editor/` - Editor-level settings (`behavior`, `theme`)
+  - `session/` - Session-level settings (`tab`)
+  - `workspace/` - Workspace-level settings (`bookmark`, `colorpicker`, `explorer`, `flight`, `frecency`, `lsp`, `module`, `option`, `plugin`, `search_buffer`, `search_file`, `select`, `select_item`)
+
+- **`dot/fn/`** - Utility functions:
+  - `add_locations_to_ai`, `paste_image`, `paste_image_as_base64`, `pick_win`, `rename`, `select_copy_filepath`, `select_copy_filepaths`, `select_encoding`
+
+- **`dot/module/`** - Modular UI components:
+  - `ai/` - AI integration (action, config, picker, proc, prompt, state, term, tmux, types)
+  - `board/` - Information boards (act, fileinfo, git-hunk, keysheet)
+  - `clipboard/` - Cross-platform clipboard (mac, nix, win, wsl)
+  - `colorpicker/` - Color picker UI
+  - `explorer/` - File explorer (node, resource/file, state, tree, types, view, widget)
+  - `git/` - Git integration (blame, browse, buffer, cmd, diff, hunk, repo, sign, state, status, types, watcher)
+  - `image/` - Image handling (convert, doc, image, inline, placement, state, terminal)
+  - `im/` - Input method switching (mac, win, wsl)
+  - `nvimbar/` - Status/tab/window bar components
+  - `picker/` - Picker UI (composer/basic, composer/filetree, composer/list, composer/tree, finder, preview, result, view/filetree, view/tree)
+  - `searcher/` - Search and replace UI (buffer, composer/basic, composer/filetree, finder, preview, result, view/filetree, view/plainfile)
+  - `illuminate.lua` - Reference highlighting
+  - `winpicker.lua` - Window picker
+
+- **`dot/state/`** - Application state management:
+  - `maximized`, `notepad/`, `qflist`, `status`, `widget`
+
+- **`dot/theme/`** - Theme system:
+  - Theme-specific overrides: `catppuccin/`, `gruvbox/`, `onehalf/`, `tokyonight/`, `vsc/`
+  - Highlight group modules: `basic`, `common`, `lsp`, `nvimbar`, `plugin`, `treesitter`, `widget`
+
+- **`dot/ux/`** - UX components (`select`, `setting`, `textarea`)
+- **`dot/widget/`** - Widgets (`explorer`, `Notepad`, `Terminal`)
+
+- **Core modules**: `G`, `autocmd`, `buf`, `command`, `lsp`, `lsp_action`, `notifier`, `path`, `session`, `shell`, `tab`, `term`, `uri`, `win`
+
+#### `lua/fml/` - Frontend Configuration Layer
+
+- **`fml/action/`** - Action handlers:
+  - `ai.lua` - AI actions
+  - `buf/` - Buffer actions (close, focus, new, pin, save, swap)
+  - `code/` - Code actions (run, splitline)
+  - `copy.lua` - Copy actions
+  - `diagnostic.lua` - Diagnostic actions
+  - `find/` - Find actions (buffers, diagnostics, explorer, files, git, highlights, keymaps, lsp_symbols, notification, pinned_files, vim_options)
+  - `inspect.lua` - Inspection actions
+  - `lint.lua` - Lint actions
+  - `log.lua` - Log actions
+  - `lsp/` - LSP actions (python_venv, reference, server)
+  - `notepad.lua` - Notepad actions
+  - `refresh.lua` - Refresh actions
+  - `search/` - Search actions (buffer, files)
+  - `session.lua` - Session actions
+  - `tab/` - Tab actions (close, focus, new)
+  - `term/` - Terminal actions (create, destroy, focus, lazygit, swap, yazi)
+  - `toggle/` - Toggle actions (list, maximize/, theme)
+  - `ux.lua` - UX actions
+  - `win/` - Window actions (close, focus, history, mark, picker, resize, split)
+
+- **`fml/dressing/`** - UI styling and rendering:
+  - `commentstring.lua` - Comment string handling
+  - `dim.lua` - Dim inactive windows
+  - `foldtext.lua` - Fold text rendering
+  - `im.lua` - Input method integration
+  - `image.lua` - Image rendering
+  - `input.lua` - Input UI
+  - `lsp.lua` - LSP UI integration
+  - `lsp_action.lua` - LSP action UI
+  - `notifier.lua` - Notification system
+  - `plugin.lua` - Plugin UI integration
+  - `python_venv.lua` - Python venv UI
+  - `scroll.lua` - Smooth scrolling
+  - `select/` - Selection UI (codeaction, fallback, snacks providers)
+  - `statuscolumn.lua` - Status column rendering
+  - `statusline.lua` - Status line rendering
+  - `tabline.lua` - Tab line rendering
+  - `trailspace.lua` - Trailing space highlighting
+  - `ui_attach/` - UI attach handlers (cmdline, messages, popupmenu, state)
+  - `virtcolumn.lua` - Virtual column
+  - `winline.lua` - Window line rendering
+  - `winsep/` - Window separator styling
+
+- **`fml/command.lua`** - Command definitions connecting `dot.command` to `fml.action`
+
+#### `lua/ghc/` - Plugin Ecosystem
+
+- **`ghc/action/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
+- **`ghc/cmp/`** - Completion configurations (`dict`, `path`)
+- **`ghc/plugins/`** - Individual plugin configurations:
+  - blink-cmp, blink-indent, blink-pairs
+  - conform, diffview, flash
+  - mason, mini-ai, mini-hipatterns, mini-indentscope, mini-splitjoin, mini-surround
+  - nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, nvim-lint
+  - nvim-treesitter, nvim-treesitter-context, nvim-treesitter-textobjects
+  - render-markdown, which-key
+  - `_extra.lua` - Additional plugin specs
+- **`ghc/command.lua`** - Plugin-specific commands
+- **`ghc/plugin.lua`** - Plugin repository and lazy loading setup
+
+#### `lua/integration/` - Environment-specific Entry Points
+
+- **`integration/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
+- **`integration/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
+- **`integration/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
+
+#### `lua/bot/` - Bootstrap Module
+Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
+- `init.lua` - Main bootstrap
+- `autocmd.lua`, `keymap.lua`, `option.lua` - Early configuration
+
+#### Supporting Directories
+
+- **`colors/`** - Neovim colorscheme entry points (18 schemes)
+- **`ftplugin/`** - Filetype-specific settings (`bigfile`, `gitcommit`, `html`, `jsonl`, `log`, `markdown`, `text`)
+- **`lsp/`** - Language server configurations (21 servers)
+- **`queries/`** - TreeSitter queries for various languages
+- **`rust/yoz/`** - Rust source code for performance-critical operations
+- **`doc/`** - Documentation and issue tracking
+- **`lua/__types__/`** - Type definitions for LSP (`ark/`, `dot/`, `plugin/`, `yoz/`)
 
 ### Module Access Patterns
 
 - `yoz.*` → Access Rust-native utilities directly (e.g., `yoz.path.*`, `yoz.fs.*`)
 - `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
+- `ark.theme.scheme["catppuccin-mocha"]` → `require("ark.theme.scheme.catppuccin-mocha")`
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
-- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.module.*`, `dot.widget.*` follow the same lazy-loading pattern
+- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern
+- `dot.git.*`, `dot.picker.*`, `dot.searcher.*`, `dot.board.*` → module subcomponents
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Integration Points
@@ -88,12 +200,19 @@ Each integration includes environment-specific:
 - `init.lua`: Main setup and loading sequence
 - `option.lua`: Environment-specific options
 - `keymap.lua`: Key mappings
-- `autocmd.lua`: Auto commands (neovim only)
+
+The neovim integration additionally loads:
+- `dot.autocmd` - Core autocommands
+- `fml.dressing.*` - UI dressing modules
+- `fml.command` - Command implementations
+- `dot.module.git` - Git integration (if in git repo)
+- `ghc.plugin` - Plugin management
 
 ### Rust-Lua Bridge
 
 - **Compiled Library**: `lua/yoz` (`.so` on Unix, `.dll` on Windows)
-- **Source Code**: `rust/yoz/` (mlua integration)
+- **Source Code**: `rust/yoz/src/` (mlua integration)
+  - Modules: `algorithm/`, `dict/`, `find/`, `fs/`, `path/`, `replace/`, `search/`, `string/`, `types/`, `uri/`
 - **Build**: Run `./rust/build.sh --force` after Rust changes
 
 ## Code Conventions
@@ -106,7 +225,7 @@ Each integration includes environment-specific:
 - Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
 - Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
 - Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
-- Use `yoz.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
+- Use `dot.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
 - Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
 - Use `winnrs` for window number arrays (not `wins`)
 - Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
@@ -260,3 +379,8 @@ Within each category, sort alphabetically.
 - Multi-environment support: Neovim, Neovide, VSCode
 - Automatic session management for git repositories
 - Custom UI components: status line, tab line, window line, picker, searcher
+- AI integration module with multiple providers
+- Custom file explorer widget
+- Notepad widget for scratch notes
+- Comprehensive git integration (blame, hunk navigation, staging)
+- Color picker with multiple format support
