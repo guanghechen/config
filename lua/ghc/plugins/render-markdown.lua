@@ -2,11 +2,11 @@
 
 return {
   "render-markdown.nvim",
-  ft = dot.filetype.get_markdown_filetypes(),
+  ft = ark.filetype.get_markdown_filetypes(),
   cmd = { "RenderMarkdown" },
   opts = {
     debounce = 200,
-    file_types = dot.filetype.get_markdown_filetypes(),
+    file_types = ark.filetype.get_markdown_filetypes(),
     log_level = "error",
     log_runtime = false,
     max_file_size = 1,

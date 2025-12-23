@@ -110,7 +110,7 @@ function M:create_buf_as_needed()
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = dot.filetype.WINSEP
+  vim.bo[bufnr].filetype = ark.filetype.WINSEP
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

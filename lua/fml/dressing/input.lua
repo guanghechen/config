@@ -84,7 +84,7 @@ function M.input(opts, on_confirm)
   vim.bo[bufnr].buftype = "prompt"
   vim.bo[bufnr].completefunc = "v:lua.require'fml.dressing.input'.complete"
   vim.bo[bufnr].omnifunc = "v:lua.require'fml.dressing.input'.complete"
-  vim.bo[bufnr].filetype = dot.filetype.UX_INPUT
+  vim.bo[bufnr].filetype = ark.filetype.UX_INPUT
   vim.bo[bufnr].swapfile = false
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer

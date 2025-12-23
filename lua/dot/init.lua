@@ -265,7 +265,6 @@ local __mods = {
   command = "dot.command",
   context = "dot.context",
   fileicon = "dot.fileicon",
-  filetype = "dot.filetype",
   icon = "dot.icon",
   lsp = "dot.lsp",
   lsp_action = "dot.lsp_action",
@@ -310,7 +309,6 @@ local __mods = {
 ---@field public G                      dot.G
 ---@field public buf                    dot.buf
 ---@field public fileicon               dot.fileicon
----@field public filetype               dot.filetype
 ---@field public icon                   dot.icon
 ---@field public path                   dot.path
 ---@field public shell                  dot.shell

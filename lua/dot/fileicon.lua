@@ -1341,7 +1341,7 @@ function M.get_extension_icon(filepath, filetype)
   end
 
   if item == nil then
-    filetype = filetype or dot.filetype.detect("guanghechen." .. filepath) ---@type string|nil
+    filetype = filetype or ark.filetype.detect("guanghechen." .. filepath) ---@type string|nil
     if filetype ~= nil then
       return M.get_filetype_icon(filetype)
     end
@@ -1376,7 +1376,7 @@ function M.get_file_icon(filepath, filetype)
   end
 
   if item == nil then
-    filetype = filetype or dot.filetype.detect(filename) ---@type string|nil
+    filetype = filetype or ark.filetype.detect(filename) ---@type string|nil
     if filetype ~= nil then
       local glyph, hl, is_default = M.get_filetype_icon(filetype)
       if not is_default then

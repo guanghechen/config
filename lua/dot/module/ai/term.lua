@@ -45,7 +45,7 @@ local function create_buf(termmeta)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].filetype = dot.filetype.AI_TERMINAL
+  vim.bo[bufnr].filetype = ark.filetype.AI_TERMINAL
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false

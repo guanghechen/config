@@ -25,7 +25,7 @@ local function paste_image(filepath_target)
   local ok = clipboard.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
-    if dot.filetype.is_sourcefile(filetype) then
+    if ark.filetype.is_sourcefile(filetype) then
       local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
       local src = dot.path.relative(dot.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then

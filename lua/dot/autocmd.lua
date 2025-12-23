@@ -60,7 +60,7 @@ vim.api.nvim_create_autocmd("FileType", {
     end
 
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if dot.filetype.is_not_sourcefile(filetype) then
+    if ark.filetype.is_not_sourcefile(filetype) then
       vim.b[bufnr].miniindentscope_disable = true
       vim.b[bufnr].minipairs_disable = true
     end

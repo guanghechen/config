@@ -22,13 +22,13 @@ local o_flag_regex = dot.context.select.find_buffer.flag_regex ---@type ark.c.Ob
 local o_flag_case_sensitive = dot.context.select.find_buffer.flag_case_sensitive ---@type ark.c.Observable
 
 local IGNORED_FILETYPES = {
-  dot.filetype.UX_PICKER_FINDER,
-  dot.filetype.UX_PICKER_PREVIEW,
-  dot.filetype.UX_PICKER_RESULT,
-  dot.filetype.UX_SEARCHER_FINDER,
-  dot.filetype.UX_SEARCHER_PREVIEW,
-  dot.filetype.UX_SEARCHER_RESULT,
-  dot.filetype.WINSEP,
+  ark.filetype.UX_PICKER_FINDER,
+  ark.filetype.UX_PICKER_PREVIEW,
+  ark.filetype.UX_PICKER_RESULT,
+  ark.filetype.UX_SEARCHER_FINDER,
+  ark.filetype.UX_SEARCHER_PREVIEW,
+  ark.filetype.UX_SEARCHER_RESULT,
+  ark.filetype.WINSEP,
 }
 
 ---@param bufnr                         integer

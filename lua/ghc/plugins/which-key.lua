@@ -11,8 +11,8 @@ return {
     },
     disable = {
       ft = {
-        dot.filetype.TERM,
-        dot.filetype.WINSEP,
+        ark.filetype.TERM,
+        ark.filetype.WINSEP,
       },
     },
     spec = {

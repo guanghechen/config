@@ -45,7 +45,7 @@ function M:__create_buf_as_needed__()
     vim.bo[bufnr_hint].bufhidden = "hide"
     vim.bo[bufnr_hint].buflisted = false
     vim.bo[bufnr_hint].buftype = "nofile"
-    vim.bo[bufnr_hint].filetype = dot.filetype.WINPICKER_MASK
+    vim.bo[bufnr_hint].filetype = ark.filetype.WINPICKER_MASK
     vim.bo[bufnr_hint].swapfile = false
     self.bufnr_hint = bufnr_hint
   end
