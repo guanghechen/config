@@ -1,3 +1,5 @@
+local env = require("ark.env")
+
 ---@class ark.icon
 local M = {}
 
@@ -148,10 +150,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (ark.env.IS_NIX and "")
-    or (ark.env.IS_MAC and "")
-    or (ark.env.IS_WIN and "")
-    or (ark.env.IS_WSL and "")
+  current = (env.IS_NIX and "")
+    or (env.IS_MAC and "")
+    or (env.IS_WIN and "")
+    or (env.IS_WSL and "")
     or "",
 }
 
