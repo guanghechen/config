@@ -1269,13 +1269,13 @@ command
   .implement({
     uuid = K.win.close.uuid,
     action = function()
-      require("fml.action.win.close").close()
+      require("fml.action.win").close()
     end,
   })
   .implement({
     uuid = K.win.close_others.uuid,
     action = function()
-      require("fml.action.win.close").close_others()
+      require("fml.action.win").close_others()
     end,
   })
 
@@ -1284,37 +1284,37 @@ command
   .implement({
     uuid = K.win.focus_top.uuid,
     action = function()
-      require("fml.action.win.focus").focus_top()
+      require("fml.action.win").focus_top()
     end,
   })
   .implement({
     uuid = K.win.focus_right.uuid,
     action = function()
-      require("fml.action.win.focus").focus_right()
+      require("fml.action.win").focus_right()
     end,
   })
   .implement({
     uuid = K.win.focus_bottom.uuid,
     action = function()
-      require("fml.action.win.focus").focus_bottom()
+      require("fml.action.win").focus_bottom()
     end,
   })
   .implement({
     uuid = K.win.focus_left.uuid,
     action = function()
-      require("fml.action.win.focus").focus_left()
+      require("fml.action.win").focus_left()
     end,
   })
   .implement({
     uuid = K.win.focus_prev.uuid,
     action = function()
-      require("fml.action.win.focus").focus_prev()
+      require("fml.action.win").focus_prev()
     end,
   })
   .implement({
     uuid = K.win.focus_next.uuid,
     action = function()
-      require("fml.action.win.focus").focus_next()
+      require("fml.action.win").focus_next()
     end,
   })
 
@@ -1323,19 +1323,19 @@ command
   .implement({
     uuid = K.win.history.uuid,
     action = function()
-      require("fml.action.win.history").history()
+      require("fml.action.win_history").history()
     end,
   })
   .implement({
     uuid = K.win.history_backward.uuid,
     action = function()
-      require("fml.action.win.history").history_backward()
+      require("fml.action.win_history").history_backward()
     end,
   })
   .implement({
     uuid = K.win.history_forward.uuid,
     action = function()
-      require("fml.action.win.history").history_forward()
+      require("fml.action.win_history").history_forward()
     end,
   })
 
@@ -1343,7 +1343,7 @@ command
 command.implement({
   uuid = K.win.mark_sourcefile.uuid,
   action = function()
-    require("fml.action.win.mark").mark_sourcefile()
+    require("fml.action.win").mark_sourcefile()
   end,
 })
 
@@ -1352,19 +1352,19 @@ command
   .implement({
     uuid = K.win.focus.uuid,
     action = function()
-      require("fml.action.win.picker").focus()
+      require("fml.action.win").picker_focus()
     end,
   })
   .implement({
     uuid = K.win.project.uuid,
     action = function()
-      require("fml.action.win.picker").project()
+      require("fml.action.win").picker_project()
     end,
   })
   .implement({
     uuid = K.win.swap.uuid,
     action = function()
-      require("fml.action.win.picker").swap()
+      require("fml.action.win").picker_swap()
     end,
   })
 
@@ -1373,25 +1373,25 @@ command
   .implement({
     uuid = K.win.resize_horizontal_minus.uuid,
     action = function()
-      require("fml.action.win.resize").resize_horizontal_minus()
+      require("fml.action.win").resize_horizontal_minus()
     end,
   })
   .implement({
     uuid = K.win.resize_horizontal_plus.uuid,
     action = function()
-      require("fml.action.win.resize").resize_horizontal_plus()
+      require("fml.action.win").resize_horizontal_plus()
     end,
   })
   .implement({
     uuid = K.win.resize_vertical_minus.uuid,
     action = function()
-      require("fml.action.win.resize").resize_vertical_minus()
+      require("fml.action.win").resize_vertical_minus()
     end,
   })
   .implement({
     uuid = K.win.resize_vertical_plus.uuid,
     action = function()
-      require("fml.action.win.resize").resize_vertical_plus()
+      require("fml.action.win").resize_vertical_plus()
     end,
   })
 
@@ -1400,24 +1400,24 @@ command
   .implement({
     uuid = K.win.split_above.uuid,
     action = function()
-      require("fml.action.win.split").split_above()
+      require("fml.action.win").split_above()
     end,
   })
   .implement({
     uuid = K.win.split_right.uuid,
     action = function()
-      require("fml.action.win.split").split_right()
+      require("fml.action.win").split_right()
     end,
   })
   .implement({
     uuid = K.win.split_below.uuid,
     action = function()
-      require("fml.action.win.split").split_below()
+      require("fml.action.win").split_below()
     end,
   })
   .implement({
     uuid = K.win.split_left.uuid,
     action = function()
-      require("fml.action.win.split").split_left()
+      require("fml.action.win").split_left()
     end,
   })
