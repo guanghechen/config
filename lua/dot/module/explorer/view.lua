@@ -368,18 +368,16 @@ function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
   local virt_text = {} ---@type string[][]
 
   if diag_info ~= nil then
-    local pos = 0 ---@type integer
     for _, hl in ipairs(diag_info.highlights) do
-      local text = diag_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+      local text = diag_info.text:sub(hl.coll + 1, hl.colr) ---@type string
       local hlname = cursorline_hlgroup and (hl.hlname .. hl_suffix) or hl.hlname ---@type string
       virt_text[#virt_text + 1] = { text, hlname }
     end
   end
 
   if git_info ~= nil then
-    local pos = 0 ---@type integer
     for _, hl in ipairs(git_info.highlights) do
-      local text = git_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+      local text = git_info.text:sub(hl.coll + 1, hl.colr) ---@type string
       local hlname = cursorline_hlgroup and (hl.hlname .. hl_suffix) or hl.hlname ---@type string
       virt_text[#virt_text + 1] = { text, hlname }
     end
