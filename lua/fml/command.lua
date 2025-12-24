@@ -219,19 +219,19 @@ command
   .implement({
     uuid = K.code.run.uuid,
     action = function()
-      require("fml.action.code.run").run(false)
+      dot.fn.run_code(false)
     end,
   })
   .implement({
     uuid = K.code.run_force.uuid,
     action = function()
-      require("fml.action.code.run").run(true)
+      dot.fn.run_code(true)
     end,
   })
   .implement({
     uuid = K.code.run_as_neovim_command.uuid,
     action = function()
-      require("fml.action.code.run").run_as_neovim_command()
+      dot.fn.run_code_as_neovim_command()
     end,
   })
   .implement({

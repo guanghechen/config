@@ -1,21 +1,21 @@
-local __module_name__ = "fml.action.code.run" ---@type string
+local __module_name__ = "dot.fn.run_code" ---@type string
 
----@class fml.action.code.IRunner
+---@class dot.fn.run_code.IRunner
 ---@field public run                    fun(filepath: string, force: boolean): nil
 
----@class fml.action.code.IRunners
----@field public eventstream            fml.action.code.IRunner
----@field public excalidraw             fml.action.code.IRunner
----@field public html                   fml.action.code.IRunner
----@field public json                   fml.action.code.IRunner
----@field public jsonl                  fml.action.code.IRunner
----@field public log                    fml.action.code.IRunner
----@field public md                     fml.action.code.IRunner
----@field public svg                    fml.action.code.IRunner
----@field public txt                    fml.action.code.IRunner
+---@class dot.fn.run_code.IRunners
+---@field public eventstream            dot.fn.run_code.IRunner
+---@field public excalidraw             dot.fn.run_code.IRunner
+---@field public html                   dot.fn.run_code.IRunner
+---@field public json                   dot.fn.run_code.IRunner
+---@field public jsonl                  dot.fn.run_code.IRunner
+---@field public log                    dot.fn.run_code.IRunner
+---@field public md                     dot.fn.run_code.IRunner
+---@field public svg                    dot.fn.run_code.IRunner
+---@field public txt                    dot.fn.run_code.IRunner
 ---
----@field public lua                    fml.action.code.IRunner
----@field public mjs                    fml.action.code.IRunner
+---@field public lua                    dot.fn.run_code.IRunner
+---@field public mjs                    dot.fn.run_code.IRunner
 
 local YOZ_SERVER_PORT = type(vim.env.YOZ_SERVER_PORT) == "string" and vim.env.YOZ_SERVER_PORT or "7071" ---@type string
 
@@ -31,7 +31,7 @@ local function open_filepath_within_yoz(filepath, force)
   vim.system({ "curl", "-k", "-X", "POST", url }, { detach = true })
 end
 
----@type fml.action.code.IRunners
+---@type dot.fn.run_code.IRunners
 local runners = {
   eventstream = {
     run = open_filepath_within_yoz,
@@ -61,7 +61,7 @@ local runners = {
     run = open_filepath_within_yoz,
   },
 
-  --------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
 
   http = {
     run = function(filepath)
@@ -129,7 +129,7 @@ local runners = {
     end,
   },
 
-  --------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------
   lua = {
     run = function(filepath)
       vim.cmd("luafile " .. filepath)
@@ -168,12 +168,9 @@ local runners = {
   },
 }
 
----@class fml.action.code
-local M = {}
-
 ---@param force                         boolean
 ---@return nil
-function M.run(force)
+local function run_code(force)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
@@ -198,29 +195,4 @@ function M.run(force)
   runner.run(filepath, force)
 end
 
----@return nil
-function M.run_as_neovim_command()
-  local selected = dot.buf.retrieve_selected_text() ---@type string
-  if selected == "" then
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
-    selected = table.concat(lines, "\n")
-  end
-
-  if selected:match("^%s*$") then
-    return
-  end
-
-  local ok, err = pcall(function()
-    vim.api.nvim_command(selected)
-  end)
-
-  if not ok then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = "run_as_neovim_command",
-      message = err,
-    })
-  end
-end
-
-return M
+return run_code

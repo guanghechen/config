@@ -1,0 +1,28 @@
+local __module_name__ = "dot.fn.run_code_as_neovim_command" ---@type string
+
+---@return nil
+local function run_code_as_neovim_command()
+  local selected = dot.buf.retrieve_selected_text() ---@type string
+  if selected == "" then
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
+    selected = table.concat(lines, "\n")
+  end
+
+  if selected:match("^%s*$") then
+    return
+  end
+
+  local ok, err = pcall(function()
+    vim.api.nvim_command(selected)
+  end)
+
+  if not ok then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = "run_code_as_neovim_command",
+      message = err,
+    })
+  end
+end
+
+return run_code_as_neovim_command
