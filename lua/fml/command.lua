@@ -69,25 +69,25 @@ command
   .implement({
     uuid = K.buf.close.uuid,
     action = function()
-      require("fml.action.buf.close").close()
+      require("fml.action.buf").close()
     end,
   })
   .implement({
     uuid = K.buf.close_to_leftest.uuid,
     action = function()
-      require("fml.action.buf.close").close_to_leftest()
+      require("fml.action.buf").close_to_leftest()
     end,
   })
   .implement({
     uuid = K.buf.close_to_rightest.uuid,
     action = function()
-      require("fml.action.buf.close").close_to_rightest()
+      require("fml.action.buf").close_to_rightest()
     end,
   })
   .implement({
     uuid = K.buf.close_others.uuid,
     action = function()
-      require("fml.action.buf.close").close_others()
+      require("fml.action.buf").close_others()
     end,
   })
 
@@ -97,7 +97,7 @@ for index = 1, 49, 1 do
   command.implement({
     uuid = K.buf["focus_" .. bufid].uuid,
     action = function()
-      require("fml.action.buf.focus").focus(index)
+      require("fml.action.buf").focus(index)
     end,
   })
 end
@@ -105,13 +105,13 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.buf["focus_left_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf.focus").focus_left(index)
+      require("fml.action.buf").focus_left(index)
     end,
   })
   command.implement({
     uuid = K.buf["focus_right_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf.focus").focus_right(index)
+      require("fml.action.buf").focus_right(index)
     end,
   })
 end
@@ -122,7 +122,7 @@ command
     action = function(args)
       local bufnr = tonumber(args) ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        require("fml.action.buf.focus").open(bufnr)
+        require("fml.action.buf").open(bufnr)
       end
     end,
   })
@@ -131,7 +131,7 @@ command
     action = function(args)
       local bufid = tonumber(args) ---@type integer|nil
       if bufid ~= nil then
-        require("fml.action.buf.focus").focus(bufid)
+        require("fml.action.buf").focus(bufid)
       end
     end,
   })
@@ -139,14 +139,14 @@ command
     uuid = K.buf.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf.focus").focus_left(ok and step or nil)
+      require("fml.action.buf").focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.buf.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf.focus").focus_right(ok and step or nil)
+      require("fml.action.buf").focus_right(ok and step or nil)
     end,
   })
 
@@ -154,7 +154,7 @@ command
 command.implement({
   uuid = K.buf.new.uuid,
   action = function()
-    require("fml.action.buf.new").new()
+    require("fml.action.buf").new()
   end,
 })
 
@@ -162,7 +162,7 @@ command.implement({
 command.implement({
   uuid = K.buf.pin.uuid,
   action = function()
-    require("fml.action.buf.pin").toggle_pin()
+    require("fml.action.buf").toggle_pin()
   end,
 })
 
@@ -171,13 +171,13 @@ command
   .implement({
     uuid = K.buf.save.uuid,
     action = function(args)
-      require("fml.action.buf.save").save(args)
+      require("fml.action.buf").save(args)
     end,
   })
   .implement({
     uuid = K.buf.save_no_format.uuid,
     action = function()
-      require("fml.action.buf.save").save("noformat")
+      require("fml.action.buf").save("noformat")
     end,
   })
 
@@ -186,13 +186,13 @@ command
   .implement({
     uuid = K.buf.swap_left.uuid,
     action = function()
-      require("fml.action.buf.swap").swap_left()
+      require("fml.action.buf").swap_left()
     end,
   })
   .implement({
     uuid = K.buf.swap_right.uuid,
     action = function()
-      require("fml.action.buf.swap").swap_right()
+      require("fml.action.buf").swap_right()
     end,
   })
 
