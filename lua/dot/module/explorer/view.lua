@@ -296,18 +296,16 @@ function M:render(bufnr, tree, root, options)
 
     local diag_info = diag_by_lnum[lnum_key] ---@type dot.module.explorer.view.IDiagnosticInfo|nil
     if diag_info ~= nil then
-      local pos = 0 ---@type integer
       for _, hl in ipairs(diag_info.highlights) do
-        local text = diag_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+        local text = diag_info.text:sub(hl.coll + 1, hl.colr) ---@type string
         virt_text[#virt_text + 1] = { text, hl.hlname }
       end
     end
 
     local git_info = git_by_lnum[lnum_key] ---@type dot.module.explorer.view.IGitStatusInfo|nil
     if git_info ~= nil then
-      local pos = 0 ---@type integer
       for _, hl in ipairs(git_info.highlights) do
-        local text = git_info.text:sub(hl.coll - pos + 1, hl.colr - pos) ---@type string
+        local text = git_info.text:sub(hl.coll + 1, hl.colr) ---@type string
         virt_text[#virt_text + 1] = { text, hl.hlname }
       end
     end

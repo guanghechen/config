@@ -801,7 +801,7 @@ function M:__action_delete__()
   local name ---@type string
   if is_directory then
     local parts = vim.split(uri:sub(1, -2), "/") ---@type string[]
-    name = parts[#parts]
+    name = parts[#parts] or uri
   else
     name = vim.fn.fnamemodify(uri, ":t")
   end
