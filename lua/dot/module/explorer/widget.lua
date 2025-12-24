@@ -683,6 +683,65 @@ end
 
 ---@protected
 ---@return nil
+function M:__action_yank__()
+  local uri = self:get_cursor_uri() ---@type string|nil
+  if uri == nil then
+    return
+  end
+
+  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
+  local is_selected = self._tree:is_selected(uri) ---@type boolean
+
+  if current_mode == "copy" and is_selected then
+    self._tree:toggle_selected(uri, "unselect")
+  else
+    self._tree:toggle_selected(uri, "select")
+  end
+
+  self._tree.select_mode = "copy"
+  self:__refresh__()
+end
+
+---@protected
+---@return nil
+function M:__action_yank_visual__()
+  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
+  if #nodes == 0 then
+    return
+  end
+
+  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
+  if current_mode ~= "copy" then
+    for _, node in ipairs(nodes) do
+      self._tree:toggle_selected(node.uri, "select")
+    end
+    self._tree.select_mode = "copy"
+  else
+    local has_unselected = false ---@type boolean
+    for _, node in ipairs(nodes) do
+      if not node:is_selected() then
+        has_unselected = true
+        break
+      end
+    end
+
+    if has_unselected then
+      for _, node in ipairs(nodes) do
+        self._tree:toggle_selected(node.uri, "select")
+      end
+    else
+      self._tree.state:advance_tick_selected()
+      local tick = self._tree.state:next_tick_selected_even() ---@type integer
+      for _, node in ipairs(nodes) do
+        node:set_selected(tick)
+      end
+    end
+  end
+  self:__refresh__()
+end
+
+---@protected
+---@return nil
 function M:__action_delete__()
   local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
 
@@ -1536,12 +1595,12 @@ function M:__action_paste__()
   end
 
   local selected_nodes = self._tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes > 1 then
-    if select_mode == "cut" then
-      self:__action_move_selected__()
-    else
-      self:__action_copy_selected__()
-    end
+  if #selected_nodes == 0 then
+    ark.reporter.warn({
+      from = self.fullname,
+      subject = "paste",
+      message = "No files selected",
+    })
     return
   end
 
@@ -1550,27 +1609,177 @@ function M:__action_paste__()
     return
   end
 
-  local target_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
+  local target_dir_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
 
-  local ok ---@type boolean
-
-  if select_mode == "cut" then
-    ok = self._tree:apply_cut_paste(target_uri)
-  else
-    ok = self._tree:apply_copy_paste(target_uri)
+  local common_ancestor = self._tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
+  if common_ancestor == nil then
+    return
   end
 
-  if ok then
-    self._tree.select_mode = "select"
-    self._tree:refresh(true)
-    self:__refresh__(true)
+  local cwd = dot.path.cwd() ---@type string
+  local default_target = dot.path.relative(cwd, target_dir_uri:sub(8, -2)) ---@type string
+  local ns = vim.api.nvim_create_namespace("explorer_paste_preview") ---@type integer
+  local is_cut = select_mode == "cut" ---@type boolean
 
-    ark.reporter.info({
-      from = self.fullname,
-      subject = "paste",
-      message = select_mode == "cut" and "Moved successfully" or "Copied successfully",
-    })
+  ---@return integer
+  local function calc_content_width()
+    local max_width = 0 ---@type integer
+    for _, node in ipairs(selected_nodes) do
+      local filepath = node.uri:sub(8) ---@type string
+      if filepath:sub(-1) == "/" then
+        filepath = filepath:sub(1, -2)
+      end
+      local from_relative = dot.path.relative(cwd, filepath) ---@type string
+      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
+      max_width = math.max(max_width, line_width)
+    end
+    return max_width + 4
   end
+
+  ---@param target_dir string
+  ---@return dot.module.explorer.widget.IPreviewItem[]
+  ---@return integer
+  local function build_preview_items(target_dir)
+    local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
+    local max_from_len = 0 ---@type integer
+
+    for _, node in ipairs(selected_nodes) do
+      local filepath = node.uri:sub(8) ---@type string
+      if filepath:sub(-1) == "/" then
+        filepath = filepath:sub(1, -2)
+      end
+      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
+      local from_relative = dot.path.relative(cwd, filepath) ---@type string
+      local target_path = target_dir .. (target_dir:sub(-1) == "/" and "" or "/") .. relative_part ---@type string
+      local to_relative = dot.path.relative(cwd, target_path) ---@type string
+      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
+      max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
+    end
+
+    return items, max_from_len
+  end
+
+  local fullname = self.fullname ---@type string
+  local arrow = is_cut and " -> " or " +> " ---@type string
+
+  ---@type dot.module.board.Act
+  local act = dot.board.Act.new({
+    name = "explorer_paste",
+    title = string.format(
+      "%s %s %d item(s)",
+      is_cut and ark.icon.symbols.selection_cut or ark.icon.symbols.selection_copy,
+      is_cut and "Move" or "Copy",
+      #selected_nodes
+    ),
+    initial_input = default_target,
+    preview_lines = #selected_nodes,
+    get_width = calc_content_width,
+    render_preview = function(bufnr, input)
+      local target_dir = vim.trim(input) ---@type string
+      if target_dir == "" then
+        target_dir = default_target
+      end
+      if not vim.startswith(target_dir, "/") then
+        target_dir = cwd .. "/" .. target_dir
+      end
+      target_dir = dot.path.normalize(target_dir)
+
+      local items, max_from_len = build_preview_items(target_dir)
+
+      local lines = {} ---@type string[]
+      for _, item in ipairs(items) do
+        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        lines[#lines + 1] = string.format("%s%s%s%s", item.from, padding, arrow, item.to)
+      end
+
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+
+      for lnum, item in ipairs(items) do
+        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local from_hl_start = #item.from - #item.relative_part ---@type integer
+        local from_hl_end = #item.from ---@type integer
+        local to_hl_start = #item.from + #padding + #arrow + #item.to - #item.relative_part ---@type integer
+        local to_hl_end = #item.from + #padding + #arrow + #item.to ---@type integer
+        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
+        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
+      end
+    end,
+    on_confirm = function(input)
+      if input == "" then
+        return
+      end
+
+      local target_dir = input ---@type string
+      if not vim.startswith(target_dir, "/") then
+        target_dir = cwd .. "/" .. target_dir
+      end
+      target_dir = dot.path.normalize(target_dir)
+      if target_dir:sub(-1) ~= "/" then
+        target_dir = target_dir .. "/"
+      end
+
+      local success_count = 0 ---@type integer
+      local failed_count = 0 ---@type integer
+
+      for _, node in ipairs(selected_nodes) do
+        local filepath = node.uri:sub(8) ---@type string
+        if filepath:sub(-1) == "/" then
+          filepath = filepath:sub(1, -2)
+        end
+
+        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
+        local target_path = target_dir .. relative_path ---@type string
+        local target_uri = "file://" .. target_path ---@type string
+
+        local ok ---@type boolean
+        if is_cut then
+          ok = self._resource_manager:move(node.uri, target_uri)
+          if ok then
+            self._tree:remove(node.uri)
+          end
+        else
+          ok = self._resource_manager:copy(node.uri, target_uri)
+        end
+
+        if ok then
+          success_count = success_count + 1
+        else
+          failed_count = failed_count + 1
+        end
+      end
+
+      if success_count > 0 then
+        self._tree:clear_selection()
+        self._tree:refresh(true)
+        vim.schedule(function()
+          self:__refresh__(true)
+        end)
+
+        local action_name = is_cut and "Moved" or "Copied" ---@type string
+        if failed_count > 0 then
+          ark.reporter.warn({
+            from = fullname,
+            subject = "paste",
+            message = string.format("%s %d item(s), %d failed", action_name, success_count, failed_count),
+          })
+        else
+          ark.reporter.info({
+            from = fullname,
+            subject = "paste",
+            message = string.format("%s %d item(s)", action_name, success_count),
+          })
+        end
+      elseif failed_count > 0 then
+        ark.reporter.error({
+          from = fullname,
+          subject = "paste",
+          message = string.format("Failed to %s %d item(s)", is_cut and "move" or "copy", failed_count),
+        })
+      end
+    end,
+  })
+  act:open()
 end
 
 ---@protected
@@ -2609,6 +2818,14 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "n" },
+      key = "y",
+      callback = function()
+        self:__action_yank__()
+      end,
+      desc = "explorer: yank (copy)",
+    },
+    {
+      modes = { "n" },
       key = "z",
       callback = function()
         self:__action_toggle_recursive__()
@@ -2655,6 +2872,14 @@ function M:__setup_keymaps__(bufnr)
         self:__action_cut_visual__()
       end,
       desc = "explorer: cut (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "y",
+      callback = function()
+        self:__action_yank_visual__()
+      end,
+      desc = "explorer: yank (visual)",
     },
   }
 
