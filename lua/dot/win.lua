@@ -111,14 +111,14 @@ local function byte_col_to_client_character(bufnr, row, byte_col, encoding)
 
   local use_utf16 = normalized == "utf-16"
   ---@diagnostic disable-next-line: param-type-mismatch
-  local ok, character = pcall(vim.str_utfindex, line, byte_col, use_utf16) ---@spell-ignore: utfindex
+  local ok, character = pcall(vim.str_utfindex, line, byte_col, use_utf16)
   if ok and type(character) == "number" then
     return character
   end
 
   if normalized == "utf-32" then
     ---@diagnostic disable-next-line: param-type-mismatch
-    local fallback_ok, fallback_character = pcall(vim.str_utfindex, line, byte_col) ---@spell-ignore: utfindex
+    local fallback_ok, fallback_character = pcall(vim.str_utfindex, line, byte_col)
     if fallback_ok and type(fallback_character) == "number" then
       return fallback_character
     end

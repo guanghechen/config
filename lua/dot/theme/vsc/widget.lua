@@ -486,7 +486,7 @@ function M.gen_hlgroup_map(context)
     f_maximize_normal = { fg = c.editor_foreground, bg = c.editor_background },
 
     ---module/git
-    fg_hunk_indicator = { fg = c.gitDecoration_modifiedResourceForeground },
+    fg_hunk_indicator = { fg = c.editorGutter_modifiedBackground },
     fg_inline_blame = { fg = cs.mix(c.editor_background, c.textDim, 60), italic = true },
     fg_buffer_blame = { fg = cs.mix(c.editor_background, c.textDim, 30), italic = true },
     fg_sign_add = { fg = c.editorGutter_addedBackground },
@@ -495,7 +495,7 @@ function M.gen_hlgroup_map(context)
     fg_sign_change_staged = { fg = cs.mix(c.editor_background, c.editorGutter_modifiedBackground, 50) },
     fg_sign_delete = { fg = c.editorGutter_deletedBackground },
     fg_sign_delete_staged = { fg = cs.mix(c.editor_background, c.editorGutter_deletedBackground, 50) },
-    fg_sign_untracked = { fg = c.gitDecoration_untrackedResourceForeground },
+    fg_sign_untracked = { fg = c.success },
   }
 end
 
