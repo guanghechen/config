@@ -17,7 +17,7 @@ end
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local cs = ark.color
-  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
 
   return {
     ["@annotation"] = { fg = c.brightRed },

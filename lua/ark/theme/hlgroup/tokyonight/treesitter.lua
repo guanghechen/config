@@ -6,7 +6,7 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.TokyonightPalette
+  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
 
   ---@type table<string, ark.t.theme.IHlgroup>
   local hlgroup_map = {

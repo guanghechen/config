@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
 
   local heading_colors = {
     c.brightRed,

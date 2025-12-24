@@ -271,7 +271,7 @@ end
 ---@param scheme                        ark.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

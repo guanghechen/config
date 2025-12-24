@@ -85,7 +85,7 @@ end
 ---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   local basic = require("ark.theme.hlgroup.basic") ---@type ark.theme.hlgroup.basic
   local mc = basic.gen_modes_color_map(context) ---@type ark.theme.hlgroup.common.modes_color_map
 

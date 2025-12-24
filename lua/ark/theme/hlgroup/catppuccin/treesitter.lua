@@ -5,7 +5,7 @@ local M = {}
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.CatppuccinPalette
+  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
 
   ---@type table<string, ark.t.theme.IHlgroup>
   local hlgroup_map = {

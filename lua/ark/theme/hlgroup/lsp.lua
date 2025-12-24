@@ -16,7 +16,7 @@ end
 ---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

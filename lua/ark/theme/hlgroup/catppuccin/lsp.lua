@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.CatppuccinPalette
+  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

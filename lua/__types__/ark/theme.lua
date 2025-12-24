@@ -8,7 +8,7 @@
 
 ---@class ark.t.theme.IHlgroup : vim.api.keyset.highlight
 
----@class ark.t.theme.CatppuccinPalette
+---@class ark.t.theme.ICatppuccinPalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -38,7 +38,7 @@
 ---@field public text                   string
 ---@field public yellow                 string
 
----@class ark.t.theme.GruvboxPalette
+---@class ark.t.theme.IGruvboxPalette
 ---@field public none                   string
 ---
 ---@field public aqua                   string
@@ -75,7 +75,7 @@
 ---@field public red                    string
 ---@field public yellow                 string
 
----@class ark.t.theme.NordPalette
+---@class ark.t.theme.INordPalette
 ---@field public none                   string
 ---
 ---@field public nord0                  string
@@ -111,7 +111,7 @@
 ---@field public aurora3                string
 ---@field public aurora4                string
 
----@class ark.t.theme.OnehalfPalette
+---@class ark.t.theme.IOnehalfPalette
 ---@field public none                   string
 ---
 ---@field public background             string
@@ -130,7 +130,7 @@
 ---@field public white                  string
 ---@field public yellow                 string
 
----@class ark.t.theme.RosepinePalette
+---@class ark.t.theme.IRosepinePalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -149,7 +149,7 @@
 ---@field public surface                string
 ---@field public text                   string
 
----@class ark.t.theme.TokyonightPalette
+---@class ark.t.theme.ITokyonightPalette
 ---@field public none                   string
 ---
 ---@field public bg                     string
@@ -199,7 +199,7 @@
 ---@field public todo                   string
 ---@field public warning                string
 
----@class ark.t.theme.UnifiedPalette
+---@class ark.t.theme.IUnifiedPalette
 ---@field public none                   string
 ---
 ---@field public bg0                    string
@@ -505,13 +505,13 @@
 ---@field public widget_border          string
 
 ---@class ark.t.theme.IPalette
----@field public unified                ark.t.theme.UnifiedPalette
----@field public catppuccin             ark.t.theme.CatppuccinPalette|nil
----@field public gruvbox                ark.t.theme.GruvboxPalette|nil
----@field public nord                   ark.t.theme.NordPalette|nil
----@field public onehalf                ark.t.theme.OnehalfPalette|nil
----@field public rosepine               ark.t.theme.RosepinePalette|nil
----@field public tokyonight             ark.t.theme.TokyonightPalette|nil
+---@field public unified                ark.t.theme.IUnifiedPalette
+---@field public catppuccin             ark.t.theme.ICatppuccinPalette|nil
+---@field public gruvbox                ark.t.theme.IGruvboxPalette|nil
+---@field public nord                   ark.t.theme.INordPalette|nil
+---@field public onehalf                ark.t.theme.IOnehalfPalette|nil
+---@field public rosepine               ark.t.theme.IRosepinePalette|nil
+---@field public tokyonight             ark.t.theme.ITokyonightPalette|nil
 ---@field public vsc                    ark.t.theme.IVscPalette|nil
 
 ---@class ark.t.theme.IScheme

@@ -6,8 +6,8 @@ local M = {}
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.TokyonightPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
+  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
+  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
   local treesitter_context_bg = t and c.none or c.bg_highlight ---@type string
