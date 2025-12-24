@@ -248,7 +248,7 @@ command
   .implement({
     uuid = K.code.insert_splitline.uuid,
     action = function()
-      require("fml.action.code.splitline").insert_splitline()
+      dot.fn.insert_splitline()
     end,
   })
   .implement({

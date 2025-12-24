@@ -12,6 +12,7 @@ local __fn__mods = {
   find_notifications = "dot.fn.find-notifications",
   find_pinned_files = "dot.fn.find-pinned-files",
   find_vim_options = "dot.fn.find-vim-options",
+  insert_splitline = "dot.fn.insert-splitline",
   paste_image = "dot.fn.paste_image",
   paste_image_as_base64 = "dot.fn.paste_image_as_base64",
   pick_win = "dot.fn.pick_win",
@@ -37,6 +38,7 @@ local __fn__mods = {
 ---@field public find_notifications     fun(): nil
 ---@field public find_pinned_files      fun(): nil
 ---@field public find_vim_options       fun(): nil
+---@field public insert_splitline       fun(): nil
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               dot.fn.pick_win

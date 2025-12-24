@@ -1,16 +1,11 @@
----@alias fml.action.code.splitline.Content string|nil
-
----@type table<string, fml.action.code.splitline.Content>
+---@class dot.fn.insert_splitline.SPLITLINE_BY_FILETYPE
 local SPLITLINE_BY_FILETYPE = {
   lua = string.rep("-", 100),
   markdown = string.rep("-", 100),
 }
 
----@class fml.action.code.splitline
-local M = {}
-
 ---@return nil
-function M.insert_splitline()
+local function insert_splitline()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
@@ -35,4 +30,4 @@ function M.insert_splitline()
   vim.api.nvim_win_set_cursor(winnr, { row + 2, 0 })
 end
 
-return M
+return insert_splitline
