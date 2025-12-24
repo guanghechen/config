@@ -949,25 +949,25 @@ command
   .implement({
     uuid = K.tab.close.uuid,
     action = function()
-      require("fml.action.tab.close").close()
+      require("fml.action.tab").close()
     end,
   })
   .implement({
     uuid = K.tab.close_to_leftest.uuid,
     action = function()
-      require("fml.action.tab.close").close_to_leftest()
+      require("fml.action.tab").close_to_leftest()
     end,
   })
   .implement({
     uuid = K.tab.close_to_rightest.uuid,
     action = function()
-      require("fml.action.tab.close").close_to_rightest()
+      require("fml.action.tab").close_to_rightest()
     end,
   })
   .implement({
     uuid = K.tab.close_others.uuid,
     action = function()
-      require("fml.action.tab.close").close_others()
+      require("fml.action.tab").close_others()
     end,
   })
 
@@ -976,7 +976,7 @@ for i = 1, 10, 1 do
   command.implement({
     uuid = K.tab["focus_" .. tostring(i)].uuid,
     action = function()
-      require("fml.action.tab.focus").focus(i)
+      require("fml.action.tab").focus(i)
     end,
   })
 end
@@ -987,7 +987,7 @@ command
     action = function(args)
       local tabid = tonumber(args) ---@type integer|nil
       if tabid ~= nil then
-        require("fml.action.tab.focus").focus(tabid)
+        require("fml.action.tab").focus(tabid)
       end
     end,
   })
@@ -995,14 +995,14 @@ command
     uuid = K.tab.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab.focus").focus_left(ok and step or nil)
+      require("fml.action.tab").focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.tab.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab.focus").focus_right(ok and step or nil)
+      require("fml.action.tab").focus_right(ok and step or nil)
     end,
   })
 
@@ -1011,13 +1011,13 @@ command
   .implement({
     uuid = K.tab.new.uuid,
     action = function()
-      require("fml.action.tab.new").new()
+      require("fml.action.tab").new()
     end,
   })
   .implement({
     uuid = K.tab.new_with_buf.uuid,
     action = function()
-      require("fml.action.tab.new").new_with_buf()
+      require("fml.action.tab").new_with_buf()
     end,
   })
 
