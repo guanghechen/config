@@ -377,9 +377,10 @@ function M:__action_collapse_or_parent__()
     return
   end
 
+  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   if uri:sub(-1) == "/" then
     local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-    if node ~= nil and node:is_expanded() then
+    if node ~= nil and node:is_expanded(root_uri) then
       self._tree:toggle_expanded(uri, false, "collapse")
       self:__refresh__()
       return
@@ -387,7 +388,6 @@ function M:__action_collapse_or_parent__()
   end
 
   local parent_uri = self:__get_parent_uri__(uri) ---@type string
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   if parent_uri ~= root_uri then
     self._tree.state.o_cursor_uri:next(parent_uri)
     self:__sync_cursor_to_uri__(parent_uri)
@@ -491,9 +491,10 @@ function M:__action_copy_visual__()
     end
     self._tree.select_mode = "copy"
   else
+    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node:is_selected() then
+      if not node:is_selected(root_uri) then
         has_unselected = true
         break
       end
@@ -658,9 +659,10 @@ function M:__action_cut_visual__()
     end
     self._tree.select_mode = "cut"
   else
+    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node:is_selected() then
+      if not node:is_selected(root_uri) then
         has_unselected = true
         break
       end
@@ -717,9 +719,10 @@ function M:__action_yank_visual__()
     end
     self._tree.select_mode = "copy"
   else
+    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node:is_selected() then
+      if not node:is_selected(root_uri) then
         has_unselected = true
         break
       end
@@ -928,7 +931,8 @@ function M:__action_jump_last_child__()
   end
 
   local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-  if node == nil or not node:is_expanded() or #node.children == 0 then
+  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  if node == nil or not node:is_expanded(root_uri) or #node.children == 0 then
     return
   end
 
@@ -976,9 +980,10 @@ function M:__action_mark_visual__()
     return
   end
 
+  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   local has_unselected = false ---@type boolean
   for _, node in ipairs(nodes) do
-    if not node:is_selected() then
+    if not node:is_selected(root_uri) then
       has_unselected = true
       break
     end

@@ -165,23 +165,31 @@ function M:is_loaded(tick_loaded)
   return self.ns.tick_loaded == tick_loaded
 end
 
+---@param root_uri                      string|nil
 ---@return boolean
-function M:is_expanded()
+function M:is_expanded(root_uri)
   local max_tick = self.ns.tick_expanded ---@type integer
   local o = self ---@type dot.module.explorer.Node|nil
   while o ~= nil do
     max_tick = math.max(max_tick, o.rs.tick_expanded)
+    if root_uri ~= nil and o.uri == root_uri then
+      break
+    end
     o = o.parent
   end
   return max_tick % 2 == 1
 end
 
+---@param root_uri                      string|nil
 ---@return boolean
-function M:is_selected()
+function M:is_selected(root_uri)
   local max_tick = 0 ---@type integer
   local o = self ---@type dot.module.explorer.Node|nil
   while o ~= nil do
     max_tick = math.max(max_tick, o.rs.tick_selected)
+    if root_uri ~= nil and o.uri == root_uri then
+      break
+    end
     o = o.parent
   end
   return max_tick % 2 == 1
@@ -222,10 +230,11 @@ end
 ---@return dot.module.explorer.Node[]
 function M.collect_selected(root)
   local result = {} ---@type dot.module.explorer.Node[]
+  local root_uri = root.uri ---@type string
 
   ---@param node                        dot.module.explorer.Node
   local function traverse(node)
-    if node:is_selected() then
+    if node:is_selected(root_uri) then
       result[#result + 1] = node
     end
     for _, child in ipairs(node.children) do
@@ -241,10 +250,11 @@ end
 ---@return dot.module.explorer.Node[]
 function M.collect_selected_toplevel(root)
   local result = {} ---@type dot.module.explorer.Node[]
+  local root_uri = root.uri ---@type string
 
   ---@param node                        dot.module.explorer.Node
   local function traverse(node)
-    if node:is_selected() then
+    if node:is_selected(root_uri) then
       result[#result + 1] = node
       return
     end
@@ -261,10 +271,11 @@ end
 ---@return string[]
 function M.collect_selected_uris(root)
   local result = {} ---@type string[]
+  local root_uri = root.uri ---@type string
 
   ---@param node                        dot.module.explorer.Node
   local function traverse(node)
-    if node:is_selected() then
+    if node:is_selected(root_uri) then
       result[#result + 1] = node.uri
     end
     for _, child in ipairs(node.children) do

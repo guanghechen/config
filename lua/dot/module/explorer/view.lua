@@ -3,6 +3,7 @@ local __module_name__ = "dot.module.explorer.view" ---@type string
 ---@class dot.module.explorer.view.IRenderContext
 ---@field public tree                   dot.module.explorer.Tree
 ---@field public root                   dot.module.explorer.Node
+---@field public root_uri               string
 ---@field public resource_manager       dot.module.explorer.resource.IManager|nil
 ---@field public tick_loaded            integer
 ---@field public foldempty              boolean
@@ -89,11 +90,13 @@ function M:render(bufnr, tree, root, options)
   local diag_counts = {} ---@type table<string, dot.module.explorer.view.IDiagCounts>
 
   local tick_loaded = tree.state.tick_loaded ---@type integer
+  local root_uri = root.uri ---@type string
 
   ---@type dot.module.explorer.view.IRenderContext
   local ctx = {
     tree = tree,
     root = root,
+    root_uri = root_uri,
     resource_manager = options.resource_manager,
     tick_loaded = tick_loaded,
     foldempty = options.foldempty ~= false,
@@ -677,6 +680,7 @@ function M:__precompute__(root, ctx)
   local diag_counts = ctx.diag_counts ---@type table<string, dot.module.explorer.view.IDiagCounts>
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
+  local root_uri = ctx.root_uri ---@type string
 
   ---@param node                        dot.module.explorer.Node
   ---@return dot.module.explorer.view.IDiagCounts
@@ -713,7 +717,7 @@ function M:__precompute__(root, ctx)
           end
         end
       end
-    elseif node.nodetype == "D" and node:is_expanded() then
+    elseif node.nodetype == "D" and node:is_expanded(root_uri) then
       if not node:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
         ctx.tree:load_node(node, ctx.resource_manager, false)
       end
@@ -732,7 +736,7 @@ function M:__precompute__(root, ctx)
     return counts
   end
 
-  if root:is_expanded() then
+  if root:is_expanded(root_uri) then
     if not root:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
       ctx.tree:load_node(root, ctx.resource_manager, false)
     end
@@ -762,9 +766,10 @@ end
 function M:__fold_empty_dirs__(node, ctx)
   local path_parts = { node.nodename } ---@type string[]
   local current = node ---@type dot.module.explorer.Node
+  local root_uri = ctx.root_uri ---@type string
 
   while true do
-    if not current:is_expanded() then
+    if not current:is_expanded(root_uri) then
       break
     end
 

@@ -197,7 +197,8 @@ end
 function M:is_expanded(uri)
   self:__health__()
   local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
-  return node ~= nil and node:is_expanded()
+  local root_uri = self.state.o_root_uri:snapshot() ---@type string
+  return node ~= nil and node:is_expanded(root_uri)
 end
 
 ---@param uri                           string
@@ -205,7 +206,8 @@ end
 function M:is_selected(uri)
   self:__health__()
   local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
-  return node ~= nil and node:is_selected()
+  local root_uri = self.state.o_root_uri:snapshot() ---@type string
+  return node ~= nil and node:is_selected(root_uri)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -228,6 +230,7 @@ function M:attach(uri)
   end
 
   local node = self:__insert__(uri, resource) ---@type dot.module.explorer.Node
+  self:__inherit_root_state__(node)
   local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
   node:set_expanded(tick_expanded_odd, false)
   self._root = node
@@ -389,7 +392,7 @@ function M:refresh(force)
   local force_refresh = not not force ---@type boolean
   local superroot = self._superroot ---@type dot.module.explorer.Node
   local root = self._root ---@type dot.module.explorer.Node
-  local rooturi = root.uri ---@type string
+  local root_uri = root.uri ---@type string
   local tick_loaded = self.state.tick_loaded ---@type integer
 
   ---@param node                        dot.module.explorer.Node
@@ -409,7 +412,7 @@ function M:refresh(force)
       self:__load__(node, nodeindex, nodeuri, true)
     end
 
-    if not node:is_expanded() then
+    if not node:is_expanded(root_uri) then
       return
     end
 
@@ -420,12 +423,12 @@ function M:refresh(force)
   end
 
   if root == superroot then
-    walk(superroot, nil, rooturi)
+    walk(superroot, nil, root_uri)
     return
   end
 
   local nodeindex = root.parent.chidxmap[root.nodename] ---@type integer
-  walk(root, nodeindex, rooturi)
+  walk(root, nodeindex, root_uri)
 end
 
 ---@param uri                           string
@@ -551,7 +554,8 @@ function M:toggle_expanded(uri, recursive, force_expanded)
   elseif force_expanded == "collapse" then
     expanded = false
   else
-    expanded = not node:is_expanded()
+    local root_uri = self.state.o_root_uri:snapshot() ---@type string
+    expanded = not node:is_expanded(root_uri)
   end
 
   local tick_expanded ---@type integer
@@ -580,7 +584,8 @@ function M:toggle_selected(uri, force_selected)
   elseif force_selected == "unselect" then
     selected = false
   else
-    selected = not node:is_selected()
+    local root_uri = self.state.o_root_uri:snapshot() ---@type string
+    selected = not node:is_selected(root_uri)
   end
 
   local tick_selected ---@type integer
@@ -967,6 +972,24 @@ function M:__find_insertion_index__(resource_manager, children, candidate)
     end
   end
   return lo
+end
+
+---@protected
+---@param root                          dot.module.explorer.Node
+---@return nil
+function M:__inherit_root_state__(root)
+  local max_tick_expanded = root.rs.tick_expanded ---@type integer
+  local max_tick_selected = root.rs.tick_selected ---@type integer
+
+  local o = root.parent ---@type dot.module.explorer.Node|nil
+  while o ~= nil do
+    max_tick_expanded = math.max(max_tick_expanded, o.rs.tick_expanded)
+    max_tick_selected = math.max(max_tick_selected, o.rs.tick_selected)
+    o = o.parent
+  end
+
+  root.rs.tick_expanded = max_tick_expanded
+  root.rs.tick_selected = max_tick_selected
 end
 
 ---@protected
