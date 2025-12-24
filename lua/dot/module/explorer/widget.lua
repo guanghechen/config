@@ -505,7 +505,6 @@ function M:__action_copy_visual__()
         self._tree:toggle_selected(node.uri, "select")
       end
     else
-      self._tree.state:advance_tick_selected()
       local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
         node:set_selected(tick)
@@ -673,7 +672,6 @@ function M:__action_cut_visual__()
         self._tree:toggle_selected(node.uri, "select")
       end
     else
-      self._tree.state:advance_tick_selected()
       local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
         node:set_selected(tick)
@@ -733,7 +731,6 @@ function M:__action_yank_visual__()
         self._tree:toggle_selected(node.uri, "select")
       end
     else
-      self._tree.state:advance_tick_selected()
       local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
         node:set_selected(tick)
