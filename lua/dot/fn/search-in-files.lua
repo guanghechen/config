@@ -1,4 +1,4 @@
-local name = "fml.action.search.files.searcher" ---@type string
+local name = "dot.fn.search_in_files" ---@type string
 local title = "Search Files" ---@type string
 local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
 
@@ -21,7 +21,7 @@ local o_replace_pattern = dot.context.search_file.replacement
 local o_search_pattern_history = dot.context.select.search_file.search_pattern_history
 local o_replace_pattern_history = dot.context.search_file.replace_pattern_history
 
----@class fml.action.search.files.searcher.ISettingData
+---@class dot.fn.search_in_files.ISettingData
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public max_filesize           string
@@ -39,7 +39,7 @@ local function edit_setting(searcher)
   local s_includes = o_includes:snapshot() ---@type string[]
   local s_excludes = o_excludes:snapshot() ---@type string[]
 
-  ---@type fml.action.search.files.searcher.ISettingData
+  ---@type dot.fn.search_in_files.ISettingData
   local data = {
     search_pattern = s_search_pattern,
     replace_pattern = s_replace_pattern,
@@ -58,7 +58,7 @@ local function edit_setting(searcher)
         if type(raw_data) ~= "table" then
           return "Invalid search_files configuration, expect an object."
         end
-        ---@cast raw_data               fml.action.search.files.searcher.ISettingData
+        ---@cast raw_data               dot.fn.search_in_files.ISettingData
 
         if type(raw_data.search_pattern) ~= "string" then
           return "Invalid data.keyword, expect an string."
@@ -88,7 +88,7 @@ local function edit_setting(searcher)
         vim.schedule(function()
           local last_keyword = o_search_pattern:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw                  fml.action.search.files.searcher.ISettingData
+          ---@cast raw                  dot.fn.search_in_files.ISettingData
 
           local search_pattern = raw.search_pattern ---@type string
           local replace_pattern = raw.replace_pattern ---@type string
@@ -265,69 +265,47 @@ local function focus()
   end)
 end
 
----@class fml.action.search.files.searcher
-local M = {}
-
+---@param rootpath                      string|"cwd"|"directory"|"workspace"|"file"|nil
+---@param reset_input                   boolean|nil
 ---@return nil
-function M.reset_input()
-  searcher.finder:set_content("")
-end
+local function search_in_files(rootpath, reset_input)
+  if reset_input then
+    searcher.finder:set_content("")
+  end
 
----@param rootpath                      string|nil
----@return nil
-function M.search_in_files(rootpath)
+  if rootpath == "cwd" then
+    rootpath = dot.path.cwd()
+  elseif rootpath == "directory" then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_source ~= nil then
+      local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      rootpath = yoz.path.is_exist_directory(filepath) and filepath or dot.path.dirname(filepath)
+    else
+      rootpath = nil
+    end
+  elseif rootpath == "workspace" then
+    rootpath = dot.path.workspace()
+  elseif rootpath == "file" then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_source ~= nil then
+      local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      if yoz.path.is_exist_file(filepath) then
+        rootpath = filepath
+      else
+        rootpath = nil
+      end
+    else
+      rootpath = nil
+    end
+  end
+
   rootpath = (rootpath ~= nil and rootpath ~= "") and rootpath or o_rootpath:snapshot() ---@type string
   attach(searcher, rootpath)
   focus()
 end
 
----@return nil
-function M.search_in_cwd()
-  local cwd = dot.path.cwd() ---@type string
-  if searcher:isfocused() then
-    searcher:hide()
-    return
-  end
-
-  attach(searcher, cwd)
-  focus()
-end
-
----@return nil
-function M.search_in_directory()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_source ~= nil then
-    local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    local dirpath = yoz.path.is_exist_directory(filepath) and filepath or dot.path.dirname(filepath) ---@type string
-    attach(searcher, dirpath)
-  end
-  focus()
-end
-
----@return nil
-function M.search_in_workspace()
-  local workspace = dot.path.workspace() ---@type string
-  attach(searcher, workspace)
-  focus()
-end
-
----@param filepath                      string|nil
----@return nil
-function M.search_in_file(filepath)
-  if not filepath or not yoz.path.is_exist_file(filepath) then
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_source = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-    if winnr_source ~= nil then
-      local bufnr = vim.api.nvim_win_get_buf(winnr_source) ---@type integer
-      filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      if yoz.path.is_exist_file(filepath) then
-        attach(searcher, filepath)
-      end
-    end
-  end
-  focus()
-end
-
-return M
+return search_in_files

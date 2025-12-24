@@ -889,13 +889,13 @@ command
   .implement({
     uuid = K.search.in_files.uuid,
     action = function(args)
-      require("fml.action.search.files").search_in_files(args)
+      dot.fn.search_in_files(args)
     end,
   })
   .implement({
     uuid = K.search.in_file.uuid,
-    action = function(args)
-      require("fml.action.search.files").search_in_file(args)
+    action = function()
+      dot.fn.search_in_files("file")
     end,
   })
   .implement({
@@ -907,19 +907,19 @@ command
   .implement({
     uuid = K.search.in_cwd.uuid,
     action = function()
-      require("fml.action.search.files").search_in_cwd()
+      dot.fn.search_in_files("cwd")
     end,
   })
   .implement({
     uuid = K.search.in_directory.uuid,
     action = function()
-      require("fml.action.search.files").search_in_directory()
+      dot.fn.search_in_files("directory")
     end,
   })
   .implement({
     uuid = K.search.in_workspace.uuid,
     action = function()
-      require("fml.action.search.files").search_in_workspace()
+      dot.fn.search_in_files("workspace")
     end,
   })
 

@@ -1444,7 +1444,7 @@ function M:__action_open_searcher__()
   if filepath:sub(-1) == "/" then
     filepath = filepath:sub(1, -2)
   end
-  dot.command.definitions.search.in_files:execute(filepath)
+  dot.fn.search_in_files(filepath)
 end
 
 ---@protected
