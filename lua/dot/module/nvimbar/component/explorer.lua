@@ -280,10 +280,10 @@ function M.tabline(position)
     local flag_selected_icon = ark.icon.symbols.flag_selected ---@type string
     local flag_selected_hln = flag_selected and "explorer_flag_orange" or "explorer_flag_grey" ---@type string
     local flag_selected_piece_hln = string.format("%s_%s", position, flag_selected_hln) ---@type string
-    local flag_selected_callback = dot.G.register_anonymous_fn(function()
+    local flag_selected_callback = ark.G.register_anonymous_fn(function()
       local current = dot.context.explorer.flag_selected:snapshot()
       dot.context.explorer.flag_selected:next(not current)
-    end) or "dot.G.noop"
+    end) or "ark.G.noop"
     local flag_selected_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_selected_piece_text = " " .. flag_selected_icon .. flag_selected_digit ---@type string
     text = text .. flag_selected_piece_text
@@ -294,11 +294,11 @@ function M.tabline(position)
     local flag_viewtype_icon = flag_viewtype == "tree" and ark.icon.symbols.flag_tree or ark.icon.symbols.flag_list ---@type string
     local flag_viewtype_hln = "explorer_flag_blue" ---@type string
     local flag_viewtype_piece_hln = string.format("%s_%s", position, flag_viewtype_hln) ---@type string
-    local flag_viewtype_callback = dot.G.register_anonymous_fn(function()
+    local flag_viewtype_callback = ark.G.register_anonymous_fn(function()
       local current = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
       local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
       dot.context.explorer.flag_viewtype:next(next_viewtype)
-    end) or "dot.G.noop"
+    end) or "ark.G.noop"
     local flag_viewtype_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_viewtype_piece_text = " " .. flag_viewtype_icon .. flag_viewtype_digit ---@type string
     text = text .. flag_viewtype_piece_text
@@ -310,10 +310,10 @@ function M.tabline(position)
       local flag_foldempty_icon = ark.icon.symbols.flag_fold_empty_path ---@type string
       local flag_foldempty_hln = flag_foldempty and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
       local flag_foldempty_piece_hln = string.format("%s_%s", position, flag_foldempty_hln) ---@type string
-      local flag_foldempty_callback = dot.G.register_anonymous_fn(function()
+      local flag_foldempty_callback = ark.G.register_anonymous_fn(function()
         local current = dot.context.explorer.flag_foldempty:snapshot()
         dot.context.explorer.flag_foldempty:next(not current)
-      end) or "dot.G.noop"
+      end) or "ark.G.noop"
       local flag_foldempty_digit = ark.icon.todigit_supscript(index) ---@type string
       local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_digit ---@type string
       text = text .. flag_foldempty_piece_text
@@ -324,7 +324,7 @@ function M.tabline(position)
     local flag_hidden_icon = ark.icon.symbols.flag_hidden ---@type string
     local flag_hidden_hln = show_hidden and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
     local flag_hidden_piece_hln = string.format("%s_%s", position, flag_hidden_hln) ---@type string
-    local flag_hidden_callback = dot.G.register_anonymous_fn(toggle_hidden_callback) or "dot.G.noop"
+    local flag_hidden_callback = ark.G.register_anonymous_fn(toggle_hidden_callback) or "ark.G.noop"
     local flag_hidden_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_hidden_piece_text = " " .. flag_hidden_icon .. flag_hidden_digit ---@type string
     text = text .. flag_hidden_piece_text

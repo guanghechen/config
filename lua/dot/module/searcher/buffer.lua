@@ -73,7 +73,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
   for _, flag in ipairs(raw_flags) do
     flags[#flags + 1] = {
       desc = flag.desc,
-      callback = dot.G.register_anonymous_fn(flag.callback) or "dot.G.noop",
+      callback = ark.G.register_anonymous_fn(flag.callback) or "ark.G.noop",
       disabled = ark.fn.falsy,
       snapshot = flag.snapshot,
     }

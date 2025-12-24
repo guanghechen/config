@@ -103,7 +103,7 @@ function M.new(props)
         end
       end
 
-      local callback_fn = dot.G.register_anonymous_fn(callback) or "dot.G.noop" ---@type string
+      local callback_fn = ark.G.register_anonymous_fn(callback) or "ark.G.noop" ---@type string
 
       ---@type dot.module.picker.result.IFlagItem
       local item = {

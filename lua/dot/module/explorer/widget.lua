@@ -1938,7 +1938,7 @@ function M:__create_nvimbar__()
   for _, flag in ipairs(flags) do
     nvimbar_flags[#nvimbar_flags + 1] = {
       desc = flag.desc,
-      callback = dot.G.register_anonymous_fn(flag.callback) or "dot.G.noop",
+      callback = ark.G.register_anonymous_fn(flag.callback) or "ark.G.noop",
       snapshot = flag.snapshot,
     }
   end

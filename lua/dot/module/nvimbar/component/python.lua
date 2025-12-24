@@ -3,7 +3,7 @@ local __module_name__ = "dot.module.nvimbar.component.python" ---@type string
 local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
-local fn_select_python_venv = dot.G.register_anonymous_fn(function()
+local fn_select_python_venv = ark.G.register_anonymous_fn(function()
   dot.command.definitions.lsp.select_python_venv:execute()
 end)
 

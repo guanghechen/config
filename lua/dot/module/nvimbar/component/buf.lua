@@ -6,17 +6,17 @@ local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
 ---@type string
-local fn_active_buf = dot.G.register_anonymous_fn(function(bufnr)
+local fn_active_buf = ark.G.register_anonymous_fn(function(bufnr)
   dot.command.definitions.buf.open:execute(tostring(bufnr))
 end) or ""
 
 ---@type string
-local fn_focus_left_buf = dot.G.register_anonymous_fn(function()
+local fn_focus_left_buf = ark.G.register_anonymous_fn(function()
   dot.command.definitions.buf.focus_left:execute()
 end) or ""
 
 ---@type string
-local fn_focus_right_buf = dot.G.register_anonymous_fn(function()
+local fn_focus_right_buf = ark.G.register_anonymous_fn(function()
   dot.command.definitions.buf.focus_right:execute()
 end) or ""
 

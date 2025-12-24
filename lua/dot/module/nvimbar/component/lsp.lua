@@ -5,7 +5,7 @@ local txt = ark.nvim.txt
 local decode_btn_args = ark.nvim.decode_btn_args
 
 ---@type string
-local fn_goto_lsp_pos = dot.G.register_anonymous_fn(function(num)
+local fn_goto_lsp_pos = ark.G.register_anonymous_fn(function(num)
   local args = decode_btn_args(tostring(num)) ---@type integer[]
   if #args == 3 then
     local winnr = args[1] ---@type integer|nil
@@ -21,7 +21,7 @@ local fn_goto_lsp_pos = dot.G.register_anonymous_fn(function(num)
 end) or ""
 
 ---@type string
-local fn_show_error = dot.G.register_anonymous_fn(function(bufnr)
+local fn_show_error = ark.G.register_anonymous_fn(function(bufnr)
   local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
   ark.reporter.info({
     from = __module_name__,
@@ -31,7 +31,7 @@ local fn_show_error = dot.G.register_anonymous_fn(function(bufnr)
 end)
 
 ---@type string
-local fn_show_warn = dot.G.register_anonymous_fn(function(bufnr)
+local fn_show_warn = ark.G.register_anonymous_fn(function(bufnr)
   local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
   ark.reporter.info({
     from = __module_name__,
@@ -41,7 +41,7 @@ local fn_show_warn = dot.G.register_anonymous_fn(function(bufnr)
 end)
 
 ---@type string
-local fn_show_hint = dot.G.register_anonymous_fn(function(bufnr)
+local fn_show_hint = ark.G.register_anonymous_fn(function(bufnr)
   local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
   ark.reporter.info({
     from = __module_name__,
@@ -51,7 +51,7 @@ local fn_show_hint = dot.G.register_anonymous_fn(function(bufnr)
 end)
 
 ---@type string
-local fn_show_info = dot.G.register_anonymous_fn(function(bufnr)
+local fn_show_info = ark.G.register_anonymous_fn(function(bufnr)
   local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
   ark.reporter.info({
     from = __module_name__,
@@ -111,7 +111,7 @@ local function get_lsp_client_names()
 end
 
 ---@type string
-local fn_show_clients = dot.G.register_anonymous_fn(function()
+local fn_show_clients = ark.G.register_anonymous_fn(function()
   local client_names = get_lsp_client_names() ---@type string[]
   local message = #client_names > 0 and table.concat(client_names, "\n") or "No active LSP client attached." ---@type string
 

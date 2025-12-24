@@ -2,7 +2,7 @@ local btn = ark.nvim.btn
 local txt = ark.nvim.txt
 
 ---@type string
-local fn_show_detach = dot.G.register_anonymous_fn(function()
+local fn_show_detach = ark.G.register_anonymous_fn(function()
   require("dot.module.ai.action").show_detach_picker()
 end)
 

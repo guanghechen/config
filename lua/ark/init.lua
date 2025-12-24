@@ -216,6 +216,7 @@ local __mods = {
   filetype = "ark.filetype",
   fn = "ark.fn",
   fs = "ark.fs",
+  G = "ark.G",
   hot = "ark.hot",
   icon = "ark.icon",
   json = "ark.json",
@@ -245,6 +246,7 @@ local __mods = {
 ---@field public filetype               ark.filetype
 ---@field public fn                     ark.fn
 ---@field public fs                     ark.fs
+---@field public G                      ark.G
 ---@field public hot                    ark.hot
 ---@field public icon                   ark.icon
 ---@field public json                   ark.json

@@ -166,7 +166,6 @@ local __mods = {
   searcher = "dot.module.searcher",
   winpicker = "dot.module.winpicker",
 
-  G = "dot.G",
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
@@ -205,7 +204,6 @@ local __mods = {
 ---@field public ux                     dot.ux
 ---@field public widget                 dot.widget
 ---
----@field public G                      dot.G
 ---@field public buf                    dot.buf
 ---@field public path                   dot.path
 ---@field public shell                  dot.shell
