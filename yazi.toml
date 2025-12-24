@@ -89,11 +89,16 @@ sort_translit       = false
 
 [open]
 prepend_rules = [
+  { name = "*.{pptx,ppt,docx,doc,xlsx,xls,pdf}", use = "open" },
   { mime = "video/*", use = "open" },
-  { url = "*.{mp4,mkv,avi,mov,wmv,flv,webm,m4v,mpeg,mpg,3gp,ts,mts,m2ts,vob}", use = "open" },
+  { name = "*.{mp4,mkv,avi,mov,wmv,flv,webm,m4v,mpeg,mpg,3gp,ts,mts,m2ts,vob}", use = "open" },
+  { mime = "application/vnd.openxmlformats-officedocument.*", use = "open" },
+  { mime = "application/vnd.ms-*", use = "open" },
+  { mime = "application/msword", use = "open" },
+  { mime = "application/pdf", use = "open" },
 ]
 append_rules = [
-  { url = "*", use = [ "edit" ] },
+  { name = "*", use = [ "edit" ] },
 ]
 
 [opener]
