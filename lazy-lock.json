@@ -1,5 +1,5 @@
 {
-  "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "ceed1545929b74cf79b5a8950e7c415683bf690b" },
+  "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "d0c5196dae32c53cde1208161554906f5b982de8" },
   "blink.indent": { "branch": "nvim@blink.indent", "commit": "93ff30292d34116444ff9db5264f6ccd34f3f71f" },
   "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "65978aadaf9b7d6cae59c1c51cf2b366b370546e" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "5420c4b5ea0aeb99c09cfbd4fd0b70d257b44f25" },
@@ -16,7 +16,7 @@
   "nvim-dap": { "branch": "nvim@nvim-dap", "commit": "818cd8787a77a97703eb1d9090543a374f79a9ac" },
   "nvim-dap-ui": { "branch": "nvim@nvim-dap-ui", "commit": "cf91d5e2d07c72903d052f5207511bf7ecdb7122" },
   "nvim-dap-virtual-text": { "branch": "nvim@nvim-dap-virtual-text", "commit": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6" },
-  "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "8a6aae10d15069c952428fa6bebf82c2d164b502" },
+  "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "1f19dacd945a7b1a57f29f32b2d7168384df3d36" },
   "nvim-nio": { "branch": "nvim@nvim-nio", "commit": "21f5324bfac14e22ba26553caf69ec76ae8a7662" },
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "6e42d823ce0a5a76180c473c119c7677738a09d1" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a" },
