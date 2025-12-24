@@ -98,17 +98,17 @@ append_rules = [
 
 [opener]
 edit = [
-  { run = 'nvim %s', desc = "nvim", for = "unix", block = true },
-  { run = 'nvim %s', desc = "nvim", for = "windows", block = true },
+  { run = 'nvim "$@"', desc = "nvim", for = "unix", block = true },
+  { run = 'nvim "$@"', desc = "nvim", for = "windows", block = true },
 ]
 play = [
-  { run = 'mpv %s', desc = "mpv", for = "unix", orphan = true },
-  { run = 'mpv %s', desc = "mpv", for = "windows", orphan = true },
+  { run = 'mpv "$@"', desc = "mpv", for = "unix", orphan = true },
+  { run = 'mpv "$@"', desc = "mpv", for = "windows", orphan = true },
 ]
 open = [
-  { run = 'xdg-open %s1', desc = "Open", for = "linux" },
-  { run = 'open %s',      desc = "Open", for = "macos", orphan = true },
-  { run = 'start "" %s1', desc = "Open", for = "windows", orphan = true },
+  { run = 'xdg-open "$1"', desc = "Open", for = "linux" },
+  { run = 'open "$@"',      desc = "Open", for = "macos", orphan = true },
+  { run = 'start "" "$1"', desc = "Open", for = "windows", orphan = true },
 ]
 
 [plugin]
