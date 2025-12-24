@@ -154,7 +154,8 @@ end
 ---@field public o_replace_pattern?     ark.c.Observable
 ---@field public o_replace_pattern_history? ark.c.History
 
----@class dot.module.searcher.buffer.Searcher
+---@class dot.module.searcher.buffer.Searcher : dot.t.IWidget
+---@field public name                   string
 ---@field public title                  string
 ---@field public o_flag_fuzzy           ark.c.Observable
 ---@field public o_flag_regex           ark.c.Observable
@@ -198,6 +199,7 @@ function M.new(props)
   local o_match_total = ark.c.Observable.from_value(0)
 
   local self = setmetatable({}, M)
+  self.name = __module_name__
   self.title = "Search in Buffer"
   self.o_flag_replace = o_flag_replace
 
@@ -257,6 +259,7 @@ function M.new(props)
   self._last_focused_window = "finder"
   self._last_search_pattern = nil
   self._last_bufnr_source = nil
+
   return self
 end
 
@@ -295,6 +298,9 @@ function M:attach(winnr_source)
   end
 
   vim.api.nvim_set_current_win(winnr_finder)
+
+  -- Register with widget state for resume functionality
+  dot.state.widget.push(self)
 
   self._scheduler_search:schedule()
   self._nvimbar:render()
@@ -383,6 +389,38 @@ end
 ---@return integer|nil
 function M:get_winnr_finder()
   return self._winnr_finder
+end
+
+---@return nil
+function M:focus()
+  self:focus_last()
+end
+
+---@return nil
+function M:hide()
+  self:close()
+end
+
+---@return boolean
+function M:isdisposed()
+  return self._winnr_finder == nil
+end
+
+---@return boolean
+function M:isfocused()
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  return winnr_current == self._winnr_finder or winnr_current == self._winnr_replacer
+end
+
+---@return boolean
+function M:isvisible()
+  local winnr = self._winnr_finder ---@type integer|nil
+  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
+end
+
+---@return nil
+function M:resize()
+  self:__resize__()
 end
 
 ---@return nil
