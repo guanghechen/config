@@ -901,7 +901,7 @@ command
   .implement({
     uuid = K.search.in_buffer.uuid,
     action = function()
-      require("fml.action.search.buffer").search_in_buffer()
+      dot.fn.search_in_buffer()
     end,
   })
   .implement({

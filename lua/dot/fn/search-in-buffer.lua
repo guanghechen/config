@@ -1,13 +1,10 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "fml.action.search.buffer" ---@type string
+local __module_name__ = "dot.fn.search_in_buffer" ---@type string
 
 local searcher ---@type dot.module.searcher.buffer.Searcher|nil
 
----@class fml.action.search.buffer
-local M = {}
-
 ---@return nil
-function M.search_in_buffer()
+local function search_in_buffer()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr_sourcefile == nil or not vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -41,4 +38,4 @@ function M.search_in_buffer()
   end
 end
 
-return M
+return search_in_buffer

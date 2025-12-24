@@ -16,6 +16,7 @@ local __fn__mods = {
   paste_image_as_base64 = "dot.fn.paste_image_as_base64",
   pick_win = "dot.fn.pick_win",
   rename = "dot.fn.rename",
+  search_in_buffer = "dot.fn.search-in-buffer",
   search_in_files = "dot.fn.search-in-files",
   select_copy_filepath = "dot.fn.select_copy_filepath",
   select_copy_filepaths = "dot.fn.select_copy_filepaths",
@@ -40,6 +41,7 @@ local __fn__mods = {
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               dot.fn.pick_win
 ---@field public rename                 dot.fn.rename
+---@field public search_in_buffer       fun(): nil
 ---@field public search_in_files        fun(rootpath: string|"cwd"|"directory"|"workspace"|"file"|nil, reset_input: boolean|nil): nil
 ---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
 ---@field public select_copy_filepaths  fun(params: dot.fn.select_copy_filepaths.IParams): integer
