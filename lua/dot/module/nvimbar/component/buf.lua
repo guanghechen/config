@@ -129,7 +129,7 @@ end
 ---@class dot.module.nvimbar.component.buf
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.bufs(position)
   local hln_buf = position .. "_buf" ---@type string

@@ -52,7 +52,7 @@ end)
 ---@class dot.module.nvimbar.component.copilot
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
   ---@type dot.module.nvimbar.IRawComponent

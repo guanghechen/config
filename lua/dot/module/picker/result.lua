@@ -116,7 +116,7 @@ function M.new(props)
     end
   end
 
-  local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
+  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
 
   local c = require("dot.module.nvimbar").component
   local Nvimbar = require("dot.module.nvimbar").Nvimbar

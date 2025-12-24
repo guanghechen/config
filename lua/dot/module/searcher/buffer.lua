@@ -1076,7 +1076,7 @@ end
 ---@param flags                         dot.module.searcher.result.IFlagItem[]
 ---@return dot.module.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
-  local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
+  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
 
   return Nvimbar.new({
     name = string.format("%s#winbar", __module_name__),

@@ -11,6 +11,11 @@
 ---| "WARN"
 ---| "ERROR"
 
+---@alias ark.e.NvimbarPositionEnum
+---| "f_sl"
+---| "f_tl"
+---| "f_wl"
+
 ---@alias ark.e.VimMode
 ---| "c"
 ---| "i"

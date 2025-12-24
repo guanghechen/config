@@ -4,7 +4,7 @@ local txt = ark.nvim.txt
 ---@class dot.module.nvimbar.component.picker
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@param flags                         dot.module.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
 ---@return dot.module.nvimbar.IRawComponent
@@ -38,7 +38,7 @@ function M.result_flags(position, flags, flags_start_index)
   return component
 end
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@param result_lnum                   ark.c.Observable
 ---@param result_total                  ark.c.Observable
 ---@return dot.module.nvimbar.IRawComponent

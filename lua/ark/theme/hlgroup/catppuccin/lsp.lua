@@ -1,7 +1,7 @@
----@class dot.theme.catppuccin.lsp
+---@class ark.theme.hlgroup.catppuccin.lsp
 local M = {}
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.catppuccin ---@type ark.t.theme.CatppuccinPalette

@@ -66,42 +66,6 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.theme.__mods
-local __theme__mods = {
-  basic = "dot.theme.basic",
-  common = "dot.theme.common",
-  lsp = "dot.theme.lsp",
-  nvimbar = "dot.theme.nvimbar",
-  plugin = "dot.theme.plugin",
-  treesitter = "dot.theme.treesitter",
-  widget = "dot.theme.widget",
-}
-
----@class dot.theme
----@field public __mods                 dot.theme.__mods
----@field public basic                  dot.theme.basic
----@field public common                 dot.theme.common
----@field public lsp                    dot.theme.lsp
----@field public nvimbar                dot.theme.nvimbar
----@field public plugin                 dot.theme.plugin
----@field public scheme                 ark.theme.scheme
----@field public treesitter             dot.theme.treesitter
----@field public widget                 dot.theme.widget
-local theme = setmetatable({
-  __mods = __theme__mods,
-  scheme = ark.theme.scheme,
-}, {
-  __index = function(t, k)
-    local m = __theme__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.state.__mods
 local __state__mods = {
   maximized = "dot.state.maximized",
@@ -199,7 +163,6 @@ local __mods = {
 ---@field public session                dot.session
 ---@field public state                  dot.state
 ---@field public term                   dot.term
----@field public theme                  dot.theme
 ---@field public uri                    dot.uri
 ---@field public ux                     dot.ux
 ---@field public widget                 dot.widget
@@ -219,7 +182,6 @@ local M = setmetatable({
   __mods = __mods,
   fn = fn,
   state = state,
-  theme = theme,
   widget = widget,
 }, {
   __index = function(t, k)

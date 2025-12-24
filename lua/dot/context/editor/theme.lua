@@ -123,14 +123,14 @@ function M.apply_integration(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type dot.t.theme.IContext
+    ---@type ark.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
       variant = scheme.variant,
       scheme = scheme,
       transparency = transparency,
     }
-    local h = dot.theme[integration]
+    local h = ark.theme.hlgroup[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
     local uxTheme = ark.c.Theme.new()
     uxTheme:registers(hlgroup_map)
@@ -151,8 +151,8 @@ function M.apply_theme(params)
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
 
-    ---@type dot.theme.nvimbar
-    local nvimbar_hlgroup_map = dot.theme.nvimbar.gen_hlgroup_map({
+    ---@type ark.theme.hlgroup.nvimbar
+    local nvimbar_hlgroup_map = ark.theme.hlgroup.nvimbar.gen_hlgroup_map({
       theme = theme,
       scheme = scheme,
       transparency = transparency,
@@ -160,7 +160,7 @@ function M.apply_theme(params)
 
     local uxTheme = ark.c.Theme.new()
     for _, integration in ipairs(integrations) do
-      local h = dot.theme[integration]
+      local h = ark.theme.hlgroup[integration]
       ---@return table<string, ark.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
@@ -222,7 +222,7 @@ function M.get_scheme(theme)
     })
     return nil
   end
-  return dot.theme.scheme[theme]
+  return ark.theme.scheme[theme]
 end
 
 ---@param force                         boolean

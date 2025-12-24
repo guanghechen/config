@@ -1,9 +1,33 @@
----@class dot.theme.one_half.basic
+---@class ark.theme.hlgroup.basic
 local M = {}
 
----@param context                       dot.t.theme.IContext
----@return dot.theme.common.modes_color_map
+---@param context                       ark.t.theme.IContext
+---@return ark.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
+  local md = string.format("ark.theme.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_modes_color_map(context)
+  end
+
+  return M.default_gen_modes_color_map(context)
+end
+
+---@param context                       ark.t.theme.IContext
+---@return table<string, ark.t.theme.IHlgroup>
+function M.gen_hlgroup_map(context)
+  local md = string.format("ark.theme.hlgroup.%s.basic", context.scheme.theme) ---@type string
+  local ok, mod = pcall(require, md)
+  if ok and mod then
+    return mod.gen_hlgroup_map(context)
+  end
+
+  return M.default_gen_hlgroup_map(context)
+end
+
+---@param context                       ark.t.theme.IContext
+---@return ark.theme.hlgroup.common.modes_color_map
+function M.default_gen_modes_color_map(context)
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local mc = {
     command = c.brightBlue,
@@ -19,9 +43,9 @@ function M.gen_modes_color_map(context)
   return mc
 end
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
-function M.gen_hlgroup_map(context)
+function M.default_gen_hlgroup_map(context)
   local cs = ark.color
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
   local t = context.transparency ---@type boolean
@@ -36,8 +60,8 @@ function M.gen_hlgroup_map(context)
     ---cursor
     Cursor = { fg = c.bg1, bg = c.pink },
     CursorColumn = { bg = c.bg1, blend = t and 50 or 0 },
-    CursorLine = { bg = c.bg2, blend = t and 50 or 0 },
-    CursorLineNr = { fg = c.fg2, bg = c.bg2, bold = true, blend = t and 50 or 0 },
+    CursorLine = { bg = c.bg1, blend = t and 50 or 0 },
+    CursorLineNr = { fg = c.fg2, bg = c.bg1, bold = true, blend = t and 50 or 0 },
     vCursor = { link = "Cursor" },
     iCursor = { link = "Cursor" },
     lCursor = { link = "Cursor" },
@@ -143,7 +167,7 @@ function M.gen_hlgroup_map(context)
     Define = { fg = c.aqua },
     Float = { fg = c.purple },
     Function = { fg = c.yellow, bold = true },
-    Identifier = { fg = c.red },
+    Identifier = { fg = c.blue },
     Include = { fg = c.purple },
     Keyword = { fg = c.purple },
     Label = { fg = c.red },
@@ -176,7 +200,7 @@ function M.gen_hlgroup_map(context)
     Bold = { bold = true },
     Changed = { fg = c.yellow },
     ColorColumn = { fg = c.fg2, bg = cs.mix(c.bg0, c.pink, 20) },
-    Comment = { fg = cs.change_hex_lightness(c.bg4, 20), italic = true },
+    Comment = { fg = c.grey, italic = true },
     Conceal = { fg = c.blue },
     CurSearch = { fg = c.bg0, bg = c.orange },
     Debug = { fg = c.red },
@@ -228,7 +252,6 @@ function M.gen_hlgroup_map(context)
     WinBarNC = { fg = c.blue, bg = c.bg1 },
     WinSeparator = { fg = c.bg2, bg = c.none },
   }
-
   return hlgroup_map
 end
 

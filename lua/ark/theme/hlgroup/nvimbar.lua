@@ -1,8 +1,8 @@
----@class dot.theme.nvimbar
+---@class ark.theme.hlgroup.nvimbar
 local M = {}
 
----@param context                       dot.t.theme.IContext
----@return dot.theme.nvimbar
+---@param context                       ark.t.theme.IContext
+---@return ark.theme.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
   local cs = ark.color
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
@@ -251,9 +251,9 @@ function M.gen_hlgroup_map(context)
     termc_sep_right = { link = "ms_b_none" },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type dot.module.nvimbar.PositionEnum[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type ark.e.NvimbarPositionEnum[]
 
-  ---@class dot.theme.nvimbar : table<string, ark.t.theme.IHlgroup>
+  ---@class ark.theme.hlgroup.nvimbar : table<string, ark.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }

@@ -1,7 +1,7 @@
----@class dot.theme.vsc.treesitter
+---@class ark.theme.hlgroup.vsc.treesitter
 local M = {}
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette

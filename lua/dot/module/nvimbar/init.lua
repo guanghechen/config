@@ -1,8 +1,3 @@
----@alias dot.module.nvimbar.PositionEnum
----| "f_sl"
----| "f_tl"
----| "f_wl"
-
 ---@class dot.module.nvimbar.IRawComponent
 ---@field public atomic                 boolean
 ---@field public name                   string

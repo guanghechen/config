@@ -1,8 +1,8 @@
----@class dot.theme.vsc.basic
+---@class ark.theme.hlgroup.vsc.basic
 local M = {}
 
----@param context                       dot.t.theme.IContext
----@return dot.theme.common.modes_color_map
+---@param context                       ark.t.theme.IContext
+---@return ark.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
   local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
   return {
@@ -18,7 +18,7 @@ function M.gen_modes_color_map(context)
   }
 end
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color

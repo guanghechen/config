@@ -1,7 +1,7 @@
----@class dot.theme.catppuccin.treesitter
+---@class ark.theme.hlgroup.catppuccin.treesitter
 local M = {}
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean

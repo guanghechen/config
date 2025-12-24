@@ -1,10 +1,10 @@
----@class dot.theme.plugin
+---@class ark.theme.hlgroup.plugin
 local M = {}
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local md = string.format("dot.theme.%s.plugin", context.scheme.theme) ---@type string
+  local md = string.format("ark.theme.hlgroup.%s.plugin", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
   if ok and mod then
     return mod.gen_hlgroup_map(context)

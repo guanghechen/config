@@ -1,4 +1,4 @@
----@class dot.theme.common.modes_color_map
+---@class ark.theme.hlgroup.common.modes_color_map
 ---@field public command                ark.t.theme.IHlgroup
 ---@field public confirm                ark.t.theme.IHlgroup
 ---@field public insert                 ark.t.theme.IHlgroup
@@ -7,7 +7,7 @@
 ---@field public terminal               ark.t.theme.IHlgroup
 ---@field public visual                 ark.t.theme.IHlgroup
 
----@class dot.theme.common.modes_map
+---@class ark.theme.hlgroup.common.modes_map
 local modes_map = {
   ["n"] = { "normal", "NORMAL" },
   ["no"] = { "normal", "NORMAL (no)" },
@@ -47,7 +47,7 @@ local modes_map = {
   ["!"] = { "terminal", "SHELL" },
 }
 
----@class dot.theme.common
+---@class ark.theme.hlgroup.common
 local M = {}
 
 ---@type string[]
@@ -82,12 +82,12 @@ function M.resolve_mode()
   return m[1], m[2]
 end
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.unified ---@type ark.t.theme.UnifiedPalette
-  local basic = require("dot.theme.basic") ---@type dot.theme.basic
-  local mc = basic.gen_modes_color_map(context) ---@type dot.theme.common.modes_color_map
+  local basic = require("ark.theme.hlgroup.basic") ---@type ark.theme.hlgroup.basic
+  local mc = basic.gen_modes_color_map(context) ---@type ark.theme.hlgroup.common.modes_color_map
 
   local hlgroup_map = {} ---@type table<string, ark.t.theme.IHlgroup>
   for _, color in ipairs(colors) do

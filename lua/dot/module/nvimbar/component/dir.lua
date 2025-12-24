@@ -4,7 +4,7 @@ local txt = ark.nvim.txt
 ---@class dot.module.nvimbar.component.dir
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.path(position)
   local hln_blur_sep = position .. "_dir_path_blur_sep" ---@type string
@@ -55,7 +55,7 @@ function M.path(position)
   return component
 end
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.path_prominent(position)
   local hln_icon = position .. "_dir_path_prominent_icon" ---@type string

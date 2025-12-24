@@ -70,7 +70,7 @@ local termline = Nvimbar.new({
   end,
 })
 
-local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
+local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
 ark.fn.observe({ dot.term.o_termuuid }, function()

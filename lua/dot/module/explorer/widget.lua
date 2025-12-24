@@ -1930,7 +1930,7 @@ end
 function M:__create_nvimbar__()
   local c = require("dot.module.nvimbar").component
   local Nvimbar = require("dot.module.nvimbar").Nvimbar
-  local position = "f_wl" ---@type dot.module.nvimbar.PositionEnum
+  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
 
   local flags = self:__get_flags__() ---@type dot.module.explorer.widget.IFlagItem[]
   ---@type dot.module.nvimbar.component.explorer.IFlagItem[]

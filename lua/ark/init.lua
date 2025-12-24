@@ -150,14 +150,48 @@ local theme_scheme = setmetatable({ __mods = theme_scheme__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class ark.theme.hlgroup.__mods
+local theme_hlgroup__mods = {
+  basic = "ark.theme.hlgroup.basic",
+  common = "ark.theme.hlgroup.common",
+  lsp = "ark.theme.hlgroup.lsp",
+  nvimbar = "ark.theme.hlgroup.nvimbar",
+  plugin = "ark.theme.hlgroup.plugin",
+  treesitter = "ark.theme.hlgroup.treesitter",
+  widget = "ark.theme.hlgroup.widget",
+}
+
+---@class ark.theme.hlgroup
+---@field public __mods                 ark.theme.hlgroup.__mods
+---@field public basic                  ark.theme.hlgroup.basic
+---@field public common                 ark.theme.hlgroup.common
+---@field public lsp                    ark.theme.hlgroup.lsp
+---@field public nvimbar                ark.theme.hlgroup.nvimbar
+---@field public plugin                 ark.theme.hlgroup.plugin
+---@field public treesitter             ark.theme.hlgroup.treesitter
+---@field public widget                 ark.theme.hlgroup.widget
+local theme_hlgroup = setmetatable({ __mods = theme_hlgroup__mods }, {
+  __index = function(t, k)
+    local m = theme_hlgroup__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class ark.theme.__mods
 local theme__mods = {}
 
 ---@class ark.theme
 ---@field public __mods                 ark.theme.__mods
+---@field public hlgroup                ark.theme.hlgroup
 ---@field public scheme                 ark.theme.scheme
 local theme = setmetatable({
   __mods = theme__mods,
+  hlgroup = theme_hlgroup,
   scheme = theme_scheme,
 }, {
   __index = function(t, k)

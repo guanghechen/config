@@ -3,7 +3,7 @@ local txt = ark.nvim.txt
 ---@class dot.module.nvimbar.component.git
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.branch(position)
   local hln_sep = position .. "_git_branch_sep" ---@type string

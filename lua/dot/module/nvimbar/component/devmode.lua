@@ -3,7 +3,7 @@ local txt = ark.nvim.txt
 ---@class dot.module.nvimbar.component.devmode
 local M = {}
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.devmode(position)
   local hln_devmode = position .. "_devmode_text" ---@type string
@@ -25,7 +25,7 @@ function M.devmode(position)
   return component
 end
 
----@param position                      dot.module.nvimbar.PositionEnum
+---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.render_count(position)
   local hln_text = position .. "_devmode_render_count_text" ---@type string

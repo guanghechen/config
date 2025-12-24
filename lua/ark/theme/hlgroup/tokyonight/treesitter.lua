@@ -1,7 +1,7 @@
----@class dot.theme.tokyonight.treesitter
+---@class ark.theme.hlgroup.tokyonight.treesitter
 local M = {}
 
----@param context                       dot.t.theme.IContext
+---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = ark.color
