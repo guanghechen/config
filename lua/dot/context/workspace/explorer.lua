@@ -31,7 +31,7 @@ function M.defaults()
   return {
     flag_foldempty = true,
     flag_selected = false,
-    flag_show_hidden = false,
+    flag_show_hidden = true,
     flag_viewtype = "tree",
     trash = false,
     width = 30,
