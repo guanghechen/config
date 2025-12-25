@@ -491,24 +491,23 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
       and next_hunk.type == "delete"
       and next_hunk.added.start == start + count
 
+    -- Check if this hunk has more removed lines than added lines
+    -- In this case, the last line should show changedelete indicator
+    local has_extra_removes = removed_count > count
+
     for i = 0, count - 1 do
       local lnum = start + i
       if lnum >= min_lnum and lnum <= max_lnum then
         local is_last_line = (i == count - 1)
 
-        if i == 0 and removed_count > 0 then
-          -- First line with removals
-          if count > removed_count then
-            signs[#signs + 1] = { type = "changedelete", lnum = lnum }
-          else
-            signs[#signs + 1] = { type = "change", lnum = lnum }
-          end
-        elseif is_last_line and next_is_adjacent_delete then
-          -- Last line with adjacent delete hunk following
+        if is_last_line and (next_is_adjacent_delete or has_extra_removes) then
+          -- Last line: show changedelete if adjacent delete follows or has extra removes
           signs[#signs + 1] = { type = "changedelete", lnum = lnum }
         elseif removed_count > 0 and i < removed_count then
+          -- Lines within removed range: show change
           signs[#signs + 1] = { type = "change", lnum = lnum }
         else
+          -- Lines beyond removed range: show add
           signs[#signs + 1] = { type = "add", lnum = lnum }
         end
       end

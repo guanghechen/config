@@ -797,6 +797,22 @@ function M.setup()
     end,
   })
 
+  vim.api.nvim_create_autocmd("OptionSet", {
+    group = augroup,
+    pattern = { "fileformat", "bomb", "eol" },
+    callback = function(args)
+      local bufnr = args.buf ---@type integer
+      local buf_cache = cache[bufnr]
+      if not buf_cache then
+        return
+      end
+      buf_cache.force_next_update = true
+      if buf_cache.update_debounced then
+        buf_cache.update_debounced()
+      end
+    end,
+  })
+
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_is_valid(buf) then
       M.attach(buf)
