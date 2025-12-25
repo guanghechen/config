@@ -1,4 +1,5 @@
-local DEBOUNCE_MS = 200 ---@type integer
+local DEBOUNCE_MS = 150 ---@type integer
+local INDEX_DEBOUNCE_MS = 100 ---@type integer
 
 ---@class dot.module.git.watcher
 local M = {}
@@ -12,20 +13,23 @@ local fs_watcher_index = nil
 ---@type uv.uv_timer_t|nil
 local debounce_timer = nil
 
+---@type uv.uv_timer_t|nil
+local index_debounce_timer = nil
+
 ---@type string|nil
 local current_gitdir = nil
 
 ---@type boolean
-local pending_force = false
+local pending_head_change = false
 
 ---@type boolean
 local pending_branch_refresh = false
 
 ---@type boolean
-local pending_index_only = false
+local pending_status_change = false
 
 ---@type boolean
-local pending_status = false
+local pending_index_change = false
 
 ---@type string[]
 local IGNORE_FILENAMES = {
@@ -39,7 +43,7 @@ local IGNORE_FILENAMES = {
 }
 
 ---@type string[]
-local FORCE_REFRESH_FILENAMES = {
+local HEAD_CHANGE_FILENAMES = {
   "HEAD",
   "refs",
   "packed-refs",
@@ -64,8 +68,8 @@ end
 
 ---@param filename                   string
 ---@return boolean
-local function should_force_refresh(filename)
-  for _, name in ipairs(FORCE_REFRESH_FILENAMES) do
+local function is_head_change(filename)
+  for _, name in ipairs(HEAD_CHANGE_FILENAMES) do
     if filename == name or vim.startswith(filename, name .. "/") then
       return true
     end
@@ -100,7 +104,7 @@ local function refresh_branch()
   end)
 end
 
-local function trigger_refresh()
+local function trigger_gitdir_refresh()
   if not debounce_timer then
     debounce_timer = vim.uv.new_timer()
   end
@@ -111,30 +115,47 @@ local function trigger_refresh()
 
   debounce_timer:stop()
   debounce_timer:start(DEBOUNCE_MS, 0, vim.schedule_wrap(function()
-    local do_force = pending_force ---@type boolean
+    local do_head = pending_head_change ---@type boolean
     local do_branch = pending_branch_refresh ---@type boolean
-    local index_only = pending_index_only ---@type boolean
-    local do_status = pending_status ---@type boolean
+    local do_status = pending_status_change ---@type boolean
 
-    pending_force = false
+    pending_head_change = false
     pending_branch_refresh = false
-    pending_index_only = false
-    pending_status = false
+    pending_status_change = false
 
     if do_branch then
       refresh_branch()
     end
 
-    if index_only and not do_force and not do_status then
-      dot.git.buffer.invalidate_index_all()
-      dot.git.state.refresh_async(false)
-    elseif do_force then
+    if do_head then
       dot.git.buffer.invalidate_compare_text_all()
+      dot.git.state.clear_ignored_cache()
       dot.git.state.refresh_async(true)
     elseif do_status then
       dot.git.buffer.mark_dirty_all()
       dot.git.state.refresh_async(false)
     end
+  end))
+end
+
+local function trigger_index_refresh()
+  if not index_debounce_timer then
+    index_debounce_timer = vim.uv.new_timer()
+  end
+
+  if not index_debounce_timer then
+    return
+  end
+
+  index_debounce_timer:stop()
+  index_debounce_timer:start(INDEX_DEBOUNCE_MS, 0, vim.schedule_wrap(function()
+    if not pending_index_change then
+      return
+    end
+    pending_index_change = false
+
+    dot.git.buffer.invalidate_index_all()
+    dot.git.state.refresh_async(false)
   end))
 end
 
@@ -144,23 +165,23 @@ local function on_fs_event(filename)
     return
   end
 
-  pending_status = true
-
-  if should_force_refresh(filename) then
-    pending_force = true
+  if is_head_change(filename) then
+    pending_head_change = true
     dot.git.state.clear_ignored_cache()
+  else
+    pending_status_change = true
   end
 
   if should_refresh_branch(filename) then
     pending_branch_refresh = true
   end
 
-  trigger_refresh()
+  trigger_gitdir_refresh()
 end
 
 local function on_index_event()
-  pending_index_only = true
-  trigger_refresh()
+  pending_index_change = true
+  trigger_index_refresh()
 end
 
 local function stop_watcher()
@@ -168,6 +189,12 @@ local function stop_watcher()
     debounce_timer:stop()
     debounce_timer:close()
     debounce_timer = nil
+  end
+
+  if index_debounce_timer and not index_debounce_timer:is_closing() then
+    index_debounce_timer:stop()
+    index_debounce_timer:close()
+    index_debounce_timer = nil
   end
 
   if fs_watcher_dir and not fs_watcher_dir:is_closing() then
@@ -203,11 +230,14 @@ local function start_watcher(gitdir)
       if vim.startswith(filename, "index.lock") or vim.startswith(filename, ".watchman-cookie") then
         return
       end
+      if filename == "index" then
+        return
+      end
       on_fs_event(filename)
     end)
   end
 
-  local index_path = gitdir .. "/index"
+  local index_path = gitdir .. "/index" ---@type string
   if vim.uv.fs_stat(index_path) then
     fs_watcher_index = vim.uv.new_fs_event()
     if fs_watcher_index then
@@ -237,10 +267,12 @@ local function init_watcher()
   end)
 end
 
+---@return nil
 function M.dispose()
   stop_watcher()
 end
 
+---@return nil
 function M.setup()
   local augroup = vim.api.nvim_create_augroup("DotModuleGitWatcher", { clear = true }) ---@type integer
 
@@ -255,6 +287,7 @@ function M.setup()
 end
 
 ---@param gitdir                     string|nil
+---@return nil
 function M.update(gitdir)
   if gitdir then
     start_watcher(gitdir)
