@@ -60,7 +60,10 @@ function M.find(lnum, hunks)
     return nil, nil
   end
   for i, hunk in ipairs(hunks) do
-    if lnum >= hunk.added.start and lnum <= hunk.vend then
+    -- For topdelete (added.start = 0, vend = 0), match when lnum = 1
+    local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+    local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+    if lnum >= effective_start and lnum <= effective_vend then
       return hunk, i
     end
   end
@@ -91,7 +94,9 @@ function M.find_nearest(lnum, hunks, direction, opts)
 
   if direction == "next" then
     for i, hunk in ipairs(hunks) do
-      if hunk.added.start > lnum then
+      -- For topdelete (added.start = 0), use effective position 1
+      local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+      if effective_start > lnum then
         return hunk, i
       end
     end
@@ -104,7 +109,9 @@ function M.find_nearest(lnum, hunks, direction, opts)
   if direction == "prev" then
     for i = #hunks, 1, -1 do
       local hunk = hunks[i]
-      if hunk.vend < lnum then
+      -- For topdelete (vend = 0), use effective position 1
+      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+      if effective_vend < lnum then
         return hunk, i
       end
     end
@@ -157,7 +164,10 @@ function M.create_partial(hunks, top, bot)
   local dominated_hunks = {} ---@type dot.module.git.Hunk[]
 
   for _, hunk in ipairs(hunks) do
-    if not (hunk.vend < top or hunk.added.start > bot) then
+    -- For topdelete (added.start = 0, vend = 0), use effective position 1
+    local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+    local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+    if not (effective_vend < top or effective_start > bot) then
       dominated_hunks[#dominated_hunks + 1] = hunk
     end
   end
@@ -170,15 +180,18 @@ function M.create_partial(hunks, top, bot)
 
   local removed_start = first_hunk.removed.start
   local removed_count = 0
-  local added_start = math.max(first_hunk.added.start, top)
+  local first_effective_start = first_hunk.added.start == 0 and 1 or first_hunk.added.start ---@type integer
+  local added_start = math.max(first_effective_start, top)
   local added_count = 0
 
   local removed_lines = {} ---@type string[]
   local added_lines = {} ---@type string[]
 
   for _, hunk in ipairs(dominated_hunks) do
-    local hunk_top = math.max(hunk.added.start, top)
-    local hunk_bot = math.min(hunk.vend, bot)
+    local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+    local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+    local hunk_top = math.max(effective_start, top)
+    local hunk_bot = math.min(effective_vend, bot)
 
     if hunk.type == "delete" then
       for _, line in ipairs(hunk.removed.lines) do
@@ -304,12 +317,16 @@ function M.calc_signs(hunk, min_lnum, max_lnum)
   local removed_count = hunk.removed.count
 
   if count == 0 then
-    local lnum = start
-    if lnum >= min_lnum and lnum <= max_lnum then
-      if start == 0 then
+    -- Pure deletion: show sign at effective position
+    if start == 0 then
+      -- Topdelete: deletion at file start, show at line 1
+      if 1 >= min_lnum and 1 <= max_lnum then
         signs[#signs + 1] = { type = "topdelete", lnum = 1, count = removed_count }
-      else
-        signs[#signs + 1] = { type = "delete", lnum = lnum, count = removed_count }
+      end
+    else
+      -- Normal delete: show at the line where deletion occurred
+      if start >= min_lnum and start <= max_lnum then
+        signs[#signs + 1] = { type = "delete", lnum = start, count = removed_count }
       end
     end
   else

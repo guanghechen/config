@@ -343,10 +343,10 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
       key = "u",
       callback = function()
         self:close()
-        local range = { hunk.added.start, hunk.vend }
-        if hunk.added.start == 0 then
-          range = { 1, 1 }
-        end
+        -- For topdelete (added.start = 0, vend = 0), use effective position 1
+        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+        local range = { effective_start, effective_vend }
         dot.git.hunk.unstage(range, function(ok, err)
           if ok then
             ark.reporter.info({
@@ -371,10 +371,10 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
       key = "s",
       callback = function()
         self:close()
-        local range = { hunk.added.start, hunk.vend }
-        if hunk.added.start == 0 then
-          range = { 1, 1 }
-        end
+        -- For topdelete (added.start = 0, vend = 0), use effective position 1
+        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+        local range = { effective_start, effective_vend }
         dot.git.hunk.stage(range, function(ok, err)
           if ok then
             ark.reporter.info({
@@ -398,10 +398,10 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
       key = "r",
       callback = function()
         self:close()
-        local range = { hunk.added.start, hunk.vend }
-        if hunk.added.start == 0 then
-          range = { 1, 1 }
-        end
+        -- For topdelete (added.start = 0, vend = 0), use effective position 1
+        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+        local range = { effective_start, effective_vend }
         local ok, err = dot.git.hunk.reset(range)
         if ok then
           ark.reporter.info({

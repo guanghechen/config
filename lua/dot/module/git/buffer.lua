@@ -510,8 +510,9 @@ function M.reset_hunk(bufnr, range)
     return false, "No hunk at cursor"
   end
 
-  local start_line = hunk.added.start - 1
-  local end_line = start_line + hunk.added.count
+  -- For topdelete (added.start = 0), insert at beginning (index 0)
+  local start_line = hunk.added.start == 0 and 0 or (hunk.added.start - 1) ---@type integer
+  local end_line = start_line + hunk.added.count ---@type integer
 
   vim.api.nvim_buf_set_lines(bufnr, start_line, end_line, false, hunk.removed.lines)
 
@@ -639,17 +640,15 @@ local function apply_inverted_hunks(index_lines, head_lines, hunks)
     local start_in_head = hunk.removed.start
     local count_in_head = hunk.removed.count
 
-    if count_in_index == 0 then
-      for i = current_line, start_in_index do
-        result[#result + 1] = index_lines[i]
-      end
-      current_line = start_in_index + 1
-    else
+    -- For topdelete (start_in_index = 0), no lines to copy before the hunk
+    -- Otherwise, copy lines from current position to just before the hunk
+    if start_in_index > 0 then
       for i = current_line, start_in_index - 1 do
         result[#result + 1] = index_lines[i]
       end
-      current_line = start_in_index + count_in_index
     end
+    -- Move past the added lines in index (for topdelete, this is 0 + 0 = 0, so use max(1, ...))
+    current_line = math.max(1, start_in_index + count_in_index)
 
     if count_in_head > 0 then
       for i = start_in_head, start_in_head + count_in_head - 1 do
@@ -701,7 +700,10 @@ function M.unstage_hunk(bufnr, range, callback)
   if range then
     local top, bot = range[1], range[2] ---@type integer, integer
     for _, hunk in ipairs(hunks_staged) do
-      if not (hunk.vend < top or hunk.added.start > bot) then
+      -- For topdelete (added.start = 0, vend = 0), use effective position 1
+      local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+      if not (effective_vend < top or effective_start > bot) then
         selected_hunks[#selected_hunks + 1] = hunk
       end
     end

@@ -174,7 +174,9 @@ function M.run_diff(old_lines, new_lines)
     if old_start == 0 then
       old_start = 1
     end
-    if new_start == 0 then
+    -- Keep new_start = 0 for pure deletions at file start (topdelete)
+    -- Only normalize to 1 when there are added lines
+    if new_start == 0 and new_count > 0 then
       new_start = 1
     end
 
@@ -256,24 +258,27 @@ end
 --- Find longest common subsequence length table for two strings
 ---@param a                          string
 ---@param b                          string
----@return table<integer, table<integer, integer>>
+---@return integer[]  Flat array of size (m+1)*(n+1)
 local function lcs_table(a, b)
   local m, n = #a, #b
-  local dp = {} ---@type table<integer, table<integer, integer>>
+  local width = n + 1
+  local dp = {} ---@type integer[]
 
-  for i = 0, m do
-    dp[i] = {}
-    for j = 0, n do
-      dp[i][j] = 0
-    end
+  -- Initialize row 0
+  for j = 1, width do
+    dp[j] = 0
   end
 
   for i = 1, m do
+    local row_offset = i * width
+    dp[row_offset + 1] = 0 -- Initialize col 0
+
     for j = 1, n do
+      local idx = row_offset + j + 1
       if a:sub(i, i) == b:sub(j, j) then
-        dp[i][j] = dp[i - 1][j - 1] + 1
+        dp[idx] = dp[idx - width - 1] + 1
       else
-        dp[i][j] = math.max(dp[i - 1][j], dp[i][j - 1])
+        dp[idx] = math.max(dp[idx - width], dp[idx - 1])
       end
     end
   end
@@ -282,20 +287,22 @@ local function lcs_table(a, b)
 end
 
 --- Backtrack LCS to find matching positions
----@param dp                         table<integer, table<integer, integer>>
+---@param dp                         integer[]
 ---@param a                          string
 ---@param b                          string
 ---@return table<integer, integer>  Maps position in a (1-based) to position in b (1-based)
 local function lcs_backtrack(dp, a, b)
   local matches = {} ---@type table<integer, integer>
   local i, j = #a, #b
+  local width = #b + 1
 
   while i > 0 and j > 0 do
+    local idx = i * width + j + 1
     if a:sub(i, i) == b:sub(j, j) then
       matches[i] = j
       i = i - 1
       j = j - 1
-    elseif dp[i - 1][j] > dp[i][j - 1] then
+    elseif dp[idx - width] > dp[idx - 1] then
       i = i - 1
     else
       j = j - 1
