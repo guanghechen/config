@@ -276,26 +276,34 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
   lines[#lines + 1] = string.format("--- a/%s", relpath)
   lines[#lines + 1] = string.format("+++ b/%s", relpath)
 
-  local removed_start = hunk.removed.start
-  local removed_count = hunk.removed.count
-  local added_start = hunk.added.start
-  local added_count = hunk.added.count
+  local start = hunk.removed.start ---@type integer
+  local pre_count = hunk.removed.count ---@type integer
+  local now_count = hunk.added.count ---@type integer
 
-  if invert then
-    removed_start, added_start = added_start, removed_start
-    removed_count, added_count = added_count, removed_count
+  -- For pure additions (type == "add"), the removed.start points to where content
+  -- should be inserted AFTER, but git patch format expects line numbers to be 1-based
+  -- So we need to increment start by 1
+  if hunk.type == "add" then
+    start = start + 1
   end
 
-  lines[#lines + 1] = string.format("@@ -%d,%d +%d,%d @@", removed_start, removed_count, added_start, added_count)
+  local pre_lines = hunk.removed.lines ---@type string[]
+  local now_lines = hunk.added.lines ---@type string[]
 
-  local removed_lines = invert and hunk.added.lines or hunk.removed.lines
-  local added_lines = invert and hunk.removed.lines or hunk.added.lines
+  if invert then
+    pre_count, now_count = now_count, pre_count
+    pre_lines, now_lines = now_lines, pre_lines
+  end
 
-  for _, line in ipairs(removed_lines) do
+  -- In the patch header: -start,pre_count +start,now_count
+  -- Both use the same 'start' value (the position in the original file)
+  lines[#lines + 1] = string.format("@@ -%d,%d +%d,%d @@", start, pre_count, start, now_count)
+
+  for _, line in ipairs(pre_lines) do
     lines[#lines + 1] = "-" .. line
   end
 
-  for _, line in ipairs(added_lines) do
+  for _, line in ipairs(now_lines) do
     lines[#lines + 1] = "+" .. line
   end
 
