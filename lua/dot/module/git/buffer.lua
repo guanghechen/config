@@ -105,7 +105,11 @@ local function update_hunks(buf_cache, callback)
 
   updating[bufnr] = true
   buf_cache.changedtick = tick
+  local should_force_update = buf_cache.force_next_update ---@type boolean
   buf_cache.force_next_update = false
+
+  local old_hunks = buf_cache.hunks ---@type dot.module.git.Hunk[]|nil
+  local old_hunks_staged = buf_cache.hunks_staged ---@type dot.module.git.Hunk[]|nil
 
   local buf_lines = get_buf_lines(bufnr) ---@type string[]
   local toplevel = buf_cache.repo.toplevel ---@type string
@@ -135,7 +139,13 @@ local function update_hunks(buf_cache, callback)
     end
 
     dot.git.hunk.set(bufnr, buf_cache.hunks)
-    dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, { untracked = buf_cache.untracked })
+
+    local hunks_changed = dot.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
+    local hunks_staged_changed = dot.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
+
+    if should_force_update or hunks_changed or hunks_staged_changed then
+      dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, { untracked = buf_cache.untracked })
+    end
 
     buf_cache.dirty = false
     updating[bufnr] = nil
@@ -283,6 +293,8 @@ function M.attach(bufnr, opts)
         dot.git.sign.on_lines(buf, last_orig, last_new)
 
         if bc.hunks and dot.git.sign.contains_range(buf, first + 1, last_new) then
+          bc.force_next_update = true
+        elseif bc.hunks_staged and dot.git.sign.contains_range(buf, first + 1, last_new) then
           bc.force_next_update = true
         end
 

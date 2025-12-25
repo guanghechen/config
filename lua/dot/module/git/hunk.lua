@@ -169,6 +169,27 @@ function M.summary(hunks)
   return { added = added, changed = changed, removed = removed }
 end
 
+---Compare two hunk arrays by their heads to determine if signs need updating.
+---@param a                          dot.module.git.Hunk[]|nil
+---@param b                          dot.module.git.Hunk[]|nil
+---@return boolean                   true if hunks are different
+function M.compare_heads(a, b)
+  if (a == nil) ~= (b == nil) then
+    return true
+  end
+  if a and b and #a ~= #b then
+    return true
+  end
+  if a then
+    for i, ah in ipairs(a) do
+      if b[i].head ~= ah.head then
+        return true
+      end
+    end
+  end
+  return false
+end
+
 ---@param hunks                      dot.module.git.Hunk[]|nil
 ---@param top                        integer
 ---@param bot                        integer
