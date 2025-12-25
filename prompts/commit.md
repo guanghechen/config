@@ -1,18 +1,21 @@
 Please create a git commit based on our current changes.
 
-## Arguments
+## Arguments (Optional)
 
 ``````text
 $ARGUMENTS
 ``````
 
-**Interpret the arguments above as follows (in priority order):**
+**If arguments are provided, interpret them as follows:**
 
-1. **Specific file paths**: If the arguments contain file paths or glob patterns, **only** stage and commit those files. Ignore all other changes.
-2. **Scope restriction**: If the arguments explicitly describe a subset of changes to include (e.g., "only TypeScript files", "only changes related to auth"), filter the changes accordingly and only commit matching files.
-3. **Commit message hints**: Otherwise, treat the arguments as contextual hints to generate a more accurate and descriptive commit message.
+- **Commit scope**: Specify which files or changes to include in this commit.
+  - File paths or glob patterns (e.g., `src/*.ts`, `lib/utils.js`)
+  - Descriptive filters (e.g., "only TypeScript files", "only changes related to auth")
+- **Message hints**: Additional context to help generate a more accurate commit message.
 
-If no arguments are provided, commit all staged/unstaged changes as usual.
+Arguments can contain scope, hints, or both. Parse them intelligently.
+
+**If no arguments are provided**, commit all staged/unstaged changes.
 
 ## Requirements
 
