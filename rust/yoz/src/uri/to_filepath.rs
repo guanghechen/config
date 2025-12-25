@@ -1,7 +1,7 @@
 use super::decode::decode;
 use super::parse::parse;
 
-pub fn to_filepath(uri: &str) -> Option<String> {
+pub fn to_filepath(uri: &str, keep_trailing_slash: bool) -> Option<String> {
     let parts = parse(uri)?;
 
     if parts.protocol != "file" {
@@ -16,21 +16,25 @@ pub fn to_filepath(uri: &str) -> Option<String> {
     let decoded = decode(path);
 
     #[cfg(windows)]
-    {
+    let mut result = {
         // On Windows, file URI path starts with "/" followed by drive letter
         // e.g., "/C:/Users/..." -> "C:/Users/..."
         // Then normalize to use backslashes
         let trimmed = decoded.strip_prefix('/').unwrap_or(&decoded);
-        let normalized = trimmed.replace('/', "\\");
-        Some(normalized)
-    }
+        trimmed.replace('/', "\\")
+    };
 
     #[cfg(not(windows))]
-    {
-        // On Unix, the path is already in the correct format
-        // e.g., "/home/user/..." -> "/home/user/..."
-        Some(decoded)
+    let mut result = decoded;
+
+    if !keep_trailing_slash && result.len() > 1 {
+        let last_char = result.chars().last().unwrap_or('\0');
+        if last_char == '/' || last_char == '\\' {
+            result.pop();
+        }
     }
+
+    Some(result)
 }
 
 #[cfg(test)]
@@ -39,7 +43,7 @@ mod tests {
 
     #[test]
     #[cfg(not(windows))]
-    fn t_to_filepath_unix() {
+    fn t_to_filepath_unix_keep_trailing() {
         let cases = [
             ("file:///home/user/file.txt", Some("/home/user/file.txt")),
             ("file:///bin/sh", Some("/bin/sh")),
@@ -51,14 +55,30 @@ mod tests {
         ];
 
         for (input, expected) in cases {
-            let result = to_filepath(input);
+            let result = to_filepath(input, true);
+            assert_eq!(result.as_deref(), expected, "input: {}", input);
+        }
+    }
+
+    #[test]
+    #[cfg(not(windows))]
+    fn t_to_filepath_unix_strip_trailing() {
+        let cases = [
+            ("file:///home/user/file.txt", Some("/home/user/file.txt")),
+            ("file:///bin/sh", Some("/bin/sh")),
+            ("file:///path/to/dir/", Some("/path/to/dir")),
+            ("file:///", Some("/")),
+        ];
+
+        for (input, expected) in cases {
+            let result = to_filepath(input, false);
             assert_eq!(result.as_deref(), expected, "input: {}", input);
         }
     }
 
     #[test]
     #[cfg(windows)]
-    fn t_to_filepath_windows() {
+    fn t_to_filepath_windows_keep_trailing() {
         let cases = [
             ("file:///C:/Users/user/file.txt", Some("C:\\Users\\user\\file.txt")),
             ("file:///D:/path/to/dir/", Some("D:\\path\\to\\dir\\")),
@@ -68,7 +88,22 @@ mod tests {
         ];
 
         for (input, expected) in cases {
-            let result = to_filepath(input);
+            let result = to_filepath(input, true);
+            assert_eq!(result.as_deref(), expected, "input: {}", input);
+        }
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn t_to_filepath_windows_strip_trailing() {
+        let cases = [
+            ("file:///C:/Users/user/file.txt", Some("C:\\Users\\user\\file.txt")),
+            ("file:///D:/path/to/dir/", Some("D:\\path\\to\\dir")),
+            ("file:///C:/", Some("C:\\")),
+        ];
+
+        for (input, expected) in cases {
+            let result = to_filepath(input, false);
             assert_eq!(result.as_deref(), expected, "input: {}", input);
         }
     }
@@ -78,7 +113,7 @@ mod tests {
         let cases = ["http://example.com", "https://example.com", "ftp://server/path"];
 
         for input in cases {
-            assert!(to_filepath(input).is_none(), "should return None for: {}", input);
+            assert!(to_filepath(input, true).is_none(), "should return None for: {}", input);
         }
     }
 }

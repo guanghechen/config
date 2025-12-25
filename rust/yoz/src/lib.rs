@@ -763,7 +763,12 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
         ),
         (
             "to_filepath",
-            f(lua, |_, uri: String| Ok(uri::to_filepath(&uri)))?,
+            f(
+                lua,
+                |_, (uri, keep_trailing_slash): (String, Option<bool>)| {
+                    Ok(uri::to_filepath(&uri, keep_trailing_slash.unwrap_or(false)))
+                },
+            )?,
         ),
         (
             "validate",

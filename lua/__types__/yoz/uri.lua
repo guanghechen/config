@@ -78,8 +78,9 @@ function M.relative(from_uri, to_uri) end
 function M.split(path) end
 
 ---@param uri                           string
+---@param keep_trailing_slash           boolean|nil
 ---@return string|nil
-function M.to_filepath(uri) end
+function M.to_filepath(uri, keep_trailing_slash) end
 
 ---@param uri                           string
 ---@return boolean
