@@ -2918,6 +2918,14 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "x" },
+      key = "my",
+      callback = function()
+        self:__action_toggle_select_mode_visual__("copy")
+      end,
+      desc = "explorer: toggle copy (visual)",
+    },
+    {
+      modes = { "x" },
       key = "oa",
       callback = function()
         self:__action_add_locations_to_ai_visual__()
@@ -2931,6 +2939,14 @@ function M:__setup_keymaps__(bufnr)
         self:__action_toggle_select_mode_visual__("cut")
       end,
       desc = "explorer: toggle cut (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "y",
+      callback = function()
+        self:__action_toggle_select_mode_visual__("copy")
+      end,
+      desc = "explorer: toggle copy (visual)",
     },
   }
 
