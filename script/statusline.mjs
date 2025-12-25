@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 
 await main()
@@ -65,26 +65,77 @@ async function getCwdPart(data) {
 
 async function getGitPart(fullCwd) {
   try {
-    const branch = execSync('git branch --show-current', {
+    // Use single git status -sb command to get branch, ahead/behind, and file status
+    const status = execSync('git status -sb', {
       cwd: fullCwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim()
+    })
+
+    const lines = status.split('\n')
+    const headerLine = lines[0] || ''
+
+    // Parse header: "## branch...origin/branch [ahead 1, behind 2]" or "## HEAD (no branch)"
+    let branch = ''
+    let ahead = 0, behind = 0
+
+    const headerMatch = headerLine.match(/^## (.+?)(?:\.\.\.(\S+))?(?:\s+\[(.+)\])?$/)
+    if (headerMatch) {
+      branch = headerMatch[1]
+      const trackingInfo = headerMatch[3]
+      if (trackingInfo) {
+        const aheadMatch = trackingInfo.match(/ahead (\d+)/)
+        const behindMatch = trackingInfo.match(/behind (\d+)/)
+        if (aheadMatch) ahead = parseInt(aheadMatch[1], 10)
+        if (behindMatch) behind = parseInt(behindMatch[1], 10)
+      }
+    }
+
+    // Handle detached HEAD - show short commit hash
+    if (branch === 'HEAD (no branch)' || branch === 'HEAD') {
+      try {
+        const shortHash = execSync('git rev-parse --short HEAD', {
+          cwd: fullCwd,
+          encoding: 'utf-8',
+          stdio: ['pipe', 'pipe', 'pipe'],
+        }).trim()
+        branch = `@${shortHash}`
+      } catch {
+        branch = '@detached'
+      }
+    }
 
     if (!branch) return ''
 
-    const [aheadBehind, statusInfo] = await Promise.all([
-      getAheadBehind(fullCwd),
-      getStatusCounts(fullCwd),
-    ])
+    // Check for conflict state (merge, rebase, cherry-pick, etc.)
+    const conflictState = getConflictState(fullCwd)
+
+    // Count file statuses from remaining lines
+    let staged = 0, unstaged = 0, untracked = 0, conflicts = 0
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line) continue
+      const x = line[0], y = line[1]
+      // Conflict markers: UU, AA, DD, AU, UA, DU, UD
+      if ((x === 'U' || y === 'U') || (x === 'A' && y === 'A') || (x === 'D' && y === 'D')) {
+        conflicts++
+      } else if (x === '?' && y === '?') {
+        untracked++
+      } else {
+        if (x !== ' ' && x !== '?') staged++
+        if (y !== ' ' && y !== '?') unstaged++
+      }
+    }
 
     // Build status indicators (fish-style)
     const indicators = []
-    if (aheadBehind.ahead > 0) indicators.push(`\x1b[32m↑${aheadBehind.ahead}\x1b[0m`)
-    if (aheadBehind.behind > 0) indicators.push(`\x1b[31m↓${aheadBehind.behind}\x1b[0m`)
-    if (statusInfo.staged > 0) indicators.push(`\x1b[32m•${statusInfo.staged}\x1b[0m`)
-    if (statusInfo.unstaged > 0) indicators.push(`\x1b[31m+${statusInfo.unstaged}\x1b[0m`)
-    if (statusInfo.untracked > 0) indicators.push(`\x1b[34m?${statusInfo.untracked}\x1b[0m`)
+    if (conflictState) indicators.push(`\x1b[31;1m${conflictState}\x1b[0m`)
+    if (conflicts > 0) indicators.push(`\x1b[31;1m✖${conflicts}\x1b[0m`)
+    if (ahead > 0) indicators.push(`\x1b[32m↑${ahead}\x1b[0m`)
+    if (behind > 0) indicators.push(`\x1b[31m↓${behind}\x1b[0m`)
+    if (staged > 0) indicators.push(`\x1b[32m•${staged}\x1b[0m`)
+    if (unstaged > 0) indicators.push(`\x1b[31m+${unstaged}\x1b[0m`)
+    if (untracked > 0) indicators.push(`\x1b[34m?${untracked}\x1b[0m`)
 
     const statusStr = indicators.length > 0 ? `\x1b[90m|\x1b[0m${indicators.join('')}` : ''
     return `\x1b[95m\uea68 ${branch}${statusStr}\x1b[0m`
@@ -94,42 +145,26 @@ async function getGitPart(fullCwd) {
   return ''
 }
 
-function getAheadBehind(cwd) {
+function getConflictState(cwd) {
   try {
-    const result = execSync('git rev-list --left-right --count @{upstream}...HEAD', {
+    // Check for various in-progress operations by testing file existence
+    const gitDir = execSync('git rev-parse --git-dir', {
       cwd,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     }).trim()
-    const [behind, ahead] = result.split(/\s+/).map(Number)
-    return { ahead: ahead || 0, behind: behind || 0 }
-  } catch {
-    // No upstream configured or not a git repo
-    return { ahead: 0, behind: 0 }
-  }
-}
 
-function getStatusCounts(cwd) {
-  try {
-    const status = execSync('git status --porcelain', {
-      cwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
-    let staged = 0, unstaged = 0, untracked = 0
-    for (const line of status.split('\n')) {
-      if (!line) continue
-      const x = line[0], y = line[1]
-      if (x === '?' && y === '?') untracked++
-      else {
-        if (x !== ' ' && x !== '?') staged++
-        if (y !== ' ' && y !== '?') unstaged++
-      }
-    }
-    return { staged, unstaged, untracked }
+    const fullGitDir = path.isAbsolute(gitDir) ? gitDir : path.join(cwd, gitDir)
+
+    if (existsSync(path.join(fullGitDir, 'MERGE_HEAD'))) return '⚡merge'
+    if (existsSync(path.join(fullGitDir, 'rebase-merge')) || existsSync(path.join(fullGitDir, 'rebase-apply'))) return '⚡rebase'
+    if (existsSync(path.join(fullGitDir, 'CHERRY_PICK_HEAD'))) return '⚡pick'
+    if (existsSync(path.join(fullGitDir, 'REVERT_HEAD'))) return '⚡revert'
+    if (existsSync(path.join(fullGitDir, 'BISECT_LOG'))) return '⚡bisect'
   } catch {
-    return { staged: 0, unstaged: 0, untracked: 0 }
+    // Ignore errors
   }
+  return ''
 }
 
 function getModelPart(data) {
