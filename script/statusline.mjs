@@ -137,7 +137,7 @@ async function getGitPart(fullCwd) {
     if (unstaged > 0) indicators.push(`\x1b[31m+${unstaged}\x1b[0m`)
     if (untracked > 0) indicators.push(`\x1b[34m?${untracked}\x1b[0m`)
 
-    const statusStr = indicators.length > 0 ? `\x1b[90m|\x1b[0m${indicators.join('')}` : ''
+    const statusStr = indicators.length > 0 ? ` ${indicators.join('')}` : ''
     return `\x1b[95m\uea68 ${branch}${statusStr}\x1b[0m`
   } catch {
     // Not a git repository or git command failed
