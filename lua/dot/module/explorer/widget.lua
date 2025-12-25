@@ -682,8 +682,9 @@ function M:__action_cut_visual__()
 end
 
 ---@protected
+---@param target_mode                   dot.module.explorer.SelectModeEnum
 ---@return nil
-function M:__action_yank__()
+function M:__action_toggle_select_mode__(target_mode)
   local uri = self:get_cursor_uri() ---@type string|nil
   if uri == nil then
     return
@@ -692,51 +693,56 @@ function M:__action_yank__()
   local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
   local is_selected = self._tree:is_selected(uri) ---@type boolean
 
-  if current_mode == "copy" and is_selected then
-    self._tree:toggle_selected(uri, "unselect")
+  if is_selected then
+    if current_mode == target_mode then
+      self._tree:toggle_selected(uri, "unselect")
+    else
+      self._tree.select_mode = target_mode
+    end
   else
     self._tree:toggle_selected(uri, "select")
+    self._tree.select_mode = target_mode
   end
 
-  self._tree.select_mode = "copy"
   self:__refresh__()
 end
 
 ---@protected
+---@param target_mode                   dot.module.explorer.SelectModeEnum
 ---@return nil
-function M:__action_yank_visual__()
+function M:__action_toggle_select_mode_visual__(target_mode)
   local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
   if #nodes == 0 then
     return
   end
 
+  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-  if current_mode ~= "copy" then
-    for _, node in ipairs(nodes) do
-      self._tree:toggle_selected(node.uri, "select")
-    end
-    self._tree.select_mode = "copy"
-  else
-    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
-    local has_unselected = false ---@type boolean
-    for _, node in ipairs(nodes) do
-      if not node:is_selected(root_uri) then
-        has_unselected = true
-        break
-      end
-    end
+  local all_selected = true ---@type boolean
 
-    if has_unselected then
-      for _, node in ipairs(nodes) do
-        self._tree:toggle_selected(node.uri, "select")
-      end
-    else
+  for _, node in ipairs(nodes) do
+    if not node:is_selected(root_uri) then
+      all_selected = false
+      break
+    end
+  end
+
+  if all_selected then
+    if current_mode == target_mode then
       local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
         node:set_selected(tick)
       end
+    else
+      self._tree.select_mode = target_mode
     end
+  else
+    for _, node in ipairs(nodes) do
+      self._tree:toggle_selected(node.uri, "select")
+    end
+    self._tree.select_mode = target_mode
   end
+
   self:__refresh__()
 end
 
@@ -2561,6 +2567,12 @@ function M:__setup_keymaps__(bufnr)
     },
     -- Uppercase letters
     {
+      modes = { "n", "i" },
+      key = "I",
+      callback = function() end,
+      desc = "explorer: nop (block insert mode)",
+    },
+    {
       modes = { "n" },
       key = "A",
       callback = function()
@@ -2674,6 +2686,12 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: collapse/go parent",
     },
     {
+      modes = { "n", "i" },
+      key = "i",
+      callback = function() end,
+      desc = "explorer: nop (block insert mode)",
+    },
+    {
       modes = { "n" },
       key = "l",
       callback = function()
@@ -2685,9 +2703,9 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "mc",
       callback = function()
-        self:__action_copy_selected__()
+        self:__action_toggle_select_mode__("copy")
       end,
-      desc = "explorer: copy selected to directory",
+      desc = "explorer: toggle copy selection",
     },
     {
       modes = { "n" },
@@ -2707,11 +2725,27 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "n" },
+      key = "mp",
+      callback = function()
+        self:__action_paste__()
+      end,
+      desc = "explorer: paste",
+    },
+    {
+      modes = { "n" },
+      key = "ms",
+      callback = function()
+        self:__action_toggle_select_mode__("select")
+      end,
+      desc = "explorer: toggle select mode",
+    },
+    {
+      modes = { "n" },
       key = "mx",
       callback = function()
-        self:__action_move_selected__()
+        self:__action_toggle_select_mode__("cut")
       end,
-      desc = "explorer: move selected to directory",
+      desc = "explorer: toggle cut selection",
     },
     {
       modes = { "n" },
@@ -2821,7 +2855,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "y",
       callback = function()
-        self:__action_yank__()
+        self:__action_toggle_select_mode__("copy")
       end,
       desc = "explorer: yank (copy)",
     },
@@ -2836,11 +2870,19 @@ function M:__setup_keymaps__(bufnr)
     -- Visual mode
     {
       modes = { "x" },
+      key = "<Tab>",
+      callback = function()
+        self:__action_toggle_select_mode_visual__("select")
+      end,
+      desc = "explorer: toggle select (visual)",
+    },
+    {
+      modes = { "x" },
       key = "c",
       callback = function()
-        self:__action_copy_visual__()
+        self:__action_toggle_select_mode_visual__("copy")
       end,
-      desc = "explorer: copy (visual)",
+      desc = "explorer: toggle copy (visual)",
     },
     {
       modes = { "x" },
@@ -2852,11 +2894,27 @@ function M:__setup_keymaps__(bufnr)
     },
     {
       modes = { "x" },
-      key = "m",
+      key = "mc",
       callback = function()
-        self:__action_mark_visual__()
+        self:__action_toggle_select_mode_visual__("copy")
       end,
-      desc = "explorer: mark (visual)",
+      desc = "explorer: toggle copy (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "ms",
+      callback = function()
+        self:__action_toggle_select_mode_visual__("select")
+      end,
+      desc = "explorer: toggle select (visual)",
+    },
+    {
+      modes = { "x" },
+      key = "mx",
+      callback = function()
+        self:__action_toggle_select_mode_visual__("cut")
+      end,
+      desc = "explorer: toggle cut (visual)",
     },
     {
       modes = { "x" },
@@ -2870,17 +2928,9 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "x",
       callback = function()
-        self:__action_cut_visual__()
+        self:__action_toggle_select_mode_visual__("cut")
       end,
-      desc = "explorer: cut (visual)",
-    },
-    {
-      modes = { "x" },
-      key = "y",
-      callback = function()
-        self:__action_yank_visual__()
-      end,
-      desc = "explorer: yank (visual)",
+      desc = "explorer: toggle cut (visual)",
     },
   }
 
