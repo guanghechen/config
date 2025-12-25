@@ -180,17 +180,20 @@ end
 ---@param position                      ark.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.nr(position)
-  local hln_text = position .. "_nvim_nr" ---@type string
+  local hln_sep = position .. "_nvim_nr_sep" ---@type string
+  local hln_text = position .. "_nvim_nr_text" ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
     name = "nvim:nr",
     atomic = true,
+    tight = true,
     render = function(context)
       local winnr = context.winnr ---@type integer
       local bufnr = context.bufnr ---@type integer
-      local text = string.format("%s %d:%d", "", winnr, bufnr) ---@type string
-      local hl_text = txt(text, hln_text) ---@type string
+      local content = string.format("%d:%d ", winnr, bufnr) ---@type string
+      local text = ark.icon.symbols.sep_left .. content ---@type string
+      local hl_text = txt(ark.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) ---@type string
       return text, hl_text, true
     end,
   }

@@ -82,8 +82,6 @@ function M.gen_hlgroup_map(context)
     file_readonly = { fg = c.orange, bg = "bg_bar" },
     file_size_text = { fg = c.fg2, bg = "bg_bar" },
     file_status_text = { fg = c.fg2, bg = "bg_bar" },
-    file_type_primary_sep = { fg = bg_pos, bg = c.bg0 },
-    file_type_primary_text = { fg = c.fg2, bg = bg_pos, bold = true },
     file_type_text = { fg = c.fg2, bg = "bg_bar" },
 
     ---! git
@@ -171,7 +169,8 @@ function M.gen_hlgroup_map(context)
     nvim_msg_command = { fg = c.pink, bg = "bg_bar" },
     nvim_msg_lsp = { fg = c.fg4, bg = "bg_bar" },
     nvim_msg_mode = { fg = c.yellow, bg = "bg_bar" },
-    nvim_nr = { fg = c.fg3, bg = "bg_bar" },
+    nvim_nr_sep = { fg = bg_pos, bg = c.bg0 },
+    nvim_nr_text = { fg = c.fg2, bg = bg_pos, bold = true },
     nvim_pid = { fg = c.fg3, bg = "bg_bar" },
     nvim_pos_sep = { link = "ms_b_bg2" },
     nvim_pos_text = { link = "mf_b_bg0" },
