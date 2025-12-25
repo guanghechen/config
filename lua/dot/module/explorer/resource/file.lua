@@ -471,17 +471,7 @@ end
 ---@param uri                           string
 ---@return string
 function M:__uri_to_filepath__(uri)
-  local prefix = "file://" ---@type string
-  if not vim.startswith(uri, prefix) then
-    return ""
-  end
-
-  local filepath = uri:sub(#prefix + 1) ---@type string
-  if filepath:sub(-1) == "/" and #filepath > 1 then
-    filepath = filepath:sub(1, -2)
-  end
-
-  return filepath
+  return yoz.uri.to_filepath(uri) or ""
 end
 
 ---@protected

@@ -27,7 +27,7 @@ function M.new(props)
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
   local initial_root = props.initial_root ---@type string|nil
 
-  local default_root = initial_root or ("file://" .. dot.path.cwd() .. "/") ---@type string
+  local default_root = initial_root or yoz.uri.from_filepath(dot.path.cwd() .. "/") ---@type string
 
   local self = setmetatable({}, M)
   self.name = name

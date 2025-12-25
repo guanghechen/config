@@ -76,7 +76,7 @@ function M.reveal(filepath)
   end
 
   filepath = dot.path.normalize(filepath)
-  local uri = "file://" .. filepath ---@type string
+  local uri = yoz.uri.from_filepath(filepath) ---@type string
 
   local widget = M.get_widget() ---@type dot.module.explorer.Widget
   local was_visible = widget:isvisible() ---@type boolean
@@ -98,7 +98,7 @@ function M.set_root(root)
   end
 
   root = dot.path.normalize(root)
-  local uri = "file://" .. root .. "/" ---@type string
+  local uri = yoz.uri.from_filepath(root .. "/") ---@type string
 
   local widget = M.get_widget() ---@type dot.module.explorer.Widget
   widget:set_root(uri)

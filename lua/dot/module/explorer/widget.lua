@@ -4,6 +4,23 @@ local Tree = require("dot.module.explorer.tree")
 local View = require("dot.module.explorer.view")
 local ResourceFileManager = require("dot.module.explorer.resource.file")
 
+---@param uri                           string
+---@return string
+local function uri_to_filepath(uri)
+  return yoz.uri.to_filepath(uri) or ""
+end
+
+---@param filepath                      string
+---@param is_directory                  boolean|nil
+---@return string
+local function filepath_to_uri(filepath, is_directory)
+  local uri = yoz.uri.from_filepath(filepath) ---@type string
+  if is_directory and uri:sub(-1) ~= "/" then
+    uri = uri .. "/"
+  end
+  return uri
+end
+
 local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "EndOfBuffer:f_explorer_eob",
   "Normal:f_explorer_bg",
@@ -319,10 +336,7 @@ function M:__action_add_locations_to_ai__()
   local locations = {} ---@type dot.t.ILocation[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       locations[#locations + 1] = { filepath = filepath }
     end
   else
@@ -330,10 +344,7 @@ function M:__action_add_locations_to_ai__()
     if uri == nil then
       return
     end
-    local filepath = uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
-    end
+    local filepath = uri_to_filepath(uri) ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -350,10 +361,7 @@ function M:__action_add_locations_to_ai_visual__()
 
   local locations = {} ---@type dot.t.ILocation[]
   for _, node in ipairs(nodes) do
-    local filepath = node.uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
-    end
+    local filepath = uri_to_filepath(node.uri) ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -418,17 +426,14 @@ function M:__action_copy_node__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
 
   vim.ui.input({ prompt = "Copy to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = "file://" .. input ---@type string
+    local target_uri = filepath_to_uri(input) ---@type string
     local ok = self._resource_manager:copy(uri, target_uri) ---@type boolean
     if ok then
       self._tree:refresh(true)
@@ -448,10 +453,7 @@ function M:__action_copy_path__()
   local filepaths = {} ---@type string[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       filepaths[#filepaths + 1] = filepath
     end
   else
@@ -459,10 +461,7 @@ function M:__action_copy_path__()
     if uri == nil then
       return
     end
-    local filepath = uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
-    end
+    local filepath = uri_to_filepath(uri) ---@type string
     filepaths[#filepaths + 1] = filepath
   end
 
@@ -620,17 +619,14 @@ function M:__action_cut__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
 
   vim.ui.input({ prompt = "Move to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = "file://" .. input ---@type string
+    local target_uri = filepath_to_uri(input) ---@type string
     local ok = self._resource_manager:move(uri, target_uri) ---@type boolean
     if ok then
       self._tree:remove(uri)
@@ -888,7 +884,7 @@ end
 ---@return nil
 function M:__action_go_home__()
   local workspace = dot.path.workspace() ---@type string
-  local root_uri = "file://" .. workspace .. "/" ---@type string
+  local root_uri = filepath_to_uri(workspace, true) ---@type string
   self:set_root(root_uri)
 end
 
@@ -917,7 +913,7 @@ end
 ---@return nil
 function M:__action_go_cwd__()
   local cwd = dot.path.cwd() ---@type string
-  local root_uri = "file://" .. cwd .. "/" ---@type string
+  local root_uri = filepath_to_uri(cwd, true) ---@type string
   self:set_root(root_uri)
 end
 
@@ -1041,7 +1037,7 @@ function M:__action_open_selected__()
   end
 
   for _, node in ipairs(file_nodes) do
-    local filepath = node.uri:sub(8) ---@type string
+    local filepath = uri_to_filepath(node.uri) ---@type string
     dot.win.open_filepath(winnr_sourcefile, filepath)
   end
 
@@ -1075,10 +1071,7 @@ function M:__action_delete_selected__()
   ---@type string[]
   local preview_lines = {}
   for _, node in ipairs(selected_nodes) do
-    local filepath = node.uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
-    end
+    local filepath = uri_to_filepath(node.uri) ---@type string
     local relative_path = dot.path.relative(cwd, filepath) ---@type string
     preview_lines[#preview_lines + 1] = relative_path
   end
@@ -1156,10 +1149,7 @@ function M:__action_move_selected__()
   local function calc_content_width()
     local max_width = 0 ---@type integer
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
       max_width = math.max(max_width, line_width)
@@ -1175,13 +1165,10 @@ function M:__action_move_selected__()
     local max_from_len = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = target_dir .. (target_dir:sub(-1) == "/" and "" or "/") .. relative_part ---@type string
+      local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
       max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
@@ -1204,8 +1191,8 @@ function M:__action_move_selected__()
       if target_dir == "" then
         target_dir = default_target
       end
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
 
@@ -1236,8 +1223,8 @@ function M:__action_move_selected__()
       end
 
       local target_dir = input ---@type string
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
       if target_dir:sub(-1) ~= "/" then
@@ -1248,14 +1235,11 @@ function M:__action_move_selected__()
       local failed_count = 0 ---@type integer
 
       for _, node in ipairs(selected_nodes) do
-        local filepath = node.uri:sub(8) ---@type string
-        if filepath:sub(-1) == "/" then
-          filepath = filepath:sub(1, -2)
-        end
+        local filepath = uri_to_filepath(node.uri) ---@type string
 
         local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = target_dir .. relative_path ---@type string
-        local target_uri = "file://" .. target_path ---@type string
+        local target_path = dot.path.join(target_dir, relative_path) ---@type string
+        local target_uri = filepath_to_uri(target_path) ---@type string
 
         local ok = self._resource_manager:move(node.uri, target_uri) ---@type boolean
         if ok then
@@ -1324,10 +1308,7 @@ function M:__action_copy_selected__()
   local function calc_content_width()
     local max_width = 0 ---@type integer
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
       max_width = math.max(max_width, line_width)
@@ -1343,13 +1324,10 @@ function M:__action_copy_selected__()
     local max_from_len = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = target_dir .. (target_dir:sub(-1) == "/" and "" or "/") .. relative_part ---@type string
+      local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
       max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
@@ -1372,8 +1350,8 @@ function M:__action_copy_selected__()
       if target_dir == "" then
         target_dir = default_target
       end
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
 
@@ -1404,8 +1382,8 @@ function M:__action_copy_selected__()
       end
 
       local target_dir = input ---@type string
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
       if target_dir:sub(-1) ~= "/" then
@@ -1416,14 +1394,11 @@ function M:__action_copy_selected__()
       local failed_count = 0 ---@type integer
 
       for _, node in ipairs(selected_nodes) do
-        local filepath = node.uri:sub(8) ---@type string
-        if filepath:sub(-1) == "/" then
-          filepath = filepath:sub(1, -2)
-        end
+        local filepath = uri_to_filepath(node.uri) ---@type string
 
         local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = target_dir .. relative_path ---@type string
-        local target_uri = "file://" .. target_path ---@type string
+        local target_path = dot.path.join(target_dir, relative_path) ---@type string
+        local target_uri = filepath_to_uri(target_path) ---@type string
 
         local ok = self._resource_manager:copy(node.uri, target_uri) ---@type boolean
         if ok then
@@ -1473,10 +1448,7 @@ function M:__action_open_file_explorer__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
   dot.fn.find_explorer(filepath)
 end
 
@@ -1490,9 +1462,9 @@ function M:__action_open_file_finder__()
 
   local dirpath ---@type string
   if uri:sub(-1) == "/" then
-    dirpath = uri:sub(8, -2)
+    dirpath = uri_to_filepath(uri)
   else
-    dirpath = dot.path.dirname(uri:sub(8))
+    dirpath = dot.path.dirname(uri_to_filepath(uri))
   end
 
   dot.fn.find_files(dirpath, true)
@@ -1506,10 +1478,7 @@ function M:__action_open_searcher__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
   dot.fn.search_in_files(filepath)
 end
 
@@ -1521,10 +1490,7 @@ function M:__action_open_system_explorer__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
 
   vim.ui.open(filepath)
 end
@@ -1541,7 +1507,7 @@ function M:__action_open__()
     self._tree:toggle_expanded(uri, false, nil)
     self:__refresh__()
   else
-    local filepath = uri:sub(8) ---@type string
+    local filepath = uri_to_filepath(uri) ---@type string
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -1559,7 +1525,7 @@ function M:__action_open_split__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   vim.cmd("split " .. vim.fn.fnameescape(filepath))
 end
 
@@ -1571,7 +1537,7 @@ function M:__action_open_tab__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
 end
 
@@ -1583,7 +1549,7 @@ function M:__action_open_vsplit__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
 end
 
@@ -1624,7 +1590,7 @@ function M:__action_paste__()
   end
 
   local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, target_dir_uri:sub(8, -2)) ---@type string
+  local default_target = dot.path.relative(cwd, uri_to_filepath(target_dir_uri)) ---@type string
   local ns = vim.api.nvim_create_namespace("explorer_paste_preview") ---@type integer
   local is_cut = select_mode == "cut" ---@type boolean
 
@@ -1632,10 +1598,7 @@ function M:__action_paste__()
   local function calc_content_width()
     local max_width = 0 ---@type integer
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
       max_width = math.max(max_width, line_width)
@@ -1651,13 +1614,10 @@ function M:__action_paste__()
     local max_from_len = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = target_dir .. (target_dir:sub(-1) == "/" and "" or "/") .. relative_part ---@type string
+      local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
       max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
@@ -1686,8 +1646,8 @@ function M:__action_paste__()
       if target_dir == "" then
         target_dir = default_target
       end
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
 
@@ -1718,8 +1678,8 @@ function M:__action_paste__()
       end
 
       local target_dir = input ---@type string
-      if not vim.startswith(target_dir, "/") then
-        target_dir = cwd .. "/" .. target_dir
+      if not yoz.path.is_absolute(target_dir) then
+        target_dir = dot.path.resolve(cwd, target_dir)
       end
       target_dir = dot.path.normalize(target_dir)
       if target_dir:sub(-1) ~= "/" then
@@ -1730,14 +1690,11 @@ function M:__action_paste__()
       local failed_count = 0 ---@type integer
 
       for _, node in ipairs(selected_nodes) do
-        local filepath = node.uri:sub(8) ---@type string
-        if filepath:sub(-1) == "/" then
-          filepath = filepath:sub(1, -2)
-        end
+        local filepath = uri_to_filepath(node.uri) ---@type string
 
         local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = target_dir .. relative_path ---@type string
-        local target_uri = "file://" .. target_path ---@type string
+        local target_path = dot.path.join(target_dir, relative_path) ---@type string
+        local target_uri = filepath_to_uri(target_path) ---@type string
 
         local ok ---@type boolean
         if is_cut then
@@ -1797,7 +1754,7 @@ function M:__action_pick_win_open__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
   if winnr == nil then
     return
@@ -1815,7 +1772,7 @@ function M:__action_pick_win_split__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
   if winnr == nil then
     return
@@ -1833,7 +1790,7 @@ function M:__action_pick_win_vsplit__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
+  local filepath = uri_to_filepath(uri) ---@type string
   local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
   if winnr == nil then
     return
@@ -1887,14 +1844,8 @@ function M:__action_rename__()
 
     local new_uri = root_uri .. new_relative_path .. (is_directory and "/" or "") ---@type string
 
-    local old_filepath = uri:sub(8) ---@type string
-    local new_filepath = new_uri:sub(8) ---@type string
-    if old_filepath:sub(-1) == "/" then
-      old_filepath = old_filepath:sub(1, -2)
-    end
-    if new_filepath:sub(-1) == "/" then
-      new_filepath = new_filepath:sub(1, -2)
-    end
+    local old_filepath = uri_to_filepath(uri) ---@type string
+    local new_filepath = uri_to_filepath(new_uri) ---@type string
 
     dot.lsp.on_rename(old_filepath, new_filepath, function()
       local ok = self._resource_manager:move(uri, new_uri) ---@type boolean
@@ -1941,10 +1892,7 @@ function M:__action_send_to_quickfix__()
     if uri == nil then
       return
     end
-    local filepath = uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
-    end
+    local filepath = uri_to_filepath(uri) ---@type string
     vim.fn.setqflist({}, "r", {
       title = "Explorer",
       items = { { filename = filepath, lnum = 1, col = 1 } },
@@ -1952,10 +1900,7 @@ function M:__action_send_to_quickfix__()
   else
     local items = {} ---@type table[]
     for _, node in ipairs(selected_nodes) do
-      local filepath = node.uri:sub(8) ---@type string
-      if filepath:sub(-1) == "/" then
-        filepath = filepath:sub(1, -2)
-      end
+      local filepath = uri_to_filepath(node.uri) ---@type string
       items[#items + 1] = { filename = filepath, lnum = 1, col = 1 }
     end
     vim.fn.setqflist({}, "r", {
@@ -1981,10 +1926,7 @@ function M:__action_show_file_info__()
     return
   end
 
-  local filepath = uri:sub(8) ---@type string
-  if filepath:sub(-1) == "/" then
-    filepath = filepath:sub(1, -2)
-  end
+  local filepath = uri_to_filepath(uri) ---@type string
 
   local fileinfo = dot.board.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
@@ -3107,7 +3049,7 @@ function M:__goto_matching_file__(direction, matcher)
   for lnum = 1, total_lines do
     local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
     if uri ~= nil and uri:sub(-1) ~= "/" then
-      local filepath = uri:sub(8) ---@type string
+      local filepath = uri_to_filepath(uri) ---@type string
       file_uris[#file_uris + 1] = { lnum = lnum, uri = uri, filepath = filepath }
     end
   end
@@ -3186,7 +3128,7 @@ function M:__goto_matching_file_or_dir__(direction, matcher)
     local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
     if uri ~= nil then
       local is_dir = uri:sub(-1) == "/" ---@type boolean
-      local filepath = uri:sub(8) ---@type string
+      local filepath = uri_to_filepath(uri) ---@type string
       if is_dir and #filepath > 1 then
         filepath = filepath:sub(1, -2)
       end

@@ -30,7 +30,19 @@ pub fn to_filepath(uri: &str, keep_trailing_slash: bool) -> Option<String> {
     if !keep_trailing_slash && result.len() > 1 {
         let last_char = result.chars().last().unwrap_or('\0');
         if last_char == '/' || last_char == '\\' {
-            result.pop();
+            // On Windows, preserve trailing slash for root paths like "C:\"
+            // "C:" means current directory on C drive, "C:\" means root of C drive
+            #[cfg(windows)]
+            let is_windows_root = result.len() == 3
+                && result.chars().nth(1) == Some(':')
+                && result.chars().next().map_or(false, |c| c.is_ascii_alphabetic());
+
+            #[cfg(not(windows))]
+            let is_windows_root = false;
+
+            if !is_windows_root {
+                result.pop();
+            }
         }
     }
 

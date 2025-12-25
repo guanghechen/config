@@ -124,17 +124,16 @@ function M:get_common_ancestor_path(nodes)
 
   local paths = {} ---@type string[]
   for _, node in ipairs(nodes) do
-    local filepath = node.uri:sub(8) ---@type string
-    if filepath:sub(-1) == "/" then
-      filepath = filepath:sub(1, -2)
+    local filepath = yoz.uri.to_filepath(node.uri) ---@type string|nil
+    if filepath ~= nil then
+      paths[#paths + 1] = filepath
     end
-    paths[#paths + 1] = filepath
   end
 
   local common = dot.path.dirname(paths[1]) ---@type string
   for i = 2, #paths do
     local path = paths[i] ---@type string
-    while not vim.startswith(path, common .. "/") and path ~= common do
+    while not yoz.path.is_descendant(common, path) and path ~= common do
       common = dot.path.dirname(common)
       if common == "" or common == "/" then
         return "/"
