@@ -31,6 +31,10 @@ function M.encode(src) end
 ---@return string|nil
 function M.extname(uri) end
 
+---@param filepath                      string
+---@return string
+function M.from_filepath(filepath) end
+
 ---@param uri                           string
 ---@return string|nil
 function M.hash(uri) end

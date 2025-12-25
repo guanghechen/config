@@ -698,6 +698,12 @@ fn uri_module(lua: &Lua) -> LuaResult<LuaTable> {
             "extname",
             f(lua, |_, uri: String| Ok(uri::extname(&uri)))?,
         ),
+        (
+            "from_filepath",
+            f(lua, |_, filepath: String| {
+                Ok(uri::from_filepath(&filepath))
+            })?,
+        ),
         ("hash", f(lua, |_, uri: String| Ok(uri::hash(&uri)))?),
         (
             "is_data_uri",
