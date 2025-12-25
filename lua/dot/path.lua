@@ -8,13 +8,17 @@ local HOME_CONTEXT = ark.env.HOME_CONTEXT ---@type string
 local HOME_SHARED = ark.env.HOME_SHARED ---@type string
 
 local CWD ---@type string
+local CWD_URI ---@type string
 local WORKSPACE ---@type string
+local WORKSPACE_URI ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
   local gitrepo = ark.env.locate_gitroot(cwd) ---@type string|nil
   CWD = cwd ---@type string
+  CWD_URI = yoz.uri.from_filepath(cwd .. "/") ---@type string
   WORKSPACE = gitrepo or cwd ---@type string
+  WORKSPACE_URI = yoz.uri.from_filepath((gitrepo or cwd) .. "/") ---@type string
   IS_GIT_REPO = gitrepo ~= nil ---@type boolean
 end
 
@@ -176,8 +180,18 @@ function M.workspace()
 end
 
 ---@return string
+function M.workspace_uri()
+  return WORKSPACE_URI ---@type string
+end
+
+---@return string
 function M.cwd()
   return CWD ---@type string
+end
+
+---@return string
+function M.cwd_uri()
+  return CWD_URI ---@type string
 end
 
 ----------------------------------------------------------------------------------------------------

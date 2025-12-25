@@ -95,22 +95,21 @@ function M.winbar(o_root_uri, position, flags, get_width)
       local width = get_width() ---@type integer
 
       local root_uri = o_root_uri:snapshot() ---@type string
-      local root_path = root_uri:sub(8) ---@type string
-      if root_path:sub(-1) == "/" then
-        root_path = root_path:sub(1, -2)
-      end
+      local root_path = yoz.uri.to_filepath(root_uri) or "" ---@type string
 
       local cwd = dot.path.cwd() ---@type string
+      local cwd_uri = dot.path.cwd_uri() ---@type string
       local workspace = dot.path.workspace() ---@type string
+      local workspace_uri = dot.path.workspace_uri() ---@type string
       local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-      local is_cwd = root_path == cwd ---@type boolean
+      local is_cwd = vim.startswith(root_uri, cwd_uri) ---@type boolean
       local icon = is_cwd and icon_cwd or icon_folder ---@type string
       local display_path ---@type string
 
       if is_cwd then
-        if cwd == workspace then
+        if cwd_uri == workspace_uri then
           display_path = icon .. " " .. workspace_name
-        elseif vim.startswith(cwd, workspace .. "/") then
+        elseif vim.startswith(cwd_uri, workspace_uri) then
           display_path = icon .. " " .. cwd:sub(#workspace + 2)
         else
           display_path = icon .. " " .. shorten_path(root_path)
@@ -170,22 +169,21 @@ function M.path(o_root_uri)
     atomic = true,
     render = function()
       local root_uri = o_root_uri:snapshot() ---@type string
-      local root_path = root_uri:sub(8) ---@type string
-      if root_path:sub(-1) == "/" then
-        root_path = root_path:sub(1, -2)
-      end
+      local root_path = yoz.uri.to_filepath(root_uri) or "" ---@type string
 
       local cwd = dot.path.cwd() ---@type string
+      local cwd_uri = dot.path.cwd_uri() ---@type string
       local workspace = dot.path.workspace() ---@type string
+      local workspace_uri = dot.path.workspace_uri() ---@type string
       local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-      local is_cwd = root_path == cwd ---@type boolean
+      local is_cwd = vim.startswith(root_uri, cwd_uri) ---@type boolean
       local icon = is_cwd and icon_cwd or icon_folder ---@type string
       local display_path ---@type string
 
       if is_cwd then
-        if cwd == workspace then
+        if cwd_uri == workspace_uri then
           display_path = icon .. " " .. workspace_name
-        elseif vim.startswith(cwd, workspace .. "/") then
+        elseif vim.startswith(cwd_uri, workspace_uri) then
           display_path = icon .. " " .. cwd:sub(#workspace + 2)
         else
           display_path = icon .. " " .. shorten_path(root_path)
@@ -218,31 +216,32 @@ function M.tabline(position)
 
   ---@return string, string, boolean
   local function get_path_text()
+    local root_uri ---@type string
     local root_path ---@type string
 
     if dot.widget.explorer.widget ~= nil then
       local state = dot.widget.explorer.widget:get_state() ---@type dot.module.explorer.State
-      local root_uri = state.o_root_uri:snapshot() ---@type string
-      root_path = root_uri:sub(8) ---@type string
-      if root_path:sub(-1) == "/" then
-        root_path = root_path:sub(1, -2)
-      end
+      root_uri = state.o_root_uri:snapshot() ---@type string
+      root_path = yoz.uri.to_filepath(root_uri) or "" ---@type string
     else
-      root_path = dot.path.workspace()
+      root_uri = dot.path.workspace_uri() ---@type string
+      root_path = dot.path.workspace() ---@type string
     end
 
     local cwd = dot.path.cwd() ---@type string
+    local cwd_uri = dot.path.cwd_uri() ---@type string
     local workspace = dot.path.workspace() ---@type string
+    local workspace_uri = dot.path.workspace_uri() ---@type string
     local workspace_name = vim.fn.fnamemodify(workspace, ":t") ---@type string
-    local is_cwd = root_path == cwd ---@type boolean
+    local is_cwd = vim.startswith(root_uri, cwd_uri) ---@type boolean
     local icon = is_cwd and icon_cwd or icon_folder ---@type string
     local path_hln = is_cwd and hln_path or hln_path_detached ---@type string
 
     if is_cwd then
-      if cwd == workspace then
+      if cwd_uri == workspace_uri then
         local display = icon .. " " .. workspace_name ---@type string
         return display, txt(display, path_hln), is_cwd
-      elseif vim.startswith(cwd, workspace .. "/") then
+      elseif vim.startswith(cwd_uri, workspace_uri) then
         local display = icon .. " " .. cwd:sub(#workspace + 2) ---@type string
         return display, txt(display, path_hln), is_cwd
       end
