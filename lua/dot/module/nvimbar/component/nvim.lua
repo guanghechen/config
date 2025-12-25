@@ -235,7 +235,7 @@ function M.pos(position)
     render = function()
       local row, col, _, location_icon, bar_index = calc_cursor_location() ---@type integer, integer, integer, string, integer
       local hln_bar = position .. "_nvim_pos_bar_" .. tostring(bar_index) ---@type string
-      local prefix = string.format("%s %d·%d ", ark.icon.ui.Location, row, col) ---@type string
+      local prefix = string.format("%s %3d·%-2d ", ark.icon.ui.Location, row, col) ---@type string
       local bar = location_icon ---@type string
       local text = ark.icon.symbols.sep_left .. prefix .. bar ---@type string
       local hl_text = txt(ark.icon.symbols.sep_left, hln_sep) .. txt(prefix, hln_text) .. txt(bar, hln_bar) ---@type string
