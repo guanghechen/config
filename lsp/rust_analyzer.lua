@@ -207,7 +207,7 @@ return {
         },
       },
       diagnostics = {
-        enable = false,
+        enable = true,
       },
       imports = {
         merge = {
