@@ -1,73 +1,104 @@
 [alias]
-  last = log -1 HEAD
-  loga = log --color --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) %C(bold blue)%an%C(reset) %Creset%s%C(reset) %C(dim white) %Cgreen(%cr)%C(reset) %C(yellow)%d%C(reset)'
-  logi = log --color --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) %C(bold blue)%an%C(reset) %Creset%s%C(reset) %C(dim white) %Cgreen(%cr)%C(reset) %C(yellow)%d%C(reset)'
+  amend = commit --amend --no-edit
+  current = rev-parse --abbrev-ref HEAD
+  filelog = log -p --follow --
+  last = !bash -c 'git log -1 HEAD | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
+  loga = !bash -c 'git log --color --graph --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %Creset%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
+  logi = !bash -c 'git log --color --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %C(brightwhite)%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
+  recent = branch --sort=-committerdate --format='%(committerdate:relative)%09%(refname:short)'
   unstage = reset HEAD --
-  volatile = push origin --force HEAD:volatile
-[commit]
-#  gpgSign = true
+  who = blame -w -C -C -C
+
+[branch]
+  sort = -committerdate
+
 [core]
-  quotepath = false
   editor = nvim
   eol = lf
-  safecrlf = true
-  savecrlf = true
   autocrlf = false
+  safecrlf = true
   fileMode = true
-  compression = 0
-  pager = delta
+  longpaths = true
+  # pager = delta
+  quotepath = false
+  excludesfile = ~/.config/git/ignore
+
 [color]
   ui = true
+
+[commit]
+  verbose = true
+
+[credential]
+  # Remain empty by design, don't set helper here.
+
 [diff]
+  # algorithm = patience
+  algorithm = histogram
   colorMoved = default
+  mnemonicprefix = true
+  renames = copies
+
+[fetch]
+  prune = true
+  prunetags = true
+
 [filter "lfs"]
   clean = git-lfs clean -- %f
   process = git-lfs filter-process
   required = true
   smudge = git-lfs smudge -- %f
-[gpg]
-#  program = gpg
+
 [gui]
   encoding = utf-8
+
+[help]
+  autocorrect = 20  # auto correct typos
+
+[https]
+  postBuffer = 524288000
+
 [http]
-  postBuffer=52428800
+  postBuffer = 524288000
+
 [init]
   defaultBranch = main
+
+[interactive]
+  diffFilter = delta --color-only
+
 [i18n]
   commitencoding = utf-8
   logOutputEncoding = utf-8
+
 [i18n "commit"]
   encoding = utf-8
+
+[log]
+  date = iso
+
 [merge]
-  conflictstyle= diff3
+  conflictstyle= zdiff3
+
+[pull]
+  rebase = false
+
 [push]
-  default = simple
+  autoSetupRemote = true
+  default = current
+  followTags = true
 
-# delta config
-# https://github.com/dandavison/delta
-[delta]
-  hunk-header-style = raw
-  hunk-header-decoration-style = ul
-  hyperlinks = true
-  hyperlinks-file-link-format = vscode://file/{path}:{line}
-  detect-dark-light = auto
-  # diff-so-fancy = true
-  line-numbers = true
-  navigate = true    # use n and N to move between diff sections
-  paging = never
-  side-by-side = true
-  syntax-theme = GitHub
-  true-color = always
+[rebase]
+  autostash = true
+  updateRefs = true
 
-[includeIf "gitdir:~/.config/"]
-  path = ~/.config/git/guanghechen/.gitconfig
+[status]
+  submoduleSummary = true
+  showUntrackedFiles = all
 
-[includeIf "gitdir:~/playground/"]
-  path = ~/.config/git/guanghechen/.gitconfig
+[tag]
+  sort = version:refname
 
-[includeIf "gitdir:~/ws/github/guanghechen/"]
-  path = ~/.config/git/guanghechen/.gitconfig
-
-[includeIf "gitdir:~/ws/github/yozora/"]
-  path = ~/.config/git/guanghechen/.gitconfig
+[transfer]
+  fsckobjects = true
 
