@@ -1,11 +1,5 @@
 use super::encode::encode;
 
-#[cfg(windows)]
-pub const SEP: char = '\\';
-
-#[cfg(not(windows))]
-pub const SEP: char = '/';
-
 pub fn from_filepath(filepath: &str) -> String {
     if filepath.is_empty() {
         return String::new();

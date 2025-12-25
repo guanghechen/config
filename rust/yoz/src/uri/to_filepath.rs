@@ -1,12 +1,6 @@
 use super::decode::decode;
 use super::parse::parse;
 
-#[cfg(windows)]
-pub const SEP: char = '\\';
-
-#[cfg(not(windows))]
-pub const SEP: char = '/';
-
 pub fn to_filepath(uri: &str) -> Option<String> {
     let parts = parse(uri)?;
 
@@ -27,7 +21,7 @@ pub fn to_filepath(uri: &str) -> Option<String> {
         // e.g., "/C:/Users/..." -> "C:/Users/..."
         // Then normalize to use backslashes
         let trimmed = decoded.strip_prefix('/').unwrap_or(&decoded);
-        let normalized = trimmed.replace('/', &SEP.to_string());
+        let normalized = trimmed.replace('/', "\\");
         Some(normalized)
     }
 
