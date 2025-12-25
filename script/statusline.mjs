@@ -13,17 +13,21 @@ async function main() {
     const data = JSON.parse(input)
 
     // Get all parts in parallel
-    const [modelPart, costPart, cwdInfo] = await Promise.all([
+    const [modelPart, costPart, cwdInfo, contextPart, stylePart] = await Promise.all([
       getModelPart(data),
       getCostPart(data),
       getCwdPart(data),
+      getContextPart(data),
+      getStylePart(data),
     ])
 
     // Get git part (needs to run after cwd is determined)
     const gitPart = await getGitPart(cwdInfo.fullPath)
 
-    // Output status line
-    const statusline = [cwdInfo.display, gitPart, modelPart, costPart].filter(Boolean).join(' ')
+    // Output status line with │ separator
+    // Order: cwd, git, model, context, cost, style
+    const sep = '\x1b[90m│\x1b[0m'
+    const statusline = [cwdInfo.display, gitPart, modelPart, contextPart, costPart, stylePart].filter(Boolean).join(` ${sep} `)
     process.stdout.write(statusline)
   } catch (err) {
     // Fallback output if something goes wrong
@@ -78,12 +82,12 @@ async function getGitPart(fullCwd) {
     const indicators = []
     if (aheadBehind.ahead > 0) indicators.push(`\x1b[32m↑${aheadBehind.ahead}\x1b[0m`)
     if (aheadBehind.behind > 0) indicators.push(`\x1b[31m↓${aheadBehind.behind}\x1b[0m`)
-    if (statusInfo.staged > 0) indicators.push(`\x1b[32m●${statusInfo.staged}\x1b[0m`)
-    if (statusInfo.unstaged > 0) indicators.push(`\x1b[31m✚${statusInfo.unstaged}\x1b[0m`)
-    if (statusInfo.untracked > 0) indicators.push(`\x1b[34m…${statusInfo.untracked}\x1b[0m`)
+    if (statusInfo.staged > 0) indicators.push(`\x1b[32m•${statusInfo.staged}\x1b[0m`)
+    if (statusInfo.unstaged > 0) indicators.push(`\x1b[31m+${statusInfo.unstaged}\x1b[0m`)
+    if (statusInfo.untracked > 0) indicators.push(`\x1b[34m?${statusInfo.untracked}\x1b[0m`)
 
     const statusStr = indicators.length > 0 ? `\x1b[90m|\x1b[0m${indicators.join('')}` : ''
-    return `\x1b[90m(\x1b[91m\uea68 ${branch}${statusStr}\x1b[90m)\x1b[0m`
+    return `\x1b[95m\uea68 ${branch}${statusStr}\x1b[0m`
   } catch {
     // Not a git repository or git command failed
   }
@@ -128,12 +132,44 @@ function getStatusCounts(cwd) {
   }
 }
 
-async function getModelPart(data) {
+function getModelPart(data) {
   const model = data.model?.display_name || 'Unknown'
-  return `\x1b[90m ${model}\x1b[0m`
+  return `\x1b[96m󰘦 ${model}\x1b[0m`
 }
 
-async function getCostPart(data) {
+function getCostPart(data) {
   const costUsd = data.cost?.total_cost_usd || 0
-  return `\x1b[90m$${costUsd.toFixed(4)}\x1b[0m`
+  return `\x1b[93m$${costUsd.toFixed(4)}\x1b[0m`
+}
+
+function getContextPart(data) {
+  const ctx = data.context_window
+  if (!ctx) return ''
+
+  const windowSize = ctx.context_window_size || 0
+  if (windowSize === 0) return ''
+
+  const usage = ctx.current_usage
+  let currentTokens = 0
+  if (usage) {
+    currentTokens = (usage.input_tokens || 0) +
+      (usage.cache_creation_input_tokens || 0) +
+      (usage.cache_read_input_tokens || 0)
+  }
+
+  const percent = Math.round((currentTokens / windowSize) * 100)
+  const usedK = (currentTokens / 1000).toFixed(1)
+  const totalK = (windowSize / 1000).toFixed(0)
+
+  // Color based on usage: green < 50%, yellow 50-80%, red > 80%
+  let color = '\x1b[32m' // green
+  if (percent >= 80) color = '\x1b[31m' // red
+  else if (percent >= 50) color = '\x1b[33m' // yellow
+
+  return `${color}󰍛 ${usedK}k/${totalK}k (${percent}%)\x1b[0m`
+}
+
+function getStylePart(data) {
+  const style = data.output_style?.name || 'default'
+  return `\x1b[90m󰉼 ${style}\x1b[0m`
 }
