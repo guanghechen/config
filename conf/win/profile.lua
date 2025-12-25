@@ -3,8 +3,8 @@ local M = {}
 
 ---@param config table
 function M.setup(config)
-  -- Set default program (equivalent to Windows Terminal's defaultProfile)
-  config.default_prog = { "wsl.exe" }
+  -- Use WSL SSH domain as default
+  config.default_domain = "SSH:wsl"
 
   -- Launch Menu (equivalent to Windows Terminal's profiles list)
   config.launch_menu = {
