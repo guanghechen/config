@@ -1157,12 +1157,12 @@ function M:__action_move_selected__()
     return max_width + 4
   end
 
-  ---@param target_dir string
+  ---@param target_dir                   string
   ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer
+  ---@return integer                      max_from_displaywidth
   local function build_preview_items(target_dir)
     local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_len = 0 ---@type integer
+    local max_from_displaywidth = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
       local filepath = uri_to_filepath(node.uri) ---@type string
@@ -1171,10 +1171,10 @@ function M:__action_move_selected__()
       local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
+      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
     end
 
-    return items, max_from_len
+    return items, max_from_displaywidth
   end
 
   local fullname = self.fullname ---@type string
@@ -1196,11 +1196,11 @@ function M:__action_move_selected__()
       end
       target_dir = dot.path.normalize(target_dir)
 
-      local items, max_from_len = build_preview_items(target_dir)
+      local items, max_from_displaywidth = build_preview_items(target_dir)
 
       local lines = {} ---@type string[]
       for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         lines[#lines + 1] = string.format("%s%s -> %s", item.from, padding, item.to)
       end
 
@@ -1208,7 +1208,7 @@ function M:__action_move_selected__()
       vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
       for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         local from_hl_start = #item.from - #item.relative_part ---@type integer
         local from_hl_end = #item.from ---@type integer
         local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
@@ -1316,12 +1316,12 @@ function M:__action_copy_selected__()
     return max_width + 4
   end
 
-  ---@param target_dir string
+  ---@param target_dir                   string
   ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer
+  ---@return integer                      max_from_displaywidth
   local function build_preview_items(target_dir)
     local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_len = 0 ---@type integer
+    local max_from_displaywidth = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
       local filepath = uri_to_filepath(node.uri) ---@type string
@@ -1330,10 +1330,10 @@ function M:__action_copy_selected__()
       local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
+      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
     end
 
-    return items, max_from_len
+    return items, max_from_displaywidth
   end
 
   local fullname = self.fullname ---@type string
@@ -1355,11 +1355,11 @@ function M:__action_copy_selected__()
       end
       target_dir = dot.path.normalize(target_dir)
 
-      local items, max_from_len = build_preview_items(target_dir)
+      local items, max_from_displaywidth = build_preview_items(target_dir)
 
       local lines = {} ---@type string[]
       for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         lines[#lines + 1] = string.format("%s%s +> %s", item.from, padding, item.to)
       end
 
@@ -1367,7 +1367,7 @@ function M:__action_copy_selected__()
       vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
       for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         local from_hl_start = #item.from - #item.relative_part ---@type integer
         local from_hl_end = #item.from ---@type integer
         local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
@@ -1606,12 +1606,12 @@ function M:__action_paste__()
     return max_width + 4
   end
 
-  ---@param target_dir string
+  ---@param target_dir                   string
   ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer
+  ---@return integer                      max_from_displaywidth
   local function build_preview_items(target_dir)
     local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_len = 0 ---@type integer
+    local max_from_displaywidth = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
       local filepath = uri_to_filepath(node.uri) ---@type string
@@ -1620,10 +1620,10 @@ function M:__action_paste__()
       local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_len = math.max(max_from_len, vim.fn.strdisplaywidth(from_relative))
+      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
     end
 
-    return items, max_from_len
+    return items, max_from_displaywidth
   end
 
   local fullname = self.fullname ---@type string
@@ -1651,11 +1651,11 @@ function M:__action_paste__()
       end
       target_dir = dot.path.normalize(target_dir)
 
-      local items, max_from_len = build_preview_items(target_dir)
+      local items, max_from_displaywidth = build_preview_items(target_dir)
 
       local lines = {} ---@type string[]
       for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         lines[#lines + 1] = string.format("%s%s%s%s", item.from, padding, arrow, item.to)
       end
 
@@ -1663,7 +1663,7 @@ function M:__action_paste__()
       vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
       for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_len - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
         local from_hl_start = #item.from - #item.relative_part ---@type integer
         local from_hl_end = #item.from ---@type integer
         local to_hl_start = #item.from + #padding + #arrow + #item.to - #item.relative_part ---@type integer

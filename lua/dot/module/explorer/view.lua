@@ -427,10 +427,12 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
     parts[#parts + 1] = icon
     parts[#parts + 1] = " "
 
+    -- Extend highlight to include the trailing space to handle icon width mismatch
+    -- between Neovim's internal calculation and terminal font rendering
     highlights[#highlights + 1] = {
       lnum = lnum,
       coll = col,
-      colr = col + #icon,
+      colr = col + #icon + 1,
       hlname = icon_hl,
     }
     col = col + #icon + 1
