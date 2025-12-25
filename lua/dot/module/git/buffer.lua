@@ -144,7 +144,10 @@ local function update_hunks(buf_cache, callback)
     local hunks_staged_changed = dot.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
 
     if should_force_update or hunks_changed or hunks_staged_changed then
-      dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, { untracked = buf_cache.untracked })
+      dot.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
+        untracked = buf_cache.untracked,
+        force = should_force_update,
+      })
     end
 
     buf_cache.dirty = false

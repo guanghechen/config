@@ -1,13 +1,17 @@
 ---@class dot.module.git.hunk
 local M = {}
 
+----------------------------------------------------------------------------------------------------
+-- State management
+----------------------------------------------------------------------------------------------------
+
 ---@type table<integer, ark.c.Observable>
 local buffer_hunks_observables = {}
 
 ---@type table<integer, dot.module.git.Hunk[]|nil>
 local buffer_hunks = {}
 
----@param bufnr                      integer
+---@param bufnr                         integer
 ---@return ark.c.Observable
 function M.get_observable(bufnr)
   if not buffer_hunks_observables[bufnr] then
@@ -16,14 +20,14 @@ function M.get_observable(bufnr)
   return buffer_hunks_observables[bufnr]
 end
 
----@param bufnr                      integer
+---@param bufnr                         integer
 ---@return dot.module.git.Hunk[]|nil
 function M.get(bufnr)
   return buffer_hunks[bufnr]
 end
 
----@param bufnr                      integer
----@param hunks                      dot.module.git.Hunk[]|nil
+---@param bufnr                         integer
+---@param hunks                         dot.module.git.Hunk[]|nil
 function M.set(bufnr, hunks)
   buffer_hunks[bufnr] = hunks
 
@@ -33,7 +37,7 @@ function M.set(bufnr, hunks)
   end
 end
 
----@param bufnr                      integer
+---@param bufnr                         integer
 function M.remove(bufnr)
   buffer_hunks[bufnr] = nil
 
@@ -45,14 +49,12 @@ function M.remove(bufnr)
   end
 end
 
----@param bufnr                      integer
----@return dot.module.git.HunkSummary
-function M.get_summary(bufnr)
-  return M.summary(buffer_hunks[bufnr])
-end
+----------------------------------------------------------------------------------------------------
+-- Hunk queries
+----------------------------------------------------------------------------------------------------
 
----@param lnum                       integer
----@param hunks                      dot.module.git.Hunk[]|nil
+---@param lnum                          integer
+---@param hunks                         dot.module.git.Hunk[]|nil
 ---@return dot.module.git.Hunk|nil
 ---@return integer|nil
 function M.find(lnum, hunks)
@@ -60,7 +62,6 @@ function M.find(lnum, hunks)
     return nil, nil
   end
   for i, hunk in ipairs(hunks) do
-    -- For topdelete (added.start = 0, vend = 0), match when lnum = 1
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
     if lnum >= effective_start and lnum <= effective_vend then
@@ -70,10 +71,10 @@ function M.find(lnum, hunks)
   return nil, nil
 end
 
----@param lnum                       integer
----@param hunks                      dot.module.git.Hunk[]|nil
----@param direction                  "next"|"prev"|"first"|"last"
----@param opts                       { wrap: boolean|nil, navigation_message: boolean|nil }|nil
+---@param lnum                          integer
+---@param hunks                         dot.module.git.Hunk[]|nil
+---@param direction                     "next"|"prev"|"first"|"last"
+---@param opts                          { wrap: boolean|nil }|nil
 ---@return dot.module.git.Hunk|nil
 ---@return integer|nil
 function M.find_nearest(lnum, hunks, direction, opts)
@@ -93,21 +94,15 @@ function M.find_nearest(lnum, hunks, direction, opts)
   local wrap = opts.wrap ~= false
 
   if direction == "next" then
-    -- Find the first hunk that starts after current line
-    -- If cursor is inside a hunk, skip to the next one
     for i, hunk in ipairs(hunks) do
       local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
       local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
 
-      -- If this hunk ends before or at current line, check next hunk
       if effective_vend < lnum then
         -- Continue to next hunk
       elseif effective_start > lnum then
-        -- This hunk starts after current line - this is our target
         return hunk, i
       else
-        -- Cursor is inside this hunk (lnum >= effective_start and lnum <= effective_vend)
-        -- Return the next hunk if exists
         if i + 1 <= #hunks then
           return hunks[i + 1], i + 1
         elseif wrap then
@@ -116,7 +111,6 @@ function M.find_nearest(lnum, hunks, direction, opts)
         return nil, nil
       end
     end
-    -- No hunk found after current position
     if wrap and #hunks > 0 then
       return hunks[1], 1
     end
@@ -126,7 +120,6 @@ function M.find_nearest(lnum, hunks, direction, opts)
   if direction == "prev" then
     for i = #hunks, 1, -1 do
       local hunk = hunks[i]
-      -- For topdelete (vend = 0), use effective position 1
       local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
       if effective_vend < lnum then
         return hunk, i
@@ -141,12 +134,18 @@ function M.find_nearest(lnum, hunks, direction, opts)
   return nil, nil
 end
 
----@param hunks                      dot.module.git.Hunk[]|nil
+---@param bufnr                         integer
+---@return dot.module.git.HunkSummary
+function M.get_summary(bufnr)
+  return M.summary(buffer_hunks[bufnr])
+end
+
+---@param hunks                         dot.module.git.Hunk[]|nil
 ---@return dot.module.git.HunkSummary
 function M.summary(hunks)
-  local added = 0
-  local changed = 0
-  local removed = 0
+  local added = 0 ---@type integer
+  local changed = 0 ---@type integer
+  local removed = 0 ---@type integer
 
   if hunks then
     for _, hunk in ipairs(hunks) do
@@ -169,30 +168,35 @@ function M.summary(hunks)
   return { added = added, changed = changed, removed = removed }
 end
 
----Compare two hunk arrays by their heads to determine if signs need updating.
----@param a                          dot.module.git.Hunk[]|nil
----@param b                          dot.module.git.Hunk[]|nil
----@return boolean                   true if hunks are different
+---Compare two hunk arrays by their heads.
+---@param a                             dot.module.git.Hunk[]|nil
+---@param b                             dot.module.git.Hunk[]|nil
+---@return boolean                      true if hunks are different
 function M.compare_heads(a, b)
   if (a == nil) ~= (b == nil) then
     return true
   end
-  if a and b and #a ~= #b then
+  if not a or not b then
+    return false
+  end
+  if #a ~= #b then
     return true
   end
-  if a then
-    for i, ah in ipairs(a) do
-      if b[i].head ~= ah.head then
-        return true
-      end
+  for i, ah in ipairs(a) do
+    if b[i].head ~= ah.head then
+      return true
     end
   end
   return false
 end
 
----@param hunks                      dot.module.git.Hunk[]|nil
----@param top                        integer
----@param bot                        integer
+----------------------------------------------------------------------------------------------------
+-- Hunk creation
+----------------------------------------------------------------------------------------------------
+
+---@param hunks                         dot.module.git.Hunk[]|nil
+---@param top                           integer
+---@param bot                           integer
 ---@return dot.module.git.Hunk|nil
 function M.create_partial(hunks, top, bot)
   if not hunks or #hunks == 0 then
@@ -202,7 +206,6 @@ function M.create_partial(hunks, top, bot)
   local dominated_hunks = {} ---@type dot.module.git.Hunk[]
 
   for _, hunk in ipairs(hunks) do
-    -- For topdelete (added.start = 0, vend = 0), use effective position 1
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
     if not (effective_vend < top or effective_start > bot) then
@@ -217,65 +220,57 @@ function M.create_partial(hunks, top, bot)
   local first_hunk = dominated_hunks[1]
   local last_hunk = dominated_hunks[#dominated_hunks]
 
-  local removed_start = first_hunk.removed.start
-  local removed_count = 0
+  local removed_start = first_hunk.removed.start ---@type integer
+  local removed_count = 0 ---@type integer
   local first_effective_start = first_hunk.added.start == 0 and 1 or first_hunk.added.start ---@type integer
-  local added_start = math.max(first_effective_start, top)
-  local added_count = 0
+  local added_start = math.max(first_effective_start, top) ---@type integer
+  local added_count = 0 ---@type integer
 
   local removed_lines = {} ---@type string[]
   local added_lines = {} ---@type string[]
 
-  -- Track if we're including the last line of the last hunk
-  -- to determine if we should inherit no_nl_at_eof
   local includes_last_removed_line = false ---@type boolean
   local includes_last_added_line = false ---@type boolean
 
   for idx, hunk in ipairs(dominated_hunks) do
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
-    local hunk_top = math.max(effective_start, top)
-    local hunk_bot = math.min(effective_vend, bot)
-    local is_last_hunk = (idx == #dominated_hunks)
+    local hunk_top = math.max(effective_start, top) ---@type integer
+    local hunk_bot = math.min(effective_vend, bot) ---@type integer
+    local is_last_hunk = (idx == #dominated_hunks) ---@type boolean
 
     if hunk.type == "delete" then
       for _, line in ipairs(hunk.removed.lines) do
         removed_lines[#removed_lines + 1] = line
       end
       removed_count = removed_count + hunk.removed.count
-      -- For delete type, we always include all removed lines
       if is_last_hunk then
         includes_last_removed_line = true
       end
     elseif hunk.type == "add" then
-      local offset = hunk_top - hunk.added.start
-      local count = hunk_bot - hunk_top + 1
+      local offset = hunk_top - hunk.added.start ---@type integer
+      local count = hunk_bot - hunk_top + 1 ---@type integer
       for i = offset + 1, offset + count do
         added_lines[#added_lines + 1] = hunk.added.lines[i]
       end
       added_count = added_count + count
-      -- Check if we're including the last added line
       if is_last_hunk and (offset + count >= hunk.added.count) then
         includes_last_added_line = true
       end
     else
-      local add_offset = hunk_top - hunk.added.start
-      local add_count = hunk_bot - hunk_top + 1
+      local add_offset = hunk_top - hunk.added.start ---@type integer
+      local add_count = hunk_bot - hunk_top + 1 ---@type integer
 
       local remove_offset ---@type integer
       local remove_count ---@type integer
 
-      -- Defensive check: for change type, added.count should be > 0
-      -- but we guard against division by zero anyway
       if hunk.added.count == 0 then
         remove_offset = 0
         remove_count = hunk.removed.count
       elseif add_offset == 0 and add_count == hunk.added.count then
-        -- Full hunk selection
         remove_offset = 0
         remove_count = hunk.removed.count
       else
-        -- Proportional selection
         local ratio = hunk.removed.count / hunk.added.count
         remove_offset = math.floor(add_offset * ratio)
         remove_count = math.ceil(add_count * ratio)
@@ -295,7 +290,6 @@ function M.create_partial(hunks, top, bot)
       end
       added_count = added_count + add_count
 
-      -- Check if we're including the last lines
       if is_last_hunk then
         if remove_offset + remove_count >= hunk.removed.count then
           includes_last_removed_line = true
@@ -316,7 +310,6 @@ function M.create_partial(hunks, top, bot)
     hunk_type = "change"
   end
 
-  -- Inherit no_nl_at_eof from last hunk if we're including its last line
   local removed_no_nl = includes_last_removed_line and last_hunk.removed.no_nl_at_eof or nil
   local added_no_nl = includes_last_added_line and last_hunk.added.no_nl_at_eof or nil
 
@@ -340,10 +333,14 @@ function M.create_partial(hunks, top, bot)
   }
 end
 
----@param relpath                    string
----@param hunk                       dot.module.git.Hunk
----@param mode_bits                  string|nil
----@param invert                     boolean|nil
+----------------------------------------------------------------------------------------------------
+-- Patch generation
+----------------------------------------------------------------------------------------------------
+
+---@param relpath                       string
+---@param hunk                          dot.module.git.Hunk
+---@param mode_bits                     string|nil
+---@param invert                        boolean|nil
 ---@return string
 function M.create_patch(relpath, hunk, mode_bits, invert)
   local lines = {} ---@type string[]
@@ -359,9 +356,6 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
   local pre_count = hunk.removed.count ---@type integer
   local now_count = hunk.added.count ---@type integer
 
-  -- For pure additions (type == "add"), the removed.start points to where content
-  -- should be inserted AFTER, but git patch format expects line numbers to be 1-based
-  -- So we need to increment start by 1
   if hunk.type == "add" then
     start = start + 1
   end
@@ -377,15 +371,12 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
     pre_no_nl, now_no_nl = now_no_nl, pre_no_nl
   end
 
-  -- In the patch header: -start,pre_count +start,now_count
-  -- Both use the same 'start' value (the position in the original file)
   lines[#lines + 1] = string.format("@@ -%d,%d +%d,%d @@", start, pre_count, start, now_count)
 
   for _, line in ipairs(pre_lines) do
     lines[#lines + 1] = "-" .. line
   end
 
-  -- Add "\ No newline at end of file" marker for removed lines
   if pre_no_nl and #pre_lines > 0 then
     lines[#lines + 1] = "\\ No newline at end of file"
   end
@@ -394,7 +385,6 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
     lines[#lines + 1] = "+" .. line
   end
 
-  -- Add "\ No newline at end of file" marker for added lines
   if now_no_nl and #now_lines > 0 then
     lines[#lines + 1] = "\\ No newline at end of file"
   end
@@ -403,13 +393,10 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
   return table.concat(lines, "\n")
 end
 
----Create a unified patch for multiple hunks with proper offset handling.
----This is needed when staging multiple hunks at once, as each hunk application
----changes line numbers for subsequent hunks.
----@param relpath                    string
----@param hunks                      dot.module.git.Hunk[]
----@param mode_bits                  string|nil
----@param invert                     boolean|nil
+---@param relpath                       string
+---@param hunks                         dot.module.git.Hunk[]
+---@param mode_bits                     string|nil
+---@param invert                        boolean|nil
 ---@return string
 function M.create_patch_multi(relpath, hunks, mode_bits, invert)
   if #hunks == 0 then
@@ -451,7 +438,6 @@ function M.create_patch_multi(relpath, hunks, mode_bits, invert)
       pre_no_nl, now_no_nl = now_no_nl, pre_no_nl
     end
 
-    -- Apply offset to the "after" position (+start+offset)
     lines[#lines + 1] = string.format("@@ -%d,%d +%d,%d @@", start, pre_count, start + offset, now_count)
 
     for _, line in ipairs(pre_lines) do
@@ -470,7 +456,6 @@ function M.create_patch_multi(relpath, hunks, mode_bits, invert)
       lines[#lines + 1] = "\\ No newline at end of file"
     end
 
-    -- Update offset for next hunk
     offset = offset + (now_count - pre_count)
   end
 
@@ -478,57 +463,50 @@ function M.create_patch_multi(relpath, hunks, mode_bits, invert)
   return table.concat(lines, "\n")
 end
 
----@param hunk                       dot.module.git.Hunk
----@param min_lnum                   integer|nil
----@param max_lnum                   integer|nil
----@param next_hunk                  dot.module.git.Hunk|nil
+----------------------------------------------------------------------------------------------------
+-- Sign calculation
+----------------------------------------------------------------------------------------------------
+
+---@param hunk                          dot.module.git.Hunk
+---@param min_lnum                      integer|nil
+---@param max_lnum                      integer|nil
+---@param next_hunk                     dot.module.git.Hunk|nil
 ---@return dot.module.git.Sign[]
 function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
   local signs = {} ---@type dot.module.git.Sign[]
   min_lnum = min_lnum or 1
   max_lnum = max_lnum or math.huge
 
-  local start = hunk.added.start
-  local count = hunk.added.count
-  local removed_count = hunk.removed.count
+  local start = hunk.added.start ---@type integer
+  local count = hunk.added.count ---@type integer
+  local removed_count = hunk.removed.count ---@type integer
 
   if count == 0 then
-    -- Pure deletion: show sign at effective position
     if start == 0 then
-      -- Topdelete: deletion at file start, show at line 1
       if 1 >= min_lnum and 1 <= max_lnum then
         signs[#signs + 1] = { type = "topdelete", lnum = 1, count = removed_count }
       end
     else
-      -- Normal delete: show at the line where deletion occurred
       if start >= min_lnum and start <= max_lnum then
         signs[#signs + 1] = { type = "delete", lnum = start, count = removed_count }
       end
     end
   else
-    -- Check if next hunk is a delete that touches this hunk's end
-    -- In this case, the last line should show changedelete indicator
     local next_is_adjacent_delete = next_hunk
       and next_hunk.type == "delete"
       and next_hunk.added.start == start + count
-
-    -- Check if this hunk has more removed lines than added lines
-    -- In this case, the last line should show changedelete indicator
     local has_extra_removes = removed_count > count
 
     for i = 0, count - 1 do
-      local lnum = start + i
+      local lnum = start + i ---@type integer
       if lnum >= min_lnum and lnum <= max_lnum then
-        local is_last_line = (i == count - 1)
+        local is_last_line = (i == count - 1) ---@type boolean
 
         if is_last_line and (next_is_adjacent_delete or has_extra_removes) then
-          -- Last line: show changedelete if adjacent delete follows or has extra removes
           signs[#signs + 1] = { type = "changedelete", lnum = lnum }
         elseif removed_count > 0 and i < removed_count then
-          -- Lines within removed range: show change
           signs[#signs + 1] = { type = "change", lnum = lnum }
         else
-          -- Lines beyond removed range: show add
           signs[#signs + 1] = { type = "add", lnum = lnum }
         end
       end
@@ -538,9 +516,9 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
   return signs
 end
 
----@param hunks                      dot.module.git.Hunk[]|nil
----@param min_lnum                   integer|nil
----@param max_lnum                   integer|nil
+---@param hunks                         dot.module.git.Hunk[]|nil
+---@param min_lnum                      integer|nil
+---@param max_lnum                      integer|nil
 ---@return dot.module.git.Sign[]
 function M.calc_signs_all(hunks, min_lnum, max_lnum)
   local signs = {} ---@type dot.module.git.Sign[]
@@ -551,7 +529,6 @@ function M.calc_signs_all(hunks, min_lnum, max_lnum)
   max_lnum = max_lnum or math.huge
 
   for i, hunk in ipairs(hunks) do
-    -- Early exit: if hunk starts after max_lnum, no more signs needed
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     if effective_start > max_lnum then
       break
@@ -567,8 +544,12 @@ function M.calc_signs_all(hunks, min_lnum, max_lnum)
   return signs
 end
 
----@param range                      { [1]: integer, [2]: integer }|nil
----@param callback                   fun(ok: boolean, err: string|nil)|nil
+----------------------------------------------------------------------------------------------------
+-- User actions
+----------------------------------------------------------------------------------------------------
+
+---@param range                         { [1]: integer, [2]: integer }|nil
+---@param callback                      fun(ok: boolean, err: string|nil)|nil
 function M.stage(range, callback)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
@@ -577,8 +558,8 @@ function M.stage(range, callback)
   dot.git.buffer.stage_hunk(bufnr, range, callback)
 end
 
----@param range                      { [1]: integer, [2]: integer }|nil
----@param callback                   fun(ok: boolean, err: string|nil)|nil
+---@param range                         { [1]: integer, [2]: integer }|nil
+---@param callback                      fun(ok: boolean, err: string|nil)|nil
 function M.unstage(range, callback)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
@@ -587,7 +568,7 @@ function M.unstage(range, callback)
   dot.git.buffer.unstage_hunk(bufnr, range, callback)
 end
 
----@param range                      { [1]: integer, [2]: integer }|nil
+---@param range                         { [1]: integer, [2]: integer }|nil
 ---@return boolean
 ---@return string|nil
 function M.reset(range)
@@ -598,7 +579,7 @@ function M.reset(range)
   return dot.git.buffer.reset_hunk(bufnr, range)
 end
 
----@param callback                   fun(ok: boolean)|nil
+---@param callback                      fun(ok: boolean)|nil
 function M.stage_buffer(callback)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
@@ -628,6 +609,10 @@ function M.reset_buffer()
   return dot.git.buffer.reset_buffer(bufnr)
 end
 
+----------------------------------------------------------------------------------------------------
+-- Navigation
+----------------------------------------------------------------------------------------------------
+
 local nav_ns = vim.api.nvim_create_namespace("dot_git_hunk_nav") ---@type integer
 local nav_autocmd_id = nil ---@type integer|nil
 local nav_bufnr = nil ---@type integer|nil
@@ -643,10 +628,10 @@ local function clear_nav_indicator()
   nav_bufnr = nil
 end
 
----@param bufnr                      integer
----@param lnum                       integer
----@param index                      integer
----@param total                      integer
+---@param bufnr                         integer
+---@param lnum                          integer
+---@param index                         integer
+---@param total                         integer
 local function show_nav_indicator(bufnr, lnum, index, total)
   clear_nav_indicator()
   nav_bufnr = bufnr
@@ -672,8 +657,8 @@ function M.clear_nav()
   clear_nav_indicator()
 end
 
----@param direction                  "next"|"prev"
----@param include_staged             boolean
+---@param direction                     "next"|"prev"
+---@param include_staged                boolean
 local function nav_impl(direction, include_staged)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not dot.git.buffer.is_attached(bufnr) then
@@ -729,15 +714,19 @@ local function nav_impl(direction, include_staged)
   show_nav_indicator(bufnr, target.lnum, target_idx, #hunks)
 end
 
----@param direction                  "next"|"prev"
+---@param direction                     "next"|"prev"
 function M.nav(direction)
   nav_impl(direction, false)
 end
 
----@param direction                  "next"|"prev"
+---@param direction                     "next"|"prev"
 function M.nav_all(direction)
   nav_impl(direction, true)
 end
+
+----------------------------------------------------------------------------------------------------
+-- Preview
+----------------------------------------------------------------------------------------------------
 
 ---@type dot.module.board.GitHunk|nil
 local hunk_board = nil
@@ -756,6 +745,8 @@ function M.preview()
   hunk_board = dot.board.GitHunk.new({ bufnr = bufnr })
   hunk_board:open()
 end
+
+----------------------------------------------------------------------------------------------------
 
 function M.setup() end
 

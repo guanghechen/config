@@ -21,12 +21,53 @@ local config = {
   priority_staged = 9,
 }
 
+----------------------------------------------------------------------------------------------------
+-- Signs class
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.module.git.sign.ISigns
 ---@field protected _ns                 integer
 ---@field protected _config             table<dot.module.git.SignType, { text: string, hl: string }>
 ---@field protected _priority           integer
+---@field protected _hl_to_type         table<string, dot.module.git.SignType>
 local Signs = {}
 Signs.__index = Signs
+
+---@param staged                        boolean|nil
+---@return dot.module.git.sign.ISigns
+function Signs.__new__(staged)
+  local self = setmetatable({}, Signs)
+  self._ns = vim.api.nvim_create_namespace(staged and NS_NAME_STAGED or NS_NAME)
+  self._config = staged and config.signs_staged or config.signs
+  self._priority = staged and config.priority_staged or config.priority
+
+  self._hl_to_type = {}
+  for sign_type, sign_config in pairs(self._config) do
+    self._hl_to_type[sign_config.hl] = sign_type
+  end
+
+  return self
+end
+
+---@return integer
+function Signs:get_namespace()
+  return self._ns
+end
+
+---@param bufnr                         integer
+---@param start_lnum                    integer
+---@param end_lnum                      integer|nil
+---@return boolean
+function Signs:contains(bufnr, start_lnum, end_lnum)
+  local marks = vim.api.nvim_buf_get_extmarks(
+    bufnr,
+    self._ns,
+    { (start_lnum or 1) - 1, 0 },
+    { (end_lnum or start_lnum or 1) - 1, 0 },
+    { limit = 1 }
+  )
+  return #marks > 0
+end
 
 ---@param bufnr                         integer
 ---@param signs                         dot.module.git.Sign[]
@@ -37,16 +78,16 @@ function Signs:add(bufnr, signs, filter)
   end
 
   for _, sign in ipairs(signs) do
-    local lnum = sign.lnum
+    local lnum = sign.lnum ---@type integer
     if lnum >= 1 and (not filter or filter(lnum)) and not self:contains(bufnr, lnum) then
       local line = lnum - 1 ---@type integer
-      local text = self:__get_sign_text__(sign.type)
+      local text = self._config[sign.type] and self._config[sign.type].text ---@type string|nil
       if text then
         pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns, line, 0, {
           id = lnum,
           priority = self._priority,
           sign_text = text,
-          sign_hl_group = self:__get_sign_hl__(sign.type),
+          sign_hl_group = self._config[sign.type].hl,
         })
       end
     end
@@ -69,21 +110,6 @@ function Signs:remove(bufnr, start_lnum, end_lnum)
 end
 
 ---@param bufnr                         integer
----@param start_lnum                    integer|nil
----@param end_lnum                      integer|nil
----@return boolean
-function Signs:contains(bufnr, start_lnum, end_lnum)
-  local marks = vim.api.nvim_buf_get_extmarks(
-    bufnr,
-    self._ns,
-    { (start_lnum or 1) - 1, 0 },
-    { (end_lnum or start_lnum or 1) - 1, 0 },
-    { limit = 1 }
-  )
-  return #marks > 0
-end
-
----@param bufnr                         integer
 ---@param last_orig                     integer
 ---@param last_new                      integer
 function Signs:on_lines(bufnr, last_orig, last_new)
@@ -98,36 +124,86 @@ function Signs:reset()
   end
 end
 
----@return integer
-function Signs:get_namespace()
-  return self._ns
+---@param bufnr                         integer
+---@return table<integer, dot.module.git.SignType>
+function Signs:__get_extmarks__(bufnr)
+  local result = {} ---@type table<integer, dot.module.git.SignType>
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return result
+  end
+
+  local marks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, 0, -1, { details = true })
+  for _, mark in ipairs(marks) do
+    local lnum = mark[2] + 1 ---@type integer
+    local details = mark[4] ---@type table
+    local hl = details.sign_hl_group ---@type string|nil
+    if hl and self._hl_to_type[hl] then
+      result[lnum] = self._hl_to_type[hl]
+    end
+  end
+
+  return result
+end
+
+---@param bufnr                         integer
+---@param new_signs                     dot.module.git.Sign[]
+---@param filter                        (fun(lnum: integer): boolean)|nil
+function Signs:__update_incremental__(bufnr, new_signs, filter)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local old_signs = self:__get_extmarks__(bufnr)
+  local new_signs_map = {} ---@type table<integer, dot.module.git.SignType>
+
+  for _, sign in ipairs(new_signs) do
+    local lnum = sign.lnum ---@type integer
+    if lnum >= 1 and (not filter or filter(lnum)) then
+      new_signs_map[lnum] = sign.type
+    end
+  end
+
+  local to_remove = {} ---@type integer[]
+  local to_add = {} ---@type dot.module.git.Sign[]
+
+  for lnum, old_type in pairs(old_signs) do
+    local new_type = new_signs_map[lnum]
+    if not new_type then
+      to_remove[#to_remove + 1] = lnum
+    elseif new_type ~= old_type then
+      to_remove[#to_remove + 1] = lnum
+      to_add[#to_add + 1] = { lnum = lnum, type = new_type }
+    end
+  end
+
+  for lnum, new_type in pairs(new_signs_map) do
+    if not old_signs[lnum] then
+      to_add[#to_add + 1] = { lnum = lnum, type = new_type }
+    end
+  end
+
+  for _, lnum in ipairs(to_remove) do
+    pcall(vim.api.nvim_buf_del_extmark, bufnr, self._ns, lnum)
+  end
+
+  for _, sign in ipairs(to_add) do
+    local lnum = sign.lnum ---@type integer
+    local line = lnum - 1 ---@type integer
+    local text = self._config[sign.type] and self._config[sign.type].text ---@type string|nil
+    if text then
+      pcall(vim.api.nvim_buf_set_extmark, bufnr, self._ns, line, 0, {
+        id = lnum,
+        priority = self._priority,
+        sign_text = text,
+        sign_hl_group = self._config[sign.type].hl,
+      })
+    end
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@param sign_type                     dot.module.git.SignType
----@return string|nil
-function Signs:__get_sign_hl__(sign_type)
-  local sign_config = self._config[sign_type]
-  return sign_config and sign_config.hl
-end
-
----@param sign_type                     dot.module.git.SignType
----@return string|nil
-function Signs:__get_sign_text__(sign_type)
-  local sign_config = self._config[sign_type]
-  return sign_config and sign_config.text
-end
-
----@param staged                        boolean|nil
----@return dot.module.git.sign.ISigns
-function Signs.__new__(staged)
-  local self = setmetatable({}, Signs)
-  self._ns = vim.api.nvim_create_namespace(staged and NS_NAME_STAGED or NS_NAME)
-  self._config = staged and config.signs_staged or config.signs
-  self._priority = staged and config.priority_staged or config.priority
-  return self
-end
+-- Module
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.module.git.sign
 local M = {}
@@ -196,6 +272,10 @@ local function setup_decoration_provider()
   })
 end
 
+----------------------------------------------------------------------------------------------------
+-- Public API
+----------------------------------------------------------------------------------------------------
+
 ---@param bufnr                         integer
 ---@param signs                         dot.module.git.Sign[]
 function M.add(bufnr, signs)
@@ -227,36 +307,51 @@ end
 ---@param bufnr                         integer
 ---@param hunks                         dot.module.git.Hunk[]|nil
 ---@param hunks_staged                  dot.module.git.Hunk[]|nil
----@param opts                          { untracked: boolean|nil }|nil
+---@param opts                          { untracked: boolean|nil, force: boolean|nil }|nil
 function M.update(bufnr, hunks, hunks_staged, opts)
-  M.clear(bufnr)
   setup_decoration_provider()
 
-  if not hunks or #hunks == 0 then
-    if not hunks_staged or #hunks_staged == 0 then
-      return
-    end
-  end
-
+  local force = opts and opts.force ---@type boolean|nil
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
 
+  local new_signs = {} ---@type dot.module.git.Sign[]
   if hunks and #hunks > 0 then
-    local signs = dot.git.hunk.calc_signs_all(hunks, 1, line_count)
+    new_signs = dot.git.hunk.calc_signs_all(hunks, 1, line_count)
     if opts and opts.untracked then
-      for _, sign in ipairs(signs) do
+      for _, sign in ipairs(new_signs) do
         if sign.type == "add" then
           sign.type = "untracked"
         end
       end
     end
-    signs_normal:add(bufnr, signs)
   end
 
+  if force then
+    signs_normal:remove(bufnr)
+    signs_normal:add(bufnr, new_signs)
+  else
+    signs_normal:__update_incremental__(bufnr, new_signs)
+  end
+
+  local new_signs_staged = {} ---@type dot.module.git.Sign[]
   if hunks_staged and #hunks_staged > 0 then
-    local signs = dot.git.hunk.calc_signs_all(hunks_staged, 1, line_count)
-    signs_staged:add(bufnr, signs, function(lnum)
-      return not signs_normal:contains(bufnr, lnum)
-    end)
+    new_signs_staged = dot.git.hunk.calc_signs_all(hunks_staged, 1, line_count)
+  end
+
+  local new_signs_lnum_set = {} ---@type table<integer, boolean>
+  for _, sign in ipairs(new_signs) do
+    new_signs_lnum_set[sign.lnum] = true
+  end
+
+  local filter = function(lnum)
+    return not new_signs_lnum_set[lnum]
+  end
+
+  if force then
+    signs_staged:remove(bufnr)
+    signs_staged:add(bufnr, new_signs_staged, filter)
+  else
+    signs_staged:__update_incremental__(bufnr, new_signs_staged, filter)
   end
 end
 

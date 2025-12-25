@@ -1,54 +1,29 @@
----@class dot.module.git.BlameInfo
----@field public abbrev_sha             string
----@field public author                 string
----@field public author_mail            string
----@field public author_time            integer
----@field public author_tz              string
----@field public committer              string
----@field public committer_mail         string
----@field public committer_time         integer
----@field public committer_tz           string
----@field public filename               string
----@field public final_lnum             integer
----@field public num_lines              integer
----@field public orig_lnum              integer
----@field public previous               string|nil
----@field public previous_filename      string|nil
----@field public sha                    string
----@field public summary                string
+----------------------------------------------------------------------------------------------------
+-- Core types
+----------------------------------------------------------------------------------------------------
 
----@class dot.module.git.browse.IOpenOpts
----@field public branch                 string|nil
----@field public commit                 string|nil
----@field public line_end               integer|nil
----@field public line_start             integer|nil
----@field public what                   string|nil
+---@alias dot.module.git.HunkType
+---| "add"
+---| "change"
+---| "delete"
 
----@class dot.module.git.buffer.ICache
----@field public attached               boolean
----@field public bufnr                  integer
----@field public changedtick            integer
----@field public compare_text           string[]|nil
----@field public compare_text_index     string[]|nil
----@field public dirty                  boolean
----@field public file                   string
----@field public force_next_update      boolean
----@field public hunks                  dot.module.git.Hunk[]|nil
----@field public hunks_staged           dot.module.git.Hunk[]|nil
----@field public mode_bits              string|nil
----@field public object_name            string|nil
----@field public relpath                string
----@field public repo                   dot.module.git.Repo
----@field public untracked              boolean
----@field public update_debounced       ark.timer.IDisposableCallable|nil
+---@alias dot.module.git.SignType
+---| "add"
+---| "change"
+---| "changedelete"
+---| "delete"
+---| "topdelete"
+---| "untracked"
 
----@class dot.module.git.FileInfo
----@field public has_conflicts          boolean|nil
----@field public i_crlf                 boolean|nil
----@field public mode_bits              string|nil
----@field public object_name            string|nil
----@field public relpath                string|nil
----@field public w_crlf                 boolean|nil
+---@alias dot.module.git.StageState
+---| "mixed"
+---| "staged"
+---| "unstaged"
+---| nil
+
+----------------------------------------------------------------------------------------------------
+-- Hunk types
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.module.git.Hunk
 ---@field public added                  dot.module.git.HunkNode
@@ -68,10 +43,14 @@
 ---@field public changed                integer
 ---@field public removed                integer
 
----@alias dot.module.git.HunkType
----| "add"
----| "change"
----| "delete"
+---@class dot.module.git.Sign
+---@field public count                  integer|nil
+---@field public lnum                   integer
+---@field public type                   dot.module.git.SignType
+
+----------------------------------------------------------------------------------------------------
+-- Repository types
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.module.git.Repo
 ---@field public abbrev_head            string
@@ -90,24 +69,62 @@
 ---@field public unstage_file           fun(self: dot.module.git.Repo, file: string, callback: fun(ok: boolean))
 ---@field public update_index           fun(self: dot.module.git.Repo, mode_bits: string, object_name: string, file: string, callback: fun(ok: boolean))
 
----@class dot.module.git.Sign
----@field public count                  integer|nil
----@field public lnum                   integer
----@field public type                   dot.module.git.SignType
+---@class dot.module.git.FileInfo
+---@field public has_conflicts          boolean|nil
+---@field public i_crlf                 boolean|nil
+---@field public mode_bits              string|nil
+---@field public object_name            string|nil
+---@field public relpath                string|nil
+---@field public w_crlf                 boolean|nil
 
----@alias dot.module.git.SignType
----| "add"
----| "change"
----| "changedelete"
----| "delete"
----| "topdelete"
----| "untracked"
+----------------------------------------------------------------------------------------------------
+-- Buffer types
+----------------------------------------------------------------------------------------------------
 
----@alias dot.module.git.StageState
----| "mixed"
----| "staged"
----| "unstaged"
----| nil
+---@class dot.module.git.buffer.ICache
+---@field public attached               boolean
+---@field public bufnr                  integer
+---@field public changedtick            integer
+---@field public compare_text           string[]|nil
+---@field public compare_text_index     string[]|nil
+---@field public dirty                  boolean
+---@field public file                   string
+---@field public force_next_update      boolean
+---@field public hunks                  dot.module.git.Hunk[]|nil
+---@field public hunks_staged           dot.module.git.Hunk[]|nil
+---@field public mode_bits              string|nil
+---@field public object_name            string|nil
+---@field public relpath                string
+---@field public repo                   dot.module.git.Repo
+---@field public untracked              boolean
+---@field public update_debounced       ark.timer.IDisposableCallable|nil
+
+----------------------------------------------------------------------------------------------------
+-- Blame types
+----------------------------------------------------------------------------------------------------
+
+---@class dot.module.git.BlameInfo
+---@field public abbrev_sha             string
+---@field public author                 string
+---@field public author_mail            string
+---@field public author_time            integer
+---@field public author_tz              string
+---@field public committer              string
+---@field public committer_mail         string
+---@field public committer_time         integer
+---@field public committer_tz           string
+---@field public filename               string
+---@field public final_lnum             integer
+---@field public num_lines              integer
+---@field public orig_lnum              integer
+---@field public previous               string|nil
+---@field public previous_filename      string|nil
+---@field public sha                    string
+---@field public summary                string
+
+----------------------------------------------------------------------------------------------------
+-- Status types
+----------------------------------------------------------------------------------------------------
 
 ---@class dot.module.git.status.ICollectOpts
 ---@field public base                   string|nil
@@ -128,5 +145,18 @@
 ---@field public unstaged               table<string, boolean>
 ---@field public unstaged_bits          integer
 ---@field public unstaged_display       string
+
+----------------------------------------------------------------------------------------------------
+-- Browse types
+----------------------------------------------------------------------------------------------------
+
+---@class dot.module.git.browse.IOpenOpts
+---@field public branch                 string|nil
+---@field public commit                 string|nil
+---@field public line_end               integer|nil
+---@field public line_start             integer|nil
+---@field public what                   string|nil
+
+----------------------------------------------------------------------------------------------------
 
 return {}
