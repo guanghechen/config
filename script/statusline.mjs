@@ -4,255 +4,190 @@ import { execSync } from 'node:child_process'
 import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 
-await main()
+class StatuslineComponent {
+  constructor(data) {
+    this.data = data
+    this.cwd = path.normalize(data.cwd || process.cwd())
+  }
 
-async function main() {
-  try {
-    // Read JSON input from stdin
-    const input = readFileSync(0, 'utf-8')
-    const data = JSON.parse(input)
-
-    // Get all parts in parallel
-    const [modelPart, costPart, cwdInfo, contextPart, stylePart] = await Promise.all([
-      getModelPart(data),
-      getCostPart(data),
-      getCwdPart(data),
-      getContextPart(data),
-      getStylePart(data),
+  async render() {
+    const parts = await Promise.all([
+      this.path(),
+      this.git(),
+      this.model(),
+      this.context(),
+      this.cost(),
+      this.style(),
     ])
-
-    // Get git part (needs to run after cwd is determined)
-    const gitPart = await getGitPart(cwdInfo.fullPath)
-
-    // Output status line with │ separator
-    // Order: cwd, git, model, context, cost, style
     const sep = '\x1b[90m│\x1b[0m'
-    const statusline = [cwdInfo.display, gitPart, modelPart, contextPart, costPart, stylePart].filter(Boolean).join(` ${sep} `)
-    process.stdout.write(statusline)
-  } catch (err) {
-    // Fallback output if something goes wrong
-    process.stdout.write('[Claude Code]')
-  }
-}
-
-async function getCwdPart(data) {
-  const fullCwd = path.normalize(data.cwd || process.cwd())
-  let cwd = fullCwd
-
-  // Replace home directory with ~
-  const home = process.env.HOME || process.env.USERPROFILE
-  if (cwd.startsWith(home)) {
-    cwd = '~' + cwd.slice(home.length)
+    return parts.filter(Boolean).join(` ${sep} `)
   }
 
-  // Abbreviate parent directories to first letter only
-  const parts = cwd.split(path.sep)
-  if (parts.length > 1) {
-    const abbreviated = parts.slice(0, -1).map(part => {
-      if (part === '~' || part === '') return part
-      // Show first two letters for dotfiles/dotfolders
-      if (part[0] === '.') return part.slice(0, 2)
-      return part[0]
-    })
-    cwd = [...abbreviated, parts[parts.length - 1]].join(path.sep)
-  }
-
-  return {
-    display: `\x1b[94m󱃪 ${cwd}\x1b[0m`,
-    fullPath: fullCwd,
-  }
-}
-
-async function getGitPart(fullCwd) {
-  try {
-    // Use git status -sb for branch/ahead/behind and file status
-    const status = execSync('git status -sb', {
-      cwd: fullCwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
-
-    const lines = status.split('\n')
-    const headerLine = lines[0] || ''
-
-    // Parse header: "## branch...origin/branch [ahead 1, behind 2]" or "## HEAD (no branch)"
-    let branch = ''
-    let ahead = 0, behind = 0
-
-    const headerMatch = headerLine.match(/^## (.+?)(?:\.\.\.(\S+))?(?:\s+\[(.+)\])?$/)
-    if (headerMatch) {
-      branch = headerMatch[1]
-      const trackingInfo = headerMatch[3]
-      if (trackingInfo) {
-        const aheadMatch = trackingInfo.match(/ahead (\d+)/)
-        const behindMatch = trackingInfo.match(/behind (\d+)/)
-        if (aheadMatch) ahead = parseInt(aheadMatch[1], 10)
-        if (behindMatch) behind = parseInt(behindMatch[1], 10)
-      }
+  path() {
+    let display = this.cwd
+    const home = process.env.HOME || process.env.USERPROFILE
+    if (display.startsWith(home)) {
+      display = '~' + display.slice(home.length)
     }
-
-    // Handle detached HEAD - show short commit hash
-    if (branch === 'HEAD (no branch)' || branch === 'HEAD') {
-      try {
-        const shortHash = execSync('git rev-parse --short HEAD', {
-          cwd: fullCwd,
-          encoding: 'utf-8',
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }).trim()
-        branch = `@${shortHash}`
-      } catch {
-        branch = '@detached'
-      }
+    const parts = display.split(path.sep)
+    if (parts.length > 1) {
+      const abbreviated = parts.slice(0, -1).map(p => {
+        if (p === '~' || p === '') return p
+        if (p[0] === '.') return p.slice(0, 2)
+        return p[0]
+      })
+      display = [...abbreviated, parts.at(-1)].join(path.sep)
     }
+    return `\x1b[94m󱃪 ${display}\x1b[0m`
+  }
 
-    if (!branch) return ''
-
-    // Check for conflict state (merge, rebase, cherry-pick, etc.)
-    const conflictState = getConflictState(fullCwd)
-
-    // Get stash count
-    let stashCount = 0
+  git() {
     try {
-      const stashList = execSync('git stash list', {
-        cwd: fullCwd,
+      const status = execSync('git status -sb', {
+        cwd: this.cwd,
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe'],
       })
-      stashCount = stashList.split('\n').filter(Boolean).length
-    } catch {
-      // Ignore stash errors
+      const lines = status.split('\n')
+      const header = lines[0] || ''
+
+      let branch = '', ahead = 0, behind = 0
+      const m = header.match(/^## (.+?)(?:\.\.\.(\S+))?(?:\s+\[(.+)\])?$/)
+      if (m) {
+        branch = m[1]
+        if (m[3]) {
+          ahead = parseInt(m[3].match(/ahead (\d+)/)?.[1] || 0, 10)
+          behind = parseInt(m[3].match(/behind (\d+)/)?.[1] || 0, 10)
+        }
+      }
+
+      if (branch === 'HEAD (no branch)' || branch === 'HEAD') {
+        try {
+          const hash = execSync('git rev-parse --short HEAD', {
+            cwd: this.cwd, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+          }).trim()
+          branch = `@${hash}`
+        } catch { branch = '@detached' }
+      }
+
+      if (!branch) return ''
+
+      const conflict = this.#conflictState()
+      const stash = this.#stashCount()
+      const files = this.#parseFiles(lines.slice(1))
+      const ind = this.#buildIndicators({ conflict, ahead, behind, stash, ...files })
+
+      return `\x1b[95m\uea68 ${branch}${ind}\x1b[0m`
+    } catch { return '' }
+  }
+
+  #conflictState() {
+    try {
+      const gitDir = execSync('git rev-parse --git-dir', {
+        cwd: this.cwd, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      }).trim()
+      const dir = path.isAbsolute(gitDir) ? gitDir : path.join(this.cwd, gitDir)
+
+      if (existsSync(path.join(dir, 'MERGE_HEAD'))) return '⚡merge'
+      if (existsSync(path.join(dir, 'rebase-merge')) || existsSync(path.join(dir, 'rebase-apply'))) return '⚡rebase'
+      if (existsSync(path.join(dir, 'CHERRY_PICK_HEAD'))) return '⚡pick'
+      if (existsSync(path.join(dir, 'REVERT_HEAD'))) return '⚡revert'
+      if (existsSync(path.join(dir, 'BISECT_LOG'))) return '⚡bisect'
+    } catch {}
+    return ''
+  }
+
+  #stashCount() {
+    try {
+      const list = execSync('git stash list', {
+        cwd: this.cwd, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      })
+      return list.split('\n').filter(Boolean).length
+    } catch { return 0 }
+  }
+
+  #parseFiles(lines) {
+    const r = {
+      conflicts: 0, untracked: 0,
+      stagedM: 0, stagedA: 0, stagedD: 0, stagedR: 0,
+      unstagedM: 0, unstagedA: 0, unstagedD: 0, unstagedR: 0,
     }
-
-    // Count file statuses by type from remaining lines
-    // Staged: M=modified, A=added, D=deleted, R=renamed
-    // Unstaged: same but in second column
-    let conflicts = 0, untracked = 0
-    let stagedModified = 0, stagedAdded = 0, stagedDeleted = 0, stagedRenamed = 0
-    let unstagedModified = 0, unstagedAdded = 0, unstagedDeleted = 0, unstagedRenamed = 0
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i]
+    for (const line of lines) {
       if (!line) continue
-      const x = line[0], y = line[1]
-
-      // Conflict markers: UU, AA, DD, AU, UA, DU, UD
+      const [x, y] = line
       if ((x === 'U' || y === 'U') || (x === 'A' && y === 'A') || (x === 'D' && y === 'D')) {
-        conflicts++
+        r.conflicts++
       } else if (x === '?' && y === '?') {
-        untracked++
+        r.untracked++
       } else {
-        // Staged changes (first column)
-        if (x === 'M') stagedModified++
-        else if (x === 'A') stagedAdded++
-        else if (x === 'D') stagedDeleted++
-        else if (x === 'R') stagedRenamed++
-
-        // Unstaged changes (second column)
-        if (y === 'M') unstagedModified++
-        else if (y === 'A') unstagedAdded++
-        else if (y === 'D') unstagedDeleted++
-        else if (y === 'R') unstagedRenamed++
+        if (x === 'M') r.stagedM++
+        else if (x === 'A') r.stagedA++
+        else if (x === 'D') r.stagedD++
+        else if (x === 'R') r.stagedR++
+        if (y === 'M') r.unstagedM++
+        else if (y === 'A') r.unstagedA++
+        else if (y === 'D') r.unstagedD++
+        else if (y === 'R') r.unstagedR++
       }
     }
-
-    // Build status indicators with specific icons
-    // Icons: ○ modified, + added, − deleted, → renamed, ? untracked
-    // Colors: green=staged, yellow=unstaged, gray=untracked, blue=ahead/stash, magenta=behind
-    const indicators = []
-
-    if (conflictState) indicators.push(`\x1b[31;1m${conflictState}\x1b[0m`)
-    if (conflicts > 0) indicators.push(`\x1b[31;1m✖${conflicts}\x1b[0m`)
-
-    // Ahead/behind with blue/magenta
-    if (ahead > 0) indicators.push(`\x1b[34m↑${ahead}\x1b[0m`)
-    if (behind > 0) indicators.push(`\x1b[35m↓${behind}\x1b[0m`)
-
-    // Stash with flag icon, blue
-    if (stashCount > 0) indicators.push(`\x1b[34m⚑${stashCount}\x1b[0m`)
-
-    // Staged files (green) - show each type with its icon
-    if (stagedModified > 0) indicators.push(`\x1b[32m●${stagedModified}\x1b[0m`)
-    if (stagedAdded > 0) indicators.push(`\x1b[32m+${stagedAdded}\x1b[0m`)
-    if (stagedDeleted > 0) indicators.push(`\x1b[32m−${stagedDeleted}\x1b[0m`)
-    if (stagedRenamed > 0) indicators.push(`\x1b[32m→${stagedRenamed}\x1b[0m`)
-
-    // Unstaged files (yellow) - show each type with its icon
-    if (unstagedModified > 0) indicators.push(`\x1b[33m●${unstagedModified}\x1b[0m`)
-    if (unstagedAdded > 0) indicators.push(`\x1b[33m+${unstagedAdded}\x1b[0m`)
-    if (unstagedDeleted > 0) indicators.push(`\x1b[33m−${unstagedDeleted}\x1b[0m`)
-    if (unstagedRenamed > 0) indicators.push(`\x1b[33m→${unstagedRenamed}\x1b[0m`)
-
-    // Untracked files (gray with ? icon)
-    if (untracked > 0) indicators.push(`\x1b[90m?${untracked}\x1b[0m`)
-
-    const statusStr = indicators.length > 0 ? ` ${indicators.join('')}` : ''
-    return `\x1b[95m\uea68 ${branch}${statusStr}\x1b[0m`
-  } catch {
-    // Not a git repository or git command failed
-  }
-  return ''
-}
-
-function getConflictState(cwd) {
-  try {
-    // Check for various in-progress operations by testing file existence
-    const gitDir = execSync('git rev-parse --git-dir', {
-      cwd,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim()
-
-    const fullGitDir = path.isAbsolute(gitDir) ? gitDir : path.join(cwd, gitDir)
-
-    if (existsSync(path.join(fullGitDir, 'MERGE_HEAD'))) return '⚡merge'
-    if (existsSync(path.join(fullGitDir, 'rebase-merge')) || existsSync(path.join(fullGitDir, 'rebase-apply'))) return '⚡rebase'
-    if (existsSync(path.join(fullGitDir, 'CHERRY_PICK_HEAD'))) return '⚡pick'
-    if (existsSync(path.join(fullGitDir, 'REVERT_HEAD'))) return '⚡revert'
-    if (existsSync(path.join(fullGitDir, 'BISECT_LOG'))) return '⚡bisect'
-  } catch {
-    // Ignore errors
-  }
-  return ''
-}
-
-function getModelPart(data) {
-  const model = data.model?.display_name || 'Unknown'
-  return `\x1b[96m󰘦 ${model}\x1b[0m`
-}
-
-function getCostPart(data) {
-  const costUsd = data.cost?.total_cost_usd || 0
-  return `\x1b[93m$${costUsd.toFixed(4)}\x1b[0m`
-}
-
-function getContextPart(data) {
-  const ctx = data.context_window
-  if (!ctx) return ''
-
-  const windowSize = ctx.context_window_size || 0
-  if (windowSize === 0) return ''
-
-  const usage = ctx.current_usage
-  let currentTokens = 0
-  if (usage) {
-    currentTokens = (usage.input_tokens || 0) +
-      (usage.cache_creation_input_tokens || 0) +
-      (usage.cache_read_input_tokens || 0)
+    return r
   }
 
-  const percent = Math.round((currentTokens / windowSize) * 100)
-  const usedK = (currentTokens / 1000).toFixed(1)
-  const totalK = (windowSize / 1000).toFixed(0)
+  #buildIndicators({ conflict, conflicts, ahead, behind, stash, stagedM, stagedA, stagedD, stagedR, unstagedM, unstagedA, unstagedD, unstagedR, untracked }) {
+    const ind = []
+    if (conflict) ind.push(`\x1b[31;1m${conflict}\x1b[0m`)
+    if (conflicts > 0) ind.push(`\x1b[31;1m✖${conflicts}\x1b[0m`)
+    if (ahead > 0) ind.push(`\x1b[34m↑${ahead}\x1b[0m`)
+    if (behind > 0) ind.push(`\x1b[35m↓${behind}\x1b[0m`)
+    if (stash > 0) ind.push(`\x1b[34m⚑${stash}\x1b[0m`)
+    if (stagedM > 0) ind.push(`\x1b[32m●${stagedM}\x1b[0m`)
+    if (stagedA > 0) ind.push(`\x1b[32m+${stagedA}\x1b[0m`)
+    if (stagedD > 0) ind.push(`\x1b[32m−${stagedD}\x1b[0m`)
+    if (stagedR > 0) ind.push(`\x1b[32m→${stagedR}\x1b[0m`)
+    if (unstagedM > 0) ind.push(`\x1b[33m●${unstagedM}\x1b[0m`)
+    if (unstagedA > 0) ind.push(`\x1b[33m+${unstagedA}\x1b[0m`)
+    if (unstagedD > 0) ind.push(`\x1b[33m−${unstagedD}\x1b[0m`)
+    if (unstagedR > 0) ind.push(`\x1b[33m→${unstagedR}\x1b[0m`)
+    if (untracked > 0) ind.push(`\x1b[90m?${untracked}\x1b[0m`)
+    return ind.length ? ` ${ind.join('')}` : ''
+  }
 
-  // Color based on usage: green < 50%, yellow 50-80%, red > 80%
-  let color = '\x1b[32m' // green
-  if (percent >= 80) color = '\x1b[31m' // red
-  else if (percent >= 50) color = '\x1b[33m' // yellow
+  model() {
+    const name = this.data.model?.display_name || 'Unknown'
+    return `\x1b[96m󰘦 ${name}\x1b[0m`
+  }
 
-  return `${color}󰍛 ${usedK}k/${totalK}k (${percent}%)\x1b[0m`
+  cost() {
+    const usd = this.data.cost?.total_cost_usd || 0
+    return `\x1b[93m$${usd.toFixed(4)}\x1b[0m`
+  }
+
+  context() {
+    const ctx = this.data.context_window
+    if (!ctx?.context_window_size) return ''
+
+    const total = ctx.context_window_size
+    const usage = ctx.current_usage
+    const used = usage
+      ? (usage.input_tokens || 0) + (usage.cache_creation_input_tokens || 0) + (usage.cache_read_input_tokens || 0)
+      : 0
+
+    const pct = Math.round((used / total) * 100)
+    const color = pct >= 80 ? '\x1b[31m' : pct >= 50 ? '\x1b[33m' : '\x1b[32m'
+    return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k (${pct}%)\x1b[0m`
+  }
+
+  style() {
+    const name = this.data.output_style?.name || 'default'
+    return `\x1b[90m󰉼 ${name}\x1b[0m`
+  }
 }
 
-function getStylePart(data) {
-  const style = data.output_style?.name || 'default'
-  return `\x1b[90m󰉼 ${style}\x1b[0m`
+try {
+  const input = readFileSync(0, 'utf-8')
+  const data = JSON.parse(input)
+  const component = new StatuslineComponent(data)
+  process.stdout.write(await component.render())
+} catch {
+  process.stdout.write('[Claude Code]')
 }
