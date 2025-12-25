@@ -93,13 +93,30 @@ function M.find_nearest(lnum, hunks, direction, opts)
   local wrap = opts.wrap ~= false
 
   if direction == "next" then
+    -- Find the first hunk that starts after current line
+    -- If cursor is inside a hunk, skip to the next one
     for i, hunk in ipairs(hunks) do
-      -- For topdelete (added.start = 0), use effective position 1
       local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
-      if effective_start > lnum then
+      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+
+      -- If this hunk ends before or at current line, check next hunk
+      if effective_vend < lnum then
+        -- Continue to next hunk
+      elseif effective_start > lnum then
+        -- This hunk starts after current line - this is our target
         return hunk, i
+      else
+        -- Cursor is inside this hunk (lnum >= effective_start and lnum <= effective_vend)
+        -- Return the next hunk if exists
+        if i + 1 <= #hunks then
+          return hunks[i + 1], i + 1
+        elseif wrap then
+          return hunks[1], 1
+        end
+        return nil, nil
       end
     end
+    -- No hunk found after current position
     if wrap and #hunks > 0 then
       return hunks[1], 1
     end
@@ -177,6 +194,7 @@ function M.create_partial(hunks, top, bot)
   end
 
   local first_hunk = dominated_hunks[1]
+  local last_hunk = dominated_hunks[#dominated_hunks]
 
   local removed_start = first_hunk.removed.start
   local removed_count = 0
@@ -187,17 +205,27 @@ function M.create_partial(hunks, top, bot)
   local removed_lines = {} ---@type string[]
   local added_lines = {} ---@type string[]
 
-  for _, hunk in ipairs(dominated_hunks) do
+  -- Track if we're including the last line of the last hunk
+  -- to determine if we should inherit no_nl_at_eof
+  local includes_last_removed_line = false ---@type boolean
+  local includes_last_added_line = false ---@type boolean
+
+  for idx, hunk in ipairs(dominated_hunks) do
     local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
     local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
     local hunk_top = math.max(effective_start, top)
     local hunk_bot = math.min(effective_vend, bot)
+    local is_last_hunk = (idx == #dominated_hunks)
 
     if hunk.type == "delete" then
       for _, line in ipairs(hunk.removed.lines) do
         removed_lines[#removed_lines + 1] = line
       end
       removed_count = removed_count + hunk.removed.count
+      -- For delete type, we always include all removed lines
+      if is_last_hunk then
+        includes_last_removed_line = true
+      end
     elseif hunk.type == "add" then
       local offset = hunk_top - hunk.added.start
       local count = hunk_bot - hunk_top + 1
@@ -205,17 +233,31 @@ function M.create_partial(hunks, top, bot)
         added_lines[#added_lines + 1] = hunk.added.lines[i]
       end
       added_count = added_count + count
+      -- Check if we're including the last added line
+      if is_last_hunk and (offset + count >= hunk.added.count) then
+        includes_last_added_line = true
+      end
     else
       local add_offset = hunk_top - hunk.added.start
       local add_count = hunk_bot - hunk_top + 1
 
-      local ratio = hunk.removed.count / hunk.added.count
-      local remove_offset = math.floor(add_offset * ratio)
-      local remove_count = math.ceil(add_count * ratio)
+      local remove_offset ---@type integer
+      local remove_count ---@type integer
 
-      if add_offset == 0 and add_count == hunk.added.count then
+      -- Defensive check: for change type, added.count should be > 0
+      -- but we guard against division by zero anyway
+      if hunk.added.count == 0 then
         remove_offset = 0
         remove_count = hunk.removed.count
+      elseif add_offset == 0 and add_count == hunk.added.count then
+        -- Full hunk selection
+        remove_offset = 0
+        remove_count = hunk.removed.count
+      else
+        -- Proportional selection
+        local ratio = hunk.removed.count / hunk.added.count
+        remove_offset = math.floor(add_offset * ratio)
+        remove_count = math.ceil(add_count * ratio)
       end
 
       for i = remove_offset + 1, remove_offset + remove_count do
@@ -231,6 +273,16 @@ function M.create_partial(hunks, top, bot)
         end
       end
       added_count = added_count + add_count
+
+      -- Check if we're including the last lines
+      if is_last_hunk then
+        if remove_offset + remove_count >= hunk.removed.count then
+          includes_last_removed_line = true
+        end
+        if add_offset + add_count >= hunk.added.count then
+          includes_last_added_line = true
+        end
+      end
     end
   end
 
@@ -243,6 +295,10 @@ function M.create_partial(hunks, top, bot)
     hunk_type = "change"
   end
 
+  -- Inherit no_nl_at_eof from last hunk if we're including its last line
+  local removed_no_nl = includes_last_removed_line and last_hunk.removed.no_nl_at_eof or nil
+  local added_no_nl = includes_last_added_line and last_hunk.added.no_nl_at_eof or nil
+
   ---@type dot.module.git.Hunk
   return {
     type = hunk_type,
@@ -251,11 +307,13 @@ function M.create_partial(hunks, top, bot)
       start = added_start,
       count = added_count,
       lines = added_lines,
+      no_nl_at_eof = added_no_nl,
     },
     removed = {
       start = removed_start,
       count = removed_count,
       lines = removed_lines,
+      no_nl_at_eof = removed_no_nl,
     },
     vend = added_start + math.max(added_count, 1) - 1,
   }
@@ -289,10 +347,13 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
 
   local pre_lines = hunk.removed.lines ---@type string[]
   local now_lines = hunk.added.lines ---@type string[]
+  local pre_no_nl = hunk.removed.no_nl_at_eof ---@type boolean|nil
+  local now_no_nl = hunk.added.no_nl_at_eof ---@type boolean|nil
 
   if invert then
     pre_count, now_count = now_count, pre_count
     pre_lines, now_lines = now_lines, pre_lines
+    pre_no_nl, now_no_nl = now_no_nl, pre_no_nl
   end
 
   -- In the patch header: -start,pre_count +start,now_count
@@ -303,8 +364,93 @@ function M.create_patch(relpath, hunk, mode_bits, invert)
     lines[#lines + 1] = "-" .. line
   end
 
+  -- Add "\ No newline at end of file" marker for removed lines
+  if pre_no_nl and #pre_lines > 0 then
+    lines[#lines + 1] = "\\ No newline at end of file"
+  end
+
   for _, line in ipairs(now_lines) do
     lines[#lines + 1] = "+" .. line
+  end
+
+  -- Add "\ No newline at end of file" marker for added lines
+  if now_no_nl and #now_lines > 0 then
+    lines[#lines + 1] = "\\ No newline at end of file"
+  end
+
+  lines[#lines + 1] = ""
+  return table.concat(lines, "\n")
+end
+
+---Create a unified patch for multiple hunks with proper offset handling.
+---This is needed when staging multiple hunks at once, as each hunk application
+---changes line numbers for subsequent hunks.
+---@param relpath                    string
+---@param hunks                      dot.module.git.Hunk[]
+---@param mode_bits                  string|nil
+---@param invert                     boolean|nil
+---@return string
+function M.create_patch_multi(relpath, hunks, mode_bits, invert)
+  if #hunks == 0 then
+    return ""
+  end
+
+  if #hunks == 1 then
+    return M.create_patch(relpath, hunks[1], mode_bits, invert)
+  end
+
+  local lines = {} ---@type string[]
+  invert = invert or false
+  mode_bits = mode_bits or "100644"
+
+  lines[#lines + 1] = string.format("diff --git a/%s b/%s", relpath, relpath)
+  lines[#lines + 1] = string.format("index 000000..000000 %s", mode_bits)
+  lines[#lines + 1] = string.format("--- a/%s", relpath)
+  lines[#lines + 1] = string.format("+++ b/%s", relpath)
+
+  local offset = 0 ---@type integer
+
+  for _, hunk in ipairs(hunks) do
+    local start = hunk.removed.start ---@type integer
+    local pre_count = hunk.removed.count ---@type integer
+    local now_count = hunk.added.count ---@type integer
+
+    if hunk.type == "add" then
+      start = start + 1
+    end
+
+    local pre_lines = hunk.removed.lines ---@type string[]
+    local now_lines = hunk.added.lines ---@type string[]
+    local pre_no_nl = hunk.removed.no_nl_at_eof ---@type boolean|nil
+    local now_no_nl = hunk.added.no_nl_at_eof ---@type boolean|nil
+
+    if invert then
+      pre_count, now_count = now_count, pre_count
+      pre_lines, now_lines = now_lines, pre_lines
+      pre_no_nl, now_no_nl = now_no_nl, pre_no_nl
+    end
+
+    -- Apply offset to the "after" position (+start+offset)
+    lines[#lines + 1] = string.format("@@ -%d,%d +%d,%d @@", start, pre_count, start + offset, now_count)
+
+    for _, line in ipairs(pre_lines) do
+      lines[#lines + 1] = "-" .. line
+    end
+
+    if pre_no_nl and #pre_lines > 0 then
+      lines[#lines + 1] = "\\ No newline at end of file"
+    end
+
+    for _, line in ipairs(now_lines) do
+      lines[#lines + 1] = "+" .. line
+    end
+
+    if now_no_nl and #now_lines > 0 then
+      lines[#lines + 1] = "\\ No newline at end of file"
+    end
+
+    -- Update offset for next hunk
+    offset = offset + (now_count - pre_count)
   end
 
   lines[#lines + 1] = ""
@@ -314,8 +460,9 @@ end
 ---@param hunk                       dot.module.git.Hunk
 ---@param min_lnum                   integer|nil
 ---@param max_lnum                   integer|nil
+---@param next_hunk                  dot.module.git.Hunk|nil
 ---@return dot.module.git.Sign[]
-function M.calc_signs(hunk, min_lnum, max_lnum)
+function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
   local signs = {} ---@type dot.module.git.Sign[]
   min_lnum = min_lnum or 1
   max_lnum = max_lnum or math.huge
@@ -338,15 +485,27 @@ function M.calc_signs(hunk, min_lnum, max_lnum)
       end
     end
   else
+    -- Check if next hunk is a delete that touches this hunk's end
+    -- In this case, the last line should show changedelete indicator
+    local next_is_adjacent_delete = next_hunk
+      and next_hunk.type == "delete"
+      and next_hunk.added.start == start + count
+
     for i = 0, count - 1 do
       local lnum = start + i
       if lnum >= min_lnum and lnum <= max_lnum then
+        local is_last_line = (i == count - 1)
+
         if i == 0 and removed_count > 0 then
+          -- First line with removals
           if count > removed_count then
             signs[#signs + 1] = { type = "changedelete", lnum = lnum }
           else
             signs[#signs + 1] = { type = "change", lnum = lnum }
           end
+        elseif is_last_line and next_is_adjacent_delete then
+          -- Last line with adjacent delete hunk following
+          signs[#signs + 1] = { type = "changedelete", lnum = lnum }
         elseif removed_count > 0 and i < removed_count then
           signs[#signs + 1] = { type = "change", lnum = lnum }
         else
@@ -369,8 +528,17 @@ function M.calc_signs_all(hunks, min_lnum, max_lnum)
     return signs
   end
 
-  for _, hunk in ipairs(hunks) do
-    local hunk_signs = M.calc_signs(hunk, min_lnum, max_lnum)
+  max_lnum = max_lnum or math.huge
+
+  for i, hunk in ipairs(hunks) do
+    -- Early exit: if hunk starts after max_lnum, no more signs needed
+    local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+    if effective_start > max_lnum then
+      break
+    end
+
+    local next_hunk = hunks[i + 1] ---@type dot.module.git.Hunk|nil
+    local hunk_signs = M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
     for _, sign in ipairs(hunk_signs) do
       signs[#signs + 1] = sign
     end

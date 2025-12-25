@@ -196,9 +196,10 @@ function M.get_show_text_async(cwd, object, callback)
       vim.schedule(function()
         if obj.code == 0 then
           local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-          if lines[#lines] == "" then
-            lines[#lines] = nil
-          end
+          -- Keep trailing empty string to preserve no_nl_at_eof information
+          -- If file ends with newline: split produces [..., ""]
+          -- If file has no trailing newline: split produces [..., "last_line"]
+          -- diff.lua uses this to detect no_nl_at_eof
           callback(lines)
         else
           vim.system(
@@ -208,9 +209,6 @@ function M.get_show_text_async(cwd, object, callback)
               vim.schedule(function()
                 if obj2.code == 0 then
                   local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
-                  if lines[#lines] == "" then
-                    lines[#lines] = nil
-                  end
                   callback(lines)
                 else
                   callback(nil)

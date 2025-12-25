@@ -7,8 +7,10 @@ local M = {}
 ---@param new_count                  integer
 ---@param old_lines                  string[]
 ---@param new_lines                  string[]
+---@param old_has_trailing_nl        boolean
+---@param new_has_trailing_nl        boolean
 ---@return dot.module.git.Hunk
-local function create_hunk(old_start, old_count, new_start, new_count, old_lines, new_lines)
+local function create_hunk(old_start, old_count, new_start, new_count, old_lines, new_lines, old_has_trailing_nl, new_has_trailing_nl)
   local removed_lines = {} ---@type string[]
   local added_lines = {} ---@type string[]
 
@@ -31,6 +33,25 @@ local function create_hunk(old_start, old_count, new_start, new_count, old_lines
 
   local vend = new_start + math.max(new_count, 1) - 1
 
+  -- Detect no newline at EOF for removed lines
+  -- If hunk touches the last line and original file has no trailing newline
+  local removed_no_nl_at_eof = false ---@type boolean
+  if old_count > 0 and not old_has_trailing_nl then
+    local last_old_idx = old_start + old_count - 1
+    if last_old_idx >= #old_lines then
+      removed_no_nl_at_eof = true
+    end
+  end
+
+  -- Detect no newline at EOF for added lines
+  local added_no_nl_at_eof = false ---@type boolean
+  if new_count > 0 and not new_has_trailing_nl then
+    local last_new_idx = new_start + new_count - 1
+    if last_new_idx >= #new_lines then
+      added_no_nl_at_eof = true
+    end
+  end
+
   ---@type dot.module.git.Hunk
   return {
     type = hunk_type,
@@ -39,11 +60,13 @@ local function create_hunk(old_start, old_count, new_start, new_count, old_lines
       start = new_start,
       count = new_count,
       lines = added_lines,
+      no_nl_at_eof = added_no_nl_at_eof or nil,
     },
     removed = {
       start = old_start,
       count = old_count,
       lines = removed_lines,
+      no_nl_at_eof = removed_no_nl_at_eof or nil,
     },
     vend = vend,
   }
@@ -145,13 +168,41 @@ function M.run_diff(old_lines, new_lines)
     return hunks
   end
 
-  local a = table.concat(old_lines, "\n")
-  local b = table.concat(new_lines, "\n")
+  -- Detect trailing newline by checking if last element is empty string
+  -- git cat-file output: "line1\nline2\n" -> {"line1", "line2", ""}
+  -- nvim_buf_get_lines: always returns lines without trailing empty string
+  -- We need to normalize both to the same format for diff comparison
+  local old_has_trailing_nl = #old_lines > 0 and old_lines[#old_lines] == "" ---@type boolean
+  local new_has_trailing_nl = #new_lines > 0 and new_lines[#new_lines] == "" ---@type boolean
 
-  if #old_lines > 0 then
+  -- Remove trailing empty string for consistent line counting
+  -- But keep track of whether it existed for no_nl_at_eof detection
+  local old_effective = old_lines ---@type string[]
+  local new_effective = new_lines ---@type string[]
+
+  if old_has_trailing_nl then
+    old_effective = {}
+    for i = 1, #old_lines - 1 do
+      old_effective[i] = old_lines[i]
+    end
+  end
+
+  if new_has_trailing_nl then
+    new_effective = {}
+    for i = 1, #new_lines - 1 do
+      new_effective[i] = new_lines[i]
+    end
+  end
+
+  local a = table.concat(old_effective, "\n")
+  local b = table.concat(new_effective, "\n")
+
+  -- Add trailing newline for diff calculation
+  -- vim.diff expects consistent newline handling
+  if #old_effective > 0 then
     a = a .. "\n"
   end
-  if #new_lines > 0 then
+  if #new_effective > 0 then
     b = b .. "\n"
   end
 
@@ -180,7 +231,7 @@ function M.run_diff(old_lines, new_lines)
       new_start = 1
     end
 
-    local hunk = create_hunk(old_start, old_count, new_start, new_count, old_lines, new_lines)
+    local hunk = create_hunk(old_start, old_count, new_start, new_count, old_effective, new_effective, old_has_trailing_nl, new_has_trailing_nl)
     hunks[#hunks + 1] = hunk
   end
 
