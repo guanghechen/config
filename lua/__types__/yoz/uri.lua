@@ -74,6 +74,10 @@ function M.relative(from_uri, to_uri) end
 function M.split(path) end
 
 ---@param uri                           string
+---@return string|nil
+function M.to_filepath(uri) end
+
+---@param uri                           string
 ---@return boolean
 function M.validate(uri) end
 

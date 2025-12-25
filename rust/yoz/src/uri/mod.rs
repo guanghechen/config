@@ -12,6 +12,7 @@ mod pathname;
 mod protocol;
 mod relative;
 mod split;
+mod to_filepath;
 mod validate;
 
 pub use basename::basename;
@@ -28,4 +29,5 @@ pub use pathname::pathname;
 pub use protocol::protocol;
 pub use relative::relative;
 pub use split::split;
+pub use to_filepath::to_filepath;
 pub use validate::validate;
