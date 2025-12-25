@@ -65,7 +65,7 @@ async function getCwdPart(data) {
 
 async function getGitPart(fullCwd) {
   try {
-    // Use single git status -sb command to get branch, ahead/behind, and file status
+    // Use git status -sb for branch/ahead/behind and file status
     const status = execSync('git status -sb', {
       cwd: fullCwd,
       encoding: 'utf-8',
@@ -110,32 +110,80 @@ async function getGitPart(fullCwd) {
     // Check for conflict state (merge, rebase, cherry-pick, etc.)
     const conflictState = getConflictState(fullCwd)
 
-    // Count file statuses from remaining lines
-    let staged = 0, unstaged = 0, untracked = 0, conflicts = 0
+    // Get stash count
+    let stashCount = 0
+    try {
+      const stashList = execSync('git stash list', {
+        cwd: fullCwd,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      })
+      stashCount = stashList.split('\n').filter(Boolean).length
+    } catch {
+      // Ignore stash errors
+    }
+
+    // Count file statuses by type from remaining lines
+    // Staged: M=modified, A=added, D=deleted, R=renamed
+    // Unstaged: same but in second column
+    let conflicts = 0, untracked = 0
+    let stagedModified = 0, stagedAdded = 0, stagedDeleted = 0, stagedRenamed = 0
+    let unstagedModified = 0, unstagedAdded = 0, unstagedDeleted = 0, unstagedRenamed = 0
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i]
       if (!line) continue
       const x = line[0], y = line[1]
+
       // Conflict markers: UU, AA, DD, AU, UA, DU, UD
       if ((x === 'U' || y === 'U') || (x === 'A' && y === 'A') || (x === 'D' && y === 'D')) {
         conflicts++
       } else if (x === '?' && y === '?') {
         untracked++
       } else {
-        if (x !== ' ' && x !== '?') staged++
-        if (y !== ' ' && y !== '?') unstaged++
+        // Staged changes (first column)
+        if (x === 'M') stagedModified++
+        else if (x === 'A') stagedAdded++
+        else if (x === 'D') stagedDeleted++
+        else if (x === 'R') stagedRenamed++
+
+        // Unstaged changes (second column)
+        if (y === 'M') unstagedModified++
+        else if (y === 'A') unstagedAdded++
+        else if (y === 'D') unstagedDeleted++
+        else if (y === 'R') unstagedRenamed++
       }
     }
 
-    // Build status indicators (fish-style)
+    // Build status indicators with specific icons
+    // Icons: ○ modified, + added, − deleted, → renamed, ? untracked
+    // Colors: green=staged, yellow=unstaged, gray=untracked, blue=ahead/stash, magenta=behind
     const indicators = []
+
     if (conflictState) indicators.push(`\x1b[31;1m${conflictState}\x1b[0m`)
     if (conflicts > 0) indicators.push(`\x1b[31;1m✖${conflicts}\x1b[0m`)
-    if (ahead > 0) indicators.push(`\x1b[32m↑${ahead}\x1b[0m`)
-    if (behind > 0) indicators.push(`\x1b[31m↓${behind}\x1b[0m`)
-    if (staged > 0) indicators.push(`\x1b[32m•${staged}\x1b[0m`)
-    if (unstaged > 0) indicators.push(`\x1b[31m+${unstaged}\x1b[0m`)
-    if (untracked > 0) indicators.push(`\x1b[34m?${untracked}\x1b[0m`)
+
+    // Ahead/behind with blue/magenta
+    if (ahead > 0) indicators.push(`\x1b[34m↑${ahead}\x1b[0m`)
+    if (behind > 0) indicators.push(`\x1b[35m↓${behind}\x1b[0m`)
+
+    // Stash with flag icon, blue
+    if (stashCount > 0) indicators.push(`\x1b[34m⚑${stashCount}\x1b[0m`)
+
+    // Staged files (green) - show each type with its icon
+    if (stagedModified > 0) indicators.push(`\x1b[32m●${stagedModified}\x1b[0m`)
+    if (stagedAdded > 0) indicators.push(`\x1b[32m+${stagedAdded}\x1b[0m`)
+    if (stagedDeleted > 0) indicators.push(`\x1b[32m−${stagedDeleted}\x1b[0m`)
+    if (stagedRenamed > 0) indicators.push(`\x1b[32m→${stagedRenamed}\x1b[0m`)
+
+    // Unstaged files (yellow) - show each type with its icon
+    if (unstagedModified > 0) indicators.push(`\x1b[33m●${unstagedModified}\x1b[0m`)
+    if (unstagedAdded > 0) indicators.push(`\x1b[33m+${unstagedAdded}\x1b[0m`)
+    if (unstagedDeleted > 0) indicators.push(`\x1b[33m−${unstagedDeleted}\x1b[0m`)
+    if (unstagedRenamed > 0) indicators.push(`\x1b[33m→${unstagedRenamed}\x1b[0m`)
+
+    // Untracked files (gray with ? icon)
+    if (untracked > 0) indicators.push(`\x1b[90m?${untracked}\x1b[0m`)
 
     const statusStr = indicators.length > 0 ? ` ${indicators.join('')}` : ''
     return `\x1b[95m\uea68 ${branch}${statusStr}\x1b[0m`
