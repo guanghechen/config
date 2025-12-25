@@ -15,6 +15,7 @@
     "padding": 0
   },
   "enabledPlugins": {
+    "example-skills@anthropic-agent-skills": true,
     "lua-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true
   },
