@@ -614,17 +614,7 @@ function M:__precompute__(root, ctx)
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
 
-  local loaded_bufnrs = {} ---@type table<string, integer>
-  if show_diagnostics then
-    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_is_loaded(bufnr) then
-        local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
-        if bufname ~= "" then
-          loaded_bufnrs[bufname] = bufnr
-        end
-      end
-    end
-  end
+  local loaded_bufnrs = show_diagnostics and ark.nvim.get_loaded_bufnrs() or {} ---@type table<string, integer>
 
   ---@param node                        dot.module.explorer.Node
   ---@return dot.module.explorer.view.IDiagCounts

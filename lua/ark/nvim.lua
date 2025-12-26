@@ -12,6 +12,9 @@ local function decode_int(text)
   return num
 end
 
+local filepath_to_bufnr = {} ---@type table<string, integer>
+local bufnr_to_filepath = {} ---@type table<integer, string>
+
 ---@class ark.nvim
 local M = {}
 
@@ -150,9 +153,57 @@ end
 ---@param filepath                      string
 ---@return integer|nil
 function M.locate_bufnr(filepath)
-  local bufnr = vim.fn.bufnr(filepath) ---@type integer
+  local bufnr = filepath_to_bufnr[filepath] ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+    return bufnr
+  end
+
+  filepath_to_bufnr[filepath] = nil
+  if bufnr ~= nil then
+    bufnr_to_filepath[bufnr] = nil
+  end
+
+  bufnr = vim.fn.bufnr(filepath) ---@type integer
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr
+  end
+end
+
+---@return table<string, integer>
+function M.get_loaded_bufnrs()
+  local result = {} ---@type table<string, integer>
+  for filepath, bufnr in pairs(filepath_to_bufnr) do
+    if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+      result[filepath] = bufnr
+    end
+  end
+  return result
+end
+
+---@param bufnr                         integer
+---@param filepath                      string
+---@return nil
+function M.on_buf_open(bufnr, filepath)
+  if bufnr < 1 or filepath == "" then
+    return
+  end
+
+  local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
+  if old_filepath ~= nil and old_filepath ~= filepath then
+    filepath_to_bufnr[old_filepath] = nil
+  end
+
+  filepath_to_bufnr[filepath] = bufnr
+  bufnr_to_filepath[bufnr] = filepath
+end
+
+---@param bufnr                         integer
+---@return nil
+function M.on_buf_close(bufnr)
+  local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
+  if old_filepath ~= nil then
+    filepath_to_bufnr[old_filepath] = nil
+    bufnr_to_filepath[bufnr] = nil
   end
 end
 
