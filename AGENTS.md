@@ -1,33 +1,40 @@
 # Supreme Principles
 
-The following rules are **supreme principles** that must be followed at **all times** regardless of circumstances. Each item is an **absolute principle** that **supersedes all other guidelines** and is essential to the core workflow.
+> **Non-negotiable.** Violation of these principles is unacceptable.
 
-1. **CRITICAL**: **Never** try to read files that are ignored by git unless I provide the filepaths explicitly.
-2. **CRITICAL**: **Never** read, access, or reference any environment variable files including `.env.local`, `.env.*.local`, `*.http_request`, `*.http_response`, and any files containing sensitive information like secrets, passwords, or credentials.
-3. **CRITICAL**: **Never** stage or commit changes to git unless explicitly instructed to do so. All modifications, fixes, and changes must remain in the working directory for manual review and confirmation.
+1. **CRITICAL**: Never read files ignored by git unless filepaths are explicitly provided.
+2. **CRITICAL**: Never access environment variable files (`*.http_request`, `*.http_response`, `.env.local`, `.git-credentials`, `.ssh/`) or any files containing secrets, passwords, or credentials.
+3. **CRITICAL**: Never stage or commit git changes unless explicitly instructed.
 
 ## Coding Guidances
 
 1. **ALWAYS**: Only install packages when explicitly instructed.
-2. **ALWAYS**: Use `I`-prefixed naming for all types and interfaces (e.g., `IChatMessage`, `IUser`)
-3. **ALWAYS**: Write clean and concise code, avoid unnecessary comments.
-4. **ALWAYS**: Strictly adhere to the single responsibility principle, keep each file doing as few things as possible.
-5. **ALWAYS**: Keep processing until the task is completed or an unsolvable problem is encountered, without stopping in between.
-6. **ALWAYS**: You are not allowed to run any npm or yarn script except `yarn format`, `yarn lintfix`, and `yarn add`.
-7. **ALWAYS**: Recognize that the user is a skilled software engineer with strong engineering and algorithmic capabilities. When facing challenging problems or complex design decisions, proactively engage in discussion with the user to seek inspiration, explore ideas, and collaborate on better solutions.
-8. **ALWAYS**: Implement code in a concise, elegant, and efficient manner. Performance is crucial. Prioritize simplicity and elegance in your implementations. Caching should be the lowest priority consideration unless explicitly requested.
+2. **ALWAYS**: Use `I`-prefixed naming for types and interfaces (e.g., `IChatMessage`, `IUser`).
+3. **ALWAYS**: Write clean, concise, elegant code. Avoid unnecessary comments. Caching is lowest priority unless requested.
+4. **ALWAYS**: Keep processing until task completion or unsolvable problem; don't stop in between.
+5. **ALWAYS**: Engage in discussion with the user on challenging problems or complex design decisions.
+
+### Critical Architecture Principles
+
+1. **Unidirectional Dependencies** - No circular dependencies. Dependencies must form a DAG.
+2. **Single Responsibility** - High cohesion, low coupling. Each file has one clear purpose.
+3. **Consistent Module Structure** - All modules follow similar, self-explanatory organization. Familiarity with one module means understanding all.
+4. **Minimal Public Interface** - Private by default. Expose as little as possible.
+5. **Simplicity Over Optimization** - Simplicity first. Avoid caching unless truly necessary. Isolate complex optimizations into dedicated modules and expose through interfaces.
+
+### Formatting
+
+- Always include a single trailing newline at end of file
+- Validate at system boundaries only; trust internal code
 
 ## Documentation Guidances
 
-1. **ALWAYS**: When drawing tables or borders using symbols in Markdown, ensure separator lines are properly aligned. The user always uses a monospace font where CJK characters (e.g., Chinese) occupy 2 display units while ASCII characters occupy 1 unit. Account for this width difference to maintain visual alignment.
+1. **ALWAYS**: Align table/border separators in Markdown. CJK characters occupy 2 display units, ASCII occupies 1.
 
-## Recommended Requirements
+## Recommended
 
-The following rules are merely recommended for adoption and can be referenced at your discretion based on the circumstances.
-
-1. **RECOMMENDED**: Use `fd` rather than `find` command to search files.
-2. **RECOMMENDED**: Use `rg` rather than `grep` command to search contents from files or piped-contents.
-3. **RECOMMENDED**: When implementing a new feature, forking existing code is encouraged. Avoid rewriting existing code for reuse purposes, unless the modification is particularly simple or no other logic depends on that part of the code.
+1. Use `fd` rather than `find` to search files.
+2. Use `rg` rather than `grep` to search contents.
+3. Fork existing code for new features; avoid rewriting unless modification is simple or no other logic depends on it.
 
 ----End of the Supreme Principles----
-
