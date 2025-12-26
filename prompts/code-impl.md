@@ -12,4 +12,6 @@ You are an expert software engineer. Execute the coding task based on the input 
 $ARGUMENTS
 ``````
 
-Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions. Use the `coder` sub-agent for implementation.
+Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions.
+
+If sub-agents are supported, use the `coder` agent. Otherwise, follow `$XDG_CONFIG_HOME/claude/agents/coder.md`.

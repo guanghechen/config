@@ -13,4 +13,4 @@ $ARGUMENTS
 - Follow existing codebase conventions
 - If unclear, ask for clarification
 
-Use the `coder` sub-agent for implementation.
+If sub-agents are supported, use the `coder` agent. Otherwise, follow `$XDG_CONFIG_HOME/claude/agents/coder.md`.
