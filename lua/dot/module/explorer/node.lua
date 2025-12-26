@@ -203,11 +203,35 @@ function M.sync_chidxmap(parent, start_idx)
   end
 end
 
+--- Check if self is an ancestor of the given node.
+--- Note: A node is NOT considered an ancestor of itself.
 ---@param node                          dot.module.explorer.Node
 ---@return boolean
 function M:is_ancestor_of(node)
-  local uri = self.uri ---@type string
-  if node.uri == uri then
+  if self.uri == node.uri then
+    return false
+  end
+
+  local depth = self.depth ---@type integer
+  if node.depth <= depth then
+    return false
+  end
+
+  local o = node.parent ---@type dot.module.explorer.Node|nil
+  while o ~= nil and o.depth >= depth do
+    if o.uri == self.uri then
+      return true
+    end
+    o = o.parent
+  end
+  return false
+end
+
+--- Check if self is an ancestor of the given node, or if they are the same node.
+---@param node                          dot.module.explorer.Node
+---@return boolean
+function M:is_ancestor_or_self(node)
+  if self.uri == node.uri then
     return true
   end
 
@@ -217,8 +241,8 @@ function M:is_ancestor_of(node)
   end
 
   local o = node.parent ---@type dot.module.explorer.Node|nil
-  while o ~= nil and depth <= o.depth do
-    if o.uri == uri then
+  while o ~= nil and o.depth >= depth do
+    if o.uri == self.uri then
       return true
     end
     o = o.parent
@@ -226,11 +250,35 @@ function M:is_ancestor_of(node)
   return false
 end
 
+--- Check if self is a descendant of the given root.
+--- Note: A node is NOT considered a descendant of itself.
 ---@param root                          dot.module.explorer.Node
 ---@return boolean
 function M:is_descendant_of(root)
-  local uri = root.uri ---@type string
-  if self.uri == uri then
+  if self.uri == root.uri then
+    return false
+  end
+
+  local depth = root.depth ---@type integer
+  if self.depth <= depth then
+    return false
+  end
+
+  local o = self.parent ---@type dot.module.explorer.Node|nil
+  while o ~= nil and o.depth >= depth do
+    if o.uri == root.uri then
+      return true
+    end
+    o = o.parent
+  end
+  return false
+end
+
+--- Check if self is a descendant of the given root, or if they are the same node.
+---@param root                          dot.module.explorer.Node
+---@return boolean
+function M:is_descendant_or_self(root)
+  if self.uri == root.uri then
     return true
   end
 
@@ -241,7 +289,7 @@ function M:is_descendant_of(root)
 
   local o = self.parent ---@type dot.module.explorer.Node|nil
   while o ~= nil and o.depth >= depth do
-    if o.uri == uri then
+    if o.uri == root.uri then
       return true
     end
     o = o.parent

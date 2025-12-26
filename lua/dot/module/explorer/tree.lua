@@ -125,7 +125,7 @@ function M:apply_copy_paste(target_parent_uri)
       return false
     end
 
-    if self:__is_descendant__(node, target_node) then
+    if target_node:is_descendant_or_self(node) then
       ark.reporter.error({
         from = __module_name__,
         subject = subject,
@@ -271,7 +271,7 @@ function M:apply_cut_paste(target_parent_uri)
       return false
     end
 
-    if self:__is_descendant__(node, target_node) then
+    if target_node:is_descendant_or_self(node) then
       ark.reporter.error({
         from = __module_name__,
         subject = subject,
@@ -804,7 +804,7 @@ function M:remove(uri)
     parent.chidxmap[node.nodename] = nil
 
     if self._root ~= nil then
-      if self._root == node or self:__is_descendant__(node, self._root) then
+      if self._root:is_descendant_or_self(node) then
         self._root = parent
       end
     end
@@ -1026,29 +1026,6 @@ function M:__insert__(uri, resource, ensure_resource)
   end
   o.uri = Node.calc_uri(o.parent.uri, o.nodename, o.nodetype)
   return o, new_created
-end
-
----@protected
----@param root                          dot.module.explorer.Node
----@param node                          dot.module.explorer.Node
----@return boolean
-function M:__is_descendant__(root, node)
-  if root == node then
-    return true
-  end
-
-  if node.depth <= root.depth then
-    return false
-  end
-
-  local o = node.parent ---@type dot.module.explorer.Node|nil
-  while o ~= nil do
-    if o == root then
-      return true
-    end
-    o = o.parent
-  end
-  return false
 end
 
 ---@protected
