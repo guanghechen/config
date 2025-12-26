@@ -12,11 +12,9 @@ local function is_within_range(cursor, range)
 end
 
 ---@class dot.module.lsp
----@field public action                 dot.module.lsp.action
 ---@field public diagnostic             dot.module.lsp.diagnostic
 ---@field public event                  dot.module.lsp.event
 local M = {
-  action = require("dot.module.lsp.action"),
   diagnostic = require("dot.module.lsp.diagnostic"),
   event = require("dot.module.lsp.event"),
 }
