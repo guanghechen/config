@@ -795,3 +795,20 @@ local tree = Tree.new({
 1. 暂不支持文件系统监听（需手动刷新）
 2. 暂不支持大目录分页加载
 3. 暂不支持多工作区根
+
+----------------------------------------------------------------------------------------------------
+
+## Design Decisions
+
+The following are intentional design choices:
+
+- **Single action.lua file**: All action methods are kept in one file (~1365 lines). They share similar patterns and are highly related; splitting would increase import complexity without meaningful benefit.
+
+- **Keymaps in widget.lua**: All keymaps are defined inline in `__setup_keymaps__`. External configuration would add complexity; current approach keeps mappings co-located with their implementation.
+
+- **`get_common_ancestor_path` returns `/` for root**: When computing the common ancestor of selected nodes reaches the filesystem root, returning `"/"` is the expected fallback behavior.
+
+- **Short variable names `Ns`, `Nn` in tree.lua**: Used locally for URI length calculations. Short names are acceptable in tight scope and follow math/algorithm conventions.
+
+- **Separate `is_ancestor_of` method variants**: Four methods (`is_ancestor_of`, `is_ancestor_or_self`, `is_descendant_of`, `is_descendant_or_self`) are kept separate. Each has distinct boundary conditions; extracting common logic would add complexity without significant code reduction.
+
