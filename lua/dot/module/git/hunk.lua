@@ -333,6 +333,32 @@ function M.create_partial(hunks, top, bot)
   }
 end
 
+---@param hunks                         dot.module.git.Hunk[]|nil
+---@param top                           integer
+---@param bot                           integer
+---@return dot.module.git.Hunk[]
+function M.create_partials(hunks, top, bot)
+  if not hunks or #hunks == 0 then
+    return {}
+  end
+
+  local result = {} ---@type dot.module.git.Hunk[]
+
+  for _, hunk in ipairs(hunks) do
+    local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+    local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+
+    if not (effective_vend < top or effective_start > bot) then
+      local partial = M.create_partial({ hunk }, top, bot)
+      if partial then
+        result[#result + 1] = partial
+      end
+    end
+  end
+
+  return result
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Patch generation
 ----------------------------------------------------------------------------------------------------

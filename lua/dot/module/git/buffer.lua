@@ -633,16 +633,17 @@ function M.stage_hunk(bufnr, range, callback)
     return
   end
 
-  local hunk ---@type dot.module.git.Hunk|nil
+  local hunks ---@type dot.module.git.Hunk[]
   if range then
-    hunk = dot.git.hunk.create_partial(buf_cache.hunks, range[1], range[2])
+    hunks = dot.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
   else
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    hunk = dot.git.hunk.find(lnum, buf_cache.hunks)
+    local hunk = dot.git.hunk.find(lnum, buf_cache.hunks)
+    hunks = hunk and { hunk } or {}
   end
 
-  if not hunk then
+  if #hunks == 0 then
     if callback then
       callback(false, "No hunk at cursor")
     end
@@ -655,7 +656,7 @@ function M.stage_hunk(bufnr, range, callback)
   local file = buf_cache.file
 
   local function do_stage()
-    local patch = dot.git.hunk.create_patch(relpath, hunk, mode_bits, false)
+    local patch = dot.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)
     dot.git.cmd.apply_patch_async(toplevel, patch, false, function(ok, err)
       if ok then
         M.refresh(bufnr, true, function()
