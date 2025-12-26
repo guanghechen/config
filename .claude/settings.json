@@ -1,7 +1,11 @@
 {
   "permissions": {
-    "allow": ["WebSearch"]
+    "allow": [
+      "WebFetch",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:docs.claude.com)",
+      "WebFetch(domain:github.com)"
+    ]
   },
-  "outputStyle": "Explanatory"
+  "outputStyle": "Wiki"
 }
-
