@@ -83,16 +83,10 @@ function M:apply_copy_paste(target_parent_uri)
     return false
   end
 
-  local target_nodeuri = target_node.uri ---@type string
-  local load_uri ---@type string
-  if target_node == self._superroot then
-    load_uri = target_node.uri
-  else
-    load_uri = target_nodeuri
-  end
+  local target_node_uri = target_node.uri ---@type string
 
   if not target_node.loaded then
-    self:__load_children__(target_node, load_uri)
+    self:__load_children__(target_node, target_node_uri)
   end
 
   local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
@@ -169,7 +163,7 @@ function M:apply_copy_paste(target_parent_uri)
 
   for _, node in ipairs(selected_nodes) do
     local source_uri = node.uri ---@type string
-    local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
+    local destination_uri = Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
 
     local ok, result = pcall(rm.copy, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
     if not ok then
@@ -228,16 +222,10 @@ function M:apply_cut_paste(target_parent_uri)
     return false
   end
 
-  local target_nodeuri = target_node.uri ---@type string
-  local load_uri ---@type string
-  if target_node == self._superroot then
-    load_uri = target_node.uri
-  else
-    load_uri = target_nodeuri
-  end
+  local target_node_uri = target_node.uri ---@type string
 
   if not target_node.loaded then
-    self:__load_children__(target_node, load_uri)
+    self:__load_children__(target_node, target_node_uri)
   end
 
   local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
@@ -328,7 +316,7 @@ function M:apply_cut_paste(target_parent_uri)
       end
 
       local source_uri = nodeuri ---@type string
-      local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
+      local destination_uri = Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
 
       local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
       if not ok then
@@ -798,9 +786,14 @@ function M:remove(uri)
       return
     end
 
+    -- Order matters:
+    -- 1. table.remove: physically remove node from children array
+    -- 2. sync_chidxmap: re-index remaining children after removal_index
+    -- 3. chidxmap[nodename] = nil: explicitly clear the removed node's entry
+    --    (sync_chidxmap only re-indexes from removal_index, it won't clear
+    --    the removed node's entry if no remaining child has the same name)
     table.remove(parent.children, removal_index)
     Node.sync_chidxmap(parent, removal_index)
-
     parent.chidxmap[node.nodename] = nil
 
     if self._root ~= nil then
