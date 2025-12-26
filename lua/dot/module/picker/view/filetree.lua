@@ -744,7 +744,7 @@ function M.default_render_listview_leaf(ctx, node)
   end
   text = text .. git_text ---@type string
 
-  local diagnostic_text = dot.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
+  local diagnostic_text = dot.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
   return { text = text, highlights = highlights }
 end
@@ -854,7 +854,7 @@ function M.default_render_treeview_leaf(_, node)
   end
   text = text .. git_text ---@type string
 
-  local diagnostic_text = dot.lsp.calc_diagnostic_info(node.data.filepath, #text, highlights) ---@type string
+  local diagnostic_text = dot.lsp.diagnostic.render(node.data.filepath, #text, highlights) ---@type string
   text = text .. diagnostic_text ---@type string
   return { text = text, highlights = highlights }
 end

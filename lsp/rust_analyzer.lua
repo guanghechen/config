@@ -113,7 +113,7 @@ end
 ---@param config                        table
 ---@return nil
 local function before_init(params, config)
-  dot.lsp.before_init(params, config)
+  dot.lsp.event.before_init(params, config)
 
   -- See https://github.com/rust-lang/rust-analyzer/blob/eb5da56d839ae0a9e9f50774fa3eb78eb0964550/docs/dev/lsp-extensions.md?plain=1#L26
   if config.settings and config.settings["rust-analyzer"] then
@@ -161,7 +161,7 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  dot.lsp.on_attach(client, bufnr)
+  dot.lsp.event.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(bufnr, "LspCargoReload", function()
     reload_workspace(bufnr)
@@ -171,16 +171,16 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  dot.lsp.on_detach(client, bufnr)
+  dot.lsp.event.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  dot.lsp.on_init(client, config)
+  dot.lsp.event.on_init(client, config)
 end
 
-local capabilities = dot.lsp.get_capabilities()
+local capabilities = dot.lsp.event.get_capabilities()
 local experimental = type(capabilities.experimental) == "table" and capabilities.experimental or {} ---@cast experimental table
 experimental.serverStatusNotification = true
 experimental.commands = vim.list_extend({

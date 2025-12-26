@@ -320,7 +320,7 @@ function M:move(source_uri, target_uri)
   end
 
   local move_ok = true ---@type boolean
-  dot.lsp.on_rename(source_path, target_path, function()
+  dot.lsp.event.on_rename(source_path, target_path, function()
     local ok, err = pcall(vim.fn.rename, source_path, target_path)
     if not ok then
       ark.reporter.error({
@@ -337,7 +337,7 @@ function M:move(source_uri, target_uri)
     return false
   end
 
-  dot.lsp.rename_buf(source_path, target_path)
+  dot.lsp.event.rename_buf(source_path, target_path)
 
   return true
 end

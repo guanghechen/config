@@ -945,10 +945,10 @@ function M:rename()
     local old_filepath = yoz.uri.to_filepath(uri) or "" ---@type string
     local new_filepath = yoz.uri.to_filepath(new_uri) or "" ---@type string
 
-    dot.lsp.on_rename(old_filepath, new_filepath, function()
+    dot.lsp.event.on_rename(old_filepath, new_filepath, function()
       local ok = ctx.resource_manager:move(uri, new_uri) ---@type boolean
       if ok then
-        dot.lsp.rename_buf(old_filepath, new_filepath)
+        dot.lsp.event.rename_buf(old_filepath, new_filepath)
         if #selected_nodes == 1 then
           ctx.tree:clear_selection()
         end

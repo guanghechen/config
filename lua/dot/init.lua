@@ -126,6 +126,7 @@ local widget = setmetatable({
 local __mods = {
   board = "dot.module.board",
   git = "dot.module.git",
+  lsp = "dot.module.lsp",
   picker = "dot.module.picker",
   searcher = "dot.module.searcher",
   winpicker = "dot.module.winpicker",
@@ -133,8 +134,6 @@ local __mods = {
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
-  lsp = "dot.lsp",
-  lsp_action = "dot.lsp_action",
   notifier = "dot.notifier",
   path = "dot.path",
   session = "dot.session",
@@ -150,6 +149,7 @@ local __mods = {
 ---@field public __mods                 dot.__mods
 ---@field public board                  dot.module.board
 ---@field public git                    dot.module.git
+---@field public lsp                    dot.module.lsp
 ---@field public picker                 dot.module.picker
 ---@field public searcher               dot.module.searcher
 ---@field public winpicker              dot.module.winpicker
@@ -157,8 +157,6 @@ local __mods = {
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public fn                     dot.fn
----@field public lsp                    dot.lsp
----@field public lsp_action             dot.lsp_action
 ---@field public notifier               dot.notifier
 ---@field public session                dot.session
 ---@field public state                  dot.state

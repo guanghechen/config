@@ -255,7 +255,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
     local client = vim.lsp.get_client_by_id(client_id)
     local bufnr = args.buf
     if client ~= nil then
-      dot.lsp.on_detach(client, bufnr)
+      dot.lsp.event.on_detach(client, bufnr)
     end
   end,
 })

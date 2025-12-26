@@ -30,7 +30,7 @@ end
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  dot.lsp.before_init(params, config)
+  dot.lsp.event.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
@@ -89,7 +89,7 @@ local function on_attach(client, bufnr)
     end)
   end
 
-  dot.lsp.on_attach(client, bufnr)
+  dot.lsp.event.on_attach(client, bufnr)
 
   ---@type ark.t.IKeymap[]
   local keymaps = {
@@ -191,13 +191,13 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  dot.lsp.on_detach(client, bufnr)
+  dot.lsp.event.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  dot.lsp.on_init(client, config)
+  dot.lsp.event.on_init(client, config)
 end
 
 local paths = {
@@ -219,7 +219,7 @@ end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = dot.lsp.get_capabilities(),
+  capabilities = dot.lsp.event.get_capabilities(),
   cmd = { "vtsls", "--stdio" },
   filetypes = {
     "javascript",

@@ -1,4 +1,4 @@
-local __module_name__ = "dot.lsp_action" ---@type string
+local __module_name__ = "dot.module.lsp.action" ---@type string
 
 local api = vim.api
 local lsp = vim.lsp
@@ -398,7 +398,7 @@ local function custom_code_action(opts)
   end
 end
 
----@class dot.lsp_action
+---@class dot.module.lsp.action
 local M = {}
 
 ---@param spec                          dot.t.ILspActionProviderSpec|fun(ctx: dot.t.ILspActionProviderContext): dot.t.ILspActionProviderAction|nil

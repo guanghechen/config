@@ -25,7 +25,7 @@ local function rename(params)
     return false
   end
 
-  dot.lsp.on_rename(from, to, function()
+  dot.lsp.event.on_rename(from, to, function()
     local move_success, move_err = yoz.fs.move({
       old_path = from,
       new_path = to,
@@ -43,7 +43,7 @@ local function rename(params)
       return
     end
 
-    dot.lsp.rename_buf(from, to)
+    dot.lsp.event.rename_buf(from, to)
   end)
 
   return true

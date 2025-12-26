@@ -1,5 +1,5 @@
-dot.lsp_action.setup()
-dot.lsp_action.register({
+dot.lsp.action.setup()
+dot.lsp.action.register({
   id = "cspell-add-word",
   source = "cspell",
   handler = function(ctx)
