@@ -8,6 +8,7 @@
 
 ```
 dot.module.explorer/
+├── action.lua       # 动作逻辑（文件操作、导航等）
 ├── node.lua         # 节点定义与状态查询
 ├── tree.lua         # 树结构管理与操作
 ├── state.lua        # 全局状态与 tick 管理
@@ -31,7 +32,7 @@ tree.lua (树) ← resource/file.lua (资源管理器)
     ↓
 view.lua (渲染)
     ↓
-widget.lua (Widget)
+widget.lua (Widget) ← action.lua (动作)
 ```
 
 ## 核心概念
@@ -440,14 +441,14 @@ end
 -- 初始状态：根目录及部分子目录展开
 -- 目标：折叠根目录下所有内容
 
-function widget:__action_collapse_all__()
-  local root_uri = tree.state.o_root_uri:snapshot()
+function Action:collapse_all()
+  local root_uri = self._ctx.tree.o_root_uri:snapshot()
 
   -- 1. 递归折叠（设置 rs 为偶数）
-  tree:toggle_expanded(root_uri, true, "collapse")
+  self._ctx.tree:toggle_expanded(root_uri, true, "collapse")
 
   -- 2. 单独展开 root（设置 ns 为奇数）
-  tree:toggle_expanded(root_uri, false, "expand")
+  self._ctx.tree:toggle_expanded(root_uri, false, "expand")
 end
 ```
 
@@ -506,6 +507,38 @@ end
 6. **代码简洁**：状态判断和更新逻辑统一，易于理解和维护
 
 ## 模块职责
+
+### action.lua
+
+动作逻辑模块，通过 Context 模式从 widget 中解耦：
+
+**Context 接口**：
+```lua
+---@class dot.module.explorer.action.IContext
+---@field public widget              dot.module.explorer.Widget
+---@field public tree                dot.module.explorer.Tree
+---@field public resource_manager    dot.module.explorer.resource.FileManager
+---@field public fullname            string
+---@field public get_cursor_uri      fun(): string|nil
+---@field public get_parent_uri      fun(uri: string): string|nil
+---@field public get_visual_nodes    fun(): dot.module.explorer.Node[]
+---@field public refresh             fun(skip_refresh?: boolean): nil
+---@field public render              fun(): nil
+---@field public sync_cursor_to_uri  fun(uri: string): nil
+```
+
+**核心方法**：
+- 文件操作：`create_file()`、`create_directory()`、`delete()`、`rename()`
+- 剪贴操作：`copy_node()`、`cut()`、`paste()`、`copy_selected()`、`move_selected()`
+- 导航操作：`go_parent()`、`go_cwd()`、`go_home()`、`go_prev()`
+- 打开操作：`open()`、`open_tab()`、`open_split()`、`open_vsplit()`
+- 窗口选择：`pick_win_open()`、`pick_win_split()`、`pick_win_vsplit()`
+- 选中操作：`select_toggle()`、`toggle_select_mode()`、`toggle_select_mode_visual()`
+- 展开操作：`collapse_all()`、`collapse_or_parent()`、`toggle_recursive()`
+- 跳转操作：`jump_parent()`、`jump_last_child()`
+- 外部集成：`add_locations_to_ai()`、`open_file_explorer()`、`open_file_finder()`、`open_searcher()`、`open_system_explorer()`
+- 信息显示：`show_keysheet()`、`show_file_info()`、`copy_path()`
+- 其他：`send_to_quickfix()`、`set_root()`、`open_selected()`、`delete_selected()`
 
 ### node.lua
 
@@ -567,14 +600,29 @@ end
 
 ### widget.lua
 
-Widget 层封装，提供标准 Widget API：
+Widget 层封装，提供标准 Widget API 和快捷键绑定：
 
-- `focus()`、`hide()`、`toggle()`、`show()`
+**公共 API**：
+- `focus()`、`hide()`、`toggle()`、`show()`：窗口控制
 - `reveal(uri)`：展开并定位到指定 URI
 - `set_root(uri)`：设置根目录
 - `refresh()`：刷新视图
-- 快捷键绑定
-- Winbar 渲染
+- `get_bufnr()`、`get_winnr()`：获取缓冲区/窗口号
+- `get_cursor_uri()`：获取光标所在节点 URI
+- `get_tree()`：获取 Tree 实例
+- `get_render_result()`：获取渲染结果
+
+**内部方法**：
+- `__goto_git_changed__(direction)`：跳转到 git 变更文件
+- `__goto_matching_file__(direction, matcher)`：按条件跳转到匹配文件
+- `__goto_matching_file_or_dir__(direction, matcher)`：按条件跳转到匹配文件或目录
+- `__setup_keymaps__(bufnr)`：设置快捷键
+- `__setup_subscriptions__()`：设置状态订阅
+- `__render__()`：渲染树视图
+- `__refresh__(skip_refresh)`：刷新树数据
+- `__sync_cursor_to_uri__(uri)`：同步光标到 URI
+- `__update_winbar__()`：更新 Winbar
+- `__update_cursorline__()`：更新光标行高亮
 
 ### Act UI
 

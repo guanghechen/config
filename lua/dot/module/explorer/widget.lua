@@ -1,5 +1,6 @@
 local __module_name__ = "dot.module.explorer.widget" ---@type string
 
+local Action = require("dot.module.explorer.action")
 local Tree = require("dot.module.explorer.tree")
 local View = require("dot.module.explorer.view")
 local ResourceFileManager = require("dot.module.explorer.resource.file")
@@ -50,22 +51,23 @@ local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@t
 ---@class dot.module.explorer.Widget : dot.t.IWidget
 ---@field public name                   string
 ---@field public fullname               string
----@field protected _disposed           boolean
----@field protected _bufnr              integer|nil
----@field protected _winnr              integer|nil
+---@field protected _action             dot.module.explorer.Action
 ---@field protected _autocmd_ids        integer[]
----@field protected _tree               dot.module.explorer.Tree
----@field protected _view               dot.module.explorer.View
----@field protected _resource_manager   dot.module.explorer.resource.FileManager
----@field protected _render_result      dot.module.explorer.view.IRenderResult|nil
----@field protected _nvimbar            dot.module.nvimbar.Nvimbar
----@field protected _subscriptions      ark.c.IUnsubscribable[]
----@field protected _width              integer
----@field protected _o_width            ark.c.Observable|nil
+---@field protected _bufnr              integer|nil
+---@field protected _disposed           boolean
 ---@field protected _flags              dot.module.explorer.widget.IFlagItem[]
 ---@field protected _is_focused         boolean
 ---@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
+---@field protected _o_width            ark.c.Observable|nil
 ---@field protected _prev_cursor_lnum   integer|nil
+---@field protected _render_result      dot.module.explorer.view.IRenderResult|nil
+---@field protected _resource_manager   dot.module.explorer.resource.FileManager
+---@field protected _subscriptions      ark.c.IUnsubscribable[]
+---@field protected _tree               dot.module.explorer.Tree
+---@field protected _view               dot.module.explorer.View
+---@field protected _width              integer
+---@field protected _winnr              integer|nil
 local M = {}
 M.__index = M
 
@@ -96,21 +98,49 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.name = name
   self.fullname = fullname
-  self._disposed = false
-  self._bufnr = nil
-  self._winnr = nil
   self._autocmd_ids = {}
-  self._tree = tree
-  self._view = view
-  self._resource_manager = resource_manager
-  self._render_result = nil
-  self._subscriptions = {}
-  self._width = props.width or 40
-  self._o_width = props.o_width
+  self._bufnr = nil
+  self._disposed = false
   self._flags = props.flags or {}
   self._is_focused = false
   self._keymaps = {}
+  self._nvimbar = nil ---@type dot.module.nvimbar.Nvimbar
+  self._o_width = props.o_width
   self._prev_cursor_lnum = nil
+  self._render_result = nil
+  self._resource_manager = resource_manager
+  self._subscriptions = {}
+  self._tree = tree
+  self._view = view
+  self._width = props.width or 40
+  self._winnr = nil
+
+  ---@type dot.module.explorer.action.IContext
+  local action_ctx = {
+    widget = self,
+    tree = tree,
+    resource_manager = resource_manager,
+    fullname = fullname,
+    get_cursor_uri = function()
+      return self:get_cursor_uri()
+    end,
+    get_parent_uri = function(uri)
+      return self:__get_parent_uri__(uri)
+    end,
+    get_visual_nodes = function()
+      return self:__get_visual_nodes__()
+    end,
+    refresh = function(skip_refresh)
+      self:__refresh__(skip_refresh)
+    end,
+    render = function()
+      self:__render__()
+    end,
+    sync_cursor_to_uri = function(uri)
+      self:__sync_cursor_to_uri__(uri)
+    end,
+  }
+  self._action = Action.new(action_ctx)
   self._nvimbar = self:__create_nvimbar__()
 
   self:__setup_subscriptions__()
@@ -324,1687 +354,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@return nil
-function M:__action_add_locations_to_ai__()
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-
-  local locations = {} ---@type dot.t.ILocation[]
-  if #selected_nodes > 0 then
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      locations[#locations + 1] = { filepath = filepath }
-    end
-  else
-    local uri = self:get_cursor_uri() ---@type string|nil
-    if uri == nil then
-      return
-    end
-    local filepath = uri_to_filepath(uri) ---@type string
-    locations[#locations + 1] = { filepath = filepath }
-  end
-
-  dot.fn.add_locations_to_ai(locations)
-end
-
----@protected
----@return nil
-function M:__action_add_locations_to_ai_visual__()
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local locations = {} ---@type dot.t.ILocation[]
-  for _, node in ipairs(nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
-    locations[#locations + 1] = { filepath = filepath }
-  end
-
-  dot.fn.add_locations_to_ai(locations)
-end
-
----@protected
----@return nil
-function M:__action_collapse_all__()
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  self._tree:toggle_expanded(root_uri, true, "collapse")
-  self._tree:toggle_expanded(root_uri, false, "expand")
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_collapse_or_parent__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  if uri:sub(-1) == "/" then
-    local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-    if node ~= nil and node.expanded then
-      self._tree:toggle_expanded(uri, false, "collapse")
-      self:__refresh__()
-      return
-    end
-  end
-
-  local parent_uri = self:__get_parent_uri__(uri) ---@type string
-  if parent_uri ~= root_uri then
-    self._tree.o_cursor_uri:next(parent_uri)
-    self:__sync_cursor_to_uri__(parent_uri)
-  end
-end
-
----@protected
----@return nil
-function M:__action_copy_node__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-  if #selected_nodes > 0 then
-    local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-    local is_selected = self._tree:is_selected(uri) ---@type boolean
-
-    if current_mode == "copy" and is_selected then
-      self._tree:toggle_selected(uri, "unselect")
-    else
-      self._tree:toggle_selected(uri, "select")
-    end
-
-    self._tree.select_mode = "copy"
-    self:__refresh__()
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-
-  vim.ui.input({ prompt = "Copy to: ", default = filepath }, function(input)
-    if input == nil or input == "" or input == filepath then
-      return
-    end
-
-    local target_uri = filepath_to_uri(input) ---@type string
-    local ok = self._resource_manager:copy(uri, target_uri) ---@type boolean
-    if ok then
-      self._tree:refresh(true)
-      vim.schedule(function()
-        self:__refresh__(true)
-        self:__sync_cursor_to_uri__(target_uri)
-      end)
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_copy_path__()
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-
-  local filepaths = {} ---@type string[]
-  if #selected_nodes > 0 then
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      filepaths[#filepaths + 1] = filepath
-    end
-  else
-    local uri = self:get_cursor_uri() ---@type string|nil
-    if uri == nil then
-      return
-    end
-    local filepath = uri_to_filepath(uri) ---@type string
-    filepaths[#filepaths + 1] = filepath
-  end
-
-  dot.fn.select_copy_filepaths({
-    filepaths = filepaths,
-    winopts = {
-      relative = "cursor",
-      row = 1,
-      col = 4,
-    },
-  })
-end
-
----@protected
----@return nil
-function M:__action_copy_visual__()
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-  if current_mode ~= "copy" then
-    for _, node in ipairs(nodes) do
-      self._tree:toggle_selected(node.uri, "select")
-    end
-    self._tree.select_mode = "copy"
-  else
-    local has_unselected = false ---@type boolean
-    for _, node in ipairs(nodes) do
-      if not node.selected then
-        has_unselected = true
-        break
-      end
-    end
-
-    if has_unselected then
-      for _, node in ipairs(nodes) do
-        self._tree:toggle_selected(node.uri, "select")
-      end
-    else
-      for _, node in ipairs(nodes) do
-        node.selected = false
-      end
-    end
-  end
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_create_directory__()
-  local cursor_uri = self:get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
-    return
-  end
-
-  local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
-
-  vim.ui.input({ prompt = "Create directory: ", default = relative_path }, function(input)
-    if input == nil or #vim.trim(input) == 0 then
-      return
-    end
-
-    local dirname = vim.trim(input) ---@type string
-    if dirname:sub(-1) ~= "/" then
-      dirname = dirname .. "/"
-    end
-
-    local new_uri = root_uri .. dirname ---@type string
-    local resource = self._resource_manager:create(new_uri) ---@type dot.module.explorer.resource.INode|nil
-    if resource ~= nil then
-      local new_parent_uri = self:__get_parent_uri__(new_uri) ---@type string
-      self._tree:toggle_expanded(new_parent_uri, false, "expand")
-      local parts = vim.split(dirname:sub(1, -2), "/", { plain = true }) ---@type string[]
-      local intermediate_uri = root_uri ---@type string
-      for _, part in ipairs(parts) do
-        intermediate_uri = intermediate_uri .. part .. "/"
-        self._tree:toggle_expanded(intermediate_uri, false, "expand")
-      end
-      self._tree:refresh(true)
-      vim.schedule(function()
-        self:__render__()
-        self:__sync_cursor_to_uri__(new_uri)
-      end)
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_create_file__()
-  local cursor_uri = self:get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
-    return
-  end
-
-  local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
-
-  vim.ui.input({ prompt = "Create file: ", default = relative_path }, function(input)
-    if input == nil or #vim.trim(input) == 0 then
-      return
-    end
-
-    local filename = vim.trim(input) ---@type string
-    local new_uri = root_uri .. filename ---@type string
-    local resource = self._resource_manager:create(new_uri) ---@type dot.module.explorer.resource.INode|nil
-    if resource ~= nil then
-      local new_parent_uri = self:__get_parent_uri__(new_uri) ---@type string
-      self._tree:toggle_expanded(new_parent_uri, false, "expand")
-      local parts = vim.split(filename, "/", { plain = true }) ---@type string[]
-      if #parts > 1 then
-        local intermediate_uri = root_uri ---@type string
-        for i = 1, #parts - 1 do
-          intermediate_uri = intermediate_uri .. parts[i] .. "/"
-          self._tree:toggle_expanded(intermediate_uri, false, "expand")
-        end
-      end
-      self._tree:refresh(true)
-      vim.schedule(function()
-        self:__render__()
-        self:__sync_cursor_to_uri__(new_uri)
-      end)
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_cut__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-  if #selected_nodes > 0 then
-    local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-    local is_selected = self._tree:is_selected(uri) ---@type boolean
-
-    if current_mode == "cut" and is_selected then
-      self._tree:toggle_selected(uri, "unselect")
-    else
-      self._tree:toggle_selected(uri, "select")
-    end
-
-    self._tree.select_mode = "cut"
-    self:__refresh__()
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-
-  vim.ui.input({ prompt = "Move to: ", default = filepath }, function(input)
-    if input == nil or input == "" or input == filepath then
-      return
-    end
-
-    local target_uri = filepath_to_uri(input) ---@type string
-    local ok = self._resource_manager:move(uri, target_uri) ---@type boolean
-    if ok then
-      self._tree:remove(uri)
-      self._tree:refresh(true)
-      vim.schedule(function()
-        self:__refresh__(true)
-        self:__sync_cursor_to_uri__(target_uri)
-      end)
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_cut_visual__()
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-  if current_mode ~= "cut" then
-    for _, node in ipairs(nodes) do
-      self._tree:toggle_selected(node.uri, "select")
-    end
-    self._tree.select_mode = "cut"
-  else
-    local has_unselected = false ---@type boolean
-    for _, node in ipairs(nodes) do
-      if not node.selected then
-        has_unselected = true
-        break
-      end
-    end
-
-    if has_unselected then
-      for _, node in ipairs(nodes) do
-        self._tree:toggle_selected(node.uri, "select")
-      end
-    else
-      for _, node in ipairs(nodes) do
-        node.selected = false
-      end
-    end
-  end
-  self:__refresh__()
-end
-
----@protected
----@param target_mode                   dot.module.explorer.SelectModeEnum
----@return nil
-function M:__action_toggle_select_mode__(target_mode)
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-  local is_selected = self._tree:is_selected(uri) ---@type boolean
-
-  if is_selected then
-    if current_mode == target_mode then
-      self._tree:toggle_selected(uri, "unselect")
-    else
-      self._tree.select_mode = target_mode
-    end
-  else
-    self._tree:toggle_selected(uri, "select")
-    self._tree.select_mode = target_mode
-  end
-
-  self:__refresh__()
-end
-
----@protected
----@param target_mode                   dot.module.explorer.SelectModeEnum
----@return nil
-function M:__action_toggle_select_mode_visual__(target_mode)
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-  local all_selected = true ---@type boolean
-
-  for _, node in ipairs(nodes) do
-    if not node.selected then
-      all_selected = false
-      break
-    end
-  end
-
-  if all_selected then
-    if current_mode == target_mode then
-      for _, node in ipairs(nodes) do
-        node.selected = false
-      end
-    else
-      self._tree.select_mode = target_mode
-    end
-  else
-    for _, node in ipairs(nodes) do
-      self._tree:toggle_selected(node.uri, "select")
-    end
-    self._tree.select_mode = target_mode
-  end
-
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_delete__()
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-
-  if #selected_nodes > 0 then
-    local names = {} ---@type string[]
-    for _, node in ipairs(selected_nodes) do
-      names[#names + 1] = node.nodename
-    end
-
-    local prompt ---@type string
-    if #selected_nodes == 1 then
-      prompt = string.format("Delete '%s'?", names[1])
-    else
-      prompt = string.format("Delete %d items? (%s)", #selected_nodes, table.concat(names, ", "))
-    end
-
-    vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-      if input == nil then
-        return
-      end
-
-      local answer = vim.trim(input):lower() ---@type string
-      if answer ~= "y" and answer ~= "yes" then
-        return
-      end
-
-      local deleted_count = 0 ---@type integer
-      for _, node in ipairs(selected_nodes) do
-        local ok = self._tree:remove(node.uri) ---@type boolean
-        if ok then
-          deleted_count = deleted_count + 1
-        end
-      end
-
-      if deleted_count > 0 then
-        self._tree:clear_selection()
-        vim.schedule(function()
-          self:__refresh__()
-        end)
-
-        ark.reporter.info({
-          from = self.fullname,
-          subject = "delete",
-          message = string.format("Deleted %d item(s)", deleted_count),
-        })
-      end
-    end)
-    return
-  end
-
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
-  local name ---@type string
-  if is_directory then
-    local parts = vim.split(uri:sub(1, -2), "/") ---@type string[]
-    name = parts[#parts] or uri
-  else
-    name = vim.fn.fnamemodify(uri, ":t")
-  end
-
-  local prompt = string.format("Delete '%s'?", name) ---@type string
-  vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-    if input == nil then
-      return
-    end
-
-    local answer = vim.trim(input):lower() ---@type string
-    if answer ~= "y" and answer ~= "yes" then
-      return
-    end
-
-    local ok = self._tree:remove(uri) ---@type boolean
-    if ok then
-      vim.schedule(function()
-        self:__refresh__()
-      end)
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_delete_visual__()
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local names = {} ---@type string[]
-  for _, node in ipairs(nodes) do
-    names[#names + 1] = node.nodename
-  end
-
-  local prompt ---@type string
-  if #nodes == 1 then
-    prompt = string.format("Delete '%s'?", names[1])
-  else
-    prompt = string.format("Delete %d items? (%s)", #nodes, table.concat(names, ", "))
-  end
-
-  vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(input)
-    if input == nil then
-      return
-    end
-
-    local answer = vim.trim(input):lower() ---@type string
-    if answer ~= "y" and answer ~= "yes" then
-      return
-    end
-
-    local deleted_count = 0 ---@type integer
-    for _, node in ipairs(nodes) do
-      local ok = self._tree:remove(node.uri) ---@type boolean
-      if ok then
-        deleted_count = deleted_count + 1
-      end
-    end
-
-    if deleted_count > 0 then
-      vim.schedule(function()
-        self:__refresh__()
-      end)
-
-      ark.reporter.info({
-        from = self.fullname,
-        subject = "delete",
-        message = string.format("Deleted %d item(s)", deleted_count),
-      })
-    end
-  end)
-end
-
----@protected
----@return nil
-function M:__action_go_home__()
-  local workspace = dot.path.workspace() ---@type string
-  local root_uri = filepath_to_uri(workspace, true) ---@type string
-  self:set_root(root_uri)
-end
-
----@protected
----@return nil
-function M:__action_go_parent__()
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  local parent_uri = self:__get_parent_uri__(root_uri) ---@type string
-
-  if parent_uri ~= root_uri then
-    self:set_root(parent_uri)
-  end
-end
-
----@protected
----@return nil
-function M:__action_go_prev__()
-  local prev_root_uri = self._tree.prev_root_uri ---@type string|nil
-  if prev_root_uri == nil then
-    return
-  end
-  self:set_root(prev_root_uri)
-end
-
----@protected
----@return nil
-function M:__action_go_cwd__()
-  local cwd = dot.path.cwd() ---@type string
-  local root_uri = filepath_to_uri(cwd, true) ---@type string
-  self:set_root(root_uri)
-end
-
----@protected
----@return nil
-function M:__action_jump_last_child__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  if uri:sub(-1) ~= "/" then
-    return
-  end
-
-  local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-  if node == nil or not node.expanded or #node.children == 0 then
-    return
-  end
-
-  local last_child = node.children[#node.children] ---@type dot.module.explorer.Node
-  local target_uri = last_child.uri ---@type string
-  self._tree.o_cursor_uri:next(target_uri)
-  self:__sync_cursor_to_uri__(target_uri)
-end
-
----@protected
----@return nil
-function M:__action_jump_parent__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local parent_uri = self:__get_parent_uri__(uri) ---@type string
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-
-  if parent_uri ~= uri and vim.startswith(parent_uri, root_uri) then
-    self._tree.o_cursor_uri:next(parent_uri)
-    self:__sync_cursor_to_uri__(parent_uri)
-  end
-end
-
----@protected
----@return nil
-function M:__action_mark__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  self._tree:toggle_selected(uri, nil)
-  self._tree.select_mode = "select"
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_mark_visual__()
-  local nodes = self:__get_visual_nodes__() ---@type dot.module.explorer.Node[]
-  if #nodes == 0 then
-    return
-  end
-
-  local has_unselected = false ---@type boolean
-  for _, node in ipairs(nodes) do
-    if not node.selected then
-      has_unselected = true
-      break
-    end
-  end
-
-  if has_unselected then
-    for _, node in ipairs(nodes) do
-      self._tree:toggle_selected(node.uri, "select")
-    end
-  else
-    for _, node in ipairs(nodes) do
-      node.selected = false
-    end
-  end
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_open_selected__()
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "open selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local file_nodes = {} ---@type dot.module.explorer.Node[]
-  for _, node in ipairs(selected_nodes) do
-    if node.nodetype == "F" then
-      file_nodes[#file_nodes + 1] = node
-    end
-  end
-
-  if #file_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "open selected",
-      message = "No files in selection (only directories)",
-    })
-    return
-  end
-
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-    vim.api.nvim_set_current_win(winnr_sourcefile)
-  end
-
-  for _, node in ipairs(file_nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
-    dot.win.open_filepath(winnr_sourcefile, filepath)
-  end
-
-  self._tree:clear_selection()
-  vim.schedule(function()
-    self:__render__()
-  end)
-
-  ark.reporter.info({
-    from = self.fullname,
-    subject = "open selected",
-    message = string.format("Opened %d file(s)", #file_nodes),
-  })
-end
-
----@protected
----@return nil
-function M:__action_delete_selected__()
-  local selected_nodes = self._tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "delete selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-
-  ---@type string[]
-  local preview_lines = {}
-  for _, node in ipairs(selected_nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
-    local relative_path = dot.path.relative(cwd, filepath) ---@type string
-    preview_lines[#preview_lines + 1] = relative_path
-  end
-
-  local fullname = self.fullname ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_delete",
-    title = string.format("%s Delete %d item(s)", ark.icon.diagnostic.Warning, #selected_nodes),
-    initial_input = "y",
-    preview_lines = #preview_lines,
-    render_preview = function(bufnr, _)
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, preview_lines)
-    end,
-    on_confirm = function(input)
-      local answer = vim.trim(input):lower() ---@type string
-      if answer ~= "y" and answer ~= "yes" then
-        return
-      end
-
-      local deleted_count = 0 ---@type integer
-      for _, node in ipairs(selected_nodes) do
-        local ok = self._tree:remove(node.uri) ---@type boolean
-        if ok then
-          deleted_count = deleted_count + 1
-        end
-      end
-
-      if deleted_count > 0 then
-        self._tree:clear_selection()
-        vim.schedule(function()
-          self:__refresh__()
-        end)
-
-        ark.reporter.info({
-          from = fullname,
-          subject = "delete",
-          message = string.format("Deleted %d item(s)", deleted_count),
-        })
-      end
-    end,
-  })
-  act:open()
-end
-
----@protected
----@return nil
-function M:__action_move_selected__()
-  local selected_nodes = self._tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "move selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local common_ancestor = self._tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
-  if common_ancestor == nil then
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, common_ancestor) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_move_preview") ---@type integer
-
-  ---@class dot.module.explorer.widget.IPreviewItem
-  ---@field public from                    string
-  ---@field public to                      string
-  ---@field public relative_part           string
-
-  ---@return integer
-  local function calc_content_width()
-    local max_width = 0 ---@type integer
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
-      max_width = math.max(max_width, line_width)
-    end
-    return max_width + 4
-  end
-
-  ---@param target_dir                   string
-  ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer                      max_from_displaywidth
-  local function build_preview_items(target_dir)
-    local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
-
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = dot.path.join(target_dir, relative_part) ---@type string
-      local to_relative = dot.path.relative(cwd, target_path) ---@type string
-      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
-    end
-
-    return items, max_from_displaywidth
-  end
-
-  local fullname = self.fullname ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_move",
-    title = string.format("%s Move %d item(s)", ark.icon.symbols.selection_cut, #selected_nodes),
-    initial_input = default_target,
-    preview_lines = #selected_nodes,
-    get_width = calc_content_width,
-    render_preview = function(bufnr, input)
-      local target_dir = vim.trim(input) ---@type string
-      if target_dir == "" then
-        target_dir = default_target
-      end
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-
-      local items, max_from_displaywidth = build_preview_items(target_dir)
-
-      local lines = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        lines[#lines + 1] = string.format("%s%s -> %s", item.from, padding, item.to)
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-      for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        local from_hl_start = #item.from - #item.relative_part ---@type integer
-        local from_hl_end = #item.from ---@type integer
-        local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
-        local to_hl_end = #item.from + #padding + 4 + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
-      end
-    end,
-    on_confirm = function(input)
-      if input == "" then
-        return
-      end
-
-      local target_dir = input ---@type string
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-      if target_dir:sub(-1) ~= "/" then
-        target_dir = target_dir .. "/"
-      end
-
-      local moved_count = 0 ---@type integer
-      local failed_count = 0 ---@type integer
-
-      for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
-
-        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
-
-        local ok = self._resource_manager:move(node.uri, target_uri) ---@type boolean
-        if ok then
-          self._tree:remove(node.uri)
-          moved_count = moved_count + 1
-        else
-          failed_count = failed_count + 1
-        end
-      end
-
-      if moved_count > 0 then
-        self._tree:clear_selection()
-        self._tree:refresh(true)
-        vim.schedule(function()
-          self:__refresh__(true)
-        end)
-
-        if failed_count > 0 then
-          ark.reporter.warn({
-            from = fullname,
-            subject = "move",
-            message = string.format("Moved %d item(s), %d failed", moved_count, failed_count),
-          })
-        else
-          ark.reporter.info({
-            from = fullname,
-            subject = "move",
-            message = string.format("Moved %d item(s)", moved_count),
-          })
-        end
-      elseif failed_count > 0 then
-        ark.reporter.error({
-          from = fullname,
-          subject = "move",
-          message = string.format("Failed to move %d item(s)", failed_count),
-        })
-      end
-    end,
-  })
-  act:open()
-end
-
----@protected
----@return nil
-function M:__action_copy_selected__()
-  local selected_nodes = self._tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "copy selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local common_ancestor = self._tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
-  if common_ancestor == nil then
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, common_ancestor) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_copy_preview") ---@type integer
-
-  ---@return integer
-  local function calc_content_width()
-    local max_width = 0 ---@type integer
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
-      max_width = math.max(max_width, line_width)
-    end
-    return max_width + 4
-  end
-
-  ---@param target_dir                   string
-  ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer                      max_from_displaywidth
-  local function build_preview_items(target_dir)
-    local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
-
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = dot.path.join(target_dir, relative_part) ---@type string
-      local to_relative = dot.path.relative(cwd, target_path) ---@type string
-      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
-    end
-
-    return items, max_from_displaywidth
-  end
-
-  local fullname = self.fullname ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_copy",
-    title = string.format("%s Copy %d item(s)", ark.icon.symbols.selection_copy, #selected_nodes),
-    initial_input = default_target,
-    preview_lines = #selected_nodes,
-    get_width = calc_content_width,
-    render_preview = function(bufnr, input)
-      local target_dir = vim.trim(input) ---@type string
-      if target_dir == "" then
-        target_dir = default_target
-      end
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-
-      local items, max_from_displaywidth = build_preview_items(target_dir)
-
-      local lines = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        lines[#lines + 1] = string.format("%s%s +> %s", item.from, padding, item.to)
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-      for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        local from_hl_start = #item.from - #item.relative_part ---@type integer
-        local from_hl_end = #item.from ---@type integer
-        local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
-        local to_hl_end = #item.from + #padding + 4 + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
-      end
-    end,
-    on_confirm = function(input)
-      if input == "" then
-        return
-      end
-
-      local target_dir = input ---@type string
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-      if target_dir:sub(-1) ~= "/" then
-        target_dir = target_dir .. "/"
-      end
-
-      local copied_count = 0 ---@type integer
-      local failed_count = 0 ---@type integer
-
-      for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
-
-        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
-
-        local ok = self._resource_manager:copy(node.uri, target_uri) ---@type boolean
-        if ok then
-          copied_count = copied_count + 1
-        else
-          failed_count = failed_count + 1
-        end
-      end
-
-      if copied_count > 0 then
-        self._tree:clear_selection()
-        self._tree:refresh(true)
-        vim.schedule(function()
-          self:__refresh__(true)
-        end)
-
-        if failed_count > 0 then
-          ark.reporter.warn({
-            from = fullname,
-            subject = "copy",
-            message = string.format("Copied %d item(s), %d failed", copied_count, failed_count),
-          })
-        else
-          ark.reporter.info({
-            from = fullname,
-            subject = "copy",
-            message = string.format("Copied %d item(s)", copied_count),
-          })
-        end
-      elseif failed_count > 0 then
-        ark.reporter.error({
-          from = fullname,
-          subject = "copy",
-          message = string.format("Failed to copy %d item(s)", failed_count),
-        })
-      end
-    end,
-  })
-  act:open()
-end
-
----@protected
----@return nil
-function M:__action_open_file_explorer__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  dot.fn.find_explorer(filepath)
-end
-
----@protected
----@return nil
-function M:__action_open_file_finder__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local dirpath ---@type string
-  if uri:sub(-1) == "/" then
-    dirpath = uri_to_filepath(uri)
-  else
-    dirpath = dot.path.dirname(uri_to_filepath(uri))
-  end
-
-  dot.fn.find_files(dirpath, true)
-end
-
----@protected
----@return nil
-function M:__action_open_searcher__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  dot.fn.search_in_files(filepath)
-end
-
----@protected
----@return nil
-function M:__action_open_system_explorer__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-
-  vim.ui.open(filepath)
-end
-
----@protected
----@return nil
-function M:__action_open__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  if uri:sub(-1) == "/" then
-    self._tree:toggle_expanded(uri, false, nil)
-    self:__refresh__()
-  else
-    local filepath = uri_to_filepath(uri) ---@type string
-    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-      vim.api.nvim_set_current_win(winnr_sourcefile)
-    end
-    dot.win.open_filepath(winnr_sourcefile, filepath)
-  end
-end
-
----@protected
----@return nil
-function M:__action_open_split__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  vim.cmd("split " .. vim.fn.fnameescape(filepath))
-end
-
----@protected
----@return nil
-function M:__action_open_tab__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
-end
-
----@protected
----@return nil
-function M:__action_open_vsplit__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
-end
-
----@protected
----@return nil
-function M:__action_paste__()
-  local select_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
-
-  if select_mode == "select" then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "paste",
-      message = "No cut/copy operation pending",
-    })
-    return
-  end
-
-  local selected_nodes = self._tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "paste",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local cursor_uri = self:get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
-    return
-  end
-
-  local target_dir_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
-
-  local common_ancestor = self._tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
-  if common_ancestor == nil then
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, uri_to_filepath(target_dir_uri)) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_paste_preview") ---@type integer
-  local is_cut = select_mode == "cut" ---@type boolean
-
-  ---@return integer
-  local function calc_content_width()
-    local max_width = 0 ---@type integer
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
-      max_width = math.max(max_width, line_width)
-    end
-    return max_width + 4
-  end
-
-  ---@param target_dir                   string
-  ---@return dot.module.explorer.widget.IPreviewItem[]
-  ---@return integer                      max_from_displaywidth
-  local function build_preview_items(target_dir)
-    local items = {} ---@type dot.module.explorer.widget.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
-
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = dot.path.join(target_dir, relative_part) ---@type string
-      local to_relative = dot.path.relative(cwd, target_path) ---@type string
-      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
-    end
-
-    return items, max_from_displaywidth
-  end
-
-  local fullname = self.fullname ---@type string
-  local arrow = is_cut and " -> " or " +> " ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_paste",
-    title = string.format(
-      "%s %s %d item(s)",
-      is_cut and ark.icon.symbols.selection_cut or ark.icon.symbols.selection_copy,
-      is_cut and "Move" or "Copy",
-      #selected_nodes
-    ),
-    initial_input = default_target,
-    preview_lines = #selected_nodes,
-    get_width = calc_content_width,
-    render_preview = function(bufnr, input)
-      local target_dir = vim.trim(input) ---@type string
-      if target_dir == "" then
-        target_dir = default_target
-      end
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-
-      local items, max_from_displaywidth = build_preview_items(target_dir)
-
-      local lines = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        lines[#lines + 1] = string.format("%s%s%s%s", item.from, padding, arrow, item.to)
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-      for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        local from_hl_start = #item.from - #item.relative_part ---@type integer
-        local from_hl_end = #item.from ---@type integer
-        local to_hl_start = #item.from + #padding + #arrow + #item.to - #item.relative_part ---@type integer
-        local to_hl_end = #item.from + #padding + #arrow + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
-      end
-    end,
-    on_confirm = function(input)
-      if input == "" then
-        return
-      end
-
-      local target_dir = input ---@type string
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-      if target_dir:sub(-1) ~= "/" then
-        target_dir = target_dir .. "/"
-      end
-
-      local success_count = 0 ---@type integer
-      local failed_count = 0 ---@type integer
-
-      for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
-
-        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
-
-        local ok ---@type boolean
-        if is_cut then
-          ok = self._resource_manager:move(node.uri, target_uri)
-          if ok then
-            self._tree:remove(node.uri)
-          end
-        else
-          ok = self._resource_manager:copy(node.uri, target_uri)
-        end
-
-        if ok then
-          success_count = success_count + 1
-        else
-          failed_count = failed_count + 1
-        end
-      end
-
-      if success_count > 0 then
-        self._tree:clear_selection()
-        self._tree:refresh(true)
-        vim.schedule(function()
-          self:__refresh__(true)
-        end)
-
-        local action_name = is_cut and "Moved" or "Copied" ---@type string
-        if failed_count > 0 then
-          ark.reporter.warn({
-            from = fullname,
-            subject = "paste",
-            message = string.format("%s %d item(s), %d failed", action_name, success_count, failed_count),
-          })
-        else
-          ark.reporter.info({
-            from = fullname,
-            subject = "paste",
-            message = string.format("%s %d item(s)", action_name, success_count),
-          })
-        end
-      elseif failed_count > 0 then
-        ark.reporter.error({
-          from = fullname,
-          subject = "paste",
-          message = string.format("Failed to %s %d item(s)", is_cut and "move" or "copy", failed_count),
-        })
-      end
-    end,
-  })
-  act:open()
-end
-
----@protected
----@return nil
-function M:__action_pick_win_open__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
-  if winnr == nil then
-    return
-  end
-
-  dot.win.open_filepath(winnr, filepath)
-  vim.api.nvim_set_current_win(winnr)
-end
-
----@protected
----@return nil
-function M:__action_pick_win_split__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
-  if winnr == nil then
-    return
-  end
-
-  vim.api.nvim_set_current_win(winnr)
-  vim.cmd("split " .. vim.fn.fnameescape(filepath))
-end
-
----@protected
----@return nil
-function M:__action_pick_win_vsplit__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-  local winnr = dot.win.pick_sourcefile(self._winnr) ---@type integer|nil
-  if winnr == nil then
-    return
-  end
-
-  vim.api.nvim_set_current_win(winnr)
-  vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
-end
-
----@protected
----@return nil
-function M:__action_rename__()
-  local selected_nodes = self._tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
-
-  if #selected_nodes > 1 then
-    ark.reporter.warn({
-      from = self.fullname,
-      subject = "rename",
-      message = "Cannot rename multiple files at once. Please select only one file.",
-    })
-    return
-  end
-
-  local uri ---@type string|nil
-  if #selected_nodes == 1 then
-    uri = selected_nodes[1].uri
-  else
-    uri = self:get_cursor_uri()
-  end
-
-  if uri == nil then
-    return
-  end
-
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
-  local relative_path = uri:sub(#root_uri + 1) ---@type string
-  if is_directory and relative_path:sub(-1) == "/" then
-    relative_path = relative_path:sub(1, -2)
-  end
-
-  vim.ui.input({ prompt = "Rename to: ", default = relative_path }, function(input)
-    if input == nil or #vim.trim(input) == 0 then
-      return
-    end
-
-    local new_relative_path = vim.trim(input) ---@type string
-    if new_relative_path == relative_path then
-      return
-    end
-
-    local new_uri = root_uri .. new_relative_path .. (is_directory and "/" or "") ---@type string
-
-    local old_filepath = uri_to_filepath(uri) ---@type string
-    local new_filepath = uri_to_filepath(new_uri) ---@type string
-
-    dot.lsp.on_rename(old_filepath, new_filepath, function()
-      local ok = self._resource_manager:move(uri, new_uri) ---@type boolean
-      if ok then
-        dot.lsp.rename_buf(old_filepath, new_filepath)
-        if #selected_nodes == 1 then
-          self._tree:clear_selection()
-        end
-        self._tree:refresh(true)
-        vim.schedule(function()
-          self:__refresh__(true)
-        end)
-        ark.reporter.info({
-          from = self.fullname,
-          subject = "rename",
-          message = string.format("Renamed to: %s", new_relative_path),
-        })
-      end
-    end)
-  end)
-end
-
----@protected
----@return nil
-function M:__action_select_toggle__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  self._tree:toggle_selected(uri, nil)
-  self._tree.select_mode = "select"
-  self:__refresh__()
-end
-
----@protected
----@return nil
-function M:__action_send_to_quickfix__()
-  local root = self._tree:get_root_node() ---@type dot.module.explorer.Node
-  local selected_nodes = require("dot.module.explorer.node").collect_selected(root) ---@type dot.module.explorer.Node[]
-
-  if #selected_nodes == 0 then
-    local uri = self:get_cursor_uri() ---@type string|nil
-    if uri == nil then
-      return
-    end
-    local filepath = uri_to_filepath(uri) ---@type string
-    vim.fn.setqflist({}, "r", {
-      title = "Explorer",
-      items = { { filename = filepath, lnum = 1, col = 1 } },
-    })
-  else
-    local items = {} ---@type table[]
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      items[#items + 1] = { filename = filepath, lnum = 1, col = 1 }
-    end
-    vim.fn.setqflist({}, "r", {
-      title = "Explorer Selection",
-      items = items,
-    })
-  end
-
-  vim.cmd("copen")
-
-  ark.reporter.info({
-    from = self.fullname,
-    subject = "quickfix",
-    message = "Sent to quickfix list",
-  })
-end
-
----@protected
----@return nil
-function M:__action_show_file_info__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  local filepath = uri_to_filepath(uri) ---@type string
-
-  local fileinfo = dot.board.Fileinfo.new({ filepath = filepath })
-  fileinfo:open()
-end
-
----@protected
----@return nil
-function M:__action_set_root__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  if uri:sub(-1) ~= "/" then
-    uri = self:__get_parent_uri__(uri)
-  end
-
-  self:set_root(uri)
-end
-
----@protected
----@return nil
-function M:__action_show_keysheet__()
-  local keysheet = dot.board.Keysheet.new({
-    title = "Explorer Help",
-    keymaps = self._keymaps,
-  })
-  keysheet:open()
-end
-
----@protected
----@return nil
-function M:__action_toggle_recursive__()
-  local uri = self:get_cursor_uri() ---@type string|nil
-  if uri == nil then
-    return
-  end
-
-  if uri:sub(-1) ~= "/" then
-    return
-  end
-
-  self._tree:toggle_expanded(uri, true, nil)
-  self:__refresh__()
-end
-
----@protected
 ---@param direction                     "prev"|"next"
 ---@return nil
-function M:__action_goto_diagnostic__(direction)
-  self:__goto_matching_file__(direction, function(filepath)
-    local bufnr = vim.fn.bufnr(filepath) ---@type integer
-    if bufnr < 0 then
-      return false
-    end
-    local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
-    return #diagnostics > 0
-  end)
-end
-
----@protected
----@param direction                     "prev"|"next"
----@return nil
-function M:__action_goto_diagnostic_error__(direction)
-  self:__goto_matching_file__(direction, function(filepath)
-    local bufnr = vim.fn.bufnr(filepath) ---@type integer
-    if bufnr < 0 then
-      return false
-    end
-    local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type vim.Diagnostic[]
-    return #diagnostics > 0
-  end)
-end
-
----@protected
----@param direction                     "prev"|"next"
----@return nil
-function M:__action_goto_diagnostic_warning__(direction)
-  self:__goto_matching_file__(direction, function(filepath)
-    local bufnr = vim.fn.bufnr(filepath) ---@type integer
-    if bufnr < 0 then
-      return false
-    end
-    local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type vim.Diagnostic[]
-    return #diagnostics > 0
-  end)
-end
-
----@protected
----@param direction                     "prev"|"next"
----@return nil
-function M:__action_goto_git_changed__(direction)
+function M:__goto_git_changed__(direction)
   local aggregated = dot.git.state.aggregated() ---@type dot.module.git.status.IAggregatedCache
   local staged_files = aggregated.staged_files ---@type string[]
   local unstaged_files = aggregated.unstaged_files ---@type string[]
@@ -2317,6 +669,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M:__setup_keymaps__(bufnr)
+  local action = self._action ---@type dot.module.explorer.Action
   local widget_keymaps = dot.state.widget.get_keymaps(self) ---@type ark.t.IKeymap[]
 
   ---@type ark.t.IKeymap[]
@@ -2325,7 +678,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<2-LeftMouse>",
       callback = function()
-        self:__action_open__()
+        action:open()
       end,
       desc = "explorer: open/toggle (double-click)",
     },
@@ -2343,7 +696,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<C-q>",
       callback = function()
-        self:__action_send_to_quickfix__()
+        action:send_to_quickfix(self._tree:get_root_node())
       end,
       desc = "explorer: send selection to quickfix",
     },
@@ -2351,7 +704,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<C-t>",
       callback = function()
-        self:__action_open_tab__()
+        action:open_tab()
       end,
       desc = "explorer: open in tab",
     },
@@ -2359,7 +712,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<C-v>",
       callback = function()
-        self:__action_open_vsplit__()
+        action:open_vsplit()
       end,
       desc = "explorer: open in vsplit",
     },
@@ -2367,7 +720,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<C-x>",
       callback = function()
-        self:__action_open_split__()
+        action:open_split()
       end,
       desc = "explorer: open in split",
     },
@@ -2376,7 +729,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<BS>",
       callback = function()
-        self:__action_go_parent__()
+        action:go_parent()
       end,
       desc = "explorer: go to parent directory",
     },
@@ -2384,7 +737,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<CR>",
       callback = function()
-        self:__action_open__()
+        action:open()
       end,
       desc = "explorer: open/toggle",
     },
@@ -2392,7 +745,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "<Tab>",
       callback = function()
-        self:__action_select_toggle__()
+        action:select_toggle()
       end,
       desc = "explorer: toggle selection",
     },
@@ -2401,7 +754,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = ".",
       callback = function()
-        self:__action_set_root__()
+        action:set_root()
       end,
       desc = "explorer: set as root",
     },
@@ -2409,7 +762,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "?",
       callback = function()
-        self:__action_show_keysheet__()
+        action:show_keysheet(self._keymaps)
       end,
       desc = "explorer: show keymap help",
     },
@@ -2417,7 +770,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "[d",
       callback = function()
-        self:__action_goto_diagnostic__("prev")
+        self:__goto_matching_file__("prev", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to prev diagnostic file",
     },
@@ -2425,7 +785,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "[e",
       callback = function()
-        self:__action_goto_diagnostic_error__("prev")
+        self:__goto_matching_file__("prev", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to prev diagnostic error file",
     },
@@ -2433,7 +800,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "[h",
       callback = function()
-        self:__action_goto_git_changed__("prev")
+        self:__goto_git_changed__("prev")
       end,
       desc = "explorer: go to prev git changed file",
     },
@@ -2441,7 +808,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "[i",
       callback = function()
-        self:__action_jump_parent__()
+        action:jump_parent()
       end,
       desc = "explorer: jump to parent line",
     },
@@ -2449,7 +816,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "[w",
       callback = function()
-        self:__action_goto_diagnostic_warning__("prev")
+        self:__goto_matching_file__("prev", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to prev diagnostic warning file",
     },
@@ -2457,7 +831,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "]d",
       callback = function()
-        self:__action_goto_diagnostic__("next")
+        self:__goto_matching_file__("next", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to next diagnostic file",
     },
@@ -2465,7 +846,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "]e",
       callback = function()
-        self:__action_goto_diagnostic_error__("next")
+        self:__goto_matching_file__("next", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to next diagnostic error file",
     },
@@ -2473,7 +861,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "]h",
       callback = function()
-        self:__action_goto_git_changed__("next")
+        self:__goto_git_changed__("next")
       end,
       desc = "explorer: go to next git changed file",
     },
@@ -2481,7 +869,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "]i",
       callback = function()
-        self:__action_jump_last_child__()
+        action:jump_last_child()
       end,
       desc = "explorer: jump to last child",
     },
@@ -2489,7 +877,14 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "]w",
       callback = function()
-        self:__action_goto_diagnostic_warning__("next")
+        self:__goto_matching_file__("next", function(filepath)
+          local bufnr = vim.fn.bufnr(filepath) ---@type integer
+          if bufnr < 0 then
+            return false
+          end
+          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type vim.Diagnostic[]
+          return #diagnostics > 0
+        end)
       end,
       desc = "explorer: go to next diagnostic warning file",
     },
@@ -2504,7 +899,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "A",
       callback = function()
-        self:__action_create_directory__()
+        action:create_directory()
       end,
       desc = "explorer: create directory",
     },
@@ -2520,7 +915,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "J",
       callback = function()
-        self:__action_pick_win_split__()
+        action:pick_win_split()
       end,
       desc = "explorer: pick window and split",
     },
@@ -2528,7 +923,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "L",
       callback = function()
-        self:__action_pick_win_vsplit__()
+        action:pick_win_vsplit()
       end,
       desc = "explorer: pick window and vsplit",
     },
@@ -2536,7 +931,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "O",
       callback = function()
-        self:__action_open_system_explorer__()
+        action:open_system_explorer()
       end,
       desc = "explorer: open in system explorer",
     },
@@ -2552,7 +947,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "W",
       callback = function()
-        self:__action_collapse_all__()
+        action:collapse_all()
       end,
       desc = "explorer: collapse all",
     },
@@ -2561,7 +956,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "a",
       callback = function()
-        self:__action_create_file__()
+        action:create_file()
       end,
       desc = "explorer: create file",
     },
@@ -2569,7 +964,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "c",
       callback = function()
-        self:__action_copy_node__()
+        action:copy_node()
       end,
       desc = "explorer: copy node",
     },
@@ -2577,7 +972,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "d",
       callback = function()
-        self:__action_delete__()
+        action:delete()
       end,
       desc = "explorer: delete",
     },
@@ -2585,7 +980,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "gb",
       callback = function()
-        self:__action_go_prev__()
+        action:go_prev()
       end,
       desc = "explorer: go to previous root",
     },
@@ -2593,7 +988,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "gc",
       callback = function()
-        self:__action_go_cwd__()
+        action:go_cwd()
       end,
       desc = "explorer: go to cwd",
     },
@@ -2601,7 +996,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "gw",
       callback = function()
-        self:__action_go_home__()
+        action:go_home()
       end,
       desc = "explorer: go to workspace root",
     },
@@ -2609,7 +1004,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "h",
       callback = function()
-        self:__action_collapse_or_parent__()
+        action:collapse_or_parent()
       end,
       desc = "explorer: collapse/go parent",
     },
@@ -2623,7 +1018,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "l",
       callback = function()
-        self:__action_open__()
+        action:open()
       end,
       desc = "explorer: open/toggle",
     },
@@ -2631,7 +1026,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "mc",
       callback = function()
-        self:__action_toggle_select_mode__("copy")
+        action:toggle_select_mode("copy")
       end,
       desc = "explorer: toggle copy selection",
     },
@@ -2639,7 +1034,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "md",
       callback = function()
-        self:__action_delete_selected__()
+        action:delete_selected()
       end,
       desc = "explorer: delete selected",
     },
@@ -2647,7 +1042,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "mo",
       callback = function()
-        self:__action_open_selected__()
+        action:open_selected()
       end,
       desc = "explorer: open selected files",
     },
@@ -2655,7 +1050,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "mp",
       callback = function()
-        self:__action_paste__()
+        action:paste()
       end,
       desc = "explorer: paste",
     },
@@ -2663,7 +1058,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "ms",
       callback = function()
-        self:__action_toggle_select_mode__("select")
+        action:toggle_select_mode("select")
       end,
       desc = "explorer: toggle select mode",
     },
@@ -2671,7 +1066,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "mx",
       callback = function()
-        self:__action_toggle_select_mode__("cut")
+        action:toggle_select_mode("cut")
       end,
       desc = "explorer: toggle cut selection",
     },
@@ -2679,7 +1074,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "o",
       callback = function()
-        self:__action_open__()
+        action:open()
       end,
       desc = "explorer: open/toggle",
     },
@@ -2687,7 +1082,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "oa",
       callback = function()
-        self:__action_add_locations_to_ai__()
+        action:add_locations_to_ai()
       end,
       desc = "explorer: add locations to ai",
     },
@@ -2695,7 +1090,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "oc",
       callback = function()
-        self:__action_copy_path__()
+        action:copy_path()
       end,
       desc = "explorer: copy path",
     },
@@ -2703,7 +1098,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "oe",
       callback = function()
-        self:__action_open_file_explorer__()
+        action:open_file_explorer()
       end,
       desc = "explorer: open file explorer",
     },
@@ -2711,7 +1106,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "of",
       callback = function()
-        self:__action_open_file_finder__()
+        action:open_file_finder()
       end,
       desc = "explorer: open file finder",
     },
@@ -2719,7 +1114,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "oi",
       callback = function()
-        self:__action_show_file_info__()
+        action:show_file_info()
       end,
       desc = "explorer: show file info",
     },
@@ -2727,7 +1122,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "oo",
       callback = function()
-        self:__action_open_system_explorer__()
+        action:open_system_explorer()
       end,
       desc = "explorer: open in system explorer",
     },
@@ -2735,7 +1130,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "os",
       callback = function()
-        self:__action_open_searcher__()
+        action:open_searcher()
       end,
       desc = "explorer: open searcher",
     },
@@ -2743,7 +1138,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "p",
       callback = function()
-        self:__action_paste__()
+        action:paste()
       end,
       desc = "explorer: paste",
     },
@@ -2759,7 +1154,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "r",
       callback = function()
-        self:__action_rename__()
+        action:rename()
       end,
       desc = "explorer: rename",
     },
@@ -2767,7 +1162,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "w",
       callback = function()
-        self:__action_pick_win_open__()
+        action:pick_win_open()
       end,
       desc = "explorer: pick window and open",
     },
@@ -2775,7 +1170,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "x",
       callback = function()
-        self:__action_cut__()
+        action:cut()
       end,
       desc = "explorer: cut",
     },
@@ -2783,7 +1178,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "y",
       callback = function()
-        self:__action_toggle_select_mode__("copy")
+        action:toggle_select_mode("copy")
       end,
       desc = "explorer: yank (copy)",
     },
@@ -2791,7 +1186,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "z",
       callback = function()
-        self:__action_toggle_recursive__()
+        action:toggle_recursive()
       end,
       desc = "explorer: toggle expand/collapse recursively",
     },
@@ -2800,7 +1195,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "<Tab>",
       callback = function()
-        self:__action_toggle_select_mode_visual__("select")
+        action:toggle_select_mode_visual("select")
       end,
       desc = "explorer: toggle select (visual)",
     },
@@ -2808,7 +1203,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "c",
       callback = function()
-        self:__action_toggle_select_mode_visual__("copy")
+        action:toggle_select_mode_visual("copy")
       end,
       desc = "explorer: toggle copy (visual)",
     },
@@ -2816,7 +1211,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "d",
       callback = function()
-        self:__action_delete_visual__()
+        action:delete_visual()
       end,
       desc = "explorer: delete (visual)",
     },
@@ -2824,7 +1219,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "mc",
       callback = function()
-        self:__action_toggle_select_mode_visual__("copy")
+        action:toggle_select_mode_visual("copy")
       end,
       desc = "explorer: toggle copy (visual)",
     },
@@ -2832,7 +1227,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "ms",
       callback = function()
-        self:__action_toggle_select_mode_visual__("select")
+        action:toggle_select_mode_visual("select")
       end,
       desc = "explorer: toggle select (visual)",
     },
@@ -2840,7 +1235,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "mx",
       callback = function()
-        self:__action_toggle_select_mode_visual__("cut")
+        action:toggle_select_mode_visual("cut")
       end,
       desc = "explorer: toggle cut (visual)",
     },
@@ -2848,7 +1243,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "my",
       callback = function()
-        self:__action_toggle_select_mode_visual__("copy")
+        action:toggle_select_mode_visual("copy")
       end,
       desc = "explorer: toggle copy (visual)",
     },
@@ -2856,7 +1251,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "oa",
       callback = function()
-        self:__action_add_locations_to_ai_visual__()
+        action:add_locations_to_ai_visual()
       end,
       desc = "explorer: add locations to ai (visual)",
     },
@@ -2864,7 +1259,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "x",
       callback = function()
-        self:__action_toggle_select_mode_visual__("cut")
+        action:toggle_select_mode_visual("cut")
       end,
       desc = "explorer: toggle cut (visual)",
     },
@@ -2872,7 +1267,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "x" },
       key = "y",
       callback = function()
-        self:__action_toggle_select_mode_visual__("copy")
+        action:toggle_select_mode_visual("copy")
       end,
       desc = "explorer: toggle copy (visual)",
     },
