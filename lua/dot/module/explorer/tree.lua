@@ -89,7 +89,7 @@ function M:apply_copy_paste(target_parent_uri)
     self:__load_children__(target_node, target_node_uri)
   end
 
-  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
+  local selected_nodes = Node.collect_selected(self._root) ---@type dot.module.explorer.Node[]
   if #selected_nodes == 0 then
     return false
   end
@@ -101,11 +101,11 @@ function M:apply_copy_paste(target_parent_uri)
 
   for _, node in ipairs(selected_nodes) do
     local nodeuri = node.uri ---@type string
-    if node == self._superroot then
+    if node == self._root then
       ark.reporter.error({
         from = __module_name__,
         subject = subject,
-        message = "Cannot copy the superroot.",
+        message = "Cannot copy the root.",
       })
       return false
     end
@@ -228,7 +228,7 @@ function M:apply_cut_paste(target_parent_uri)
     self:__load_children__(target_node, target_node_uri)
   end
 
-  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
+  local selected_nodes = Node.collect_selected(self._root) ---@type dot.module.explorer.Node[]
   if #selected_nodes == 0 then
     return false
   end
@@ -240,11 +240,11 @@ function M:apply_cut_paste(target_parent_uri)
 
   for _, node in ipairs(selected_nodes) do
     local nodeuri = node.uri ---@type string
-    if node == self._superroot then
+    if node == self._root then
       ark.reporter.error({
         from = __module_name__,
         subject = subject,
-        message = "Cannot move the superroot.",
+        message = "Cannot move the root.",
       })
       return false
     end
@@ -525,19 +525,19 @@ end
 ---@return dot.module.explorer.Node[]
 function M:get_selected_nodes()
   self:__health__()
-  return Node.collect_selected(self._superroot)
+  return Node.collect_selected(self._root)
 end
 
 ---@return dot.module.explorer.Node[]
 function M:get_selected_nodes_toplevel()
   self:__health__()
-  return Node.collect_selected_toplevel(self._superroot)
+  return Node.collect_selected_toplevel(self._root)
 end
 
 ---@return string[]
 function M:get_selected_uris()
   self:__health__()
-  return Node.collect_selected_uris(self._superroot)
+  return Node.collect_selected_uris(self._root)
 end
 
 ---@param parenturi                     string
