@@ -57,3 +57,7 @@ For each issue found, provide:
 Style:
 - Respond in Chinese, but keep technical terms and code in English
 - Only explain rare or domain-specific concepts
+
+## Output Requirement
+
+After completing the review, save a copy of the full review output to `{cwd}/.code-analyze/{simple-title}-cc.md`, where `{simple-title}` is a concise kebab-case title derived from the review target (e.g., `user-auth-service`, `payment-controller`).
