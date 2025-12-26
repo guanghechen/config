@@ -220,16 +220,16 @@ function M.default_gen_hlgroup_map(context)
     f_ui_normal = { bg = bg_pane },
 
     ---lsp
-    f_lsp_diagnostic_error = { fg = u.red, bg = bg_pane },
+    f_lsp_diagnostic_error = { fg = u.red },
     f_lsp_diagnostic_error_cl = { fg = u.red, bg = u.bg3 },
     f_lsp_diagnostic_error_clb = { fg = u.red, bg = u.bg2 },
-    f_lsp_diagnostic_warn = { fg = u.yellow, bg = bg_pane },
+    f_lsp_diagnostic_warn = { fg = u.yellow },
     f_lsp_diagnostic_warn_cl = { fg = u.yellow, bg = u.bg3 },
     f_lsp_diagnostic_warn_clb = { fg = u.yellow, bg = u.bg2 },
-    f_lsp_diagnostic_hint = { fg = u.purple, bg = bg_pane },
+    f_lsp_diagnostic_hint = { fg = u.purple },
     f_lsp_diagnostic_hint_cl = { fg = u.purple, bg = u.bg3 },
     f_lsp_diagnostic_hint_clb = { fg = u.purple, bg = u.bg2 },
-    f_lsp_diagnostic_info = { fg = u.green, bg = bg_pane },
+    f_lsp_diagnostic_info = { fg = u.green },
     f_lsp_diagnostic_info_cl = { fg = u.green, bg = u.bg3 },
     f_lsp_diagnostic_info_clb = { fg = u.green, bg = u.bg2 },
 
