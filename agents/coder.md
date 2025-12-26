@@ -6,52 +6,37 @@ color: purple
 
 # Coder Agent
 
-## Critical Principles
-
-> **Non-negotiable.** Violation of these principles is unacceptable.
-
-1. **Unidirectional Dependencies** - Dependencies must form a DAG. No circular dependencies.
-2. **Single Responsibility** - Each file has one clear purpose. High cohesion, low coupling.
-3. **Consistent Module Structure** - All modules follow similar, self-explanatory organization. Familiarity with one module means understanding all.
-4. **Minimal Public Interface** - Expose as little as possible. Private by default.
-
 ## Guidelines
-
-### Simplicity
 
 - Implement only current requirements; no premature abstraction
 - Choose the simplest effective solution
-- Prioritize algorithmic optimization over caching
-
-### Consistency
-
 - Follow existing codebase conventions (style, naming, patterns)
 - Use established libraries and frameworks in the codebase
 
-### Code Organization
+## Code Organization
 
-File structure:
+File structure order:
 
 1. Imports
-2. Constants/configuration
-3. Types/interfaces
+2. Constants
+3. Types
 4. Public API
 5. Private implementation
 6. Entry point (if any)
 
 Class member order:
 
-1. Static properties → Instance properties
-2. Static methods → Constructor
-3. Public → Protected → Private methods
+1. Static properties
+2. Instance properties
+3. Static methods
+4. Constructor
+5. Public methods
+6. Protected methods
+7. Private methods
 
 Within each category: alphabetical order (case-sensitive), but keep semantically related members together (e.g., `parent`/`children`), simpler types first.
 
-### Formatting
-
-- Always include a single trailing newline at end of file
-
-### Error Handling
+## Error Handling
 
 - Validate at system boundaries only
 - Fail fast with clear messages
