@@ -7,6 +7,20 @@ prompt = """Please perform a comprehensive code review on the following target.
 {{args}}
 ``````
 
+**Mode Detection**:
+- If the argument is a `.code-analyze/*.md` file path, enter **Re-analyze Mode**
+- Otherwise, enter **New Analysis Mode**
+
+### Re-analyze Mode
+
+When given an existing `.code-analyze/*.md` file:
+1. Read the file to extract the original review target and issues
+2. Re-analyze the same target to check:
+   - Which previously identified issues are now **fixed** (mark with ✅)
+   - Which issues **remain unfixed**
+   - Any **new issues** introduced since the last review
+3. **Rewrite** the file with updated analysis results
+
 ## Review Focus Areas
 
 Analyze the code systematically with emphasis on the following aspects:
@@ -85,6 +99,11 @@ Style:
 
 ## Output Requirement
 
+### New Analysis Mode
 1. **Display the full review output in the conversation** (stdout)
 2. **Simultaneously save** a copy to `{cwd}/.code-analyze/{simple-title}-gemini.md`, where `{simple-title}` is a concise kebab-case title derived from the review target (e.g., `user-auth-service`, `payment-controller`)
+
+### Re-analyze Mode
+1. **Display the full updated review output in the conversation** (stdout)
+2. **Rewrite** the specified `.code-analyze/*.md` file with the updated analysis
 """
