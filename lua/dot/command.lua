@@ -498,6 +498,10 @@ M.definitions.notepad = {
   change_engine = D.new("Fnotepadchangeengine", "notepad: change storage engine"),
   go_backward = D.new("Fnotepadgobackward", "notepad: go backward in history"),
   go_forward = D.new("Fnotepadgoforward", "notepad: go forward in history"),
+  split_h = D.new("Fnotepadsplith", "notepad: split left"),
+  split_j = D.new("Fnotepadsplitj", "notepad: split below"),
+  split_k = D.new("Fnotepadsplitk", "notepad: split above"),
+  split_l = D.new("Fnotepadsplitl", "notepad: split right"),
 }
 
 ---@class dot.command.definitions.refresh

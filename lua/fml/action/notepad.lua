@@ -714,4 +714,49 @@ function M.note_select()
   notes_picker:focus()
 end
 
+---@param direction                     'h'|'j'|'k'|'l'
+---@return integer
+local function __split__(direction)
+  if direction == "h" then
+    vim.o.splitright = false
+    vim.cmd("vsplit")
+    vim.o.splitright = true
+  elseif direction == "j" then
+    vim.o.splitbelow = true
+    vim.cmd("split")
+  elseif direction == "k" then
+    vim.o.splitbelow = false
+    vim.cmd("split")
+    vim.o.splitbelow = true
+  else
+    vim.o.splitright = true
+    vim.cmd("vsplit")
+  end
+  return vim.api.nvim_get_current_win()
+end
+
+---@param direction                     'h'|'j'|'k'|'l'
+---@return nil
+function M.split(direction)
+  local winnr_original = vim.api.nvim_get_current_win() ---@type integer
+  if dot.win.is_float(winnr_original) then
+    return
+  end
+
+  local winnr_new = __split__(direction) ---@type integer
+  local bufnr = widget:ensure_buf() ---@type integer
+  vim.api.nvim_win_set_buf(winnr_new, bufnr)
+
+  vim.wo[winnr_new].cursorline = true
+  vim.wo[winnr_new].list = true
+  vim.wo[winnr_new].number = true
+  vim.wo[winnr_new].relativenumber = true
+  vim.wo[winnr_new].signcolumn = "yes"
+  vim.wo[winnr_new].spell = true
+  vim.wo[winnr_new].wrap = true
+  vim.wo[winnr_new].winfixbuf = true
+
+  widget:render_winbar_to(winnr_new)
+end
+
 return M

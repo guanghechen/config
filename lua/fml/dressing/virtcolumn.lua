@@ -143,7 +143,7 @@ local function refresh()
   local offset = math.max(0, topline - extend) + 1 ---@type integer
   local endline = botline + extend ---@type integer
 
-  if filetype == "markdown" then
+  if filetype == "markdown" or filetype == ark.filetype.NOTEPAD then
     render_unicode(bufnr, offset, endline)
   else
     render_ascii(bufnr, offset, endline)

@@ -297,7 +297,7 @@ function M.new(props)
   self.max_height = props.max_height or MAX_HEIGHT
   self.min_width = props.min_width or MIN_WIDTH
   self.min_height = props.min_height or MIN_HEIGHT
-  self.filetype = props.filetype or "markdown"
+  self.filetype = props.filetype or ark.filetype.NOTEPAD
   self.win_opts = vim.tbl_extend("force", { winhighlight = NOTEPAD_WIN_HIGHLIGHT }, props.win_opts or {})
   self._bufnr = nil
   self._winnr = nil
@@ -1009,11 +1009,6 @@ function M:ensure_buf()
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
 
-  local render_manager = package.loaded["render-markdown.core.manager"]
-  if render_manager ~= nil then
-    render_manager.set_buf(bufnr, false)
-  end
-
   self:__attach_autocmds__(bufnr)
   self:__render_active_item__(bufnr)
   ark.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
@@ -1252,6 +1247,24 @@ function M:dispose()
   end
   self._bufnr = nil
   self._winnr = nil
+end
+
+---@param winnr                          integer
+---@return nil
+function M:render_winbar_to(winnr)
+  if self._nvimbar == nil then
+    return
+  end
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local prev_winnr = self._winnr
+  self._winnr = winnr
+  local result = self._nvimbar:render(true)
+  self._winnr = prev_winnr
+
+  vim.wo[winnr].winbar = result
 end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME

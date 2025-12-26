@@ -34,6 +34,7 @@ M.TEMP_VIEWER = "temp-viewer"
 M.UX_CMDLINE = "ux-cmdline"
 M.UX_INPUT = "ux-input"
 M.UX_MESSAGE_HISTORY = "ux-message-history"
+M.NOTEPAD = "notepad"
 M.UX_PICKER_FINDER = "ux-picker-finder"
 M.UX_PICKER_PREVIEW = "ux-picker-preview"
 M.UX_PICKER_RESULT = "ux-picker-result"
@@ -114,6 +115,7 @@ local filetypes = {
     [M.DAP_UI_STACKS] = true,
     [M.DAP_UI_WATCHES] = true,
     [M.EXPLORER] = true,
+    [M.NOTEPAD] = true,
   },
   hipattern = {},
   language = {
@@ -168,6 +170,7 @@ local filetypes = {
   },
   markdown = {
     [M.IMAGE_VIEWER] = true,
+    [M.NOTEPAD] = true,
     ["markdown"] = true,
   },
   not_sourcefile = {

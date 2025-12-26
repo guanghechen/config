@@ -9,7 +9,7 @@ local function insert_markup(alt, src)
   local content = src ---@type string
   local filetype = vim.bo.filetype ---@type string
 
-  if filetype == "markdown" then
+  if filetype == "markdown" or filetype == ark.filetype.NOTEPAD then
     content = string.format("![%s](%s)", alt, src)
   end
 

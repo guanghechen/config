@@ -874,6 +874,30 @@ command
       require("fml.action.notepad").go_forward()
     end,
   })
+  .implement({
+    uuid = K.notepad.split_h.uuid,
+    action = function()
+      require("fml.action.notepad").split("h")
+    end,
+  })
+  .implement({
+    uuid = K.notepad.split_j.uuid,
+    action = function()
+      require("fml.action.notepad").split("j")
+    end,
+  })
+  .implement({
+    uuid = K.notepad.split_k.uuid,
+    action = function()
+      require("fml.action.notepad").split("k")
+    end,
+  })
+  .implement({
+    uuid = K.notepad.split_l.uuid,
+    action = function()
+      require("fml.action.notepad").split("l")
+    end,
+  })
 
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
