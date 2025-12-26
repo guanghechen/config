@@ -13,4 +13,6 @@ prompt = """Apply the following fixes from code review.
 - Keep changes minimal and focused
 - Follow existing codebase conventions
 - If unclear, ask for clarification
+
+If sub-agents are supported, use the `coder` agent. Otherwise, follow `$XDG_CONFIG_HOME/claude/agents/coder.md`.
 """
