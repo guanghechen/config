@@ -1121,14 +1121,11 @@ function M:__load_children__(node, uri)
   end
 
   if unchanged then
-    for index = 1, child_count, 1 do
-      local child = children[index] ---@type dot.module.explorer.Node
-      child.uri = Node.calc_uri(node.uri, child.nodename, child.nodetype)
-      chidxmap[child.nodename] = index
-      if child.nodetype == "F" then
-        child.loaded = true
-      end
-    end
+    -- When children are unchanged:
+    -- - node.uri hasn't changed (same directory)
+    -- - chidxmap indices are already correct
+    -- - child.uri doesn't need recalculation
+    -- Only need to ensure node.loaded is set
     node.loaded = true
     return
   end
