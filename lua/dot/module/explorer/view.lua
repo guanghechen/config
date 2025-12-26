@@ -635,19 +635,11 @@ function M:__precompute__(root, ctx)
           if cached ~= nil then
             counts = cached
           else
-            local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
-            for _, diag in ipairs(diagnostics) do
-              local severity = diag.severity ---@type vim.diagnostic.Severity
-              if severity == vim.diagnostic.severity.ERROR then
-                counts.error = counts.error + 1
-              elseif severity == vim.diagnostic.severity.WARN then
-                counts.warn = counts.warn + 1
-              elseif severity == vim.diagnostic.severity.HINT then
-                counts.hint = counts.hint + 1
-              elseif severity == vim.diagnostic.severity.INFO then
-                counts.info = counts.info + 1
-              end
-            end
+            local diag_data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+            counts.error = diag_data.error
+            counts.warn = diag_data.warn
+            counts.hint = diag_data.hint
+            counts.info = diag_data.info
             bufnr_counts[bufnr] = counts
           end
         end

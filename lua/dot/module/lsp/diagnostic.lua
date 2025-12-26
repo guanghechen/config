@@ -2,166 +2,154 @@ local __module_name__ = "dot.module.lsp.diagnostic" ---@type string
 
 local DEBOUNCE_MS = 50 ---@type integer
 
----@param a                             dot.module.lsp.diagnostic.IBufferDiagnostics|nil
----@param b                             dot.module.lsp.diagnostic.IBufferDiagnostics|nil
+---@param data                           dot.module.lsp.diagnostic.IBufferDiagnostics
+---@return nil
+local function reset_buffer(data)
+  data.error = 0
+  data.warn = 0
+  data.info = 0
+  data.hint = 0
+  data.total = 0
+end
+
+---@param a                              dot.module.lsp.diagnostic.IBufferDiagnostics
+---@param b                              dot.module.lsp.diagnostic.IBufferDiagnostics
 ---@return boolean
 local function equals_buffer(a, b)
-  if a == nil and b == nil then
-    return true
-  end
-  if a == nil or b == nil then
-    return false
-  end
-  return a.bufnr == b.bufnr
-    and a.error == b.error
-    and a.warn == b.warn
-    and a.info == b.info
-    and a.hint == b.hint
-end
-
----@param a                             dot.module.lsp.diagnostic.IAllDiagnostics
----@param b                             dot.module.lsp.diagnostic.IAllDiagnostics
----@return boolean
-local function equals_all(a, b)
-  if a.error ~= b.error or a.warn ~= b.warn or a.info ~= b.info or a.hint ~= b.hint or a.total ~= b.total then
-    return false
-  end
-
-  local a_buffers = a.buffers ---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
-  local b_buffers = b.buffers ---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
-
-  for bufnr, a_buf in pairs(a_buffers) do
-    if not equals_buffer(a_buf, b_buffers[bufnr]) then
-      return false
-    end
-  end
-
-  for bufnr, _ in pairs(b_buffers) do
-    if a_buffers[bufnr] == nil then
-      return false
-    end
-  end
-
-  return true
-end
-
----@return dot.module.lsp.diagnostic.IAllDiagnostics
-local function create_empty_all()
-  ---@type dot.module.lsp.diagnostic.IAllDiagnostics
-  return {
-    error = 0,
-    warn = 0,
-    info = 0,
-    hint = 0,
-    total = 0,
-    buffers = {},
-  }
-end
-
----@param bufnr                         integer
----@return dot.module.lsp.diagnostic.IBufferDiagnostics
-local function create_empty_buffer(bufnr)
-  ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-  return {
-    bufnr = bufnr,
-    error = 0,
-    warn = 0,
-    info = 0,
-    hint = 0,
-    total = 0,
-  }
+  return a.error == b.error and a.warn == b.warn and a.info == b.info and a.hint == b.hint
 end
 
 ---@class dot.module.lsp.diagnostic
 local M = {}
 
----@type ark.c.Observable<dot.module.lsp.diagnostic.IAllDiagnostics>
-M.o_all = ark.c.Observable.from_value(create_empty_all(), equals_all)
+---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
+M._buffers = {}
 
----@type table<integer, ark.c.Observable<dot.module.lsp.diagnostic.IBufferDiagnostics>>
-M._buffer_observables = {}
+---@type ark.c.Subscribers
+M._subscribers_all = ark.c.Subscribers.new()
+
+---@type table<integer, ark.c.Subscribers>
+M._subscribers_bufnr = {}
+
+---@type integer
+M._total_error = 0
+
+---@type integer
+M._total_warn = 0
+
+---@type integer
+M._total_info = 0
+
+---@type integer
+M._total_hint = 0
 
 ---@type ark.timer.IDisposableCallable
 local refresh_debounced
 
----@return dot.module.lsp.diagnostic.IAllDiagnostics
-local function collect()
-  local diagnostics = vim.diagnostic.get() ---@type vim.Diagnostic[]
-
-  ---@type dot.module.lsp.diagnostic.IAllDiagnostics
-  local result = create_empty_all()
-
-  for _, diagnostic in ipairs(diagnostics) do
-    local bufnr = diagnostic.bufnr ---@type integer|nil
-    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-      local severity = diagnostic.severity ---@type vim.diagnostic.Severity
-
-      local buf_data = result.buffers[bufnr] ---@type dot.module.lsp.diagnostic.IBufferDiagnostics|nil
-      if buf_data == nil then
-        buf_data = create_empty_buffer(bufnr)
-        result.buffers[bufnr] = buf_data
-      end
-
-      if severity == vim.diagnostic.severity.ERROR then
-        buf_data.error = buf_data.error + 1
-        result.error = result.error + 1
-      elseif severity == vim.diagnostic.severity.WARN then
-        buf_data.warn = buf_data.warn + 1
-        result.warn = result.warn + 1
-      elseif severity == vim.diagnostic.severity.INFO then
-        buf_data.info = buf_data.info + 1
-        result.info = result.info + 1
-      elseif severity == vim.diagnostic.severity.HINT then
-        buf_data.hint = buf_data.hint + 1
-        result.hint = result.hint + 1
-      end
-
-      buf_data.total = buf_data.total + 1
-      result.total = result.total + 1
-    end
+---@param bufnr                          integer
+---@return boolean
+local function is_file_buffer(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false
   end
-
-  return result
+  local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  return bufname ~= "" and not vim.startswith(bufname, "term://")
 end
 
+---@param bufnr                          integer
+---@return dot.module.lsp.diagnostic.IBufferDiagnostics
+local function get_or_create_buffer(bufnr)
+  local data = M._buffers[bufnr] ---@type dot.module.lsp.diagnostic.IBufferDiagnostics|nil
+  if data == nil then
+    data = { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
+    M._buffers[bufnr] = data
+  end
+  return data
+end
+
+---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+local EMPTY_BUFFER = { bufnr = -1, error = 0, warn = 0, info = 0, hint = 0, total = 0 }
+
 local function do_refresh()
-  local prev_all = M.o_all:snapshot() ---@type dot.module.lsp.diagnostic.IAllDiagnostics
-  local next_all = collect() ---@type dot.module.lsp.diagnostic.IAllDiagnostics
+  local prev_totals = {
+    error = M._total_error,
+    warn = M._total_warn,
+    info = M._total_info,
+    hint = M._total_hint,
+  }
 
-  local prev_buffers = prev_all.buffers ---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
-  local next_buffers = next_all.buffers ---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
+  local changed_bufnrs = {} ---@type table<integer, { prev: dot.module.lsp.diagnostic.IBufferDiagnostics, next: dot.module.lsp.diagnostic.IBufferDiagnostics }>
 
-  local changed_bufnrs = {} ---@type table<integer, boolean>
+  M._total_error = 0
+  M._total_warn = 0
+  M._total_info = 0
+  M._total_hint = 0
 
-  for bufnr, next_buf in pairs(next_buffers) do
-    local prev_buf = prev_buffers[bufnr] ---@type dot.module.lsp.diagnostic.IBufferDiagnostics|nil
-    if not equals_buffer(prev_buf, next_buf) then
-      changed_bufnrs[bufnr] = true
+  for bufnr, data in pairs(M._buffers) do
+    changed_bufnrs[bufnr] = {
+      prev = { bufnr = bufnr, error = data.error, warn = data.warn, info = data.info, hint = data.hint, total = data.total },
+      next = data,
+    }
+    reset_buffer(data)
+  end
+
+  local diagnostics = vim.diagnostic.get() ---@type vim.Diagnostic[]
+  for _, diagnostic in ipairs(diagnostics) do
+    local bufnr = diagnostic.bufnr ---@type integer|nil
+    if bufnr ~= nil and is_file_buffer(bufnr) then
+      local data = get_or_create_buffer(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+      if changed_bufnrs[bufnr] == nil then
+        changed_bufnrs[bufnr] = {
+          prev = { bufnr = bufnr, error = 0, warn = 0, info = 0, hint = 0, total = 0 },
+          next = data,
+        }
+      end
+
+      local severity = diagnostic.severity ---@type vim.diagnostic.Severity
+      if severity == vim.diagnostic.severity.ERROR then
+        data.error = data.error + 1
+        M._total_error = M._total_error + 1
+      elseif severity == vim.diagnostic.severity.WARN then
+        data.warn = data.warn + 1
+        M._total_warn = M._total_warn + 1
+      elseif severity == vim.diagnostic.severity.INFO then
+        data.info = data.info + 1
+        M._total_info = M._total_info + 1
+      elseif severity == vim.diagnostic.severity.HINT then
+        data.hint = data.hint + 1
+        M._total_hint = M._total_hint + 1
+      end
+
+      data.total = data.total + 1
     end
   end
 
-  for bufnr, _ in pairs(prev_buffers) do
-    if next_buffers[bufnr] == nil then
-      changed_bufnrs[bufnr] = true
+  for bufnr, change in pairs(changed_bufnrs) do
+    if not equals_buffer(change.prev, change.next) then
+      local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+      if subscribers ~= nil then
+        subscribers:notify(change.next)
+      end
     end
   end
 
-  for bufnr, _ in pairs(changed_bufnrs) do
-    local observable = M._buffer_observables[bufnr] ---@type ark.c.Observable<dot.module.lsp.diagnostic.IBufferDiagnostics>|nil
-    if observable ~= nil and not observable:isdisposed() then
-      local next_buf = next_buffers[bufnr] or create_empty_buffer(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-      observable:next(next_buf)
-    end
-  end
+  local totals_changed = prev_totals.error ~= M._total_error
+    or prev_totals.warn ~= M._total_warn
+    or prev_totals.info ~= M._total_info
+    or prev_totals.hint ~= M._total_hint
 
-  M.o_all:next(next_all)
+  if totals_changed or next(changed_bufnrs) ~= nil then
+    M._subscribers_all:notify(nil)
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
+  end
 end
 
 refresh_debounced = ark.timer.debounce(do_refresh, DEBOUNCE_MS)
 
----@param filepath                      string
----@param offset                        integer
----@param highlights                    ark.t.IHighlightInline[]
+---@param filepath                       string
+---@param offset                         integer
+---@param highlights                     ark.t.IHighlightInline[]
 ---@return string
 function M.render(filepath, offset, highlights)
   local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
@@ -169,7 +157,7 @@ function M.render(filepath, offset, highlights)
     return ""
   end
 
-  local data = M.o_all:snapshot().buffers[bufnr] ---@type dot.module.lsp.diagnostic.IBufferDiagnostics|nil
+  local data = M._buffers[bufnr] ---@type dot.module.lsp.diagnostic.IBufferDiagnostics|nil
   if data == nil then
     return ""
   end
@@ -211,16 +199,47 @@ function M.render(filepath, offset, highlights)
   return text
 end
 
----@return dot.module.lsp.diagnostic.IAllDiagnostics
-function M.get_all()
-  return M.o_all:snapshot()
+---@return integer
+---@return integer
+---@return integer
+---@return integer
+function M.get_totals()
+  return M._total_error, M._total_warn, M._total_info, M._total_hint
 end
 
----@param bufnr                         integer
----@return dot.module.lsp.diagnostic.IBufferDiagnostics|nil
+---@param bufnr                          integer
+---@return dot.module.lsp.diagnostic.IBufferDiagnostics
 function M.get_by_bufnr(bufnr)
-  local all = M.o_all:snapshot() ---@type dot.module.lsp.diagnostic.IAllDiagnostics
-  return all.buffers[bufnr]
+  return M._buffers[bufnr] or EMPTY_BUFFER
+end
+
+---@param filepath                       string
+---@return dot.module.lsp.diagnostic.IBufferDiagnostics
+function M.get_by_filepath(filepath)
+  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
+  if bufnr == nil or bufnr < 1 then
+    return EMPTY_BUFFER
+  end
+  return M._buffers[bufnr] or EMPTY_BUFFER
+end
+
+---@param filepath                       string
+---@param severity                       vim.diagnostic.Severity|nil
+---@return boolean
+function M.has_diagnostics(filepath, severity)
+  local data = M.get_by_filepath(filepath) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+  if severity == nil then
+    return data.total > 0
+  elseif severity == vim.diagnostic.severity.ERROR then
+    return data.error > 0
+  elseif severity == vim.diagnostic.severity.WARN then
+    return data.warn > 0
+  elseif severity == vim.diagnostic.severity.HINT then
+    return data.hint > 0
+  elseif severity == vim.diagnostic.severity.INFO then
+    return data.info > 0
+  end
+  return false
 end
 
 ---@return nil
@@ -228,28 +247,22 @@ function M.refresh()
   refresh_debounced()
 end
 
----@param subscriber                    ark.c.ISubscriber
----@param ignore_initial                ?boolean
+---@param subscriber                     ark.c.ISubscriber
 ---@return ark.c.IUnsubscribable
-function M.subscribe_all(subscriber, ignore_initial)
-  return M.o_all:subscribe(subscriber, ignore_initial)
+function M.subscribe_all(subscriber)
+  return M._subscribers_all:subscribe(subscriber)
 end
 
----@param bufnr                         integer
----@param subscriber                    ark.c.ISubscriber
----@param ignore_initial                ?boolean
+---@param bufnr                          integer
+---@param subscriber                     ark.c.ISubscriber
 ---@return ark.c.IUnsubscribable
-function M.subscribe_bufnr(bufnr, subscriber, ignore_initial)
-  local observable = M._buffer_observables[bufnr] ---@type ark.c.Observable<dot.module.lsp.diagnostic.IBufferDiagnostics>|nil
-
-  if observable == nil or observable:isdisposed() then
-    local all = M.o_all:snapshot() ---@type dot.module.lsp.diagnostic.IAllDiagnostics
-    local initial = all.buffers[bufnr] or create_empty_buffer(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-    observable = ark.c.Observable.from_value(initial, equals_buffer)
-    M._buffer_observables[bufnr] = observable
+function M.subscribe_bufnr(bufnr, subscriber)
+  local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+  if subscribers == nil then
+    subscribers = ark.c.Subscribers.new()
+    M._subscribers_bufnr[bufnr] = subscribers
   end
-
-  return observable:subscribe(subscriber, ignore_initial)
+  return subscribers:subscribe(subscriber)
 end
 
 ---@return nil
@@ -267,10 +280,11 @@ function M.setup()
     group = augroup,
     callback = function(args)
       local bufnr = args.buf ---@type integer
-      local observable = M._buffer_observables[bufnr] ---@type ark.c.Observable<dot.module.lsp.diagnostic.IBufferDiagnostics>|nil
-      if observable ~= nil then
-        observable:dispose()
-        M._buffer_observables[bufnr] = nil
+      M._buffers[bufnr] = nil
+      local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+      if subscribers ~= nil then
+        subscribers:dispose()
+        M._subscribers_bufnr[bufnr] = nil
       end
     end,
   })

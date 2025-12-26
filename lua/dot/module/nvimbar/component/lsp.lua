@@ -22,41 +22,41 @@ end) or ""
 
 ---@type string
 local fn_show_error = ark.G.register_anonymous_fn(function(bufnr)
-  local errors = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR })
+  local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
   ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- error",
-    details = errors,
+    details = { count = data.error },
   })
 end)
 
 ---@type string
 local fn_show_warn = ark.G.register_anonymous_fn(function(bufnr)
-  local warns = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN })
+  local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
   ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- warning",
-    details = warns,
+    details = { count = data.warn },
   })
 end)
 
 ---@type string
 local fn_show_hint = ark.G.register_anonymous_fn(function(bufnr)
-  local hints = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT })
+  local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
   ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- hint",
-    details = hints,
+    details = { count = data.hint },
   })
 end)
 
 ---@type string
 local fn_show_info = ark.G.register_anonymous_fn(function(bufnr)
-  local infos = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO })
+  local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
   ark.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- info",
-    details = infos,
+    details = { count = data.info },
   })
 end)
 
@@ -186,21 +186,19 @@ function M.diagnostics(position)
       return not not rawget(vim, "lsp")
     end,
     render = function(context)
+      local diag_data = dot.lsp.diagnostic.get_by_bufnr(context.bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+
       local text_hl = "" ---@type string
-      local count_error = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.ERROR })
-      local text_count_error = count_error > 0 and ark.icon.diagnostic.Error_alt .. " " .. count_error .. " " or ""
+      local text_count_error = diag_data.error > 0 and ark.icon.diagnostic.Error_alt .. " " .. diag_data.error .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
-      local count_warn = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.WARN })
-      local text_count_warn = count_warn > 0 and ark.icon.diagnostic.Warning_alt .. " " .. count_warn .. " " or ""
+      local text_count_warn = diag_data.warn > 0 and ark.icon.diagnostic.Warning_alt .. " " .. diag_data.warn .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
-      local count_hint = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.HINT })
-      local text_count_hint = count_hint > 0 and ark.icon.diagnostic.Hint_alt .. " " .. count_hint .. " " or ""
+      local text_count_hint = diag_data.hint > 0 and ark.icon.diagnostic.Hint_alt .. " " .. diag_data.hint .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
-      local count_info = #vim.diagnostic.get(context.bufnr, { severity = vim.diagnostic.severity.INFO })
-      local text_count_info = count_info > 0 and ark.icon.diagnostic.Information_alt .. " " .. count_info .. " " or ""
+      local text_count_info = diag_data.info > 0 and ark.icon.diagnostic.Information_alt .. " " .. diag_data.info .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info

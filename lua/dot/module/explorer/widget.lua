@@ -17,19 +17,6 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 
 local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@type integer
 
----@param filepath                       string
----@param severity                       vim.diagnostic.Severity|nil
----@return boolean
-local function has_diagnostics(filepath, severity)
-  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
-  if bufnr == nil then
-    return false
-  end
-  local opts = severity and { severity = severity } or nil ---@type vim.diagnostic.GetOpts|nil
-  local diagnostics = vim.diagnostic.get(bufnr, opts) ---@type vim.Diagnostic[]
-  return #diagnostics > 0
-end
-
 ---@class dot.module.explorer.widget.IFlagItem
 ---@field public desc                   string
 ---@field public callback               fun(): nil
@@ -768,7 +755,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[d",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          return has_diagnostics(filepath, nil)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, nil)
         end)
       end,
       desc = "explorer: go to prev diagnostic file",
@@ -778,7 +765,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[e",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          return has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
         end)
       end,
       desc = "explorer: go to prev diagnostic error file",
@@ -804,7 +791,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[w",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          return has_diagnostics(filepath, vim.diagnostic.severity.WARN)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, vim.diagnostic.severity.WARN)
         end)
       end,
       desc = "explorer: go to prev diagnostic warning file",
@@ -814,7 +801,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]d",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          return has_diagnostics(filepath, nil)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, nil)
         end)
       end,
       desc = "explorer: go to next diagnostic file",
@@ -824,7 +811,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]e",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          return has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
         end)
       end,
       desc = "explorer: go to next diagnostic error file",
@@ -850,7 +837,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]w",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          return has_diagnostics(filepath, vim.diagnostic.severity.WARN)
+          return dot.lsp.diagnostic.has_diagnostics(filepath, vim.diagnostic.severity.WARN)
         end)
       end,
       desc = "explorer: go to next diagnostic warning file",
@@ -1349,6 +1336,17 @@ function M:__setup_subscriptions__()
     false
   )
   self._subscriptions[#self._subscriptions + 1] = sub_git_unstaged
+
+  local sub_diagnostic = dot.lsp.diagnostic.subscribe_all(
+    ark.c.Subscriber.new({
+      on_next = function()
+        if self:isvisible() then
+          self:__render__()
+        end
+      end,
+    })
+  )
+  self._subscriptions[#self._subscriptions + 1] = sub_diagnostic
 end
 
 ---@protected

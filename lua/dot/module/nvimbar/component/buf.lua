@@ -170,10 +170,11 @@ function M.bufs(position)
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
-    local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type integer
-    local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type integer
-    local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT }) ---@type integer
-    local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO }) ---@type integer
+    local diag_data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+    local count_error = diag_data.error ---@type integer
+    local count_warn = diag_data.warn ---@type integer
+    local count_hint = diag_data.hint ---@type integer
+    local count_info = diag_data.info ---@type integer
 
     local text_diagnostic = "" ---@type string
     local hl_text_diagnostic = "" ---@type string
@@ -273,10 +274,11 @@ function M.bufs(position)
     local is_pinned = buf.pinned ---@type boolean
     local is_mod = vim.bo[bufnr].modified ---@type boolean
 
-    local count_error = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type integer
-    local count_warn = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type integer
-    local count_hint = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.HINT }) ---@type integer
-    local count_info = #vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.INFO }) ---@type integer
+    local diag_data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+    local count_error = diag_data.error ---@type integer
+    local count_warn = diag_data.warn ---@type integer
+    local count_hint = diag_data.hint ---@type integer
+    local count_info = diag_data.info ---@type integer
 
     local text_diagnostic = "" ---@type string
     local slots = 0 ---@type integer
