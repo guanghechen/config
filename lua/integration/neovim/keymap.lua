@@ -276,6 +276,11 @@ ms({ "n", "x" }, "<leader>tn", K.tab.new_with_buf)
 ms({ "i", "n", "t", "x" }, { "<C-a>g", "<D-g>", "<M-g>" }, K.term.lazygit_cwd)
 ms({ "i", "n", "t", "x" }, { "<C-a>t", "<D-t>", "<M-t>" }, K.term.toggle)
 ms({ "i", "n", "t", "x" }, { "<C-a>y", "<D-y>", "<M-y>" }, K.term.yazi_reveal)
+ms({ "n", "x" }, "<leader>th", K.term.split_h)
+ms({ "n", "x" }, "<leader>tj", K.term.split_j)
+ms({ "n", "x" }, "<leader>tk", K.term.split_k)
+ms({ "n", "x" }, "<leader>tl", K.term.split_l)
+ms({ "n", "x" }, "<leader>tt", K.term.toggle)
 ---------------------------------------------------------------------------------------#[t]erminal--
 
 --#[t]oggle/ux--------------------------------------------------------------------------------------

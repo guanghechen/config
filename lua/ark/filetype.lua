@@ -116,6 +116,7 @@ local filetypes = {
     [M.DAP_UI_WATCHES] = true,
     [M.EXPLORER] = true,
     [M.NOTEPAD] = true,
+    [M.TERM] = true,
   },
   hipattern = {},
   language = {

@@ -579,6 +579,10 @@ M.definitions.term = {
   focus_right = D.new("Ftermfocusright", "term: focus right", "?"),
   swap_left = D.new("Ftermswapleft", "term: swap left", "?"),
   swap_right = D.new("Ftermswapright", "term: swap right", "?"),
+  split_h = D.new("Ftermsplith", "term: split left"),
+  split_j = D.new("Ftermsplitj", "term: split below"),
+  split_k = D.new("Ftermsplitk", "term: split above"),
+  split_l = D.new("Ftermsplitl", "term: split right"),
 }
 
 ---@class dot.command.definitions.toggle

@@ -105,32 +105,52 @@ dot.state.status.dirtier_termline:subscribe(
   true
 )
 
+---@param winnr                         integer
+---@return nil
+local function render_winbar_to(winnr)
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local prev_winnr = _terminal_winnr
+  _terminal_winnr = winnr
+  local result = termline:render(true)
+  _terminal_winnr = prev_winnr
+
+  vim.wo[winnr].winbar = result
+end
+
+---@param direction                     'h'|'j'|'k'|'l'
+---@return integer
+local function __split__(direction)
+  if direction == "h" then
+    vim.o.splitright = false
+    vim.cmd("vsplit")
+    vim.o.splitright = true
+  elseif direction == "j" then
+    vim.o.splitbelow = true
+    vim.cmd("split")
+  elseif direction == "k" then
+    vim.o.splitbelow = false
+    vim.cmd("split")
+    vim.o.splitbelow = true
+  else
+    vim.o.splitright = true
+    vim.cmd("vsplit")
+  end
+  return vim.api.nvim_get_current_win()
+end
+
 ---@class dot.widget.Terminal : dot.t.IWidget
 local M = {}
-
----@return boolean
-function M:isdisposed()
-  return false
-end
-
----@return boolean
-function M:isfocused()
-  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-  return winnr_current == _terminal_winnr
-end
-
----@return boolean
-function M:isvisible()
-  return _terminal_winnr ~= nil and vim.api.nvim_win_is_valid(_terminal_winnr)
-end
-
----@return nil
-function M:dispose() end
 
 ---@return nil
 function M:close()
   self:hide()
 end
+
+---@return nil
+function M:dispose() end
 
 ---@return integer|nil
 function M:focus()
@@ -151,6 +171,18 @@ function M:focus()
   dot.term.on_focused(termmeta)
 end
 
+---@return integer|nil
+function M:get_bufnr()
+  local termindex = dot.term.current() ---@type integer
+  local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
+  return termmeta and termmeta.bufnr or nil
+end
+
+---@return integer|nil
+function M:get_winnr()
+  return _terminal_winnr
+end
+
 ---@return nil
 function M:hide()
   local winnr = _terminal_winnr ---@type integer|nil
@@ -158,21 +190,20 @@ function M:hide()
   dot.win.close(winnr)
 end
 
----@return nil
-function M:show()
-  self:focus()
+---@return boolean
+function M:isdisposed()
+  return false
 end
 
----@return integer|nil
-function M:get_bufnr()
-  local termindex = dot.term.current() ---@type integer
-  local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
-  return termmeta and termmeta.bufnr or nil ---@type integer|nil
+---@return boolean
+function M:isfocused()
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  return winnr_current == _terminal_winnr
 end
 
----@return integer|nil
-function M:get_winnr()
-  return _terminal_winnr
+---@return boolean
+function M:isvisible()
+  return _terminal_winnr ~= nil and vim.api.nvim_win_is_valid(_terminal_winnr)
 end
 
 ---@return nil
@@ -187,6 +218,51 @@ function M:resize()
       self:__create_win_as_needed__(termmeta)
     end
   end
+end
+
+---@return nil
+function M:show()
+  self:focus()
+end
+
+---@param direction                     'h'|'j'|'k'|'l'
+---@return nil
+function M:split(direction)
+  local winnr_original = vim.api.nvim_get_current_win() ---@type integer
+  if dot.win.is_float(winnr_original) then
+    return
+  end
+
+  local termindex = dot.term.current() ---@type integer
+  local _, termmeta = dot.term.at(termindex) ---@type string|nil, dot.t.ITermMeta|nil
+  if termmeta == nil then
+    termmeta = dot.term.create({
+      uuid = yoz.fn.uuid(),
+      name = "Terminal",
+      type = "shell",
+      permanent = true,
+    })
+  end
+
+  local winnr_new = __split__(direction) ---@type integer
+  local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
+  vim.api.nvim_win_set_buf(winnr_new, bufnr)
+
+  vim.wo[winnr_new].cursorline = false
+  vim.wo[winnr_new].list = false
+  vim.wo[winnr_new].number = false
+  vim.wo[winnr_new].relativenumber = false
+  vim.wo[winnr_new].signcolumn = "no"
+  vim.wo[winnr_new].spell = false
+  vim.wo[winnr_new].wrap = true
+  vim.wo[winnr_new].winfixbuf = true
+
+  render_winbar_to(winnr_new)
+  self:__start_job__(termmeta)
+
+  vim.schedule(function()
+    vim.cmd("startinsert")
+  end)
 end
 
 ---@return nil
@@ -388,42 +464,52 @@ function M:__start__(termmeta)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = self:__create_win_as_needed__(termmeta) ---@type integer
     vim.api.nvim_tabpage_set_win(tabnr, winnr)
-
-    local channelid = vim.fn.jobstart(termmeta.cmd, {
-      cwd = termmeta.cwd,
-      env = termmeta.env,
-      pty = true,
-      term = true,
-      detach = false,
-      on_exit = function(jobid, code, event)
-        if code ~= 0 and code ~= 129 then
-          ark.reporter.error({
-            from = __module_name__,
-            subject = "terminal unexpected exit",
-            details = {
-              termmeta = {
-                uuid = termmeta.uuid,
-                name = termmeta.name,
-                cmd = termmeta.cmd,
-                cwd = termmeta.cwd,
-                env = termmeta.env,
-                permanent = termmeta.permanent,
-                hidewipe = termmeta.hidewipe,
-                code = code,
-                event = event,
-              },
-            },
-          })
-        end
-
-        if termmeta.jobid == jobid then
-          termmeta.jobid = nil
-          dot.term.on_closed(termmeta)
-        end
-      end,
-    })
-    termmeta.jobid = channelid
+    self:__start_job__(termmeta)
   end
+end
+
+---@protected
+---@param termmeta                      dot.t.ITermMeta
+---@return nil
+function M:__start_job__(termmeta)
+  if termmeta.jobid ~= nil then
+    return
+  end
+
+  local channelid = vim.fn.jobstart(termmeta.cmd, {
+    cwd = termmeta.cwd,
+    env = termmeta.env,
+    pty = true,
+    term = true,
+    detach = false,
+    on_exit = function(jobid, code, event)
+      if code ~= 0 and code ~= 129 then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = "terminal unexpected exit",
+          details = {
+            termmeta = {
+              uuid = termmeta.uuid,
+              name = termmeta.name,
+              cmd = termmeta.cmd,
+              cwd = termmeta.cwd,
+              env = termmeta.env,
+              permanent = termmeta.permanent,
+              hidewipe = termmeta.hidewipe,
+              code = code,
+              event = event,
+            },
+          },
+        })
+      end
+
+      if termmeta.jobid == jobid then
+        termmeta.jobid = nil
+        dot.term.on_closed(termmeta)
+      end
+    end,
+  })
+  termmeta.jobid = channelid
 end
 
 return M

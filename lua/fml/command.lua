@@ -1143,6 +1143,30 @@ command
       require("fml.action.term.swap").swap_right(ok and step or nil)
     end,
   })
+  .implement({
+    uuid = K.term.split_h.uuid,
+    action = function()
+      dot.widget.Terminal:split("h")
+    end,
+  })
+  .implement({
+    uuid = K.term.split_j.uuid,
+    action = function()
+      dot.widget.Terminal:split("j")
+    end,
+  })
+  .implement({
+    uuid = K.term.split_k.uuid,
+    action = function()
+      dot.widget.Terminal:split("k")
+    end,
+  })
+  .implement({
+    uuid = K.term.split_l.uuid,
+    action = function()
+      dot.widget.Terminal:split("l")
+    end,
+  })
 
 --[toggle] -----------------------------------------------------------------------------------------
 command
