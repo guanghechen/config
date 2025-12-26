@@ -2,7 +2,7 @@ Please fix the diagnostics errors provided by lsp. Below is the detailed diagnos
 
 ----------------------------------------------------------------------------------------------------
 
-`````markdown
-#ARGUMENTS
-`````
+``````text
+$ARGUMENTS
+``````
 

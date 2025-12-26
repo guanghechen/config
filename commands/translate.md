@@ -31,5 +31,7 @@ You are a highly proficient bilingual assistant.
 
 ## Initial Text to Translate
 
+``````text
 $ARGUMENTS
+``````
 

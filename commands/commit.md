@@ -2,9 +2,9 @@ Please create a git commit based on our current changes.
 
 ## Arguments (Optional)
 
-```text
+``````text
 $ARGUMENTS
-```
+``````
 
 **If arguments are provided, interpret them as follows:**
 
