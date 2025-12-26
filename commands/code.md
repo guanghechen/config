@@ -13,4 +13,4 @@ Do not introduce new information, and keep the voice consistent with the source.
 $ARGUMENTS
 ``````
 
-Please use the `code` sub-agent when carrying out any coding-related work.
+Please use the `coder` sub-agent when carrying out any coding-related work.
