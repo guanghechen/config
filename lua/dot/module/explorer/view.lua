@@ -515,7 +515,7 @@ end
 ---@param is_expanded                   boolean
 ---@return string
 ---@return string
-function M:__get_node_icon__(_, node, is_ignored, is_expanded)
+function M:__get_node_icon__(node, is_ignored, is_expanded)
   if node.nodetype == "D" then
     local icon, icon_hl ---@type string, string
     if is_expanded then
@@ -708,7 +708,7 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
   col = col + #indent
 
   if ctx.show_icons then
-    local icon, icon_hl = self:__get_node_icon__(ctx, node, is_ignored, is_expanded) ---@type string, string
+    local icon, icon_hl = self:__get_node_icon__(node, is_ignored, is_expanded) ---@type string, string
     parts[#parts + 1] = icon
     parts[#parts + 1] = " "
 
