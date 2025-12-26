@@ -3225,9 +3225,17 @@ end
 ---@protected
 ---@return nil
 function M:__update_winbar__()
-  if vim.o.showtabline ~= 0 then
+  local winnr = self._winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
+
+  if vim.o.showtabline ~= 0 then
+    -- When tabline is shown, hide winbar (info displayed in tabline instead)
+    vim.wo[winnr].winbar = nil
+    return
+  end
+
   self._nvimbar:render(true)
 end
 

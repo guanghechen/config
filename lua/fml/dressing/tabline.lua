@@ -80,11 +80,8 @@ dirtier:subscribe(ark.c.Subscriber.new({
       vim.o.showtabline = 2
 
       if last_showtabline == 0 then
-        if dot.widget.explorer.widget ~= nil then
-          local winnr = dot.widget.explorer.widget:get_winnr() ---@type integer|nil
-          if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-            vim.wo[winnr].winbar = nil
-          end
+        if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
+          dot.widget.explorer.widget:render_winbar()
         end
       end
 
