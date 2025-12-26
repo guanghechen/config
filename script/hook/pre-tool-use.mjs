@@ -4,13 +4,17 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const SENSITIVE_PATTERNS = [
-  /^\.env\.local$/,
-  /^\.env\.[^.]+\.local$/,
   /\.http_request$/,
   /\.http_response$/,
+  /^\.env\.local$/,
+  /^\.git-credentials$/,
 ]
 
-const SENSITIVE_PATHS = [/(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/]
+const SENSITIVE_PATHS = [
+  //
+  /(?:^|[\\/])\.ssh[\\/]/,
+  /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
+]
 
 function isSensitiveFile(filepath) {
   const base = path.basename(filepath)
