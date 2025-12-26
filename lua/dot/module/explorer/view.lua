@@ -5,56 +5,55 @@ local __module_name__ = "dot.module.explorer.view" ---@type string
 ---@field public root                   dot.module.explorer.Node
 ---@field public root_uri               string
 ---@field public resource_manager       dot.module.explorer.resource.IManager|nil
----@field public tick_loaded            integer
+---@field public diag_counts            table<string, dot.module.explorer.view.IDiagCounts>
 ---@field public foldempty              boolean
 ---@field public only_selected          boolean
+---@field public select_mode            dot.module.explorer.SelectModeEnum
 ---@field public show_diagnostics       boolean
 ---@field public show_git_status        boolean
 ---@field public show_icons             boolean
----@field public diag_counts            table<string, dot.module.explorer.view.IDiagCounts>
----@field public select_mode            dot.module.explorer.SelectModeEnum
 
 ---@class dot.module.explorer.view.IDiagCounts
 ---@field public error                  integer
----@field public warn                   integer
 ---@field public hint                   integer
 ---@field public info                   integer
+---@field public warn                   integer
 
 ---@class dot.module.explorer.view.IGitStatusInfo
+---@field public highlights             ark.t.IHighlightInline[]
 ---@field public lnum                   integer
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]
 
 ---@class dot.module.explorer.view.IDiagnosticInfo
+---@field public highlights             ark.t.IHighlightInline[]
 ---@field public lnum                   integer
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]
 
 ---@class dot.module.explorer.view.ISignInfo
 ---@field public lnum                   integer
----@field public sign_text              string
 ---@field public sign_hl_group          string
+---@field public sign_text              string
 
 ---@class dot.module.explorer.view.IRenderResult
----@field public lines                  string[]
----@field public highlights             ark.t.IHighlight[]
----@field public diagnostic_info_list   dot.module.explorer.view.IDiagnosticInfo[]
----@field public git_status_list        dot.module.explorer.view.IGitStatusInfo[]
----@field public sign_info_list         dot.module.explorer.view.ISignInfo[]
----@field public lnum_to_uri            table<integer, string>
----@field public uri_to_lnum            table<string, integer>
 ---@field public diag_by_lnum           table<integer, dot.module.explorer.view.IDiagnosticInfo>
+---@field public diagnostic_info_list   dot.module.explorer.view.IDiagnosticInfo[]
 ---@field public git_by_lnum            table<integer, dot.module.explorer.view.IGitStatusInfo>
+---@field public git_status_list        dot.module.explorer.view.IGitStatusInfo[]
+---@field public highlights             ark.t.IHighlight[]
+---@field public lines                  string[]
+---@field public lnum_to_uri            table<integer, string>
 ---@field public sign_by_lnum           table<integer, dot.module.explorer.view.ISignInfo>
+---@field public sign_info_list         dot.module.explorer.view.ISignInfo[]
+---@field public uri_to_lnum            table<string, integer>
 
 ---@class dot.module.explorer.view.IRenderOptions
----@field public resource_manager       ?dot.module.explorer.resource.IManager
 ---@field public foldempty              ?boolean
 ---@field public only_selected          ?boolean
+---@field public resource_manager       ?dot.module.explorer.resource.IManager
+---@field public select_mode            ?dot.module.explorer.SelectModeEnum
 ---@field public show_diagnostics       ?boolean
 ---@field public show_git_status        ?boolean
 ---@field public show_icons             ?boolean
----@field public select_mode            ?dot.module.explorer.SelectModeEnum
 
 local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
@@ -63,10 +62,15 @@ local INDENT_SPACE = "  " ---@type string
 local VIRT_TEXT_ID_OFFSET = 1000000 ---@type integer
 
 ---@class dot.module.explorer.View
----@field protected _nsnr               integer
 ---@field protected _indent_hln         string
+---@field protected _nsnr               integer
 local M = {}
 M.__index = M
+
+---@return integer
+function M:get_namespace()
+  return self._nsnr
+end
 
 ---@param name                          string
 ---@return dot.module.explorer.View
@@ -89,7 +93,6 @@ function M:render(bufnr, tree, root, options)
 
   local diag_counts = {} ---@type table<string, dot.module.explorer.view.IDiagCounts>
 
-  local tick_loaded = tree.state.tick_loaded ---@type integer
   local root_uri = root.uri ---@type string
 
   ---@type dot.module.explorer.view.IRenderContext
@@ -98,7 +101,6 @@ function M:render(bufnr, tree, root, options)
     root = root,
     root_uri = root_uri,
     resource_manager = options.resource_manager,
-    tick_loaded = tick_loaded,
     foldempty = options.foldempty ~= false,
     only_selected = options.only_selected == true,
     show_diagnostics = options.show_diagnostics ~= false,
@@ -122,15 +124,13 @@ function M:render(bufnr, tree, root, options)
   local only_selected = ctx.only_selected ---@type boolean
 
   ---@param node                        dot.module.explorer.Node
-  ---@param rs_tick_selected_max        integer
   ---@return boolean
-  local function has_selected_in_subtree(node, rs_tick_selected_max)
-    local node_rs_tick_selected_max = math.max(rs_tick_selected_max, node.rs.tick_selected) ---@type integer
-    if node_rs_tick_selected_max % 2 == 1 then
+  local function has_selected_in_subtree(node)
+    if node.selected then
       return true
     end
     for _, child in ipairs(node.children) do
-      if has_selected_in_subtree(child, node_rs_tick_selected_max) then
+      if has_selected_in_subtree(child) then
         return true
       end
     end
@@ -141,18 +141,15 @@ function M:render(bufnr, tree, root, options)
   ---@param prefix                      string
   ---@param is_last                     boolean
   ---@param display_name                string|nil
-  ---@param rs_tick_expanded_max        integer
-  ---@param rs_tick_selected_max        integer
   ---@return nil
-  local function traverse(node, prefix, is_last, display_name, rs_tick_expanded_max, rs_tick_selected_max)
-    local node_rs_tick_selected_max = math.max(rs_tick_selected_max, node.rs.tick_selected) ---@type integer
-    local is_selected = node_rs_tick_selected_max % 2 == 1 ---@type boolean
+  local function traverse(node, prefix, is_last, display_name)
+    local is_selected = node.selected ---@type boolean
 
     if only_selected and not is_selected then
       if node.nodetype == "F" then
         return
       end
-      if not has_selected_in_subtree(node, rs_tick_selected_max) then
+      if not has_selected_in_subtree(node) then
         return
       end
     end
@@ -160,8 +157,7 @@ function M:render(bufnr, tree, root, options)
     lnum = lnum + 1
     local current_lnum = lnum ---@type integer
 
-    local node_rs_tick_expanded_max = math.max(rs_tick_expanded_max, node.rs.tick_expanded) ---@type integer
-    local is_expanded = math.max(node_rs_tick_expanded_max, node.ns.tick_expanded) % 2 == 1 ---@type boolean
+    local is_expanded = node.expanded ---@type boolean
 
     local indent ---@type string
     if prefix == "" then
@@ -218,7 +214,7 @@ function M:render(bufnr, tree, root, options)
     end
 
     if node.nodetype == "D" and is_expanded then
-      if not node:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
+      if not node.loaded and ctx.resource_manager ~= nil then
         ctx.tree:load_node(node, ctx.resource_manager, false)
       end
 
@@ -239,16 +235,14 @@ function M:render(bufnr, tree, root, options)
           end
         end
 
-        traverse(child, child_prefix, i == N, child_display_name, node_rs_tick_expanded_max, node_rs_tick_selected_max)
+        traverse(child, child_prefix, i == N, child_display_name)
       end
     end
   end
 
-  local root_rs_tick_expanded_max = root.rs.tick_expanded ---@type integer
-  local root_rs_tick_selected_max = root.rs.tick_selected ---@type integer
-  local root_is_expanded = math.max(root_rs_tick_expanded_max, root.ns.tick_expanded) % 2 == 1 ---@type boolean
+  local root_is_expanded = root.expanded ---@type boolean
   if root_is_expanded then
-    if not root:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
+    if not root.loaded and ctx.resource_manager ~= nil then
       ctx.tree:load_node(root, ctx.resource_manager, false)
     end
 
@@ -265,7 +259,7 @@ function M:render(bufnr, tree, root, options)
         end
       end
 
-      traverse(child, "", i == N, child_display_name, root_rs_tick_expanded_max, root_rs_tick_selected_max)
+      traverse(child, "", i == N, child_display_name)
     end
   end
 
@@ -343,11 +337,6 @@ function M:render(bufnr, tree, root, options)
   }
 end
 
----@return integer
-function M:get_namespace()
-  return self._nsnr
-end
-
 ---@param bufnr                         integer
 ---@param render_result                 dot.module.explorer.view.IRenderResult
 ---@param lnum                          integer
@@ -401,66 +390,136 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
+---@param node                          dot.module.explorer.Node
+---@param ctx                           dot.module.explorer.view.IRenderContext
+---@return dot.module.explorer.Node
+---@return string
+function M:__fold_empty_dirs__(node, ctx)
+  local path_parts = { node.nodename } ---@type string[]
+  local current = node ---@type dot.module.explorer.Node
+
+  while true do
+    if not current.expanded then
+      break
+    end
+
+    if not current.loaded and ctx.resource_manager ~= nil then
+      ctx.tree:load_node(current, ctx.resource_manager, false)
+    end
+
+    local children = current.children ---@type dot.module.explorer.Node[]
+    if #children ~= 1 then
+      break
+    end
+
+    local child = children[1] ---@type dot.module.explorer.Node
+    if child.nodetype ~= "D" then
+      break
+    end
+
+    path_parts[#path_parts + 1] = child.nodename
+    current = child
+  end
+
+  if #path_parts == 1 then
+    return node, node.nodename
+  end
+
+  return current, table.concat(path_parts, "/")
+end
+
+---@protected
 ---@param ctx                           dot.module.explorer.view.IRenderContext
 ---@param node                          dot.module.explorer.Node
----@param indent                        string
 ---@param lnum                          integer
----@param display_name                  string|nil
----@param is_expanded                   boolean
----@param is_selected                   boolean
----@return string
----@return ark.t.IHighlight[]
----@return dot.module.explorer.view.IGitStatusInfo|nil
 ---@return dot.module.explorer.view.IDiagnosticInfo|nil
-function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, is_selected)
-  local parts = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+function M:__get_diagnostic_info__(ctx, node, lnum)
+  local counts = ctx.diag_counts[node.uri] ---@type dot.module.explorer.view.IDiagCounts|nil
+  if counts == nil then
+    return nil
+  end
+
+  local count_error = counts.error ---@type integer
+  local count_warn = counts.warn ---@type integer
+  local count_hint = counts.hint ---@type integer
+  local count_info = counts.info ---@type integer
+
+  if count_error == 0 and count_warn == 0 and count_hint == 0 and count_info == 0 then
+    return nil
+  end
+
+  local text = "" ---@type string
+  local highlights = {} ---@type ark.t.IHighlightInline[]
   local col = 0 ---@type integer
+  local slots = 0 ---@type integer
 
-  local is_ignored = self:__is_ignored__(node) ---@type boolean
-
-  parts[#parts + 1] = indent
-  col = col + #indent
-
-  if ctx.show_icons then
-    local icon, icon_hl = self:__get_node_icon__(ctx, node, is_ignored, is_expanded) ---@type string, string
-    parts[#parts + 1] = icon
-    parts[#parts + 1] = " "
-
-    -- Extend highlight to include the trailing space to handle icon width mismatch
-    -- between Neovim's internal calculation and terminal font rendering
-    highlights[#highlights + 1] = {
-      lnum = lnum,
-      coll = col,
-      colr = col + #icon + 1,
-      hlname = icon_hl,
-    }
-    col = col + #icon + 1
+  if count_error > 0 then
+    local part = " " .. ark.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
+    text = text .. part
+    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_error" }
+    col = col + #part
+    slots = slots + 1
   end
 
-  local name = display_name or node.nodename ---@type string
-  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected) ---@type string
-  parts[#parts + 1] = name
+  if count_warn > 0 then
+    local part = " " .. ark.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
+    text = text .. part
+    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_warn" }
+    col = col + #part
+    slots = slots + 1
+  end
 
-  highlights[#highlights + 1] = {
+  if count_hint > 0 and slots < 2 then
+    local part = " " .. ark.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
+    text = text .. part
+    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_hint" }
+    col = col + #part
+    slots = slots + 1
+  end
+
+  if count_info > 0 and slots < 2 then
+    local part = " " .. ark.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
+    text = text .. part
+    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_info" }
+    col = col + #part
+    slots = slots + 1
+  end
+
+  if #text < 1 then
+    return nil
+  end
+
+  return {
     lnum = lnum,
-    coll = col,
-    colr = col + #name,
-    hlname = name_hl,
+    text = text,
+    highlights = highlights,
   }
+end
 
-  local git_info ---@type dot.module.explorer.view.IGitStatusInfo|nil
-  if ctx.show_git_status then
-    git_info = self:__get_git_status_info__(node, lnum)
+---@protected
+---@param node                          dot.module.explorer.Node
+---@param lnum                          integer
+---@return dot.module.explorer.view.IGitStatusInfo|nil
+function M:__get_git_status_info__(node, lnum)
+  local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+  if filepath == "" then
+    return nil
   end
 
-  local diag_info ---@type dot.module.explorer.view.IDiagnosticInfo|nil
-  if ctx.show_diagnostics then
-    diag_info = self:__get_diagnostic_info__(ctx, node, lnum)
+  local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
+  local highlights = {} ---@type ark.t.IHighlightInline[]
+
+  local git_text, _ = dot.git.status.calc_info(filepath, filetype, 0, highlights)
+
+  if git_text == nil or #git_text < 1 then
+    return nil
   end
 
-  local line = table.concat(parts) ---@type string
-  return line, highlights, git_info, diag_info
+  return {
+    lnum = lnum,
+    text = git_text,
+    highlights = highlights,
+  }
 end
 
 ---@protected
@@ -474,7 +533,7 @@ function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
   if node.nodetype == "D" then
     local icon, icon_hl ---@type string, string
     if is_expanded then
-      local is_loaded = node:is_loaded(ctx.tick_loaded) ---@type boolean
+      local is_loaded = node.loaded ---@type boolean
       local is_empty = is_loaded and #node.children == 0 ---@type boolean
       if is_empty then
         icon = ark.icon.filetype.FolderEmptyOpen
@@ -551,107 +610,6 @@ end
 
 ---@protected
 ---@param node                          dot.module.explorer.Node
----@param lnum                          integer
----@return dot.module.explorer.view.IGitStatusInfo|nil
-function M:__get_git_status_info__(node, lnum)
-  local filepath = self:__uri_to_filepath__(node.uri) ---@type string
-  if filepath == "" then
-    return nil
-  end
-
-  local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
-  local highlights = {} ---@type ark.t.IHighlightInline[]
-
-  local git_text, _ = dot.git.status.calc_info(filepath, filetype, 0, highlights)
-
-  if git_text == nil or #git_text < 1 then
-    return nil
-  end
-
-  return {
-    lnum = lnum,
-    text = git_text,
-    highlights = highlights,
-  }
-end
-
----@protected
----@param ctx                           dot.module.explorer.view.IRenderContext
----@param node                          dot.module.explorer.Node
----@param lnum                          integer
----@return dot.module.explorer.view.IDiagnosticInfo|nil
-function M:__get_diagnostic_info__(ctx, node, lnum)
-  local counts = ctx.diag_counts[node.uri] ---@type dot.module.explorer.view.IDiagCounts|nil
-  if counts == nil then
-    return nil
-  end
-
-  local count_error = counts.error ---@type integer
-  local count_warn = counts.warn ---@type integer
-  local count_hint = counts.hint ---@type integer
-  local count_info = counts.info ---@type integer
-
-  if count_error == 0 and count_warn == 0 and count_hint == 0 and count_info == 0 then
-    return nil
-  end
-
-  local text = "" ---@type string
-  local highlights = {} ---@type ark.t.IHighlightInline[]
-  local col = 0 ---@type integer
-  local slots = 0 ---@type integer
-
-  if count_error > 0 then
-    local part = " " .. ark.icon.diagnostic.Error_alt .. " " .. count_error ---@type string
-    text = text .. part
-    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_error" }
-    col = col + #part
-    slots = slots + 1
-  end
-
-  if count_warn > 0 then
-    local part = " " .. ark.icon.diagnostic.Warning_alt .. " " .. count_warn ---@type string
-    text = text .. part
-    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_warn" }
-    col = col + #part
-    slots = slots + 1
-  end
-
-  if count_hint > 0 and slots < 2 then
-    local part = " " .. ark.icon.diagnostic.Hint_alt .. " " .. count_hint ---@type string
-    text = text .. part
-    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_hint" }
-    col = col + #part
-    slots = slots + 1
-  end
-
-  if count_info > 0 and slots < 2 then
-    local part = " " .. ark.icon.diagnostic.Information_alt .. " " .. count_info ---@type string
-    text = text .. part
-    highlights[#highlights + 1] = { coll = col, colr = col + #part, hlname = "f_lsp_diagnostic_info" }
-    col = col + #part
-    slots = slots + 1
-  end
-
-  if #text < 1 then
-    return nil
-  end
-
-  return {
-    lnum = lnum,
-    text = text,
-    highlights = highlights,
-  }
-end
-
----@protected
----@param uri                           string
----@return string
-function M:__uri_to_filepath__(uri)
-  return yoz.uri.to_filepath(uri) or ""
-end
-
----@protected
----@param node                          dot.module.explorer.Node
 ---@return boolean
 function M:__is_ignored__(node)
   local filepath = self:__uri_to_filepath__(node.uri) ---@type string
@@ -670,7 +628,6 @@ function M:__precompute__(root, ctx)
   local diag_counts = ctx.diag_counts ---@type table<string, dot.module.explorer.view.IDiagCounts>
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
-  local root_uri = ctx.root_uri ---@type string
 
   ---@param node                        dot.module.explorer.Node
   ---@return dot.module.explorer.view.IDiagCounts
@@ -707,8 +664,8 @@ function M:__precompute__(root, ctx)
           end
         end
       end
-    elseif node.nodetype == "D" and node:is_expanded(root_uri) then
-      if not node:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
+    elseif node.nodetype == "D" and node.expanded then
+      if not node.loaded and ctx.resource_manager ~= nil then
         ctx.tree:load_node(node, ctx.resource_manager, false)
       end
       for _, child in ipairs(node.children) do
@@ -726,8 +683,8 @@ function M:__precompute__(root, ctx)
     return counts
   end
 
-  if root:is_expanded(root_uri) then
-    if not root:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
+  if root.expanded then
+    if not root.loaded and ctx.resource_manager ~= nil then
       ctx.tree:load_node(root, ctx.resource_manager, false)
     end
     local root_counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
@@ -749,43 +706,71 @@ function M:__precompute__(root, ctx)
 end
 
 ---@protected
----@param node                          dot.module.explorer.Node
 ---@param ctx                           dot.module.explorer.view.IRenderContext
----@return dot.module.explorer.Node
+---@param node                          dot.module.explorer.Node
+---@param indent                        string
+---@param lnum                          integer
+---@param display_name                  string|nil
+---@param is_expanded                   boolean
+---@param is_selected                   boolean
 ---@return string
-function M:__fold_empty_dirs__(node, ctx)
-  local path_parts = { node.nodename } ---@type string[]
-  local current = node ---@type dot.module.explorer.Node
-  local root_uri = ctx.root_uri ---@type string
+---@return ark.t.IHighlight[]
+---@return dot.module.explorer.view.IGitStatusInfo|nil
+---@return dot.module.explorer.view.IDiagnosticInfo|nil
+function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, is_selected)
+  local parts = {} ---@type string[]
+  local highlights = {} ---@type ark.t.IHighlight[]
+  local col = 0 ---@type integer
 
-  while true do
-    if not current:is_expanded(root_uri) then
-      break
-    end
+  local is_ignored = self:__is_ignored__(node) ---@type boolean
 
-    if not current:is_loaded(ctx.tick_loaded) and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(current, ctx.resource_manager, false)
-    end
+  parts[#parts + 1] = indent
+  col = col + #indent
 
-    local children = current.children ---@type dot.module.explorer.Node[]
-    if #children ~= 1 then
-      break
-    end
+  if ctx.show_icons then
+    local icon, icon_hl = self:__get_node_icon__(ctx, node, is_ignored, is_expanded) ---@type string, string
+    parts[#parts + 1] = icon
+    parts[#parts + 1] = " "
 
-    local child = children[1] ---@type dot.module.explorer.Node
-    if child.nodetype ~= "D" then
-      break
-    end
-
-    path_parts[#path_parts + 1] = child.nodename
-    current = child
+    highlights[#highlights + 1] = {
+      lnum = lnum,
+      coll = col,
+      colr = col + #icon + 1,
+      hlname = icon_hl,
+    }
+    col = col + #icon + 1
   end
 
-  if #path_parts == 1 then
-    return node, node.nodename
+  local name = display_name or node.nodename ---@type string
+  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected) ---@type string
+  parts[#parts + 1] = name
+
+  highlights[#highlights + 1] = {
+    lnum = lnum,
+    coll = col,
+    colr = col + #name,
+    hlname = name_hl,
+  }
+
+  local git_info ---@type dot.module.explorer.view.IGitStatusInfo|nil
+  if ctx.show_git_status then
+    git_info = self:__get_git_status_info__(node, lnum)
   end
 
-  return current, table.concat(path_parts, "/")
+  local diag_info ---@type dot.module.explorer.view.IDiagnosticInfo|nil
+  if ctx.show_diagnostics then
+    diag_info = self:__get_diagnostic_info__(ctx, node, lnum)
+  end
+
+  local line = table.concat(parts) ---@type string
+  return line, highlights, git_info, diag_info
+end
+
+---@protected
+---@param uri                           string
+---@return string
+function M:__uri_to_filepath__(uri)
+  return yoz.uri.to_filepath(uri) or ""
 end
 
 return M

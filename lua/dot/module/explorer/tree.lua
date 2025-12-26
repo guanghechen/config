@@ -1,5 +1,4 @@
 local Node = require("dot.module.explorer.node")
-local State = require("dot.module.explorer.state")
 
 local __module_name__ = "dot.module.explorer.tree" ---@type string
 local math_floor = math.floor
@@ -13,14 +12,18 @@ local math_floor = math.floor
 ---@field public o_flag_hidden          ?ark.c.Observable
 
 ---@class dot.module.explorer.Tree
----@field public name                   string
 ---@field public fullname               string
+---@field public name                   string
+---@field public o_cursor_uri           ark.c.Observable
+---@field public o_flag_foldempty       ark.c.Observable
+---@field public o_flag_hidden          ark.c.Observable
+---@field public o_root_uri             ark.c.Observable
+---@field public prev_root_uri          string|nil
 ---@field public select_mode            dot.module.explorer.SelectModeEnum
----@field public state                  dot.module.explorer.State
 ---@field protected _disposed           boolean
----@field protected _superroot          dot.module.explorer.Node
----@field protected _root               dot.module.explorer.Node
 ---@field protected _resource_manager   dot.module.explorer.resource.IManager
+---@field protected _root               dot.module.explorer.Node
+---@field protected _superroot          dot.module.explorer.Node
 local M = {}
 M.__index = M
 
@@ -31,31 +34,397 @@ function M.new(props)
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
   local protocol = props.protocol or "file://" ---@type string
   local resource_manager = props.resource_manager ---@type dot.module.explorer.resource.IManager
+  local initial_root = props.initial_root ---@type string|nil
+  local default_root = initial_root or dot.path.cwd_uri() ---@type string
 
-  local state = State.new({
-    name = name,
-    initial_root = props.initial_root,
-    o_flag_foldempty = props.o_flag_foldempty,
-    o_flag_hidden = props.o_flag_hidden,
-  })
-
-  local tick_expanded_odd = state:next_tick_expanded_odd() ---@type integer
-  local superroot = Node.superroot(protocol, tick_expanded_odd) ---@type dot.module.explorer.Node
+  local superroot = Node.superroot(protocol) ---@type dot.module.explorer.Node
 
   local self = setmetatable({}, M)
-  self.name = name
   self.fullname = fullname
+  self.name = name
+  self.o_cursor_uri = ark.c.Observable.from_value(default_root)
+  self.o_flag_foldempty = props.o_flag_foldempty or ark.c.Observable.from_value(true)
+  self.o_flag_hidden = props.o_flag_hidden or ark.c.Observable.from_value(false)
+  self.o_root_uri = ark.c.Observable.from_value(default_root)
+  self.prev_root_uri = nil
   self.select_mode = "select"
-  self.state = state
   self._disposed = false
-  self._superroot = superroot
-  self._root = superroot
   self._resource_manager = resource_manager
+  self._root = superroot
+  self._superroot = superroot
 
-  local initial_root_uri = state.o_root_uri:snapshot() ---@type string
-  self:attach(initial_root_uri)
+  self:attach(default_root)
 
   return self
+end
+
+---@param target_parent_uri             string
+---@return boolean
+function M:apply_copy_paste(target_parent_uri)
+  self:__health__()
+
+  local subject = string.format("%s#apply_copy_paste", self.name) ---@type string
+  local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
+  if target_node == nil then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = subject,
+      message = string.format("Target parent '%s' does not exist.", target_parent_uri),
+    })
+    return false
+  end
+
+  if target_node.nodetype ~= "D" then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = subject,
+      message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
+    })
+    return false
+  end
+
+  local target_nodeuri = target_node.uri ---@type string
+  local load_uri ---@type string
+  if target_node == self._superroot then
+    load_uri = target_node.uri
+  else
+    load_uri = target_nodeuri
+  end
+
+  if not target_node.loaded then
+    self:__load_children__(target_node, load_uri)
+  end
+
+  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
+  if #selected_nodes == 0 then
+    return false
+  end
+
+  local reserved = {} ---@type table<string, boolean>
+  for name, _ in pairs(target_node.chidxmap) do
+    reserved[name] = true
+  end
+
+  for _, node in ipairs(selected_nodes) do
+    local nodeuri = node.uri ---@type string
+    if node == self._superroot then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = "Cannot copy the superroot.",
+      })
+      return false
+    end
+
+    if node.parent == nil then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format("Node '%s' is detached and cannot be copied.", nodeuri),
+      })
+      return false
+    end
+
+    if self:__is_descendant__(node, target_node) then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format(
+          "Target parent '%s' is a descendant of the selected node '%s'.",
+          target_parent_uri,
+          nodeuri
+        ),
+      })
+      return false
+    end
+
+    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
+    if existing_idx ~= nil then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
+      })
+      return false
+    end
+
+    if reserved[node.nodename] then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format(
+          "Multiple nodes named '%s' cannot be pasted into '%s'.",
+          node.nodename,
+          target_parent_uri
+        ),
+      })
+      return false
+    end
+
+    reserved[node.nodename] = true
+  end
+
+  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
+  local changed = false ---@type boolean
+
+  for _, node in ipairs(selected_nodes) do
+    local source_uri = node.uri ---@type string
+    local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
+
+    local ok, result = pcall(rm.copy, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
+    if not ok then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format("Resource manager copy failed for '%s'.", source_uri),
+        details = { target = destination_uri, error = result },
+      })
+      return false
+    end
+
+    if result == false or result == nil then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format("Resource manager refused to copy '%s'.", source_uri),
+        details = { target = destination_uri },
+      })
+      return false
+    end
+
+    local clone = Node.clone(node, target_node) ---@type dot.module.explorer.Node
+    Node.refresh_depth(clone, target_node.depth + 1)
+    local insert_idx = self:__find_insertion_index__(rm, target_node.children, clone) ---@type integer
+    table.insert(target_node.children, insert_idx, clone)
+    Node.sync_chidxmap(target_node, insert_idx)
+    changed = true
+  end
+
+  return changed
+end
+
+---@param target_parent_uri             string
+---@return boolean
+function M:apply_cut_paste(target_parent_uri)
+  self:__health__()
+
+  local subject = string.format("%s#apply_cut_paste", self.name) ---@type string
+  local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
+  if target_node == nil then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = subject,
+      message = string.format("Target parent '%s' does not exist.", target_parent_uri),
+    })
+    return false
+  end
+
+  if target_node.nodetype ~= "D" then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = subject,
+      message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
+    })
+    return false
+  end
+
+  local target_nodeuri = target_node.uri ---@type string
+  local load_uri ---@type string
+  if target_node == self._superroot then
+    load_uri = target_node.uri
+  else
+    load_uri = target_nodeuri
+  end
+
+  if not target_node.loaded then
+    self:__load_children__(target_node, load_uri)
+  end
+
+  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
+  if #selected_nodes == 0 then
+    return false
+  end
+
+  local reserved = {} ---@type table<string, boolean>
+  for name, _ in pairs(target_node.chidxmap) do
+    reserved[name] = true
+  end
+
+  for _, node in ipairs(selected_nodes) do
+    local nodeuri = node.uri ---@type string
+    if node == self._superroot then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = "Cannot move the superroot.",
+      })
+      return false
+    end
+
+    local parent = node.parent ---@type dot.module.explorer.Node|nil
+    if parent == nil then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
+      })
+      return false
+    end
+
+    if self:__is_descendant__(node, target_node) then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format(
+          "Target parent '%s' is a descendant of the selected node '%s'.",
+          target_parent_uri,
+          nodeuri
+        ),
+      })
+      return false
+    end
+
+    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
+    if existing_idx ~= nil then
+      local existing = target_node.children[existing_idx] ---@type dot.module.explorer.Node
+      if existing ~= node then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = subject,
+          message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
+        })
+        return false
+      end
+    elseif reserved[node.nodename] then
+      ark.reporter.error({
+        from = __module_name__,
+        subject = subject,
+        message = string.format(
+          "Multiple nodes named '%s' cannot be pasted into '%s'.",
+          node.nodename,
+          target_parent_uri
+        ),
+      })
+      return false
+    else
+      reserved[node.nodename] = true
+    end
+  end
+
+  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
+  local changed = false ---@type boolean
+
+  for _, node in ipairs(selected_nodes) do
+    local nodeuri = node.uri ---@type string
+    if node.parent ~= target_node then
+      local parent = node.parent ---@type dot.module.explorer.Node|nil
+      if parent == nil then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = subject,
+          message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
+        })
+        return false
+      end
+
+      local source_uri = nodeuri ---@type string
+      local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
+
+      local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
+      if not ok then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = subject,
+          message = string.format("Resource manager move failed for '%s'.", source_uri),
+          details = { target = destination_uri, error = result },
+        })
+        return false
+      end
+
+      if result == false or result == nil then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = subject,
+          message = string.format("Resource manager refused to move '%s'.", source_uri),
+          details = { target = destination_uri },
+        })
+        return false
+      end
+
+      local removal_index = parent.chidxmap[node.nodename] ---@type integer|nil
+      if removal_index == nil then
+        for index, child in ipairs(parent.children) do
+          if child == node then
+            removal_index = index
+            break
+          end
+        end
+      end
+
+      if removal_index == nil then
+        ark.reporter.error({
+          from = __module_name__,
+          subject = subject,
+          message = string.format("Cannot locate node '%s' in its parent list.", source_uri),
+          details = { target = destination_uri },
+        })
+        return false
+      end
+
+      table.remove(parent.children, removal_index)
+      parent.chidxmap[node.nodename] = nil
+      Node.sync_chidxmap(parent, removal_index)
+
+      node.parent = target_node
+      Node.refresh_depth(node, target_node.depth + 1)
+      local insert_idx = self:__find_insertion_index__(rm, target_node.children, node) ---@type integer
+      table.insert(target_node.children, insert_idx, node)
+      Node.sync_chidxmap(target_node, insert_idx)
+
+      changed = true
+    end
+  end
+
+  return changed
+end
+
+---@param uri                           string
+---@return boolean
+function M:attach(uri)
+  self:__health__()
+  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
+  local resource = rm:locate(uri) ---@type dot.module.explorer.resource.INode|nil
+  if resource == nil then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = self.name,
+      message = string.format("Failed to attach node '%s' in %s.", uri, self.name),
+    })
+    return false
+  end
+
+  local node = self:__insert__(uri, resource) ---@type dot.module.explorer.Node
+  node.expanded = true
+  self._root = node
+  return true
+end
+
+---@return nil
+function M:clear()
+  self:__health__()
+
+  local rootname = self._superroot.nodename ---@type string
+  local superroot = Node.superroot(rootname) ---@type dot.module.explorer.Node
+  self._superroot = superroot
+  self._root = superroot
+  self.select_mode = "select"
+end
+
+---@return nil
+function M:clear_selection()
+  self:__health__()
+  self._superroot:set_selected_recursive(false)
+  self.select_mode = "select"
 end
 
 ---@return nil
@@ -68,48 +437,52 @@ function M:dispose()
   self._root = nil
 end
 
----@return boolean
-function M:isdisposed()
-  return self._disposed
-end
-
-----------------------------------------------------------------------------------------------------
---- Getters
-----------------------------------------------------------------------------------------------------
-
----@return string
-function M:get_root_uri()
+---@param uri                           string
+---@return nil
+function M:expand_path(uri)
   self:__health__()
-  return self._root.uri
-end
 
----@return dot.module.explorer.Node
-function M:get_root_node()
-  self:__health__()
-  return self._root
-end
+  local root = self._root ---@type dot.module.explorer.Node
+  local root_uri = root.uri ---@type string
 
----@return dot.module.explorer.resource.IManager
-function M:get_resource_manager()
-  return self._resource_manager
-end
+  if not vim.startswith(uri, root_uri) then
+    return
+  end
 
----@return dot.module.explorer.Node[]
-function M:get_selected_nodes()
-  self:__health__()
-  return Node.collect_selected(self._superroot)
-end
+  local relative = uri:sub(#root_uri + 1) ---@type string
+  local pieces = vim.split(relative, "/", { plain = true }) ---@type string[]
 
----@return dot.module.explorer.Node[]
-function M:get_selected_nodes_toplevel()
-  self:__health__()
-  return Node.collect_selected_toplevel(self._superroot)
-end
+  local node = root ---@type dot.module.explorer.Node
+  local current_uri = root_uri ---@type string
 
----@return string[]
-function M:get_selected_uris()
-  self:__health__()
-  return Node.collect_selected_uris(self._superroot)
+  if not node.loaded then
+    self:__load_children__(node, current_uri)
+  end
+
+  node.expanded = true
+
+  for _, piece in ipairs(pieces) do
+    if piece == "" then
+      goto continue
+    end
+
+    local idx = node.chidxmap[piece] ---@type integer|nil
+    if idx == nil then
+      return
+    end
+
+    node = node.children[idx]
+    current_uri = current_uri .. piece .. (node.nodetype == "D" and "/" or "")
+
+    if node.nodetype == "D" then
+      if not node.loaded then
+        self:__load_children__(node, current_uri)
+      end
+      node.expanded = true
+    end
+
+    ::continue::
+  end
 end
 
 ---@param nodes                         ?dot.module.explorer.Node[]
@@ -144,157 +517,39 @@ function M:get_common_ancestor_path(nodes)
   return common
 end
 
----@param uri                           string
----@return dot.module.explorer.Node|nil
-function M:locate(uri)
-  self:__health__()
-  return self:__locate__(uri)
+---@return dot.module.explorer.resource.IManager
+function M:get_resource_manager()
+  return self._resource_manager
 end
 
-----------------------------------------------------------------------------------------------------
---- Predicates
-----------------------------------------------------------------------------------------------------
-
----@param rooturi                       string
----@param nodeuri                       string
----@return boolean
-function M:is_descendant(rooturi, nodeuri)
-  if nodeuri == rooturi then
-    return true
-  end
-
-  local Nr = #rooturi ---@type integer
-  local Nn = #nodeuri ---@type integer
-  if Nn <= Nr then
-    return false
-  end
-
-  if rooturi:sub(Nr, Nr) ~= "/" then
-    return false
-  end
-
-  return nodeuri:sub(1, Nr) == rooturi
+---@return dot.module.explorer.Node
+function M:get_root_node()
+  self:__health__()
+  return self._root
 end
 
----@param uri                           string
----@return boolean
-function M:is_existent(uri)
+---@return string
+function M:get_root_uri()
   self:__health__()
-  return self:__locate__(uri) ~= nil
+  return self._root.uri
 end
 
----@param uri                           string
----@return boolean
-function M:is_loaded(uri)
+---@return dot.module.explorer.Node[]
+function M:get_selected_nodes()
   self:__health__()
-  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
-  return node ~= nil and node:is_loaded(self.state.tick_loaded)
+  return Node.collect_selected(self._superroot)
 end
 
----@param uri                           string
----@return boolean
-function M:is_expanded(uri)
+---@return dot.module.explorer.Node[]
+function M:get_selected_nodes_toplevel()
   self:__health__()
-  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
-  local root_uri = self.state.o_root_uri:snapshot() ---@type string
-  return node ~= nil and node:is_expanded(root_uri)
+  return Node.collect_selected_toplevel(self._superroot)
 end
 
----@param uri                           string
----@return boolean
-function M:is_selected(uri)
+---@return string[]
+function M:get_selected_uris()
   self:__health__()
-  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
-  local root_uri = self.state.o_root_uri:snapshot() ---@type string
-  return node ~= nil and node:is_selected(root_uri)
-end
-
-----------------------------------------------------------------------------------------------------
---- Mutations
-----------------------------------------------------------------------------------------------------
-
----@param uri                           string
----@return boolean
-function M:attach(uri)
-  self:__health__()
-  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
-  local resource = rm:locate(uri) ---@type dot.module.explorer.resource.INode|nil
-  if resource == nil then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = self.name,
-      message = string.format("Failed to attach node '%s' in %s.", uri, self.name),
-    })
-    return false
-  end
-
-  local node = self:__insert__(uri, resource) ---@type dot.module.explorer.Node
-  self:__inherit_root_state__(node)
-  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
-  node:set_expanded(tick_expanded_odd, false)
-  self._root = node
-  return true
-end
-
----@return nil
-function M:clear()
-  self:__health__()
-
-  local rootname = self._superroot.nodename ---@type string
-  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
-  local superroot = Node.superroot(rootname, tick_expanded_odd) ---@type dot.module.explorer.Node
-  self._superroot = superroot
-  self._root = superroot
-  self.select_mode = "select"
-end
-
----@param uri                           string
----@return nil
-function M:expand_path(uri)
-  self:__health__()
-
-  local root = self._root ---@type dot.module.explorer.Node
-  local root_uri = root.uri ---@type string
-
-  if not vim.startswith(uri, root_uri) then
-    return
-  end
-
-  local relative = uri:sub(#root_uri + 1) ---@type string
-  local pieces = vim.split(relative, "/", { plain = true }) ---@type string[]
-
-  local node = root ---@type dot.module.explorer.Node
-  local current_uri = root_uri ---@type string
-
-  if not node:is_loaded(self.state.tick_loaded) then
-    self:__load_children__(node, current_uri)
-  end
-
-  local tick_expanded_odd = self.state:next_tick_expanded_odd() ---@type integer
-  node:set_expanded(tick_expanded_odd, false)
-
-  for _, piece in ipairs(pieces) do
-    if piece == "" then
-      goto continue
-    end
-
-    local idx = node.chidxmap[piece] ---@type integer|nil
-    if idx == nil then
-      return
-    end
-
-    node = node.children[idx]
-    current_uri = current_uri .. piece .. (node.nodetype == "D" and "/" or "")
-
-    if node.nodetype == "D" then
-      if not node:is_loaded(self.state.tick_loaded) then
-        self:__load_children__(node, current_uri)
-      end
-      node:set_expanded(tick_expanded_odd, false)
-    end
-
-    ::continue::
-  end
+  return Node.collect_selected_uris(self._superroot)
 end
 
 ---@param parenturi                     string
@@ -345,8 +600,7 @@ function M:insert(parenturi, resource)
   end
 
   local children = parent.children ---@type dot.module.explorer.Node[]
-  local tick_expanded_even = self.state:next_tick_expanded_even() ---@type integer
-  local node = Node.new(parent, resource.nodetype, resource.nodename, tick_expanded_even) ---@type dot.module.explorer.Node
+  local node = Node.new(parent, resource.nodetype, resource.nodename) ---@type dot.module.explorer.Node
   local insert_idx = self:__find_insertion_index__(rm, children, node) ---@type integer
 
   table.insert(children, insert_idx, node)
@@ -355,32 +609,104 @@ function M:insert(parenturi, resource)
   return true
 end
 
----@return nil
-function M:mark_all_dirty()
+---@param rooturi                       string
+---@param nodeuri                       string
+---@return boolean
+function M:is_descendant(rooturi, nodeuri)
+  if nodeuri == rooturi then
+    return true
+  end
+
+  local Nr = #rooturi ---@type integer
+  local Nn = #nodeuri ---@type integer
+  if Nn <= Nr then
+    return false
+  end
+
+  if rooturi:sub(Nr, Nr) ~= "/" then
+    return false
+  end
+
+  return nodeuri:sub(1, Nr) == rooturi
+end
+
+---@return boolean
+function M:isdisposed()
+  return self._disposed
+end
+
+---@param uri                           string
+---@return boolean
+function M:is_existent(uri)
   self:__health__()
-  self.state:advance_tick_loaded()
+  return self:__locate__(uri) ~= nil
+end
+
+---@param uri                           string
+---@return boolean
+function M:is_expanded(uri)
+  self:__health__()
+  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
+  return node ~= nil and node.expanded
+end
+
+---@param uri                           string
+---@return boolean
+function M:is_loaded(uri)
+  self:__health__()
+  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
+  return node ~= nil and node.loaded
+end
+
+---@param uri                           string
+---@return boolean
+function M:is_selected(uri)
+  self:__health__()
+  local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
+  return node ~= nil and node.selected
 end
 
 ---@param node                          dot.module.explorer.Node
----@param resource_manager              dot.module.explorer.resource.IManager|nil
 ---@param force                         boolean|nil
 ---@return nil
-function M:load_node(node, resource_manager, force)
+function M:load_node(node, _, force)
   self:__health__()
-  local _ = resource_manager or self._resource_manager ---@type dot.module.explorer.resource.IManager
   local force_load = not not force ---@type boolean
 
   if node.nodetype ~= "D" then
     return
   end
 
-  local tick_loaded = self.state.tick_loaded ---@type integer
-  if not force_load and node:is_loaded(tick_loaded) then
+  if not force_load and node.loaded then
     return
   end
 
   local uri = node.uri ---@type string
   self:__load_children__(node, uri)
+end
+
+---@param uri                           string
+---@return dot.module.explorer.Node|nil
+function M:locate(uri)
+  self:__health__()
+  return self:__locate__(uri)
+end
+
+---@return nil
+function M:mark_all_dirty()
+  self:__health__()
+
+  ---@param node                        dot.module.explorer.Node
+  local function mark_dirty(node)
+    if node.nodetype == "D" then
+      node.loaded = false
+    end
+    for _, child in ipairs(node.children) do
+      mark_dirty(child)
+    end
+  end
+
+  mark_dirty(self._superroot)
 end
 
 ---@param force                         boolean|nil
@@ -392,13 +718,12 @@ function M:refresh(force)
   local superroot = self._superroot ---@type dot.module.explorer.Node
   local root = self._root ---@type dot.module.explorer.Node
   local root_uri = root.uri ---@type string
-  local tick_loaded = self.state.tick_loaded ---@type integer
 
   ---@param node                        dot.module.explorer.Node
   ---@param nodeindex                   integer|nil
   ---@param nodeuri                     string
   local function walk(node, nodeindex, nodeuri)
-    local load_node = force_refresh or not node:is_loaded(tick_loaded) ---@type boolean
+    local load_node = force_refresh or not node.loaded ---@type boolean
 
     if node == superroot then
       if load_node then
@@ -411,7 +736,7 @@ function M:refresh(force)
       self:__load__(node, nodeindex, nodeuri, true)
     end
 
-    if not node:is_expanded(root_uri) then
+    if not node.expanded then
       return
     end
 
@@ -553,18 +878,14 @@ function M:toggle_expanded(uri, recursive, force_expanded)
   elseif force_expanded == "collapse" then
     expanded = false
   else
-    local root_uri = self.state.o_root_uri:snapshot() ---@type string
-    expanded = not node:is_expanded(root_uri)
+    expanded = not node.expanded
   end
 
-  local tick_expanded ---@type integer
-  if expanded then
-    tick_expanded = self.state:next_tick_expanded_odd()
+  if recursive then
+    node:set_expanded_recursive(expanded)
   else
-    tick_expanded = self.state:next_tick_expanded_even()
+    node.expanded = expanded
   end
-
-  node:set_expanded(tick_expanded, recursive)
 end
 
 ---@param uri                           string
@@ -583,366 +904,12 @@ function M:toggle_selected(uri, force_selected)
   elseif force_selected == "unselect" then
     selected = false
   else
-    local root_uri = self.state.o_root_uri:snapshot() ---@type string
-    selected = not node:is_selected(root_uri)
+    selected = not node.selected
   end
 
-  local tick_selected ---@type integer
-  if selected then
-    tick_selected = self.state:next_tick_selected_odd()
-  else
-    tick_selected = self.state:next_tick_selected_even()
-  end
-
-  node:set_selected(tick_selected)
+  node.selected = selected
 end
 
----@return nil
-function M:clear_selection()
-  self:__health__()
-  self.state:next_tick_selected_even()
-  self.select_mode = "select"
-end
-
-----------------------------------------------------------------------------------------------------
---- Cut/Copy/Paste
-----------------------------------------------------------------------------------------------------
-
----@param target_parent_uri             string
----@return boolean
-function M:apply_cut_paste(target_parent_uri)
-  self:__health__()
-
-  local subject = string.format("%s#apply_cut_paste", self.name) ---@type string
-  local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
-  if target_node == nil then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' does not exist.", target_parent_uri),
-    })
-    return false
-  end
-
-  if target_node.nodetype ~= "D" then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
-    })
-    return false
-  end
-
-  local target_nodeuri = target_node.uri ---@type string
-  local load_uri ---@type string
-  if target_node == self._superroot then
-    load_uri = target_node.uri
-  else
-    load_uri = target_nodeuri
-  end
-
-  if not target_node:is_loaded(self.state.tick_loaded) then
-    self:__load_children__(target_node, load_uri)
-  end
-
-  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    return false
-  end
-
-  local reserved = {} ---@type table<string, boolean>
-  for name, _ in pairs(target_node.chidxmap) do
-    reserved[name] = true
-  end
-
-  for _, node in ipairs(selected_nodes) do
-    local nodeuri = node.uri ---@type string
-    if node == self._superroot then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = "Cannot move the superroot.",
-      })
-      return false
-    end
-
-    local parent = node.parent ---@type dot.module.explorer.Node|nil
-    if parent == nil then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
-      })
-      return false
-    end
-
-    if self:__is_descendant__(node, target_node) then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Target parent '%s' is a descendant of the selected node '%s'.",
-          target_parent_uri,
-          nodeuri
-        ),
-      })
-      return false
-    end
-
-    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
-    if existing_idx ~= nil then
-      local existing = target_node.children[existing_idx] ---@type dot.module.explorer.Node
-      if existing ~= node then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
-        })
-        return false
-      end
-    elseif reserved[node.nodename] then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Multiple nodes named '%s' cannot be pasted into '%s'.",
-          node.nodename,
-          target_parent_uri
-        ),
-      })
-      return false
-    else
-      reserved[node.nodename] = true
-    end
-  end
-
-  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
-  local changed = false ---@type boolean
-
-  for _, node in ipairs(selected_nodes) do
-    local nodeuri = node.uri ---@type string
-    if node.parent ~= target_node then
-      local parent = node.parent ---@type dot.module.explorer.Node|nil
-      if parent == nil then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
-        })
-        return false
-      end
-
-      local source_uri = nodeuri ---@type string
-      local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
-
-      local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
-      if not ok then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Resource manager move failed for '%s'.", source_uri),
-          details = { target = destination_uri, error = result },
-        })
-        return false
-      end
-
-      if result == false or result == nil then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Resource manager refused to move '%s'.", source_uri),
-          details = { target = destination_uri },
-        })
-        return false
-      end
-
-      local removal_index = parent.chidxmap[node.nodename] ---@type integer|nil
-      if removal_index == nil then
-        for index, child in ipairs(parent.children) do
-          if child == node then
-            removal_index = index
-            break
-          end
-        end
-      end
-
-      if removal_index == nil then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Cannot locate node '%s' in its parent list.", source_uri),
-          details = { target = destination_uri },
-        })
-        return false
-      end
-
-      table.remove(parent.children, removal_index)
-      parent.chidxmap[node.nodename] = nil
-      Node.sync_chidxmap(parent, removal_index)
-
-      node.parent = target_node
-      node.rs.tick_expanded = target_node.rs.tick_expanded
-      node.rs.tick_selected = target_node.rs.tick_selected
-      Node.refresh_depth(node, target_node.depth + 1)
-      local insert_idx = self:__find_insertion_index__(rm, target_node.children, node) ---@type integer
-      table.insert(target_node.children, insert_idx, node)
-      Node.sync_chidxmap(target_node, insert_idx)
-
-      changed = true
-    end
-  end
-
-  return changed
-end
-
----@param target_parent_uri             string
----@return boolean
-function M:apply_copy_paste(target_parent_uri)
-  self:__health__()
-
-  local subject = string.format("%s#apply_copy_paste", self.name) ---@type string
-  local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
-  if target_node == nil then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' does not exist.", target_parent_uri),
-    })
-    return false
-  end
-
-  if target_node.nodetype ~= "D" then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
-    })
-    return false
-  end
-
-  local target_nodeuri = target_node.uri ---@type string
-  local load_uri ---@type string
-  if target_node == self._superroot then
-    load_uri = target_node.uri
-  else
-    load_uri = target_nodeuri
-  end
-
-  if not target_node:is_loaded(self.state.tick_loaded) then
-    self:__load_children__(target_node, load_uri)
-  end
-
-  local selected_nodes = Node.collect_selected(self._superroot) ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    return false
-  end
-
-  local reserved = {} ---@type table<string, boolean>
-  for name, _ in pairs(target_node.chidxmap) do
-    reserved[name] = true
-  end
-
-  for _, node in ipairs(selected_nodes) do
-    local nodeuri = node.uri ---@type string
-    if node == self._superroot then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = "Cannot copy the superroot.",
-      })
-      return false
-    end
-
-    if node.parent == nil then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Node '%s' is detached and cannot be copied.", nodeuri),
-      })
-      return false
-    end
-
-    if self:__is_descendant__(node, target_node) then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Target parent '%s' is a descendant of the selected node '%s'.",
-          target_parent_uri,
-          nodeuri
-        ),
-      })
-      return false
-    end
-
-    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
-    if existing_idx ~= nil then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
-      })
-      return false
-    end
-
-    if reserved[node.nodename] then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Multiple nodes named '%s' cannot be pasted into '%s'.",
-          node.nodename,
-          target_parent_uri
-        ),
-      })
-      return false
-    end
-
-    reserved[node.nodename] = true
-  end
-
-  local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
-  local changed = false ---@type boolean
-  local tick_expanded_even = self.state:next_tick_expanded_even() ---@type integer
-
-  for _, node in ipairs(selected_nodes) do
-    local source_uri = node.uri ---@type string
-    local destination_uri = Node.calc_uri(target_nodeuri, node.nodename, node.nodetype) ---@type string
-
-    local ok, result = pcall(rm.copy, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
-    if not ok then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Resource manager copy failed for '%s'.", source_uri),
-        details = { target = destination_uri, error = result },
-      })
-      return false
-    end
-
-    if result == false or result == nil then
-      ark.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Resource manager refused to copy '%s'.", source_uri),
-        details = { target = destination_uri },
-      })
-      return false
-    end
-
-    local clone = Node.clone(node, target_node, tick_expanded_even) ---@type dot.module.explorer.Node
-    Node.refresh_depth(clone, target_node.depth + 1)
-    local insert_idx = self:__find_insertion_index__(rm, target_node.children, clone) ---@type integer
-    table.insert(target_node.children, insert_idx, clone)
-    Node.sync_chidxmap(target_node, insert_idx)
-    changed = true
-  end
-
-  return changed
-end
-
-----------------------------------------------------------------------------------------------------
---- Protected
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
@@ -974,24 +941,6 @@ function M:__find_insertion_index__(resource_manager, children, candidate)
 end
 
 ---@protected
----@param root                          dot.module.explorer.Node
----@return nil
-function M:__inherit_root_state__(root)
-  local max_tick_expanded = root.rs.tick_expanded ---@type integer
-  local max_tick_selected = root.rs.tick_selected ---@type integer
-
-  local o = root.parent ---@type dot.module.explorer.Node|nil
-  while o ~= nil do
-    max_tick_expanded = math.max(max_tick_expanded, o.rs.tick_expanded)
-    max_tick_selected = math.max(max_tick_selected, o.rs.tick_selected)
-    o = o.parent
-  end
-
-  root.rs.tick_expanded = max_tick_expanded
-  root.rs.tick_selected = max_tick_selected
-end
-
----@protected
 ---@return nil
 function M:__health__()
   if self._disposed then
@@ -1000,6 +949,7 @@ function M:__health__()
   end
 end
 
+---@protected
 ---@param uri                           string
 ---@param resource                      dot.module.explorer.resource.INode|nil
 ---@param ensure_resource               boolean|nil
@@ -1058,7 +1008,6 @@ function M:__insert__(uri, resource, ensure_resource)
   end
 
   local new_created = false ---@type boolean
-  local tick_expanded_even = self.state:next_tick_expanded_even() ---@type integer
 
   for i = 1, n, 1 do
     local piece = pieces[i] ---@type string
@@ -1066,7 +1015,7 @@ function M:__insert__(uri, resource, ensure_resource)
     local idx = o.chidxmap[piece] ---@type integer|nil
     if idx == nil then
       local child_nodetype = i == n and nodetype or "D" ---@type dot.module.explorer.NodeTypeEnum
-      local child = Node.new(o, child_nodetype, piece, tick_expanded_even) ---@type dot.module.explorer.Node
+      local child = Node.new(o, child_nodetype, piece) ---@type dot.module.explorer.Node
       local insert_idx = self:__find_insertion_index__(rm, o.children, child) ---@type integer
 
       table.insert(o.children, insert_idx, child)
@@ -1105,6 +1054,7 @@ function M:__is_descendant__(root, node)
   return false
 end
 
+---@protected
 ---@param node                          dot.module.explorer.Node
 ---@param nodeindex                     integer
 ---@param uri                           string
@@ -1112,10 +1062,9 @@ end
 ---@return dot.module.explorer.Node
 function M:__load__(node, nodeindex, uri, force)
   local superroot = self._superroot ---@type dot.module.explorer.Node
-  local tick_loaded = self.state.tick_loaded ---@type integer
 
   if node == superroot then
-    if force or not node:is_loaded(tick_loaded) then
+    if force or not node.loaded then
       self:__load_children__(node, uri)
     end
     return node
@@ -1133,31 +1082,19 @@ function M:__load__(node, nodeindex, uri, force)
     if parent == nil then
       error(string.format("[__load__] Parent is nil for node URI: '%s'.", uri))
     end
-    local _ = self.state:next_tick_expanded_even() ---@type integer
-
-    ---@type dot.module.explorer.node.IRootState
-    local rs = {
-      tick_expanded = parent.rs.tick_expanded,
-      tick_selected = parent.rs.tick_selected,
-    }
-
-    ---@type dot.module.explorer.node.INodeState
-    local ns = {
-      tick_expanded = node.ns.tick_expanded,
-      tick_loaded = resource_node.nodetype == "F" and tick_loaded or 0,
-    }
 
     ---@type dot.module.explorer.Node
     local new_node = setmetatable({
       uri = uri,
-      nodetype = resource_node.nodetype,
       nodename = resource_node.nodename,
+      nodetype = resource_node.nodetype,
       parent = parent,
       children = {},
       chidxmap = {},
       depth = parent.depth + 1,
-      rs = rs,
-      ns = ns,
+      expanded = node.expanded,
+      loaded = resource_node.nodetype == "F",
+      selected = node.selected,
     }, Node)
 
     node.parent.children[nodeindex] = new_node
@@ -1171,11 +1108,11 @@ function M:__load__(node, nodeindex, uri, force)
   node.uri = uri
 
   if node.nodetype == "F" then
-    node:mark_loaded(tick_loaded)
+    node.loaded = true
     return node
   end
 
-  if not force and node:is_loaded(tick_loaded) then
+  if not force and node.loaded then
     return node
   end
 
@@ -1183,6 +1120,7 @@ function M:__load__(node, nodeindex, uri, force)
   return node
 end
 
+---@protected
 ---@param node                          dot.module.explorer.Node
 ---@param uri                           string
 ---@return nil
@@ -1197,8 +1135,6 @@ function M:__load_children__(node, uri)
     end
   end
 
-  local tick_loaded = self.state.tick_loaded ---@type integer
-  local tick_expanded_even = self.state:next_tick_expanded_even() ---@type integer
   local children = node.children ---@type dot.module.explorer.Node[]
   local chidxmap = node.chidxmap ---@type table<string, integer|nil>
   local child_count = #children ---@type integer
@@ -1222,10 +1158,10 @@ function M:__load_children__(node, uri)
       child.uri = Node.calc_uri(node.uri, child.nodename, child.nodetype)
       chidxmap[child.nodename] = index
       if child.nodetype == "F" then
-        child:mark_loaded(tick_loaded)
+        child.loaded = true
       end
     end
-    node:mark_loaded(tick_loaded)
+    node.loaded = true
     return
   end
 
@@ -1235,18 +1171,15 @@ function M:__load_children__(node, uri)
     local old_index = chidxmap[item.nodename] ---@type integer|nil
     local old_child = old_index ~= nil and children[old_index] or nil ---@type dot.module.explorer.Node|nil
     if old_child == nil or old_child.nodetype ~= item.nodetype then
-      local child = Node.new(node, item.nodetype, item.nodename, tick_expanded_even) ---@type dot.module.explorer.Node
+      local child = Node.new(node, item.nodetype, item.nodename) ---@type dot.module.explorer.Node
       child.uri = Node.calc_uri(node.uri, child.nodename, child.nodetype)
-      if item.nodetype == "F" then
-        child:mark_loaded(tick_loaded)
-      end
       new_children[i] = child
       new_chidxmap[item.nodename] = i
     else
       old_child.parent = node
       old_child.uri = Node.calc_uri(node.uri, old_child.nodename, old_child.nodetype)
       if old_child.nodetype == "F" then
-        old_child:mark_loaded(tick_loaded)
+        old_child.loaded = true
       end
       new_children[i] = old_child
       new_chidxmap[item.nodename] = i
@@ -1254,9 +1187,10 @@ function M:__load_children__(node, uri)
   end
   node.children = new_children
   node.chidxmap = new_chidxmap
-  node:mark_loaded(tick_loaded)
+  node.loaded = true
 end
 
+---@protected
 ---@param uri                           string
 ---@return dot.module.explorer.Node|nil
 function M:__locate__(uri)

@@ -388,8 +388,11 @@ function M:__render__(force)
         message = "Encounter error while render the nvimbar component.",
         details = {
           bufnr = context.bufnr,
-          context = context,
-          component = component,
+          component = {
+            name = component.name,
+            position = component.position,
+            priority = component.priority,
+          },
           error = hltext,
         },
       })

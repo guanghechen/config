@@ -220,8 +220,8 @@ function M.tabline(position)
     local root_path ---@type string
 
     if dot.widget.explorer.widget ~= nil then
-      local state = dot.widget.explorer.widget:get_state() ---@type dot.module.explorer.State
-      root_uri = state.o_root_uri:snapshot() ---@type string
+      local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
+      root_uri = tree.o_root_uri:snapshot() ---@type string
       root_path = yoz.uri.to_filepath(root_uri) or "" ---@type string
     else
       root_uri = dot.path.workspace_uri() ---@type string
@@ -257,8 +257,8 @@ function M.tabline(position)
     local toggle_hidden_callback ---@type fun(): nil
 
     if dot.widget.explorer.widget ~= nil then
-      local state = dot.widget.explorer.widget:get_state() ---@type dot.module.explorer.State
-      local o_flag_hidden = state.o_flag_hidden ---@type ark.c.Observable
+      local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
+      local o_flag_hidden = tree.o_flag_hidden ---@type ark.c.Observable
       show_hidden = o_flag_hidden:snapshot()
       toggle_hidden_callback = function()
         o_flag_hidden:next(not o_flag_hidden:snapshot())

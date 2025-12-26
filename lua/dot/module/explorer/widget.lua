@@ -184,11 +184,6 @@ function M:get_render_result()
   return self._render_result
 end
 
----@return dot.module.explorer.State
-function M:get_state()
-  return self._tree.state
-end
-
 ---@return dot.module.explorer.Tree
 function M:get_tree()
   return self._tree
@@ -268,11 +263,11 @@ function M:reveal(uri)
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   if not vim.startswith(uri, root_uri) then
     local parent_uri = self:__get_parent_uri__(uri) ---@type string
     self:set_root(parent_uri)
-    root_uri = self._tree.state.o_root_uri:snapshot()
+    root_uri = self._tree.o_root_uri:snapshot()
   end
 
   local target_dir = uri:sub(-1) == "/" and uri or self:__get_parent_uri__(uri) ---@type string
@@ -281,22 +276,22 @@ function M:reveal(uri)
   self._tree:refresh(false)
   self:__refresh__()
 
-  self._tree.state.o_cursor_uri:next(uri)
+  self._tree.o_cursor_uri:next(uri)
   self:__sync_cursor_to_uri__(uri)
 end
 
 ---@param root_uri                      string
 ---@return boolean
 function M:set_root(root_uri)
-  local current_root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local current_root_uri = self._tree.o_root_uri:snapshot() ---@type string
   if root_uri == current_root_uri then
     return true
   end
 
   local ok = self._tree:attach(root_uri) ---@type boolean
   if ok then
-    self._tree.state.prev_root_uri = current_root_uri
-    self._tree.state.o_root_uri:next(root_uri)
+    self._tree.prev_root_uri = current_root_uri
+    self._tree.o_root_uri:next(root_uri)
     self:__refresh__()
   end
   return ok
@@ -371,7 +366,7 @@ end
 ---@protected
 ---@return nil
 function M:__action_collapse_all__()
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   self._tree:toggle_expanded(root_uri, true, "collapse")
   self._tree:toggle_expanded(root_uri, false, "expand")
   self:__refresh__()
@@ -385,10 +380,10 @@ function M:__action_collapse_or_parent__()
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   if uri:sub(-1) == "/" then
     local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-    if node ~= nil and node:is_expanded(root_uri) then
+    if node ~= nil and node.expanded then
       self._tree:toggle_expanded(uri, false, "collapse")
       self:__refresh__()
       return
@@ -397,7 +392,7 @@ function M:__action_collapse_or_parent__()
 
   local parent_uri = self:__get_parent_uri__(uri) ---@type string
   if parent_uri ~= root_uri then
-    self._tree.state.o_cursor_uri:next(parent_uri)
+    self._tree.o_cursor_uri:next(parent_uri)
     self:__sync_cursor_to_uri__(parent_uri)
   end
 end
@@ -490,10 +485,9 @@ function M:__action_copy_visual__()
     end
     self._tree.select_mode = "copy"
   else
-    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node:is_selected(root_uri) then
+      if not node.selected then
         has_unselected = true
         break
       end
@@ -504,9 +498,8 @@ function M:__action_copy_visual__()
         self._tree:toggle_selected(node.uri, "select")
       end
     else
-      local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
-        node:set_selected(tick)
+        node.selected = false
       end
     end
   end
@@ -522,7 +515,7 @@ function M:__action_create_directory__()
   end
 
   local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
 
   vim.ui.input({ prompt = "Create directory: ", default = relative_path }, function(input)
@@ -564,7 +557,7 @@ function M:__action_create_file__()
   end
 
   local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or self:__get_parent_uri__(cursor_uri) ---@type string
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
 
   vim.ui.input({ prompt = "Create file: ", default = relative_path }, function(input)
@@ -654,10 +647,9 @@ function M:__action_cut_visual__()
     end
     self._tree.select_mode = "cut"
   else
-    local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node:is_selected(root_uri) then
+      if not node.selected then
         has_unselected = true
         break
       end
@@ -668,9 +660,8 @@ function M:__action_cut_visual__()
         self._tree:toggle_selected(node.uri, "select")
       end
     else
-      local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
-        node:set_selected(tick)
+        node.selected = false
       end
     end
   end
@@ -712,12 +703,11 @@ function M:__action_toggle_select_mode_visual__(target_mode)
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   local current_mode = self._tree.select_mode ---@type dot.module.explorer.SelectModeEnum
   local all_selected = true ---@type boolean
 
   for _, node in ipairs(nodes) do
-    if not node:is_selected(root_uri) then
+    if not node.selected then
       all_selected = false
       break
     end
@@ -725,9 +715,8 @@ function M:__action_toggle_select_mode_visual__(target_mode)
 
   if all_selected then
     if current_mode == target_mode then
-      local tick = self._tree.state:next_tick_selected_even() ---@type integer
       for _, node in ipairs(nodes) do
-        node:set_selected(tick)
+        node.selected = false
       end
     else
       self._tree.select_mode = target_mode
@@ -891,7 +880,7 @@ end
 ---@protected
 ---@return nil
 function M:__action_go_parent__()
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   local parent_uri = self:__get_parent_uri__(root_uri) ---@type string
 
   if parent_uri ~= root_uri then
@@ -902,7 +891,7 @@ end
 ---@protected
 ---@return nil
 function M:__action_go_prev__()
-  local prev_root_uri = self._tree.state.prev_root_uri ---@type string|nil
+  local prev_root_uri = self._tree.prev_root_uri ---@type string|nil
   if prev_root_uri == nil then
     return
   end
@@ -930,14 +919,13 @@ function M:__action_jump_last_child__()
   end
 
   local node = self._tree:locate(uri) ---@type dot.module.explorer.Node|nil
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
-  if node == nil or not node:is_expanded(root_uri) or #node.children == 0 then
+  if node == nil or not node.expanded or #node.children == 0 then
     return
   end
 
   local last_child = node.children[#node.children] ---@type dot.module.explorer.Node
   local target_uri = last_child.uri ---@type string
-  self._tree.state.o_cursor_uri:next(target_uri)
+  self._tree.o_cursor_uri:next(target_uri)
   self:__sync_cursor_to_uri__(target_uri)
 end
 
@@ -950,10 +938,10 @@ function M:__action_jump_parent__()
   end
 
   local parent_uri = self:__get_parent_uri__(uri) ---@type string
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
 
   if parent_uri ~= uri and vim.startswith(parent_uri, root_uri) then
-    self._tree.state.o_cursor_uri:next(parent_uri)
+    self._tree.o_cursor_uri:next(parent_uri)
     self:__sync_cursor_to_uri__(parent_uri)
   end
 end
@@ -979,10 +967,9 @@ function M:__action_mark_visual__()
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
   local has_unselected = false ---@type boolean
   for _, node in ipairs(nodes) do
-    if not node:is_selected(root_uri) then
+    if not node.selected then
       has_unselected = true
       break
     end
@@ -993,9 +980,8 @@ function M:__action_mark_visual__()
       self._tree:toggle_selected(node.uri, "select")
     end
   else
-    local tick = self._tree.state:next_tick_selected_even() ---@type integer
     for _, node in ipairs(nodes) do
-      node:set_selected(tick)
+      node.selected = false
     end
   end
   self:__refresh__()
@@ -1825,7 +1811,7 @@ function M:__action_rename__()
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   local is_directory = uri:sub(-1) == "/" ---@type boolean
   local relative_path = uri:sub(#root_uri + 1) ---@type string
   if is_directory and relative_path:sub(-1) == "/" then
@@ -2132,7 +2118,7 @@ function M:__create_nvimbar__()
         vim.wo[winnr].winbar = result
       end
     end,
-  }):place("left", c.explorer.winbar(self._tree.state.o_root_uri, position, nvimbar_flags, get_width), 100)
+  }):place("left", c.explorer.winbar(self._tree.o_root_uri, position, nvimbar_flags, get_width), 100)
 
   return nvimbar
 end
@@ -2192,7 +2178,7 @@ function M:__create_win_as_needed__()
     callback = function()
       local uri = self:get_cursor_uri() ---@type string|nil
       if uri ~= nil then
-        self._tree.state.o_cursor_uri:next(uri)
+        self._tree.o_cursor_uri:next(uri)
       end
       self:__update_cursorline__()
     end,
@@ -2212,7 +2198,7 @@ end
 ---@protected
 ---@return dot.module.explorer.widget.IFlagItem[]
 function M:__get_flags__()
-  local state = self._tree.state ---@type dot.module.explorer.State
+  local tree = self._tree ---@type dot.module.explorer.Tree
 
   ---@type dot.module.explorer.widget.IFlagItem[]
   local flags = {}
@@ -2224,10 +2210,10 @@ function M:__get_flags__()
   flags[#flags + 1] = {
     desc = "explorer: toggle hidden files",
     callback = function()
-      state.o_flag_hidden:next(not state.o_flag_hidden:snapshot())
+      tree.o_flag_hidden:next(not tree.o_flag_hidden:snapshot())
     end,
     snapshot = function()
-      local show_hidden = state.o_flag_hidden:snapshot() ---@type boolean
+      local show_hidden = tree.o_flag_hidden:snapshot() ---@type boolean
       return ark.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
@@ -2286,7 +2272,7 @@ function M:__refresh__(skip_refresh)
     return
   end
 
-  local root_uri = self._tree.state.o_root_uri:snapshot() ---@type string
+  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
   local current_root_uri = self._tree:get_root_uri() ---@type string
   if root_uri ~= current_root_uri then
     local ok = self._tree:attach(root_uri) ---@type boolean
@@ -2313,7 +2299,7 @@ function M:__render__()
 
   local render_result = self._view:render(bufnr, self._tree, root_node, {
     resource_manager = self._resource_manager,
-    foldempty = self._tree.state.o_flag_foldempty:snapshot(),
+    foldempty = self._tree.o_flag_foldempty:snapshot(),
     only_selected = dot.context.explorer.flag_selected:snapshot(),
     show_git_status = true,
     show_icons = true,
@@ -2321,7 +2307,7 @@ function M:__render__()
   })
   self._render_result = render_result
 
-  local cursor_uri = self._tree.state.o_cursor_uri:snapshot() ---@type string
+  local cursor_uri = self._tree.o_cursor_uri:snapshot() ---@type string
   self:__sync_cursor_to_uri__(cursor_uri)
   self:__update_winbar__()
   self:__update_cursorline__()
@@ -2526,7 +2512,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "n" },
       key = "H",
       callback = function()
-        self._tree.state.o_flag_hidden:next(not self._tree.state.o_flag_hidden:snapshot())
+        self._tree.o_flag_hidden:next(not self._tree.o_flag_hidden:snapshot())
       end,
       desc = "explorer: toggle hidden files",
     },
@@ -2913,9 +2899,9 @@ end
 ---@protected
 ---@return nil
 function M:__setup_subscriptions__()
-  local state = self._tree.state ---@type dot.module.explorer.State
+  local tree = self._tree ---@type dot.module.explorer.Tree
 
-  local sub_root_uri = state.o_root_uri:subscribe(
+  local sub_root_uri = tree.o_root_uri:subscribe(
     ark.c.Subscriber.new({
       on_next = function()
         self:__update_winbar__()
@@ -2926,7 +2912,7 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_root_uri
 
-  local sub_show_hidden = state.o_flag_hidden:subscribe(
+  local sub_show_hidden = tree.o_flag_hidden:subscribe(
     ark.c.Subscriber.new({
       on_next = function(show_hidden)
         self._resource_manager:set_show_hidden(show_hidden)
@@ -2938,7 +2924,7 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_show_hidden
 
-  local sub_foldempty = state.o_flag_foldempty:subscribe(
+  local sub_foldempty = tree.o_flag_foldempty:subscribe(
     ark.c.Subscriber.new({
       on_next = function()
         self:__refresh__()
@@ -3095,7 +3081,7 @@ function M:__goto_matching_file__(direction, matcher)
   if target_lnum ~= nil then
     local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
     if target_uri ~= nil then
-      self._tree.state.o_cursor_uri:next(target_uri)
+      self._tree.o_cursor_uri:next(target_uri)
       pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
       return true
     end
@@ -3177,7 +3163,7 @@ function M:__goto_matching_file_or_dir__(direction, matcher)
   if target_lnum ~= nil then
     local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
     if target_uri ~= nil then
-      self._tree.state.o_cursor_uri:next(target_uri)
+      self._tree.o_cursor_uri:next(target_uri)
       pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
       return true
     end
