@@ -644,22 +644,6 @@ function M.calc_info(filepath, filetype, offset, highlights)
   return part, highlight
 end
 
----@class dot.module.git.status.IAggregatedCache
----@field public dir_cache           table<string, dot.module.git.status.IDirInfo|false>
----@field public file_display       table<string, string>
----@field public file_stage         table<string, dot.module.git.StageState>
----@field public file_summary       table<string, string|nil>
----@field public staged_files       string[]
----@field public status_table       table<string, dot.module.git.StatusEntry>
----@field public unstaged_files     string[]
----@field public workspace          string|nil
-
----@class dot.module.git.status.IDirInfo
----@field public codes              table<string, boolean>
----@field public display            string
----@field public stage              dot.module.git.StageState
----@field public summary            string|nil
-
 ---@param workspace                  string|nil
 ---@param status_table               table<string, dot.module.git.StatusEntry>
 ---@return dot.module.git.status.IAggregatedCache

@@ -95,9 +95,6 @@ local function refresh_branch()
   end
 
   dot.git.cmd.get_abbrev_head_async(r.toplevel, function(abbrev_head)
-    if not r then
-      return
-    end
     r.abbrev_head = abbrev_head
     dot.git.state.o_branch:next(abbrev_head)
     dot.git.state.refresh_user_info()

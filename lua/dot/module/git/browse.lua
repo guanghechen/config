@@ -201,7 +201,7 @@ function M.open(opts)
   local commit = opts.commit ---@type string|nil
   if not commit then
     local word = vim.fn.expand("<cword>") ---@type string
-    if word and word:match("^[a-fA-F0-9]+$") then
+    if word and #word >= 7 and word:match("^[a-fA-F0-9]+$") then
       commit = word
     end
   end
