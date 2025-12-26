@@ -16,10 +16,11 @@
 
 ### Critical Architecture Principles
 
-1. **Unidirectional Dependencies** - Dependencies must form a DAG. No circular dependencies.
-2. **Single Responsibility** - Each file has one clear purpose. High cohesion, low coupling.
+1. **Unidirectional Dependencies** - No circular dependencies. Dependencies must form a DAG.
+2. **Single Responsibility** - High cohesion, low coupling. Each file has one clear purpose.
 3. **Consistent Module Structure** - All modules follow similar, self-explanatory organization. Familiarity with one module means understanding all.
-4. **Minimal Public Interface** - Expose as little as possible. Private by default.
+4. **Minimal Public Interface** - Private by default. Expose as little as possible.
+5. **Simplicity Over Optimization** - Simplicity first. Avoid caching unless truly necessary. Isolate complex optimizations into dedicated modules and expose through interfaces.
 
 ### Formatting
 
