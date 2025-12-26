@@ -59,6 +59,9 @@ local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
 local INDENT_SPACE = "  " ---@type string
+
+-- Virtual text IDs start at 1M to avoid collision with extmark IDs (typically small integers).
+-- This ensures clear separation between line-based extmarks and virtual text decorations.
 local VIRT_TEXT_ID_OFFSET = 1000000 ---@type integer
 
 ---@class dot.module.explorer.View
@@ -152,7 +155,8 @@ function M:render(bufnr, tree, root, options)
       indent = prefix .. (is_last and INDENT_LAST or INDENT_BRANCH)
     end
 
-    local line, line_highlights, git_info, diag_info = self:__render_node__(ctx, node, indent, current_lnum, display_name, is_expanded, is_selected)
+    local line, line_highlights, git_info, diag_info =
+      self:__render_node__(ctx, node, indent, current_lnum, display_name, is_expanded, is_selected)
 
     lines[current_lnum] = line
     lnum_to_uri[current_lnum] = node.uri
@@ -206,10 +210,7 @@ function M:render(bufnr, tree, root, options)
 
       local children = node.children ---@type dot.module.explorer.Node[]
       local N = #children ---@type integer
-      local child_prefix = prefix == "" and "" or (prefix .. (is_last and INDENT_SPACE or INDENT_PIPE)) ---@type string
-      if prefix == "" then
-        child_prefix = is_last and INDENT_SPACE or INDENT_PIPE
-      end
+      local child_prefix = prefix .. (is_last and INDENT_SPACE or INDENT_PIPE) ---@type string
       for i, child in ipairs(children) do
         local child_display_name = nil ---@type string|nil
 

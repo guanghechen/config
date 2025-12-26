@@ -595,7 +595,7 @@ function M:__get_visual_nodes__()
 
   local mode = vim.fn.mode() ---@type string
   if mode == "v" or mode == "V" or mode == "\22" then
-    vim.cmd("normal! \\<Esc>")
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
   end
 
   local nodes = {} ---@type dot.module.explorer.Node[]
