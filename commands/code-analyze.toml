@@ -46,20 +46,45 @@ Analyze the code systematically with emphasis on the following aspects:
 - Ensure consistent formatting and structure
 - Look for code duplication that should be refactored
 
-## Output
+## Output Format
 
-For each issue found, provide:
-1. **Location**: File path and line number(s)
-2. **Category**: Which review focus area it belongs to
-3. **Severity**: Critical / Warning / Suggestion
-4. **Description**: Clear explanation of the issue
-5. **Recommendation**: How to fix or improve
+Group issues by category using hierarchical numbering (e.g., `1.1`, `1.2`, `2.1`), where the first digit represents the category number from Review Focus Areas above.
+
+For each issue, provide:
+- **Location**: File path and line number(s)
+- **Severity**: Critical / Warning / Suggestion
+- **Description**: Clear explanation of the issue
+- **Recommendation**: How to fix or improve
+
+Example:
+```
+### 1. Logic Errors
+
+#### 1.1 [Critical] Off-by-one error in loop
+- **Location**: `src/utils.ts:42`
+- **Description**: ...
+- **Recommendation**: ...
+
+#### 1.2 [Warning] Unhandled edge case
+- **Location**: `src/utils.ts:58`
+- **Description**: ...
+- **Recommendation**: ...
+
+### 2. Performance Issues
+
+#### 2.1 [Warning] N+1 query pattern
+- **Location**: `src/api/users.ts:23-30`
+- **Description**: ...
+- **Recommendation**: ...
+```
 
 Style:
 - Respond in Chinese, but keep technical terms and code in English
 - Only explain rare or domain-specific concepts
+- Skip categories with no issues found
 
 ## Output Requirement
 
-After completing the review, save a copy of the full review output to `{cwd}/.code-analyze/{simple-title}-gemini.md`, where `{simple-title}` is a concise kebab-case title derived from the review target (e.g., `user-auth-service`, `payment-controller`).
+1. **Display the full review output in the conversation** (stdout)
+2. **Simultaneously save** a copy to `{cwd}/.code-analyze/{simple-title}-gemini.md`, where `{simple-title}` is a concise kebab-case title derived from the review target (e.g., `user-auth-service`, `payment-controller`)
 """
