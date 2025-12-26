@@ -1,0 +1,16 @@
+description = "Apply fixes from code review"
+prompt = """Apply the following fixes from code review.
+
+## Issues to Fix
+
+``````text
+{{args}}
+``````
+
+## Guidelines
+
+- Fix each issue completely before moving to the next
+- Keep changes minimal and focused
+- Follow existing codebase conventions
+- If unclear, ask for clarification
+"""
