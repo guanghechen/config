@@ -190,7 +190,7 @@ function M:apply_copy_paste(target_parent_uri)
     Node.refresh_depth(clone, target_node.depth + 1)
     local insert_idx = self:__find_insertion_index__(rm, target_node.children, clone) ---@type integer
     table.insert(target_node.children, insert_idx, clone)
-    Node.sync_chidxmap(target_node, insert_idx)
+    target_node:sync_chidxmap(insert_idx)
     changed = true
   end
 
@@ -361,13 +361,13 @@ function M:apply_cut_paste(target_parent_uri)
 
       table.remove(parent.children, removal_index)
       parent.chidxmap[node.nodename] = nil
-      Node.sync_chidxmap(parent, removal_index)
+      parent:sync_chidxmap(removal_index)
 
       node.parent = target_node
       Node.refresh_depth(node, target_node.depth + 1)
       local insert_idx = self:__find_insertion_index__(rm, target_node.children, node) ---@type integer
       table.insert(target_node.children, insert_idx, node)
-      Node.sync_chidxmap(target_node, insert_idx)
+      target_node:sync_chidxmap(insert_idx)
 
       changed = true
     end
@@ -592,7 +592,7 @@ function M:insert(parenturi, resource)
   local insert_idx = self:__find_insertion_index__(rm, children, node) ---@type integer
 
   table.insert(children, insert_idx, node)
-  Node.sync_chidxmap(parent, insert_idx)
+  parent:sync_chidxmap(insert_idx)
 
   return true
 end
@@ -793,7 +793,7 @@ function M:remove(uri)
     --    (sync_chidxmap only re-indexes from removal_index, it won't clear
     --    the removed node's entry if no remaining child has the same name)
     table.remove(parent.children, removal_index)
-    Node.sync_chidxmap(parent, removal_index)
+    parent:sync_chidxmap(removal_index)
     parent.chidxmap[node.nodename] = nil
 
     if self._root ~= nil then
@@ -1009,7 +1009,7 @@ function M:__insert__(uri, resource, ensure_resource)
       local insert_idx = self:__find_insertion_index__(rm, o.children, child) ---@type integer
 
       table.insert(o.children, insert_idx, child)
-      Node.sync_chidxmap(o, insert_idx)
+      o:sync_chidxmap(insert_idx)
 
       o = child
       new_created = true

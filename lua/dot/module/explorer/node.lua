@@ -191,18 +191,6 @@ function M.superroot(protocol)
   return self
 end
 
----@param parent                        dot.module.explorer.Node
----@param start_idx                     integer
----@return nil
-function M.sync_chidxmap(parent, start_idx)
-  local children = parent.children ---@type dot.module.explorer.Node[]
-  local chidxmap = parent.chidxmap ---@type table<string, integer|nil>
-  for i = start_idx, #children do
-    local child = children[i] ---@type dot.module.explorer.Node
-    chidxmap[child.nodename] = i
-  end
-end
-
 --- Check if self is an ancestor of the given node.
 --- Note: A node is NOT considered an ancestor of itself.
 ---@param node                          dot.module.explorer.Node
@@ -359,6 +347,17 @@ function M.sync_ancestors(node)
       p.has_selected = has_selected
     end
     p = p.parent
+  end
+end
+
+---@param start_idx                     integer
+---@return nil
+function M:sync_chidxmap(start_idx)
+  local children = self.children ---@type dot.module.explorer.Node[]
+  local chidxmap = self.chidxmap ---@type table<string, integer|nil>
+  for i = start_idx, #children do
+    local child = children[i] ---@type dot.module.explorer.Node
+    chidxmap[child.nodename] = i
   end
 end
 
