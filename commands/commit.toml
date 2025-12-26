@@ -5,7 +5,9 @@ Please create a git commit based on our current changes.
 
 ## Arguments (Optional)
 
+``````text
 {{args}}
+``````
 
 **If arguments are provided, interpret them as follows:**
 
