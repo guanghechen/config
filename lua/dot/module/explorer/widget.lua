@@ -334,53 +334,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param direction                     "prev"|"next"
----@return nil
-function M:__goto_git_changed__(direction)
-  local aggregated = dot.git.state.aggregated() ---@type dot.module.git.status.IAggregatedCache
-  local staged_files = aggregated.staged_files ---@type string[]
-  local unstaged_files = aggregated.unstaged_files ---@type string[]
-
-  if #staged_files == 0 and #unstaged_files == 0 then
-    ark.reporter.info({
-      from = self.fullname,
-      subject = "goto git changed",
-      message = "No git changes detected",
-    })
-    return
-  end
-
-  local changed_set = {} ---@type table<string, boolean>
-  for _, filepath in ipairs(staged_files) do
-    changed_set[filepath] = true
-  end
-  for _, filepath in ipairs(unstaged_files) do
-    changed_set[filepath] = true
-  end
-
-  local found = self:__goto_matching_file_or_dir__(direction, function(filepath, is_dir)
-    local normalized = dot.path.normalize(filepath) ---@type string
-    if is_dir then
-      for changed_path, _ in pairs(changed_set) do
-        if vim.startswith(changed_path, normalized .. "/") then
-          return true
-        end
-      end
-      return false
-    end
-    return changed_set[normalized] == true
-  end)
-
-  if not found then
-    ark.reporter.info({
-      from = self.fullname,
-      subject = "goto git changed",
-      message = "No git changed files in current view",
-    })
-  end
-end
-
----@protected
 ---@return integer
 function M:__create_buf_as_needed__()
   local bufnr = self._bufnr ---@type integer|nil
@@ -597,6 +550,147 @@ function M:__get_visual_nodes__()
   end
 
   return nodes
+end
+
+---@protected
+---@param direction                     "prev"|"next"
+---@return nil
+function M:__goto_git_changed__(direction)
+  local aggregated = dot.git.state.aggregated() ---@type dot.module.git.status.IAggregatedCache
+  local staged_files = aggregated.staged_files ---@type string[]
+  local unstaged_files = aggregated.unstaged_files ---@type string[]
+
+  if #staged_files == 0 and #unstaged_files == 0 then
+    ark.reporter.info({
+      from = self.fullname,
+      subject = "goto git changed",
+      message = "No git changes detected",
+    })
+    return
+  end
+
+  local changed_set = {} ---@type table<string, boolean>
+  for _, filepath in ipairs(staged_files) do
+    changed_set[filepath] = true
+  end
+  for _, filepath in ipairs(unstaged_files) do
+    changed_set[filepath] = true
+  end
+
+  local found = self:__goto_matching_file_or_dir__(direction, function(filepath, is_dir)
+    local normalized = dot.path.normalize(filepath) ---@type string
+    if is_dir then
+      for changed_path, _ in pairs(changed_set) do
+        if vim.startswith(changed_path, normalized .. "/") then
+          return true
+        end
+      end
+      return false
+    end
+    return changed_set[normalized] == true
+  end)
+
+  if not found then
+    ark.reporter.info({
+      from = self.fullname,
+      subject = "goto git changed",
+      message = "No git changed files in current view",
+    })
+  end
+end
+
+---@protected
+---@param direction                     "prev"|"next"
+---@param matcher                       fun(filepath: string): boolean
+---@return boolean                      found
+function M:__goto_matching_file__(direction, matcher)
+  return self:__goto_matching_item__(direction, false, function(filepath, _)
+    return matcher(filepath)
+  end)
+end
+
+---@protected
+---@param direction                     "prev"|"next"
+---@param matcher                       fun(filepath: string, is_dir: boolean): boolean
+---@return boolean                      found
+function M:__goto_matching_file_or_dir__(direction, matcher)
+  return self:__goto_matching_item__(direction, true, matcher)
+end
+
+---@protected
+---@param direction                     "prev"|"next"
+---@param include_dirs                  boolean
+---@param matcher                       fun(filepath: string, is_dir: boolean): boolean
+---@return boolean                      found
+function M:__goto_matching_item__(direction, include_dirs, matcher)
+  local render_result = self._render_result ---@type dot.module.explorer.view.IRenderResult|nil
+  if render_result == nil then
+    return false
+  end
+
+  local winnr = self._winnr ---@type integer|nil
+  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
+    return false
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local current_lnum = cursor[1] ---@type integer
+  local total_lines = #render_result.lines ---@type integer
+
+  local matching_lnums = {} ---@type integer[]
+  for lnum = 1, total_lines do
+    local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
+    if uri ~= nil then
+      local is_dir = uri:sub(-1) == "/" ---@type boolean
+      if include_dirs or not is_dir then
+        local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+        if is_dir and #filepath > 1 then
+          filepath = filepath:sub(1, -2)
+        end
+        if matcher(filepath, is_dir) then
+          matching_lnums[#matching_lnums + 1] = lnum
+        end
+      end
+    end
+  end
+
+  if #matching_lnums == 0 then
+    return false
+  end
+
+  local target_lnum ---@type integer|nil
+  if direction == "next" then
+    for _, lnum in ipairs(matching_lnums) do
+      if lnum > current_lnum then
+        target_lnum = lnum
+        break
+      end
+    end
+    if target_lnum == nil then
+      target_lnum = matching_lnums[1]
+    end
+  else
+    for i = #matching_lnums, 1, -1 do
+      if matching_lnums[i] < current_lnum then
+        target_lnum = matching_lnums[i]
+        break
+      end
+    end
+    if target_lnum == nil then
+      target_lnum = matching_lnums[#matching_lnums]
+    end
+  end
+
+  if target_lnum ~= nil then
+    local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
+    if target_uri ~= nil then
+      self._tree.o_cursor_uri:next(target_uri)
+      pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
+      return true
+    end
+  end
+
+  return false
 end
 
 ---@protected
@@ -1367,100 +1461,6 @@ function M:__sync_cursor_to_uri__(uri)
   if lnum ~= nil then
     pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
   end
-end
-
----@protected
----@param direction                     "prev"|"next"
----@param matcher                       fun(filepath: string): boolean
----@return boolean                      found
-function M:__goto_matching_file__(direction, matcher)
-  return self:__goto_matching_item__(direction, false, function(filepath, _)
-    return matcher(filepath)
-  end)
-end
-
----@protected
----@param direction                     "prev"|"next"
----@param matcher                       fun(filepath: string, is_dir: boolean): boolean
----@return boolean                      found
-function M:__goto_matching_file_or_dir__(direction, matcher)
-  return self:__goto_matching_item__(direction, true, matcher)
-end
-
----@protected
----@param direction                     "prev"|"next"
----@param include_dirs                  boolean
----@param matcher                       fun(filepath: string, is_dir: boolean): boolean
----@return boolean                      found
-function M:__goto_matching_item__(direction, include_dirs, matcher)
-  local render_result = self._render_result ---@type dot.module.explorer.view.IRenderResult|nil
-  if render_result == nil then
-    return false
-  end
-
-  local winnr = self._winnr ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return false
-  end
-
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local current_lnum = cursor[1] ---@type integer
-  local total_lines = #render_result.lines ---@type integer
-
-  local matching_lnums = {} ---@type integer[]
-  for lnum = 1, total_lines do
-    local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
-    if uri ~= nil then
-      local is_dir = uri:sub(-1) == "/" ---@type boolean
-      if include_dirs or not is_dir then
-        local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
-        if is_dir and #filepath > 1 then
-          filepath = filepath:sub(1, -2)
-        end
-        if matcher(filepath, is_dir) then
-          matching_lnums[#matching_lnums + 1] = lnum
-        end
-      end
-    end
-  end
-
-  if #matching_lnums == 0 then
-    return false
-  end
-
-  local target_lnum ---@type integer|nil
-  if direction == "next" then
-    for _, lnum in ipairs(matching_lnums) do
-      if lnum > current_lnum then
-        target_lnum = lnum
-        break
-      end
-    end
-    if target_lnum == nil then
-      target_lnum = matching_lnums[1]
-    end
-  else
-    for i = #matching_lnums, 1, -1 do
-      if matching_lnums[i] < current_lnum then
-        target_lnum = matching_lnums[i]
-        break
-      end
-    end
-    if target_lnum == nil then
-      target_lnum = matching_lnums[#matching_lnums]
-    end
-  end
-
-  if target_lnum ~= nil then
-    local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
-    if target_uri ~= nil then
-      self._tree.o_cursor_uri:next(target_uri)
-      pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
-      return true
-    end
-  end
-
-  return false
 end
 
 ---@protected
