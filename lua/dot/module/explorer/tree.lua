@@ -303,19 +303,9 @@ function M:apply_cut_paste(target_parent_uri)
   local changed = false ---@type boolean
 
   for _, node in ipairs(selected_nodes) do
-    local nodeuri = node.uri ---@type string
     if node.parent ~= target_node then
-      local parent = node.parent ---@type dot.module.explorer.Node|nil
-      if parent == nil then
-        ark.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
-        })
-        return false
-      end
-
-      local source_uri = nodeuri ---@type string
+      local parent = node.parent ---@type dot.module.explorer.Node
+      local source_uri = node.uri ---@type string
       local destination_uri = Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
 
       local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
@@ -792,9 +782,11 @@ function M:remove(uri)
     -- 3. chidxmap[nodename] = nil: explicitly clear the removed node's entry
     --    (sync_chidxmap only re-indexes from removal_index, it won't clear
     --    the removed node's entry if no remaining child has the same name)
+    -- 4. sync_ancestors: update has_selected state along ancestor chain
     table.remove(parent.children, removal_index)
     parent:sync_chidxmap(removal_index)
     parent.chidxmap[node.nodename] = nil
+    Node.sync_ancestors(parent)
 
     if self._root ~= nil then
       if self._root:is_descendant_or_self(node) then
