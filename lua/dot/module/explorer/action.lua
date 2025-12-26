@@ -1,34 +1,3 @@
-local __module_name__ = "dot.module.explorer.action" ---@type string
-
----@param uri                           string
----@return string
-local function uri_to_filepath(uri)
-  return yoz.uri.to_filepath(uri) or ""
-end
-
----@param filepath                      string
----@param is_directory                  boolean|nil
----@return string
-local function filepath_to_uri(filepath, is_directory)
-  local uri = yoz.uri.from_filepath(filepath) ---@type string
-  if is_directory and uri:sub(-1) ~= "/" then
-    uri = uri .. "/"
-  end
-  return uri
-end
-
----@class dot.module.explorer.action.IContext
----@field public widget                 dot.module.explorer.Widget
----@field public tree                   dot.module.explorer.Tree
----@field public resource_manager       dot.module.explorer.resource.FileManager
----@field public fullname               string
----@field public get_cursor_uri         fun(): string|nil
----@field public get_parent_uri         fun(uri: string): string
----@field public get_visual_nodes       fun(): dot.module.explorer.Node[]
----@field public refresh                fun(skip_refresh: boolean|nil): nil
----@field public render                 fun(): nil
----@field public sync_cursor_to_uri     fun(uri: string): nil
-
 ---@class dot.module.explorer.Action
 ---@field protected _ctx                dot.module.explorer.action.IContext
 local M = {}
@@ -50,7 +19,7 @@ function M:add_locations_to_ai()
   local locations = {} ---@type dot.t.ILocation[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
+      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
       locations[#locations + 1] = { filepath = filepath }
     end
   else
@@ -58,7 +27,7 @@ function M:add_locations_to_ai()
     if uri == nil then
       return
     end
-    local filepath = uri_to_filepath(uri) ---@type string
+    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -75,7 +44,7 @@ function M:add_locations_to_ai_visual()
 
   local locations = {} ---@type dot.t.ILocation[]
   for _, node in ipairs(nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
+    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -140,14 +109,14 @@ function M:copy_node()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
 
   vim.ui.input({ prompt = "Copy to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = filepath_to_uri(input) ---@type string
+    local target_uri = yoz.uri.from_filepath(input) ---@type string
     local ok = ctx.resource_manager:copy(uri, target_uri) ---@type boolean
     if ok then
       ctx.tree:refresh(true)
@@ -167,7 +136,7 @@ function M:copy_path()
   local filepaths = {} ---@type string[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
+      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
       filepaths[#filepaths + 1] = filepath
     end
   else
@@ -175,7 +144,7 @@ function M:copy_path()
     if uri == nil then
       return
     end
-    local filepath = uri_to_filepath(uri) ---@type string
+    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
     filepaths[#filepaths + 1] = filepath
   end
 
@@ -218,7 +187,7 @@ function M:copy_visual()
       end
     else
       for _, node in ipairs(nodes) do
-        node.selected = false
+        ctx.tree:toggle_selected(node.uri, "unselect")
       end
     end
   end
@@ -331,14 +300,14 @@ function M:cut()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
 
   vim.ui.input({ prompt = "Move to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = filepath_to_uri(input) ---@type string
+    local target_uri = yoz.uri.from_filepath(input) ---@type string
     local ok = ctx.resource_manager:move(uri, target_uri) ---@type boolean
     if ok then
       ctx.tree:remove(uri)
@@ -380,7 +349,7 @@ function M:cut_visual()
       end
     else
       for _, node in ipairs(nodes) do
-        node.selected = false
+        ctx.tree:toggle_selected(node.uri, "unselect")
       end
     end
   end
@@ -543,7 +512,7 @@ function M:delete_selected()
   ---@type string[]
   local preview_lines = {}
   for _, node in ipairs(selected_nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
+    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
     local relative_path = dot.path.relative(cwd, filepath) ---@type string
     preview_lines[#preview_lines + 1] = relative_path
   end
@@ -594,7 +563,7 @@ end
 function M:go_cwd()
   local ctx = self._ctx ---@type dot.module.explorer.action.IContext
   local cwd = dot.path.cwd() ---@type string
-  local root_uri = filepath_to_uri(cwd, true) ---@type string
+  local root_uri = yoz.uri.from_filepath(cwd .. "/") ---@type string
   ctx.widget:set_root(root_uri)
 end
 
@@ -602,7 +571,7 @@ end
 function M:go_home()
   local ctx = self._ctx ---@type dot.module.explorer.action.IContext
   local workspace = dot.path.workspace() ---@type string
-  local root_uri = filepath_to_uri(workspace, true) ---@type string
+  local root_uri = yoz.uri.from_filepath(workspace .. "/") ---@type string
   ctx.widget:set_root(root_uri)
 end
 
@@ -702,7 +671,7 @@ function M:mark_visual()
     end
   else
     for _, node in ipairs(nodes) do
-      node.selected = false
+      ctx.tree:toggle_selected(node.uri, "unselect")
     end
   end
   ctx.refresh()
@@ -720,7 +689,7 @@ function M:open()
     ctx.tree:toggle_expanded(uri, false, nil)
     ctx.refresh()
   else
-    local filepath = uri_to_filepath(uri) ---@type string
+    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -738,7 +707,7 @@ function M:open_file_explorer()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   dot.fn.find_explorer(filepath)
 end
 
@@ -752,9 +721,9 @@ function M:open_file_finder()
 
   local dirpath ---@type string
   if uri:sub(-1) == "/" then
-    dirpath = uri_to_filepath(uri)
+    dirpath = yoz.uri.to_filepath(uri) or ""
   else
-    dirpath = dot.path.dirname(uri_to_filepath(uri))
+    dirpath = dot.path.dirname(yoz.uri.to_filepath(uri) or "")
   end
 
   dot.fn.find_files(dirpath, true)
@@ -768,7 +737,7 @@ function M:open_searcher()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   dot.fn.search_in_files(filepath)
 end
 
@@ -808,7 +777,7 @@ function M:open_selected()
   end
 
   for _, node in ipairs(file_nodes) do
-    local filepath = uri_to_filepath(node.uri) ---@type string
+    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
     dot.win.open_filepath(winnr_sourcefile, filepath)
   end
 
@@ -832,7 +801,7 @@ function M:open_split()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   vim.cmd("split " .. vim.fn.fnameescape(filepath))
 end
 
@@ -844,7 +813,7 @@ function M:open_system_explorer()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   vim.ui.open(filepath)
 end
 
@@ -856,7 +825,7 @@ function M:open_tab()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
 end
 
@@ -868,7 +837,7 @@ function M:open_vsplit()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
 end
 
@@ -881,7 +850,7 @@ function M:pick_win_open(winnr)
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -900,7 +869,7 @@ function M:pick_win_split(winnr)
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -919,7 +888,7 @@ function M:pick_win_vsplit(winnr)
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -973,8 +942,8 @@ function M:rename()
 
     local new_uri = root_uri .. new_relative_path .. (is_directory and "/" or "") ---@type string
 
-    local old_filepath = uri_to_filepath(uri) ---@type string
-    local new_filepath = uri_to_filepath(new_uri) ---@type string
+    local old_filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+    local new_filepath = yoz.uri.to_filepath(new_uri) or "" ---@type string
 
     dot.lsp.on_rename(old_filepath, new_filepath, function()
       local ok = ctx.resource_manager:move(uri, new_uri) ---@type boolean
@@ -1021,7 +990,7 @@ function M:send_to_quickfix(root)
     if uri == nil then
       return
     end
-    local filepath = uri_to_filepath(uri) ---@type string
+    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
     vim.fn.setqflist({}, "r", {
       title = "Explorer",
       items = { { filename = filepath, lnum = 1, col = 1 } },
@@ -1029,7 +998,7 @@ function M:send_to_quickfix(root)
   else
     local items = {} ---@type table[]
     for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
+      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
       items[#items + 1] = { filename = filepath, lnum = 1, col = 1 }
     end
     vim.fn.setqflist({}, "r", {
@@ -1080,7 +1049,7 @@ function M:show_file_info()
     return
   end
 
-  local filepath = uri_to_filepath(uri) ---@type string
+  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
 
   local fileinfo = dot.board.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
@@ -1134,7 +1103,7 @@ function M:toggle_select_mode_visual(target_mode)
   if all_selected then
     if current_mode == target_mode then
       for _, node in ipairs(nodes) do
-        node.selected = false
+        ctx.tree:toggle_selected(node.uri, "unselect")
       end
     else
       ctx.tree.select_mode = target_mode
@@ -1170,321 +1139,18 @@ end
 ---@field public to                     string
 ---@field public relative_part          string
 
+---@alias dot.module.explorer.action.TransferModeEnum
+---| "move"
+---| "copy"
+
 ---@return nil
 function M:move_selected()
-  local ctx = self._ctx ---@type dot.module.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = ctx.fullname,
-      subject = "move selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local common_ancestor = ctx.tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
-  if common_ancestor == nil then
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, common_ancestor) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_move_preview") ---@type integer
-
-  ---@return integer
-  local function calc_content_width()
-    local max_width = 0 ---@type integer
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
-      max_width = math.max(max_width, line_width)
-    end
-    return max_width + 4
-  end
-
-  ---@param target_dir                  string
-  ---@return dot.module.explorer.action.IPreviewItem[]
-  ---@return integer                     max_from_displaywidth
-  local function build_preview_items(target_dir)
-    local items = {} ---@type dot.module.explorer.action.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
-
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = dot.path.join(target_dir, relative_part) ---@type string
-      local to_relative = dot.path.relative(cwd, target_path) ---@type string
-      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
-    end
-
-    return items, max_from_displaywidth
-  end
-
-  local fullname = ctx.fullname ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_move",
-    title = string.format("%s Move %d item(s)", ark.icon.symbols.selection_cut, #selected_nodes),
-    initial_input = default_target,
-    preview_lines = #selected_nodes,
-    get_width = calc_content_width,
-    render_preview = function(bufnr, input)
-      local target_dir = vim.trim(input) ---@type string
-      if target_dir == "" then
-        target_dir = default_target
-      end
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-
-      local items, max_from_displaywidth = build_preview_items(target_dir)
-
-      local lines = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        lines[#lines + 1] = string.format("%s%s -> %s", item.from, padding, item.to)
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-      for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        local from_hl_start = #item.from - #item.relative_part ---@type integer
-        local from_hl_end = #item.from ---@type integer
-        local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
-        local to_hl_end = #item.from + #padding + 4 + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
-      end
-    end,
-    on_confirm = function(input)
-      if input == "" then
-        return
-      end
-
-      local target_dir = input ---@type string
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-      if target_dir:sub(-1) ~= "/" then
-        target_dir = target_dir .. "/"
-      end
-
-      local moved_count = 0 ---@type integer
-      local failed_count = 0 ---@type integer
-
-      for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
-
-        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
-
-        local ok = ctx.resource_manager:move(node.uri, target_uri) ---@type boolean
-        if ok then
-          ctx.tree:remove(node.uri)
-          moved_count = moved_count + 1
-        else
-          failed_count = failed_count + 1
-        end
-      end
-
-      if moved_count > 0 then
-        ctx.tree:clear_selection()
-        ctx.tree:refresh(true)
-        vim.schedule(function()
-          ctx.refresh(true)
-        end)
-
-        if failed_count > 0 then
-          ark.reporter.warn({
-            from = fullname,
-            subject = "move",
-            message = string.format("Moved %d item(s), %d failed", moved_count, failed_count),
-          })
-        else
-          ark.reporter.info({
-            from = fullname,
-            subject = "move",
-            message = string.format("Moved %d item(s)", moved_count),
-          })
-        end
-      elseif failed_count > 0 then
-        ark.reporter.error({
-          from = fullname,
-          subject = "move",
-          message = string.format("Failed to move %d item(s)", failed_count),
-        })
-      end
-    end,
-  })
-  act:open()
+  self:__transfer_selected__("move", nil)
 end
 
 ---@return nil
 function M:copy_selected()
-  local ctx = self._ctx ---@type dot.module.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = ctx.fullname,
-      subject = "copy selected",
-      message = "No files selected",
-    })
-    return
-  end
-
-  local common_ancestor = ctx.tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
-  if common_ancestor == nil then
-    return
-  end
-
-  local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, common_ancestor) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_copy_preview") ---@type integer
-
-  ---@return integer
-  local function calc_content_width()
-    local max_width = 0 ---@type integer
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
-      max_width = math.max(max_width, line_width)
-    end
-    return max_width + 4
-  end
-
-  ---@param target_dir                  string
-  ---@return dot.module.explorer.action.IPreviewItem[]
-  ---@return integer                     max_from_displaywidth
-  local function build_preview_items(target_dir)
-    local items = {} ---@type dot.module.explorer.action.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
-
-    for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
-      local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
-      local from_relative = dot.path.relative(cwd, filepath) ---@type string
-      local target_path = dot.path.join(target_dir, relative_part) ---@type string
-      local to_relative = dot.path.relative(cwd, target_path) ---@type string
-      items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
-    end
-
-    return items, max_from_displaywidth
-  end
-
-  local fullname = ctx.fullname ---@type string
-
-  ---@type dot.module.board.Act
-  local act = dot.board.Act.new({
-    name = "explorer_copy",
-    title = string.format("%s Copy %d item(s)", ark.icon.symbols.selection_copy, #selected_nodes),
-    initial_input = default_target,
-    preview_lines = #selected_nodes,
-    get_width = calc_content_width,
-    render_preview = function(bufnr, input)
-      local target_dir = vim.trim(input) ---@type string
-      if target_dir == "" then
-        target_dir = default_target
-      end
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-
-      local items, max_from_displaywidth = build_preview_items(target_dir)
-
-      local lines = {} ---@type string[]
-      for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        lines[#lines + 1] = string.format("%s%s +> %s", item.from, padding, item.to)
-      end
-
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-
-      for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
-        local from_hl_start = #item.from - #item.relative_part ---@type integer
-        local from_hl_end = #item.from ---@type integer
-        local to_hl_start = #item.from + #padding + 4 + #item.to - #item.relative_part ---@type integer
-        local to_hl_end = #item.from + #padding + 4 + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
-      end
-    end,
-    on_confirm = function(input)
-      if input == "" then
-        return
-      end
-
-      local target_dir = input ---@type string
-      if not yoz.path.is_absolute(target_dir) then
-        target_dir = dot.path.resolve(cwd, target_dir)
-      end
-      target_dir = dot.path.normalize(target_dir)
-      if target_dir:sub(-1) ~= "/" then
-        target_dir = target_dir .. "/"
-      end
-
-      local copied_count = 0 ---@type integer
-      local failed_count = 0 ---@type integer
-
-      for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
-
-        local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
-        local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
-
-        local ok = ctx.resource_manager:copy(node.uri, target_uri) ---@type boolean
-        if ok then
-          copied_count = copied_count + 1
-        else
-          failed_count = failed_count + 1
-        end
-      end
-
-      if copied_count > 0 then
-        ctx.tree:clear_selection()
-        ctx.tree:refresh(true)
-        vim.schedule(function()
-          ctx.refresh(true)
-        end)
-
-        if failed_count > 0 then
-          ark.reporter.warn({
-            from = fullname,
-            subject = "copy",
-            message = string.format("Copied %d item(s), %d failed", copied_count, failed_count),
-          })
-        else
-          ark.reporter.info({
-            from = fullname,
-            subject = "copy",
-            message = string.format("Copied %d item(s)", copied_count),
-          })
-        end
-      elseif failed_count > 0 then
-        ark.reporter.error({
-          from = fullname,
-          subject = "copy",
-          message = string.format("Failed to copy %d item(s)", failed_count),
-        })
-      end
-    end,
-  })
-  act:open()
+  self:__transfer_selected__("copy", nil)
 end
 
 ---@return nil
@@ -1501,38 +1167,56 @@ function M:paste()
     return
   end
 
-  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
-  if #selected_nodes == 0 then
-    ark.reporter.warn({
-      from = ctx.fullname,
-      subject = "paste",
-      message = "No files selected",
-    })
-    return
-  end
-
   local cursor_uri = ctx.get_cursor_uri() ---@type string|nil
   if cursor_uri == nil then
     return
   end
 
   local target_dir_uri = cursor_uri:sub(-1) == "/" and cursor_uri or ctx.get_parent_uri(cursor_uri) ---@type string
+  local target_dir = yoz.uri.to_filepath(target_dir_uri) or "" ---@type string
+
+  local mode = select_mode == "cut" and "move" or "copy" ---@type dot.module.explorer.action.TransferModeEnum
+  self:__transfer_selected__(mode, target_dir)
+end
+
+----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param mode                          dot.module.explorer.action.TransferModeEnum
+---@param initial_target                string|nil
+---@return nil
+function M:__transfer_selected__(mode, initial_target)
+  local ctx = self._ctx ---@type dot.module.explorer.action.IContext
+  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
+  if #selected_nodes == 0 then
+    ark.reporter.warn({
+      from = ctx.fullname,
+      subject = mode .. " selected",
+      message = "No files selected",
+    })
+    return
+  end
 
   local common_ancestor = ctx.tree:get_common_ancestor_path(selected_nodes) ---@type string|nil
   if common_ancestor == nil then
     return
   end
 
+  local is_move = mode == "move" ---@type boolean
+  local icon = is_move and ark.icon.symbols.selection_cut or ark.icon.symbols.selection_copy ---@type string
+  local arrow = is_move and " -> " or " +> " ---@type string
+  local verb_past = is_move and "Moved" or "Copied" ---@type string
+  local verb_inf = is_move and "move" or "copy" ---@type string
+
   local cwd = dot.path.cwd() ---@type string
-  local default_target = dot.path.relative(cwd, uri_to_filepath(target_dir_uri)) ---@type string
-  local ns = vim.api.nvim_create_namespace("explorer_paste_preview") ---@type integer
-  local is_cut = select_mode == "cut" ---@type boolean
+  local default_target = initial_target and dot.path.relative(cwd, initial_target) or dot.path.relative(cwd, common_ancestor) ---@type string
+  local ns = vim.api.nvim_create_namespace("explorer_" .. mode .. "_preview") ---@type integer
 
   ---@return integer
   local function calc_content_width()
     local max_width = 0 ---@type integer
     for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
+      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
       max_width = math.max(max_width, line_width)
@@ -1542,36 +1226,30 @@ function M:paste()
 
   ---@param target_dir                  string
   ---@return dot.module.explorer.action.IPreviewItem[]
-  ---@return integer                     max_from_displaywidth
+  ---@return integer                     max_from_display_width
   local function build_preview_items(target_dir)
     local items = {} ---@type dot.module.explorer.action.IPreviewItem[]
-    local max_from_displaywidth = 0 ---@type integer
+    local max_from_display_width = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
-      local filepath = uri_to_filepath(node.uri) ---@type string
+      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
       local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local target_path = dot.path.join(target_dir, relative_part) ---@type string
       local to_relative = dot.path.relative(cwd, target_path) ---@type string
       items[#items + 1] = { from = from_relative, to = to_relative, relative_part = relative_part }
-      max_from_displaywidth = math.max(max_from_displaywidth, vim.fn.strdisplaywidth(from_relative))
+      max_from_display_width = math.max(max_from_display_width, vim.fn.strdisplaywidth(from_relative))
     end
 
-    return items, max_from_displaywidth
+    return items, max_from_display_width
   end
 
   local fullname = ctx.fullname ---@type string
-  local arrow = is_cut and " -> " or " +> " ---@type string
 
   ---@type dot.module.board.Act
   local act = dot.board.Act.new({
-    name = "explorer_paste",
-    title = string.format(
-      "%s %s %d item(s)",
-      is_cut and ark.icon.symbols.selection_cut or ark.icon.symbols.selection_copy,
-      is_cut and "Move" or "Copy",
-      #selected_nodes
-    ),
+    name = "explorer_" .. mode,
+    title = string.format("%s %s %d item(s)", icon, verb_past:gsub("ed$", ""), #selected_nodes),
     initial_input = default_target,
     preview_lines = #selected_nodes,
     get_width = calc_content_width,
@@ -1585,11 +1263,11 @@ function M:paste()
       end
       target_dir = dot.path.normalize(target_dir)
 
-      local items, max_from_displaywidth = build_preview_items(target_dir)
+      local items, max_from_display_width = build_preview_items(target_dir)
 
       local lines = {} ---@type string[]
       for _, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_display_width - vim.fn.strdisplaywidth(item.from)) ---@type string
         lines[#lines + 1] = string.format("%s%s%s%s", item.from, padding, arrow, item.to)
       end
 
@@ -1597,7 +1275,7 @@ function M:paste()
       vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
       for lnum, item in ipairs(items) do
-        local padding = string.rep(" ", max_from_displaywidth - vim.fn.strdisplaywidth(item.from)) ---@type string
+        local padding = string.rep(" ", max_from_display_width - vim.fn.strdisplaywidth(item.from)) ---@type string
         local from_hl_start = #item.from - #item.relative_part ---@type integer
         local from_hl_end = #item.from ---@type integer
         local to_hl_start = #item.from + #padding + #arrow + #item.to - #item.relative_part ---@type integer
@@ -1624,14 +1302,18 @@ function M:paste()
       local failed_count = 0 ---@type integer
 
       for _, node in ipairs(selected_nodes) do
-        local filepath = uri_to_filepath(node.uri) ---@type string
+        local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
 
         local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
         local target_path = dot.path.join(target_dir, relative_path) ---@type string
-        local target_uri = filepath_to_uri(target_path) ---@type string
+        local is_directory = node.nodetype == "D" ---@type boolean
+        local target_uri = yoz.uri.from_filepath(target_path) ---@type string
+        if is_directory and target_uri:sub(-1) ~= "/" then
+          target_uri = target_uri .. "/"
+        end
 
         local ok ---@type boolean
-        if is_cut then
+        if is_move then
           ok = ctx.resource_manager:move(node.uri, target_uri)
           if ok then
             ctx.tree:remove(node.uri)
@@ -1654,25 +1336,24 @@ function M:paste()
           ctx.refresh(true)
         end)
 
-        local action_name = is_cut and "Moved" or "Copied" ---@type string
         if failed_count > 0 then
           ark.reporter.warn({
             from = fullname,
-            subject = "paste",
-            message = string.format("%s %d item(s), %d failed", action_name, success_count, failed_count),
+            subject = verb_inf,
+            message = string.format("%s %d item(s), %d failed", verb_past, success_count, failed_count),
           })
         else
           ark.reporter.info({
             from = fullname,
-            subject = "paste",
-            message = string.format("%s %d item(s)", action_name, success_count),
+            subject = verb_inf,
+            message = string.format("%s %d item(s)", verb_past, success_count),
           })
         end
       elseif failed_count > 0 then
         ark.reporter.error({
           from = fullname,
-          subject = "paste",
-          message = string.format("Failed to %s %d item(s)", is_cut and "move" or "copy", failed_count),
+          subject = verb_inf,
+          message = string.format("Failed to %s %d item(s)", verb_inf, failed_count),
         })
       end
     end,

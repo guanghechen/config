@@ -8,8 +8,8 @@ local math_floor = math.floor
 ---@field public protocol               string
 ---@field public resource_manager       dot.module.explorer.resource.IManager
 ---@field public initial_root           ?string
----@field public o_flag_foldempty       ?ark.c.Observable
----@field public o_flag_hidden          ?ark.c.Observable
+---@field public o_flag_foldempty       ark.c.Observable
+---@field public o_flag_hidden          ark.c.Observable
 
 ---@class dot.module.explorer.Tree
 ---@field public fullname               string
@@ -43,8 +43,8 @@ function M.new(props)
   self.fullname = fullname
   self.name = name
   self.o_cursor_uri = ark.c.Observable.from_value(default_root)
-  self.o_flag_foldempty = props.o_flag_foldempty or ark.c.Observable.from_value(true)
-  self.o_flag_hidden = props.o_flag_hidden or ark.c.Observable.from_value(false)
+  self.o_flag_foldempty = props.o_flag_foldempty
+  self.o_flag_hidden = props.o_flag_hidden
   self.o_root_uri = ark.c.Observable.from_value(default_root)
   self.prev_root_uri = nil
   self.select_mode = "select"
@@ -609,26 +609,6 @@ function M:insert(parenturi, resource)
   return true
 end
 
----@param rooturi                       string
----@param nodeuri                       string
----@return boolean
-function M:is_descendant(rooturi, nodeuri)
-  if nodeuri == rooturi then
-    return true
-  end
-
-  local Nr = #rooturi ---@type integer
-  local Nn = #nodeuri ---@type integer
-  if Nn <= Nr then
-    return false
-  end
-
-  if rooturi:sub(Nr, Nr) ~= "/" then
-    return false
-  end
-
-  return nodeuri:sub(1, Nr) == rooturi
-end
 
 ---@return boolean
 function M:isdisposed()
@@ -818,10 +798,8 @@ function M:remove(uri)
       return
     end
 
-    if removal_index ~= nil then
-      table.remove(parent.children, removal_index)
-      Node.sync_chidxmap(parent, removal_index)
-    end
+    table.remove(parent.children, removal_index)
+    Node.sync_chidxmap(parent, removal_index)
 
     parent.chidxmap[node.nodename] = nil
 
@@ -907,10 +885,29 @@ function M:toggle_selected(uri, force_selected)
     selected = not node.selected
   end
 
-  node.selected = selected
+  self:__load_subtree__(node)
+  node:set_selected_recursive(selected)
+  Node.sync_ancestors(node)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param node                          dot.module.explorer.Node
+---@return nil
+function M:__load_subtree__(node)
+  if node.nodetype == "F" then
+    return
+  end
+
+  if not node.loaded then
+    self:__load_children__(node, node.uri)
+  end
+
+  for _, child in ipairs(node.children) do
+    self:__load_subtree__(child)
+  end
+end
 
 ---@protected
 ---@param uri                           string
@@ -1094,7 +1091,8 @@ function M:__load__(node, nodeindex, uri, force)
       depth = parent.depth + 1,
       expanded = node.expanded,
       loaded = resource_node.nodetype == "F",
-      selected = node.selected,
+      selected = parent.selected,
+      has_selected = parent.selected,
     }, Node)
 
     node.parent.children[nodeindex] = new_node

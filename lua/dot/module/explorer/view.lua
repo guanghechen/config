@@ -124,20 +124,6 @@ function M:render(bufnr, tree, root, options)
   local only_selected = ctx.only_selected ---@type boolean
 
   ---@param node                        dot.module.explorer.Node
-  ---@return boolean
-  local function has_selected_in_subtree(node)
-    if node.selected then
-      return true
-    end
-    for _, child in ipairs(node.children) do
-      if has_selected_in_subtree(child) then
-        return true
-      end
-    end
-    return false
-  end
-
-  ---@param node                        dot.module.explorer.Node
   ---@param prefix                      string
   ---@param is_last                     boolean
   ---@param display_name                string|nil
@@ -149,7 +135,7 @@ function M:render(bufnr, tree, root, options)
       if node.nodetype == "F" then
         return
       end
-      if not has_selected_in_subtree(node) then
+      if not node.has_selected then
         return
       end
     end
@@ -523,13 +509,12 @@ function M:__get_git_status_info__(node, lnum)
 end
 
 ---@protected
----@param ctx                           dot.module.explorer.view.IRenderContext
 ---@param node                          dot.module.explorer.Node
 ---@param is_ignored                    boolean
 ---@param is_expanded                   boolean
 ---@return string
 ---@return string
-function M:__get_node_icon__(ctx, node, is_ignored, is_expanded)
+function M:__get_node_icon__(_, node, is_ignored, is_expanded)
   if node.nodetype == "D" then
     local icon, icon_hl ---@type string, string
     if is_expanded then
@@ -629,6 +614,18 @@ function M:__precompute__(root, ctx)
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
 
+  local loaded_bufnrs = {} ---@type table<string, integer>
+  if show_diagnostics then
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_loaded(bufnr) then
+        local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
+        if bufname ~= "" then
+          loaded_bufnrs[bufname] = bufnr
+        end
+      end
+    end
+  end
+
   ---@param node                        dot.module.explorer.Node
   ---@return dot.module.explorer.view.IDiagCounts
   local function traverse(node)
@@ -641,8 +638,8 @@ function M:__precompute__(root, ctx)
 
     if node.nodetype == "F" then
       if show_diagnostics and filepath ~= "" then
-        local bufnr = vim.fn.bufnr(filepath) ---@type integer
-        if bufnr >= 0 then
+        local bufnr = loaded_bufnrs[filepath] ---@type integer|nil
+        if bufnr ~= nil then
           local cached = bufnr_counts[bufnr] ---@type dot.module.explorer.view.IDiagCounts|nil
           if cached ~= nil then
             counts = cached

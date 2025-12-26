@@ -6,9 +6,10 @@
 ---@field public children               dot.module.explorer.Node[]
 ---@field public chidxmap               table<string, integer|nil>
 ---@field public depth                  integer
----@field public expanded               boolean
 ---@field public loaded                 boolean
+---@field public expanded               boolean
 ---@field public selected               boolean
+---@field public has_selected           boolean
 local M = {}
 M.__index = M
 
@@ -37,9 +38,10 @@ function M.clone(node, new_parent)
     children = {},
     chidxmap = {},
     depth = new_parent.depth + 1,
-    expanded = false,
     loaded = node.nodetype == "F",
+    expanded = false,
     selected = false,
+    has_selected = false,
   }
 
   local self = setmetatable(cloned, M)
@@ -58,6 +60,10 @@ end
 ---@param root                          dot.module.explorer.Node
 ---@return dot.module.explorer.Node[]
 function M.collect_selected(root)
+  if not root.has_selected and not root.selected then
+    return {}
+  end
+
   local result = {} ---@type dot.module.explorer.Node[]
 
   ---@param node                        dot.module.explorer.Node
@@ -65,8 +71,10 @@ function M.collect_selected(root)
     if node.selected then
       result[#result + 1] = node
     end
-    for _, child in ipairs(node.children) do
-      traverse(child)
+    if node.has_selected then
+      for _, child in ipairs(node.children) do
+        traverse(child)
+      end
     end
   end
 
@@ -77,6 +85,10 @@ end
 ---@param root                          dot.module.explorer.Node
 ---@return dot.module.explorer.Node[]
 function M.collect_selected_toplevel(root)
+  if not root.has_selected and not root.selected then
+    return {}
+  end
+
   local result = {} ---@type dot.module.explorer.Node[]
 
   ---@param node                        dot.module.explorer.Node
@@ -85,8 +97,10 @@ function M.collect_selected_toplevel(root)
       result[#result + 1] = node
       return
     end
-    for _, child in ipairs(node.children) do
-      traverse(child)
+    if node.has_selected then
+      for _, child in ipairs(node.children) do
+        traverse(child)
+      end
     end
   end
 
@@ -97,6 +111,10 @@ end
 ---@param root                          dot.module.explorer.Node
 ---@return string[]
 function M.collect_selected_uris(root)
+  if not root.has_selected and not root.selected then
+    return {}
+  end
+
   local result = {} ---@type string[]
 
   ---@param node                        dot.module.explorer.Node
@@ -104,8 +122,10 @@ function M.collect_selected_uris(root)
     if node.selected then
       result[#result + 1] = node.uri
     end
-    for _, child in ipairs(node.children) do
-      traverse(child)
+    if node.has_selected then
+      for _, child in ipairs(node.children) do
+        traverse(child)
+      end
     end
   end
 
@@ -127,9 +147,10 @@ function M.new(parent, nodetype, nodename)
     children = {},
     chidxmap = {},
     depth = parent.depth + 1,
-    expanded = false,
     loaded = nodetype == "F",
+    expanded = false,
     selected = false,
+    has_selected = false,
   }
 
   local self = setmetatable(node, M)
@@ -160,9 +181,10 @@ function M.superroot(protocol)
     children = {},
     chidxmap = {},
     depth = 0,
-    expanded = true,
     loaded = false,
+    expanded = true,
     selected = false,
+    has_selected = false,
   }
 
   local self = setmetatable(node, M)
@@ -240,8 +262,55 @@ end
 ---@return nil
 function M:set_selected_recursive(selected)
   self.selected = selected
+  if selected then
+    self.has_selected = true
+  else
+    self.has_selected = false
+  end
   for _, child in ipairs(self.children) do
     child:set_selected_recursive(selected)
+  end
+end
+
+--- Sync `has_selected` state from node to its ancestors.
+---
+--- IMPORTANT: This function assumes `has_selected` propagation is monotonic - once an ancestor
+--- has `has_selected = true`, all its ancestors must also have it. The early exit optimization
+--- (break when `p.has_selected` is already true) relies on this invariant. Direct modification
+--- of `selected` or `has_selected` fields without using `set_selected_recursive` + `sync_ancestors`
+--- may violate this invariant and cause incorrect state.
+---@param node                          dot.module.explorer.Node
+---@return nil
+function M.sync_ancestors(node)
+  local is_selected = node.selected or node.has_selected ---@type boolean
+  local p = node.parent ---@type dot.module.explorer.Node|nil
+
+  while p ~= nil do
+    if is_selected then
+      -- Early exit: if parent already has_selected, all ancestors above must also have it
+      if p.has_selected then
+        break
+      end
+      p.has_selected = true
+    else
+      if p.selected then
+        p.selected = false
+      end
+
+      local has_selected = false ---@type boolean
+      for _, child in ipairs(p.children) do
+        if child.selected or child.has_selected then
+          has_selected = true
+          break
+        end
+      end
+      -- Early exit: if state unchanged, ancestors above are also unchanged
+      if p.has_selected == has_selected then
+        break
+      end
+      p.has_selected = has_selected
+    end
+    p = p.parent
   end
 end
 

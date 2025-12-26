@@ -5,23 +5,6 @@ local Tree = require("dot.module.explorer.tree")
 local View = require("dot.module.explorer.view")
 local ResourceFileManager = require("dot.module.explorer.resource.file")
 
----@param uri                           string
----@return string
-local function uri_to_filepath(uri)
-  return yoz.uri.to_filepath(uri) or ""
-end
-
----@param filepath                      string
----@param is_directory                  boolean|nil
----@return string
-local function filepath_to_uri(filepath, is_directory)
-  local uri = yoz.uri.from_filepath(filepath) ---@type string
-  if is_directory and uri:sub(-1) ~= "/" then
-    uri = uri .. "/"
-  end
-  return uri
-end
-
 local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "EndOfBuffer:f_explorer_eob",
   "Normal:f_explorer_bg",
@@ -34,6 +17,19 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 
 local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@type integer
 
+---@param filepath                       string
+---@param severity                       vim.diagnostic.Severity|nil
+---@return boolean
+local function has_diagnostics(filepath, severity)
+  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
+  if bufnr == nil then
+    return false
+  end
+  local opts = severity and { severity = severity } or nil ---@type vim.diagnostic.GetOpts|nil
+  local diagnostics = vim.diagnostic.get(bufnr, opts) ---@type vim.Diagnostic[]
+  return #diagnostics > 0
+end
+
 ---@class dot.module.explorer.widget.IFlagItem
 ---@field public desc                   string
 ---@field public callback               fun(): nil
@@ -42,11 +38,11 @@ local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@t
 ---@class dot.module.explorer.widget.IProps
 ---@field public name                   string
 ---@field public root                   ?string
----@field public width                  ?integer
----@field public o_flag_foldempty       ?ark.c.Observable
----@field public o_flag_hidden          ?ark.c.Observable
----@field public o_width                ?ark.c.Observable
+---@field public o_flag_foldempty       ark.c.Observable
+---@field public o_flag_hidden          ark.c.Observable
+---@field public o_width                ark.c.Observable
 ---@field public flags                  ?dot.module.explorer.widget.IFlagItem[]
+---@field public on_disposed            ?fun(): nil
 
 ---@class dot.module.explorer.Widget : dot.t.IWidget
 ---@field public name                   string
@@ -59,14 +55,14 @@ local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@t
 ---@field protected _is_focused         boolean
 ---@field protected _keymaps            ark.t.IKeymap[]
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
----@field protected _o_width            ark.c.Observable|nil
+---@field protected _on_disposed        fun(): nil|nil
+---@field protected _o_width            ark.c.Observable
 ---@field protected _prev_cursor_lnum   integer|nil
 ---@field protected _render_result      dot.module.explorer.view.IRenderResult|nil
 ---@field protected _resource_manager   dot.module.explorer.resource.FileManager
 ---@field protected _subscriptions      ark.c.IUnsubscribable[]
 ---@field protected _tree               dot.module.explorer.Tree
 ---@field protected _view               dot.module.explorer.View
----@field protected _width              integer
 ---@field protected _winnr              integer|nil
 local M = {}
 M.__index = M
@@ -77,9 +73,9 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  local o_flag_foldempty = props.o_flag_foldempty ---@type ark.c.Observable|nil
-  local o_flag_hidden = props.o_flag_hidden ---@type ark.c.Observable|nil
-  local show_hidden = o_flag_hidden ~= nil and o_flag_hidden:snapshot() or false ---@type boolean
+  local o_flag_foldempty = props.o_flag_foldempty ---@type ark.c.Observable
+  local o_flag_hidden = props.o_flag_hidden ---@type ark.c.Observable
+  local show_hidden = o_flag_hidden:snapshot() ---@type boolean
 
   local resource_manager = ResourceFileManager.new({ name = name, show_hidden = show_hidden }) ---@type dot.module.explorer.resource.FileManager
 
@@ -104,7 +100,7 @@ function M.new(props)
   self._flags = props.flags or {}
   self._is_focused = false
   self._keymaps = {}
-  self._nvimbar = nil ---@type dot.module.nvimbar.Nvimbar
+  self._on_disposed = props.on_disposed
   self._o_width = props.o_width
   self._prev_cursor_lnum = nil
   self._render_result = nil
@@ -112,7 +108,6 @@ function M.new(props)
   self._subscriptions = {}
   self._tree = tree
   self._view = view
-  self._width = props.width or 40
   self._winnr = nil
 
   ---@type dot.module.explorer.action.IContext
@@ -125,19 +120,19 @@ function M.new(props)
       return self:get_cursor_uri()
     end,
     get_parent_uri = function(uri)
-      return self:__get_parent_uri__(uri)
+      return self:__get_parent_uri__(uri) ---@diagnostic disable-line: invisible
     end,
     get_visual_nodes = function()
-      return self:__get_visual_nodes__()
+      return self:__get_visual_nodes__() ---@diagnostic disable-line: invisible
     end,
     refresh = function(skip_refresh)
-      self:__refresh__(skip_refresh)
+      self:__refresh__(skip_refresh) ---@diagnostic disable-line: invisible
     end,
     render = function()
-      self:__render__()
+      self:__render__() ---@diagnostic disable-line: invisible
     end,
     sync_cursor_to_uri = function(uri)
-      self:__sync_cursor_to_uri__(uri)
+      self:__sync_cursor_to_uri__(uri) ---@diagnostic disable-line: invisible
     end,
   }
   self._action = Action.new(action_ctx)
@@ -172,6 +167,10 @@ function M:dispose()
   self:hide()
   self._tree:dispose()
   self._render_result = nil
+
+  if self._on_disposed ~= nil then
+    self._on_disposed()
+  end
 end
 
 ---@return integer|nil
@@ -232,10 +231,7 @@ function M:hide()
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local width = vim.api.nvim_win_get_width(winnr) ---@type integer
     if width > 0 then
-      self._width = width
-      if self._o_width ~= nil then
-        self._o_width:next(width)
-      end
+      self._o_width:next(width)
     end
     vim.api.nvim_win_close(winnr, true)
   end
@@ -330,10 +326,7 @@ end
 ---@param width                         integer
 ---@return nil
 function M:set_width(width)
-  self._width = width
-  if self._o_width ~= nil then
-    self._o_width:next(width)
-  end
+  self._o_width:next(width)
   self:resize()
 end
 
@@ -544,7 +537,8 @@ end
 ---@return integer
 function M:__get_effective_width__()
   local columns = vim.o.columns ---@type integer
-  return math.min(self._width, columns)
+  local width = self._o_width:snapshot() ---@type integer
+  return math.min(width, columns)
 end
 
 ---@protected
@@ -599,7 +593,10 @@ function M:__get_visual_nodes__()
 
   local start_lnum, end_lnum = dot.buf.retrieve_visual_lnum_range() ---@type integer, integer
 
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "nx", false)
+  local mode = vim.fn.mode() ---@type string
+  if mode == "v" or mode == "V" or mode == "\22" then
+    vim.cmd("normal! \\<Esc>")
+  end
 
   local nodes = {} ---@type dot.module.explorer.Node[]
   for lnum = start_lnum, end_lnum do
@@ -771,12 +768,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[d",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, nil)
         end)
       end,
       desc = "explorer: go to prev diagnostic file",
@@ -786,12 +778,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[e",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
         end)
       end,
       desc = "explorer: go to prev diagnostic error file",
@@ -817,12 +804,7 @@ function M:__setup_keymaps__(bufnr)
       key = "[w",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, vim.diagnostic.severity.WARN)
         end)
       end,
       desc = "explorer: go to prev diagnostic warning file",
@@ -832,12 +814,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]d",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, nil)
         end)
       end,
       desc = "explorer: go to next diagnostic file",
@@ -847,12 +824,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]e",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.ERROR }) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, vim.diagnostic.severity.ERROR)
         end)
       end,
       desc = "explorer: go to next diagnostic error file",
@@ -878,12 +850,7 @@ function M:__setup_keymaps__(bufnr)
       key = "]w",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
-          local bufnr = vim.fn.bufnr(filepath) ---@type integer
-          if bufnr < 0 then
-            return false
-          end
-          local diagnostics = vim.diagnostic.get(bufnr, { severity = vim.diagnostic.severity.WARN }) ---@type vim.Diagnostic[]
-          return #diagnostics > 0
+          return has_diagnostics(filepath, vim.diagnostic.severity.WARN)
         end)
       end,
       desc = "explorer: go to next diagnostic warning file",
@@ -1329,18 +1296,15 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_foldempty
 
-  if self._o_width ~= nil then
-    local sub_width = self._o_width:subscribe(
-      ark.c.Subscriber.new({
-        on_next = function(width)
-          self._width = width
-          self:resize()
-        end,
-      }),
-      false
-    )
-    self._subscriptions[#self._subscriptions + 1] = sub_width
-  end
+  local sub_width = self._o_width:subscribe(
+    ark.c.Subscriber.new({
+      on_next = function()
+        self:resize()
+      end,
+    }),
+    false
+  )
+  self._subscriptions[#self._subscriptions + 1] = sub_width
 
   local sub_flag_selected = dot.context.explorer.flag_selected:subscribe(
     ark.c.Subscriber.new({
@@ -1412,77 +1376,9 @@ end
 ---@param matcher                       fun(filepath: string): boolean
 ---@return boolean                      found
 function M:__goto_matching_file__(direction, matcher)
-  local render_result = self._render_result ---@type dot.module.explorer.view.IRenderResult|nil
-  if render_result == nil then
-    return false
-  end
-
-  local winnr = self._winnr ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return false
-  end
-
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local current_lnum = cursor[1] ---@type integer
-  local total_lines = #render_result.lines ---@type integer
-
-  local file_uris = {} ---@type {lnum: integer, uri: string, filepath: string}[]
-  for lnum = 1, total_lines do
-    local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
-    if uri ~= nil and uri:sub(-1) ~= "/" then
-      local filepath = uri_to_filepath(uri) ---@type string
-      file_uris[#file_uris + 1] = { lnum = lnum, uri = uri, filepath = filepath }
-    end
-  end
-
-  if #file_uris == 0 then
-    return false
-  end
-
-  local matching_lnums = {} ---@type integer[]
-  for _, item in ipairs(file_uris) do
-    if matcher(item.filepath) then
-      matching_lnums[#matching_lnums + 1] = item.lnum
-    end
-  end
-
-  if #matching_lnums == 0 then
-    return false
-  end
-
-  local target_lnum ---@type integer|nil
-  if direction == "next" then
-    for _, lnum in ipairs(matching_lnums) do
-      if lnum > current_lnum then
-        target_lnum = lnum
-        break
-      end
-    end
-    if target_lnum == nil then
-      target_lnum = matching_lnums[1]
-    end
-  else
-    for i = #matching_lnums, 1, -1 do
-      if matching_lnums[i] < current_lnum then
-        target_lnum = matching_lnums[i]
-        break
-      end
-    end
-    if target_lnum == nil then
-      target_lnum = matching_lnums[#matching_lnums]
-    end
-  end
-
-  if target_lnum ~= nil then
-    local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
-    if target_uri ~= nil then
-      self._tree.o_cursor_uri:next(target_uri)
-      pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
-      return true
-    end
-  end
-
-  return false
+  return self:__goto_matching_item__(direction, false, function(filepath, _)
+    return matcher(filepath)
+  end)
 end
 
 ---@protected
@@ -1490,6 +1386,15 @@ end
 ---@param matcher                       fun(filepath: string, is_dir: boolean): boolean
 ---@return boolean                      found
 function M:__goto_matching_file_or_dir__(direction, matcher)
+  return self:__goto_matching_item__(direction, true, matcher)
+end
+
+---@protected
+---@param direction                     "prev"|"next"
+---@param include_dirs                  boolean
+---@param matcher                       fun(filepath: string, is_dir: boolean): boolean
+---@return boolean                      found
+function M:__goto_matching_item__(direction, include_dirs, matcher)
   local render_result = self._render_result ---@type dot.module.explorer.view.IRenderResult|nil
   if render_result == nil then
     return false
@@ -1504,27 +1409,20 @@ function M:__goto_matching_file_or_dir__(direction, matcher)
   local current_lnum = cursor[1] ---@type integer
   local total_lines = #render_result.lines ---@type integer
 
-  local items = {} ---@type {lnum: integer, uri: string, filepath: string, is_dir: boolean}[]
+  local matching_lnums = {} ---@type integer[]
   for lnum = 1, total_lines do
     local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
     if uri ~= nil then
       local is_dir = uri:sub(-1) == "/" ---@type boolean
-      local filepath = uri_to_filepath(uri) ---@type string
-      if is_dir and #filepath > 1 then
-        filepath = filepath:sub(1, -2)
+      if include_dirs or not is_dir then
+        local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+        if is_dir and #filepath > 1 then
+          filepath = filepath:sub(1, -2)
+        end
+        if matcher(filepath, is_dir) then
+          matching_lnums[#matching_lnums + 1] = lnum
+        end
       end
-      items[#items + 1] = { lnum = lnum, uri = uri, filepath = filepath, is_dir = is_dir }
-    end
-  end
-
-  if #items == 0 then
-    return false
-  end
-
-  local matching_lnums = {} ---@type integer[]
-  for _, item in ipairs(items) do
-    if matcher(item.filepath, item.is_dir) then
-      matching_lnums[#matching_lnums + 1] = item.lnum
     end
   end
 
