@@ -135,19 +135,19 @@ class StatuslineComponent {
 
   #buildIndicators({ conflict, conflicts, ahead, behind, stash, stagedM, stagedA, stagedD, stagedR, unstagedM, unstagedA, unstagedD, unstagedR, untracked }) {
     const ind = []
-    if (conflict) ind.push(`\x1b[31;1m${conflict}\x1b[0m`)
-    if (conflicts > 0) ind.push(`\x1b[31;1m✖${conflicts}\x1b[0m`)
-    if (ahead > 0) ind.push(`\x1b[34m↑${ahead}\x1b[0m`)
-    if (behind > 0) ind.push(`\x1b[35m↓${behind}\x1b[0m`)
-    if (stash > 0) ind.push(`\x1b[34m⚑${stash}\x1b[0m`)
-    if (stagedM > 0) ind.push(`\x1b[32m●${stagedM}\x1b[0m`)
-    if (stagedA > 0) ind.push(`\x1b[32m+${stagedA}\x1b[0m`)
-    if (stagedD > 0) ind.push(`\x1b[32m−${stagedD}\x1b[0m`)
-    if (stagedR > 0) ind.push(`\x1b[32m→${stagedR}\x1b[0m`)
-    if (unstagedM > 0) ind.push(`\x1b[33m●${unstagedM}\x1b[0m`)
-    if (unstagedA > 0) ind.push(`\x1b[33m+${unstagedA}\x1b[0m`)
-    if (unstagedD > 0) ind.push(`\x1b[33m−${unstagedD}\x1b[0m`)
-    if (unstagedR > 0) ind.push(`\x1b[33m→${unstagedR}\x1b[0m`)
+    if (conflict) ind.push(`\x1b[91;1m${conflict}\x1b[0m`)
+    if (conflicts > 0) ind.push(`\x1b[91;1m✖${conflicts}\x1b[0m`)
+    if (ahead > 0) ind.push(`\x1b[94m↑${ahead}\x1b[0m`)
+    if (behind > 0) ind.push(`\x1b[95m↓${behind}\x1b[0m`)
+    if (stash > 0) ind.push(`\x1b[94m⚑${stash}\x1b[0m`)
+    if (stagedM > 0) ind.push(`\x1b[92m●${stagedM}\x1b[0m`)
+    if (stagedA > 0) ind.push(`\x1b[92m+${stagedA}\x1b[0m`)
+    if (stagedD > 0) ind.push(`\x1b[92m−${stagedD}\x1b[0m`)
+    if (stagedR > 0) ind.push(`\x1b[92m→${stagedR}\x1b[0m`)
+    if (unstagedM > 0) ind.push(`\x1b[93m●${unstagedM}\x1b[0m`)
+    if (unstagedA > 0) ind.push(`\x1b[93m+${unstagedA}\x1b[0m`)
+    if (unstagedD > 0) ind.push(`\x1b[93m−${unstagedD}\x1b[0m`)
+    if (unstagedR > 0) ind.push(`\x1b[93m→${unstagedR}\x1b[0m`)
     if (untracked > 0) ind.push(`\x1b[90m?${untracked}\x1b[0m`)
     return ind.length ? ` ${ind.join('')}` : ''
   }
@@ -173,7 +173,7 @@ class StatuslineComponent {
       : 0
 
     const pct = Math.round((used / total) * 100)
-    const color = pct >= 80 ? '\x1b[31m' : pct >= 50 ? '\x1b[33m' : '\x1b[32m'
+    const color = pct >= 80 ? '\x1b[91m' : pct >= 50 ? '\x1b[93m' : '\x1b[92m'
     return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k (${pct}%)\x1b[0m`
   }
 
