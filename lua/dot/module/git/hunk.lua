@@ -492,19 +492,20 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
       end
     end
   else
+    local is_change_hunk = hunk.type == "change" ---@type boolean
     local next_is_adjacent_delete = next_hunk
       and next_hunk.type == "delete"
       and next_hunk.added.start == start + count
-    local has_extra_removes = removed_count > count
+    local has_extra_removes = is_change_hunk and removed_count > count
 
     for i = 0, count - 1 do
       local lnum = start + i ---@type integer
       if lnum >= min_lnum and lnum <= max_lnum then
         local is_last_line = (i == count - 1) ---@type boolean
 
-        if is_last_line and (next_is_adjacent_delete or has_extra_removes) then
+        if is_last_line and is_change_hunk and (next_is_adjacent_delete or has_extra_removes) then
           signs[#signs + 1] = { type = "changedelete", lnum = lnum }
-        elseif removed_count > 0 and i < removed_count then
+        elseif is_change_hunk and i < removed_count then
           signs[#signs + 1] = { type = "change", lnum = lnum }
         else
           signs[#signs + 1] = { type = "add", lnum = lnum }

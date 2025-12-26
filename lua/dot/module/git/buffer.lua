@@ -9,8 +9,36 @@ local cache = {}
 ---@type dot.module.git.Repo|nil
 local repo = nil
 
----@type table<integer, boolean>
-local updating = {}
+----------------------------------------------------------------------------------------------------
+-- Update lock mechanism
+-- Prevents concurrent updates to the same buffer and queues pending updates
+----------------------------------------------------------------------------------------------------
+
+---@class dot.module.git.buffer.IUpdateLock
+---@field public running              boolean
+---@field public scheduled            boolean
+---@field public pending_callback     fun()|nil
+
+---@type table<integer, dot.module.git.buffer.IUpdateLock>
+local update_locks = {}
+
+---@param bufnr                         integer
+---@return dot.module.git.buffer.IUpdateLock
+local function get_update_lock(bufnr)
+  if not update_locks[bufnr] then
+    update_locks[bufnr] = {
+      running = false,
+      scheduled = false,
+      pending_callback = nil,
+    }
+  end
+  return update_locks[bufnr]
+end
+
+---@param bufnr                         integer
+local function clear_update_lock(bufnr)
+  update_locks[bufnr] = nil
+end
 
 ---@param bufnr                      integer
 ---@return boolean
@@ -88,10 +116,18 @@ local function update_hunks(buf_cache, callback)
     return
   end
 
-  if updating[bufnr] then
-    if callback then
-      callback()
-    end
+  local lock = get_update_lock(bufnr)
+
+  -- If already scheduled, just update the callback
+  if lock.scheduled then
+    lock.pending_callback = callback
+    return
+  end
+
+  -- If running, schedule for later execution
+  if lock.running then
+    lock.scheduled = true
+    lock.pending_callback = callback
     return
   end
 
@@ -103,7 +139,7 @@ local function update_hunks(buf_cache, callback)
     return
   end
 
-  updating[bufnr] = true
+  lock.running = true
   buf_cache.changedtick = tick
   local should_force_update = buf_cache.force_next_update ---@type boolean
   buf_cache.force_next_update = false
@@ -117,7 +153,9 @@ local function update_hunks(buf_cache, callback)
 
   local function finish()
     if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
-      updating[bufnr] = nil
+      lock.running = false
+      lock.scheduled = false
+      lock.pending_callback = nil
       if callback then
         callback()
       end
@@ -151,9 +189,27 @@ local function update_hunks(buf_cache, callback)
     end
 
     buf_cache.dirty = false
-    updating[bufnr] = nil
+
+    -- Complete current update
+    lock.running = false
     if callback then
       callback()
+    end
+
+    -- Check if there's a scheduled update waiting
+    if lock.scheduled then
+      lock.scheduled = false
+      local pending_cb = lock.pending_callback
+      lock.pending_callback = nil
+      -- Use vim.schedule to avoid deep recursion
+      vim.schedule(function()
+        local current_cache = cache[bufnr]
+        if current_cache and current_cache.attached then
+          update_hunks(current_cache, pending_cb)
+        elseif pending_cb then
+          pending_cb()
+        end
+      end)
     end
   end
 
@@ -295,9 +351,14 @@ function M.attach(bufnr, opts)
 
         dot.git.sign.on_lines(buf, last_orig, last_new)
 
-        if bc.hunks and dot.git.sign.contains_range(buf, first + 1, last_new) then
+        -- Check if the modified range intersects with existing signs
+        -- first is 0-indexed, convert to 1-indexed for sign checking
+        -- Use max(last_orig, last_new) to cover both insertion and deletion cases
+        local check_start = first + 1 ---@type integer
+        local check_end = math.max(last_orig, last_new) ---@type integer
+        if bc.hunks and dot.git.sign.contains_range(buf, check_start, check_end) then
           bc.force_next_update = true
-        elseif bc.hunks_staged and dot.git.sign.contains_range(buf, first + 1, last_new) then
+        elseif bc.hunks_staged and dot.git.sign.contains_range(buf, check_start, check_end) then
           bc.force_next_update = true
         end
 
@@ -368,7 +429,7 @@ function M.detach(bufnr)
   end
 
   buf_cache.attached = false
-  updating[bufnr] = nil
+  clear_update_lock(bufnr)
 
   if buf_cache.update_debounced then
     buf_cache.update_debounced:dispose()
