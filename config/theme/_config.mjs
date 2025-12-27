@@ -155,8 +155,10 @@ export const apps = [
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
-        NVIM_APPNAME: app.name,
-        GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+        env: {
+          NVIM_APPNAME: app.name,
+          GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+        },
       })
     },
   },
@@ -171,8 +173,10 @@ export const apps = [
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
-        NVIM_APPNAME: app.name,
-        GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+        env: {
+          NVIM_APPNAME: app.name,
+          GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+        },
       })
     },
   },

@@ -88,7 +88,14 @@ export async function render_template(template, scheme) {
   return content
 }
 
-export async function safe_exec(cmd, args, extendedEnv) {
+/**
+ * @param {string} cmd
+ * @param {string[]} args
+ * @param {{ env?: Record<string, string>, silent?: boolean }} [options]
+ * @return {Promise<{ stdout: string } | undefined>}
+ */
+export async function safe_exec(cmd, args, options) {
+  const { env: extendedEnv, silent = false } = options ?? {}
   const encoding = 'utf8'
 
   try {
@@ -115,7 +122,7 @@ export async function safe_exec(cmd, args, extendedEnv) {
         const child = spawn(cmd, args, {
           cwd,
           env: { ...process.env, ...extendedEnv },
-          stdio: ['ignore', 'pipe', 'pipe'], // Suppress output
+          stdio: ['ignore', 'pipe', 'pipe'],
         })
         child.stdout?.on('data', data => {
           stdoutData += data.toString(encoding)
@@ -134,7 +141,9 @@ export async function safe_exec(cmd, args, extendedEnv) {
 
     return { stdout }
   } catch (error) {
-    console.error(`[safe_exec] Failed to run command.`, { cmd, args, error })
+    if (!silent) {
+      console.error(`[safe_exec] Failed to run command.`, { cmd, args, error })
+    }
   }
 }
 
@@ -145,7 +154,7 @@ export async function safe_exec(cmd, args, extendedEnv) {
 export async function command_exists(cmd) {
   if (IS_WIN) return false
   try {
-    const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`])
+    const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`], { silent: true })
     return !!result?.stdout
   } catch (error) {
     console.error(`[command_exists] Failed to check command.`, { cmd, error })
