@@ -15,8 +15,6 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "WinSeparator:f_explorer_border",
 }, ",")
 
-local ns_cursorline = vim.api.nvim_create_namespace("explorer_cursorline") ---@type integer
-
 ---@class dot.module.explorer.widget.IFlagItem
 ---@field public desc                   string
 ---@field public callback               fun(): nil
@@ -1480,10 +1478,10 @@ function M:__update_cursorline__()
   local lnum = cursor[1] ---@type integer
   local prev_lnum = self._prev_cursor_lnum ---@type integer|nil
 
-  vim.api.nvim_buf_clear_namespace(bufnr, ns_cursorline, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, ark.var.nsnr.explorer_cursorline, 0, -1)
 
   local hlgroup = self._is_focused and "f_explorer_cursorline" or "f_explorer_cursorline_blur" ---@type string
-  vim.api.nvim_buf_set_extmark(bufnr, ns_cursorline, lnum - 1, 0, {
+  vim.api.nvim_buf_set_extmark(bufnr, ark.var.nsnr.explorer_cursorline, lnum - 1, 0, {
     line_hl_group = hlgroup,
     priority = 100,
   })

@@ -61,6 +61,7 @@ M.nsnr = {
   attach                = cn("ux:attach"),
   cmdline               = cn("ux:cmdline"),
   diagnostic            = cn("ux:diagnostic"),
+  explorer_cursorline   = cn("ux:explorer:cursorline"),
   input_confirmation    = cn("ux:input:confirmation"),
   matches               = cn("ux:matches"),
   notify                = cn("ux:notify"),
