@@ -137,7 +137,7 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param termmeta                dot.t.ITermMeta
+      ---@param termmeta                dot.module.term.IMeta
       ---@return nil
       local function handle(termmeta)
         local bufnr = termmeta.bufnr ---@type integer|nil
@@ -149,7 +149,7 @@ local runners = {
       end
 
       local termuuid = "9b2efac7-b9e3-4ee3-aa51-2dc394b500f5" ---@type string
-      dot.widget.Terminal:toggle_and_focus({
+      dot.term.widget:toggle_and_focus({
         uuid = termuuid,
         type = "runner",
         name = "code runner (mjs)",
@@ -159,7 +159,7 @@ local runners = {
       })
 
       ark.timer.delay(function()
-        local termmeta = dot.term.get(termuuid) ---@type dot.t.ITermMeta|nil
+        local termmeta = dot.term.state.get(termuuid) ---@type dot.module.term.IMeta|nil
         if termmeta ~= nil then
           handle(termmeta)
         end

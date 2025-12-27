@@ -100,14 +100,12 @@ local state = setmetatable({
 local __widget__mods = {
   explorer = "dot.widget.explorer",
   Notepad = "dot.widget.notepad",
-  Terminal = "dot.widget.terminal",
 }
 
 ---@class dot.widget
 ---@field public __mods                 dot.widget.__mods
 ---@field public explorer               dot.widget.explorer
 ---@field public Notepad                dot.widget.Notepad
----@field public Terminal               dot.widget.Terminal
 local widget = setmetatable({
   __mods = __widget__mods,
 }, {
@@ -129,6 +127,7 @@ local __mods = {
   lsp = "dot.module.lsp",
   picker = "dot.module.picker",
   searcher = "dot.module.searcher",
+  term = "dot.module.term",
   winpicker = "dot.module.winpicker",
 
   buf = "dot.buf",
@@ -139,7 +138,6 @@ local __mods = {
   session = "dot.session",
   shell = "dot.shell",
   tab = "dot.tab",
-  term = "dot.term",
   uri = "dot.uri",
   ux = "dot.ux",
   win = "dot.win",

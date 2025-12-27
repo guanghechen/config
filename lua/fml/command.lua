@@ -1050,55 +1050,55 @@ command
   .implement({
     uuid = K.term.create.uuid,
     action = function()
-      require("fml.action.term.create").show_profile_selector()
+      dot.term.action.create()
     end,
   })
   .implement({
     uuid = K.term.destroy.uuid,
     action = function()
-      require("fml.action.term.destroy").destroy()
+      dot.term.action.destroy()
     end,
   })
   .implement({
     uuid = K.term.rename.uuid,
     action = function()
-      require("fml.action.term.create").rename()
+      dot.term.action.rename()
     end,
   })
   .implement({
     uuid = K.term.toggle.uuid,
     action = function()
-      require("fml.action.term.create").toggle()
+      dot.term.action.toggle()
     end,
   })
   .implement({
     uuid = K.term.lazygit_cwd.uuid,
     action = function()
-      require("fml.action.term.lazygit").lazygit_cwd()
+      dot.term.action.lazygit_cwd()
     end,
   })
   .implement({
     uuid = K.term.lazygit_file_history.uuid,
     action = function()
-      require("fml.action.term.lazygit").lazygit_file_history()
+      dot.term.action.lazygit_file_history()
     end,
   })
   .implement({
     uuid = K.term.yazi_cwd.uuid,
     action = function()
-      require("fml.action.term.yazi").yazi_cwd()
+      dot.term.action.yazi_cwd()
     end,
   })
   .implement({
     uuid = K.term.yazi_workspace.uuid,
     action = function()
-      require("fml.action.term.yazi").yazi_workspace()
+      dot.term.action.yazi_workspace()
     end,
   })
   .implement({
     uuid = K.term.yazi_reveal.uuid,
     action = function()
-      require("fml.action.term.yazi").yazi_reveal()
+      dot.term.action.yazi_reveal()
     end,
   })
 
@@ -1107,8 +1107,8 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
-      if dot.term.focus(index) then
-        dot.widget.Terminal:focus()
+      if dot.term.state.focus(index) then
+        dot.term.widget:focus()
       end
     end,
   })
@@ -1119,52 +1119,52 @@ command
     uuid = K.term.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.term.focus").focus_left(ok and step or nil)
+      dot.term.action.focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.term.focus").focus_right(ok and step or nil)
+      dot.term.action.focus_right(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.term.swap").swap_left(ok and step or nil)
+      dot.term.action.swap_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.term.swap").swap_right(ok and step or nil)
+      dot.term.action.swap_right(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.split_h.uuid,
     action = function()
-      dot.widget.Terminal:split("h")
+      dot.term.widget:split("h")
     end,
   })
   .implement({
     uuid = K.term.split_j.uuid,
     action = function()
-      dot.widget.Terminal:split("j")
+      dot.term.widget:split("j")
     end,
   })
   .implement({
     uuid = K.term.split_k.uuid,
     action = function()
-      dot.widget.Terminal:split("k")
+      dot.term.widget:split("k")
     end,
   })
   .implement({
     uuid = K.term.split_l.uuid,
     action = function()
-      dot.widget.Terminal:split("l")
+      dot.term.widget:split("l")
     end,
   })
 

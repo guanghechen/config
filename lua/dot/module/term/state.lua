@@ -1,56 +1,19 @@
-local __module_name__ = "dot.term" ---@type string
+local __module_name__ = "dot.module.term.state" ---@type string
+
+require("dot.module.term.types")
 
 local DEFAULT_TERM_TYPE = "5fd8db97-7c8c-4629-a99a-a2696709018b" ---@type string
 
----@class dot.t.ITermMeta
----@field public uuid                   string
----@field public type                   string
----@field public name                   string
----@field public bufnr                  integer
----@field public cmd                    string[]|string
----@field public cwd                    string
----@field public env                    table<string, string>|nil
----@field public permanent              boolean
----@field public hidewipe               boolean
----@field public keymaps                ark.t.IKeymap[]
----@field public jobid                  integer|nil
----@field public on_closed              fun(): nil
----@field public on_focused             fun(): nil
----@field public on_resized             fun(): nil
-
----@class dot.t.ITermCreateParams
----@field public uuid                   string
----@field public type                   string
----@field public name                   string
----@field public cmd                    ?string[]|string
----@field public cwd                    ?string
----@field public env                    ?table<string, string>
----@field public permanent              ?boolean
----@field public hidewipe               ?boolean
----@field public keymaps                ?ark.t.IKeymap[]
----@field public on_closed              ?fun(): nil
----@field public on_focused             ?fun(): nil
----@field public on_resized             ?fun(): nil
-
----@class dot.t.ITermUpdateParams
----@field public name                   ?string
----@field public type                   ?string
----@field public cmd                    ?string[]|string
----@field public cwd                    ?string
----@field public env                    ?table<string, string>
----@field public on_closed              ?fun(): nil
----@field public on_focused             ?fun(): nil
----@field public on_resized             ?fun(): nil
-
-local metamap = {} ---@type table<string, dot.t.ITermMeta>
+local metamap = {} ---@type table<string, dot.module.term.IMeta>
 local termlist = {} ---@type string[]
-local o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
 
----@class dot.term
+---@class dot.module.term.state
 ---@field public o_termuuid             ark.c.Observable
+---@field protected __remove__          fun(termuuid: string): nil
+---@field protected __unregister__      fun(termuuid: string): nil
 local M = {}
 
-M.o_termuuid = o_termuuid ---@type ark.c.Observable
+M.o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
 
 ---@param termuuid                      string
 ---@return boolean
@@ -68,7 +31,7 @@ end
 
 ---@param index                         integer
 ---@return string|nil
----@return dot.t.ITermMeta|nil
+---@return dot.module.term.IMeta|nil
 function M.at(index)
   local termuuid = termlist[index] ---@type string|nil
   if termuuid then
@@ -79,18 +42,18 @@ end
 ---@return integer
 ---@return string|nil
 function M.current()
-  local termuuid = o_termuuid:snapshot() ---@type string
+  local termuuid = M.o_termuuid:snapshot() ---@type string
   local index = M.indexof(termuuid) ---@type integer
   return index, termuuid
 end
 
 ---@param typ                           string
 ---@return integer
----@return dot.t.ITermMeta|nil
+---@return dot.module.term.IMeta|nil
 function M.find_index_by_type(typ)
   for index = 1, #termlist, 1 do
     local termuuid = termlist[index] ---@type string
-    local termmeta = metamap[termuuid] ---@type dot.t.ITermMeta|nil
+    local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
     if termmeta ~= nil and termmeta.type == typ then
       return index, termmeta
     end
@@ -105,12 +68,12 @@ function M.focus(index)
   if termuuid == nil then
     return false
   end
-  o_termuuid:next(termuuid)
+  M.o_termuuid:next(termuuid)
   return true
 end
 
 ---@param termuuid                      string
----@return dot.t.ITermMeta|nil
+---@return dot.module.term.IMeta|nil
 function M.get(termuuid)
   return metamap[termuuid]
 end
@@ -135,7 +98,7 @@ end
 
 ---@param bufnr                         integer|nil
 ---@return integer
----@return dot.t.ITermMeta|nil
+---@return dot.module.term.IMeta|nil
 function M.indexof_by_bufnr(bufnr)
   if bufnr == nil or bufnr < 1 then
     return -1
@@ -143,7 +106,7 @@ function M.indexof_by_bufnr(bufnr)
 
   for index = 1, #termlist, 1 do
     local termuuid = termlist[index] ---@type string
-    local termmeta = metamap[termuuid] ---@type dot.t.ITermMeta|nil
+    local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
     if termmeta ~= nil and termmeta.bufnr == bufnr then
       return index, termmeta
     end
@@ -151,12 +114,12 @@ function M.indexof_by_bufnr(bufnr)
   return -1
 end
 
----@return fun(): dot.t.ITermMeta|nil, integer|nil
+---@return fun(): dot.module.term.IMeta|nil, integer|nil
 function M:iterator()
   local i = 0 ---@type integer
   local index = 0 ---@type integer
 
-  ---@return dot.t.ITermMeta|nil
+  ---@return dot.module.term.IMeta|nil
   ---@return integer|nil
   return function()
     while i < #termlist do
@@ -166,7 +129,7 @@ function M:iterator()
         return nil, nil
       end
 
-      local termmeta = metamap[termuuid] ---@type dot.t.ITermMeta|nil
+      local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
       if termmeta ~= nil then
         return termmeta, index
       end
@@ -183,12 +146,12 @@ function M:iterator()
 end
 
 ---@param termuuid                      string|nil
----@return dot.t.ITermMeta|nil
+---@return dot.module.term.IMeta|nil
 function M.pick_next_term(termuuid)
   for index = 1, #termlist, 1 do
     local uuid = termlist[index] ---@type string
     if uuid ~= termuuid then
-      local termmeta = metamap[uuid] ---@type dot.t.ITermMeta|nil
+      local termmeta = metamap[uuid] ---@type dot.module.term.IMeta|nil
       if termmeta ~= nil and termmeta.bufnr > 0 and vim.api.nvim_buf_is_valid(termmeta.bufnr) then
         return termmeta
       end
@@ -209,8 +172,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param params                        dot.t.ITermCreateParams
----@return dot.t.ITermMeta
+---@param params                        dot.module.term.ICreateParams
+---@return dot.module.term.IMeta
 function M.create(params)
   local termuuid = params.uuid ---@type string
   if termuuid == nil or #termuuid < 1 then
@@ -219,7 +182,7 @@ function M.create(params)
 
   local typ = params.type or DEFAULT_TERM_TYPE ---@type string
 
-  local termmeta = metamap[termuuid] ---@type dot.t.ITermMeta|nil
+  local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
   if termmeta ~= nil then
     ark.reporter.error({
       from = __module_name__,
@@ -256,9 +219,9 @@ function M.create(params)
     buffer = bufnr,
     callback = function()
       vim.schedule(function()
-        local _, _termmeta = dot.term.indexof_by_bufnr(bufnr)
+        local _, _termmeta = dot.term.state.indexof_by_bufnr(bufnr)
         if _termmeta then
-          M.on_closed(_termmeta)
+          dot.term.event.on_closed(_termmeta)
         else
           dot.buf.close(bufnr)
         end
@@ -266,7 +229,7 @@ function M.create(params)
     end,
   })
 
-  ---@type dot.t.ITermMeta
+  ---@type dot.module.term.IMeta
   termmeta = {
     uuid = termuuid,
     type = typ,
@@ -371,7 +334,7 @@ function M.create(params)
     key = "q",
     desc = "term: close",
     callback = function()
-      M.on_closed(termmeta)
+      dot.term.event.on_closed(termmeta)
     end,
   }
   ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
@@ -379,12 +342,12 @@ function M.create(params)
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid
 
-  o_termuuid:next(termuuid)
+  M.o_termuuid:next(termuuid)
   return termmeta
 end
 
----@param termmeta                      dot.t.ITermMeta
----@param params                        dot.t.ITermUpdateParams
+---@param termmeta                      dot.module.term.IMeta
+---@param params                        dot.module.term.IUpdateParams
 ---@return boolean
 function M.update(termmeta, params)
   if params.name ~= nil then
@@ -416,61 +379,26 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param bufnr                         integer|nil
+---@protected
+---@param termuuid                      string
 ---@return nil
-function M.on_buf_deleted(bufnr)
-  local _, termmeta = M.indexof_by_bufnr(bufnr) ---@type integer
-  if termmeta ~= nil then
-    M.on_closed(termmeta)
-  end
-end
-
----@param termmeta                      dot.t.ITermMeta
----@return nil
-function M.on_closed(termmeta)
-  if termmeta.jobid ~= nil then
-    vim.fn.jobstop(termmeta.jobid)
-    termmeta.jobid = nil
-  end
-
-  local bufnr = termmeta.bufnr ---@type integer
-  termmeta.bufnr = 0
-
-  local next_termmeta = M.pick_next_term(termmeta.uuid) ---@type dot.t.ITermMeta|nil
-  if next_termmeta ~= nil then
-    o_termuuid:next(next_termmeta.uuid)
-  else
-    o_termuuid:next("")
-  end
-
+function M.__remove__(termuuid)
   local k = 0 ---@type integer
   for index = 1, #termlist, 1 do
-    local termuuid = termlist[index] ---@type string
-    if termuuid ~= termmeta.uuid then
+    local uuid = termlist[index] ---@type string
+    if uuid ~= termuuid then
       k = k + 1
-      termlist[k] = termuuid ---@type string
+      termlist[k] = uuid ---@type string
     end
   end
   ark.table.truncate_inline(termlist, k)
-
-  if not termmeta.permanent then
-    metamap[termmeta.uuid] = nil
-  end
-
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    dot.buf.close(bufnr)
-  end
-  termmeta.on_closed()
-
-  vim.schedule(function()
-    vim.cmd("checktime")
-  end)
 end
 
----@param termmeta                      dot.t.ITermMeta
+---@protected
+---@param termuuid                      string
 ---@return nil
-function M.on_focused(termmeta)
-  termmeta.on_focused()
+function M.__unregister__(termuuid)
+  metamap[termuuid] = nil
 end
 
 return M

@@ -8,7 +8,7 @@ local fn_switch_term = ark.G.register_anonymous_fn(function(encoded)
   local argv = decode_btn_args(tostring(encoded)) ---@type integer[]
   local index = argv[1] ---@type integer|nil
   if index ~= nil then
-    dot.term.focus(index)
+    dot.term.state.focus(index)
   end
 end) or "ark.G.noop"
 
@@ -30,7 +30,7 @@ end) or "ark.G.noop"
 ---@class dot.module.nvimbar.component.term
 local M = {}
 
----@param termmeta                      dot.t.ITermMeta
+---@param termmeta                      dot.module.term.IMeta
 ---@return string
 local function format_name(termmeta)
   local name = vim.trim(termmeta.name or "") ---@type string
@@ -67,7 +67,7 @@ function M.items(position)
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = ark.nvim.make_bg_transparency(hln_button) ---@type string
 
-  ---@param termmeta                    dot.t.ITermMeta
+  ---@param termmeta                    dot.module.term.IMeta
   ---@param index                       integer
   ---@return string
   ---@return string
@@ -84,7 +84,7 @@ function M.items(position)
     return text, btn(hl_text, fn_switch_term, { index })
   end
 
-  ---@param termmeta                    dot.t.ITermMeta
+  ---@param termmeta                    dot.module.term.IMeta
   ---@param index                       integer
   ---@return string
   ---@return string
@@ -107,10 +107,10 @@ function M.items(position)
     name = "term:items",
     atomic = false,
     render = function(_, remain_width)
-      local entries = {} ---@type { term: dot.t.ITermMeta, index: integer }[]
-      local total_terms = dot.term.size() ---@type integer
+      local entries = {} ---@type { term: dot.module.term.IMeta, index: integer }[]
+      local total_terms = dot.term.state.size() ---@type integer
       for idx = 1, total_terms do
-        local termuuid, termmeta = dot.term.at(idx) ---@type string|nil, dot.t.ITermMeta|nil
+        local termuuid, termmeta = dot.term.state.at(idx) ---@type string|nil, dot.module.term.IMeta|nil
         if termuuid ~= nil and termmeta ~= nil then
           entries[#entries + 1] = { term = termmeta, index = idx }
         end
@@ -121,7 +121,7 @@ function M.items(position)
         return "", "", false
       end
 
-      local active_index = dot.term.current() ---@type integer
+      local active_index = dot.term.state.current() ---@type integer
       if active_index < 1 or active_index > total_terms then
         active_index = entries[1].index
       end
