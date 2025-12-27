@@ -6,7 +6,7 @@ local M = {}
 ---@param bufnr                         integer|nil
 ---@return nil
 function M.on_buf_deleted(bufnr)
-  local _, termmeta = dot.term.state.indexof_by_bufnr(bufnr) ---@type integer
+  local _, termmeta = dot.term.state.indexof_by_bufnr(bufnr)
   if termmeta ~= nil then
     M.on_closed(termmeta)
   end
