@@ -3,6 +3,20 @@ local __module_name__ = "dot.module.explorer.resource.file" ---@type string
 local DEBOUNCE_MS = 150 ---@type integer
 local MAX_WATCHES = 50 ---@type integer
 
+local WATCH_IGNORE_PATTERNS = {
+  "^%.git$",
+  "^%.hg$",
+  "^%.svn$",
+  "^%.DS_Store$",
+  "^%.Spotlight%-",
+  "^%.Trashes$",
+  "^%.fseventsd$",
+  "^__pycache__$",
+  "^node_modules$",
+  "^%.cache$",
+  "^%.vscode%-server$",
+} ---@type string[]
+
 ---@class dot.module.explorer.resource.file.IProps
 ---@field public name                   string
 ---@field public show_hidden            boolean|nil
@@ -682,11 +696,13 @@ function M:__start_watch__(dirpath)
     end
 
     if filename then
-      if vim.startswith(filename, ".") then
+      if filename:match("%.swp$") or filename:match("%.tmp$") or filename:match("~$") or filename:match("^4913$") then
         return
       end
-      if filename:match("%.swp$") or filename:match("%.tmp$") or filename:match("~$") then
-        return
+      for _, pattern in ipairs(WATCH_IGNORE_PATTERNS) do
+        if filename:match(pattern) then
+          return
+        end
       end
     end
 
