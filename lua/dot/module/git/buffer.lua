@@ -674,10 +674,16 @@ function M.stage_hunk(bufnr, range, callback)
 
   if not buf_cache.object_name then
     dot.git.cmd.add_intent_to_add_async(toplevel, relpath, function()
-      dot.git.cmd.get_file_info_async(toplevel, file, function(file_info)
+      dot.git.cmd.get_file_info_async(toplevel, relpath, function(file_info)
         buf_cache.mode_bits = file_info and file_info.mode_bits
         buf_cache.object_name = file_info and file_info.object_name
         mode_bits = buf_cache.mode_bits
+        if not buf_cache.object_name or not buf_cache.mode_bits then
+          if callback then
+            callback(false, "Failed to read index entry for new file")
+          end
+          return
+        end
         do_stage()
       end)
     end)

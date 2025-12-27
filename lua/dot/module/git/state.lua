@@ -36,6 +36,15 @@ local ignored_cache = {}
 ---@type integer
 local ignored_count = 0
 
+---@type { gitignore: integer|nil, exclude: integer|nil }
+local ignored_mtime = {
+  gitignore = nil,
+  exclude = nil,
+}
+
+---@type boolean
+local ignored_mtime_initialized = false
+
 ---@type boolean
 local initialized = false
 
@@ -133,6 +142,35 @@ function M.clear_ignored_cache()
   ignored_count = 0
 end
 
+local function refresh_ignore_mtime()
+  local workspace = dot.path.workspace() ---@type string
+  local gitignore_path = dot.path.join(workspace, ".gitignore") ---@type string
+  local exclude_path = dot.path.join(workspace, ".git/info/exclude") ---@type string
+
+  ---@param path                        string
+  ---@return integer|nil
+  local function stat_mtime(path)
+    local stat = vim.uv.fs_stat(path) ---@type uv.fs_stat.result|nil
+    if stat and stat.mtime then
+      return stat.mtime.sec
+    end
+    return nil
+  end
+
+  local gitignore_mtime = stat_mtime(gitignore_path) ---@type integer|nil
+  local exclude_mtime = stat_mtime(exclude_path) ---@type integer|nil
+
+  if ignored_mtime_initialized then
+    if gitignore_mtime ~= ignored_mtime.gitignore or exclude_mtime ~= ignored_mtime.exclude then
+      M.clear_ignored_cache()
+    end
+  end
+
+  ignored_mtime.gitignore = gitignore_mtime
+  ignored_mtime.exclude = exclude_mtime
+  ignored_mtime_initialized = true
+end
+
 ---@return string
 function M.get_branch()
   return M.o_branch:snapshot()
@@ -191,6 +229,8 @@ function M.preload_ignored(filepaths, callback)
       uncached[#uncached + 1] = normalized
     end
   end
+
+  refresh_ignore_mtime()
 
   if #uncached == 0 then
     if callback then
