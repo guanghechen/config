@@ -1,0 +1,158 @@
+description = "Follow-up analysis after completing fixes"
+prompt = """Perform a follow-up analysis after completing fixes for previously identified issues.
+
+## Review Target
+
+``````text
+{{args}}
+``````
+
+This command is used after addressing most issues from a previous analysis:
+1. Re-analyze the same target with fresh perspective
+2. Leverage existing resolution records to reduce false positives
+3. Update stale file paths and line ranges due to code changes
+4. Discover any new issues introduced during fixes
+
+## Workflow
+
+### Step 1: Locate Previous Analysis
+
+Search for existing `.code-analyze/*-gemini.md` files related to the given topic:
+- Match by topic keywords in filename or content
+- If multiple matches found, list them and ask user to select
+- If no match found, inform user and suggest using `/code-analyze` instead
+
+### Step 2: Parse Existing Records
+
+From the previous analysis file, extract:
+
+1. **Original review target** - The files/directories/scope that was analyzed
+2. **Preserved statuses** - Issues marked with:
+   - `󰛨 [By Design]`
+   - `󰜺 [Won't Fix]`
+   - `󱙝 [False Alarm]`
+3. **Fixed/Done issues** - For reference only (will be re-verified):
+   - `󰄬 [fixed]`
+   - `󰄬 [done]`
+
+### Step 3: Validate and Update Records
+
+For each preserved issue (By Design / Won't Fix / False Alarm):
+
+1. **Check if code still exists**:
+   - File deleted → Remove the record entirely
+   - Code block deleted → Remove the record entirely
+
+2. **Update stale locations**:
+   - Use semantic matching (function names, variable names, code patterns) to relocate
+   - Update `**Location**` field with new `filepath:line` or `filepath:line-range`
+   - If code moved to a different file, update the file path
+
+3. **Keep issue content intact** - Do not modify description or recommendation
+
+### Step 4: Perform Fresh Analysis
+
+Re-analyze the original target with:
+- Full scope as defined in Step 1
+- Same review focus areas as `/code-analyze`
+- **Suppress** issues that match preserved records (By Design / Won't Fix / False Alarm)
+
+### Step 5: Generate Output
+
+Produce a comprehensive report:
+
+1. **Summary** - Issue counts by category and severity, plus preserved/removed counts
+2. **New Issues** - Newly discovered issues grouped by category
+3. **Preserved Issues** - Collapsed section with By Design / Won't Fix / False Alarm issues
+
+## Issue Format
+
+Same as `/code-analyze`. Group by category using hierarchical numbering (e.g., `1.1`, `2.1`).
+
+For each issue:
+- **Location**: File path and line number(s)
+- **Severity**: Critical / Warning / Suggestion
+- **Description**: Clear explanation
+- **Recommendation**: How to fix
+
+## Summary Table
+
+Provide summary tables at the beginning:
+
+```markdown
+## Summary
+
+### New Issues
+
+| Category           | Critical | Warning | Suggestion | Total |
+| ------------------ | -------- | ------- | ---------- | ----- |
+| 1. Logic Errors    | 0        | 1       | 0          | 1     |
+| 2. Performance     | 0        | 0       | 1          | 1     |
+| **Total**          | **0**    | **1**   | **1**      | **2** |
+
+### Preserved & Removed
+
+| Status          | Count |
+| --------------- | ----- |
+| By Design       | 2     |
+| Won't Fix       | 1     |
+| False Alarm     | 0     |
+| Records Removed | 1     |
+```
+
+- Skip rows for categories/statuses with 0 count (except **Total** row)
+
+## Output Format
+
+```markdown
+# Code Analysis Follow-up: {topic}
+
+> Re-analyzed: {original-target}
+> Previous analysis: {previous-file-path}
+> Date: {current-date}
+
+## Summary
+...
+
+---
+
+## New Issues
+
+### 1. Logic Errors
+
+#### 1.1 [Warning] New issue title
+- **Location**: `src/file.ts:42`
+- **Description**: ...
+- **Recommendation**: ...
+
+---
+
+<details>
+<summary>📋 Preserved Issues (X items)</summary>
+
+### By Design
+
+#### 󰛨 [By Design] Original issue title
+- **Location**: `src/file.ts:58` ← Updated from line 45
+- **Description**: ...
+
+### Won't Fix
+
+#### 󰜺 [Won't Fix] Original issue title
+- **Location**: `src/file.ts:72`
+- **Description**: ...
+
+</details>
+```
+
+## Output Requirement
+
+1. **Display** the full report in the conversation
+2. **Overwrite** the original `.code-analyze/*-gemini.md` file with updated analysis
+
+## Style
+
+- Respond in Chinese; keep code and technical terms in English
+- Only explain rare or domain-specific concepts
+- Skip categories with no issues found
+"""
