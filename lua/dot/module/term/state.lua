@@ -58,7 +58,7 @@ function M.find_index_by_type(typ)
       return index, termmeta
     end
   end
-  return -1
+  return -1, nil
 end
 
 ---@param index                         integer

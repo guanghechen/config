@@ -340,45 +340,46 @@ end
 
 ---@return nil
 function M.toggle()
-  local cwd = dot.path.cwd()
   local terminal = dot.term.widget ---@type dot.module.term.widget
 
+  local termindex = dot.term.state.current() ---@type integer
+  local _, termmeta_current = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
+  local is_shell_or_runner = termmeta_current ~= nil
+    and (termmeta_current.type == "runner" or termmeta_current.type == "shell")
+
   if terminal:isvisible() then
-    local termindex = dot.term.state.current() ---@type integer
-    local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
-    if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
+    if is_shell_or_runner then
       terminal:toggle()
       return
     end
   else
     terminal:focus()
-    local termindex = dot.term.state.current() ---@type integer
-    local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
-    if termmeta ~= nil and (termmeta.type == "runner" or termmeta.type == "shell") then
+    if is_shell_or_runner then
       return
     end
   end
 
-  local _, termmeta = dot.term.state.find_index_by_type("shell") ---@type integer, dot.module.term.IMeta|nil
-  if termmeta == nil then
+  local _, termmeta_shell = dot.term.state.find_index_by_type("shell") ---@type integer, dot.module.term.IMeta|nil
+  local selected_text = dot.buf.retrieve_selected_text() ---@type string
+  if termmeta_shell == nil then
     terminal:toggle_and_focus({
       uuid = yoz.fn.uuid(),
       type = "shell",
       name = "shell",
-      cwd = cwd,
+      cwd = dot.path.cwd(),
       autofocus = true,
       permanent = true,
-      selected_text = dot.buf.retrieve_selected_text(),
+      selected_text = selected_text,
     })
   else
     terminal:toggle_and_focus({
-      uuid = termmeta.uuid,
-      type = termmeta.type,
-      name = termmeta.name,
-      cwd = termmeta.cwd,
+      uuid = termmeta_shell.uuid,
+      type = termmeta_shell.type,
+      name = termmeta_shell.name,
+      cwd = termmeta_shell.cwd,
       autofocus = true,
       permanent = true,
-      selected_text = dot.buf.retrieve_selected_text(),
+      selected_text = selected_text,
     })
   end
 end
