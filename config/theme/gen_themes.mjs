@@ -9,5 +9,5 @@ const errors = await Promise.allSettled(tasks).then(results =>
 )
 
 if (errors.length > 0) {
-  console.error('[gen_themes] Errors encountered:', errors)
+  console.error('\x1b[31m[gen_themes]\x1b[0m Errors encountered:', errors)
 }

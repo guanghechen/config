@@ -36,7 +36,8 @@ export const apps = [
       await fs.writeFile(main_config_filepath, content, 'utf8')
     },
     after_gen: async () => {
-      await safe_exec('bat', ['cache', '--build'])
+      const result = await safe_exec('bat', ['cache', '--build'], { silent: true })
+      if (!result) console.error('\x1b[31m[bat]\x1b[0m Failed to rebuild cache. cmd: \x1b[33mbat cache --build\x1b[0m')
     },
   },
   {
@@ -58,11 +59,8 @@ export const apps = [
       await fs.writeFile(config_filepath, updated, 'utf8')
 
       // Send SIGUSR2 to btop to trigger hot reload
-      try {
-        await safe_exec('pkill', ['-USR2', 'btop'])
-      } catch (error) {
-        console.log('[skipped] Failed to reload btop. error:', error)
-      }
+      const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
+      if (!result) console.error('\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m')
     },
   },
   {
@@ -98,11 +96,8 @@ export const apps = [
     after_apply: async () => {
       const is_ghostty_exist = await command_exists('ghostty')
       if (is_ghostty_exist) {
-        try {
-          await safe_exec('pkill', ['-USR2', 'ghostty'])
-        } catch (error) {
-          console.log('[skipped] Failed to reload ghostty. error:', error)
-        }
+        const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
+        if (!result) console.error('\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m')
       }
     },
   },

@@ -11,7 +11,7 @@ async function handle() {
   const data = await settings.load()
   let theme = process.argv[2]?.toLowerCase() || data.theme
   if (!themes.includes(theme)) {
-    console.error('[toggle_theme] Cannot find the given theme:', theme)
+    console.error('\x1b[31m[toggle_theme]\x1b[0m Cannot find the given theme:', theme)
     return
   }
 
@@ -32,7 +32,7 @@ async function handle() {
   )
 
   if (errors.length > 0) {
-    console.error('[toggle_theme] Errors encountered:', errors)
+    console.error('\x1b[31m[toggle_theme]\x1b[0m Errors encountered:', errors)
   } else {
     data.theme = theme
     await settings.save(data)

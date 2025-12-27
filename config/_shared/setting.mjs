@@ -47,7 +47,7 @@ export const settings = {
       const json = JSON.parse(content);
       return normalize(json);
     } catch (error) {
-      console.error("[settings.load] Failed to load the filepath.", { filepath });
+      console.error("\x1b[31m[settings.load]\x1b[0m Failed to load the filepath.", { filepath });
       return defaults();
     }
   },

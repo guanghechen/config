@@ -47,7 +47,7 @@ export async function touch(filepath) {
       const now = new Date();
       utimesSync(filepath, now, now);
     } catch (error) {
-      console.error("[touch] Error touching file:", { filepath, error });
+      console.error("\x1b[31m[touch]\x1b[0m Error touching file:", { filepath, error });
     }
   }
 }

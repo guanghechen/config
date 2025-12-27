@@ -142,7 +142,7 @@ export async function safe_exec(cmd, args, options) {
     return { stdout }
   } catch (error) {
     if (!silent) {
-      console.error(`[safe_exec] Failed to run command.`, { cmd, args, error })
+      console.error('\x1b[31m[safe_exec]\x1b[0m Failed to run command.', { cmd, args, error })
     }
   }
 }
@@ -157,7 +157,7 @@ export async function command_exists(cmd) {
     const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`], { silent: true })
     return !!result?.stdout
   } catch (error) {
-    console.error(`[command_exists] Failed to check command.`, { cmd, error })
+    console.error('\x1b[31m[command_exists]\x1b[0m Failed to check command.', { cmd, error })
     return false
   }
 }
@@ -169,7 +169,7 @@ export async function command_exists(cmd) {
 export async function load_theme_scheme(theme) {
   const filepath = path.join(HOME_THEME_SCHEME, `${theme}.json`)
   if (!existsSync(filepath)) {
-    console.error('[load_theme_scheme] unknown theme.', { theme })
+    console.error('\x1b[31m[load_theme_scheme]\x1b[0m Unknown theme.', { theme })
     return
   }
   const content = await fs.readFile(filepath, 'utf8')
@@ -188,7 +188,7 @@ export async function load_theme_scheme(theme) {
     )
     return JSON.parse(resolvedContent)
   } catch (error) {
-    console.error('[load_theme_scheme] Bad scheme, not a valid json.', {
+    console.error('\x1b[31m[load_theme_scheme]\x1b[0m Bad scheme, not a valid json.', {
       theme,
       filepath,
       content,
@@ -207,7 +207,7 @@ export async function apply_theme_per_app(app, scheme) {
   if (app.local) {
     const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`)
     if (!existsSync(template_filepath)) {
-      console.error('[apply_theme_per_app] Cannot find the template.', { app })
+      console.error('\x1b[31m[apply_theme_per_app]\x1b[0m Cannot find the template.', { app })
       return
     }
     const template = await fs.readFile(template_filepath, 'utf8')
@@ -230,7 +230,7 @@ export async function gen_themes_per_app(app) {
 
   const template_filepath = path.join(HOME_THEME_APP, `${app.name}.hbs`)
   if (!existsSync(template_filepath)) {
-    console.error('[gen_themes_per_app] Cannot find the template.', { app })
+    console.error('\x1b[31m[gen_themes_per_app]\x1b[0m Cannot find the template.', { app })
     return
   }
   const template = await fs.readFile(template_filepath, 'utf8')
