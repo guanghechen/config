@@ -333,7 +333,10 @@ function M.create(params)
     key = "q",
     desc = "term: close",
     callback = function()
-      dot.term.event.on_closed(termmeta)
+      local _, meta = M.indexof_by_bufnr(bufnr)
+      if meta then
+        dot.term.event.on_closed(meta)
+      end
     end,
   }
   ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
