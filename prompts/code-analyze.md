@@ -7,19 +7,43 @@ $ARGUMENTS
 ``````
 
 **Mode Detection**:
-- If the argument is a `.code-analyze/*.md` file path → **Re-analyze Mode**
+- If the argument is a `.code-analyzer/{topic}/*.md` file path → **Re-analyze Mode**
 - Otherwise → **New Analysis Mode**
 
 ### Re-analyze Mode
 
-When given an existing `.code-analyze/*.md` file:
+When given an existing `.code-analyzer/{topic}/*.md` file:
 1. Read the file to extract the original review target and issues
-2. Re-analyze the same target to check:
+2. Read `baseline.md` in the same directory to get shared consensus
+3. Re-analyze the same target to check:
    - Which previously identified issues are now **fixed** (mark with ✅)
    - Which issues **remain unfixed**
    - Any **new issues** introduced since the last review
-3. **Preserve** all issue resolution statuses (see Issue Resolution Statuses)
-4. **Rewrite** the file with updated analysis results
+4. **Suppress** issues documented in `baseline.md` (By Design decisions)
+5. **Rewrite** the analysis file with updated results
+
+## Baseline File
+
+The `baseline.md` file (`.code-analyzer/{topic}/baseline.md`) stores shared consensus:
+
+```markdown
+# Baseline: {topic}
+
+> Review target: {original-target}
+
+## By Design
+
+These are intentional design decisions. Do NOT report as issues in any analysis.
+
+### {pattern-or-location}
+- **Reason**: Why this is intentional
+- **Date**: When this decision was made
+```
+
+**Rules**:
+- **Only `By Design`** decisions are stored in baseline (permanent design decisions)
+- Other statuses (`fixed`, `done`, `won't fix`, `false alarm`) stay in the analysis file only
+- All commands must read baseline before analysis and suppress matching issues
 
 ## Review Focus Areas
 
@@ -94,17 +118,18 @@ Example:
 
 Issues can be marked with the following statuses (applied via `/code-apply`). All resolved statuses use ~~strikethrough~~ to indicate completion:
 
-| Status      | Heading Format                   | Meaning                                              |
-| ----------- | -------------------------------- | ---------------------------------------------------- |
-| Fixed       | `󰄬 ~~[fixed] ... ~~`             | Issue resolved by code fix                           |
-| Done        | `󰄬 ~~[done] ... ~~`              | TODO item completed                                  |
-| By Design   | `󰛨 ~~[By Design] ... ~~`         | Intentional behavior; suppress in future analysis    |
-| Won't Fix   | `󰜺 ~~[Won't Fix] ... ~~`         | Known issue, accepted risk or deferred               |
-| False Alarm | `󱙝 ~~[False Alarm] ... ~~`       | Not a real issue; exclude from future analysis       |
+| Status      | Heading Format             | Stored In      | Meaning                                           |
+| ----------- | -------------------------- | -------------- | ------------------------------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ... ~~`       | analysis file  | Issue resolved by code fix                        |
+| Done        | `󰄬 ~~[done] ... ~~`        | analysis file  | TODO item completed                               |
+| By Design   | `󰛨 ~~[By Design] ... ~~`   | **baseline**   | Intentional behavior; suppress in future analysis |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ... ~~`   | analysis file  | Known issue, accepted risk or deferred            |
+| False Alarm | `󱙝 ~~[False Alarm] ... ~~` | analysis file  | Not a real issue; exclude from future analysis    |
 
 **Re-analyze Behavior**:
 - `󰄬 [fixed]` / `󰄬 [done]`: Re-verify; remove strikethrough if issue reappears
-- `󰛨 [By Design]` / `󰜺 [Won't Fix]` / `󱙝 [False Alarm]`: Preserve; do NOT re-report
+- `󰜺 [Won't Fix]` / `󱙝 [False Alarm]`: Preserve in analysis file; do NOT re-report
+- `󰛨 [By Design]`: Stored in `baseline.md`; permanently suppressed across all analyses
 
 ## Summary Table
 
@@ -127,13 +152,15 @@ Provide a summary table at the beginning of the output:
 ## Output Requirement
 
 ### New Analysis Mode
-1. **Display** the full review output in the conversation
-2. **Save** a copy to `{cwd}/.code-analyze/{simple-title}-codex.md`
-   - `{simple-title}`: concise kebab-case title (e.g., `user-auth-service`)
+1. Read `baseline.md` if exists; suppress documented By Design issues
+2. **Display** the full review output in the conversation
+3. **Save** analysis to `{cwd}/.code-analyzer/{topic}/codex.md`
+   - `{topic}`: concise kebab-case title (e.g., `git-module`, `user-auth-service`)
 
 ### Re-analyze Mode
-1. **Display** the full updated review output in the conversation
-2. **Rewrite** the specified `.code-analyze/*.md` file with updated analysis
+1. Read `baseline.md`; suppress documented By Design issues
+2. **Display** the full updated review output in the conversation
+3. **Rewrite** the specified `.code-analyzer/{topic}/*.md` file with updated analysis
 
 ## Style
 

@@ -29,9 +29,9 @@ If no specific issues are provided, apply all actionable issues (Critical and Wa
    4. #3.2 use memoization instead of caching the entire result
    ```
 
-   - **by design**: Intentional behavior; suppress in future analysis
-   - **won't fix**: Acknowledged issue, deferred or accepted risk
-   - **false alarm**: Not a real issue; exclude from future analysis
+   - **by design**: Intentional behavior → stored in `baseline.md`
+   - **won't fix**: Acknowledged issue, deferred → stays in analysis file
+   - **false alarm**: Not a real issue → stays in analysis file
    - **custom context**: Additional instructions override the original recommendation
 
 ## Guidelines
@@ -47,9 +47,16 @@ If no specific issues are provided, apply all actionable issues (Critical and Wa
 After applying all fixes:
 
 1. **Re-review** each fixed issue to verify proper resolution
-2. **Update** the corresponding `.code-analyze/*-codex.md` file:
-   - Mark resolved issues with ~~strikethrough~~: `󰄬 ~~[fixed] ...~~` or `󰄬 ~~[done] ...~~`
-   - For non-fix resolutions: `󰛨 ~~[By Design] ...~~`, `󰜺 ~~[Won't Fix] ...~~`, `󱙝 ~~[False Alarm] ...~~`
+2. **Update files** based on resolution status:
+
+| Status      | Marker                       | Stored In                             |
+| ----------- | ---------------------------- | ------------------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ...~~`          | analysis file (`codex.md`)            |
+| Done        | `󰄬 ~~[done] ...~~`           | analysis file (`codex.md`)            |
+| By Design   | `󰛨 ~~[By Design] ...~~`      | **`baseline.md`** (permanent)         |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`      | analysis file (`codex.md`)            |
+| False Alarm | `󱙝 ~~[False Alarm] ...~~`    | analysis file (`codex.md`)            |
+
 3. **Report** summary using the table format below
 
 ## Summary Table
@@ -82,7 +89,8 @@ Provide summary tables after applying changes:
 ## Output Requirement
 
 1. **Display** the summary in the conversation
-2. **Update** the `.code-analyze/*-codex.md` file with resolution markers
+2. **Update** the analysis file (`.code-analyzer/{topic}/codex.md`) with resolution markers
+3. **Append to `baseline.md`** if any issues marked as By Design (create file if not exists)
 
 ## Style
 
