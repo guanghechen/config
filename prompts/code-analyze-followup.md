@@ -26,13 +26,13 @@ Search for existing `.code-analyze/*-codex.md` files related to the given topic:
 From the previous analysis file, extract:
 
 1. **Original review target** - The files/directories/scope that was analyzed
-2. **Preserved statuses** - Issues marked with:
-   - `󰛨 [By Design]`
-   - `󰜺 [Won't Fix]`
-   - `󱙝 [False Alarm]`
+2. **Preserved statuses** - Issues marked with (~~strikethrough~~):
+   - `󰛨 ~~[By Design] ...~~`
+   - `󰜺 ~~[Won't Fix] ...~~`
+   - `󱙝 ~~[False Alarm] ...~~`
 3. **Fixed/Done issues** - For reference only (will be re-verified):
-   - `󰄬 [fixed]`
-   - `󰄬 [done]`
+   - `󰄬 ~~[fixed] ...~~`
+   - `󰄬 ~~[done] ...~~`
 
 ### Step 3: Validate and Update Records
 
@@ -131,13 +131,13 @@ Provide summary tables at the beginning:
 
 ### By Design
 
-#### 󰛨 [By Design] Original issue title
+#### 󰛨 ~~[By Design] Original issue title~~
 - **Location**: `src/file.ts:58` ← Updated from line 45
 - **Description**: ...
 
 ### Won't Fix
 
-#### 󰜺 [Won't Fix] Original issue title
+#### 󰜺 ~~[Won't Fix] Original issue title~~
 - **Location**: `src/file.ts:72`
 - **Description**: ...
 
