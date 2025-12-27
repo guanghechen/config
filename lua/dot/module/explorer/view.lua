@@ -10,8 +10,10 @@ local INDENT_SPACE = "  " ---@type string
 local VIRT_TEXT_ID_OFFSET = 1000000 ---@type integer
 
 ---@class dot.module.explorer.View
+---@field protected _cached_filepaths   string[]
 ---@field protected _indent_hln         string
 ---@field protected _nsnr               integer
+---@field protected _tick_structure     integer
 local M = {}
 M.__index = M
 
@@ -26,8 +28,10 @@ function M.new(name)
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
   local self = setmetatable({}, M)
-  self._nsnr = vim.api.nvim_create_namespace(fullname)
+  self._cached_filepaths = {}
   self._indent_hln = "f_explorer_indent"
+  self._nsnr = vim.api.nvim_create_namespace(fullname)
+  self._tick_structure = -1
   return self
 end
 
@@ -555,72 +559,97 @@ end
 ---@param ctx                           dot.module.explorer.view.IRenderContext
 ---@return nil
 function M:__precompute__(root, ctx)
-  local filepaths = {} ---@type string[]
+  local tree = ctx.tree ---@type dot.module.explorer.Tree
+  local ticks = tree.ticks ---@type dot.module.explorer.ITreeTicks
   local diag_counts = ctx.diag_counts ---@type table<string, dot.module.explorer.view.IDiagCounts>
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
 
   local loaded_bufnrs = show_diagnostics and ark.nvim.get_loaded_bufnrs() or {} ---@type table<string, integer>
 
-  ---@param node                        dot.module.explorer.Node
-  ---@return dot.module.explorer.view.IDiagCounts
-  local function traverse(node)
-    local filepath = self:__uri_to_filepath__(node.uri) ---@type string
-    if filepath ~= "" then
-      filepaths[#filepaths + 1] = filepath
-    end
+  local filepaths ---@type string[]
+  if self._tick_structure == ticks.structure then
+    filepaths = self._cached_filepaths
+  else
+    filepaths = {}
 
-    local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
+    ---@param node                      dot.module.explorer.Node
+    local function collect_filepaths(node)
+      local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+      if filepath ~= "" then
+        filepaths[#filepaths + 1] = filepath
+      end
 
-    if node.nodetype == "F" then
-      if show_diagnostics and filepath ~= "" then
-        local bufnr = loaded_bufnrs[filepath] ---@type integer|nil
-        if bufnr ~= nil then
-          local cached = bufnr_counts[bufnr] ---@type dot.module.explorer.view.IDiagCounts|nil
-          if cached ~= nil then
-            counts = cached
-          else
-            local diag_data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-            counts.error = diag_data.error
-            counts.warn = diag_data.warn
-            counts.hint = diag_data.hint
-            counts.info = diag_data.info
-            bufnr_counts[bufnr] = counts
-          end
+      if node.nodetype == "D" and node.expanded then
+        if not node.loaded and ctx.resource_manager ~= nil then
+          ctx.tree:load_node(node, false)
+        end
+        for _, child in ipairs(node.children) do
+          collect_filepaths(child)
         end
       end
-    elseif node.nodetype == "D" and node.expanded then
-      if not node.loaded and ctx.resource_manager ~= nil then
-        ctx.tree:load_node(node, false)
+    end
+
+    if root.expanded then
+      if not root.loaded and ctx.resource_manager ~= nil then
+        ctx.tree:load_node(root, false)
       end
-      for _, child in ipairs(node.children) do
-        local child_counts = traverse(child) ---@type dot.module.explorer.view.IDiagCounts
-        counts.error = counts.error + child_counts.error
-        counts.warn = counts.warn + child_counts.warn
-        counts.hint = counts.hint + child_counts.hint
-        counts.info = counts.info + child_counts.info
+      for _, child in ipairs(root.children) do
+        collect_filepaths(child)
       end
     end
 
-    if show_diagnostics then
-      diag_counts[node.uri] = counts
-    end
-    return counts
+    self._cached_filepaths = filepaths
+    self._tick_structure = ticks.structure
   end
 
-  if root.expanded then
-    if not root.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(root, false)
+  if show_diagnostics then
+    ---@param node                      dot.module.explorer.Node
+    ---@return dot.module.explorer.view.IDiagCounts
+    local function compute_diagnostics(node)
+      local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
+
+      if node.nodetype == "F" then
+        local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+        if filepath ~= "" then
+          local bufnr = loaded_bufnrs[filepath] ---@type integer|nil
+          if bufnr ~= nil then
+            local cached = bufnr_counts[bufnr] ---@type dot.module.explorer.view.IDiagCounts|nil
+            if cached ~= nil then
+              counts = cached
+            else
+              local diag_data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
+              counts.error = diag_data.error
+              counts.warn = diag_data.warn
+              counts.hint = diag_data.hint
+              counts.info = diag_data.info
+              bufnr_counts[bufnr] = counts
+            end
+          end
+        end
+      elseif node.nodetype == "D" and node.expanded then
+        for _, child in ipairs(node.children) do
+          local child_counts = compute_diagnostics(child) ---@type dot.module.explorer.view.IDiagCounts
+          counts.error = counts.error + child_counts.error
+          counts.warn = counts.warn + child_counts.warn
+          counts.hint = counts.hint + child_counts.hint
+          counts.info = counts.info + child_counts.info
+        end
+      end
+
+      diag_counts[node.uri] = counts
+      return counts
     end
-    local root_counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
-    for _, child in ipairs(root.children) do
-      local child_counts = traverse(child) ---@type dot.module.explorer.view.IDiagCounts
-      root_counts.error = root_counts.error + child_counts.error
-      root_counts.warn = root_counts.warn + child_counts.warn
-      root_counts.hint = root_counts.hint + child_counts.hint
-      root_counts.info = root_counts.info + child_counts.info
-    end
-    if show_diagnostics then
+
+    if root.expanded then
+      local root_counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
+      for _, child in ipairs(root.children) do
+        local child_counts = compute_diagnostics(child) ---@type dot.module.explorer.view.IDiagCounts
+        root_counts.error = root_counts.error + child_counts.error
+        root_counts.warn = root_counts.warn + child_counts.warn
+        root_counts.hint = root_counts.hint + child_counts.hint
+        root_counts.info = root_counts.info + child_counts.info
+      end
       diag_counts[root.uri] = root_counts
     end
   end

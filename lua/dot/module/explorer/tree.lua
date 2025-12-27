@@ -20,6 +20,7 @@ local math_floor = math.floor
 ---@field public o_root_uri             ark.c.Observable
 ---@field public prev_root_uri          string|nil
 ---@field public select_mode            dot.module.explorer.SelectModeEnum
+---@field public ticks                  dot.module.explorer.ITreeTicks
 ---@field protected _disposed           boolean
 ---@field protected _resource_manager   dot.module.explorer.resource.IManager
 ---@field protected _root               dot.module.explorer.Node
@@ -48,6 +49,7 @@ function M.new(props)
   self.o_root_uri = ark.c.Observable.from_value(default_root)
   self.prev_root_uri = nil
   self.select_mode = "select"
+  self.ticks = { structure = 0 }
   self._disposed = false
   self._resource_manager = resource_manager
   self._root = superroot
@@ -194,6 +196,9 @@ function M:apply_copy_paste(target_parent_uri)
     changed = true
   end
 
+  if changed then
+    self.ticks.structure = self.ticks.structure + 1
+  end
   return changed
 end
 
@@ -363,6 +368,9 @@ function M:apply_cut_paste(target_parent_uri)
     end
   end
 
+  if changed then
+    self.ticks.structure = self.ticks.structure + 1
+  end
   return changed
 end
 
@@ -384,6 +392,7 @@ function M:attach(uri)
   local node = self:__insert__(uri, resource) ---@type dot.module.explorer.Node
   node.expanded = true
   self._root = node
+  self.ticks.structure = self.ticks.structure + 1
   return true
 end
 
@@ -396,6 +405,7 @@ function M:clear()
   self._superroot = superroot
   self._root = superroot
   self.select_mode = "select"
+  self.ticks.structure = self.ticks.structure + 1
 end
 
 ---@return nil
@@ -461,6 +471,8 @@ function M:expand_path(uri)
 
     ::continue::
   end
+
+  self.ticks.structure = self.ticks.structure + 1
 end
 
 ---@param nodes                         ?dot.module.explorer.Node[]
@@ -584,6 +596,7 @@ function M:insert(parenturi, resource)
   table.insert(children, insert_idx, node)
   parent:sync_chidxmap(insert_idx)
 
+  self.ticks.structure = self.ticks.structure + 1
   return true
 end
 
@@ -665,6 +678,7 @@ function M:mark_all_dirty()
   end
 
   mark_dirty(self._superroot)
+  self.ticks.structure = self.ticks.structure + 1
 end
 
 ---@param force                         boolean|nil
@@ -706,11 +720,13 @@ function M:refresh(force)
 
   if root == superroot then
     walk(superroot, nil, root_uri)
+    self.ticks.structure = self.ticks.structure + 1
     return
   end
 
   local nodeindex = root.parent.chidxmap[root.nodename] ---@type integer
   walk(root, nodeindex, root_uri)
+  self.ticks.structure = self.ticks.structure + 1
 end
 
 ---@param uri                           string
@@ -821,6 +837,7 @@ function M:remove(uri)
     return false
   end
 
+  self.ticks.structure = self.ticks.structure + 1
   return result ~= false
 end
 
@@ -849,6 +866,8 @@ function M:toggle_expanded(uri, recursive, force_expanded)
   else
     node.expanded = expanded
   end
+
+  self.ticks.structure = self.ticks.structure + 1
 end
 
 ---@param uri                           string

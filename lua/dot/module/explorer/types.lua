@@ -18,6 +18,9 @@
 ---| "cut"
 ---| "copy"
 
+---@class dot.module.explorer.ITreeTicks
+---@field public structure              integer
+
 ---@class dot.module.explorer.ITreeTraverseCallbackParams
 ---@field public node                   dot.module.explorer.Node
 ---@field public childindex             integer
