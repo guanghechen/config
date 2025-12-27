@@ -40,6 +40,32 @@ export const apps = [
     },
   },
   {
+    name: 'btop',
+    home: path.join(XDG_CONFIG_HOME, 'btop'),
+    themes: 'themes/',
+    extname: '.theme',
+    local: null,
+    active: app => is_directory(app.home),
+    render: (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (app, scheme) => {
+      const config_filepath = path.join(app.home, 'btop.conf')
+      const theme_name = gen_full_theme_name(scheme.theme, scheme.variant)
+      const content = await fs.readFile(config_filepath, 'utf8')
+      const updated = content.replace(
+        /^color_theme\s*=\s*".+?"$/m,
+        `color_theme = "${theme_name}.theme"`,
+      )
+      await fs.writeFile(config_filepath, updated, 'utf8')
+
+      // Send SIGUSR2 to btop to trigger hot reload
+      try {
+        await safe_exec('pkill', ['-USR2', 'btop'])
+      } catch (error) {
+        console.log('[skipped] Failed to reload btop. error:', error)
+      }
+    },
+  },
+  {
     name: 'fzf',
     home: path.join(XDG_CONFIG_HOME, 'fzf'),
     themes: 'themes/',
@@ -62,15 +88,6 @@ export const apps = [
     },
   },
   {
-    name: 'git-delta',
-    home: path.join(XDG_CONFIG_HOME, 'git-delta'),
-    themes: 'theme/',
-    extname: '.conf',
-    local: 'config.conf',
-    active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
-  },
-  {
     name: 'ghostty',
     home: path.join(XDG_CONFIG_HOME, 'ghostty'),
     themes: 'theme/',
@@ -88,6 +105,15 @@ export const apps = [
         }
       }
     },
+  },
+  {
+    name: 'git-delta',
+    home: path.join(XDG_CONFIG_HOME, 'git-delta'),
+    themes: 'theme/',
+    extname: '.conf',
+    local: 'config.conf',
+    active: app => is_directory(app.home),
+    render: (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'kitty',
