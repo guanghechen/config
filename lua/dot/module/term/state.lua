@@ -200,7 +200,7 @@ function M.create(params)
   local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil
   local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil
   local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil
-  local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type ark.t.IKeymap[]
+  local user_keymaps = params.user_keymaps and vim.list_slice(params.user_keymaps) or {} ---@type ark.t.IKeymap[]
 
   ---@type dot.module.term.IMeta
   termmeta = {
@@ -211,7 +211,7 @@ function M.create(params)
     cmd = cmd,
     cwd = cwd,
     env = env,
-    keymaps = keymaps,
+    user_keymaps = user_keymaps,
     permanent = permanent,
     hidewipe = hidewipe,
     on_closed = on_closed,

@@ -140,9 +140,9 @@ local function split_window(direction)
 end
 
 ---@param termmeta                      dot.module.term.IMeta
----@param keymaps                       ark.t.IKeymap[]
----@return nil
-local function setup_default_keymaps(termmeta, keymaps)
+---@return ark.t.IKeymap[]
+local function create_default_keymaps(termmeta)
+  local keymaps = {} ---@type ark.t.IKeymap[]
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
     local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
@@ -236,6 +236,7 @@ local function setup_default_keymaps(termmeta, keymaps)
       end
     end,
   }
+  return keymaps
 end
 
 ---@class dot.module.term.widget : dot.t.IWidget
@@ -393,7 +394,7 @@ function M:toggle_and_focus(params)
       env = params.env,
       permanent = params.permanent,
       hidewipe = params.hidewipe,
-      keymaps = params.keymaps,
+      user_keymaps = params.user_keymaps,
       on_closed = params.on_closed,
       on_focused = params.on_focused,
       on_resized = params.on_resized,
@@ -488,8 +489,9 @@ function M.__create_buf_as_needed__(termmeta)
   })
 
   termmeta.bufnr = bufnr
-  setup_default_keymaps(termmeta, termmeta.keymaps)
-  ark.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  local default_keymaps = create_default_keymaps(termmeta) ---@type ark.t.IKeymap[]
+  ark.nvim.bindkeys(default_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.nvim.bindkeys(termmeta.user_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   return bufnr
 end
