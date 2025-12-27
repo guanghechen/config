@@ -50,8 +50,8 @@ After applying all fixes:
 
 1. **Re-review** each fixed issue to verify proper resolution
 2. **Update** the corresponding `.code-analyze/*-cc.md` file:
-   - Mark resolved issues with `󰄬 [fixed]` or `󰄬 [done]`
-   - Add verification notes if needed
+   - Mark resolved issues with ~~strikethrough~~: `󰄬 ~~[fixed] ...~~` or `󰄬 ~~[done] ...~~`
+   - For non-fix resolutions: `󰛨 ~~[By Design] ...~~`, `󰜺 ~~[Won't Fix] ...~~`, `󱙝 ~~[False Alarm] ...~~`
 3. **Report** summary using the table format below
 
 ## Summary Table

@@ -79,12 +79,12 @@ Example:
 - **Description**: ...
 - **Recommendation**: ...
 
-#### 󰄬 [fixed] 1.2 [Warning] Unhandled edge case
+#### 󰄬 ~~[fixed] 1.2 [Warning] Unhandled edge case~~
 - **Location**: `src/utils.ts:58`
 - **Description**: ...
 - **Recommendation**: ...
 
-#### 󰜺 [Won't Fix] 1.3 [Warning] Missing null check
+#### 󰜺 ~~[Won't Fix] 1.3 [Warning] Missing null check~~
 - **Location**: `src/utils.ts:75`
 - **Description**: ...
 - **Recommendation**: ...
@@ -92,19 +92,19 @@ Example:
 
 ## Issue Resolution Statuses
 
-Issues can be marked with the following statuses (applied via `/code-apply`):
+Issues can be marked with the following statuses (applied via `/code-apply`). All resolved statuses use ~~strikethrough~~ to indicate completion:
 
-| Status      | Heading Tag       | Meaning                                              |
-| ----------- | ----------------- | ---------------------------------------------------- |
-| Fixed       | `󰄬 [fixed]`       | Issue resolved by code fix                           |
-| Done        | `󰄬 [done]`        | TODO item completed                                  |
-| By Design   | `󰛨 [By Design]`   | Intentional behavior; suppress in future analysis    |
-| Won't Fix   | `󰜺 [Won't Fix]`   | Known issue, accepted risk or deferred               |
-| False Alarm | `󱙝 [False Alarm]` | Not a real issue; exclude from future analysis       |
+| Status      | Heading Format                   | Meaning                                              |
+| ----------- | -------------------------------- | ---------------------------------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ... ~~`             | Issue resolved by code fix                           |
+| Done        | `󰄬 ~~[done] ... ~~`              | TODO item completed                                  |
+| By Design   | `󰛨 ~~[By Design] ... ~~`         | Intentional behavior; suppress in future analysis    |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ... ~~`         | Known issue, accepted risk or deferred               |
+| False Alarm | `󱙝 ~~[False Alarm] ... ~~`       | Not a real issue; exclude from future analysis       |
 
 **Re-analyze Behavior**:
-- `󰄬 [fixed]` / `󰄬 [done]`: Re-verify; remove marker if issue reappears
-- `󰛨 [By Design]` / `󰜺 [Won't Fix]` / `󱙝 [False Alarm]`: Preserve marker; do NOT re-report
+- `󰄬 [fixed]` / `󰄬 [done]`: Re-verify; remove strikethrough if issue reappears
+- `󰛨 [By Design]` / `󰜺 [Won't Fix]` / `󱙝 [False Alarm]`: Preserve; do NOT re-report
 
 ## Summary Table
 
