@@ -60,7 +60,7 @@ local STATUS_CODE_BIT_MAP = {}
 ---@type string[]
 local STATUS_CODE_ORDER = {}
 
-local next_status_bit_index = 0
+local next_status_bit_index = 0 ---@type integer
 
 do
   local items = {} ---@type { code: string, bit: integer }[]

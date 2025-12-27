@@ -124,6 +124,8 @@ function Signs:reset()
   end
 end
 
+----------------------------------------------------------------------------------------------------
+
 ---@param bufnr                         integer
 ---@return table<integer, dot.module.git.SignType>
 function Signs:__get_extmarks__(bufnr)
