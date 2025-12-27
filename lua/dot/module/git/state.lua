@@ -62,7 +62,7 @@ local pending_refresh = false
 ---@type boolean
 local pending_force = false
 
----@type fun()[]
+---@type (fun(): nil)[]
 local queued_callbacks = {}
 
 ---@type ark.timer.IDisposableCallable
@@ -76,7 +76,7 @@ local function run_queued_callbacks()
   end
 end
 
----@type fun()|nil
+---@type (fun(): nil)|nil
 local current_collect_cancel = nil
 
 local function do_refresh()
@@ -213,7 +213,7 @@ function M.last_refreshed_at()
 end
 
 ---@param filepaths                  string[]
----@param callback                   fun()|nil
+---@param callback                   (fun(): nil)|nil
 function M.preload_ignored(filepaths, callback)
   if not dot.path.is_git_repo() then
     if callback then
@@ -277,7 +277,7 @@ function M.preload_ignored(filepaths, callback)
 end
 
 ---@param force                      boolean|nil
----@param callback                   fun()|nil
+---@param callback                   (fun(): nil)|nil
 function M.refresh_async(force, callback)
   if callback then
     queued_callbacks[#queued_callbacks + 1] = callback
@@ -291,8 +291,8 @@ function M.refresh_async(force, callback)
 end
 
 ---@param base                       string|nil
----@param callback                   fun(workspace: string, result: table<string, string>)
----@return fun()                     cancel_fn
+---@param callback                   fun(workspace: string, result: table<string, string>): nil
+---@return fun(): nil                cancel_fn
 function M.status_async(base, callback)
   return dot.git.status.collect_async({ base = base }, function(workspace, status_table_result)
     local result = {}

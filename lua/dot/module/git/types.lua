@@ -62,7 +62,7 @@
 ---@field public get_show_text          fun(self: dot.module.git.Repo, object: string, callback: fun(lines: string[]|nil))
 ---@field public gitdir                 string
 ---@field public hash_object            fun(self: dot.module.git.Repo, file: string, lines: string[], callback: fun(hash: string|nil))
----@field public refresh_head           fun(self: dot.module.git.Repo, callback: fun()|nil)
+---@field public refresh_head           fun(self: dot.module.git.Repo, callback: (fun(): nil)|nil)
 ---@field public reset_file             fun(self: dot.module.git.Repo, file: string, callback: fun(ok: boolean))
 ---@field public stage_file             fun(self: dot.module.git.Repo, file: string, callback: fun(ok: boolean))
 ---@field public toplevel               string

@@ -65,7 +65,7 @@ function M:hash_object(file, lines, callback)
   dot.git.cmd.hash_object_async(self.toplevel, relpath, lines, callback)
 end
 
----@param callback                   fun()|nil
+---@param callback                   (fun(): nil)|nil
 function M:refresh_head(callback)
   dot.git.cmd.get_abbrev_head_async(self.toplevel, function(abbrev_head, detached)
     self.abbrev_head = abbrev_head

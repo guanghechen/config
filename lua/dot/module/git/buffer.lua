@@ -17,7 +17,7 @@ local repo = nil
 ---@class dot.module.git.buffer.IUpdateLock
 ---@field public running              boolean
 ---@field public scheduled            boolean
----@field public pending_callback     fun()|nil
+---@field public pending_callback     (fun(): nil)|nil
 
 ---@type table<integer, dot.module.git.buffer.IUpdateLock>
 local update_locks = {}
@@ -105,7 +105,7 @@ local function get_buf_lines(bufnr)
 end
 
 ---@param buf_cache                  dot.module.git.buffer.ICache
----@param callback                   fun()|nil
+---@param callback                   (fun(): nil)|nil
 local function update_hunks(buf_cache, callback)
   local bufnr = buf_cache.bufnr ---@type integer
 
@@ -519,7 +519,7 @@ end
 
 ---@param bufnr                      integer
 ---@param invalidate_compare_text    boolean|nil
----@param callback                   fun()|nil
+---@param callback                   (fun(): nil)|nil
 function M.refresh(bufnr, invalidate_compare_text, callback)
   local buf_cache = cache[bufnr]
   if not buf_cache then

@@ -398,8 +398,8 @@ local function finalize_entry(entry)
 end
 
 ---@param opts                       dot.module.git.status.ICollectOpts|nil
----@param callback                   fun(workspace: string, status_map: table<string, dot.module.git.StatusEntry>, status_groups: table<string, table<string, boolean>>)
----@return fun()                     cancel_fn
+---@param callback                   fun(workspace: string, status_map: table<string, dot.module.git.StatusEntry>, status_groups: table<string, table<string, boolean>>): nil
+---@return fun(): nil                cancel_fn
 function M.collect_async(opts, callback)
   local workspace = opts and opts.workspace or dot.path.workspace()
   if type(workspace) ~= "string" or #workspace == 0 then
@@ -419,7 +419,7 @@ function M.collect_async(opts, callback)
 
   local pending = include_untracked and 3 or 2 ---@type integer
   local cancelled = false                  ---@type boolean
-  local cancel_fns = {}                    ---@type fun()[]
+  local cancel_fns = {}                    ---@type (fun(): nil)[]
 
   local function finalize_all()
     if not cancelled then
