@@ -55,4 +55,29 @@ After applying all fixes:
 2. **Update** the corresponding `.code-analyze/*-cc.md` file:
    - Mark resolved issues as ✅ (prepend to the issue title)
    - Add verification notes if needed
-3. **Report** summary of applied fixes and their verification status
+3. **Report** summary using the table format below
+
+## Summary Table
+
+Provide a summary of applied changes:
+
+```markdown
+## Apply Summary
+
+| Category           | Critical | Warning | Suggestion | Total |
+| ------------------ | -------- | ------- | ---------- | ----- |
+| 1. Logic Errors    | 1        | 1       | 0          | 2     |
+| 2. Performance     | 0        | 1       | 0          | 1     |
+| **Total**          | **1**    | **2**   | **0**      | **3** |
+
+| Status      | Count |
+| ----------- | ----- |
+| Fixed       | 2     |
+| By Design   | 1     |
+| Won't Fix   | 0     |
+| False Alarm | 0     |
+```
+
+- First table: Issues processed, grouped by category and severity
+- Second table: Resolution status counts
+- Skip rows for categories/statuses with 0 count (except Total row)

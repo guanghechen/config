@@ -127,6 +127,27 @@ Issues can be marked with the following statuses (applied via `/code-apply`):
 - `󰜺 [Won't Fix]`: Preserve marker; do NOT re-report
 - `󱙝 [False Alarm]`: Preserve marker; do NOT re-report
 
+## Summary Table
+
+At the beginning of the output, provide a summary table with issue counts by category and severity:
+
+```markdown
+## Summary
+
+| Category           | Critical | Warning | Suggestion | Total |
+| ------------------ | -------- | ------- | ---------- | ----- |
+| 1. Logic Errors    | 1        | 2       | 0          | 3     |
+| 2. Performance     | 0        | 1       | 1          | 2     |
+| 3. Memory Leaks    | 0        | 0       | 0          | 0     |
+| 4. Deprecated APIs | 0        | 1       | 0          | 1     |
+| 5. Organization    | 0        | 0       | 2          | 2     |
+| 6. Style           | 0        | 0       | 1          | 1     |
+| **Total**          | **1**    | **4**   | **4**      | **9** |
+```
+
+- Skip rows for categories with 0 total issues
+- The Total row should always be present
+
 Style:
 - Respond in Chinese, but keep technical terms and code in English
 - Only explain rare or domain-specific concepts
