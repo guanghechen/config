@@ -241,6 +241,8 @@ end
 ---@class dot.module.term.widget : dot.t.IWidget
 local M = {}
 
+M.name = "terminal"
+
 ---@return nil
 function M:close()
   self:hide()

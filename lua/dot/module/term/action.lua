@@ -67,18 +67,9 @@ local function open_yazi(name, cwd, filepath)
         terminal:close()
 
         local filepaths = vim.fn.filereadable(tempname) == 1 and vim.fn.readfile(tempname) or {} ---@type string[]
-        local N = #filepaths ---@type integer
-        local k = 1 ---@type integer
-        for i = 1, N, 1 do
-          local p = filepaths[i] ---@type string
-          if vim.fn.filereadable(p) == 1 then
-            filepaths[k] = p
-            k = k + 1
-          end
-        end
-        for i = N, k, -1 do
-          filepaths[i] = nil
-        end
+        filepaths = vim.tbl_filter(function(p)
+          return vim.fn.filereadable(p) == 1
+        end, filepaths)
 
         if #filepaths > 0 then
           dot.win.open_filepaths(nil, filepaths)
