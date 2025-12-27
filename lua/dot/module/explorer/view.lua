@@ -1,60 +1,5 @@
 local __module_name__ = "dot.module.explorer.view" ---@type string
 
----@class dot.module.explorer.view.IRenderContext
----@field public tree                   dot.module.explorer.Tree
----@field public root                   dot.module.explorer.Node
----@field public root_uri               string
----@field public resource_manager       dot.module.explorer.resource.IManager|nil
----@field public diag_counts            table<string, dot.module.explorer.view.IDiagCounts>
----@field public foldempty              boolean
----@field public only_selected          boolean
----@field public select_mode            dot.module.explorer.SelectModeEnum
----@field public show_diagnostics       boolean
----@field public show_git_status        boolean
----@field public show_icons             boolean
-
----@class dot.module.explorer.view.IDiagCounts
----@field public error                  integer
----@field public hint                   integer
----@field public info                   integer
----@field public warn                   integer
-
----@class dot.module.explorer.view.IGitStatusInfo
----@field public highlights             ark.t.IHighlightInline[]
----@field public lnum                   integer
----@field public text                   string
-
----@class dot.module.explorer.view.IDiagnosticInfo
----@field public highlights             ark.t.IHighlightInline[]
----@field public lnum                   integer
----@field public text                   string
-
----@class dot.module.explorer.view.ISignInfo
----@field public lnum                   integer
----@field public sign_hl_group          string
----@field public sign_text              string
-
----@class dot.module.explorer.view.IRenderResult
----@field public diag_by_lnum           table<integer, dot.module.explorer.view.IDiagnosticInfo>
----@field public diagnostic_info_list   dot.module.explorer.view.IDiagnosticInfo[]
----@field public git_by_lnum            table<integer, dot.module.explorer.view.IGitStatusInfo>
----@field public git_status_list        dot.module.explorer.view.IGitStatusInfo[]
----@field public highlights             ark.t.IHighlight[]
----@field public lines                  string[]
----@field public lnum_to_uri            table<integer, string>
----@field public sign_by_lnum           table<integer, dot.module.explorer.view.ISignInfo>
----@field public sign_info_list         dot.module.explorer.view.ISignInfo[]
----@field public uri_to_lnum            table<string, integer>
-
----@class dot.module.explorer.view.IRenderOptions
----@field public foldempty              ?boolean
----@field public only_selected          ?boolean
----@field public resource_manager       ?dot.module.explorer.resource.IManager
----@field public select_mode            ?dot.module.explorer.SelectModeEnum
----@field public show_diagnostics       ?boolean
----@field public show_git_status        ?boolean
----@field public show_icons             ?boolean
-
 local INDENT_BRANCH = "├─" ---@type string
 local INDENT_LAST = "╰─" ---@type string
 local INDENT_PIPE = "│ " ---@type string
@@ -205,7 +150,7 @@ function M:render(bufnr, tree, root, options)
 
     if node.nodetype == "D" and is_expanded then
       if not node.loaded and ctx.resource_manager ~= nil then
-        ctx.tree:load_node(node, ctx.resource_manager, false)
+        ctx.tree:load_node(node, false)
       end
 
       local children = node.children ---@type dot.module.explorer.Node[]
@@ -230,7 +175,7 @@ function M:render(bufnr, tree, root, options)
   local root_is_expanded = root.expanded ---@type boolean
   if root_is_expanded then
     if not root.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(root, ctx.resource_manager, false)
+      ctx.tree:load_node(root, false)
     end
 
     local children = root.children ---@type dot.module.explorer.Node[]
@@ -391,7 +336,7 @@ function M:__fold_empty_dirs__(node, ctx)
     end
 
     if not current.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(current, ctx.resource_manager, false)
+      ctx.tree:load_node(current, false)
     end
 
     local children = current.children ---@type dot.module.explorer.Node[]
@@ -646,7 +591,7 @@ function M:__precompute__(root, ctx)
       end
     elseif node.nodetype == "D" and node.expanded then
       if not node.loaded and ctx.resource_manager ~= nil then
-        ctx.tree:load_node(node, ctx.resource_manager, false)
+        ctx.tree:load_node(node, false)
       end
       for _, child in ipairs(node.children) do
         local child_counts = traverse(child) ---@type dot.module.explorer.view.IDiagCounts
@@ -665,7 +610,7 @@ function M:__precompute__(root, ctx)
 
   if root.expanded then
     if not root.loaded and ctx.resource_manager ~= nil then
-      ctx.tree:load_node(root, ctx.resource_manager, false)
+      ctx.tree:load_node(root, false)
     end
     local root_counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type dot.module.explorer.view.IDiagCounts
     for _, child in ipairs(root.children) do

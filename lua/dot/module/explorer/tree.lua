@@ -627,7 +627,7 @@ end
 ---@param node                          dot.module.explorer.Node
 ---@param force                         boolean|nil
 ---@return nil
-function M:load_node(node, _, force)
+function M:load_node(node, force)
   self:__health__()
   local force_load = not not force ---@type boolean
 
