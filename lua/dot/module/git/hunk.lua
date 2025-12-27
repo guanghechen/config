@@ -11,6 +11,9 @@ local buffer_hunks_observables = {}
 ---@type table<integer, dot.module.git.Hunk[]|nil>
 local buffer_hunks = {}
 
+---@type table<integer, ark.c.IUnsubscribable[]>
+local buffer_subscriptions = {}
+
 ---@param bufnr                         integer
 ---@return ark.c.Observable
 function M.get_observable(bufnr)
@@ -18,6 +21,22 @@ function M.get_observable(bufnr)
     buffer_hunks_observables[bufnr] = ark.c.Observable.from_value({})
   end
   return buffer_hunks_observables[bufnr]
+end
+
+---@param bufnr                         integer
+---@param subscriber                    ark.c.ISubscriber
+---@param ignore_initial                boolean|nil
+---@return ark.c.IUnsubscribable
+function M.subscribe(bufnr, subscriber, ignore_initial)
+  local observable = M.get_observable(bufnr)
+  local unsubscribable = observable:subscribe(subscriber, ignore_initial)
+
+  if not buffer_subscriptions[bufnr] then
+    buffer_subscriptions[bufnr] = {}
+  end
+  buffer_subscriptions[bufnr][#buffer_subscriptions[bufnr] + 1] = unsubscribable
+
+  return unsubscribable
 end
 
 ---@param bufnr                         integer
@@ -40,6 +59,15 @@ end
 ---@param bufnr                         integer
 function M.remove(bufnr)
   buffer_hunks[bufnr] = nil
+
+  -- Unsubscribe all tracked subscriptions for this buffer
+  local subscriptions = buffer_subscriptions[bufnr]
+  if subscriptions then
+    for _, unsubscribable in ipairs(subscriptions) do
+      unsubscribable:unsubscribe()
+    end
+    buffer_subscriptions[bufnr] = nil
+  end
 
   local observable = buffer_hunks_observables[bufnr]
   if observable then
