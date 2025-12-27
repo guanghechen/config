@@ -179,8 +179,6 @@ function M.create(params)
     error(string.format("Invalid UUID: '%s'", termuuid), 2)
   end
 
-  local typ = params.type or DEFAULT_TERM_TYPE ---@type string
-
   local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
   if termmeta ~= nil then
     ark.reporter.error({
@@ -192,48 +190,24 @@ function M.create(params)
     return termmeta
   end
 
+  local typ = params.type or DEFAULT_TERM_TYPE ---@type string
   local name = params.name ---@type string
   local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string[]|string
   local cwd = params.cwd or dot.path.cwd() ---@type string
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local hidewipe = not not params.hidewipe ---@type boolean
-  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil|nil
-  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil|nil
-  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil|nil
+  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil
+  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil
+  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil
   local keymaps = params.keymaps and vim.list_slice(params.keymaps) or {} ---@type ark.t.IKeymap[]
-
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].filetype = ark.filetype.TERM
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = false
-  vim.bo[bufnr].swapfile = false
-
-  if hidewipe then
-    vim.bo[bufnr].bufhidden = "wipe"
-  end
-
-  vim.api.nvim_create_autocmd("TermClose", {
-    buffer = bufnr,
-    callback = function()
-      vim.schedule(function()
-        local _, _termmeta = dot.term.state.indexof_by_bufnr(bufnr)
-        if _termmeta then
-          dot.term.event.on_closed(_termmeta)
-        else
-          dot.buf.close(bufnr)
-        end
-      end)
-    end,
-  })
 
   ---@type dot.module.term.IMeta
   termmeta = {
     uuid = termuuid,
     type = typ,
     name = name,
-    bufnr = bufnr,
+    bufnr = 0,
     cmd = cmd,
     cwd = cwd,
     env = env,
@@ -245,101 +219,6 @@ function M.create(params)
     on_resized = on_resized,
     jobid = nil,
   }
-
-  for i = 1, 9 do
-    local key = string.format("<C-%d>", i) ---@type string
-    local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
-    keymaps[#keymaps + 1] = {
-      modes = { "i", "n", "t", "x" },
-      key = key,
-      desc = definition.desc,
-      callback = function()
-        definition:execute()
-      end,
-    }
-  end
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-,>",
-    aliases = { "<C-[>" },
-    desc = dot.command.definitions.term.focus_left.desc,
-    callback = function()
-      dot.command.definitions.term.focus_left:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-.>",
-    aliases = { "<C-]>" },
-    desc = dot.command.definitions.term.focus_right.desc,
-    callback = function()
-      dot.command.definitions.term.focus_right:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-S-,>",
-    aliases = { "<C-S-[>" },
-    desc = dot.command.definitions.term.swap_left.desc,
-    callback = function()
-      dot.command.definitions.term.swap_left:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-S-.>",
-    aliases = { "<C-S-]>" },
-    desc = dot.command.definitions.term.swap_right.desc,
-    callback = function()
-      dot.command.definitions.term.swap_right:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-n>",
-    desc = dot.command.definitions.term.rename.desc,
-    callback = function()
-      dot.command.definitions.term.rename:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-/>",
-    desc = dot.command.definitions.term.create.desc,
-    callback = function()
-      dot.command.definitions.term.create:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<C-d>",
-    desc = dot.command.definitions.term.destroy.desc,
-    callback = function()
-      dot.command.definitions.term.destroy:execute()
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "i", "n", "t", "x" },
-    key = "<esc>",
-    desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
-    expr = true,
-    replace_keycodes = true,
-    callback = function()
-      return "<esc>"
-    end,
-  }
-  keymaps[#keymaps + 1] = {
-    modes = { "n", "x" },
-    key = "q",
-    desc = "term: close",
-    callback = function()
-      local _, meta = M.indexof_by_bufnr(bufnr)
-      if meta then
-        dot.term.event.on_closed(meta)
-      end
-    end,
-  }
-  ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   metamap[termuuid] = termmeta
   termlist[#termlist + 1] = termuuid

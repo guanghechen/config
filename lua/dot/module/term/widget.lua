@@ -18,9 +18,8 @@ local TERMINAL_WIN_HIGHLIGHT = table.concat({
 local _terminal_mask_bufnr = nil ---@type integer|nil
 local _terminal_winnr = nil ---@type integer|nil
 
----@protected
 ---@return integer
-local function __create_mask_buf_as_needed__()
+local function create_mask_buf_as_needed()
   local bufnr = _terminal_mask_bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true)
@@ -121,7 +120,7 @@ end
 
 ---@param direction                     'h'|'j'|'k'|'l'
 ---@return integer
-local function __split__(direction)
+local function split_window(direction)
   if direction == "h" then
     vim.o.splitright = false
     vim.cmd("vsplit")
@@ -138,6 +137,105 @@ local function __split__(direction)
     vim.cmd("vsplit")
   end
   return vim.api.nvim_get_current_win()
+end
+
+---@param termmeta                      dot.module.term.IMeta
+---@param keymaps                       ark.t.IKeymap[]
+---@return nil
+local function setup_default_keymaps(termmeta, keymaps)
+  for i = 1, 9 do
+    local key = string.format("<C-%d>", i) ---@type string
+    local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
+    keymaps[#keymaps + 1] = {
+      modes = { "i", "n", "t", "x" },
+      key = key,
+      desc = definition.desc,
+      callback = function()
+        definition:execute()
+      end,
+    }
+  end
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-,>",
+    aliases = { "<C-[>" },
+    desc = dot.command.definitions.term.focus_left.desc,
+    callback = function()
+      dot.command.definitions.term.focus_left:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-.>",
+    aliases = { "<C-]>" },
+    desc = dot.command.definitions.term.focus_right.desc,
+    callback = function()
+      dot.command.definitions.term.focus_right:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-S-,>",
+    aliases = { "<C-S-[>" },
+    desc = dot.command.definitions.term.swap_left.desc,
+    callback = function()
+      dot.command.definitions.term.swap_left:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-S-.>",
+    aliases = { "<C-S-]>" },
+    desc = dot.command.definitions.term.swap_right.desc,
+    callback = function()
+      dot.command.definitions.term.swap_right:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-n>",
+    desc = dot.command.definitions.term.rename.desc,
+    callback = function()
+      dot.command.definitions.term.rename:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-/>",
+    desc = dot.command.definitions.term.create.desc,
+    callback = function()
+      dot.command.definitions.term.create:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<C-d>",
+    desc = dot.command.definitions.term.destroy.desc,
+    callback = function()
+      dot.command.definitions.term.destroy:execute()
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "i", "n", "t", "x" },
+    key = "<esc>",
+    desc = "term: feedback esc to terminal (fix the conflict caused by  the csi u)",
+    expr = true,
+    replace_keycodes = true,
+    callback = function()
+      return "<esc>"
+    end,
+  }
+  keymaps[#keymaps + 1] = {
+    modes = { "n", "x" },
+    key = "q",
+    desc = "term: close",
+    callback = function()
+      local _, meta = dot.term.state.indexof_by_bufnr(termmeta.bufnr)
+      if meta then
+        dot.term.event.on_closed(meta)
+      end
+    end,
+  }
 end
 
 ---@class dot.module.term.widget : dot.t.IWidget
@@ -243,7 +341,7 @@ function M:split(direction)
     })
   end
 
-  local winnr_new = __split__(direction) ---@type integer
+  local winnr_new = split_window(direction) ---@type integer
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   vim.api.nvim_win_set_buf(winnr_new, bufnr)
 
@@ -357,8 +455,8 @@ end
 ---@param termmeta                      dot.module.term.IMeta
 ---@return integer
 function M.__create_buf_as_needed__(termmeta)
-  local bufnr = termmeta.bufnr ---@type integer|nil
-  if bufnr ~= nil and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+  local bufnr = termmeta.bufnr ---@type integer
+  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr
   end
 
@@ -368,6 +466,10 @@ function M.__create_buf_as_needed__(termmeta)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false
+
+  if termmeta.hidewipe then
+    vim.bo[bufnr].bufhidden = "wipe"
+  end
 
   vim.api.nvim_create_autocmd("TermClose", {
     buffer = bufnr,
@@ -383,8 +485,10 @@ function M.__create_buf_as_needed__(termmeta)
     end,
   })
 
-  ark.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
   termmeta.bufnr = bufnr
+  setup_default_keymaps(termmeta, termmeta.keymaps)
+  ark.nvim.bindkeys(termmeta.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+
   return bufnr
 end
 
@@ -416,7 +520,7 @@ function M:__create_win_as_needed__(termmeta)
   local winnr = _terminal_winnr ---@type integer|nil
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    local bufnr_mask = __create_mask_buf_as_needed__() ---@type integer
+    local bufnr_mask = create_mask_buf_as_needed() ---@type integer
     winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
     dot.win.set_type(winnr, dot.win.Types.TERMINAL)
     vim.api.nvim_win_set_buf(winnr, bufnr)
