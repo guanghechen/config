@@ -261,7 +261,9 @@ local function run_blame(bufnr, file, cwd, callback)
     args = args,
     timeout = 30000,
     on_exit = function(p, err)
-      running_procs[bufnr] = nil
+      if running_procs[bufnr] == p then
+        running_procs[bufnr] = nil
+      end
       if err then
         callback(nil)
         return
@@ -593,7 +595,9 @@ function M.buffer_show(bufnr)
     args = args,
     timeout = 60000,
     on_exit = function(p, err)
-      running_buffer_procs[bufnr] = nil
+      if running_buffer_procs[bufnr] == p then
+        running_buffer_procs[bufnr] = nil
+      end
 
       vim.schedule(function()
         buffer_blame_loading[bufnr] = nil
