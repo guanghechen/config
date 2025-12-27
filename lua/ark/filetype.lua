@@ -78,6 +78,7 @@ local filetypes = {
     makefile         = true,
     markdown         = true,
     nim              = true,
+    [M.NOTEPAD]      = true,
     ['objective-c']  = true,
     pascal           = true,
     perl             = true,
@@ -106,6 +107,7 @@ local filetypes = {
   -- stylua: ignore end
   cmp_others = {
     [M.UX_PICKER_FINDER] = true,
+    [M.UX_SEARCHER_FINDER] = true,
   },
   has_external_winline = {
     [M.DAP_REPL] = true,

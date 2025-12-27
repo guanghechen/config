@@ -25,13 +25,19 @@ return {
       end,
     }
 
+    local code_sources = { "lsp", "path_at", "path", "snippets", "buffer", "dict" } ---@type string[]
+    local markdown_sources = { "slash", "lsp", "path_at", "path", "snippets", "buffer", "dict" } ---@type string[]
+    local finder_sources = { "path" } ---@type string[]
+    local searcher_sources = { "path", "dict" } ---@type string[]
+
     ---@type table<string, string[]>
     local sources_per_filetype = {
-      [ark.filetype.UX_PICKER_FINDER] = { "path" },
+      [ark.filetype.NOTEPAD] = markdown_sources,
+      [ark.filetype.UX_PICKER_FINDER] = finder_sources,
+      [ark.filetype.UX_SEARCHER_FINDER] = searcher_sources,
+      ["markdown"] = markdown_sources,
     }
     do
-      local code_sources = { "lsp", "path_at", "path", "snippets", "buffer", "dict" }
-
       for _, cmp_code in ipairs(ark.filetype.list_code_filetypes()) do
         if sources_per_filetype[cmp_code] == nil then
           sources_per_filetype[cmp_code] = code_sources
@@ -371,6 +377,11 @@ return {
               chunk_size = 100,
               gc_threshold_mb = 100,
             },
+          },
+          slash = {
+            name = "slash",
+            module = "ghc.cmp.slash",
+            score_offset = 220,
           },
           snippets = {
             name = "snippets",
