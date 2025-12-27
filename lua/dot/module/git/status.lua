@@ -206,7 +206,7 @@ local function collect_display_from_bits(bits, codes)
       local flag = STATUS_CODE_BIT_MAP[code]
       if bit.band(bits, flag) ~= 0 then
         count = count + 1
-        chars[count] = code
+        chars[count] = code == "?" and "U" or code
       end
     end
   end
@@ -216,7 +216,7 @@ local function collect_display_from_bits(bits, codes)
     for code, enabled in pairs(codes) do
       if enabled and STATUS_CODE_BIT_MAP[code] == nil then
         extras = extras or {}
-        extras[#extras + 1] = code
+        extras[#extras + 1] = code == "?" and "U" or code
       end
     end
   end
@@ -546,7 +546,7 @@ function M.resolve_highlight(stage_state, codes, summary, display, categories)
     return GIT_STATUS_HIGHLIGHT.A
   end
   if resolved.untracked then
-    return GIT_STATUS_HIGHLIGHT["?"]
+    return GIT_STATUS_HIGHLIGHT.A
   end
   if resolved.ignored then
     return GIT_STATUS_HIGHLIGHT["!"]
@@ -626,12 +626,18 @@ function M.calc_info(filepath, filetype, offset, highlights)
   local normalized_filepath = dot.path.normalize(filepath)
   local aggregated = dot.git.state.aggregated()
   local entry = aggregated.status_table[normalized_filepath]
+  local is_untracked = entry ~= nil and entry.codes["?"] == true
   if entry ~= nil then
     staged_len = #(entry.staged_display or "")
   end
   for index = 1, #display do
     local char = display:sub(index, index)
-    local hlname = GIT_STATUS_HIGHLIGHT[char] or DEFAULT_GIT_STATUS_HL
+    local hlname ---@type string
+    if char == "U" and is_untracked then
+      hlname = GIT_STATUS_HIGHLIGHT.A
+    else
+      hlname = GIT_STATUS_HIGHLIGHT[char] or DEFAULT_GIT_STATUS_HL
+    end
     local is_staged_char = index <= staged_len
     if is_staged_char and char ~= "D" and char ~= "U" then
       hlname = "f_ft_git_staged"
