@@ -117,13 +117,12 @@ end
 ---@return fun(): dot.module.term.IMeta|nil, integer|nil
 function M:iterator()
   local i = 0 ---@type integer
-  local index = 0 ---@type integer
 
   ---@return dot.module.term.IMeta|nil
   ---@return integer|nil
   return function()
     while i < #termlist do
-      i = i + 1 ---@type integer
+      i = i + 1
       local termuuid = termlist[i] ---@type string|nil
       if termuuid == nil then
         return nil, nil
@@ -131,7 +130,7 @@ function M:iterator()
 
       local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
       if termmeta ~= nil then
-        return termmeta, index
+        return termmeta, i
       end
 
       ark.reporter.error({
