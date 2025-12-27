@@ -249,6 +249,7 @@ function M:close()
   self:hide()
 end
 
+--- Singleton module with process-lifetime scope; no explicit cleanup needed.
 ---@return nil
 function M:dispose() end
 
