@@ -1,0 +1,94 @@
+# rosepine-moon
+
+# Main bg
+theme[main_bg]="#232136"
+
+# Main text color
+theme[main_fg]="#E0DEF4"
+
+# Title color for boxes
+theme[title]="#E0DEF4"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#3E8FB0"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#393552"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#E0DEF4"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#6E6A86"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#3E8FB0"
+
+# Color of text in graphs
+theme[graph_text]="#6E6A86"
+
+# Background color of meters
+theme[meter_bg]="#2A273F"
+
+# Cpu box outline color
+theme[cpu_box]="#44415A"
+
+# Memory/disks box outline color
+theme[mem_box]="#44415A"
+
+# Net up/down box outline color
+theme[net_box]="#44415A"
+
+# Processes box outline color
+theme[proc_box]="#44415A"
+
+# Box divider line and small boxes line color
+theme[div_line]="#44415A"
+
+# Temperature graph colors (green -> yellow -> red)
+theme[temp_start]="#95B1AC"
+theme[temp_mid]="#F6C177"
+theme[temp_end]="#EB6F92"
+
+# CPU graph colors
+theme[cpu_start]="#95B1AC"
+theme[cpu_mid]="#F6C177"
+theme[cpu_end]="#EB6F92"
+
+# Mem/Disk free meter
+theme[free_start]="#95B1AC"
+theme[free_mid]="#F6C177"
+theme[free_end]="#EB6F92"
+
+# Mem/Disk cached meter
+theme[cached_start]="#9CCFD8"
+theme[cached_mid]="#3E8FB0"
+theme[cached_end]="#C4A7E7"
+
+# Mem/Disk available meter
+theme[available_start]="#95B1AC"
+theme[available_mid]="#F6C177"
+theme[available_end]="#EA9A97"
+
+# Mem/Disk used meter
+theme[used_start]="#95B1AC"
+theme[used_mid]="#F6C177"
+theme[used_end]="#EB6F92"
+
+# Download graph colors
+theme[download_start]="#95B1AC"
+theme[download_mid]="#9CCFD8"
+theme[download_end]="#3E8FB0"
+
+# Upload graph colors
+theme[upload_start]="#C4A7E7"
+theme[upload_mid]="#EB6F92"
+theme[upload_end]="#EB6F92"
+
+# Process box gradient
+theme[process_start]="#9CCFD8"
+theme[process_mid]="#3E8FB0"
+theme[process_end]="#C4A7E7"
+
+# Background color when process is paused (e.g. after pressing 'p')
+theme[proc_pause_bg]="#EB6F92"
