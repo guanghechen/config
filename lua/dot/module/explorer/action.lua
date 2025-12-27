@@ -942,27 +942,21 @@ function M:rename()
 
     local new_uri = root_uri .. new_relative_path .. (is_directory and "/" or "") ---@type string
 
-    local old_filepath = yoz.uri.to_filepath(uri) or "" ---@type string
-    local new_filepath = yoz.uri.to_filepath(new_uri) or "" ---@type string
-
-    dot.lsp.event.on_rename(old_filepath, new_filepath, function()
-      local ok = ctx.resource_manager:move(uri, new_uri) ---@type boolean
-      if ok then
-        dot.lsp.event.rename_buf(old_filepath, new_filepath)
-        if #selected_nodes == 1 then
-          ctx.tree:clear_selection()
-        end
-        ctx.tree:refresh(true)
-        vim.schedule(function()
-          ctx.refresh(true)
-        end)
-        ark.reporter.info({
-          from = ctx.fullname,
-          subject = "rename",
-          message = string.format("Renamed to: %s", new_relative_path),
-        })
+    local ok = ctx.resource_manager:move(uri, new_uri) ---@type boolean
+    if ok then
+      if #selected_nodes == 1 then
+        ctx.tree:clear_selection()
       end
-    end)
+      ctx.tree:refresh(true)
+      vim.schedule(function()
+        ctx.refresh(true)
+      end)
+      ark.reporter.info({
+        from = ctx.fullname,
+        subject = "rename",
+        message = string.format("Renamed to: %s", new_relative_path),
+      })
+    end
   end)
 end
 
