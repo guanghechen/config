@@ -214,6 +214,34 @@ function M.tabline(position)
   local icon_folder = ark.icon.filetype.Folder ---@type string
   local icon_detached = ark.icon.ui.CircleMedium ---@type string
 
+  -- Register callbacks once at component creation, not on every render
+  local cb_flag_selected = ark.G.register_anonymous_fn(function()
+    local current = dot.context.explorer.flag_selected:snapshot()
+    dot.context.explorer.flag_selected:next(not current)
+  end) or "ark.G.noop"
+
+  local cb_flag_viewtype = ark.G.register_anonymous_fn(function()
+    local current = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
+    local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
+    dot.context.explorer.flag_viewtype:next(next_viewtype)
+  end) or "ark.G.noop"
+
+  local cb_flag_foldempty = ark.G.register_anonymous_fn(function()
+    local current = dot.context.explorer.flag_foldempty:snapshot()
+    dot.context.explorer.flag_foldempty:next(not current)
+  end) or "ark.G.noop"
+
+  local cb_flag_hidden = ark.G.register_anonymous_fn(function()
+    if dot.widget.explorer.widget ~= nil then
+      local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
+      local o_flag_hidden = tree.o_flag_hidden ---@type ark.c.Observable
+      o_flag_hidden:next(not o_flag_hidden:snapshot())
+    else
+      local current = dot.context.explorer.flag_show_hidden:snapshot()
+      dot.context.explorer.flag_show_hidden:next(not current)
+    end
+  end) or "ark.G.noop"
+
   ---@return string, string, boolean
   local function get_path_text()
     local root_uri ---@type string
@@ -254,21 +282,13 @@ function M.tabline(position)
   ---@return string, string
   local function get_flags_text()
     local show_hidden ---@type boolean
-    local toggle_hidden_callback ---@type fun(): nil
 
     if dot.widget.explorer.widget ~= nil then
       local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
       local o_flag_hidden = tree.o_flag_hidden ---@type ark.c.Observable
       show_hidden = o_flag_hidden:snapshot()
-      toggle_hidden_callback = function()
-        o_flag_hidden:next(not o_flag_hidden:snapshot())
-      end
     else
       show_hidden = dot.context.explorer.flag_show_hidden:snapshot()
-      toggle_hidden_callback = function()
-        local current = dot.context.explorer.flag_show_hidden:snapshot()
-        dot.context.explorer.flag_show_hidden:next(not current)
-      end
     end
 
     local text = "" ---@type string
@@ -279,29 +299,20 @@ function M.tabline(position)
     local flag_selected_icon = ark.icon.symbols.flag_selected ---@type string
     local flag_selected_hln = flag_selected and "explorer_flag_orange" or "explorer_flag_grey" ---@type string
     local flag_selected_piece_hln = string.format("%s_%s", position, flag_selected_hln) ---@type string
-    local flag_selected_callback = ark.G.register_anonymous_fn(function()
-      local current = dot.context.explorer.flag_selected:snapshot()
-      dot.context.explorer.flag_selected:next(not current)
-    end) or "ark.G.noop"
     local flag_selected_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_selected_piece_text = " " .. flag_selected_icon .. flag_selected_digit ---@type string
     text = text .. flag_selected_piece_text
-    hl_text = hl_text .. btn(txt(flag_selected_piece_text, flag_selected_piece_hln), flag_selected_callback)
+    hl_text = hl_text .. btn(txt(flag_selected_piece_text, flag_selected_piece_hln), cb_flag_selected)
     index = index + 1
 
     local flag_viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
     local flag_viewtype_icon = flag_viewtype == "tree" and ark.icon.symbols.flag_tree or ark.icon.symbols.flag_list ---@type string
     local flag_viewtype_hln = "explorer_flag_blue" ---@type string
     local flag_viewtype_piece_hln = string.format("%s_%s", position, flag_viewtype_hln) ---@type string
-    local flag_viewtype_callback = ark.G.register_anonymous_fn(function()
-      local current = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
-      local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
-      dot.context.explorer.flag_viewtype:next(next_viewtype)
-    end) or "ark.G.noop"
     local flag_viewtype_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_viewtype_piece_text = " " .. flag_viewtype_icon .. flag_viewtype_digit ---@type string
     text = text .. flag_viewtype_piece_text
-    hl_text = hl_text .. btn(txt(flag_viewtype_piece_text, flag_viewtype_piece_hln), flag_viewtype_callback)
+    hl_text = hl_text .. btn(txt(flag_viewtype_piece_text, flag_viewtype_piece_hln), cb_flag_viewtype)
     index = index + 1
 
     if flag_viewtype == "tree" then
@@ -309,25 +320,20 @@ function M.tabline(position)
       local flag_foldempty_icon = ark.icon.symbols.flag_fold_empty_path ---@type string
       local flag_foldempty_hln = flag_foldempty and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
       local flag_foldempty_piece_hln = string.format("%s_%s", position, flag_foldempty_hln) ---@type string
-      local flag_foldempty_callback = ark.G.register_anonymous_fn(function()
-        local current = dot.context.explorer.flag_foldempty:snapshot()
-        dot.context.explorer.flag_foldempty:next(not current)
-      end) or "ark.G.noop"
       local flag_foldempty_digit = ark.icon.todigit_supscript(index) ---@type string
       local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_digit ---@type string
       text = text .. flag_foldempty_piece_text
-      hl_text = hl_text .. btn(txt(flag_foldempty_piece_text, flag_foldempty_piece_hln), flag_foldempty_callback)
+      hl_text = hl_text .. btn(txt(flag_foldempty_piece_text, flag_foldempty_piece_hln), cb_flag_foldempty)
     end
     index = index + 1
 
     local flag_hidden_icon = ark.icon.symbols.flag_hidden ---@type string
     local flag_hidden_hln = show_hidden and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
     local flag_hidden_piece_hln = string.format("%s_%s", position, flag_hidden_hln) ---@type string
-    local flag_hidden_callback = ark.G.register_anonymous_fn(toggle_hidden_callback) or "ark.G.noop"
     local flag_hidden_digit = ark.icon.todigit_supscript(index) ---@type string
     local flag_hidden_piece_text = " " .. flag_hidden_icon .. flag_hidden_digit ---@type string
     text = text .. flag_hidden_piece_text
-    hl_text = hl_text .. btn(txt(flag_hidden_piece_text, flag_hidden_piece_hln), flag_hidden_callback)
+    hl_text = hl_text .. btn(txt(flag_hidden_piece_text, flag_hidden_piece_hln), cb_flag_hidden)
 
     return text, hl_text
   end
