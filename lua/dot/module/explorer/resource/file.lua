@@ -1,13 +1,23 @@
 local __module_name__ = "dot.module.explorer.resource.file" ---@type string
 
+local DEBOUNCE_MS = 150 ---@type integer
+local MAX_WATCHES = 50 ---@type integer
+
 ---@class dot.module.explorer.resource.file.IProps
 ---@field public name                   string
 ---@field public show_hidden            boolean|nil
+---@field public on_change              fun()|nil
 
 ---@class dot.module.explorer.resource.FileManager : dot.module.explorer.resource.IManager
 ---@field public name                   string
 ---@field public fullname               string
+---@field protected _debounce_timer     uv.uv_timer_t|nil
+---@field protected _disposed           boolean
+---@field protected _on_change          fun()|nil
+---@field protected _pending_change     boolean
 ---@field protected _show_hidden        boolean
+---@field protected _watches            table<string, uv.uv_fs_event_t>
+---@field protected _watch_count        integer
 local M = {}
 M.__index = M
 
@@ -21,9 +31,81 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.name = name
   self.fullname = fullname
+  self._debounce_timer = nil
+  self._disposed = false
+  self._on_change = props.on_change
+  self._pending_change = false
   self._show_hidden = show_hidden
+  self._watches = {}
+  self._watch_count = 0
 
   return self
+end
+
+---@return nil
+function M:dispose()
+  if self._disposed then
+    return
+  end
+  self._disposed = true
+
+  self:__stop_all_watches__()
+
+  if self._debounce_timer and not self._debounce_timer:is_closing() then
+    self._debounce_timer:stop()
+    self._debounce_timer:close()
+    self._debounce_timer = nil
+  end
+end
+
+---@return nil
+function M:pause_watch()
+  if self._disposed then
+    return
+  end
+  self:__stop_all_watches__()
+end
+
+---@param expanded_dirs                 string[]
+---@return nil
+function M:sync_watches(expanded_dirs)
+  if self._disposed then
+    return
+  end
+
+  local wanted = {} ---@type table<string, boolean>
+  local limit_reached = false ---@type boolean
+
+  for i, dirpath in ipairs(expanded_dirs) do
+    if i > MAX_WATCHES then
+      limit_reached = true
+      break
+    end
+    if dirpath:sub(-1) == "/" then
+      dirpath = dirpath:sub(1, -2)
+    end
+    wanted[dirpath] = true
+  end
+
+  if limit_reached then
+    ark.reporter.warn({
+      from = self.fullname,
+      subject = "sync_watches",
+      message = string.format("Watch limit reached (%d directories).", MAX_WATCHES),
+    })
+  end
+
+  for path in pairs(wanted) do
+    if not self._watches[path] then
+      self:__start_watch__(path)
+    end
+  end
+
+  for path in pairs(self._watches) do
+    if not wanted[path] then
+      self:__stop_watch__(path)
+    end
+  end
 end
 
 ---@param show_hidden                   boolean
@@ -468,10 +550,47 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param uri                           string
----@return string
-function M:__uri_to_filepath__(uri)
-  return yoz.uri.to_filepath(uri) or ""
+---@param source_path                   string
+---@param target_path                   string
+---@return boolean
+function M:__copy_directory__(source_path, target_path)
+  local ok, err = pcall(vim.fn.mkdir, target_path, "p")
+  if not ok then
+    ark.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to create target directory: %s", target_path),
+      details = { error = err },
+    })
+    return false
+  end
+
+  local handle = vim.uv.fs_scandir(source_path) ---@type userdata|nil
+  if handle == nil then
+    return true
+  end
+
+  while true do
+    local name, ftype = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
+    if name == nil then
+      break
+    end
+
+    local child_source = source_path .. "/" .. name ---@type string
+    local child_target = target_path .. "/" .. name ---@type string
+
+    if ftype == "directory" then
+      if not self:__copy_directory__(child_source, child_target) then
+        return false
+      end
+    else
+      if not self:__copy_file__(child_source, child_target) then
+        return false
+      end
+    end
+  end
+
+  return true
 end
 
 ---@protected
@@ -541,47 +660,118 @@ function M:__copy_file__(source_path, target_path)
 end
 
 ---@protected
----@param source_path                   string
----@param target_path                   string
----@return boolean
-function M:__copy_directory__(source_path, target_path)
-  local ok, err = pcall(vim.fn.mkdir, target_path, "p")
+---@param dirpath                       string
+---@return nil
+function M:__start_watch__(dirpath)
+  if self._watches[dirpath] then
+    return
+  end
+
+  if self._watch_count >= MAX_WATCHES then
+    return
+  end
+
+  local handle = vim.uv.new_fs_event() ---@type uv.uv_fs_event_t|nil
+  if not handle then
+    return
+  end
+
+  local ok, err = handle:start(dirpath, {}, function(watch_err, filename)
+    if watch_err then
+      return
+    end
+
+    if filename then
+      if vim.startswith(filename, ".") then
+        return
+      end
+      if filename:match("%.swp$") or filename:match("%.tmp$") or filename:match("~$") then
+        return
+      end
+    end
+
+    self:__trigger_change__()
+  end)
+
   if not ok then
-    ark.reporter.error({
+    ark.reporter.warn({
       from = self.fullname,
-      subject = "copy",
-      message = string.format("Failed to create target directory: %s", target_path),
+      subject = "watch",
+      message = string.format("Failed to watch: %s", dirpath),
       details = { error = err },
     })
-    return false
+    if not handle:is_closing() then
+      handle:close()
+    end
+    return
   end
 
-  local handle = vim.uv.fs_scandir(source_path) ---@type userdata|nil
-  if handle == nil then
-    return true
+  self._watches[dirpath] = handle
+  self._watch_count = self._watch_count + 1
+end
+
+---@protected
+---@return nil
+function M:__stop_all_watches__()
+  for path in pairs(self._watches) do
+    self:__stop_watch__(path)
+  end
+end
+
+---@protected
+---@param dirpath                       string
+---@return nil
+function M:__stop_watch__(dirpath)
+  local handle = self._watches[dirpath] ---@type uv.uv_fs_event_t|nil
+  if not handle then
+    return
   end
 
-  while true do
-    local name, ftype = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
-    if name == nil then
-      break
+  if not handle:is_closing() then
+    handle:stop()
+    handle:close()
+  end
+
+  self._watches[dirpath] = nil
+  self._watch_count = self._watch_count - 1
+end
+
+---@protected
+---@return nil
+function M:__trigger_change__()
+  self._pending_change = true
+
+  if not self._debounce_timer then
+    self._debounce_timer = vim.uv.new_timer()
+  end
+
+  if not self._debounce_timer then
+    return
+  end
+
+  self._debounce_timer:stop()
+  self._debounce_timer:start(DEBOUNCE_MS, 0, vim.schedule_wrap(function()
+    if self._disposed then
+      return
     end
 
-    local child_source = source_path .. "/" .. name ---@type string
-    local child_target = target_path .. "/" .. name ---@type string
-
-    if ftype == "directory" then
-      if not self:__copy_directory__(child_source, child_target) then
-        return false
-      end
-    else
-      if not self:__copy_file__(child_source, child_target) then
-        return false
-      end
+    if not self._pending_change then
+      return
     end
-  end
 
-  return true
+    self._pending_change = false
+
+    if self._on_change then
+      self._on_change()
+    end
+  end))
+end
+
+---@protected
+---@param uri                           string
+---@return string
+function M:__uri_to_filepath__(uri)
+  return yoz.uri.to_filepath(uri) or ""
 end
 
 return M

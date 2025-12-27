@@ -62,7 +62,21 @@ function M.new(props)
   local o_flag_hidden = props.o_flag_hidden ---@type ark.c.Observable
   local show_hidden = o_flag_hidden:snapshot() ---@type boolean
 
-  local resource_manager = ResourceFileManager.new({ name = name, show_hidden = show_hidden }) ---@type dot.module.explorer.resource.FileManager
+  local self = setmetatable({}, M)
+
+  local resource_manager = ResourceFileManager.new({
+    name = name,
+    show_hidden = show_hidden,
+    on_change = function()
+      if self._disposed then
+        return
+      end
+      self._tree:mark_all_dirty()
+      if self:isvisible() then
+        self:__refresh__()
+      end
+    end,
+  }) ---@type dot.module.explorer.resource.FileManager
 
   ---@type dot.module.explorer.Tree
   local tree = Tree.new({
@@ -76,7 +90,6 @@ function M.new(props)
 
   local view = View.new(name) ---@type dot.module.explorer.View
 
-  local self = setmetatable({}, M)
   self.name = name
   self.fullname = fullname
   self._autocmd_ids = {}
@@ -151,6 +164,7 @@ function M:dispose()
 
   self:hide()
   self._tree:dispose()
+  self._resource_manager:dispose()
   self._render_result = nil
 
   if self._on_disposed ~= nil then
@@ -212,6 +226,8 @@ end
 function M:hide()
   local winnr = self._winnr ---@type integer|nil
   self._winnr = nil
+
+  self._resource_manager:pause_watch()
 
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local width = vim.api.nvim_win_get_width(winnr) ---@type integer
@@ -739,6 +755,30 @@ function M:__render__()
   self:__sync_cursor_to_uri__(cursor_uri)
   self:__update_winbar__()
   self:__update_cursorline__()
+  self:__sync_watches__(root_node)
+end
+
+---@protected
+---@param root_node                     dot.module.explorer.Node
+---@return nil
+function M:__sync_watches__(root_node)
+  local expanded_dirs = {} ---@type string[]
+
+  ---@param node                        dot.module.explorer.Node
+  local function walk(node)
+    if node.nodetype == "D" and node.expanded then
+      local filepath = yoz.uri.to_filepath(node.uri) ---@type string|nil
+      if filepath then
+        expanded_dirs[#expanded_dirs + 1] = filepath
+      end
+      for _, child in ipairs(node.children) do
+        walk(child)
+      end
+    end
+  end
+
+  walk(root_node)
+  self._resource_manager:sync_watches(expanded_dirs)
 end
 
 ---@protected
