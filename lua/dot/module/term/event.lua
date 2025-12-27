@@ -1,5 +1,3 @@
-local __module_name__ = "dot.module.term.event" ---@type string
-
 require("dot.module.term.types")
 
 ---@class dot.module.term.event
@@ -32,10 +30,10 @@ function M.on_closed(termmeta)
     dot.term.state.o_termuuid:next("")
   end
 
-  dot.term.state.__remove__(termmeta.uuid)
+  dot.term.state.remove(termmeta.uuid)
 
   if not termmeta.permanent then
-    dot.term.state.__unregister__(termmeta.uuid)
+    dot.term.state.unregister(termmeta.uuid)
   end
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then

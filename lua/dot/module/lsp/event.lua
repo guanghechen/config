@@ -1,5 +1,3 @@
-local __module_name__ = "dot.module.lsp.event" ---@type string
-
 local Methods = vim.lsp.protocol.Methods
 local augroup_codelens = ark.nvim.augroup("dot.module.lsp.event.codelens") ---@type integer
 

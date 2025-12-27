@@ -9,8 +9,8 @@ local termlist = {} ---@type string[]
 
 ---@class dot.module.term.state
 ---@field public o_termuuid             ark.c.Observable
----@field protected __remove__          fun(termuuid: string): nil
----@field protected __unregister__      fun(termuuid: string): nil
+---@field public remove                 fun(termuuid: string): nil
+---@field public unregister             fun(termuuid: string): nil
 local M = {}
 
 M.o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
@@ -37,6 +37,62 @@ function M.at(index)
   if termuuid then
     return termuuid, metamap[termuuid]
   end
+end
+
+---@param params                        dot.module.term.ICreateParams
+---@return dot.module.term.IMeta
+function M.create(params)
+  local termuuid = params.uuid ---@type string
+  if termuuid == nil or #termuuid < 1 then
+    error(string.format("Invalid UUID: '%s'", termuuid), 2)
+  end
+
+  local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
+  if termmeta ~= nil then
+    ark.reporter.error({
+      from = __module_name__,
+      subject = "Duplicate UUID",
+      message = string.format("A terminal with UUID '%s' already exists.", termuuid),
+      details = { params = params },
+    })
+    return termmeta
+  end
+
+  local typ = params.type or DEFAULT_TERM_TYPE ---@type string
+  local name = params.name ---@type string
+  local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string[]|string
+  local cwd = params.cwd or dot.path.cwd() ---@type string
+  local env = params.env ---@type table<string, string>|nil
+  local permanent = not not params.permanent ---@type boolean
+  local hidewipe = not not params.hidewipe ---@type boolean
+  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil
+  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil
+  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil
+  local user_keymaps = params.user_keymaps and vim.list_slice(params.user_keymaps) or {} ---@type ark.t.IKeymap[]
+
+  ---@type dot.module.term.IMeta
+  termmeta = {
+    uuid = termuuid,
+    type = typ,
+    name = name,
+    bufnr = 0,
+    cmd = cmd,
+    cwd = cwd,
+    env = env,
+    user_keymaps = user_keymaps,
+    permanent = permanent,
+    hidewipe = hidewipe,
+    on_closed = on_closed,
+    on_focused = on_focused,
+    on_resized = on_resized,
+    jobid = nil,
+  }
+
+  metamap[termuuid] = termmeta
+  termlist[#termlist + 1] = termuuid
+
+  M.o_termuuid:next(termuuid)
+  return termmeta
 end
 
 ---@return integer
@@ -164,67 +220,29 @@ function M.put(index, termuuid)
   termlist[index] = termuuid
 end
 
+---@param termuuid                      string
+---@return nil
+function M.remove(termuuid)
+  local k = 0 ---@type integer
+  for index = 1, #termlist, 1 do
+    local uuid = termlist[index] ---@type string
+    if uuid ~= termuuid then
+      k = k + 1
+      termlist[k] = uuid ---@type string
+    end
+  end
+  ark.table.truncate_inline(termlist, k)
+end
+
 ---@return integer
 function M.size()
   return #termlist
 end
 
-----------------------------------------------------------------------------------------------------
-
----@param params                        dot.module.term.ICreateParams
----@return dot.module.term.IMeta
-function M.create(params)
-  local termuuid = params.uuid ---@type string
-  if termuuid == nil or #termuuid < 1 then
-    error(string.format("Invalid UUID: '%s'", termuuid), 2)
-  end
-
-  local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
-  if termmeta ~= nil then
-    ark.reporter.error({
-      from = __module_name__,
-      subject = "Duplicate UUID",
-      message = string.format("A terminal with UUID '%s' already exists.", termuuid),
-      details = { params = params },
-    })
-    return termmeta
-  end
-
-  local typ = params.type or DEFAULT_TERM_TYPE ---@type string
-  local name = params.name ---@type string
-  local cmd = params.cmd or vim.env.SHELL or vim.o.shell ---@type string[]|string
-  local cwd = params.cwd or dot.path.cwd() ---@type string
-  local env = params.env ---@type table<string, string>|nil
-  local permanent = not not params.permanent ---@type boolean
-  local hidewipe = not not params.hidewipe ---@type boolean
-  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil
-  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil
-  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil
-  local user_keymaps = params.user_keymaps and vim.list_slice(params.user_keymaps) or {} ---@type ark.t.IKeymap[]
-
-  ---@type dot.module.term.IMeta
-  termmeta = {
-    uuid = termuuid,
-    type = typ,
-    name = name,
-    bufnr = 0,
-    cmd = cmd,
-    cwd = cwd,
-    env = env,
-    user_keymaps = user_keymaps,
-    permanent = permanent,
-    hidewipe = hidewipe,
-    on_closed = on_closed,
-    on_focused = on_focused,
-    on_resized = on_resized,
-    jobid = nil,
-  }
-
-  metamap[termuuid] = termmeta
-  termlist[#termlist + 1] = termuuid
-
-  M.o_termuuid:next(termuuid)
-  return termmeta
+---@param termuuid                      string
+---@return nil
+function M.unregister(termuuid)
+  metamap[termuuid] = nil
 end
 
 ---@param termmeta                      dot.module.term.IMeta
@@ -256,30 +274,6 @@ function M.update(termmeta, params)
     termmeta.on_resized = params.on_resized
   end
   return true
-end
-
-----------------------------------------------------------------------------------------------------
-
----@protected
----@param termuuid                      string
----@return nil
-function M.__remove__(termuuid)
-  local k = 0 ---@type integer
-  for index = 1, #termlist, 1 do
-    local uuid = termlist[index] ---@type string
-    if uuid ~= termuuid then
-      k = k + 1
-      termlist[k] = uuid ---@type string
-    end
-  end
-  ark.table.truncate_inline(termlist, k)
-end
-
----@protected
----@param termuuid                      string
----@return nil
-function M.__unregister__(termuuid)
-  metamap[termuuid] = nil
 end
 
 return M
