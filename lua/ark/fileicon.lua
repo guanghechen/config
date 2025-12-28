@@ -89,6 +89,8 @@ local ICONS_EXTENSION = {
   glsl                    = "glsl",
   h                       = { glyph = "󰫵", hl = "MiniIconsPurple" },
   ipynb                   = { glyph = "󰠮", hl = "MiniIconsOrange" },
+  json                    = "json",
+  md                      = "markdown",
   purs                    = "purescript",
   tf                      = "terraform",
 
@@ -218,6 +220,7 @@ local ICONS_FILE = {
   ["LICENSE.md"]          = { glyph = "", hl = "MiniIconsCyan"   },
   ["LICENSE.txt"]         = { glyph = "", hl = "MiniIconsCyan"   },
   ["json.tmpl"]           = { glyph = "", hl = "MiniIconsGrey"   },
+  ["lazy-lock.json"]      = { glyph = "󰒲", hl = "MiniIconsBlue"   },
   NEWS                    = { glyph = "󰎕", hl = "MiniIconsBlue"   },
   ["NEWS.md"]             = { glyph = "󰎕", hl = "MiniIconsBlue"   },
   ["package.json"]        = { glyph = "", hl = "MiniIconsGreen"  },
