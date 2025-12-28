@@ -359,7 +359,7 @@ return {
             score_offset = 200,
             timeout_ms = 2000,
             opts = {
-              ignore_root_slash = dot.path.is_git_repo(),
+              ignore_root_slash = false,
               show_hidden_files_by_default = true,
             },
           },

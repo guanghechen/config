@@ -41,33 +41,35 @@ function M:__should_complete__(context)
   local line = context.line ---@type string
   local col = context.cursor[2] ---@type integer
 
-  -- Find the start of the current word
-  local start_col = col ---@type integer
-  while start_col > 0 do
-    local char = line:sub(start_col, start_col)
-    if char:match("[%s]") then
+  -- Find the '/' character by scanning backward
+  local slash_col = col ---@type integer
+  while slash_col > 0 do
+    local char = line:sub(slash_col, slash_col)
+    if char == "/" then
       break
+    elseif char:match("[%s%p]") then
+      -- Stop at whitespace or punctuation without finding '/'
+      return false, nil
     end
-    start_col = start_col - 1
+    slash_col = slash_col - 1
   end
 
-  -- Check if the word starts with '/'
-  local word_start = start_col + 1 ---@type integer
-  if line:sub(word_start, word_start) ~= "/" then
+  -- No '/' found
+  if slash_col == 0 or line:sub(slash_col, slash_col) ~= "/" then
     return false, nil
   end
 
-  -- Only trigger at the beginning of a line or after whitespace
-  if start_col > 0 then
-    local prev_char = line:sub(start_col, start_col)
-    if not prev_char:match("[%s]") then
+  -- Check if '/' is at line start or preceded by whitespace/punctuation
+  if slash_col > 1 then
+    local prev_char = line:sub(slash_col - 1, slash_col - 1)
+    if not prev_char:match("[%s%p]") then
       return false, nil
     end
   end
 
   ---@type lsp.Range
   local range = {
-    start = { line = context.cursor[1] - 1, character = word_start - 1 },
+    start = { line = context.cursor[1] - 1, character = slash_col - 1 },
     ["end"] = { line = context.cursor[1] - 1, character = col },
   }
 
