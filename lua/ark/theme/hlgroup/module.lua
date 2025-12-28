@@ -240,7 +240,7 @@ function M.default_gen_hlgroup_map(context)
     m_term_bg = { bg = u.bg0 },
     m_term_current = { bg = u.bg2 },
 
-    ---fml/dressing/select/codeaction
+    ---era/dressing/select/codeaction
     m_sca_client_name = { fg = u.fg4, bg = u.none },
     m_sca_content = { fg = u.fg1, bg = u.none },
     m_sca_order = { fg = u.red, bg = u.none },

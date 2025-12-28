@@ -13,14 +13,13 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
 
 ```
-yoz → ark → dot → fml → ghc → integration
+yoz → ark → dot → era → integration
 ```
 
 - **yoz**: Rust-native standard library, completely independent Lua extension, does not depend on Neovim
 - **ark**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
 - **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/ark
-- **fml**: Actions and dressing (UI styling and components)
-- **ghc**: Plugin-related configurations
+- **era**: Actions, dressing (UI styling and components), and plugin configurations
 - **integration**: Environment-specific entry points for neovim/neovide/vscode
 
 ### Global Variables
@@ -95,9 +94,9 @@ Foundation layer with algorithms, collections, and utilities.
 
 - **Core modules**: `G`, `autocmd`, `buf`, `command`, `lsp`, `lsp_action`, `notifier`, `path`, `session`, `shell`, `tab`, `term`, `uri`, `win`
 
-#### `lua/fml/` - Frontend Configuration Layer
+#### `lua/era/` - Frontend Configuration Layer
 
-- **`fml/action/`** - Action handlers:
+- **`era/action/`** - Action handlers:
   - `ai.lua` - AI actions
   - `buf/` - Buffer actions (close, focus, new, pin, save, swap)
   - `code/` - Code actions (run, splitline)
@@ -118,7 +117,7 @@ Foundation layer with algorithms, collections, and utilities.
   - `ux.lua` - UX actions
   - `win/` - Window actions (close, focus, history, mark, picker, resize, split)
 
-- **`fml/dressing/`** - UI styling and rendering:
+- **`era/dressing/`** - UI styling and rendering:
   - `commentstring.lua` - Comment string handling
   - `dim.lua` - Dim inactive windows
   - `foldtext.lua` - Fold text rendering
@@ -141,21 +140,18 @@ Foundation layer with algorithms, collections, and utilities.
   - `winline.lua` - Window line rendering
   - `winsep/` - Window separator styling
 
-- **`fml/command.lua`** - Command definitions connecting `dot.command` to `fml.action`
+- **`era/command.lua`** - Command definitions connecting `dot.command` to `era.action`
 
-#### `lua/ghc/` - Plugin Ecosystem
-
-- **`ghc/action/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
-- **`ghc/cmp/`** - Completion configurations (`dict`, `path`)
-- **`ghc/plugins/`** - Individual plugin configurations:
+- **`era/action/plugin/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
+- **`era/cmp/`** - Completion configurations (`dict`, `path`)
+- **`era/plugins/`** - Individual plugin configurations:
   - blink-cmp, blink-indent, blink-pairs
   - conform, diffview, flash
   - mason, mini-ai, mini-hipatterns, mini-indentscope, mini-splitjoin, mini-surround
   - nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, nvim-lint
   - nvim-treesitter, nvim-treesitter-context, nvim-treesitter-textobjects
   - render-markdown, which-key
-- **`ghc/command.lua`** - Plugin-specific commands
-- **`ghc/plugin.lua`** - Plugin repository and lazy loading setup
+- **`era/plugin.lua`** - Plugin repository and lazy loading setup
 
 #### `lua/integration/` - Environment-specific Entry Points
 
@@ -200,10 +196,10 @@ Each integration includes environment-specific:
 
 The neovim integration additionally loads:
 - `dot.autocmd` - Core autocommands
-- `fml.dressing.*` - UI dressing modules
-- `fml.command` - Command implementations
+- `era.dressing.*` - UI dressing modules
+- `era.command` - Command implementations
 - `dot.module.git` - Git integration (if in git repo)
-- `ghc.plugin` - Plugin management
+- `era.plugin` - Plugin management
 
 ### Rust-Lua Bridge
 
@@ -361,8 +357,8 @@ Within each category, sort alphabetically.
 
 ## Plugin Management
 - **Lock File**: `lazy-lock.json` contains exact plugin versions
-- **Plugin Configs**: `ghc/plugins/` for individual plugin configurations
-- **Completion**: `ghc/cmp/` for completion source configurations
+- **Plugin Configs**: `era/plugins/` for individual plugin configurations
+- **Completion**: `era/cmp/` for completion source configurations
 
 ## Development Files
 - `init-theme.lua`: Theme testing and development

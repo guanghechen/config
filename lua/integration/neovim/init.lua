@@ -7,15 +7,15 @@ require("integration.neovim.keymap")
 pcall(require, "integration.local.option")
 pcall(require, "integration.local.keymap")
 
-require("fml.dressing.notifier")
-require("fml.dressing.ui_attach")
-require("fml.command")
+require("era.dressing.notifier")
+require("era.dressing.ui_attach")
+require("era.command")
 
 if dot.path.is_git_repo() then
   require("dot.module.git")
 end
 
-require("fml.plugin")
+require("era.plugin")
 pcall(require, "integration.local.plugin")
 
 ---! Reload session if not specify file and current directory is a git repository.
@@ -27,26 +27,26 @@ if dot.path.is_git_repo() then
 end
 
 vim.schedule(function()
-  require("fml.dressing.statusline")
-  require("fml.dressing.tabline")
-  require("fml.dressing.winline")
+  require("era.dressing.statusline")
+  require("era.dressing.tabline")
+  require("era.dressing.winline")
 
-  require("fml.dressing.commentstring")
-  require("fml.dressing.foldtext")
-  require("fml.dressing.scroll")
-  require("fml.dressing.statuscolumn")
-  require("fml.dressing.trailspace")
-  require("fml.dressing.virtcolumn")
-  require("fml.dressing.winsep")
+  require("era.dressing.commentstring")
+  require("era.dressing.foldtext")
+  require("era.dressing.scroll")
+  require("era.dressing.statuscolumn")
+  require("era.dressing.trailspace")
+  require("era.dressing.virtcolumn")
+  require("era.dressing.winsep")
 
-  require("fml.dressing.dim")
-  require("fml.dressing.im")
-  require("fml.dressing.input")
-  require("fml.dressing.lsp")
-  require("fml.dressing.lsp_action")
-  require("fml.dressing.python_venv")
-  require("fml.dressing.select")
-  require("fml.dressing.image")
+  require("era.dressing.dim")
+  require("era.dressing.im")
+  require("era.dressing.input")
+  require("era.dressing.lsp")
+  require("era.dressing.lsp_action")
+  require("era.dressing.python_venv")
+  require("era.dressing.select")
+  require("era.dressing.image")
   pcall(require, "integration.local.dressing")
 
   dot.setup_breakpoints()
