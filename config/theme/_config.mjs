@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { GEMINI_CONFIG_DIR, XDG_CONFIG_HOME } from '../_shared/env.mjs'
+import { GEMINI_CONFIG_DIR, platform, XDG_CONFIG_HOME } from '../_shared/env.mjs'
 import { is_directory, is_file, touch } from '../_shared/util.mjs'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
@@ -58,9 +58,14 @@ export const apps = [
       )
       await fs.writeFile(config_filepath, updated, 'utf8')
 
-      // Send SIGUSR2 to btop to trigger hot reload
-      const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
-      if (!result) console.error('\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m')
+      // Send SIGUSR2 to btop to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
+      if (platform !== 'win') {
+        const is_btop_exist = await command_exists('btop')
+        if (is_btop_exist) {
+          const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
+          if (!result) console.error('\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m')
+        }
+      }
     },
   },
   {
@@ -94,10 +99,13 @@ export const apps = [
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async () => {
-      const is_ghostty_exist = await command_exists('ghostty')
-      if (is_ghostty_exist) {
-        const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
-        if (!result) console.error('\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m')
+      // Send SIGUSR2 to ghostty to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
+      if (platform !== 'win') {
+        const is_ghostty_exist = await command_exists('ghostty')
+        if (is_ghostty_exist) {
+          const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
+          if (!result) console.error('\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m')
+        }
       }
     },
   },
