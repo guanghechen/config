@@ -11,14 +11,24 @@ function main() {
   if (GIT_PUSH_PATTERN.test(command)) {
     console.log(
       JSON.stringify({
-        decision: 'ask',
-        message: `Intercepted "git push". Allow?`,
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          permissionDecision: 'ask',
+          permissionDecisionReason: `Intercepted "git push". Allow?`,
+        },
       }),
     )
     return
   }
 
-  console.log(JSON.stringify({ decision: 'allow' }))
+  console.log(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'allow',
+      },
+    }),
+  )
 }
 
 main()

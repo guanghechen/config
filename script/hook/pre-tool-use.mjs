@@ -41,14 +41,24 @@ function main() {
   if (fp && isSensitiveFile(fp)) {
     console.log(
       JSON.stringify({
-        decision: 'ask',
-        message: `"${path.basename(fp)}" is a sensitive file. Allow access?`,
+        hookSpecificOutput: {
+          hookEventName: 'PreToolUse',
+          permissionDecision: 'ask',
+          permissionDecisionReason: `"${path.basename(fp)}" is a sensitive file. Allow access?`,
+        },
       }),
     )
     return
   }
 
-  console.log(JSON.stringify({ decision: 'allow' }))
+  console.log(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'allow',
+      },
+    }),
+  )
 }
 
 main()
