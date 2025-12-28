@@ -9,10 +9,6 @@ pcall(require, "integration.local.keymap")
 
 require("fml.dressing.notifier")
 require("fml.dressing.ui_attach")
-require("fml.dressing.statusline")
-require("fml.dressing.tabline")
-require("fml.dressing.winline")
-require("fml.dressing.statuscolumn")
 require("fml.command")
 
 if dot.path.is_git_repo() then
@@ -32,9 +28,15 @@ if dot.path.is_git_repo() then
 end
 
 vim.schedule(function()
+  require("fml.dressing.statusline")
+  require("fml.dressing.tabline")
+  require("fml.dressing.winline")
+
   require("fml.dressing.commentstring")
   require("fml.dressing.foldtext")
   require("fml.dressing.scroll")
+  require("fml.dressing.statuscolumn")
+  require("fml.dressing.trailspace")
   require("fml.dressing.virtcolumn")
   require("fml.dressing.winsep")
 
@@ -45,7 +47,6 @@ vim.schedule(function()
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
-  require("fml.dressing.trailspace")
   require("fml.dressing.image")
   pcall(require, "integration.local.dressing")
 
