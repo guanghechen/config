@@ -653,7 +653,6 @@ function M.stage_hunk(bufnr, range, callback)
   local toplevel = buf_cache.repo.toplevel
   local relpath = buf_cache.relpath
   local mode_bits = buf_cache.mode_bits
-  local file = buf_cache.file
 
   local function do_stage()
     local patch = dot.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)

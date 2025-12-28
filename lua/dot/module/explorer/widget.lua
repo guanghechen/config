@@ -68,12 +68,12 @@ function M.new(props)
     name = name,
     show_hidden = show_hidden,
     on_change = function()
-      if self._disposed then
+      if self._disposed then ---@diagnostic disable-line: invisible
         return
       end
-      self._tree:mark_all_dirty()
+      self._tree:mark_all_dirty() ---@diagnostic disable-line: invisible
       if self:isvisible() then
-        self:__refresh__()
+        self:__refresh__() ---@diagnostic disable-line: invisible
       end
     end,
   }) ---@type dot.module.explorer.resource.FileManager
