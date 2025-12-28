@@ -1,41 +1,40 @@
 local __module_name__ = "dot.fn.select_copy_filepaths" ---@type string
 
----@class dot.fn.select_copy_filepaths.IParams
+---@class dot.fn.select_copy_filepaths.IParams : vim.api.keyset.win_config
 ---@field public filepaths                string[]
----@field public winopts                  vim.api.keyset.win_config|nil
+---@field public position                 dot.module.choices.PositionEnum|nil
 ---@field public on_completed             ?fun(): nil
 
 ---@param params                        dot.fn.select_copy_filepaths.IParams
 ---@return integer
 local function select_copy_filepaths(params)
   local filepaths = params.filepaths ---@type string[]
-  local winopts = params.winopts or {} ---@type vim.api.keyset.win_config
   local on_completed = params.on_completed or ark.fn.noop ---@type fun(): nil
 
-  local popup = dot.ux.Select.new({
-    wincfg = vim.tbl_extend("force", {
-      width = 16,
-      title = "Copy filepath",
-    }, winopts),
-    item_present_uuid = "relative",
+  return dot.choices.open({
+    title = "Copy filepath",
+    position = params.position or "cursor",
+    relative = params.relative,
+    win = params.win,
+    row = params.row,
+    col = params.col,
     items = {
-      { uuid = "absolute", text = "absolute" },
-      { uuid = "relative", text = "relative" },
-      { uuid = "filename", text = "filename" },
+      { key = "1", text = "absolute" },
+      { key = "2", text = "relative" },
+      { key = "3", text = "filename" },
     },
-    on_select = function(widget, item)
-      widget:destroy()
-
+    default_key = "2",
+    on_choice = function(item)
       if item ~= nil then
         local contents = {} ---@type string[]
         local cwd = dot.path.cwd() ---@type string
 
         for _, filepath in ipairs(filepaths) do
-          if item.uuid == "absolute" then
+          if item.key == "1" then
             contents[#contents + 1] = filepath
-          elseif item.uuid == "relative" then
+          elseif item.key == "2" then
             contents[#contents + 1] = dot.path.relative(cwd, filepath, "/")
-          elseif item.uuid == "filename" then
+          elseif item.key == "3" then
             contents[#contents + 1] = yoz.path.basename(filepath)
           end
         end
@@ -43,15 +42,18 @@ local function select_copy_filepaths(params)
         local content = table.concat(contents, "\n") ---@type string
         ark.nvim.copy(content)
 
+        ---@type string
+        local item_text = item.key == "1" and "absolute" or item.key == "2" and "relative" or "filename"
+
         if #filepaths == 1 then
           ark.reporter.info({
             from = __module_name__,
-            message = string.format("Copied %s: %s", item.uuid, content),
+            message = string.format("Copied %s: %s", item_text, content),
           })
         else
           ark.reporter.info({
             from = __module_name__,
-            message = string.format("Copied %d %s path(s)", #filepaths, item.uuid),
+            message = string.format("Copied %d %s path(s)", #filepaths, item_text),
           })
         end
       end
@@ -59,7 +61,6 @@ local function select_copy_filepaths(params)
       on_completed()
     end,
   })
-  return popup:focus()
 end
 
 return select_copy_filepaths

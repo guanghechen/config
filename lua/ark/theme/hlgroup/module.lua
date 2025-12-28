@@ -60,6 +60,7 @@ function M.default_gen_hlgroup_map(context)
     m_ch_current = { bg = u.bg3 },
     m_ch_key = { fg = u.pink, bold = true },
     m_ch_normal = { fg = u.fg1, bg = bg_pane },
+    m_ch_sign_current = { fg = u.cyan, bg = u.bg3 },
     m_ch_text = { fg = u.fg2 },
 
     ---module/colorpicker

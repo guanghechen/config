@@ -164,32 +164,24 @@ local group_items = {
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
           reopen()
         else
-          dot.ux.Select
-            .new({
-              wincfg = {
-                relative = "editor",
-                anchor = "SE",
-                width = 12,
-                row = vim.o.lines - 1,
-                col = vim.o.columns - offset_right,
-              },
-              items = {
-                { uuid = "reopen", text = "reopen" },
-                { uuid = "resave", text = "resave" },
-              },
-              on_select = function(widget, item)
-                widget:destroy()
-
-                if item ~= nil then
-                  if item.uuid == "reopen" then
-                    reopen()
-                  else
-                    resave()
-                  end
+          dot.choices.open({
+            relative = "editor",
+            row = vim.o.lines - 3,
+            col = vim.o.columns - offset_right - 12,
+            items = {
+              { key = "1", text = "reopen" },
+              { key = "2", text = "resave" },
+            },
+            on_choice = function(item)
+              if item ~= nil then
+                if item.key == "1" then
+                  reopen()
+                else
+                  resave()
                 end
-              end,
-            })
-            :focus()
+              end
+            end,
+          })
         end
       end,
     },
@@ -237,48 +229,42 @@ local group_items = {
         local offset_right = #cwd_name + 4 ---@type integer
         local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
 
-        ---@param callback              fun(widget: dot.ux.ISelect, fileformat_next: string|nil): nil
+        ---@param callback              fun(fileformat_next: string|nil): nil
         ---@return nil
         local function select_fileformat(callback)
-          dot.ux.Select
-            .new({
-              wincfg = {
-                relative = "editor",
-                anchor = "SE",
-                width = 12,
-                row = vim.o.lines - 1,
-                col = vim.o.columns - offset_right,
-              },
-              items = {
-                { uuid = "dos", text = "dos" },
-                { uuid = "mac", text = "mac" },
-                { uuid = "unix", text = "unix" },
-              },
-              item_present_uuid = fileformat_cur,
-              on_select = function(widget, item)
-                if item ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-                  callback(widget, item.uuid)
-                else
-                  callback(widget, nil)
-                end
-              end,
-            })
-            :focus()
+          dot.choices.open({
+            relative = "editor",
+            row = vim.o.lines - 4,
+            col = vim.o.columns - offset_right - 12,
+            items = {
+              { key = "1", text = "dos" },
+              { key = "2", text = "mac" },
+              { key = "3", text = "unix" },
+            },
+            default_key = fileformat_cur == "dos" and "1" or fileformat_cur == "mac" and "2" or "3",
+            on_choice = function(item)
+              if item ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+                ---@type string
+                local ff = item.key == "1" and "dos" or item.key == "2" and "mac" or "unix"
+                callback(ff)
+              else
+                callback(nil)
+              end
+            end,
+          })
         end
 
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
-          select_fileformat(function(widget, fileformat_next)
+          select_fileformat(function(fileformat_next)
             if fileformat_next ~= nil then
               vim.bo[bufnr].fileformat = fileformat_next ---@type string
-              widget:destroy()
             end
           end)
         else
-          select_fileformat(function(widget, fileformat_next)
+          select_fileformat(function(fileformat_next)
             if fileformat_next ~= nil then
               local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
               vim.bo[bufnr].fileformat = fileformat_next ---@type string
-              widget:destroy()
 
               for i, line in ipairs(lines) do
                 lines[i] = line:gsub("\r$", "")

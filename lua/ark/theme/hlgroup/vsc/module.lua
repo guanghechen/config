@@ -49,6 +49,7 @@ function M.gen_hlgroup_map(context)
     m_ch_current = { bg = u.bg3 },
     m_ch_key = { fg = c.accentPink, bold = true },
     m_ch_normal = { fg = c.text, bg = bg_pane },
+    m_ch_sign_current = { fg = c.accentCyan, bg = u.bg3 },
     m_ch_text = { fg = c.text },
 
     ---module/colorpicker

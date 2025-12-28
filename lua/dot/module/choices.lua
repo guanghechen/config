@@ -1,4 +1,4 @@
----@alias dot.module.choice.ItemKey
+---@alias dot.module.choices.ItemKey
 ---| "1"
 ---| "2"
 ---| "3"
@@ -11,39 +11,31 @@
 ---| "y"
 ---| "n"
 
----@alias dot.module.choice.RelativeEnum
----| "editor"
+---@alias dot.module.choices.PositionEnum
 ---| "cursor"
----| "win"
+---| "center"
 
----@class dot.module.choice.IItem
----@field public key                    dot.module.choice.ItemKey
+---@class dot.module.choices.IItem
+---@field public key                    dot.module.choices.ItemKey
 ---@field public text                   string
 
----@class dot.module.choice.IProps
+---@class dot.module.choices.IProps : vim.api.keyset.win_config
 ---@field public title                  string|nil
----@field public relative               dot.module.choice.RelativeEnum|nil
----@field public win                    integer|nil
----@field public row                    integer|nil
----@field public col                    integer|nil
----@field public items                  dot.module.choice.IItem[]
----@field public default_key            dot.module.choice.ItemKey|nil
----@field public on_choice              fun(item: dot.module.choice.IItem|nil): nil
+---@field public position               dot.module.choices.PositionEnum|nil
+---@field public items                  dot.module.choices.IItem[]
+---@field public default_key            dot.module.choices.ItemKey|nil
+---@field public on_choice              fun(item: dot.module.choices.IItem|nil): nil
 
----@class dot.module.choice.IConfirmProps
+---@class dot.module.choices.IConfirmProps : vim.api.keyset.win_config
 ---@field public title                  string|nil
----@field public relative               dot.module.choice.RelativeEnum|nil
----@field public win                    integer|nil
----@field public row                    integer|nil
----@field public col                    integer|nil
+---@field public position               dot.module.choices.PositionEnum|nil
 ---@field public yes_text               string|nil
 ---@field public no_text                string|nil
 ---@field public default_yes            boolean|nil
 ---@field public on_choice              fun(confirmed: boolean): nil
 
----@type string
 local WIN_HIGHLIGHT = table.concat({
-  "Cursor:m_ch_current",
+  "Cursor:m_ch_normal",
   "CursorColumn:m_ch_current",
   "CursorLine:m_ch_current",
   "CursorLineNr:m_ch_current",
@@ -52,16 +44,16 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:m_ch_normal",
 }, ",")
 
----@class dot.module.choice
+---@class dot.module.choices
 local M = {}
 
----@param props                         dot.module.choice.IProps
----@return integer winnr
+---@param props                         dot.module.choices.IProps
+---@return integer
 function M.open(props)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local items = props.items ---@type dot.module.choice.IItem[]
-  local default_key = props.default_key ---@type dot.module.choice.ItemKey|nil
-  local on_choice = props.on_choice ---@type fun(item: dot.module.choice.IItem|nil): nil
+  local items = props.items ---@type dot.module.choices.IItem[]
+  local default_key = props.default_key ---@type dot.module.choices.ItemKey|nil
+  local on_choice = props.on_choice ---@type fun(item: dot.module.choices.IItem|nil): nil
 
   local title = props.title and string.format(" %s ", props.title) or "" ---@type string
   local title_width = vim.api.nvim_strwidth(title) ---@type integer
@@ -70,8 +62,17 @@ function M.open(props)
   local content_width = 0 ---@type integer
   local lines = {} ---@type string[]
 
+  local max_key_width = 0 ---@type integer
+  for _, item in ipairs(items) do
+    local key_width = #item.key ---@type integer
+    if key_width > max_key_width then
+      max_key_width = key_width
+    end
+  end
+
   for index, item in ipairs(items) do
-    local line = string.format("  %s.  %s", item.key, item.text) ---@type string
+    local padding = string.rep(" ", max_key_width - #item.key) ---@type string
+    local line = string.format("  %s%s. %s", padding, item.key, item.text) ---@type string
     lines[index] = line
     if default_key == item.key then
       default_index = index
@@ -85,10 +86,10 @@ function M.open(props)
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr = vim.api.nvim_create_namespace("ux:choice") ---@type integer
+  local nsnr = vim.api.nvim_create_namespace("ux:choices") ---@type integer
   for index, item in ipairs(items) do
     local row = index - 1 ---@type integer
-    local key_start = 2 ---@type integer
+    local key_start = 2 + max_key_width - #item.key ---@type integer
     local key_end = key_start + #item.key ---@type integer
     vim.hl.range(bufnr, nsnr, "m_ch_key", { row, key_start }, { row, key_end })
   end
@@ -96,40 +97,46 @@ function M.open(props)
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = ark.filetype.SELECT
+  vim.bo[bufnr].filetype = "choices"
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
   vim.bo[bufnr].swapfile = false
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
-  local relative = props.relative or "editor" ---@type dot.module.choice.RelativeEnum
-  local relative_win = props.win ---@type integer|nil
+  local position = props.position or "center" ---@type dot.module.choices.PositionEnum
 
-  if relative == "win" then
-    if relative_win == nil or not vim.api.nvim_win_is_valid(relative_win) then
-      relative = "editor"
-      relative_win = nil
-    end
-  else
-    relative_win = nil
-  end
-
+  local relative ---@type string
+  local relative_win ---@type integer|nil
   local row ---@type integer
   local col ---@type integer
 
-  if relative == "editor" then
-    row = props.row or math.floor((vim.o.lines - #items) / 2)
-    col = props.col or math.floor((vim.o.columns - width) / 2)
-  elseif relative == "win" then
-    row = props.row or 0
-    col = props.col or 0
-  else
+  if position == "cursor" then
+    relative = "cursor"
+    relative_win = nil
     local parent_cursor = vim.api.nvim_win_get_cursor(parent_winnr) ---@type integer[]
     local parent_row = parent_cursor[1] ---@type integer
     local win_height = vim.api.nvim_win_get_height(parent_winnr) ---@type integer
     local rows_below = win_height - parent_row ---@type integer
-    row = props.row or (rows_below >= #items + 2 and 1 or -#items - 2)
-    col = props.col or 0
+    row = rows_below >= #items + 2 and 1 or -#items - 2
+    col = 0
+  else
+    relative = "editor"
+    relative_win = nil
+    row = math.floor((vim.o.lines - #items) / 2)
+    col = math.floor((vim.o.columns - width) / 2)
+  end
+
+  if props.relative ~= nil then
+    relative = props.relative
+  end
+  if props.win ~= nil then
+    relative_win = props.win
+  end
+  if props.row ~= nil then
+    row = props.row
+  end
+  if props.col ~= nil then
+    col = props.col
   end
 
   col = math.max(0, col)
@@ -137,7 +144,6 @@ function M.open(props)
   local zindex_source_winnr = relative_win or parent_winnr ---@type integer
   local zindex = dot.win.resolve_zindex(zindex_source_winnr) ---@type integer
 
-  ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     anchor = "NW",
     border = "rounded",
@@ -153,7 +159,7 @@ function M.open(props)
     width = width,
     win = relative_win,
     zindex = zindex,
-  })
+  }) ---@type integer
 
   dot.win.set_type(winnr, dot.win.Types.SELECT)
   vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
@@ -170,9 +176,25 @@ function M.open(props)
 
   vim.api.nvim_win_set_cursor(winnr, { default_index, 0 })
 
+  local sign_group = ark.var.sign.GROUP_CHOICES_CURRENT ---@type string
+  local sign_nr = ark.var.sign.NR_CHOICES_CURRENT ---@type integer
+  local sign_name = ark.var.sign.CHOICES_CURRENT ---@type string
+
+  ---@param lnum                        integer
+  ---@return nil
+  local function update_sign(lnum)
+    pcall(vim.fn.sign_unplace, sign_group, { id = sign_nr, buffer = bufnr })
+    if lnum > 0 then
+      pcall(vim.fn.sign_place, sign_nr, sign_group, sign_name, bufnr, { lnum = lnum, priority = 50 })
+    end
+  end
+
+  update_sign(default_index)
+
   local disposed = false ---@type boolean
 
-  ---@param item                        dot.module.choice.IItem|nil
+  ---@param item                        dot.module.choices.IItem|nil
+  ---@return nil
   local function dispose(item)
     if disposed then
       return
@@ -205,7 +227,7 @@ function M.open(props)
       end
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
       local index = cursor[1] ---@type integer
-      local item = items[index] ---@type dot.module.choice.IItem
+      local item = items[index] ---@type dot.module.choices.IItem
       dispose(item)
     end,
   }
@@ -216,13 +238,13 @@ function M.open(props)
       modes = { "i", "n", "x" },
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
-      desc = "choice: noop",
+      desc = "choices: noop",
       callback = ark.fn.noop,
     },
     {
       modes = { "i", "n", "x" },
       key = "<LeftMouse>",
-      desc = "choice: move cursor",
+      desc = "choices: move cursor",
       callback = function()
         local current_winnr = vim.api.nvim_get_current_win() ---@type integer
         if winnr == current_winnr then
@@ -235,20 +257,20 @@ function M.open(props)
       modes = { "i", "n", "x" },
       key = "<C-a>q",
       aliases = { "<D-q>", "<M-q>", "<Esc>" },
-      desc = "choice: cancel",
+      desc = "choices: cancel",
       callback = action.cancel,
     },
     {
       modes = { "i", "n", "x" },
       key = "<2-LeftMouse>",
       aliases = { "<CR>" },
-      desc = "choice: confirm",
+      desc = "choices: confirm",
       callback = action.confirm,
     },
     {
       modes = { "n", "x" },
       key = "q",
-      desc = "choice: quit",
+      desc = "choices: quit",
       callback = action.cancel,
     },
   }
@@ -257,7 +279,7 @@ function M.open(props)
     table.insert(keymaps, {
       modes = { "i", "n", "x" },
       key = item.key,
-      desc = string.format("choice: select %s", item.key),
+      desc = string.format("choices: select %s", item.key),
       callback = function()
         dispose(item)
       end,
@@ -273,6 +295,17 @@ function M.open(props)
     end,
   })
 
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    buffer = bufnr,
+    callback = function()
+      if disposed then
+        return
+      end
+      local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+      update_sign(cursor[1])
+    end,
+  })
+
   vim.schedule(function()
     vim.cmd("stopinsert")
     if vim.api.nvim_win_is_valid(winnr) then
@@ -283,8 +316,8 @@ function M.open(props)
   return winnr
 end
 
----@param props                         dot.module.choice.IConfirmProps
----@return integer winnr
+---@param props                         dot.module.choices.IConfirmProps
+---@return integer
 function M.confirm(props)
   local yes_text = props.yes_text or "Yes" ---@type string
   local no_text = props.no_text or "No" ---@type string
@@ -293,6 +326,7 @@ function M.confirm(props)
 
   return M.open({
     title = props.title,
+    position = props.position,
     relative = props.relative,
     win = props.win,
     row = props.row,

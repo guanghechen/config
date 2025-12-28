@@ -210,6 +210,12 @@ M.sign = {
   SEARCHER_RESULT_SELECTED              = "SearcherResultSelected",
   SEARCHER_RESULT_SELECTED_CURRENT      = "SearcherResultSelectedCurrent",
 
+  ---! choices
+  CHOICES_CURRENT                       = "ChoicesCurrent",
+  GROUP_CHOICES_CURRENT                 = "f7a1b2c3-d4e5-6789-abcd-ef0123456789",
+  NR_CHOICES_CURRENT                    = 3050,
+
+  ---! dap
   DAP_BREAKPOINT                        = "DapBreakpoint",
   DAP_BREAKPOINT_CONDITION              = "DapBreakpointCondition",
   DAP_BREAKPOINT_REJECTED               = "DapBreakpointRejected",
@@ -220,12 +226,6 @@ M.sign = {
 
 -- stylua: ignore start
 local sd = vim.fn.sign_define
-sd(M.sign.DAP_BREAKPOINT,                   { text = ark.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
-sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = ark.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
-sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = ark.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
-sd(M.sign.DAP_LOG_POINT,                    { text = ark.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
-sd(M.sign.DAP_STOPPED,                      { text = ark.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
-
 sd(M.sign.PICKER_FINDER_PROMPT,             { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
 sd(M.sign.PICKER_RESULT_CURRENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
 sd(M.sign.PICKER_RESULT_PRESENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
@@ -233,13 +233,21 @@ sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = ark.icon.ui.ArrowPresent,  
 sd(M.sign.PICKER_RESULT_SELECTED,           { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
 sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 
+sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
 sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
 sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
-sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"          })
 sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
 sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
 sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
 sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
+
+sd(M.sign.CHOICES_CURRENT,                  { text = ark.icon.ui.ArrowPresent,         texthl = "m_ch_sign_current"               })
+
+sd(M.sign.DAP_BREAKPOINT,                   { text = ark.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
+sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = ark.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
+sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = ark.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
+sd(M.sign.DAP_LOG_POINT,                    { text = ark.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
+sd(M.sign.DAP_STOPPED,                      { text = ark.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 -- stylua: ignore end
 
 ----------------------------------------------------------------------------------------------------

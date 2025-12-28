@@ -123,7 +123,7 @@ local widget = setmetatable({
 ---@class dot.__mods
 local __mods = {
   board = "dot.module.board",
-  choice = "dot.module.choice",
+  choices = "dot.module.choices",
   git = "dot.module.git",
   input = "dot.module.input",
   lsp = "dot.module.lsp",
@@ -148,7 +148,7 @@ local __mods = {
 ---@class dot
 ---@field public __mods                 dot.__mods
 ---@field public board                  dot.module.board
----@field public choice                 dot.module.choice
+---@field public choices                dot.module.choices
 ---@field public git                    dot.module.git
 ---@field public input                  dot.module.input
 ---@field public lsp                    dot.module.lsp

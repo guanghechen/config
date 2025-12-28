@@ -90,47 +90,41 @@ function M.create()
     return
   end
 
-  local items = {} ---@type dot.ux.ISelectItem[]
-  for _, profile in ipairs(profiles) do
+  ---@type dot.module.choices.IItem[]
+  local items = {}
+  for index, profile in ipairs(profiles) do
     table.insert(items, {
-      uuid = profile.name,
+      key = tostring(index),
       text = profile.name,
     })
   end
 
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local mouse = vim.fn.getmousepos()
-  local select_widget = dot.ux.Select.new({
+
+  dot.choices.open({
+    title = "Select terminal profile",
+    relative = "win",
+    win = winnr,
+    row = 0,
+    col = mouse.wincol - 3,
     items = items,
-    wincfg = {
-      title = "Select terminal profile:",
-      width = 30,
-      height = 3,
-      relative = "win",
-      win = winnr,
-      row = 0,
-      col = mouse.wincol - 3,
-    },
-    on_select = function(_, selected_item)
+    on_choice = function(selected_item)
       if selected_item == nil then
         return
       end
 
-      local selected_profile = nil ---@type dot.module.term.IProfile|nil
-      for _, profile in ipairs(profiles) do
-        if profile.name == selected_item.uuid then
-          selected_profile = profile
-          break
-        end
+      local selected_index = tonumber(selected_item.key) ---@type integer|nil
+      if selected_index == nil then
+        return
       end
 
+      local selected_profile = profiles[selected_index] ---@type dot.module.term.IProfile|nil
       if selected_profile then
         apply_profile(selected_profile)
       end
     end,
   })
-
-  select_widget:focus()
 end
 
 ---@return nil
