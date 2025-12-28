@@ -3,6 +3,7 @@
     "lsp/yamlls.lua",
     "lua/dot/dict/",
     "lua/dot/fileicon.lua",
+    "lua/dot/module/image/terminal.lua",
     "rust/yoz/src/dict/en.rs"
   ],
   "import": ["~/.config/cspell/cspell.json"],
@@ -989,4 +990,3 @@
     "zindex"
   ]
 }
-
