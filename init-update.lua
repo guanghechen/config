@@ -7,7 +7,7 @@ local default_storage = dot.get_default_storage() ---@type dot.context.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type dot.context.storage
 dot.setup_context(storage)
 
-require("ghc.plugin")
+require("fml.plugin")
 
 require("mason")
 local action = require("fml.action.plugin.mason")

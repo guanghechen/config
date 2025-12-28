@@ -1,8 +1,8 @@
----@class ghc.cmp.slash.ICommand
+---@class fml.cmp.slash.ICommand
 ---@field public name                   string
 ---@field public description            string
 
----@type ghc.cmp.slash.ICommand[]
+---@type fml.cmp.slash.ICommand[]
 local commands = {
   { name = "code-analyze", description = "Perform comprehensive code review on target" },
   { name = "code-analyze-followup", description = "Follow-up analysis after fixes" },
@@ -18,7 +18,7 @@ local commands = {
   { name = "translate", description = "Bilingual translation" },
 }
 
----@class ghc.cmp.slash
+---@class fml.cmp.slash
 ---@field protected _kind_event         integer
 ---@field protected _insert_format      integer
 local M = {}

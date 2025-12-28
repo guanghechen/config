@@ -8,7 +8,7 @@ return {
     "friendly-snippets",
   },
   opts = function()
-    ---@class ghc.plugins.blink_cmp.actions
+    ---@class fml.plugins.blink_cmp.actions
     local actions = {
       ---@return boolean|nil
       has_native_completion = function()
@@ -345,7 +345,7 @@ return {
           },
           dict = {
             name = "dict",
-            module = "ghc.cmp.dict",
+            module = "fml.cmp.dict",
             score_offset = 95,
           },
           lsp = {
@@ -365,7 +365,7 @@ return {
           },
           path_at = {
             name = "path_at",
-            module = "ghc.cmp.path",
+            module = "fml.cmp.path",
             score_offset = 210,
             timeout_ms = 2000,
             opts = {
@@ -380,7 +380,7 @@ return {
           },
           slash = {
             name = "slash",
-            module = "ghc.cmp.slash",
+            module = "fml.cmp.slash",
             score_offset = 220,
           },
           snippets = {

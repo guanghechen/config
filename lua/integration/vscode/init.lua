@@ -8,7 +8,7 @@ require("integration.vscode.keymap")
 pcall(require, "integration.local.option")
 pcall(require, "integration.local.keymap")
 
-require("ghc.plugin")
+require("fml.plugin")
 pcall(require, "integration.local.plugin")
 
 vim.schedule(function()

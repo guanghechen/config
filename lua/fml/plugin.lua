@@ -1,6 +1,6 @@
-local __module_name__ = "ghc.plugin" ---@type string
+local __module_name__ = "fml.plugin" ---@type string
 
----@class ghc.plugin.bootstrap.conds
+---@class fml.plugin.bootstrap.conds
 local conds = {
   common = function()
     return true
@@ -86,8 +86,8 @@ for _, raw_spec in ipairs(raw_specs) do
     cond = cond,
   }
 
-  -- Load plugin details from ghc.plugins.*
-  local spec_module_name = "ghc.plugins."
+  -- Load plugin details from fml.plugins.*
+  local spec_module_name = "fml.plugins."
     .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
   if ok and spec_module then

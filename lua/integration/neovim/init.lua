@@ -15,7 +15,7 @@ if dot.path.is_git_repo() then
   require("dot.module.git")
 end
 
-require("ghc.plugin")
+require("fml.plugin")
 pcall(require, "integration.local.plugin")
 
 ---! Reload session if not specify file and current directory is a git repository.

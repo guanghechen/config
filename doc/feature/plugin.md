@@ -181,7 +181,7 @@ Compatible with lazy.nvim's `lazy-lock.json`:
 }
 ```
 
-## Integration with ghc/plugin.lua
+## Integration with fml/plugin.lua
 
 ```lua
 ---@type dot.module.plugin.IRawSpec[]
@@ -201,8 +201,8 @@ for _, raw_spec in ipairs(raw_specs) do
     main = raw_spec.main,
     cond = raw_spec.cond,
   }
-  -- Load additional config from ghc.plugins.*
-  local ok, details = pcall(require, "ghc.plugins." .. name)
+  -- Load additional config from fml.plugins.*
+  local ok, details = pcall(require, "fml.plugins." .. name)
   if ok then
     spec = vim.tbl_deep_extend("force", spec, details)
   end
