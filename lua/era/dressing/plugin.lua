@@ -41,18 +41,4 @@ function M.mock_web_devicons()
   }
 end
 
----@return nil
-function M.mock_winpicker()
-  if package.loaded["window-picker"] then
-    return
-  end
-
-  package.loaded["window-picker"] = {
-    pick_window = function()
-      local winnr_source = vim.api.nvim_get_current_win() ---@type integer
-      return dot.win.pick_projectable(winnr_source)
-    end,
-  }
-end
-
 return M
