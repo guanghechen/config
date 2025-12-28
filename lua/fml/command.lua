@@ -370,6 +370,52 @@ command
     end,
   })
 
+--[explorer] ---------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.explorer.focus.uuid,
+    action = function()
+      dot.widget.explorer.focus()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.focus_cwd.uuid,
+    action = function()
+      dot.widget.explorer.focus_cwd()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.focus_workspace.uuid,
+    action = function()
+      dot.widget.explorer.focus_workspace()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.hide.uuid,
+    action = function()
+      dot.widget.explorer.hide()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.refresh.uuid,
+    action = function()
+      dot.widget.explorer.refresh()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.reveal.uuid,
+    action = function()
+      dot.widget.explorer.reveal()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.toggle.uuid,
+    tabtype = ark.vim.tab.Types.NORMAL,
+    action = function()
+      dot.widget.explorer.toggle()
+    end,
+  })
+
 --[find] -------------------------------------------------------------------------------------------
 command
   .implement({
