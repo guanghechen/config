@@ -154,7 +154,6 @@ Foundation layer with algorithms, collections, and utilities.
   - nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, nvim-lint
   - nvim-treesitter, nvim-treesitter-context, nvim-treesitter-textobjects
   - render-markdown, which-key
-  - `_extra.lua` - Additional plugin specs
 - **`ghc/command.lua`** - Plugin-specific commands
 - **`ghc/plugin.lua`** - Plugin repository and lazy loading setup
 
