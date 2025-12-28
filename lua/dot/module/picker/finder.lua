@@ -276,18 +276,19 @@ end
 function M:set_content(content)
   self:__health__()
 
+  if content == self.input:snapshot() then
+    return
+  end
+
+  self.input:next(content)
+
   local bufnr = self._bufnr ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  if content == self.input:snapshot() then
-    return
-  end
-
   local lines = { content } ---@type  string[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  self.input:next(content)
   self.linecount:next(#lines)
   self:__set_prompt__(bufnr)
 
