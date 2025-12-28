@@ -4,7 +4,7 @@
 
 1. **CRITICAL**: Never read files ignored by git unless filepaths are explicitly provided.
 2. **CRITICAL**: Never access environment variable files (`*.http_request`, `*.http_response`, `.env.local`, `.git-credentials`, `.ssh/`) or any files containing secrets, passwords, or credentials.
-3. **CRITICAL**: Never stage or commit git changes unless explicitly instructed.
+3. **CRITICAL**: Never stage or commit git changes autonomously. Every git commit must be explicitly requested by the user.
 
 ## Coding Guidances
 
