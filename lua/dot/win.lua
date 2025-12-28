@@ -1,23 +1,5 @@
 local __module_name__ = "dot.win"
-
----@alias dot.win.TypeEnum
----| "ux:board"
----| "ux:cmdline"
----| "ux:explorer"
----| "ux:input"
----| "ux:picker-finder"
----| "ux:picker-preview"
----| "ux:picker-result"
----| "ux:notify"
----| "ux:popupmenu"
----| "ux:search-input"
----| "ux:search-main"
----| "ux:search-preview"
----| "ux:select"
----| "ux:terminal"
----| "ux:textarea"
----| "ux:winpicker"
----| "ux:winsep"
+local vim_win = require("ark.vim.win")
 
 ---@class dot.win.IFilepathHistoryItem
 ---@field public bufnr                  integer|nil
@@ -33,47 +15,24 @@ local __module_name__ = "dot.win"
 ---@class dot.win.IMeta
 ---@field public history                ark.c.History|nil
 ---@field public winline                dot.win.IWinline|nil
----@field public wintype                dot.win.TypeEnum|nil
-
----@class dot.win.Types
-local Types = {
-  -- stylua: ignore start
-  BOARD             = "ux:board",
-  CMDLINE           = "ux:cmdline",
-  EXPLORER          = "ux:explorer",
-  INPUT             = "ux:input",
-  NOTIFY            = "ux:notify",
-  PICKER_FINDER     = "ux:picker-finder",
-  PICKER_PREVIEW    = "ux:picker-preview",
-  PICKER_RESULT     = "ux:picker-result",
-  POPUPMENU         = "ux:popupmenu",
-  SEARCHER_FINDER   = "ux:searcher-finder",
-  SEARCHER_PREVIEW  = "ux:searcher-preview",
-  SEARCHER_RESULT   = "ux:searcher-result",
-  SELECT            = "ux:select",
-  TERMINAL          = "ux:terminal",
-  TEXTAREA          = "ux:textarea",
-  WINPICKER         = "ux:winpicker",
-  WINSEP            = "ux:winsep",
-  -- stylua: ignore end
-}
+---@field public wintype                ark.vim.win.TypeEnum|nil
 
 local wintype_attrs = {
   focusable = {
-    [Types.BOARD] = true,
-    [Types.EXPLORER] = true,
-    [Types.INPUT] = true,
-    [Types.NOTIFY] = true,
-    [Types.PICKER_FINDER] = true,
-    [Types.PICKER_PREVIEW] = true,
-    [Types.PICKER_RESULT] = true,
-    [Types.POPUPMENU] = true,
-    [Types.SEARCHER_FINDER] = true,
-    [Types.SEARCHER_PREVIEW] = true,
-    [Types.SEARCHER_RESULT] = true,
-    [Types.SELECT] = true,
-    [Types.TERMINAL] = true,
-    [Types.TEXTAREA] = true,
+    [vim_win.Types.BOARD] = true,
+    [vim_win.Types.EXPLORER] = true,
+    [vim_win.Types.INPUT] = true,
+    [vim_win.Types.NOTIFY] = true,
+    [vim_win.Types.PICKER_FINDER] = true,
+    [vim_win.Types.PICKER_PREVIEW] = true,
+    [vim_win.Types.PICKER_RESULT] = true,
+    [vim_win.Types.POPUPMENU] = true,
+    [vim_win.Types.SEARCHER_FINDER] = true,
+    [vim_win.Types.SEARCHER_PREVIEW] = true,
+    [vim_win.Types.SEARCHER_RESULT] = true,
+    [vim_win.Types.SELECT] = true,
+    [vim_win.Types.TERMINAL] = true,
+    [vim_win.Types.TEXTAREA] = true,
   },
   projectable = {},
   sourcefile = {},
@@ -102,7 +61,7 @@ local function byte_col_to_client_character(bufnr, row, byte_col, encoding)
     return byte_col
   end
 
-  local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1]
+  local line = vim.api.nvim_buf_get_lines(bufnr, row, row + 1, false)[1] ---@type string|nil
   if line == nil then
     return byte_col
   end
@@ -130,8 +89,8 @@ end
 ---@param encoding                      string|nil
 ---@return integer
 local function position_to_byte_col(bufnr, position, encoding)
-  local normalized = normalize_encoding(encoding)
-  local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, bufnr, position, normalized)
+  local normalized = normalize_encoding(encoding) ---@type string
+  local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, bufnr, position, normalized) ---@type boolean, integer
   if ok and type(col) == "number" then
     return col
   end
@@ -141,30 +100,7 @@ end
 ---@class dot.win
 local M = {}
 
-M.Types = vim.deepcopy(Types)
-
----@param winnr                         integer|nil
----@return nil
-function M.close(winnr)
-  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
-    return
-  end
-  vim.api.nvim_win_close(winnr, true)
-end
-
----@param tabnr                         integer
----@param filetype                      string
----@return integer|nil
-function M.find_by_filetype(tabnr, filetype)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  for _, winnr in pairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype then
-      return winnr
-    end
-  end
-  return nil
-end
+----------------------------------------------------------------------------------------------------
 
 ---@param tabnr                         integer
 ---@param filetype                      string|nil
@@ -173,7 +109,7 @@ function M.find_fixed_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and M.is_fixed(winnr) then
+    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and vim_win.is_fixed(winnr) then
       return winnr
     end
   end
@@ -187,13 +123,14 @@ function M.find_floating_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and M.is_float(winnr) then
+    if vim.bo[bufnr].filetype == filetype and vim_win.is_float(winnr) then
       return winnr
     end
   end
   return nil
 end
 
+---@param tabnr                         integer
 ---@param filetype                      string|nil
 ---@return integer|nil
 function M.find_sourcefile_by_filetype(tabnr, filetype)
@@ -208,20 +145,6 @@ function M.find_sourcefile_by_filetype(tabnr, filetype)
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@param winnr                         integer
----@return boolean
-function M.is_fixed(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config == nil or config.relative == ""
-end
-
----@param winnr                         integer
----@return boolean
-function M.is_float(winnr)
-  local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  return config.relative ~= nil and config.relative ~= ""
-end
 
 ---@param winnr                         integer
 ---@return boolean
@@ -251,7 +174,7 @@ function M.is_projectable(winnr)
     return wintype_attrs.projectable[meta.wintype] == true
   end
 
-  if vim.wo[winnr].winfixbuf or M.is_float(winnr) then
+  if vim.wo[winnr].winfixbuf or vim_win.is_float(winnr) then
     return false
   end
 
@@ -270,7 +193,7 @@ function M.is_sourcefile(winnr)
     return wintype_attrs.sourcefile[meta.wintype] == true
   end
 
-  if vim.wo[winnr].winfixbuf or M.is_float(winnr) then
+  if vim.wo[winnr].winfixbuf or vim_win.is_float(winnr) then
     return false
   end
 
@@ -289,28 +212,22 @@ function M.is_swappable(winnr)
     return wintype_attrs.swappable[meta.wintype] == true
   end
 
-  if M.is_float(winnr) then
+  if vim_win.is_float(winnr) then
     return false
   end
 
   return true
 end
 
----@param winnr                         integer
----@return boolean
-function M.is_valid(winnr)
-  return winnr > 0 and vim.api.nvim_win_is_valid(winnr)
-end
-
 ---@param winnr                         integer|nil
 ---@return integer
 function M.resolve_zindex(winnr)
-  winnr = winnr or vim.api.nvim_get_current_win()
+  winnr = winnr or vim.api.nvim_get_current_win() ---@type integer
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   local base_zindex = wincfg.zindex or 50 ---@type integer
   local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  local wintype = meta and meta.wintype or nil ---@type dot.win.TypeEnum|nil
-  if wintype == Types.CMDLINE or wintype == Types.NOTIFY then
+  local wintype = meta and meta.wintype or nil ---@type ark.vim.win.TypeEnum|nil
+  if wintype == vim_win.Types.CMDLINE or wintype == vim_win.Types.NOTIFY then
     return base_zindex - 1
   end
   return base_zindex + 1
@@ -333,7 +250,7 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_sourcefile(winnr_candidate)
-  if winnr_candidate ~= nil and M.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
+  if winnr_candidate ~= nil and vim_win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
   return dot.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
@@ -399,8 +316,8 @@ function M.resolve(winnr, force)
   meta = meta or {} ---@type dot.win.IMeta
   meta_map[winnr] = meta
 
-  meta.wintype = vim.w[winnr].eve_type ---@type dot.win.TypeEnum|nil
-  if meta.wintype ~= nil or M.is_float(winnr) then
+  meta.wintype = vim.w[winnr].eve_type ---@type ark.vim.win.TypeEnum|nil
+  if meta.wintype ~= nil or vim_win.is_float(winnr) then
     return meta
   end
 
@@ -419,7 +336,7 @@ function M.resolve(winnr, force)
 end
 
 ---@param winnr                         integer
----@param wintype                       dot.win.TypeEnum|nil
+---@param wintype                       ark.vim.win.TypeEnum|nil
 ---@return nil
 function M.set_type(winnr, wintype)
   vim.w[winnr].eve_type = wintype
@@ -462,7 +379,7 @@ function M.locate_symbols(winnr, callback)
     return cancel_request
   end
 
-  if winnr == nil or not M.is_valid(winnr) then
+  if winnr == nil or not vim_win.is_valid(winnr) then
     return abort()
   end
 

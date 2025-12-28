@@ -1,4 +1,4 @@
-local txt = ark.nvim.txt
+local txt = ark.vim.fn.txt
 
 ---@class dot.module.nvimbar.component.git
 local M = {}

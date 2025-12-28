@@ -270,7 +270,7 @@ end
 ---@return nil
 function M.split(direction)
   local winnr_original = vim.api.nvim_get_current_win() ---@type integer
-  if dot.win.is_float(winnr_original) then
+  if ark.vim.win.is_float(winnr_original) then
     return
   end
 

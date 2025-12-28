@@ -256,7 +256,6 @@ local __mods = {
   hot = "ark.hot",
   icon = "ark.icon",
   json = "ark.json",
-  nvim = "ark.nvim",
   reporter = "ark.reporter",
   stdout = "ark.stdout",
   string = "ark.string",
@@ -265,6 +264,7 @@ local __mods = {
   timer = "ark.timer",
   tmux = "ark.tmux",
   var = "ark.var",
+  vim = "ark.vim",
   winhint = "ark.winhint",
 }
 
@@ -287,7 +287,6 @@ local __mods = {
 ---@field public icon                   ark.icon
 ---@field public json                   ark.json
 ---@field public lang                   ark.lang
----@field public nvim                   ark.nvim
 ---@field public reporter               ark.reporter
 ---@field public stdout                 ark.stdout
 ---@field public string                 ark.string
@@ -298,6 +297,7 @@ local __mods = {
 ---@field public tmux                   ark.tmux
 ---@field public var                    ark.var
 ---@field public view                   ark.view
+---@field public vim                    ark.vim
 ---@field public winhint                ark.winhint
 local M = setmetatable({
   __mods = __mods,

@@ -126,7 +126,7 @@ function M.get_ctx()
   local filepath = vim.api.nvim_buf_get_name(bufnr)
 
   local selection_range = nil ---@type { start_lnum: integer, start_col: integer, end_lnum: integer, end_col: integer }|nil
-  local start_lnum, start_col, end_lnum, end_col = dot.buf.retrieve_visual_range()
+  local start_lnum, start_col, end_lnum, end_col = ark.vim.buf.retrieve_visual_range()
   if start_lnum and start_col and end_lnum and end_col then
     if start_lnum ~= end_lnum or start_col ~= end_col then
       selection_range = {

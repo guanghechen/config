@@ -101,7 +101,7 @@ function M.new()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  dot.tab.set_type(tabnr, dot.tab.Types.NORMAL)
+  dot.tab.set_type(tabnr, ark.vim.tab.Types.NORMAL)
   dot.tab.resolve(tabnr, false)
   return tabnr
 end
@@ -115,7 +115,7 @@ function M.new_with_buf()
   vim.bo.bufhidden = "wipe"
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  dot.tab.set_type(tabnr, dot.tab.Types.NORMAL)
+  dot.tab.set_type(tabnr, ark.vim.tab.Types.NORMAL)
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)

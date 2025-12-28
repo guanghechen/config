@@ -40,7 +40,7 @@ local function select_copy_filepaths(params)
         end
 
         local content = table.concat(contents, "\n") ---@type string
-        ark.nvim.copy(content)
+        ark.vim.fn.copy(content)
 
         ---@type string
         local item_text = item.key == "1" and "absolute" or item.key == "2" and "relative" or "filename"

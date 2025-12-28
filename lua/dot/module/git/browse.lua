@@ -188,7 +188,7 @@ function M.open(opts)
   local line_end = opts.line_end ---@type integer|nil
   if line_start == nil or line_end == nil then
     if vim.fn.mode():find("[vV]") then
-      local s, e = dot.buf.retrieve_visual_lnum_range()
+      local s, e = ark.vim.buf.retrieve_visual_lnum_range()
       line_start = s
       line_end = e
     else

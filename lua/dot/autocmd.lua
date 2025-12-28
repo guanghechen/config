@@ -1,5 +1,5 @@
 vim.api.nvim_create_autocmd("BufDelete", {
-  group = ark.nvim.augroup("bootstrap_on_BufDelete"),
+  group = ark.vim.fn.augroup("bootstrap_on_BufDelete"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -10,7 +10,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
 })
 
 vim.api.nvim_create_autocmd("BufWinEnter", {
-  group = ark.nvim.augroup("bootstrap_on_BufWinEnter"),
+  group = ark.vim.fn.augroup("bootstrap_on_BufWinEnter"),
   callback = function(event)
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -32,7 +32,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
 })
 
 vim.api.nvim_create_autocmd("CursorHold", {
-  group = ark.nvim.augroup("bootstrap_on_CursorHold"),
+  group = ark.vim.fn.augroup("bootstrap_on_CursorHold"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     dot.state.status.dirtier_statusline:mark_dirty()
@@ -44,7 +44,7 @@ vim.api.nvim_create_autocmd("CursorHold", {
 })
 
 vim.api.nvim_create_autocmd("DiagnosticChanged", {
-  group = ark.nvim.augroup("bootstrap_on_DiagnosticChanged"),
+  group = ark.vim.fn.augroup("bootstrap_on_DiagnosticChanged"),
   callback = function()
     dot.state.status.dirtier_statusline:mark_dirty()
     dot.state.status.dirtier_tabline:mark_dirty()
@@ -52,7 +52,7 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = ark.nvim.augroup("bootstrap_on_FileType"),
+  group = ark.vim.fn.augroup("bootstrap_on_FileType"),
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -68,14 +68,14 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("ModeChanged", {
-  group = ark.nvim.augroup("bootstrap_on_ModeChanged"),
+  group = ark.vim.fn.augroup("bootstrap_on_ModeChanged"),
   callback = function()
     ark.theme.hlgroup.common.on_mode_changed()
   end,
 })
 
 vim.api.nvim_create_autocmd("OptionSet", {
-  group = ark.nvim.augroup("bootstrap_on_OptionSet_modified"),
+  group = ark.vim.fn.augroup("bootstrap_on_OptionSet_modified"),
   pattern = "modified",
   callback = function()
     dot.state.status.dirtier_statusline:mark_dirty()
@@ -84,7 +84,7 @@ vim.api.nvim_create_autocmd("OptionSet", {
 })
 
 vim.api.nvim_create_autocmd("TabClosed", {
-  group = ark.nvim.augroup("bootstrap_on_TabClosed"),
+  group = ark.vim.fn.augroup("bootstrap_on_TabClosed"),
   callback = function(event)
     local tabnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     dot.tab.on_close(tabnr)
@@ -95,7 +95,7 @@ vim.api.nvim_create_autocmd("TabClosed", {
 })
 
 vim.api.nvim_create_autocmd("TabEnter", {
-  group = ark.nvim.augroup("bootstrap_on_TabEnter"),
+  group = ark.vim.fn.augroup("bootstrap_on_TabEnter"),
   callback = function()
     dot.state.status.dirtier_statusline:mark_dirty()
     dot.state.status.dirtier_tabline:mark_dirty()
@@ -103,7 +103,7 @@ vim.api.nvim_create_autocmd("TabEnter", {
 })
 
 vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
-  group = ark.nvim.augroup("state_on_VimEnter"),
+  group = ark.vim.fn.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
       local cwd = dot.path.cwd() ---@type string
@@ -122,7 +122,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
           local new_filepath = dot.buf.pick_filepath(filepath, existed_filepaths) ---@type string|nil
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true
-            if dot.buf.is_valid(bufnr) then
+            if ark.vim.buf.is_valid(bufnr) then
               local filetype = vim.bo[bufnr].filetype ---@type string
               vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
               vim.bo[bufnr].swapfile = false
@@ -147,7 +147,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 })
 
 vim.api.nvim_create_autocmd("VimLeavePre", {
-  group = ark.nvim.augroup("state_on_VimLeavePre"),
+  group = ark.vim.fn.augroup("state_on_VimLeavePre"),
   once = true,
   callback = function()
     dot.state.status.dispose()
@@ -156,7 +156,7 @@ vim.api.nvim_create_autocmd("VimLeavePre", {
 
 ---! Auto resize splits when window got resized.
 vim.api.nvim_create_autocmd("VimResized", {
-  group = ark.nvim.augroup("bootstrap_on_VimResized"),
+  group = ark.vim.fn.augroup("bootstrap_on_VimResized"),
   callback = function()
     ---Switch to a fixed window to avoid the current floating window being taken affect by `wincmd =`
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -183,7 +183,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 })
 
 vim.api.nvim_create_autocmd("WinClosed", {
-  group = ark.nvim.augroup("bootstrap_on_WinClosed"),
+  group = ark.vim.fn.augroup("bootstrap_on_WinClosed"),
   callback = function(event)
     local winnr = type(event.file) == "string" and tonumber(event.file) or nil ---@type integer|nil
     dot.win.on_close(winnr)
@@ -194,7 +194,7 @@ vim.api.nvim_create_autocmd("WinClosed", {
 })
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = ark.nvim.augroup("bootstrap_on_WinEnter"),
+  group = ark.vim.fn.augroup("bootstrap_on_WinEnter"),
   callback = function()
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
@@ -210,7 +210,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
           meta.winnr_sourcefile:next(winnr)
         end
       end
-      if dot.win.is_fixed(winnr) then
+      if ark.vim.win.is_fixed(winnr) then
         if meta ~= nil then
           meta.winnr_fixed:next(winnr)
         end
@@ -237,7 +237,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 })
 
 vim.api.nvim_create_autocmd("WinResized", {
-  group = ark.nvim.augroup("bootstrap_on_WinResized"),
+  group = ark.vim.fn.augroup("bootstrap_on_WinResized"),
   callback = function()
     vim.schedule(function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -249,7 +249,7 @@ vim.api.nvim_create_autocmd("WinResized", {
 ----------------------------------------------------------------------------------------------------
 
 vim.api.nvim_create_autocmd("LspDetach", {
-  group = ark.nvim.augroup("bootstrap_on_LspDetach"),
+  group = ark.vim.fn.augroup("bootstrap_on_LspDetach"),
   callback = function(args)
     local client_id = args.data.client_id
     local client = vim.lsp.get_client_by_id(client_id)
@@ -261,7 +261,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
 })
 
 vim.api.nvim_create_autocmd("LspProgress", {
-  group = ark.nvim.augroup("bootstrap_on_LspProgress"),
+  group = ark.vim.fn.augroup("bootstrap_on_LspProgress"),
   callback = function(event)
     local data = event.data.params.value
     local progress = ""
@@ -285,7 +285,7 @@ vim.api.nvim_create_autocmd("LspProgress", {
 
 if 1 == 0 then
   vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
-    group = ark.nvim.augroup("debug_on_WinNew_WinEnter"),
+    group = ark.vim.fn.augroup("debug_on_WinNew_WinEnter"),
     callback = function(arg)
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer

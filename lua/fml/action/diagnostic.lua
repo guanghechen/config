@@ -85,7 +85,7 @@ function M.line()
   })
 
   vim.schedule(function()
-    if winnr ~= nil and dot.win.is_valid(winnr) then
+    if winnr ~= nil and ark.vim.win.is_valid(winnr) then
       vim.api.nvim_set_current_win(winnr)
     end
   end)
@@ -201,7 +201,7 @@ function M.to_md()
   end
 
   local content = table.concat(lines, "\n")
-  ark.nvim.copy(content)
+  ark.vim.fn.copy(content)
   ark.reporter.info({
     from = __module_name__,
     subject = "to_md",

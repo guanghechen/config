@@ -253,7 +253,7 @@ end)
 
 ---@return nil
 local function focus()
-  local selected_text = dot.buf.retrieve_selected_text() ---@type string
+  local selected_text = ark.vim.buf.retrieve_selected_text() ---@type string
   searcher:focus()
 
   vim.schedule(function()

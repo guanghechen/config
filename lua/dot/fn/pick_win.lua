@@ -64,7 +64,7 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
   if N < 1 then
     if split_as_needed then
       for _, winnr in ipairs(winnrs) do
-        if not dot.win.is_float(winnr) then
+        if not ark.vim.win.is_float(winnr) then
           local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
           vim.bo[bufnr].bufhidden = "wipe"
           vim.bo[bufnr].buflisted = true

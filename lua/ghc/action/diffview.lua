@@ -37,9 +37,9 @@ end
 ---@return nil
 function M.toggle()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = dot.tab.resolve_type(tabnr, false) ---@type dot.tab.TypeEnum
+  local tabtype = dot.tab.resolve_type(tabnr, false) ---@type ark.vim.tab.TypeEnum
 
-  if tabtype == dot.tab.Types.DIFFVIEW then
+  if tabtype == ark.vim.tab.Types.DIFFVIEW then
     require("diffview").emit("toggle_files")
   else
     require("diffview").open()

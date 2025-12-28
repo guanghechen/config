@@ -3,7 +3,7 @@
 ---@field public pinned                 boolean
 
 ---@class dot.context.tab.meta.data
----@field public tabtype                dot.tab.TypeEnum
+---@field public tabtype                ark.vim.tab.TypeEnum
 ---@field public bufs                   dot.context.tab.buf.data[]
 
 ---@class dot.context.tab.data
@@ -64,7 +64,7 @@ function M.dump()
   for _, tabnr in ipairs(tabnrs) do
     local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
     if meta ~= nil then
-      local tabtype = meta.tabtype ---@type  dot.tab.TypeEnum
+      local tabtype = meta.tabtype ---@type ark.vim.tab.TypeEnum
       local bufs = {} ---@type dot.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type dot.context.tab.meta.data
       for _, buf in ipairs(meta.bufs) do

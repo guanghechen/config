@@ -25,7 +25,7 @@ local __module_name__ = "dot.module.illuminate" ---@type string
 
 local ns_lsp_ref = vim.api.nvim_create_namespace("vim_lsp_references") ---@type integer
 local ns_nvim_ref = vim.api.nvim_create_namespace("nvim.lsp.references") ---@type integer
-local augroup = ark.nvim.augroup(__module_name__) ---@type integer
+local augroup = ark.vim.fn.augroup(__module_name__) ---@type integer
 local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
 local attached_buffers = {} ---@type table<integer, boolean>
 

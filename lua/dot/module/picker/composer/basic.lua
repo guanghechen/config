@@ -551,7 +551,7 @@ function M:__create_wins__()
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   if preview_winnr ~= nil and not should_show_preview then
-    dot.win.close(preview_winnr)
+    ark.vim.win.close(preview_winnr)
     preview_winnr = nil
   end
 

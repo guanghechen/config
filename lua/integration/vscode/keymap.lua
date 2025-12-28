@@ -1,6 +1,6 @@
 local actions = require("integration.vscode.action")
 
-local mk = ark.nvim.make_keys
+local mk = ark.vim.fn.make_keys
 
 ---@param modes                         string[]
 ---@param keys                          string|string[]

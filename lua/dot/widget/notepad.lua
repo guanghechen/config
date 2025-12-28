@@ -1011,7 +1011,7 @@ function M:ensure_buf()
 
   self:__attach_autocmds__(bufnr)
   self:__render_active_item__(bufnr)
-  ark.nvim.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
+  ark.vim.fn.bindkeys(NOTEPAD_KEYMAPS, { bufnr = bufnr, noremap = true, silent = true })
 
   return bufnr
 end
@@ -1096,7 +1096,7 @@ function M:ensure_win()
   if winnr == nil then
     winnr = vim.api.nvim_open_win(bufnr, true, config)
     self._winnr = winnr
-    dot.win.set_type(winnr, dot.win.Types.TEXTAREA)
+    dot.win.set_type(winnr, ark.vim.win.Types.TEXTAREA)
   else
     vim.wo[winnr].winfixbuf = false
     local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
@@ -1174,7 +1174,7 @@ end
 function M:hide()
   local winnr = self:get_winnr()
   self._winnr = nil
-  dot.win.close(winnr)
+  ark.vim.win.close(winnr)
 end
 
 ---@return nil

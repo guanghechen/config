@@ -86,8 +86,8 @@ function M:dispose()
   self._winnr = nil
 
   local ok1, error1 = pcall(linecount.dispose, linecount)
-  local ok2, error2 = pcall(dot.win.close, winnr)
-  local ok3, error3 = pcall(dot.buf.close, bufnr)
+  local ok2, error2 = pcall(ark.vim.win.close, winnr)
+  local ok3, error3 = pcall(ark.vim.buf.close, bufnr)
   if not (ok1 and ok2 and ok3) then
     ark.reporter.error({
       from = fullname,
@@ -158,7 +158,7 @@ function M:create_buf()
   vim.bo[bufnr].filetype = ark.filetype.UX_PICKER_FINDER
   vim.bo[bufnr].swapfile = false
 
-  ark.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  ark.vim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   local keyword = self.input:snapshot() ---@type string
   local initial_lines = vim.split(keyword, "\n", { plain = true }) ---@type string[]
@@ -209,7 +209,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, dot.win.Types.PICKER_FINDER)
+  dot.win.set_type(winnr, ark.vim.win.Types.PICKER_FINDER)
   vim.wo[winnr].cursorline = false
   vim.wo[winnr].number = false
   vim.wo[winnr].relativenumber = false
@@ -241,7 +241,7 @@ function M:hide()
 
   self._winnr = nil
 
-  local ok1, error1 = pcall(dot.win.close, winnr)
+  local ok1, error1 = pcall(ark.vim.win.close, winnr)
   if not ok1 then
     ark.reporter.error({
       from = self.fullname,

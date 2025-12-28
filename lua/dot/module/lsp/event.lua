@@ -1,4 +1,4 @@
-local augroup_codelens = ark.nvim.augroup("dot.module.lsp.event.codelens") ---@type integer
+local augroup_codelens = ark.vim.fn.augroup("dot.module.lsp.event.codelens") ---@type integer
 
 ---@class dot.module.lsp.event
 local M = {}
@@ -311,7 +311,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: rename",
     },
   }
-  ark.nvim.bindkeys(keymaps, { bufnr = bufnr })
+  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 ---@param client                        vim.lsp.Client

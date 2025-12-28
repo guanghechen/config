@@ -685,13 +685,13 @@ function M:__create_wins__()
   local preview_layout = self:__preview_layout__() ---@type "hidden"|"right"|"bottom"
   local should_show_preview = preview_layout ~= "hidden" ---@type boolean
   if preview_winnr ~= nil and not should_show_preview then
-    dot.win.close(preview_winnr)
+    ark.vim.win.close(preview_winnr)
     preview_winnr = nil
   end
 
   local should_show_replacer = self:__should_show_replacer__() ---@type boolean
   if replacer_winnr ~= nil and not should_show_replacer then
-    dot.win.close(replacer_winnr)
+    ark.vim.win.close(replacer_winnr)
     replacer_winnr = nil
   end
 
@@ -1812,7 +1812,7 @@ function M:__toggle_replacer_visibility__(flag_replace)
         self.finder:focus()
       end
 
-      dot.win.close(replacer_winnr)
+      ark.vim.win.close(replacer_winnr)
       self:resize()
     end
   end

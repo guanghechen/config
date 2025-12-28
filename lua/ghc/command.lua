@@ -63,14 +63,14 @@ command
   })
   .implement({
     uuid = K.explorer.toggle.uuid,
-    tabtype = dot.tab.Types.NORMAL,
+    tabtype = ark.vim.tab.Types.NORMAL,
     action = function()
       dot.widget.explorer.toggle()
     end,
   })
   .implement({
     uuid = K.explorer.toggle.uuid,
-    tabtype = dot.tab.Types.DIFFVIEW,
+    tabtype = ark.vim.tab.Types.DIFFVIEW,
     action = function()
       require("ghc.action.diffview").toggle()
     end,
@@ -100,7 +100,7 @@ command
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
-  tabtype = dot.tab.Types.DIFFVIEW,
+  tabtype = ark.vim.tab.Types.DIFFVIEW,
   action = function()
     require("ghc.action.diffview").refresh()
   end,

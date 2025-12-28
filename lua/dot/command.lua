@@ -7,12 +7,12 @@ local __module_name__ = "dot.command" ---@type string
 
 ---@class dot.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                dot.tab.TypeEnum|nil
+---@field public tabtype                ark.vim.tab.TypeEnum|nil
 ---@field public action                 fun(args?: string): nil
 
 ---@class dot.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?dot.tab.TypeEnum
+---@field public tabtype                ?ark.vim.tab.TypeEnum
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, dot.command.IRawDefinition>
@@ -32,7 +32,7 @@ local M = {
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = dot.tab.resolve_type(tabnr, false) ---@type dot.tab.TypeEnum
+  local tabtype = dot.tab.resolve_type(tabnr, false) ---@type ark.vim.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] or command_map[uuid] ---@type dot.command.ICommand|nil
 
@@ -111,7 +111,7 @@ end
 ---@return dot.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype ---@type dot.tab.TypeEnum|nil
+  local tabtype = implementation.tabtype ---@type ark.vim.tab.TypeEnum|nil
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil
   if definition == nil then

@@ -17,7 +17,7 @@ local function restore(original)
     return false
   end
 
-  if not dot.win.is_float(winnr) then
+  if not ark.vim.win.is_float(winnr) then
     dot.state.maximized.clear_original_float()
     return false
   end

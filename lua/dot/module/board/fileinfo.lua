@@ -292,7 +292,7 @@ function M:__setup_keymaps__(bufnr)
     { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "fileinfo: close" },
     { modes = { "n" }, key = "<Esc>", callback = function() self:close() end, desc = "fileinfo: close" },
   }
-  ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
 return M

@@ -202,7 +202,7 @@ local picker = dot.picker.ListComposer.new({
     if item ~= nil then
       ---@cast item dot.fn.find_highlights.IItem
       composer:close()
-      ark.nvim.copy(item.uuid)
+      ark.vim.fn.copy(item.uuid)
     end
   end,
   on_refresh = function(composer)

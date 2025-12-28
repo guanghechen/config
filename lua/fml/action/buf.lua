@@ -29,21 +29,21 @@ function M.close()
   local winnr = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    dot.buf.close(bufnr)
+    ark.vim.buf.close(bufnr)
     return
   end
 
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   if meta == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    dot.buf.close(bufnr)
+    ark.vim.buf.close(bufnr)
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
   local history = meta.history ---@type ark.c.History|nil
   if history == nil then
-    dot.buf.close(bufnr)
+    ark.vim.buf.close(bufnr)
     return
   end
 
@@ -107,7 +107,7 @@ function M.close_others()
   end
 
   local bufnrs_to_remove = {} ---@type integer[]
-  local bufnrs_visible = dot.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = ark.vim.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
 
   for _, buf in ipairs(meta.bufs) do
     if not buf.pinned and not bufnrs_visible[buf.bufnr] then
@@ -138,7 +138,7 @@ function M.close_to_leftest()
   end
 
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufnrs_visible = dot.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = ark.vim.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile - 1, 1, -1 do
@@ -171,7 +171,7 @@ function M.close_to_rightest()
   end
 
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufnrs_visible = dot.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
+  local bufnrs_visible = ark.vim.tab.list_visible_bufnrs(tabnr) ---@type table<integer, boolean>
   local bufnrs_to_remove = {} ---@type integer[]
 
   for i = bufid_sourcefile + 1, #bufs, 1 do

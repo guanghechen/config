@@ -205,7 +205,7 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     local bufnr = event.buf ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     if filepath ~= "" then
-      ark.nvim.on_buf_open(bufnr, filepath)
+      ark.vim.buf.on_buf_open(bufnr, filepath)
     end
   end,
 })
@@ -214,6 +214,6 @@ vim.api.nvim_create_autocmd("BufDelete", {
   group = augroup("cache_buf_filepath_delete"),
   callback = function(event)
     local bufnr = event.buf ---@type integer
-    ark.nvim.on_buf_close(bufnr)
+    ark.vim.buf.on_buf_close(bufnr)
   end,
 })

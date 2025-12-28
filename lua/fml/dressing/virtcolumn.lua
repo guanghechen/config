@@ -183,7 +183,7 @@ vim.api.nvim_create_autocmd({
   "FileType",
   "CursorHold",
 }, {
-  group = ark.nvim.augroup("virtcolumn_refresh"),
+  group = ark.vim.fn.augroup("virtcolumn_refresh"),
   callback = function()
     refresh_debounced()
   end,

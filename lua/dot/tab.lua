@@ -1,7 +1,3 @@
----@alias dot.tab.TypeEnum
----| "diffview"
----| "normal"
-
 ---@class dot.tab.IBufItem
 ---@field public bufnr                  integer
 ---@field public pinned                 boolean
@@ -11,23 +7,17 @@
 ---@field public winnr_fixed            ark.c.Observable
 ---@field public winnr_float            ark.c.Observable
 ---@field public winnr_sourcefile       ark.c.Observable
----@field public tabtype                dot.tab.TypeEnum
-
----@class dot.tab.Types
-local Types = {
-  DIFFVIEW = "diffview",
-  NORMAL = "normal",
-}
+---@field public tabtype                ark.vim.tab.TypeEnum
 
 local meta_map = {} ---@type table<integer, dot.tab.IMeta>
 
 ---@class dot.tab
 local M = {}
 
-M.Types = vim.deepcopy(Types)
+----------------------------------------------------------------------------------------------------
 
 ---@param tabnr                         integer|nil
----@return dot.tab.TypeEnum|nil
+---@return ark.vim.tab.TypeEnum|nil
 function M.get_type(tabnr)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return nil
@@ -36,7 +26,7 @@ function M.get_type(tabnr)
 end
 
 ---@param tabnr                         integer
----@param tabtype                       dot.tab.TypeEnum|nil
+---@param tabtype                       ark.vim.tab.TypeEnum|nil
 ---@return nil
 function M.set_type(tabnr, tabtype)
   vim.t[tabnr].eve_type = tabtype
@@ -69,24 +59,6 @@ function M.focus_win_sourcefile(tabnr)
   if winnr_sourcefile ~= nil then
     vim.api.nvim_tabpage_set_win(tabnr, winnr_sourcefile)
   end
-end
-
----@param tabnr                         integer
----@return boolean
-function M.is_valid(tabnr)
-  return tabnr > 0 and vim.api.nvim_tabpage_is_valid(tabnr)
-end
-
----@param tabnr                         integer
----@return table<integer, boolean>
-function M.list_visible_bufnrs(tabnr)
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  local bufnrs = {} ---@type table<integer, boolean>
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    bufnrs[bufnr] = true
-  end
-  return bufnrs
 end
 
 ---@param bufnrs                        integer[]|nil
@@ -332,12 +304,12 @@ function M.resolve(tabnr, force)
     end
   end
 
-  local tabtype = M.resolve_type(tabnr, force) ---@type dot.tab.TypeEnum
+  local tabtype = M.resolve_type(tabnr, force) ---@type ark.vim.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = ark.c.Observable.from_value(dot.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.Observable
-  local winnr_float = ark.c.Observable.from_value(dot.win.is_float(winnr) and winnr or 0) ---@type ark.c.Observable
-  local winnr_sourcefile = ark.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0)
+  local winnr_fixed = ark.c.Observable.from_value(ark.vim.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.Observable
+  local winnr_float = ark.c.Observable.from_value(ark.vim.win.is_float(winnr) and winnr or 0) ---@type ark.c.Observable
+  local winnr_sourcefile = ark.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0) ---@type ark.c.Observable
 
   ---@type dot.tab.IMeta
   meta = {
@@ -353,9 +325,9 @@ end
 
 ---@param tabnr                         integer
 ---@param force                         boolean
----@return dot.tab.TypeEnum
+---@return ark.vim.tab.TypeEnum
 function M.resolve_type(tabnr, force)
-  local tabtype = M.get_type(tabnr) ---@type dot.tab.TypeEnum|nil
+  local tabtype = M.get_type(tabnr) ---@type ark.vim.tab.TypeEnum|nil
   if tabtype ~= nil and not force then
     return tabtype
   end
@@ -367,12 +339,12 @@ function M.resolve_type(tabnr, force)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == ark.filetype.DIFFVIEW_FILES or filetype == ark.filetype.DIFFVIEW_FILE_HISTORY then
-      tabtype = Types.DIFFVIEW ---@type dot.tab.TypeEnum
+      tabtype = ark.vim.tab.Types.DIFFVIEW ---@type ark.vim.tab.TypeEnum
       break
     end
   end
 
-  tabtype = tabtype or Types.NORMAL ---@type dot.tab.TypeEnum
+  tabtype = tabtype or ark.vim.tab.Types.NORMAL ---@type ark.vim.tab.TypeEnum
   M.set_type(tabnr, tabtype)
   return tabtype
 end

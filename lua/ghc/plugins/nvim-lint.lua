@@ -175,7 +175,7 @@ return {
     end)
 
     vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
-      group = ark.nvim.augroup("nvim-lint-on-file-load-save"),
+      group = ark.vim.fn.augroup("nvim-lint-on-file-load-save"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
         lint_debounced(bufnr)
@@ -183,7 +183,7 @@ return {
     })
 
     vim.api.nvim_create_autocmd({ "InsertLeave" }, {
-      group = ark.nvim.augroup("nvim-lint-on-insert-leave"),
+      group = ark.vim.fn.augroup("nvim-lint-on-insert-leave"),
       callback = function()
         local bufnr = vim.api.nvim_get_current_buf() ---@type integer
         lint_debounced(bufnr)

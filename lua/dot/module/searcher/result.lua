@@ -80,7 +80,7 @@ function M.new(props)
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
   local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.module.searcher.result.IOnDrawed
-  local augroup_CursorMoved = ark.nvim.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
+  local augroup_CursorMoved = ark.vim.fn.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
@@ -408,8 +408,8 @@ function M:dispose()
   local ok1, error1 = pcall(lnum_current.dispose, lnum_current)
   local ok2, error2 = pcall(lnum_present.dispose, lnum_present)
   local ok3, error3 = pcall(lnum_total.dispose, lnum_total)
-  local ok4, error4 = pcall(dot.win.close, winnr)
-  local ok5, error5 = pcall(dot.buf.close, bufnr)
+  local ok4, error4 = pcall(ark.vim.win.close, winnr)
+  local ok5, error5 = pcall(ark.vim.buf.close, bufnr)
   local ok6, error6 = pcall(vim.api.nvim_clear_autocmds, { group = augroup_CursorMoved })
   local ok7, error7 = pcall(nvimbar.dispose, nvimbar)
   local ok8, error8 = pcall(scheduler_content.dispose, scheduler_content)
@@ -496,7 +496,7 @@ function M:create_buf()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  ark.nvim.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  ark.vim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
   self._scheduler_content:schedule({ immediate = true })
   self._scheduler_lnum_current:schedule({ immediate = true })
@@ -534,7 +534,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, dot.win.Types.PICKER_RESULT)
+  dot.win.set_type(winnr, ark.vim.win.Types.PICKER_RESULT)
 
   local lnum_total = self.lnum_total:snapshot() ---@type integer
   vim.wo[winnr].cursorline = lnum_total > 0
@@ -574,7 +574,7 @@ function M:hide()
 
   self._winnr = nil
 
-  local ok1, error1 = pcall(dot.win.close, winnr)
+  local ok1, error1 = pcall(ark.vim.win.close, winnr)
   if not ok1 then
     ark.reporter.error({
       from = self.fullname,

@@ -152,7 +152,7 @@ refresh_debounced = ark.timer.debounce(do_refresh, DEBOUNCE_MS)
 ---@param highlights                     ark.t.IHighlightInline[]
 ---@return string
 function M.render(filepath, offset, highlights)
-  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
+  local bufnr = ark.vim.buf.locate_bufnr(filepath) ---@type integer|nil
   if bufnr == nil or bufnr < 1 then
     return ""
   end
@@ -216,7 +216,7 @@ end
 ---@param filepath                       string
 ---@return dot.module.lsp.diagnostic.IBufferDiagnostics
 function M.get_by_filepath(filepath)
-  local bufnr = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
+  local bufnr = ark.vim.buf.locate_bufnr(filepath) ---@type integer|nil
   if bufnr == nil or bufnr < 1 then
     return EMPTY_BUFFER
   end
@@ -267,7 +267,7 @@ end
 
 ---@return nil
 function M.setup()
-  local augroup = ark.nvim.augroup(__module_name__) ---@type integer
+  local augroup = ark.vim.fn.augroup(__module_name__) ---@type integer
 
   vim.api.nvim_create_autocmd("DiagnosticChanged", {
     group = augroup,

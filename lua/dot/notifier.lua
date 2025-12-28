@@ -367,7 +367,7 @@ end
 ---@return integer
 function M.__create_buf_as_needed__(win)
   local bufnr = win.bufnr ---@type integer|nil
-  if bufnr == nil or not dot.buf.is_valid(bufnr) then
+  if bufnr == nil or not ark.vim.buf.is_valid(bufnr) then
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     win.bufnr = bufnr
 
@@ -391,7 +391,7 @@ function M.__create_buf_as_needed__(win)
         end,
       },
     }
-    ark.nvim.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+    ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     if vim.treesitter ~= nil and vim.treesitter.language ~= nil then
       local lang = vim.treesitter.language.get_lang("markdown") or "markdown" ---@type string
@@ -459,12 +459,12 @@ function M.__create_win_as_needed__(win)
   local bufnr = M.__create_buf_as_needed__(win) ---@type integer
   local winnr = win.winnr ---@type integer|nil
 
-  if winnr == nil or not dot.win.is_valid(winnr) then
+  if winnr == nil or not ark.vim.win.is_valid(winnr) then
     wincfg.noautocmd = true
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
 
-    dot.win.set_type(winnr, dot.win.Types.NOTIFY)
+    dot.win.set_type(winnr, ark.vim.win.Types.NOTIFY)
     vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].conceallevel = 0
@@ -528,7 +528,7 @@ function M.__gen_winbar__(task, width)
   local text_left = string.format("%s %s", ark.icon.loglevel[task.level], text_title) ---@type string
   local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
   local hlname = config.winbar[task.level] ---@type string
-  local hl_text = ark.nvim.txt(text_left, hlname) .. "%=%=" .. ark.nvim.txt(text_right, hlname)
+  local hl_text = ark.vim.fn.txt(text_left, hlname) .. "%=%=" .. ark.vim.fn.txt(text_right, hlname)
   return hl_text
 end
 
@@ -690,11 +690,11 @@ function M.__handle__()
 end
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = ark.nvim.augroup("notifier_on_WinEnter"),
+  group = ark.vim.fn.augroup("notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
-    if meta ~= nil and meta.wintype == dot.win.Types.NOTIFY then
+    if meta ~= nil and meta.wintype == ark.vim.win.Types.NOTIFY then
       for _, win in ipairs(__WINS__) do
         if win.winnr == winnr then
           win.tick = win.tick + 1
@@ -706,7 +706,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 })
 
 vim.api.nvim_create_autocmd("VimResized", {
-  group = ark.nvim.augroup("notifier_on_VimResized"),
+  group = ark.vim.fn.augroup("notifier_on_VimResized"),
   callback = function()
     M.schedule()
   end,

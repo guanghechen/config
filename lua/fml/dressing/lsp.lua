@@ -64,7 +64,7 @@ local function enable_lsp_for_filetype(ft)
 end
 
 vim.api.nvim_create_autocmd("FileType", {
-  group = ark.nvim.augroup(__module_name__ .. ".setup"),
+  group = ark.vim.fn.augroup(__module_name__ .. ".setup"),
   callback = function(args)
     enable_lsp_for_filetype(args.match)
   end,

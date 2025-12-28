@@ -1,5 +1,5 @@
-local btn = ark.nvim.btn
-local txt = ark.nvim.txt
+local btn = ark.vim.fn.btn
+local txt = ark.vim.fn.txt
 
 local fileformat_text_map = {
   dos = "CRLF",

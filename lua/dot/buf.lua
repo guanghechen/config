@@ -1,29 +1,5 @@
 local __module_name__ = "dot.buf" ---@type string
 
----@alias dot.buf.TypeEnum
----| ""
----| "acwrite"
----| "help"
----| "nofile"
----| "nowrite"
----| "quickfix"
----| "terminal"
----| "prompt"
-
-local BUFFER_CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
-
----@class dot.buf.Types
-local Types = {
-  EMPTY = "",
-  ACWRITE = "acwrite",
-  HELP = "help",
-  NOFILE = "nofile",
-  NOWRITE = "nowrite",
-  QUICKFIX = "quickfix",
-  TERMINAL = "terminal",
-  PROMPT = "prompt",
-}
-
 ---@class dot.buf.IMeta
 ---@field public dirpath_pieces         string[]
 ---@field public filename               string
@@ -32,59 +8,12 @@ local Types = {
 ---@field public fileicon               string
 ---@field public fileicon_hln           string
 
-local buftype_attrs = {
-  sourcefile = {
-    [Types.EMPTY] = true,
-    [Types.ACWRITE] = true,
-    [Types.NOFILE] = true,
-    [Types.NOWRITE] = true,
-  },
-}
-
 local meta_map = {} ---@type table<integer, dot.buf.IMeta|nil>
 
 ---@class dot.buf
 local M = {}
 
-M.CONTENT_SPLITLINE = BUFFER_CONTENT_SPLITLINE ---@type string
-M.Types = vim.deepcopy(Types)
-
----@param bufnr                         integer|nil
----@return nil
-function M.close(bufnr)
-  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_editable(bufnr)
-  return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_sourcefile(bufnr)
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype_attrs.sourcefile[buftype] ~= true then
-    return false
-  end
-
-  local filetype = vim.bo[bufnr].filetype ---@type string
-  if ark.filetype.is_not_sourcefile(filetype) then
-    return false
-  end
-
-  return true
-end
-
----@param bufnr                         integer
----@return boolean
-function M.is_valid(bufnr)
-  return bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr)
-end
+----------------------------------------------------------------------------------------------------
 
 ---@param filepath                      string|nil
 ---@return integer|nil
@@ -93,7 +22,7 @@ function M.loadfile(filepath)
     return nil
   end
 
-  local bufnr_sourcefile = ark.nvim.locate_bufnr(filepath) ---@type integer|nil
+  local bufnr_sourcefile = ark.vim.buf.locate_bufnr(filepath) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
     vim.bo[bufnr_sourcefile].buflisted = true
     return bufnr_sourcefile
@@ -206,122 +135,6 @@ function M.resolve(bufnr, force)
   end
 
   return meta
-end
-
----@return string
-function M.retrieve_selected_text()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  if buftype == Types.TERMINAL or buftype == Types.PROMPT then
-    return ""
-  end
-
-  local saved_reg = vim.fn.getreg("v")
-  vim.cmd([[noautocmd sil norm! "vy]])
-
-  local selected_text = vim.fn.getreg("v")
-  vim.fn.setreg("v", saved_reg)
-  return selected_text or ""
-end
-
----@param winnr                         integer
----@return string
-function M.retrieve_split_block(winnr)
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  local cursor_line = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-
-  local lft = 0 ---@type integer
-  for i = cursor_line, 1, -1 do
-    if lines[i] == BUFFER_CONTENT_SPLITLINE then
-      lft = i
-      break
-    end
-  end
-
-  local rht = #lines + 1 ---@type integer
-  for i = cursor_line, #lines do
-    if lines[i] == BUFFER_CONTENT_SPLITLINE then
-      rht = i
-      break
-    end
-  end
-
-  while lft + 1 < rht and lines[lft + 1]:match("^%s*$") do
-    lft = lft + 1
-  end
-
-  while rht - 1 > lft and lines[rht - 1]:match("^%s*$") do
-    rht = rht - 1
-  end
-
-  local text = table.concat(lines, "\n", lft + 1, rht - 1) ---@type string
-  return text
-end
-
----@return integer
----@return integer
-function M.retrieve_visual_lnum_range()
-  local start_pos = vim.fn.getpos("v") -- visual selection start
-  local end_pos = vim.fn.getpos(".") -- visual selection end (cursor)
-
-  local lnum_start = start_pos[2] ---@type integer
-  local lnum_end = end_pos[2] ---@type integer
-
-  if lnum_start < lnum_end then
-    return lnum_start, lnum_end
-  end
-  return lnum_end, lnum_start
-end
-
----@return integer
----@return integer
----@return integer
----@return integer
-function M.retrieve_visual_range()
-  local s_pos = vim.fn.getpos("v") -- visual selection start
-  local e_pos = vim.fn.getpos(".") -- visual selection end (cursor)
-
-  local s_lnum = s_pos[2] ---@type integer
-  local s_col = s_pos[3] ---@type integer
-  local e_lnum = e_pos[2] ---@type integer
-  local e_col = e_pos[3] ---@type integer
-
-  if s_lnum < e_lnum then
-    return s_lnum, s_col, e_lnum, e_col
-  end
-
-  if s_lnum == e_lnum and s_col < e_col then
-    return s_lnum, s_col, e_lnum, e_col
-  end
-
-  return e_lnum, e_col, s_lnum, s_col
-end
-
----@param bufnr                         integer
----@param lnum_start                    integer
----@param col_start                     integer
----@param lnum_end                      integer
----@param col_end                       integer
----@return string[]
-function M.retrieve_visual_range_lines(bufnr, lnum_start, col_start, lnum_end, col_end)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, lnum_start - 1, lnum_end, false) ---@type string[]
-  local N = #lines ---@type integer
-
-  if N == 0 then
-    return {}
-  end
-
-  if N == 1 then
-    lines[1] = string.sub(lines[1], col_start, col_end)
-  end
-
-  if N > 1 then
-    lines[1] = string.sub(lines[1], col_start, -1)
-    lines[N] = string.sub(lines[N], 1, col_end)
-  end
-
-  return lines
 end
 
 ----------------------------------------------------------------------------------------------------
