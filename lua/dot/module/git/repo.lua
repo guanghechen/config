@@ -111,6 +111,4 @@ function M:update_index(mode_bits, object_name, file, callback)
   dot.git.cmd.update_index_async(self.toplevel, mode_bits, object_name, relpath, callback)
 end
 
-function M.setup() end
-
 return M

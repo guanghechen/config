@@ -380,6 +380,4 @@ function M.update_index_async(cwd, mode_bits, object_name, relpath, callback)
   )
 end
 
-function M.setup() end
-
 return M

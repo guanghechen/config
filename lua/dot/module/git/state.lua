@@ -330,6 +330,4 @@ function M.refresh_user_info()
   end)
 end
 
-function M.setup() end
-
 return M

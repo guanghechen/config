@@ -750,6 +750,4 @@ function M.compute_dir_status(aggregated, dirpath)
   return info
 end
 
-function M.setup() end
-
 return M
