@@ -45,6 +45,12 @@ function M.gen_hlgroup_map(context)
     m_bk_normal = { fg = c.text, bg = bg_pane },
     m_bk_title = { fg = c.accentPurple, bg = bg_pane, bold = true },
 
+    ---module/choice
+    m_ch_current = { bg = u.bg3 },
+    m_ch_key = { fg = c.accentPink, bold = true },
+    m_ch_normal = { fg = c.text, bg = bg_pane },
+    m_ch_text = { fg = c.text },
+
     ---module/colorpicker
     m_cp_bar_name = { fg = c.textDim, bg = bg_pane },
     m_cp_bar_value = { fg = c.text, bg = bg_pane },
