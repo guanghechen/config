@@ -9,11 +9,11 @@ function M.gen_hlgroup_map(context)
   local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
   local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
-  local lazy_panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
+  local panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
   local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
   local treesitter_context_bg = t and c.none or c.surface0
-  local lazy_badge_fg = u.bg1 ---@type string
-  local lazy_badge_bg = u.pink ---@type string
+  local badge_fg = u.bg1 ---@type string
+  local badge_bg = u.pink ---@type string
 
   ---@type table<string, ark.t.theme.IHlgroup>
   return {
@@ -84,43 +84,15 @@ function M.gen_hlgroup_map(context)
     FlashPromptIcon = { fg = c.peach, bg = c.none },
     FlashCursor = { fg = c.base, bg = c.text },
 
-    ---! lazy.nvim
-    LazyButton = { fg = c.text, bg = c.none },
-    LazyButtonActive = { fg = u.pink, bg = c.none },
-    LazyCommit = { fg = c.green },
-    LazyCommitIssue = { fg = c.yellow },
-    LazyDir = { fg = c.blue },
-    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
-    LazyH2 = { fg = c.text, bold = true, underline = true },
-    LazyNoCond = { fg = c.red },
-    LazyNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
-    LazyProgressDone = { fg = c.blue, bold = true },
-    LazyProgressTodo = { fg = c.overlay1, italic = true },
-    LazyReasonCmd = { fg = c.yellow },
-    LazyReasonEvent = { fg = c.sky },
-    LazyReasonFt = { fg = c.lavender },
-    LazyReasonImport = { fg = c.subtext0 },
-    LazyReasonKeys = { fg = c.blue },
-    LazyReasonPlugin = { fg = c.red },
-    LazyReasonRuntime = { fg = c.mauve },
-    LazyReasonSource = { fg = c.green },
-    LazyReasonStart = { fg = c.text },
-    LazyOperator = { fg = c.text },
-    LazyProp = { fg = c.lavender, bold = true },
-    LazySpecial = { fg = c.blue },
-    LazyTaskOutput = { fg = c.text },
-    LazyUrl = { fg = c.blue, underline = true },
-    LazyValue = { fg = c.teal },
-
     ---! mason.nvim
     MasonHeader = { fg = u.pink, bg = c.none },
     MasonHighlight = { fg = c.blue },
-    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
+    MasonHighlightBlock = { fg = badge_fg, bg = badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = u.fg1 },
     MasonMutedBlock = { fg = u.fg1 },
-    MasonNormal = { fg = c.text, bg = lazy_panel_bg, blend = t and 0 or 40 },
+    MasonNormal = { fg = c.text, bg = panel_bg, blend = t and 0 or 40 },
 
     ---! mini.icons
     MiniIconsAzure = { fg = c.sky },

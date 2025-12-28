@@ -11,6 +11,8 @@ function M.gen_hlgroup_map(context)
 
   local bg = t and c.none or u.bg0 ---@type string
   local bg_pane = t and u.bg0 or c.none ---@type string
+  local badge_fg = u.bg1 ---@type string
+  local panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
 
   return {
     ---module/ai
@@ -49,7 +51,7 @@ function M.gen_hlgroup_map(context)
     m_ch_current = { bg = u.bg3 },
     m_ch_key = { fg = c.accentPink, bold = true },
     m_ch_normal = { fg = c.text, bg = bg_pane },
-    m_ch_sign_current = { fg = c.accentCyan, bg = u.bg3 },
+    m_ch_sign_current = { fg = c.accentAqua, bg = u.bg3 },
     m_ch_text = { fg = c.text },
 
     ---module/colorpicker
@@ -177,6 +179,38 @@ function M.gen_hlgroup_map(context)
     m_pk_sign_line_present_current = { fg = u.pink, bg = u.bg3, bold = true },
     m_pk_sign_line_selected = { fg = u.purple, bg = c.none },
     m_pk_sign_line_selected_current = { fg = u.purple, bg = u.bg3 },
+
+    ---module/plugin
+    m_pl_bold = { bold = true },
+    m_pl_button = { fg = c.text, bg = c.none },
+    m_pl_button_active = { fg = u.pink, bg = c.none },
+    m_pl_cmd = { fg = c.accentBlue },
+    m_pl_comment = { fg = c.textMuted, italic = true },
+    m_pl_commit = { fg = c.accentBlue },
+    m_pl_commit_from = { fg = c.accentRed },
+    m_pl_commit_msg = { fg = c.text },
+    m_pl_commit_time = { fg = c.textMuted, italic = true },
+    m_pl_commit_to = { fg = c.accentGreen },
+    m_pl_commit_type = { fg = c.accentPurple, bold = true },
+    m_pl_dep = { fg = c.textMuted, italic = true },
+    m_pl_error = { fg = c.accentRed },
+    m_pl_event = { fg = c.accentYellow },
+    m_pl_ft = { fg = c.accentAqua },
+    m_pl_h1 = { fg = badge_fg, bg = u.pink, bold = true },
+    m_pl_h2 = { fg = c.text, bold = true, underline = true },
+    m_pl_icon_cmd = { fg = c.accentBlue },
+    m_pl_icon_dep = { fg = c.accentRed },
+    m_pl_icon_event = { fg = c.accentYellow },
+    m_pl_icon_ft = { fg = c.accentAqua },
+    m_pl_icon_key = { fg = c.accentGreen },
+    m_pl_icon_source = { fg = c.accentPurple },
+    m_pl_key = { fg = c.accentGreen },
+    m_pl_loaded = { fg = c.success },
+    m_pl_normal = { fg = c.text, bg = panel_bg, blend = t and 0 or 40 },
+    m_pl_not_loaded = { fg = c.textMuted },
+    m_pl_running = { fg = c.accentYellow },
+    m_pl_source = { fg = c.accentPurple },
+    m_pl_time = { fg = c.accentPurple },
 
     ---module/searcher
     m_ss_matches = { fg = u.pink, bold = true, italic = true },

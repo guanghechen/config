@@ -5,9 +5,7 @@
     "lua/dot/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -139,7 +137,12 @@
     "Fnotepadswapleft",
     "Fnotepadswapright",
     "Fnotepadtoggle",
+    "Fnotepadsplith",
+    "Fnotepadsplitj",
+    "Fnotepadsplitk",
+    "Fnotepadsplitl",
     "Fopen",
+    "Fpluginopen",
     "Frefreshall",
     "Freplacefiles",
     "Freplacefilesinbuffer",
@@ -967,3 +970,4 @@
     "zindex"
   ]
 }
+

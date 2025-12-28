@@ -504,6 +504,11 @@ M.definitions.notepad = {
   split_l = D.new("Fnotepadsplitl", "notepad: split right"),
 }
 
+---@class dot.command.definitions.plugin
+M.definitions.plugin = {
+  open = D.new("Fpluginopen", "plugin: open"),
+}
+
 ---@class dot.command.definitions.refresh
 M.definitions.refresh = {
   all = D.new("Frefreshall", "refresh: all"),

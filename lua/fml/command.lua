@@ -1285,6 +1285,14 @@ command
     end,
   })
 
+--[plugin] -----------------------------------------------------------------------------------------
+command.implement({
+  uuid = K.plugin.open.uuid,
+  action = function()
+    require("dot.module.plugin").show()
+  end,
+})
+
 --[ux] widgets -------------------------------------------------------------------------------------
 command
   .implement({

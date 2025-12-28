@@ -1,25 +1,5 @@
 local __module_name__ = "ghc.plugin" ---@type string
 
----@class ghc.plugin.IRawSpec
----@field public name                   string
----@field public branch                 ?string
----@field public main                   ?string
----@field public cond                   fun(): boolean
-
----@class ghc.plugin.ISpec
----@field public url                    string
----@field public branch                 string
----@field public name                   string
----@field public main                   ?string
----@field public cond                   fun(): boolean
-
----@class ghc.plugin.ISpecDetails : ghc.plugin.ISpec
----@field public cmd                    ?any
----@field public cond                   ?any
----@field public enabled                ?any
----@field public event                  ?any
----@field public lazy                   ?any
-
 ---@class ghc.plugin.bootstrap.conds
 local conds = {
   common = function()
@@ -53,7 +33,7 @@ local conds = {
   end,
 }
 
----@type ghc.plugin.IRawSpec[]
+---@type dot.module.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
@@ -82,15 +62,22 @@ local raw_specs = {
   -- stylua: ignore end
 }
 
----@type ghc.plugin.ISpec[]
+---@type string[]
+local no_details_module_names = {
+  "friendly-snippets",
+  "nvim-nio",
+}
+
+---@type dot.module.plugin.IPluginSpec[]
 local specs = {}
 for _, raw_spec in ipairs(raw_specs) do
   local url = "https://github.com/guanghechen/mirror.git" ---@type string
   local name = raw_spec.name ---@type string
-  local main = raw_spec.main ---@type string
+  local main = raw_spec.main ---@type string|nil
   local branch = raw_spec.branch or ("nvim@" .. name) ---@type string
   local cond = raw_spec.cond ---@type fun(): boolean
-  ---@type ghc.plugin.ISpec
+
+  ---@type dot.module.plugin.IPluginSpec
   local spec = {
     url = url,
     branch = branch,
@@ -98,99 +85,27 @@ for _, raw_spec in ipairs(raw_specs) do
     main = main,
     cond = cond,
   }
-  specs[#specs + 1] = spec
-end
 
----extend specs------------------------------------------------------------------------------
-
-local final_specs = {} ---@type ghc.plugin.ISpecDetails[]
-for _, spec in ipairs(specs) do
-  ---@type ghc.plugin.ISpecDetails
-  local spec_basic = vim.tbl_deep_extend("force", {}, spec)
-  final_specs[#final_specs + 1] = spec_basic
-end
-
----@type string[]
-local no_details_module_names = {
-  "friendly-snippets",
-  "nvim-nio",
-}
-
-for index = 1, #specs, 1 do
-  local spec_basic = final_specs[index] ---@type ghc.plugin.ISpecDetails
+  -- Load plugin details from ghc.plugins.*
   local spec_module_name = "ghc.plugins."
-    .. spec_basic.name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
+    .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
-  if ok then
-    local spec_details = vim.tbl_deep_extend("force", {}, spec_basic, spec_module)
-    final_specs[#final_specs + 1] = spec_details
-
-    spec_basic.cmd = spec_details.cmd
-    spec_basic.enabled = spec_details.enabled
-    spec_basic.event = spec_details.event
-    spec_basic.lazy = spec_details.lazy
-
-    spec_details.cond = spec_basic.cond
-    spec_details.url = spec_basic.url
-    spec_details.branch = spec_basic.branch
-    spec_details.main = spec_basic.main
-  elseif not vim.list_contains(no_details_module_names, spec_basic.name) then
+  if ok and spec_module then
+    spec = vim.tbl_deep_extend("force", spec, spec_module)
+    spec.cond = cond
+    spec.url = url
+    spec.branch = branch
+    spec.main = main or spec.main
+  elseif not vim.list_contains(no_details_module_names, name) then
     ark.reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
-      message = "Failed to resolve the details of plugin: " .. spec_basic.name,
-      details = { basic = spec_basic, error = spec_module },
+      message = "Failed to resolve the details of plugin: " .. name,
+      details = { basic = spec, error = spec_module },
     })
   end
+
+  specs[#specs + 1] = spec
 end
 
----! bootstrap lazy and all plugins
-vim.list_extend(final_specs, require("ghc.plugins._extra"))
-
-local lazypath = dot.path.normalize(ark.env.HOME_NVIM_DATA .. "/lazy/lazy.nvim")
-if not yoz.path.is_exist(dot.path.join(lazypath, ".git")) then
-  local repo = "https://github.com/guanghechen/mirror"
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    repo,
-    "--single-branch",
-    "--branch=nvim@ghc-lazy.nvim",
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(lazypath)
-vim.env.LAZY_PATH = lazypath
-require("lazy").setup({
-  spec = final_specs,
-  defaults = {
-    lazy = true,
-  },
-  install = {
-    colorscheme = { "default" },
-  },
-  checker = {
-    enabled = false, -- set true to automatically check for plugin updates
-  },
-  git = {
-    timeout = 60 * 60 * 24, -- 24h
-  },
-  performance = {
-    rtp = {
-      disabled_plugins = {},
-    },
-  },
-  rocks = {
-    enabled = false,
-  },
-  ui = {
-    backdrop = 100,
-    icons = {
-      ft = "",
-      lazy = "󰂠 ",
-      loaded = "",
-      not_loaded = "",
-    },
-  },
-})
+require("dot.module.plugin").setup(specs)

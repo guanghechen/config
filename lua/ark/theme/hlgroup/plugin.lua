@@ -21,8 +21,8 @@ function M.default_gen_hlgroup_map(context)
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg0, c.bg2, 75) ---@type string
   local treesitter_context_bg = t and c.none or c.bg2 ---@type string
-  local lazy_badge_fg = c.bg1 ---@type string
-  local lazy_badge_bg = c.pink ---@type string
+  local badge_fg = c.bg1 ---@type string
+  local badge_bg = c.pink ---@type string
 
   ---@type table<string, ark.t.theme.IHlgroup>
   return {
@@ -93,38 +93,10 @@ function M.default_gen_hlgroup_map(context)
     FlashPromptIcon = { fg = c.orange, bg = c.none },
     FlashCursor = { fg = c.bg0, bg = c.fg1 },
 
-    ---! lazy.nvim
-    LazyButton = { fg = c.fg2, bg = c.none },
-    LazyButtonActive = { fg = c.pink, bg = c.none },
-    LazyCommit = { fg = c.green },
-    LazyCommitIssue = { fg = c.orange },
-    LazyDir = { fg = c.fg1 },
-    LazyH1 = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
-    LazyH2 = { fg = c.fg2, bold = true, underline = true },
-    LazyNoCond = { fg = c.red },
-    LazyNormal = { bg = cs.mix(c.bg0, c.bg1, 80), blend = 50 },
-    LazyOperator = { fg = c.fg1 },
-    LazyProp = { fg = c.pink, bold = true },
-    LazyProgressDone = { fg = c.green },
-    LazyProgressTodo = { fg = c.bg4, italic = true },
-    LazyReasonCmd = { fg = c.yellow },
-    LazyReasonEvent = { fg = c.yellow },
-    LazyReasonFt = { fg = c.purple },
-    LazyReasonImport = { fg = c.fg1 },
-    LazyReasonKeys = { fg = c.brightAqua },
-    LazyReasonPlugin = { fg = c.red },
-    LazyReasonRuntime = { fg = c.purple },
-    LazyReasonSource = { fg = c.aqua },
-    LazyReasonStart = { fg = c.fg1 },
-    LazySpecial = { fg = c.blue },
-    LazyTaskOutput = { fg = c.fg1 },
-    LazyUrl = { fg = c.fg1 },
-    LazyValue = { fg = c.brightAqua },
-
     ---! mason.nvim
     MasonHeader = { fg = c.pink, bg = c.none },
     MasonHighlight = { fg = c.blue },
-    MasonHighlightBlock = { fg = lazy_badge_fg, bg = lazy_badge_bg, bold = true },
+    MasonHighlightBlock = { fg = badge_fg, bg = badge_bg, bold = true },
     MasonHighlightBlockBold = { link = "MasonHighlightBlock" },
     MasonHeaderSecondary = { link = "MasonHighlightBlock" },
     MasonMuted = { fg = c.fg1 },
