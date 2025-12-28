@@ -37,7 +37,10 @@ export const apps = [
     },
     after_gen: async () => {
       const result = await safe_exec('bat', ['cache', '--build'], { silent: true })
-      if (!result) console.error('\x1b[31m[bat]\x1b[0m Failed to rebuild cache. cmd: \x1b[33mbat cache --build\x1b[0m')
+      if (!result)
+        console.error(
+          '\x1b[31m[bat]\x1b[0m Failed to rebuild cache. cmd: \x1b[33mbat cache --build\x1b[0m',
+        )
     },
   },
   {
@@ -45,25 +48,19 @@ export const apps = [
     home: path.join(XDG_CONFIG_HOME, 'btop'),
     themes: 'themes/',
     extname: '.theme',
-    local: null,
+    local: 'themes/local.theme',
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, scheme) => {
-      const config_filepath = path.join(app.home, 'btop.conf')
-      const theme_name = gen_full_theme_name(scheme.theme, scheme.variant)
-      const content = await fs.readFile(config_filepath, 'utf8')
-      const updated = content.replace(
-        /^color_theme\s*=\s*".+?"$/m,
-        `color_theme = "${theme_name}.theme"`,
-      )
-      await fs.writeFile(config_filepath, updated, 'utf8')
-
+    after_apply: async () => {
       // Send SIGUSR2 to btop to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (platform !== 'win') {
         const is_btop_exist = await command_exists('btop')
         if (is_btop_exist) {
           const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
-          if (!result) console.error('\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m')
+          if (!result)
+            console.error(
+              '\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m',
+            )
         }
       }
     },
@@ -104,7 +101,10 @@ export const apps = [
         const is_ghostty_exist = await command_exists('ghostty')
         if (is_ghostty_exist) {
           const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
-          if (!result) console.error('\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m')
+          if (!result)
+            console.error(
+              '\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m',
+            )
         }
       }
     },
