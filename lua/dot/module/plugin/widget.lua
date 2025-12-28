@@ -5,6 +5,7 @@ local State = require("dot.module.plugin.state")
 ---@field public wrap                   integer
 ---@field protected _view               dot.module.plugin.View
 ---@field protected _lines              dot.module.plugin.ITextSegment[][]
+---@field protected _required_by        table<string, string[]>
 local M = {}
 M.__index = M
 
@@ -14,6 +15,7 @@ function M.new(view)
   local self = setmetatable({}, M)
   self._view = view
   self._lines = {}
+  self._required_by = {}
   self.padding = 2
   self.wrap = view.win_opts.width
   return self
@@ -22,6 +24,7 @@ end
 ---@return nil
 function M:update()
   self._lines = {}
+  self:__build_required_by__()
   self:__title__()
 
   local mode = self._view.state.mode ---@type dot.module.plugin.ViewModeEnum
@@ -43,6 +46,29 @@ function M:update()
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@return nil
+function M:__build_required_by__()
+  self._required_by = {}
+  local Loader = require("dot.module.plugin.loader")
+  local plugins = Loader.get_all() ---@type table<string, dot.module.plugin.IPluginState>
+
+  for _, state in pairs(plugins) do
+    local spec = state.spec ---@type dot.module.plugin.IPluginSpec
+    if spec.dependencies then
+      for _, dep_name in ipairs(spec.dependencies) do
+        if not self._required_by[dep_name] then
+          self._required_by[dep_name] = {}
+        end
+        table.insert(self._required_by[dep_name], spec.name)
+      end
+    end
+  end
+
+  for _, list in pairs(self._required_by) do
+    table.sort(list)
+  end
+end
 
 ---@param str                           string
 ---@param hl                            string|nil
@@ -193,6 +219,14 @@ function M:__append_triggers__(spec)
     for _, dep in ipairs(spec.dependencies) do
       self:__append__(" " .. icons.dep, "m_pl_icon_dep")
       self:__append__(dep, "m_pl_dep")
+    end
+  end
+
+  local required_by = self._required_by[spec.name] ---@type string[]|nil
+  if required_by then
+    for _, requirer in ipairs(required_by) do
+      self:__append__(" " .. icons.source, "m_pl_icon_source")
+      self:__append__(requirer, "m_pl_source")
     end
   end
 end
