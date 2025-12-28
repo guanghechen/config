@@ -20,7 +20,7 @@ return {
     },
   },
   config = function(_, opts)
-    local action = require("ghc.action.mason")
+    local action = require("fml.action.plugin.mason")
     require("mason").setup(opts)
 
     -- custom cmd to install all mason binaries listed

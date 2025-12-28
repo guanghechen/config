@@ -17,7 +17,6 @@ end
 
 require("ghc.plugin")
 pcall(require, "integration.local.plugin")
-require("ghc.command")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if dot.path.is_git_repo() then

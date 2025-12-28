@@ -1,4 +1,4 @@
-local __module_name__ = "ghc.action.nvim-treesitter" ---@type string
+local __module_name__ = "fml.action.plugin.nvim-treesitter" ---@type string
 
 local function find_conditional_node(node)
   local node_type = node:type() ---@type string
@@ -10,7 +10,7 @@ local function find_conditional_node(node)
   return parent and find_conditional_node(parent)
 end
 
----@class ghc.action.nvim_treesitter
+---@class fml.action.plugin.nvim_treesitter
 local M = {}
 
 function M.swap_next_parameter()

@@ -10,7 +10,7 @@ dot.setup_context(storage)
 require("ghc.plugin")
 
 require("mason")
-local action = require("ghc.action.mason")
+local action = require("fml.action.plugin.mason")
 
 ark.stdout.info("[guanghechen]", "Installing Mason packages...")
 action.install_all(false, function()

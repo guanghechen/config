@@ -1,6 +1,6 @@
-local __module_name__ = "ghc.action.mason"
+local __module_name__ = "fml.action.plugin.mason" ---@type string
 
----@class ghc.action.mason
+---@class fml.action.plugin.mason
 local M = {}
 
 ---@return string[]

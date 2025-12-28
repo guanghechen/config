@@ -1,6 +1,6 @@
-local __module_name__ = "ghc.action.diffview" ---@type string
+local __module_name__ = "fml.action.plugin.diffview" ---@type string
 
----@class ghc.action.diffview
+---@class fml.action.plugin.diffview
 local M = {}
 
 ---@return nil

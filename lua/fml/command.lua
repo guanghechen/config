@@ -1523,3 +1523,67 @@ command
       require("fml.action.win").split_left()
     end,
   })
+
+----------------------------------------------------------------------------------------------------
+--                                            plugin                                              --
+----------------------------------------------------------------------------------------------------
+
+--[code] plugin: nvim-treesitter -------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.code.swap_conditional_branches.uuid,
+    action = function()
+      require("fml.action.plugin.nvim-treesitter").swap_conditional_branches()
+    end,
+  })
+  .implement({
+    uuid = K.code.swap_next_parameter.uuid,
+    action = function()
+      require("fml.action.plugin.nvim-treesitter").swap_next_parameter()
+    end,
+  })
+  .implement({
+    uuid = K.code.swap_prev_parameter.uuid,
+    action = function()
+      require("fml.action.plugin.nvim-treesitter").swap_prev_parameter()
+    end,
+  })
+
+--[explorer] plugin: diffview ----------------------------------------------------------------------
+command.implement({
+  uuid = K.explorer.toggle.uuid,
+  tabtype = ark.vim.tab.Types.DIFFVIEW,
+  action = function()
+    require("fml.action.plugin.diffview").toggle()
+  end,
+})
+
+--[git] plugin: diffview ---------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.git.diffview.uuid,
+    action = function()
+      require("fml.action.plugin.diffview").diffview()
+    end,
+  })
+  .implement({
+    uuid = K.git.history.uuid,
+    action = function()
+      require("fml.action.plugin.diffview").history()
+    end,
+  })
+  .implement({
+    uuid = K.git.history_file.uuid,
+    action = function()
+      require("fml.action.plugin.diffview").history_file()
+    end,
+  })
+
+--[refresh] plugin: diffview -----------------------------------------------------------------------
+command.implement({
+  uuid = K.refresh.all.uuid,
+  tabtype = ark.vim.tab.Types.DIFFVIEW,
+  action = function()
+    require("fml.action.plugin.diffview").refresh()
+  end,
+})
