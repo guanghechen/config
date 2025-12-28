@@ -3,13 +3,13 @@
 return {
   name = "mini.surround",
   keys = {
-    { "gsa", mode = { "n", "x" }, desc = "surrounding: add" },
-    { "gsd", desc = "surrounding: delete" },
-    { "gsf", desc = "surrounding: find right" },
-    { "gsF", desc = "surrounding: find left" },
-    { "gsh", desc = "surrounding: highlight" },
-    { "gsr", desc = "surrounding: replace" },
-    { "gsn", desc = "surrounding: update n_lines" },
+    { lhs = "gsa", mode = { "n", "x" }, desc = "surrounding: add" },
+    { lhs = "gsd", desc = "surrounding: delete" },
+    { lhs = "gsf", desc = "surrounding: find right" },
+    { lhs = "gsF", desc = "surrounding: find left" },
+    { lhs = "gsh", desc = "surrounding: highlight" },
+    { lhs = "gsr", desc = "surrounding: replace" },
+    { lhs = "gsn", desc = "surrounding: update n_lines" },
   },
   opts = {
     n_lines = 50,

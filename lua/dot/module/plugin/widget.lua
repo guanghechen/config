@@ -199,7 +199,7 @@ function M:__append_triggers__(spec)
 
   if spec.keys then
     for _, key_spec in ipairs(spec.keys) do
-      local lhs = key_spec[1] ---@type string
+      local lhs = key_spec.lhs ---@type string
       local modes = key_spec.mode or { "n" }
       if type(modes) == "string" then
         modes = { modes }

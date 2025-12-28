@@ -1,7 +1,7 @@
 ---@see https://github.com/MeanderingProgrammer/render-markdown.nvim/tree/6e0e8902dac70fecbdd8ce557d142062a621ec38
 
 return {
-  "render-markdown.nvim",
+  name = "render-markdown.nvim",
   ft = ark.filetype.get_markdown_filetypes(),
   cmd = { "RenderMarkdown" },
   opts = {

@@ -206,6 +206,16 @@ function M:__mount__()
       self:resize()
     end,
   })
+
+  vim.api.nvim_create_autocmd("User", {
+    group = self._augroup,
+    pattern = "PluginLoad",
+    callback = function()
+      if self:isvisible() then
+        self.widget:update()
+      end
+    end,
+  })
 end
 
 ---@return nil

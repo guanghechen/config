@@ -7,17 +7,17 @@ return {
   event = "VeryLazy",
   keys = {
     {
-      "s",
+      lhs = "s",
       mode = { "n", "x", "o" },
-      function()
+      rhs = function()
         require("flash").jump()
       end,
       desc = "flash: jump",
     },
     {
-      "S",
+      lhs = "S",
       mode = { "n", "o", "x" },
-      function()
+      rhs = function()
         require("flash").treesitter({
           label = { style = "overlay" },
           highlight = { backdrop = true },
@@ -26,34 +26,34 @@ return {
       desc = "flash: treesitter",
     },
     {
-      "r",
+      lhs = "r",
       mode = "o",
-      function()
+      rhs = function()
         require("flash").remote()
       end,
       desc = "flash: remote",
     },
     {
-      "R",
+      lhs = "R",
       mode = { "o", "x" },
-      function()
+      rhs = function()
         require("flash").treesitter_search()
       end,
       desc = "flash: treesitter search",
     },
     {
-      "<c-s>",
+      lhs = "<c-s>",
       mode = "c",
-      function()
+      rhs = function()
         require("flash").toggle()
       end,
       desc = "flash: toggle search",
     },
     -- Treesitter incremental selection
     {
-      "<c-space>",
+      lhs = "<c-space>",
       mode = { "n", "o", "x" },
-      function()
+      rhs = function()
         require("flash").treesitter({
           label = {
             style = "overlay",

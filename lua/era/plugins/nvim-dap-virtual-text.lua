@@ -1,5 +1,5 @@
 return {
-  "nvim-dap-virtual-text",
+  name = "nvim-dap-virtual-text",
   opts = {
     virt_text_pos = "eol",
     text_prefix = "",

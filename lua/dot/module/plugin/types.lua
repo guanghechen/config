@@ -9,21 +9,6 @@
 ---| "done"
 ---| "error"
 
----@alias dot.module.plugin.EventTrigger
----| string
----| string[]
-
----@alias dot.module.plugin.CmdTrigger
----| string
----| string[]
-
----@alias dot.module.plugin.FtTrigger
----| string
----| string[]
-
----@alias dot.module.plugin.KeysTrigger
----| dot.module.plugin.IKeySpec[]
-
 ---@class dot.module.plugin.IConfig
 ---@field public lockfile               string
 ---@field public root                   string
@@ -76,22 +61,28 @@
 ---@field public hl                     string|nil
 
 ---@class dot.module.plugin.IKeySpec
----@field public [1]                    string
+---@field public lhs                    string
+---@field public rhs                    (string|fun())|nil
 ---@field public mode                   string|string[]|nil
 ---@field public desc                   string|nil
+---@field public noremap                boolean|nil
+---@field public remap                  boolean|nil
+---@field public expr                   boolean|nil
+---@field public nowait                 boolean|nil
 
 ---@class dot.module.plugin.IPluginSpec
 ---@field public name                   string
 ---@field public main                   string|nil
 ---@field public url                    string|nil
 ---@field public branch                 string|nil
+---@field public build                  string|(fun(): nil)|nil
 ---@field public cond                   (fun(): boolean)|nil
 ---@field public enabled                boolean|nil
 ---@field public lazy                   boolean|nil
----@field public event                  dot.module.plugin.EventTrigger|nil
----@field public cmd                    dot.module.plugin.CmdTrigger|nil
----@field public ft                     dot.module.plugin.FtTrigger|nil
----@field public keys                   dot.module.plugin.KeysTrigger|nil
+---@field public event                  string|string[]|nil
+---@field public cmd                    string|string[]|nil
+---@field public ft                     string|string[]|nil
+---@field public keys                   dot.module.plugin.IKeySpec[]|nil
 ---@field public dependencies           string[]|nil
 ---@field public opts                   table|(fun(): table)|nil
 ---@field public config                 (fun(spec: dot.module.plugin.IPluginSpec, opts: table): nil)|nil

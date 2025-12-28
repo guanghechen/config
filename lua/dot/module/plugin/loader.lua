@@ -92,8 +92,6 @@ function M.__install_package_loader__()
         M.__load_plugin__(state)
       end
 
-      -- If module is already loaded (by config), return it directly.
-      -- This prevents the module from being re-initialized by subsequent loaders.
       local mod = package.loaded[modname]
       if mod ~= nil then
         return function()
@@ -120,7 +118,7 @@ function M.__load_plugins__(specs)
 
   for _, spec in ipairs(specs) do
     local has_lazy_triggers = (spec.event or spec.cmd or spec.ft or spec.keys) ~= nil ---@type boolean
-    local is_dependency = dep_names[spec.name] ---@type boolean
+    local is_dependency = dep_names[spec.name] or false ---@type boolean
     local is_lazy = spec.lazy ~= false and (spec.lazy or has_lazy_triggers or is_dependency) ---@type boolean
 
     if is_lazy then
@@ -198,6 +196,10 @@ function M.__load_plugin__(state)
   end
 
   state.load_time = (vim.uv.hrtime() - start_time) / 1e6
+
+  vim.schedule(function()
+    vim.api.nvim_exec_autocmds("User", { pattern = "PluginLoad", modeline = false, data = spec.name })
+  end)
 end
 
 ---@param spec                          dot.module.plugin.IPluginSpec
@@ -261,7 +263,11 @@ end
 ---@param state                         dot.module.plugin.IPluginState
 ---@return nil
 function M.__setup_lazy_events__(spec, state)
-  local events = M.__to_list__(spec.event) ---@type string[]
+  if not spec.event then
+    return
+  end
+
+  local events = type(spec.event) == "string" and { spec.event } or spec.event --[[@as string[] ]]
   for _, event in ipairs(events) do
     if event == "VeryLazy" then
       vim.api.nvim_create_autocmd("User", {
@@ -286,7 +292,11 @@ end
 ---@param state                         dot.module.plugin.IPluginState
 ---@return nil
 function M.__setup_lazy_cmds__(spec, state)
-  local cmds = M.__to_list__(spec.cmd) ---@type string[]
+  if not spec.cmd then
+    return
+  end
+
+  local cmds = type(spec.cmd) == "string" and { spec.cmd } or spec.cmd --[[@as string[] ]]
   for _, cmd in ipairs(cmds) do
     vim.api.nvim_create_user_command(cmd, function(cmd_opts)
       vim.api.nvim_del_user_command(cmd)
@@ -307,16 +317,18 @@ end
 ---@param state                         dot.module.plugin.IPluginState
 ---@return nil
 function M.__setup_lazy_ft__(spec, state)
-  local fts = M.__to_list__(spec.ft) ---@type string[]
-  if #fts > 0 then
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = fts,
-      once = true,
-      callback = function()
-        M.__load_plugin__(state)
-      end,
-    })
+  if not spec.ft then
+    return
   end
+
+  local fts = type(spec.ft) == "string" and { spec.ft } or spec.ft --[[@as string[] ]]
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = fts,
+    once = true,
+    callback = function()
+      M.__load_plugin__(state)
+    end,
+  })
 end
 
 ---@param spec                          dot.module.plugin.IPluginSpec
@@ -328,38 +340,42 @@ function M.__setup_lazy_keys__(spec, state)
   end
 
   for _, key_spec in ipairs(spec.keys) do
-    local lhs = key_spec[1] ---@type string
-    local modes = key_spec.mode or { "n" } ---@type string|string[]
-    if type(modes) == "string" then
-      modes = { modes }
-    end
+    local lhs = key_spec.lhs ---@type string
+    local rhs = key_spec.rhs ---@type string|fun()|nil
+    local modes = type(key_spec.mode) == "string" and { key_spec.mode } or key_spec.mode or { "n" } --[[@as string[] ]]
 
     for _, mode in ipairs(modes) do
       vim.keymap.set(mode, lhs, function()
         for _, m in ipairs(modes) do
           pcall(vim.keymap.del, m, lhs)
         end
+
         M.__load_plugin__(state)
-        local feed = vim.api.nvim_replace_termcodes("<Ignore>" .. lhs, true, true, true) ---@type string
+
+        if rhs then
+          ---@type vim.keymap.set.Opts
+          local opts = {
+            desc = key_spec.desc,
+            noremap = key_spec.noremap,
+            remap = key_spec.remap,
+            expr = key_spec.expr,
+            nowait = key_spec.nowait,
+          }
+          for _, m in ipairs(modes) do
+            vim.keymap.set(m, lhs, rhs, opts)
+          end
+        end
+
+        local key = mode:sub(-1) == "a" and (lhs .. "<C-]>") or lhs ---@type string
+        local feed = vim.api.nvim_replace_termcodes("<Ignore>" .. key, true, true, true) ---@type string
         vim.api.nvim_feedkeys(feed, "i", false)
       end, {
         desc = key_spec.desc or ("Load " .. spec.name),
+        nowait = key_spec.nowait,
         expr = true,
       })
     end
   end
-end
-
----@param value                         string|string[]|nil
----@return string[]
-function M.__to_list__(value)
-  if value == nil then
-    return {}
-  end
-  if type(value) == "string" then
-    return { value }
-  end
-  return value
 end
 
 return M
