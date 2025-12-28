@@ -178,37 +178,7 @@ require("lazy").setup({
   },
   performance = {
     rtp = {
-      -- disable some rtp plugins
-      disabled_plugins = vim.tbl_filter(function(v)
-        return type(v) == "string" and #v > 0
-      end, {
-        "2html_plugin",
-        "bugreport",
-        "compiler",
-        "getscript",
-        "getscriptPlugin",
-        "gzip",
-        "logipat",
-        "matchit",
-        "matchparen",
-        "netrw",
-        "netrwFileHandlers",
-        "netrwPlugin",
-        "netrwSettings",
-        "optwin",
-        "rrhelper",
-        "spellfile_plugin",
-        "synmenu",
-        "syntax",
-        "tar",
-        "tarPlugin",
-        "tohtml",
-        "tutor",
-        "vimball",
-        "vimballPlugin",
-        "zip",
-        "zipPlugin",
-      }),
+      disabled_plugins = {},
     },
   },
   rocks = {
