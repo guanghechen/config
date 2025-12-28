@@ -226,20 +226,20 @@ sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = ark.icon.dap.BreakpointReje
 sd(M.sign.DAP_LOG_POINT,                    { text = ark.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
 sd(M.sign.DAP_STOPPED,                      { text = ark.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 
-sd(M.sign.PICKER_FINDER_PROMPT,             { text = ark.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
-sd(M.sign.PICKER_RESULT_CURRENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
-sd(M.sign.PICKER_RESULT_PRESENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
-sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
-sd(M.sign.PICKER_RESULT_SELECTED,           { text = ark.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
-sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = ark.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
+sd(M.sign.PICKER_FINDER_PROMPT,             { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
+sd(M.sign.PICKER_RESULT_CURRENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
+sd(M.sign.PICKER_RESULT_PRESENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
+sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
+sd(M.sign.PICKER_RESULT_SELECTED,           { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
+sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 
-sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"              })
-sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_current"          })
-sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "f_pk_finder_prompt"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = ark.icon.ui.ArrowPresent,         texthl = "f_pk_sign_line_present_current"  })
-sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = ark.icon.ui.Selected,             texthl = "f_pk_sign_line_selected"         })
-sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = ark.icon.ui.SelectedCurrent,      texthl = "f_pk_sign_line_selected_current" })
+sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
+sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
+sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
+sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
+sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 -- stylua: ignore end
 
 ----------------------------------------------------------------------------------------------------

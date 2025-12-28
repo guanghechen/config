@@ -70,6 +70,7 @@
 ---| "basic"
 ---| "common"
 ---| "lsp"
+---| "module"
 ---| "nvimbar"
 ---| "widget"
 ---| "treesitter"

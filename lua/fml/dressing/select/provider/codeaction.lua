@@ -102,12 +102,12 @@ local function codeaction_provider(items, opts)
       text = text,
       text_lower = text:lower(),
       highlights = {
-        { coll = 0, colr = width_order + 1, hlname = "f_us_codeaction_order" },
-        { coll = width_order + 2, colr = width_order + 2 + #text_content, hlname = "f_us_codeaction_content" },
+        { coll = 0, colr = width_order + 1, hlname = "m_sca_order" },
+        { coll = width_order + 2, colr = width_order + 2 + #text_content, hlname = "m_sca_content" },
         {
           coll = width_order + #text_content + 4,
           colr = width_order + #text_content + 4 + #text_client_name,
-          hlname = "f_us_codeaction_client_name",
+          hlname = "m_sca_client_name",
         },
       },
       data = item_data,

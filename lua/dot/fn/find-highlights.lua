@@ -100,7 +100,7 @@ local picker = dot.picker.ListComposer.new({
         local hlname_start_offset = 12 ---@type integer
         for _, m in ipairs(match.matches) do
           if m.l >= hlname_start_offset then
-            vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+            vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
           end
         end
       end

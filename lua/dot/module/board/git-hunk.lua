@@ -173,9 +173,9 @@ function M:__render__(hunk)
     lnum = 0,
     coll = 0,
     colr = #hunk.head,
-    hlname = "fb_git_hunk_header",
+    hlname = "m_bgh_header",
   }
-  signs[0] = { sign = "@", hlname = "fb_git_hunk_header" }
+  signs[0] = { sign = "@", hlname = "m_bgh_header" }
 
   local word_diffs = dot.git.diff.compute_hunk_word_diff(hunk)
   local word_diff_by_old = {} ---@type table<integer, dot.module.git.WordChange[]>

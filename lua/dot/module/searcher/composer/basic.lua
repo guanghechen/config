@@ -264,7 +264,7 @@ function M.new(props)
       input = replace_pattern,
       title = replacer_title,
       prompt_sign = ark.icon.symbols.flag_replace,
-      prompt_sign_hl = "f_pk_replacer_prompt",
+      prompt_sign_hl = "m_pk_replacer_prompt",
     })
   end
 

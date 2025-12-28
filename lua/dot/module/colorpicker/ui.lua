@@ -219,7 +219,7 @@ function M:__build_winbar__()
   local alpha = self._color:get_alpha()
   local value = self._color:get()
 
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_preview_icon", { fg = hex })
+  vim.api.nvim_set_hl(self._ns_id, "m_cp_preview_icon", { fg = hex })
 
   local input_str
   if input.name == "HEX" then
@@ -250,14 +250,14 @@ function M:__build_winbar__()
   input_str = input_str:gsub("%%", "%%%%")
 
   if input.name == output.name then
-    return string.format("%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%=", self._point_char, input_str)
+    return string.format("%%=%%#m_cp_preview_icon#%s %%#m_cp_bar_name#%s%%=", self._point_char, input_str)
   end
 
   local r, g, b = self._color:get_rgb()
   local output_str = output.str(r, g, b, alpha):gsub("%%", "%%%%")
 
   return string.format(
-    "%%=%%#f_cp_preview_icon#%s %%#f_cp_bar_name#%s%%#f_cp_normal# -> %s%%=",
+    "%%=%%#m_cp_preview_icon#%s %%#m_cp_bar_name#%s%%#m_cp_normal# -> %s%%=",
     self._point_char,
     input_str,
     output_str
@@ -268,7 +268,7 @@ end
 ---@return { [1]: string, [2]: string }[]
 function M:__build_title__()
   local input = self._color:input()
-  return { { string.format(" Color Picker (%s) ", input.name), "f_cp_title" } }
+  return { { string.format(" Color Picker (%s) ", input.name), "m_cp_title" } }
 end
 
 ---@protected
@@ -283,18 +283,18 @@ function M:__build_footer__()
 
   for i = #history, 1, -1 do
     local item = history[i]
-    local hl_name = string.format("f_cp_history_%d", i)
+    local hl_name = string.format("m_cp_history_%d", i)
     vim.api.nvim_set_hl(self._ns_id, hl_name, { fg = item.hex })
     local char = self._history_index == i and self._point_char or self._history_char
-    table.insert(footer, { " ", "f_cp_normal" })
+    table.insert(footer, { " ", "m_cp_normal" })
     table.insert(footer, { char, hl_name })
   end
 
-  vim.api.nvim_set_hl(self._ns_id, "f_cp_current", { fg = current_hex })
+  vim.api.nvim_set_hl(self._ns_id, "m_cp_current", { fg = current_hex })
   local current_char = self._history_index == 0 and self._point_char or self._history_char
-  table.insert(footer, { " │ ", "f_cp_border" })
-  table.insert(footer, { current_char, "f_cp_current" })
-  table.insert(footer, { " " .. output.name .. " ", "f_cp_title" })
+  table.insert(footer, { " │ ", "m_cp_border" })
+  table.insert(footer, { current_char, "m_cp_current" })
+  table.insert(footer, { " " .. output.name .. " ", "m_cp_title" })
 
   return footer
 end
@@ -326,8 +326,8 @@ function M:__highlight__()
     local max_val = input.max[i]
     local point_idx = self:__adjust_to_bar__(value[i], max_val)
 
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_name", { row, 0 }, { row, bar_name_len })
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
+    vim.hl.range(self._bufnr, self._ns_id, "m_cp_bar_name", { row, 0 }, { row, bar_name_len })
+    vim.hl.range(self._bufnr, self._ns_id, "m_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
 
     local start_col = bar_name_len + 8
     for j = 1, self._bar_len do
@@ -342,7 +342,7 @@ function M:__highlight__()
         hl = { fg = contrast_color(hex), bg = hex }
       end
 
-      local hl_name = string.format("f_cp_bar_%d_%d", i, j)
+      local hl_name = string.format("m_cp_bar_%d_%d", i, j)
       vim.api.nvim_set_hl(self._ns_id, hl_name, hl)
       vim.hl.range(self._bufnr, self._ns_id, hl_name, { row, start_col }, { row, end_col })
 
@@ -355,8 +355,8 @@ function M:__highlight__()
   if alpha then
     local point_idx = self:__adjust_to_bar__(alpha, 100)
 
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_name", { row, 0 }, { row, bar_name_len })
-    vim.hl.range(self._bufnr, self._ns_id, "f_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
+    vim.hl.range(self._bufnr, self._ns_id, "m_cp_bar_name", { row, 0 }, { row, bar_name_len })
+    vim.hl.range(self._bufnr, self._ns_id, "m_cp_bar_value", { row, bar_name_len + 3 }, { row, bar_name_len + 7 })
 
     local start_col = bar_name_len + 8
     local r, g, b = self._color:get_rgb()
@@ -375,7 +375,7 @@ function M:__highlight__()
         hl = { fg = contrast_color(hex), bg = hex }
       end
 
-      local hl_name = string.format("f_cp_alpha_%d", i)
+      local hl_name = string.format("m_cp_alpha_%d", i)
       vim.api.nvim_set_hl(self._ns_id, hl_name, hl)
       vim.hl.range(self._bufnr, self._ns_id, hl_name, { row, start_col }, { row, end_col })
 

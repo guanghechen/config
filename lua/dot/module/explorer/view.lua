@@ -29,7 +29,7 @@ function M.new(name)
 
   local self = setmetatable({}, M)
   self._cached_filepaths = {}
-  self._indent_hln = "f_explorer_indent"
+  self._indent_hln = "m_ex_indent"
   self._nsnr = vim.api.nvim_create_namespace(fullname)
   self._tick_structure = -1
   return self
@@ -137,13 +137,13 @@ function M:render(bufnr, tree, root, options)
       local sign_hl_group ---@type string
       if ctx.select_mode == "cut" then
         sign_text = ark.icon.symbols.selection_cut
-        sign_hl_group = "f_explorer_cut"
+        sign_hl_group = "m_ex_cut"
       elseif ctx.select_mode == "copy" then
         sign_text = ark.icon.symbols.selection_copy
-        sign_hl_group = "f_explorer_copy"
+        sign_hl_group = "m_ex_copy"
       else
         sign_text = ark.icon.symbols.selection
-        sign_hl_group = "f_explorer_selected"
+        sign_hl_group = "m_ex_selected"
       end
       sign_info_list[#sign_info_list + 1] = {
         lnum = current_lnum,
@@ -287,7 +287,7 @@ function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
   local git_info = render_result.git_by_lnum[lnum] ---@type dot.module.explorer.view.IGitStatusInfo|nil
   local sign_info = render_result.sign_by_lnum[lnum] ---@type dot.module.explorer.view.ISignInfo|nil
 
-  local is_focused = cursorline_hlgroup == "f_explorer_cursorline" ---@type boolean
+  local is_focused = cursorline_hlgroup == "m_ex_cursorline" ---@type boolean
   local hl_suffix = is_focused and "_cl" or "_clb" ---@type string
 
   local virt_text = {} ---@type string[][]
@@ -472,10 +472,10 @@ function M:__get_node_icon__(node, is_ignored, is_expanded)
       local is_empty = is_loaded and #node.children == 0 ---@type boolean
       if is_empty then
         icon = ark.icon.filetype.FolderEmptyOpen
-        icon_hl = "f_ft_dirname"
+        icon_hl = "m_ft_dirname"
       else
         icon = ark.icon.filetype.FolderOpen
-        icon_hl = "f_ft_dirname"
+        icon_hl = "m_ft_dirname"
       end
     else
       local dir_icon, dir_hl, is_fallback = ark.fileicon.get_directory_icon(node.nodename) ---@type string, string, boolean
@@ -484,18 +484,18 @@ function M:__get_node_icon__(node, is_ignored, is_expanded)
         icon_hl = dir_hl
       else
         icon = ark.icon.filetype.Folder
-        icon_hl = "f_ft_dirname"
+        icon_hl = "m_ft_dirname"
       end
     end
     if is_ignored then
-      icon_hl = "f_explorer_ignored"
+      icon_hl = "m_ex_ignored"
     end
     return icon, icon_hl
   end
 
   local icon, icon_hl = ark.fileicon.get_file_icon(node.nodename) ---@type string, string
   if is_ignored then
-    icon_hl = "f_explorer_ignored"
+    icon_hl = "m_ex_ignored"
   end
   return icon, icon_hl
 end
@@ -508,11 +508,11 @@ end
 ---@return string
 function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
   if is_selected then
-    return "f_explorer_selected"
+    return "m_ex_selected"
   end
 
   if is_ignored then
-    return "f_explorer_ignored"
+    return "m_ex_ignored"
   end
 
   local counts = ctx.diag_counts[node.uri] ---@type dot.module.explorer.view.IDiagCounts|nil
@@ -537,10 +537,10 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
   end
 
   if node.nodetype == "D" then
-    return "f_ft_dirname"
+    return "m_ft_dirname"
   end
 
-  return "f_ft_filename"
+  return "m_ft_filename"
 end
 
 ---@protected

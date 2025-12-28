@@ -6,13 +6,13 @@ local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
 local TERMINAL_WIN_HIGHLIGHT = table.concat({
-  "Cursor:f_us_terminal_current",
-  "CursorColumn:f_us_terminal_current",
-  "CursorLine:f_us_terminal_current",
-  "CursorLineNr:f_us_terminal_current",
+  "Cursor:m_term_current",
+  "CursorColumn:m_term_current",
+  "CursorLine:m_term_current",
+  "CursorLineNr:m_term_current",
   "FloatBorder:FloatActiveBorder",
   "FloatTitle:FloatActiveTitle",
-  "Normal:f_us_terminal_bg",
+  "Normal:m_term_bg",
 }, ",")
 
 local _terminal_mask_bufnr = nil ---@type integer|nil

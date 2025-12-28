@@ -79,7 +79,7 @@ end
 ---@param get_width                     fun(): integer
 ---@return dot.module.nvimbar.IRawComponent
 function M.winbar(o_root_uri, position, flags, get_width)
-  local hln_text = "f_explorer_winbar" ---@type string
+  local hln_text = "m_ex_winbar" ---@type string
   local hln_path = position .. "_explorer_path" ---@type string
   local hln_path_detached = position .. "_explorer_path_detached" ---@type string
   local hln_detached = position .. "_explorer_detached" ---@type string

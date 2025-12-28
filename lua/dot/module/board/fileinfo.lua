@@ -140,7 +140,7 @@ function M:open()
   vim.wo[winnr].winhighlight = table.concat({
     "FloatBorder:ms_b_bg0",
     "FloatTitle:ms_b_bg0",
-    "Normal:fb_fileinfo_normal",
+    "Normal:m_bf_normal",
   }, ",")
 
   self:__setup_keymaps__(bufnr)
@@ -259,14 +259,14 @@ function M:__render__(stat)
       lnum = lnum,
       coll = label_start,
       colr = label_start + #info.label,
-      hlname = "fb_fileinfo_label",
+      hlname = "m_bf_label",
     }
 
     highlights[#highlights + 1] = {
       lnum = lnum,
       coll = value_start,
       colr = value_start + #info.value,
-      hlname = "fb_fileinfo_value",
+      hlname = "m_bf_value",
     }
 
     lines[#lines + 1] = line

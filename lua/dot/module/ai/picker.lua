@@ -63,19 +63,19 @@ end
 local function get_item_hlname(info)
   local category = info.category
   if category == "attached" then
-    return "f_us_ai_attached"
+    return "m_ai_attached"
   elseif category == "same_window" then
-    return "f_us_ai_running_same_window"
+    return "m_ai_running_same_window"
   elseif category == "agent_session" then
-    return "f_us_ai_running_agent_session"
+    return "m_ai_running_agent_session"
   elseif category == "new_agent" then
-    return "f_us_ai_new"
+    return "m_ai_new"
   elseif category == "same_session" then
-    return "f_us_ai_running_same_session"
+    return "m_ai_running_same_session"
   elseif category == "other_tmux" then
-    return "f_us_ai_running_other_session"
+    return "m_ai_running_other_session"
   else
-    return "f_us_ai_new"
+    return "m_ai_new"
   end
 end
 
@@ -292,7 +292,7 @@ local function build_attached_picker_items(attached)
       uuid = source.id,
       text = text,
       text_lower = text:lower(),
-      highlights = { { coll = 0, colr = #text, hlname = "f_us_ai_attached" } },
+      highlights = { { coll = 0, colr = #text, hlname = "m_ai_attached" } },
       data = source,
     }
   end
@@ -434,7 +434,7 @@ function M.show_send_target(attached, on_select)
       uuid = send_to_all_uuid,
       text = send_to_all_text,
       text_lower = send_to_all_text:lower(),
-      highlights = { { coll = 0, colr = #send_to_all_text, hlname = "f_us_ai_send_to_all" } },
+      highlights = { { coll = 0, colr = #send_to_all_text, hlname = "m_ai_send_to_all" } },
       data = nil,
     })
   end

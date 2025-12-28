@@ -61,25 +61,25 @@ local __borders__ = {
 local __highlights__ = {
   finder = table.concat({
     "FloatBorder:FloatBorder",
-    "FloatTitle:f_pk_finder_title",
-    "Normal:f_pk_finder_normal",
+    "FloatTitle:m_pk_finder_title",
+    "Normal:m_pk_finder_normal",
   }, ","),
   result = table.concat({
-    "Cursor:f_pk_result_current",
-    "CursorColumn:f_pk_result_current",
-    "CursorLine:f_pk_result_current",
-    "CursorLineNr:f_pk_result_current",
+    "Cursor:m_pk_result_current",
+    "CursorColumn:m_pk_result_current",
+    "CursorLine:m_pk_result_current",
+    "CursorLineNr:m_pk_result_current",
     "FloatBorder:FloatBorder",
-    "Normal:f_pk_result_normal",
+    "Normal:m_pk_result_normal",
   }, ","),
   preview = table.concat({
-    "Cursor:f_pk_preview_current",
-    "CursorColumn:f_pk_preview_current",
-    "CursorLine:f_pk_preview_current",
-    "CursorLineNr:f_pk_preview_current",
+    "Cursor:m_pk_preview_current",
+    "CursorColumn:m_pk_preview_current",
+    "CursorLine:m_pk_preview_current",
+    "CursorLineNr:m_pk_preview_current",
     "FloatBorder:FloatBorder",
-    "FloatTitle:f_pk_preview_title",
-    "Normal:f_pk_preview_normal",
+    "FloatTitle:m_pk_preview_title",
+    "Normal:m_pk_preview_normal",
   }, ","),
 }
 

@@ -1274,8 +1274,8 @@ function M:__transfer_selected__(mode, initial_target)
         local from_hl_end = #item.from ---@type integer
         local to_hl_start = #item.from + #padding + #arrow + #item.to - #item.relative_part ---@type integer
         local to_hl_end = #item.from + #padding + #arrow + #item.to ---@type integer
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
-        vim.hl.range(bufnr, ns, "f_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
+        vim.hl.range(bufnr, ns, "m_pk_matches", { lnum - 1, from_hl_start }, { lnum - 1, from_hl_end })
+        vim.hl.range(bufnr, ns, "m_pk_matches", { lnum - 1, to_hl_start }, { lnum - 1, to_hl_end })
       end
     end,
     on_confirm = function(input)

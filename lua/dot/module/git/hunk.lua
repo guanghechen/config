@@ -693,7 +693,7 @@ local function show_nav_indicator(bufnr, lnum, index, total)
 
   local text = string.format("[%d/%d]", index, total) ---@type string
   pcall(vim.api.nvim_buf_set_extmark, bufnr, nav_ns, lnum - 1, 0, {
-    virt_text = { { text, "fg_hunk_indicator" } },
+    virt_text = { { text, "m_git_hunk_indicator" } },
     virt_text_pos = "eol",
   })
 

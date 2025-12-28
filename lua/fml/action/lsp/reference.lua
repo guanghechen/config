@@ -213,7 +213,7 @@ local function focus(title, method, buf_flagname, additional_params)
           for _, location in ipairs(locations) do
             local line = lines[location.lnum] or "" ---@type string
             location.text = line
-            location.highlights = { { coll = location.col, colr = location.col_end, hlname = "f_ft_reference" } }
+            location.highlights = { { coll = location.col, colr = location.col_end, hlname = "m_ft_reference" } }
           end
         end
       end)

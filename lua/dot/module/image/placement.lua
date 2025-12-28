@@ -234,7 +234,7 @@ end
 ---@return nil
 function M:render_grid(loc)
   local s = require("dot.module.image.state").data
-  local hl = "f_image_" .. self.id
+  local hl = "m_img_" .. self.id
   vim.api.nvim_set_hl(0, hl, {
     fg = self.img.id,
     sp = self.id,
@@ -245,7 +245,7 @@ function M:render_grid(loc)
   local height = math.min(#diacritics, loc.height)
   local width = math.min(#diacritics, loc.width)
 
-  local border_hl = "f_image_border"
+  local border_hl = "m_img_border"
   local border_chars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
   local top_border = border_chars[1] .. string.rep(border_chars[2], width) .. border_chars[3]
   local bottom_border = border_chars[7] .. string.rep(border_chars[6], width) .. border_chars[5]
@@ -370,7 +370,7 @@ function M:render_grid(loc)
       end_row = range[3] - 1,
       end_col = range[4],
       conceal = conceal,
-      virt_text = is_inline and { { icon, "f_image_anchor" } } or nil,
+      virt_text = is_inline and { { icon, "m_img_anchor" } } or nil,
       virt_text_pos = "inline",
       virt_text_hide = false,
       virt_lines = virt_lines,
@@ -590,9 +590,9 @@ function M:__progress__()
       local name = current and current.name or "image"
       vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
         virt_text = {
-          { "◐ ", "f_image_spinner" },
+          { "◐ ", "m_img_spinner" },
           { " " },
-          { name .. " loading …", "f_image_loading" },
+          { name .. " loading …", "m_img_loading" },
         },
       })
     end)

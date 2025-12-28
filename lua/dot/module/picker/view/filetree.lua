@@ -647,7 +647,7 @@ function M:render_listview(params)
             if r > 0 and l < L then
               l = l < 0 and 0 or l ---@type integer
               r = r < L and r or L ---@type integer
-              vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+              vim.hl.range(bufnr, nsnr, "m_pk_matches", { row, offset_final + l }, { row, offset_final + r })
             end
           end
         end
@@ -706,7 +706,7 @@ function M:render_treeview(params)
             if r > 0 and l < L then
               l = l < 0 and 0 or l ---@type integer
               r = r < L and r or L ---@type integer
-              vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+              vim.hl.range(bufnr, nsnr, "m_pk_matches", { row, offset_final + l }, { row, offset_final + r })
             end
           end
         end
@@ -734,7 +734,7 @@ function M.default_render_listview_leaf(ctx, node)
   }
 
   local highlight_index = #highlights + 1 ---@type integer
-  highlights[highlight_index] = { coll = #fileicon + 1, colr = #text, hlname = "f_ft_text" }
+  highlights[highlight_index] = { coll = #fileicon + 1, colr = #text, hlname = "m_ft_text" }
 
   ---@type string, string|nil
   local git_text, git_name_highlight =
@@ -758,8 +758,8 @@ function M.default_render_listview_location(_, _, _, locationstate)
 
   ---@type ark.t.IHighlightInline[]
   local highlights = {
-    { coll = 0, colr = offset, hlname = "f_ft_position" },
-    { coll = offset, colr = -1, hlname = "f_ft_text" },
+    { coll = 0, colr = offset, hlname = "m_ft_position" },
+    { coll = offset, colr = -1, hlname = "m_ft_text" },
   }
 
   if locationstate.text ~= nil then
@@ -789,7 +789,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     ---@type ark.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-      { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
+      { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
     }
 
     return { text = text, highlights = highlights }
@@ -819,15 +819,15 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-    { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
+    { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
   }
 
   for index = start_index + 1, #basenames, 1 do
     local piece = basenames[index] ---@type string
     local offset = #text ---@type integer
     text = text .. string.format("/%s", piece)
-    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_ft_pathsep" }
-    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_ft_dirname" }
+    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "m_ft_pathsep" }
+    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "m_ft_dirname" }
   end
 
   return { text = text, highlights = highlights }
@@ -843,7 +843,7 @@ function M.default_render_treeview_leaf(_, node)
   ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-    { coll = #fileicon + 1, colr = #text, hlname = "f_ft_filename" },
+    { coll = #fileicon + 1, colr = #text, hlname = "m_ft_filename" },
   }
 
   ---@type string, string|nil
@@ -868,8 +868,8 @@ function M.default_render_treeview_location(_, _, _, locationstate)
 
   ---@type ark.t.IHighlightInline[]
   local highlights = {
-    { coll = 0, colr = offset, hlname = "f_ft_position" },
-    { coll = offset, colr = -1, hlname = "f_ft_text" },
+    { coll = 0, colr = offset, hlname = "m_ft_position" },
+    { coll = offset, colr = -1, hlname = "m_ft_text" },
   }
 
   if locationstate.text ~= nil then

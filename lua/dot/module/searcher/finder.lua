@@ -41,7 +41,7 @@ function M.new(props)
   local linecount = ark.c.Observable.from_value(0) ---@type ark.c.Observable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
   local prompt_sign = props.prompt_sign ---@type string|nil
-  local prompt_sign_hl = props.prompt_sign_hl or "f_pk_finder_prompt" ---@type string
+  local prompt_sign_hl = props.prompt_sign_hl or "m_pk_finder_prompt" ---@type string
 
   local self = setmetatable({}, M)
   self.fullname = fullname

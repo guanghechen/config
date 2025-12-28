@@ -160,20 +160,20 @@ local function get_selection_line(ctx)
     string.format("@%s L%d:C%d-L%d:C%d", relpath, range.start_lnum, range.start_col, range.end_lnum, range.end_col)
   ---@type dot.module.ai.ITextLine
   local line = {
-    { "@", "f_us_ai_loc_delim" },
-    { relpath, "f_us_ai_loc_file" },
+    { "@", "m_ai_loc_delim" },
+    { relpath, "m_ai_loc_file" },
     { " ", nil },
-    { "L", "f_us_ai_loc_row" },
-    { tostring(range.start_lnum), "f_us_ai_loc_num" },
-    { ":", "f_us_ai_loc_delim" },
-    { "C", "f_us_ai_loc_col" },
-    { tostring(range.start_col), "f_us_ai_loc_num" },
-    { "-", "f_us_ai_loc_delim" },
-    { "L", "f_us_ai_loc_row" },
-    { tostring(range.end_lnum), "f_us_ai_loc_num" },
-    { ":", "f_us_ai_loc_delim" },
-    { "C", "f_us_ai_loc_col" },
-    { tostring(range.end_col), "f_us_ai_loc_num" },
+    { "L", "m_ai_loc_row" },
+    { tostring(range.start_lnum), "m_ai_loc_num" },
+    { ":", "m_ai_loc_delim" },
+    { "C", "m_ai_loc_col" },
+    { tostring(range.start_col), "m_ai_loc_num" },
+    { "-", "m_ai_loc_delim" },
+    { "L", "m_ai_loc_row" },
+    { tostring(range.end_lnum), "m_ai_loc_num" },
+    { ":", "m_ai_loc_delim" },
+    { "C", "m_ai_loc_col" },
+    { tostring(range.end_col), "m_ai_loc_num" },
   }
   return line, text
 end
@@ -188,8 +188,8 @@ local function get_file_line(ctx)
   local text = string.format("@%s", relpath)
   ---@type dot.module.ai.ITextLine
   local line = {
-    { "@", "f_us_ai_loc_delim" },
-    { relpath, "f_us_ai_loc_file" },
+    { "@", "m_ai_loc_delim" },
+    { relpath, "m_ai_loc_file" },
   }
   return line, text
 end
@@ -261,9 +261,9 @@ local function get_diagnostics_all_lines(ctx)
           local text = string.format("%s:%d [%s]: %s", relpath, d.lnum + 1, severity_name, d.message)
           text_lines[#text_lines + 1] = text
           lines[#lines + 1] = {
-            { relpath, "f_us_ai_loc_file" },
-            { ":", "f_us_ai_loc_delim" },
-            { tostring(d.lnum + 1), "f_us_ai_loc_num" },
+            { relpath, "m_ai_loc_file" },
+            { ":", "m_ai_loc_delim" },
+            { tostring(d.lnum + 1), "m_ai_loc_num" },
             { " [", "Comment" },
             { severity_name, severity_hl },
             { "]: ", "Comment" },
@@ -292,8 +292,8 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Fix the diagnostics in ", "f_us_ai_prompt_header" } }, file_line)
-      table.insert(lines[#lines], { ":", "f_us_ai_prompt_header" })
+      lines[#lines + 1] = vim.list_extend({ { "Fix the diagnostics in ", "m_ai_prompt_header" } }, file_line)
+      table.insert(lines[#lines], { ":", "m_ai_prompt_header" })
       vim.list_extend(lines, diag_lines)
       return { text = "Fix the diagnostics in " .. file_text .. ":\n" .. diag_text, lines = lines }
     end,
@@ -307,7 +307,7 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = { { "Fix these diagnostics:", "f_us_ai_prompt_header" } }
+      lines[#lines + 1] = { { "Fix these diagnostics:", "m_ai_prompt_header" } }
       vim.list_extend(lines, diag_lines)
       return { text = "Fix these diagnostics:\n" .. diag_text, lines = lines }
     end,
@@ -321,7 +321,7 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Fix this code: ", "f_us_ai_prompt_header" } }, target_line)
+      lines[#lines + 1] = vim.list_extend({ { "Fix this code: ", "m_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
         vim.list_extend(lines, content_lines)
@@ -338,7 +338,7 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Optimize this code: ", "f_us_ai_prompt_header" } }, target_line)
+      lines[#lines + 1] = vim.list_extend({ { "Optimize this code: ", "m_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
         vim.list_extend(lines, content_lines)
@@ -355,7 +355,7 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Refactor this code: ", "f_us_ai_prompt_header" } }, target_line)
+      lines[#lines + 1] = vim.list_extend({ { "Refactor this code: ", "m_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
         vim.list_extend(lines, content_lines)
@@ -372,7 +372,7 @@ M.list = {
         return nil
       end
       local lines = {} ---@type dot.module.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Review this code: ", "f_us_ai_prompt_header" } }, target_line)
+      lines[#lines + 1] = vim.list_extend({ { "Review this code: ", "m_ai_prompt_header" } }, target_line)
       local content_lines = get_selection_content(ctx)
       if content_lines then
         vim.list_extend(lines, content_lines)

@@ -194,7 +194,7 @@ picker = dot.picker.ListComposer.new({
 
       if match.matches then
         for _, m in ipairs(match.matches) do
-          vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+          vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
         end
       end
     end

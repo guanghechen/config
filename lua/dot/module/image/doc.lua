@@ -56,7 +56,7 @@ M.transforms = {
     end
     local state = require("dot.module.image.state")
     local s = state.data
-    local color_val = vim.api.nvim_get_hl(0, { name = "f_image_math" }).fg
+    local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
     local color = color_val and string.format("#%06x", color_val) or "#000000"
     img.content = state.tpl(s.math.typst.tpl, {
       color = color,
@@ -70,7 +70,7 @@ M.transforms = {
     if not (img.content and img.ext == "math.tex") then
       return
     end
-    local color_val = vim.api.nvim_get_hl(0, { name = "f_image_math" }).fg
+    local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
     local fg = color_val and string.format("#%06x", color_val) or "#000000"
     local content = vim.trim(img.content or "")
     content = content:gsub("^%$+`?", ""):gsub("`?%$+$", "")

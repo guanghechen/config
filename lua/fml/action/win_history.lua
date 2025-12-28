@@ -173,7 +173,7 @@ local picker = dot.picker.ListComposer.new({
           vim.hl.range(
             bufnr,
             nsnr_matches,
-            "f_pk_matches",
+            "m_pk_matches",
             { row, m.l + offset },
             { row, m.r + offset },
             { priority = 30 }

@@ -353,7 +353,7 @@ function M:render_listview(params)
           if r > 0 and l < L then
             l = l < 0 and 0 or l ---@type integer
             r = r < L and r or L ---@type integer
-            vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+            vim.hl.range(bufnr, nsnr, "m_pk_matches", { row, offset_final + l }, { row, offset_final + r })
           end
         end
       end
@@ -412,7 +412,7 @@ function M:render_treeview(params)
           if r > 0 and l < L then
             l = l < 0 and 0 or l ---@type integer
             r = r < L and r or L ---@type integer
-            vim.hl.range(bufnr, nsnr, "f_pk_matches", { row, offset_final + l }, { row, offset_final + r })
+            vim.hl.range(bufnr, nsnr, "m_pk_matches", { row, offset_final + l }, { row, offset_final + r })
           end
         end
       end

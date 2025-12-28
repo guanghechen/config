@@ -265,7 +265,7 @@ function M:search(params)
   end
 
   local has_replace_preview = flag_replace and replace_pattern ~= nil and replace_pattern ~= ""
-  local search_highlight = has_replace_preview and "f_ss_search" or "f_ss_matches"
+  local search_highlight = has_replace_preview and "m_ss_search" or "m_ss_matches"
 
   local function resolve_filepath(relpath)
     if relpath == nil or relpath == "" then
@@ -344,7 +344,7 @@ function M:search(params)
           highlights[#highlights + 1] = {
             coll = prefix_len,
             colr = prefix_len + replacement_len,
-            hlname = "f_ss_replace",
+            hlname = "m_ss_replace",
           }
         end
       else
@@ -490,8 +490,8 @@ function M.default_render_listview_location(_, _, _, locationstate)
 
   ---@type ark.t.IHighlightInline[]
   local highlights = {
-    { coll = 0, colr = offset, hlname = "f_ft_position" },
-    { coll = offset, colr = -1, hlname = "f_ft_text" },
+    { coll = 0, colr = offset, hlname = "m_ft_position" },
+    { coll = offset, colr = -1, hlname = "m_ft_text" },
   }
 
   if locationstate.text ~= nil then
@@ -521,7 +521,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     ---@type ark.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-      { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
+      { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
     }
     return { text = text, highlights = highlights }
   end
@@ -550,15 +550,15 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-    { coll = #fileicon + 1, colr = #text, hlname = "f_ft_dirname" },
+    { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
   }
 
   for index = start_index + 1, #basenames, 1 do
     local piece = basenames[index] ---@type string
     local offset = #text ---@type integer
     text = text .. string.format("/%s", piece)
-    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "f_ft_pathsep" }
-    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "f_ft_dirname" }
+    highlights[#highlights + 1] = { coll = offset, colr = offset + 1, hlname = "m_ft_pathsep" }
+    highlights[#highlights + 1] = { coll = offset + 1, colr = #text, hlname = "m_ft_dirname" }
   end
 
   return { text = text, highlights = highlights }
@@ -574,7 +574,7 @@ function M.default_render_treeview_leaf(_, node)
   ---@type ark.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
-    { coll = #fileicon + 1, colr = #text, hlname = "f_ft_filename" },
+    { coll = #fileicon + 1, colr = #text, hlname = "m_ft_filename" },
   }
   return { text = text, highlights = highlights }
 end
@@ -588,8 +588,8 @@ function M.default_render_treeview_location(_, _, _, locationstate)
 
   ---@type ark.t.IHighlightInline[]
   local highlights = {
-    { coll = 0, colr = offset, hlname = "f_ft_position" },
-    { coll = offset, colr = -1, hlname = "f_ft_text" },
+    { coll = 0, colr = offset, hlname = "m_ft_position" },
+    { coll = offset, colr = -1, hlname = "m_ft_text" },
   }
 
   if locationstate.text ~= nil then

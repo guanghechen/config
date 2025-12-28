@@ -128,10 +128,10 @@ function M:open()
   vim.wo[winnr].winfixbuf = true
   vim.wo[winnr].wrap = false
   vim.wo[winnr].winhighlight = table.concat({
-    "CursorLine:fb_keysheet_cursorline",
+    "CursorLine:m_bk_cursorline",
     "FloatBorder:ms_b_bg0",
     "FloatTitle:ms_b_bg0",
-    "Normal:fb_keysheet_normal",
+    "Normal:m_bk_normal",
   }, ",")
 
   self:__setup_keymaps__(bufnr)
@@ -217,19 +217,19 @@ function M:__render__(available_width)
       row_highlights[#row_highlights + 1] = {
         coll = current_col,
         colr = current_col + #item.key,
-        hlname = "fb_keysheet_key",
+        hlname = "m_bk_key",
       }
 
       row_highlights[#row_highlights + 1] = {
         coll = current_col + key_width + 2,
         colr = current_col + key_width + 2 + #item.modes,
-        hlname = "fb_keysheet_mode",
+        hlname = "m_bk_mode",
       }
 
       row_highlights[#row_highlights + 1] = {
         coll = current_col + key_width + 2 + mode_width + 2,
         colr = current_col + key_width + 2 + mode_width + 2 + #item.desc,
-        hlname = "fb_keysheet_desc",
+        hlname = "m_bk_desc",
       }
 
       current_col = current_col + item_width - PADDING_LEFT - PADDING_RIGHT + COLUMN_GAP

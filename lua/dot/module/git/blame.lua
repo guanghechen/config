@@ -126,7 +126,7 @@ local inline_config = {
   delay = 2000,
   enabled = true,
   formatter = "<author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
-  hl_group = "fg_inline_blame",
+  hl_group = "m_git_inline_blame",
   prefix = "    ",
   priority = 200,
 }
@@ -454,7 +454,7 @@ local buffer_augroup = vim.api.nvim_create_augroup("DotModuleGitBufferBlame", { 
 ---@field public priority            integer
 local buffer_config = {
   formatter = "<author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
-  hl_group = "fg_buffer_blame",
+  hl_group = "m_git_buffer_blame",
   priority = 100,
 }
 

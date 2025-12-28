@@ -155,6 +155,7 @@ local theme_hlgroup__mods = {
   basic = "ark.theme.hlgroup.basic",
   common = "ark.theme.hlgroup.common",
   lsp = "ark.theme.hlgroup.lsp",
+  module = "ark.theme.hlgroup.module",
   nvimbar = "ark.theme.hlgroup.nvimbar",
   plugin = "ark.theme.hlgroup.plugin",
   treesitter = "ark.theme.hlgroup.treesitter",
@@ -166,6 +167,7 @@ local theme_hlgroup__mods = {
 ---@field public basic                  ark.theme.hlgroup.basic
 ---@field public common                 ark.theme.hlgroup.common
 ---@field public lsp                    ark.theme.hlgroup.lsp
+---@field public module                 ark.theme.hlgroup.module
 ---@field public nvimbar                ark.theme.hlgroup.nvimbar
 ---@field public plugin                 ark.theme.hlgroup.plugin
 ---@field public treesitter             ark.theme.hlgroup.treesitter

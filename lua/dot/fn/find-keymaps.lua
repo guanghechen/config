@@ -81,9 +81,9 @@ local function fetch_data()
 
         ---@type ark.t.IHighlightInline[]
         local highlights = {
-          { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "f_us_km_lhs" },
-          { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "f_us_km_mode" },
-          { coll = OFFSET_DESC, colr = -1, hlname = "f_us_km_desc" },
+          { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "m_skm_lhs" },
+          { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "m_skm_mode" },
+          { coll = OFFSET_DESC, colr = -1, hlname = "m_skm_desc" },
         }
 
         ---@type dot.fn.find_keymaps.IItemData
@@ -124,9 +124,9 @@ local function fetch_data()
 
         ---@type ark.t.IHighlightInline[]
         local highlights = {
-          { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "f_us_km_lhs" },
-          { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "f_us_km_mode" },
-          { coll = OFFSET_DESC, colr = -1, hlname = "f_us_km_desc" },
+          { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "m_skm_lhs" },
+          { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "m_skm_mode" },
+          { coll = OFFSET_DESC, colr = -1, hlname = "m_skm_desc" },
         }
 
         ---@type dot.fn.find_keymaps.IItemData
@@ -206,7 +206,7 @@ local picker = dot.picker.ListComposer.new({
 
       if match.matches then
         for _, m in ipairs(match.matches) do
-          vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+          vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
         end
       end
     end
@@ -263,16 +263,16 @@ local picker = dot.picker.ListComposer.new({
 
     local nsnr_content = ark.var.nsnr.picker_preview
     local LABEL_WIDTH = 13
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 0, 0 }, { 0, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_lhs", { 0, LABEL_WIDTH }, { 0, LABEL_WIDTH + #data.lhs }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 1, 0 }, { 1, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_mode", { 1, LABEL_WIDTH }, { 1, LABEL_WIDTH + #data.mode }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 2, 0 }, { 2, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_desc", { 2, LABEL_WIDTH }, { 2, LABEL_WIDTH + #data.desc }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 3, 0 }, { 3, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_source", { 3, LABEL_WIDTH }, { 3, LABEL_WIDTH + #data.source }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "f_us_km_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 0, 0 }, { 0, LABEL_WIDTH }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_lhs", { 0, LABEL_WIDTH }, { 0, LABEL_WIDTH + #data.lhs }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 1, 0 }, { 1, LABEL_WIDTH }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_mode", { 1, LABEL_WIDTH }, { 1, LABEL_WIDTH + #data.mode }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 2, 0 }, { 2, LABEL_WIDTH }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_desc", { 2, LABEL_WIDTH }, { 2, LABEL_WIDTH + #data.desc }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 3, 0 }, { 3, LABEL_WIDTH }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_source", { 3, LABEL_WIDTH }, { 3, LABEL_WIDTH + #data.source }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
+    vim.hl.range(bufnr, nsnr_content, "m_skm_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
 
     ---@type dot.module.picker.preview.IDrawResult
     local result = {

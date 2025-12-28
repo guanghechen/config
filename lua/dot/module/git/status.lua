@@ -1,4 +1,4 @@
-local DEFAULT_GIT_STATUS_HL = "f_ft_git_other"
+local DEFAULT_GIT_STATUS_HL = "m_ft_git_other"
 
 ---@enum dot.module.git.StatusEnum
 local GIT_STATUS_ENUM = {
@@ -15,15 +15,15 @@ local GIT_STATUS_ENUM = {
 
 ---@type table<string, string>
 local GIT_STATUS_HIGHLIGHT = {
-  ["!"] = "f_ft_git_ignored",
-  ["?"] = "f_ft_git_untracked",
-  A = "f_ft_git_add",
-  C = "f_ft_git_rename",
-  D = "f_ft_git_delete",
-  M = "f_ft_git_change",
-  R = "f_ft_git_rename",
-  T = "f_ft_git_change",
-  U = "f_ft_git_unmerged",
+  ["!"] = "m_ft_git_ignored",
+  ["?"] = "m_ft_git_untracked",
+  A = "m_ft_git_add",
+  C = "m_ft_git_rename",
+  D = "m_ft_git_delete",
+  M = "m_ft_git_change",
+  R = "m_ft_git_rename",
+  T = "m_ft_git_change",
+  U = "m_ft_git_unmerged",
 }
 
 ---@type table<string, string[]>
@@ -534,10 +534,10 @@ function M.resolve_highlight(stage_state, codes, summary, display, categories)
     return GIT_STATUS_HIGHLIGHT.U
   end
   if resolved.unstaged then
-    return "f_ft_git_unstaged"
+    return "m_ft_git_unstaged"
   end
   if resolved.staged then
-    return "f_ft_git_staged"
+    return "m_ft_git_staged"
   end
   if resolved.modified then
     return GIT_STATUS_HIGHLIGHT.M
@@ -640,7 +640,7 @@ function M.calc_info(filepath, filetype, offset, highlights)
     end
     local is_staged_char = index <= staged_len
     if is_staged_char and char ~= "D" and char ~= "U" then
-      hlname = "f_ft_git_staged"
+      hlname = "m_ft_git_staged"
     end
     local coll = status_offset + index - 1
     local colr = coll + 1

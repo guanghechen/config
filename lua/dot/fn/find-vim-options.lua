@@ -46,10 +46,10 @@ local function fetch_data()
 
     ---@type ark.t.IHighlightInline[]
     local highlights = {
-      { coll = OFFSET_NAME, colr = OFFSET_NAME + #info.name, hlname = "f_us_vo_name" },
-      { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #info.type, hlname = "f_us_vo_type" },
-      { coll = OFFSET_SCOPE, colr = OFFSET_SCOPE + #info.scope, hlname = "f_us_vo_scope" },
-      { coll = OFFSET_VALUE, colr = -1, hlname = "f_us_vo_value" },
+      { coll = OFFSET_NAME, colr = OFFSET_NAME + #info.name, hlname = "m_fvo_name" },
+      { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #info.type, hlname = "m_fvo_type" },
+      { coll = OFFSET_SCOPE, colr = OFFSET_SCOPE + #info.scope, hlname = "m_fvo_scope" },
+      { coll = OFFSET_VALUE, colr = -1, hlname = "m_fvo_value" },
     }
 
     ---@type dot.fn.find_vim_options.IItemData
@@ -124,7 +124,7 @@ local picker = dot.picker.ListComposer.new({
             offset_l = m.l + (WIDTH_TYPE + WIDTH_SCOPE)
             offset_r = m.r + (WIDTH_TYPE + WIDTH_SCOPE)
           end
-          vim.hl.range(bufnr, nsnr_matches, "f_pk_matches", { row, offset_l }, { row, offset_r }, { priority = 30 })
+          vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, offset_l }, { row, offset_r }, { priority = 30 })
         end
       end
     end

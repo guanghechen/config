@@ -42,7 +42,7 @@ local function create_file_item(raw_item, dirpath)
 
   if raw_item.type == "directory" then
     icon = ark.icon.kind.Folder
-    icon_hl = "f_fe_name_dir"
+    icon_hl = "m_fe_name_dir"
   else
     icon, icon_hl = ark.fileicon.get_file_icon(raw_item.name)
   end
@@ -165,7 +165,7 @@ local function apply_match_highlights(
         vim.hl.range(
           bufnr,
           nsnr_matches,
-          "f_pk_matches",
+          "m_pk_matches",
           { row, byte_pos + match_start },
           { row, byte_pos + match_end },
           { priority = 30 }
@@ -220,7 +220,7 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
     ---@type string
     local text_name = display_filename
       .. string.rep(" ", math.max(1, filename_max_display_width - vim.api.nvim_strwidth(display_filename)))
-    local filename_hl = fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file" ---@type string
+    local filename_hl = fileitem.type == "directory" and "m_fe_name_dir" or "m_fe_name_file" ---@type string
     byte_pos = apply_highlight(bufnr, row, byte_pos, text_name, filename_hl) - 1
 
     -- Match highlights
@@ -236,13 +236,13 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
 
     -- Permission highlight
     local text_perm = ark.string.pad_start(fileitem.perm, diritem.perm_width, " ") .. "  " ---@type string
-    local perm_hl = fileitem.type == "directory" and "f_fe_perm_dir" or "f_fe_perm_file" ---@type string
+    local perm_hl = fileitem.type == "directory" and "m_fe_perm_dir" or "m_fe_perm_file" ---@type string
     local nsnr_content = ark.var.nsnr.picker_result ---@type integer
     vim.hl.range(bufnr, nsnr_content, perm_hl, { row, byte_pos }, { row, byte_pos + 1 }, { priority = 10 })
     vim.hl.range(
       bufnr,
       nsnr_content,
-      "f_fe_perm",
+      "m_fe_perm",
       { row, byte_pos + 1 },
       { row, byte_pos + string.len(text_perm) },
       { priority = 10 }
@@ -251,11 +251,11 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
 
     -- Size highlight
     local text_size = ark.string.pad_start(fileitem.size, diritem.size_width, " ") .. "  " ---@type string
-    byte_pos = apply_highlight(bufnr, row, byte_pos, text_size, "f_fe_size")
+    byte_pos = apply_highlight(bufnr, row, byte_pos, text_size, "m_fe_size")
 
     -- Date highlight
     local text_date = fileitem.date .. "  " ---@type string
-    apply_highlight(bufnr, row, byte_pos, text_date, "f_fe_date")
+    apply_highlight(bufnr, row, byte_pos, text_date, "m_fe_date")
   end
 
   return { uuids = uuids }
@@ -299,7 +299,7 @@ local function fetch_diritem(dirpath, force)
       group = raw_itself.group,
       date = raw_itself.date,
       icon = ark.icon.kind.Folder,
-      icon_hl = "f_fe_name_dir",
+      icon_hl = "m_fe_name_dir",
     }
     file_datamap[dirpath] = itself
 
@@ -505,18 +505,18 @@ local function preview_render(composer, bufnr)
         lnum = lnum,
         coll = byte_pos,
         colr = byte_pos + 1,
-        hlname = c_fileitem.type == "directory" and "f_fe_perm_dir" or "f_fe_perm_file",
+        hlname = c_fileitem.type == "directory" and "m_fe_perm_dir" or "m_fe_perm_file",
       })
       table.insert(
         highlights,
-        { lnum = lnum, coll = byte_pos + 1, colr = byte_pos + byte_len_perm, hlname = "f_fe_perm" }
+        { lnum = lnum, coll = byte_pos + 1, colr = byte_pos + byte_len_perm, hlname = "m_fe_perm" }
       )
       text = text .. text_perm
       byte_pos = byte_pos + byte_len_perm
 
       local text_size = ark.string.pad_start(c_fileitem.size, c_diritem.size_width, " ") .. "  "
       local byte_len_size = string.len(text_size) ---@type integer
-      table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_size, hlname = "f_fe_size" })
+      table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_size, hlname = "m_fe_size" })
       text = text .. text_size
       byte_pos = byte_pos + byte_len_size
 
@@ -525,7 +525,7 @@ local function preview_render(composer, bufnr)
         local byte_len_owner = string.len(text_owner) ---@type integer
         table.insert(
           highlights,
-          { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_owner, hlname = "f_fe_owner" }
+          { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_owner, hlname = "m_fe_owner" }
         )
         text = text .. text_owner
         byte_pos = byte_pos + byte_len_owner
@@ -534,7 +534,7 @@ local function preview_render(composer, bufnr)
         local byte_len_group = string.len(text_group) ---@type integer
         table.insert(
           highlights,
-          { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_group, hlname = "f_fe_group" }
+          { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_group, hlname = "m_fe_group" }
         )
         text = text .. text_group
         byte_pos = byte_pos + byte_len_group
@@ -542,7 +542,7 @@ local function preview_render(composer, bufnr)
 
       local text_date = ark.string.pad_end(c_fileitem.date, c_diritem.date_width, " ") .. "  "
       local byte_len_date = string.len(text_date) ---@type integer
-      table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_date, hlname = "f_fe_date" })
+      table.insert(highlights, { lnum = lnum, coll = byte_pos, colr = byte_pos + byte_len_date, hlname = "m_fe_date" })
       text = text .. text_date
       byte_pos = byte_pos + byte_len_date
 
@@ -552,7 +552,7 @@ local function preview_render(composer, bufnr)
         lnum = lnum,
         coll = byte_pos,
         colr = byte_pos + byte_len_name,
-        hlname = c_fileitem.type == "directory" and "f_fe_name_dir" or "f_fe_name_file",
+        hlname = c_fileitem.type == "directory" and "m_fe_name_dir" or "m_fe_name_file",
       })
       text = text .. text_name
       byte_pos = byte_pos + byte_len_name

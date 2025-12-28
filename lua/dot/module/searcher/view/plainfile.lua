@@ -85,7 +85,7 @@ function M:calc_preview_data(context)
     local lines = { "  Not a text file, cannot preview." } ---@type string[]
 
     ---@type dot.module.searcher.IPlainfileViewHighlight[]
-    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "f_sr_error" } }
+    local highlights = { { offset = -1, lnum = 1, coll = 0, colr = -1, hlname = "m_sr_error" } }
 
     ---@type dot.module.searcher.IPlainfileViewData
     local result = {
@@ -153,7 +153,7 @@ function M:calc_preview_data(context)
         offset_delta = offset_delta + (match.r - match.l)
       end
 
-      local hlname = is_search_match and "f_sr_search" or "f_sr_replace"
+      local hlname = is_search_match and "m_sr_search" or "m_sr_replace"
 
       local l = match.l ---@type integer
       local r = match.r ---@type integer
@@ -197,7 +197,7 @@ function M:calc_preview_data(context)
               lnum = lnum,
               coll = col_start,
               colr = col_end,
-              hlname = "f_sr_match",
+              hlname = "m_sr_match",
             }
           end
         end
@@ -237,8 +237,8 @@ function M:patch_preview_data(context, data)
     for _, hl in ipairs(data.highlights) do
       if offset_current == hl.offset then
         resolved = true
-        local is_search_match = hl.hlname == "f_sr_search" ---@type boolean
-        local hlname = is_search_match and "f_sr_search_cur" or "f_sr_replace_cur" ---@type string
+        local is_search_match = hl.hlname == "m_sr_search" ---@type boolean
+        local hlname = is_search_match and "m_sr_search_cur" or "m_sr_replace_cur" ---@type string
         local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
@@ -250,7 +250,7 @@ function M:patch_preview_data(context, data)
     for _, hl in ipairs(data.highlights) do
       if offset_current == hl.offset then
         resolved = true
-        local hlname = "f_sr_match_cur" ---@type string
+        local hlname = "m_sr_match_cur" ---@type string
         local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then

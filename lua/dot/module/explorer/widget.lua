@@ -6,13 +6,13 @@ local View = require("dot.module.explorer.view")
 local ResourceFileManager = require("dot.module.explorer.resource.file")
 
 local EXPLORER_WIN_HIGHLIGHT = table.concat({
-  "EndOfBuffer:f_explorer_eob",
-  "Normal:f_explorer_bg",
-  "SignColumn:f_explorer_bg",
-  "VertSplit:f_explorer_border",
-  "WinBar:f_explorer_winbar",
-  "WinBarNC:f_explorer_winbar",
-  "WinSeparator:f_explorer_border",
+  "EndOfBuffer:m_ex_eob",
+  "Normal:m_ex_bg",
+  "SignColumn:m_ex_bg",
+  "VertSplit:m_ex_border",
+  "WinBar:m_ex_winbar",
+  "WinBarNC:m_ex_winbar",
+  "WinSeparator:m_ex_border",
 }, ",")
 
 ---@class dot.module.explorer.widget.IFlagItem
@@ -398,8 +398,8 @@ function M:__create_nvimbar__()
   local nvimbar = Nvimbar.new({
     name = string.format("%s#winbar", self.fullname),
     comp_sep = "",
-    comp_sep_hlname = "f_explorer_winbar",
-    comp_sep_hlname_active = "f_explorer_winbar",
+    comp_sep_hlname = "m_ex_winbar",
+    comp_sep_hlname_active = "m_ex_winbar",
     delay = 128,
     silent = ark.fn.falsy,
     get_max_width = get_width,
@@ -1520,7 +1520,7 @@ function M:__update_cursorline__()
 
   vim.api.nvim_buf_clear_namespace(bufnr, ark.var.nsnr.explorer_cursorline, 0, -1)
 
-  local hlgroup = self._is_focused and "f_explorer_cursorline" or "f_explorer_cursorline_blur" ---@type string
+  local hlgroup = self._is_focused and "m_ex_cursorline" or "m_ex_cursorline_blur" ---@type string
   vim.api.nvim_buf_set_extmark(bufnr, ark.var.nsnr.explorer_cursorline, lnum - 1, 0, {
     line_hl_group = hlgroup,
     priority = 100,
@@ -1530,7 +1530,7 @@ function M:__update_cursorline__()
     if prev_lnum ~= nil and prev_lnum ~= lnum then
       self._view:update_virt_text(bufnr, render_result, prev_lnum, nil)
     end
-    local cursorline_hlgroup = self._is_focused and "f_explorer_cursorline" or "f_explorer_cursorline_blur" ---@type string
+    local cursorline_hlgroup = self._is_focused and "m_ex_cursorline" or "m_ex_cursorline_blur" ---@type string
     self._view:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
   end
 

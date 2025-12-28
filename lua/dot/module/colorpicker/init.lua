@@ -3,7 +3,7 @@ local Color = require("dot.module.colorpicker.color")
 local UI = require("dot.module.colorpicker.ui")
 local picker = require("dot.module.colorpicker.picker")
 
-local WIN_HIGHLIGHT = "FloatBorder:f_cp_border,Normal:f_cp_normal,EndOfBuffer:f_cp_normal"
+local WIN_HIGHLIGHT = "FloatBorder:m_cp_border,Normal:m_cp_normal,EndOfBuffer:m_cp_normal"
 
 ---@class dot.module.colorpicker.IProps : dot.module.colorpicker.ui.IProps
 
