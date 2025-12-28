@@ -226,7 +226,7 @@ function M.rename()
     return
   end
 
-  ---@type fml.dressing.input.IOptions
+  ---@type dot.module.input.IOptions
   local input_opts = {
     prompt = "Enter new terminal name: ",
     default = termmeta.name,

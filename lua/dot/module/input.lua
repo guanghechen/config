@@ -4,6 +4,12 @@
 ---| "text"
 ---| "confirmation"
 
+---@alias dot.module.input.ConfirmCallback fun(): nil
+
+---@alias dot.module.input.CancelCallback fun(): nil
+
+---@alias dot.module.input.BeforeConfirmFn fun(text: string, confirm: dot.module.input.ConfirmCallback, cancel: dot.module.input.CancelCallback): nil
+
 ---@class dot.module.input.IOptions
 ---@field public relative               ?"editor"|"cursor"|"win"
 ---@field public win                    ?integer
@@ -16,7 +22,7 @@
 ---@field public default                ?string
 ---@field public completion             ?string
 ---@field public startinsert            ?boolean
----@field public before_confirm         ?fun(text: string, confirm: fun(): nil, cancel: fun(): nil): nil
+---@field public before_confirm         ?dot.module.input.BeforeConfirmFn
 ---@field public block_cancel           ?boolean
 
 ---@class dot.module.input.IContext
@@ -178,7 +184,7 @@ function M.open(opts, on_confirm)
     end)
   end
 
-  local before_confirm = opts.before_confirm ---@type (fun(text: string, confirm: fun(): nil, cancel: fun(): nil): nil)|nil
+  local before_confirm = opts.before_confirm ---@type dot.module.input.BeforeConfirmFn|nil
   local block_cancel = opts.block_cancel or false ---@type boolean
   local confirming = false ---@type boolean
 
@@ -197,12 +203,14 @@ function M.open(opts, on_confirm)
       local text = string.sub(lines[1] or "", #prompt + 1) ---@type string
       if before_confirm then
         confirming = true
-        before_confirm(text, function()
+        local confirm_cb = function()
           confirming = false
           dispose(text)
-        end, function()
+        end ---@type dot.module.input.ConfirmCallback
+        local cancel_cb = function()
           confirming = false
-        end)
+        end ---@type dot.module.input.CancelCallback
+        before_confirm(text, confirm_cb, cancel_cb)
       else
         dispose(text)
       end

@@ -302,7 +302,7 @@ function M.rename()
     return
   end
 
-  ---@type fml.dressing.input.IOptions
+  ---@type dot.module.input.IOptions
   local input_opts = {
     prompt = "Rename notepad item:",
     default = item.name,
