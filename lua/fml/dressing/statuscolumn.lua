@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/85b8ec210975aa137af4b7bef1fb7b7098be331a/lua/snacks/statuscolumn.lua
+---@see https://github.com/folke/snacks.nvim/blob/85b8ec210975aa137af4b7bef1fb7b7098be331a/lua/snacks/statuscolumn.lua
 
 ---@class fml.dressing.statuscolumn.IConfig
 ---@field public left                   fml.dressing.statuscolumn.IComponents

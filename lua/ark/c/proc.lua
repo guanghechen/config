@@ -1,4 +1,4 @@
---- https://github.com/folke/snacks.nvim/blob/5589c9d37bccf56f98982cd88a72e69cddf13436/lua/snacks/util/spawn.lua
+---@see https://github.com/folke/snacks.nvim/blob/5589c9d37bccf56f98982cd88a72e69cddf13436/lua/snacks/util/spawn.lua
 
 ---@param handle                        uv.uv_handle_t|nil
 ---@return nil

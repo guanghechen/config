@@ -1,3 +1,5 @@
+---@see https://github.com/lewis6991/gitsigns.nvim/blob/bf77caa5da671f5bab16e4792711d5aa288e8db0
+
 ---@class dot.module.git.__mods
 local __mods = {
   blame = "dot.module.git.blame",
