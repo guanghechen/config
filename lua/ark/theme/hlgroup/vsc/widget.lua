@@ -97,10 +97,6 @@ function M.gen_hlgroup_map(context)
     f_indent_underline_6 = { sp = cs.mix(u.bg0, u.blue, 50), underline = true },
     f_indent_underline_7 = { sp = cs.mix(u.bg0, u.purple, 50), underline = true },
 
-    ---input
-    f_ui_current = { bg = u.bg3 },
-    f_ui_normal = { bg = bg_pane },
-
     ---lsp
     f_lsp_diagnostic_error = { fg = u.red },
     f_lsp_diagnostic_error_cl = { fg = u.red, bg = u.bg3 },

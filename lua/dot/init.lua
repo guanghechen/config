@@ -125,6 +125,7 @@ local __mods = {
   board = "dot.module.board",
   choice = "dot.module.choice",
   git = "dot.module.git",
+  input = "dot.module.input",
   lsp = "dot.module.lsp",
   picker = "dot.module.picker",
   searcher = "dot.module.searcher",
@@ -149,6 +150,7 @@ local __mods = {
 ---@field public board                  dot.module.board
 ---@field public choice                 dot.module.choice
 ---@field public git                    dot.module.git
+---@field public input                  dot.module.input
 ---@field public lsp                    dot.module.lsp
 ---@field public picker                 dot.module.picker
 ---@field public searcher               dot.module.searcher

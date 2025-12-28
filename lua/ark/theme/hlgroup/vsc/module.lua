@@ -156,6 +156,10 @@ function M.gen_hlgroup_map(context)
     m_img_special = { fg = c.accentPurple },
     m_img_spinner = { fg = c.textDim },
 
+    ---module/input
+    m_in_current = { bg = u.bg3 },
+    m_in_normal = { bg = bg_pane },
+
     ---module/picker
     m_pk_finder_normal = { fg = u.fg1, bg = bg_pane },
     m_pk_finder_prompt = { fg = u.red, bg = bg_pane },
