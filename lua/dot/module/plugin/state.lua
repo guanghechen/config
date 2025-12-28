@@ -16,11 +16,11 @@ local M = {
       cmd = " ",
       dep = " ",
       event = " ",
-      ft = "",
+      ft = " ",
       keys = "󰌌 ",
       lazy = "󰂠 ",
-      loaded = "",
-      not_loaded = "",
+      loaded = " ",
+      not_loaded = " ",
       source = "󰘓 ",
       },
     },
@@ -108,7 +108,7 @@ function M.collect_orphan_plugins()
   local handle = vim.uv.fs_scandir(M.options.root)
   if handle then
     while true do
-      local name, type = vim.uv.fs_scandir_next(handle)
+      local name, type = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
       if not name then
         break
       end
@@ -120,6 +120,25 @@ function M.collect_orphan_plugins()
   table.sort(orphans)
 
   return orphans
+end
+
+---@return nil
+function M.remove_orphan_lock_entries()
+  M.load_lock()
+
+  local known_plugins = {} ---@type table<string, boolean>
+  for _, spec in ipairs(M.specs) do
+    known_plugins[spec.name] = true
+  end
+
+  local new_lock = {} ---@type table<string, dot.module.plugin.ILockEntry>
+  for name, entry in pairs(M.lock) do
+    if known_plugins[name] then
+      new_lock[name] = entry
+    end
+  end
+
+  M.update_lock(new_lock)
 end
 
 return M

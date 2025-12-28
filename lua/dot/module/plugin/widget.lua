@@ -37,9 +37,9 @@ function M:update()
 
   self:__trim__()
 
-  vim.bo[self._view.buf].modifiable = true
-  self:__render__(self._view.buf)
-  vim.bo[self._view.buf].modifiable = false
+  vim.bo[self._view.bufnr].modifiable = true
+  self:__render__(self._view.bufnr)
+  vim.bo[self._view.bufnr].modifiable = false
 end
 
 ----------------------------------------------------------------------------------------------------

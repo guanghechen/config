@@ -6,8 +6,8 @@ local Widget = require("dot.module.plugin.widget")
 
 ---@class dot.module.plugin.View : dot.t.IWidget
 ---@field public name                   string
----@field public buf                    integer|nil
----@field public win                    integer|nil
+---@field public bufnr                  integer|nil
+---@field public winnr                  integer|nil
 ---@field public win_opts               vim.api.keyset.win_config
 ---@field public state                  dot.module.plugin.IViewState
 ---@field public widget                 dot.module.plugin.Widget
@@ -41,8 +41,8 @@ function M.show(mode)
   _instance.state = { mode = mode or "home" }
   _instance._augroup = nil
   _instance._disposed = false
-  _instance.buf = nil
-  _instance.win = nil
+  _instance.bufnr = nil
+  _instance.winnr = nil
   _instance.win_opts = {}
   _instance:focus()
 end
@@ -69,8 +69,8 @@ end
 function M:focus()
   dot.state.widget.push(self)
 
-  if self.win ~= nil and vim.api.nvim_win_is_valid(self.win) then
-    vim.api.nvim_set_current_win(self.win)
+  if self.winnr ~= nil and vim.api.nvim_win_is_valid(self.winnr) then
+    vim.api.nvim_set_current_win(self.winnr)
     return
   end
 
@@ -92,19 +92,19 @@ function M:hide()
     self._augroup = nil
   end
 
-  local buf = self.buf
-  local win = self.win
+  local bufnr = self.bufnr ---@type integer|nil
+  local winnr = self.winnr ---@type integer|nil
 
-  self.buf = nil
-  self.win = nil
+  self.bufnr = nil
+  self.winnr = nil
 
   vim.schedule(function()
-    if win and vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_win_close(win, true)
+    if winnr and vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
     end
-    if buf and vim.api.nvim_buf_is_valid(buf) then
-      vim.diagnostic.reset(State.ns, buf)
-      vim.api.nvim_buf_delete(buf, { force = true })
+    if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+      vim.diagnostic.reset(State.ns, bufnr)
+      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
 end
@@ -116,15 +116,15 @@ end
 
 ---@return boolean
 function M:isfocused()
-  if self.win == nil or not vim.api.nvim_win_is_valid(self.win) then
+  if self.winnr == nil or not vim.api.nvim_win_is_valid(self.winnr) then
     return false
   end
-  return vim.api.nvim_get_current_win() == self.win
+  return vim.api.nvim_get_current_win() == self.winnr
 end
 
 ---@return boolean
 function M:isvisible()
-  return self.win ~= nil and vim.api.nvim_win_is_valid(self.win)
+  return self.winnr ~= nil and vim.api.nvim_win_is_valid(self.winnr)
 end
 
 ---@return nil
@@ -133,7 +133,7 @@ function M:resize()
     return
   end
   self:__layout__()
-  vim.api.nvim_win_set_config(self.win, {
+  vim.api.nvim_win_set_config(self.winnr, {
     relative = self.win_opts.relative,
     width = self.win_opts.width,
     height = self.win_opts.height,
@@ -172,25 +172,25 @@ end
 
 ---@return nil
 function M:__mount__()
-  self.buf = vim.api.nvim_create_buf(false, true)
-  self.win = vim.api.nvim_open_win(self.buf, true, self.win_opts)
+  self.bufnr = vim.api.nvim_create_buf(false, true)
+  self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.win_opts)
 
-  vim.bo[self.buf].buftype = "nofile"
-  vim.bo[self.buf].filetype = "dot_plugin"
-  vim.bo[self.buf].bufhidden = "wipe"
+  vim.bo[self.bufnr].buftype = "nofile"
+  vim.bo[self.bufnr].filetype = "dot_plugin"
+  vim.bo[self.bufnr].bufhidden = "wipe"
 
-  vim.wo[self.win].conceallevel = 3
-  vim.wo[self.win].foldenable = false
-  vim.wo[self.win].spell = false
-  vim.wo[self.win].wrap = true
-  vim.wo[self.win].winhighlight = "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title"
-  vim.wo[self.win].colorcolumn = ""
-  vim.wo[self.win].winbar = ""
+  vim.wo[self.winnr].conceallevel = 3
+  vim.wo[self.winnr].foldenable = false
+  vim.wo[self.winnr].spell = false
+  vim.wo[self.winnr].wrap = true
+  vim.wo[self.winnr].winhighlight = "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title"
+  vim.wo[self.winnr].colorcolumn = ""
+  vim.wo[self.winnr].winbar = ""
 
-  self._augroup = vim.api.nvim_create_augroup("dot_plugin_view_" .. self.win, { clear = true })
+  self._augroup = vim.api.nvim_create_augroup("dot_plugin_view_" .. self.winnr, { clear = true })
   vim.api.nvim_create_autocmd("WinClosed", {
     group = self._augroup,
-    pattern = tostring(self.win),
+    pattern = tostring(self.winnr),
     once = true,
     callback = function()
       self:hide()
@@ -210,7 +210,7 @@ end
 
 ---@return nil
 function M:__setup_keymaps__()
-  local bufnr = self.buf ---@type integer
+  local bufnr = self.bufnr ---@type integer
 
   for _, keymap in ipairs(dot.state.widget.get_keymaps(self)) do
     local keys = { keymap.key }

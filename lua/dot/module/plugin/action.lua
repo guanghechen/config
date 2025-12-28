@@ -80,6 +80,8 @@ function M.clean(on_done)
     end
   end
 
+  State.remove_orphan_lock_entries()
+
   M._running = false
   on_done()
 end
@@ -144,14 +146,8 @@ end
 
 ---@param name                          string
 ---@param callback                      fun(task: dot.module.plugin.ITaskState): nil
----@return nil
+---@return boolean
 function M.__run_task__(name, callback)
-  local Loader = require("dot.module.plugin.loader")
-  local state = Loader.get(name) ---@type dot.module.plugin.IPluginState|nil
-  if not state then
-    return
-  end
-
   ---@type dot.module.plugin.ITaskState
   local task = {
     name = name,
@@ -163,6 +159,7 @@ function M.__run_task__(name, callback)
   M._tasks[name] = task
 
   callback(task)
+  return true
 end
 
 ---@param specs                         dot.module.plugin.IPluginSpec[]
@@ -171,10 +168,25 @@ end
 ---@return nil
 function M.__update_plugins__(specs, on_progress, on_done)
   local total = #specs ---@type integer
+
+  if total == 0 then
+    on_done()
+    return
+  end
+
   local completed = 0 ---@type integer
 
   ---@type table<string, dot.module.plugin.ILockEntry>
-  local new_lock = vim.deepcopy(State.lock)
+  local new_lock = {}
+
+  ---@param spec                          dot.module.plugin.IPluginSpec
+  ---@return nil
+  local function preserve_lock(spec)
+    local old_entry = State.lock[spec.name]
+    if old_entry then
+      new_lock[spec.name] = old_entry
+    end
+  end
 
   for _, spec in ipairs(specs) do
     M.__run_task__(spec.name, function(task)
@@ -183,8 +195,13 @@ function M.__update_plugins__(specs, on_progress, on_done)
       if not yoz.path.is_exist(path) then
         task.status = "error"
         task.message = "Not installed"
+        preserve_lock(spec)
         completed = completed + 1
         on_progress()
+        if completed == total then
+          State.update_lock(new_lock)
+          on_done()
+        end
         return
       end
 
@@ -192,8 +209,13 @@ function M.__update_plugins__(specs, on_progress, on_done)
       if not info then
         task.status = "error"
         task.message = "Not a git repo"
+        preserve_lock(spec)
         completed = completed + 1
         on_progress()
+        if completed == total then
+          State.update_lock(new_lock)
+          on_done()
+        end
         return
       end
 
@@ -209,9 +231,11 @@ function M.__update_plugins__(specs, on_progress, on_done)
             if fetch_result.code ~= 0 then
               task.status = "error"
               task.message = "Fetch failed"
+              preserve_lock(spec)
               completed = completed + 1
               on_progress()
               if completed == total then
+                State.update_lock(new_lock)
                 on_done()
               end
               return
@@ -223,9 +247,11 @@ function M.__update_plugins__(specs, on_progress, on_done)
             if not target_commit then
               task.status = "error"
               task.message = "No target commit"
+              preserve_lock(spec)
               completed = completed + 1
               on_progress()
               if completed == total then
+                State.update_lock(new_lock)
                 on_done()
               end
               return
@@ -257,6 +283,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
                   if checkout_result.code ~= 0 then
                     task.status = "error"
                     task.message = "Checkout failed"
+                    preserve_lock(spec)
                     completed = completed + 1
                     on_progress()
                     if completed == total then
