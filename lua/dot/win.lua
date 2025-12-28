@@ -1,7 +1,5 @@
 local __module_name__ = "dot.win"
 
-local Methods = vim.lsp.protocol.Methods
-
 ---@alias dot.win.TypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
@@ -581,7 +579,7 @@ function M.locate_symbols(winnr, callback)
   ---! Make the request to the LSP server
   local requests
   requests, cancel_lsp =
-    vim.lsp.buf_request(bufnr, Methods.textDocument_documentSymbol, { textDocument = textDocument }, handler)
+    vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
   cancel_lsp = cancel_lsp or ark.fn.noop
   if requests == nil or next(requests) == nil then
     return abort()

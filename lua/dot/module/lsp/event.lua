@@ -1,4 +1,3 @@
-local Methods = vim.lsp.protocol.Methods
 local augroup_codelens = ark.nvim.augroup("dot.module.lsp.event.codelens") ---@type integer
 
 ---@class dot.module.lsp.event
@@ -17,8 +16,8 @@ function M.on_rename(from, to, rename)
 
   local clients = vim.lsp.get_clients()
   for _, client in ipairs(clients) do
-    if client:supports_method(Methods.workspace_willRenameFiles) then
-      local resp = client:request_sync(Methods.workspace_willRenameFiles, changes, 1000, 0)
+    if client:supports_method("workspace/willRenameFiles") then
+      local resp = client:request_sync("workspace/willRenameFiles", changes, 1000, 0)
       if resp and resp.result ~= nil then
         vim.lsp.util.apply_workspace_edit(resp.result, client.offset_encoding)
       end
@@ -30,8 +29,8 @@ function M.on_rename(from, to, rename)
   end
 
   for _, client in ipairs(clients) do
-    if client:supports_method(Methods.workspace_didRenameFiles) then
-      client:notify(Methods.workspace_didRenameFiles, changes)
+    if client:supports_method("workspace/didRenameFiles") then
+      client:notify("workspace/didRenameFiles", changes)
     end
   end
 end
@@ -95,37 +94,37 @@ function M.on_attach(client, bufnr)
   local support_references = vim.b[bufnr].support_references or 0 ---@type integer
   local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
-  if client:supports_method(Methods.textDocument_codeLens) then
+  if client:supports_method("textDocument/codeLens") then
     support_codelens = support_codelens + 1
   end
-  if client:supports_method(Methods.textDocument_inlayHint) then
+  if client:supports_method("textDocument/inlayHint") then
     support_inlayhint = support_inlayhint + 1
   end
-  if client:supports_method(Methods.textDocument_rename) then
+  if client:supports_method("textDocument/rename") then
     support_rename = support_rename + 1
   end
-  if client:supports_method(Methods.textDocument_codeAction) then
+  if client:supports_method("textDocument/codeAction") then
     support_codeAction = support_codeAction + 1
   end
-  if client:supports_method(Methods.textDocument_documentHighlight) then
+  if client:supports_method("textDocument/documentHighlight") then
     support_documentHighlight = support_documentHighlight + 1
   end
-  if client:supports_method(Methods.textDocument_documentSymbol) then
+  if client:supports_method("textDocument/documentSymbol") then
     support_documentSymbol = support_documentSymbol + 1
   end
-  if client:supports_method(Methods.textDocument_foldingRange) then
+  if client:supports_method("textDocument/foldingRange") then
     support_foldingRange = support_foldingRange + 1
   end
-  if client:supports_method(Methods.textDocument_definition) then
+  if client:supports_method("textDocument/definition") then
     support_definition = support_definition + 1
   end
-  if client:supports_method(Methods.textDocument_implementation) then
+  if client:supports_method("textDocument/implementation") then
     support_implementation = support_implementation + 1
   end
-  if client:supports_method(Methods.textDocument_references) then
+  if client:supports_method("textDocument/references") then
     support_references = support_references + 1
   end
-  if client:supports_method(Methods.textDocument_typeDefinition) then
+  if client:supports_method("textDocument/typeDefinition") then
     support_typeDefinition = support_typeDefinition + 1
   end
 
@@ -331,7 +330,7 @@ function M.on_detach(client, bufnr)
   local support_references = vim.b[bufnr].support_references or 0 ---@type integer
   local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
-  if support_codelens > 0 and client:supports_method(Methods.textDocument_codeLens) then
+  if support_codelens > 0 and client:supports_method("textDocument/codeLens") then
     support_codelens = support_codelens - 1
 
     if support_codelens == 0 then
@@ -341,38 +340,38 @@ function M.on_detach(client, bufnr)
       })
     end
   end
-  if support_inlayhint > 0 and client:supports_method(Methods.textDocument_inlayHint) then
+  if support_inlayhint > 0 and client:supports_method("textDocument/inlayHint") then
     support_inlayhint = support_inlayhint - 1
   end
-  if support_rename > 0 and client:supports_method(Methods.textDocument_rename) then
+  if support_rename > 0 and client:supports_method("textDocument/rename") then
     support_rename = support_rename - 1
   end
-  if support_codeAction > 0 and client:supports_method(Methods.textDocument_codeAction) then
+  if support_codeAction > 0 and client:supports_method("textDocument/codeAction") then
     support_codeAction = support_codeAction - 1
   end
-  if support_documentHighlight > 0 and client:supports_method(Methods.textDocument_documentHighlight) then
+  if support_documentHighlight > 0 and client:supports_method("textDocument/documentHighlight") then
     support_documentHighlight = support_documentHighlight - 1
 
     if support_documentHighlight == 0 then
       require("dot.module.illuminate").undressing(bufnr)
     end
   end
-  if support_documentSymbol > 0 and client:supports_method(Methods.textDocument_documentSymbol) then
+  if support_documentSymbol > 0 and client:supports_method("textDocument/documentSymbol") then
     support_documentSymbol = support_documentSymbol - 1
   end
-  if support_foldingRange > 0 and client:supports_method(Methods.textDocument_foldingRange) then
+  if support_foldingRange > 0 and client:supports_method("textDocument/foldingRange") then
     support_foldingRange = support_foldingRange - 1
   end
-  if support_definition > 0 and client:supports_method(Methods.textDocument_definition) then
+  if support_definition > 0 and client:supports_method("textDocument/definition") then
     support_definition = support_definition - 1
   end
-  if support_implementation > 0 and client:supports_method(Methods.textDocument_implementation) then
+  if support_implementation > 0 and client:supports_method("textDocument/implementation") then
     support_implementation = support_implementation - 1
   end
-  if support_references > 0 and client:supports_method(Methods.textDocument_references) then
+  if support_references > 0 and client:supports_method("textDocument/references") then
     support_references = support_references - 1
   end
-  if support_typeDefinition > 0 and client:supports_method(Methods.textDocument_typeDefinition) then
+  if support_typeDefinition > 0 and client:supports_method("textDocument/typeDefinition") then
     support_typeDefinition = support_typeDefinition - 1
   end
 

@@ -1,8 +1,6 @@
 local __module_name__ = "fml.dressing.lsp_action" ---@type string
 
 local api = vim.api
-local lsp = vim.lsp
-local util = vim.lsp.util
 
 ---@class dot.t.ILspActionProviderContext
 ---@field public bufnr                  integer
@@ -226,7 +224,7 @@ local function custom_code_action(opts)
   local has_external_diagnostics = context.diagnostics ~= nil
   context.diagnostics = context.diagnostics or {}
   if not context.triggerKind then
-    context.triggerKind = lsp.protocol.CodeActionTriggerKind.Invoked
+    context.triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked
   end
 
   local bufnr = api.nvim_get_current_buf()
@@ -241,7 +239,7 @@ local function custom_code_action(opts)
   })
   local provider_actions = collect_provider_actions(provider_ctx)
 
-  local clients = lsp.get_clients({ bufnr = bufnr, method = "textDocument/codeAction" })
+  local clients = vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/codeAction" })
 
   local function build_params(client)
     local params
@@ -252,17 +250,17 @@ local function custom_code_action(opts)
       local start_pos = { selection_start.line + 1, selection_start.character }
       ---@type [integer, integer]
       local end_pos = { selection_end.line + 1, selection_end.character }
-      params = util.make_given_range_params(start_pos, end_pos, bufnr, client.offset_encoding)
+      params = vim.lsp.util.make_given_range_params(start_pos, end_pos, bufnr, client.offset_encoding)
     else
-      params = util.make_range_params(provider_ctx.winnr, client.offset_encoding)
+      params = vim.lsp.util.make_range_params(provider_ctx.winnr, client.offset_encoding)
     end
     ---@cast params lsp.CodeActionParams
 
     if has_external_diagnostics then
       params.context = context
     else
-      local ns_pull = lsp.diagnostic.get_namespace(client.id, false)
-      local ns_push = lsp.diagnostic.get_namespace(client.id, true)
+      local ns_pull = vim.lsp.diagnostic.get_namespace(client.id, false)
+      local ns_push = vim.lsp.diagnostic.get_namespace(client.id, true)
       local diagnostics = {}
       vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_pull, lnum = lnum }))
       vim.list_extend(diagnostics, vim.diagnostic.get(bufnr, { namespace = ns_push, lnum = lnum }))
@@ -282,7 +280,7 @@ local function custom_code_action(opts)
 
   local function apply_action(action, client, ctx)
     if action.edit then
-      util.apply_workspace_edit(action.edit, client.offset_encoding)
+      vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
     end
     local a_cmd = action.command
     if a_cmd then
@@ -301,7 +299,7 @@ local function custom_code_action(opts)
       return action.action.title
     end
 
-    local clients_for_buf = lsp.get_clients({ bufnr = item.ctx.bufnr })
+    local clients_for_buf = vim.lsp.get_clients({ bufnr = item.ctx.bufnr })
     local title = item.action.title:gsub("\r\n", "\\r\\n"):gsub("\n", "\\n")
 
     if item.action.disabled then
@@ -312,7 +310,7 @@ local function custom_code_action(opts)
       return title
     end
 
-    local source = lsp.get_client_by_id(item.ctx.client_id)
+    local source = vim.lsp.get_client_by_id(item.ctx.client_id)
     if source == nil then
       return title
     end
@@ -330,7 +328,7 @@ local function custom_code_action(opts)
       return
     end
 
-    local client = assert(lsp.get_client_by_id(choice.ctx.client_id))
+    local client = assert(vim.lsp.get_client_by_id(choice.ctx.client_id))
     local action = choice.action
 
     if type(action.title) == "string" and type(action.command) == "string" then
@@ -406,7 +404,7 @@ local function custom_code_action(opts)
             return false
           end
         end
-        if action.disabled and opts.context.triggerKind ~= lsp.protocol.CodeActionTriggerKind.Invoked then
+        if action.disabled and opts.context.triggerKind ~= vim.lsp.protocol.CodeActionTriggerKind.Invoked then
           return false
         end
       end
@@ -456,7 +454,7 @@ local function custom_code_action(opts)
   end
 
   if next(clients) then
-    lsp.buf_request_all(bufnr, "textDocument/codeAction", build_params, process_results)
+    vim.lsp.buf_request_all(bufnr, "textDocument/codeAction", build_params, process_results)
   else
     process_results({})
   end

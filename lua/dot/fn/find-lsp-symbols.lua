@@ -2,8 +2,6 @@
 local name = "dot.fn.find_lsp_symbols" ---@type string
 local title = "LSP Symbols" ---@type string
 
-local Methods = vim.lsp.protocol.Methods
-
 ---@class dot.fn.find_lsp_symbols.ISymbolData
 ---@field public name                   string
 ---@field public kind                   string
@@ -136,7 +134,7 @@ local function supports_document_symbols(client, bufnr)
   if not client then
     return false
   end
-  if client.supports_method and client:supports_method(Methods.textDocument_documentSymbol, bufnr) then
+  if client.supports_method and client:supports_method("textDocument/documentSymbol", bufnr) then
     return true
   end
   local cap = client.server_capabilities and client.server_capabilities.documentSymbolProvider
@@ -164,7 +162,7 @@ local function request_document_symbols(bufnr, callback)
   local params = { textDocument = vim.lsp.util.make_text_document_params(bufnr) }
 
   for _, client in ipairs(supported) do
-    local ok, request_id = client:request(Methods.textDocument_documentSymbol, params, function(err, result)
+    local ok, request_id = client:request("textDocument/documentSymbol", params, function(err, result)
       if not err and result then
         responses[#responses + 1] = { client = client, result = result }
       end

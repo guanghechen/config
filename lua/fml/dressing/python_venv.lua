@@ -1,7 +1,5 @@
 local __module_name__ = "fml.dressing.python_venv" ---@type string
 
-local Methods = vim.lsp.protocol.Methods
-
 ---@param text                          string
 ---@return string
 ---@return integer
@@ -22,7 +20,7 @@ local function hook_basedpyright(venv_path, venv_python)
     settings.python.pythonPath = venv_python
     client.config.settings = settings
     client.settings = settings
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
+    client:notify("workspace/didChangeConfiguration", { settings = settings })
   end
 end
 
@@ -39,7 +37,7 @@ local function hook_pyright(venv_path, venv_python)
     settings.python.pythonPath = venv_python
     client.config.settings = settings
     client.settings = settings
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
+    client:notify("workspace/didChangeConfiguration", { settings = settings })
   end
 end
 
@@ -56,7 +54,7 @@ local function hook_pylance(venv_path, venv_python)
     settings.python.pythonPath = venv_python
     client.config.settings = settings
     client.settings = settings
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
+    client:notify("workspace/didChangeConfiguration", { settings = settings })
   end
 end
 
@@ -76,7 +74,7 @@ local function hook_pylsp(venv_path, venv_python)
         },
       },
     })
-    client:notify(Methods.workspace_didChangeConfiguration, { settings = settings })
+    client:notify("workspace/didChangeConfiguration", { settings = settings })
   end
 end
 

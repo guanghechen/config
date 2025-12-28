@@ -1,8 +1,6 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "fml.action.lsp.reference" ---@type string
 
-local Methods = vim.lsp.protocol.Methods
-
 ---@class fml.action.lsp.reference.IItem
 ---@field public filepath               string
 ---@field public lnum                   integer
@@ -231,19 +229,19 @@ local M = {}
 
 ---@return nil
 function M.goto_definitions()
-  focus("LSP Definitions", Methods.textDocument_definition, "support_definition", {})
+  focus("LSP Definitions", "textDocument/definition", "support_definition", {})
 end
 
 ---@return nil
 function M.goto_implementations()
-  focus("LSP Implementations", Methods.textDocument_implementation, "support_implementation", {})
+  focus("LSP Implementations", "textDocument/implementation", "support_implementation", {})
 end
 
 ---@return nil
 function M.goto_references()
   focus(
     "LSP References",
-    Methods.textDocument_references,
+    "textDocument/references",
     "support_references",
     { context = { includeDeclaration = true } }
   )
@@ -251,7 +249,7 @@ end
 
 ---@return nil
 function M.goto_type_definitions()
-  focus("LSP Type Definitions", Methods.textDocument_typeDefinition, "support_typeDefinition", {})
+  focus("LSP Type Definitions", "textDocument/typeDefinition", "support_typeDefinition", {})
 end
 
 return M
