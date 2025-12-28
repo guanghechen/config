@@ -240,8 +240,7 @@ function M.setup_context(storage)
   M.context.set_storage(storage)
   M.context.load(storage, false)
 
-  local colorscheme = M.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-  vim.cmd.colorscheme(colorscheme)
+  M.context.theme.reload_theme(false, false)
 end
 
 ---@return nil

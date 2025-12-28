@@ -171,7 +171,6 @@ Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
 
 #### Supporting Directories
 
-- **`colors/`** - Neovim colorscheme entry points (18 schemes)
 - **`ftplugin/`** - Filetype-specific settings (`bigfile`, `gitcommit`, `html`, `jsonl`, `log`, `markdown`, `text`)
 - **`lsp/`** - Language server configurations (21 servers)
 - **`queries/`** - TreeSitter queries for various languages
