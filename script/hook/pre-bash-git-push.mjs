@@ -2,23 +2,28 @@
 
 import { readFileSync } from 'node:fs'
 
-const GIT_PUSH_PATTERN = /\bgit\s+push\b/
+const GIT_SENSITIVE_COMMANDS = [
+  { pattern: /\bgit\s+push\b/, name: 'git push' },
+  { pattern: /\bgit\s+commit\b/, name: 'git commit' },
+]
 
 function main() {
   const input = JSON.parse(readFileSync(0, 'utf-8'))
   const command = input.tool_input?.command || ''
 
-  if (GIT_PUSH_PATTERN.test(command)) {
-    console.log(
-      JSON.stringify({
-        hookSpecificOutput: {
-          hookEventName: 'PreToolUse',
-          permissionDecision: 'ask',
-          permissionDecisionReason: `Intercepted "git push". Allow?`,
-        },
-      }),
-    )
-    return
+  for (const { pattern, name } of GIT_SENSITIVE_COMMANDS) {
+    if (pattern.test(command)) {
+      console.log(
+        JSON.stringify({
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'ask',
+            permissionDecisionReason: `Intercepted "${name}". Allow?`,
+          },
+        }),
+      )
+      return
+    }
   }
 
   console.log(
