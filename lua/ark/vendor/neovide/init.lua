@@ -8,7 +8,7 @@ pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
 era.notifier.dressing()
-require("fml.dressing.ui_attach")
+era.ui_attach.dressing()
 require("fml.command")
 
 if dot.path.is_git_repo() then

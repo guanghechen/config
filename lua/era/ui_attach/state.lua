@@ -1,11 +1,11 @@
----@class fml.dressing.ui_attach.ITask
+---@class era.ui_attach.ITask
 ---@field public event                  string
 ---@field public args                   any[]
 
----@alias fml.dressing.ui_attach.IHandleTask
----| fun(task: fml.dressing.ui_attach.ITask): nil
+---@alias era.ui_attach.IHandleTask
+---| fun(task: era.ui_attach.ITask): nil
 
----@class fml.dressing.ui_attach.cmdline.IState
+---@class era.ui_attach.cmdline.IState
 ---@field public pos                    integer
 ---@field public firstc                 string
 ---@field public prompt                 string
@@ -21,13 +21,13 @@
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
----@class fml.dressing.ui_attach.message.IState
+---@class era.ui_attach.message.IState
 ---@field public history_bufnr          integer|nil
 ---@field public history_winnr          integer|nil
 ---@field public last_group             string|nil
----@field public confirming_task        fml.dressing.ui_attach.ITask|nil
+---@field public confirming_task        era.ui_attach.ITask|nil
 
----@class fml.dressing.ui_attach.popupmenu.IState
+---@class era.ui_attach.popupmenu.IState
 ---@field public items                  string[][]
 ---@field public selected               integer
 ---@field public row                    integer
@@ -36,18 +36,18 @@
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
----@class fml.dressing.ui_attach.cmdline_block.IState
+---@class era.ui_attach.cmdline_block.IState
 ---@field public lines                  string[]
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 
----@class fml.dressing.ui_attach.state
+---@class era.ui_attach.state
 local M = {}
 
-M.cmdline = {} ---@type fml.dressing.ui_attach.cmdline.IState[]
-M.message = {} ---@type fml.dressing.ui_attach.message.IState
-M.popupmenu = nil ---@type fml.dressing.ui_attach.popupmenu.IState|nil
-M.cmdline_block = { lines = {}, highlights = {} } ---@type fml.dressing.ui_attach.cmdline_block.IState
+M.cmdline = {} ---@type era.ui_attach.cmdline.IState[]
+M.message = {} ---@type era.ui_attach.message.IState
+M.popupmenu = nil ---@type era.ui_attach.popupmenu.IState|nil
+M.cmdline_block = { lines = {}, highlights = {} } ---@type era.ui_attach.cmdline_block.IState
 
 return M

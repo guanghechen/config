@@ -1,4 +1,4 @@
-local states = require("fml.dressing.ui_attach.state")
+local states = require("era.ui_attach.state")
 
 local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
@@ -55,22 +55,22 @@ local _cmdline_title_map = {
 }
 local _cmdline_type_map = {
   ['command']         = string.format(" %s  ", stl.icon.ui.Cmdline),
-  ["command_help"]    = string.format(" %s  ", ""),
-  ["command_lua"]     = string.format(" %s  ", ""),
+  ["command_help"]    = string.format(" %s  ", ""),
+  ["command_lua"]     = string.format(" %s  ", ""),
   ["confirm"]    = string.format(" %s  ", stl.icon.ui.Cmdline),
   ["search_forward"]  = string.format(" %s ", stl.icon.ui.SearchForward),
   ["search_backward"] = string.format(" %s ", stl.icon.ui.SearchBackward),
 }
 -- stylua: ignore end
 
----@class fml.dressing.ui_attach.cmdline
+---@class era.ui_attach.cmdline
 local M = {}
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.hide(task)
   local level = unpack(task.args) ---@type integer
-  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.ui_attach.cmdline.IState|nil
   states.cmdline[level] = nil
 
   if state ~= nil then
@@ -95,11 +95,11 @@ function M.hide(task)
   end
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.pos(task)
   local pos, level = unpack(task.args) ---@type integer
-  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.ui_attach.cmdline.IState|nil
   if state ~= nil and state.pos ~= pos then
     state.pos = pos
     M._show(state)
@@ -110,7 +110,7 @@ function M.pos(task)
   end
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.show(task)
   ---@diagnostic disable-next-line: unused-local
@@ -123,7 +123,7 @@ function M.show(task)
   ---@cast level                        integer             -- Nesting level, 0 means top level
   ---@cast hlid                         integer             -- hlgroup id
 
-  local msg_show_task = states.message.confirming_task ---@type fml.dressing.ui_attach.ITask|nil
+  local msg_show_task = states.message.confirming_task ---@type era.ui_attach.ITask|nil
   prompt = vim.trim(prompt):gsub(":$", "") ---@type string
 
   local typ = states.message.confirming_task ~= nil and "confirm" or "command" ---@type string
@@ -168,9 +168,9 @@ function M.show(task)
 
   local icon = _cmdline_type_map[typ] ---@type string
 
-  local state = states.cmdline[level] ---@type fml.dressing.ui_attach.cmdline.IState|nil
+  local state = states.cmdline[level] ---@type era.ui_attach.cmdline.IState|nil
   if state == nil then
-    ---@type fml.dressing.ui_attach.cmdline.IState
+    ---@type era.ui_attach.cmdline.IState
     state = {
       pos = pos,
       firstc = firstc,
@@ -210,7 +210,7 @@ function M.show(task)
   end
 end
 
----@param state                         fml.dressing.ui_attach.cmdline.IState
+---@param state                         era.ui_attach.cmdline.IState
 ---@return nil
 function M._show(state)
   local bufnr = state.bufnr ---@type integer|nil
@@ -298,7 +298,7 @@ function M._show(state)
   M._update_cmdline_position(state, winnr)
 end
 
----@param state                         fml.dressing.ui_attach.cmdline.IState
+---@param state                         era.ui_attach.cmdline.IState
 ---@param winnr                         integer
 ---@return nil
 function M._update_cmdline_position(state, winnr)
@@ -334,7 +334,7 @@ function M._update_cmdline_position(state, winnr)
   }
 end
 
----@param block                         fml.dressing.ui_attach.cmdline_block.IState
+---@param block                         era.ui_attach.cmdline_block.IState
 ---@return nil
 function M._render_block(block)
   if #block.lines < 1 then
@@ -419,8 +419,8 @@ function M._render_block(block)
   vim.api.nvim__redraw({ win = winnr, flush = true })
 end
 
----@param state                         fml.dressing.ui_attach.cmdline.IState
----@param msg_show_task                 fml.dressing.ui_attach.ITask
+---@param state                         era.ui_attach.cmdline.IState
+---@param msg_show_task                 era.ui_attach.ITask
 ---@return nil
 function M._show_confirm(state, msg_show_task)
   local bufnr = state.bufnr ---@type integer|nil
@@ -588,12 +588,12 @@ function M._show_confirm(state, msg_show_task)
   M._update_cmdline_position(state, winnr)
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.special_char(task) end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.block_show(task)
   local entries = unpack(task.args)
@@ -605,7 +605,7 @@ function M.block_show(task)
   M._render_block(block)
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.block_append(task)
   local entries = unpack(task.args)
@@ -623,7 +623,7 @@ function M.block_append(task)
   M._render_block(block)
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.block_hide(task)

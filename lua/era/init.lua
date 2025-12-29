@@ -91,6 +91,7 @@ local __mods = {
   tabline = "era.tabline",
   term = "era.term",
   trailspace = "era.trailspace",
+  ui_attach = "era.ui_attach",
   view = "era.view",
   virtcolumn = "era.virtcolumn",
   winline = "era.winline",
@@ -124,6 +125,7 @@ local __mods = {
 ---@field public tabline                era.tabline
 ---@field public term                   era.term
 ---@field public trailspace             era.trailspace
+---@field public ui_attach              era.ui_attach
 ---@field public view                   era.view
 ---@field public virtcolumn             era.virtcolumn
 ---@field public winline                era.winline

@@ -1,5 +1,5 @@
-local __module_name__ = "fml.dressing.ui_attach.messages"
-local states = require("fml.dressing.ui_attach.state")
+local __module_name__ = "era.ui_attach.messages"
+local states = require("era.ui_attach.state")
 
 local KIND_MAP = {
   CHANGES = {
@@ -25,24 +25,24 @@ local kind_2_level_map = {
   debug = vim.log.levels.DEBUG,
 }
 
----@class fml.dressing.ui_attach.messages
+---@class era.ui_attach.messages
 local M = {}
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.clear(task)
   dot.state.status.searching:next(true)
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.history_clear(task)
   --- nothing need to do
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.history_show(task)
   local entries = unpack(task.args)
@@ -132,7 +132,7 @@ function M.history_show(task)
   end
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 function M.show(task)
   local kind, content, replace_last, history = unpack(task.args)
@@ -220,7 +220,7 @@ function M.show(task)
   })
 end
 
----@param task                          fml.dressing.ui_attach.ITask
+---@param task                          era.ui_attach.ITask
 ---@return nil
 ---@diagnostic disable-next-line: unused-local
 function M.showcmd(task)
