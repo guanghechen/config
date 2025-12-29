@@ -102,6 +102,7 @@ local __mods = {
   easing = "stl.external.easing",
 
   anim = "stl.anim",
+  box = "stl.box",
   debug = "stl.debug",
   env = "stl.env",
   fileicon = "stl.fileicon",
@@ -130,6 +131,7 @@ local __mods = {
 ---@field public lang                   stl.lang
 ---
 ---@field public anim                   stl.anim
+---@field public box                    stl.box
 ---@field public debug                  stl.debug
 ---@field public env                    stl.env
 ---@field public fileicon               stl.fileicon

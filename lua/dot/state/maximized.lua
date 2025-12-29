@@ -82,7 +82,7 @@ function M.compute_float_maximized_wincfg(wincfg)
   local available_height = math.max(1, editor_height - top_offset - bottom_offset) ---@type integer
 
   ---@type integer, integer
-  local fitted_width, fitted_height = ark.box.fit_editor(
+  local fitted_width, fitted_height = stl.box.fit_editor(
     editor_width,
     available_height,
     maximize_cfg.border,

@@ -1,10 +1,10 @@
----@class ark.box.IDimension
+---@class stl.box.IDimension
 ---@field public row                    integer
 ---@field public col                    integer
 ---@field public width                  integer
 ---@field public height                 integer
 
----@class ark.box.IRestriction
+---@class stl.box.IRestriction
 ---@field public position               stl.e.BoxPosition
 ---@field public rows                   integer
 ---@field public cols                   integer
@@ -17,7 +17,7 @@
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 
----@class ark.box
+---@class stl.box
 local M = {}
 
 ---@param size                          number
@@ -37,8 +37,8 @@ end
 
 ---@param width                         integer
 ---@param height                        integer
----@param restriction                   ark.box.IRestriction
----@return ark.box.IDimension
+---@param restriction                   stl.box.IRestriction
+---@return stl.box.IDimension
 function M.measure(width, height, restriction)
   local rows = restriction.rows ---@type integer
   local cols = restriction.cols ---@type integer
@@ -60,7 +60,7 @@ function M.measure(width, height, restriction)
     row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
     col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-    ---@type ark.box.IDimension
+    ---@type stl.box.IDimension
     return { row = row, col = col, width = width, height = height }
   end
 
@@ -72,7 +72,7 @@ function M.measure(width, height, restriction)
       row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
       col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-      ---@type ark.box.IDimension
+      ---@type stl.box.IDimension
       return { row = row, col = col, width = width, height = height }
     end
   end
@@ -82,7 +82,7 @@ function M.measure(width, height, restriction)
   row = math.max(1, math.min(rows - height + 1, row)) ---@type integer
   col = math.max(0, math.min(cols - width, col)) ---@type integer
 
-  ---@type ark.box.IDimension
+  ---@type stl.box.IDimension
   return { row = row, col = col, width = width, height = height }
 end
 
@@ -162,18 +162,18 @@ function M.resolve_border_extents(border)
   return left, right, top, bottom
 end
 
----@class ark.box.FitEditorOpts
+---@class stl.box.FitEditorOpts
 ---@field public cols                   integer|nil
 ---@field public rows                   integer|nil
 
 ---@param width                         integer
 ---@param height                        integer
 ---@param border                        string|table|nil
----@param opts                          ark.box.FitEditorOpts|nil
+---@param opts                          stl.box.FitEditorOpts|nil
 ---@return integer
 ---@return integer
 function M.fit_editor(width, height, border, opts)
-  opts = opts or {} ---@type ark.box.FitEditorOpts
+  opts = opts or {} ---@type stl.box.FitEditorOpts
 
   local cols = opts.cols or vim.o.columns ---@type integer
   local rows = opts.rows or vim.o.lines ---@type integer
