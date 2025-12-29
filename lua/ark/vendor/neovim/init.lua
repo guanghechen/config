@@ -40,7 +40,7 @@ vim.schedule(function()
   require("fml.dressing.winsep")
 
   era.dim.dressing()
-  require("fml.dressing.im")
+  era.im.dressing()
   require("fml.dressing.input")
   require("fml.dressing.lsp")
   require("fml.dressing.lsp_action")
