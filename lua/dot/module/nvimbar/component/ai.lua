@@ -9,7 +9,7 @@ end)
 ---@class dot.module.nvimbar.component.ai
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.status(position)
   local state = require("dot.module.ai.state")

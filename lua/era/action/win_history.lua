@@ -53,7 +53,7 @@ local function fetch_data(winnr_sourcefile)
       local filename = yoz.path.basename(filepath) ---@type string
       local icon, icon_hln = stl.fileicon.get_file_icon(filename) ---@type string, string
 
-      ---@type ark.t.IHighlightInline[]
+      ---@type stl.t.IHighlightInline[]
       local highlights = {
         {
           coll = ORDINAL_WIDTH + 1,
@@ -85,7 +85,7 @@ local function fetch_data(winnr_sourcefile)
         local filename = yoz.path.basename(filepath) ---@type string
         local icon, icon_hln = stl.fileicon.get_file_icon(filename) ---@type string, string
 
-        ---@type ark.t.IHighlightInline[]
+        ---@type stl.t.IHighlightInline[]
         local highlights = {
           {
             coll = ORDINAL_WIDTH + 1,

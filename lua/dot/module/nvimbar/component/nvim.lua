@@ -33,7 +33,7 @@ end
 ---@class dot.module.nvimbar.component.nvim
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.mode(position)
   local hln_text = position .. "_nvim_mode_text" ---@type string
@@ -61,7 +61,7 @@ function M.mode(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.msg_changes(position)
   local hln_text = position .. "_nvim_msg_changes" ---@type string
@@ -97,7 +97,7 @@ function M.msg_changes(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.msg_command(position)
   local hln_text = position .. "_nvim_msg_command" ---@type string
@@ -133,7 +133,7 @@ function M.msg_command(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.msg_lsp(position)
   local hln_text = position .. "_nvim_msg_lsp" ---@type string
@@ -155,7 +155,7 @@ function M.msg_lsp(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.msg_mode(position)
   local hln_text = position .. "_nvim_msg_mode" ---@type string
@@ -177,7 +177,7 @@ function M.msg_mode(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.nr(position)
   local hln_sep = position .. "_nvim_nr_sep" ---@type string
@@ -200,7 +200,7 @@ function M.nr(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.pid(position)
   local hln_text = position .. "_nvim_pid" ---@type string
@@ -224,7 +224,7 @@ function M.pid(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.pos(position)
   local hln_sep = position .. "_nvim_pos_sep" ---@type string
@@ -248,7 +248,7 @@ function M.pos(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.tabs(position)
   local hln_toggle = position .. "_nvim_tab_toggle" ---@type string

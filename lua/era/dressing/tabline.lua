@@ -2,7 +2,7 @@ local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
-local position = "f_tl" ---@type ark.e.NvimbarPositionEnum
+local position = "f_tl" ---@type stl.e.NvimbarPositionEnum
 
 local tabline ---@type dot.module.nvimbar.Nvimbar
 tabline = Nvimbar.new({

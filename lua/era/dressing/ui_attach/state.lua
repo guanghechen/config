@@ -38,7 +38,7 @@
 
 ---@class era.dressing.ui_attach.cmdline_block.IState
 ---@field public lines                  string[]
----@field public highlights             ark.t.IHighlight[]
+---@field public highlights             stl.t.IHighlight[]
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
 

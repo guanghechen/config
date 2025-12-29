@@ -24,7 +24,7 @@ local __module_name__ = "dot.module.board.act" ---@type string
 ---@field public on_input_change        ?dot.module.board.act.IOnInputChange
 ---@field public on_confirm             dot.module.board.act.IOnConfirm
 ---@field public on_cancel              ?dot.module.board.act.IOnCancel
----@field public keymaps                ?ark.t.IKeymap[]
+---@field public keymaps                ?stl.t.IKeymap[]
 ---@field public width                  ?number
 ---@field public get_width              ?dot.module.board.act.IGetWidth
 
@@ -45,7 +45,7 @@ local __module_name__ = "dot.module.board.act" ---@type string
 ---@field public on_input_change        dot.module.board.act.IOnInputChange
 ---@field public on_confirm             dot.module.board.act.IOnConfirm
 ---@field public on_cancel              dot.module.board.act.IOnCancel
----@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _keymaps            stl.t.IKeymap[]
 ---@field protected _preview_lines      integer
 ---@field protected _recommended_width  number
 ---@field protected _get_width          dot.module.board.act.IGetWidth|nil
@@ -92,7 +92,7 @@ function M.new(props)
   local on_confirm = props.on_confirm ---@type dot.module.board.act.IOnConfirm
   local on_cancel = props.on_cancel or stl.fn.noop ---@type dot.module.board.act.IOnCancel
 
-  local keymaps = props.keymaps or {} ---@type ark.t.IKeymap[]
+  local keymaps = props.keymaps or {} ---@type stl.t.IKeymap[]
   local preview_lines = props.preview_lines or 5 ---@type integer
   local recommended_width = math.max(0.1, props.width or 0.6) ---@type number
   local get_width = props.get_width ---@type dot.module.board.act.IGetWidth|nil
@@ -505,7 +505,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M:__setup_keymaps__(bufnr)
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local builtin_keymaps = {
     {
       modes = { "i", "n" },
@@ -525,7 +525,7 @@ function M:__setup_keymaps__(bufnr)
     },
   }
 
-  local keymaps = vim.list_extend(builtin_keymaps, self._keymaps) ---@type ark.t.IKeymap[]
+  local keymaps = vim.list_extend(builtin_keymaps, self._keymaps) ---@type stl.t.IKeymap[]
   ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 

@@ -7,7 +7,7 @@
 ---@field public env                    ?table<string, string>
 ---@field public permanent              ?boolean
 ---@field public hidewipe               ?boolean
----@field public user_keymaps           ?ark.t.IKeymap[]
+---@field public user_keymaps           ?stl.t.IKeymap[]
 ---@field public on_closed              ?fun(): nil
 ---@field public on_focused             ?fun(): nil
 ---@field public on_resized             ?fun(): nil
@@ -22,7 +22,7 @@
 ---@field public env                    table<string, string>|nil
 ---@field public permanent              boolean
 ---@field public hidewipe               boolean
----@field public user_keymaps           ark.t.IKeymap[]
+---@field public user_keymaps           stl.t.IKeymap[]
 ---@field public jobid                  integer|nil
 ---@field public on_closed              fun(): nil
 ---@field public on_focused             fun(): nil

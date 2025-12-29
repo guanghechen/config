@@ -50,7 +50,7 @@ function M.forward()
 end
 
 ---@param widget                        dot.t.IWidget
----@return ark.t.IKeymap[]
+---@return stl.t.IKeymap[]
 function M.get_keymaps(widget)
   ---@return nil
   local function on_close()
@@ -68,7 +68,7 @@ function M.get_keymaps(widget)
     end
   end
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "t", "x" },

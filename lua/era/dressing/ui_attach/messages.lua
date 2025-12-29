@@ -176,7 +176,7 @@ function M.show(task)
     dot.state.status.msg_changes:next(message)
   end
 
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
   local lnum, col_offset = 1, 0 ---@type integer, integer
   for _, item in ipairs(content) do
     local _, text, hlid = unpack(item) ---@type integer, string, integer
@@ -188,7 +188,7 @@ function M.show(task)
         col_offset = 0
       end
       if #line > 0 then
-        ---@type ark.t.IHighlight
+        ---@type stl.t.IHighlight
         local highlight = {
           lnum = lnum,
           coll = col_offset,

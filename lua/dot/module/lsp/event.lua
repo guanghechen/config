@@ -177,7 +177,7 @@ function M.on_attach(client, bufnr)
     require("dot.module.illuminate").dressing(bufnr)
   end
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

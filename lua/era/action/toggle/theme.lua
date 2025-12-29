@@ -66,7 +66,7 @@ local function render_result(_, bufnr, itemmap, matches)
     local themename = item.text ---@type string
     local hlgroup_prefix = "f_cs_" .. themename:gsub("-", "_") .. "__" ---@type string
 
-    local scheme = ark.theme.scheme[themename] ---@type ark.t.theme.IScheme
+    local scheme = ark.theme.scheme[themename] ---@type stl.t.theme.IScheme
     for _, color in ipairs(COLORS_TO_DISPLAY) do
       local hlgroup = hlgroup_prefix .. color ---@type string
       local hex = scheme.palette[color] ---@type string
@@ -91,7 +91,7 @@ end
 ---@param theme                         string
 ---@return nil
 local function apply_theme(theme)
-  local scheme = dot.context.theme.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+  local scheme = dot.context.theme.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
   if scheme == nil then
     return
   end

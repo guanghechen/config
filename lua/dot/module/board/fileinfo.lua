@@ -101,7 +101,7 @@ function M:open()
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = true
 
-  local lines, highlights, width = self:__render__(stat) ---@type string[], ark.t.IHighlight[], integer
+  local lines, highlights, width = self:__render__(stat) ---@type string[], stl.t.IHighlight[], integer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   vim.bo[bufnr].modifiable = false
@@ -210,7 +210,7 @@ end
 ---@protected
 ---@param stat                          uv.fs_stat.result
 ---@return string[]
----@return ark.t.IHighlight[]
+---@return stl.t.IHighlight[]
 ---@return integer
 function M:__render__(stat)
   local strwidth = vim.api.nvim_strwidth ---@type fun(str: string): integer
@@ -243,7 +243,7 @@ function M:__render__(stat)
   end
 
   local lines = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
 
   lines[#lines + 1] = ""
 
@@ -287,7 +287,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M:__setup_keymaps__(bufnr)
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "fileinfo: close" },
     { modes = { "n" }, key = "<Esc>", callback = function() self:close() end, desc = "fileinfo: close" },

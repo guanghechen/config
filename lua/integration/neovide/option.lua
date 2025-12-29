@@ -39,9 +39,9 @@ vim.g.neovide_padding_left = 0
 vim.g.neovide_remember_window_size = true
 
 do
-  local scheme = dot.context.theme.get_scheme(dot.context.theme.theme:snapshot()) ---@type ark.t.theme.IScheme | nil
+  local scheme = dot.context.theme.get_scheme(dot.context.theme.theme:snapshot()) ---@type stl.t.theme.IScheme | nil
   if scheme ~= nil then
-    local c = scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+    local c = scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
     vim.g.terminal_color_0 = c.bg0
     vim.g.terminal_color_1 = c.red
     vim.g.terminal_color_2 = c.green

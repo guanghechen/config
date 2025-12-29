@@ -1,13 +1,13 @@
 ---@class ark.theme.hlgroup.catppuccin.plugin
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.catppuccin ---@type stl.t.theme.ICatppuccinPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local cmp_panel_bg = cs.mix(t and c.none or c.mantle, c.surface0, 65)
   local panel_bg = cs.mix(t and c.none or c.mantle, c.surface1, 60)
   local dap_virtual_bg = cs.mix(t and c.none or c.surface0, c.peach, 25)
@@ -15,7 +15,7 @@ function M.gen_hlgroup_map(context)
   local badge_fg = u.bg1 ---@type string
   local badge_bg = u.pink ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   return {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },

@@ -26,12 +26,12 @@ local __module_name__ = "dot.module.searcher.preview" ---@type string
 ---@class dot.module.searcher.IPreviewProps
 ---@field public name                   string
 ---@field public draw                   dot.module.searcher.preview.IDraw
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field public on_drawed              ?dot.module.searcher.preview.IOnDrawed
 
 ---@class dot.module.searcher.Preview
 ---@field public fullname               string
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -46,7 +46,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type dot.module.searcher.preview.IDraw
-  local keymaps = props.keymaps ---@type ark.t.IKeymap[]
+  local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local on_drawed = props.on_drawed or stl.fn.noop ---@type dot.module.searcher.preview.IOnDrawed
 
   local self = setmetatable({}, M)

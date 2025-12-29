@@ -458,12 +458,12 @@ local group_items = {
       title = "theme variant",
       snapshot = function()
         local theme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = dot.context.theme.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+        local scheme = dot.context.theme.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
         return scheme and scheme.variant or "", "String"
       end,
       action = function()
         local theme = dot.context.theme.theme:snapshot() ---@type dot.e.ThemeFullName
-        local scheme = dot.context.theme.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+        local scheme = dot.context.theme.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
         if scheme == nil or scheme.opposite == nil then
           return
         end
@@ -558,7 +558,7 @@ local function fetch_data()
       text_flag
     )
 
-    ---@type ark.t.IHighlightInline[]
+    ---@type stl.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #text_group + 1, hlname = "Special" },
       { coll = offset, colr = offset + #text_flag, hlname = hln_flag },

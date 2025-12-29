@@ -1,10 +1,10 @@
 ---@class ark.theme.hlgroup.gruvbox.treesitter
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
 
   local heading_colors = {
     c.brightRed,
@@ -15,7 +15,7 @@ function M.gen_hlgroup_map(context)
     c.brightPurple,
   }
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     ["@annotation"] = { fg = c.brightRed },
     ["@attribute"] = { fg = c.brightYellow },

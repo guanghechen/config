@@ -34,7 +34,7 @@ end, false)
 ---@class dot.module.nvimbar.component.python
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.env(position)
   local hln_text = position .. "_python_env_text" ---@type string

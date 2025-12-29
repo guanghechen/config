@@ -1,14 +1,14 @@
 ---@meta
 
----@class ark.t.theme.IContext
+---@class stl.t.theme.IContext
 ---@field public theme                  string
 ---@field public variant                string|nil
----@field public scheme                 ark.t.theme.IScheme
+---@field public scheme                 stl.t.theme.IScheme
 ---@field public transparency           boolean
 
----@class ark.t.theme.IHlgroup : vim.api.keyset.highlight
+---@class stl.t.theme.IHlgroup : vim.api.keyset.highlight
 
----@class ark.t.theme.ICatppuccinPalette
+---@class stl.t.theme.ICatppuccinPalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -38,7 +38,7 @@
 ---@field public text                   string
 ---@field public yellow                 string
 
----@class ark.t.theme.IGruvboxPalette
+---@class stl.t.theme.IGruvboxPalette
 ---@field public none                   string
 ---
 ---@field public aqua                   string
@@ -75,7 +75,7 @@
 ---@field public red                    string
 ---@field public yellow                 string
 
----@class ark.t.theme.INordPalette
+---@class stl.t.theme.INordPalette
 ---@field public none                   string
 ---
 ---@field public nord0                  string
@@ -111,7 +111,7 @@
 ---@field public aurora3                string
 ---@field public aurora4                string
 
----@class ark.t.theme.IOnehalfPalette
+---@class stl.t.theme.IOnehalfPalette
 ---@field public none                   string
 ---
 ---@field public background             string
@@ -130,7 +130,7 @@
 ---@field public white                  string
 ---@field public yellow                 string
 
----@class ark.t.theme.IRosepinePalette
+---@class stl.t.theme.IRosepinePalette
 ---@field public none                   string
 ---
 ---@field public base                   string
@@ -149,7 +149,7 @@
 ---@field public surface                string
 ---@field public text                   string
 
----@class ark.t.theme.ITokyonightPalette
+---@class stl.t.theme.ITokyonightPalette
 ---@field public none                   string
 ---
 ---@field public bg                     string
@@ -199,7 +199,7 @@
 ---@field public todo                   string
 ---@field public warning                string
 
----@class ark.t.theme.IUnifiedPalette
+---@class stl.t.theme.IUnifiedPalette
 ---@field public none                   string
 ---
 ---@field public bg0                    string
@@ -238,7 +238,7 @@
 ---@field public diffAdd                string
 ---@field public diffAddInline          string
 
----@class ark.t.theme.IVscPalette
+---@class stl.t.theme.IVscPalette
 ---@field public accentAqua             string
 ---@field public accentBlue             string
 ---@field public accentGreen            string
@@ -504,19 +504,19 @@
 ---@field public welcomePage_tileBackground string
 ---@field public widget_border          string
 
----@class ark.t.theme.IPalette
----@field public unified                ark.t.theme.IUnifiedPalette
----@field public catppuccin             ark.t.theme.ICatppuccinPalette|nil
----@field public gruvbox                ark.t.theme.IGruvboxPalette|nil
----@field public nord                   ark.t.theme.INordPalette|nil
----@field public onehalf                ark.t.theme.IOnehalfPalette|nil
----@field public rosepine               ark.t.theme.IRosepinePalette|nil
----@field public tokyonight             ark.t.theme.ITokyonightPalette|nil
----@field public vsc                    ark.t.theme.IVscPalette|nil
+---@class stl.t.theme.IPalette
+---@field public unified                stl.t.theme.IUnifiedPalette
+---@field public catppuccin             stl.t.theme.ICatppuccinPalette|nil
+---@field public gruvbox                stl.t.theme.IGruvboxPalette|nil
+---@field public nord                   stl.t.theme.INordPalette|nil
+---@field public onehalf                stl.t.theme.IOnehalfPalette|nil
+---@field public rosepine               stl.t.theme.IRosepinePalette|nil
+---@field public tokyonight             stl.t.theme.ITokyonightPalette|nil
+---@field public vsc                    stl.t.theme.IVscPalette|nil
 
----@class ark.t.theme.IScheme
+---@class stl.t.theme.IScheme
 ---@field public theme                  dot.e.ThemeFamily
 ---@field public variant                dot.e.ThemeVariant|nil
 ---@field public opposite               dot.e.ThemeVariant|nil
 ---@field public darken                 boolean
----@field public palette                ark.t.theme.IPalette
+---@field public palette                stl.t.theme.IPalette

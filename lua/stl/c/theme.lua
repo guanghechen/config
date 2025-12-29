@@ -1,14 +1,14 @@
 ---@class stl.c.theme.IApplyParams
----@field public scheme                 ark.t.theme.IScheme
+---@field public scheme                 stl.t.theme.IScheme
 ---@field public nsnr                   integer
 
 ---@class stl.c.theme.ICompileParams
----@field public scheme                 ark.t.theme.IScheme
+---@field public scheme                 stl.t.theme.IScheme
 ---@field public filepath               string
 ---@field public nsnr                   integer
 
 ---@class stl.c.Theme
----@field protected hlgroup_map         table<string, ark.t.theme.IHlgroup>
+---@field protected hlgroup_map         table<string, stl.t.theme.IHlgroup>
 local M = {}
 M.__index = M
 
@@ -31,14 +31,14 @@ function M:apply(params)
 end
 
 ---@param hlname                        string
----@param hlgroup                       ark.t.theme.IHlgroup
+---@param hlgroup                       stl.t.theme.IHlgroup
 ---@return stl.c.Theme
 function M:register(hlname, hlgroup)
   self.hlgroup_map[hlname] = hlgroup
   return self
 end
 
----@param hlgroup_map                   table<string, ark.t.theme.IHlgroup|nil>
+---@param hlgroup_map                   table<string, stl.t.theme.IHlgroup|nil>
 ---@return stl.c.Theme
 function M:registers(hlgroup_map)
   for hlname, hlgroup in pairs(hlgroup_map) do

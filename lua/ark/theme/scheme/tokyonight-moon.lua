@@ -1,6 +1,6 @@
 --- tokyonight-moon
 
----@type ark.t.theme.IScheme
+---@type stl.t.theme.IScheme
 local M = {
   theme = "tokyonight",
   variant = "moon",

@@ -1,10 +1,10 @@
 ---@class ark.theme.hlgroup.vsc.lsp
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

@@ -44,7 +44,7 @@ local function fetch_data()
     local text = text_name .. text_type .. text_scope .. text_value ---@type string
     local text_for_search = text_name .. string.rep(" ", WIDTH_TYPE + WIDTH_SCOPE) .. text_value ---@type string
 
-    ---@type ark.t.IHighlightInline[]
+    ---@type stl.t.IHighlightInline[]
     local highlights = {
       { coll = OFFSET_NAME, colr = OFFSET_NAME + #info.name, hlname = "m_fvo_name" },
       { coll = OFFSET_TYPE, colr = OFFSET_TYPE + #info.type, hlname = "m_fvo_type" },

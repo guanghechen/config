@@ -38,7 +38,7 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field protected _disposed           boolean
 ---@field protected _flags              dot.module.explorer.widget.IFlagItem[]
 ---@field protected _is_focused         boolean
----@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _keymaps            stl.t.IKeymap[]
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
 ---@field protected _on_disposed        fun(): nil|nil
 ---@field protected _o_width            stl.c.Observable
@@ -373,7 +373,7 @@ end
 function M:__create_nvimbar__()
   local c = require("dot.module.nvimbar").component
   local Nvimbar = require("dot.module.nvimbar").Nvimbar
-  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
   local flags = self:__get_flags__() ---@type dot.module.explorer.widget.IFlagItem[]
   ---@type dot.module.nvimbar.component.explorer.IFlagItem[]
@@ -786,9 +786,9 @@ end
 ---@return nil
 function M:__setup_keymaps__(bufnr)
   local action = self._action ---@type dot.module.explorer.Action
-  local widget_keymaps = dot.state.widget.get_keymaps(self) ---@type ark.t.IKeymap[]
+  local widget_keymaps = dot.state.widget.get_keymaps(self) ---@type stl.t.IKeymap[]
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },

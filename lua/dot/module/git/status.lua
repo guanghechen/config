@@ -604,7 +604,7 @@ end
 ---@param filepath                   string
 ---@param filetype                   "file"|"directory"|nil
 ---@param offset                     integer
----@param highlights                 ark.t.IHighlightInline[]
+---@param highlights                 stl.t.IHighlightInline[]
 ---@return string
 ---@return string|nil
 function M.calc_info(filepath, filetype, offset, highlights)

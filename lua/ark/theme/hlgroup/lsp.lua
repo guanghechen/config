@@ -1,8 +1,8 @@
 ---@class ark.theme.hlgroup.lsp
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("ark.theme.hlgroup.%s.lsp", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -13,10 +13,10 @@ function M.gen_hlgroup_map(context)
   return M.default_gen_hlgroup_map(context)
 end
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

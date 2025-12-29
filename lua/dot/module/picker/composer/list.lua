@@ -32,7 +32,7 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---@field public uuid                   string
 ---@field public text                   string
 ---@field public text_lower             string
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 
 ---@class dot.module.picker.composer.list.IResetData
 ---@field public items                  dot.module.picker.composer.list.IItem[]
@@ -53,10 +53,10 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public keymaps_common         ?ark.t.IKeymap[]
----@field public keymaps_finder         ?ark.t.IKeymap[]
----@field public keymaps_preview        ?ark.t.IKeymap[]
----@field public keymaps_result         ?ark.t.IKeymap[]
+---@field public keymaps_common         ?stl.t.IKeymap[]
+---@field public keymaps_finder         ?stl.t.IKeymap[]
+---@field public keymaps_preview        ?stl.t.IKeymap[]
+---@field public keymaps_result         ?stl.t.IKeymap[]
 ---
 ---@field public flag_fuzzy             stl.c.Observable
 ---@field public flag_regex             stl.c.Observable
@@ -126,10 +126,10 @@ function M.new(props)
   local search_pattern = props.search_pattern ---@type stl.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
 
-  local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
-  local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
-  local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
-  local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
+  local keymaps_common = props.keymaps_common ---@type stl.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type stl.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type stl.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type stl.t.IKeymap[]|nil
 
   local flag_fuzzy = props.flag_fuzzy ---@type stl.c.Observable
   local flag_regex = props.flag_regex ---@type stl.c.Observable
@@ -268,7 +268,7 @@ function M.new(props)
     add_flags(flags, flags_append, name)
   end
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_ks_common = {
     {
       modes = { "i", "n", "x" },
@@ -298,13 +298,13 @@ function M.new(props)
     },
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_ks_finder = {}
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_ks_result = {}
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_ks_preview = {}
 
   local composer = dot.picker.BasicComposer.new({

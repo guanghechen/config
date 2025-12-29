@@ -1,6 +1,6 @@
 ---@class dot.module.board.keysheet.IProps
 ---@field public title                  ?string
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 
 ---@class dot.module.board.keysheet.IState
 ---@field protected _disposed           boolean
@@ -8,7 +8,7 @@
 ---@field protected _winnr              integer|nil
 ---@field protected _ns                 integer
 ---@field protected _title              string
----@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _keymaps            stl.t.IKeymap[]
 
 ---@class dot.module.board.Keysheet : dot.module.board.keysheet.IState
 local M = {}
@@ -94,7 +94,7 @@ function M:open()
 
   local width = vim.o.columns - 2 ---@type integer
   local height = vim.o.lines - 4 ---@type integer
-  local lines, highlights = self:__render__(width) ---@type string[], ark.t.IHighlight[]
+  local lines, highlights = self:__render__(width) ---@type string[], stl.t.IHighlight[]
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
   vim.bo[bufnr].modifiable = false
@@ -151,10 +151,10 @@ end
 ---@protected
 ---@param available_width               integer
 ---@return string[]
----@return ark.t.IHighlight[]
+---@return stl.t.IHighlight[]
 function M:__render__(available_width)
   local strwidth = vim.api.nvim_strwidth ---@type fun(str: string): integer
-  local keymaps = self._keymaps ---@type ark.t.IKeymap[]
+  local keymaps = self._keymaps ---@type stl.t.IKeymap[]
 
   local key_width = 0 ---@type integer
   local mode_width = 0 ---@type integer
@@ -190,7 +190,7 @@ function M:__render__(available_width)
   local rows = math.ceil(#items / columns) ---@type integer
 
   local lines = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
 
   lines[#lines + 1] = ""
 
@@ -259,7 +259,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M:__setup_keymaps__(bufnr)
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "keysheet: close" },
     { modes = { "n" }, key = "<Esc>", callback = function() self:close() end, desc = "keysheet: close" },

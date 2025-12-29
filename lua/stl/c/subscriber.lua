@@ -7,7 +7,7 @@ local __module_name__ = "stl.c.subscriber" ---@type string
 ---| fun(value: any, value_prev: any|nil):nil
 
 ---@class stl.c.ISubscriber : stl.c.IDisposable
----@field public next                   fun(self: stl.c.ISubscriber, value: ark.t.T, value_prev: ark.t.T| nil): nil
+---@field public next                   fun(self: stl.c.ISubscriber, value: stl.t.T, value_prev: stl.t.T| nil): nil
 
 ---@class stl.c.subscriber.IProps
 ---@field public on_dispose             stl.c.subscriber.IOnDispose|nil
@@ -52,8 +52,8 @@ function M:dispose()
   on_dispose()
 end
 
----@param value                         ark.t.T
----@param value_prev                    ark.t.T|nil
+---@param value                         stl.t.T
+---@param value_prev                    stl.t.T|nil
 ---@return nil
 function M:next(value, value_prev)
   self:__health__()

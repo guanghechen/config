@@ -74,7 +74,7 @@ local runners = {
       local spinner_timer = vim.uv.new_timer() ---@type uv.uv_timer_t|nil
       local output = "Starting HTTP request...\n" ---@type string
 
-      ---@param level                   ?ark.e.LogLevelEnum
+      ---@param level                   ?stl.e.LogLevelEnum
       ---@return nil
       local function update_notification(level)
         local message = terminated and output or (output .. " " .. ark.anim.spinner(spinner_step)) ---@type string

@@ -232,7 +232,7 @@ function M.open(props)
     end,
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "x" },

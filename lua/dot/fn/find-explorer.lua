@@ -493,7 +493,7 @@ local function preview_render(composer, bufnr)
     end
   elseif fileitem.type == "directory" then
     local lines = {} ---@type string[]
-    local highlights = {} ---@type ark.t.IHighlight[]
+    local highlights = {} ---@type stl.t.IHighlight[]
     local c_diritem = fetch_diritem(fileitem.path, false) ---@type dot.fn.find_explorer.IDirItem
     for lnum, c_fileitem in ipairs(c_diritem.items) do
       local byte_pos = 0 ---@type integer

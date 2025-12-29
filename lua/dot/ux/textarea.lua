@@ -36,7 +36,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@class dot.ux.Textarea : dot.ux.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected position            ark.e.BoxPosition
+---@field protected position            stl.e.BoxPosition
 ---@field protected width               number
 ---@field protected height              number
 ---@field protected max_width           number|nil
@@ -45,13 +45,13 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field protected min_height          number|nil
 ---@field protected title               string
 ---@field protected filetype            string|nil
----@field protected keymaps             ark.t.IKeymap[]
+---@field protected keymaps             stl.t.IKeymap[]
 ---@field protected win_opts            table<string, any>
 local M = {}
 M.__index = M
 
 ---@class dot.ux.textarea.IProps
----@field public position               ark.e.BoxPosition
+---@field public position               stl.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -60,7 +60,7 @@ M.__index = M
 ---@field public min_width              ?number
 ---@field public min_height             ?number
 ---@field public filetype               ?string
----@field public keymaps                ?ark.t.IKeymap[]
+---@field public keymaps                ?stl.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(lines: string[]): string|nil
 ---@field public on_close               ?fun(): nil
@@ -71,7 +71,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local position = props.position ---@type ark.e.BoxPosition
+  local position = props.position ---@type stl.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
@@ -137,7 +137,7 @@ function M.new(props)
     end
   end
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "i", "n", "x" },

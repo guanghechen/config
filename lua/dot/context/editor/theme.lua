@@ -26,9 +26,9 @@ local __module_name__ = "dot.context.editor.theme" ---@type string
 ---
 ---@field public apply_integration      fun(params: dot.context.theme.ILoadIntegrationParams): nil
 ---@field public apply_theme            fun(params: dot.context.theme.ILoadThemeParams): nil
----@field public get_scheme             fun(theme: dot.e.ThemeFullName): ark.t.theme.IScheme | nil
+---@field public get_scheme             fun(theme: dot.e.ThemeFullName): stl.t.theme.IScheme | nil
 ---@field public reload_theme           fun(force: boolean, reload_plugins: boolean): nil
----@field public set_term_colors        fun(scheme: ark.t.theme.IScheme): nil
+---@field public set_term_colors        fun(scheme: stl.t.theme.IScheme): nil
 
 ---@class dot.context.theme :  dot.context.theme.state
 ---@field public defaults               fun(): dot.context.theme.data
@@ -124,7 +124,7 @@ function M.apply_integration(params)
 
   local scheme = M.get_scheme(theme)
   if scheme ~= nil then
-    ---@type ark.t.theme.IContext
+    ---@type stl.t.theme.IContext
     local themeContext = {
       theme = scheme.theme,
       variant = scheme.variant,
@@ -162,11 +162,11 @@ function M.apply_theme(params)
     local uxTheme = stl.c.Theme.new()
     for _, integration in ipairs(integrations) do
       local h = ark.theme.hlgroup[integration]
-      ---@return table<string, ark.t.theme.IHlgroup>
+      ---@return table<string, stl.t.theme.IHlgroup>
       local hlgroup_map = h.gen_hlgroup_map({ scheme = scheme, transparency = transparency })
 
       if integration == "plugin" then
-        local additional = {} ---@type table<string, ark.t.theme.IHlgroup>
+        local additional = {} ---@type table<string, stl.t.theme.IHlgroup>
         for hlname, hlgroup in pairs(hlgroup_map) do
           if string.sub(hlname, 1, 9) == "MiniIcons" then
             additional["f_sl_" .. hlname] = { fg = hlgroup.fg, bg = nvimbar_hlgroup_map.f_sl_bg.bg }
@@ -212,7 +212,7 @@ function M.apply_theme(params)
 end
 
 ---@param theme                         dot.e.ThemeFullName
----@return ark.t.theme.IScheme | nil
+---@return stl.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(ark.var.theme, theme) then
     stl.reporter.error({
@@ -233,7 +233,7 @@ function M.reload_theme(force, reload_plugins)
   local theme = M.theme:snapshot() ---@type dot.e.ThemeFullName
   local transparency = M.transparency:snapshot() ---@type boolean
 
-  local scheme = M.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+  local scheme = M.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
   if scheme ~= nil then
     vim.g.colors_name = theme
     vim.o.background = scheme.darken and "dark" or "light"
@@ -258,7 +258,7 @@ function M.reload_theme(force, reload_plugins)
       })
     end
 
-    -- local scheme = M.get_scheme(theme) ---@type ark.t.theme.IScheme|nil
+    -- local scheme = M.get_scheme(theme) ---@type stl.t.theme.IScheme|nil
     -- if scheme ~= nil then
     -- M.set_term_colors(scheme)
     -- end
@@ -269,10 +269,10 @@ end
 --- Since we also changed the terminal color outside, so no need to set it again,
 --- so we can get the terminal color automatically changed by the terminal itself
 --- since we used the color name instead of a specific value (hex).
----@param scheme                        ark.t.theme.IScheme
+---@param scheme                        stl.t.theme.IScheme
 ---@return nil
 function M.set_term_colors(scheme)
-  local c = scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   vim.g.terminal_color_0 = c.bg0
   vim.g.terminal_color_1 = c.red
   vim.g.terminal_color_2 = c.green

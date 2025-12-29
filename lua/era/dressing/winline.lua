@@ -2,7 +2,7 @@ local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
 local txt = ark.vim.fn.txt
-local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
+local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
 ---@return boolean
 local function silent()

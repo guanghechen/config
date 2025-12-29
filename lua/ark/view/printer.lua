@@ -9,7 +9,7 @@ local __module_name__ = "ark.view.printer" ---@type string
 ---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field protected _disposed           boolean
----@field protected _highlights         ark.t.IHighlight[]
+---@field protected _highlights         stl.t.IHighlight[]
 ---@field protected _indent             string
 ---@field protected _lines              string[]
 ---@field protected _max_width          integer
@@ -103,7 +103,7 @@ function M:render(bufnr)
   self:health()
 
   local lines = self._lines ---@type string[]
-  local highlights = self._highlights ---@type ark.t.IHighlight[]
+  local highlights = self._highlights ---@type stl.t.IHighlight[]
   local nsnr = self.nsnr ---@type integer
 
   vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
@@ -118,7 +118,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param lines                         string[]
----@param highlights                    ?ark.t.IHighlight[]
+---@param highlights                    ?stl.t.IHighlight[]
 ---@return ark.view.Printer
 function M:lines(lines, highlights)
   self:health()
@@ -128,13 +128,13 @@ function M:lines(lines, highlights)
   end
 
   if highlights ~= nil and #highlights > 0 then
-    local _highlights = self._highlights ---@type ark.t.IHighlight[]
+    local _highlights = self._highlights ---@type stl.t.IHighlight[]
     local offset_lnum = #self._lines ---@type integer
     local offset_col = self._offset_indent ---@type integer
     for _, raw in ipairs(highlights) do
       if raw.lnum < 0 then
         for i = 1, #lines, 1 do
-          ---@type ark.t.IHighlight
+          ---@type stl.t.IHighlight
           local highlight = {
             lnum = offset_lnum + i,
             coll = raw.coll < 0 and raw.coll or offset_col + raw.coll,
@@ -144,7 +144,7 @@ function M:lines(lines, highlights)
           _highlights[#_highlights + 1] = highlight
         end
       else
-        ---@type ark.t.IHighlight
+        ---@type stl.t.IHighlight
         local highlight = {
           lnum = offset_lnum + raw.lnum,
           coll = raw.coll < 0 and raw.coll or offset_col + raw.coll,
@@ -173,7 +173,7 @@ function M:lines(lines, highlights)
 end
 
 ---@param content                       string
----@param highlights                    ?ark.t.IHighlightInline[]
+---@param highlights                    ?stl.t.IHighlightInline[]
 ---@return ark.view.Printer
 function M:line(content, highlights)
   self:health()
@@ -182,7 +182,7 @@ function M:line(content, highlights)
     local lnum = #self._lines + 1 ---@type integer
     local offset_col = self._offset_indent ---@type integer
     for _, raw in ipairs(highlights) do
-      ---@type ark.t.IHighlight
+      ---@type stl.t.IHighlight
       local highlight = {
         lnum = lnum,
         coll = raw.coll < 0 and raw.coll or offset_col + raw.coll,
@@ -202,7 +202,7 @@ function M:line(content, highlights)
 end
 
 ---@param content                       string
----@param highlights                    ?ark.t.IHighlightInline[]
+---@param highlights                    ?stl.t.IHighlightInline[]
 ---@return ark.view.Printer
 function M:inline(content, highlights)
   self:health()
@@ -212,7 +212,7 @@ function M:inline(content, highlights)
 
   if highlights ~= nil and #highlights > 0 then
     for _, raw in ipairs(highlights) do
-      ---@type ark.t.IHighlight
+      ---@type stl.t.IHighlight
       local highlight = {
         lnum = lnum,
         coll = raw.coll < 0 and raw.coll or offset_col + raw.coll,

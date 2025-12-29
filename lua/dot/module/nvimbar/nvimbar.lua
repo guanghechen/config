@@ -15,7 +15,7 @@ local __module_name__ = "dot.module.nvimbar" ---@type string
 ---@field public fileicon               string
 ---@field public fileicon_hl            string
 ---@field public filetype               string
----@field public mode                   ark.e.VimModeName
+---@field public mode                   stl.e.VimModeName
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 

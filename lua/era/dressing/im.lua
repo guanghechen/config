@@ -9,7 +9,7 @@ end
 
 local augroup = ark.vim.fn.augroup("auto_toggle_im")
 ark.timer.delay(function()
-  local previous_mode = "n" ---@type ark.e.VimMode
+  local previous_mode = "n" ---@type stl.e.VimMode
   local previous_input_method = nil ---@type dot.module.im.InputMethod|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = augroup,
@@ -18,7 +18,7 @@ ark.timer.delay(function()
         return
       end
 
-      local current_mode = vim.fn.mode() ---@type ark.e.VimMode
+      local current_mode = vim.fn.mode() ---@type stl.e.VimMode
       if current_mode ~= previous_mode then
         if previous_mode == "i" then
           previous_input_method = im.get_input_method()

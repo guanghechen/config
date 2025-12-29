@@ -1,11 +1,11 @@
 ---@class ark.theme.hlgroup.nvimbar
 local M = {}
 
----@param context                       ark.t.theme.IContext
+---@param context                       stl.t.theme.IContext
 ---@return ark.theme.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
   local cs = stl.color
-  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string
   local bg_pos = c.bg2 ---@type string
@@ -16,7 +16,7 @@ function M.gen_hlgroup_map(context)
     f_wl = c.none,
   }
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     bg = { fg = "bg_bar", bg = "bg_bar" },
     text = { fg = c.fg2, bg = "bg_bar" },
@@ -250,9 +250,9 @@ function M.gen_hlgroup_map(context)
     termc_sep_right = { link = "ms_b_none" },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type ark.e.NvimbarPositionEnum[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type stl.e.NvimbarPositionEnum[]
 
-  ---@class ark.theme.hlgroup.nvimbar : table<string, ark.t.theme.IHlgroup>
+  ---@class ark.theme.hlgroup.nvimbar : table<string, stl.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }
   ---@field public f_tl_bg              { bg: string, sp?: string }
   ---@field public f_wl_bg              { bg: string, sp?: string }

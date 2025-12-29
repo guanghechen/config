@@ -16,12 +16,12 @@ local Levels = {
 ---@field public silent                 ?boolean
 ---@field public title                  ?string
 ---@field public timeout                ?integer
----@field public highlights             ?ark.t.IHighlight[]
+---@field public highlights             ?stl.t.IHighlight[]
 
 ---@class stl.reporter
 local M = {}
 
----@param level                         ark.e.LogLevelEnum|integer
+---@param level                         stl.e.LogLevelEnum|integer
 ---@param options                       stl.reporter.IOptions
 ---@return nil
 function M.log(level, options)
@@ -30,7 +30,7 @@ function M.log(level, options)
   local anonymous = options.anonymous or false ---@type boolean
   local silent = options.silent or false ---@type boolean
   local timeout = options.timeout or 3000 ---@type integer
-  local highlights = options.highlights ---@type ark.t.IHighlight[]|nil
+  local highlights = options.highlights ---@type stl.t.IHighlight[]|nil
 
   local title = options.title or options.from ---@type string
   if options.title == nil and options.subject ~= nil then

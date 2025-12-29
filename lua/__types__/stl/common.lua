@@ -1,32 +1,32 @@
 ---@meta
 
----@alias ark.t.T
+---@alias stl.t.T
 ---| any
 
 ---@generic T
----@alias ark.t.IEquals
+---@alias stl.t.IEquals
 ---| fun(x: T, y: T): boolean
 
 ---@generic T
----@alias ark.t.IFilter
+---@alias stl.t.IFilter
 ---| fun(element: T, index: integer): boolean
 
 ---@generic T
----@alias ark.t.INormalize
+---@alias stl.t.INormalize
 ---| fun(x: T): T
 
----@class ark.t.IHighlight
+---@class stl.t.IHighlight
 ---@field public lnum                   integer
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
 
----@class ark.t.IHighlightInline
+---@class stl.t.IHighlightInline
 ---@field public coll                   integer
 ---@field public colr                   integer
 ---@field public hlname                 string
 
----@class ark.t.IKeymapOverridable
+---@class stl.t.IKeymapOverridable
 ---@field public bufnr                  ?integer
 ---@field public nowait                 ?boolean
 ---@field public noremap                ?boolean
@@ -34,9 +34,9 @@
 ---@field public expr                   ?boolean
 ---@field public replace_keycodes       ?boolean
 
----@class ark.t.IKeymap : ark.t.IKeymapOverridable
+---@class stl.t.IKeymap : stl.t.IKeymapOverridable
 ---@field public disabled               boolean|nil
----@field public modes                  ark.e.VimMode[]
+---@field public modes                  stl.e.VimMode[]
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public desc                   string|nil

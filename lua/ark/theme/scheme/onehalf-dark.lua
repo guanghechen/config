@@ -1,6 +1,6 @@
 --- onehalf-dark
 
----@type ark.t.theme.IScheme
+---@type stl.t.theme.IScheme
 local M = {
   theme = "onehalf",
   variant = "dark",

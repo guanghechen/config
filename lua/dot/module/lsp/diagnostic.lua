@@ -149,7 +149,7 @@ refresh_debounced = ark.timer.debounce(do_refresh, DEBOUNCE_MS)
 
 ---@param filepath                       string
 ---@param offset                         integer
----@param highlights                     ark.t.IHighlightInline[]
+---@param highlights                     stl.t.IHighlightInline[]
 ---@return string
 function M.render(filepath, offset, highlights)
   local bufnr = ark.vim.buf.locate_bufnr(filepath) ---@type integer|nil

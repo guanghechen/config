@@ -1,10 +1,10 @@
 ---@class stl.c.circular_stack.IProps
 ---@field public capacity               integer
 
-local _tmp_array = {} ---@type ark.t.T[]
+local _tmp_array = {} ---@type stl.t.T[]
 
 ---@class stl.c.CircularStack
----@field protected _elements           ark.t.T[]
+---@field protected _elements           stl.t.T[]
 ---@field protected _capacity           integer
 ---@field protected _size               integer
 ---@field protected _start              integer
@@ -29,7 +29,7 @@ end
 ---@param queue                         stl.c.CircularStack
 ---@return stl.c.CircularStack
 function M.from(queue)
-  local elements = {} ---@type ark.t.T[]
+  local elements = {} ---@type stl.t.T[]
   local size = 0 ---@type integer
   for element in queue:iterator() do
     size = size + 1
@@ -45,12 +45,12 @@ function M.from(queue)
   return self
 end
 
----@param arr                           ark.t.T[]
+---@param arr                           stl.t.T[]
 ---@param capacity                      integer
 ---@return stl.c.CircularStack
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
-  local elements = {} ---@type ark.t.T[]
+  local elements = {} ---@type stl.t.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -78,7 +78,7 @@ function M:size()
 end
 
 ---@param index                         integer
----@return ark.t.T|nil
+---@return stl.t.T|nil
 function M:at(index)
   if index < 1 or index > self._size then
     return
@@ -96,13 +96,13 @@ function M:clear()
   self._end = 0
 end
 
----@return ark.t.T[]
+---@return stl.t.T[]
 function M:collect()
-  local elements = self._elements ---@type ark.t.T[]
+  local elements = self._elements ---@type stl.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
-  local results = {} ---@type ark.t.T[]
+  local results = {} ---@type stl.t.T[]
   local idx = self._start - 1 ---@type integer
 
   for index = 1, size, 1 do
@@ -112,10 +112,10 @@ function M:collect()
   return results
 end
 
----@param filter                        ark.t.IFilter
+---@param filter                        stl.t.IFilter
 ---@return integer
 function M:count(filter)
-  local elements = self._elements ---@type ark.t.T[]
+  local elements = self._elements ---@type stl.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
@@ -131,7 +131,7 @@ function M:count(filter)
   return count
 end
 
----@param filter                        fun(element: ark.t.T, index: integer): boolean
+---@param filter                        fun(element: stl.t.T, index: integer): boolean
 ---@return stl.c.CircularStack
 function M:fork(filter)
   local clone = M.new({ capacity = self._capacity }) ---@type stl.c.CircularStack
@@ -145,16 +145,16 @@ function M:fork(filter)
   return clone
 end
 
----@return fun(): ark.t.T|nil, integer|nil
+---@return fun(): stl.t.T|nil, integer|nil
 function M:iterator()
-  local elements = self._elements ---@type ark.t.T[]
+  local elements = self._elements ---@type stl.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = 0 ---@type integer
   local idx = self._start - 1 ---@type integer
 
-  ---@return ark.t.T|nil
+  ---@return stl.t.T|nil
   ---@return integer|nil
   return function()
     index = index + 1
@@ -165,16 +165,16 @@ function M:iterator()
   end
 end
 
----@return fun(): ark.t.T|nil, integer|nil
+---@return fun(): stl.t.T|nil, integer|nil
 function M:iterator_reverse()
-  local elements = self._elements ---@type ark.t.T[]
+  local elements = self._elements ---@type stl.t.T[]
   local capacity = self._capacity ---@type integer
   local size = self._size ---@type integer
 
   local index = size + 1 ---@type integer
   local idx = self._end + 1 ---@type integer
 
-  ---@return ark.t.T|nil
+  ---@return stl.t.T|nil
   ---@return integer|nil
   return function()
     index = index - 1
@@ -185,13 +185,13 @@ function M:iterator_reverse()
   end
 end
 
----@return ark.t.T|nil
+---@return stl.t.T|nil
 function M:pop()
   if self._size < 1 then
     return nil
   end
 
-  local target = self._elements[self._end] ---@type ark.t.T|nil
+  local target = self._elements[self._end] ---@type stl.t.T|nil
   if self._size == 1 then
     self._size = 0
     self._start = 1
@@ -203,7 +203,7 @@ function M:pop()
   return target
 end
 
----@param element                       ark.t.T
+---@param element                       stl.t.T
 ---@return nil
 function M:push(element)
   self._end = self._end == self._capacity and 1 or self._end + 1
@@ -216,7 +216,7 @@ function M:push(element)
   end
 end
 
----@param filter                        ark.t.IFilter
+---@param filter                        stl.t.IFilter
 ---@return nil
 function M:rearrange(filter)
   if self._size < 1 then
@@ -231,7 +231,7 @@ function M:rearrange(filter)
     local idx = self._start - 1 ---@type integer
     for index = 1, self._size, 1 do
       idx = idx + 1
-      local element = self._elements[idx] ---@type ark.t.T
+      local element = self._elements[idx] ---@type stl.t.T
       if filter(element, index) then
         size = size + 1
         self._elements[size] = element
@@ -250,7 +250,7 @@ function M:rearrange(filter)
   end
   for idx = self._start, self._capacity, 1 do
     index = index + 1
-    local element = self._elements[idx] ---@type ark.t.T
+    local element = self._elements[idx] ---@type stl.t.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -258,7 +258,7 @@ function M:rearrange(filter)
   end
   for idx = 1, self._end, 1 do
     index = index + 1
-    local element = _tmp_array[idx] ---@type ark.t.T
+    local element = _tmp_array[idx] ---@type stl.t.T
     if filter(element, index) then
       size = size + 1
       self._elements[size] = element
@@ -269,11 +269,11 @@ function M:rearrange(filter)
   self._end = size
 end
 
----@param arr                           ark.t.T[]
+---@param arr                           stl.t.T[]
 ---@return nil
 function M:reset(arr)
   local capacity = self._capacity ---@type integer
-  local elements = self._elements ---@type ark.t.T[]
+  local elements = self._elements ---@type stl.t.T[]
   local size = 0 ---@type integer
   local arr_start = #arr <= capacity and 1 or #arr - capacity + 1 ---@type integer
   for idx = arr_start, #arr, 1 do
@@ -286,13 +286,13 @@ function M:reset(arr)
   self._end = size
 end
 
----@return ark.t.T|nil
+---@return stl.t.T|nil
 function M:top()
   return self._size > 0 and self._elements[self._end] or nil
 end
 
 ---@param index                         integer
----@param value                         ark.t.T
+---@param value                         stl.t.T
 ---@return nil
 function M:update(index, value)
   if index < 1 or index > self._size then

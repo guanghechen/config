@@ -65,7 +65,7 @@ function M:render(bufnr, tree, root, options)
   self:__precompute__(root, ctx)
 
   local lines = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
   local diagnostic_info_list = {} ---@type dot.module.explorer.view.IDiagnosticInfo[]
   local git_status_list = {} ---@type dot.module.explorer.view.IGitStatusInfo[]
   local sign_info_list = {} ---@type dot.module.explorer.view.ISignInfo[]
@@ -385,7 +385,7 @@ function M:__get_diagnostic_info__(ctx, node, lnum)
   end
 
   local text = "" ---@type string
-  local highlights = {} ---@type ark.t.IHighlightInline[]
+  local highlights = {} ---@type stl.t.IHighlightInline[]
   local col = 0 ---@type integer
   local slots = 0 ---@type integer
 
@@ -443,7 +443,7 @@ function M:__get_git_status_info__(node, lnum)
   end
 
   local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
-  local highlights = {} ---@type ark.t.IHighlightInline[]
+  local highlights = {} ---@type stl.t.IHighlightInline[]
 
   local git_text, _ = dot.git.status.calc_info(filepath, filetype, 0, highlights)
 
@@ -668,12 +668,12 @@ end
 ---@param is_expanded                   boolean
 ---@param is_selected                   boolean
 ---@return string
----@return ark.t.IHighlight[]
+---@return stl.t.IHighlight[]
 ---@return dot.module.explorer.view.IGitStatusInfo|nil
 ---@return dot.module.explorer.view.IDiagnosticInfo|nil
 function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, is_selected)
   local parts = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
   local col = 0 ---@type integer
 
   local is_ignored = self:__is_ignored__(node) ---@type boolean

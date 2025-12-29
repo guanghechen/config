@@ -1,10 +1,10 @@
 ---@class ark.theme.hlgroup.vsc.basic
 local M = {}
 
----@param context                       ark.t.theme.IContext
+---@param context                       stl.t.theme.IContext
 ---@return ark.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
+  local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
   return {
     command = c.accentBlue,
     confirm = c.accentAqua,
@@ -18,15 +18,15 @@ function M.gen_modes_color_map(context)
   }
 end
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     ComplHint = { fg = c.muted, italic = true },
     ComplHintMore = { fg = c.descriptionForeground, italic = true },

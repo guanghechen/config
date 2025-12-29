@@ -3,7 +3,7 @@ local txt = ark.vim.fn.txt
 ---@class dot.module.nvimbar.component.cwd
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.cwd(position)
   local hln_text = position .. "_cwd_text" ---@type string

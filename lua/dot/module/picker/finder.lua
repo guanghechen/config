@@ -10,13 +10,13 @@ local __module_name__ = "dot.module.picker.finder" ---@type string
 
 ---@class dot.module.picker.IFinderProps
 ---@field public name                   string
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field public input                  stl.c.Observable
 ---@field public title                  string
 
 ---@class dot.module.picker.Finder
 ---@field public fullname               string
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field public input                  stl.c.Observable
 ---@field public linecount              stl.c.Observable
 ---@field public title                  string
@@ -32,7 +32,7 @@ M.__index = M
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local keymaps = props.keymaps ---@type ark.t.IKeymap[]
+  local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local input = props.input ---@type stl.c.Observable
   local linecount = stl.c.Observable.from_value(0) ---@type stl.c.Observable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string

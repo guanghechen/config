@@ -1,8 +1,8 @@
 ---@class ark.theme.hlgroup.plugin
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("ark.theme.hlgroup.%s.plugin", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -15,7 +15,7 @@ end
 
 function M.default_gen_hlgroup_map(context)
   local cs = stl.color
-  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
 
   local item_kind_bg = c.none ---@type string
@@ -24,7 +24,7 @@ function M.default_gen_hlgroup_map(context)
   local badge_fg = c.bg1 ---@type string
   local badge_bg = c.pink ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   return {
     ---! cmp
     BlinkCmpDoc = { bg = cmp_panel_bg },

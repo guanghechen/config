@@ -1,22 +1,22 @@
 ---@meta
 
----@alias ark.e.BoxPosition
+---@alias stl.e.BoxPosition
 ---| "cursor"
 ---| "center"
 
----@alias ark.e.LogLevelEnum
+---@alias stl.e.LogLevelEnum
 ---| "TRACE"
 ---| "DEBUG"
 ---| "INFO"
 ---| "WARN"
 ---| "ERROR"
 
----@alias ark.e.NvimbarPositionEnum
+---@alias stl.e.NvimbarPositionEnum
 ---| "f_sl"
 ---| "f_tl"
 ---| "f_wl"
 
----@alias ark.e.VimMode
+---@alias stl.e.VimMode
 ---| "c"
 ---| "i"
 ---| "n"
@@ -28,7 +28,7 @@
 ---| "V"
 ---| "x"
 
----@alias ark.e.VimModeName
+---@alias stl.e.VimModeName
 ---| "normal"
 ---| "visual"
 ---| "insert"

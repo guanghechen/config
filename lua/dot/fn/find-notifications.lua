@@ -25,7 +25,7 @@ local function fetch_data()
       string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), stl.icon.loglevel[task.level], task.title)
 
     local suffix = task.level:lower() ---@type string
-    ---@type ark.t.IHighlightInline[]
+    ---@type stl.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = 8, hlname = "f_un_icon_" .. suffix },
       { coll = 9, colr = 12, hlname = "f_un_icon_" .. suffix },

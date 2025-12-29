@@ -49,10 +49,10 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field public width                  ?number
 ---@field public node_sorter            stl.c.ITreeNodeSorter
 ---
----@field public keymaps_common         ?ark.t.IKeymap[]
----@field public keymaps_finder         ?ark.t.IKeymap[]
----@field public keymaps_preview        ?ark.t.IKeymap[]
----@field public keymaps_result         ?ark.t.IKeymap[]
+---@field public keymaps_common         ?stl.t.IKeymap[]
+---@field public keymaps_finder         ?stl.t.IKeymap[]
+---@field public keymaps_preview        ?stl.t.IKeymap[]
+---@field public keymaps_result         ?stl.t.IKeymap[]
 ---
 ---@field public flag_foldempty         stl.c.Observable
 ---@field public flag_fuzzy             stl.c.Observable
@@ -135,10 +135,10 @@ function M.new(props)
   local o_search_pattern = props.search_pattern ---@type stl.c.Observable
   local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
 
-  local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
-  local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
-  local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
-  local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
+  local keymaps_common = props.keymaps_common ---@type stl.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type stl.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type stl.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type stl.t.IKeymap[]|nil
 
   local o_flag_fuzzy = props.flag_fuzzy ---@type stl.c.Observable
   local o_flag_regex = props.flag_regex ---@type stl.c.Observable
@@ -528,10 +528,10 @@ function M.new(props)
     end,
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_common = {}
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_finder = {
     {
       modes = { "n", "x" },
@@ -601,7 +601,7 @@ function M.new(props)
     },
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_result = {
     {
       modes = { "i", "n", "x" },

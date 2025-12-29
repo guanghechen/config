@@ -89,16 +89,16 @@ local __module_name__ = "ark.view.treeview" ---@type string
 ---@class ark.view.tree.INodeListviewResultCache
 ---@field public tick                   integer
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 
 ---@class ark.view.tree.INodeTreeviewResultCache
 ---@field public tick                   integer
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 
 ---@class ark.view.tree.INodeRenderResult
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]|nil
+---@field public highlights             stl.t.IHighlightInline[]|nil
 
 ---@class ark.view.tree.IRenderResult
 ---@field public childline              integer[]|nil
@@ -380,7 +380,7 @@ function M:render_listview(params)
   local childline = {} ---@type integer[]
   local indents = {} ---@type string[]
   local lines = {} ---@type string[]
-  local highlights_list = {} ---@type (ark.t.IHighlightInline[]|nil)[]
+  local highlights_list = {} ---@type (stl.t.IHighlightInline[]|nil)[]
   local lnum2uuid = {} ---@type string[]
   local uuid2lnum = {} ---@type table<string, integer>
   local parent_leaf_lines = {} ---@type table<string, integer[]>
@@ -415,7 +415,7 @@ function M:render_listview(params)
 
           indents[lnum] = indent ---@type string
           lines[lnum] = indent .. result.text ---@type string
-          highlights_list[lnum] = result.highlights ---@type ark.t.IHighlightInline[]|nil
+          highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
           lnum2uuid[lnum] = location.locationuuid
           uuid2lnum[location.locationuuid] = lnum
           location_lnums[#location_lnums + 1] = lnum
@@ -451,7 +451,7 @@ function M:render_listview(params)
     childline[lnum_leaf] = lnum
     indents[lnum] = indent ---@type string
     lines[lnum] = indent .. cache.text ---@type string
-    highlights_list[lnum] = cache.highlights ---@type ark.t.IHighlightInline[]|nil
+    highlights_list[lnum] = cache.highlights ---@type stl.t.IHighlightInline[]|nil
     lnum2uuid[lnum] = leafnode.uuid
     uuid2lnum[leafnode.uuid] = lnum
 
@@ -649,7 +649,7 @@ function M:render_listview(params)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   for index = 1, #lines, 1 do
     local row = index - 1 ---@type integer
-    local highlights = highlights_list[index] ---@type ark.t.IHighlightInline[]|nil
+    local highlights = highlights_list[index] ---@type stl.t.IHighlightInline[]|nil
     local indent = indents[index] ---@type string
     local offset = #indent
     vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
@@ -657,7 +657,7 @@ function M:render_listview(params)
     if highlights ~= nil then
       local H = #highlights ---@type integer
       for hi = 1, H, 1 do
-        local highlight = highlights[hi] ---@type ark.t.IHighlightInline
+        local highlight = highlights[hi] ---@type stl.t.IHighlightInline
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer
@@ -722,7 +722,7 @@ function M:render_treeview(params)
   local childline = {} ---@type integer[]
   local indents = {} ---@type string[]
   local lines = {} ---@type string[]
-  local highlights_list = {} ---@type (ark.t.IHighlightInline[]|nil)[]
+  local highlights_list = {} ---@type (stl.t.IHighlightInline[]|nil)[]
   local lnum2uuid = {} ---@type string[]
   local uuid2lnum = {} ---@type table<string, integer>
   local parent_leaf_lines = {} ---@type table<string, integer[]>
@@ -762,7 +762,7 @@ function M:render_treeview(params)
           local result = render_treeview_location(ctx, leafnode, leafstate, location, lnum)
 
           lines[lnum] = indent .. result.text ---@type string
-          highlights_list[lnum] = result.highlights ---@type ark.t.IHighlightInline[]|nil
+          highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
           indents[lnum] = indent ---@type string
           lnum2uuid[lnum] = location.locationuuid
           uuid2lnum[location.locationuuid] = lnum
@@ -810,7 +810,7 @@ function M:render_treeview(params)
     end
 
     lines[lnum] = indent .. cache.text ---@type string
-    highlights_list[lnum] = cache.highlights ---@type ark.t.IHighlightInline[]|nil
+    highlights_list[lnum] = cache.highlights ---@type stl.t.IHighlightInline[]|nil
     indents[lnum] = indent ---@type string
     childline[lnum_leaf] = lnum
     lnum2uuid[lnum] = leafnode.uuid
@@ -882,7 +882,7 @@ function M:render_treeview(params)
       indent = folded_depth > 0 and folded_indent or indent ---@type string
 
       lines[lnum] = indent .. result.text ---@type string
-      highlights_list[lnum] = result.highlights ---@type ark.t.IHighlightInline[]|nil
+      highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
       indents[lnum] = indent ---@type string
       uuid2lnum[containernode.uuid] = lnum
       lnum2uuid[lnum] = containernode.uuid
@@ -930,7 +930,7 @@ function M:render_treeview(params)
       end
 
       lines[lnum] = indent .. result.text ---@type string
-      highlights_list[lnum] = result.highlights ---@type ark.t.IHighlightInline[]|nil
+      highlights_list[lnum] = result.highlights ---@type stl.t.IHighlightInline[]|nil
       indents[lnum] = indent ---@type string
       uuid2lnum[containernode.uuid] = lnum
       lnum2uuid[lnum] = containernode.uuid
@@ -1155,7 +1155,7 @@ function M:render_treeview(params)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   for index = 1, #lines, 1 do
     local row = index - 1 ---@type integer
-    local highlights = highlights_list[index] ---@type ark.t.IHighlightInline[]|nil
+    local highlights = highlights_list[index] ---@type stl.t.IHighlightInline[]|nil
     local indent = indents[index] ---@type string
     local offset = #indent
     vim.hl.range(bufnr, nsnr, self._indent_hln, { row, #INDENT_COMMON }, { row, offset })
@@ -1163,7 +1163,7 @@ function M:render_treeview(params)
     if highlights ~= nil then
       local H = #highlights ---@type integer
       for hi = 1, H, 1 do
-        local highlight = highlights[hi] ---@type ark.t.IHighlightInline
+        local highlight = highlights[hi] ---@type stl.t.IHighlightInline
         local hlname = highlight.hlname ---@type string
         local colr = highlight.colr ---@type integer
         local coll = highlight.coll ---@type integer

@@ -1,20 +1,20 @@
 ---@class ark.theme.hlgroup.tokyonight.plugin
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.tokyonight ---@type stl.t.theme.ITokyonightPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local item_kind_bg = c.none ---@type string
   local cmp_panel_bg = cs.mix(c.bg_dark, c.bg, 80) ---@type string
   local treesitter_context_bg = t and c.none or c.bg_highlight ---@type string
   local badge_fg = u.bg1 ---@type string
   local badge_bg = u.pink ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.fg, bg = cmp_panel_bg },

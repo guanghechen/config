@@ -158,14 +158,14 @@ end
 ---@protected
 ---@param hunk                         dot.module.git.Hunk
 ---@return string[]
----@return ark.t.IHighlight[]
+---@return stl.t.IHighlight[]
 ---@return integer
 ---@return table<integer, { sign: string, hlname: string }>
 function M:__render__(hunk)
   local strwidth = vim.api.nvim_strwidth ---@type fun(str: string): integer
 
   local lines = {} ---@type string[]
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
   local signs = {} ---@type table<integer, { sign: string, hlname: string }>
 
   lines[#lines + 1] = hunk.head
@@ -331,7 +331,7 @@ end
 ---@param is_staged                    boolean
 ---@return nil
 function M:__setup_keymaps__(bufnr, hunk, is_staged)
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "git-hunk: close" },
     { modes = { "n" }, key = "<Esc>", callback = function() self:close() end, desc = "git-hunk: close" },

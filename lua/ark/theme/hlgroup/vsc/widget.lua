@@ -1,12 +1,12 @@
 ---@class ark.theme.hlgroup.vsc.widget
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
-  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
   local t = context.transparency ---@type boolean
 
   local bg = t and c.none or u.bg0 ---@type string

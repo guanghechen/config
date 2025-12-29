@@ -3,7 +3,7 @@ local txt = ark.vim.fn.txt
 ---@class dot.module.nvimbar.component.host
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string

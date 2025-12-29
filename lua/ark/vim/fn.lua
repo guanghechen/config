@@ -71,8 +71,8 @@ function M.decode_btn_args(text)
   return result
 end
 
----@param keymaps                       ark.t.IKeymap[]
----@param keymap_override               ark.t.IKeymapOverridable
+---@param keymaps                       stl.t.IKeymap[]
+---@param keymap_override               stl.t.IKeymapOverridable
 ---@return nil
 function M.bindkeys(keymaps, keymap_override)
   for _, keymap in ipairs(keymaps) do

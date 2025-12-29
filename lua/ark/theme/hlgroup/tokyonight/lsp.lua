@@ -1,11 +1,11 @@
 ---@class ark.theme.hlgroup.tokyonight.lsp
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
+  local c = context.scheme.palette.tokyonight ---@type stl.t.theme.ITokyonightPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

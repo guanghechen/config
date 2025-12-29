@@ -1,10 +1,10 @@
 ---@class ark.theme.hlgroup.tokyonight.basic
 local M = {}
 
----@param context                       ark.t.theme.IContext
+---@param context                       stl.t.theme.IContext
 ---@return ark.theme.hlgroup.common.modes_color_map
 function M.gen_modes_color_map(context)
-  local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local mc = {
     command = c.brightBlue,
     confirm = c.brightAqua,
@@ -19,17 +19,17 @@ function M.gen_modes_color_map(context)
   return mc
 end
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.tokyonight ---@type stl.t.theme.ITokyonightPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
 
   local bg = t and c.none or c.bg ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     ---Completion
     ComplHint = { fg = c.terminal_black },

@@ -6,7 +6,7 @@ local __module_name__ = "dot.notifier" ---@type string
 ---@field public level                  string
 ---@field public title                  string
 ---@field public content                string
----@field public highlights             ark.t.IHighlight[]|nil
+---@field public highlights             stl.t.IHighlight[]|nil
 ---@field public isempty                boolean
 ---@field public lines                  string[]
 ---@field public times                  integer
@@ -19,7 +19,7 @@ local __module_name__ = "dot.notifier" ---@type string
 ---@field public level                  string
 ---@field public title                  string
 ---@field public content                string
----@field public highlights             ark.t.IHighlight[]|nil
+---@field public highlights             stl.t.IHighlight[]|nil
 ---@field public timeout                integer
 ---@field public anonymous              boolean
 ---@field public silent                 boolean
@@ -148,7 +148,7 @@ setmetatable(M, {
   __call = function(self, msg, level0, opts)
     opts = opts or {}
 
-    local level = M.resolve_level(level0) ---@type ark.e.LogLevelEnum
+    local level = M.resolve_level(level0) ---@type stl.e.LogLevelEnum
     local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
     local title = opts.title or M.resolve_title(level) ---@type string
     local content = msg ---@type string
@@ -157,7 +157,7 @@ setmetatable(M, {
     elseif type(opts.content) == "string" then
       content = opts.content
     end
-    local highlights = type(opts.highlights) == "table" and opts.highlights or nil ---@type ark.t.IHighlight[]|nil
+    local highlights = type(opts.highlights) == "table" and opts.highlights or nil ---@type stl.t.IHighlight[]|nil
     local timeout = opts.timeout or 3000 ---@type integer
     local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
     local silent = type(opts.silent) == "boolean" and opts.silent or false ---@type boolean
@@ -267,12 +267,12 @@ function M.resume()
 end
 
 ---@param level                         number
----@return ark.e.LogLevelEnum
+---@return stl.e.LogLevelEnum
 function M.resolve_level(level)
   return LevelMap[level] or "INFO"
 end
 
----@param level                         ark.e.LogLevelEnum
+---@param level                         stl.e.LogLevelEnum
 ---@return string
 function M.resolve_title(level)
   return LevelTitleMap[level]
@@ -286,7 +286,7 @@ function M.notify(params)
   local level = params.level ---@type string
   local title = params.title ---@type string
   local content = vim.trim(params.content) ---@type string
-  local highlights = params.highlights ---@type ark.t.IHighlight[]|nil
+  local highlights = params.highlights ---@type stl.t.IHighlight[]|nil
   local timeout = params.timeout ---@type integer
   local anonymous = params.anonymous ---@type boolean
   local silent = params.silent ---@type boolean
@@ -311,7 +311,7 @@ function M.notify(params)
   }
 
   local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = dot.state.status.notification_level:snapshot() ---@type ark.e.LogLevelEnum
+  local notification_level = dot.state.status.notification_level:snapshot() ---@type stl.e.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 
@@ -377,7 +377,7 @@ function M.__create_buf_as_needed__(win)
     vim.bo[bufnr].filetype = stl.filetype.NOTIFY
     vim.bo[bufnr].swapfile = false
 
-    ---@type ark.t.IKeymap[]
+    ---@type stl.t.IKeymap[]
     local keymaps = {
       {
         modes = { "n", "x" },
@@ -536,7 +536,7 @@ end
 ---@param task                          dot.t.INotifierTask
 ---@param width                         integer
 ---@return string
----@return ark.t.IHighlightInline[]
+---@return stl.t.IHighlightInline[]
 function M.__gen_winbar_like_text__(task, width)
   local max_width_title = width - 14 ---@type integer
   local text_title = task.times > 1 and string.format("%s (x%d) ", task.title, task.times) or task.title ---@type string
@@ -556,7 +556,7 @@ function M.__gen_winbar_like_text__(task, width)
   local text_blank = width_blank > 0 and string.rep(" ", width_blank) or "" ---@type string
   local text = text_left .. text_blank .. text_right ---@type string
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = { { coll = 0, colr = -1, hlname = hlname } }
   return text, highlights
 end

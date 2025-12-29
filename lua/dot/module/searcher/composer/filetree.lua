@@ -50,11 +50,11 @@ local __module_name__ = "dot.module.searcher.composer.filetree" ---@type string
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
----@field public keymaps_common         ?ark.t.IKeymap[]
----@field public keymaps_finder         ?ark.t.IKeymap[]
----@field public keymaps_preview        ?ark.t.IKeymap[]
----@field public keymaps_replacer       ?ark.t.IKeymap[]
----@field public keymaps_result         ?ark.t.IKeymap[]
+---@field public keymaps_common         ?stl.t.IKeymap[]
+---@field public keymaps_finder         ?stl.t.IKeymap[]
+---@field public keymaps_preview        ?stl.t.IKeymap[]
+---@field public keymaps_replacer       ?stl.t.IKeymap[]
+---@field public keymaps_result         ?stl.t.IKeymap[]
 ---
 ---@field public excludes               stl.c.Observable
 ---@field public flag_exclude           stl.c.Observable
@@ -168,11 +168,11 @@ function M.new(props)
   local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
   local replace_pattern_history = props.replace_pattern_history ---@type stl.c.History|nil
 
-  local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
-  local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
-  local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
-  local keymaps_replacer = props.keymaps_replacer ---@type ark.t.IKeymap[]|nil
-  local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
+  local keymaps_common = props.keymaps_common ---@type stl.t.IKeymap[]|nil
+  local keymaps_finder = props.keymaps_finder ---@type stl.t.IKeymap[]|nil
+  local keymaps_preview = props.keymaps_preview ---@type stl.t.IKeymap[]|nil
+  local keymaps_replacer = props.keymaps_replacer ---@type stl.t.IKeymap[]|nil
+  local keymaps_result = props.keymaps_result ---@type stl.t.IKeymap[]|nil
 
   local flags_append = props.flags_append ---@type dot.module.searcher.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type dot.module.searcher.result.IFlagItemRaw[]|nil
@@ -241,7 +241,7 @@ function M.new(props)
     local start_col0 = type(locationstate.col) == "number" and math.floor(locationstate.col) or nil ---@type integer|nil
     local end_col0 = type(locationstate.col_end) == "number" and math.floor(locationstate.col_end) or nil ---@type integer|nil
 
-    local highlights = locationstate.highlights ---@type ark.t.IHighlightInline[]|nil
+    local highlights = locationstate.highlights ---@type stl.t.IHighlightInline[]|nil
     if highlights ~= nil then
       for _, highlight in ipairs(highlights) do
         if start_col0 == nil and type(highlight.coll) == "number" then
@@ -979,7 +979,7 @@ function M.new(props)
     end,
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_common = {
     {
       modes = { "i", "n", "x" },
@@ -989,7 +989,7 @@ function M.new(props)
     },
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_finder = {
     {
       modes = { "n", "x" },
@@ -1090,7 +1090,7 @@ function M.new(props)
     },
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_replacer = {
     {
       modes = { "n", "x" },
@@ -1191,7 +1191,7 @@ function M.new(props)
     },
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local preset_keymaps_result = {
     {
       modes = { "n", "x" },

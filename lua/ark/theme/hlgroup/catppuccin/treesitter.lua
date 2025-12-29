@@ -1,13 +1,13 @@
 ---@class ark.theme.hlgroup.catppuccin.treesitter
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
+  local c = context.scheme.palette.catppuccin ---@type stl.t.theme.ICatppuccinPalette
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     -- Comments
     ["@comment"] = { fg = c.overlay2, italic = true },

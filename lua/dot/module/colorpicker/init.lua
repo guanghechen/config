@@ -17,7 +17,7 @@ local WIN_HIGHLIGHT = "FloatBorder:m_cp_border,Normal:m_cp_normal,EndOfBuffer:m_
 ---@field protected _saved_color        dot.module.colorpicker.Color|nil
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected _keymaps            ark.t.IKeymap[]
+---@field protected _keymaps            stl.t.IKeymap[]
 local M = {}
 M.__index = M
 
@@ -227,9 +227,9 @@ function M:__attach_autocmds__()
 end
 
 ---@protected
----@return ark.t.IKeymap[]
+---@return stl.t.IKeymap[]
 function M:__build_keymaps__()
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   return {
     {
       modes = { "n" },

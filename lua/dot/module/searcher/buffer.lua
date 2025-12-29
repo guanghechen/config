@@ -175,8 +175,8 @@ end
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
 ---@field protected _scheduler_search   stl.c.Scheduler
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
----@field protected _finder_keymaps     ark.t.IKeymap[]
----@field protected _replacer_keymaps   ark.t.IKeymap[]
+---@field protected _finder_keymaps     stl.t.IKeymap[]
+---@field protected _replacer_keymaps   stl.t.IKeymap[]
 ---@field protected _preserve_match_index integer|nil
 ---@field protected _last_focused_window "finder"|"replacer"
 ---@field protected _last_search_pattern string|nil
@@ -916,7 +916,7 @@ end
 ---@protected
 ---@param raw_flags                     dot.module.searcher.result.IFlagItemRaw[]
 ---@param window_type                   "finder"|"replacer"
----@return ark.t.IKeymap[]
+---@return stl.t.IKeymap[]
 function M:__create_keymaps__(raw_flags, window_type)
   local actions = {
     toggle_source_with_searcher = function()
@@ -933,7 +933,7 @@ function M:__create_keymaps__(raw_flags, window_type)
     end,
   }
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local base_keymaps = {
     {
       modes = { "n" },
@@ -1076,7 +1076,7 @@ end
 ---@param flags                         dot.module.searcher.result.IFlagItem[]
 ---@return dot.module.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
-  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
   return Nvimbar.new({
     name = string.format("%s#winbar", __module_name__),

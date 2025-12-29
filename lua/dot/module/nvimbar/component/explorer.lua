@@ -40,7 +40,7 @@ end
 ---@class dot.module.nvimbar.component.explorer
 local M = {}
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@param flags                         dot.module.nvimbar.component.explorer.IFlagItem[]
 ---@return dot.module.nvimbar.IRawComponent
 function M.flags(position, flags)
@@ -74,7 +74,7 @@ function M.flags(position, flags)
 end
 
 ---@param o_root_uri                    stl.c.Observable
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@param flags                         dot.module.nvimbar.component.explorer.IFlagItem[]
 ---@param get_width                     fun(): integer
 ---@return dot.module.nvimbar.IRawComponent
@@ -202,7 +202,7 @@ function M.path(o_root_uri)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.tabline(position)
   local hln_blank = position .. "_sidebar_blank" ---@type string

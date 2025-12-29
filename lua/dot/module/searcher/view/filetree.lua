@@ -32,7 +32,7 @@ local __module_name__ = "dot.module.searcher.view.filetree" ---@type string
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
----@field public highlights             ?ark.t.IHighlightInline[]
+---@field public highlights             ?stl.t.IHighlightInline[]
 ---
 ---@field public match                  dot.module.searcher.view.filetree.ISearchedItem
 
@@ -87,7 +87,7 @@ local __module_name__ = "dot.module.searcher.view.filetree" ---@type string
 ---@field public lnum                   integer
 ---@field public col                    integer
 ---@field public text                   string
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 ---
 ---@field public preview                dot.module.searcher.view.filetree.ISearchedPreviewItem
 
@@ -297,7 +297,7 @@ function M:search(params)
       local sy = match.sy or sx ---@type integer
 
       local text ---@type string
-      local highlights ---@type ark.t.IHighlightInline[]
+      local highlights ---@type stl.t.IHighlightInline[]
 
       if has_replace_preview then
         local prefix = preview_text:sub(1, sy + 1) ---@type string
@@ -477,7 +477,7 @@ function M.default_render_listview_leaf(ctx, node)
   local filepath = #rootnode.data.filepath < 2 and node.data.filepath
     or node.data.filepath:sub(#rootnode.data.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
-  local highlights = { { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln } } ---@type ark.t.IHighlightInline[]
+  local highlights = { { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln } } ---@type stl.t.IHighlightInline[]
   return { text = text, highlights = highlights }
 end
 
@@ -488,7 +488,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "m_ft_position" },
     { coll = offset, colr = -1, hlname = "m_ft_text" },
@@ -518,7 +518,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   if folded_depth < 1 then
     local text = string.format("%s %s", fileicon, basename) ---@type string
 
-    ---@type ark.t.IHighlightInline[]
+    ---@type stl.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
       { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
@@ -547,7 +547,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     text = string.format("%s %s", fileicon, basenames[1]) ---@type string
   end
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
@@ -571,7 +571,7 @@ function M.default_render_treeview_leaf(_, node)
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local text = string.format("%s %s", fileicon, basename) ---@type string
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "m_ft_filename" },
@@ -586,7 +586,7 @@ function M.default_render_treeview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "m_ft_position" },
     { coll = offset, colr = -1, hlname = "m_ft_text" },

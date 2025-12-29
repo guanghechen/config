@@ -1,14 +1,14 @@
 ---@class ark.theme.hlgroup.tokyonight.treesitter
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
+  local c = context.scheme.palette.tokyonight ---@type stl.t.theme.ITokyonightPalette
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   local hlgroup_map = {
     ["@annotation"] = { link = "PreProc" },
     ["@attribute"] = { link = "PreProc" },

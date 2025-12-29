@@ -43,7 +43,7 @@ local function format_name(termmeta)
   return name
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.items(position)
   local hln_button = position .. "_term_button" ---@type string
@@ -241,7 +241,7 @@ function M.items(position)
   return component
 end
 
----@param position                      ark.e.NvimbarPositionEnum
+---@param position                      stl.e.NvimbarPositionEnum
 ---@return dot.module.nvimbar.IRawComponent
 function M.add_button(position)
   local hln_button = position .. "_term_button" ---@type string

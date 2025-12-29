@@ -1,10 +1,10 @@
 ---@class ark.theme.hlgroup.catppuccin.lsp
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local c = context.scheme.palette.catppuccin ---@type ark.t.theme.ICatppuccinPalette
+  local c = context.scheme.palette.catppuccin ---@type stl.t.theme.ICatppuccinPalette
 
   return {
     ["@lsp.mod.declaration"] = {},

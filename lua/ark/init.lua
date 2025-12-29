@@ -44,24 +44,24 @@ local theme_scheme__mods = {
 
 ---@class ark.theme.scheme
 ---@field public __mods                 ark.theme.scheme.__mods
----@field public ["catppuccin-frappe"]  ark.t.theme.IScheme
----@field public ["catppuccin-latte"]   ark.t.theme.IScheme
----@field public ["catppuccin-macchiato"] ark.t.theme.IScheme
----@field public ["catppuccin-mocha"]   ark.t.theme.IScheme
----@field public ["gruvbox-dark"]       ark.t.theme.IScheme
----@field public ["gruvbox-light"]      ark.t.theme.IScheme
----@field public ["nord"]               ark.t.theme.IScheme
----@field public ["onehalf-dark"]       ark.t.theme.IScheme
----@field public ["onehalf-light"]      ark.t.theme.IScheme
----@field public ["rosepine-dawn"]      ark.t.theme.IScheme
----@field public ["rosepine-main"]      ark.t.theme.IScheme
----@field public ["rosepine-moon"]      ark.t.theme.IScheme
----@field public ["tokyonight-day"]     ark.t.theme.IScheme
----@field public ["tokyonight-moon"]    ark.t.theme.IScheme
----@field public ["tokyonight-night"]   ark.t.theme.IScheme
----@field public ["tokyonight-storm"]   ark.t.theme.IScheme
----@field public ["vsc-dark-modern"]    ark.t.theme.IScheme
----@field public ["vsc-light-modern"]   ark.t.theme.IScheme
+---@field public ["catppuccin-frappe"]  stl.t.theme.IScheme
+---@field public ["catppuccin-latte"]   stl.t.theme.IScheme
+---@field public ["catppuccin-macchiato"] stl.t.theme.IScheme
+---@field public ["catppuccin-mocha"]   stl.t.theme.IScheme
+---@field public ["gruvbox-dark"]       stl.t.theme.IScheme
+---@field public ["gruvbox-light"]      stl.t.theme.IScheme
+---@field public ["nord"]               stl.t.theme.IScheme
+---@field public ["onehalf-dark"]       stl.t.theme.IScheme
+---@field public ["onehalf-light"]      stl.t.theme.IScheme
+---@field public ["rosepine-dawn"]      stl.t.theme.IScheme
+---@field public ["rosepine-main"]      stl.t.theme.IScheme
+---@field public ["rosepine-moon"]      stl.t.theme.IScheme
+---@field public ["tokyonight-day"]     stl.t.theme.IScheme
+---@field public ["tokyonight-moon"]    stl.t.theme.IScheme
+---@field public ["tokyonight-night"]   stl.t.theme.IScheme
+---@field public ["tokyonight-storm"]   stl.t.theme.IScheme
+---@field public ["vsc-dark-modern"]    stl.t.theme.IScheme
+---@field public ["vsc-light-modern"]   stl.t.theme.IScheme
 local theme_scheme = setmetatable({ __mods = theme_scheme__mods }, {
   __index = function(t, k)
     local m = theme_scheme__mods[k] ---@type string|nil

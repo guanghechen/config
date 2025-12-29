@@ -1,8 +1,8 @@
 ---@class ark.theme.hlgroup.module
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local md = string.format("ark.theme.hlgroup.%s.module", context.scheme.theme) ---@type string
   local ok, mod = pcall(require, md)
@@ -13,11 +13,11 @@ function M.gen_hlgroup_map(context)
   return M.default_gen_hlgroup_map(context)
 end
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.default_gen_hlgroup_map(context)
   local cs = stl.color
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
 
   local bg = t and u.none or u.bg0 ---@type string

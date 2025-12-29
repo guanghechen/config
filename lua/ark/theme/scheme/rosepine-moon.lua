@@ -1,6 +1,6 @@
 --- rosepine-moon
 
----@type ark.t.theme.IScheme
+---@type stl.t.theme.IScheme
 local M = {
   theme = "rosepine",
   variant = "moon",

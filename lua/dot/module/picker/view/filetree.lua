@@ -32,7 +32,7 @@ local __module_name__ = "dot.module.picker.view.filetree" ---@type string
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
----@field public highlights             ?ark.t.IHighlightInline[]
+---@field public highlights             ?stl.t.IHighlightInline[]
 
 ---@class dot.module.picker.view.filetree.IListviewRendererContext : ark.view.tree.IListviewRendererContext
 ---@field public rootnode               stl.c.IFiletreeNode
@@ -728,7 +728,7 @@ function M.default_render_listview_leaf(ctx, node)
     or node.data.filepath:sub(#rootnode.data.filepath + 2)
   local text = string.format("%s %s", fileicon, filepath) ---@type string
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
   }
@@ -756,7 +756,7 @@ function M.default_render_listview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "m_ft_position" },
     { coll = offset, colr = -1, hlname = "m_ft_text" },
@@ -786,7 +786,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   if folded_depth < 1 then
     local text = string.format("%s %s", fileicon, basename) ---@type string
 
-    ---@type ark.t.IHighlightInline[]
+    ---@type stl.t.IHighlightInline[]
     local highlights = {
       { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
       { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
@@ -816,7 +816,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     text = string.format("%s %s", fileicon, basenames[1]) ---@type string
   end
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "m_ft_dirname" },
@@ -840,7 +840,7 @@ function M.default_render_treeview_leaf(_, node)
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local text = string.format("%s %s", fileicon, basename) ---@type string
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = #fileicon + 1, hlname = fileicon_hln },
     { coll = #fileicon + 1, colr = #text, hlname = "m_ft_filename" },
@@ -866,7 +866,7 @@ function M.default_render_treeview_location(_, _, _, locationstate)
   local text = col ~= nil and string.format("%4d:%-4d", lnum, col) or string.format("%4d:", lnum) ---@type string
   local offset = #text ---@type integer
 
-  ---@type ark.t.IHighlightInline[]
+  ---@type stl.t.IHighlightInline[]
   local highlights = {
     { coll = 0, colr = offset, hlname = "m_ft_position" },
     { coll = offset, colr = -1, hlname = "m_ft_text" },

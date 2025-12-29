@@ -2,7 +2,7 @@ local __module_name__ = "stl.c.input_history" ---@type string
 
 ---@class stl.c.InputHistory : stl.c.History
 ---@field public fullname               string
----@field public equals                 ark.t.IEquals
+---@field public equals                 stl.t.IEquals
 ---@field protected _present            integer
 ---@field protected _stack              stl.c.CircularStack
 local M = {}
@@ -14,7 +14,7 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local capacity = props.capacity ---@type integer
-  local equals = props.equals or stl.fn.equals_shallow ---@type ark.t.IEquals
+  local equals = props.equals or stl.fn.equals_shallow ---@type stl.t.IEquals
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -33,28 +33,28 @@ function M.deserialize(props)
 
   local self = setmetatable({}, M)
   self.fullname = fullname
-  self.equals = props.equals or stl.fn.equals_shallow ---@type ark.t.IEquals
+  self.equals = props.equals or stl.fn.equals_shallow ---@type stl.t.IEquals
   self._stack = stl.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
 
 ---@param index                         integer
----@return ark.t.T|nil
+---@return stl.t.T|nil
 function M:at(index)
   return self._stack:at(index)
 end
 
 ---@param step                          ?integer
----@return ark.t.T|nil
+---@return stl.t.T|nil
 ---@return boolean
 function M:backward(step)
   local index = self._present - math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type ark.t.T|nil, integer
+  local element, present = self:go(index) ---@type stl.t.T|nil, integer
   return element, present <= 1
 end
 
----@return ark.t.T|nil
+---@return stl.t.T|nil
 function M:bottom()
   return self._stack:at(1)
 end
@@ -70,7 +70,7 @@ function M:clear()
   self._stack:clear()
 end
 
----@return ark.t.T[]
+---@return stl.t.T[]
 function M:collect()
   return self._stack:collect()
 end
@@ -99,16 +99,16 @@ function M:fork(params)
 end
 
 ---@param step                          ?integer
----@return ark.t.T|nil
+---@return stl.t.T|nil
 ---@return boolean
 function M:forward(step)
   local index = self._present + math.max(1, step or 1) ---@type integer
-  local element, present = self:go(index) ---@type ark.t.T|nil, integer
+  local element, present = self:go(index) ---@type stl.t.T|nil, integer
   return element, present == self._stack:size()
 end
 
 ---@param index                         integer
----@return ark.t.T|nil
+---@return stl.t.T|nil
 ---@return integer
 function M:go(index)
   local stack = self._stack ---@type stl.c.CircularStack
@@ -132,13 +132,13 @@ function M:is_top()
   return self._present == self._stack:size()
 end
 
----@return fun(): ark.t.T, integer
+---@return fun(): stl.t.T, integer
 function M:iterator()
   local stack = self._stack ---@type stl.c.CircularStack
   return stack:iterator()
 end
 
----@return fun(): ark.t.T, integer
+---@return fun(): stl.t.T, integer
 function M:iterator_reverse()
   local stack = self._stack ---@type stl.c.CircularStack
   return stack:iterator_reverse()
@@ -147,13 +147,13 @@ end
 ---@param data                          stl.c.history.ISerializedData
 ---@return nil
 function M:load(data)
-  local stack = data.stack ---@type ark.t.T[]
+  local stack = data.stack ---@type stl.t.T[]
   local present = data.present ---@type integer
   self._stack:reset(stack)
   self:go(present or math.huge)
 end
 
----@return ark.t.T|nil
+---@return stl.t.T|nil
 ---@return integer
 function M:present()
   return self._stack:at(self._present), self._present
@@ -162,7 +162,7 @@ end
 ---@return nil
 function M:print()
   local present = self._present ---@type integer
-  local stack = self._stack:collect() ---@type ark.t.T
+  local stack = self._stack:collect() ---@type stl.t.T
   stl.reporter.info({
     from = self.fullname,
     subject = "print",
@@ -170,10 +170,10 @@ function M:print()
   })
 end
 
----@param element                       ark.t.T
+---@param element                       stl.t.T
 ---@return nil
 function M:push(element)
-  local present = self._stack:at(self._present) ---@type ark.t.T|nil
+  local present = self._stack:at(self._present) ---@type stl.t.T|nil
   if present ~= nil and self.equals(present, element) then
     return
   end
@@ -186,7 +186,7 @@ function M:push(element)
   self._present = stack:size()
 end
 
----@param filter                        ark.t.IFilter
+---@param filter                        stl.t.IFilter
 ---@return nil
 function M:rearrange(filter)
   local stack = self._stack ---@type stl.c.CircularStack
@@ -214,14 +214,14 @@ function M:size()
   return self._stack:size()
 end
 
----@return ark.t.T|nil
+---@return stl.t.T|nil
 ---@return integer
 function M:top()
   local stack = self._stack ---@type stl.c.CircularStack
   return stack:top(), stack:size()
 end
 
----@param element                       ark.t.T
+---@param element                       stl.t.T
 ---@return nil
 function M:update_top(element)
   local stack = self._stack ---@type stl.c.CircularStack

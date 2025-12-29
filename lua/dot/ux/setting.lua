@@ -21,7 +21,7 @@ M.__index = M
 setmetatable(M, dot.ux.Textarea)
 
 ---@class dot.ux.setting.IProps
----@field public position               ark.e.BoxPosition
+---@field public position               stl.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -29,7 +29,7 @@ setmetatable(M, dot.ux.Textarea)
 ---@field public max_height             ?number
 ---@field public min_width              ?number
 ---@field public min_height             ?number
----@field public keymaps                ?ark.t.IKeymap[]
+---@field public keymaps                ?stl.t.IKeymap[]
 ---@field public win_opts               ?table<string, any>
 ---@field public validate               ?fun(value: dot.t.T): string|nil
 ---@field public on_close               ?fun(): nil
@@ -38,14 +38,14 @@ setmetatable(M, dot.ux.Textarea)
 ---@param props                         dot.ux.setting.IProps
 ---@return dot.ux.Setting
 function M.new(props)
-  local position = props.position ---@type ark.e.BoxPosition
+  local position = props.position ---@type stl.e.BoxPosition
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil
   local max_height = props.max_height ---@type number|nil
   local min_width = props.min_width ---@type number|nil
   local min_height = props.min_height ---@type number|nil
-  local keymaps = props.keymaps or {} ---@type ark.t.IKeymap[]
+  local keymaps = props.keymaps or {} ---@type stl.t.IKeymap[]
   local title = props.title ---@type string|nil
   local win_opts = props.win_opts or {} ---@type table<string, any>
 

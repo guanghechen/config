@@ -39,7 +39,7 @@ local __module_name__ = "dot.module.picker.result" ---@type string
 ---@field public name                   string
 ---@field public draw                   dot.module.picker.result.IDraw
 ---@field public isselected             ?dot.module.picker.result.IIsSelected
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field public flags                  dot.module.picker.result.IFlagItemRaw[]
 ---@field public flags_start_index      ?0|1
 ---@field public on_drawed              ?dot.module.picker.result.IOnDrawed
@@ -49,7 +49,7 @@ local __module_name__ = "dot.module.picker.result" ---@type string
 ---@field public fullname               string
 ---@field public draw                   dot.module.picker.result.IDraw
 ---@field public flags                  dot.module.picker.result.IFlagItem[]
----@field public keymaps                ark.t.IKeymap[]
+---@field public keymaps                stl.t.IKeymap[]
 ---@field public lnum_current           stl.c.Observable
 ---@field public lnum_present           stl.c.Observable
 ---@field public lnum_total             stl.c.Observable
@@ -73,7 +73,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type dot.module.picker.result.IDraw
   local isselected = props.isselected or stl.fn.falsy ---@type dot.module.picker.result.IIsSelected
-  local keymaps = props.keymaps ---@type ark.t.IKeymap[]
+  local keymaps = props.keymaps ---@type stl.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
   local on_drawed = props.on_drawed or stl.fn.noop ---@type dot.module.picker.result.IOnDrawed
@@ -116,7 +116,7 @@ function M.new(props)
     end
   end
 
-  local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
   local c = require("dot.module.nvimbar").component
   local Nvimbar = require("dot.module.nvimbar").Nvimbar

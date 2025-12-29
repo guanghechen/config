@@ -74,7 +74,7 @@ return {
       },
     }
 
-    ---@type ark.t.IKeymap[]
+    ---@type stl.t.IKeymap[]
     local keymaps = {}
 
     ---@type { key: string, query: string, source?: string, desc: string, modes?: string[] }[]
@@ -106,7 +106,7 @@ return {
         local query = spec.query
         local source = spec.source or "textobjects"
         local desc = spec.desc or make_move_desc(key, query)
-        local modes = spec.modes or { "n", "x", "o" } ---@type ark.e.VimMode[]
+        local modes = spec.modes or { "n", "x", "o" } ---@type stl.e.VimMode[]
 
         local callback ---@type fun(): nil
         if key:find("[cC]") then

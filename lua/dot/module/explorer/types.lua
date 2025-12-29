@@ -61,12 +61,12 @@
 ---@field public warn                   integer
 
 ---@class dot.module.explorer.view.IDiagnosticInfo
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 ---@field public lnum                   integer
 ---@field public text                   string
 
 ---@class dot.module.explorer.view.IGitStatusInfo
----@field public highlights             ark.t.IHighlightInline[]
+---@field public highlights             stl.t.IHighlightInline[]
 ---@field public lnum                   integer
 ---@field public text                   string
 
@@ -97,7 +97,7 @@
 ---@field public diagnostic_info_list   dot.module.explorer.view.IDiagnosticInfo[]
 ---@field public git_by_lnum            table<integer, dot.module.explorer.view.IGitStatusInfo>
 ---@field public git_status_list        dot.module.explorer.view.IGitStatusInfo[]
----@field public highlights             ark.t.IHighlight[]
+---@field public highlights             stl.t.IHighlight[]
 ---@field public lines                  string[]
 ---@field public lnum_to_uri            table<integer, string>
 ---@field public sign_by_lnum           table<integer, dot.module.explorer.view.ISignInfo>

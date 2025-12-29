@@ -1,19 +1,19 @@
 ---@class ark.theme.hlgroup.vsc.plugin
 local M = {}
 
----@param context                       ark.t.theme.IContext
----@return table<string, ark.t.theme.IHlgroup>
+---@param context                       stl.t.theme.IContext
+---@return table<string, stl.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
   local cs = stl.color
   local t = context.transparency ---@type boolean
-  local c = context.scheme.palette.vsc ---@type ark.t.theme.IVscPalette
-  local u = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
+  local c = context.scheme.palette.vsc ---@type stl.t.theme.IVscPalette
+  local u = context.scheme.palette.unified ---@type stl.t.theme.IUnifiedPalette
   local cmp_panel_bg = cs.mix(c.overlay, c.base, 70) ---@type string
   local treesitter_context_bg = t and c.none or c.overlay ---@type string
   local badge_fg = u.bg1 ---@type string
   local panel_bg = cs.mix(t and c.none or c.base, t and c.none or c.overlay, 60) ---@type string
 
-  ---@type table<string, ark.t.theme.IHlgroup>
+  ---@type table<string, stl.t.theme.IHlgroup>
   return {
     ---! blink.cmp
     BlinkCmpDoc = { fg = c.text, bg = cmp_panel_bg },

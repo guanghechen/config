@@ -1,6 +1,6 @@
 --- vsc-dark-modern
 
----@type ark.t.theme.IScheme
+---@type stl.t.theme.IScheme
 local M = {
   theme = "vsc",
   variant = "dark-modern",

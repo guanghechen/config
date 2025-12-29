@@ -12,7 +12,7 @@ local __module_name__ = "dot.module.searcher.view.plainfile" ---@type string
 ---@field public offset_current         integer
 ---@field public match_offsets          integer[]
 
----@class dot.module.searcher.IPlainfileViewHighlight : ark.t.IHighlight
+---@class dot.module.searcher.IPlainfileViewHighlight : stl.t.IHighlight
 ---@field public offset                 integer
 
 ---@class dot.module.searcher.IPlainfileViewData
@@ -226,9 +226,9 @@ end
 
 ---@param context                       dot.module.searcher.IPlainfileViewContext
 ---@param data                          dot.module.searcher.IPlainfileViewData
----@return ark.t.IHighlight[]
+---@return stl.t.IHighlight[]
 function M:patch_preview_data(context, data)
-  local highlights = {} ---@type ark.t.IHighlight[]
+  local highlights = {} ---@type stl.t.IHighlight[]
   local flag_replace = context.flag_replace:snapshot() ---@type boolean
   local offset_current = context.offset_current ---@type integer
 
@@ -239,7 +239,7 @@ function M:patch_preview_data(context, data)
         resolved = true
         local is_search_match = hl.hlname == "m_sr_search" ---@type boolean
         local hlname = is_search_match and "m_sr_search_cur" or "m_sr_replace_cur" ---@type string
-        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
+        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type stl.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
         break
@@ -251,7 +251,7 @@ function M:patch_preview_data(context, data)
       if offset_current == hl.offset then
         resolved = true
         local hlname = "m_sr_match_cur" ---@type string
-        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type ark.t.IHighlight
+        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type stl.t.IHighlight
         highlights[#highlights + 1] = highlight
       elseif resolved then
         break
@@ -303,7 +303,7 @@ function M:render(context, bufnr, filepath, force)
 
   do
     local nsnr = ark.var.nsnr.searcher_searched_cur ---@type integer
-    local patched_highlights = self:patch_preview_data(context, data) ---@type ark.t.IHighlight[]
+    local patched_highlights = self:patch_preview_data(context, data) ---@type stl.t.IHighlight[]
 
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     for _, hl in ipairs(patched_highlights) do

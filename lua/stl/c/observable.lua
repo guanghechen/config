@@ -6,20 +6,20 @@ local __module_name__ = "stl.c.observable" ---@type string
 ---@field public silent                 ?boolean  Whether to notify the subscribers or not.
 
 ---@class stl.c.observable.IProps
----@field public initial_value          ark.t.T           Initial value of the observable
----@field public equals                 ?ark.t.IEquals    Determine whether the two values are equal.
----@field public normalize              ?ark.t.INormalize Normalize the value before compare or update
+---@field public initial_value          stl.t.T           Initial value of the observable
+---@field public equals                 ?stl.t.IEquals    Determine whether the two values are equal.
+---@field public normalize              ?stl.t.INormalize Normalize the value before compare or update
 ---@field public readonly               ?boolean
 
 ---@type stl.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = stl.fn.noop }
 
 ---@class stl.c.Observable : stl.c.BatchDisposable, stl.c.ISubscribable
----@field public equals                 ark.t.IEquals
----@field public normalize              ark.t.INormalize
+---@field public equals                 stl.t.IEquals
+---@field public normalize              stl.t.INormalize
 ---@field protected _readonly           boolean
----@field protected _value              ark.t.T
----@field protected _value_last_notified ark.t.T|nil
+---@field protected _value              stl.t.T
+---@field protected _value_last_notified stl.t.T|nil
 ---@field protected _subscribers        stl.c.Subscribers
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
@@ -29,10 +29,10 @@ setmetatable(M, stl.c.BatchDisposable)
 ---@param props                         stl.c.observable.IProps
 ---@return stl.c.Observable
 function M.new(props)
-  local equals = props.equals or stl.fn.equals_shallow ---@type ark.t.IEquals
-  local normalize = props.normalize or stl.fn.identity ---@type ark.t.INormalize
+  local equals = props.equals or stl.fn.equals_shallow ---@type stl.t.IEquals
+  local normalize = props.normalize or stl.fn.identity ---@type stl.t.INormalize
   local readonly = not not props.readonly ---@type boolean
-  local initial_value = props.initial_value ---@type ark.t.T
+  local initial_value = props.initial_value ---@type stl.t.T
 
   local self = setmetatable(stl.c.BatchDisposable.new(), M)
   ---@cast self                         stl.c.Observable
@@ -46,9 +46,9 @@ function M.new(props)
   return self
 end
 
----@param value                         ark.t.T         Initial value of the observable
----@param equals                        ?ark.t.IEquals  Determine whether the two values are equal.
----@param normalize                     ?ark.t.INormalize Normalize the value before compare or update
+---@param value                         stl.t.T         Initial value of the observable
+---@param equals                        ?stl.t.IEquals  Determine whether the two values are equal.
+---@param normalize                     ?stl.t.INormalize Normalize the value before compare or update
 ---@return stl.c.Observable
 function M.from_value(value, equals, normalize)
   return M.new({ initial_value = value, equals = equals, normalize = normalize })
@@ -70,7 +70,7 @@ function M:dispose()
   self._subscribers:dispose()
 end
 
----@param value                         ark.t.T
+---@param value                         stl.t.T
 ---@param options                       ?stl.c.observable.INextOptions
 ---@return boolean Indicate whether if the value changed.
 function M:next(value, options)
@@ -116,8 +116,8 @@ function M:subscribe(subscriber, ignoreInitial)
   end
 
   if not ignoreInitial then
-    local value_prev = self._value_last_notified ---@type ark.t.T | nil
-    local value = self._value ---@type ark.t.T
+    local value_prev = self._value_last_notified ---@type stl.t.T | nil
+    local value = self._value ---@type stl.t.T
     subscriber:next(value, value_prev)
   end
 
@@ -134,10 +134,10 @@ end
 ---@protected
 ---@return nil
 function M:__notify__()
-  ---@type ark.t.T | nil
+  ---@type stl.t.T | nil
   local value_prev = self._value_last_notified
 
-  ---@type ark.t.T
+  ---@type stl.t.T
   local value = self._value
 
   self._value_last_notified = value

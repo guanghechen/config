@@ -79,7 +79,7 @@ local function fetch_data()
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 
-        ---@type ark.t.IHighlightInline[]
+        ---@type stl.t.IHighlightInline[]
         local highlights = {
           { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "m_skm_lhs" },
           { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "m_skm_mode" },
@@ -122,7 +122,7 @@ local function fetch_data()
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 
-        ---@type ark.t.IHighlightInline[]
+        ---@type stl.t.IHighlightInline[]
         local highlights = {
           { coll = OFFSET_LHS, colr = OFFSET_LHS + #lhs, hlname = "m_skm_lhs" },
           { coll = OFFSET_MODE, colr = OFFSET_MODE + #mode, hlname = "m_skm_mode" },

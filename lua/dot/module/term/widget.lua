@@ -68,7 +68,7 @@ local termline = Nvimbar.new({
   end,
 })
 
-local position = "f_wl" ---@type ark.e.NvimbarPositionEnum
+local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
 stl.fn.observe({ dot.term.state.o_termuuid }, function()
@@ -140,9 +140,9 @@ local function split_window(direction)
 end
 
 ---@param termmeta                      dot.module.term.IMeta
----@return ark.t.IKeymap[]
+---@return stl.t.IKeymap[]
 local function create_default_keymaps(termmeta)
-  local keymaps = {} ---@type ark.t.IKeymap[]
+  local keymaps = {} ---@type stl.t.IKeymap[]
   for i = 1, 9 do
     local key = string.format("<C-%d>", i) ---@type string
     local definition = dot.command.definitions.term["focus_" .. tostring(i)] ---@type dot.command.IDefinition
@@ -490,7 +490,7 @@ function M.__create_buf_as_needed__(termmeta)
   })
 
   termmeta.bufnr = bufnr
-  local default_keymaps = create_default_keymaps(termmeta) ---@type ark.t.IKeymap[]
+  local default_keymaps = create_default_keymaps(termmeta) ---@type stl.t.IKeymap[]
   ark.vim.fn.bindkeys(default_keymaps, { bufnr = bufnr, noremap = true, silent = true })
   ark.vim.fn.bindkeys(termmeta.user_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 

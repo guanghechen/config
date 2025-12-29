@@ -1025,7 +1025,7 @@ function M:set_root()
   ctx.widget:set_root(uri)
 end
 
----@param keymaps                       ark.t.IKeymap[]
+---@param keymaps                       stl.t.IKeymap[]
 ---@return nil
 function M:show_keysheet(keymaps)
   local keysheet = dot.board.Keysheet.new({

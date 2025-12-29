@@ -160,7 +160,7 @@ local function refresh(force)
     local locationuuid = string.format("%s:%d:%d:%d#%d", filepath, diagnostic.lnum, diagnostic.col, diagnostic.end_col, #locations) ---@type string
 
     local text ---@type string
-    local highlights = {} ---@type ark.t.IHighlightInline[]
+    local highlights = {} ---@type stl.t.IHighlightInline[]
 
     local message = diagnostic.message:gsub("\n", " ") ---@type string
 
