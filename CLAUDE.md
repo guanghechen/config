@@ -13,13 +13,13 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
 
 ```
-yoz → stl → dot → era → vendor
+yoz → stl → dot → fml → vendor
 ```
 
 - **yoz**: Rust-native standard library, completely independent Lua extension, does not depend on Neovim
 - **stl**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
 - **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/stl
-- **era**: Actions, dressing (UI styling and components), and plugin configurations
+- **fml**: Actions, dressing (UI styling and components), and plugin configurations
 - **vendor**: Environment-specific entry points for neovim/neovide/vscode
 
 ### Global Variables
@@ -104,9 +104,9 @@ Foundation layer with algorithms, collections, and utilities.
 
 - **Core modules**: `G`, `autocmd`, `buf`, `command`, `lsp`, `lsp_action`, `notifier`, `path`, `session`, `shell`, `tab`, `term`, `uri`, `win`
 
-#### `lua/era/` - Frontend Configuration Layer
+#### `lua/fml/` - Frontend Configuration Layer
 
-- **`era/action/`** - Action handlers:
+- **`fml/action/`** - Action handlers:
   - `ai.lua` - AI actions
   - `buf/` - Buffer actions (close, focus, new, pin, save, swap)
   - `code/` - Code actions (run, splitline)
@@ -127,7 +127,7 @@ Foundation layer with algorithms, collections, and utilities.
   - `ux.lua` - UX actions
   - `win/` - Window actions (close, focus, history, mark, picker, resize, split)
 
-- **`era/dressing/`** - UI styling and rendering:
+- **`fml/dressing/`** - UI styling and rendering:
   - `commentstring.lua` - Comment string handling
   - `dim.lua` - Dim inactive windows
   - `foldtext.lua` - Fold text rendering
@@ -150,18 +150,18 @@ Foundation layer with algorithms, collections, and utilities.
   - `winline.lua` - Window line rendering
   - `winsep/` - Window separator styling
 
-- **`era/command.lua`** - Command definitions connecting `dot.command` to `era.action`
+- **`fml/command.lua`** - Command definitions connecting `dot.command` to `fml.action`
 
-- **`era/action/plugin/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
-- **`era/cmp/`** - Completion configurations (`dict`, `path`)
-- **`era/plugins/`** - Individual plugin configurations:
+- **`fml/action/plugin/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
+- **`fml/cmp/`** - Completion configurations (`dict`, `path`)
+- **`fml/plugins/`** - Individual plugin configurations:
   - blink-cmp, blink-indent, blink-pairs
   - conform, diffview, flash
   - mason, mini-ai, mini-hipatterns, mini-indentscope, mini-splitjoin, mini-surround
   - nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, nvim-lint
   - nvim-treesitter, nvim-treesitter-context, nvim-treesitter-textobjects
   - render-markdown, which-key
-- **`era/plugin.lua`** - Plugin repository and lazy loading setup
+- **`fml/plugin.lua`** - Plugin repository and lazy loading setup
 
 #### `lua/ark/vendor/` - Environment-specific Entry Points
 
@@ -206,10 +206,10 @@ Each vendor entry point includes environment-specific:
 
 The neovim vendor additionally loads:
 - `dot.autocmd` - Core autocommands
-- `era.dressing.*` - UI dressing modules
-- `era.command` - Command implementations
+- `fml.dressing.*` - UI dressing modules
+- `fml.command` - Command implementations
 - `dot.module.git` - Git module (if in git repo)
-- `era.plugin` - Plugin management
+- `fml.plugin` - Plugin management
 
 ### Rust-Lua Bridge
 
@@ -367,8 +367,8 @@ Within each category, sort alphabetically.
 
 ## Plugin Management
 - **Lock File**: `lazy-lock.json` contains exact plugin versions
-- **Plugin Configs**: `era/plugins/` for individual plugin configurations
-- **Completion**: `era/cmp/` for completion source configurations
+- **Plugin Configs**: `fml/plugins/` for individual plugin configurations
+- **Completion**: `fml/cmp/` for completion source configurations
 
 ## Development Files
 - `init-theme.lua`: Theme testing and development

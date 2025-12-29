@@ -3,7 +3,7 @@
 The notepad feature provides a floating, markdown-friendly scratch area for lightweight notes tied to the current workspace. It is composed of:
 - A persistent data store exposed via `_G.eve.notepad`
 - A floating widget (`eve.ux.widget.Notepad`) that renders the active note and handles input
-- An action layer (`era.action.notepad`) that wires commands and UI prompts
+- An action layer (`fml.action.notepad`) that wires commands and UI prompts
 - A nvimbar component that lists notes and exposes quick navigation
 
 The current implementation assumes a single persistence backend (the active workspace). Upcoming work will add a `source` dimension so the notepad framework can pull notes from alternative locations (e.g., editor-wide or shared stores).
@@ -18,7 +18,7 @@ The current implementation assumes a single persistence backend (the active work
 - `set_content` updates timestamps and mirrors the special `chatbox` note into any buffer tagged with `eve.notepad.BUFFER_VAR`, keeping AI/chat integrations in sync.
 - Exposes a full CRUD surface (`create`, `ensure_named_item`, `remove`, `rename`, `set_content`, `append_content`) plus navigation helpers (`focus_*`, `swap_*`, `iterator`, `current`).
 
-## Action Layer (`lua/era/action/notepad.lua`)
+## Action Layer (`lua/fml/action/notepad.lua`)
 
 - Lazily instantiates `eve.ux.widget.Notepad` widgets keyed by identifier; the default instance drives the toggle/show commands.
 - Ensures the store is initialised and focused before presenting the UI, creating a new untitled note when nothing exists.
@@ -54,7 +54,7 @@ The current implementation assumes a single persistence backend (the active work
 
 ## Commands, Keymaps, and Persistence
 
-- Commands are defined under `dot.command.definitions.notepad.*` and wired via `era/command.lua`. Most commands operate without arguments; focus/swap variants accept an optional numeric count.
+- Commands are defined under `dot.command.definitions.notepad.*` and wired via `fml/command.lua`. Most commands operate without arguments; focus/swap variants accept an optional numeric count.
 - Widget keymaps are buffer-local, installed each time a notepad buffer is created, and respect aliases for cross-platform modifier keys.
 - `Notepad.flush_to_disk()` creates parent directories when needed and emits a `stl.reporter.info` notification on success.
 - `eve.notepad.flush()` is safe to call during Neovim shutdown (e.g., autocmd hooks) to guarantee the debounce queue is emptied.

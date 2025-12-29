@@ -1,0 +1,395 @@
+---@see https://github.com/saghen/blink.cmp/tree/2e4e54b1283f4cf3673063fc3e10993c20aeec5c
+
+return {
+  name = "blink.cmp",
+  build = "cargo build --release",
+  event = { "InsertEnter", "CmdlineEnter" },
+  dependencies = {
+    "friendly-snippets",
+  },
+  opts = function()
+    ---@class fml.plugins.blink_cmp.actions
+    local actions = {
+      ---@return boolean|nil
+      has_native_completion = function()
+        return vim.lsp.inline_completion.get()
+      end,
+
+      ---@return boolean|nil
+      tab_fallback = function()
+        local mode = vim.api.nvim_get_mode().mode ---@type string
+        if mode == "i" then
+          vim.fn.feedkeys("\t", "n")
+          return true
+        end
+      end,
+    }
+
+    local code_sources = { "lsp", "path_at", "path", "snippets", "buffer", "dict" } ---@type string[]
+    local markdown_sources = { "slash", "lsp", "path_at", "path", "snippets", "buffer", "dict" } ---@type string[]
+    local finder_sources = { "path" } ---@type string[]
+    local searcher_sources = { "path", "dict" } ---@type string[]
+
+    ---@type table<string, string[]>
+    local sources_per_filetype = {
+      [stl.filetype.NOTEPAD] = markdown_sources,
+      [stl.filetype.UX_PICKER_FINDER] = finder_sources,
+      [stl.filetype.UX_SEARCHER_FINDER] = searcher_sources,
+      ["markdown"] = markdown_sources,
+    }
+    do
+      for _, cmp_code in ipairs(stl.filetype.list_code_filetypes()) do
+        if sources_per_filetype[cmp_code] == nil then
+          sources_per_filetype[cmp_code] = code_sources
+        end
+      end
+    end
+
+    return {
+      enabled = function()
+        if vim.bo.buftype == "nowrite" then
+          return false
+        end
+
+        -- Disable on .env* files
+        local bufname = vim.api.nvim_buf_get_name(0)
+        local filename = vim.fn.fnamemodify(bufname, ":t")
+        if filename:match("^%.env") or filename:match("%.http%.out$") then
+          return false
+        end
+
+        local filetype = vim.bo.filetype ---@type string
+        if not stl.filetype.is_cmp_enabled(filetype) then
+          return false
+        end
+
+        return true
+      end,
+      appearance = {
+        use_nvim_cmp_as_default = false,
+        nerd_font_variant = "mono",
+        kind_icons = stl.icon.kind,
+      },
+      cmdline = {
+        enabled = true,
+        keymap = {
+          preset = "cmdline",
+          ["<Left>"] = false,
+          ["<Right>"] = false,
+          ["<Tab>"] = { "show_and_insert_or_accept_single", "select_next" },
+          ["<S-Tab>"] = { "show_and_insert_or_accept_single", "select_prev" },
+          ["<Up>"] = { "select_prev", "fallback" },
+          ["<Down>"] = { "select_next", "fallback" },
+          ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
+          ["<C-j>"] = { "select_next", "fallback_to_mappings" },
+          ["<C-y>"] = { "select_and_accept", "fallback" },
+          ["<C-e>"] = { "cancel", "fallback" },
+        },
+        completion = {
+          ghost_text = { enabled = true },
+          list = { selection = { preselect = false } },
+          menu = {
+            auto_show = function()
+              return vim.fn.getcmdtype() == ":"
+            end,
+          },
+        },
+      },
+      completion = {
+        accept = {
+          auto_brackets = {
+            enabled = true,
+          },
+        },
+        trigger = {
+          show_on_backspace = true,
+          show_on_backspace_in_keyword = true,
+        },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 200,
+          window = {
+            border = "rounded",
+          },
+        },
+        ghost_text = {
+          enabled = false,
+        },
+        list = {
+          selection = {
+            preselect = true,
+            auto_insert = true,
+          },
+        },
+        keyword = {
+          range = "prefix",
+        },
+        menu = {
+          border = "rounded",
+          draw = {
+            treesitter = { "lsp" },
+            columns = {
+              -- { "item_idx" },
+              -- { "kind_icon", "source_name" },
+              { "kind_icon" },
+              { "label", "label_description", gap = 1 },
+              { "source_name" },
+            },
+            components = {
+              item_idx = {
+                text = function(ctx)
+                  return ctx.idx == 10 and "0" or ctx.idx >= 10 and " " or tostring(ctx.idx)
+                end,
+                highlight = "BlinkCmpItemIdx",
+              },
+              kind = {
+                highlight = function(ctx)
+                  return "BlinkCmpKind" .. ctx.kind
+                end,
+              },
+              kind_icon = {
+                text = function(ctx)
+                  return stl.icon.kind[ctx.kind] .. " "
+                end,
+                highlight = function(ctx)
+                  return "BlinkCmpKind" .. ctx.kind
+                end,
+              },
+              label = {
+                highlight = function()
+                  return "BlinkCmpLabel"
+                end,
+              },
+              source_name = {
+                text = function(ctx)
+                  return string.format("[%s]", ctx.source_name:lower())
+                end,
+                highlight = function()
+                  return "BlinkCmpSource"
+                end,
+              },
+            },
+          },
+          direction_priority = function()
+            local ctx = require("blink.cmp").get_context()
+            local item = require("blink.cmp").get_selected_item()
+            if ctx == nil or item == nil then
+              return { "s", "n" }
+            end
+
+            local item_text = item.textEdit ~= nil and item.textEdit.newText or item.insertText or item.label
+            local is_multiline = item_text:find("\n") ~= nil
+
+            -- after showing the menu upwards, we want to maintain that direction
+            -- until we re-open the menu, so store the context id in a global variable
+            if is_multiline or vim.g.blink_cmp_upwards_ctx_id == ctx.id then
+              vim.g.blink_cmp_upwards_ctx_id = ctx.id
+              return { "n", "s" }
+            end
+            return { "s", "n" }
+          end,
+        },
+      },
+      fuzzy = {
+        implementation = "prefer_rust_with_warning",
+        sorts = {
+          "score",
+          "exact",
+          "sort_text",
+        },
+        frecency = {
+          enabled = true,
+        },
+      },
+      keymap = {
+        preset = "none",
+        ["<CR>"] = { "select_and_accept", "fallback" },
+        ["<Tab>"] = {
+          function(cmp)
+            -- Priority 1: Navigate blink.cmp menu if visible
+            if cmp.is_menu_visible() then
+              return cmp.select_next()
+            end
+          end,
+          function()
+            -- Priority 2: Jump to next snippet placeholder
+            if vim.snippet.active({ direction = 1 }) then
+              vim.snippet.jump(1)
+              return true
+            end
+          end,
+          function()
+            -- Priority 3: Accept copilot inline completion
+            return vim.lsp.inline_completion.get()
+          end,
+          actions.tab_fallback,
+          "fallback",
+        },
+        ["<S-Tab>"] = {
+          function(cmp)
+            -- Priority 1: Navigate blink.cmp menu if visible
+            if cmp.is_menu_visible() then
+              return cmp.select_prev()
+            end
+          end,
+          function()
+            -- Priority 2: Jump to previous snippet placeholder
+            if vim.snippet.active({ direction = -1 }) then
+              vim.snippet.jump(-1)
+              return true
+            end
+          end,
+          actions.tab_fallback,
+          "fallback",
+        },
+        ["<C-y>"] = {
+          function()
+            -- Accept copilot inline completion first if available
+            return vim.lsp.inline_completion.get()
+          end,
+          "select_and_accept",
+          "fallback",
+        },
+
+        ["<Up>"] = { "select_prev", "fallback" },
+        ["<Down>"] = { "select_next", "fallback" },
+        ["<C-k>"] = { "select_prev", "fallback_to_mappings" },
+        ["<C-j>"] = { "select_next", "fallback_to_mappings" },
+        ["<C-h>"] = { "hide", "fallback" },
+        ["<C-l>"] = {
+          function()
+            -- Accept copilot inline completion first if available
+            return vim.lsp.inline_completion.get()
+          end,
+          "select_and_accept",
+          "fallback",
+        },
+
+        ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<C-p>"] = { "show_signature", "hide_signature", "fallback" },
+        ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
+
+        -- stylua: ignore start
+        ['<C-1>'] = { function(cmp) cmp.accept({ index = 1 }) end },
+        ['<C-2>'] = { function(cmp) cmp.accept({ index = 2 }) end },
+        ['<C-3>'] = { function(cmp) cmp.accept({ index = 3 }) end },
+        ['<C-4>'] = { function(cmp) cmp.accept({ index = 4 }) end },
+        ['<C-5>'] = { function(cmp) cmp.accept({ index = 5 }) end },
+        ['<C-6>'] = { function(cmp) cmp.accept({ index = 6 }) end },
+        ['<C-7>'] = { function(cmp) cmp.accept({ index = 7 }) end },
+        ['<C-8>'] = { function(cmp) cmp.accept({ index = 8 }) end },
+        ['<C-9>'] = { function(cmp) cmp.accept({ index = 9 }) end },
+        -- stylua: ignore end
+      },
+      signature = {
+        enabled = true,
+        window = {
+          border = "rounded",
+          winblend = 50,
+          show_documentation = false,
+        },
+      },
+      snippets = {
+        preset = "default",
+      },
+      sources = {
+        default = { "path", "buffer" },
+        per_filetype = sources_per_filetype,
+        providers = {
+          buffer = {
+            name = "buffer",
+            module = "blink.cmp.sources.buffer",
+            score_offset = 100,
+            opts = {
+              get_bufnrs = function()
+                local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+                local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
+                if meta == nil then
+                  return {}
+                end
+
+                local bufnrs = {} ---@type integer[]
+                local max_buffers = 10 -- Limit to prevent resource exhaustion
+                local count = 0
+
+                for _, buf in ipairs(meta.bufs) do
+                  if count >= max_buffers then
+                    break
+                  end
+
+                  local bufnr = buf.bufnr ---@type integer
+                  if vim.bo[bufnr].buftype == "" then
+                    -- Only include buffers that are reasonably sized (< 1MB)
+                    local bufname = vim.api.nvim_buf_get_name(bufnr)
+                    if bufname ~= "" then
+                      local size = vim.fn.getfsize(bufname)
+                      if size >= 0 and size < 131072 then -- 128KB limit, -1 means file doesn't exist
+                        bufnrs[#bufnrs + 1] = bufnr
+                        count = count + 1
+                      end
+                    else
+                      -- For unnamed buffers, include them (they're usually small)
+                      bufnrs[#bufnrs + 1] = bufnr
+                      count = count + 1
+                    end
+                  end
+                end
+                return bufnrs
+              end,
+            },
+          },
+          cmdline = {
+            name = "cmdline",
+            module = "blink.cmp.sources.cmdline",
+          },
+          dict = {
+            name = "dict",
+            module = "fml.cmp.dict",
+            score_offset = 95,
+          },
+          lsp = {
+            name = "lsp",
+            module = "blink.cmp.sources.lsp",
+            score_offset = 180,
+          },
+          path = {
+            name = "path",
+            module = "blink.cmp.sources.path",
+            score_offset = 200,
+            timeout_ms = 2000,
+            opts = {
+              ignore_root_slash = false,
+              show_hidden_files_by_default = true,
+            },
+          },
+          path_at = {
+            name = "path_at",
+            module = "fml.cmp.path",
+            score_offset = 210,
+            timeout_ms = 2000,
+            opts = {
+              show_hidden_files_by_default = true,
+              max_concurrent_requests = 1,
+              debounce = 150,
+              request_timeout = 2000,
+              max_entries_per_scan = 200, -- Increased from 50 for better coverage
+              chunk_size = 100,
+              gc_threshold_mb = 100,
+            },
+          },
+          slash = {
+            name = "slash",
+            module = "fml.cmp.slash",
+            score_offset = 220,
+          },
+          snippets = {
+            name = "snippets",
+            module = "blink.cmp.sources.snippets",
+            score_offset = 160,
+          },
+        },
+      },
+    }
+  end,
+}

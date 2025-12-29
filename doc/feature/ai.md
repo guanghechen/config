@@ -103,7 +103,7 @@ lua/eve/ux/widget/ai/
 
 ## Commands
 
-Registered in `lua/era/command.lua`:
+Registered in `lua/fml/command.lua`:
 - `ai.attach_agent`: Open attach picker
 - `ai.detach_agent`: Detach agent (direct detach if only one attached, otherwise show picker)
 - `ai.submit_buffer`: Send current split block content and submit

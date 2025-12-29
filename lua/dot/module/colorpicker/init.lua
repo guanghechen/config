@@ -215,7 +215,7 @@ function M:__attach_autocmds__()
     return
   end
 
-  local augroup = vim.api.nvim_create_augroup("era-colorpicker-" .. self._winnr, { clear = true })
+  local augroup = vim.api.nvim_create_augroup("dot-colorpicker-" .. self._winnr, { clear = true })
   vim.api.nvim_create_autocmd("WinClosed", {
     pattern = tostring(self._winnr),
     group = augroup,

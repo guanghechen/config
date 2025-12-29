@@ -43,7 +43,7 @@ M.__index = M
 function M.new(props)
   props = props or {}
   local self = setmetatable({}, M)
-  self._ns_id = vim.api.nvim_create_namespace("era-colorpicker")
+  self._ns_id = vim.api.nvim_create_namespace("dot-colorpicker")
   self._bufnr = nil
   self._winnr = nil
   self._color = nil

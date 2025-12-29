@@ -283,7 +283,7 @@ end
 ---@param text                          string
 ---@return boolean
 function M.send_text(pane_id, text)
-  local buffer_name = "era-ai-" .. pane_id
+  local buffer_name = "dot-ai-" .. pane_id
   if not exec({ "tmux", "load-buffer", "-b", buffer_name, "-" }, { stdin = text }) then
     return false
   end

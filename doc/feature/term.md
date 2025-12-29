@@ -41,8 +41,8 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 
 4. Default keymaps and commands stay aligned with the action layer:
    - `Ftermtoggle`, `Ftermcreate`, `Ftermrename`, `Ftermdestroy`, `Ftermfocus{1-9}`, `Ftermfocusleft`, `Ftermfocusright`, `Ftermswapleft`, `Ftermswapright`, and more live under `dot.command.definitions.term`.
-   - `lua/era/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `dot.state.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
-   - Each terminal profile includes its launch command and type; profiles can be selected via the UI picker defined in `era/action/term/create.lua`.
+   - `lua/fml/action/term/*.lua` bridges these commands to widget functions, manages prompts (rename, destroy confirmation), and triggers `dot.state.status.dirtier_termline:mark_dirty()` so the winbar reflects the new state.
+   - Each terminal profile includes its launch command and type; profiles can be selected via the UI picker defined in `fml/action/term/create.lua`.
 
 ----------------------------------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 - Persists per-terminal metadata (name, cmd, cwd, env, jobid) while deferring actual process lifecycle to the widget.
 - Publishes the `o_termuuid` observable so subscribers (widget winbar, status dirtier) react to focus changes.
 
-### Action Layer (`lua/era/action/term/*.lua`)
+### Action Layer (`lua/fml/action/term/*.lua`)
 - `create.lua` handles profile selection, shell defaults, toggle behaviour, and rename prompts.
 - `destroy.lua` confirms deletions, picks a fallback terminal, and raises the dirtier when state changes.
 - `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `dot.term` navigation helpers.
