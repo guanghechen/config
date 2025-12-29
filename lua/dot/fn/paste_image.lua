@@ -73,7 +73,7 @@ local function paste()
 
   local input_winnr ---@type integer
 
-  input_winnr = era.input.open({
+  input_winnr = era.view.Input.open({
     prompt = "Save image to",
     default = placeholder,
     relative = "editor",
@@ -94,7 +94,7 @@ local function paste()
       local input_row = input_cfg.row or 3 ---@type integer
       local input_col = input_cfg.col or 0 ---@type integer
 
-      era.choices.confirm({
+      era.view.Select.confirm({
         title = "File exists, overwrite?",
         relative = "editor",
         row = input_row + 3,

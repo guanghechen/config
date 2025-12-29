@@ -2,7 +2,6 @@
 local __mods = {
   ai = "era.ai",
   board = "era.board",
-  choices = "era.choices",
   clipboard = "era.clipboard",
   colorpicker = "era.colorpicker",
   explorer = "era.explorer",
@@ -10,7 +9,6 @@ local __mods = {
   illuminate = "era.illuminate",
   im = "era.im",
   image = "era.image",
-  input = "era.input",
   lsp = "era.lsp",
   nvimbar = "era.nvimbar",
   picker = "era.picker",
@@ -25,7 +23,6 @@ local __mods = {
 ---@field public __mods                 era.__mods
 ---@field public ai                     era.ai
 ---@field public board                  era.board
----@field public choices                era.choices
 ---@field public clipboard              era.clipboard
 ---@field public colorpicker            era.colorpicker
 ---@field public explorer               era.explorer
@@ -33,7 +30,6 @@ local __mods = {
 ---@field public illuminate             era.illuminate
 ---@field public im                     era.im
 ---@field public image                  era.image
----@field public input                  era.input
 ---@field public lsp                    era.lsp
 ---@field public nvimbar                era.nvimbar
 ---@field public picker                 era.picker

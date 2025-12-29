@@ -2,7 +2,7 @@ local __module_name__ = "dot.fn.select_copy_filepaths" ---@type string
 
 ---@class dot.fn.select_copy_filepaths.IParams : vim.api.keyset.win_config
 ---@field public filepaths                string[]
----@field public position                 era.choices.PositionEnum|nil
+---@field public position                 era.view.select.PositionEnum|nil
 ---@field public on_completed             ?fun(): nil
 
 ---@param params                        dot.fn.select_copy_filepaths.IParams
@@ -11,7 +11,7 @@ local function select_copy_filepaths(params)
   local filepaths = params.filepaths ---@type string[]
   local on_completed = params.on_completed or stl.fn.noop ---@type fun(): nil
 
-  return era.choices.open({
+  return era.view.Select.open({
     title = "Copy filepath",
     position = params.position or "cursor",
     relative = params.relative,

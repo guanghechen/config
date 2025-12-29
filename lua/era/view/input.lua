@@ -1,34 +1,34 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/input.lua
 
----@alias era.input.InputTypeEnum
+---@alias era.view.input.InputTypeEnum
 ---| "text"
 ---| "confirmation"
 
----@alias era.input.ConfirmCallback fun(): nil
+---@alias era.view.input.ConfirmCallback fun(): nil
 
----@alias era.input.CancelCallback fun(): nil
+---@alias era.view.input.CancelCallback fun(): nil
 
----@alias era.input.BeforeConfirmFn fun(text: string, confirm: era.input.ConfirmCallback, cancel: era.input.CancelCallback): nil
+---@alias era.view.input.BeforeConfirmFn fun(text: string, confirm: era.view.input.ConfirmCallback, cancel: era.view.input.CancelCallback): nil
 
----@class era.input.IOptions
+---@class era.view.input.IOptions
 ---@field public relative               ?"editor"|"cursor"|"win"
 ---@field public win                    ?integer
 ---@field public width                  ?integer
 ---@field public row                    ?integer
 ---@field public col                    ?integer
----@field public inputtype              ?era.input.InputTypeEnum
+---@field public inputtype              ?era.view.input.InputTypeEnum
 ---
 ---@field public prompt                 ?string
 ---@field public default                ?string
 ---@field public completion             ?string
 ---@field public startinsert            ?boolean
----@field public before_confirm         ?era.input.BeforeConfirmFn
+---@field public before_confirm         ?era.view.input.BeforeConfirmFn
 ---@field public block_cancel           ?boolean
 
----@class era.input.IContext
+---@class era.view.input.IContext
 ---@field public completion             ?string
 
-local contexts = {} ---@type table<integer, era.input.IContext>
+local contexts = {} ---@type table<integer, era.view.input.IContext>
 local NSNR_CONFIRMATION = dot.var.nsnr.input_confirmation ---@type integer
 local MAX_WIDTH = 120 ---@type integer
 
@@ -44,7 +44,7 @@ local WIN_HIGHLIGHT = table.concat({
   "SpecialKey:SpecialKey",
 }, ",")
 
----@class era.input
+---@class era.view.input
 local M = {}
 
 ---@param findstart                     integer
@@ -52,7 +52,7 @@ local M = {}
 ---@return integer|string[]
 function M.complete(findstart, base)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local ctx = contexts[bufnr] ---@type era.input.IContext|nil
+  local ctx = contexts[bufnr] ---@type era.view.input.IContext|nil
   local completion = ctx and ctx.completion or nil ---@type string|nil
   if findstart == 1 then
     if vim.api.nvim_buf_is_valid(bufnr) then
@@ -69,7 +69,7 @@ function M.complete(findstart, base)
   return ok and results or {}
 end
 
----@param opts                          ?era.input.IOptions
+---@param opts                          ?era.view.input.IOptions
 ---@param on_confirm                    fun(value: string|nil): nil
 ---@return integer winnr
 function M.open(opts, on_confirm)
@@ -77,8 +77,8 @@ function M.open(opts, on_confirm)
   local parent_cursor = vim.api.nvim_win_get_cursor(parent_winnr) ---@type integer[]
   local parent_row = parent_cursor[1] ---@type integer
 
-  opts = opts or {} ---@type era.input.IOptions
-  local inputtype = opts.inputtype or "text" ---@type era.input.InputTypeEnum
+  opts = opts or {} ---@type era.view.input.IOptions
+  local inputtype = opts.inputtype or "text" ---@type era.view.input.InputTypeEnum
   local prompt = inputtype == "confirmation" and "? (y/n)  " or "" ---@type string
   local title = opts.prompt and vim.trim(opts.prompt):gsub(":$", "") or "Input" ---@type string
   local default = opts.default or "" ---@type string
@@ -90,9 +90,9 @@ function M.open(opts, on_confirm)
   vim.bo[bufnr].bufhidden = "wipe"
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "prompt"
-  vim.bo[bufnr].completefunc = "v:lua.require'era.input'.complete"
+  vim.bo[bufnr].completefunc = "v:lua.require'era.view.input'.complete"
   vim.bo[bufnr].filetype = stl.filetype.UX_INPUT
-  vim.bo[bufnr].omnifunc = "v:lua.require'era.input'.complete"
+  vim.bo[bufnr].omnifunc = "v:lua.require'era.view.input'.complete"
   vim.bo[bufnr].swapfile = false
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
@@ -184,7 +184,7 @@ function M.open(opts, on_confirm)
     end)
   end
 
-  local before_confirm = opts.before_confirm ---@type era.input.BeforeConfirmFn|nil
+  local before_confirm = opts.before_confirm ---@type era.view.input.BeforeConfirmFn|nil
   local block_cancel = opts.block_cancel or false ---@type boolean
   local confirming = false ---@type boolean
 
@@ -206,10 +206,10 @@ function M.open(opts, on_confirm)
         local confirm_cb = function()
           confirming = false
           dispose(text)
-        end ---@type era.input.ConfirmCallback
+        end ---@type era.view.input.ConfirmCallback
         local cancel_cb = function()
           confirming = false
-        end ---@type era.input.CancelCallback
+        end ---@type era.view.input.CancelCallback
         before_confirm(text, confirm_cb, cancel_cb)
       else
         dispose(text)

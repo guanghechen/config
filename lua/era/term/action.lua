@@ -90,7 +90,7 @@ function M.create()
     return
   end
 
-  ---@type era.choices.IItem[]
+  ---@type era.view.select.IItem[]
   local items = {}
   for index, profile in ipairs(profiles) do
     table.insert(items, {
@@ -102,7 +102,7 @@ function M.create()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local mouse = vim.fn.getmousepos()
 
-  era.choices.open({
+  era.view.Select.open({
     title = "Select terminal profile",
     relative = "win",
     win = winnr,
@@ -226,7 +226,7 @@ function M.rename()
     return
   end
 
-  ---@type era.input.IOptions
+  ---@type era.view.input.IOptions
   local input_opts = {
     prompt = "Enter new terminal name: ",
     default = termmeta.name,

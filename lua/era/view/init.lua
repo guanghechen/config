@@ -1,7 +1,9 @@
 ---@class era.view.__mods
 local __mods = {
+  Input = "era.view.input",
   Plainfile = "era.view.plainfile",
   Printer = "era.view.printer",
+  Select = "era.view.select",
   Setting = "era.view.setting",
   Textarea = "era.view.textarea",
   Tree = "era.view.tree",
@@ -9,8 +11,10 @@ local __mods = {
 
 ---@class era.view
 ---@field public __mods                 era.view.__mods
+---@field public Input                  era.view.input
 ---@field public Plainfile              era.view.Plainfile
 ---@field public Printer                era.view.Printer
+---@field public Select                 era.view.select
 ---@field public Setting                era.view.Setting
 ---@field public Textarea               era.view.Textarea
 ---@field public Tree                   era.view.Tree
