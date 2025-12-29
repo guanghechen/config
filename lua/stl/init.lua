@@ -79,6 +79,7 @@ local __mods = {
   color = "stl.external.color",
   easing = "stl.external.easing",
 
+  debug = "stl.debug",
   env = "stl.env",
   fileicon = "stl.fileicon",
   filetype = "stl.filetype",
@@ -97,6 +98,7 @@ local __mods = {
 ---
 ---@field public dict                   stl.dict
 ---
+---@field public debug                  stl.debug
 ---@field public env                    stl.env
 ---@field public fileicon               stl.fileicon
 ---@field public filetype               stl.filetype

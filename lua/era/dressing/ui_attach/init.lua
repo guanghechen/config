@@ -125,7 +125,7 @@ local function ui_attach_callback(event, kind, ...)
   local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
   if devmode then
     if not DEVMODE_IGNORED_EVENTS[event] then
-      ark.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
+      stl.debug.log_silent(string.format("DEVMODE | %s", event), { event, kind, ... })
     end
   end
 

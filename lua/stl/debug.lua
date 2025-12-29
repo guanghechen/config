@@ -1,4 +1,4 @@
----@class ark.t.IDebugCmdParams
+---@class stl.t.IDebugCmdParams
 ---@field public cmd                    string|string[]
 ---@field public level                  ?integer|nil
 ---@field public title                  ?string
@@ -10,7 +10,7 @@
 ---@field public header                 ?string
 ---@field public props                  ?table<string, string>
 
----@class ark.debug
+---@class stl.debug
 local M = {}
 setmetatable(M, {
   ---@param title                       string|unknown

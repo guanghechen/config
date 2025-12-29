@@ -302,7 +302,7 @@ if 1 == 0 then
         local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
         local buftype2 = vim.bo[bufnr2].buftype ---@type string
         local filetype2 = vim.bo[bufnr2].filetype ---@type string
-        ark.debug.log_silent({
+        stl.debug.log_silent({
           arg = arg,
           winnr = winnr,
           b1 = {

@@ -167,7 +167,6 @@ local view = setmetatable({ __mods = view__mods }, {
 local __mods = {
   anim = "ark.anim",
   box = "ark.box",
-  debug = "ark.debug",
   fs = "ark.fs",
   G = "ark.G",
   hot = "ark.hot",
@@ -185,7 +184,6 @@ local __mods = {
 ---@field public __mods                 ark.__mods
 ---@field public anim                   ark.anim
 ---@field public box                    ark.box
----@field public debug                  ark.debug
 ---@field public fs                     ark.fs
 ---@field public G                      ark.G
 ---@field public hot                    ark.hot
