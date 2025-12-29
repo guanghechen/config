@@ -27,7 +27,7 @@ if dot.path.is_git_repo() then
 end
 
 vim.schedule(function()
-  require("fml.dressing.statusline")
+  era.statusline.dressing()
   require("fml.dressing.tabline")
   require("fml.dressing.winline")
 

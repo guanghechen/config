@@ -85,6 +85,7 @@ local __mods = {
   scroll = "era.scroll",
   searcher = "era.searcher",
   statuscolumn = "era.statuscolumn",
+  statusline = "era.statusline",
   term = "era.term",
   view = "era.view",
   winpicker = "era.winpicker",
@@ -110,6 +111,7 @@ local __mods = {
 ---@field public scroll                 era.scroll
 ---@field public searcher               era.searcher
 ---@field public statuscolumn           era.statuscolumn
+---@field public statusline             era.statusline
 ---@field public term                   era.term
 ---@field public view                   era.view
 ---@field public winpicker              era.winpicker

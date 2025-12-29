@@ -1,3 +1,6 @@
+---@class era.statusline
+local M = {}
+
 local c = require("era.nvimbar").component
 local Nvimbar = require("era.nvimbar").Nvimbar
 
@@ -54,27 +57,30 @@ statusline
   :place("right", c.nvim.msg_changes(position), 85)
   :place("right", c.nvim.msg_lsp(position), 90)
 
-dirtier:subscribe(stl.c.Subscriber.new({
-  on_next = function()
-    if dirtier:is_dirty() then
+---@return nil
+function M.dressing()
+  dirtier:subscribe(stl.c.Subscriber.new({
+    on_next = function()
+      if dirtier:is_dirty() then
+        statusline:render()
+      end
+    end,
+  }))
+
+  vim.api.nvim_create_autocmd("ModeChanged", {
+    group = stl.nvim.fn.augroup("statusline_on_ModeChanged"),
+    callback = function(evt)
+      local m = evt.match ---@type string
+      if string.sub(m, 1, 2) == "c:" or string.sub(m, #m - 1, #m) == ":c" then
+        vim.schedule(function()
+          local result = statusline:render(true) ---@type string
+          vim.o.statusline = result
+          vim.cmd("redraw")
+        end)
+      end
       statusline:render()
-    end
-  end,
-}))
+    end,
+  })
+end
 
-vim.api.nvim_create_autocmd("ModeChanged", {
-  group = stl.nvim.fn.augroup("statusline_on_ModeChanged"),
-  callback = function(evt)
-    local m = evt.match ---@type string
-    if string.sub(m, 1, 2) == "c:" or string.sub(m, #m - 1, #m) == ":c" then
-      vim.schedule(function()
-        local result = statusline:render(true) ---@type string
-        vim.o.statusline = result
-        vim.cmd("redraw")
-      end)
-    end
-    statusline:render()
-  end,
-})
-
-return statusline
+return M
