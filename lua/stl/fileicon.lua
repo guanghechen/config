@@ -1346,7 +1346,7 @@ function M.get_extension_icon(filepath, filetype)
   end
 
   if item == nil then
-    filetype = filetype or stl.filetype.detect("guanghechen." .. filepath) ---@type string|nil
+    filetype = filetype or stl.filetype.detect(filename) ---@type string|nil
     if filetype ~= nil then
       return M.get_filetype_icon(filetype)
     end
