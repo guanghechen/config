@@ -14,7 +14,7 @@ The current implementation assumes a single persistence backend (the active work
 - `INotepadItem` schema includes `uuid`, human-readable `name`, free-form `content`, and ISO8601 `created_at`/`updated_at` timestamps.
 - Maintains in-memory `items_map`, `orders`, the active UUID, and an observable (`o_active_uuid`) so other modules can react to selection changes.
 - Guarantees at least one item exists (allocates an untitled note on startup) and normalises blank names to `dot.var.BUF_UNTITLED`.
-- Auto-saves with a 10 s `ark.timer.debounce` and exposes `save/flush` helpers for manual persistence.
+- Auto-saves with a 10 s `stl.timer.debounce` and exposes `save/flush` helpers for manual persistence.
 - `set_content` updates timestamps and mirrors the special `chatbox` note into any buffer tagged with `eve.notepad.BUFFER_VAR`, keeping AI/chat integrations in sync.
 - Exposes a full CRUD surface (`create`, `ensure_named_item`, `remove`, `rename`, `set_content`, `append_content`) plus navigation helpers (`focus_*`, `swap_*`, `iterator`, `current`).
 
