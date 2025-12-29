@@ -29,7 +29,7 @@ local o_replace_pattern_history = dot.context.search_file.replace_pattern_histor
 ---@field public includes               string[]
 ---@field public excludes               string[]
 
----@param searcher                      dot.module.searcher.FiletreeComposer
+---@param searcher                      era.searcher.FiletreeComposer
 ---@return nil
 local function edit_setting(searcher)
   local s_search_pattern = o_search_pattern:snapshot() ---@type string
@@ -119,7 +119,7 @@ local function edit_setting(searcher)
     })
 end
 
----@param searcher                      dot.module.searcher.FiletreeComposer
+---@param searcher                      era.searcher.FiletreeComposer
 ---@param rootpath                      string
 ---@return nil
 local function attach(searcher, rootpath)
@@ -132,8 +132,8 @@ local function attach(searcher, rootpath)
   end
 end
 
-local searcher ---@type dot.module.searcher.FiletreeComposer
-searcher = dot.searcher.FiletreeComposer.new({
+local searcher ---@type era.searcher.FiletreeComposer
+searcher = era.searcher.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,

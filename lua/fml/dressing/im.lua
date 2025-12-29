@@ -2,7 +2,7 @@ if stl.env.IS_NIX then
   return
 end
 
-local im = require("dot.module.im") ---@type dot.module.im
+local im = require("era.im") ---@type era.im
 if not im.get_input_method or not im.set_input_method then
   return
 end
@@ -10,7 +10,7 @@ end
 local augroup = stl.nvim.fn.augroup("auto_toggle_im")
 stl.timer.delay(function()
   local previous_mode = "n" ---@type stl.e.VimMode
-  local previous_input_method = nil ---@type dot.module.im.InputMethod|nil
+  local previous_input_method = nil ---@type era.im.InputMethod|nil
   vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = augroup,
     callback = function()

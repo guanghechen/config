@@ -19,7 +19,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
    - The window initially opens with an internal mask buffer (`filetype = stl.filetype.TERM_MASK`) to keep the layout stable while the real terminal buffer is attached.
    - `termline` (the terminal winbar) renders inside this floating window; any time the window resizes the widget recomputes its max width and re-renders the bar.
 
-2. Each terminal tab runs in a dedicated buffer created by `dot.term.state.create`:
+2. Each terminal tab runs in a dedicated buffer created by `era.term.state.create`:
    - Buffer options match expectations for pseudo terminals:
      ```lua
      vim.bo[bufnr].buflisted = false
@@ -30,7 +30,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
      ```
    - When the widget focuses a terminal (`:focus()` / `:toggle_and_focus()`), it ensures the buffer exists, opens the float, and starts the job with `vim.fn.jobstart(..., { pty = true })`.
    - `toggle_and_focus` accepts creation metadata and optional `selected_text`; if a job already exists the text is piped to `termmeta.jobid` after focus.
-   - `TermClose` autocmds translate vim events back through `dot.term.event.on_closed` so the store stays consistent even when the user exits the program inside the terminal.
+   - `TermClose` autocmds translate vim events back through `era.term.event.on_closed` so the store stays consistent even when the user exits the program inside the terminal.
 
 3. The terminal winbar mirrors the Notepad UX and keeps long lists approachable:
    - `lua/dot/module/nvimbar/component/term.lua` exposes `items(position)` and `add_button(position)`. Legacy consumers can still call `term.terms`.
@@ -57,13 +57,13 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 ### Action Layer (`lua/fml/action/term/*.lua`)
 - `create.lua` handles profile selection, shell defaults, toggle behaviour, and rename prompts.
 - `destroy.lua` confirms deletions, picks a fallback terminal, and raises the dirtier when state changes.
-- `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `dot.term` navigation helpers.
+- `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `era.term` navigation helpers.
 - Every action routes notifications through `stl.reporter` and ensures `dot.state.status.dirtier_termline` is marked so the widget winbar stays current.
 
 ### Widget (`lua/dot/module/term/widget.lua`)
 - Owns the floating window lifecycle, mask buffer, terminal buffer creation, and `jobstart` integration.
 - Implements the shared widget API (`focus`, `toggle`, `toggle_and_focus`, `hide`, `resize`, `isvisible`, `isfocused`).
-- Observes `dot.term.state.o_termuuid` to keep the visible buffer in sync and uses `dot.state.status.dirtier_termline` to throttle winbar renders.
+- Observes `era.term.state.o_termuuid` to keep the visible buffer in sync and uses `dot.state.status.dirtier_termline` to throttle winbar renders.
 - When autofocus is requested and text is provided, schedules `vim.api.nvim_chan_send` to feed the active terminal job.
 
 ### Nvimbar Component (`lua/dot/module/nvimbar/component/term.lua`)

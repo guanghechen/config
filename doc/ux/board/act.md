@@ -2,7 +2,7 @@
 
 ## 概述
 
-`dot.board.Act` 是一个通用的输入-预览组件，提供输入框与预览窗口的组合 UI。适用于需要用户输入并实时预览结果的场景，如文件移动、复制、删除确认等操作。
+`era.board.Act` 是一个通用的输入-预览组件，提供输入框与预览窗口的组合 UI。适用于需要用户输入并实时预览结果的场景，如文件移动、复制、删除确认等操作。
 
 ## 架构
 
@@ -23,7 +23,7 @@
 ### 创建实例
 
 ```lua
-local act = dot.board.Act.new({
+local act = era.board.Act.new({
   name = "my_action",                    -- 唯一标识
   title = "Action Title",                -- 标题栏显示
   initial_input = "default value",       -- 输入框初始值

@@ -21,7 +21,7 @@ end
 ---@param filepath_target               string
 ---@return boolean
 local function paste_image(filepath_target)
-  local clipboard = require("dot.module.clipboard")
+  local clipboard = require("era.clipboard")
   local ok = clipboard.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
@@ -59,7 +59,7 @@ end
 
 ---@return nil
 local function paste()
-  local clipboard = require("dot.module.clipboard")
+  local clipboard = require("era.clipboard")
   if not clipboard.has_image() then
     return
   end
@@ -73,7 +73,7 @@ local function paste()
 
   local input_winnr ---@type integer
 
-  input_winnr = dot.input.open({
+  input_winnr = era.input.open({
     prompt = "Save image to",
     default = placeholder,
     relative = "editor",
@@ -94,7 +94,7 @@ local function paste()
       local input_row = input_cfg.row or 3 ---@type integer
       local input_col = input_cfg.col or 0 ---@type integer
 
-      dot.choices.confirm({
+      era.choices.confirm({
         title = "File exists, overwrite?",
         relative = "editor",
         row = input_row + 3,

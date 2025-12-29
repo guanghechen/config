@@ -310,7 +310,7 @@ local o_flag_regex = dot.context.select.lsp_symbols.flag_regex ---@type stl.c.Ob
 local o_flag_case_sensitive = dot.context.select.lsp_symbols.flag_case_sensitive ---@type stl.c.Observable
 local o_flag_viewtype = dot.context.select.lsp_symbols.flag_viewtype ---@type stl.c.Observable
 local o_flag_foldempty = dot.context.select.lsp_symbols.flag_foldempty ---@type stl.c.Observable
-local picker ---@type dot.module.picker.TreeComposer
+local picker ---@type era.picker.TreeComposer
 
 ---@param kindname                      string
 ---@return string, string
@@ -550,7 +550,7 @@ end
 ---@return nil
 local function refresh()
   local tree = picker._tree ---@type stl.c.Tree
-  local treeview = picker._treeview ---@type dot.module.picker.TreeView
+  local treeview = picker._treeview ---@type era.picker.TreeView
 
   _tick_refresh = _tick_refresh + 1
   local tick_refresh = _tick_refresh
@@ -598,7 +598,7 @@ local function render_symbol(_, node)
   }
 end
 
----@type dot.module.picker.view.tree.ITreeviewContainerNodeRenderer
+---@type era.picker.view.tree.ITreeviewContainerNodeRenderer
 local function render_treeview_container(_, node, _, _, folded_depth)
   if folded_depth == 0 then
     return render_symbol(_, node)
@@ -773,7 +773,7 @@ local function goto_symbol(nodeuuid)
   vim.cmd("normal! zv zz")
 end
 
-picker = dot.picker.TreeComposer.new({
+picker = era.picker.TreeComposer.new({
   name = name,
   permanent = true,
   title = title,

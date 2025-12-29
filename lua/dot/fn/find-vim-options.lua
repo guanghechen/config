@@ -8,7 +8,7 @@ local title = "Find Vim Options" ---@type string
 ---@field public value                  string|number|boolean
 ---@field public text                   string
 
----@class dot.fn.find_vim_options.IItem : dot.module.picker.composer.list.IItem
+---@class dot.fn.find_vim_options.IItem : era.picker.composer.list.IItem
 ---@field public data                   dot.fn.find_vim_options.IItemData
 
 local WIDTH_NAME = 25 ---@type integer
@@ -25,7 +25,7 @@ local o_flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
 local o_flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 local o_flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
----@return dot.module.picker.composer.list.IResetData
+---@return era.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -76,11 +76,11 @@ local function fetch_data()
     return a.data.name < b.data.name
   end)
 
-  ---@type dot.module.picker.composer.list.IResetData
+  ---@type era.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker = dot.picker.ListComposer.new({
+local picker = era.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -129,7 +129,7 @@ local picker = dot.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type dot.module.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type era.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -149,7 +149,7 @@ local picker = dot.picker.ListComposer.new({
   end,
 
   on_refresh = function(composer)
-    local data = fetch_data() ---@type dot.module.picker.composer.list.IResetData
+    local data = fetch_data() ---@type era.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

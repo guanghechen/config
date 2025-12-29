@@ -5,7 +5,7 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     dot.tab.on_buf_delete(tabnr)
     dot.buf.on_close(bufnr)
-    dot.term.event.on_buf_deleted(bufnr)
+    era.term.event.on_buf_deleted(bufnr)
   end,
 })
 
@@ -255,7 +255,7 @@ vim.api.nvim_create_autocmd("LspDetach", {
     local client = vim.lsp.get_client_by_id(client_id)
     local bufnr = args.buf
     if client ~= nil then
-      dot.lsp.event.on_detach(client, bufnr)
+      era.lsp.event.on_detach(client, bufnr)
     end
   end,
 })

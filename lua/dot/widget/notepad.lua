@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
 
-local c = require("dot.module.nvimbar").component
-local Nvimbar = require("dot.module.nvimbar").Nvimbar
+local c = require("era.nvimbar").component
+local Nvimbar = require("era.nvimbar").Nvimbar
 
 local DEFAULT_WIDTH = 0.6
 local DEFAULT_HEIGHT = 0.6
@@ -275,7 +275,7 @@ end
 ---@field protected _winnr              integer|nil
 ---@field protected _suspend_sync       boolean
 ---@field protected _buf_autocmds       integer[]
----@field protected _nvimbar            dot.module.nvimbar.Nvimbar|nil
+---@field protected _nvimbar            era.nvimbar.Nvimbar|nil
 ---@field protected _subscription_active stl.c.IUnsubscribable|nil
 ---@field protected _subscription_winbar stl.c.IUnsubscribable|nil
 ---@field protected _subscription_source stl.c.IUnsubscribable|nil

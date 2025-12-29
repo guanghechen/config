@@ -2,12 +2,12 @@
 
 ## 概述
 
-`dot.module.explorer` 是一个原生文件资源管理器模块，采用基于 URI 的抽象设计，支持未来扩展至多种资源类型。模块通过 tick 机制实现高效的状态管理，使节点的展开/折叠、选中、加载等状态判断与更新都能在 O(depth) 复杂度内完成。
+`era.explorer` 是一个原生文件资源管理器模块，采用基于 URI 的抽象设计，支持未来扩展至多种资源类型。模块通过 tick 机制实现高效的状态管理，使节点的展开/折叠、选中、加载等状态判断与更新都能在 O(depth) 复杂度内完成。
 
 ## 架构
 
 ```
-dot.module.explorer/
+era.explorer/
 ├── action.lua       # 动作逻辑（文件操作、导航等）
 ├── node.lua         # 节点定义与状态查询
 ├── tree.lua         # 树结构管理与操作
@@ -74,7 +74,7 @@ widget.lua (Widget) ← action.lua (动作)
 `resource.IManager` 定义了资源操作的统一接口：
 
 ```lua
----@class dot.module.explorer.resource.IManager
+---@class era.explorer.resource.IManager
 ---@field public compare      fun(left, right): integer
 ---@field public create       fun(self, uri): INode|nil
 ---@field public copy         fun(self, source_uri, target_uri): boolean
@@ -105,7 +105,7 @@ Tick 机制通过整数比较和奇偶判断解决这些问题，核心思想是
 #### 全局状态 (State)
 
 ```lua
----@class dot.module.explorer.State
+---@class era.explorer.State
 ---@field public tick_expanded    integer  -- 全局展开计数器
 ---@field public tick_loaded      integer  -- 全局加载计数器
 ---@field public tick_selected    integer  -- 全局选中计数器
@@ -118,11 +118,11 @@ State 维护三个全局计数器，每次状态变更时递增以生成新的 t
 每个节点包含两层状态：
 
 ```lua
----@class dot.module.explorer.node.IRootState
+---@class era.explorer.node.IRootState
 ---@field public tick_expanded    integer  -- 子树级展开 tick
 ---@field public tick_selected    integer  -- 子树级选中 tick
 
----@class dot.module.explorer.node.INodeState
+---@class era.explorer.node.INodeState
 ---@field public tick_expanded    integer  -- 节点级展开 tick
 ---@field public tick_loaded      integer  -- 节点级加载 tick
 ```
@@ -536,14 +536,14 @@ end
 
 **Context 接口**：
 ```lua
----@class dot.module.explorer.action.IContext
----@field public widget              dot.module.explorer.Widget
----@field public tree                dot.module.explorer.Tree
----@field public resource_manager    dot.module.explorer.resource.FileManager
+---@class era.explorer.action.IContext
+---@field public widget              era.explorer.Widget
+---@field public tree                era.explorer.Tree
+---@field public resource_manager    era.explorer.resource.FileManager
 ---@field public fullname            string
 ---@field public get_cursor_uri      fun(): string|nil
 ---@field public get_parent_uri      fun(uri: string): string|nil
----@field public get_visual_nodes    fun(): dot.module.explorer.Node[]
+---@field public get_visual_nodes    fun(): era.explorer.Node[]
 ---@field public refresh             fun(skip_refresh?: boolean): nil
 ---@field public render              fun(): nil
 ---@field public sync_cursor_to_uri  fun(uri: string): nil
@@ -648,7 +648,7 @@ Widget 层封装，提供标准 Widget API 和快捷键绑定：
 
 ### Act UI
 
-`md`、`mx`、`mc` 操作使用 `dot.board.Act` 组件（详见 [Act 文档](../ux/board/act.md)），提供输入框与预览窗口的组合 UI。
+`md`、`mx`、`mc` 操作使用 `era.board.Act` 组件（详见 [Act 文档](../ux/board/act.md)），提供输入框与预览窗口的组合 UI。
 
 #### 路径显示规则
 
@@ -761,11 +761,11 @@ Act UI 支持以下交互：
 ### 添加新的 Resource 类型
 
 1. 在 `resource/` 目录下创建新实现（如 `sftp.lua`）
-2. 实现 `dot.module.explorer.resource.IManager` 接口
+2. 实现 `era.explorer.resource.IManager` 接口
 3. 在创建 Tree 时传入新的 resource_manager
 
 ```lua
-local SftpManager = require("dot.module.explorer.resource.sftp")
+local SftpManager = require("era.explorer.resource.sftp")
 local tree = Tree.new({
   name = "sftp-explorer",
   protocol = "sftp://",

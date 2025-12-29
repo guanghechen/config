@@ -17,38 +17,38 @@ local CONFIG_FILENAMES = {
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = dot.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = era.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  dot.lsp.event.before_init(params, config)
+  era.lsp.event.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 ---@return nil
 local function on_attach(client, bufnr)
-  dot.lsp.event.on_attach(client, bufnr)
+  era.lsp.event.on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  dot.lsp.event.on_detach(client, bufnr)
+  era.lsp.event.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  dot.lsp.event.on_init(client, config)
+  era.lsp.event.on_init(client, config)
 end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = dot.lsp.event.get_capabilities(),
+  capabilities = era.lsp.event.get_capabilities(),
   cmd = { "vue-language-server", "--stdio" },
   filetypes = { "vue" },
   root_markers = { "package.json", "tsconfig.json", "jsconfig.json", ".git" },

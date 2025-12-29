@@ -33,7 +33,7 @@ local conds = {
   end,
 }
 
----@type dot.module.plugin.IRawSpec[]
+---@type era.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
   { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
@@ -68,7 +68,7 @@ local no_details_module_names = {
   "nvim-nio",
 }
 
----@type dot.module.plugin.IPluginSpec[]
+---@type era.plugin.IPluginSpec[]
 local specs = {}
 for _, raw_spec in ipairs(raw_specs) do
   local url = "https://github.com/guanghechen/mirror.git" ---@type string
@@ -77,7 +77,7 @@ for _, raw_spec in ipairs(raw_specs) do
   local branch = raw_spec.branch or ("nvim@" .. name) ---@type string
   local cond = raw_spec.cond ---@type fun(): boolean
 
-  ---@type dot.module.plugin.IPluginSpec
+  ---@type era.plugin.IPluginSpec
   local spec = {
     url = url,
     branch = branch,
@@ -108,4 +108,4 @@ for _, raw_spec in ipairs(raw_specs) do
   specs[#specs + 1] = spec
 end
 
-require("dot.module.plugin").setup(specs)
+require("era.plugin").setup(specs)

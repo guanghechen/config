@@ -11,7 +11,7 @@ function M.refresh_all()
 
   vim.cmd("checktime")
   dot.tab.refresh()
-  dot.git.state.refresh_async(true)
+  era.git.state.refresh_async(true)
 
   pcall(function()
     if vim.treesitter and bufnr_sourcefile ~= nil then

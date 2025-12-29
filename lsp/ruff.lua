@@ -4,13 +4,13 @@
 ---@param params                        lsp.InitializeParams
 ---@param config                        table
 local function before_init(params, config)
-  dot.lsp.event.before_init(params, config)
+  era.lsp.event.before_init(params, config)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  dot.lsp.event.on_attach(client, bufnr)
+  era.lsp.event.on_attach(client, bufnr)
 
   client.server_capabilities.hoverProvider = false
   client.server_capabilities.completionProvider = nil
@@ -38,18 +38,18 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  dot.lsp.event.on_detach(client, bufnr)
+  era.lsp.event.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  dot.lsp.event.on_init(client, config)
+  era.lsp.event.on_init(client, config)
 end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = dot.lsp.event.get_capabilities(),
+  capabilities = era.lsp.event.get_capabilities(),
   cmd = { "ruff", "server" },
   filetypes = { "python" },
   root_markers = { "pyproject.toml", "ruff.toml", ".ruff.toml", ".git" },

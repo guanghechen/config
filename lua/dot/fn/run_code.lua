@@ -137,7 +137,7 @@ local runners = {
   },
   mjs = {
     run = function(filepath)
-      ---@param termmeta                dot.module.term.IMeta
+      ---@param termmeta                era.term.IMeta
       ---@return nil
       local function handle(termmeta)
         local bufnr = termmeta.bufnr ---@type integer|nil
@@ -149,7 +149,7 @@ local runners = {
       end
 
       local termuuid = "9b2efac7-b9e3-4ee3-aa51-2dc394b500f5" ---@type string
-      dot.term.widget:toggle_and_focus({
+      era.term.widget:toggle_and_focus({
         uuid = termuuid,
         type = "runner",
         name = "code runner (mjs)",
@@ -159,7 +159,7 @@ local runners = {
       })
 
       stl.timer.delay(function()
-        local termmeta = dot.term.state.get(termuuid) ---@type dot.module.term.IMeta|nil
+        local termmeta = era.term.state.get(termuuid) ---@type era.term.IMeta|nil
         if termmeta ~= nil then
           handle(termmeta)
         end

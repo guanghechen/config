@@ -93,14 +93,14 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
     return winnrs[1]
   end
 
-  local masks = {} ---@type table<integer, dot.module.winpicker>
+  local masks = {} ---@type table<integer, era.winpicker>
   local winnr_target = nil ---@type integer|nil
 
   pcall(function()
     for i = 1, N, 1 do
       local winnr = winnrs[i] ---@type integer
       local char = config.chars[i] ---@type string
-      local mask = dot.winpicker.new(char:lower()) ---@type dot.module.winpicker
+      local mask = era.winpicker.new(char:lower()) ---@type era.winpicker
       masks[winnr] = mask
     end
 

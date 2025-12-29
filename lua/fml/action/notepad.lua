@@ -18,11 +18,11 @@ if widget:current_item() == nil then
   end
 end
 
----@class fml.action.notepad.ISourceItem : dot.module.picker.composer.list.IItem
+---@class fml.action.notepad.ISourceItem : era.picker.composer.list.IItem
 ---@field public data                   { name: string, title: string, filepath: string }
 ---@field public text_lower             string
 
----@return dot.module.picker.composer.list.IResetData
+---@return era.picker.composer.list.IResetData
 local function fetch_source_data()
   dirty_data = false
 
@@ -44,7 +44,7 @@ local function fetch_source_data()
     }
   end
 
-  ---@type dot.module.picker.composer.list.IResetData
+  ---@type era.picker.composer.list.IResetData
   return {
     items = items,
     uuid_current = current_source.name,
@@ -52,8 +52,8 @@ local function fetch_source_data()
   }
 end
 
-local source_picker ---@type dot.module.picker.ListComposer|nil
-source_picker = dot.picker.ListComposer.new({
+local source_picker ---@type era.picker.ListComposer|nil
+source_picker = era.picker.ListComposer.new({
   name = __module_name__ .. ".source_select",
   permanent = true,
   title = "Select Notepad Source",
@@ -67,12 +67,12 @@ source_picker = dot.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.ISourceItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No source selected" })
-      ---@type dot.module.picker.preview.IDrawResult
+      ---@type era.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -85,7 +85,7 @@ source_picker = dot.picker.ListComposer.new({
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    ---@type dot.module.picker.preview.IDrawResult
+    ---@type era.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = false,
@@ -302,7 +302,7 @@ function M.rename()
     return
   end
 
-  ---@type dot.module.input.IOptions
+  ---@type era.input.IOptions
   local input_opts = {
     prompt = "Rename notepad item:",
     default = item.name,
@@ -472,11 +472,11 @@ function M.source_next()
   })
 end
 
----@class fml.action.notepad.INoteItem : dot.module.picker.composer.list.IItem
+---@class fml.action.notepad.INoteItem : era.picker.composer.list.IItem
 ---@field public data                   dot.t.INotepadItemMeta
 ---@field public text_lower             string
 
----@return dot.module.picker.composer.list.IResetData
+---@return era.picker.composer.list.IResetData
 local function fetch_notes_data()
   local source = widget:get_source() ---@type dot.t.INotepadSource
   local current_item = widget:current_item() ---@type dot.t.INotepadItemState|nil
@@ -492,7 +492,7 @@ local function fetch_notes_data()
     }
   end
 
-  ---@type dot.module.picker.composer.list.IResetData
+  ---@type era.picker.composer.list.IResetData
   return {
     items = items,
     uuid_current = current_item and current_item.uuid or nil,
@@ -500,8 +500,8 @@ local function fetch_notes_data()
   }
 end
 
-local notes_picker ---@type dot.module.picker.ListComposer|nil
-notes_picker = dot.picker.ListComposer.new({
+local notes_picker ---@type era.picker.ListComposer|nil
+notes_picker = era.picker.ListComposer.new({
   name = __module_name__ .. ".note_select",
   permanent = true,
   title = "Select Note",
@@ -515,12 +515,12 @@ notes_picker = dot.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.INoteItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No note selected" })
-      ---@type dot.module.picker.preview.IDrawResult
+      ---@type era.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -534,7 +534,7 @@ notes_picker = dot.picker.ListComposer.new({
 
     if note == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Failed to load note content" })
-      ---@type dot.module.picker.preview.IDrawResult
+      ---@type era.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = false,
@@ -547,7 +547,7 @@ notes_picker = dot.picker.ListComposer.new({
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
     vim.bo[bufnr].filetype = "markdown"
 
-    ---@type dot.module.picker.preview.IDrawResult
+    ---@type era.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = true,
@@ -573,12 +573,12 @@ notes_picker = dot.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.notepad.IEngineItem : dot.module.picker.composer.list.IItem
+---@class fml.action.notepad.IEngineItem : era.picker.composer.list.IItem
 ---@field public data                   { engine: 'json'|'folder', description: string }
 ---@field public text_lower             string
 
-local engine_picker ---@type dot.module.picker.ListComposer|nil
-engine_picker = dot.picker.ListComposer.new({
+local engine_picker ---@type era.picker.ListComposer|nil
+engine_picker = era.picker.ListComposer.new({
   name = __module_name__ .. ".engine_select",
   permanent = true,
   title = "Select Storage Engine",
@@ -592,7 +592,7 @@ engine_picker = dot.picker.ListComposer.new({
 
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
-    local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
     ---@cast item fml.action.notepad.IEngineItem|nil
 
     if item == nil then
@@ -672,7 +672,7 @@ function M.change_engine()
     },
   }
 
-  ---@type dot.module.picker.composer.list.IResetData
+  ---@type era.picker.composer.list.IResetData
   local data = {
     items = items,
     uuid_current = current_config.engine,

@@ -190,7 +190,7 @@ Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and
 - `dot.theme.scheme["catppuccin-mocha"]` → `require("dot.theme.scheme.catppuccin-mocha")`
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
 - `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern
-- `dot.git.*`, `dot.picker.*`, `dot.searcher.*`, `dot.board.*` → module subcomponents
+- `era.git.*`, `era.picker.*`, `era.searcher.*`, `era.board.*` → module subcomponents
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
 ### Vendor Entry Points
@@ -209,7 +209,7 @@ The neovim vendor additionally loads:
 - `dot.autocmd` - Core autocommands
 - `fml.dressing.*` - UI dressing modules
 - `fml.command` - Command implementations
-- `dot.module.git` - Git module (if in git repo)
+- `era.git` - Git module (if in git repo)
 - `fml.plugin` - Plugin management
 
 ### Rust-Lua Bridge
@@ -269,7 +269,7 @@ The neovim vendor additionally loads:
   ```
 - Union type aliases must have each union item on its own line with `---| ` prefix, using double quotes for string literals:
   ```lua
-  ---@alias dot.git.StageState
+  ---@alias era.git.StageState
   ---| "staged"
   ---| "unstaged"
   ---| "mixed"

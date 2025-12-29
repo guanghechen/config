@@ -7,7 +7,7 @@
 ## 模块架构
 
 ```
-dot.module.git/
+era.git/
 ├── init.lua      -- 入口，初始化 watcher、autocmd、暴露公共 API
 ├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
 ├── repo.lua      -- Git 仓库抽象，封装常用操作
@@ -79,7 +79,7 @@ M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
 每个 buffer 维护独立的 hunk 缓存：
 
 ```lua
----@class dot.module.git.buffer.ICache
+---@class era.git.buffer.ICache
 ---@field public compare_text       string[]|nil  -- HEAD 内容
 ---@field public compare_text_index string[]|nil  -- Index 内容
 ---@field public hunks              Hunk[]|nil    -- Index vs Buffer（未暂存变更）
@@ -203,7 +203,7 @@ Stage 状态：
 ## 公共 API
 
 ```lua
-local git = dot.git
+local git = era.git
 
 -- 状态查询
 git.get_branch()                    -- 获取当前分支名

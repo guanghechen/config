@@ -1,10 +1,10 @@
-local c = require("dot.module.nvimbar").component
-local Nvimbar = require("dot.module.nvimbar").Nvimbar
+local c = require("era.nvimbar").component
+local Nvimbar = require("era.nvimbar").Nvimbar
 
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
 local position = "f_tl" ---@type stl.e.NvimbarPositionEnum
 
-local tabline ---@type dot.module.nvimbar.Nvimbar
+local tabline ---@type era.nvimbar.Nvimbar
 tabline = Nvimbar.new({
   name = "tabline",
   comp_sep = "",

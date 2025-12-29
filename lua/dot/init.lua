@@ -51,7 +51,7 @@ local __fn__mods = {
 ---@field public search_in_files        fun(rootpath: string|"cwd"|"directory"|"workspace"|"file"|nil, reset_input: boolean|nil): nil
 ---@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
 ---@field public select_copy_filepaths  fun(params: dot.fn.select_copy_filepaths.IParams): integer
----@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): dot.module.picker.ListComposer
+---@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): era.picker.ListComposer
 local fn = setmetatable({
   __mods = __fn__mods,
 }, {
@@ -229,16 +229,6 @@ local widget = setmetatable({
 
 ---@class dot.__mods
 local __mods = {
-  board = "dot.module.board",
-  choices = "dot.module.choices",
-  git = "dot.module.git",
-  input = "dot.module.input",
-  lsp = "dot.module.lsp",
-  picker = "dot.module.picker",
-  searcher = "dot.module.searcher",
-  term = "dot.module.term",
-  winpicker = "dot.module.winpicker",
-
   buf = "dot.buf",
   command = "dot.command",
   context = "dot.context",
@@ -256,14 +246,6 @@ local __mods = {
 
 ---@class dot
 ---@field public __mods                 dot.__mods
----@field public board                  dot.module.board
----@field public choices                dot.module.choices
----@field public git                    dot.module.git
----@field public input                  dot.module.input
----@field public lsp                    dot.module.lsp
----@field public picker                 dot.module.picker
----@field public searcher               dot.module.searcher
----@field public winpicker              dot.module.winpicker
 ---
 ---@field public command                dot.command
 ---@field public context                dot.context
@@ -272,7 +254,6 @@ local __mods = {
 ---@field public notifier               dot.notifier
 ---@field public session                dot.session
 ---@field public state                  dot.state
----@field public term                   dot.term
 ---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
 ---@field public ux                     dot.ux

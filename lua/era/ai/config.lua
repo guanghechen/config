@@ -1,0 +1,67 @@
+---@class era.ai.config
+local M = {}
+
+---@type era.ai.AgentName[]
+M.agents = { "claude", "codex", "copilot", "gemini" }
+
+---@type table<era.ai.AgentName, string>
+M.agent_labels = {
+  claude = "claude",
+  codex = "codex",
+  copilot = "copilot",
+  gemini = "gemini",
+}
+
+---@type table<era.ai.AgentName, era.ai.IToolConfig>
+M.tools = {
+  claude = {
+    cmd = "claude",
+    args = function()
+      return { "--dangerously-skip-permissions" }
+    end,
+    env = function()
+      return { CLAUDE_CONFIG_DIR = vim.env.CLAUDE_CONFIG_DIR }
+    end,
+    proc_pattern = "\\<claude\\>",
+    url = "https://github.com/anthropics/claude-code",
+    vim_mode = true,
+  },
+  codex = {
+    cmd = "codex",
+    args = function(cwd)
+      return { "--cd", cwd, "--dangerously-bypass-approvals-and-sandbox" }
+    end,
+    env = function()
+      return { CODEX_HOME = vim.env.CODEX_HOME }
+    end,
+    proc_pattern = "\\<codex\\>",
+    url = "https://github.com/openai/codex",
+    vim_mode = false,
+  },
+  copilot = {
+    cmd = "copilot",
+    args = function()
+      return { "--banner" }
+    end,
+    env = function()
+      return {}
+    end,
+    proc_pattern = "\\<copilot\\>",
+    url = "https://github.com/github/copilot-cli",
+    vim_mode = false,
+  },
+  gemini = {
+    cmd = "gemini",
+    args = function()
+      return {}
+    end,
+    env = function()
+      return {}
+    end,
+    proc_pattern = "\\<gemini\\>",
+    url = "https://github.com/google-gemini/gemini-cli",
+    vim_mode = true,
+  },
+}
+
+return M

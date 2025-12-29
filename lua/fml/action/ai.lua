@@ -78,26 +78,26 @@ end
 
 ---@return nil
 function M.attach_agent()
-  require("dot.module.ai.action").show_attach_picker()
+  require("era.ai.action").show_attach_picker()
 end
 
 ---@return nil
 function M.detach_agent()
-  require("dot.module.ai.action").show_detach_picker()
+  require("era.ai.action").show_detach_picker()
 end
 
 ---@return nil
 function M.submit_buffer()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local text = stl.nvim.buf.retrieve_split_block(winnr) ---@type string
-  require("dot.module.ai.action").send_to_attached(text, true)
+  require("era.ai.action").send_to_attached(text, true)
 end
 
 ---@return nil
 function M.submit_selection()
   local text = stl.nvim.buf.retrieve_selected_text() or ""
   if #text > 0 then
-    require("dot.module.ai.action").send_to_attached(text, true)
+    require("era.ai.action").send_to_attached(text, true)
   end
 end
 
@@ -106,14 +106,14 @@ function M.send_buffer()
   local bufnr = vim.api.nvim_get_current_buf()
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local text = table.concat(lines, "\n")
-  require("dot.module.ai.action").send_to_attached(text, false)
+  require("era.ai.action").send_to_attached(text, false)
 end
 
 ---@return nil
 function M.send_selection()
   local text = stl.nvim.buf.retrieve_selected_text() or ""
   if #text > 0 then
-    require("dot.module.ai.action").send_to_attached(text, false)
+    require("era.ai.action").send_to_attached(text, false)
   end
 end
 
@@ -122,7 +122,7 @@ function M.send_this()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   local text = table.concat(lines, "\n")
-  require("dot.module.ai.action").send_to_attached(text, false)
+  require("era.ai.action").send_to_attached(text, false)
 end
 
 ---@return nil
@@ -139,13 +139,13 @@ function M.send_file()
 
   local location, _ = dot.uri.file_location({ filepath = filepath })
   if location then
-    require("dot.module.ai.action").send_to_attached(location, false)
+    require("era.ai.action").send_to_attached(location, false)
   end
 end
 
 ---@return nil
 function M.select_prompt()
-  require("dot.module.ai.action").show_prompt_picker()
+  require("era.ai.action").show_prompt_picker()
 end
 
 return M

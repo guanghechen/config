@@ -526,19 +526,19 @@ command
   .implement({
     uuid = K.git.browse.uuid,
     action = function()
-      dot.git.browse.open()
+      era.git.browse.open()
     end,
   })
   .implement({
     uuid = K.git.browse_permalink.uuid,
     action = function()
-      dot.git.browse.open({ what = "permalink" })
+      era.git.browse.open({ what = "permalink" })
     end,
   })
   .implement({
     uuid = K.git.browse_repo.uuid,
     action = function()
-      dot.git.browse.open({ what = "repo" })
+      era.git.browse.open({ what = "repo" })
     end,
   })
 
@@ -547,13 +547,13 @@ command
   .implement({
     uuid = K.git.blame.uuid,
     action = function()
-      dot.git.blame.inline_toggle()
+      era.git.blame.inline_toggle()
     end,
   })
   .implement({
     uuid = K.git.blame_buffer.uuid,
     action = function()
-      dot.git.blame.buffer_toggle()
+      era.git.blame.buffer_toggle()
     end,
   })
   .implement({
@@ -562,7 +562,7 @@ command
       if vim.wo.diff then
         vim.cmd.normal({ "[c", bang = true })
       else
-        dot.git.hunk.nav("prev")
+        era.git.hunk.nav("prev")
       end
     end,
   })
@@ -572,7 +572,7 @@ command
       if vim.wo.diff then
         vim.cmd.normal({ "]c", bang = true })
       else
-        dot.git.hunk.nav("next")
+        era.git.hunk.nav("next")
       end
     end,
   })
@@ -582,7 +582,7 @@ command
       if vim.wo.diff then
         vim.cmd.normal({ "[c", bang = true })
       else
-        dot.git.hunk.nav_all("prev")
+        era.git.hunk.nav_all("prev")
       end
     end,
   })
@@ -592,65 +592,65 @@ command
       if vim.wo.diff then
         vim.cmd.normal({ "]c", bang = true })
       else
-        dot.git.hunk.nav_all("next")
+        era.git.hunk.nav_all("next")
       end
     end,
   })
   .implement({
     uuid = K.git.hunk_preview.uuid,
     action = function()
-      dot.git.hunk.preview()
+      era.git.hunk.preview()
     end,
   })
   .implement({
     uuid = K.git.hunk_stage.uuid,
     action = function()
-      dot.git.hunk.stage()
+      era.git.hunk.stage()
     end,
   })
   .implement({
     uuid = K.git.hunk_stage_visual.uuid,
     action = function()
       local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
-      dot.git.hunk.stage({ lnum_start, lnum_end })
+      era.git.hunk.stage({ lnum_start, lnum_end })
     end,
   })
   .implement({
     uuid = K.git.hunk_unstage.uuid,
     action = function()
-      dot.git.hunk.unstage()
+      era.git.hunk.unstage()
     end,
   })
   .implement({
     uuid = K.git.hunk_unstage_visual.uuid,
     action = function()
       local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
-      dot.git.hunk.unstage({ lnum_start, lnum_end })
+      era.git.hunk.unstage({ lnum_start, lnum_end })
     end,
   })
   .implement({
     uuid = K.git.hunk_reset.uuid,
     action = function()
-      dot.git.hunk.reset()
+      era.git.hunk.reset()
     end,
   })
   .implement({
     uuid = K.git.hunk_reset_visual.uuid,
     action = function()
       local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
-      dot.git.hunk.reset({ lnum_start, lnum_end })
+      era.git.hunk.reset({ lnum_start, lnum_end })
     end,
   })
   .implement({
     uuid = K.git.stage_buffer.uuid,
     action = function()
-      dot.git.hunk.stage_buffer()
+      era.git.hunk.stage_buffer()
     end,
   })
   .implement({
     uuid = K.git.reset_buffer.uuid,
     action = function()
-      dot.git.hunk.reset_buffer()
+      era.git.hunk.reset_buffer()
     end,
   })
 
@@ -752,14 +752,14 @@ command
     uuid = K.lsp.goto_prev_reference.uuid,
     action = function()
       local step = vim.v.count1 ---@type integer
-      require("dot.module.illuminate").jump(-step, true)
+      require("era.illuminate").jump(-step, true)
     end,
   })
   .implement({
     uuid = K.lsp.goto_next_reference.uuid,
     action = function()
       local step = vim.v.count1 ---@type integer
-      require("dot.module.illuminate").jump(step, true)
+      require("era.illuminate").jump(step, true)
     end,
   })
   .implement({
@@ -1096,55 +1096,55 @@ command
   .implement({
     uuid = K.term.create.uuid,
     action = function()
-      dot.term.action.create()
+      era.term.action.create()
     end,
   })
   .implement({
     uuid = K.term.destroy.uuid,
     action = function()
-      dot.term.action.destroy()
+      era.term.action.destroy()
     end,
   })
   .implement({
     uuid = K.term.rename.uuid,
     action = function()
-      dot.term.action.rename()
+      era.term.action.rename()
     end,
   })
   .implement({
     uuid = K.term.toggle.uuid,
     action = function()
-      dot.term.action.toggle()
+      era.term.action.toggle()
     end,
   })
   .implement({
     uuid = K.term.lazygit_cwd.uuid,
     action = function()
-      dot.term.action.lazygit_cwd()
+      era.term.action.lazygit_cwd()
     end,
   })
   .implement({
     uuid = K.term.lazygit_file_history.uuid,
     action = function()
-      dot.term.action.lazygit_file_history()
+      era.term.action.lazygit_file_history()
     end,
   })
   .implement({
     uuid = K.term.yazi_cwd.uuid,
     action = function()
-      dot.term.action.yazi_cwd()
+      era.term.action.yazi_cwd()
     end,
   })
   .implement({
     uuid = K.term.yazi_workspace.uuid,
     action = function()
-      dot.term.action.yazi_workspace()
+      era.term.action.yazi_workspace()
     end,
   })
   .implement({
     uuid = K.term.yazi_reveal.uuid,
     action = function()
-      dot.term.action.yazi_reveal()
+      era.term.action.yazi_reveal()
     end,
   })
 
@@ -1153,8 +1153,8 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.term["focus_" .. tostring(index)].uuid,
     action = function()
-      if dot.term.state.focus(index) then
-        dot.term.widget:focus()
+      if era.term.state.focus(index) then
+        era.term.widget:focus()
       end
     end,
   })
@@ -1165,52 +1165,52 @@ command
     uuid = K.term.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      dot.term.action.focus_left(ok and step or nil)
+      era.term.action.focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      dot.term.action.focus_right(ok and step or nil)
+      era.term.action.focus_right(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      dot.term.action.swap_left(ok and step or nil)
+      era.term.action.swap_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.swap_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      dot.term.action.swap_right(ok and step or nil)
+      era.term.action.swap_right(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.term.split_h.uuid,
     action = function()
-      dot.term.widget:split("h")
+      era.term.widget:split("h")
     end,
   })
   .implement({
     uuid = K.term.split_j.uuid,
     action = function()
-      dot.term.widget:split("j")
+      era.term.widget:split("j")
     end,
   })
   .implement({
     uuid = K.term.split_k.uuid,
     action = function()
-      dot.term.widget:split("k")
+      era.term.widget:split("k")
     end,
   })
   .implement({
     uuid = K.term.split_l.uuid,
     action = function()
-      dot.term.widget:split("l")
+      era.term.widget:split("l")
     end,
   })
 
@@ -1335,7 +1335,7 @@ command
 command.implement({
   uuid = K.plugin.open.uuid,
   action = function()
-    require("dot.module.plugin").show()
+    require("era.plugin").show()
   end,
 })
 
@@ -1344,7 +1344,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      require("dot.module.colorpicker").instance():pick()
+      require("era.colorpicker").instance():pick()
     end,
   })
   .implement({

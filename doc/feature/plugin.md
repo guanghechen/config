@@ -2,7 +2,7 @@
 
 ## Overview
 
-`dot.module.plugin` is a lightweight plugin manager that provides lazy loading, update, and clean functionality. It serves as a simplified alternative to lazy.nvim with essential features.
+`era.plugin` is a lightweight plugin manager that provides lazy loading, update, and clean functionality. It serves as a simplified alternative to lazy.nvim with essential features.
 
 ## Features
 
@@ -15,7 +15,7 @@
 ## Architecture
 
 ```
-dot.module.plugin/
+era.plugin/
 ├── init.lua     # Module entry and public API
 ├── types.lua    # Type definitions
 ├── state.lua    # Global state and configuration
@@ -49,21 +49,21 @@ init.lua (public API)
 ## Configuration
 
 ```lua
----@class dot.module.plugin.IConfig
+---@class era.plugin.IConfig
 ---@field public lockfile               string       -- Lock file path
 ---@field public root                   string       -- Plugin install directory
----@field public ui                     dot.module.plugin.IUIConfig
+---@field public ui                     era.plugin.IUIConfig
 
----@class dot.module.plugin.IUIConfig
+---@class era.plugin.IUIConfig
 ---@field public size                   { width: number, height: number }
 ---@field public border                 string       -- Border style
----@field public icons                  dot.module.plugin.IIcons
+---@field public icons                  era.plugin.IIcons
 ```
 
 ## Plugin Spec
 
 ```lua
----@class dot.module.plugin.IPluginSpec
+---@class era.plugin.IPluginSpec
 ---@field public name                   string           -- Plugin name (directory name)
 ---@field public url                    string|nil       -- Git repository URL
 ---@field public branch                 string|nil       -- Git branch
@@ -102,7 +102,7 @@ local specs = {
   },
 }
 
-require("dot.module.plugin").setup(specs)
+require("era.plugin").setup(specs)
 ```
 
 ### Commands
@@ -184,7 +184,7 @@ Compatible with lazy.nvim's `lazy-lock.json`:
 ## Integration with fml/plugin.lua
 
 ```lua
----@type dot.module.plugin.IRawSpec[]
+---@type era.plugin.IRawSpec[]
 local raw_specs = {
   { name = "flash.nvim", main = "flash", cond = conds.common },
   { name = "which-key.nvim", main = "which-key", cond = conds.common },
@@ -209,5 +209,5 @@ for _, raw_spec in ipairs(raw_specs) do
   specs[#specs + 1] = spec
 end
 
-require("dot.module.plugin").setup(specs)
+require("era.plugin").setup(specs)
 ```

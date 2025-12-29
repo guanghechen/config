@@ -14,7 +14,7 @@ local o_flag_case_sensitive = stl.c.Observable.from_value(true)
 local o_flag_selected = stl.c.Observable.from_value(false)
 local o_flag_viewtype = stl.c.Observable.from_value("tree")
 
----@param picker                        dot.module.picker.FiletreeComposer
+---@param picker                        era.picker.FiletreeComposer
 ---@return nil
 local function refresh(picker)
   local cwd = dot.path.cwd() ---@type string
@@ -22,7 +22,7 @@ local function refresh(picker)
   picker:reset_filepaths(cwd, filepaths, false)
 end
 
-local picker = dot.picker.FiletreeComposer.new({
+local picker = era.picker.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,

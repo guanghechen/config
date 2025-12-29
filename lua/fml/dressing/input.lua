@@ -1,8 +1,8 @@
 ---@class fml.dressing.input
 local M = {}
 
-M.complete = require("dot.module.input").complete
-M.input = require("dot.module.input").open
+M.complete = require("era.input").complete
+M.input = require("era.input").open
 
 local original_input = vim.ui.input
 stl.fn.observe({ dot.context.flight.dressing_input }, function()

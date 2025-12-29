@@ -1,5 +1,5 @@
-local c = require("dot.module.nvimbar").component
-local Nvimbar = require("dot.module.nvimbar").Nvimbar
+local c = require("era.nvimbar").component
+local Nvimbar = require("era.nvimbar").Nvimbar
 
 local txt = stl.nvim.fn.txt
 local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
@@ -11,12 +11,12 @@ local function silent()
 end
 
 ---@param winnr                         integer
----@return dot.module.nvimbar.Nvimbar|nil
+---@return era.nvimbar.Nvimbar|nil
 local function resolve_nvimbar(winnr)
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
-    local nvimbar = nil ---@type dot.module.nvimbar.Nvimbar|nil
+    local nvimbar = nil ---@type era.nvimbar.Nvimbar|nil
     nvimbar = Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
@@ -149,7 +149,7 @@ local function render(winnr)
     return
   end
 
-  local nvimbar = resolve_nvimbar(winnr) ---@type dot.module.nvimbar.Nvimbar|nil
+  local nvimbar = resolve_nvimbar(winnr) ---@type era.nvimbar.Nvimbar|nil
   if nvimbar ~= nil then
     nvimbar:render()
     return

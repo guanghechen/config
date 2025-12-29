@@ -1,0 +1,48 @@
+---@class era.term.ICreateParams
+---@field public uuid                   string
+---@field public type                   string
+---@field public name                   string
+---@field public cmd                    ?string[]|string
+---@field public cwd                    ?string
+---@field public env                    ?table<string, string>
+---@field public permanent              ?boolean
+---@field public hidewipe               ?boolean
+---@field public user_keymaps           ?stl.t.IKeymap[]
+---@field public on_closed              ?fun(): nil
+---@field public on_focused             ?fun(): nil
+---@field public on_resized             ?fun(): nil
+
+---@class era.term.IMeta
+---@field public uuid                   string
+---@field public type                   string
+---@field public name                   string
+---@field public bufnr                  integer
+---@field public cmd                    string[]|string
+---@field public cwd                    string
+---@field public env                    table<string, string>|nil
+---@field public permanent              boolean
+---@field public hidewipe               boolean
+---@field public user_keymaps           stl.t.IKeymap[]
+---@field public jobid                  integer|nil
+---@field public on_closed              fun(): nil
+---@field public on_focused             fun(): nil
+---@field public on_resized             fun(): nil
+
+---@class era.term.IProfile
+---@field public name                   string
+---@field public type                   string
+---@field public cmd                    string
+
+---@class era.term.IToggleAndFocusParams : era.term.ICreateParams
+---@field public selected_text          string|nil
+---@field public autofocus              boolean|nil
+
+---@class era.term.IUpdateParams
+---@field public name                   ?string
+---@field public type                   ?string
+---@field public cmd                    ?string[]|string
+---@field public cwd                    ?string
+---@field public env                    ?table<string, string>
+---@field public on_closed              ?fun(): nil
+---@field public on_focused             ?fun(): nil
+---@field public on_resized             ?fun(): nil

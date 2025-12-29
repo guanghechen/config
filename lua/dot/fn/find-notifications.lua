@@ -3,7 +3,7 @@ local __module_name__ = "dot.fn.find_notifications"
 ---@class dot.fn.find_notifications.IItemData
 ---@field public task                   dot.t.INotifierTask
 
----@class dot.fn.find_notifications.IItem : dot.module.picker.composer.list.IItem
+---@class dot.fn.find_notifications.IItem : era.picker.composer.list.IItem
 ---@field public data                   dot.fn.find_notifications.IItemData
 
 local dirty_data = true ---@type boolean
@@ -12,7 +12,7 @@ local o_flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
 local o_flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 local o_flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
----@return dot.module.picker.composer.list.IResetData
+---@return era.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -43,12 +43,12 @@ local function fetch_data()
     items[#items + 1] = item
   end
 
-  ---@type dot.module.picker.composer.list.IResetData
+  ---@type era.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker ---@type dot.module.picker.ListComposer
-picker = dot.picker.ListComposer.new({
+local picker ---@type era.picker.ListComposer
+picker = era.picker.ListComposer.new({
   name = __module_name__,
   permanent = true,
   title = "Find Notifications",
@@ -65,7 +65,7 @@ picker = dot.picker.ListComposer.new({
 
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type dot.module.picker.preview.IDrawResult
+      ---@type era.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -74,10 +74,10 @@ picker = dot.picker.ListComposer.new({
       }
     end
 
-    local item = composer:retrieve(lnum_current) ---@type dot.module.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No notification selected" })
-      ---@type dot.module.picker.preview.IDrawResult
+      ---@type era.picker.preview.IDrawResult
       return {
         cursorline = false,
         number = true,
@@ -146,7 +146,7 @@ picker = dot.picker.ListComposer.new({
       end
     end
 
-    ---@type dot.module.picker.preview.IDrawResult
+    ---@type era.picker.preview.IDrawResult
     return {
       cursorline = false,
       number = true,

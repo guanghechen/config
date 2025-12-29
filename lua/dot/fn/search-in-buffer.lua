@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "dot.fn.search_in_buffer" ---@type string
 
-local searcher ---@type dot.module.searcher.buffer.Searcher|nil
+local searcher ---@type era.searcher.buffer.Searcher|nil
 
 ---@return nil
 local function search_in_buffer()
@@ -17,7 +17,7 @@ local function search_in_buffer()
 
   if searcher == nil then
     local context = dot.context.search_buffer ---@type dot.context.search_buffer
-    searcher = dot.searcher.BufferSearcher.new({
+    searcher = era.searcher.BufferSearcher.new({
       o_flag_fuzzy = context.flag_fuzzy,
       o_flag_regex = context.flag_regex,
       o_flag_replace = context.flag_replace,

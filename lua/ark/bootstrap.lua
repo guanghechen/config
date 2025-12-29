@@ -162,6 +162,7 @@ function M.setup()
   require("ark.autocmd")
 
   _G.dot = require("dot") ---@type dot
+  _G.era = require("era") ---@type era
 end
 
 return M

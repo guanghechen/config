@@ -22,7 +22,7 @@ local o_includes = dot.context.select.find_file.includes
 ---@field public includes               string[]
 ---@field public excludes               string[]
 
----@param picker                        dot.module.picker.FiletreeComposer
+---@param picker                        era.picker.FiletreeComposer
 ---@return nil
 local function edit_setting(picker)
   local s_keyword = o_search_pattern:snapshot() ---@type string
@@ -85,7 +85,7 @@ local function edit_setting(picker)
     })
 end
 
----@param picker                        dot.module.picker.FiletreeComposer
+---@param picker                        era.picker.FiletreeComposer
 ---@param rootpath                      string
 ---@return nil
 local function refresh(picker, rootpath)
@@ -122,7 +122,7 @@ local function refresh(picker, rootpath)
   picker:mark_result_dirty()
 end
 
----@param picker                        dot.module.picker.FiletreeComposer
+---@param picker                        era.picker.FiletreeComposer
 ---@param rootpath                      string
 ---@return nil
 local function attach(picker, rootpath)
@@ -134,8 +134,8 @@ local function attach(picker, rootpath)
   end
 end
 
-local picker ---@type dot.module.picker.FiletreeComposer
-picker = dot.picker.FiletreeComposer.new({
+local picker ---@type era.picker.FiletreeComposer
+picker = era.picker.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,
