@@ -1,4 +1,4 @@
----@class ark.anim
+---@class stl.anim
 local M = {}
 
 -- local spinners = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" } ---@type string[]

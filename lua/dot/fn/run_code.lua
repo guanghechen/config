@@ -77,7 +77,7 @@ local runners = {
       ---@param level                   ?stl.e.LogLevelEnum
       ---@return nil
       local function update_notification(level)
-        local message = terminated and output or (output .. " " .. ark.anim.spinner(spinner_step)) ---@type string
+        local message = terminated and output or (output .. " " .. stl.anim.spinner(spinner_step)) ---@type string
         stl.reporter.log(level or "INFO", {
           from = __module_name__,
           subject = filepath,
