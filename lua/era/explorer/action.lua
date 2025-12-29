@@ -1045,7 +1045,7 @@ function M:show_file_info()
 
   local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
 
-  local fileinfo = era.board.Fileinfo.new({ filepath = filepath })
+  local fileinfo = era.view.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
 end
 

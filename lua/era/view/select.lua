@@ -44,7 +44,7 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:m_ch_normal",
 }, ",")
 
----@class era.view.select
+---@class era.view.Select
 local M = {}
 
 ---@param props                         era.view.select.IProps

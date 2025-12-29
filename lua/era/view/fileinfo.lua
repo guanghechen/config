@@ -1,24 +1,24 @@
-local __module_name__ = "era.board.fileinfo" ---@type string
+local __module_name__ = "era.view.fileinfo" ---@type string
 
----@class era.board.fileinfo.IProps
+---@class era.view.fileinfo.IProps
 ---@field public filepath               string
 
----@class era.board.fileinfo.IState
+---@class era.view.fileinfo.IState
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _ns                 integer
 ---@field protected _filepath           string
 
----@class era.board.Fileinfo : era.board.fileinfo.IState
+---@class era.view.Fileinfo : era.view.fileinfo.IState
 local M = {}
 M.__index = M
 
 local PADDING_LEFT = 2 ---@type integer
 local PADDING_RIGHT = 2 ---@type integer
 
----@param props                         era.board.fileinfo.IProps
----@return era.board.Fileinfo
+---@param props                         era.view.fileinfo.IProps
+---@return era.view.Fileinfo
 function M.new(props)
   local self = setmetatable({}, M)
   self._disposed = false
@@ -216,11 +216,11 @@ function M:__render__(stat)
   local strwidth = vim.api.nvim_strwidth ---@type fun(str: string): integer
   local filepath = self._filepath ---@type string
 
-  ---@class era.board.fileinfo.IInfoLine
+  ---@class era.view.fileinfo.IInfoLine
   ---@field public label                  string
   ---@field public value                  string
 
-  local infos = {} ---@type era.board.fileinfo.IInfoLine[]
+  local infos = {} ---@type era.view.fileinfo.IInfoLine[]
   local workspace = dot.path.workspace() ---@type string
   local relative_path = filepath ---@type string
   if filepath:sub(1, #workspace) == workspace then

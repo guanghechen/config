@@ -44,7 +44,7 @@ local WIN_HIGHLIGHT = table.concat({
   "SpecialKey:SpecialKey",
 }, ",")
 
----@class era.view.input
+---@class era.view.Input
 local M = {}
 
 ---@param findstart                     integer
