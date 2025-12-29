@@ -1028,7 +1028,7 @@ end
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return nil
 function M:show_keysheet(keymaps)
-  local keysheet = era.board.Keysheet.new({
+  local keysheet = era.view.Keysheet.new({
     title = "Explorer Help",
     keymaps = keymaps,
   })

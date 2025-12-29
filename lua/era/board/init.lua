@@ -3,7 +3,6 @@ local __mods = {
   Act = "era.board.act",
   Fileinfo = "era.board.fileinfo",
   GitHunk = "era.board.git-hunk",
-  Keysheet = "era.board.keysheet",
 }
 
 ---@class era.board
@@ -11,7 +10,6 @@ local __mods = {
 ---@field public Act                    era.board.Act
 ---@field public Fileinfo               era.board.Fileinfo
 ---@field public GitHunk                era.board.GitHunk
----@field public Keysheet               era.board.Keysheet
 local M = setmetatable({
   __mods = __mods,
 }, {
