@@ -31,7 +31,7 @@ local function is_escaped(json_string, quote_position)
   return backslash_count % 2 == 1
 end
 
----@class ark.json
+---@class stl.json
 local M = {}
 
 ---@param json_string                   string

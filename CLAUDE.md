@@ -46,6 +46,7 @@ Standard library with environment detection and dictionary data.
 - **`stl/fileicon`** - File icon definitions (directories, files, extensions, filetypes, LSP, OS)
 - **`stl/filetype`** - Filetype constants and utility functions for file type detection
 - **`stl/icon`** - Icon definitions (UI, diagnostics, LSP, DAP, Git, filetypes, etc.)
+- **`stl/json`** - JSON utilities with comment stripping support
 
 #### `lua/ark/` - Foundation Layer
 Foundation layer with algorithms, collections, and utilities.

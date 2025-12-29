@@ -207,7 +207,7 @@ return {
   config = function()
     local vscode = require("dap.ext.vscode")
     vscode.json_decode = function(text)
-      return ark.json.decode(text, { luanil = { object = true, array = true } })
+      return stl.json.decode(text, { luanil = { object = true, array = true } })
     end
 
     setup_node()
