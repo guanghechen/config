@@ -87,6 +87,7 @@ local __mods = {
   searcher = "era.searcher",
   statuscolumn = "era.statuscolumn",
   statusline = "era.statusline",
+  tabline = "era.tabline",
   term = "era.term",
   trailspace = "era.trailspace",
   view = "era.view",
@@ -116,6 +117,7 @@ local __mods = {
 ---@field public searcher               era.searcher
 ---@field public statuscolumn           era.statuscolumn
 ---@field public statusline             era.statusline
+---@field public tabline                era.tabline
 ---@field public term                   era.term
 ---@field public trailspace             era.trailspace
 ---@field public view                   era.view

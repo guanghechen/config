@@ -28,7 +28,7 @@ end
 
 vim.schedule(function()
   era.statusline.dressing()
-  require("fml.dressing.tabline")
+  era.tabline.dressing()
   require("fml.dressing.winline")
 
   era.commentstring.dressing()

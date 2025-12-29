@@ -1,3 +1,6 @@
+---@class era.tabline
+local M = {}
+
 local c = require("era.nvimbar").component
 local Nvimbar = require("era.nvimbar").Nvimbar
 
@@ -73,37 +76,40 @@ local function should_show_tabline()
   return meta == nil or #meta.bufs > 1
 end
 
-local last_showtabline = 0 ---@type integer
-dirtier:subscribe(stl.c.Subscriber.new({
-  on_next = function()
-    if should_show_tabline() then
-      vim.o.showtabline = 2
+---@return nil
+function M.dressing()
+  local last_showtabline = 0 ---@type integer
+  dirtier:subscribe(stl.c.Subscriber.new({
+    on_next = function()
+      if should_show_tabline() then
+        vim.o.showtabline = 2
 
-      if last_showtabline == 0 then
-        if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
-          dot.widget.explorer.widget:render_winbar()
+        if last_showtabline == 0 then
+          if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
+            dot.widget.explorer.widget:render_winbar()
+          end
         end
+
+        last_showtabline = 2
+        tabline:render()
+      else
+        vim.o.showtabline = 0
+
+        if last_showtabline ~= 0 then
+          if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
+            dot.widget.explorer.widget:render_winbar()
+          end
+
+          local winnrs = vim.api.nvim_list_wins() ---@type integer[]
+          for _, winnr in ipairs(winnrs) do
+            dot.state.status.dirty_winline_nr:next(winnr)
+          end
+        end
+
+        last_showtabline = 0
       end
+    end,
+  }))
+end
 
-      last_showtabline = 2
-      tabline:render()
-    else
-      vim.o.showtabline = 0
-
-      if last_showtabline ~= 0 then
-        if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
-          dot.widget.explorer.widget:render_winbar()
-        end
-
-        local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-        for _, winnr in ipairs(winnrs) do
-          dot.state.status.dirty_winline_nr:next(winnr)
-        end
-      end
-
-      last_showtabline = 0
-    end
-  end,
-}))
-
-return tabline
+return M
