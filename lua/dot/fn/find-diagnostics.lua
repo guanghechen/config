@@ -41,7 +41,7 @@ local function refresh(force)
   end
 
   if bufnr_sourcefile ~= nil and not vim.api.nvim_buf_is_valid(bufnr_sourcefile) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = name,
       subject = "refresh",
       message = "Buffer is not valid or not set.",
@@ -135,7 +135,7 @@ local function refresh(force)
     end
 
     if leafnodestate.nodetype ~= "leaf" then
-      ark.reporter.error({
+      stl.reporter.error({
         from = picker.fullname,
         subject = "refresh",
         message = "Expected leaf node state, but got: " .. leafnodestate.nodetype,

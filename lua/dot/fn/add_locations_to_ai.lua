@@ -4,7 +4,7 @@ local __module_name__ = "dot.fn.add_locations_to_ai" ---@type string
 ---@return nil
 local function add_locations_to_ai(locations)
   if #locations < 1 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = "No valid locations provided.",
@@ -29,7 +29,7 @@ local function add_locations_to_ai(locations)
   end
 
   if #lines < 1 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = "No locations could be stringified.",
@@ -38,7 +38,7 @@ local function add_locations_to_ai(locations)
   end
 
   if #failures > 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = string.format("Skipped %d invalid location%s.", #failures, #failures == 1 and "" or "s"),
@@ -75,7 +75,7 @@ local function add_locations_to_ai(locations)
   end
 
   if append_error ~= nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = "Failed to append payload to notepad.",
@@ -84,7 +84,7 @@ local function add_locations_to_ai(locations)
   end
 
   if #copy_failures > 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = "Copy failed: " .. table.concat(copy_failures, "; "),
@@ -94,7 +94,7 @@ local function add_locations_to_ai(locations)
     if append_success then
       success_message = "Locations copied to clipboard and appended to notepad."
     end
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "add_locations_to_ai",
       message = success_message,

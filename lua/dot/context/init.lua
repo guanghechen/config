@@ -396,7 +396,7 @@ function M.watch_changes()
         end
       end,
       on_error = function(p, err)
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "watch_changes",
           message = "Something got wrong while watching the editor states file changes!",

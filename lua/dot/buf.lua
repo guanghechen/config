@@ -40,7 +40,7 @@ function M.loadfile(filepath)
 
     local ok, error = pcall(vim.fn.bufload, bufnr)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "loadfile",
         message = string.format("Failed to load file %s", filepath),

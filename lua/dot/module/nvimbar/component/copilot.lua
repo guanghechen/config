@@ -43,7 +43,7 @@ local fn_show_message = ark.G.register_anonymous_fn(function()
     status = "Disconnected"
   end
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     details = { enabled = enabled, status = status },
   })

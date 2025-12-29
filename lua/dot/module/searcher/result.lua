@@ -264,7 +264,7 @@ function M.new(props)
       end
 
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = fullname,
           subject = "draw",
           message = "Failed to draw",
@@ -289,7 +289,7 @@ function M.new(props)
 
       local on_drawed_ok, on_drawed_result = pcall(on_drawed, bufnr)
       if not on_drawed_ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = fullname,
           subject = "on_drawed",
           message = "Failed to call on_drawed",
@@ -417,7 +417,7 @@ function M:dispose()
   local ok10, error10 = pcall(scheduler_lnum_present.dispose, scheduler_lnum_present)
   local ok11, error11 = pcall(scheduler_lnums_selected.dispose, scheduler_lnums_selected)
   if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8 and ok9 and ok10 and ok11) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = fullname,
       subject = "dispose",
       message = "Failed to dispose",
@@ -576,7 +576,7 @@ function M:hide()
 
   local ok1, error1 = pcall(ark.vim.win.close, winnr)
   if not ok1 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "hide",
       message = "Failed to hide",

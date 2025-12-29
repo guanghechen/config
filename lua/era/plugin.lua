@@ -97,7 +97,7 @@ for _, raw_spec in ipairs(raw_specs) do
     spec.branch = branch
     spec.main = main or spec.main
   elseif not vim.list_contains(no_details_module_names, name) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "resolve plugin details",
       message = "Failed to resolve the details of plugin: " .. name,

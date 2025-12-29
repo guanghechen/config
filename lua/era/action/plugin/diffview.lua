@@ -23,7 +23,7 @@ function M.history_file()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   if bufnr_sourcefile == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       message = "No source file found in current tab",
     })
@@ -49,7 +49,7 @@ end
 ---@return nil
 function M.refresh()
   require("diffview").emit("refresh_files")
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     message = "Refreshed!",
   })

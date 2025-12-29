@@ -59,7 +59,7 @@ function M.save()
     })
     dot.session.save_session(storage.nvim_session)
 
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       message = "Session saved successfully!",
     })

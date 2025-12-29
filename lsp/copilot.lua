@@ -177,7 +177,7 @@ return {
       local client_id = ctx.client_id
       if res.status == "Error" then
         dot.state.status.copilots[client_id] = "error"
-        ark.reporter.warn({
+        stl.reporter.warn({
           from = __module_name__,
           subject = "copilot_auth_error",
           message = "Please use `:Copilot auth` or `:LspCopilotSignIn` to sign in to Copilot",

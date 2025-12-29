@@ -137,7 +137,7 @@ function M.jump(step, cycle)
   local words, current_index = get_reference_words(bufnr)
 
   if not current_index then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "jump",
       message = "Cursor not on a reference word",
@@ -157,7 +157,7 @@ function M.jump(step, cycle)
     end
     vim.api.nvim_win_set_cursor(0, target.from)
     if config.notify_jump then
-      ark.reporter.info({
+      stl.reporter.info({
         from = __module_name__,
         subject = "jump",
         message = ("Reference [%d/%d]"):format(new_index, #words),
@@ -167,7 +167,7 @@ function M.jump(step, cycle)
       vim.cmd.normal({ "zv", bang = true })
     end
   elseif config.notify_end then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "jump",
       message = "No more references",

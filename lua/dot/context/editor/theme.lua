@@ -215,7 +215,7 @@ end
 ---@return ark.t.theme.IScheme | nil
 function M.get_scheme(theme)
   if not vim.list_contains(ark.var.theme, theme) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "get_scheme",
       message = "Unknown theme.",
@@ -250,7 +250,7 @@ function M.reload_theme(force, reload_plugins)
   else
     local ok, err = pcall(dofile, theme_path)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "reload_theme",
         message = "Bad theme file.",

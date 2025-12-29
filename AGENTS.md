@@ -336,16 +336,16 @@ The neovim integration additionally loads:
 - Protected methods should be ordered alphabetically
 
 ### Error Reporting
-Use `ark.reporter` for notifications instead of `vim.notify`:
+Use `stl.reporter` for notifications instead of `vim.notify`:
 
 ```lua
-ark.reporter.error({
+stl.reporter.error({
   from = __module_name__,
   subject = "Operation Name",
   message = "Error message here",
   details = { key = "value" }, -- optional, displayed as JSON
 })
--- Same interface for ark.reporter.{error|warn|info|debug}
+-- Same interface for stl.reporter.{error|warn|info|debug}
 ```
 
 ### Rust Integration

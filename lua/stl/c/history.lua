@@ -182,7 +182,7 @@ end
 function M:print()
   local present = self._present ---@type integer
   local stack = self._stack:collect() ---@type ark.t.T
-  ark.reporter.info({
+  stl.reporter.info({
     from = self.fullname,
     subject = "print",
     details = { present = present, stack = stack },

@@ -397,7 +397,7 @@ function M.new(props)
         filepath = dot.path.resolve(rootpath, filepath) ---@type string
 
         if yoz.path.is_exist(filepath) then
-          ark.reporter.error({
+          stl.reporter.error({
             from = fullname,
             subject = "create_node",
             message = "The filepath is already exist.",
@@ -530,7 +530,7 @@ function M.new(props)
         end
 
         if not success then
-          ark.reporter.error({
+          stl.reporter.error({
             from = fullname,
             subject = "remove_node",
             message = string.format("Failed to delete %s.", isdir and "directory" or "file"),
@@ -616,7 +616,7 @@ function M.new(props)
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
           local dest_type = dest_is_dir and "directory" or "file"
-          ark.reporter.error({
+          stl.reporter.error({
             from = fullname,
             subject = "rename_node",
             message = string.format(
@@ -738,7 +738,7 @@ function M.new(props)
         if source_is_dir ~= dest_is_dir then
           local source_type = source_is_dir and "directory" or "file"
           local dest_type = dest_is_dir and "directory" or "file"
-          ark.reporter.error({
+          stl.reporter.error({
             from = fullname,
             subject = "move_node",
             message = string.format(
@@ -944,7 +944,7 @@ function M.new(props)
 
       local filepath = filenode.data.filepath
       ark.vim.fn.copy(filepath)
-      ark.reporter.info({
+      stl.reporter.info({
         from = fullname,
         message = "Copied absolute filepath: " .. filepath,
       })
@@ -959,7 +959,7 @@ function M.new(props)
       local cwd = dot.path.cwd()
       local relative = dot.path.relative(cwd, filepath, "/")
       ark.vim.fn.copy(relative)
-      ark.reporter.info({
+      stl.reporter.info({
         from = fullname,
         message = "Copied relative filepath: " .. relative,
       })
@@ -1616,7 +1616,7 @@ function M:dispose()
     local ok6, error6 = pcall(on_dispose)
 
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-      ark.reporter.error({
+      stl.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -1713,7 +1713,7 @@ function M:attach(rootuuid)
 
   local node = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   if node == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "attach",
       message = string.format("Cannot find node by the given uuid: %s", rootuuid),
@@ -2189,7 +2189,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   if isdir then
     local result, err = yoz.fs.collect_files(to, true)
     if err ~= nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "collect_files_failed",
         details = {
@@ -2266,7 +2266,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
         return
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "reset_filepaths",
         message = "Unexpected filetype",

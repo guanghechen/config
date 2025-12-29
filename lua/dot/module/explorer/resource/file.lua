@@ -102,7 +102,7 @@ function M:sync_watches(expanded_dirs)
   end
 
   if limit_reached then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = self.fullname,
       subject = "sync_watches",
       message = string.format("Watch limit reached (%d directories).", MAX_WATCHES),
@@ -163,7 +163,7 @@ function M:create(uri)
   if is_directory then
     local ok, err = pcall(vim.fn.mkdir, filepath, "p")
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "create",
         message = string.format("Failed to create directory: %s", filepath),
@@ -176,7 +176,7 @@ function M:create(uri)
     if vim.fn.isdirectory(parent_dir) == 0 then
       local ok, err = pcall(vim.fn.mkdir, parent_dir, "p")
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "create",
           message = string.format("Failed to create parent directory: %s", parent_dir),
@@ -188,7 +188,7 @@ function M:create(uri)
 
     local ok, err = pcall(vim.fn.writefile, {}, filepath)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "create",
         message = string.format("Failed to create file: %s", filepath),
@@ -213,7 +213,7 @@ function M:copy(source_uri, target_uri)
   end
 
   if vim.fn.filereadable(target_path) == 1 or vim.fn.isdirectory(target_path) == 1 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Target already exists: %s", target_path),
@@ -225,7 +225,7 @@ function M:copy(source_uri, target_uri)
   if vim.fn.isdirectory(target_parent) == 0 then
     local ok, err = pcall(vim.fn.mkdir, target_parent, "p")
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "copy",
         message = string.format("Failed to create target parent directory: %s", target_parent),
@@ -262,7 +262,7 @@ function M:insert_if_missing(uri)
     end
     local ok, err = pcall(vim.fn.mkdir, filepath, "p")
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "insert_if_missing",
         message = string.format("Failed to create directory: %s", filepath),
@@ -280,7 +280,7 @@ function M:insert_if_missing(uri)
     if vim.fn.isdirectory(parent_dir) == 0 then
       local ok, err = pcall(vim.fn.mkdir, parent_dir, "p")
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "insert_if_missing",
           message = string.format("Failed to create parent directory: %s", parent_dir),
@@ -292,7 +292,7 @@ function M:insert_if_missing(uri)
 
     local ok, err = pcall(vim.fn.writefile, {}, filepath)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "insert_if_missing",
         message = string.format("Failed to create file: %s", filepath),
@@ -393,7 +393,7 @@ function M:move(source_uri, target_uri)
   end
 
   if vim.fn.filereadable(target_path) == 1 or vim.fn.isdirectory(target_path) == 1 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "move",
       message = string.format("Target already exists: %s", target_path),
@@ -405,7 +405,7 @@ function M:move(source_uri, target_uri)
   if vim.fn.isdirectory(target_parent) == 0 then
     local ok, err = pcall(vim.fn.mkdir, target_parent, "p")
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "move",
         message = string.format("Failed to create target parent directory: %s", target_parent),
@@ -419,7 +419,7 @@ function M:move(source_uri, target_uri)
   dot.lsp.event.on_rename(source_path, target_path, function()
     local ok, err = pcall(vim.fn.rename, source_path, target_path)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "move",
         message = string.format("Failed to move: %s -> %s", source_path, target_path),
@@ -461,7 +461,7 @@ function M:remove(uri, on_removed)
       local result = vim.system({ "trash", "-F", filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "remove",
           message = string.format("Failed to move to trash: %s", filepath),
@@ -485,7 +485,7 @@ function M:remove(uri, on_removed)
       local result = vim.system({ "powershell.exe", "-NoProfile", "-Command", ps_script }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "remove",
           message = string.format("Failed to move to trash: %s", filepath),
@@ -496,7 +496,7 @@ function M:remove(uri, on_removed)
       local result = vim.system({ "gio", "trash", filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "remove",
           message = string.format("Failed to move to trash: %s", filepath),
@@ -519,7 +519,7 @@ function M:remove(uri, on_removed)
       local result = vim.system({ "powershell", "-NoProfile", "-Command", ps_script }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = self.fullname,
           subject = "remove",
           message = string.format("Failed to move to trash: %s", filepath),
@@ -527,7 +527,7 @@ function M:remove(uri, on_removed)
         })
       end
     else
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = self.fullname,
         subject = "remove",
         message = "Trash is not supported on this platform, falling back to permanent delete",
@@ -544,7 +544,7 @@ function M:remove(uri, on_removed)
       ok, err = pcall(vim.fn.delete, filepath)
     end
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "remove",
         message = string.format("Failed to remove: %s", filepath),
@@ -570,7 +570,7 @@ end
 function M:__copy_directory__(source_path, target_path)
   local ok, err = pcall(vim.fn.mkdir, target_path, "p")
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to create target directory: %s", target_path),
@@ -616,7 +616,7 @@ function M:__copy_file__(source_path, target_path)
 
   local stat = vim.uv.fs_stat(source_path) ---@type uv.fs_stat.result|nil
   if stat == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to stat source file: %s", source_path),
@@ -626,7 +626,7 @@ function M:__copy_file__(source_path, target_path)
 
   local source_fd = vim.uv.fs_open(source_path, "r", 438) ---@type integer|nil
   if source_fd == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to open source file: %s", source_path),
@@ -637,7 +637,7 @@ function M:__copy_file__(source_path, target_path)
   local target_fd = vim.uv.fs_open(target_path, "w", stat.mode) ---@type integer|nil
   if target_fd == nil then
     vim.uv.fs_close(source_fd)
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "copy",
       message = string.format("Failed to create target file: %s", target_path),
@@ -657,7 +657,7 @@ function M:__copy_file__(source_path, target_path)
     local written = vim.uv.fs_write(target_fd, chunk, offset) ---@type integer|nil
     if written == nil or written ~= #chunk then
       success = false
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "copy",
         message = string.format("Failed to write to target file: %s", target_path),
@@ -710,7 +710,7 @@ function M:__start_watch__(dirpath)
   end)
 
   if not ok then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = self.fullname,
       subject = "watch",
       message = string.format("Failed to watch: %s", dirpath),

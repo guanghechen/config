@@ -247,7 +247,7 @@ function M:__run__()
           local silent = self._silent() ---@type boolean
           if not silent then
             local fullname = self.fullname ---@type string
-            ark.reporter.error({
+            stl.reporter.error({
               from = fullname,
               message = "failed to run.",
               details = {

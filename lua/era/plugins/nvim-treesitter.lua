@@ -112,7 +112,7 @@ local function install(subject, callback)
   end
 
   if not pcall(require, "mason") then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = subject,
       message = "Mason is enabled",
@@ -130,7 +130,7 @@ local function install(subject, callback)
   mr.refresh(function()
     local p = mr.get_package("tree-sitter-cli")
     if not p:is_installed() then
-      ark.reporter.info({
+      stl.reporter.info({
         from = __module_name__,
         subject = subject,
         message = "Installing `tree-sitter-cli` with `mason.nvim`...",
@@ -140,14 +140,14 @@ local function install(subject, callback)
         nil,
         vim.schedule_wrap(function(success)
           if success then
-            ark.reporter.info({
+            stl.reporter.info({
               from = __module_name__,
               subject = subject,
               message = "Installed `tree-sitter-cli` with `mason.nvim`.",
             })
             callback()
           else
-            ark.reporter.error({
+            stl.reporter.error({
               from = __module_name__,
               subject = subject,
               message = "**treesitter-main** requires the `tree-sitter` executable to be installed",

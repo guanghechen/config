@@ -41,7 +41,7 @@ end
 ---@return nil
 function M.setup(specs)
   if M._initialized then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "setup",
       message = "Plugin loader already initialized",

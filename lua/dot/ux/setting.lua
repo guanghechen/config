@@ -89,7 +89,7 @@ function M.new(props)
     end)
 
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "on_confirm",
         message = "Failed to parse json string.",

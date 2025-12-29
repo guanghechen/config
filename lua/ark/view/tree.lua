@@ -1085,7 +1085,7 @@ function M:render_treeview(params)
         return result
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "render_treeview",
         message = "Unknown nodetype",
@@ -1119,7 +1119,7 @@ function M:render_treeview(params)
         return render_container(node, nodestate, is_lastchild, cur, false)
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "render_treeview",
         message = "Unknown nodetype",
@@ -1411,7 +1411,7 @@ function M:collapse(uuid, value, recursive)
 
   local tree = self._tree ---@type stl.c.IReadonlyTree
   if not tree:isexistent(uuid) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "collapse",
       message = "The node isn't exist",
@@ -1423,7 +1423,7 @@ function M:collapse(uuid, value, recursive)
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
   local state = statemap[uuid] ---@type ark.view.tree.INodeState|nil
   if state == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "collapse",
       message = "The node state isn't exist",

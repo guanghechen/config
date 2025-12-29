@@ -140,7 +140,7 @@ return {
       return 4 -- approved
     end,
     ["eslint/probeFailed"] = function()
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = __module_name__,
         subject = "probeFailed",
         message = "ESLint probe failed.",
@@ -148,7 +148,7 @@ return {
       return {}
     end,
     ["eslint/noLibrary"] = function()
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = __module_name__,
         subject = "noLibrary",
         message = "Unable to find ESLint library.",

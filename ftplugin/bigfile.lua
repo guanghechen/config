@@ -24,7 +24,7 @@ vim.schedule(function()
   vim.bo[bufnr].syntax = filetype
 end)
 
-ark.reporter.warn({
+stl.reporter.warn({
   from = __module_name__,
   subject = "bigfile",
   message = ("Big file detected `%s`.\nSome Neovim features have been **disabled**."):format(filepath),

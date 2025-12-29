@@ -99,7 +99,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          ark.reporter.error({
+          stl.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "Unsupported buftype",
@@ -109,7 +109,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          ark.reporter.error({
+          stl.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
             message = "File is modified without save, please save it first.",
@@ -206,7 +206,7 @@ local group_items = {
         local buftype = vim.bo[bufnr].buftype ---@type string
         local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
-          ark.reporter.error({
+          stl.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "Unsupported buftype",
@@ -216,7 +216,7 @@ local group_items = {
         end
 
         if vim.bo[bufnr].modified then
-          ark.reporter.error({
+          stl.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
             message = "File is modified without save, please save it first.",

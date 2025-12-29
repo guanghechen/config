@@ -121,7 +121,7 @@ function M:calc_preview_data(context)
 
     if preview_result == nil then
       if preview_error ~= nil then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "replace_file_preview_by_matches_advance",
           message = preview_error,

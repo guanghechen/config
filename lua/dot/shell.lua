@@ -27,7 +27,7 @@ elseif stl.env.IS_WIN then
     end
   end
 else
-  ark.reporter.error({
+  stl.reporter.error({
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",

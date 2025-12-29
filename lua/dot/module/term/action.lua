@@ -132,7 +132,7 @@ function M.destroy()
   local termindex = dot.term.state.current() ---@type integer
   local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
   if termmeta == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "destroy",
       message = "No active terminal found to destroy.",
@@ -218,7 +218,7 @@ function M.rename()
   local termindex = dot.term.state.current() ---@type integer
   local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
   if termmeta == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "rename",
       message = "No active terminal found to rename.",

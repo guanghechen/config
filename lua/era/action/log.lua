@@ -28,7 +28,7 @@ end
 local function show_json_preview(content)
   local json = extract_json_content(content)
   if not json then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "preview_json",
       message = "No JSON content found in the selection.",
@@ -37,7 +37,7 @@ local function show_json_preview(content)
   end
 
   if not json then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "preview_json",
       message = "Failed to format JSON content.",

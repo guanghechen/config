@@ -469,7 +469,7 @@ function M:dispose()
     local ok3, error3 = pcall(on_disposed)
 
     if not (ok1 and ok2 and ok3) then
-      ark.reporter.error({
+      stl.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -651,7 +651,7 @@ function M:__match__(input)
     }
     local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
     if search_err then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "search_in_lines failed",
         details = {

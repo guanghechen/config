@@ -1,4 +1,4 @@
----@class ark.reporter.Levels
+---@class stl.reporter.Levels
 local Levels = {
   DEBUG = vim.log.levels.DEBUG,
   INFO = vim.log.levels.INFO,
@@ -6,7 +6,7 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@class ark.reporter.IOptions
+---@class stl.reporter.IOptions
 ---@field public from                   string
 ---@field public group                  ?string
 ---@field public subject                ?string
@@ -18,11 +18,11 @@ local Levels = {
 ---@field public timeout                ?integer
 ---@field public highlights             ?ark.t.IHighlight[]
 
----@class ark.reporter
+---@class stl.reporter
 local M = {}
 
 ---@param level                         ark.e.LogLevelEnum|integer
----@param options                       ark.reporter.IOptions
+---@param options                       stl.reporter.IOptions
 ---@return nil
 function M.log(level, options)
   local group = options.group ---@type string|nil
@@ -59,22 +59,22 @@ function M.log(level, options)
   })
 end
 
----@param options                       ark.reporter.IOptions
+---@param options                       stl.reporter.IOptions
 function M.debug(options)
   M.log(vim.log.levels.DEBUG, options)
 end
 
----@param options                       ark.reporter.IOptions
+---@param options                       stl.reporter.IOptions
 function M.info(options)
   M.log(vim.log.levels.INFO, options)
 end
 
----@param options                       ark.reporter.IOptions
+---@param options                       stl.reporter.IOptions
 function M.warn(options)
   M.log(vim.log.levels.WARN, options)
 end
 
----@param options                       ark.reporter.IOptions
+---@param options                       stl.reporter.IOptions
 function M.error(options)
   M.log(vim.log.levels.ERROR, options)
 end

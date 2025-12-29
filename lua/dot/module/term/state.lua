@@ -49,7 +49,7 @@ function M.create(params)
 
   local termmeta = metamap[termuuid] ---@type dot.module.term.IMeta|nil
   if termmeta ~= nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "Duplicate UUID",
       message = string.format("A terminal with UUID '%s' already exists.", termuuid),
@@ -189,7 +189,7 @@ function M:iterator()
         return termmeta, i
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "Invalid termuuid",
         message = string.format("Cannot retrieve the termmeta by the given termuuid: %s", termuuid),

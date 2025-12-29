@@ -132,7 +132,7 @@ function M.new(props)
     vim.bo[bufnr].readonly = true
 
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = fullname,
         subject = "render_preview",
         message = "Failed to render preview",
@@ -145,7 +145,7 @@ function M.new(props)
     self._preview_debounced()
     local ok, result = pcall(on_input_change, input:snapshot())
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = fullname,
         subject = "on_input_change",
         message = "Failed to call on_input_change",
@@ -186,7 +186,7 @@ function M:dispose()
   local ok6, error6 = pcall(ark.vim.buf.close, preview_bufnr)
 
   if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "dispose",
       message = "Failed to dispose",
@@ -250,7 +250,7 @@ function M:confirm()
 
   local ok, result = pcall(self.on_confirm, input_value)
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "confirm",
       message = "Failed to call on_confirm",
@@ -269,7 +269,7 @@ function M:cancel()
 
   local ok, result = pcall(self.on_cancel)
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "cancel",
       message = "Failed to call on_cancel",

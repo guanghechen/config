@@ -108,7 +108,7 @@ local function refresh(picker, rootpath)
   local filepaths = {}
   local result, err = yoz.find.find_files(find_files_options)
   if err ~= nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = name,
       subject = "find_files",
       message = err.error,

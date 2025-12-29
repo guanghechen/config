@@ -69,7 +69,7 @@ local function fetch_data()
     local output, err = vim.fn.system(cmd)
 
     if vim.v.shell_error ~= 0 then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "find_venvs",
         message = "Failed to run fd command.",
@@ -135,7 +135,7 @@ local function fetch_data()
       local output, err = vim.fn.system(cmd)
 
       if vim.v.shell_error ~= 0 then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "find_venvs",
           message = "Failed to run fd command.",
@@ -211,7 +211,7 @@ local function fetch_data()
       local output, err = vim.fn.system(cmd)
 
       if vim.v.shell_error ~= 0 then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "find_venvs",
           message = "Failed to run fd command.",

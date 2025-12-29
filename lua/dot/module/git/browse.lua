@@ -218,7 +218,7 @@ function M.open(opts)
 
   local remotes = M.get_remotes(fields)
   if #remotes == 0 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.module.git.browse",
       subject = "open",
       message = "No git remotes found",

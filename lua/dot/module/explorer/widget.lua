@@ -261,7 +261,7 @@ end
 function M:refresh()
   self._tree:refresh(true)
   self:__refresh__(true)
-  ark.reporter.info({
+  stl.reporter.info({
     from = self.fullname,
     subject = "refresh",
     message = "Explorer refreshed",
@@ -575,7 +575,7 @@ function M:__goto_git_changed__(direction)
   local unstaged_files = aggregated.unstaged_files ---@type string[]
 
   if #staged_files == 0 and #unstaged_files == 0 then
-    ark.reporter.info({
+    stl.reporter.info({
       from = self.fullname,
       subject = "goto git changed",
       message = "No git changes detected",
@@ -605,7 +605,7 @@ function M:__goto_git_changed__(direction)
   end)
 
   if not found then
-    ark.reporter.info({
+    stl.reporter.info({
       from = self.fullname,
       subject = "goto git changed",
       message = "No git changed files in current view",

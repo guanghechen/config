@@ -30,7 +30,7 @@ local function select_copy_filepath(params)
           local content = filepath ---@type string
 
           ark.vim.fn.copy(content)
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             message = "Copied absolute filepath: " .. content,
           })
@@ -39,14 +39,14 @@ local function select_copy_filepath(params)
           local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
           ark.vim.fn.copy(content)
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             message = "Copied relative filepath: " .. content,
           })
         elseif item.key == "3" then
           local content = yoz.path.basename(filepath) ---@type string
           ark.vim.fn.copy(content)
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             message = "Copied filename: " .. content,
           })

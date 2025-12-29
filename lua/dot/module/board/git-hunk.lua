@@ -85,7 +85,7 @@ function M:open()
 
   if not dot.git.buffer.is_attached(bufnr) then
     dot.git.buffer.attach(bufnr)
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "Git Hunk",
       message = "Attaching to buffer, try again",
@@ -107,7 +107,7 @@ function M:open()
   end
 
   if not hunk then
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "Git Hunk",
       message = "No hunk at current line",
@@ -349,13 +349,13 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local range = { effective_start, effective_vend }
         dot.git.hunk.unstage(range, function(ok, err)
           if ok then
-            ark.reporter.info({
+            stl.reporter.info({
               from = __module_name__,
               subject = "Git Hunk",
               message = "Hunk unstaged",
             })
           else
-            ark.reporter.error({
+            stl.reporter.error({
               from = __module_name__,
               subject = "Git Hunk",
               message = err or "Failed to unstage hunk",
@@ -377,13 +377,13 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local range = { effective_start, effective_vend }
         dot.git.hunk.stage(range, function(ok, err)
           if ok then
-            ark.reporter.info({
+            stl.reporter.info({
               from = __module_name__,
               subject = "Git Hunk",
               message = "Hunk staged",
             })
           else
-            ark.reporter.error({
+            stl.reporter.error({
               from = __module_name__,
               subject = "Git Hunk",
               message = err or "Failed to stage hunk",
@@ -404,13 +404,13 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local range = { effective_start, effective_vend }
         local ok, err = dot.git.hunk.reset(range)
         if ok then
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             subject = "Git Hunk",
             message = "Hunk reset",
           })
         else
-          ark.reporter.error({
+          stl.reporter.error({
             from = __module_name__,
             subject = "Git Hunk",
             message = err or "Failed to reset hunk",

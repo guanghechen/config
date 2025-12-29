@@ -51,7 +51,7 @@ local function __vim_navigate__(direction)
 
   local ok, error = pcall(__vim_navigate_window__, direction)
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       message = "E11: Invalid in command-line window; <cr> executes, ctrl-c quits",
       details = { direction = direction, error = error },

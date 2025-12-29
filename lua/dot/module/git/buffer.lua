@@ -383,7 +383,7 @@ function M.attach(bufnr, opts)
     })
 
     if not ok then
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = "dot.module.git.buffer",
         subject = "attach",
         message = "Failed to attach buffer",

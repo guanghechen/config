@@ -208,7 +208,7 @@ function M.show(task)
 
   local anonymous = KIND_MAP.CHANGES[kind] ~= true and kind ~= "echo" and not history ---@type boolean
   local silent = KIND_MAP.CHANGES[kind] == true ---@type boolean
-  ark.reporter.log(level, {
+  stl.reporter.log(level, {
     from = __module_name__,
     title = title,
     message = message,

@@ -81,7 +81,7 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
       end
     end
 
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "pick_window",
       message = "No windows left to pick after filtering",

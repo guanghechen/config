@@ -89,7 +89,7 @@ function M:dispose()
   local ok2, error2 = pcall(ark.vim.win.close, winnr)
   local ok3, error3 = pcall(ark.vim.buf.close, bufnr)
   if not (ok1 and ok2 and ok3) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = fullname,
       subject = "dispose",
       message = "Failed to dispose",
@@ -243,7 +243,7 @@ function M:hide()
 
   local ok1, error1 = pcall(ark.vim.win.close, winnr)
   if not ok1 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "hide",
       message = "Failed to hide",

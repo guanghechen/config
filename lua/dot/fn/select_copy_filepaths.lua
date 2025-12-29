@@ -46,12 +46,12 @@ local function select_copy_filepaths(params)
         local item_text = item.key == "1" and "absolute" or item.key == "2" and "relative" or "filename"
 
         if #filepaths == 1 then
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             message = string.format("Copied %s: %s", item_text, content),
           })
         else
-          ark.reporter.info({
+          stl.reporter.info({
             from = __module_name__,
             message = string.format("Copied %d %s path(s)", #filepaths, item_text),
           })

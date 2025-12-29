@@ -8,7 +8,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = filepath ---@type string
 
     ark.vim.fn.copy(content)
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
     })
@@ -17,7 +17,7 @@ local function copy_current_filepath(candidate, filepath)
     local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
     ark.vim.fn.copy(content)
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
     })
@@ -25,12 +25,12 @@ local function copy_current_filepath(candidate, filepath)
     local content = yoz.path.basename(filepath) ---@type string
 
     ark.vim.fn.copy(content)
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filename to system clipboard!",
     })
   else
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       message = "Failed to copy current filepath, unknown candidate!",
       details = { candidate = candidate },

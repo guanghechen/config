@@ -47,7 +47,7 @@ function M.attach(source)
   M.o_attached:next(#_attached_sources)
 
   local agent_label = config.agent_labels[source.agent] or source.agent
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "Agent Attached",
     message = string.format("Attached to %s.", agent_label),
@@ -74,7 +74,7 @@ function M.detach(source_id, close_terminal)
     M.o_attached:next(#_attached_sources)
 
     local agent_label = config.agent_labels[detached_source.agent] or detached_source.agent
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "Agent Detached",
       message = string.format("Detached from %s.", agent_label),
@@ -97,7 +97,7 @@ function M.detach_all()
     _attached_sources = {}
     M.o_attached:next(0)
 
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "Agent Detached",
       message = "Detached from all agents.",

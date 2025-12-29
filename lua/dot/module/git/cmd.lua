@@ -95,7 +95,7 @@ function M.apply_patch_async(cwd, patch, reverse, callback)
         if not cancelled then
           if obj.code ~= 0 then
             local err_msg = obj.stderr or ""
-            ark.reporter.error({
+            stl.reporter.error({
               from = "dot.module.git.cmd",
               subject = "apply_patch",
               message = "Failed to apply patch.",
@@ -295,7 +295,7 @@ function M.hash_object_async(cwd, file, lines, callback)
         vim.schedule(function()
           if not cancelled then
             if obj.code ~= 0 then
-              ark.reporter.warn({
+              stl.reporter.warn({
                 from = "dot.module.git.cmd",
                 subject = "hash_object",
                 message = "Failed to hash object",
@@ -327,7 +327,7 @@ end
 function M.stage_file_async(cwd, relpath, callback)
   return M.run_async({ "add", "--", relpath }, { cwd = cwd }, function(_, code)
     if code ~= 0 then
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = "dot.module.git.cmd",
         subject = "stage_file",
         message = "Failed to stage file",
@@ -345,7 +345,7 @@ end
 function M.unstage_file_async(cwd, relpath, callback)
   return M.run_async({ "reset", "HEAD", "--", relpath }, { cwd = cwd }, function(_, code)
     if code ~= 0 then
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = "dot.module.git.cmd",
         subject = "unstage_file",
         message = "Failed to unstage file",
@@ -368,7 +368,7 @@ function M.update_index_async(cwd, mode_bits, object_name, relpath, callback)
     { cwd = cwd },
     function(_, code)
       if code ~= 0 then
-        ark.reporter.warn({
+        stl.reporter.warn({
           from = "dot.module.git.cmd",
           subject = "update_index",
           message = "Failed to update index",

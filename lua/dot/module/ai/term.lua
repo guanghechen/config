@@ -168,7 +168,7 @@ local function start_job(termmeta)
     detach = false,
     on_exit = function(jobid, code, _)
       if code ~= 0 and code ~= 1 and code ~= 129 then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "terminal unexpected exit",
           details = { uuid = termmeta.uuid, agent = termmeta.agent, cmd = termmeta.cmd, cwd = termmeta.cwd, code = code },
@@ -283,7 +283,7 @@ function M.send(uuid, text, submit)
   local ok, err = pcall(vim.api.nvim_chan_send, termmeta.jobid, payload)
 
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "send",
       message = "Failed to send text to terminal.",

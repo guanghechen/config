@@ -30,7 +30,7 @@ local function fetch_data(winnr_sourcefile)
 
   local meta = dot.win.resolve(winnr_sourcefile, false) ---@type dot.win.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       message = "No history found.",
       details = { cwd = cwd, winnr_source = winnr_sourcefile },
@@ -243,7 +243,7 @@ function M.history()
   local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
 
   if winnr_sourcefile == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "history",
       message = "Cannot resolve sourcefile winnr",
@@ -281,7 +281,7 @@ function M.history_backward()
 
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -292,7 +292,7 @@ function M.history_backward()
 
   local history = meta.history ---@type stl.c.History|nil
   if history == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "history_backward",
       message = "No history found.",
@@ -348,7 +348,7 @@ function M.history_forward()
 
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   if meta == nil or meta.history == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "history_forward",
       message = "No history found.",

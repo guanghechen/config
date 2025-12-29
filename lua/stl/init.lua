@@ -85,6 +85,7 @@ local __mods = {
   fn = "stl.fn",
   icon = "stl.icon",
   json = "stl.json",
+  reporter = "stl.reporter",
   stdout = "stl.stdout",
 }
 
@@ -102,6 +103,7 @@ local __mods = {
 ---@field public fn                     stl.fn
 ---@field public icon                   stl.icon
 ---@field public json                   stl.json
+---@field public reporter               stl.reporter
 ---@field public stdout                 stl.stdout
 local M = setmetatable({
   __mods = __mods,

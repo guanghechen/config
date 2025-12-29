@@ -398,7 +398,7 @@ function M:delete()
           ctx.refresh()
         end)
 
-        ark.reporter.info({
+        stl.reporter.info({
           from = ctx.fullname,
           subject = "delete",
           message = string.format("Deleted %d item(s)", deleted_count),
@@ -485,7 +485,7 @@ function M:delete_visual()
         ctx.refresh()
       end)
 
-      ark.reporter.info({
+      stl.reporter.info({
         from = ctx.fullname,
         subject = "delete",
         message = string.format("Deleted %d item(s)", deleted_count),
@@ -499,7 +499,7 @@ function M:delete_selected()
   local ctx = self._ctx ---@type dot.module.explorer.action.IContext
   local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
   if #selected_nodes == 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = "delete selected",
       message = "No files selected",
@@ -548,7 +548,7 @@ function M:delete_selected()
           ctx.refresh()
         end)
 
-        ark.reporter.info({
+        stl.reporter.info({
           from = fullname,
           subject = "delete",
           message = string.format("Deleted %d item(s)", deleted_count),
@@ -746,7 +746,7 @@ function M:open_selected()
   local ctx = self._ctx ---@type dot.module.explorer.action.IContext
   local selected_nodes = ctx.tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
   if #selected_nodes == 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = "open selected",
       message = "No files selected",
@@ -762,7 +762,7 @@ function M:open_selected()
   end
 
   if #file_nodes == 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = "open selected",
       message = "No files in selection (only directories)",
@@ -786,7 +786,7 @@ function M:open_selected()
     ctx.render()
   end)
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = ctx.fullname,
     subject = "open selected",
     message = string.format("Opened %d file(s)", #file_nodes),
@@ -904,7 +904,7 @@ function M:rename()
   local selected_nodes = ctx.tree:get_selected_nodes() ---@type dot.module.explorer.Node[]
 
   if #selected_nodes > 1 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = "rename",
       message = "Cannot rename multiple files at once. Please select only one file.",
@@ -951,7 +951,7 @@ function M:rename()
       vim.schedule(function()
         ctx.refresh(true)
       end)
-      ark.reporter.info({
+      stl.reporter.info({
         from = ctx.fullname,
         subject = "rename",
         message = string.format("Renamed to: %s", new_relative_path),
@@ -1003,7 +1003,7 @@ function M:send_to_quickfix(root)
 
   vim.cmd("copen")
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = ctx.fullname,
     subject = "quickfix",
     message = "Sent to quickfix list",
@@ -1153,7 +1153,7 @@ function M:paste()
   local select_mode = ctx.tree.select_mode ---@type dot.module.explorer.SelectModeEnum
 
   if select_mode == "select" then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = "paste",
       message = "No cut/copy operation pending",
@@ -1183,7 +1183,7 @@ function M:__transfer_selected__(mode, initial_target)
   local ctx = self._ctx ---@type dot.module.explorer.action.IContext
   local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type dot.module.explorer.Node[]
   if #selected_nodes == 0 then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = ctx.fullname,
       subject = mode .. " selected",
       message = "No files selected",
@@ -1331,20 +1331,20 @@ function M:__transfer_selected__(mode, initial_target)
         end)
 
         if failed_count > 0 then
-          ark.reporter.warn({
+          stl.reporter.warn({
             from = fullname,
             subject = verb_inf,
             message = string.format("%s %d item(s), %d failed", verb_past, success_count, failed_count),
           })
         else
-          ark.reporter.info({
+          stl.reporter.info({
             from = fullname,
             subject = verb_inf,
             message = string.format("%s %d item(s)", verb_past, success_count),
           })
         end
       elseif failed_count > 0 then
-        ark.reporter.error({
+        stl.reporter.error({
           from = fullname,
           subject = verb_inf,
           message = string.format("Failed to %s %d item(s)", verb_inf, failed_count),

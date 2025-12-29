@@ -256,7 +256,7 @@ function M.preload_ignored(filepaths, callback)
           ignored_set[dot.path.normalize(line)] = true
         end
       elseif obj.code ~= 128 then
-        ark.reporter.warn({
+        stl.reporter.warn({
           from = "dot.module.git.state",
           subject = "preload_ignored",
           message = "git check-ignore failed",

@@ -140,7 +140,7 @@ local function collect_provider_actions(ctx)
     local handler = provider.handler ---@type function
     local ok, result = pcall(handler, ctx)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "collect_provider_actions",
         message = "Failed to execute LSP action provider.",
@@ -169,7 +169,7 @@ local function collect_provider_actions(ctx)
             ctx = ctx,
           }
         else
-          ark.reporter.warn({
+          stl.reporter.warn({
             from = __module_name__,
             subject = "collect_provider_actions",
             message = "Ignoring invalid provider action.",
@@ -337,7 +337,7 @@ local function custom_code_action(opts)
     end
 
     if action.disabled then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "code_action",
         message = action.disabled.reason,
@@ -351,7 +351,7 @@ local function custom_code_action(opts)
           if action.edit or action.command then
             apply_action(action, client, choice.ctx)
           else
-            ark.reporter.error({
+            stl.reporter.error({
               from = __module_name__,
               subject = "code_action",
               message = err.code .. ": " .. err.message,
@@ -442,7 +442,7 @@ local function custom_code_action(opts)
     end
 
     if #actions == 0 then
-      ark.reporter.info({
+      stl.reporter.info({
         from = __module_name__,
         subject = "code_action",
         message = "No code actions available.",

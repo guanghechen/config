@@ -80,7 +80,7 @@ function M:open()
   local filepath = self._filepath ---@type string
   local stat = vim.uv.fs_stat(filepath) ---@type uv.fs_stat.result|nil
   if stat == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "File Info",
       message = "Cannot get file information",

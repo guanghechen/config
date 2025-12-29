@@ -166,7 +166,7 @@ picker = dot.picker.ListComposer.new({
     dirty_data = true
 
     local task = item.data.task ---@type dot.t.INotifierTask
-    ark.reporter.log(task.level, {
+    stl.reporter.log(task.level, {
       from = __module_name__,
       title = task.title,
       message = task.content,

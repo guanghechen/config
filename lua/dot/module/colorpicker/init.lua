@@ -84,7 +84,7 @@ function M:pick()
   end)
 
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.module.colorpicker",
       subject = "pick",
       message = tostring(err),

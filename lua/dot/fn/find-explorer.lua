@@ -274,7 +274,7 @@ local function fetch_diritem(dirpath, force)
   local raw_data, raw_err = yoz.fs.readdir(dirpath) ---@type yoz.fs.IReaddirResult|nil, yoz.fs.IReaddirError|nil
 
   if raw_data == nil and raw_err ~= nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = name,
       subject = "readdir failed",
       details = {

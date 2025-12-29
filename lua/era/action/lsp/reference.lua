@@ -53,7 +53,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
 
   local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
   if not vim.b[bufnr_sourcefile][buf_flagname] then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "fetch_data",
       message = "Not support method.",
@@ -126,7 +126,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
     end
 
     if #errors > 0 then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = "fetch_data",
         message = "Encountered errors.",
@@ -164,7 +164,7 @@ local function focus(title, method, buf_flagname, additional_params)
     end
 
     if #items <= 0 then
-      ark.reporter.info({
+      stl.reporter.info({
         from = __module_name__,
         subject = title,
         message = "No items found.",

@@ -97,7 +97,7 @@ function M.close_others()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "close_others",
       message = "Cannot resolve the meta for the current tab.",
@@ -123,7 +123,7 @@ function M.close_to_leftest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "close_to_leftest",
       message = "Cannot resolve the meta for the current tab.",
@@ -156,7 +156,7 @@ function M.close_to_rightest()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "close_to_rightest",
       message = "Cannot resolve the meta for the current tab.",
@@ -194,7 +194,7 @@ function M.focus(bufid)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "focus",
       message = "Cannot resolve the meta for the current tab.",
@@ -214,7 +214,7 @@ function M.focus_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "focus_left",
       message = "Cannot resolve the meta for the current tab.",
@@ -241,7 +241,7 @@ function M.focus_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "focus_right",
       message = "Cannot resolve the meta for the current tab.",
@@ -378,7 +378,7 @@ function M.save(args)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
   if winnr_sourcefile == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "save",
       message = "Cannot find a valid sourcefile winnr",
@@ -448,7 +448,7 @@ function M.save(args)
       end
 
       if yoz.path.is_exist_directory(next_filepath) then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = "save",
           message = "Cannot save a file into a directory.",
@@ -484,7 +484,7 @@ function M.swap_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "swap_left",
       message = "Cannot resolve the meta for the current tab.",
@@ -525,7 +525,7 @@ function M.swap_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   if meta == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "swap_right",
       message = "Cannot resolve the meta for the current tab.",

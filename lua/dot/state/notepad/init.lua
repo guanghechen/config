@@ -118,7 +118,7 @@ end
 function M.migrate_source_engine(name, target_engine)
   local config = M.source_config_map[name]
   if config == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.state.notepad",
       subject = "Migration Failed",
       message = string.format("Source '%s' not found", name),
@@ -127,7 +127,7 @@ function M.migrate_source_engine(name, target_engine)
   end
 
   if config.engine == target_engine then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = "dot.state.notepad",
       subject = "Migration Skipped",
       message = string.format("Source '%s' is already using %s engine", name, target_engine),
@@ -165,7 +165,7 @@ function M.migrate_source_engine(name, target_engine)
   end
 
   if not new_source:load_from_json(json_data) then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.state.notepad",
       subject = "Migration Failed",
       message = string.format("Failed to import data to %s engine", target_engine),
@@ -183,7 +183,7 @@ function M.migrate_source_engine(name, target_engine)
   config.filepath = new_filepath
   _source_cache[name] = new_source
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = "dot.state.notepad",
     subject = "Migration Complete",
     message = string.format("Migrated '%s' from %s to %s", config.title, source_engine, target_engine),
@@ -257,7 +257,7 @@ end
 function M.toggle_source_engine(name)
   local config = M.source_config_map[name]
   if config == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.state.notepad",
       subject = "Toggle Failed",
       message = string.format("Source '%s' not found", name),

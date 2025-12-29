@@ -23,7 +23,7 @@ end) or ""
 ---@type string
 local fn_show_error = ark.G.register_anonymous_fn(function(bufnr)
   local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- error",
     details = { count = data.error },
@@ -33,7 +33,7 @@ end)
 ---@type string
 local fn_show_warn = ark.G.register_anonymous_fn(function(bufnr)
   local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- warning",
     details = { count = data.warn },
@@ -43,7 +43,7 @@ end)
 ---@type string
 local fn_show_hint = ark.G.register_anonymous_fn(function(bufnr)
   local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- hint",
     details = { count = data.hint },
@@ -53,7 +53,7 @@ end)
 ---@type string
 local fn_show_info = ark.G.register_anonymous_fn(function(bufnr)
   local data = dot.lsp.diagnostic.get_by_bufnr(bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "diagnostics -- info",
     details = { count = data.info },
@@ -115,7 +115,7 @@ local fn_show_clients = ark.G.register_anonymous_fn(function()
   local client_names = get_lsp_client_names() ---@type string[]
   local message = #client_names > 0 and table.concat(client_names, "\n") or "No active LSP client attached." ---@type string
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "lsp clients",
     message = message,

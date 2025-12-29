@@ -264,7 +264,7 @@ function M:match(params)
   }
   local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
   if search_err then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "search_in_lines failed",
       details = {
@@ -512,7 +512,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         return
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "reset_filepaths",
         message = "Unexpected filetype",
@@ -613,7 +613,7 @@ function M:render_listview(params)
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or filetree.root ---@type string
   local rootnode = filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   if rootnode == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "render_listview",
       message = "Cannot retrieve the root node",

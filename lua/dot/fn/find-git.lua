@@ -74,7 +74,7 @@ picker = dot.picker.FiletreeComposer.new({
 ---@return nil
 local function find_git()
   if not dot.path.is_git_repo() then
-    ark.reporter.error({
+    stl.reporter.error({
       from = name,
       subject = "find_git",
       message = "Not a git repository",

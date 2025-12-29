@@ -93,7 +93,7 @@ end
 function M.__rm_recursive__(dir)
   local ok, err = pcall(vim.fn.delete, dir, "rf")
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = "dot.module.plugin.action",
       subject = "__rm_recursive__",
       message = "Failed to delete directory: " .. dir,

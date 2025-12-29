@@ -90,7 +90,7 @@ function M.handle_selection(item)
   if item.type == "new" then
     if not item.installed then
       local tool = config.tools[item.agent]
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = __module_name__,
         subject = "handle_selection",
         message = string.format("%s is not installed.", config.agent_labels[item.agent]),
@@ -113,7 +113,7 @@ function M.attach_to_source(source)
   end
 
   if source.external then
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "attach_to_source",
       message = string.format(
@@ -224,7 +224,7 @@ function M.show_detach_picker()
   local attached = state.get_attached()
 
   if #attached == 0 then
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "show_detach_picker",
       message = "No agents attached.",
@@ -295,7 +295,7 @@ function M.__create_and_attach_tmux__(agent, cwd)
   local pane = tmux.find_existing_agent_pane(agent, cwd) or tmux.create_agent_pane(agent, cwd)
 
   if not pane then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "create_and_attach",
       message = string.format("Failed to create %s pane.", config.agent_labels[agent]),
@@ -335,7 +335,7 @@ function M.__send_to_sources__(sources, text, submit)
   end
 
   if #succeeded > 0 then
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "Message Sent",
       message = string.format("Sent to %s.", table.concat(succeeded, ", ")),
@@ -343,7 +343,7 @@ function M.__send_to_sources__(sources, text, submit)
   end
 
   if #failed > 0 then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "Send Failed",
       message = string.format("Failed to send to %s.", table.concat(failed, ", ")),

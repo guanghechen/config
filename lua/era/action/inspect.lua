@@ -8,7 +8,7 @@ function M.inspect_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local meta = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "inspect_buf",
     details = {
@@ -35,7 +35,7 @@ function M.inspect_state()
   local workspace = dot.path.workspace() ---@type string
   local full_state = dot.context.dump() ---@type dot.context.data
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "inspect_state",
     details = {
@@ -61,7 +61,7 @@ function M.inspect_state_full()
   local cwd = dot.path.cwd() ---@type string
   local workspace = dot.path.workspace() ---@type string
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "inspect_state_full",
     details = {
@@ -80,7 +80,7 @@ function M.inspect_tab()
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
 
   if meta == nil then
-    ark.reporter.info({
+    stl.reporter.info({
       from = __module_name__,
       subject = "inspect_tab",
       details = {
@@ -94,7 +94,7 @@ function M.inspect_tab()
     return
   end
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "inspect_tab",
     details = {
@@ -130,7 +130,7 @@ function M.inspect_window()
   local meta_win = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   local meta_buf = dot.buf.resolve(bufnr, false) ---@type dot.buf.IMeta|nil
 
-  ark.reporter.info({
+  stl.reporter.info({
     from = __module_name__,
     subject = "inspect_window",
     details = {

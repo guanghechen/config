@@ -240,7 +240,7 @@ function M:search(params)
   })
 
   if results == nil or results.items == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = self.fullname,
       subject = "search",
       message = "Failed to perform the search action.",
@@ -317,7 +317,7 @@ function M:search(params)
 
         if type(replacement_real) ~= "string" then
           if preview_err ~= nil then
-            ark.reporter.error({
+            stl.reporter.error({
               from = __module_name__,
               subject = "replace_text_preview",
               message = preview_err,
@@ -450,7 +450,7 @@ function M:reset_filepaths(cwd, filepaths)
         return
       end
 
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "reset_filepaths",
         message = "Unexpected filetype",

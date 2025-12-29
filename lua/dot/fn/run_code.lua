@@ -78,7 +78,7 @@ local runners = {
       ---@return nil
       local function update_notification(level)
         local message = terminated and output or (output .. " " .. ark.anim.spinner(spinner_step)) ---@type string
-        ark.reporter.log(level or "INFO", {
+        stl.reporter.log(level or "INFO", {
           from = __module_name__,
           subject = filepath,
           message = message,
@@ -183,7 +183,7 @@ local function run_code(force)
 
   local runner = runners[key]
   if runner == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "run",
       message = "Cannot find the runner by the given filepath.",

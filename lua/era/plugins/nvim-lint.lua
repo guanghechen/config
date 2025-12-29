@@ -127,7 +127,7 @@ local function do_lint(bufnr)
 
     local linter = lint.linters[name]
     if not linter then
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = __module_name__,
         message = "Linter not found: " .. name,
       })

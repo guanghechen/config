@@ -24,7 +24,7 @@ The current implementation assumes a single persistence backend (the active work
 - Ensures the store is initialised and focused before presenting the UI, creating a new untitled note when nothing exists.
 - Routes user commands (`Fnotepadtoggle`, `Fnotepadsave`, `Fnotepadcreate`, `Fnotepadrename`, `Fnotepaddestroy`, focus/swap variants, etc.) into store mutations and widget updates.
 - Flushes all live widget buffers before saving so edits from multiple windows land in the JSON snapshot coherently.
-- Provides interactive prompts for create/rename/destroy flows and reports results through `ark.reporter`.
+- Provides interactive prompts for create/rename/destroy flows and reports results through `stl.reporter`.
 - Offers `append_content` as a convenience hook that appends to—or auto-creates—the `chatbox` note, then focuses the widget for immediate review.
 
 ## Widget (`lua/eve/ux/widget/notepad.lua`)
@@ -56,7 +56,7 @@ The current implementation assumes a single persistence backend (the active work
 
 - Commands are defined under `dot.command.definitions.notepad.*` and wired via `era/command.lua`. Most commands operate without arguments; focus/swap variants accept an optional numeric count.
 - Widget keymaps are buffer-local, installed each time a notepad buffer is created, and respect aliases for cross-platform modifier keys.
-- `Notepad.flush_to_disk()` creates parent directories when needed and emits a `ark.reporter.info` notification on success.
+- `Notepad.flush_to_disk()` creates parent directories when needed and emits a `stl.reporter.info` notification on success.
 - `eve.notepad.flush()` is safe to call during Neovim shutdown (e.g., autocmd hooks) to guarantee the debounce queue is emptied.
 
 ## Upcoming: `source` Abstraction

@@ -17,7 +17,7 @@ local function run_code_as_neovim_command()
   end)
 
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = "run_code_as_neovim_command",
       message = err,

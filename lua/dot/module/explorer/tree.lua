@@ -68,7 +68,7 @@ function M:apply_copy_paste(target_parent_uri)
   local subject = string.format("%s#apply_copy_paste", self.name) ---@type string
   local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
   if target_node == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = subject,
       message = string.format("Target parent '%s' does not exist.", target_parent_uri),
@@ -77,7 +77,7 @@ function M:apply_copy_paste(target_parent_uri)
   end
 
   if target_node.nodetype ~= "D" then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = subject,
       message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
@@ -104,7 +104,7 @@ function M:apply_copy_paste(target_parent_uri)
   for _, node in ipairs(selected_nodes) do
     local nodeuri = node.uri ---@type string
     if node == self._root then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = "Cannot copy the root.",
@@ -113,7 +113,7 @@ function M:apply_copy_paste(target_parent_uri)
     end
 
     if node.parent == nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format("Node '%s' is detached and cannot be copied.", nodeuri),
@@ -122,7 +122,7 @@ function M:apply_copy_paste(target_parent_uri)
     end
 
     if target_node:is_descendant_or_self(node) then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format(
@@ -136,7 +136,7 @@ function M:apply_copy_paste(target_parent_uri)
 
     local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
     if existing_idx ~= nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
@@ -145,7 +145,7 @@ function M:apply_copy_paste(target_parent_uri)
     end
 
     if reserved[node.nodename] then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format(
@@ -169,7 +169,7 @@ function M:apply_copy_paste(target_parent_uri)
 
     local ok, result = pcall(rm.copy, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format("Resource manager copy failed for '%s'.", source_uri),
@@ -179,7 +179,7 @@ function M:apply_copy_paste(target_parent_uri)
     end
 
     if result == false or result == nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format("Resource manager refused to copy '%s'.", source_uri),
@@ -210,7 +210,7 @@ function M:apply_cut_paste(target_parent_uri)
   local subject = string.format("%s#apply_cut_paste", self.name) ---@type string
   local target_node = self:__locate__(target_parent_uri) ---@type dot.module.explorer.Node|nil
   if target_node == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = subject,
       message = string.format("Target parent '%s' does not exist.", target_parent_uri),
@@ -219,7 +219,7 @@ function M:apply_cut_paste(target_parent_uri)
   end
 
   if target_node.nodetype ~= "D" then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = subject,
       message = string.format("Target parent '%s' is not a directory.", target_parent_uri),
@@ -246,7 +246,7 @@ function M:apply_cut_paste(target_parent_uri)
   for _, node in ipairs(selected_nodes) do
     local nodeuri = node.uri ---@type string
     if node == self._root then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = "Cannot move the root.",
@@ -256,7 +256,7 @@ function M:apply_cut_paste(target_parent_uri)
 
     local parent = node.parent ---@type dot.module.explorer.Node|nil
     if parent == nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format("Node '%s' is detached and cannot be moved.", nodeuri),
@@ -265,7 +265,7 @@ function M:apply_cut_paste(target_parent_uri)
     end
 
     if target_node:is_descendant_or_self(node) then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format(
@@ -281,7 +281,7 @@ function M:apply_cut_paste(target_parent_uri)
     if existing_idx ~= nil then
       local existing = target_node.children[existing_idx] ---@type dot.module.explorer.Node
       if existing ~= node then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = subject,
           message = string.format("Target parent '%s' already contains '%s'.", target_parent_uri, node.nodename),
@@ -289,7 +289,7 @@ function M:apply_cut_paste(target_parent_uri)
         return false
       end
     elseif reserved[node.nodename] then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = subject,
         message = string.format(
@@ -315,7 +315,7 @@ function M:apply_cut_paste(target_parent_uri)
 
       local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
       if not ok then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = subject,
           message = string.format("Resource manager move failed for '%s'.", source_uri),
@@ -325,7 +325,7 @@ function M:apply_cut_paste(target_parent_uri)
       end
 
       if result == false or result == nil then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = subject,
           message = string.format("Resource manager refused to move '%s'.", source_uri),
@@ -345,7 +345,7 @@ function M:apply_cut_paste(target_parent_uri)
       end
 
       if removal_index == nil then
-        ark.reporter.error({
+        stl.reporter.error({
           from = __module_name__,
           subject = subject,
           message = string.format("Cannot locate node '%s' in its parent list.", source_uri),
@@ -381,7 +381,7 @@ function M:attach(uri)
   local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
   local resource = rm:locate(uri) ---@type dot.module.explorer.resource.INode|nil
   if resource == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = self.name,
       message = string.format("Failed to attach node '%s' in %s.", uri, self.name),
@@ -551,7 +551,7 @@ function M:insert(parenturi, resource)
   local rm = self._resource_manager ---@type dot.module.explorer.resource.IManager
   local resource_node = rm:locate(parenturi) ---@type dot.module.explorer.resource.INode|nil
   if resource_node == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#insert", self.name),
       message = string.format("Cannot insert resource for non-existent URI '%s'.", parenturi),
@@ -560,7 +560,7 @@ function M:insert(parenturi, resource)
   end
 
   if resource_node.nodetype ~= "D" then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#insert", self.name),
       message = string.format("Cannot insert resource under non-directory URI '%s'.", parenturi),
@@ -575,7 +575,7 @@ function M:insert(parenturi, resource)
   if idx ~= nil then
     local existing = parent.children[idx] ---@type dot.module.explorer.Node
     if existing.nodetype ~= resource.nodetype then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = string.format("%s#insert", self.name),
         message = string.format(
@@ -736,7 +736,7 @@ function M:remove(uri)
 
   local node = self:__locate__(uri) ---@type dot.module.explorer.Node|nil
   if node == nil then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = string.format("%s#remove", self.name),
       message = string.format("Cannot remove non-existent URI '%s'.", uri),
@@ -746,7 +746,7 @@ function M:remove(uri)
 
   local superroot = self._superroot ---@type dot.module.explorer.Node
   if node == superroot then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#remove", self.name),
       message = "Cannot remove the superroot.",
@@ -756,7 +756,7 @@ function M:remove(uri)
 
   local parent = node.parent ---@type dot.module.explorer.Node|nil
   if parent == nil then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#remove", self.name),
       message = string.format("Detached node detected while removing '%s'.", uri),
@@ -784,7 +784,7 @@ function M:remove(uri)
     end
 
     if removal_index == nil then
-      ark.reporter.error({
+      stl.reporter.error({
         from = __module_name__,
         subject = string.format("%s#remove", self.name),
         message = string.format("Failed to locate node '%s' during removal callback.", uri),
@@ -820,7 +820,7 @@ function M:remove(uri)
 
   local ok, result = pcall(rm.remove, rm, uri, on_removed) ---@type boolean, boolean|nil
   if not ok then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#remove", self.name),
       message = string.format("Resource manager removal failed for '%s': %s", uri, result),
@@ -829,7 +829,7 @@ function M:remove(uri)
   end
 
   if result == false then
-    ark.reporter.error({
+    stl.reporter.error({
       from = __module_name__,
       subject = string.format("%s#remove", self.name),
       message = string.format("Resource manager refused to remove '%s'.", uri),

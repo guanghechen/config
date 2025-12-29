@@ -117,7 +117,7 @@ function M.locate_mason_bin_path(bin, silent)
   end
 
   if not silent then
-    ark.reporter.warn({
+    stl.reporter.warn({
       from = __module_name__,
       subject = "locate_mason_bin_path",
       message = string.format(
@@ -148,7 +148,7 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
 
   if not vim.uv.fs_stat(filepath) and not stl.env.IS_HEADLESS then
     if not silent then
-      ark.reporter.warn({
+      stl.reporter.warn({
         from = __module_name__,
         subject = "locate_mason_pkg_path",
         message = string.format(

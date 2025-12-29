@@ -58,7 +58,7 @@ Implement a Terminal widget experience that mirrors the ergonomics of the Notepa
 - `create.lua` handles profile selection, shell defaults, toggle behaviour, and rename prompts.
 - `destroy.lua` confirms deletions, picks a fallback terminal, and raises the dirtier when state changes.
 - `focus.lua`, `swap.lua`, `yazi.lua`, `lazygit.lua`, and related modules glue user commands to `dot.term` navigation helpers.
-- Every action routes notifications through `ark.reporter` and ensures `dot.state.status.dirtier_termline` is marked so the widget winbar stays current.
+- Every action routes notifications through `stl.reporter` and ensures `dot.state.status.dirtier_termline` is marked so the widget winbar stays current.
 
 ### Widget (`lua/dot/module/term/widget.lua`)
 - Owns the floating window lifecycle, mask buffer, terminal buffer creation, and `jobstart` integration.

@@ -399,7 +399,7 @@ function M:dispose()
     end
 
     if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
-      ark.reporter.error({
+      stl.reporter.error({
         from = fullname,
         subject = "dispose",
         message = "Failed to dispose",
@@ -453,7 +453,7 @@ function M:close()
   vim.schedule(function()
     local ok, error = pcall(self._on_closed, self)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "close",
         message = "Failed to call on_closed",
@@ -476,7 +476,7 @@ function M:focus(pane)
   vim.schedule(function()
     local ok, error = pcall(self._on_focused, self)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "focus",
         message = "Failed to call on_focused",
@@ -496,7 +496,7 @@ function M:hide()
   vim.schedule(function()
     local ok, error = pcall(self._on_hidden, self)
     if not ok then
-      ark.reporter.error({
+      stl.reporter.error({
         from = self.fullname,
         subject = "hide",
         message = "Failed to call on_hidden",
@@ -956,7 +956,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
         if not self._disposed then
           local ok, error = pcall(self._on_cancel)
           if not ok then
-            ark.reporter.error({
+            stl.reporter.error({
               from = self.fullname,
               subject = "close",
               message = "Failed to call on_cancel",
@@ -974,7 +974,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       callback = function()
         local refresh_ok, refresh_error = pcall(self._on_refresh, self, true)
         if not refresh_ok then
-          ark.reporter.error({
+          stl.reporter.error({
             from = self.fullname,
             subject = "refresh",
             message = "Failed to run on_refresh",
