@@ -80,7 +80,7 @@ local function batch_invalidate_and_refresh(opts)
   end
 
   for index, bufnr in ipairs(visible_buffers) do
-    ark.timer.delay(function()
+    stl.timer.delay(function()
       if cache[bufnr] then
         M.refresh(bufnr, true)
       end
@@ -331,7 +331,7 @@ function M.attach(bufnr, opts)
       update_debounced = nil,
     }
 
-    buf_cache.update_debounced = ark.timer.debounce(function()
+    buf_cache.update_debounced = stl.timer.debounce(function()
       if cache[bufnr] and buf_cache.attached then
         update_hunks(buf_cache)
       end
@@ -844,8 +844,8 @@ end
 function M.setup()
   local augroup = vim.api.nvim_create_augroup("DotModuleGitBuffer", { clear = true }) ---@type integer
 
-  ---@type ark.timer.IDisposableCallable
-  local buf_enter_debounced = ark.timer.debounce(function(bufnr)
+  ---@type stl.timer.IDisposableCallable
+  local buf_enter_debounced = stl.timer.debounce(function(bufnr)
     if M.is_dirty(bufnr) then
       M.refresh(bufnr, true)
     end

@@ -668,7 +668,7 @@ function M.__handle__()
 
       local tick = win.tick ---@type integer
       local winnr = M.__create_win_as_needed__(win) ---@type integer
-      ark.timer.delay(function()
+      stl.timer.delay(function()
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) and win.tick == tick then
           vim.api.nvim_win_close(winnr, true)
           M.schedule()

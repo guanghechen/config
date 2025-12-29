@@ -38,7 +38,7 @@ local __module_name__ = "dot.module.image.placement" ---@type string
 ---@field protected _loc                  ?dot.module.image.Loc
 ---@field protected _state                ?dot.module.image.State
 ---@field protected _extmarks             ?dot.module.image.Extmark[]
----@field protected _debounced            ?ark.timer.IDisposableCallable
+---@field protected _debounced            ?stl.timer.IDisposableCallable
 local M = {}
 M.__index = M
 
@@ -137,7 +137,7 @@ function M.new(bufnr, src, opts)
   end
 
   local update_fn = self.update
-  local debounced = ark.timer.debounce(function()
+  local debounced = stl.timer.debounce(function()
     update_fn(self)
   end, 10)
   self._debounced = debounced
@@ -582,7 +582,7 @@ function M:__progress__()
     80,
     vim.schedule_wrap(function()
       if self:ready() or self.img:failed() or not vim.api.nvim_buf_is_valid(self.bufnr) then
-        ark.timer.clear_timer(timer)
+        stl.timer.clear_timer(timer)
         return
       end
       vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)

@@ -36,7 +36,7 @@ local __module_name__ = "dot.module.board.act" ---@type string
 ---@field protected _preview_winnr      integer|nil
 ---@field protected _ns                 integer
 ---@field protected _input              stl.c.Observable
----@field protected _preview_debounced  ark.timer.IDisposableCallable
+---@field protected _preview_debounced  stl.timer.IDisposableCallable
 
 ---@class dot.module.board.Act : dot.module.board.act.IState
 ---@field public fullname               string
@@ -119,7 +119,7 @@ function M.new(props)
   self._recommended_width = recommended_width
   self._get_width = get_width
 
-  self._preview_debounced = ark.timer.debounce(function()
+  self._preview_debounced = stl.timer.debounce(function()
     local bufnr = self._preview_bufnr ---@type integer|nil
     if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
       return
@@ -169,7 +169,7 @@ function M:dispose()
   local preview_bufnr = self._preview_bufnr ---@type integer|nil
   local preview_winnr = self._preview_winnr ---@type integer|nil
   local input = self._input ---@type stl.c.Observable
-  local preview_debounced = self._preview_debounced ---@type ark.timer.IDisposableCallable
+  local preview_debounced = self._preview_debounced ---@type stl.timer.IDisposableCallable
 
   self._input_bufnr = nil
   self._input_winnr = nil

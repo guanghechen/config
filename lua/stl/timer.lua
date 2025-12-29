@@ -1,20 +1,20 @@
----@class ark.timer.IDisposableCallable
----@field public cancel                 fun(self: ark.timer.IDisposableCallable):nil
----@field public dispose                fun(self: ark.timer.IDisposableCallable):nil
----@field public stop                   fun(self: ark.timer.IDisposableCallable):nil
+---@class stl.timer.IDisposableCallable
+---@field public cancel                 fun(self: stl.timer.IDisposableCallable):nil
+---@field public dispose                fun(self: stl.timer.IDisposableCallable):nil
+---@field public stop                   fun(self: stl.timer.IDisposableCallable):nil
 ---@operator call:any
 
----@class ark.timer
+---@class stl.timer
 local M = {}
 
 local ffi = require("ffi")
 
----@alias ark.timer.Guard              ffi.cdata*
+---@alias stl.timer.Guard              ffi.cdata*
 
-local guard_map = setmetatable({}, { __mode = "k" }) ---@type table<uv.uv_timer_t, ark.timer.Guard>
+local guard_map = setmetatable({}, { __mode = "k" }) ---@type table<uv.uv_timer_t, stl.timer.Guard>
 
 ---@param timer                         uv.uv_timer_t
----@return                              ark.timer.Guard
+---@return                              stl.timer.Guard
 local function create_guard(timer)
   local t = timer ---@type uv.uv_timer_t|nil
   local guard = ffi.gc(ffi.new("uint8_t[1]"), function()
@@ -40,11 +40,11 @@ end
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return ark.timer.IDisposableCallable
+---@return stl.timer.IDisposableCallable
 function M.debounce(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   ---@diagnostic disable-next-line: unused-local
-  local guard_ref = create_guard(timer) ---@type ark.timer.Guard|nil
+  local guard_ref = create_guard(timer) ---@type stl.timer.Guard|nil
   local wrapped = vim.schedule_wrap(fn)
   local args ---@type table|nil
   local disposed = false ---@type boolean
@@ -95,7 +95,7 @@ function M.debounce(fn, delay)
     end
   end
 
-  ---@type ark.timer.IDisposableCallable
+  ---@type stl.timer.IDisposableCallable
   local callable = {
     cancel = cancel_pending,
     stop = cancel_pending,
@@ -112,11 +112,11 @@ end
 ---@generic T: function
 ---@param fn                            T
 ---@param delay                         integer
----@return ark.timer.IDisposableCallable
+---@return stl.timer.IDisposableCallable
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
   ---@diagnostic disable-next-line: unused-local
-  local guard_ref = create_guard(timer) ---@type ark.timer.Guard|nil
+  local guard_ref = create_guard(timer) ---@type stl.timer.Guard|nil
 
   local running = false ---@type boolean
   local trailing_args = nil ---@type table|nil
@@ -188,7 +188,7 @@ function M.throttle(fn, delay)
     end
   end
 
-  ---@type ark.timer.IDisposableCallable
+  ---@type stl.timer.IDisposableCallable
   local callable = {
     cancel = cancel_pending,
     stop = cancel_pending,
@@ -208,7 +208,7 @@ end
 function M.delay(fn, ms)
   local timer = vim.uv.new_timer()
   if timer ~= nil then
-    local guard_ref = create_guard(timer) ---@type ark.timer.Guard|nil
+    local guard_ref = create_guard(timer) ---@type stl.timer.Guard|nil
     guard_map[timer] = guard_ref
     timer:start(
       ms,
@@ -233,7 +233,7 @@ end
 function M.set_interval(fn, interval)
   local timer = vim.uv.new_timer()
   if timer ~= nil then
-    local guard_ref = create_guard(timer) ---@type ark.timer.Guard|nil
+    local guard_ref = create_guard(timer) ---@type stl.timer.Guard|nil
     guard_map[timer] = guard_ref
     timer:start(
       interval,

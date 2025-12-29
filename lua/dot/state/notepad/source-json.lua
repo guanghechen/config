@@ -6,7 +6,7 @@ local __module_name__ = "dot.state.notepad.source-json" ---@type string
 
 ---@class dot.state.notepad.source.Json : dot.t.INotepadSource
 ---@field protected default_item_name   fun(): string
----@field protected _flush_debounced    ark.timer.IDisposableCallable|nil Debounced flush
+---@field protected _flush_debounced    stl.timer.IDisposableCallable|nil Debounced flush
 ---@field protected _state              dot.state.notepad.source.JsonState|nil Internal state cache
 local M = {}
 M.__index = M
@@ -48,7 +48,7 @@ function M.new(config)
   self.default_item_name = config.default_item_name
   self._state = nil
 
-  self._flush_debounced = ark.timer.debounce(function()
+  self._flush_debounced = stl.timer.debounce(function()
     self:flush()
   end, FLUSH_DEBOUNCE_MS)
 

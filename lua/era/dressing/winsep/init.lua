@@ -93,7 +93,7 @@ local winsep = {
   end,
 }
 
-local refresh_debounced = ark.timer.debounce(function(winnr)
+local refresh_debounced = stl.timer.debounce(function(winnr)
   local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
   if not enabled then
     winsep:hide()

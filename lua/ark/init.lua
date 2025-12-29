@@ -148,7 +148,6 @@ local __mods = {
   fs = "ark.fs",
   G = "ark.G",
   time = "ark.time",
-  timer = "ark.timer",
   var = "ark.var",
   vim = "ark.vim",
 }
@@ -161,7 +160,6 @@ local __mods = {
 ---@field public G                      ark.G
 ---@field public theme                  ark.theme
 ---@field public time                   ark.time
----@field public timer                  ark.timer
 ---@field public var                    ark.var
 ---@field public view                   ark.view
 ---@field public vim                    ark.vim

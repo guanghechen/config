@@ -146,7 +146,7 @@ local function check_scope(winnr)
   local elapsed = 0
 
   if listener.timer then
-    ark.timer.clear_timer(listener.timer)
+    stl.timer.clear_timer(listener.timer)
     listener.timer = nil
   end
 
@@ -159,7 +159,7 @@ local function check_scope(winnr)
   timer:start(0, config.step, function()
     vim.schedule(function()
       if not listener or listener.timer ~= timer then
-        ark.timer.clear_timer(timer)
+        stl.timer.clear_timer(timer)
         return
       end
 
@@ -175,7 +175,7 @@ local function check_scope(winnr)
       end
 
       if progress >= 1 then
-        ark.timer.clear_timer(timer)
+        stl.timer.clear_timer(timer)
         if listener and listener.timer == timer then
           listener.timer = nil
         end
@@ -244,7 +244,7 @@ local function disable()
 
   if listener then
     if listener.timer then
-      ark.timer.clear_timer(listener.timer)
+      stl.timer.clear_timer(listener.timer)
     end
     listener = nil
   end

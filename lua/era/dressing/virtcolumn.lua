@@ -149,7 +149,7 @@ local function refresh()
   end
 end
 
-local refresh_debounced = ark.timer.debounce(function()
+local refresh_debounced = stl.timer.debounce(function()
   local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
   if enabled then
     refresh()

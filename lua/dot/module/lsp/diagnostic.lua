@@ -43,7 +43,7 @@ M._total_info = 0
 ---@type integer
 M._total_hint = 0
 
----@type ark.timer.IDisposableCallable
+---@type stl.timer.IDisposableCallable
 local refresh_debounced
 
 ---@param bufnr                          integer
@@ -145,7 +145,7 @@ local function do_refresh()
   end
 end
 
-refresh_debounced = ark.timer.debounce(do_refresh, DEBOUNCE_MS)
+refresh_debounced = stl.timer.debounce(do_refresh, DEBOUNCE_MS)
 
 ---@param filepath                       string
 ---@param offset                         integer

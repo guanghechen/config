@@ -6,7 +6,7 @@ local __module_name__ = "dot.state.notepad.source-folder" ---@type string
 
 ---@class dot.state.notepad.source.Folder : dot.t.INotepadSource
 ---@field protected default_item_name   fun(): string
----@field protected _flush_debounced    ark.timer.IDisposableCallable|nil Debounced flush
+---@field protected _flush_debounced    stl.timer.IDisposableCallable|nil Debounced flush
 ---@field protected _state              dot.state.notepad.source.FolderState|nil Internal state cache
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
@@ -47,7 +47,7 @@ function M.new(config)
   self._dirty_orders = false
   self._dirty_active = false
 
-  self._flush_debounced = ark.timer.debounce(function()
+  self._flush_debounced = stl.timer.debounce(function()
     self:flush()
   end, FLUSH_DEBOUNCE_MS)
 

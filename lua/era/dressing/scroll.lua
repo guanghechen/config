@@ -93,7 +93,7 @@ end
 ---@return nil
 local function stop_animation(state)
   if state.timer then
-    ark.timer.clear_timer(state.timer)
+    stl.timer.clear_timer(state.timer)
     state.timer = nil
   end
 
@@ -250,7 +250,7 @@ local function check_scroll(winnr)
   timer:start(0, step, function()
     vim.schedule(function()
       if not is_state_valid(state) or state.timer ~= timer then
-        ark.timer.clear_timer(timer)
+        stl.timer.clear_timer(timer)
         return
       end
 

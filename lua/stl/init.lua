@@ -113,6 +113,7 @@ local __mods = {
   stdout = "stl.stdout",
   string = "stl.string",
   table = "stl.table",
+  timer = "stl.timer",
   tmux = "stl.tmux",
   winhint = "stl.winhint",
 }
@@ -138,6 +139,7 @@ local __mods = {
 ---@field public stdout                 stl.stdout
 ---@field public string                 stl.string
 ---@field public table                  stl.table
+---@field public timer                  stl.timer
 ---@field public tmux                   stl.tmux
 ---@field public winhint                stl.winhint
 local M = setmetatable({

@@ -65,7 +65,7 @@ local pending_force = false
 ---@type (fun(): nil)[]
 local queued_callbacks = {}
 
----@type ark.timer.IDisposableCallable
+---@type stl.timer.IDisposableCallable
 local refresh_throttled
 
 local function run_queued_callbacks()
@@ -130,7 +130,7 @@ local function do_refresh()
   end)
 end
 
-refresh_throttled = ark.timer.throttle(do_refresh, REFRESH_THROTTLE_MS)
+refresh_throttled = stl.timer.throttle(do_refresh, REFRESH_THROTTLE_MS)
 
 ---@return dot.module.git.status.IAggregatedCache
 function M.aggregated()

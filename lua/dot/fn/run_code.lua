@@ -90,7 +90,7 @@ local runners = {
       local function clear_spinner()
         terminated = true
         if spinner_timer then
-          ark.timer.clear_timer(spinner_timer)
+          stl.timer.clear_timer(spinner_timer)
           spinner_timer = nil
         end
       end
@@ -158,7 +158,7 @@ local runners = {
         permanent = false,
       })
 
-      ark.timer.delay(function()
+      stl.timer.delay(function()
         local termmeta = dot.term.state.get(termuuid) ---@type dot.module.term.IMeta|nil
         if termmeta ~= nil then
           handle(termmeta)

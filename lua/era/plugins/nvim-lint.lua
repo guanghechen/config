@@ -62,7 +62,7 @@ local linters = {
   },
 }
 
-local lint_debounced = nil ---@type ark.timer.IDisposableCallable|nil
+local lint_debounced = nil ---@type stl.timer.IDisposableCallable|nil
 
 ---@param bufnr                         integer
 local function do_lint(bufnr)
@@ -167,7 +167,7 @@ return {
     if lint_debounced ~= nil then
       lint_debounced:dispose()
     end
-    lint_debounced = ark.timer.debounce(do_lint, 128)
+    lint_debounced = stl.timer.debounce(do_lint, 128)
 
     stl.fn.observe({ dot.state.status.lint_schedule_nr }, function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer

@@ -222,7 +222,7 @@ function M.setup_breakpoints()
 
   M.win.open_filepaths(0, filepaths)
 
-  ark.timer.delay(function()
+  stl.timer.delay(function()
     local bps = require("dap.breakpoints")
     for _, breakpoint in ipairs(breakpoints) do
       local bufnr = M.buf.loadfile(breakpoint.filepath) ---@type integer|nil

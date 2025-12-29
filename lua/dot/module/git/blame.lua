@@ -536,8 +536,8 @@ local function buffer_update_current_line(bufnr)
   buffer_render(bufnr, blame, lnum)
 end
 
----@type ark.timer.IDisposableCallable
-local buffer_update_debounced = ark.timer.debounce(function(bufnr)
+---@type stl.timer.IDisposableCallable
+local buffer_update_debounced = stl.timer.debounce(function(bufnr)
   buffer_update_current_line(bufnr)
 end, 50)
 
