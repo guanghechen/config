@@ -82,6 +82,7 @@ local __mods = {
   nvimbar = "era.nvimbar",
   picker = "era.picker",
   plugin = "era.plugin",
+  scroll = "era.scroll",
   searcher = "era.searcher",
   statuscolumn = "era.statuscolumn",
   term = "era.term",
@@ -106,6 +107,7 @@ local __mods = {
 ---@field public nvimbar                era.nvimbar
 ---@field public picker                 era.picker
 ---@field public plugin                 era.plugin
+---@field public scroll                 era.scroll
 ---@field public searcher               era.searcher
 ---@field public statuscolumn           era.statuscolumn
 ---@field public term                   era.term
