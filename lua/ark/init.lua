@@ -54,26 +54,6 @@ local c = setmetatable({ __mods = c__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.dict.__mods
-local dict__mods = {
-  en = "ark.dict.en",
-}
-
----@class ark.dict
----@field public __mods                 ark.dict.__mods
----@field public en                     { [1]: string, [2]: string }[]
-local dict = setmetatable({ __mods = dict__mods }, {
-  __index = function(t, k)
-    local m = dict__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class ark.lang.__mods
 local lang__mods = {
   python = "ark.lang.python",
@@ -274,7 +254,6 @@ local __mods = {
 ---@field public c                      ark.c
 ---@field public color                  ark.external.color
 ---@field public debug                  ark.debug
----@field public dict                   ark.dict
 ---@field public easing                 ark.external.easing
 ---@field public fileicon               ark.fileicon
 ---@field public filetype               ark.filetype
@@ -300,7 +279,6 @@ local __mods = {
 local M = setmetatable({
   __mods = __mods,
   c = c,
-  dict = dict,
   lang = lang,
   theme = theme,
   view = view,

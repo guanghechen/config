@@ -24,8 +24,9 @@ yoz → ark → dot → era → integration
 
 ### Global Variables
 
-Three global variables are exposed via `_G`:
+Four global variables are exposed via `_G`:
 - `_G.yoz` → `require("yoz")` - Rust-powered helpers (set in `bot/init.lua`)
+- `_G.stl` → `require("stl")` - Standard library for environment and dictionary (set in `bot/init.lua`)
 - `_G.ark` → `require("ark")` - Foundation utilities and collections (set in `init.lua`)
 - `_G.dot` → `require("dot")` - Configuration and core framework (set in `init.lua`)
 
@@ -35,6 +36,12 @@ Three global variables are exposed via `_G`:
 Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
 - Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`, `uri`
 - Type definitions: `lua/__types__/yoz/`
+
+#### `lua/stl/` - Standard Library Layer
+Standard library with environment detection and dictionary data.
+
+- **`stl/dict/`** - Dictionary data (e.g., `en` for English word pairs)
+- **`stl/env`** - Environment detection (OS, terminal, paths)
 
 #### `lua/ark/` - Foundation Layer
 Foundation layer with algorithms, collections, and utilities.
@@ -49,13 +56,12 @@ Foundation layer with algorithms, collections, and utilities.
   - `Proc`, `Scheduler`, `Ticker` - Process and timing
   - `Theme` - Theme management class
 
-- **`ark/dict/`** - Dictionary data (e.g., `en` for English word pairs)
 - **`ark/external/`** - External utilities (`color`, `easing`)
 - **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
 - **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
 - **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)
 
-- **Core utilities**: `anim`, `box`, `debug`, `env`, `fileicon`, `filetype`, `fn`, `fs`, `hot`, `icon`, `json`, `nvim`, `reporter`, `stdout`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
+- **Core utilities**: `anim`, `box`, `debug`, `fileicon`, `filetype`, `fn`, `fs`, `hot`, `icon`, `json`, `nvim`, `reporter`, `stdout`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
 
 #### `lua/dot/` - Configuration and Core Framework Layer
 
