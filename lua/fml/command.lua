@@ -1349,7 +1349,7 @@ command
   .implement({
     uuid = K.ux.dismiss_notifications.uuid,
     action = function()
-      dot.notifier.dismiss_all()
+      era.notifier.dismiss_all()
     end,
   })
   .implement({

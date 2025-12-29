@@ -1,6 +1,6 @@
-local __module_name__ = "dot.notifier" ---@type string
+local __module_name__ = "era.notifier" ---@type string
 
----@class dot.t.INotifierTask
+---@class era.t.INotifierTask
 ---@field public uuid                   string
 ---@field public group                  string|nil
 ---@field public level                  string
@@ -14,7 +14,7 @@ local __module_name__ = "dot.notifier" ---@type string
 ---@field public timestamp              integer
 ---@field public width                  integer|nil
 
----@class dot.t.INotifierNotifyParams
+---@class era.t.INotifierNotifyParams
 ---@field public group                  string|nil
 ---@field public level                  string
 ---@field public title                  string
@@ -24,15 +24,15 @@ local __module_name__ = "dot.notifier" ---@type string
 ---@field public anonymous              boolean
 ---@field public silent                 boolean
 
----@class dot.t.INotifierWindow
+---@class era.t.INotifierWindow
 ---@field public winnr                  integer|nil
 ---@field public bufnr                  integer|nil
 ---@field public tick                   integer
----@field public task                   dot.t.INotifierTask
+---@field public task                   era.t.INotifierTask
 ---@field public row                    integer
 ---@field public dirty                  boolean
 
----@class dot.notifier.Levels
+---@class era.notifier.Levels
 local Levels = {
   TRACE = vim.log.levels.TRACE,
   DEBUG = vim.log.levels.DEBUG,
@@ -41,7 +41,7 @@ local Levels = {
   ERROR = vim.log.levels.ERROR,
 }
 
----@class dot.notifier.LevelMap
+---@class era.notifier.LevelMap
 local LevelMap = {
   TRACE = "TRACE",
   DEBUG = "DEBUG",
@@ -55,7 +55,7 @@ local LevelMap = {
   [vim.log.levels.ERROR] = "ERROR",
 }
 
----@class dot.notifier.LevelTitleMap
+---@class era.notifier.LevelTitleMap
 local LevelTitleMap = {
   TRACE = "Trace",
   DEBUG = "Debug",
@@ -105,9 +105,9 @@ local config = {
 
 local __TASKS__ = stl.c.CircularQueue.new({ capacity = 50 })
 local __TASK_HISTORY__ = stl.c.CircularQueue.new({ capacity = 200 })
-local __WINS__ = {} ---@type dot.t.INotifierWindow[]
+local __WINS__ = {} ---@type era.t.INotifierWindow[]
 
----@param task                          dot.t.INotifierTask
+---@param task                          era.t.INotifierTask
 ---@return integer
 local function measure_task_width(task)
   if task.width == nil then
@@ -126,7 +126,7 @@ local function measure_task_width(task)
   return math.min(width, 82, vim.o.columns - 4) ---@type integer
 end
 
----@param task                          dot.t.INotifierTask
+---@param task                          era.t.INotifierTask
 ---@return integer
 local function measure_task_height(task)
   if task.isempty then
@@ -137,10 +137,10 @@ local function measure_task_height(task)
   return math.min(height, 42, math.floor(vim.o.lines * 0.4)) ---@type integer
 end
 
----@class dot.notifier
+---@class era.notifier
 local M = {}
 setmetatable(M, {
-  ---@param self                        dot.notifier
+  ---@param self                        era.notifier
   ---@param msg                         string
   ---@param level0                      integer
   ---@param opts                        any
@@ -216,8 +216,8 @@ end
 
 ---@return nil
 function M.dismiss_all()
-  local wins = __WINS__ ---@type dot.t.INotifierWindow[]
-  __WINS__ = {} ---@type dot.t.INotifierWindow[]
+  local wins = __WINS__ ---@type era.t.INotifierWindow[]
+  __WINS__ = {} ---@type era.t.INotifierWindow[]
   for _, win in ipairs(wins) do
     M.__destroy_win__(win)
   end
@@ -226,7 +226,7 @@ end
 ---@param group                         string
 ---@return nil
 function M.dismiss_by_group(group)
-  local dismissing = {} ---@type dot.t.INotifierWindow[]
+  local dismissing = {} ---@type era.t.INotifierWindow[]
   for _, win in ipairs(__WINS__) do
     if win.task.group == group then
       dismissing[#dismissing + 1] = win
@@ -237,7 +237,7 @@ function M.dismiss_by_group(group)
     return
   end
 
-  local remaining = {} ---@type dot.t.INotifierWindow[]
+  local remaining = {} ---@type era.t.INotifierWindow[]
   for _, win in ipairs(__WINS__) do
     if win.task.group ~= group then
       remaining[#remaining + 1] = win
@@ -250,7 +250,7 @@ function M.dismiss_by_group(group)
   end
 end
 
----@return dot.t.INotifierTask[]
+---@return era.t.INotifierTask[]
 function M.history()
   return __TASK_HISTORY__:collect()
 end
@@ -278,7 +278,7 @@ function M.resolve_title(level)
   return LevelTitleMap[level]
 end
 
----@param params                        dot.t.INotifierNotifyParams
+---@param params                        era.t.INotifierNotifyParams
 ---@return nil
 function M.notify(params)
   local timestamp = os.time() ---@type integer
@@ -295,7 +295,7 @@ function M.notify(params)
   local lines = isempty and {} or vim.split(content, "\n", { plain = true }) ---@type string[]
   local uuid = yoz.fn.md5(string.format("%s:%s:%s:%s", level, group or "", title, content)) ---@type string
 
-  ---@type dot.t.INotifierTask
+  ---@type era.t.INotifierTask
   local task = {
     uuid = uuid,
     group = group,
@@ -360,10 +360,19 @@ function M.notify(params)
   end)
 end
 
+---@return nil
+function M.dressing()
+  vim.notify = M
+
+  stl.fn.observe({ dot.state.status.notification_level, dot.state.status.notification_paused }, function()
+    M.schedule()
+  end)
+end
+
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
----@param win                           dot.t.INotifierWindow
+---@param win                           era.t.INotifierWindow
 ---@return integer
 function M.__create_buf_as_needed__(win)
   local bufnr = win.bufnr ---@type integer|nil
@@ -435,10 +444,10 @@ function M.__create_buf_as_needed__(win)
 end
 
 ---@protected
----@param win                           dot.t.INotifierWindow
+---@param win                           era.t.INotifierWindow
 ---@return integer
 function M.__create_win_as_needed__(win)
-  local task = win.task ---@type dot.t.INotifierTask
+  local task = win.task ---@type era.t.INotifierTask
   local width = measure_task_width(task) ---@type integer
   local height = measure_task_height(task) ---@type integer
 
@@ -493,7 +502,7 @@ function M.__create_win_as_needed__(win)
 end
 
 ---@protected
----@param win                           dot.t.INotifierWindow
+---@param win                           era.t.INotifierWindow
 ---@return nil
 function M.__destroy_win__(win)
   if win.winnr ~= nil and vim.api.nvim_win_is_valid(win.winnr) then
@@ -509,7 +518,7 @@ function M.__destroy_win__(win)
 end
 
 ---@protected
----@param task                          dot.t.INotifierTask
+---@param task                          era.t.INotifierTask
 ---@param width                         integer
 ---@return string
 function M.__gen_winbar__(task, width)
@@ -533,7 +542,7 @@ function M.__gen_winbar__(task, width)
 end
 
 ---@protected
----@param task                          dot.t.INotifierTask
+---@param task                          era.t.INotifierTask
 ---@param width                         integer
 ---@return string
 ---@return stl.t.IHighlightInline[]
@@ -565,7 +574,7 @@ end
 ---@return nil
 function M.__handle__()
   local N = 0 ---@type integer
-  local invalid_wins = {} ---@type dot.t.INotifierWindow[]
+  local invalid_wins = {} ---@type era.t.INotifierWindow[]
   for _, win in ipairs(__WINS__) do
     if
       win.winnr == nil
@@ -585,22 +594,22 @@ function M.__handle__()
   end
 
   while true do
-    local candidate = __TASKS__:dequeue() ---@type dot.t.INotifierTask|nil
+    local candidate = __TASKS__:dequeue() ---@type era.t.INotifierTask|nil
     local consumed = false ---@type boolean
 
     local n = 0 ---@type integer
     local row = 1 ---@type integer
     for index = 1, N, 1 do
-      local win = __WINS__[index] ---@type dot.t.INotifierWindow
+      local win = __WINS__[index] ---@type era.t.INotifierWindow
 
       if candidate ~= nil then
         if candidate.uuid == win.task.uuid then
           candidate.times = candidate.times + win.task.times ---@type integer
-          win.task = candidate ---@type dot.t.INotifierTask|nil
+          win.task = candidate ---@type era.t.INotifierTask|nil
           win.dirty = true ---@type boolean
           consumed = true ---@type boolean
         elseif candidate.group ~= nil and candidate.group == win.task.group then
-          win.task = candidate ---@type dot.t.INotifierTask|nil
+          win.task = candidate ---@type era.t.INotifierTask|nil
           win.dirty = true ---@type boolean
           consumed = true ---@type boolean
         end
@@ -620,7 +629,7 @@ function M.__handle__()
     if n == N and not consumed and candidate ~= nil then
       local height = measure_task_height(candidate) ---@type integer
       if row + height + 3 <= vim.o.lines then
-        ---@type dot.t.INotifierWindow
+        ---@type era.t.INotifierWindow
         local win = {
           winnr = nil,
           bufnr = nil,
@@ -633,7 +642,7 @@ function M.__handle__()
 
         N = N + 1 ---@type integer
         n = N ---@type integer
-        __WINS__[N] = win ---@type dot.t.INotifierWindow
+        __WINS__[N] = win ---@type era.t.INotifierWindow
       end
     end
 
@@ -643,10 +652,10 @@ function M.__handle__()
 
     if n < N then
       for index = N, n + 1, -1 do
-        local win = __WINS__[index] ---@type dot.t.INotifierWindow
+        local win = __WINS__[index] ---@type era.t.INotifierWindow
         __WINS__[index] = nil
         __TASKS__:enqueue_front(win.task)
-        invalid_wins[#invalid_wins + 1] = win ---@type dot.t.INotifierWindow
+        invalid_wins[#invalid_wins + 1] = win ---@type era.t.INotifierWindow
       end
       break
     end
@@ -661,7 +670,7 @@ function M.__handle__()
   end
 
   for _, win in ipairs(__WINS__) do
-    local task = win.task ---@type dot.t.INotifierTask
+    local task = win.task ---@type era.t.INotifierTask
     if win.dirty then
       win.dirty = false ---@type boolean
       win.tick = win.tick + 1 ---@type integer
@@ -690,7 +699,7 @@ function M.__handle__()
 end
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = stl.nvim.fn.augroup("notifier_on_WinEnter"),
+  group = stl.nvim.fn.augroup("era.notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
@@ -706,7 +715,7 @@ vim.api.nvim_create_autocmd("WinEnter", {
 })
 
 vim.api.nvim_create_autocmd("VimResized", {
-  group = stl.nvim.fn.augroup("notifier_on_VimResized"),
+  group = stl.nvim.fn.augroup("era.notifier_on_VimResized"),
   callback = function()
     M.schedule()
   end,

@@ -165,7 +165,6 @@ local __mods = {
   command = "dot.command",
   context = "dot.context",
   G = "dot.G",
-  notifier = "dot.notifier",
   path = "dot.path",
   session = "dot.session",
   shell = "dot.shell",
@@ -181,7 +180,6 @@ local __mods = {
 ---@field public command                dot.command
 ---@field public context                dot.context
 ---@field public G                      dot.G
----@field public notifier               dot.notifier
 ---@field public session                dot.session
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme

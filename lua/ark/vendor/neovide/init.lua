@@ -7,7 +7,7 @@ require("ark.vendor.neovide.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-require("fml.dressing.notifier")
+era.notifier.dressing()
 require("fml.dressing.ui_attach")
 require("fml.command")
 

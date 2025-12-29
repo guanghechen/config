@@ -1,7 +1,7 @@
 local __module_name__ = "era.fn.find_notifications"
 
 ---@class era.fn.find_notifications.IItemData
----@field public task                   dot.t.INotifierTask
+---@field public task                   era.t.INotifierTask
 
 ---@class era.fn.find_notifications.IItem : era.picker.composer.list.IItem
 ---@field public data                   era.fn.find_notifications.IItemData
@@ -17,10 +17,10 @@ local function fetch_data()
   dirty_data = false
 
   local items = {} ---@type era.fn.find_notifications.IItem[]
-  local tasks = dot.notifier.history() ---@type dot.t.INotifierTask[]
+  local tasks = era.notifier.history() ---@type era.t.INotifierTask[]
 
   for index = #tasks, 1, -1 do
-    local task = tasks[index] ---@type dot.t.INotifierTask
+    local task = tasks[index] ---@type era.t.INotifierTask
     local text =
       string.format("%s %s %s", os.date("%H:%M:%S", task.timestamp), stl.icon.loglevel[task.level], task.title)
 
@@ -88,7 +88,7 @@ picker = era.picker.ListComposer.new({
 
     ---@cast item era.fn.find_notifications.IItem
 
-    local task = item.data.task ---@type dot.t.INotifierTask
+    local task = item.data.task ---@type era.t.INotifierTask
 
     ---@type string[]
     local header_lines = {
@@ -165,7 +165,7 @@ picker = era.picker.ListComposer.new({
 
     dirty_data = true
 
-    local task = item.data.task ---@type dot.t.INotifierTask
+    local task = item.data.task ---@type era.t.INotifierTask
     stl.reporter.log(task.level, {
       from = __module_name__,
       title = task.title,

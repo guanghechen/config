@@ -80,6 +80,7 @@ local __mods = {
   im = "era.im",
   image = "era.image",
   lsp = "era.lsp",
+  notifier = "era.notifier",
   nvimbar = "era.nvimbar",
   picker = "era.picker",
   plugin = "era.plugin",
@@ -111,6 +112,7 @@ local __mods = {
 ---@field public im                     era.im
 ---@field public image                  era.image
 ---@field public lsp                    era.lsp
+---@field public notifier               era.notifier
 ---@field public nvimbar                era.nvimbar
 ---@field public picker                 era.picker
 ---@field public plugin                 era.plugin
