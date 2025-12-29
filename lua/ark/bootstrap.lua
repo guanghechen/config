@@ -4,22 +4,6 @@ local __module_name__ = "bot" ---@type string
 local M = {}
 
 ---@return nil
-function M.setup()
-  _G.yoz = require("yoz") ---@type yoz
-  _G.stl = require("stl") ---@type stl
-
-  M.setup_patches()
-  M.setup_shell()
-  M.setup_workspace()
-
-  require("bot.option")
-  require("bot.keymap")
-  require("bot.autocmd")
-
-  _G.dot = require("dot") ---@type dot
-end
-
----@return nil
 function M.setup_patches()
   table.unpack = table.unpack or unpack --- table.unpack is introduced in Lua 5.2
   table.clear = table.clear or function(map)
@@ -162,6 +146,22 @@ function M.setup_workspace()
   vim.schedule(function()
     vim.cmd("clearjumps")
   end)
+end
+
+---@return nil
+function M.setup()
+  _G.yoz = require("yoz") ---@type yoz
+  _G.stl = require("stl") ---@type stl
+
+  M.setup_patches()
+  M.setup_shell()
+  M.setup_workspace()
+
+  require("ark.option")
+  require("ark.keymap")
+  require("ark.autocmd")
+
+  _G.dot = require("dot") ---@type dot
 end
 
 return M

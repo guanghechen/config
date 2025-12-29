@@ -1,4 +1,4 @@
-require("bot").setup()
+require("ark.bootstrap").setup()
 
 if dot.path.is_git_repo() then
   local log_filepath = dot.path.locate_workspace_filepath("log.json")

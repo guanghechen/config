@@ -108,8 +108,8 @@ M.session = {
   }, ","),
 }
 
----@class dot.var.theme
-M.theme = {
+---@class dot.var.themes
+M.themes = {
   "catppuccin-frappe",
   "catppuccin-latte",
   "catppuccin-macchiato",

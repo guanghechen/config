@@ -1,7 +1,7 @@
 ---@param name                          string
 ---@return integer
 local function augroup(name)
-  return vim.api.nvim_create_augroup("bot_" .. name, { clear = true })
+  return vim.api.nvim_create_augroup("ark_" .. name, { clear = true })
 end
 
 vim.filetype.add({

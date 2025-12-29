@@ -1,4 +1,4 @@
-require("bot").setup()
+require("ark.bootstrap").setup()
 
 local default_storage = dot.get_default_storage() ---@type dot.context.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type dot.context.storage
