@@ -1,4 +1,7 @@
----@class fml.dressing.virtcolumn.config
+---@class era.virtcolumn
+local M = {}
+
+---@class era.virtcolumn.config
 local config = {
   nsnr = dot.var.nsnr.virtcolumn,
   virt_char = "╎",
@@ -156,34 +159,39 @@ local refresh_debounced = stl.timer.debounce(function()
   end
 end, 50)
 
-stl.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
-  local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
-  if not enabled then
-    local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-    for _, bufnr in ipairs(bufnrs) do
-      vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr, 0, -1)
+---@return nil
+function M.dressing()
+  stl.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
+    local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
+    if not enabled then
+      local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+      for _, bufnr in ipairs(bufnrs) do
+        vim.api.nvim_buf_clear_namespace(bufnr, config.nsnr, 0, -1)
+      end
+      return
     end
-    return
-  end
 
-  refresh_debounced()
-end, true)
-
-vim.api.nvim_create_autocmd({
-  "WinScrolled",
-  "WinResized",
-  "TextChanged",
-  "TextChangedI",
-  "WinEnter",
-  "BufWinEnter",
-  "BufRead",
-  "InsertLeave",
-  "InsertEnter",
-  "FileType",
-  "CursorHold",
-}, {
-  group = stl.nvim.fn.augroup("virtcolumn_refresh"),
-  callback = function()
     refresh_debounced()
-  end,
-})
+  end, true)
+
+  vim.api.nvim_create_autocmd({
+    "WinScrolled",
+    "WinResized",
+    "TextChanged",
+    "TextChangedI",
+    "WinEnter",
+    "BufWinEnter",
+    "BufRead",
+    "InsertLeave",
+    "InsertEnter",
+    "FileType",
+    "CursorHold",
+  }, {
+    group = stl.nvim.fn.augroup("era.virtcolumn"),
+    callback = function()
+      refresh_debounced()
+    end,
+  })
+end
+
+return M
