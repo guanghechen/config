@@ -47,7 +47,7 @@ vim.schedule(function()
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
-  require("fml.dressing.image")
+  era.image.dressing()
   pcall(require, "ark.vendor.neovide.dressing")
   pcall(require, "ark.vendor.local.dressing")
 
