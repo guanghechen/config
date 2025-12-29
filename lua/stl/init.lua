@@ -84,6 +84,7 @@ local __mods = {
   fileicon = "stl.fileicon",
   filetype = "stl.filetype",
   fn = "stl.fn",
+  hot = "stl.hot",
   icon = "stl.icon",
   json = "stl.json",
   reporter = "stl.reporter",
@@ -105,6 +106,7 @@ local __mods = {
 ---@field public fileicon               stl.fileicon
 ---@field public filetype               stl.filetype
 ---@field public fn                     stl.fn
+---@field public hot                    stl.hot
 ---@field public icon                   stl.icon
 ---@field public json                   stl.json
 ---@field public reporter               stl.reporter

@@ -1,4 +1,4 @@
----@class ark.hot
+---@class stl.hot
 local M = {}
 
 ---@param modname                       string

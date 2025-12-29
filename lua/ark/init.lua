@@ -169,7 +169,6 @@ local __mods = {
   box = "ark.box",
   fs = "ark.fs",
   G = "ark.G",
-  hot = "ark.hot",
   time = "ark.time",
   timer = "ark.timer",
   tmux = "ark.tmux",
@@ -184,7 +183,6 @@ local __mods = {
 ---@field public box                    ark.box
 ---@field public fs                     ark.fs
 ---@field public G                      ark.G
----@field public hot                    ark.hot
 ---@field public lang                   ark.lang
 ---@field public theme                  ark.theme
 ---@field public time                   ark.time
