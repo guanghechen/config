@@ -1,1 +1,0 @@
-require("integration.neovim.keymap")

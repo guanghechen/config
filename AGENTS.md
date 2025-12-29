@@ -13,22 +13,21 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
 
 ```
-yoz → ark → dot → era → integration
+yoz → stl → dot → era → vendor
 ```
 
 - **yoz**: Rust-native standard library, completely independent Lua extension, does not depend on Neovim
-- **ark**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
-- **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/ark
+- **stl**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
+- **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/stl
 - **era**: Actions, dressing (UI styling and components), and plugin configurations
-- **integration**: Environment-specific entry points for neovim/neovide/vscode
+- **vendor**: Environment-specific entry points for neovim/neovide/vscode
 
 ### Global Variables
 
-Four global variables are exposed via `_G`:
+Three global variables are exposed via `_G`:
 - `_G.yoz` → `require("yoz")` - Rust-powered helpers (set in `bot/init.lua`)
 - `_G.stl` → `require("stl")` - Standard library for environment and dictionary (set in `bot/init.lua`)
-- `_G.ark` → `require("ark")` - Foundation utilities and collections (set in `init.lua`)
-- `_G.dot` → `require("dot")` - Configuration and core framework (set in `init.lua`)
+- `_G.dot` → `require("dot")` - Configuration and core framework (set in `bot/init.lua`)
 
 ### Core Module Structure
 
@@ -164,14 +163,14 @@ Foundation layer with algorithms, collections, and utilities.
   - render-markdown, which-key
 - **`era/plugin.lua`** - Plugin repository and lazy loading setup
 
-#### `lua/integration/` - Environment-specific Entry Points
+#### `lua/vendor/` - Environment-specific Entry Points
 
-- **`integration/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
-- **`integration/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
-- **`integration/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
+- **`vendor/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
+- **`vendor/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
+- **`vendor/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
 
 #### `lua/bot/` - Bootstrap Module
-Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
+Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and workspace.
 - `init.lua` - Main bootstrap
 - `autocmd.lua`, `keymap.lua`, `option.lua` - Early configuration
 
@@ -182,7 +181,7 @@ Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
 - **`queries/`** - TreeSitter queries for various languages
 - **`rust/yoz/`** - Rust source code for performance-critical operations
 - **`doc/`** - Documentation and issue tracking
-- **`lua/__types__/`** - Type definitions for LSP (`ark/`, `dot/`, `plugin/`, `yoz/`)
+- **`lua/__types__/`** - Type definitions for LSP (`dot/`, `plugin/`, `stl/`, `yoz/`)
 
 ### Module Access Patterns
 
@@ -194,29 +193,29 @@ Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
 - `dot.git.*`, `dot.picker.*`, `dot.searcher.*`, `dot.board.*` → module subcomponents
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 
-### Integration Points
+### Vendor Entry Points
 
 The configuration supports multiple environments through conditional loading in `init.lua`:
-- **Standard Neovim**: `integration/neovim/` (default path)
-- **Neovide GUI**: `integration/neovide/` (when `vim.g.neovide` is set)
-- **VSCode Extension**: `integration/vscode/` (when `vim.g.vscode` is set)
+- **Standard Neovim**: `vendor/neovim/` (default path)
+- **Neovide GUI**: `vendor/neovide/` (when `vim.g.neovide` is set)
+- **VSCode Extension**: `vendor/vscode/` (when `vim.g.vscode` is set)
 
-Each integration includes environment-specific:
+Each vendor entry point includes environment-specific:
 - `init.lua`: Main setup and loading sequence
 - `option.lua`: Environment-specific options
 - `keymap.lua`: Key mappings
 
-The neovim integration additionally loads:
+The neovim vendor additionally loads:
 - `dot.autocmd` - Core autocommands
 - `era.dressing.*` - UI dressing modules
 - `era.command` - Command implementations
-- `dot.module.git` - Git integration (if in git repo)
+- `dot.module.git` - Git module (if in git repo)
 - `era.plugin` - Plugin management
 
 ### Rust-Lua Bridge
 
 - **Compiled Library**: `lua/yoz` (`.so` on Unix, `.dll` on Windows)
-- **Source Code**: `rust/yoz/src/` (mlua integration)
+- **Source Code**: `rust/yoz/src/` (mlua bridge)
   - Modules: `algorithm/`, `dict/`, `find/`, `fs/`, `path/`, `replace/`, `search/`, `string/`, `types/`, `uri/`
 - **Build**: Run `./rust/build.sh --force` after Rust changes
 

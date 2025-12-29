@@ -1,11 +1,11 @@
 require("dot.autocmd")
-pcall(require, "integration.local.autocmd")
+pcall(require, "vendor.local.autocmd")
 
 dot.setup_context()
-require("integration.neovide.option")
-require("integration.neovide.keymap")
-pcall(require, "integration.local.option")
-pcall(require, "integration.local.keymap")
+require("vendor.neovim.option")
+require("vendor.neovim.keymap")
+pcall(require, "vendor.local.option")
+pcall(require, "vendor.local.keymap")
 
 require("era.dressing.notifier")
 require("era.dressing.ui_attach")
@@ -16,8 +16,7 @@ if dot.path.is_git_repo() then
 end
 
 require("era.plugin")
-pcall(require, "integration.neovide.plugin")
-pcall(require, "integration.local.plugin")
+pcall(require, "vendor.local.plugin")
 
 ---! Reload session if not specify file and current directory is a git repository.
 if dot.path.is_git_repo() then
@@ -48,8 +47,7 @@ vim.schedule(function()
   require("era.dressing.python_venv")
   require("era.dressing.select")
   require("era.dressing.image")
-  pcall(require, "integration.neovide.dressing")
-  pcall(require, "integration.local.dressing")
+  pcall(require, "vendor.local.dressing")
 
   dot.setup_breakpoints()
   dot.setup_diagnostics()

@@ -1,4 +1,4 @@
----@class integration.vscode.action
+---@class vendor.vscode.action
 local M = {}
 
 ---@return nil

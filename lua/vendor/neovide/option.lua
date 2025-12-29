@@ -1,4 +1,4 @@
-require("integration.neovim.option")
+require("vendor.neovim.option")
 
 -- Appearance
 vim.g.neovide_padding_top = 0

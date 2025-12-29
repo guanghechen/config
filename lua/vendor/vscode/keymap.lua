@@ -1,4 +1,4 @@
-local actions = require("integration.vscode.action")
+local actions = require("vendor.vscode.action")
 
 local mk = stl.nvim.fn.make_keys
 
