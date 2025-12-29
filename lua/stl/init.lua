@@ -24,6 +24,7 @@ local __mods = {
   easing = "stl.external.easing",
 
   env = "stl.env",
+  fileicon = "stl.fileicon",
   icon = "stl.icon",
 }
 
@@ -35,6 +36,7 @@ local __mods = {
 ---@field public dict                   stl.dict
 ---
 ---@field public env                    stl.env
+---@field public fileicon               stl.fileicon
 ---@field public icon                   stl.icon
 local M = setmetatable({
   __mods = __mods,

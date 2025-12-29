@@ -44,7 +44,7 @@ local function create_file_item(raw_item, dirpath)
     icon = stl.icon.kind.Folder
     icon_hl = "m_fe_name_dir"
   else
-    icon, icon_hl = ark.fileicon.get_file_icon(raw_item.name)
+    icon, icon_hl = stl.fileicon.get_file_icon(raw_item.name)
   end
 
   ---@type dot.fn.find_explorer.IFileItem

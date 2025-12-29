@@ -6,7 +6,7 @@ local BYTE_BACKSLASH  = 0x5c ---@type integer '\\'
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_directory
+---@class stl.fileicon.category_directory
 local ICONS_DIRECTORY = {
   [".cache"]              = { glyph = "󰪺", hl = "MiniIconsCyan"   },
   [".config"]             = { glyph = "󱁿", hl = "MiniIconsCyan"   },
@@ -81,7 +81,7 @@ local ICONS_DIRECTORY = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_extension
+---@class stl.fileicon.category_extension
 local ICONS_EXTENSION = {
   -- Extensions for which `vim.filetype.match()` mismatches or doesn"t work. Usually because matching depends on an actual buffer content.
   conf                    = "conf",
@@ -173,7 +173,7 @@ local ICONS_EXTENSION = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_file
+---@class stl.fileicon.category_file
 local ICONS_FILE = {
   [".DS_Store"]           = { glyph = "󰒓", hl = "MiniIconsRed"    },
   [".bash_profile"]       = { glyph = "󰒓", hl = "MiniIconsGreen"  },
@@ -277,7 +277,7 @@ local ICONS_FILE = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_filetype
+---@class stl.fileicon.category_filetype
 local ICONS_FILETYPE = {
   ["8th"]                 = { glyph = "󰭁", hl = "MiniIconsYellow" },
   a2ps                    = { glyph = "󰒓", hl = "MiniIconsCyan"   },
@@ -1211,7 +1211,7 @@ local ICONS_FILETYPE = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_lsp
+---@class stl.fileicon.category_lsp
 local ICONS_LSP = {
   array                   = { glyph = "󰅪", hl = "MiniIconsOrange" },
   boolean                 = { glyph = "󰨙", hl = "MiniIconsOrange" },
@@ -1252,7 +1252,7 @@ local ICONS_LSP = {
 -- stylua: ignore end
 
 -- stylua: ignore start
----@class ark.fileicon.category_os
+---@class stl.fileicon.category_os
 local ICONS_OS = {
   android                 = { glyph = "󰀲", hl = "MiniIconsGreen"  },
   arch                    = { glyph = "󰣇", hl = "MiniIconsAzure"  },
@@ -1275,13 +1275,13 @@ local ICONS_OS = {
 }
 -- stylua: ignore end
 
----@class ark.fileicon.category_map
----@field public directory              ark.fileicon.category_directory
----@field public extension              ark.fileicon.category_extension
----@field public file                   ark.fileicon.category_file
----@field public filetype               ark.fileicon.category_filetype
----@field public lsp                    ark.fileicon.category_lsp
----@field public os                     ark.fileicon.category_os
+---@class stl.fileicon.category_map
+---@field public directory              stl.fileicon.category_directory
+---@field public extension              stl.fileicon.category_extension
+---@field public file                   stl.fileicon.category_file
+---@field public filetype               stl.fileicon.category_filetype
+---@field public lsp                    stl.fileicon.category_lsp
+---@field public os                     stl.fileicon.category_os
 local ICONS_CATEGORY_MAP = {
   -- stylua: ignore start
   directory = ICONS_DIRECTORY,
@@ -1293,10 +1293,10 @@ local ICONS_CATEGORY_MAP = {
   -- stylua: ignore end
 }
 
----@alias ark.fileicon.get_icon
+---@alias stl.fileicon.get_icon
 ---| function(basename: string, filetype: string|nil): string, string, boolean
 
----@class ark.fileicon
+---@class stl.fileicon
 local M = {}
 
 ---@param filepath                      string
@@ -1465,7 +1465,7 @@ local GET_ICON_MAP = {
 ---@return string
 ---@return boolean
 function M.get(category, name, filetype)
-  local get_icon = GET_ICON_MAP[category] ---@type ark.fileicon.get_icon|nil
+  local get_icon = GET_ICON_MAP[category] ---@type stl.fileicon.get_icon|nil
   if get_icon == nil then
     return "󰟢", "MiniIconsGrey", true
   end

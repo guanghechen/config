@@ -68,7 +68,7 @@ local function create_buffer_item(bufnr, cwd)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local relative_filepath = dot.path.relative(cwd, filepath, "/") ---@type string
   local filename = yoz.path.basename(filepath)
-  local icon, icon_hl = ark.fileicon.get_file_icon(filename, filetype)
+  local icon, icon_hl = stl.fileicon.get_file_icon(filename, filetype)
 
   ---@type dot.fn.find_buffers.IItemData
   local data = {

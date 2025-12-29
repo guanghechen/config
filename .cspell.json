@@ -1,9 +1,9 @@
 {
   "ignorePaths": [
     "lsp/yamlls.lua",
-    "lua/dot/fileicon.lua",
     "lua/dot/module/image/terminal.lua",
     "lua/stl/dict/",
+    "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
   "import": ["~/.config/cspell/cspell.json"],

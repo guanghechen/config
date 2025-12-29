@@ -66,7 +66,7 @@ local function build_context(preset_context)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
-  local fileicon, fileicon_hl = ark.fileicon.get_file_icon(filename, filetype) ---@type string, string
+  local fileicon, fileicon_hl = stl.fileicon.get_file_icon(filename, filetype) ---@type string, string
 
   local git_branch = dot.git.state.get_branch() ---@type string|nil
   git_branch = git_branch ~= "" and git_branch or nil

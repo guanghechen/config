@@ -162,9 +162,9 @@ function M.resolve(filepath, filetype, force)
     local basename = yoz.path.basename(filepath) ---@type string
     local fileicon, fileicon_hln ---@type string, string
     if filetype == "directory" then
-      fileicon, fileicon_hln = ark.fileicon.get_directory_icon(basename) ---@type string, string
+      fileicon, fileicon_hln = stl.fileicon.get_directory_icon(basename) ---@type string, string
     else
-      fileicon, fileicon_hln = ark.fileicon.get_file_icon(basename) ---@type string, string
+      fileicon, fileicon_hln = stl.fileicon.get_file_icon(basename) ---@type string, string
     end
 
     ---@type ark.c.IFiletreeNodeData
@@ -185,9 +185,9 @@ function M.resolve(filepath, filetype, force)
     if nodedata.filetype ~= filetype then
       local fileicon, fileicon_hln ---@type string, string
       if filetype == "directory" then
-        fileicon, fileicon_hln = ark.fileicon.get_directory_icon(nodedata.basename) ---@type string, string
+        fileicon, fileicon_hln = stl.fileicon.get_directory_icon(nodedata.basename) ---@type string, string
       else
-        fileicon, fileicon_hln = ark.fileicon.get_file_icon(nodedata.basename) ---@type string, string
+        fileicon, fileicon_hln = stl.fileicon.get_file_icon(nodedata.basename) ---@type string, string
       end
       nodedata.fileicon = fileicon
       nodedata.fileicon_hln = fileicon_hln
