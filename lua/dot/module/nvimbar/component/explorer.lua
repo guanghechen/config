@@ -215,23 +215,23 @@ function M.tabline(position)
   local icon_detached = stl.icon.ui.CircleMedium ---@type string
 
   -- Register callbacks once at component creation, not on every render
-  local cb_flag_selected = ark.G.register_anonymous_fn(function()
+  local cb_flag_selected = dot.G.register_anonymous_fn(function()
     local current = dot.context.explorer.flag_selected:snapshot()
     dot.context.explorer.flag_selected:next(not current)
-  end) or "ark.G.noop"
+  end) or "dot.G.noop"
 
-  local cb_flag_viewtype = ark.G.register_anonymous_fn(function()
+  local cb_flag_viewtype = dot.G.register_anonymous_fn(function()
     local current = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
     local next_viewtype = current == "tree" and "list" or "tree" ---@type dot.context.explorer.ViewtypeEnum
     dot.context.explorer.flag_viewtype:next(next_viewtype)
-  end) or "ark.G.noop"
+  end) or "dot.G.noop"
 
-  local cb_flag_foldempty = ark.G.register_anonymous_fn(function()
+  local cb_flag_foldempty = dot.G.register_anonymous_fn(function()
     local current = dot.context.explorer.flag_foldempty:snapshot()
     dot.context.explorer.flag_foldempty:next(not current)
-  end) or "ark.G.noop"
+  end) or "dot.G.noop"
 
-  local cb_flag_hidden = ark.G.register_anonymous_fn(function()
+  local cb_flag_hidden = dot.G.register_anonymous_fn(function()
     if dot.widget.explorer.widget ~= nil then
       local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
       local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
@@ -240,7 +240,7 @@ function M.tabline(position)
       local current = dot.context.explorer.flag_show_hidden:snapshot()
       dot.context.explorer.flag_show_hidden:next(not current)
     end
-  end) or "ark.G.noop"
+  end) or "dot.G.noop"
 
   ---@return string, string, boolean
   local function get_path_text()

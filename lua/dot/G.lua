@@ -1,7 +1,7 @@
 local id = 0 ---@type integer
 local gfn = {} ---@type table<string, fun(...): nil>
 
----@class ark.G
+---@class dot.G
 local M = {}
 setmetatable(M, { __index = gfn })
 
@@ -17,7 +17,7 @@ function M.register_anonymous_fn(fn, fn_name)
   end
 
   gfn[fn_name] = fn
-  return "ark.G." .. fn_name
+  return "dot.G." .. fn_name
 end
 
 return M

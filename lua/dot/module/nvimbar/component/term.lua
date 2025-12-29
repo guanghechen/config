@@ -4,28 +4,28 @@ local decode_btn_args = stl.nvim.fn.decode_btn_args
 local K = dot.command.definitions ---@type table<string, any>
 
 ---@type string
-local fn_switch_term = ark.G.register_anonymous_fn(function(encoded)
+local fn_switch_term = dot.G.register_anonymous_fn(function(encoded)
   local argv = decode_btn_args(tostring(encoded)) ---@type integer[]
   local index = argv[1] ---@type integer|nil
   if index ~= nil then
     dot.term.state.focus(index)
   end
-end) or "ark.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_add_term = ark.G.register_anonymous_fn(function()
+local fn_add_term = dot.G.register_anonymous_fn(function()
   K.term.create:execute()
-end) or "ark.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_focus_prev_term = ark.G.register_anonymous_fn(function()
+local fn_focus_prev_term = dot.G.register_anonymous_fn(function()
   K.term.focus_left:execute()
-end) or "ark.G.noop"
+end) or "dot.G.noop"
 
 ---@type string
-local fn_focus_next_term = ark.G.register_anonymous_fn(function()
+local fn_focus_next_term = dot.G.register_anonymous_fn(function()
   K.term.focus_right:execute()
-end) or "ark.G.noop"
+end) or "dot.G.noop"
 
 ---@class dot.module.nvimbar.component.term
 local M = {}

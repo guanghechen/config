@@ -18,7 +18,7 @@ function M.path(position)
   local relpath_pieces = {} ---@type string[]
 
   ---@type string
-  local fn_open_explorer = ark.G.register_anonymous_fn(function(index)
+  local fn_open_explorer = dot.G.register_anonymous_fn(function(index)
     local dirpath = table.concat(relpath_pieces, stl.env.PATH_SEP, 1, index) ---@type string
     dot.command.definitions.find.explorer:execute(vim.fn.fnameescape(dirpath))
   end) or ""

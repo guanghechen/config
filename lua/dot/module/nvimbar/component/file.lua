@@ -16,12 +16,12 @@ local fileformat_icon_map = {
 }
 
 ---@type string
-local fn_on_fileencoding_clicked = ark.G.register_anonymous_fn(function()
+local fn_on_fileencoding_clicked = dot.G.register_anonymous_fn(function()
   dot.command.definitions.toggle.list:execute("fileencoding_local")
 end) or ""
 
 ---@type string
-local fn_on_fileformat_clicked = ark.G.register_anonymous_fn(function()
+local fn_on_fileformat_clicked = dot.G.register_anonymous_fn(function()
   dot.command.definitions.toggle.list:execute("fileformat_local")
 end) or ""
 
@@ -152,7 +152,7 @@ function M.path(position)
   local hln_text = position .. "_file_path_text" ---@type string
 
   ---@type string
-  local fn_on_filepath_clicked = ark.G.register_anonymous_fn(function()
+  local fn_on_filepath_clicked = dot.G.register_anonymous_fn(function()
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 

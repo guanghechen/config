@@ -32,13 +32,11 @@ local view = setmetatable({ __mods = view__mods }, {
 
 ---@class ark.__mods
 local __mods = {
-  G = "ark.G",
   var = "ark.var",
 }
 
 ---@class ark
 ---@field public __mods                 ark.__mods
----@field public G                      ark.G
 ---@field public var                    ark.var
 ---@field public view                   ark.view
 local M = setmetatable({

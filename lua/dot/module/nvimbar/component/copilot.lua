@@ -30,7 +30,7 @@ local function get_status()
 end
 
 ---@type string
-local fn_show_message = ark.G.register_anonymous_fn(function()
+local fn_show_message = dot.G.register_anonymous_fn(function()
   local enabled = dot.context.flight.ai:snapshot() ---@type boolean
   local status = "NIL" ---@type unknown
 
