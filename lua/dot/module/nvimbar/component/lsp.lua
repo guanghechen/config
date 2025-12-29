@@ -78,7 +78,7 @@ local function get_lsp_clients(position)
   local client_icons = {} ---@type dot.module.nvimbar.component.lsp.ILspIcon[]
   for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
     if client.attached_buffers[bufnr] and client.name ~= "null-ls" and client.name ~= "copilot" then
-      local icon = ark.icon.lsp[client.name] or "" ---@type string
+      local icon = stl.icon.lsp[client.name] or "" ---@type string
       local hln_icon = position .. "_lsp_icon_" .. client.name ---@type string
       if vim.fn.hlexists(hln_icon) == 0 then
         hln_icon = hln_fallback
@@ -189,16 +189,16 @@ function M.diagnostics(position)
       local diag_data = dot.lsp.diagnostic.get_by_bufnr(context.bufnr) ---@type dot.module.lsp.diagnostic.IBufferDiagnostics
 
       local text_hl = "" ---@type string
-      local text_count_error = diag_data.error > 0 and ark.icon.diagnostic.Error_alt .. " " .. diag_data.error .. " " or ""
+      local text_count_error = diag_data.error > 0 and stl.icon.diagnostic.Error_alt .. " " .. diag_data.error .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
-      local text_count_warn = diag_data.warn > 0 and ark.icon.diagnostic.Warning_alt .. " " .. diag_data.warn .. " " or ""
+      local text_count_warn = diag_data.warn > 0 and stl.icon.diagnostic.Warning_alt .. " " .. diag_data.warn .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
-      local text_count_hint = diag_data.hint > 0 and ark.icon.diagnostic.Hint_alt .. " " .. diag_data.hint .. " " or ""
+      local text_count_hint = diag_data.hint > 0 and stl.icon.diagnostic.Hint_alt .. " " .. diag_data.hint .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
-      local text_count_info = diag_data.info > 0 and ark.icon.diagnostic.Information_alt .. " " .. diag_data.info .. " " or ""
+      local text_count_info = diag_data.info > 0 and stl.icon.diagnostic.Information_alt .. " " .. diag_data.info .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info
@@ -215,7 +215,7 @@ function M.symbols(position)
   local hln_lsp_sep = position .. "_lsp_symbol_sep" ---@type string
   local hln_lsp_text = position .. "_lsp_symbol_text" ---@type string
 
-  local sep = " " .. ark.icon.fillchars.foldclose .. " " ---@type string
+  local sep = " " .. stl.icon.fillchars.foldclose .. " " ---@type string
   local width_sep = vim.api.nvim_strwidth(sep) ---@type integer
 
   ---@type dot.module.nvimbar.IRawComponent
@@ -242,7 +242,7 @@ function M.symbols(position)
       local has_remain = false ---@type boolean
       for _, symbol in ipairs(symbols) do
         local title = symbol.name or "" ---@type string
-        local icon = (ark.icon.kind[symbol.kind] or "") .. " " ---@type string
+        local icon = (stl.icon.kind[symbol.kind] or "") .. " " ---@type string
         local width = width_sep + vim.api.nvim_strwidth(icon .. title) ---@type integer
         if width > remain_width then
           has_remain = true

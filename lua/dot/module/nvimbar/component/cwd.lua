@@ -19,11 +19,11 @@ function M.cwd(position)
     end,
     render = function(context)
       local cwd_name = yoz.path.basename(context.cwd) ---@type string
-      local text = ark.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
+      local text = stl.icon.filetype.FolderRootOpened .. " " .. cwd_name .. " " ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = ark.icon.symbols.sep_left .. text ---@type string
-      hl_text = txt(ark.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
+      text = stl.icon.symbols.sep_left .. text ---@type string
+      hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
       return text, hl_text, true
     end,
   }

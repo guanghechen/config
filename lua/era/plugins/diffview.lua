@@ -99,13 +99,13 @@ return {
         end,
       },
       icons = { -- Only applies when use_icons is true.
-        folder_closed = ark.icon.filetype.Folder,
-        folder_open = ark.icon.filetype.FolderOpen,
+        folder_closed = stl.icon.filetype.Folder,
+        folder_open = stl.icon.filetype.FolderOpen,
       },
       signs = {
-        fold_closed = ark.icon.ui.ArrowClosed,
-        fold_open = ark.icon.ui.ArrowOpen,
-        done = ark.icon.ui.Accepted,
+        fold_closed = stl.icon.ui.ArrowClosed,
+        fold_open = stl.icon.ui.ArrowOpen,
+        done = stl.icon.ui.Accepted,
       },
       keymaps = {
         disable_defaults = true, -- Disable the default keymaps

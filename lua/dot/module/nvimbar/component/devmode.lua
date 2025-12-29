@@ -46,11 +46,11 @@ function M.render_count(position)
       local text = " " .. ark.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      text = ark.icon.symbols.sep_left .. text ---@type string
-      hl_text = txt(ark.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
+      text = stl.icon.symbols.sep_left .. text ---@type string
+      hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. hl_text ---@type string
 
-      text = text .. ark.icon.symbols.sep_right ---@type string
-      hl_text = hl_text .. txt(ark.icon.symbols.sep_right, hln_sep) ---@type string
+      text = text .. stl.icon.symbols.sep_right ---@type string
+      hl_text = hl_text .. txt(stl.icon.symbols.sep_right, hln_sep) ---@type string
       return text, hl_text, true
     end,
   }

@@ -124,7 +124,7 @@ function M:open()
     border = "rounded",
     style = "minimal",
     focusable = true,
-    title = string.format(" %s File Info ", ark.icon.diagnostic.Information),
+    title = string.format(" %s File Info ", stl.icon.diagnostic.Information),
     title_pos = "center",
   })
   self._winnr = winnr

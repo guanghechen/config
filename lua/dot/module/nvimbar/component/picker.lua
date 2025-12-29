@@ -22,7 +22,7 @@ function M.result_flags(position, flags, flags_start_index)
       local index = flags_start_index ---@type integer
       for _, item in ipairs(flags) do
         if not item.disabled() then
-          local digit = ark.icon.todigit_supscript(index) ---@type string
+          local digit = stl.icon.todigit_supscript(index) ---@type string
           local flag_text, flag_hln = item:snapshot() ---@type string, string
           local piece_text = " " .. flag_text .. digit ---@type string
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string

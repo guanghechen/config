@@ -522,7 +522,7 @@ function M:delete_selected()
   ---@type dot.module.board.Act
   local act = dot.board.Act.new({
     name = "explorer_delete",
-    title = string.format("%s Delete %d item(s)", ark.icon.diagnostic.Warning, #selected_nodes),
+    title = string.format("%s Delete %d item(s)", stl.icon.diagnostic.Warning, #selected_nodes),
     initial_input = "y",
     preview_lines = #preview_lines,
     render_preview = function(bufnr, _)
@@ -1197,7 +1197,7 @@ function M:__transfer_selected__(mode, initial_target)
   end
 
   local is_move = mode == "move" ---@type boolean
-  local icon = is_move and ark.icon.symbols.selection_cut or ark.icon.symbols.selection_copy ---@type string
+  local icon = is_move and stl.icon.symbols.selection_cut or stl.icon.symbols.selection_copy ---@type string
   local arrow = is_move and " -> " or " +> " ---@type string
   local verb_past = is_move and "Moved" or "Copied" ---@type string
   local verb_inf = is_move and "move" or "copy" ---@type string

@@ -50,11 +50,11 @@ function M.items(position, notepad)
   local hln_sep_left_active = position .. "_notepadc_sep_left" ---@type string
   local hln_sep_right_active = position .. "_notepadc_sep_right" ---@type string
 
-  local text_sep_left = ark.icon.symbols.sep_left ---@type string
-  local text_sep_right = ark.icon.symbols.sep_right ---@type string
+  local text_sep_left = stl.icon.symbols.sep_left ---@type string
+  local text_sep_right = stl.icon.symbols.sep_right ---@type string
 
-  local icon_arrow_left = ark.icon.ui.Left ---@type string
-  local icon_arrow_right = ark.icon.ui.Right ---@type string
+  local icon_arrow_left = stl.icon.ui.Left ---@type string
+  local icon_arrow_right = stl.icon.ui.Right ---@type string
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = ark.vim.fn.make_bg_transparency(hln_button) ---@type string
 
@@ -82,7 +82,7 @@ function M.items(position, notepad)
     if relative_distance ~= nil then
       local distance = math.abs(relative_distance) ---@type integer
       local marker = relative_distance < 0 and "₋" or "₊" ---@type string
-      text_index = ark.icon.todigit_subscript(distance) .. marker ---@type string
+      text_index = stl.icon.todigit_subscript(distance) .. marker ---@type string
     else
       text_index = tostring(index) .. " " ---@type string
     end
@@ -101,7 +101,7 @@ function M.items(position, notepad)
   ---@return string
   local function render_item_active(item, index)
     local name = format_name(item) ---@type string
-    local text_index = ark.icon.todigit_subscript(index) .. "." ---@type string
+    local text_index = stl.icon.todigit_subscript(index) .. "." ---@type string
     local text_name = name ---@type string
     local text = text_sep_left .. text_index .. text_name .. text_sep_right .. " " ---@type string
     local hl_text = txt(text_sep_left, hln_sep_left_active)
@@ -298,8 +298,8 @@ function M.source(position, notepad)
 
   local fn_switch_source = ark.G.register_anonymous_fn(fn_switch_source_registry[widget_id]) or "ark.G.noop"
 
-  local text_sep_left = ark.icon.symbols.sep_left ---@type string
-  local icon_source = ark.icon.notepad.Source ---@type string
+  local text_sep_left = stl.icon.symbols.sep_left ---@type string
+  local icon_source = stl.icon.notepad.Source ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {

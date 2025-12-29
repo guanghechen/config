@@ -525,7 +525,7 @@ function M.__gen_winbar__(task, width)
     width_title = vim.api.nvim_strwidth(text_title) ---@type integer
   end
 
-  local text_left = string.format("%s %s", ark.icon.loglevel[task.level], text_title) ---@type string
+  local text_left = string.format("%s %s", stl.icon.loglevel[task.level], text_title) ---@type string
   local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
   local hlname = config.winbar[task.level] ---@type string
   local hl_text = ark.vim.fn.txt(text_left, hlname) .. "%=%=" .. ark.vim.fn.txt(text_right, hlname)
@@ -547,7 +547,7 @@ function M.__gen_winbar_like_text__(task, width)
   end
 
   local hlname = config.winbar_like[task.level] ---@type string
-  local text_left = string.format("%s %s", ark.icon.loglevel[task.level], text_title) ---@type string
+  local text_left = string.format("%s %s", stl.icon.loglevel[task.level], text_title) ---@type string
   local text_right = string.format("%s", os.date("%H:%M:%S", task.timestamp)) ---@type string
 
   local width_left = vim.api.nvim_strwidth(text_left) ---@type integer

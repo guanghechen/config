@@ -46,7 +46,7 @@ function M.status(position)
       end
       table.sort(names)
 
-      local icon = ark.icon.status.attached ---@type string
+      local icon = stl.icon.status.attached ---@type string
       local agents_text = table.concat(names, ",")
       local text = string.format("%s %s", icon, agents_text)
 

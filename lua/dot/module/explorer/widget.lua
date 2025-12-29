@@ -514,7 +514,7 @@ function M:__get_flags__()
     end,
     snapshot = function()
       local show_hidden = tree.o_flag_hidden:snapshot() ---@type boolean
-      return ark.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
+      return stl.icon.symbols.flag_hidden, show_hidden and "picker_flag_blue" or "picker_flag_grey"
     end,
   }
 

@@ -10,9 +10,9 @@ local fileformat_text_map = {
 local __module_name__ = "dot.module.nvimbar.component.file" ---@type string
 
 local fileformat_icon_map = {
-  dos = ark.icon.os.dos,
-  mac = ark.icon.os.mac,
-  unix = ark.icon.os.nix,
+  dos = stl.icon.os.dos,
+  mac = stl.icon.os.mac,
+  unix = stl.icon.os.nix,
 }
 
 ---@type string
@@ -73,7 +73,7 @@ function M.format(position)
       local bufnr = context.bufnr ---@type integer
       local fileformat = vim.bo[bufnr].fileformat ---@type string
 
-      local icon_fileformat = fileformat_icon_map[fileformat] or ark.icon.os.current ---@type string
+      local icon_fileformat = fileformat_icon_map[fileformat] or stl.icon.os.current ---@type string
       local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
 
       local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
@@ -92,7 +92,7 @@ end
 ---@return dot.module.nvimbar.IRawComponent
 function M.indent(position)
   local hln_text = position .. "_file_indent_text" ---@type string
-  local icon_shiftwidth = ark.icon.ui.Tab ---@type string
+  local icon_shiftwidth = stl.icon.ui.Tab ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent
   local component = {
@@ -205,7 +205,7 @@ function M.readonly(position)
       return vim.bo.readonly
     end,
     render = function()
-      local text = ark.icon.ui.Lock .. " [RO]" ---@type string
+      local text = stl.icon.ui.Lock .. " [RO]" ---@type string
       local hl_text = txt(text, hln_readonly) ---@type string
       return text, hl_text, true
     end,
@@ -264,13 +264,13 @@ function M.status(position)
     local summary = dot.git.hunk.get_summary(bufnr) ---@type dot.module.git.HunkSummary
     local text = "" ---@type string
     if summary.added > 0 then
-      text = text .. " " .. ark.icon.git.Add .. " " .. summary.added ---@type string
+      text = text .. " " .. stl.icon.git.Add .. " " .. summary.added ---@type string
     end
     if summary.changed > 0 then
-      text = text .. " " .. ark.icon.git.Mod_alt .. " " .. summary.changed ---@type string
+      text = text .. " " .. stl.icon.git.Mod_alt .. " " .. summary.changed ---@type string
     end
     if summary.removed > 0 then
-      text = text .. " " .. ark.icon.git.Remove .. " " .. summary.removed ---@type string
+      text = text .. " " .. stl.icon.git.Remove .. " " .. summary.removed ---@type string
     end
     return text
   end

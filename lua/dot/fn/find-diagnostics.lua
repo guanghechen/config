@@ -165,17 +165,17 @@ local function refresh(force)
     local message = diagnostic.message:gsub("\n", " ") ---@type string
 
     if diagnostic.code == nil then
-      text = string.format("%s  : %s", ark.icon.diagnostic[severity], message) ---@type string
+      text = string.format("%s  : %s", stl.icon.diagnostic[severity], message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
-        colr = #ark.icon.diagnostic[severity],
+        colr = #stl.icon.diagnostic[severity],
         hlname = string.format("Diagnostic_%s", severity),
       }
     else
-      text = string.format("%s %s : %s", ark.icon.diagnostic[severity], tostring(diagnostic.code), message) ---@type string
+      text = string.format("%s %s : %s", stl.icon.diagnostic[severity], tostring(diagnostic.code), message) ---@type string
       highlights[#highlights + 1] = {
         coll = 0,
-        colr = #ark.icon.diagnostic[severity],
+        colr = #stl.icon.diagnostic[severity],
         hlname = string.format("Diagnostic_%s", severity),
       }
     end
@@ -249,7 +249,7 @@ picker = dot.picker.FiletreeComposer.new({
       end,
       snapshot = function()
         local enabled = o_flag_buffer:snapshot() ---@type boolean
-        return ark.icon.symbols.flag_buffer, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return stl.icon.symbols.flag_buffer, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   },

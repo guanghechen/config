@@ -1,4 +1,4 @@
-local icons = require("ark.icon")
+local icons = require("stl.icon")
 
 -- Global Variables --------------------------------------------------------------------------------
 

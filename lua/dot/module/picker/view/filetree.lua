@@ -780,7 +780,7 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
   local fileicon = node.data.fileicon ---@type string
   local fileicon_hln = node.data.fileicon_hln ---@type string
   if not nodestate.collapsed then
-    fileicon = ark.icon.filetype.FolderOpen
+    fileicon = stl.icon.filetype.FolderOpen
   end
 
   if folded_depth < 1 then

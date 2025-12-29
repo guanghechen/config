@@ -142,7 +142,7 @@ function M.open(opts, on_confirm)
     relative = relative,
     row = row,
     style = "minimal",
-    title = string.format(" %s %s ", ark.icon.ui.Edit, title),
+    title = string.format(" %s %s ", stl.icon.ui.Edit, title),
     title_pos = "center",
     width = width,
     win = relative_win,

@@ -41,7 +41,7 @@ local function create_file_item(raw_item, dirpath)
   local icon, icon_hl ---@type string, string
 
   if raw_item.type == "directory" then
-    icon = ark.icon.kind.Folder
+    icon = stl.icon.kind.Folder
     icon_hl = "m_fe_name_dir"
   else
     icon, icon_hl = ark.fileicon.get_file_icon(raw_item.name)
@@ -298,7 +298,7 @@ local function fetch_diritem(dirpath, force)
       owner = raw_itself.owner,
       group = raw_itself.group,
       date = raw_itself.date,
-      icon = ark.icon.kind.Folder,
+      icon = stl.icon.kind.Folder,
       icon_hl = "m_fe_name_dir",
     }
     file_datamap[dirpath] = itself

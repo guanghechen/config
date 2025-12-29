@@ -124,7 +124,7 @@ function M.__get_flags__()
       end,
       snapshot = function()
         local enabled = dot.context.explorer.flag_selected:snapshot() ---@type boolean
-        return ark.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
+        return stl.icon.symbols.flag_selected, enabled and "picker_flag_orange" or "picker_flag_grey"
       end,
     },
     {
@@ -137,9 +137,9 @@ function M.__get_flags__()
       snapshot = function()
         local viewtype = dot.context.explorer.flag_viewtype:snapshot() ---@type dot.context.explorer.ViewtypeEnum
         if viewtype == "tree" then
-          return ark.icon.symbols.flag_tree, "picker_flag_blue"
+          return stl.icon.symbols.flag_tree, "picker_flag_blue"
         else
-          return ark.icon.symbols.flag_list, "picker_flag_blue"
+          return stl.icon.symbols.flag_list, "picker_flag_blue"
         end
       end,
     },
@@ -159,7 +159,7 @@ function M.__get_flags__()
           return "", ""
         end
         local enabled = dot.context.explorer.flag_foldempty:snapshot() ---@type boolean
-        return ark.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
+        return stl.icon.symbols.flag_fold_empty_path, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
   }

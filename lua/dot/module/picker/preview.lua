@@ -243,11 +243,11 @@ function M:create_win(winopts, dimension)
   dot.win.set_type(winnr, ark.vim.win.Types.PICKER_PREVIEW)
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-    ark.icon.listchars.eol,
-    ark.icon.listchars.lead,
-    ark.icon.listchars.nbsp,
-    ark.icon.listchars.space,
-    ark.icon.listchars.trail
+    stl.icon.listchars.eol,
+    stl.icon.listchars.lead,
+    stl.icon.listchars.nbsp,
+    stl.icon.listchars.space,
+    stl.icon.listchars.trail
   )
   vim.wo[winnr].spell = false
   vim.wo[winnr].signcolumn = "yes"

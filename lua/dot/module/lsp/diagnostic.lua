@@ -165,7 +165,7 @@ function M.render(filepath, offset, highlights)
   local text = "" ---@type string
 
   if data.error > 0 then
-    local part = " " .. ark.icon.diagnostic.Error_alt .. " " .. data.error ---@type string
+    local part = " " .. stl.icon.diagnostic.Error_alt .. " " .. data.error ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_error" }
@@ -173,7 +173,7 @@ function M.render(filepath, offset, highlights)
   end
 
   if data.warn > 0 then
-    local part = " " .. ark.icon.diagnostic.Warning_alt .. " " .. data.warn ---@type string
+    local part = " " .. stl.icon.diagnostic.Warning_alt .. " " .. data.warn ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_warn" }
@@ -181,7 +181,7 @@ function M.render(filepath, offset, highlights)
   end
 
   if data.hint > 0 then
-    local part = " " .. ark.icon.diagnostic.Hint_alt .. " " .. data.hint ---@type string
+    local part = " " .. stl.icon.diagnostic.Hint_alt .. " " .. data.hint ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_hint" }
@@ -189,7 +189,7 @@ function M.render(filepath, offset, highlights)
   end
 
   if data.info > 0 then
-    local part = " " .. ark.icon.diagnostic.Information_alt .. " " .. data.info ---@type string
+    local part = " " .. stl.icon.diagnostic.Information_alt .. " " .. data.info ---@type string
     local offset_next = offset + #part ---@type integer
     text = text .. part ---@type string
     highlights[#highlights + 1] = { coll = offset, colr = offset_next, hlname = "f_lsp_diagnostic_info" }

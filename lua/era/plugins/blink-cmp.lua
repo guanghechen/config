@@ -68,7 +68,7 @@ return {
       appearance = {
         use_nvim_cmp_as_default = false,
         nerd_font_variant = "mono",
-        kind_icons = ark.icon.kind,
+        kind_icons = stl.icon.kind,
       },
       cmdline = {
         enabled = true,
@@ -149,7 +149,7 @@ return {
               },
               kind_icon = {
                 text = function(ctx)
-                  return ark.icon.kind[ctx.kind] .. " "
+                  return stl.icon.kind[ctx.kind] .. " "
                 end,
                 highlight = function(ctx)
                   return "BlinkCmpKind" .. ctx.kind

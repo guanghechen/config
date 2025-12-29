@@ -1,9 +1,7 @@
-local env = require("stl.env")
-
----@class ark.icon
+---@class stl.icon
 local M = {}
 
----@class ark.icon.digits_subscript
+---@class stl.icon.digits_subscript
 local digits_subscript = {
   "₀",
   "₁",
@@ -17,7 +15,7 @@ local digits_subscript = {
   "₉",
 }
 
----@class ark.icon.digits_supscript
+---@class stl.icon.digits_supscript
 local digits_supscript = {
   "⁰",
   "¹",
@@ -55,7 +53,7 @@ function M.todigit_supscript(num)
   return #result > 0 and result or digits_supscript[1]
 end
 
----@class ark.icon.fillchars
+---@class stl.icon.fillchars
 M.fillchars = {
   diff = " ",
   eob = " ",
@@ -67,7 +65,7 @@ M.fillchars = {
   vert = "│",
 }
 
----@class ark.icon.listchars
+---@class stl.icon.listchars
 M.listchars = {
   eol = "↲",
   extends = "»",
@@ -79,7 +77,7 @@ M.listchars = {
   trail = "•",
 }
 
----@class ark.icon.symbols
+---@class stl.icon.symbols
 M.symbols = {
   flag_buffer = "",
   flag_case_sensitive = "",
@@ -104,7 +102,7 @@ M.symbols = {
   setting = "",
 }
 
----@class ark.icon.status
+---@class stl.icon.status
 M.status = {
   attached = "󰖩",
   broadcast = "󰐼",
@@ -113,7 +111,7 @@ M.status = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.icon.app
+---@class stl.icon.app
 M.app = {
   Copilot = "",
   CopilotError = "",
@@ -122,7 +120,7 @@ M.app = {
   Vim = "",
 }
 
----@class ark.icon.filetype
+---@class stl.icon.filetype
 M.filetype = {
   Default = "",
   File = "",
@@ -138,28 +136,28 @@ M.filetype = {
   Unknown = "󰈚",
 }
 
----@class ark.icon.lang
+---@class stl.icon.lang
 M.lang = {
   python = " ",
 }
 
----@class ark.icon.os
+---@class stl.icon.os
 M.os = {
   dos = "",
   mac = "",
   nix = "",
   wsl = "",
   unknown = "",
-  current = (env.IS_NIX and "")
-    or (env.IS_MAC and "")
-    or (env.IS_WIN and "")
-    or (env.IS_WSL and "")
+  current = (stl.env.IS_NIX and "")
+    or (stl.env.IS_MAC and "")
+    or (stl.env.IS_WIN and "")
+    or (stl.env.IS_WSL and "")
     or "",
 }
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.icon.dap
+---@class stl.icon.dap
 M.dap = {
   Breakpoint = "",
   BreakpointCondition = "",
@@ -177,7 +175,7 @@ M.dap = {
   Terminate = "󰝤",
 }
 
----@class ark.icon.diagnostic
+---@class stl.icon.diagnostic
 M.diagnostic = {
   ERROR = "",
   WARN = "",
@@ -196,7 +194,7 @@ M.diagnostic = {
   Warning_alt = "",
 }
 
----@class ark.icon.git
+---@class stl.icon.git
 M.git = {
   Add = "",
   Branch = "",
@@ -215,7 +213,7 @@ M.git = {
   Conflict = "",
 }
 
----@class ark.icon.lsp
+---@class stl.icon.lsp
 M.lsp = {
   basedpyright = "",
   bashls = "",
@@ -240,7 +238,7 @@ M.lsp = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.icon.kind
+---@class stl.icon.kind
 M.kind = {
   Array = "󰅪",
   Boolean = "󰨙",
@@ -295,7 +293,7 @@ M.kind = {
   Watch = "󰥔",
 }
 
----@class ark.icon.log
+---@class stl.icon.log
 M.loglevel = {
   TRACE = "",
   DEBUG = "",
@@ -304,13 +302,13 @@ M.loglevel = {
   ERROR = "",
 }
 
----@class ark.icon.notepad
+---@class stl.icon.notepad
 M.notepad = {
   Notebook = "󰠮",
   Source = "",
 }
 
----@class ark.icon.ui
+---@class stl.icon.ui
 M.ui = {
   Accepted = "",
   ArrowClosed = "",

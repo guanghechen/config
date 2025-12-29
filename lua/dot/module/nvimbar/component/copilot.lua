@@ -65,21 +65,21 @@ function M.status(position)
     render = function()
       local enabled = dot.context.flight.ai:snapshot() ---@type boolean
       if not enabled then
-        local text = ark.icon.app.Copilot .. " Copilot" ---@type string
+        local text = stl.icon.app.Copilot .. " Copilot" ---@type string
         local hl_text = btn(text, fn_show_message)
         return text, hl_text, true
       end
 
       local status = get_status()
-      local icon = ark.icon.app.Copilot ---@type string
+      local icon = stl.icon.app.Copilot ---@type string
       local hln_icon = position .. "_ai_copilot_icon_connected" ---@type string
 
       -- Use different icons and colors based on status
       if status == "Error" or status == "Stopped" or status == "Disconnected" then
-        icon = ark.icon.app.CopilotError
+        icon = stl.icon.app.CopilotError
         hln_icon = position .. "_ai_copilot_icon_error"
       elseif status == "Busy" then
-        icon = ark.icon.app.CopilotWarn
+        icon = stl.icon.app.CopilotWarn
         hln_icon = position .. "_ai_copilot_icon_busy"
       end
 

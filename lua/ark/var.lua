@@ -29,17 +29,17 @@ local severity = vim.diagnostic.severity
 M.diagnostic = {
   ---@type table<vim.diagnostic.Severity, string>
   severity2prefixicon = {
-    [severity.ERROR] = ark.icon.diagnostic.Error_alt,
-    [severity.WARN] = ark.icon.diagnostic.Warning_alt,
-    [severity.INFO] = ark.icon.diagnostic.Information_alt,
-    [severity.HINT] = ark.icon.diagnostic.Hint_alt,
+    [severity.ERROR] = stl.icon.diagnostic.Error_alt,
+    [severity.WARN] = stl.icon.diagnostic.Warning_alt,
+    [severity.INFO] = stl.icon.diagnostic.Information_alt,
+    [severity.HINT] = stl.icon.diagnostic.Hint_alt,
   },
   ---@type table<vim.diagnostic.Severity, string>
   severity2texticon = {
-    [severity.ERROR] = ark.icon.diagnostic.Error_alt,
-    [severity.WARN] = ark.icon.diagnostic.Warning_alt,
-    [severity.INFO] = ark.icon.diagnostic.Information_alt,
-    [severity.HINT] = ark.icon.diagnostic.Hint_alt,
+    [severity.ERROR] = stl.icon.diagnostic.Error_alt,
+    [severity.WARN] = stl.icon.diagnostic.Warning_alt,
+    [severity.INFO] = stl.icon.diagnostic.Information_alt,
+    [severity.HINT] = stl.icon.diagnostic.Hint_alt,
   },
   ---@type table<vim.diagnostic.Severity, string>
   severity2numhl = {
@@ -226,28 +226,28 @@ M.sign = {
 
 -- stylua: ignore start
 local sd = vim.fn.sign_define
-sd(M.sign.PICKER_FINDER_PROMPT,             { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
-sd(M.sign.PICKER_RESULT_CURRENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
-sd(M.sign.PICKER_RESULT_PRESENT,            { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
-sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
-sd(M.sign.PICKER_RESULT_SELECTED,           { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
-sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
+sd(M.sign.PICKER_FINDER_PROMPT,             { text = stl.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
+sd(M.sign.PICKER_RESULT_CURRENT,            { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
+sd(M.sign.PICKER_RESULT_PRESENT,            { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
+sd(M.sign.PICKER_RESULT_PRESENT_CURRENT,    { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
+sd(M.sign.PICKER_RESULT_SELECTED,           { text = stl.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
+sd(M.sign.PICKER_RESULT_SELECTED_CURRENT,   { text = stl.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 
-sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
-sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = ark.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
-sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
-sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = ark.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
-sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = ark.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
-sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = ark.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
+sd(M.sign.SEARCHER_BUFFER_PROMPT,           { text = stl.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
+sd(M.sign.SEARCHER_FINDER_PROMPT,           { text = stl.icon.ui.Telescope,            texthl = "m_pk_finder_prompt"              })
+sd(M.sign.SEARCHER_RESULT_CURRENT,          { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_current"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT,          { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present"          })
+sd(M.sign.SEARCHER_RESULT_PRESENT_CURRENT,  { text = stl.icon.ui.ArrowPresent,         texthl = "m_pk_sign_line_present_current"  })
+sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = stl.icon.ui.Selected,             texthl = "m_pk_sign_line_selected"         })
+sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = stl.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 
-sd(M.sign.CHOICES_CURRENT,                  { text = ark.icon.ui.ArrowPresent,         texthl = "m_ch_sign_current"               })
+sd(M.sign.CHOICES_CURRENT,                  { text = stl.icon.ui.ArrowPresent,         texthl = "m_ch_sign_current"               })
 
-sd(M.sign.DAP_BREAKPOINT,                   { text = ark.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
-sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = ark.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
-sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = ark.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
-sd(M.sign.DAP_LOG_POINT,                    { text = ark.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
-sd(M.sign.DAP_STOPPED,                      { text = ark.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
+sd(M.sign.DAP_BREAKPOINT,                   { text = stl.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
+sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = stl.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })
+sd(M.sign.DAP_BREAKPOINT_REJECTED,          { text = stl.icon.dap.BreakpointRejected,  texthl = "DapBreakpointRejected",          linehl = "DapBreakpointRejectedLine",  numhl = "DapBreakpointRejectedNum",  })
+sd(M.sign.DAP_LOG_POINT,                    { text = stl.icon.dap.LogPoint,            texthl = "DapLogPoint",                    linehl = "DapLogPointLine",            numhl = "DapLogPointNum",            })
+sd(M.sign.DAP_STOPPED,                      { text = stl.icon.dap.Stopped,             texthl = "DapStopped",                     linehl = "DapStoppedLine",             numhl = "DapStoppedNum",             })
 -- stylua: ignore end
 
 ----------------------------------------------------------------------------------------------------
