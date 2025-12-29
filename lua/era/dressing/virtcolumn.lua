@@ -32,7 +32,6 @@ local DISABLED_FILETYPES = {
   [stl.filetype.FLASH_PROMPT] = true,
   [stl.filetype.GITCOMMIT] = true,
   [stl.filetype.IMAGE_VIEWER] = true,
-  [stl.filetype.LAZY] = true,
   [stl.filetype.LSPINFO] = true,
   [stl.filetype.MASON] = true,
   [stl.filetype.NOTIFY] = true,
