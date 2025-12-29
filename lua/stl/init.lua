@@ -113,6 +113,7 @@ local __mods = {
   stdout = "stl.stdout",
   string = "stl.string",
   table = "stl.table",
+  winhint = "stl.winhint",
 }
 
 ---@class stl
@@ -136,6 +137,7 @@ local __mods = {
 ---@field public stdout                 stl.stdout
 ---@field public string                 stl.string
 ---@field public table                  stl.table
+---@field public winhint                stl.winhint
 local M = setmetatable({
   __mods = __mods,
   c = c,

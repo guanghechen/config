@@ -152,7 +152,6 @@ local __mods = {
   tmux = "ark.tmux",
   var = "ark.var",
   vim = "ark.vim",
-  winhint = "ark.winhint",
 }
 
 ---@class ark
@@ -168,7 +167,6 @@ local __mods = {
 ---@field public var                    ark.var
 ---@field public view                   ark.view
 ---@field public vim                    ark.vim
----@field public winhint                ark.winhint
 local M = setmetatable({
   __mods = __mods,
   theme = theme,

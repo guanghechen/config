@@ -1,4 +1,4 @@
----@class ark.winhint
+---@class stl.winhint
 local M = {
   a = {
     "    █████╗    ",

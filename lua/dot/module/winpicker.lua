@@ -21,7 +21,7 @@ function M.new(char)
     return M.renderers[char]
   end
 
-  local hint = ark.winhint[char] ---@type string[]
+  local hint = stl.winhint[char] ---@type string[]
 
   local self = setmetatable({}, M)
   self.char = char
