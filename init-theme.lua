@@ -1,7 +1,5 @@
 require("bot").setup()
 
-_G.dot = require("dot") ---@type dot
-
 local default_storage = dot.get_default_storage() ---@type dot.context.storage
 local storage = { editor = default_storage.editor } ---@type dot.context.storage
 dot.setup_context(storage)

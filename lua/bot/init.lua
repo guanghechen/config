@@ -15,6 +15,8 @@ function M.setup()
   require("bot.option")
   require("bot.keymap")
   require("bot.autocmd")
+
+  _G.dot = require("dot") ---@type dot
 end
 
 ---@return nil
