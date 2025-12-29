@@ -29,7 +29,7 @@ end
 vim.schedule(function()
   era.statusline.dressing()
   era.tabline.dressing()
-  require("fml.dressing.winline")
+  era.winline.dressing()
 
   era.commentstring.dressing()
   era.foldtext.dressing()

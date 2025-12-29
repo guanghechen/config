@@ -92,6 +92,7 @@ local __mods = {
   trailspace = "era.trailspace",
   view = "era.view",
   virtcolumn = "era.virtcolumn",
+  winline = "era.winline",
   winpicker = "era.winpicker",
 }
 
@@ -122,6 +123,7 @@ local __mods = {
 ---@field public trailspace             era.trailspace
 ---@field public view                   era.view
 ---@field public virtcolumn             era.virtcolumn
+---@field public winline                era.winline
 ---@field public winpicker              era.winpicker
 local M = setmetatable({
   __mods = __mods,

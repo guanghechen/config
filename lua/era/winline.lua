@@ -1,3 +1,6 @@
+---@class era.winline
+local M = {}
+
 local c = require("era.nvimbar").component
 local Nvimbar = require("era.nvimbar").Nvimbar
 
@@ -161,14 +164,19 @@ local function render(winnr)
   end
 end
 
-dot.state.status.dirty_winline_nr:subscribe(
-  stl.c.Subscriber.new({
-    on_next = function(winnr, winnr_prev)
-      render(winnr)
-      if winnr_prev ~= winnr then
-        render(winnr_prev)
-      end
-    end,
-  }),
-  true
-)
+---@return nil
+function M.dressing()
+  dot.state.status.dirty_winline_nr:subscribe(
+    stl.c.Subscriber.new({
+      on_next = function(winnr, winnr_prev)
+        render(winnr)
+        if winnr_prev ~= winnr then
+          render(winnr_prev)
+        end
+      end,
+    }),
+    true
+  )
+end
+
+return M
