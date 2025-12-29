@@ -58,28 +58,26 @@ function M.setup_clipboard()
     }
   end
 
-  local env = require("stl.env")
-  if env.IS_MAC then
-    if env.IS_TMUX then
+  if stl.env.IS_MAC then
+    if stl.env.IS_TMUX then
       vim.g.clipboard = tmux_clipboard()
     end
     return
   end
 
-  if env.IS_WSL then
+  if stl.env.IS_WSL then
     vim.g.clipboard = wsl_clipboard()
   end
 end
 
 ---@return nil
 function M.setup_shell()
-  local env = require("stl.env")
-  if env.IS_MAC then
+  if stl.env.IS_MAC then
   -- vim.o.shell = "/bin/bash"
-  elseif env.IS_NIX or env.IS_WSL then
+  elseif stl.env.IS_NIX or stl.env.IS_WSL then
   -- vim.o.shell = "/usr/bin/bash"
   -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
-  elseif env.IS_WIN then
+  elseif stl.env.IS_WIN then
     vim.o.shell = "pwsh"
 
     -- Setting shell command flags
@@ -111,9 +109,8 @@ function M.setup_workspace()
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
 
-    local env = require("stl.env")
-    local A = env.locate_gitroot(p)
-    local B = env.locate_gitroot(cwd)
+    local A = stl.env.locate_gitroot(p)
+    local B = stl.env.locate_gitroot(cwd)
 
     if A == nil then
       local ok, err = pcall(function()

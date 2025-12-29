@@ -1,5 +1,3 @@
-local icons = require("stl.icon")
-
 -- Global Variables --------------------------------------------------------------------------------
 
 vim.g.bigfile_size = 1.5 * 1024 * 1024 --- 1.5MB
@@ -175,8 +173,8 @@ vim.o.termguicolors = true
 vim.opt.mouse:append("a")
 vim.opt.shortmess:append({ W = true, I = true, c = true, C = true })
 
-vim.opt.fillchars:append(icons.fillchars)
-vim.opt.listchars:append(icons.listchars)
+vim.opt.fillchars:append(stl.icon.fillchars)
+vim.opt.listchars:append(stl.icon.listchars)
 
 -- Session & Persistence ---------------------------------------------------------------------------
 
