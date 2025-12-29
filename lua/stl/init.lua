@@ -96,6 +96,32 @@ local lang = setmetatable({ __mods = lang__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class stl.nvim.__mods
+local nvim__mods = {
+  buf = "stl.nvim.buf",
+  fn = "stl.nvim.fn",
+  tab = "stl.nvim.tab",
+  win = "stl.nvim.win",
+}
+
+---@class stl.nvim
+---@field public __mods                 stl.nvim.__mods
+---@field public buf                    stl.nvim.buf
+---@field public fn                     stl.nvim.fn
+---@field public tab                    stl.nvim.tab
+---@field public win                    stl.nvim.win
+local nvim = setmetatable({ __mods = nvim__mods }, {
+  __index = function(t, k)
+    local m = nvim__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class stl.__mods
 local __mods = {
   color = "stl.external.color",
@@ -129,6 +155,7 @@ local __mods = {
 ---
 ---@field public dict                   stl.dict
 ---@field public lang                   stl.lang
+---@field public nvim                   stl.nvim
 ---
 ---@field public anim                   stl.anim
 ---@field public box                    stl.box
@@ -153,6 +180,7 @@ local M = setmetatable({
   c = c,
   dict = dict,
   lang = lang,
+  nvim = nvim,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

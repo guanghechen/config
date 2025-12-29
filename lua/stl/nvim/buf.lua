@@ -1,4 +1,4 @@
----@alias ark.vim.buf.TypeEnum
+---@alias stl.nvim.buf.TypeEnum
 ---| ""
 ---| "acwrite"
 ---| "help"
@@ -10,7 +10,7 @@
 
 local CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
 
----@class ark.vim.buf.Types
+---@class stl.nvim.buf.Types
 local Types = {
   EMPTY = "",
   ACWRITE = "acwrite",
@@ -34,7 +34,7 @@ local buftype_attrs = {
 local filepath_to_bufnr = {} ---@type table<string, integer>
 local bufnr_to_filepath = {} ---@type table<integer, string>
 
----@class ark.vim.buf
+---@class stl.nvim.buf
 local M = {}
 
 M.CONTENT_SPLITLINE = CONTENT_SPLITLINE ---@type string

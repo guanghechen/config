@@ -450,7 +450,7 @@ function M:__create_win_as_needed__()
   vim.wo[winnr].wrap = false
   vim.wo[winnr].winhighlight = EXPLORER_WIN_HIGHLIGHT
 
-  dot.win.set_type(winnr, ark.vim.win.Types.EXPLORER)
+  dot.win.set_type(winnr, stl.nvim.win.Types.EXPLORER)
 
   self:__update_winbar__()
 
@@ -545,7 +545,7 @@ function M:__get_visual_nodes__()
     return {}
   end
 
-  local start_lnum, end_lnum = ark.vim.buf.retrieve_visual_lnum_range() ---@type integer, integer
+  local start_lnum, end_lnum = stl.nvim.buf.retrieve_visual_lnum_range() ---@type integer, integer
 
   local mode = vim.fn.mode() ---@type string
   if mode == "v" or mode == "V" or mode == "\22" then
@@ -1374,7 +1374,7 @@ function M:__setup_keymaps__(bufnr)
   end
 
   self._keymaps = keymaps
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
 ---@protected

@@ -34,7 +34,7 @@ local config = {
   repeat_delay = 100,
 }
 
-local augroup = ark.vim.fn.augroup(__module_name__)
+local augroup = stl.nvim.fn.augroup(__module_name__)
 
 local states = {} ---@type table<integer, era.dressing.scroll.IState>
 local mouse_scrolling = false ---@type boolean

@@ -1,6 +1,6 @@
-local btn = ark.vim.fn.btn
-local txt = ark.vim.fn.txt
-local decode_btn_args = ark.vim.fn.decode_btn_args
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
+local decode_btn_args = stl.nvim.fn.decode_btn_args
 local K = dot.command.definitions ---@type table<string, any>
 
 ---@type string
@@ -65,7 +65,7 @@ function M.items(position)
   local icon_arrow_left = stl.icon.ui.Left ---@type string
   local icon_arrow_right = stl.icon.ui.Right ---@type string
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
-  local hln_arrow = ark.vim.fn.make_bg_transparency(hln_button) ---@type string
+  local hln_arrow = stl.nvim.fn.make_bg_transparency(hln_button) ---@type string
 
   ---@param termmeta                    dot.module.term.IMeta
   ---@param index                       integer

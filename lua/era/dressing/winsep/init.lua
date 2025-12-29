@@ -112,7 +112,7 @@ stl.fn.observe({ dot.context.flight.dressing_winsep }, function()
 end, true)
 
 vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
-  group = ark.vim.fn.augroup("winsep_on_resize"),
+  group = stl.nvim.fn.augroup("winsep_on_resize"),
   callback = function()
     vim.schedule(function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -123,10 +123,10 @@ vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
 })
 
 vim.api.nvim_create_autocmd("WinEnter", {
-  group = ark.vim.fn.augroup("winsep_on_WinEnter"),
+  group = stl.nvim.fn.augroup("winsep_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if ark.vim.win.is_fixed(winnr) then
+    if stl.nvim.win.is_fixed(winnr) then
       refresh_debounced(winnr)
     end
   end,

@@ -1,7 +1,7 @@
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
-local txt = ark.vim.fn.txt
+local txt = stl.nvim.fn.txt
 local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
 ---@return boolean
@@ -27,7 +27,7 @@ local function resolve_nvimbar(winnr)
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
           local width = vim.api.nvim_win_get_width(winnr) ---@type integer
-          return ark.vim.win.is_float(winnr) and width - 2 or width
+          return stl.nvim.win.is_float(winnr) and width - 2 or width
         end
         return 0
       end,
@@ -113,7 +113,7 @@ end
 ---@param winnr                         integer|nil
 ---@return nil
 local function render(winnr)
-  if winnr == nil or not ark.vim.win.is_valid(winnr) then
+  if winnr == nil or not stl.nvim.win.is_valid(winnr) then
     return
   end
 

@@ -211,7 +211,7 @@ function M:open(params)
     vim.bo[bufnr].filetype = self.filetype
     vim.bo[bufnr].swapfile = false
     vim.b[bufnr][ark.var.N_BUF_DISABLE_LINT] = true
-    ark.vim.fn.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
+    stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
     vim.schedule(function()
       vim.cmd("stopinsert")
@@ -241,7 +241,7 @@ function M:open(params)
     })
     self._winnr = winnr
 
-    dot.win.set_type(winnr, ark.vim.win.Types.TEXTAREA)
+    dot.win.set_type(winnr, stl.nvim.win.Types.TEXTAREA)
     vim.api.nvim_win_set_cursor(winnr, { text_cursor_row, text_cursor_col })
   end
 

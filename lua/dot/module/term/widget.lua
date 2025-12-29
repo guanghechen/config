@@ -260,7 +260,7 @@ function M:focus()
   local termindex = dot.term.state.current() ---@type integer
   local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
   if termmeta == nil then
-    ark.vim.win.close(_terminal_winnr)
+    stl.nvim.win.close(_terminal_winnr)
     _terminal_winnr = nil
     return
   end
@@ -288,7 +288,7 @@ end
 function M:hide()
   local winnr = _terminal_winnr ---@type integer|nil
   _terminal_winnr = nil
-  ark.vim.win.close(winnr)
+  stl.nvim.win.close(winnr)
 end
 
 ---@return boolean
@@ -313,7 +313,7 @@ function M:resize()
     local termindex = dot.term.state.current() ---@type integer
     local _, termmeta = dot.term.state.at(termindex) ---@type string|nil, dot.module.term.IMeta|nil
     if termmeta == nil then
-      ark.vim.win.close(_terminal_winnr)
+      stl.nvim.win.close(_terminal_winnr)
       _terminal_winnr = nil
     else
       self:__create_win_as_needed__(termmeta)
@@ -330,7 +330,7 @@ end
 ---@return nil
 function M:split(direction)
   local winnr_original = vim.api.nvim_get_current_win() ---@type integer
-  if ark.vim.win.is_float(winnr_original) then
+  if stl.nvim.win.is_float(winnr_original) then
     return
   end
 
@@ -483,7 +483,7 @@ function M.__create_buf_as_needed__(termmeta)
         if _termmeta then
           dot.term.event.on_closed(_termmeta)
         else
-          ark.vim.buf.close(bufnr)
+          stl.nvim.buf.close(bufnr)
         end
       end)
     end,
@@ -491,8 +491,8 @@ function M.__create_buf_as_needed__(termmeta)
 
   termmeta.bufnr = bufnr
   local default_keymaps = create_default_keymaps(termmeta) ---@type stl.t.IKeymap[]
-  ark.vim.fn.bindkeys(default_keymaps, { bufnr = bufnr, noremap = true, silent = true })
-  ark.vim.fn.bindkeys(termmeta.user_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(default_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(termmeta.user_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   return bufnr
 end
@@ -527,7 +527,7 @@ function M:__create_win_as_needed__(termmeta)
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     local bufnr_mask = create_mask_buf_as_needed() ---@type integer
     winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
-    dot.win.set_type(winnr, ark.vim.win.Types.TERMINAL)
+    dot.win.set_type(winnr, stl.nvim.win.Types.TERMINAL)
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
     vim.wo[winnr].cursorline = false

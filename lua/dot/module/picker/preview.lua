@@ -129,8 +129,8 @@ function M:dispose()
   self._last_result = nil
   self._scheduler_content = nil
 
-  local ok1, error1 = pcall(ark.vim.win.close, winnr)
-  local ok2, error2 = pcall(ark.vim.buf.close, bufnr)
+  local ok1, error1 = pcall(stl.nvim.win.close, winnr)
+  local ok2, error2 = pcall(stl.nvim.buf.close, bufnr)
   local ok3, error3 = pcall(scheduler_content.dispose, scheduler_content)
   if not (ok1 and ok2 and ok3) then
     stl.reporter.error({
@@ -204,7 +204,7 @@ function M:create_buf()
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  ark.vim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
   return bufnr, true
 end
 
@@ -240,7 +240,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, ark.vim.win.Types.PICKER_PREVIEW)
+  dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_PREVIEW)
   vim.wo[winnr].listchars = string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
     stl.icon.listchars.eol,
@@ -301,7 +301,7 @@ function M:hide()
 
   self._winnr = nil
 
-  local ok1, error1 = pcall(ark.vim.win.close, winnr)
+  local ok1, error1 = pcall(stl.nvim.win.close, winnr)
   if not ok1 then
     stl.reporter.error({
       from = self.fullname,

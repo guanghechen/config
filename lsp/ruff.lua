@@ -32,7 +32,7 @@ local function on_attach(client, bufnr)
       desc = "Organize Imports",
     },
   }
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr })
 end
 
 ---@param client                        vim.lsp.Client

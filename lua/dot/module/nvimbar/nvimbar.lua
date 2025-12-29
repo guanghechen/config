@@ -156,8 +156,8 @@ function M.new(props)
   self.fullname = fullname
   self._value = value
   self._disposed = false
-  self._sep = ark.vim.fn.txt(comp_sep, comp_sep_hlname)
-  self._sep_active = ark.vim.fn.txt(comp_sep, comp_sep_hlname_active)
+  self._sep = stl.nvim.fn.txt(comp_sep, comp_sep_hlname)
+  self._sep_active = stl.nvim.fn.txt(comp_sep, comp_sep_hlname_active)
   self._sep_width = vim.api.nvim_strwidth(comp_sep)
   self._components = {}
   self._orders = {}

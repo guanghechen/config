@@ -104,7 +104,7 @@ local function create_buf(termmeta)
       end,
     },
   }
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   termmeta.bufnr = bufnr
   return bufnr
@@ -222,7 +222,7 @@ end
 function M.hide()
   local winnr = _winnr
   _winnr = nil
-  ark.vim.win.close(winnr)
+  stl.nvim.win.close(winnr)
 end
 
 ---@param termmeta                      dot.module.ai.term.IMeta
@@ -246,7 +246,7 @@ function M.on_closed(termmeta)
   state.detach_by_term_uuid(termmeta.uuid)
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    ark.vim.buf.close(bufnr)
+    stl.nvim.buf.close(bufnr)
   end
 
   if M.isvisible() then

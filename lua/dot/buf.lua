@@ -22,7 +22,7 @@ function M.loadfile(filepath)
     return nil
   end
 
-  local bufnr_sourcefile = ark.vim.buf.locate_bufnr(filepath) ---@type integer|nil
+  local bufnr_sourcefile = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
     vim.bo[bufnr_sourcefile].buflisted = true
     return bufnr_sourcefile

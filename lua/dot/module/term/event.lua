@@ -37,7 +37,7 @@ function M.on_closed(termmeta)
   end
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    ark.vim.buf.close(bufnr)
+    stl.nvim.buf.close(bufnr)
   end
   termmeta.on_closed()
 

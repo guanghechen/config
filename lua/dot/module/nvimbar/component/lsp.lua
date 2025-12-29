@@ -1,8 +1,8 @@
 local __module_name__ = "dot.module.nvimbar.component.lsp" ---@type string
 
-local btn = ark.vim.fn.btn
-local txt = ark.vim.fn.txt
-local decode_btn_args = ark.vim.fn.decode_btn_args
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
+local decode_btn_args = stl.nvim.fn.decode_btn_args
 
 ---@type string
 local fn_goto_lsp_pos = ark.G.register_anonymous_fn(function(num)
@@ -69,7 +69,7 @@ end)
 ---@param position                      stl.e.NvimbarPositionEnum
 local function get_lsp_clients(position)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if not ark.vim.buf.is_valid(bufnr) then
+  if not stl.nvim.buf.is_valid(bufnr) then
     return {}, {}
   end
 
@@ -98,7 +98,7 @@ end
 local function get_lsp_client_names()
   local names = {} ---@type string[]
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if not ark.vim.buf.is_valid(bufnr) then
+  if not stl.nvim.buf.is_valid(bufnr) then
     return names
   end
 

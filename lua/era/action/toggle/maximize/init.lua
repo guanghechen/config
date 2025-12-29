@@ -14,7 +14,7 @@ function M.maximize()
     return
   end
 
-  if ark.vim.win.is_float(winnr) then
+  if stl.nvim.win.is_float(winnr) then
     require("era.action.toggle.maximize.float").maximize(winnr)
   else
     require("era.action.toggle.maximize.normal").maximize(winnr)

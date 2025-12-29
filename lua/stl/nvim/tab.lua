@@ -1,14 +1,14 @@
----@alias ark.vim.tab.TypeEnum
+---@alias stl.nvim.tab.TypeEnum
 ---| "diffview"
 ---| "normal"
 
----@class ark.vim.tab.Types
+---@class stl.nvim.tab.Types
 local Types = {
   DIFFVIEW = "diffview",
   NORMAL = "normal",
 }
 
----@class ark.vim.tab
+---@class stl.nvim.tab
 local M = {}
 
 M.Types = vim.deepcopy(Types)

@@ -410,7 +410,7 @@ command
   })
   .implement({
     uuid = K.explorer.toggle.uuid,
-    tabtype = ark.vim.tab.Types.NORMAL,
+    tabtype = stl.nvim.tab.Types.NORMAL,
     action = function()
       dot.widget.explorer.toggle()
     end,
@@ -611,7 +611,7 @@ command
   .implement({
     uuid = K.git.hunk_stage_visual.uuid,
     action = function()
-      local lnum_start, lnum_end = ark.vim.buf.retrieve_visual_lnum_range()
+      local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
       dot.git.hunk.stage({ lnum_start, lnum_end })
     end,
   })
@@ -624,7 +624,7 @@ command
   .implement({
     uuid = K.git.hunk_unstage_visual.uuid,
     action = function()
-      local lnum_start, lnum_end = ark.vim.buf.retrieve_visual_lnum_range()
+      local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
       dot.git.hunk.unstage({ lnum_start, lnum_end })
     end,
   })
@@ -637,7 +637,7 @@ command
   .implement({
     uuid = K.git.hunk_reset_visual.uuid,
     action = function()
-      local lnum_start, lnum_end = ark.vim.buf.retrieve_visual_lnum_range()
+      local lnum_start, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range()
       dot.git.hunk.reset({ lnum_start, lnum_end })
     end,
   })
@@ -948,7 +948,7 @@ command
 --[refresh] ----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
-  tabtype = ark.vim.tab.Types.NORMAL,
+  tabtype = stl.nvim.tab.Types.NORMAL,
   action = function()
     require("era.action.refresh").refresh_all()
   end,
@@ -1552,7 +1552,7 @@ command
 --[explorer] plugin: diffview ----------------------------------------------------------------------
 command.implement({
   uuid = K.explorer.toggle.uuid,
-  tabtype = ark.vim.tab.Types.DIFFVIEW,
+  tabtype = stl.nvim.tab.Types.DIFFVIEW,
   action = function()
     require("era.action.plugin.diffview").toggle()
   end,
@@ -1582,7 +1582,7 @@ command
 --[refresh] plugin: diffview -----------------------------------------------------------------------
 command.implement({
   uuid = K.refresh.all.uuid,
-  tabtype = ark.vim.tab.Types.DIFFVIEW,
+  tabtype = stl.nvim.tab.Types.DIFFVIEW,
   action = function()
     require("era.action.plugin.diffview").refresh()
   end,

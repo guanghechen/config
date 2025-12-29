@@ -421,7 +421,7 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
     }
   end
 
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
 return M

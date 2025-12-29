@@ -180,10 +180,10 @@ function M:dispose()
 
   local ok1, error1 = pcall(input.dispose, input)
   local ok2, error2 = pcall(preview_debounced.dispose, preview_debounced)
-  local ok3, error3 = pcall(ark.vim.win.close, input_winnr)
-  local ok4, error4 = pcall(ark.vim.win.close, preview_winnr)
-  local ok5, error5 = pcall(ark.vim.buf.close, input_bufnr)
-  local ok6, error6 = pcall(ark.vim.buf.close, preview_bufnr)
+  local ok3, error3 = pcall(stl.nvim.win.close, input_winnr)
+  local ok4, error4 = pcall(stl.nvim.win.close, preview_winnr)
+  local ok5, error5 = pcall(stl.nvim.buf.close, input_bufnr)
+  local ok6, error6 = pcall(stl.nvim.buf.close, preview_bufnr)
 
   if not (ok1 and ok2 and ok3 and ok4 and ok5 and ok6) then
     stl.reporter.error({
@@ -304,7 +304,7 @@ function M:__create_wins__()
   })
   self._input_winnr = input_winnr
 
-  dot.win.set_type(input_winnr, ark.vim.win.Types.BOARD)
+  dot.win.set_type(input_winnr, stl.nvim.win.Types.BOARD)
   vim.wo[input_winnr].cursorline = false
   vim.wo[input_winnr].number = false
   vim.wo[input_winnr].relativenumber = false
@@ -330,7 +330,7 @@ function M:__create_wins__()
   })
   self._preview_winnr = preview_winnr
 
-  dot.win.set_type(preview_winnr, ark.vim.win.Types.BOARD)
+  dot.win.set_type(preview_winnr, stl.nvim.win.Types.BOARD)
   vim.wo[preview_winnr].cursorline = false
   vim.wo[preview_winnr].number = false
   vim.wo[preview_winnr].relativenumber = false
@@ -526,7 +526,7 @@ function M:__setup_keymaps__(bufnr)
   }
 
   local keymaps = vim.list_extend(builtin_keymaps, self._keymaps) ---@type stl.t.IKeymap[]
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 end
 
 return M

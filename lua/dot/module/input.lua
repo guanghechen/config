@@ -149,7 +149,7 @@ function M.open(opts, on_confirm)
     zindex = zindex,
   })
 
-  dot.win.set_type(winnr, ark.vim.win.Types.INPUT)
+  dot.win.set_type(winnr, stl.nvim.win.Types.INPUT)
   vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
   vim.wo[winnr].cursorline = false
@@ -263,7 +263,7 @@ function M.open(opts, on_confirm)
       end,
     })
   end
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_set_current_win(winnr)
   if prompt == "" then

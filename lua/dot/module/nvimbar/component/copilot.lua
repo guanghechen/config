@@ -1,7 +1,7 @@
 local __module_name__ = "dot.module.nvimbar.component.copilot" ---@type string
 
-local btn = ark.vim.fn.btn
-local txt = ark.vim.fn.txt
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
 
 ---@return string
 local function get_status()

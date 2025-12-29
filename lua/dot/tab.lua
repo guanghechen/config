@@ -7,7 +7,7 @@
 ---@field public winnr_fixed            stl.c.Observable
 ---@field public winnr_float            stl.c.Observable
 ---@field public winnr_sourcefile       stl.c.Observable
----@field public tabtype                ark.vim.tab.TypeEnum
+---@field public tabtype                stl.nvim.tab.TypeEnum
 
 local meta_map = {} ---@type table<integer, dot.tab.IMeta>
 
@@ -17,7 +17,7 @@ local M = {}
 ----------------------------------------------------------------------------------------------------
 
 ---@param tabnr                         integer|nil
----@return ark.vim.tab.TypeEnum|nil
+---@return stl.nvim.tab.TypeEnum|nil
 function M.get_type(tabnr)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
     return nil
@@ -26,7 +26,7 @@ function M.get_type(tabnr)
 end
 
 ---@param tabnr                         integer
----@param tabtype                       ark.vim.tab.TypeEnum|nil
+---@param tabtype                       stl.nvim.tab.TypeEnum|nil
 ---@return nil
 function M.set_type(tabnr, tabtype)
   vim.t[tabnr].eve_type = tabtype
@@ -304,11 +304,11 @@ function M.resolve(tabnr, force)
     end
   end
 
-  local tabtype = M.resolve_type(tabnr, force) ---@type ark.vim.tab.TypeEnum
+  local tabtype = M.resolve_type(tabnr, force) ---@type stl.nvim.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = stl.c.Observable.from_value(ark.vim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable
-  local winnr_float = stl.c.Observable.from_value(ark.vim.win.is_float(winnr) and winnr or 0) ---@type stl.c.Observable
+  local winnr_fixed = stl.c.Observable.from_value(stl.nvim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable
+  local winnr_float = stl.c.Observable.from_value(stl.nvim.win.is_float(winnr) and winnr or 0) ---@type stl.c.Observable
   local winnr_sourcefile = stl.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0) ---@type stl.c.Observable
 
   ---@type dot.tab.IMeta
@@ -325,9 +325,9 @@ end
 
 ---@param tabnr                         integer
 ---@param force                         boolean
----@return ark.vim.tab.TypeEnum
+---@return stl.nvim.tab.TypeEnum
 function M.resolve_type(tabnr, force)
-  local tabtype = M.get_type(tabnr) ---@type ark.vim.tab.TypeEnum|nil
+  local tabtype = M.get_type(tabnr) ---@type stl.nvim.tab.TypeEnum|nil
   if tabtype ~= nil and not force then
     return tabtype
   end
@@ -339,12 +339,12 @@ function M.resolve_type(tabnr, force)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
     if filetype == stl.filetype.DIFFVIEW_FILES or filetype == stl.filetype.DIFFVIEW_FILE_HISTORY then
-      tabtype = ark.vim.tab.Types.DIFFVIEW ---@type ark.vim.tab.TypeEnum
+      tabtype = stl.nvim.tab.Types.DIFFVIEW ---@type stl.nvim.tab.TypeEnum
       break
     end
   end
 
-  tabtype = tabtype or ark.vim.tab.Types.NORMAL ---@type ark.vim.tab.TypeEnum
+  tabtype = tabtype or stl.nvim.tab.Types.NORMAL ---@type stl.nvim.tab.TypeEnum
   M.set_type(tabnr, tabtype)
   return tabtype
 end

@@ -12,7 +12,7 @@ local function decode_int(text)
   return num
 end
 
----@class ark.vim.fn
+---@class stl.nvim.fn
 local M = {}
 
 ----------------------------------------------------------------------------------------------------

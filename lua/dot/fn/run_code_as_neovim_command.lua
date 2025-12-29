@@ -2,7 +2,7 @@ local __module_name__ = "dot.fn.run_code_as_neovim_command" ---@type string
 
 ---@return nil
 local function run_code_as_neovim_command()
-  local selected = ark.vim.buf.retrieve_selected_text() ---@type string
+  local selected = stl.nvim.buf.retrieve_selected_text() ---@type string
   if selected == "" then
     local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
     selected = table.concat(lines, "\n")

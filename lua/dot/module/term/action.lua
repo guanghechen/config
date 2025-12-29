@@ -345,7 +345,7 @@ function M.toggle()
   end
 
   local _, termmeta_shell = dot.term.state.find_index_by_type("shell") ---@type integer, dot.module.term.IMeta|nil
-  local selected_text = ark.vim.buf.retrieve_selected_text() ---@type string
+  local selected_text = stl.nvim.buf.retrieve_selected_text() ---@type string
   if termmeta_shell == nil then
     terminal:toggle_and_focus({
       uuid = yoz.fn.uuid(),

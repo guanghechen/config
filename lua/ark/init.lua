@@ -34,7 +34,6 @@ local view = setmetatable({ __mods = view__mods }, {
 local __mods = {
   G = "ark.G",
   var = "ark.var",
-  vim = "ark.vim",
 }
 
 ---@class ark
@@ -42,7 +41,6 @@ local __mods = {
 ---@field public G                      ark.G
 ---@field public var                    ark.var
 ---@field public view                   ark.view
----@field public vim                    ark.vim
 local M = setmetatable({
   __mods = __mods,
   view = view,

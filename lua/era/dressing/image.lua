@@ -12,7 +12,7 @@ if state.did_setup then
 end
 state.did_setup = true
 
-local group = ark.vim.fn.augroup("era.dressing.image")
+local group = stl.nvim.fn.augroup("era.dressing.image")
 vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
   group = group,
   callback = function(e)

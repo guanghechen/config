@@ -1,5 +1,5 @@
-local btn = ark.vim.fn.btn
-local txt = ark.vim.fn.txt
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
 
 ---@class dot.module.nvimbar.component.picker
 local M = {}

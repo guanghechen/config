@@ -282,7 +282,7 @@ function M:attach(winnr_source)
   if winnr_source == vim.api.nvim_get_current_win() then
     local mode = vim.fn.mode() ---@type string
     if mode == "v" or mode == "V" or mode == "\22" then -- visual, visual-line, visual-block
-      local selected_text = ark.vim.buf.retrieve_selected_text() ---@type string|nil
+      local selected_text = stl.nvim.buf.retrieve_selected_text() ---@type string|nil
       if selected_text ~= nil and selected_text ~= "" then
         self.o_search_pattern:next(selected_text)
       end
@@ -741,7 +741,7 @@ function M:__create_finder_buffer_as_needed__()
   vim.bo[bufnr].swapfile = false
 
   -- Use finder keymaps
-  ark.vim.fn.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_search_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })
@@ -787,7 +787,7 @@ function M:__create_replacer_buffer_as_needed__()
   vim.bo[bufnr].swapfile = false
 
   -- Use replacer keymaps
-  ark.vim.fn.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   local pattern = self.o_replace_pattern:snapshot() ---@type string
   local lines = vim.split(pattern, "\n", { plain = true })

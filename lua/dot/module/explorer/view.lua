@@ -565,7 +565,7 @@ function M:__precompute__(root, ctx)
   local show_diagnostics = ctx.show_diagnostics ---@type boolean
   local bufnr_counts = {} ---@type table<integer, dot.module.explorer.view.IDiagCounts>
 
-  local loaded_bufnrs = show_diagnostics and ark.vim.buf.get_loaded_bufnrs() or {} ---@type table<string, integer>
+  local loaded_bufnrs = show_diagnostics and stl.nvim.buf.get_loaded_bufnrs() or {} ---@type table<string, integer>
 
   local filepaths ---@type string[]
   if self._tick_structure == ticks.structure then

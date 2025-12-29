@@ -2,8 +2,8 @@
 ---@field public bufnr                  integer
 ---@field public meta                   dot.buf.IMeta
 
-local btn = ark.vim.fn.btn
-local txt = ark.vim.fn.txt
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
 
 ---@type string
 local fn_active_buf = ark.G.register_anonymous_fn(function(bufnr)

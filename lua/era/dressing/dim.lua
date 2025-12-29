@@ -25,7 +25,7 @@ local config = {
 ---@field public timer                  uv.uv_timer_t|nil
 
 local ns = vim.api.nvim_create_namespace(__module_name__)
-local augroup = ark.vim.fn.augroup(__module_name__)
+local augroup = stl.nvim.fn.augroup(__module_name__)
 local enabled = false ---@type boolean
 local listener = nil ---@type era.dressing.dim.IListener|nil
 

@@ -7,7 +7,7 @@ local function copy_current_filepath(candidate, filepath)
   if candidate == "absolute" then
     local content = filepath ---@type string
 
-    ark.vim.fn.copy(content)
+    stl.nvim.fn.copy(content)
     stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (absolute) to system clipboard!",
@@ -16,7 +16,7 @@ local function copy_current_filepath(candidate, filepath)
     local cwd = dot.path.cwd() ---@type string
     local content = dot.path.relative(cwd, filepath, "/") ---@type string
 
-    ark.vim.fn.copy(content)
+    stl.nvim.fn.copy(content)
     stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filepath (relative) to system clipboard!",
@@ -24,7 +24,7 @@ local function copy_current_filepath(candidate, filepath)
   elseif candidate == "filename" then
     local content = yoz.path.basename(filepath) ---@type string
 
-    ark.vim.fn.copy(content)
+    stl.nvim.fn.copy(content)
     stl.reporter.info({
       from = __module_name__,
       message = "Copied current buffer filename to system clipboard!",
@@ -45,7 +45,7 @@ local M = {}
 function M.copy_char_under_cursor()
   local col = vim.fn.col(".")
   local char = vim.fn.getline("."):sub(col, col)
-  ark.vim.fn.copy(char)
+  stl.nvim.fn.copy(char)
 end
 
 ---@param arg                           unknown|nil

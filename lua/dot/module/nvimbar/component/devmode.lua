@@ -1,4 +1,4 @@
-local txt = ark.vim.fn.txt
+local txt = stl.nvim.fn.txt
 
 ---@class dot.module.nvimbar.component.devmode
 local M = {}

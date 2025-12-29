@@ -943,7 +943,7 @@ function M.new(props)
       end
 
       local filepath = filenode.data.filepath
-      ark.vim.fn.copy(filepath)
+      stl.nvim.fn.copy(filepath)
       stl.reporter.info({
         from = fullname,
         message = "Copied absolute filepath: " .. filepath,
@@ -958,7 +958,7 @@ function M.new(props)
       local filepath = filenode.data.filepath
       local cwd = dot.path.cwd()
       local relative = dot.path.relative(cwd, filepath, "/")
-      ark.vim.fn.copy(relative)
+      stl.nvim.fn.copy(relative)
       stl.reporter.info({
         from = fullname,
         message = "Copied relative filepath: " .. relative,
@@ -2313,7 +2313,7 @@ function M:__retrieve_lnum_range__()
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
     if mode == "v" or mode == "V" or mode == "\22" then
-      local lnum_from, lnum_end = ark.vim.buf.retrieve_visual_lnum_range() ---@type integer, integer
+      local lnum_from, lnum_end = stl.nvim.buf.retrieve_visual_lnum_range() ---@type integer, integer
       return lnum_from, lnum_end
     end
   end

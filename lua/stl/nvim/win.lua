@@ -1,4 +1,4 @@
----@alias ark.vim.win.TypeEnum
+---@alias stl.nvim.win.TypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
 ---| "ux:explorer"
@@ -17,7 +17,7 @@
 ---| "ux:winpicker"
 ---| "ux:winsep"
 
----@class ark.vim.win.Types
+---@class stl.nvim.win.Types
 local Types = {
   -- stylua: ignore start
   BOARD             = "ux:board",
@@ -40,7 +40,7 @@ local Types = {
   -- stylua: ignore end
 }
 
----@class ark.vim.win
+---@class stl.nvim.win
 local M = {}
 
 M.Types = vim.deepcopy(Types)

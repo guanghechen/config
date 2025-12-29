@@ -161,7 +161,7 @@ function M.open(props)
     zindex = zindex,
   }) ---@type integer
 
-  dot.win.set_type(winnr, ark.vim.win.Types.SELECT)
+  dot.win.set_type(winnr, stl.nvim.win.Types.SELECT)
   vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
 
   vim.wo[winnr].cursorline = true
@@ -286,7 +286,7 @@ function M.open(props)
     })
   end
 
-  ark.vim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
   vim.api.nvim_create_autocmd("BufLeave", {
     buffer = bufnr,

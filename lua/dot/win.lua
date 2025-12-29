@@ -1,5 +1,5 @@
 local __module_name__ = "dot.win"
-local vim_win = require("ark.vim.win")
+local vim_win = require("stl.nvim.win")
 
 ---@class dot.win.IFilepathHistoryItem
 ---@field public bufnr                  integer|nil
@@ -15,7 +15,7 @@ local vim_win = require("ark.vim.win")
 ---@class dot.win.IMeta
 ---@field public history                stl.c.History|nil
 ---@field public winline                dot.win.IWinline|nil
----@field public wintype                ark.vim.win.TypeEnum|nil
+---@field public wintype                stl.nvim.win.TypeEnum|nil
 
 local wintype_attrs = {
   focusable = {
@@ -226,7 +226,7 @@ function M.resolve_zindex(winnr)
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   local base_zindex = wincfg.zindex or 50 ---@type integer
   local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  local wintype = meta and meta.wintype or nil ---@type ark.vim.win.TypeEnum|nil
+  local wintype = meta and meta.wintype or nil ---@type stl.nvim.win.TypeEnum|nil
   if wintype == vim_win.Types.CMDLINE or wintype == vim_win.Types.NOTIFY then
     return base_zindex - 1
   end
@@ -316,7 +316,7 @@ function M.resolve(winnr, force)
   meta = meta or {} ---@type dot.win.IMeta
   meta_map[winnr] = meta
 
-  meta.wintype = vim.w[winnr].eve_type ---@type ark.vim.win.TypeEnum|nil
+  meta.wintype = vim.w[winnr].eve_type ---@type stl.nvim.win.TypeEnum|nil
   if meta.wintype ~= nil or vim_win.is_float(winnr) then
     return meta
   end
@@ -336,7 +336,7 @@ function M.resolve(winnr, force)
 end
 
 ---@param winnr                         integer
----@param wintype                       ark.vim.win.TypeEnum|nil
+---@param wintype                       stl.nvim.win.TypeEnum|nil
 ---@return nil
 function M.set_type(winnr, wintype)
   vim.w[winnr].eve_type = wintype
