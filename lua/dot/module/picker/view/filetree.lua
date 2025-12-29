@@ -7,40 +7,40 @@ local __module_name__ = "dot.module.picker.view.filetree" ---@type string
 ---| dot.module.picker.view.filetree.ILocationNodeState
 
 ---@alias dot.module.picker.view.filetree.IListviewFileRenderer
----| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): stl.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.IListviewLocationRenderer
----| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): stl.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): stl.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewFileRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, lnum: integer): stl.view.tree.INodeRenderResult
 
 ---@alias dot.module.picker.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.picker.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.picker.view.filetree.IFileNodeState, locationstate: dot.module.picker.view.filetree.ILocationNodeState, lnum: integer): stl.view.tree.INodeRenderResult
 
----@class dot.module.picker.view.filetree.IDirectoryNodeState : ark.view.tree.IContainerNodeState
+---@class dot.module.picker.view.filetree.IDirectoryNodeState : stl.view.tree.IContainerNodeState
 
----@class dot.module.picker.view.filetree.IFileNodeState : ark.view.tree.ILeafNodeState
+---@class dot.module.picker.view.filetree.IFileNodeState : stl.view.tree.ILeafNodeState
 ---@field public locations              dot.module.picker.view.filetree.ILocationNodeState|nil
 ---@field public cache_match            dot.module.picker.view.filetree.INodeMatchResultCache|nil
 
----@class dot.module.picker.view.filetree.ILocationNodeState : ark.view.tree.ILeafLocationState
+---@class dot.module.picker.view.filetree.ILocationNodeState : stl.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
 ---@field public text                   ?string
 ---@field public highlights             ?stl.t.IHighlightInline[]
 
----@class dot.module.picker.view.filetree.IListviewRendererContext : ark.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.filetree.IListviewRendererContext : stl.view.tree.IListviewRendererContext
 ---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              dot.module.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   dot.module.picker.FiletreeView
 
----@class dot.module.picker.view.filetree.ITreeviewRendererContext : ark.view.tree.IListviewRendererContext
+---@class dot.module.picker.view.filetree.ITreeviewRendererContext : stl.view.tree.IListviewRendererContext
 ---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              dot.module.picker.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
@@ -83,12 +83,12 @@ local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 ---@field public render_treeview_leaf   ?dot.module.picker.view.filetree.ITreeviewFileRenderer
 ---@field public render_treeview_location   ?dot.module.picker.view.filetree.ITreeviewLocationRenderer
 
-local P = ark.view.Tree ---@type ark.view.Tree
+local P = stl.view.Tree ---@type stl.view.Tree
 
----@class dot.module.picker.FiletreeView : ark.view.Tree
+---@class dot.module.picker.FiletreeView : stl.view.Tree
 ---@field protected _tree               stl.c.IFiletree
 ---@field protected _last_match_result  dot.module.picker.view.filetree.INodeMatchResult
----@field public insert                 fun(self: dot.module.picker.FiletreeView, uuid: string, state: ark.view.tree.INodeState): dot.module.picker.FiletreeView
+---@field public insert                 fun(self: dot.module.picker.FiletreeView, uuid: string, state: stl.view.tree.INodeState): dot.module.picker.FiletreeView
 local M = {}
 M.__index = M
 setmetatable(M, P)
@@ -108,7 +108,7 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type dot.module.picker.view.filetree.ITreeviewFileRenderer
   local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type dot.module.picker.view.filetree.ITreeviewLocationRenderer
 
-  local super = ark.view.Tree.new({
+  local super = stl.view.Tree.new({
     name = name,
     fullname = fullname,
     indent = indent,
@@ -161,7 +161,7 @@ end
 function M:retrieve(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local nodestate = statemap[uuid] ---@type dot.module.picker.view.filetree.INodeState|nil
@@ -182,7 +182,7 @@ function M:match(params)
   self:__health__()
 
   local tree = self._tree ---@type stl.c.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local root = params.rootuuid or tree.root ---@type string
@@ -337,7 +337,7 @@ function M:insert_dirpath(dirpath)
   self:__health__()
 
   local filetree = self._tree ---@type stl.c.IFiletree
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local filenode = filetree:insert_directory_absolute(dirpath)
@@ -387,7 +387,7 @@ function M:insert_filepath(filepath, with_locations)
   self:__health__()
 
   local filetree = self._tree ---@type stl.c.IFiletree
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local lnum, col, col_end ---@type integer|nil, integer|nil, integer|nil
@@ -467,7 +467,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, with_locations)
@@ -570,11 +570,11 @@ end
 function M:traverse_filenode(root, handle)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   local uuids = {} ---@type string[]
 
   self._tree:quick_traverse(root, function(_, node)
-    local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
+    local nodestate = statemap[node.uuid] ---@type stl.view.tree.INodeState|nil
     if nodestate ~= nil and nodestate.nodetype == "leaf" then
       ---@cast nodestate                dot.module.picker.view.filetree.IFileNodeState
       handle(node, nodestate)
@@ -585,8 +585,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param params                        ark.view.tree.IRenderListviewParams
----@return ark.view.tree.IRenderResult
+---@param params                        stl.view.tree.IRenderListviewParams
+---@return stl.view.tree.IRenderResult
 function M:render_listview(params)
   self:__health__()
 
@@ -605,7 +605,7 @@ function M:render_listview(params)
   end
 
   local filetree = self._tree ---@type stl.c.IReadonlyFiletree
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   local tick_matched = self._tick_matched ---@type integer
@@ -657,8 +657,8 @@ function M:render_listview(params)
   return result
 end
 
----@param params                        ark.view.tree.IRenderTreeviewParams
----@return ark.view.tree.IRenderResult
+---@param params                        stl.view.tree.IRenderTreeviewParams
+---@return stl.view.tree.IRenderResult
 function M:render_treeview(params)
   self:__health__()
   local nsnr = DEFAULT_NSNR_MATCHES ---@type integer
@@ -678,7 +678,7 @@ function M:render_treeview(params)
   local indents = result.indents ---@type string[]
   local filetree = self._tree ---@type stl.c.IReadonlyFiletree
   local tick_matched = self._tick_matched ---@type integer
-  local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, stl.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   if only_matched then

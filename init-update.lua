@@ -1,6 +1,5 @@
 require("bot").setup()
 
-_G.ark = require("ark") ---@type ark
 _G.stl = require("stl") ---@type stl
 _G.dot = require("dot") ---@type dot
 

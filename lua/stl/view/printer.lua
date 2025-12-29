@@ -1,11 +1,11 @@
-local __module_name__ = "ark.view.printer" ---@type string
+local __module_name__ = "stl.view.printer" ---@type string
 
----@class ark.view.IPrinterProps
+---@class stl.view.IPrinterProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 ---@field public indent                 ?string
 
----@class ark.view.Printer
+---@class stl.view.Printer
 ---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field protected _disposed           boolean
@@ -21,8 +21,8 @@ M.__index = M
 
 local NSNR_DEFAULT = dot.var.nsnr.view_printer ---@type integer
 
----@param props                         ark.view.IPrinterProps
----@return ark.view.Printer
+---@param props                         stl.view.IPrinterProps
+---@return stl.view.Printer
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -44,7 +44,7 @@ function M.new(props)
   return self
 end
 
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:clear()
   self:health()
 
@@ -98,7 +98,7 @@ function M:measure()
 end
 
 ---@param bufnr                         integer
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:render(bufnr)
   self:health()
 
@@ -119,7 +119,7 @@ end
 
 ---@param lines                         string[]
 ---@param highlights                    ?stl.t.IHighlight[]
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:lines(lines, highlights)
   self:health()
 
@@ -174,7 +174,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?stl.t.IHighlightInline[]
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:line(content, highlights)
   self:health()
 
@@ -203,7 +203,7 @@ end
 
 ---@param content                       string
 ---@param highlights                    ?stl.t.IHighlightInline[]
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:inline(content, highlights)
   self:health()
 
@@ -229,7 +229,7 @@ function M:inline(content, highlights)
   return self
 end
 
----@return ark.view.Printer
+---@return stl.view.Printer
 function M:lf()
   self:health()
 

@@ -1,3 +1,35 @@
+---@class stl.view.IView
+---@field public fullname               string
+---@field public nsnr                   integer
+---@field public clear                  fun(self: stl.view.IView): stl.view.IView
+---@field public dispose                fun(self: stl.view.IView): nil
+---@field public isdisposed             fun(self: stl.view.IView): boolean
+---@field public render                 fun(self: stl.view.IView, bufnr: integer, force: boolean): stl.view.IView
+
+---@class stl.view.__mods
+local view__mods = {
+  Plainfile = "stl.view.plainfile",
+  Printer = "stl.view.printer",
+  Tree = "stl.view.tree",
+}
+
+---@class stl.view
+---@field public __mods                 stl.view.__mods
+---@field public Plainfile              stl.view.Plainfile
+---@field public Printer                stl.view.Printer
+---@field public Tree                   stl.view.Tree
+local view = setmetatable({ __mods = view__mods }, {
+  __index = function(t, k)
+    local m = view__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class stl.c.__mods
 local c__mods = {
   BatchDisposable = "stl.c.batch_disposable",
@@ -152,6 +184,7 @@ local __mods = {
 ---@field public c                      stl.c
 ---@field public color                  stl.external.color
 ---@field public easing                 stl.external.easing
+---@field public view                   stl.view
 ---
 ---@field public dict                   stl.dict
 ---@field public lang                   stl.lang
@@ -181,6 +214,7 @@ local M = setmetatable({
   dict = dict,
   lang = lang,
   nvim = nvim,
+  view = view,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

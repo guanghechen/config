@@ -1,6 +1,5 @@
 require("bot").setup()
 
-_G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
 
 if dot.path.is_git_repo() then

@@ -1,6 +1,5 @@
 require("bot").setup()
 
-_G.ark = require("ark") ---@type ark
 _G.dot = require("dot") ---@type dot
 
 local default_storage = dot.get_default_storage() ---@type dot.context.storage

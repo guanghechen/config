@@ -15,7 +15,7 @@ local title = "LSP Symbols" ---@type string
 ---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
-local plainfile = ark.view.Plainfile.new({ name = name }) ---@type ark.view.Plainfile
+local plainfile = stl.view.Plainfile.new({ name = name }) ---@type stl.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore

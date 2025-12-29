@@ -91,7 +91,7 @@ local function on_attach(client, bufnr)
 
   dot.lsp.event.on_attach(client, bufnr)
 
-  ---@type ark.t.IKeymap[]
+  ---@type stl.t.IKeymap[]
   local keymaps = {
     {
       modes = { "n" },
