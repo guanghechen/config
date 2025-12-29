@@ -1,5 +1,5 @@
 ---@type fun(w1: dot.t.IWidget, w2: dot.t.IWidget): boolean
-local equals = ark.fn.equals_shallow
+local equals = stl.fn.equals_shallow
 
 ---@class dot.state.widget
 local M = {}

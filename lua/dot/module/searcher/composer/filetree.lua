@@ -180,13 +180,13 @@ function M.new(props)
 
   local frecency = props.frecency ---@type ark.c.Frecency|nil
 
-  local on_attached = props.on_attached or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnAttached
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnClosed
+  local on_attached = props.on_attached or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnAttached
+  local on_closed = props.on_closed or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnClosed
   local on_confirm = props.on_confirm ---@type dot.module.searcher.composer.filetree.IOnConfirm|nil
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnHidden
-  local _on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.searcher.composer.filetree.IOnRefresh
+  local on_disposed = props.on_disposed or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnDisposed
+  local on_focused = props.on_focused or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnFocused
+  local on_hidden = props.on_hidden or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnHidden
+  local _on_refresh = props.on_refresh or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnRefresh
 
   local self = setmetatable({}, M)
 
@@ -312,7 +312,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       self:__search__()
@@ -1582,7 +1582,7 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({
     o_search_pattern,
     o_flag_foldempty,
     o_flag_regex,
@@ -1593,16 +1593,16 @@ function M.new(props)
   }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ o_flag_selected, o_flag_viewtype }, function()
     composer:mark_result_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe(
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
     { o_replace_pattern, o_search_pattern, o_flag_regex, o_flag_replace, o_flag_case_sensitive },
     function()
       scheduler_search:schedule()
     end
   )
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ composer.result.lnum_current }, function()
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
     if uuid ~= nil then

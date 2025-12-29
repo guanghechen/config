@@ -253,7 +253,7 @@ local function disable()
   vim.cmd("redraw!")
 end
 
-ark.fn.observe({ dot.context.flight.dressing_dim }, function()
+stl.fn.observe({ dot.context.flight.dressing_dim }, function()
   if dot.context.flight.dressing_dim:snapshot() then
     enable()
   else

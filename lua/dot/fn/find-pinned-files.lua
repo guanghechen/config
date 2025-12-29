@@ -46,7 +46,7 @@ local picker = dot.picker.FiletreeComposer.new({
   end,
 })
 
-ark.fn.observe({ dot.context.bookmark.pinned }, function()
+stl.fn.observe({ dot.context.bookmark.pinned }, function()
   refresh(picker)
 end, false)
 

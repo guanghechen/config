@@ -65,9 +65,9 @@ function M.create(params)
   local env = params.env ---@type table<string, string>|nil
   local permanent = not not params.permanent ---@type boolean
   local hidewipe = not not params.hidewipe ---@type boolean
-  local on_closed = params.on_closed or ark.fn.noop ---@type fun(): nil
-  local on_focused = params.on_focused or ark.fn.noop ---@type fun(): nil
-  local on_resized = params.on_resized or ark.fn.noop ---@type fun(): nil
+  local on_closed = params.on_closed or stl.fn.noop ---@type fun(): nil
+  local on_focused = params.on_focused or stl.fn.noop ---@type fun(): nil
+  local on_resized = params.on_resized or stl.fn.noop ---@type fun(): nil
   local user_keymaps = params.user_keymaps and vim.list_slice(params.user_keymaps) or {} ---@type ark.t.IKeymap[]
 
   ---@type dot.module.term.IMeta

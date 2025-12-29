@@ -12,7 +12,7 @@ setmetatable(M, ark.c.Observable)
 ---@return ark.c.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean
-  local equals = props.equals or ark.fn.falsy
+  local equals = props.equals or stl.fn.falsy
 
   local self = setmetatable(ark.c.Observable.new({ initial_value = dirty, equals = equals }), M)
   ---@cast self                         ark.c.Dirtier

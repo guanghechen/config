@@ -231,7 +231,7 @@ picker = dot.picker.FiletreeComposer.new({
   end,
 })
 
-ark.fn.observe({ o_rootpath }, function()
+stl.fn.observe({ o_rootpath }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
   local workspace = dot.path.workspace() ---@type string
   local cwd = dot.path.cwd() ---@type string
@@ -245,7 +245,7 @@ ark.fn.observe({ o_rootpath }, function()
   end
 end)
 
-ark.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, function()
+stl.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, function()
   local rootpath = o_rootpath:snapshot() ---@type string
   picker:mark_result_flags_dirty()
   refresh(picker, rootpath)

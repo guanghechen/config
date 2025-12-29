@@ -384,7 +384,7 @@ return {
     local plugin = require("render-markdown")
     plugin.setup(opts)
 
-    ark.fn.observe({ dot.context.plugin.render_markdown }, function()
+    stl.fn.observe({ dot.context.plugin.render_markdown }, function()
       local flag = dot.context.plugin.render_markdown:snapshot() ---@type boolean
       if flag then
         plugin.enable()

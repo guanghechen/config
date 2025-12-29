@@ -585,7 +585,7 @@ function M:focus_step(step)
   local source = self:get_source()
   local active_uuid = source:get_activated_uuid()
   local index_current = math.max(1, self:indexof(active_uuid))
-  local index_next = ark.fn.navigate_circular(index_current, step, count)
+  local index_next = stl.fn.navigate_circular(index_current, step, count)
   return self:focus_index(index_next)
 end
 
@@ -828,7 +828,7 @@ function M:__swap_step__(step)
     return false
   end
 
-  local index_next = ark.fn.navigate_circular(index_current, step, count)
+  local index_next = stl.fn.navigate_circular(index_current, step, count)
   if index_next == index_current then
     return false
   end

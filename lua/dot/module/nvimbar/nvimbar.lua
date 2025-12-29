@@ -112,8 +112,8 @@ function M.new(props)
     end
 
   local isactive = props.is_active ---@type fun(context: dot.module.nvimbar.INvimbarContext): boolean
-  local on_fulfilled = props.on_fulfilled or ark.fn.noop ---@type fun(result: string): nil
-  local validate = props.validate or ark.fn.noop ---@type fun(): string|nil
+  local on_fulfilled = props.on_fulfilled or stl.fn.noop ---@type fun(result: string): nil
+  local validate = props.validate or stl.fn.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
 
@@ -255,8 +255,8 @@ function M:place(position, raw_component, priority)
     priority = priority,
     tight = not not raw_component.tight,
     render = raw_component.render,
-    will_change = raw_component.will_change or ark.fn.truthy,
-    condition = raw_component.condition or ark.fn.truthy,
+    will_change = raw_component.will_change or stl.fn.truthy,
+    condition = raw_component.condition or stl.fn.truthy,
   }
   components[k + 1] = component
 

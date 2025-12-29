@@ -74,7 +74,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
     flags[#flags + 1] = {
       desc = flag.desc,
       callback = ark.G.register_anonymous_fn(flag.callback) or "ark.G.noop",
-      disabled = ark.fn.falsy,
+      disabled = stl.fn.falsy,
       snapshot = flag.snapshot,
     }
   end
@@ -216,7 +216,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       self:__search__()
@@ -446,7 +446,7 @@ function M:goto_prev_match()
   end
 
   local index_current = self.o_match_index:snapshot() ---@type integer
-  local index = ark.fn.navigate_circular(index_current, -1, N) ---@type integer
+  local index = stl.fn.navigate_circular(index_current, -1, N) ---@type integer
   local match_prev = matches[index] ---@type yoz.search.ITextMatch
   if match_prev then
     self.o_match_index:next(index)
@@ -484,7 +484,7 @@ function M:goto_next_match()
   end
 
   local index_current = self.o_match_index:snapshot() ---@type integer
-  local index = ark.fn.navigate_circular(index_current, 1, N) ---@type integer
+  local index = stl.fn.navigate_circular(index_current, 1, N) ---@type integer
   local match_next = matches[index] ---@type yoz.search.ITextMatch
   if match_next then
     self.o_match_index:next(index)
@@ -1084,7 +1084,7 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
     comp_sep_hlname = "f_wl_searcher",
     comp_sep_hlname_active = "f_wl_searcher",
     delay = 64,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     get_max_width = function()
       local winnr = self._winnr_finder ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -1135,7 +1135,7 @@ function M:__setup_observers__(
   nvimbar,
   scheduler_search
 )
-  ark.fn.observe({ o_search_pattern }, function()
+  stl.fn.observe({ o_search_pattern }, function()
     local pattern = o_search_pattern:snapshot() ---@type string
     if pattern == nil or pattern == "" then
       o_search_pattern_linecount:next(1)
@@ -1145,7 +1145,7 @@ function M:__setup_observers__(
     o_search_pattern_linecount:next(#lines)
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,
@@ -1156,7 +1156,7 @@ function M:__setup_observers__(
     nvimbar:render()
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,
@@ -1165,15 +1165,15 @@ function M:__setup_observers__(
     scheduler_search:schedule()
   end, true)
 
-  ark.fn.observe({ o_search_pattern_linecount }, function()
+  stl.fn.observe({ o_search_pattern_linecount }, function()
     self:__resize__()
   end, true)
 
-  ark.fn.observe({ o_flag_replace }, function()
+  stl.fn.observe({ o_flag_replace }, function()
     self:__toggle_replacer__(o_flag_replace:snapshot())
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
     o_flag_case_sensitive,

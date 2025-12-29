@@ -11,7 +11,7 @@ local _attached_sources = {}
 ---@type ark.c.Observable
 M.o_attached = ark.c.Observable.from_value(0)
 
-ark.fn.observe({ M.o_attached }, function()
+stl.fn.observe({ M.o_attached }, function()
   dot.state.status.dirtier_statusline:mark_dirty()
 end, true)
 

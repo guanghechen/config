@@ -354,7 +354,7 @@ end
 ---@param callback                      fun(ok: boolean, symbols: dot.t.ILspSymbol[]|nil): nil
 ---@return fun(): nil
 function M.locate_symbols(winnr, callback)
-  local cancel_lsp = ark.fn.noop ---@type fun(): nil
+  local cancel_lsp = stl.fn.noop ---@type fun(): nil
   local settled = false ---@type boolean
 
   local function settle(ok, symbols)
@@ -362,7 +362,7 @@ function M.locate_symbols(winnr, callback)
       return
     end
     settled = true
-    cancel_lsp = ark.fn.noop
+    cancel_lsp = stl.fn.noop
     callback(ok, symbols)
   end
 
@@ -497,7 +497,7 @@ function M.locate_symbols(winnr, callback)
   local requests
   requests, cancel_lsp =
     vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
-  cancel_lsp = cancel_lsp or ark.fn.noop
+  cancel_lsp = cancel_lsp or stl.fn.noop
   if requests == nil or next(requests) == nil then
     return abort()
   end

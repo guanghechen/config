@@ -390,7 +390,7 @@ local function disable()
   vim.api.nvim_clear_autocmds({ group = augroup })
 end
 
-ark.fn.observe({ dot.context.flight.dressing_scroll }, function()
+stl.fn.observe({ dot.context.flight.dressing_scroll }, function()
   if dot.context.flight.dressing_scroll:snapshot() then
     enable()
   else

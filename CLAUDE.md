@@ -48,6 +48,7 @@ Standard library with environment detection and dictionary data.
 - **`stl/icon`** - Icon definitions (UI, diagnostics, LSP, DAP, Git, filetypes, etc.)
 - **`stl/json`** - JSON utilities with comment stripping support
 - **`stl/stdout`** - Colored stdout logging utilities
+- **`stl/fn`** - Utility functions (boolean, identity, noop, equals, navigate, observe)
 
 #### `lua/ark/` - Foundation Layer
 Foundation layer with algorithms, collections, and utilities.
@@ -66,7 +67,7 @@ Foundation layer with algorithms, collections, and utilities.
 - **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
 - **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)
 
-- **Core utilities**: `anim`, `box`, `debug`, `fn`, `fs`, `hot`, `nvim`, `reporter`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
+- **Core utilities**: `anim`, `box`, `debug`, `fs`, `hot`, `nvim`, `reporter`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
 
 #### `lua/dot/` - Configuration and Core Framework Layer
 

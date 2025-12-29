@@ -169,7 +169,7 @@ return {
     end
     lint_debounced = ark.timer.debounce(do_lint, 128)
 
-    ark.fn.observe({ dot.state.status.lint_schedule_nr }, function()
+    stl.fn.observe({ dot.state.status.lint_schedule_nr }, function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
       lint_debounced(bufnr)
     end)

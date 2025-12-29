@@ -298,7 +298,7 @@ picker = dot.picker.FiletreeComposer.new({
   end,
 })
 
-ark.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
+stl.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
   local cwd = dot.path.cwd() ---@type string
   local flag_buffer = o_flag_buffer:snapshot() ---@type boolean
   if flag_buffer then
@@ -323,7 +323,7 @@ ark.fn.observe({ o_rootpath, o_bufnr_sourcefile, o_flag_buffer }, function()
   end
 end)
 
-ark.fn.observe({ o_flag_buffer }, function()
+stl.fn.observe({ o_flag_buffer }, function()
   picker:mark_result_flags_dirty()
   refresh(false)
 end, true)

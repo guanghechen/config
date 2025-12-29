@@ -47,7 +47,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type dot.module.picker.preview.IDraw
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
-  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.module.picker.preview.IOnDrawed
+  local on_drawed = props.on_drawed or stl.fn.noop ---@type dot.module.picker.preview.IOnDrawed
 
   local self = setmetatable({}, M)
 
@@ -56,7 +56,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil

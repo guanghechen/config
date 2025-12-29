@@ -44,9 +44,9 @@ local M = {
   dirtier_tabline = ark.c.Dirtier.new({ dirty = true }),
   dirtier_termline = ark.c.Dirtier.new({ dirty = true }),
   dirtier_notepadline = ark.c.Dirtier.new({ dirty = true }),
-  dirty_winline_nr = ark.c.Observable.from_value(0, ark.fn.falsy),
+  dirty_winline_nr = ark.c.Observable.from_value(0, stl.fn.falsy),
 
-  lint_schedule_nr = ark.c.Observable.from_value(0, ark.fn.falsy),
+  lint_schedule_nr = ark.c.Observable.from_value(0, stl.fn.falsy),
 
   msg_changes = ark.c.Observable.from_value(""),
   msg_command = ark.c.Observable.from_value(""),

@@ -187,10 +187,10 @@ function M.load(state, name, raw_data)
   state.flag_selected:next(data.flag_selected)
   state.flag_textonly:next(data.flag_textonly)
   state.flag_viewtype:next(data.flag_viewtype)
-  if not ark.fn.equals_list(state.includes:snapshot(), data.includes) then
+  if not stl.fn.equals_list(state.includes:snapshot(), data.includes) then
     state.includes:next(data.includes)
   end
-  if not ark.fn.equals_list(state.excludes:snapshot(), data.excludes) then
+  if not stl.fn.equals_list(state.excludes:snapshot(), data.excludes) then
     state.excludes:next(data.excludes)
   end
   state.search_pattern:next(data.search_pattern)

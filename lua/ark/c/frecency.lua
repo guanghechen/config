@@ -29,7 +29,7 @@ function M.new(props)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
   local items = props.items ---@type table<string, ark.c.frecency.IItem>
-  local normalize = props.normalize or ark.fn.identity ---@type fun(key: string): string
+  local normalize = props.normalize or stl.fn.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
   self._items = items

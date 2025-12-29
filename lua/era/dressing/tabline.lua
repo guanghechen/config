@@ -18,7 +18,7 @@ tabline = Nvimbar.new({
   get_max_width = function()
     return vim.o.columns
   end,
-  is_active = ark.fn.falsy,
+  is_active = stl.fn.falsy,
   on_fulfilled = function()
     vim.o.tabline = tabline:snapshot()
   end,

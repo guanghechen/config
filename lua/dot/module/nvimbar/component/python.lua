@@ -9,7 +9,7 @@ end)
 
 local python_venv = "" ---@type string|nil
 local python_version = "" ---@type string|nil
-ark.fn.observe({ dot.context.lsp.python_venv_path }, function()
+stl.fn.observe({ dot.context.lsp.python_venv_path }, function()
   local python_venv_path = dot.context.lsp.python_venv_path:snapshot() ---@type string
   python_venv = python_venv_path ~= nil and yoz.path.basename(python_venv_path) or nil ---@type string|nil
 

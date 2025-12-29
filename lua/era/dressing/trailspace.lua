@@ -82,7 +82,7 @@ vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave", "InsertEnter" }, {
   callback = unhighlight,
 })
 
-ark.fn.observe({ dot.context.flight.dressing_trailspace }, function()
+stl.fn.observe({ dot.context.flight.dressing_trailspace }, function()
   local enabled = dot.context.flight.dressing_trailspace:snapshot()
   if enabled then
     highlight()

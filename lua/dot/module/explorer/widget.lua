@@ -401,7 +401,7 @@ function M:__create_nvimbar__()
     comp_sep_hlname = "m_ex_winbar",
     comp_sep_hlname_active = "m_ex_winbar",
     delay = 128,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     get_max_width = get_width,
     get_preset_context = function()
       local winnr = self._winnr ---@type integer|nil

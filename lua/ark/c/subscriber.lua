@@ -22,7 +22,7 @@ M.__index = M
 ---@param props                         ark.c.subscriber.IProps
 ---@return ark.c.Subscriber
 function M.new(props)
-  local on_dispose = props.on_dispose or ark.fn.noop ---@type ark.c.subscriber.IOnDispose
+  local on_dispose = props.on_dispose or stl.fn.noop ---@type ark.c.subscriber.IOnDispose
   local on_next = props.on_next ---@type ark.c.subscriber.IOnNext
 
   local self = setmetatable({}, M)

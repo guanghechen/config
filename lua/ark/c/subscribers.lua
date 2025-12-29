@@ -11,7 +11,7 @@ local __module_name__ = "ark.c.subscribers" ---@type string
 ---@field public unsubscribed           boolean
 
 ---@type ark.c.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = ark.fn.noop }
+local noop_unsubscribable = { unsubscribe = stl.fn.noop }
 
 ---@class ark.c.Subscribers : ark.c.ISubscribable, ark.c.IDisposable
 ---@field protected ARRANGE_THRESHOLD   number

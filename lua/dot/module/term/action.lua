@@ -179,7 +179,7 @@ function M.focus_left(step)
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = ark.fn.navigate_circular(index_current, -step, N) ---@type integer
+  local index_next = stl.fn.navigate_circular(index_current, -step, N) ---@type integer
   dot.term.state.focus(index_next)
 end
 
@@ -194,7 +194,7 @@ function M.focus_right(step)
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local index_next = ark.fn.navigate_circular(index_current, step, N) ---@type integer
+  local index_next = stl.fn.navigate_circular(index_current, step, N) ---@type integer
   dot.term.state.focus(index_next)
 end
 
@@ -289,7 +289,7 @@ function M.swap_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local N = dot.term.state.size() ---@type integer
-  local index_next = ark.fn.navigate_circular(index_current, -step, N) ---@type integer
+  local index_next = stl.fn.navigate_circular(index_current, -step, N) ---@type integer
   local termuuid_next = dot.term.state.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then
@@ -311,7 +311,7 @@ function M.swap_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local N = dot.term.state.size() ---@type integer
-  local index_next = ark.fn.navigate_circular(index_current, step, N) ---@type integer
+  local index_next = stl.fn.navigate_circular(index_current, step, N) ---@type integer
   local termuuid_next = dot.term.state.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then

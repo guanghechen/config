@@ -1,4 +1,4 @@
----@class ark.fn
+---@class stl.fn
 local M = {}
 
 ---@param value                         unknown

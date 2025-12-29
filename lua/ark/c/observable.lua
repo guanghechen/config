@@ -12,7 +12,7 @@ local __module_name__ = "ark.c.observable" ---@type string
 ---@field public readonly               ?boolean
 
 ---@type ark.c.IUnsubscribable
-local noop_unsubscribable = { unsubscribe = ark.fn.noop }
+local noop_unsubscribable = { unsubscribe = stl.fn.noop }
 
 ---@class ark.c.Observable : ark.c.BatchDisposable, ark.c.ISubscribable
 ---@field public equals                 ark.t.IEquals
@@ -29,8 +29,8 @@ setmetatable(M, ark.c.BatchDisposable)
 ---@param props                         ark.c.observable.IProps
 ---@return ark.c.Observable
 function M.new(props)
-  local equals = props.equals or ark.fn.equals_shallow ---@type ark.t.IEquals
-  local normalize = props.normalize or ark.fn.identity ---@type ark.t.INormalize
+  local equals = props.equals or stl.fn.equals_shallow ---@type ark.t.IEquals
+  local normalize = props.normalize or stl.fn.identity ---@type ark.t.INormalize
   local readonly = not not props.readonly ---@type boolean
   local initial_value = props.initial_value ---@type ark.t.T
 

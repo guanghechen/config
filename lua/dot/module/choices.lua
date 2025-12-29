@@ -239,7 +239,7 @@ function M.open(props)
       key = "<Left>",
       aliases = { "<Right>", "h", "l", "0", "^", "$", "a", "A", "i", "I", "d", "o", "O", "x", "X", "u", "U", "v" },
       desc = "choices: noop",
-      callback = ark.fn.noop,
+      callback = stl.fn.noop,
     },
     {
       modes = { "i", "n", "x" },

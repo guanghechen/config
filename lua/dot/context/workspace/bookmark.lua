@@ -46,7 +46,7 @@ end
 function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.bookmark.data
 
-  if not ark.fn.equals_list(M.pinned:snapshot(), data.pinned) then
+  if not stl.fn.equals_list(M.pinned:snapshot(), data.pinned) then
     M.pinned:next(data.pinned)
   end
 end

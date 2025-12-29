@@ -60,7 +60,7 @@ end
 ---@return nil
 function M.focus(tabid)
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = ark.fn.navigate_limit(0, tabid, tab_count)
+  local tabid_next = stl.fn.navigate_limit(0, tabid, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   __go__(tabnr_next)
@@ -72,7 +72,7 @@ function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = ark.fn.navigate_circular(tabid_cur, -step, tab_count)
+  local tabid_next = stl.fn.navigate_circular(tabid_cur, -step, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   __go__(tabnr_next)
@@ -84,7 +84,7 @@ function M.focus_right(step)
   step = math.max(1, step or vim.v.count1 or 1)
   local tabid_cur = vim.fn.tabpagenr() ---@type integer
   local tab_count = vim.fn.tabpagenr("$") ---@type integer
-  local tabid_next = ark.fn.navigate_circular(tabid_cur, step, tab_count)
+  local tabid_next = stl.fn.navigate_circular(tabid_cur, step, tab_count)
   local tabpages = vim.api.nvim_list_tabpages()
   local tabnr_next = tabpages[tabid_next]
   __go__(tabnr_next)

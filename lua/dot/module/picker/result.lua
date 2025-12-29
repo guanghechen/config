@@ -72,11 +72,11 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local draw = props.draw ---@type dot.module.picker.result.IDraw
-  local isselected = props.isselected or ark.fn.falsy ---@type dot.module.picker.result.IIsSelected
+  local isselected = props.isselected or stl.fn.falsy ---@type dot.module.picker.result.IIsSelected
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
   local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
 
-  local on_drawed = props.on_drawed or ark.fn.noop ---@type dot.module.picker.result.IOnDrawed
+  local on_drawed = props.on_drawed or stl.fn.noop ---@type dot.module.picker.result.IOnDrawed
   local augroup_CursorMoved = ark.vim.fn.augroup(string.format("picker.result:CursorMoved#%s", uuid)) ---@type integer
 
   local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
@@ -93,9 +93,9 @@ function M.new(props)
 
       local disabled ---@type fun(): boolean
       if raw_disabled == nil or raw_disabled == false then
-        disabled = ark.fn.falsy
+        disabled = stl.fn.falsy
       elseif raw_disabled == true then
-        disabled = ark.fn.truthy
+        disabled = stl.fn.truthy
       else
         ---@return boolean
         disabled = function()
@@ -130,7 +130,7 @@ function M.new(props)
     comp_sep_hlname = "f_wl_picker",
     comp_sep_hlname_active = "f_wl_picker",
     delay = 128,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     get_max_width = function()
       local winnr = self._winnr ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -162,7 +162,7 @@ function M.new(props)
     mode = "throttle",
     delay = 32,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -192,7 +192,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -216,7 +216,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -241,7 +241,7 @@ function M.new(props)
     mode = "debounce",
     delay = 128,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
@@ -322,7 +322,7 @@ function M.new(props)
   self._scheduler_lnum_present = scheduler_lnum_present
   self._scheduler_lnums_selected = scheduler_lnums_selected
 
-  ark.fn.observe({ _o_lnum_total }, function()
+  stl.fn.observe({ _o_lnum_total }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
@@ -331,7 +331,7 @@ function M.new(props)
     end
   end)
 
-  ark.fn.observe({ _o_lnum_current }, function()
+  stl.fn.observe({ _o_lnum_current }, function()
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
@@ -344,13 +344,13 @@ function M.new(props)
     self._scheduler_lnum_current:schedule()
   end)
 
-  ark.fn.observe({ _o_lnum_current }, function()
+  stl.fn.observe({ _o_lnum_current }, function()
     if not self._disposed then
       self._scheduler_lnum_current:schedule()
     end
   end)
 
-  ark.fn.observe({ _o_lnum_present }, function()
+  stl.fn.observe({ _o_lnum_present }, function()
     if not self._disposed then
       self._scheduler_lnum_present:schedule()
     end
@@ -635,7 +635,7 @@ function M:movedown(step)
   local total = self.lnum_total:snapshot() ---@type integer
   if total > 1 then
     local lnum = self.lnum_current:snapshot() ---@type integer
-    local next_lnum = ark.fn.navigate_circular(lnum, step, total) ---@type integer
+    local next_lnum = stl.fn.navigate_circular(lnum, step, total) ---@type integer
     self.lnum_current:next(next_lnum)
   end
 end

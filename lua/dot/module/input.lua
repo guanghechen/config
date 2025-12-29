@@ -234,8 +234,8 @@ function M.open(opts, on_confirm)
       callback = action.cancel,
     },
     { modes = { "i", "n", "x" }, key = "<CR>", desc = "input: confirm", callback = action.confirm },
-    { modes = { "n", "x" }, key = "o", desc = "input: noop", callback = ark.fn.noop },
-    { modes = { "n", "x" }, key = "O", desc = "input: noop", callback = ark.fn.noop },
+    { modes = { "n", "x" }, key = "o", desc = "input: noop", callback = stl.fn.noop },
+    { modes = { "n", "x" }, key = "O", desc = "input: noop", callback = stl.fn.noop },
     { modes = { "n", "x" }, key = "q", desc = "input: force quit", callback = action.force_cancel },
   }
 

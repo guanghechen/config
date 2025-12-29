@@ -226,14 +226,14 @@ function M.watch_changes()
   local ticker_editor = ark.c.Ticker.new({ start = 0 })
   local ticker_workspace = ark.c.Ticker.new({ start = 0 })
 
-  ark.fn.observe({ M.theme.theme }, function()
+  stl.fn.observe({ M.theme.theme }, function()
     dot.context.theme.reload_theme(false, true)
   end, true)
-  ark.fn.observe({ M.theme.transparency }, function()
+  stl.fn.observe({ M.theme.transparency }, function()
     dot.context.theme.reload_theme(true, true)
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     M.option.expandtab,
   }, function()
     local flag = M.option.expandtab:snapshot() ---@type boolean
@@ -246,7 +246,7 @@ function M.watch_changes()
     end
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     M.option.relativenumber,
   }, function()
     local flag = M.option.relativenumber:snapshot() ---@type boolean
@@ -259,7 +259,7 @@ function M.watch_changes()
     end
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     M.behavior.auto_im,
     M.behavior.bufs_relative,
     M.theme.theme,
@@ -274,7 +274,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     M.plugin.render_markdown,
     M.plugin.treesitter_context,
     M.option.relativenumber,
@@ -308,13 +308,13 @@ function M.watch_changes()
     M.lsp.python_debug_port,
     M.lsp.python_venv_path,
   }
-  ark.fn.observe(select_states, function()
+  stl.fn.observe(select_states, function()
     ticker_workspace:tick()
     dot.state.status.dirtier_statusline:mark_dirty()
     dot.state.status.dirtier_tabline:mark_dirty()
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     M.lsp.code_lens,
     M.lsp.diagnostics_virt_lines,
     M.lsp.inlay_hints,
@@ -324,7 +324,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ark.fn.observe({
+  stl.fn.observe({
     dot.state.status.msg_lsp,
     dot.state.status.msg_mode,
   }, function()
@@ -336,7 +336,7 @@ function M.watch_changes()
     mode = "throttle",
     delay = 256,
     timeout = 3000,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       if M._storage.editor then

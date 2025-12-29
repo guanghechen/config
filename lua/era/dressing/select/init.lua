@@ -229,7 +229,7 @@ function M.select(items, opts, on_choice)
 end
 
 local original_select = vim.ui.select
-ark.fn.observe({ dot.context.flight.dressing_select }, function()
+stl.fn.observe({ dot.context.flight.dressing_select }, function()
   local flag = dot.context.flight.dressing_select:snapshot() ---@type boolean
   if flag then
     vim.ui.select = M.select

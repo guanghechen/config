@@ -156,7 +156,7 @@ local refresh_debounced = ark.timer.debounce(function()
   end
 end, 50)
 
-ark.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
+stl.fn.observe({ dot.context.flight.dressing_virtcolumn }, function()
   local enabled = dot.context.flight.dressing_virtcolumn:snapshot() ---@type boolean
   if not enabled then
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]

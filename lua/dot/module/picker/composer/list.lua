@@ -138,13 +138,13 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.module.picker.composer.list.IOnCancel
-  local on_closed = props.on_closed or ark.fn.noop ---@type dot.module.picker.composer.list.IOnClosed
+  local on_cancel = props.on_cancel or stl.fn.noop ---@type dot.module.picker.composer.list.IOnCancel
+  local on_closed = props.on_closed or stl.fn.noop ---@type dot.module.picker.composer.list.IOnClosed
   local on_confirm = props.on_confirm ---@type dot.module.picker.composer.list.IOnConfirm|nil
-  local on_disposed = props.on_disposed or ark.fn.noop ---@type dot.module.picker.composer.list.IOnDisposed
-  local on_focused = props.on_focused or ark.fn.noop ---@type dot.module.picker.composer.list.IOnFocused
-  local on_hidden = props.on_hidden or ark.fn.noop ---@type dot.module.picker.composer.list.IOnHidden
-  local on_refresh = props.on_refresh or ark.fn.noop ---@type dot.module.picker.composer.list.IOnRefresh
+  local on_disposed = props.on_disposed or stl.fn.noop ---@type dot.module.picker.composer.list.IOnDisposed
+  local on_focused = props.on_focused or stl.fn.noop ---@type dot.module.picker.composer.list.IOnFocused
+  local on_hidden = props.on_hidden or stl.fn.noop ---@type dot.module.picker.composer.list.IOnHidden
+  local on_refresh = props.on_refresh or stl.fn.noop ---@type dot.module.picker.composer.list.IOnRefresh
 
   ---@type dot.module.picker.composer.list.IRenderResult
   local render_result = props.render_result
@@ -203,7 +203,7 @@ function M.new(props)
     mode = "debounce",
     delay = 64,
     timeout = 0,
-    silent = ark.fn.falsy,
+    silent = stl.fn.falsy,
     value = ark.c.Observable.from_value(true),
     task = function()
       local input = search_pattern:snapshot() ---@type string
@@ -294,7 +294,7 @@ function M.new(props)
       modes = { "i", "n", "x" },
       key = "<Tab>",
       desc = "list: noop",
-      callback = ark.fn.noop,
+      callback = stl.fn.noop,
     },
   }
 
@@ -419,13 +419,13 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
   end, true)
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     scheduler_match:schedule()
   end)
-  observer_unsubs[#observer_unsubs + 1] = ark.fn.observe({ composer.result.lnum_current }, function()
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = self._lnum2uuid[lnum] ---@type string|nil
     if uuid ~= nil then

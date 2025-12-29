@@ -265,7 +265,7 @@ picker = dot.picker.ListComposer.new({
   end,
 })
 
-ark.fn.observe({ o_scope }, function()
+stl.fn.observe({ o_scope }, function()
   local scope = o_scope:snapshot() ---@type dot.e.FindBufferScope
   if scope == "A" then
     picker.finder:set_title("find buffers")

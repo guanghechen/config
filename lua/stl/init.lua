@@ -26,6 +26,7 @@ local __mods = {
   env = "stl.env",
   fileicon = "stl.fileicon",
   filetype = "stl.filetype",
+  fn = "stl.fn",
   icon = "stl.icon",
   json = "stl.json",
   stdout = "stl.stdout",
@@ -41,6 +42,7 @@ local __mods = {
 ---@field public env                    stl.env
 ---@field public fileicon               stl.fileicon
 ---@field public filetype               stl.filetype
+---@field public fn                     stl.fn
 ---@field public icon                   stl.icon
 ---@field public json                   stl.json
 ---@field public stdout                 stl.stdout

@@ -88,9 +88,9 @@ function M.new(props)
   local initial_input = props.initial_input or "" ---@type string
 
   local render_preview = props.render_preview ---@type dot.module.board.act.IRenderPreview
-  local on_input_change = props.on_input_change or ark.fn.noop ---@type dot.module.board.act.IOnInputChange
+  local on_input_change = props.on_input_change or stl.fn.noop ---@type dot.module.board.act.IOnInputChange
   local on_confirm = props.on_confirm ---@type dot.module.board.act.IOnConfirm
-  local on_cancel = props.on_cancel or ark.fn.noop ---@type dot.module.board.act.IOnCancel
+  local on_cancel = props.on_cancel or stl.fn.noop ---@type dot.module.board.act.IOnCancel
 
   local keymaps = props.keymaps or {} ---@type ark.t.IKeymap[]
   local preview_lines = props.preview_lines or 5 ---@type integer
@@ -141,7 +141,7 @@ function M.new(props)
     end
   end, 64)
 
-  ark.fn.observe({ input }, function()
+  stl.fn.observe({ input }, function()
     self._preview_debounced()
     local ok, result = pcall(on_input_change, input:snapshot())
     if not ok then

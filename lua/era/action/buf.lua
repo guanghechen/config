@@ -204,7 +204,7 @@ function M.focus(bufid)
   end
 
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufid_next = ark.fn.navigate_limit(0, bufid, #bufs) ---@type integer
+  local bufid_next = stl.fn.navigate_limit(0, bufid, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -231,7 +231,7 @@ function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
 
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  local bufid_next = stl.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -257,7 +257,7 @@ function M.focus_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  local bufid_next = stl.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   M.open(bufs[bufid_next].bufnr)
 end
 
@@ -500,7 +500,7 @@ function M.swap_left(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
+  local bufid_next = stl.fn.navigate_circular(bufid_sourcefile, -step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end
@@ -541,7 +541,7 @@ function M.swap_right(step)
 
   step = math.max(1, step or vim.v.count1 or 1)
   local bufs = meta.bufs ---@type dot.tab.IBufItem[]
-  local bufid_next = ark.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
+  local bufid_next = stl.fn.navigate_circular(bufid_sourcefile, step, #bufs) ---@type integer
   if bufid_sourcefile == bufid_next then
     return
   end

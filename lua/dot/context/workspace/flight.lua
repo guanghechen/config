@@ -231,7 +231,7 @@ M.dressing_select = ark.c.Observable.from_value(_defaults.dressing_select)
 M.dressing_trailspace = ark.c.Observable.from_value(_defaults.dressing_trailspace)
 M.dressing_ui_attach = ark.c.Observable.from_value(_defaults.dressing_ui_attach)
 M.dressing_virtcolumn = ark.c.Observable.from_value(_defaults.dressing_virtcolumn)
-M.dressing_winsep = ark.c.Observable.from_value(_defaults.dressing_winsep, ark.fn.falsy)
+M.dressing_winsep = ark.c.Observable.from_value(_defaults.dressing_winsep, stl.fn.falsy)
 
 M.gitdiff_expand_all = ark.c.Observable.from_value(_defaults.gitdiff_expand_all)
 

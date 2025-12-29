@@ -3,7 +3,7 @@ local Widget = require("dot.module.explorer.widget")
 ---@class dot.widget.explorer
 local M = {}
 
-ark.fn.observe({
+stl.fn.observe({
   dot.context.explorer.flag_foldempty,
   dot.context.explorer.flag_selected,
   dot.context.explorer.flag_show_hidden,

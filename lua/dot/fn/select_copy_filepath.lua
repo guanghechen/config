@@ -9,7 +9,7 @@ local __module_name__ = "dot.fn.select_copy_filepath" ---@type string
 ---@return integer
 local function select_copy_filepath(params)
   local filepath = params.filepath ---@type string
-  local on_completed = params.on_completed or ark.fn.noop ---@type fun(): nil
+  local on_completed = params.on_completed or stl.fn.noop ---@type fun(): nil
 
   return dot.choices.open({
     title = "Copy filepath",

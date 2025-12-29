@@ -75,7 +75,7 @@ end
 ---@return dot.module.picker.composer.list.IRenderResult|nil
 ---@return dot.module.picker.composer.list.IRenderPreview|nil
 local function snacks_provider(items, opts)
-  local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or ark.fn.identity ---@type fun(item): string|nil
+  local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or stl.fn.identity ---@type fun(item): string|nil
   local width = 0 ---@type integer
   local select_items = {} ---@type era.dressing.select.IItem[]
 

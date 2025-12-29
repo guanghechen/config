@@ -105,7 +105,7 @@ local refresh_debounced = ark.timer.debounce(function(winnr)
   end
 end, 32)
 
-ark.fn.observe({ dot.context.flight.dressing_winsep }, function()
+stl.fn.observe({ dot.context.flight.dressing_winsep }, function()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
   refresh_debounced(winnr_fixed)
