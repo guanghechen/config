@@ -42,6 +42,7 @@ Standard library with environment detection and dictionary data.
 
 - **`stl/dict/`** - Dictionary data (e.g., `en` for English word pairs)
 - **`stl/env`** - Environment detection (OS, terminal, paths)
+- **`stl/external/`** - External utilities (`color`, `easing`)
 
 #### `lua/ark/` - Foundation Layer
 Foundation layer with algorithms, collections, and utilities.
@@ -56,7 +57,6 @@ Foundation layer with algorithms, collections, and utilities.
   - `Proc`, `Scheduler`, `Ticker` - Process and timing
   - `Theme` - Theme management class
 
-- **`ark/external/`** - External utilities (`color`, `easing`)
 - **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
 - **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
 - **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)

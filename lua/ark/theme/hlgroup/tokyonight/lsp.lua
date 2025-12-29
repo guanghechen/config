@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       ark.t.theme.IContext
 ---@return table<string, ark.t.theme.IHlgroup>
 function M.gen_hlgroup_map(context)
-  local cs = ark.color
+  local cs = stl.color
   local c = context.scheme.palette.tokyonight ---@type ark.t.theme.ITokyonightPalette
 
   return {

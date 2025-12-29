@@ -20,12 +20,19 @@ local dict = setmetatable({ __mods = dict__mods }, {
 
 ---@class stl.__mods
 local __mods = {
+  color = "stl.external.color",
+  easing = "stl.external.easing",
+
   env = "stl.env",
 }
 
 ---@class stl
 ---@field public __mods                 stl.__mods
+---@field public color                  stl.external.color
+---@field public easing                 stl.external.easing
+---
 ---@field public dict                   stl.dict
+---
 ---@field public env                    stl.env
 local M = setmetatable({
   __mods = __mods,

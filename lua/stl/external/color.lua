@@ -23,7 +23,7 @@
 -- All credits to https://github.com/LeonHeidelbach for making this!
 -- 90% of functions are written by him
 
----@class ark.external.color
+---@class stl.external.color
 local M = {}
 
 local BYTE_SHARP = string.byte("#") ---@type integer

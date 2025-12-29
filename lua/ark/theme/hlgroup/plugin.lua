@@ -14,7 +14,7 @@ function M.gen_hlgroup_map(context)
 end
 
 function M.default_gen_hlgroup_map(context)
-  local cs = ark.color
+  local cs = stl.color
   local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
 

@@ -4,7 +4,7 @@ local M = {}
 ---@param context                       ark.t.theme.IContext
 ---@return ark.theme.hlgroup.nvimbar
 function M.gen_hlgroup_map(context)
-  local cs = ark.color
+  local cs = stl.color
   local c = context.scheme.palette.unified ---@type ark.t.theme.IUnifiedPalette
   local t = context.transparency ---@type boolean
   local bg_bufc = t and c.none or c.bg0 ---@type string

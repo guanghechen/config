@@ -221,9 +221,6 @@ local view = setmetatable({ __mods = view__mods }, {
 
 ---@class ark.__mods
 local __mods = {
-  color = "ark.external.color",
-  easing = "ark.external.easing",
-
   anim = "ark.anim",
   box = "ark.box",
   debug = "ark.debug",
@@ -252,9 +249,7 @@ local __mods = {
 ---@field public anim                   ark.anim
 ---@field public box                    ark.box
 ---@field public c                      ark.c
----@field public color                  ark.external.color
 ---@field public debug                  ark.debug
----@field public easing                 ark.external.easing
 ---@field public fileicon               ark.fileicon
 ---@field public filetype               ark.filetype
 ---@field public fn                     ark.fn

@@ -140,7 +140,7 @@ local function check_scope(winnr)
     listener.scopes_anim[winnr] = anim
   end
 
-  local easing_fn = ark.easing[config.easing] or ark.easing.outQuad
+  local easing_fn = stl.easing[config.easing] or stl.easing.outQuad
   local total_steps = math.ceil(config.duration / config.step)
   local from_start, to_start = anim.from, anim.to
   local elapsed = 0
