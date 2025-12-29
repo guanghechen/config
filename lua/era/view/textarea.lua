@@ -1,4 +1,4 @@
-local __module_name__ = "dot.ux.textarea" ---@type string
+local __module_name__ = "era.view.textarea" ---@type string
 
 ---@type string
 local WIN_HIGHLIGHT = table.concat({
@@ -10,15 +10,15 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:f_ut_normal",
 }, ",")
 
----@class dot.ux.ITextarea
+---@class era.view.ITextarea
 ---@field public get_bufnr              fun(): integer|nil
 ---@field public get_winnr              fun(): integer|nil
 ---@field public on_close               fun(): nil
 ---@field public on_confirm             fun(): nil
----@field public open                   fun(self: dot.ux.ITextarea, params: dot.ux.textarea.IOpenParams): nil
----@field public close                  fun(self: dot.ux.ITextarea): nil
+---@field public open                   fun(self: era.view.ITextarea, params: era.view.textarea.IOpenParams): nil
+---@field public close                  fun(self: era.view.ITextarea): nil
 
----@class dot.ux.textarea.IOpenParams
+---@class era.view.textarea.IOpenParams
 ---@field public initial_lines          string[]
 ---@field public row                    ?number
 ---@field public col                    ?number
@@ -33,7 +33,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer
 
----@class dot.ux.Textarea : dot.ux.ITextarea
+---@class era.view.Textarea : era.view.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected position            stl.e.BoxPosition
@@ -50,7 +50,7 @@ local WIN_HIGHLIGHT = table.concat({
 local M = {}
 M.__index = M
 
----@class dot.ux.textarea.IProps
+---@class era.view.textarea.IProps
 ---@field public position               stl.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
@@ -66,8 +66,8 @@ M.__index = M
 ---@field public on_close               ?fun(): nil
 ---@field public on_confirm             fun(lines: string[]): boolean
 
----@param props                         dot.ux.textarea.IProps
----@return dot.ux.Textarea
+---@param props                         era.view.textarea.IProps
+---@return era.view.Textarea
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -181,7 +181,7 @@ function M:get_winnr()
   return self._winnr
 end
 
----@param params                        dot.ux.textarea.IOpenParams
+---@param params                        era.view.textarea.IOpenParams
 ---@return nil
 function M:open(params)
   ---@type stl.box.IRestriction

@@ -49,7 +49,7 @@ local function edit_setting(searcher)
     excludes = s_excludes,
   }
 
-  dot.ux.Setting
+  era.view.Setting
     .new({
       position = "center",
       width = 100,

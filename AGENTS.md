@@ -189,7 +189,7 @@ Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and
 - `stl.c.Observable` → `require("stl.c.observable")` (collections mounted on stl.c)
 - `dot.theme.scheme["catppuccin-mocha"]` → `require("dot.theme.scheme.catppuccin-mocha")`
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
-- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern
+- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `era.view.*`, `dot.widget.*` follow the same lazy-loading pattern
 - `era.git.*`, `era.picker.*`, `era.searcher.*`, `era.board.*` → module subcomponents
 - `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
 

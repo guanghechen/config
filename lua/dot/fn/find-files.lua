@@ -36,7 +36,7 @@ local function edit_setting(picker)
     excludes = s_excludes,
   }
 
-  dot.ux.Setting
+  era.view.Setting
     .new({
       position = "center",
       width = 100,

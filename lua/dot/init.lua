@@ -239,7 +239,6 @@ local __mods = {
   shell = "dot.shell",
   tab = "dot.tab",
   uri = "dot.uri",
-  ux = "dot.ux",
   var = "dot.var",
   win = "dot.win",
 }
@@ -256,7 +255,6 @@ local __mods = {
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
----@field public ux                     dot.ux
 ---@field public widget                 dot.widget
 ---
 ---@field public buf                    dot.buf

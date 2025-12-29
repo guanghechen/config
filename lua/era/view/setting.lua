@@ -1,12 +1,12 @@
-local __module_name__ = "dot.ux.setting" ---@type string
+local __module_name__ = "era.view.setting" ---@type string
 
----@class dot.ux.ISetting
+---@class era.view.ISetting
 ---@field public bufnr                  integer|nil
 ---@field public winnr                  integer|nil
----@field public open                   fun(self: dot.ux.ISetting, params: dot.ux.setting.IOpenParams): nil
----@field public close                  fun(self: dot.ux.ISetting): nil
+---@field public open                   fun(self: era.view.ISetting, params: era.view.setting.IOpenParams): nil
+---@field public close                  fun(self: era.view.ISetting): nil
 
----@class dot.ux.setting.IOpenParams
+---@class era.view.setting.IOpenParams
 ---@field public initial_value          dot.t.T
 ---@field public row                    ?number
 ---@field public col                    ?number
@@ -15,12 +15,12 @@ local __module_name__ = "dot.ux.setting" ---@type string
 ---@field public win_cursor_row         ?integer
 ---@field public win_cursor_col         ?integer
 
----@class dot.ux.Setting : dot.ux.ISetting, dot.ux.Textarea
+---@class era.view.Setting : era.view.ISetting, era.view.Textarea
 local M = {}
 M.__index = M
-setmetatable(M, dot.ux.Textarea)
+setmetatable(M, era.view.Textarea)
 
----@class dot.ux.setting.IProps
+---@class era.view.setting.IProps
 ---@field public position               stl.e.BoxPosition
 ---@field public width                  ?number
 ---@field public height                 ?number
@@ -35,8 +35,8 @@ setmetatable(M, dot.ux.Textarea)
 ---@field public on_close               ?fun(): nil
 ---@field public on_confirm             fun(value: dot.t.T): boolean
 
----@param props                         dot.ux.setting.IProps
----@return dot.ux.Setting
+---@param props                         era.view.setting.IProps
+---@return era.view.Setting
 function M.new(props)
   local position = props.position ---@type stl.e.BoxPosition
   local width = props.width ---@type number|nil
@@ -101,7 +101,7 @@ function M.new(props)
     return on_confirm_from_props(data)
   end
 
-  local textarea = dot.ux.Textarea.new({
+  local textarea = era.view.Textarea.new({
     position = position,
     width = width,
     height = height,
@@ -119,18 +119,18 @@ function M.new(props)
   })
 
   local self = setmetatable(textarea, M)
-  ---@cast self                         dot.ux.Setting
+  ---@cast self                         era.view.Setting
 
   return self
 end
 
----@param params                        dot.ux.setting.IOpenParams
+---@param params                        era.view.setting.IOpenParams
 ---@return nil
 function M:open(params)
   local text = vim.json.encode(params.initial_value, { indent = "  ", sort_keys = false }) ---@type string
   local lines = vim.split(text, "\n", { plain = true }) ---@type string[]
 
-  ---@type dot.ux.textarea.IOpenParams
+  ---@type era.view.textarea.IOpenParams
   local opts = {
     initial_lines = lines,
     row = params.row,
@@ -140,7 +140,7 @@ function M:open(params)
     win_cursor_col = params.win_cursor_col,
     win_cursor_row = params.win_cursor_row,
   }
-  dot.ux.Textarea.open(self, opts)
+  era.view.Textarea.open(self, opts)
 end
 
 return M
