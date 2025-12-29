@@ -7,13 +7,13 @@ if dot.path.is_git_repo() then
 end
 
 if vim.g.vscode then
-  require("vendor.vscode")
+  require("ark.vendor.vscode")
   return
 end
 
 if vim.g.neovide then
-  require("vendor.neovide")
+  require("ark.vendor.neovide")
   return
 end
 
-require("vendor.neovim")
+require("ark.vendor.neovim")

@@ -163,15 +163,15 @@ Foundation layer with algorithms, collections, and utilities.
   - render-markdown, which-key
 - **`era/plugin.lua`** - Plugin repository and lazy loading setup
 
-#### `lua/vendor/` - Environment-specific Entry Points
+#### `lua/ark/vendor/` - Environment-specific Entry Points
 
-- **`vendor/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
-- **`vendor/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
-- **`vendor/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
+- **`ark/vendor/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
+- **`ark/vendor/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
+- **`ark/vendor/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
 
-#### `lua/bot/` - Bootstrap Module
+#### `lua/ark/` - Bootstrap Module
 Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and workspace.
-- `init.lua` - Main bootstrap
+- `bootstrap.lua` - Main bootstrap
 - `autocmd.lua`, `keymap.lua`, `option.lua` - Early configuration
 
 #### Supporting Directories
@@ -196,9 +196,9 @@ Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and
 ### Vendor Entry Points
 
 The configuration supports multiple environments through conditional loading in `init.lua`:
-- **Standard Neovim**: `vendor/neovim/` (default path)
-- **Neovide GUI**: `vendor/neovide/` (when `vim.g.neovide` is set)
-- **VSCode Extension**: `vendor/vscode/` (when `vim.g.vscode` is set)
+- **Standard Neovim**: `ark/vendor/neovim/` (default path)
+- **Neovide GUI**: `ark/vendor/neovide/` (when `vim.g.neovide` is set)
+- **VSCode Extension**: `ark/vendor/vscode/` (when `vim.g.vscode` is set)
 
 Each vendor entry point includes environment-specific:
 - `init.lua`: Main setup and loading sequence
