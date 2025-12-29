@@ -1,7 +1,6 @@
 ---@class era.__mods
 local __mods = {
   ai = "era.ai",
-  board = "era.board",
   clipboard = "era.clipboard",
   colorpicker = "era.colorpicker",
   explorer = "era.explorer",
@@ -22,7 +21,6 @@ local __mods = {
 ---@class era
 ---@field public __mods                 era.__mods
 ---@field public ai                     era.ai
----@field public board                  era.board
 ---@field public clipboard              era.clipboard
 ---@field public colorpicker            era.colorpicker
 ---@field public explorer               era.explorer

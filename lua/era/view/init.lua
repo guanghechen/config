@@ -1,5 +1,6 @@
 ---@class era.view.__mods
 local __mods = {
+  Act = "era.view.act",
   Fileinfo = "era.view.fileinfo",
   Input = "era.view.input",
   Keysheet = "era.view.keysheet",
@@ -13,6 +14,7 @@ local __mods = {
 
 ---@class era.view
 ---@field public __mods                 era.view.__mods
+---@field public Act                    era.view.Act
 ---@field public Fileinfo               era.view.Fileinfo
 ---@field public Input                  era.view.Input
 ---@field public Keysheet               era.view.Keysheet

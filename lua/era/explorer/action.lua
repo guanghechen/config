@@ -519,8 +519,8 @@ function M:delete_selected()
 
   local fullname = ctx.fullname ---@type string
 
-  ---@type era.board.Act
-  local act = era.board.Act.new({
+  ---@type era.view.Act
+  local act = era.view.Act.new({
     name = "explorer_delete",
     title = string.format("%s Delete %d item(s)", stl.icon.diagnostic.Warning, #selected_nodes),
     initial_input = "y",
@@ -1240,8 +1240,8 @@ function M:__transfer_selected__(mode, initial_target)
 
   local fullname = ctx.fullname ---@type string
 
-  ---@type era.board.Act
-  local act = era.board.Act.new({
+  ---@type era.view.Act
+  local act = era.view.Act.new({
     name = "explorer_" .. mode,
     title = string.format("%s %s %d item(s)", icon, verb_past:gsub("ed$", ""), #selected_nodes),
     initial_input = default_target,
