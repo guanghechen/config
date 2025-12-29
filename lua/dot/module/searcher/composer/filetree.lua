@@ -2109,7 +2109,7 @@ function M:__search_internal__()
           L = L + 1 ---@type integer
           locations[L] = location
         end
-        ark.table.truncate_inline(locations, L)
+        stl.table.truncate_inline(locations, L)
         leafnode.locations = locations
         leafnode.tick_matched = tick_matched
       end
@@ -2137,7 +2137,7 @@ function M:__search_internal__()
   end)
 
   if frecency ~= nil then
-    ark.table.stable_sort(uuids, function(a, b)
+    stl.table.stable_sort(uuids, function(a, b)
       local sa = frecency:score(a) or 0 ---@type integer
       local sb = frecency:score(b) or 0 ---@type integer
       return sb - sa
@@ -2321,7 +2321,7 @@ function M:__replace_file__(cwd, node, nodestate)
         locations[k] = location ---@type dot.module.searcher.view.filetree.ILeafLocationState
       end
     end
-    ark.table.truncate_inline(locations, k)
+    stl.table.truncate_inline(locations, k)
   elseif replace_error ~= nil then
     stl.reporter.error({
       from = self.fullname,

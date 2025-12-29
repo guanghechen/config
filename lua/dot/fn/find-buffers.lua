@@ -151,7 +151,7 @@ picker = dot.picker.ListComposer.new({
       desc = "find(buffer): toggle scope",
       callback = function()
         local scope = o_scope:snapshot() ---@type dot.e.FindBufferScope
-        local idx = ark.table.find_index(scopes, scope) or 1 ---@type integer
+        local idx = stl.table.find_index(scopes, scope) or 1 ---@type integer
         local idx_next = idx == #scopes and 1 or idx + 1 ---@type integer
         local next_scope = scopes[idx_next] ---@type dot.e.FindBufferScope
         dot.context.select.find_buffer_scope:next(next_scope)

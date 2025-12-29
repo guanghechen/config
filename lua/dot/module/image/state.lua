@@ -111,7 +111,7 @@ local data = {
   },
 }
 
-local SUPPORTED_EXTNAME_SET = ark.table.to_string_set(data.extnames) ---@type table<string, boolean>
+local SUPPORTED_EXTNAME_SET = stl.table.to_string_set(data.extnames) ---@type table<string, boolean>
 
 ---@alias dot.module.image.Size         {width: integer, height: integer}
 

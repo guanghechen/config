@@ -1,4 +1,4 @@
----@class ark.table
+---@class stl.table
 local M = {}
 
 ---@generic T

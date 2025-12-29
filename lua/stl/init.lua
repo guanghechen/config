@@ -89,6 +89,7 @@ local __mods = {
   reporter = "stl.reporter",
   stdout = "stl.stdout",
   string = "stl.string",
+  table = "stl.table",
 }
 
 ---@class stl
@@ -109,6 +110,7 @@ local __mods = {
 ---@field public reporter               stl.reporter
 ---@field public stdout                 stl.stdout
 ---@field public string                 stl.string
+---@field public table                  stl.table
 local M = setmetatable({
   __mods = __mods,
   c = c,

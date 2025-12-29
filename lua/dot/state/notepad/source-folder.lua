@@ -467,7 +467,7 @@ function M:remove(uuid)
   self:__delete_note_file__(item.name)
   dot.state.notepad.remove_from_name_index(state.name_to_uuid, item.name)
   state.items[uuid] = nil
-  ark.table.filter_inline(state.orders, function(element)
+  stl.table.filter_inline(state.orders, function(element)
     return element ~= uuid
   end)
 

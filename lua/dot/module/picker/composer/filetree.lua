@@ -542,10 +542,10 @@ function M.new(props)
         local fileuuid = filenode.uuid ---@type string
         treeview:remove(fileuuid)
         if not isdir then
-          ark.table.filter_inline(self._uuids_file, function(uuid)
+          stl.table.filter_inline(self._uuids_file, function(uuid)
             return uuid ~= fileuuid
           end)
-          ark.table.filter_inline(self._uuids_order, function(uuid)
+          stl.table.filter_inline(self._uuids_order, function(uuid)
             return uuid ~= fileuuid
           end)
         end

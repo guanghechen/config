@@ -231,7 +231,7 @@ function M.remove(termuuid)
       termlist[k] = uuid ---@type string
     end
   end
-  ark.table.truncate_inline(termlist, k)
+  stl.table.truncate_inline(termlist, k)
 end
 
 ---@return integer

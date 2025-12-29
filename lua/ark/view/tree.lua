@@ -1319,7 +1319,7 @@ function M:remove_location(leafnodestate, locationuuid)
         locations[k] = location ---@type ark.view.tree.ILeafLocationState
       end
     end
-    ark.table.truncate_inline(locations, k)
+    stl.table.truncate_inline(locations, k)
   end
 end
 

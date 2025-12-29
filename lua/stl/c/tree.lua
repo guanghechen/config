@@ -509,7 +509,7 @@ function M:insert(parent, uuid, data)
     end
 
     local old_node_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
-    ark.table.filter_inline(old_node_parent.children, function(childuuid)
+    stl.table.filter_inline(old_node_parent.children, function(childuuid)
       return childuuid ~= node.uuid
     end)
 
@@ -616,7 +616,7 @@ function M:remove(nodeuuid)
   local node_parent = nodemap[node.parent] ---@type stl.c.ITreeNode
 
   self:__remove_recursive__(node)
-  ark.table.filter_inline(node_parent.children, function(childuuid)
+  stl.table.filter_inline(node_parent.children, function(childuuid)
     return childuuid ~= nodeuuid
   end)
 

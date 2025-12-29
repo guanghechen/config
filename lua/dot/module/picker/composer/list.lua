@@ -349,7 +349,7 @@ function M.new(props)
       end
 
       if N1 > N2 then
-        ark.table.truncate_inline(lnum2uuid, N2)
+        stl.table.truncate_inline(lnum2uuid, N2)
       end
 
       local uuid_current = self._uuid_current ---@type string|nil
