@@ -522,10 +522,10 @@ function M.attach(bufnr)
   if not dot.context.flight.dressing_image:snapshot() then
     return
   end
-  if vim.b[bufnr][ark.var.N_IMAGE_ATTACHED] then
+  if vim.b[bufnr][dot.var.N_IMAGE_ATTACHED] then
     return
   end
-  vim.b[bufnr][ark.var.N_IMAGE_ATTACHED] = true
+  vim.b[bufnr][dot.var.N_IMAGE_ATTACHED] = true
 
   local state_mod = require("dot.module.image.state")
   local inline_mod = require("dot.module.image.inline")

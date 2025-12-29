@@ -70,7 +70,7 @@ local __module_name__ = "dot.module.picker.view.filetree" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
-local DEFAULT_NSNR_MATCHES = ark.var.nsnr.view_filetree_matches ---@type integer
+local DEFAULT_NSNR_MATCHES = dot.var.nsnr.view_filetree_matches ---@type integer
 ---@class dot.module.picker.view.IFiletreeProps
 ---@field public name                   string
 ---@field public tree                   stl.c.IFiletree

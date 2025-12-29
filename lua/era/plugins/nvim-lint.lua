@@ -75,7 +75,7 @@ local function do_lint(bufnr)
     return
   end
 
-  if vim.b[bufnr][ark.var.N_BUF_DISABLE_LINT] then
+  if vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] then
     return
   end
 

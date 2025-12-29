@@ -167,18 +167,18 @@ function M.new(props)
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        local group = ark.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
-        local signnr = ark.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
+        local group = dot.var.sign.GROUP_PICKER_RESULT_CURRENT ---@type string
+        local signnr = dot.var.sign.NR_PICKER_RESULT_CURRENT ---@type integer
         local lnum = _o_lnum_current:snapshot() ---@type integer
         local lnum_present = _o_lnum_present:snapshot() ---@type integer
 
         pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
         if lnum > 0 then
-          local sign = ark.var.sign.PICKER_RESULT_CURRENT ---@type string
+          local sign = dot.var.sign.PICKER_RESULT_CURRENT ---@type string
           if isselected(bufnr, lnum) then
-            sign = ark.var.sign.PICKER_RESULT_SELECTED_CURRENT
+            sign = dot.var.sign.PICKER_RESULT_SELECTED_CURRENT
           elseif lnum == lnum_present then
-            sign = ark.var.sign.PICKER_RESULT_PRESENT_CURRENT
+            sign = dot.var.sign.PICKER_RESULT_PRESENT_CURRENT
           end
           pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum, priority = 50 })
         end
@@ -197,13 +197,13 @@ function M.new(props)
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        local group = ark.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
-        local signnr = ark.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
+        local group = dot.var.sign.GROUP_PICKER_RESULT_PRESENT ---@type string
+        local signnr = dot.var.sign.NR_PICKER_RESULT_PRESENT ---@type integer
         local lnum_present = _o_lnum_present:snapshot() ---@type integer
 
         pcall(vim.fn.sign_unplace, group, { id = signnr, buffer = bufnr })
         if lnum_present > 0 then
-          local sign = ark.var.sign.PICKER_RESULT_PRESENT ---@type string
+          local sign = dot.var.sign.PICKER_RESULT_PRESENT ---@type string
           pcall(vim.fn.sign_place, signnr, group, sign, bufnr, { lnum = lnum_present, priority = 30 })
         end
       end
@@ -221,8 +221,8 @@ function M.new(props)
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        local group = ark.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
-        local sign = ark.var.sign.PICKER_RESULT_SELECTED ---@type string
+        local group = dot.var.sign.GROUP_PICKER_RESULT_SELECTED ---@type string
+        local sign = dot.var.sign.PICKER_RESULT_SELECTED ---@type string
         pcall(vim.fn.sign_unplace, group, { buffer = bufnr })
 
         local linecount = vim.api.nvim_buf_line_count(bufnr) ---@type integer

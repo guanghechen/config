@@ -14,7 +14,7 @@ local KIND_MAP = {
   },
 }
 
-local nsnrs = ark.var.nsnr ---@type ark.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 local kind_2_level_map = {
   err = vim.log.levels.ERROR,
@@ -92,7 +92,7 @@ function M.history_show(task)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = ark.var.zindex.MESSAGES,
+    zindex = dot.var.zindex.MESSAGES,
     relative = "editor",
     width = win_width,
     height = win_height,
@@ -114,7 +114,7 @@ function M.history_show(task)
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
     dot.win.set_type(winnr, stl.nvim.win.Types.BOARD)
-    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = true
     vim.wo[winnr].number = true

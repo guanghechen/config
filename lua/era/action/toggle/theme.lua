@@ -55,8 +55,8 @@ local function render_result(_, bufnr, itemmap, matches)
   -- Set buffer lines
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  local nsnr_content = ark.var.nsnr.picker_result ---@type integer
-  local nsnr_matches = ark.var.nsnr.picker_matches ---@type integer
+  local nsnr_content = dot.var.nsnr.picker_result ---@type integer
+  local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
 
   -- Apply highlights
   for lnum, match_data in ipairs(matches) do

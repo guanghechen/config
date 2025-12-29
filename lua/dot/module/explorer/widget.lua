@@ -1518,10 +1518,10 @@ function M:__update_cursorline__()
   local lnum = cursor[1] ---@type integer
   local prev_lnum = self._prev_cursor_lnum ---@type integer|nil
 
-  vim.api.nvim_buf_clear_namespace(bufnr, ark.var.nsnr.explorer_cursorline, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.explorer_cursorline, 0, -1)
 
   local hlgroup = self._is_focused and "m_ex_cursorline" or "m_ex_cursorline_blur" ---@type string
-  vim.api.nvim_buf_set_extmark(bufnr, ark.var.nsnr.explorer_cursorline, lnum - 1, 0, {
+  vim.api.nvim_buf_set_extmark(bufnr, dot.var.nsnr.explorer_cursorline, lnum - 1, 0, {
     line_hl_group = hlgroup,
     priority = 100,
   })

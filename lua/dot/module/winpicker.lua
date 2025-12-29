@@ -86,7 +86,7 @@ function M:show(winnr)
     self.winnr_hint = winnr_hint
 
     dot.win.set_type(winnr_hint, stl.nvim.win.Types.WINPICKER)
-    vim.w[winnr_hint][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr_hint].number = false
     vim.wo[winnr_hint].relativenumber = false

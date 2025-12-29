@@ -76,7 +76,7 @@ function M.pick_filepath(cwd, existed_paths)
   end
 
   for i = 1, 100 do
-    local filepath = dot.path.join(cwd, ark.var.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
+    local filepath = dot.path.join(cwd, dot.var.BUF_UNTITLED .. "-" .. tostring(i)) ---@type string
     if not existed_paths[filepath] and vim.uv.fs_stat(filepath) == nil then
       return filepath
     end

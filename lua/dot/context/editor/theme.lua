@@ -69,7 +69,7 @@ end
 function M.normalize(data)
   local resolved = M.defaults() ---@type dot.context.theme.data
   if type(data) == "table" then
-    if type(data.theme) == "string" and vim.list_contains(ark.var.theme, data.theme) then
+    if type(data.theme) == "string" and vim.list_contains(dot.var.theme, data.theme) then
       resolved.theme = data.theme
     end
     if type(data.transparency) == "boolean" then
@@ -214,7 +214,7 @@ end
 ---@param theme                         dot.e.ThemeFullName
 ---@return stl.t.theme.IScheme | nil
 function M.get_scheme(theme)
-  if not vim.list_contains(ark.var.theme, theme) then
+  if not vim.list_contains(dot.var.theme, theme) then
     stl.reporter.error({
       from = __module_name__,
       subject = "get_scheme",

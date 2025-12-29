@@ -63,7 +63,7 @@ function M.items(position, notepad)
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
     if #name == 0 then
-      name = ark.var.BUF_UNTITLED
+      name = dot.var.BUF_UNTITLED
     end
     if #name > 20 then
       name = name:sub(1, 17) .. "..."

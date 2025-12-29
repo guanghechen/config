@@ -1,6 +1,6 @@
 ---@class era.dressing.virtcolumn.config
 local config = {
-  nsnr = ark.var.nsnr.virtcolumn,
+  nsnr = dot.var.nsnr.virtcolumn,
   virt_char = "╎",
   columns = { 100, 120 },
   hlgroups = { "h_virtcolumn_1", "h_virtcolumn_2" },

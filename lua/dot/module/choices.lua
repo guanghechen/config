@@ -162,7 +162,7 @@ function M.open(props)
   }) ---@type integer
 
   dot.win.set_type(winnr, stl.nvim.win.Types.SELECT)
-  vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+  vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
   vim.wo[winnr].cursorline = true
   vim.wo[winnr].number = false
@@ -176,9 +176,9 @@ function M.open(props)
 
   vim.api.nvim_win_set_cursor(winnr, { default_index, 0 })
 
-  local sign_group = ark.var.sign.GROUP_CHOICES_CURRENT ---@type string
-  local sign_nr = ark.var.sign.NR_CHOICES_CURRENT ---@type integer
-  local sign_name = ark.var.sign.CHOICES_CURRENT ---@type string
+  local sign_group = dot.var.sign.GROUP_CHOICES_CURRENT ---@type string
+  local sign_nr = dot.var.sign.NR_CHOICES_CURRENT ---@type integer
+  local sign_name = dot.var.sign.CHOICES_CURRENT ---@type string
 
   ---@param lnum                        integer
   ---@return nil

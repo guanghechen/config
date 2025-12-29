@@ -1,6 +1,6 @@
 local states = require("era.dressing.ui_attach.state")
 
-local nsnrs = ark.var.nsnr ---@type ark.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@param entries                       table[]|nil
 ---@return string[]
@@ -231,7 +231,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = ark.var.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level * 100,
     relative = "editor",
     width = width,
     height = 1,
@@ -251,7 +251,7 @@ function M._show(state)
     state.winnr = winnr
 
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
-    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -366,7 +366,7 @@ function M._render_block(block)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = ark.var.zindex.CMDLINE_BLOCK,
+    zindex = dot.var.zindex.CMDLINE_BLOCK,
     relative = "editor",
     width = width,
     height = height,
@@ -386,7 +386,7 @@ function M._render_block(block)
     block.winnr = winnr
 
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
-    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false
@@ -533,7 +533,7 @@ function M._show_confirm(state, msg_show_task)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = ark.var.zindex.CMDLINE + state.level * 100,
+    zindex = dot.var.zindex.CMDLINE + state.level * 100,
     relative = "editor",
     width = width,
     height = height,
@@ -553,7 +553,7 @@ function M._show_confirm(state, msg_show_task)
     state.winnr = winnr
 
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
-    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

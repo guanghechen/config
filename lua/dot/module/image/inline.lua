@@ -148,7 +148,7 @@ function M:update()
             pos = i.pos,
             range = i.range,
             inline = true,
-            conceal = vim.b[self.bufnr][ark.var.N_IMAGE_CONCEAL] or conceal(i.lang, i.type),
+            conceal = vim.b[self.bufnr][dot.var.N_IMAGE_CONCEAL] or conceal(i.lang, i.type),
             type = i.type,
             ---@param p dot.module.image.Placement
             on_update = function(p)

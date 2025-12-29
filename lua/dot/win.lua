@@ -324,7 +324,7 @@ function M.resolve(winnr, force)
   if meta.history == nil then
     meta.history = stl.c.History.new({
       name = "win#bufs",
-      capacity = ark.var.WIN_BUF_HISTORY_CAPACITY,
+      capacity = dot.var.WIN_BUF_HISTORY_CAPACITY,
       ---@param x                       dot.win.IFilepathHistoryItem
       ---@param y                       dot.win.IFilepathHistoryItem
       equals = function(x, y)
@@ -386,7 +386,7 @@ function M.locate_symbols(winnr, callback)
   ---! Make the request to the LSP server
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
-  if vim.b[bufnr][ark.var.N_WINLINE_DISABLED] or support_documentSymbol < 1 then
+  if vim.b[bufnr][dot.var.N_WINLINE_DISABLED] or support_documentSymbol < 1 then
     return abort()
   end
 
@@ -424,7 +424,7 @@ function M.locate_symbols(winnr, callback)
 
         if err.message == "trying to get AST for non-added document" then
           if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.b[bufnr][ark.var.N_WINLINE_DISABLED] = true
+            vim.b[bufnr][dot.var.N_WINLINE_DISABLED] = true
           end
           settle(false)
           return

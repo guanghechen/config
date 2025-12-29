@@ -83,8 +83,8 @@ local picker = dot.picker.ListComposer.new({
 
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-    local nsnr_content = ark.var.nsnr.picker_result ---@type integer
-    local nsnr_matches = ark.var.nsnr.picker_matches
+    local nsnr_content = dot.var.nsnr.picker_result ---@type integer
+    local nsnr_matches = dot.var.nsnr.picker_matches
 
     for lnum, match in ipairs(matches) do
       local row = lnum - 1 ---@type integer
@@ -131,7 +131,7 @@ local picker = dot.picker.ListComposer.new({
       local hlgroups = _hlgroups or {} ---@type table<string, vim.api.keyset.get_hl_info>
 
       local lines = {} ---@type string[]
-      local nsnr_content = ark.var.nsnr.picker_preview ---@type integer
+      local nsnr_content = dot.var.nsnr.picker_preview ---@type integer
 
       local max_hlname_width = 0 ---@type integer
       for _, hlname in ipairs(hlnames) do

@@ -293,7 +293,7 @@ function M:render(context, bufnr, filepath, force)
       end
     end
 
-    local nsnr = ark.var.nsnr.searcher_searched ---@type integer
+    local nsnr = dot.var.nsnr.searcher_searched ---@type integer
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)
     for _, hl in ipairs(data.highlights) do
       local row = hl.lnum - 1 ---@type integer
@@ -302,7 +302,7 @@ function M:render(context, bufnr, filepath, force)
   end
 
   do
-    local nsnr = ark.var.nsnr.searcher_searched_cur ---@type integer
+    local nsnr = dot.var.nsnr.searcher_searched_cur ---@type integer
     local patched_highlights = self:patch_preview_data(context, data) ---@type stl.t.IHighlight[]
 
     vim.api.nvim_buf_clear_namespace(bufnr, nsnr, 0, -1)

@@ -1,6 +1,6 @@
 local states = require("era.dressing.ui_attach.state")
 
-local nsnrs = ark.var.nsnr ---@type ark.var.nsnr
+local nsnrs = dot.var.nsnr ---@type dot.var.nsnr
 
 ---@class era.dressing.ui_attach.popupmenu
 local M = {}
@@ -115,7 +115,7 @@ function M._show(state)
 
   ---@type vim.api.keyset.win_config
   local wincfg = {
-    zindex = ark.var.zindex.POPUPMENU,
+    zindex = dot.var.zindex.POPUPMENU,
     relative = "editor",
     width = width,
     height = height,
@@ -133,7 +133,7 @@ function M._show(state)
     state.winnr = winnr
 
     dot.win.set_type(winnr, stl.nvim.win.Types.POPUPMENU)
-    vim.w[winnr][ark.var.N_WINLINE_DISABLED] = true
+    vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.wo[winnr].cursorline = false
     vim.wo[winnr].list = false

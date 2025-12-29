@@ -1,4 +1,4 @@
----@class ark.var
+---@class dot.var
 ---@field public N_BUF_DISABLE_LINT     string
 ---@field public N_IMAGE_ATTACHED       string
 ---@field public N_IMAGE_CONCEAL        string
@@ -16,16 +16,16 @@ M.K_CODE_INSERT_SPLITLINE = "g;"
 
 ----------------------------------------------------------------------------------------------------
 
-M.N_BUF_DISABLE_LINT = "ark_buf_disable_lint"
-M.N_IMAGE_ATTACHED = "ark_image_attached"
-M.N_IMAGE_CONCEAL = "ark_image_conceal"
-M.N_WINLINE_DISABLED = "ark_winline_disabled"
+M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
+M.N_IMAGE_ATTACHED = "dot_image_attached"
+M.N_IMAGE_CONCEAL = "dot_image_conceal"
+M.N_WINLINE_DISABLED = "dot_winline_disabled"
 
 ----------------------------------------------------------------------------------------------------
 
 local severity = vim.diagnostic.severity
 
----@class ark.var.diagnostic
+---@class dot.var.diagnostic
 M.diagnostic = {
   ---@type table<vim.diagnostic.Severity, string>
   severity2prefixicon = {
@@ -54,7 +54,7 @@ M.diagnostic = {
 
 local cn = vim.api.nvim_create_namespace
 
----@class ark.var.nsnr
+---@class dot.var.nsnr
 M.nsnr = {
   -- stylua: ignore start
   ai_prompt_preview     = cn("ux:ai:prompt:preview"),
@@ -89,7 +89,7 @@ M.nsnr = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.var.session
+---@class dot.var.session
 M.session = {
   persistent_options = table.concat({
     "blank",
@@ -108,7 +108,7 @@ M.session = {
   }, ","),
 }
 
----@class ark.var.theme
+---@class dot.var.theme
 M.theme = {
   "catppuccin-frappe",
   "catppuccin-latte",
@@ -130,7 +130,7 @@ M.theme = {
   "vsc-light-modern",
 }
 
----@class ark.var.toggler
+---@class dot.var.toggler
 M.toggler = {
   "auto_im_behavior",
   "bufs_relative_behavior",
@@ -178,7 +178,7 @@ M.toggler = {
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.var.sign
+---@class dot.var.sign
 M.sign = {
   -- stylua: ignore start
   ---! picker
@@ -252,7 +252,7 @@ sd(M.sign.DAP_STOPPED,                      { text = stl.icon.dap.Stopped,      
 
 ----------------------------------------------------------------------------------------------------
 
----@class ark.var.zindex
+---@class dot.var.zindex
 M.zindex = {
   BOARD = 100,
   CMDLINE = 10000,
