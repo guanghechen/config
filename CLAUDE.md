@@ -63,7 +63,6 @@ Standard library with environment detection and dictionary data.
 Foundation layer with algorithms, collections, and utilities.
 
 - **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
-- **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
 - **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)
 
 - **Core utilities**: `anim`, `box`, `debug`, `fs`, `hot`, `nvim`, `reporter`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
@@ -97,8 +96,9 @@ Foundation layer with algorithms, collections, and utilities.
   - `maximized`, `notepad/`, `qflist`, `status`, `widget`
 
 - **`dot/theme/`** - Theme system:
-  - Theme-specific overrides: `catppuccin/`, `gruvbox/`, `onehalf/`, `tokyonight/`, `vsc/`
-  - Highlight group modules: `basic`, `common`, `lsp`, `nvimbar`, `plugin`, `treesitter`, `widget`
+  - `scheme/` - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
+  - `hlgroup/` - Highlight group definitions with theme-specific overrides (`catppuccin/`, `gruvbox/`, `onehalf/`, `tokyonight/`, `vsc/`)
+  - Highlight group modules: `basic`, `common`, `lsp`, `module`, `nvimbar`, `plugin`, `treesitter`, `widget`
 
 - **`dot/ux/`** - UX components (`select`, `setting`, `textarea`)
 - **`dot/widget/`** - Widgets (`explorer`, `Notepad`, `Terminal`)
@@ -187,7 +187,7 @@ Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
 ### Module Access Patterns
 
 - `stl.c.Observable` → `require("stl.c.observable")` (collections mounted on stl.c)
-- `ark.theme.scheme["catppuccin-mocha"]` → `require("ark.theme.scheme.catppuccin-mocha")`
+- `dot.theme.scheme["catppuccin-mocha"]` → `require("dot.theme.scheme.catppuccin-mocha")`
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
 - `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern
 - `dot.git.*`, `dot.picker.*`, `dot.searcher.*`, `dot.board.*` → module subcomponents

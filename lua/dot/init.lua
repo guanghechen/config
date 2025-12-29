@@ -96,6 +96,113 @@ local state = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class dot.theme.scheme.__mods
+local theme_scheme__mods = {
+  ["catppuccin-frappe"] = "dot.theme.scheme.catppuccin-frappe",
+  ["catppuccin-latte"] = "dot.theme.scheme.catppuccin-latte",
+  ["catppuccin-macchiato"] = "dot.theme.scheme.catppuccin-macchiato",
+  ["catppuccin-mocha"] = "dot.theme.scheme.catppuccin-mocha",
+  ["gruvbox-dark"] = "dot.theme.scheme.gruvbox-dark",
+  ["gruvbox-light"] = "dot.theme.scheme.gruvbox-light",
+  ["nord"] = "dot.theme.scheme.nord",
+  ["onehalf-dark"] = "dot.theme.scheme.onehalf-dark",
+  ["onehalf-light"] = "dot.theme.scheme.onehalf-light",
+  ["rosepine-dawn"] = "dot.theme.scheme.rosepine-dawn",
+  ["rosepine-main"] = "dot.theme.scheme.rosepine-main",
+  ["rosepine-moon"] = "dot.theme.scheme.rosepine-moon",
+  ["tokyonight-day"] = "dot.theme.scheme.tokyonight-day",
+  ["tokyonight-moon"] = "dot.theme.scheme.tokyonight-moon",
+  ["tokyonight-night"] = "dot.theme.scheme.tokyonight-night",
+  ["tokyonight-storm"] = "dot.theme.scheme.tokyonight-storm",
+  ["vsc-dark-modern"] = "dot.theme.scheme.vsc-dark-modern",
+  ["vsc-light-modern"] = "dot.theme.scheme.vsc-light-modern",
+}
+
+---@class dot.theme.scheme
+---@field public __mods                 dot.theme.scheme.__mods
+---@field public ["catppuccin-frappe"]  stl.t.theme.IScheme
+---@field public ["catppuccin-latte"]   stl.t.theme.IScheme
+---@field public ["catppuccin-macchiato"] stl.t.theme.IScheme
+---@field public ["catppuccin-mocha"]   stl.t.theme.IScheme
+---@field public ["gruvbox-dark"]       stl.t.theme.IScheme
+---@field public ["gruvbox-light"]      stl.t.theme.IScheme
+---@field public ["nord"]               stl.t.theme.IScheme
+---@field public ["onehalf-dark"]       stl.t.theme.IScheme
+---@field public ["onehalf-light"]      stl.t.theme.IScheme
+---@field public ["rosepine-dawn"]      stl.t.theme.IScheme
+---@field public ["rosepine-main"]      stl.t.theme.IScheme
+---@field public ["rosepine-moon"]      stl.t.theme.IScheme
+---@field public ["tokyonight-day"]     stl.t.theme.IScheme
+---@field public ["tokyonight-moon"]    stl.t.theme.IScheme
+---@field public ["tokyonight-night"]   stl.t.theme.IScheme
+---@field public ["tokyonight-storm"]   stl.t.theme.IScheme
+---@field public ["vsc-dark-modern"]    stl.t.theme.IScheme
+---@field public ["vsc-light-modern"]   stl.t.theme.IScheme
+local theme_scheme = setmetatable({ __mods = theme_scheme__mods }, {
+  __index = function(t, k)
+    local m = theme_scheme__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+---@class dot.theme.hlgroup.__mods
+local theme_hlgroup__mods = {
+  basic = "dot.theme.hlgroup.basic",
+  common = "dot.theme.hlgroup.common",
+  lsp = "dot.theme.hlgroup.lsp",
+  module = "dot.theme.hlgroup.module",
+  nvimbar = "dot.theme.hlgroup.nvimbar",
+  plugin = "dot.theme.hlgroup.plugin",
+  treesitter = "dot.theme.hlgroup.treesitter",
+  widget = "dot.theme.hlgroup.widget",
+}
+
+---@class dot.theme.hlgroup
+---@field public __mods                 dot.theme.hlgroup.__mods
+---@field public basic                  dot.theme.hlgroup.basic
+---@field public common                 dot.theme.hlgroup.common
+---@field public lsp                    dot.theme.hlgroup.lsp
+---@field public module                 dot.theme.hlgroup.module
+---@field public nvimbar                dot.theme.hlgroup.nvimbar
+---@field public plugin                 dot.theme.hlgroup.plugin
+---@field public treesitter             dot.theme.hlgroup.treesitter
+---@field public widget                 dot.theme.hlgroup.widget
+local theme_hlgroup = setmetatable({ __mods = theme_hlgroup__mods }, {
+  __index = function(t, k)
+    local m = theme_hlgroup__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+---@class dot.theme.__mods
+local theme__mods = {}
+
+---@class dot.theme
+---@field public __mods                 dot.theme.__mods
+---@field public hlgroup                dot.theme.hlgroup
+---@field public scheme                 dot.theme.scheme
+local theme = setmetatable({
+  __mods = theme__mods,
+  hlgroup = theme_hlgroup,
+  scheme = theme_scheme,
+}, {
+  __index = function(t, k)
+    local m = theme__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class dot.widget.__mods
 local __widget__mods = {
   explorer = "dot.widget.explorer",
@@ -163,6 +270,7 @@ local __mods = {
 ---@field public session                dot.session
 ---@field public state                  dot.state
 ---@field public term                   dot.term
+---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
 ---@field public ux                     dot.ux
 ---@field public widget                 dot.widget
@@ -182,6 +290,7 @@ local M = setmetatable({
   __mods = __mods,
   fn = fn,
   state = state,
+  theme = theme,
   widget = widget,
 }, {
   __index = function(t, k)

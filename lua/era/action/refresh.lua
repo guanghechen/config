@@ -25,7 +25,7 @@ function M.refresh_all()
   if devmode then
     pcall(function()
       stl.hot.reload_module("stl.lang")
-      stl.hot.reload_module("ark.theme")
+      stl.hot.reload_module("dot.theme")
       dot.command.definitions.ux.reload_theme:execute("force")
     end)
   end
