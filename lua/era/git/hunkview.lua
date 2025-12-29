@@ -1,9 +1,9 @@
-local __module_name__ = "era.board.git-hunk" ---@type string
+local __module_name__ = "era.git.hunkview" ---@type string
 
----@class era.board.git-hunk.IProps
+---@class era.git.hunkview.IProps
 ---@field public bufnr                 integer
 
----@class era.board.git-hunk.IState
+---@class era.git.hunkview.IState
 ---@field protected _disposed          boolean
 ---@field protected _board_bufnr       integer|nil
 ---@field protected _board_winnr       integer|nil
@@ -11,12 +11,12 @@ local __module_name__ = "era.board.git-hunk" ---@type string
 ---@field protected _bufnr             integer
 ---@field protected _lnum              integer
 
----@class era.board.GitHunk : era.board.git-hunk.IState
+---@class era.git.Hunkview : era.git.hunkview.IState
 local M = {}
 M.__index = M
 
----@param props                        era.board.git-hunk.IProps
----@return era.board.GitHunk
+---@param props                        era.git.hunkview.IProps
+---@return era.git.Hunkview
 function M.new(props)
   local self = setmetatable({}, M)
   self._disposed = false

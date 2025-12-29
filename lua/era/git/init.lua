@@ -8,6 +8,7 @@ local __mods = {
   cmd = "era.git.cmd",
   diff = "era.git.diff",
   hunk = "era.git.hunk",
+  Hunkview = "era.git.hunkview",
   repo = "era.git.repo",
   sign = "era.git.sign",
   state = "era.git.state",
@@ -23,6 +24,7 @@ local __mods = {
 ---@field public cmd                    era.git.cmd
 ---@field public diff                   era.git.diff
 ---@field public hunk                   era.git.hunk
+---@field public Hunkview               era.git.Hunkview
 ---@field public repo                   era.git.repo
 ---@field public sign                   era.git.sign
 ---@field public state                  era.git.state

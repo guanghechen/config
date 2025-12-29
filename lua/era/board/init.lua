@@ -1,13 +1,11 @@
 ---@class era.board.__mods
 local __mods = {
   Act = "era.board.act",
-  GitHunk = "era.board.git-hunk",
 }
 
 ---@class era.board
 ---@field public __mods                 era.board.__mods
 ---@field public Act                    era.board.Act
----@field public GitHunk                era.board.GitHunk
 local M = setmetatable({
   __mods = __mods,
 }, {

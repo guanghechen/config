@@ -783,7 +783,7 @@ end
 -- Preview
 ----------------------------------------------------------------------------------------------------
 
----@type era.board.GitHunk|nil
+---@type era.git.Hunkview|nil
 local hunk_board = nil
 
 function M.preview()
@@ -797,7 +797,7 @@ function M.preview()
   end
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  hunk_board = era.board.GitHunk.new({ bufnr = bufnr })
+  hunk_board = era.git.Hunkview.new({ bufnr = bufnr })
   hunk_board:open()
 end
 
