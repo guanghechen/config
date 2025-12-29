@@ -87,6 +87,7 @@ local __mods = {
   statuscolumn = "era.statuscolumn",
   statusline = "era.statusline",
   term = "era.term",
+  trailspace = "era.trailspace",
   view = "era.view",
   winpicker = "era.winpicker",
 }
@@ -113,6 +114,7 @@ local __mods = {
 ---@field public statuscolumn           era.statuscolumn
 ---@field public statusline             era.statusline
 ---@field public term                   era.term
+---@field public trailspace             era.trailspace
 ---@field public view                   era.view
 ---@field public winpicker              era.winpicker
 local M = setmetatable({

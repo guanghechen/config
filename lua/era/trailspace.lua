@@ -1,3 +1,6 @@
+---@class era.trailspace
+local M = {}
+
 local PATTERN = [[\s\+$]]
 local HLGROUP = "f_ux_trailspace"
 local match_ids = {} ---@type table<integer, integer>
@@ -54,7 +57,7 @@ local function unhighlight_all()
 end
 
 ---@return nil
-local function trim()
+function M.trim()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local curpos = vim.api.nvim_win_get_cursor(winnr)
   vim.cmd([[keeppatterns %s/\s\+$//e]])
@@ -62,7 +65,7 @@ local function trim()
 end
 
 ---@return nil
-local function trim_last_lines()
+function M.trim_last_lines()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local n_lines = vim.api.nvim_buf_line_count(bufnr) ---@type integer
@@ -72,26 +75,26 @@ local function trim_last_lines()
   end
 end
 
-local group = stl.nvim.fn.augroup("fml.dressing.trailspace")
-vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter", "InsertLeave" }, {
-  group = group,
-  callback = highlight,
-})
-vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave", "InsertEnter" }, {
-  group = group,
-  callback = unhighlight,
-})
+---@return nil
+function M.dressing()
+  local group = stl.nvim.fn.augroup("era.trailspace")
+  vim.api.nvim_create_autocmd({ "WinEnter", "BufEnter", "InsertLeave" }, {
+    group = group,
+    callback = highlight,
+  })
+  vim.api.nvim_create_autocmd({ "WinLeave", "BufLeave", "InsertEnter" }, {
+    group = group,
+    callback = unhighlight,
+  })
 
-stl.fn.observe({ dot.context.flight.dressing_trailspace }, function()
-  local enabled = dot.context.flight.dressing_trailspace:snapshot()
-  if enabled then
-    highlight()
-  else
-    unhighlight_all()
-  end
-end, true)
+  stl.fn.observe({ dot.context.flight.dressing_trailspace }, function()
+    local enabled = dot.context.flight.dressing_trailspace:snapshot()
+    if enabled then
+      highlight()
+    else
+      unhighlight_all()
+    end
+  end, true)
+end
 
-return {
-  trim = trim,
-  trim_last_lines = trim_last_lines,
-}
+return M
