@@ -1,25 +1,3 @@
----@class ark.lang.__mods
-local lang__mods = {
-  python = "ark.lang.python",
-  tailwind = "ark.lang.tailwind",
-}
-
----@class ark.lang
----@field public __mods                 ark.lang.__mods
----@field public python                 ark.lang.python
----@field public tailwind               ark.lang.tailwind
-local lang = setmetatable({ __mods = lang__mods }, {
-  __index = function(t, k)
-    local m = lang__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class ark.theme.scheme.__mods
 local theme_scheme__mods = {
   ["catppuccin-frappe"] = "ark.theme.scheme.catppuccin-frappe",
@@ -183,7 +161,6 @@ local __mods = {
 ---@field public box                    ark.box
 ---@field public fs                     ark.fs
 ---@field public G                      ark.G
----@field public lang                   ark.lang
 ---@field public theme                  ark.theme
 ---@field public time                   ark.time
 ---@field public timer                  ark.timer
@@ -194,7 +171,6 @@ local __mods = {
 ---@field public winhint                ark.winhint
 local M = setmetatable({
   __mods = __mods,
-  lang = lang,
   theme = theme,
   view = view,
 }, {

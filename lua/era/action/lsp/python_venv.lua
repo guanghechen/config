@@ -16,7 +16,7 @@ local function format_search_path(folder)
   end
 
   resolved_path = resolved_path:gsub(" ", "\\ ")
-  if folder == ark.lang.python.paths.Hatch then
+  if folder == stl.lang.python.paths.Hatch then
     return resolved_path .. "/*/*"
   else
     return resolved_path
@@ -43,8 +43,8 @@ local function fetch_data()
   local uuid_set = {} ---@type table<string, true>
 
   do
-    local anaconda_base_path = format_search_path(ark.lang.python.paths.AnacondaBase) ---@type string|nil
-    local anaconda_envs_path = format_search_path(ark.lang.python.paths.AnacondaEnvs) ---@type string|nil
+    local anaconda_base_path = format_search_path(stl.lang.python.paths.AnacondaBase) ---@type string|nil
+    local anaconda_envs_path = format_search_path(stl.lang.python.paths.AnacondaEnvs) ---@type string|nil
 
     ---@type string[]
     local cmd = {
@@ -178,13 +178,13 @@ local function fetch_data()
   --- Search venv manager paths
   do
     local venv_manager_paths = {
-      ark.lang.python.paths.Poetry,
-      ark.lang.python.paths.PDM,
-      ark.lang.python.paths.Pipenv,
-      ark.lang.python.paths.Pyenv,
-      ark.lang.python.paths.Hatch,
-      ark.lang.python.paths.VenvWrapper,
-      ark.lang.python.paths.AnacondaEnvs,
+      stl.lang.python.paths.Poetry,
+      stl.lang.python.paths.PDM,
+      stl.lang.python.paths.Pipenv,
+      stl.lang.python.paths.Pyenv,
+      stl.lang.python.paths.Hatch,
+      stl.lang.python.paths.VenvWrapper,
+      stl.lang.python.paths.AnacondaEnvs,
     }
     local search_paths = {} ---@type string[]
     for _, folder in ipairs(venv_manager_paths) do
@@ -250,9 +250,9 @@ local function fetch_data()
     end
 
     -- If $CONDA_PREFIX is defined and exists, add the path as an existing venv
-    if vim.fn.isdirectory(ark.lang.python.paths.AnacondaBase) ~= 0 then
+    if vim.fn.isdirectory(stl.lang.python.paths.AnacondaBase) ~= 0 then
       local icon = "" ---@type string
-      local dirpath = stl.string.remove_last_slash(ark.lang.python.paths.AnacondaBase .. "/") ---@type string
+      local dirpath = stl.string.remove_last_slash(stl.lang.python.paths.AnacondaBase .. "/") ---@type string
       if not uuid_set[dirpath] then
         uuid_set[dirpath] = true
         local text_content = icon .. " " .. dirpath

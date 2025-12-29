@@ -74,6 +74,28 @@ local dict = setmetatable({ __mods = dict__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class stl.lang.__mods
+local lang__mods = {
+  python = "stl.lang.python",
+  tailwind = "stl.lang.tailwind",
+}
+
+---@class stl.lang
+---@field public __mods                 stl.lang.__mods
+---@field public python                 stl.lang.python
+---@field public tailwind               stl.lang.tailwind
+local lang = setmetatable({ __mods = lang__mods }, {
+  __index = function(t, k)
+    local m = lang__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class stl.__mods
 local __mods = {
   color = "stl.external.color",
@@ -100,6 +122,7 @@ local __mods = {
 ---@field public easing                 stl.external.easing
 ---
 ---@field public dict                   stl.dict
+---@field public lang                   stl.lang
 ---
 ---@field public debug                  stl.debug
 ---@field public env                    stl.env
@@ -117,6 +140,7 @@ local M = setmetatable({
   __mods = __mods,
   c = c,
   dict = dict,
+  lang = lang,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil
