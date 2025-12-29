@@ -32,7 +32,7 @@ vim.schedule(function()
   require("fml.dressing.winline")
 
   require("fml.dressing.commentstring")
-  require("fml.dressing.foldtext")
+  era.foldtext.dressing()
   require("fml.dressing.scroll")
   require("fml.dressing.statuscolumn")
   require("fml.dressing.trailspace")

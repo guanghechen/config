@@ -72,6 +72,7 @@ local __mods = {
   clipboard = "era.clipboard",
   colorpicker = "era.colorpicker",
   explorer = "era.explorer",
+  foldtext = "era.foldtext",
   git = "era.git",
   illuminate = "era.illuminate",
   im = "era.im",
@@ -93,6 +94,7 @@ local __mods = {
 ---@field public colorpicker            era.colorpicker
 ---@field public explorer               era.explorer
 ---@field public fn                     era.fn
+---@field public foldtext               era.foldtext
 ---@field public git                    era.git
 ---@field public illuminate             era.illuminate
 ---@field public im                     era.im

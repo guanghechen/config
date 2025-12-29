@@ -1,4 +1,4 @@
----@class fml.dressing.foldtext
+---@class era.foldtext
 local M = {}
 
 ---@return [string, string][]
@@ -36,6 +36,9 @@ function M.foldtext()
   return result
 end
 
-vim.o.foldtext = "v:lua.require'fml.dressing.foldtext'.foldtext()"
+---@return nil
+function M.dressing()
+  vim.o.foldtext = "v:lua.era.foldtext.foldtext()"
+end
 
 return M
