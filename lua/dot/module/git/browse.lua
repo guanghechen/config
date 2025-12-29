@@ -241,7 +241,7 @@ function M.open(opts)
     name = "dot.module.git.browse",
     prompt = "Select remote to browse",
     format_item = function(remote)
-      local padded_name = ark.string.pad_end(remote.name, max_name_width, " ")
+      local padded_name = stl.string.pad_end(remote.name, max_name_width, " ")
       return padded_name .. " | " .. remote.url
     end,
   }, function(choice)

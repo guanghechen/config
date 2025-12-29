@@ -47,7 +47,7 @@ local function codeaction_provider(items, opts)
   local item_data_list = {} ---@type era.dressing.provider.codeaction.IItemData[]
 
   for index, item in ipairs(items) do
-    local order = ark.string.pad_start(tostring(index), width_order, " ") ---@type string
+    local order = stl.string.pad_start(tostring(index), width_order, " ") ---@type string
     local title = item.action.title ---@type string
     local lfi = title:find("\n") ---@type integer|nil The index of the first line feed character
     local content = lfi and title:sub(1, lfi - 1) or title ---@type string
@@ -88,11 +88,11 @@ local function codeaction_provider(items, opts)
 
   local select_items = {} ---@type era.dressing.provider.codeaction.IItem[]
   for index, item_data in ipairs(item_data_list) do
-    local uuid = ark.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
-    local order = ark.string.pad_start(tostring(index), width_order, " ") ---@type string
+    local uuid = stl.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
+    local order = stl.string.pad_start(tostring(index), width_order, " ") ---@type string
     item_data.index = index
 
-    local text_content = ark.string.pad_end(item_data.content, width_content, " ")
+    local text_content = stl.string.pad_end(item_data.content, width_content, " ")
     local text_client_name = item_data.client_name ---@type string
     local text = order .. ": " .. text_content .. "  " .. text_client_name ---@type string
 

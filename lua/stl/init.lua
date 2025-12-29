@@ -88,6 +88,7 @@ local __mods = {
   json = "stl.json",
   reporter = "stl.reporter",
   stdout = "stl.stdout",
+  string = "stl.string",
 }
 
 ---@class stl
@@ -107,6 +108,7 @@ local __mods = {
 ---@field public json                   stl.json
 ---@field public reporter               stl.reporter
 ---@field public stdout                 stl.stdout
+---@field public string                 stl.string
 local M = setmetatable({
   __mods = __mods,
   c = c,

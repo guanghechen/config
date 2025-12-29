@@ -48,7 +48,7 @@ local function render_result(_, bufnr, itemmap, matches)
 
     local themename = item.text ---@type string
     local colorsquares = string.rep(" ", #COLORS_TO_DISPLAY) ---@type string
-    local line = string.format("%s %s", ark.string.pad_end(themename, MAX_WIDTH_THEMENAME, " "), colorsquares) ---@type string
+    local line = string.format("%s %s", stl.string.pad_end(themename, MAX_WIDTH_THEMENAME, " "), colorsquares) ---@type string
     lines[#lines + 1] = line
   end
 

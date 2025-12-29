@@ -43,7 +43,7 @@ function M.render_count(position)
     render = function()
       count = count + 1
 
-      local text = " " .. ark.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
+      local text = " " .. stl.string.pad_start(tostring(count % 100000), 5, "0") ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
       text = stl.icon.symbols.sep_left .. text ---@type string

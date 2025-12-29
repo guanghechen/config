@@ -444,7 +444,7 @@ function M:reset(cwd, filepaths, with_locations)
 
   if with_locations then
     for _, p in ipairs(filepaths) do
-      local filepath = ark.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
+      local filepath = stl.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
       if yoz.path.is_absolute(filepath) then
         if filepath:sub(1, L) ~= P then
           self:insert_file_absolute(filepath)

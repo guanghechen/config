@@ -141,7 +141,7 @@ function M.cspell_suggestions_from_diagnostic(diagnostic)
     return {}
   end
 
-  return ark.string.parse_comma_list(chunk)
+  return stl.string.parse_comma_list(chunk)
 end
 
 ---@param context                       era.action.lint.IWordContext|nil

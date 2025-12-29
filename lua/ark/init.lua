@@ -170,7 +170,6 @@ local __mods = {
   fs = "ark.fs",
   G = "ark.G",
   hot = "ark.hot",
-  string = "ark.string",
   table = "ark.table",
   time = "ark.time",
   timer = "ark.timer",
@@ -188,7 +187,6 @@ local __mods = {
 ---@field public G                      ark.G
 ---@field public hot                    ark.hot
 ---@field public lang                   ark.lang
----@field public string                 ark.string
 ---@field public table                  ark.table
 ---@field public theme                  ark.theme
 ---@field public time                   ark.time

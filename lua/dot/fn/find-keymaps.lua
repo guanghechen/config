@@ -74,8 +74,8 @@ local function fetch_data()
         local desc = km.desc or ""
         local rhs = km.rhs or (km.callback and "[callback]" or "")
 
-        local text_lhs = ark.string.pad_end(lhs, WIDTH_LHS, " ")
-        local text_mode = ark.string.pad_end(mode, WIDTH_MODE, " ")
+        local text_lhs = stl.string.pad_end(lhs, WIDTH_LHS, " ")
+        local text_mode = stl.string.pad_end(mode, WIDTH_MODE, " ")
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 
@@ -117,8 +117,8 @@ local function fetch_data()
         local desc = km.desc or ""
         local rhs = km.rhs or (km.callback and "[callback]" or "")
 
-        local text_lhs = ark.string.pad_end(lhs, WIDTH_LHS, " ")
-        local text_mode = ark.string.pad_end(mode, WIDTH_MODE, " ")
+        local text_lhs = stl.string.pad_end(lhs, WIDTH_LHS, " ")
+        local text_mode = stl.string.pad_end(mode, WIDTH_MODE, " ")
         local text_desc = desc
         local text = text_lhs .. text_mode .. text_desc
 

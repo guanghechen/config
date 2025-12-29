@@ -287,7 +287,7 @@ local function parse_name_status_line(line)
   end
 
   relative = relative:gsub('^"', ""):gsub('"$', "")
-  relative = ark.string.octal_to_utf8(relative)
+  relative = stl.string.octal_to_utf8(relative)
   relative = dot.path.normalize(relative)
 
   return status, relative
@@ -486,7 +486,7 @@ function M.collect_async(opts, callback)
         for _, line in ipairs(lines) do
           if type(line) == "string" and #line > 0 then
             local relative = line:gsub('^"', ""):gsub('"$', "")
-            relative = ark.string.octal_to_utf8(relative)
+            relative = stl.string.octal_to_utf8(relative)
             relative = dot.path.normalize(relative)
 
             local absolute = dot.path.normalize(dot.path.join(workspace, relative))

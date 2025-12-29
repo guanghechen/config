@@ -68,7 +68,7 @@ local function fetch_data(present)
   local uuid_present = nil ---@type string|nil
 
   for _, fileencoding in ipairs(fileencodings) do
-    local text = string.format("%s     %s", ark.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
+    local text = string.format("%s     %s", stl.string.pad_end(fileencoding.title, 40, " "), fileencoding.encoding) ---@type string
 
     ---@type dot.fn.select_encoding.IItem
     local item = {
