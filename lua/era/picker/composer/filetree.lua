@@ -117,7 +117,7 @@ local __module_name__ = "era.picker.composer.filetree" ---@type string
 ---@field protected _filetree           stl.c.Filetree
 ---@field protected _frecency           stl.c.Frecency|nil
 ---@field protected _composer           era.picker.BasicComposer
----@field protected _plainfile          stl.view.Plainfile
+---@field protected _plainfile          era.view.Plainfile
 ---@field protected _retriever          stl.c.TreeRetriever
 ---@field protected _scheduler_match    stl.c.Scheduler
 ---@field protected _treeview           era.picker.FiletreeView
@@ -204,8 +204,8 @@ function M.new(props)
     name = fullname,
   })
 
-  ---@type stl.view.Plainfile
-  local plainfile = stl.view.Plainfile.new({
+  ---@type era.view.Plainfile
+  local plainfile = era.view.Plainfile.new({
     name = fullname,
   })
 
@@ -249,12 +249,12 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: viewtype", name),
       callback = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type stl.view.tree.ViewtypeEnum
-        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type stl.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
+        local next_viewtype = viewtype == "tree" and "list" or "tree" ---@type era.view.tree.ViewtypeEnum
         o_flag_viewtype:next(next_viewtype)
       end,
       snapshot = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type stl.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
         if viewtype == "tree" then
           return stl.icon.symbols.flag_tree, "picker_flag_aqua"
         end
@@ -269,7 +269,7 @@ function M.new(props)
     flags[#flags + 1] = {
       desc = string.format("%s: fold empty path", name),
       disabled = function()
-        local viewtype = o_flag_viewtype:snapshot() ---@type stl.view.tree.ViewtypeEnum
+        local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
         return viewtype ~= "tree"
       end,
       callback = function()
@@ -1441,8 +1441,8 @@ function M.new(props)
 
     ---@type era.picker.result.IDraw
     render_result = function(bufnr)
-      local viewtype = o_flag_viewtype:snapshot() ---@type stl.view.tree.ViewtypeEnum
-      local result ---@type stl.view.tree.IRenderResult
+      local viewtype = o_flag_viewtype:snapshot() ---@type era.view.tree.ViewtypeEnum
+      local result ---@type era.view.tree.IRenderResult
       local only_matched = o_search_pattern:snapshot() ~= "" ---@type boolean
       local only_selected = o_flag_selected:snapshot() ---@type boolean
 
@@ -1588,7 +1588,7 @@ function M:dispose()
   local fullname = self.fullname
   local on_dispose = self._on_disposed ---@type era.picker.composer.filetree.IOnDisposed
   local composer = self._composer ---@type era.picker.BasicComposer
-  local plainfile = self._plainfile ---@type stl.view.Plainfile
+  local plainfile = self._plainfile ---@type era.view.Plainfile
   local retriever = self._retriever ---@type stl.c.TreeRetriever
   local scheduler_match = self._scheduler_match ---@type stl.c.Scheduler
   local treeview = self._treeview ---@type era.picker.FiletreeView
@@ -1810,7 +1810,7 @@ function M:render_preview(bufnr, force)
 
   local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type era.picker.FiletreeView
-  local plainfile = self._plainfile ---@type stl.view.Plainfile
+  local plainfile = self._plainfile ---@type era.view.Plainfile
   local o_flag_foldempty = self.flag_foldempty ---@type stl.c.Observable
 
   local node, nodestate = self:__retrieve__(nodeuuid)
@@ -2223,7 +2223,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
   end
 
   local tick_selected = treeview._tick_selected ---@type integer
-  local statemap = treeview.statemap ---@type table<string, stl.view.tree.INodeState>
+  local statemap = treeview.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.picker.view.filetree.INodeState>
 
   filetree:unsafe_traverse(to_nodeuuid, function(ctx)

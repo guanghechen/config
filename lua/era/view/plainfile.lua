@@ -1,27 +1,27 @@
-local __module_name__ = "stl.view.plainfile" ---@type string
+local __module_name__ = "era.view.plainfile" ---@type string
 
----@class stl.view.plainfile.IData
+---@class era.view.plainfile.IData
 ---@field public filepath               string
 ---@field public filetype               string
 ---@field public lines                  string[]
 
----@class stl.view.IPlainfileProps
+---@class era.view.IPlainfileProps
 ---@field public name                   string
 ---@field public nsnr                   ?integer
 
----@class stl.view.Plainfile
+---@class era.view.Plainfile
 ---@field public fullname               string
 ---@field public nsnr                   integer
 ---@field protected _disposed           boolean
 ---@field protected _last_bufnr         integer|nil
----@field protected _last_data          stl.view.plainfile.IData|nil
+---@field protected _last_data          era.view.plainfile.IData|nil
 local M = {}
 M.__index = M
 
 local NSNR_DEFAULT = dot.var.nsnr.view_plainfile ---@type integer
 
----@param props                         stl.view.IPlainfileProps
----@return stl.view.Plainfile
+---@param props                         era.view.IPlainfileProps
+---@return era.view.Plainfile
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -37,7 +37,7 @@ function M.new(props)
   return self
 end
 
----@return stl.view.Plainfile
+---@return era.view.Plainfile
 function M:clear()
   self:__health__()
 
@@ -65,11 +65,11 @@ end
 ---@param bufnr                         integer
 ---@param filepath                      string
 ---@param force                         boolean
----@return stl.view.Plainfile
+---@return era.view.Plainfile
 function M:render(bufnr, filepath, force)
   self:__health__()
 
-  local data = self._last_data ---@type stl.view.plainfile.IData|nil
+  local data = self._last_data ---@type era.view.plainfile.IData|nil
   if force or data == nil or data.filepath ~= filepath then
     local filename = yoz.path.basename(filepath) ---@type string
     local lines ---@type string[]
@@ -94,7 +94,7 @@ function M:render(bufnr, filepath, force)
       filetype = "text" ---@type string
     end
 
-    ---@type stl.view.plainfile.IData
+    ---@type era.view.plainfile.IData
     data = {
       filepath = filepath,
       filetype = filetype,

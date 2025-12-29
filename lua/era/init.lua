@@ -17,6 +17,7 @@ local __mods = {
   plugin = "era.plugin",
   searcher = "era.searcher",
   term = "era.term",
+  view = "era.view",
   winpicker = "era.winpicker",
 }
 
@@ -39,6 +40,7 @@ local __mods = {
 ---@field public plugin                 era.plugin
 ---@field public searcher               era.searcher
 ---@field public term                   era.term
+---@field public view                   era.view
 ---@field public winpicker              era.winpicker
 local M = setmetatable({
   __mods = __mods,

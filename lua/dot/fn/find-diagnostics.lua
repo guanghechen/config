@@ -116,7 +116,7 @@ local function refresh(force)
 
   picker:reset_filepaths(rootpath, filepaths, false)
 
-  local statemap = treeview.statemap ---@type table<string, stl.view.tree.INodeState>
+  local statemap = treeview.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.picker.view.filetree.INodeState>
 
   for _, diagnostic in ipairs(diagnostics) do
