@@ -39,7 +39,7 @@ vim.schedule(function()
   era.virtcolumn.dressing()
   require("fml.dressing.winsep")
 
-  require("fml.dressing.dim")
+  era.dim.dressing()
   require("fml.dressing.im")
   require("fml.dressing.input")
   require("fml.dressing.lsp")

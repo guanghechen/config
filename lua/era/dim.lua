@@ -1,8 +1,11 @@
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/dim.lua
 
-local __module_name__ = "fml.dressing.dim" ---@type string
+---@class era.dim
+local M = {}
 
----@class fml.dressing.dim.IConfig
+local __module_name__ = "era.dim" ---@type string
+
+---@class era.dim.IConfig
 ---@field public animate                boolean
 ---@field public duration               integer
 ---@field public step                   integer
@@ -14,20 +17,20 @@ local config = {
   easing = "outQuad",
 }
 
----@class fml.dressing.dim.IScope
+---@class era.dim.IScope
 ---@field public buf                    integer
 ---@field public from                   integer
 ---@field public to                     integer
 
----@class fml.dressing.dim.IListener
----@field public scopes                 table<integer, fml.dressing.dim.IScope>
+---@class era.dim.IListener
+---@field public scopes                 table<integer, era.dim.IScope>
 ---@field public scopes_anim            table<integer, { from: integer, to: integer, buf: integer }>
 ---@field public timer                  uv.uv_timer_t|nil
 
 local ns = vim.api.nvim_create_namespace(__module_name__)
 local augroup = stl.nvim.fn.augroup(__module_name__)
 local enabled = false ---@type boolean
-local listener = nil ---@type fml.dressing.dim.IListener|nil
+local listener = nil ---@type era.dim.IListener|nil
 
 ---@param bufnr                         integer
 ---@return boolean
@@ -39,7 +42,7 @@ local function is_buf_enabled(bufnr)
 end
 
 ---@param winnr                         integer
----@return fml.dressing.dim.IScope|nil
+---@return era.dim.IScope|nil
 local function get_scope(winnr)
   if not vim.api.nvim_win_is_valid(winnr) then
     return nil
@@ -253,10 +256,15 @@ local function disable()
   vim.cmd("redraw!")
 end
 
-stl.fn.observe({ dot.context.flight.dressing_dim }, function()
-  if dot.context.flight.dressing_dim:snapshot() then
-    enable()
-  else
-    disable()
-  end
-end)
+---@return nil
+function M.dressing()
+  stl.fn.observe({ dot.context.flight.dressing_dim }, function()
+    if dot.context.flight.dressing_dim:snapshot() then
+      enable()
+    else
+      disable()
+    end
+  end)
+end
+
+return M
