@@ -201,13 +201,13 @@ command
   .implement({
     uuid = K.clipboard.paste_image.uuid,
     action = function()
-      dot.fn.paste_image()
+      era.fn.paste_image()
     end,
   })
   .implement({
     uuid = K.clipboard.paste_image_as_base64.uuid,
     action = function()
-      local base64 = dot.fn.paste_image_as_base64()
+      local base64 = era.fn.paste_image_as_base64()
       if base64 then
         vim.api.nvim_put({ base64 }, "c", true, true)
       end
@@ -219,19 +219,19 @@ command
   .implement({
     uuid = K.code.run.uuid,
     action = function()
-      dot.fn.run_code(false)
+      era.fn.run_code(false)
     end,
   })
   .implement({
     uuid = K.code.run_force.uuid,
     action = function()
-      dot.fn.run_code(true)
+      era.fn.run_code(true)
     end,
   })
   .implement({
     uuid = K.code.run_as_neovim_command.uuid,
     action = function()
-      dot.fn.run_code_as_neovim_command()
+      era.fn.run_code_as_neovim_command()
     end,
   })
   .implement({
@@ -248,7 +248,7 @@ command
   .implement({
     uuid = K.code.insert_splitline.uuid,
     action = function()
-      dot.fn.insert_splitline()
+      era.fn.insert_splitline()
     end,
   })
   .implement({
@@ -360,7 +360,7 @@ command
   .implement({
     uuid = K.diagnostic.outline.uuid,
     action = function()
-      dot.fn.find_diagnostics()
+      era.fn.find_diagnostics()
     end,
   })
   .implement({
@@ -421,103 +421,103 @@ command
   .implement({
     uuid = K.find.bufs.uuid,
     action = function()
-      dot.fn.find_buffers()
+      era.fn.find_buffers()
     end,
   })
   .implement({
     uuid = K.find.bufs_file.uuid,
     action = function()
-      dot.fn.find_buffers("F")
+      era.fn.find_buffers("F")
     end,
   })
   .implement({
     uuid = K.find.bufs_term.uuid,
     action = function()
-      dot.fn.find_buffers("T")
+      era.fn.find_buffers("T")
     end,
   })
   .implement({
     uuid = K.find.diagnostics.uuid,
     action = function()
-      dot.fn.find_diagnostics()
+      era.fn.find_diagnostics()
     end,
   })
   .implement({
     uuid = K.find.diagnostics_in_workspace.uuid,
     action = function()
-      dot.fn.find_diagnostics()
+      era.fn.find_diagnostics()
     end,
   })
   .implement({
     uuid = K.find.explorer.uuid,
     action = function(args)
-      dot.fn.find_explorer(args)
+      era.fn.find_explorer(args)
     end,
   })
   .implement({
     uuid = K.find.files.uuid,
     action = function(args)
-      dot.fn.find_files(args)
+      era.fn.find_files(args)
     end,
   })
   .implement({
     uuid = K.find.files_in_cwd.uuid,
     action = function()
-      dot.fn.find_files("cwd")
+      era.fn.find_files("cwd")
     end,
   })
   .implement({
     uuid = K.find.files_in_directory.uuid,
     action = function()
-      dot.fn.find_files("directory")
+      era.fn.find_files("directory")
     end,
   })
   .implement({
     uuid = K.find.files_in_workspace.uuid,
     action = function()
-      dot.fn.find_files("workspace")
+      era.fn.find_files("workspace")
     end,
   })
   .implement({
     uuid = K.find.git_not_committed.uuid,
     action = function()
-      dot.fn.find_git()
+      era.fn.find_git()
     end,
   })
   .implement({
     uuid = K.find.highlights.uuid,
     action = function()
-      dot.fn.find_highlights()
+      era.fn.find_highlights()
     end,
   })
   .implement({
     uuid = K.find.notifications.uuid,
     action = function()
-      dot.fn.find_notifications()
+      era.fn.find_notifications()
     end,
   })
   .implement({
     uuid = K.find.pinned_files.uuid,
     action = function()
-      dot.fn.find_pinned_files()
+      era.fn.find_pinned_files()
     end,
   })
   .implement({
     uuid = K.find.lsp_symbols.uuid,
     action = function()
-      dot.fn.find_lsp_symbols()
+      era.fn.find_lsp_symbols()
     end,
   })
   .implement({
     uuid = K.find.vim_options.uuid,
     action = function()
-      dot.fn.find_vim_options()
+      era.fn.find_vim_options()
     end,
   })
   .implement({
     uuid = K.find.keymaps.uuid,
     action = function()
-      dot.fn.find_keymaps()
+      era.fn.find_keymaps()
     end,
   })
 
@@ -959,37 +959,37 @@ command
   .implement({
     uuid = K.search.in_files.uuid,
     action = function(args)
-      dot.fn.search_in_files(args)
+      era.fn.search_in_files(args)
     end,
   })
   .implement({
     uuid = K.search.in_file.uuid,
     action = function()
-      dot.fn.search_in_files("file")
+      era.fn.search_in_files("file")
     end,
   })
   .implement({
     uuid = K.search.in_buffer.uuid,
     action = function()
-      dot.fn.search_in_buffer()
+      era.fn.search_in_buffer()
     end,
   })
   .implement({
     uuid = K.search.in_cwd.uuid,
     action = function()
-      dot.fn.search_in_files("cwd")
+      era.fn.search_in_files("cwd")
     end,
   })
   .implement({
     uuid = K.search.in_directory.uuid,
     action = function()
-      dot.fn.search_in_files("directory")
+      era.fn.search_in_files("directory")
     end,
   })
   .implement({
     uuid = K.search.in_workspace.uuid,
     action = function()
-      dot.fn.search_in_files("workspace")
+      era.fn.search_in_files("workspace")
     end,
   })
 

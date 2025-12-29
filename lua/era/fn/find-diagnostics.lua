@@ -1,17 +1,17 @@
 ---@diagnostic disable: invisible
 
----@alias dot.fn.find_diagnostics.SeverityEnum
+---@alias era.fn.find_diagnostics.SeverityEnum
 ---| "ERROR"
 ---| "WARN"
 ---| "INFO"
 ---| "HINT"
 
----@class dot.fn.find_diagnostics.ILocationData
+---@class era.fn.find_diagnostics.ILocationData
 ---@field public bufnr                  integer
 ---@field public diagnostic             vim.Diagnostic
----@field public severity               dot.fn.find_diagnostics.SeverityEnum
+---@field public severity               era.fn.find_diagnostics.SeverityEnum
 
-local name = "dot.fn.find_diagnostics" ---@type string
+local name = "era.fn.find_diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
 local o_search_pattern = dot.context.select.find_diagnostics.search_pattern ---@type stl.c.Observable
@@ -126,7 +126,7 @@ local function refresh(force)
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
     local severity_raw = diagnostic.severity ---@type vim.diagnostic.Severity
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
-    ---@cast severity                 dot.fn.find_diagnostics.SeverityEnum
+    ---@cast severity                 era.fn.find_diagnostics.SeverityEnum
 
     local leafuuid = stl.c.Filetree.uuid(filepath) ---@type string
     local leafnodestate = statemap[leafuuid] ---@type era.picker.view.filetree.INodeState|nil
@@ -150,7 +150,7 @@ local function refresh(force)
     local locations = leafnodestate.locations or {} ---@type era.picker.view.filetree.ILocationNodeState[]
     leafnodestate.locations = locations
 
-    ---@type dot.fn.find_diagnostics.ILocationData
+    ---@type era.fn.find_diagnostics.ILocationData
     local data = {
       bufnr = bufnr,
       diagnostic = diagnostic,

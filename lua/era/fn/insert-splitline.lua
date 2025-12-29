@@ -1,4 +1,4 @@
----@class dot.fn.insert_splitline.SPLITLINE_BY_FILETYPE
+---@class era.fn.insert_splitline.SPLITLINE_BY_FILETYPE
 local SPLITLINE_BY_FILETYPE = {
   lua = string.rep("-", 100),
   markdown = string.rep("-", 100),

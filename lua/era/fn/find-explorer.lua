@@ -1,8 +1,8 @@
-local name = "dot.fn.find_explorer" ---@type string
+local name = "era.fn.find_explorer" ---@type string
 local title = "Find Explorer" ---@type string
 
----@class dot.fn.find_explorer.IDirItem
----@field public items                  dot.fn.find_explorer.IFileItem[]
+---@class era.fn.find_explorer.IDirItem
+---@field public items                  era.fn.find_explorer.IFileItem[]
 ---@field public icon_width             integer
 ---@field public name_width             integer
 ---@field public perm_width             integer
@@ -11,7 +11,7 @@ local title = "Find Explorer" ---@type string
 ---@field public owner_width            integer
 ---@field public group_width            integer
 
----@class dot.fn.find_explorer.IFileItem
+---@class era.fn.find_explorer.IFileItem
 ---@field public type                   string
 ---@field public name                   string
 ---@field public path                   string
@@ -24,18 +24,18 @@ local title = "Find Explorer" ---@type string
 ---@field public icon                   string
 ---@field public icon_hl                string
 
----@class dot.fn.find_explorer.IItemData
----@field public fileitem               dot.fn.find_explorer.IFileItem
+---@class era.fn.find_explorer.IItemData
+---@field public fileitem               era.fn.find_explorer.IFileItem
 
----@class dot.fn.find_explorer.IItem : era.picker.composer.list.IItem
----@field public data                   dot.fn.find_explorer.IItemData
+---@class era.fn.find_explorer.IItem : era.picker.composer.list.IItem
+---@field public data                   era.fn.find_explorer.IItemData
 
-local dir_datamap = {} ---@type table<string, dot.fn.find_explorer.IDirItem>
-local file_datamap = {} ---@type table<string, dot.fn.find_explorer.IFileItem>
+local dir_datamap = {} ---@type table<string, era.fn.find_explorer.IDirItem>
+local file_datamap = {} ---@type table<string, era.fn.find_explorer.IFileItem>
 
 ---@param raw_item                      yoz.fs.IFileItemWithStatus
 ---@param dirpath                       string
----@return dot.fn.find_explorer.IFileItem
+---@return era.fn.find_explorer.IFileItem
 local function create_file_item(raw_item, dirpath)
   local filepath = dirpath .. "/" .. raw_item.name ---@type string
   local icon, icon_hl ---@type string, string
@@ -47,7 +47,7 @@ local function create_file_item(raw_item, dirpath)
     icon, icon_hl = stl.fileicon.get_file_icon(raw_item.name)
   end
 
-  ---@type dot.fn.find_explorer.IFileItem
+  ---@type era.fn.find_explorer.IFileItem
   return {
     type = raw_item.type,
     name = raw_item.name,
@@ -63,8 +63,8 @@ local function create_file_item(raw_item, dirpath)
   }
 end
 
----@param items                         dot.fn.find_explorer.IFileItem[]
----@return dot.fn.find_explorer.IDirItem
+---@param items                         era.fn.find_explorer.IFileItem[]
+---@return era.fn.find_explorer.IDirItem
 local function calculate_widths(items)
   ---@type table<string, integer>
   local widths = {
@@ -91,11 +91,11 @@ local function calculate_widths(items)
     end
   end
 
-  return vim.tbl_extend("force", { items = items }, widths) ---@type dot.fn.find_explorer.IDirItem
+  return vim.tbl_extend("force", { items = items }, widths) ---@type era.fn.find_explorer.IDirItem
 end
 
----@param fileitem                      dot.fn.find_explorer.IFileItem
----@param diritem                       dot.fn.find_explorer.IDirItem
+---@param fileitem                      era.fn.find_explorer.IFileItem
+---@param diritem                       era.fn.find_explorer.IDirItem
 ---@param result_width                  integer
 ---@param filename                      string
 ---@return string
@@ -176,9 +176,9 @@ local function apply_match_highlights(
 end
 
 ---@param bufnr                         integer
----@param itemmap                       table<string, dot.fn.find_explorer.IItem>
+---@param itemmap                       table<string, era.fn.find_explorer.IItem>
 ---@param matches                       table[]
----@param diritem                       dot.fn.find_explorer.IDirItem
+---@param diritem                       era.fn.find_explorer.IDirItem
 ---@param result_width                  integer
 ---@return table
 local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
@@ -187,8 +187,8 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
 
   -- Generate lines
   for _, match in ipairs(matches) do
-    local item = itemmap[match.uuid] ---@type dot.fn.find_explorer.IItem
-    local fileitem = item.data.fileitem ---@type dot.fn.find_explorer.IFileItem
+    local item = itemmap[match.uuid] ---@type era.fn.find_explorer.IItem
+    local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem
     local filename = item.text ---@type string
 
     local text_icon = stl.string.pad_start(fileitem.icon, diritem.icon_width, " ") .. "  " ---@type string
@@ -206,8 +206,8 @@ local function render_file_list(bufnr, itemmap, matches, diritem, result_width)
   -- Apply highlights
   for lnum, match in ipairs(matches) do
     local row = lnum - 1 ---@type integer
-    local item = itemmap[match.uuid] ---@type dot.fn.find_explorer.IItem
-    local fileitem = item.data.fileitem ---@type dot.fn.find_explorer.IFileItem
+    local item = itemmap[match.uuid] ---@type era.fn.find_explorer.IItem
+    local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem
     local filename = item.text ---@type string
     local byte_pos = 0 ---@type integer
 
@@ -263,14 +263,14 @@ end
 
 ---@param dirpath                       string
 ---@param force                         boolean
----@return dot.fn.find_explorer.IDirItem
+---@return era.fn.find_explorer.IDirItem
 local function fetch_diritem(dirpath, force)
-  local diritem = (not force) and dir_datamap[dirpath] or nil ---@type dot.fn.find_explorer.IDirItem|nil
+  local diritem = (not force) and dir_datamap[dirpath] or nil ---@type era.fn.find_explorer.IDirItem|nil
   if diritem ~= nil then
     return diritem
   end
 
-  local items = {} ---@type dot.fn.find_explorer.IFileItem[]
+  local items = {} ---@type era.fn.find_explorer.IFileItem[]
   local raw_data, raw_err = yoz.fs.readdir(dirpath) ---@type yoz.fs.IReaddirResult|nil, yoz.fs.IReaddirError|nil
 
   if raw_data == nil and raw_err ~= nil then
@@ -287,7 +287,7 @@ local function fetch_diritem(dirpath, force)
   if raw_data ~= nil then
     local raw_itself = raw_data.itself ---@type yoz.fs.IFileItemWithStatus
 
-    ---@type dot.fn.find_explorer.IFileItem
+    ---@type era.fn.find_explorer.IFileItem
     local itself = {
       type = raw_itself.type,
       name = raw_itself.name,
@@ -347,16 +347,16 @@ end
 local function fetch_data()
   local dirpath = dot.path.normalize(state_cwd:snapshot()) ---@type string
   local parent_dirpath = dot.path.dirname(dirpath) ---@type string
-  local diritem = fetch_diritem(dirpath, false) ---@type dot.fn.find_explorer.IDirItem
+  local diritem = fetch_diritem(dirpath, false) ---@type era.fn.find_explorer.IDirItem
   fetch_diritem(parent_dirpath, false)
 
-  ---@type dot.fn.find_explorer.IItem[]
+  ---@type era.fn.find_explorer.IItem[]
   local items = {}
 
   -- Add parent directory item
-  local parent_fileitem = file_datamap[parent_dirpath] ---@type dot.fn.find_explorer.IFileItem|nil
+  local parent_fileitem = file_datamap[parent_dirpath] ---@type era.fn.find_explorer.IFileItem|nil
   if parent_fileitem ~= nil then
-    ---@type dot.fn.find_explorer.IItem
+    ---@type era.fn.find_explorer.IItem
     local parent_item = {
       uuid = parent_dirpath,
       text = "../",
@@ -371,7 +371,7 @@ local function fetch_data()
   for _, fileitem in ipairs(diritem.items) do
     local filename = fileitem.type == "directory" and fileitem.name .. "/" or fileitem.name ---@type string
 
-    ---@type dot.fn.find_explorer.IItem
+    ---@type era.fn.find_explorer.IItem
     local item = {
       uuid = fileitem.path,
       text = filename,
@@ -444,8 +444,8 @@ local function preview_render(composer, bufnr)
     return result
   end
 
-  ---@cast item dot.fn.find_explorer.IItem
-  local fileitem = item.data.fileitem ---@type dot.fn.find_explorer.IFileItem|nil
+  ---@cast item era.fn.find_explorer.IItem
+  local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem|nil
   if fileitem == nil then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Cannot found the file." })
     ---@type era.picker.preview.IDrawResult
@@ -494,7 +494,7 @@ local function preview_render(composer, bufnr)
   elseif fileitem.type == "directory" then
     local lines = {} ---@type string[]
     local highlights = {} ---@type stl.t.IHighlight[]
-    local c_diritem = fetch_diritem(fileitem.path, false) ---@type dot.fn.find_explorer.IDirItem
+    local c_diritem = fetch_diritem(fileitem.path, false) ---@type era.fn.find_explorer.IDirItem
     for lnum, c_fileitem in ipairs(c_diritem.items) do
       local byte_pos = 0 ---@type integer
       local text = "" ---@type string
@@ -629,10 +629,10 @@ picker = era.picker.ListComposer.new({
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
         local item = picker:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
-        ---@cast item                   dot.fn.find_explorer.IItem|nil
+        ---@cast item                   era.fn.find_explorer.IItem|nil
 
         if item ~= nil then
-          dot.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
+          era.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
         end
       end,
     },
@@ -646,22 +646,22 @@ picker = era.picker.ListComposer.new({
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
         local item = picker:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
-        ---@cast item                   dot.fn.find_explorer.IItem|nil
+        ---@cast item                   era.fn.find_explorer.IItem|nil
 
         if item ~= nil then
-          dot.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
+          era.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
         end
       end,
     },
   },
 
   render_result = function(composer, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, dot.fn.find_explorer.IItem>
+    ---@cast itemmap                    table<string, era.fn.find_explorer.IItem>
 
     local winnr = composer.result:get_winnr() or 0 ---@type integer
     local result_width = vim.api.nvim_win_get_width(winnr) ---@type integer
     local dirpath = state_cwd:snapshot() ---@type string
-    local diritem = dir_datamap[dirpath] ---@type dot.fn.find_explorer.IDirItem|nil
+    local diritem = dir_datamap[dirpath] ---@type era.fn.find_explorer.IDirItem|nil
 
     if diritem == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -677,8 +677,8 @@ picker = era.picker.ListComposer.new({
       return
     end
 
-    ---@cast item dot.fn.find_explorer.IItem
-    local fileitem = item.data.fileitem ---@type dot.fn.find_explorer.IFileItem|nil
+    ---@cast item era.fn.find_explorer.IItem
+    local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem|nil
     if fileitem == nil then
       return
     end

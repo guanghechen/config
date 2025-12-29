@@ -1,4 +1,4 @@
-local name = "dot.fn.find_git" ---@type string
+local name = "era.fn.find_git" ---@type string
 local title = "Find Git" ---@type string
 
 local search_pattern_history = stl.c.InputHistory.new({ name = name, capacity = 5 })

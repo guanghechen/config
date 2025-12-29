@@ -156,7 +156,7 @@ function M.path(position)
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
-    dot.fn.select_copy_filepath({
+    era.fn.select_copy_filepath({
       filepath = filepath,
       winopts = {
         relative = "editor",

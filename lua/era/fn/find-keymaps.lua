@@ -1,16 +1,16 @@
 ---@diagnostic disable: invisible
-local name = "dot.fn.find_keymaps" ---@type string
+local name = "era.fn.find_keymaps" ---@type string
 local title = "Find Keymaps" ---@type string
 
----@class dot.fn.find_keymaps.IItemData
+---@class era.fn.find_keymaps.IItemData
 ---@field public mode                   string
 ---@field public lhs                    string
 ---@field public rhs                    string
 ---@field public desc                   string
 ---@field public source                 string
 
----@class dot.fn.find_keymaps.IItem : era.picker.composer.list.IItem
----@field public data                   dot.fn.find_keymaps.IItemData
+---@class era.fn.find_keymaps.IItem : era.picker.composer.list.IItem
+---@field public data                   era.fn.find_keymaps.IItemData
 
 local WIDTH_LHS = 28 ---@type integer
 local WIDTH_MODE = 4 ---@type integer
@@ -59,7 +59,7 @@ end
 local function fetch_data()
   dirty_data = false
 
-  local items = {} ---@type dot.fn.find_keymaps.IItem[]
+  local items = {} ---@type era.fn.find_keymaps.IItem[]
   local seen = {} ---@type table<string, boolean>
   local modes = { "n", "i", "x", "t", "o", "s" }
 
@@ -86,7 +86,7 @@ local function fetch_data()
           { coll = OFFSET_DESC, colr = -1, hlname = "m_skm_desc" },
         }
 
-        ---@type dot.fn.find_keymaps.IItemData
+        ---@type era.fn.find_keymaps.IItemData
         local data = {
           mode = mode,
           lhs = lhs,
@@ -95,7 +95,7 @@ local function fetch_data()
           source = km.buffer and "buffer" or "global",
         }
 
-        ---@type dot.fn.find_keymaps.IItem
+        ---@type era.fn.find_keymaps.IItem
         local item = {
           uuid = key,
           text = text,
@@ -129,7 +129,7 @@ local function fetch_data()
           { coll = OFFSET_DESC, colr = -1, hlname = "m_skm_desc" },
         }
 
-        ---@type dot.fn.find_keymaps.IItemData
+        ---@type era.fn.find_keymaps.IItemData
         local data = {
           mode = mode,
           lhs = lhs,
@@ -138,7 +138,7 @@ local function fetch_data()
           source = "buffer",
         }
 
-        ---@type dot.fn.find_keymaps.IItem
+        ---@type era.fn.find_keymaps.IItem
         local item = {
           uuid = key,
           text = text,
@@ -180,11 +180,11 @@ local picker = era.picker.ListComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, dot.fn.find_keymaps.IItem>
+    ---@cast itemmap                    table<string, era.fn.find_keymaps.IItem>
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type dot.fn.find_keymaps.IItem
+      local item = itemmap[match.uuid] ---@type era.fn.find_keymaps.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -233,7 +233,7 @@ local picker = era.picker.ListComposer.new({
     end
 
     local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
-    ---@cast item dot.fn.find_keymaps.IItem|nil
+    ---@cast item era.fn.find_keymaps.IItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
@@ -289,7 +289,7 @@ local picker = era.picker.ListComposer.new({
       return
     end
 
-    ---@cast item dot.fn.find_keymaps.IItem
+    ---@cast item era.fn.find_keymaps.IItem
     composer:close()
 
     local data = item.data

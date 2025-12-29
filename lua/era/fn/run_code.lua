@@ -1,21 +1,21 @@
-local __module_name__ = "dot.fn.run_code" ---@type string
+local __module_name__ = "era.fn.run_code" ---@type string
 
----@class dot.fn.run_code.IRunner
+---@class era.fn.run_code.IRunner
 ---@field public run                    fun(filepath: string, force: boolean): nil
 
----@class dot.fn.run_code.IRunners
----@field public eventstream            dot.fn.run_code.IRunner
----@field public excalidraw             dot.fn.run_code.IRunner
----@field public html                   dot.fn.run_code.IRunner
----@field public json                   dot.fn.run_code.IRunner
----@field public jsonl                  dot.fn.run_code.IRunner
----@field public log                    dot.fn.run_code.IRunner
----@field public md                     dot.fn.run_code.IRunner
----@field public svg                    dot.fn.run_code.IRunner
----@field public txt                    dot.fn.run_code.IRunner
+---@class era.fn.run_code.IRunners
+---@field public eventstream            era.fn.run_code.IRunner
+---@field public excalidraw             era.fn.run_code.IRunner
+---@field public html                   era.fn.run_code.IRunner
+---@field public json                   era.fn.run_code.IRunner
+---@field public jsonl                  era.fn.run_code.IRunner
+---@field public log                    era.fn.run_code.IRunner
+---@field public md                     era.fn.run_code.IRunner
+---@field public svg                    era.fn.run_code.IRunner
+---@field public txt                    era.fn.run_code.IRunner
 ---
----@field public lua                    dot.fn.run_code.IRunner
----@field public mjs                    dot.fn.run_code.IRunner
+---@field public lua                    era.fn.run_code.IRunner
+---@field public mjs                    era.fn.run_code.IRunner
 
 local YOZ_SERVER_PORT = type(vim.env.YOZ_SERVER_PORT) == "string" and vim.env.YOZ_SERVER_PORT or "7071" ---@type string
 
@@ -31,7 +31,7 @@ local function open_filepath_within_yoz(filepath, force)
   vim.system({ "curl", "-k", "-X", "POST", url }, { detach = true })
 end
 
----@type dot.fn.run_code.IRunners
+---@type era.fn.run_code.IRunners
 local runners = {
   eventstream = {
     run = open_filepath_within_yoz,

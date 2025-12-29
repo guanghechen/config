@@ -1,6 +1,6 @@
-local __module_name__ = "dot.fn.rename" ---@type string
+local __module_name__ = "era.fn.rename" ---@type string
 
----@alias dot.fn.rename
+---@alias era.fn.rename
 ---| fun(params: dot.t.IRenameParams): boolean
 
 ---@class dot.t.IRenameParams
@@ -9,7 +9,7 @@ local __module_name__ = "dot.fn.rename" ---@type string
 ---@field public isdir                  ?boolean
 ---@field public force                  ?boolean
 
----@type dot.fn.rename
+---@type era.fn.rename
 local function rename(params)
   local from = params.from ---@type string
   local to = params.to ---@type string

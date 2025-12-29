@@ -1,6 +1,6 @@
-local __module_name__ = "dot.fn.pick_win" ---@type string
+local __module_name__ = "era.fn.pick_win" ---@type string
 
----@class dot.fn.pick_win.config
+---@class era.fn.pick_win.config
 local config = {
   chars = {
     "F",
@@ -39,12 +39,12 @@ local function get_user_input_char()
   return vim.fn.nr2char(c)
 end
 
----@alias dot.fn.pick_win.filter fun(winnr: integer): boolean
+---@alias era.fn.pick_win.filter fun(winnr: integer): boolean
 
----@alias dot.fn.pick_win
----| fun(filter: dot.fn.pick_win.filter, winnr_candidate: integer|nil, split_as_needed: boolean): integer|nil
+---@alias era.fn.pick_win
+---| fun(filter: era.fn.pick_win.filter, winnr_candidate: integer|nil, split_as_needed: boolean): integer|nil
 
----@param filter                        dot.fn.pick_win.filter
+---@param filter                        era.fn.pick_win.filter
 ---@param winnr_candidate               integer|nil
 ---@param split_as_needed               boolean
 ---@return integer|nil
@@ -135,5 +135,5 @@ local function pick_window(filter, winnr_candidate, split_as_needed)
   return winnr_target
 end
 
----@type dot.fn.pick_win
+---@type era.fn.pick_win
 return pick_window

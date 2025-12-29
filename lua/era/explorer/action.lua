@@ -31,7 +31,7 @@ function M:add_locations_to_ai()
     locations[#locations + 1] = { filepath = filepath }
   end
 
-  dot.fn.add_locations_to_ai(locations)
+  era.fn.add_locations_to_ai(locations)
 end
 
 ---@return nil
@@ -48,7 +48,7 @@ function M:add_locations_to_ai_visual()
     locations[#locations + 1] = { filepath = filepath }
   end
 
-  dot.fn.add_locations_to_ai(locations)
+  era.fn.add_locations_to_ai(locations)
 end
 
 ---@return nil
@@ -148,7 +148,7 @@ function M:copy_path()
     filepaths[#filepaths + 1] = filepath
   end
 
-  dot.fn.select_copy_filepaths({
+  era.fn.select_copy_filepaths({
     filepaths = filepaths,
     winopts = {
       relative = "cursor",
@@ -708,7 +708,7 @@ function M:open_file_explorer()
   end
 
   local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
-  dot.fn.find_explorer(filepath)
+  era.fn.find_explorer(filepath)
 end
 
 ---@return nil
@@ -726,7 +726,7 @@ function M:open_file_finder()
     dirpath = dot.path.dirname(yoz.uri.to_filepath(uri) or "")
   end
 
-  dot.fn.find_files(dirpath, true)
+  era.fn.find_files(dirpath, true)
 end
 
 ---@return nil
@@ -738,7 +738,7 @@ function M:open_searcher()
   end
 
   local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
-  dot.fn.search_in_files(filepath)
+  era.fn.search_in_files(filepath)
 end
 
 ---@return nil

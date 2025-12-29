@@ -1,4 +1,4 @@
-local name = "dot.fn.find_pinned_files" ---@type string
+local name = "era.fn.find_pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
 local search_pattern = stl.c.Observable.from_value("")

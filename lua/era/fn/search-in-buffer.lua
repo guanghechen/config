@@ -1,5 +1,5 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "dot.fn.search_in_buffer" ---@type string
+local __module_name__ = "era.fn.search_in_buffer" ---@type string
 
 local searcher ---@type era.searcher.buffer.Searcher|nil
 

@@ -1,11 +1,11 @@
 ---@diagnostic disable: invisible
-local name = "dot.fn.find_buffers" ---@type string
+local name = "era.fn.find_buffers" ---@type string
 local title = "Find Buffers" ---@type string
 
----@class dot.fn.find_buffers.IItem : era.picker.composer.list.IItem
----@field public data                   dot.fn.find_buffers.IItemData
+---@class era.fn.find_buffers.IItem : era.picker.composer.list.IItem
+---@field public data                   era.fn.find_buffers.IItemData
 
----@class dot.fn.find_buffers.IItemData
+---@class era.fn.find_buffers.IItemData
 ---@field public bufnr                  integer
 ---@field public buftype                string
 ---@field public filetype               string
@@ -61,7 +61,7 @@ end
 
 ---@param bufnr                         integer
 ---@param cwd                           string
----@return dot.fn.find_buffers.IItem
+---@return era.fn.find_buffers.IItem
 local function create_buffer_item(bufnr, cwd)
   local buftype = vim.bo[bufnr].buftype ---@type string
   local filetype = vim.bo[bufnr].filetype ---@type string
@@ -70,7 +70,7 @@ local function create_buffer_item(bufnr, cwd)
   local filename = yoz.path.basename(filepath)
   local icon, icon_hl = stl.fileicon.get_file_icon(filename, filetype)
 
-  ---@type dot.fn.find_buffers.IItemData
+  ---@type era.fn.find_buffers.IItemData
   local data = {
     bufnr = bufnr,
     buftype = buftype,
@@ -99,7 +99,7 @@ local function create_buffer_item(bufnr, cwd)
     { coll = 35, colr = -1, hlname = "f_buf_filepath" },
   }
 
-  ---@type dot.fn.find_buffers.IItem
+  ---@type era.fn.find_buffers.IItem
   return {
     uuid = tostring(bufnr),
     text = text,
@@ -115,7 +115,7 @@ local function fetch_data()
   local scope = dot.context.select.find_buffer_scope:snapshot() ---@type dot.e.FindBufferScope
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 
-  local items = {} ---@type dot.fn.find_buffers.IItem[]
+  local items = {} ---@type era.fn.find_buffers.IItem[]
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
@@ -167,12 +167,12 @@ picker = era.picker.ListComposer.new({
   flags_start_index = 0,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                    table<string, dot.fn.find_buffers.IItem>
+    ---@cast itemmap                    table<string, era.fn.find_buffers.IItem>
     ---
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type dot.fn.find_buffers.IItem
+      local item = itemmap[match.uuid] ---@type era.fn.find_buffers.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -211,7 +211,7 @@ picker = era.picker.ListComposer.new({
       callback = function()
         local lnum = picker._composer:get_result_lnum() ---@type integer
         local item = picker:retrieve(lnum) ---@type era.picker.composer.list.IItem|nil
-        ---@cast item                   dot.fn.find_buffers.IItem|nil
+        ---@cast item                   era.fn.find_buffers.IItem|nil
         if item == nil then
           return
         end
@@ -249,7 +249,7 @@ picker = era.picker.ListComposer.new({
 
   on_confirm = function(composer, item)
     if item ~= nil then
-      ---@cast item dot.fn.find_buffers.IItem
+      ---@cast item era.fn.find_buffers.IItem
       composer:close()
 
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

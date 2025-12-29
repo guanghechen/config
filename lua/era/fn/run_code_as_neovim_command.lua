@@ -1,4 +1,4 @@
-local __module_name__ = "dot.fn.run_code_as_neovim_command" ---@type string
+local __module_name__ = "era.fn.run_code_as_neovim_command" ---@type string
 
 ---@return nil
 local function run_code_as_neovim_command()

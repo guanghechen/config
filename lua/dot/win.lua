@@ -238,13 +238,13 @@ end
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
-  return dot.fn.pick_win(M.is_focusable, winnr_candidate, false)
+  return era.fn.pick_win(M.is_focusable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
-  return dot.fn.pick_win(M.is_projectable, winnr_candidate, false)
+  return era.fn.pick_win(M.is_projectable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               integer|nil
@@ -253,13 +253,13 @@ function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and vim_win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
-  return dot.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
+  return era.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
 end
 
 ---@param winnr_candidate               integer|nil
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
-  return dot.fn.pick_win(M.is_swappable, winnr_candidate, false)
+  return era.fn.pick_win(M.is_swappable, winnr_candidate, false)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -551,7 +551,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     and M.is_sourcefile(winnr_source)
   )
       and winnr_source
-    or dot.fn.pick_win(M.is_sourcefile, winnr_source, true)
+    or era.fn.pick_win(M.is_sourcefile, winnr_source, true)
 
   if winnr == nil then
     return

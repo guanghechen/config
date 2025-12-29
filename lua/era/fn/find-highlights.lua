@@ -1,11 +1,11 @@
 ---@diagnostic disable: invisible
-local name = "dot.fn.find_highlights" ---@type string
+local name = "era.fn.find_highlights" ---@type string
 local title = "Find Highlights" ---@type string
 
----@class dot.fn.find_highlights.IItem : era.picker.composer.list.IItem
----@field public data                   dot.fn.find_highlights.IItemData
+---@class era.fn.find_highlights.IItem : era.picker.composer.list.IItem
+---@field public data                   era.fn.find_highlights.IItemData
 
----@class dot.fn.find_highlights.IItemData
+---@class era.fn.find_highlights.IItemData
 ---@field public lnum                   integer
 ---@field public hlid                   integer
 
@@ -25,19 +25,19 @@ local function fetch_data()
   _hlnames = hlnames
   _hlgroups = hlgroups
 
-  local items = {} ---@type dot.fn.find_highlights.IItem[]
+  local items = {} ---@type era.fn.find_highlights.IItem[]
   for lnum, hlname in ipairs(hlnames) do
     local hlid_str = stl.string.pad_end(tostring(vim.fn.hlID(hlname)), 5, " ")
     local text = string.format("%s xxx   %s", hlid_str, hlname) ---@type string
     local highlights = { { coll = 6, colr = 9, hlname = hlname } } ---@type stl.t.IHighlightInline[]
 
-    ---@type dot.fn.find_highlights.IItemData
+    ---@type era.fn.find_highlights.IItemData
     local data = {
       lnum = lnum,
       hlid = vim.fn.hlID(hlname),
     }
 
-    ---@type dot.fn.find_highlights.IItem
+    ---@type era.fn.find_highlights.IItem
     local item = {
       uuid = hlname,
       text = text,
@@ -71,12 +71,12 @@ local picker = era.picker.ListComposer.new({
   flag_case_sensitive = flag_case_sensitive,
 
   render_result = function(_, bufnr, itemmap, matches)
-    ---@cast itemmap                         table<string, dot.fn.find_highlights.IItem>
+    ---@cast itemmap                         table<string, era.fn.find_highlights.IItem>
 
     local lines = {} ---@type string[]
     local uuids = {} ---@type string[]
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type dot.fn.find_highlights.IItem
+      local item = itemmap[match.uuid] ---@type era.fn.find_highlights.IItem
       lines[#lines + 1] = item.text
       uuids[#uuids + 1] = item.uuid
     end
@@ -181,7 +181,7 @@ local picker = era.picker.ListComposer.new({
     end
 
     local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
-    ---@cast item                       dot.fn.find_highlights.IItem|nil
+    ---@cast item                       era.fn.find_highlights.IItem|nil
 
     local lnum_target = item and item.data.lnum or lnum_current ---@type integer
 
@@ -200,7 +200,7 @@ local picker = era.picker.ListComposer.new({
 
   on_confirm = function(composer, item)
     if item ~= nil then
-      ---@cast item dot.fn.find_highlights.IItem
+      ---@cast item era.fn.find_highlights.IItem
       composer:close()
       stl.nvim.fn.copy(item.uuid)
     end

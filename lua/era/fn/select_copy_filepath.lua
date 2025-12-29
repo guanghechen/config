@@ -1,11 +1,11 @@
-local __module_name__ = "dot.fn.select_copy_filepath" ---@type string
+local __module_name__ = "era.fn.select_copy_filepath" ---@type string
 
----@class dot.fn.select_copy_filepath.IParams : vim.api.keyset.win_config
+---@class era.fn.select_copy_filepath.IParams : vim.api.keyset.win_config
 ---@field public filepath               string
 ---@field public position               era.view.select.PositionEnum|nil
 ---@field public on_completed           ?fun(): nil
 
----@param params                        dot.fn.select_copy_filepath.IParams
+---@param params                        era.fn.select_copy_filepath.IParams
 ---@return integer
 local function select_copy_filepath(params)
   local filepath = params.filepath ---@type string

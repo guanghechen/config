@@ -1,4 +1,4 @@
-local name = "dot.fn.find_files" ---@type string
+local name = "era.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
 local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
@@ -17,7 +17,7 @@ local o_search_pattern_history = dot.context.select.find_file.search_pattern_his
 local o_excludes = dot.context.select.find_file.excludes
 local o_includes = dot.context.select.find_file.includes
 
----@class dot.fn.find_files.ISettingData
+---@class era.fn.find_files.ISettingData
 ---@field public keyword                string
 ---@field public includes               string[]
 ---@field public excludes               string[]
@@ -29,7 +29,7 @@ local function edit_setting(picker)
   local s_includes = o_includes:snapshot() ---@type string[]
   local s_excludes = o_excludes:snapshot() ---@type string[]
 
-  ---@type dot.fn.find_files.ISettingData
+  ---@type era.fn.find_files.ISettingData
   local data = {
     keyword = s_keyword,
     includes = s_includes,
@@ -45,7 +45,7 @@ local function edit_setting(picker)
         if type(raw_data) ~= "table" then
           return "Invalid find_files configuration, expect an object."
         end
-        ---@cast raw_data               dot.fn.find_files.ISettingData
+        ---@cast raw_data               era.fn.find_files.ISettingData
 
         if raw_data.keyword == nil or type(raw_data.keyword) ~= "string" then
           return "Invalid data.keyword, expect an string."
@@ -63,7 +63,7 @@ local function edit_setting(picker)
         vim.schedule(function()
           local last_keyword = o_search_pattern:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw                  dot.fn.find_files.ISettingData
+          ---@cast raw                  era.fn.find_files.ISettingData
 
           local keyword = raw.keyword ---@type string
           local includes = raw.includes ---@type string[]

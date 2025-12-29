@@ -124,7 +124,7 @@ local group_items = {
 
         ---@return nil
         local function reopen()
-          dot.fn.select_encoding({
+          era.fn.select_encoding({
             present = fileencoding_cur,
             title = string.format("Reopen with encoding (%s)", filename),
             on_select = function(encoding)
@@ -142,7 +142,7 @@ local group_items = {
 
         ---@return nil
         local function resave()
-          dot.fn.select_encoding({
+          era.fn.select_encoding({
             present = fileencoding_cur,
             title = string.format("Resave with encoding (%s)", filename),
             on_select = function(encoding)

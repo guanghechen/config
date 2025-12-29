@@ -22,7 +22,7 @@ function M.resume_last_widget()
       end
     end
   else
-    dot.fn.find_files()
+    era.fn.find_files()
   end
 end
 

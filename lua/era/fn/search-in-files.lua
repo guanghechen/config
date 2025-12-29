@@ -1,4 +1,4 @@
-local name = "dot.fn.search_in_files" ---@type string
+local name = "era.fn.search_in_files" ---@type string
 local title = "Search Files" ---@type string
 local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
@@ -21,7 +21,7 @@ local o_replace_pattern = dot.context.search_file.replacement
 local o_search_pattern_history = dot.context.select.search_file.search_pattern_history
 local o_replace_pattern_history = dot.context.search_file.replace_pattern_history
 
----@class dot.fn.search_in_files.ISettingData
+---@class era.fn.search_in_files.ISettingData
 ---@field public search_pattern         string
 ---@field public replace_pattern        string
 ---@field public max_filesize           string
@@ -39,7 +39,7 @@ local function edit_setting(searcher)
   local s_includes = o_includes:snapshot() ---@type string[]
   local s_excludes = o_excludes:snapshot() ---@type string[]
 
-  ---@type dot.fn.search_in_files.ISettingData
+  ---@type era.fn.search_in_files.ISettingData
   local data = {
     search_pattern = s_search_pattern,
     replace_pattern = s_replace_pattern,
@@ -58,7 +58,7 @@ local function edit_setting(searcher)
         if type(raw_data) ~= "table" then
           return "Invalid search_files configuration, expect an object."
         end
-        ---@cast raw_data               dot.fn.search_in_files.ISettingData
+        ---@cast raw_data               era.fn.search_in_files.ISettingData
 
         if type(raw_data.search_pattern) ~= "string" then
           return "Invalid data.keyword, expect an string."
@@ -88,7 +88,7 @@ local function edit_setting(searcher)
         vim.schedule(function()
           local last_keyword = o_search_pattern:snapshot() ---@type string
           local raw = vim.tbl_extend("force", data, raw_data)
-          ---@cast raw                  dot.fn.search_in_files.ISettingData
+          ---@cast raw                  era.fn.search_in_files.ISettingData
 
           local search_pattern = raw.search_pattern ---@type string
           local replace_pattern = raw.replace_pattern ---@type string

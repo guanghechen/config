@@ -647,7 +647,7 @@ function M.new(props)
           }, function(choice)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
-              local success = dot.fn.rename({
+              local success = era.fn.rename({
                 from = filepath,
                 to = next_filepath,
                 isdir = isdir,
@@ -663,14 +663,14 @@ function M.new(props)
         end
 
         local isdir = filenode.data.filetype == "directory"
-        local success = dot.fn.rename({
+        local success = era.fn.rename({
           from = filepath,
           to = next_filepath,
           isdir = isdir,
         })
 
         if not success then
-          -- Error already reported by dot.fn.rename, just return
+          -- Error already reported by era.fn.rename, just return
           return
         end
 
@@ -769,7 +769,7 @@ function M.new(props)
           }, function(choice)
             if choice == "Yes" then
               local isdir = filenode.data.filetype == "directory"
-              local success = dot.fn.rename({
+              local success = era.fn.rename({
                 from = filepath,
                 to = next_filepath,
                 isdir = isdir,
@@ -785,14 +785,14 @@ function M.new(props)
         end
 
         local isdir = filenode.data.filetype == "directory"
-        local success = dot.fn.rename({
+        local success = era.fn.rename({
           from = filepath,
           to = next_filepath,
           isdir = isdir,
         })
 
         if not success then
-          -- Error already reported by dot.fn.rename, just return
+          -- Error already reported by era.fn.rename, just return
           return
         end
 
@@ -853,7 +853,7 @@ function M.new(props)
           locations[#locations + 1] = { filepath = node.data.filepath }
         end
       end
-      dot.fn.add_locations_to_ai(locations)
+      era.fn.add_locations_to_ai(locations)
     end,
     add_subtree_to_ai = function()
       local lnum_from, lnum_to = self:__retrieve_lnum_range__() ---@type integer, integer
@@ -880,7 +880,7 @@ function M.new(props)
         end
         lnum = lnum + 1
       end
-      dot.fn.add_locations_to_ai(locations)
+      era.fn.add_locations_to_ai(locations)
     end,
 
     attach_parent = function()
@@ -911,7 +911,7 @@ function M.new(props)
 
       ---@return nil
       local function handle()
-        dot.fn.select_copy_filepath({
+        era.fn.select_copy_filepath({
           filepath = filenode.data.filepath,
           winopts = {
             relative = "cursor",

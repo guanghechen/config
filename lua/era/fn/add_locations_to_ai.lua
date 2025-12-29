@@ -1,4 +1,4 @@
-local __module_name__ = "dot.fn.add_locations_to_ai" ---@type string
+local __module_name__ = "era.fn.add_locations_to_ai" ---@type string
 
 ---@param locations                     dot.t.ILocation[]
 ---@return nil

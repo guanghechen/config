@@ -1,71 +1,3 @@
----@class dot.fn.__mods
-local __fn__mods = {
-  add_locations_to_ai = "dot.fn.add_locations_to_ai",
-  find_buffers = "dot.fn.find-buffers",
-  find_diagnostics = "dot.fn.find-diagnostics",
-  find_explorer = "dot.fn.find-explorer",
-  find_files = "dot.fn.find-files",
-  find_git = "dot.fn.find-git",
-  find_highlights = "dot.fn.find-highlights",
-  find_keymaps = "dot.fn.find-keymaps",
-  find_lsp_symbols = "dot.fn.find-lsp-symbols",
-  find_notifications = "dot.fn.find-notifications",
-  find_pinned_files = "dot.fn.find-pinned-files",
-  find_vim_options = "dot.fn.find-vim-options",
-  insert_splitline = "dot.fn.insert-splitline",
-  paste_image = "dot.fn.paste_image",
-  paste_image_as_base64 = "dot.fn.paste_image_as_base64",
-  pick_win = "dot.fn.pick_win",
-  rename = "dot.fn.rename",
-  run_code = "dot.fn.run_code",
-  run_code_as_neovim_command = "dot.fn.run_code_as_neovim_command",
-  search_in_buffer = "dot.fn.search-in-buffer",
-  search_in_files = "dot.fn.search-in-files",
-  select_copy_filepath = "dot.fn.select_copy_filepath",
-  select_copy_filepaths = "dot.fn.select_copy_filepaths",
-  select_encoding = "dot.fn.select_encoding",
-}
-
----@class dot.fn
----@field public __mods                 dot.fn.__mods
----@field public add_locations_to_ai    fun(locations: dot.t.ILocation[]): nil
----@field public find_buffers           fun(scope: dot.e.FindBufferScope|nil): nil
----@field public find_diagnostics       fun(): nil
----@field public find_explorer          fun(specified_filepath: string|nil): nil
----@field public find_files             fun(rootpath: string|"cwd"|"directory"|"workspace"|nil, reset_input: boolean|nil): nil
----@field public find_git               fun(): nil
----@field public find_highlights        fun(): nil
----@field public find_keymaps           fun(): nil
----@field public find_lsp_symbols       fun(): nil
----@field public find_notifications     fun(): nil
----@field public find_pinned_files      fun(): nil
----@field public find_vim_options       fun(): nil
----@field public insert_splitline       fun(): nil
----@field public paste_image            fun(): nil
----@field public paste_image_as_base64  fun(): string|nil
----@field public pick_win               dot.fn.pick_win
----@field public rename                 dot.fn.rename
----@field public run_code               fun(force: boolean): nil
----@field public run_code_as_neovim_command fun(): nil
----@field public search_in_buffer       fun(): nil
----@field public search_in_files        fun(rootpath: string|"cwd"|"directory"|"workspace"|"file"|nil, reset_input: boolean|nil): nil
----@field public select_copy_filepath   fun(params: dot.fn.select_copy_filepath.IParams): integer
----@field public select_copy_filepaths  fun(params: dot.fn.select_copy_filepaths.IParams): integer
----@field public select_encoding        fun(params: dot.fn.select_encoding.IParams): era.picker.ListComposer
-local fn = setmetatable({
-  __mods = __fn__mods,
-}, {
-  __index = function(t, k)
-    local m = __fn__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.state.__mods
 local __state__mods = {
   maximized = "dot.state.maximized",
@@ -248,7 +180,6 @@ local __mods = {
 ---
 ---@field public command                dot.command
 ---@field public context                dot.context
----@field public fn                     dot.fn
 ---@field public G                      dot.G
 ---@field public notifier               dot.notifier
 ---@field public session                dot.session
@@ -271,7 +202,6 @@ local __mods = {
 ---@field public setup_lsp              fun(): nil
 local M = setmetatable({
   __mods = __mods,
-  fn = fn,
   state = state,
   theme = theme,
   widget = widget,
