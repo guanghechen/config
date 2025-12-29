@@ -37,7 +37,7 @@ vim.schedule(function()
   era.statuscolumn.dressing()
   era.trailspace.dressing()
   era.virtcolumn.dressing()
-  require("fml.dressing.winsep")
+  era.winsep.dressing()
 
   era.dim.dressing()
   era.im.dressing()

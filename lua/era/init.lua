@@ -95,6 +95,7 @@ local __mods = {
   virtcolumn = "era.virtcolumn",
   winline = "era.winline",
   winpicker = "era.winpicker",
+  winsep = "era.winsep",
 }
 
 ---@class era
@@ -127,6 +128,7 @@ local __mods = {
 ---@field public virtcolumn             era.virtcolumn
 ---@field public winline                era.winline
 ---@field public winpicker              era.winpicker
+---@field public winsep                 era.winsep
 local M = setmetatable({
   __mods = __mods,
   fn = fn,

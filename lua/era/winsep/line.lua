@@ -1,4 +1,4 @@
----@class fml.dressing.winsep.line.highlights
+---@class era.winsep.line.highlights
 local config = {
   zindex = dot.var.zindex.WINSEP,
   h = {
@@ -35,33 +35,33 @@ local config = {
   },
 }
 
----@alias fml.dressing.winsep.line.Direction
+---@alias era.winsep.line.Direction
 ---| "h" left
 ---| "k" top
 ---| "l" right
 ---| "j" bottom
 
----@class fml.dressing.winsep.line.IProps
----@field public direction              fml.dressing.winsep.line.Direction
+---@class era.winsep.line.IProps
+---@field public direction              era.winsep.line.Direction
 ---@field public winhighlight           ?string
 ---@field public zindex                 ?integer
 
----@class fml.dressing.winsep.Line
+---@class era.winsep.Line
 ---@field public _cfg                   vim.api.keyset.win_config
 ---@field public _size                  integer
 ---@field public _winnr                 integer|nil
 ---@field public _bufnr                 integer|nil
 ---@field public _winhighlight          string
----@field public _direction             fml.dressing.winsep.line.Direction
+---@field public _direction             era.winsep.line.Direction
 local M = {}
 M.__index = M
 
----@param props                         fml.dressing.winsep.line.IProps
----@return fml.dressing.winsep.Line
+---@param props                         era.winsep.line.IProps
+---@return era.winsep.Line
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local direction = props.direction ---@type fml.dressing.winsep.line.Direction
+  local direction = props.direction ---@type era.winsep.line.Direction
   local winhighlight = props.winhighlight or config[direction].winhighlight ---@type string
   local zindex = props.zindex or config.zindex ---@type integer
 
@@ -143,7 +143,7 @@ end
 function M:move(row, col, size)
   local bufnr = self:create_buf_as_needed() ---@type integer
   local cfg = self._cfg ---@type vim.api.keyset.win_config
-  local direction = self._direction ---@type fml.dressing.winsep.line.Direction
+  local direction = self._direction ---@type era.winsep.line.Direction
 
   cfg.row = row
   cfg.col = col

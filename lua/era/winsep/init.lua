@@ -1,12 +1,12 @@
-local Line = require("fml.dressing.winsep.line")
+local Line = require("era.winsep.line")
 
----@class fml.dressing.Winsep
----@field public left                   fml.dressing.winsep.Line
----@field public top                    fml.dressing.winsep.Line
----@field public right                  fml.dressing.winsep.Line
----@field public bottom                 fml.dressing.winsep.Line
----@field public hide                   fun(self: fml.dressing.Winsep):nil
----@field public show                   fun(self: fml.dressing.Winsep, winnr: integer):nil
+---@class era.winsep.Winsep
+---@field public left                   era.winsep.Line
+---@field public top                    era.winsep.Line
+---@field public right                  era.winsep.Line
+---@field public bottom                 era.winsep.Line
+---@field public hide                   fun(self: era.winsep.Winsep):nil
+---@field public show                   fun(self: era.winsep.Winsep, winnr: integer):nil
 local winsep = {
   left = Line.new({ direction = "h" }),
   top = Line.new({ direction = "k" }),
@@ -93,41 +93,55 @@ local winsep = {
   end,
 }
 
-local refresh_debounced = stl.timer.debounce(function(winnr)
-  local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
-  if not enabled then
-    winsep:hide()
-    return
-  end
+---@class era.winsep
+---@field public dressing               fun(): nil
+---@field public Line                   era.winsep.Line
+---@field public Winsep                 era.winsep.Winsep
+local M = {
+  Line = Line,
+  Winsep = winsep,
+}
 
-  if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
-    winsep:show(winnr)
-  end
-end, 32)
-
-stl.fn.observe({ dot.context.flight.dressing_winsep }, function()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-  refresh_debounced(winnr_fixed)
-end, true)
-
-vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
-  group = stl.nvim.fn.augroup("winsep_on_resize"),
-  callback = function()
-    vim.schedule(function()
-      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
-      refresh_debounced(winnr_fixed)
-    end)
-  end,
-})
-
-vim.api.nvim_create_autocmd("WinEnter", {
-  group = stl.nvim.fn.augroup("winsep_on_WinEnter"),
-  callback = function()
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    if stl.nvim.win.is_fixed(winnr) then
-      refresh_debounced(winnr)
+---@return nil
+function M.dressing()
+  local refresh_debounced = stl.timer.debounce(function(winnr)
+    local enabled = dot.context.flight.dressing_winsep:snapshot() ---@type boolean
+    if not enabled then
+      winsep:hide()
+      return
     end
-  end,
-})
+
+    if winnr ~= nil and winnr > 0 and vim.api.nvim_win_is_valid(winnr) then
+      winsep:show(winnr)
+    end
+  end, 32)
+
+  stl.fn.observe({ dot.context.flight.dressing_winsep }, function()
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+    refresh_debounced(winnr_fixed)
+  end, true)
+
+  vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "SessionLoadPost" }, {
+    group = stl.nvim.fn.augroup("era.winsep_on_resize"),
+    callback = function()
+      vim.schedule(function()
+        local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+        local winnr_fixed = dot.tab.retrieve_winnr_fixed(tabnr) ---@type integer|nil
+        refresh_debounced(winnr_fixed)
+      end)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = stl.nvim.fn.augroup("era.winsep_on_WinEnter"),
+    callback = function()
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if stl.nvim.win.is_fixed(winnr) then
+        refresh_debounced(winnr)
+      end
+    end,
+  })
+end
+
+return M
