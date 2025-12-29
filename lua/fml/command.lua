@@ -1344,7 +1344,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      require("era.colorpicker").instance():pick()
+      require("era.colorpicker").ColorPicker.instance():pick()
     end,
   })
   .implement({
