@@ -139,7 +139,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
 
     if stl.env.IS_TMUX then
       vim.schedule(function()
-        local is_tmux_pane_zoomed = ark.tmux.is_tmux_pane_zoomed() ---@type boolean
+        local is_tmux_pane_zoomed = stl.tmux.is_tmux_pane_zoomed() ---@type boolean
         dot.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
       end)
     end
@@ -170,7 +170,7 @@ vim.api.nvim_create_autocmd("VimResized", {
     vim.schedule(function()
       if stl.env.IS_TMUX then
         vim.schedule(function()
-          local is_tmux_pane_zoomed = ark.tmux.is_tmux_pane_zoomed() ---@type boolean
+          local is_tmux_pane_zoomed = stl.tmux.is_tmux_pane_zoomed() ---@type boolean
           dot.state.status.tmux_zen_mode:next(is_tmux_pane_zoomed)
         end)
       end

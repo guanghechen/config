@@ -149,7 +149,6 @@ local __mods = {
   G = "ark.G",
   time = "ark.time",
   timer = "ark.timer",
-  tmux = "ark.tmux",
   var = "ark.var",
   vim = "ark.vim",
 }
@@ -163,7 +162,6 @@ local __mods = {
 ---@field public theme                  ark.theme
 ---@field public time                   ark.time
 ---@field public timer                  ark.timer
----@field public tmux                   ark.tmux
 ---@field public var                    ark.var
 ---@field public view                   ark.view
 ---@field public vim                    ark.vim
