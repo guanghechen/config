@@ -12,7 +12,7 @@ require("fml.plugin")
 pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
-  require("fml.dressing.commentstring")
+  era.commentstring.dressing()
   require("fml.dressing.im")
   pcall(require, "ark.vendor.local.dressing")
 end)

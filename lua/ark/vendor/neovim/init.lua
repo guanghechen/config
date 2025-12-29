@@ -31,7 +31,7 @@ vim.schedule(function()
   require("fml.dressing.tabline")
   require("fml.dressing.winline")
 
-  require("fml.dressing.commentstring")
+  era.commentstring.dressing()
   era.foldtext.dressing()
   require("fml.dressing.scroll")
   require("fml.dressing.statuscolumn")

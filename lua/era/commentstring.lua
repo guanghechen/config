@@ -1,13 +1,16 @@
 ---! see https://github.com/folke/ts-comments.nvim/blob/2002692ad1d3f6518d016550c20c2a890f0cbf0e/lua/ts-comments/comments.lua#L1
 
----@alias fml.dressing.commentstring.ISpec
+---@alias era.commentstring.ISpec
 ---| string
 ---| string[]
 ---| table<string, string | string[]>
 
+---@class era.commentstring
+local M = {}
+
 local native_get_option = vim.filetype.get_option
 
----@type table<string, fml.dressing.commentstring.ISpec>
+---@type table<string, era.commentstring.ISpec>
 local language_map = {
   astro = "<!-- %s -->",
   axaml = "<!-- %s -->",
@@ -129,7 +132,7 @@ end
 ---@return string[]
 local function resolve_commentstring(filetype)
   local lang = vim.treesitter.language.get_lang(filetype) or filetype
-  local spec = language_map[lang] ---@type fml.dressing.commentstring.ISpec
+  local spec = language_map[lang] ---@type era.commentstring.ISpec
 
   local ret = {} ---@type string[]
   local have = {} ---@type table<string, boolean>
@@ -191,18 +194,23 @@ local function prettier_get_option(filetype)
   return cs or ""
 end
 
----@param filetype                      string
----@param option                        string
----@return boolean|integer|string
----@diagnostic disable-next-line: duplicate-set-field
-vim.filetype.get_option = function(filetype, option)
-  if filetype == "comment" then
-    filetype = vim.bo.filetype
-  end
+---@return nil
+function M.dressing()
+  ---@param filetype                    string
+  ---@param option                      string
+  ---@return boolean|integer|string
+  ---@diagnostic disable-next-line: duplicate-set-field
+  vim.filetype.get_option = function(filetype, option)
+    if filetype == "comment" then
+      filetype = vim.bo.filetype
+    end
 
-  if option == "commentstring" then
-    return prettier_get_option(filetype)
-  end
+    if option == "commentstring" then
+      return prettier_get_option(filetype)
+    end
 
-  return native_get_option(filetype, option)
+    return native_get_option(filetype, option)
+  end
 end
+
+return M
