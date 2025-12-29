@@ -432,10 +432,9 @@ function M:__create_win_as_needed__()
     return winnr
   end
 
-  winnr = vim.api.nvim_open_win(bufnr, true, {
-    split = "left",
-    width = self:__get_effective_width__(),
-  })
+  local width = self:__get_effective_width__() ---@type integer
+  vim.cmd(("silent noswapfile vertical topleft sbuffer %d | vertical resize %d"):format(bufnr, width))
+  winnr = vim.api.nvim_get_current_win() ---@type integer
   self._winnr = winnr
 
   vim.wo[winnr].cursorline = false
