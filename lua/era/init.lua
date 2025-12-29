@@ -83,6 +83,7 @@ local __mods = {
   picker = "era.picker",
   plugin = "era.plugin",
   searcher = "era.searcher",
+  statuscolumn = "era.statuscolumn",
   term = "era.term",
   view = "era.view",
   winpicker = "era.winpicker",
@@ -106,6 +107,7 @@ local __mods = {
 ---@field public picker                 era.picker
 ---@field public plugin                 era.plugin
 ---@field public searcher               era.searcher
+---@field public statuscolumn           era.statuscolumn
 ---@field public term                   era.term
 ---@field public view                   era.view
 ---@field public winpicker              era.winpicker

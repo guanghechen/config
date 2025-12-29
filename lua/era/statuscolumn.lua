@@ -1,8 +1,8 @@
 ---@see https://github.com/folke/snacks.nvim/blob/85b8ec210975aa137af4b7bef1fb7b7098be331a/lua/snacks/statuscolumn.lua
 
----@class fml.dressing.statuscolumn.IConfig
----@field public left                   fml.dressing.statuscolumn.IComponents
----@field public right                  fml.dressing.statuscolumn.IComponents
+---@class era.statuscolumn.IConfig
+---@field public left                   era.statuscolumn.IComponents
+---@field public right                  era.statuscolumn.IComponents
 ---@field public refresh                integer
 ---@field public folds                  { open: boolean, git_hl: boolean }
 local config = {
@@ -15,26 +15,26 @@ local config = {
   },
 }
 
----@alias fml.dressing.statuscolumn.IComponents
----| fml.dressing.statuscolumn.SignType[]
----| fun(winnr: number, bufnr: number,lnum:number): fml.dressing.statuscolumn.SignType[]
+---@alias era.statuscolumn.IComponents
+---| era.statuscolumn.SignType[]
+---| fun(winnr: number, bufnr: number,lnum:number): era.statuscolumn.SignType[]
 
----@alias fml.dressing.statuscolumn.IWanted table<fml.dressing.statuscolumn.SignType, boolean>
+---@alias era.statuscolumn.IWanted table<era.statuscolumn.SignType, boolean>
 
----@alias fml.dressing.statuscolumn.SignType
+---@alias era.statuscolumn.SignType
 ---| "mark"
 ---| "sign"
 ---| "fold"
 ---| "git"
 
----@class fml.dressing.statuscolumn.ISign
----@field public type                   fml.dressing.statuscolumn.SignType
+---@class era.statuscolumn.ISign
+---@field public type                   era.statuscolumn.SignType
 ---@field public text                   string
 ---@field public texthl                 string|nil
 ---@field public name                   string|nil
 ---@field public priority               number|nil
 
----@class fml.dressing.statuscolumn.IFoldInfo
+---@class era.statuscolumn.IFoldInfo
 ---@field public start                  number Line number where deepest fold starts
 ---@field public level                  number Fold level, when zero other fields are N/A
 ---@field public llevel                 number Lowest level that starts in v:lnum
@@ -65,7 +65,7 @@ end
 
 ---@param winnr                         number
 ---@param lnum                          number
----@return fml.dressing.statuscolumn.IFoldInfo|nil
+---@return era.statuscolumn.IFoldInfo|nil
 local function fold_info(winnr, lnum)
   pcall(_ffi)
   if not C then
@@ -77,11 +77,11 @@ local function fold_info(winnr, lnum)
   if wp == nil then
     return
   end
-  return C.fold_info(wp, lnum) ---@type fml.dressing.statuscolumn.IFoldInfo
+  return C.fold_info(wp, lnum) ---@type era.statuscolumn.IFoldInfo
 end
 
 -- Cache for signs per buffer and line
-local sign_cache = {} ---@type table<number,table<number, fml.dressing.statuscolumn.ISign[]>>
+local sign_cache = {} ---@type table<number,table<number, era.statuscolumn.ISign[]>>
 local icon_cache = {} ---@type table<string, string>
 local cache = {} ---@type table<string, string>
 
@@ -99,12 +99,12 @@ local function setup()
   end
 end
 
----@param signs_by_type                 table<fml.dressing.statuscolumn.SignType, fml.dressing.statuscolumn.ISign>
----@param types                         fml.dressing.statuscolumn.SignType[]
----@return fml.dressing.statuscolumn.ISign|nil
+---@param signs_by_type                 table<era.statuscolumn.SignType, era.statuscolumn.ISign>
+---@param types                         era.statuscolumn.SignType[]
+---@return era.statuscolumn.ISign|nil
 local function find_sign(signs_by_type, types)
   for _, t in ipairs(types) do
-    local sign = signs_by_type[t] ---@type fml.dressing.statuscolumn.ISign|nil
+    local sign = signs_by_type[t] ---@type era.statuscolumn.ISign|nil
     if sign ~= nil then
       return sign
     end
@@ -119,10 +119,10 @@ end
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
 ---@param bufnr                         integer
----@param wanted                        fml.dressing.statuscolumn.IWanted
----@return table<integer, fml.dressing.statuscolumn.ISign[]>
+---@param wanted                        era.statuscolumn.IWanted
+---@return table<integer, era.statuscolumn.ISign[]>
 local function get_buf_signs(bufnr, wanted)
-  local signs_map = {} ---@type table<integer, fml.dressing.statuscolumn.ISign[]>
+  local signs_map = {} ---@type table<integer, era.statuscolumn.ISign[]>
 
   if wanted.sign or wanted.git then
     -- Get extmark signs (includes both legacy and extmark signs in nvim 0.10+)
@@ -130,7 +130,7 @@ local function get_buf_signs(bufnr, wanted)
     for _, extmark in ipairs(extmarks) do
       local lnum = extmark[2] + 1
       local name = extmark[4].sign_hl_group or extmark[4].sign_name or ""
-      ---@type fml.dressing.statuscolumn.ISign
+      ---@type era.statuscolumn.ISign
       local sign = {
         name = name,
         type = is_git_sign(name) and "git" or "sign",
@@ -152,7 +152,7 @@ local function get_buf_signs(bufnr, wanted)
     vim.list_extend(marks, vim.fn.getmarklist())
     for _, mark in ipairs(marks) do
       if mark.pos[1] == bufnr and mark.mark:match("[a-zA-Z]") then
-        ---@type fml.dressing.statuscolumn.ISign
+        ---@type era.statuscolumn.ISign
         local sign = { type = "mark", text = string.sub(mark.mark, 2), texthl = "StatusColumnMark" }
         local lnum = mark.pos[2]
         signs_map[lnum] = signs_map[lnum] or {}
@@ -168,26 +168,26 @@ end
 ---@param winnr                         integer
 ---@param bufnr                         integer
 ---@param lnum                          integer
----@param wanted                        fml.dressing.statuscolumn.IWanted
----@return fml.dressing.statuscolumn.ISign[]
+---@param wanted                        era.statuscolumn.IWanted
+---@return era.statuscolumn.ISign[]
 local function line_signs(winnr, bufnr, lnum, wanted)
-  local buf_signs = sign_cache[bufnr] ---@type table<integer, fml.dressing.statuscolumn.ISign[]>|nil
+  local buf_signs = sign_cache[bufnr] ---@type table<integer, era.statuscolumn.ISign[]>|nil
   if not buf_signs then
     buf_signs = get_buf_signs(bufnr, wanted)
     sign_cache[bufnr] = buf_signs
   end
-  local signs = buf_signs[lnum] or {} ---@type fml.dressing.statuscolumn.ISign[]
+  local signs = buf_signs[lnum] or {} ---@type era.statuscolumn.ISign[]
 
   -- Get fold signs
   if wanted.fold then
     local info = fold_info(winnr, lnum)
     if info and info.level > 0 then
       if info.lines > 0 then
-        ---@type fml.dressing.statuscolumn.ISign
+        ---@type era.statuscolumn.ISign
         local sign = { type = "fold", text = stl.icon.fillchars.foldclose, texthl = "Folded" }
         signs[#signs + 1] = sign
       elseif config.folds.open and info.start == lnum then
-        ---@type fml.dressing.statuscolumn.ISign
+        ---@type era.statuscolumn.ISign
         local sign = { type = "fold", text = stl.icon.fillchars.foldopen }
         signs[#signs + 1] = sign
       end
@@ -201,7 +201,7 @@ local function line_signs(winnr, bufnr, lnum, wanted)
   return signs
 end
 
----@param sign                          ?fml.dressing.statuscolumn.ISign
+---@param sign                          ?era.statuscolumn.ISign
 ---@return string
 local function get_icon(sign)
   if not sign then
@@ -230,10 +230,10 @@ local function statuscolumn()
     return ""
   end
 
-  local left_c = config.left --[[@as fml.dressing.statuscolumn.SignType[] ]]
-  local right_c = config.right --[[@as fml.dressing.statuscolumn.SignType[] ]]
+  local left_c = config.left --[[@as era.statuscolumn.SignType[] ]]
+  local right_c = config.right --[[@as era.statuscolumn.SignType[] ]]
 
-  ---@type fml.dressing.statuscolumn.IWanted
+  ---@type era.statuscolumn.IWanted
   local wanted = { sign = show_signs }
   for _, component in ipairs(left_c) do
     wanted[component] = wanted[component] ~= false
@@ -258,10 +258,10 @@ local function statuscolumn()
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local show_folds = vim.v.virtnum == 0 and vim.wo[winnr].foldcolumn ~= "0" ---@type boolean
   if show_signs or show_folds then
-    local signs = line_signs(winnr, bufnr, vim.v.lnum, wanted) ---@type fml.dressing.statuscolumn.ISign[]
+    local signs = line_signs(winnr, bufnr, vim.v.lnum, wanted) ---@type era.statuscolumn.ISign[]
 
     if #signs > 0 then
-      local signs_by_type = {} ---@type table<fml.dressing.statuscolumn.SignType, fml.dressing.statuscolumn.ISign>
+      local signs_by_type = {} ---@type table<era.statuscolumn.SignType, era.statuscolumn.ISign>
       for _, sign in ipairs(signs) do
         signs_by_type[sign.type] = signs_by_type[sign.type] or sign
       end
@@ -288,10 +288,10 @@ local function statuscolumn()
   components[3] = vim.b[bufnr].era_statuscolumn_right ~= false and components[3] or ""
 
   local ret = table.concat(components, "")
-  return "%@v:lua.require'fml.dressing.statuscolumn'.click_fold@" .. ret .. "%T"
+  return "%@v:lua.era.statuscolumn.click_fold@" .. ret .. "%T"
 end
 
----@class fml.dressing.statuscolumn
+---@class era.statuscolumn
 local M = {}
 
 ---@return nil
@@ -322,6 +322,9 @@ function M.statuscolumn()
   return ""
 end
 
-vim.o.statuscolumn = "%!v:lua.require'fml.dressing.statuscolumn'.statuscolumn()"
+---@return nil
+function M.dressing()
+  vim.o.statuscolumn = "%!v:lua.era.statuscolumn.statuscolumn()"
+end
 
 return M
