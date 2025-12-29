@@ -1,4 +1,4 @@
-local __module_name__ = "ark.fs" ---@type string
+local __module_name__ = "stl.fs" ---@type string
 
 ---@class stl.t.IReadFileParams
 ---@field public filepath               string
@@ -18,7 +18,7 @@ local __module_name__ = "ark.fs" ---@type string
 ---@field public silent_on_bad_path     ?boolean
 ---@field public silent_on_bad_json     ?boolean
 
----@class ark.fs
+---@class stl.fs
 local M = {}
 
 ---@param filepath                      string

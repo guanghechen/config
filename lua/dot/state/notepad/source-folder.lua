@@ -83,7 +83,7 @@ function M:load(force)
   local active_uuid = nil ---@type string|nil
 
   local ok, result = pcall(function()
-    local raw_data = ark.fs.read_json({
+    local raw_data = stl.fs.read_json({
       filepath = self._metadata_path,
       silent_on_bad_path = true,
       silent_on_bad_json = false,
@@ -576,7 +576,7 @@ function M:flush()
   }
 
   local ok, err = pcall(function()
-    ark.fs.write_json(self._metadata_path, save_data, true)
+    stl.fs.write_json(self._metadata_path, save_data, true)
   end)
 
   if not ok then

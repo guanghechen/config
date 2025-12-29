@@ -82,7 +82,7 @@ function M:load(force)
   local active_uuid = nil ---@type string|nil
 
   local ok, result = pcall(function()
-    local raw_data = ark.fs.read_json({
+    local raw_data = stl.fs.read_json({
       filepath = self.filepath,
       silent_on_bad_path = true,
       silent_on_bad_json = false,
@@ -624,7 +624,7 @@ function M:flush()
       activated_item_uuid = self._state.active_uuid or vim.NIL,
     }
 
-    ark.fs.write_json(self.filepath, save_data, true)
+    stl.fs.write_json(self.filepath, save_data, true)
   end)
 
   if not ok then

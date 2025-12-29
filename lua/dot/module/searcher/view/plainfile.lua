@@ -127,7 +127,7 @@ function M:calc_preview_data(context)
           message = preview_error,
         })
       end
-      local fallback_lines = ark.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
+      local fallback_lines = stl.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
       preview_result = { text = table.concat(fallback_lines, "\n"), matches = {} }
     end
 
@@ -174,7 +174,7 @@ function M:calc_preview_data(context)
       end
     end
   else
-    lines = ark.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
+    lines = stl.fs.read_file_as_lines({ filepath = filepath, silent = true }) or {} ---@type string[]
     highlights = {} ---@type dot.module.searcher.IPlainfileViewHighlight[]
 
     if context.filematch ~= nil then
