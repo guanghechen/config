@@ -374,7 +374,7 @@ function M.__create_buf_as_needed__(win)
     vim.bo[bufnr].buflisted = false
     vim.bo[bufnr].bufhidden = "wipe"
     vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = ark.filetype.NOTIFY
+    vim.bo[bufnr].filetype = stl.filetype.NOTIFY
     vim.bo[bufnr].swapfile = false
 
     ---@type ark.t.IKeymap[]

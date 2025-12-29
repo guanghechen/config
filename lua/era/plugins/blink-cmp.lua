@@ -32,13 +32,13 @@ return {
 
     ---@type table<string, string[]>
     local sources_per_filetype = {
-      [ark.filetype.NOTEPAD] = markdown_sources,
-      [ark.filetype.UX_PICKER_FINDER] = finder_sources,
-      [ark.filetype.UX_SEARCHER_FINDER] = searcher_sources,
+      [stl.filetype.NOTEPAD] = markdown_sources,
+      [stl.filetype.UX_PICKER_FINDER] = finder_sources,
+      [stl.filetype.UX_SEARCHER_FINDER] = searcher_sources,
       ["markdown"] = markdown_sources,
     }
     do
-      for _, cmp_code in ipairs(ark.filetype.list_code_filetypes()) do
+      for _, cmp_code in ipairs(stl.filetype.list_code_filetypes()) do
         if sources_per_filetype[cmp_code] == nil then
           sources_per_filetype[cmp_code] = code_sources
         end
@@ -59,7 +59,7 @@ return {
         end
 
         local filetype = vim.bo.filetype ---@type string
-        if not ark.filetype.is_cmp_enabled(filetype) then
+        if not stl.filetype.is_cmp_enabled(filetype) then
           return false
         end
 

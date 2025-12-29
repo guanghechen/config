@@ -2,7 +2,7 @@
 local SPLITLINE_BY_FILETYPE = {
   lua = string.rep("-", 100),
   markdown = string.rep("-", 100),
-  [ark.filetype.NOTEPAD] = string.rep("-", 100),
+  [stl.filetype.NOTEPAD] = string.rep("-", 100),
 }
 
 ---@return nil

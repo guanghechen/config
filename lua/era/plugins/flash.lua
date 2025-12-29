@@ -97,7 +97,7 @@ return {
     },
     search = {
       mode = "exact",
-      exclude = ark.filetype.get_no_flash_filetypes(),
+      exclude = stl.filetype.get_no_flash_filetypes(),
     },
   },
 }

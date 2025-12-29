@@ -1,4 +1,4 @@
----@class ark.filetype
+---@class stl.filetype
 local M = {}
 
 M.AI_TERMINAL = "ai_terminal"
@@ -45,7 +45,7 @@ M.UX_SEARCHER_RESULT = "ux-searcher-result"
 M.WINPICKER_MASK = "winpicker-mask"
 M.WINSEP = "winsep"
 
----@class ark.filetype.filetypes
+---@class stl.filetype.filetypes
 local filetypes = {
   -- stylua: ignore start
   code = {

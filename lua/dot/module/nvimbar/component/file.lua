@@ -38,7 +38,7 @@ function M.encoding(position)
     name = "file:encoding",
     atomic = true,
     condition = function(context)
-      return ark.filetype.is_sourcefile(context.filetype)
+      return stl.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local bufnr = context.bufnr ---@type integer
@@ -67,7 +67,7 @@ function M.format(position)
     name = "file:format",
     atomic = true,
     condition = function(context)
-      return ark.filetype.is_sourcefile(context.filetype)
+      return stl.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local bufnr = context.bufnr ---@type integer
@@ -99,7 +99,7 @@ function M.indent(position)
     name = "file:indent",
     atomic = true,
     condition = function(context)
-      return ark.filetype.is_sourcefile(context.filetype)
+      return stl.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
       local shiftwidth = vim.bo[context.bufnr].shiftwidth ---@type integer

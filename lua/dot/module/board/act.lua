@@ -360,7 +360,7 @@ function M:__create_input_buf__()
   vim.b[bufnr].minihipatterns_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = ark.filetype.BOARD
+  vim.bo[bufnr].filetype = stl.filetype.BOARD
   vim.bo[bufnr].swapfile = false
 
   local initial_input = self._input:snapshot() ---@type string
@@ -407,7 +407,7 @@ function M:__create_preview_buf__()
   vim.b[bufnr].minihipatterns_disable = true
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = ark.filetype.BOARD
+  vim.bo[bufnr].filetype = stl.filetype.BOARD
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true

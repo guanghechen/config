@@ -71,7 +71,7 @@ function M.is_sourcefile(bufnr)
   end
 
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if ark.filetype.is_not_sourcefile(filetype) then
+  if stl.filetype.is_not_sourcefile(filetype) then
     return false
   end
 

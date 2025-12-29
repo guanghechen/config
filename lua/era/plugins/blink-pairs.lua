@@ -8,7 +8,7 @@ return {
     mappings = {
       enabled = true,
       cmdline = true,
-      disabled_filetypes = ark.filetype.list_not_sourcefile_filetypes(),
+      disabled_filetypes = stl.filetype.list_not_sourcefile_filetypes(),
     },
     highlights = {
       enabled = true,

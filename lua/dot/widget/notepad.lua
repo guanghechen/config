@@ -297,7 +297,7 @@ function M.new(props)
   self.max_height = props.max_height or MAX_HEIGHT
   self.min_width = props.min_width or MIN_WIDTH
   self.min_height = props.min_height or MIN_HEIGHT
-  self.filetype = props.filetype or ark.filetype.NOTEPAD
+  self.filetype = props.filetype or stl.filetype.NOTEPAD
   self.win_opts = vim.tbl_extend("force", { winhighlight = NOTEPAD_WIN_HIGHLIGHT }, props.win_opts or {})
   self._bufnr = nil
   self._winnr = nil

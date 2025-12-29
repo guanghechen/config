@@ -119,7 +119,7 @@ local function render(winnr)
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local filetype = vim.bo[bufnr].filetype ---@type string
-  if ark.filetype.has_external_winline(filetype) then
+  if stl.filetype.has_external_winline(filetype) then
     return
   end
 
@@ -155,7 +155,7 @@ local function render(winnr)
     return
   end
 
-  if ark.filetype.is_sourcefile(filetype) then
+  if stl.filetype.is_sourcefile(filetype) then
     vim.wo[winnr].winbar = txt(filepath, "f_wl_text")
     return
   end

@@ -26,7 +26,7 @@ local function create_mask_buf_as_needed()
     _terminal_mask_bufnr = bufnr
 
     vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].filetype = ark.filetype.TERM_MASK
+    vim.bo[bufnr].filetype = stl.filetype.TERM_MASK
     vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].readonly = true
     vim.bo[bufnr].swapfile = false
@@ -466,7 +466,7 @@ function M.__create_buf_as_needed__(termmeta)
 
   bufnr = vim.api.nvim_create_buf(false, true)
   vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].filetype = ark.filetype.TERM
+  vim.bo[bufnr].filetype = stl.filetype.TERM
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = false
   vim.bo[bufnr].swapfile = false

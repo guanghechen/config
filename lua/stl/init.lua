@@ -25,6 +25,7 @@ local __mods = {
 
   env = "stl.env",
   fileicon = "stl.fileicon",
+  filetype = "stl.filetype",
   icon = "stl.icon",
 }
 
@@ -37,6 +38,7 @@ local __mods = {
 ---
 ---@field public env                    stl.env
 ---@field public fileicon               stl.fileicon
+---@field public filetype               stl.filetype
 ---@field public icon                   stl.icon
 local M = setmetatable({
   __mods = __mods,

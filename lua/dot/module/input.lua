@@ -91,7 +91,7 @@ function M.open(opts, on_confirm)
   vim.bo[bufnr].buflisted = false
   vim.bo[bufnr].buftype = "prompt"
   vim.bo[bufnr].completefunc = "v:lua.require'dot.module.input'.complete"
-  vim.bo[bufnr].filetype = ark.filetype.UX_INPUT
+  vim.bo[bufnr].filetype = stl.filetype.UX_INPUT
   vim.bo[bufnr].omnifunc = "v:lua.require'dot.module.input'.complete"
   vim.bo[bufnr].swapfile = false
 

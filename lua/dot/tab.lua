@@ -338,7 +338,7 @@ function M.resolve_type(tabnr, force)
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.bo[bufnr].filetype ---@type string
-    if filetype == ark.filetype.DIFFVIEW_FILES or filetype == ark.filetype.DIFFVIEW_FILE_HISTORY then
+    if filetype == stl.filetype.DIFFVIEW_FILES or filetype == stl.filetype.DIFFVIEW_FILE_HISTORY then
       tabtype = ark.vim.tab.Types.DIFFVIEW ---@type ark.vim.tab.TypeEnum
       break
     end
