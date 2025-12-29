@@ -28,6 +28,7 @@ local __mods = {
   filetype = "stl.filetype",
   icon = "stl.icon",
   json = "stl.json",
+  stdout = "stl.stdout",
 }
 
 ---@class stl
@@ -42,6 +43,7 @@ local __mods = {
 ---@field public filetype               stl.filetype
 ---@field public icon                   stl.icon
 ---@field public json                   stl.json
+---@field public stdout                 stl.stdout
 local M = setmetatable({
   __mods = __mods,
   dict = dict,

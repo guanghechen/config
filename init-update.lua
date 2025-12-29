@@ -1,6 +1,7 @@
 require("bot").setup()
 
 _G.ark = require("ark") ---@type ark
+_G.stl = require("stl") ---@type stl
 _G.dot = require("dot") ---@type dot
 
 local default_storage = dot.get_default_storage() ---@type dot.context.storage
@@ -12,15 +13,15 @@ require("era.plugin")
 require("mason")
 local action = require("era.action.plugin.mason")
 
-ark.stdout.info("[guanghechen]", "Installing Mason packages...")
+stl.stdout.info("[guanghechen]", "Installing Mason packages...")
 action.install_all(false, function()
-  ark.stdout.success("[guanghechen]", "All Mason packages installed successfully!")
+  stl.stdout.success("[guanghechen]", "All Mason packages installed successfully!")
   local ok, err = pcall(function()
     vim.cmd("qa!")
   end)
 
   if not ok then
-    ark.stdout.error("[guanghechen]", "Error during exit: " .. tostring(err))
+    stl.stdout.error("[guanghechen]", "Error during exit: " .. tostring(err))
     os.exit(1)
   end
 end)

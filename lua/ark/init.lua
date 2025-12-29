@@ -229,7 +229,6 @@ local __mods = {
   G = "ark.G",
   hot = "ark.hot",
   reporter = "ark.reporter",
-  stdout = "ark.stdout",
   string = "ark.string",
   table = "ark.table",
   time = "ark.time",
@@ -252,7 +251,6 @@ local __mods = {
 ---@field public hot                    ark.hot
 ---@field public lang                   ark.lang
 ---@field public reporter               ark.reporter
----@field public stdout                 ark.stdout
 ---@field public string                 ark.string
 ---@field public table                  ark.table
 ---@field public theme                  ark.theme

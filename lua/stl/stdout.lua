@@ -10,7 +10,7 @@ local colors = {
   bold = "\27[1m",
 }
 
----@class ark.stdout
+---@class stl.stdout
 local M = {}
 
 ---Log a message with color and prefix
