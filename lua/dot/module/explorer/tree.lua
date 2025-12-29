@@ -8,16 +8,16 @@ local math_floor = math.floor
 ---@field public protocol               string
 ---@field public resource_manager       dot.module.explorer.resource.IManager
 ---@field public initial_root           ?string
----@field public o_flag_foldempty       ark.c.Observable
----@field public o_flag_hidden          ark.c.Observable
+---@field public o_flag_foldempty       stl.c.Observable
+---@field public o_flag_hidden          stl.c.Observable
 
 ---@class dot.module.explorer.Tree
 ---@field public fullname               string
 ---@field public name                   string
----@field public o_cursor_uri           ark.c.Observable
----@field public o_flag_foldempty       ark.c.Observable
----@field public o_flag_hidden          ark.c.Observable
----@field public o_root_uri             ark.c.Observable
+---@field public o_cursor_uri           stl.c.Observable
+---@field public o_flag_foldempty       stl.c.Observable
+---@field public o_flag_hidden          stl.c.Observable
+---@field public o_root_uri             stl.c.Observable
 ---@field public prev_root_uri          string|nil
 ---@field public select_mode            dot.module.explorer.SelectModeEnum
 ---@field public ticks                  dot.module.explorer.ITreeTicks
@@ -43,10 +43,10 @@ function M.new(props)
   local self = setmetatable({}, M)
   self.fullname = fullname
   self.name = name
-  self.o_cursor_uri = ark.c.Observable.from_value(default_root)
+  self.o_cursor_uri = stl.c.Observable.from_value(default_root)
   self.o_flag_foldempty = props.o_flag_foldempty
   self.o_flag_hidden = props.o_flag_hidden
-  self.o_root_uri = ark.c.Observable.from_value(default_root)
+  self.o_root_uri = stl.c.Observable.from_value(default_root)
   self.prev_root_uri = nil
   self.select_mode = "select"
   self.ticks = { structure = 0 }

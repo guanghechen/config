@@ -43,7 +43,7 @@ local config = {
 ---@field public meta                    dot.module.image.meta
 ---@field public done                    ?boolean
 ---@field public err                     ?string
----@field public proc                    ?ark.c.Proc
+---@field public proc                    ?stl.c.Proc
 
 ---@class dot.module.image.cmd
 ---@field public cmd                     (fun(step: dot.module.image.step): (dot.module.image.Proc|dot.module.image.Proc[]))|dot.module.image.Proc|dot.module.image.Proc[]
@@ -189,7 +189,7 @@ local commands = {
 ---@type table<string, boolean>
 local have = {}
 
----@type ark.c.Proc[]
+---@type stl.c.Proc[]
 local proc_queue = {}
 
 ---@type integer
@@ -197,7 +197,7 @@ local proc_running = 0
 
 local MAX_PROCS = 3
 
----@param proc                           ?ark.c.Proc
+---@param proc                           ?stl.c.Proc
 ---@return nil
 local function schedule(proc)
   if proc then
@@ -504,7 +504,7 @@ function Convert:__step__()
     end
   end
 
-  step.proc = ark.c.Proc.new({
+  step.proc = stl.c.Proc.new({
     run = false,
     cwd = cmd.cwd and state.tpl(cmd.cwd, data) or nil,
     cmd = cmd.cmd,

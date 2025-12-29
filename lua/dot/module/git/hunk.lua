@@ -5,28 +5,28 @@ local M = {}
 -- State management
 ----------------------------------------------------------------------------------------------------
 
----@type table<integer, ark.c.Observable>
+---@type table<integer, stl.c.Observable>
 local buffer_hunks_observables = {}
 
 ---@type table<integer, dot.module.git.Hunk[]|nil>
 local buffer_hunks = {}
 
----@type table<integer, ark.c.IUnsubscribable[]>
+---@type table<integer, stl.c.IUnsubscribable[]>
 local buffer_subscriptions = {}
 
 ---@param bufnr                         integer
----@return ark.c.Observable
+---@return stl.c.Observable
 function M.get_observable(bufnr)
   if not buffer_hunks_observables[bufnr] then
-    buffer_hunks_observables[bufnr] = ark.c.Observable.from_value({})
+    buffer_hunks_observables[bufnr] = stl.c.Observable.from_value({})
   end
   return buffer_hunks_observables[bufnr]
 end
 
 ---@param bufnr                         integer
----@param subscriber                    ark.c.ISubscriber
+---@param subscriber                    stl.c.ISubscriber
 ---@param ignore_initial                boolean|nil
----@return ark.c.IUnsubscribable
+---@return stl.c.IUnsubscribable
 function M.subscribe(bufnr, subscriber, ignore_initial)
   local observable = M.get_observable(bufnr)
   local unsubscribable = observable:subscribe(subscriber, ignore_initial)

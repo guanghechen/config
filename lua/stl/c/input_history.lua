@@ -1,15 +1,15 @@
-local __module_name__ = "ark.c.input_history" ---@type string
+local __module_name__ = "stl.c.input_history" ---@type string
 
----@class ark.c.InputHistory : ark.c.History
+---@class stl.c.InputHistory : stl.c.History
 ---@field public fullname               string
 ---@field public equals                 ark.t.IEquals
 ---@field protected _present            integer
----@field protected _stack              ark.c.CircularStack
+---@field protected _stack              stl.c.CircularStack
 local M = {}
 M.__index = M
 
----@param props                         ark.c.history.IProps
----@return ark.c.InputHistory
+---@param props                         stl.c.history.IProps
+---@return stl.c.InputHistory
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -20,21 +20,21 @@ function M.new(props)
   self.fullname = fullname
   self.equals = equals
   self._present = 0
-  self._stack = ark.c.CircularStack.new({ capacity = capacity })
+  self._stack = stl.c.CircularStack.new({ capacity = capacity })
   return self
 end
 
----@param props                         ark.c.history.IDeserializeProps
----@return ark.c.InputHistory
+---@param props                         stl.c.history.IDeserializeProps
+---@return stl.c.InputHistory
 function M.deserialize(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
-  local data = props.data ---@type ark.c.history.ISerializedData
+  local data = props.data ---@type stl.c.history.ISerializedData
 
   local self = setmetatable({}, M)
   self.fullname = fullname
   self.equals = props.equals or stl.fn.equals_shallow ---@type ark.t.IEquals
-  self._stack = ark.c.CircularStack.from_array(data.stack, props.capacity)
+  self._stack = stl.c.CircularStack.from_array(data.stack, props.capacity)
   self:go(data.present or math.huge)
   return self
 end
@@ -75,17 +75,17 @@ function M:collect()
   return self._stack:collect()
 end
 
----@return ark.c.history.ISerializedData
+---@return stl.c.history.ISerializedData
 function M:dump()
-  ---@type ark.c.history.ISerializedData
+  ---@type stl.c.history.ISerializedData
   return {
     present = self._present,
     stack = self._stack:collect(),
   }
 end
 
----@param params                        ark.c.history.IForkParams
----@return ark.c.InputHistory
+---@param params                        stl.c.history.IForkParams
+---@return stl.c.InputHistory
 function M:fork(params)
   local name = params.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
@@ -94,7 +94,7 @@ function M:fork(params)
   instance.fullname = fullname
   instance.equals = self.equals
   instance._present = self._present
-  instance._stack = ark.c.CircularStack.from(self._stack)
+  instance._stack = stl.c.CircularStack.from(self._stack)
   return instance
 end
 
@@ -111,7 +111,7 @@ end
 ---@return ark.t.T|nil
 ---@return integer
 function M:go(index)
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   local present = math.min(stack:size(), math.max(1, index)) ---@type integer
   self._present = present
   return stack:at(present), present
@@ -134,17 +134,17 @@ end
 
 ---@return fun(): ark.t.T, integer
 function M:iterator()
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   return stack:iterator()
 end
 
 ---@return fun(): ark.t.T, integer
 function M:iterator_reverse()
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   return stack:iterator_reverse()
 end
 
----@param data                          ark.c.history.ISerializedData
+---@param data                          stl.c.history.ISerializedData
 ---@return nil
 function M:load(data)
   local stack = data.stack ---@type ark.t.T[]
@@ -178,7 +178,7 @@ function M:push(element)
     return
   end
 
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   self:rearrange(function(item)
     return not self.equals(item, element)
   end)
@@ -189,7 +189,7 @@ end
 ---@param filter                        ark.t.IFilter
 ---@return nil
 function M:rearrange(filter)
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   local old_present = self._present ---@type integer
   local new_present = 0 ---@type integer
   local idx = 0 ---@type integer
@@ -217,14 +217,14 @@ end
 ---@return ark.t.T|nil
 ---@return integer
 function M:top()
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   return stack:top(), stack:size()
 end
 
 ---@param element                       ark.t.T
 ---@return nil
 function M:update_top(element)
-  local stack = self._stack ---@type ark.c.CircularStack
+  local stack = self._stack ---@type stl.c.CircularStack
   local present = stack:size()
   self._present = present
   stack:update(present, element)

@@ -1,9 +1,9 @@
----@class ark.c.circular_stack.IProps
+---@class stl.c.circular_stack.IProps
 ---@field public capacity               integer
 
 local _tmp_array = {} ---@type ark.t.T[]
 
----@class ark.c.CircularStack
+---@class stl.c.CircularStack
 ---@field protected _elements           ark.t.T[]
 ---@field protected _capacity           integer
 ---@field protected _size               integer
@@ -12,8 +12,8 @@ local _tmp_array = {} ---@type ark.t.T[]
 local M = {}
 M.__index = M
 
----@param props                         ark.c.circular_stack.IProps
----@return ark.c.CircularStack
+---@param props                         stl.c.circular_stack.IProps
+---@return stl.c.CircularStack
 function M.new(props)
   local capacity = math.max(1, props.capacity) ---@type integer
 
@@ -26,8 +26,8 @@ function M.new(props)
   return self
 end
 
----@param queue                         ark.c.CircularStack
----@return ark.c.CircularStack
+---@param queue                         stl.c.CircularStack
+---@return stl.c.CircularStack
 function M.from(queue)
   local elements = {} ---@type ark.t.T[]
   local size = 0 ---@type integer
@@ -47,7 +47,7 @@ end
 
 ---@param arr                           ark.t.T[]
 ---@param capacity                      integer
----@return ark.c.CircularStack
+---@return stl.c.CircularStack
 function M.from_array(arr, capacity)
   capacity = math.max(1, capacity) ---@type integer
   local elements = {} ---@type ark.t.T[]
@@ -132,9 +132,9 @@ function M:count(filter)
 end
 
 ---@param filter                        fun(element: ark.t.T, index: integer): boolean
----@return ark.c.CircularStack
+---@return stl.c.CircularStack
 function M:fork(filter)
-  local clone = M.new({ capacity = self._capacity }) ---@type ark.c.CircularStack
+  local clone = M.new({ capacity = self._capacity }) ---@type stl.c.CircularStack
 
   for element, index in self:iterator() do
     if filter(element, index) then

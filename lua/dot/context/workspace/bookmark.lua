@@ -2,7 +2,7 @@
 ---@field public pinned                 string[]
 
 ---@class dot.context.bookmark.state
----@field public pinned                 ark.c.Observable
+---@field public pinned                 stl.c.Observable
 
 ---@class dot.context.bookmark : dot.context.bookmark.state
 ---@field public defaults               fun(): dot.context.bookmark.data
@@ -54,6 +54,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.bookmark.data
-M.pinned = ark.c.Observable.from_value(_defaults.pinned) ---@type ark.c.Observable
+M.pinned = stl.c.Observable.from_value(_defaults.pinned) ---@type stl.c.Observable
 
 return M

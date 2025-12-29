@@ -118,14 +118,14 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?ark.c.History
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history ?stl.c.History
 ---@field public finder_title           string
 ---
----@field public replace_pattern        ?ark.c.Observable
----@field public replace_pattern_history ?ark.c.History
+---@field public replace_pattern        ?stl.c.Observable
+---@field public replace_pattern_history ?stl.c.History
 ---@field public replacer_title         ?string
----@field public flag_replace           ?ark.c.Observable
+---@field public flag_replace           ?stl.c.Observable
 ---
 ---@field public result_number          boolean
 ---@field public result_isselected      ?dot.module.searcher.result.IIsSelected
@@ -160,11 +160,11 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _flag_replace       ark.c.Observable|nil
----@field protected _flag_replace_unsub ark.c.IUnsubscribable|nil
+---@field protected _flag_replace       stl.c.Observable|nil
+---@field protected _flag_replace_unsub stl.c.IUnsubscribable|nil
 ---
----@field protected _search_pattern_history ?ark.c.History
----@field protected _replace_pattern_history ?ark.c.History
+---@field protected _search_pattern_history ?stl.c.History
+---@field protected _replace_pattern_history ?stl.c.History
 ---
 ---@field protected _on_cancel          dot.module.searcher.composer.basic.IOnCancel
 ---@field protected _on_closed          dot.module.searcher.composer.basic.IOnClosed
@@ -196,14 +196,14 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type ark.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type ark.t.IKeymap[]
 
-  local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History
+  local search_pattern = props.search_pattern ---@type stl.c.Observable
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
-  local replace_pattern = props.replace_pattern ---@type ark.c.Observable|nil
-  local replace_pattern_history = props.replace_pattern_history ---@type ark.c.History|nil
+  local replace_pattern = props.replace_pattern ---@type stl.c.Observable|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type stl.c.History|nil
   local replacer_title = props.replacer_title and string.format(" %s ", vim.trim(props.replacer_title)) or " Replace " ---@type string
-  local flag_replace = props.flag_replace ---@type ark.c.Observable|nil
+  local flag_replace = props.flag_replace ---@type stl.c.Observable|nil
 
   local result_number = not not props.result_number ---@type boolean
   local result_isselected = props.result_isselected ---@type dot.module.searcher.result.IIsSelected|nil
@@ -351,7 +351,7 @@ function M.new(props)
   end
 
   -- Observer for flag_replace to toggle replacer window visibility
-  local flag_replace_unsub = nil ---@type ark.c.IUnsubscribable|nil
+  local flag_replace_unsub = nil ---@type stl.c.IUnsubscribable|nil
   if flag_replace ~= nil then
     flag_replace_unsub = stl.fn.observe({ flag_replace }, function()
       if self:isvisible() then
@@ -377,7 +377,7 @@ function M:dispose()
   local result = self.result ---@type dot.module.searcher.Result
   local preview = self.preview ---@type dot.module.searcher.Preview|nil
   local on_disposed = self._on_disposed ---@type dot.module.searcher.composer.basic.IOnDisposed
-  local flag_replace_unsub = self._flag_replace_unsub ---@type ark.c.IUnsubscribable|nil
+  local flag_replace_unsub = self._flag_replace_unsub ---@type stl.c.IUnsubscribable|nil
   vim.schedule(function()
     local ok1, error1 = pcall(finder.dispose, finder)
     local ok2, error2 = pcall(result.dispose, result)
@@ -999,7 +999,7 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       key = "tr",
       desc = "searcher: toggle replace mode",
       callback = function()
-        local flag = self._flag_replace ---@type ark.c.Observable|nil
+        local flag = self._flag_replace ---@type stl.c.Observable|nil
         if flag ~= nil then
           flag:next(not flag:snapshot())
         end

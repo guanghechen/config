@@ -27,7 +27,7 @@ dot.module.git/
 
 ### state.lua
 
-维护全局 Git 状态，使用 `ark.c.Observable` 实现响应式更新：
+维护全局 Git 状态，使用 `stl.c.Observable` 实现响应式更新：
 
 ```lua
 M.o_branch          -- Observable<string>: 当前分支名

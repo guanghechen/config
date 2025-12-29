@@ -1,28 +1,28 @@
-local __module_name__ = "ark.c.subscribers" ---@type string
+local __module_name__ = "stl.c.subscribers" ---@type string
 
----@class ark.c.ISubscribable
----@field public subscribe              fun(self: ark.c.ISubscribable, subscriber: ark.c.ISubscriber, ignoreInitial?: boolean): ark.c.IUnsubscribable
+---@class stl.c.ISubscribable
+---@field public subscribe              fun(self: stl.c.ISubscribable, subscriber: stl.c.ISubscriber, ignoreInitial?: boolean): stl.c.IUnsubscribable
 
----@class ark.c.subscribers.IProps
+---@class stl.c.subscribers.IProps
 ---@field public ARRANGE_THRESHOLD      ?number
 
----@class ark.c.subscribers.ISubscriberItem
----@field public subscriber             ark.c.ISubscriber
+---@class stl.c.subscribers.ISubscriberItem
+---@field public subscriber             stl.c.ISubscriber
 ---@field public unsubscribed           boolean
 
----@type ark.c.IUnsubscribable
+---@type stl.c.IUnsubscribable
 local noop_unsubscribable = { unsubscribe = stl.fn.noop }
 
----@class ark.c.Subscribers : ark.c.ISubscribable, ark.c.IDisposable
+---@class stl.c.Subscribers : stl.c.ISubscribable, stl.c.IDisposable
 ---@field protected ARRANGE_THRESHOLD   number
 ---@field protected _disposed           boolean
----@field protected _items              ark.c.subscribers.ISubscriberItem[]
+---@field protected _items              stl.c.subscribers.ISubscriberItem[]
 ---@field protected _subscribing_count  integer
 local M = {}
 M.__index = M
 
----@param props                         ?ark.c.subscribers.IProps
----@return ark.c.Subscribers
+---@param props                         ?stl.c.subscribers.IProps
+---@return stl.c.Subscribers
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -32,7 +32,7 @@ function M.new(props)
   ---@type boolean
   self._disposed = false
 
-  ---@type ark.c.subscribers.ISubscriberItem[]
+  ---@type stl.c.subscribers.ISubscriberItem[]
   self._items = {}
 
   ---@type integer
@@ -58,7 +58,7 @@ function M:dispose()
   end
   self._disposed = true
 
-  local handler = ark.c.BatchHandler.new()
+  local handler = stl.c.BatchHandler.new()
   local items = self._items
 
   local i = 1
@@ -95,7 +95,7 @@ function M:notify(value, value_prev)
     return
   end
 
-  local handler = ark.c.BatchHandler.new()
+  local handler = stl.c.BatchHandler.new()
   local items = self._items
 
   local i = 1
@@ -114,8 +114,8 @@ function M:notify(value, value_prev)
   handler:cleanup()
 end
 
----@param subscriber                    ark.c.ISubscriber
----@return ark.c.IUnsubscribable
+---@param subscriber                    stl.c.ISubscriber
+---@return stl.c.IUnsubscribable
 function M:subscribe(subscriber)
   if subscriber:isdisposed() then
     return noop_unsubscribable
@@ -126,13 +126,13 @@ function M:subscribe(subscriber)
     return noop_unsubscribable
   end
 
-  ---@type ark.c.subscribers.ISubscriberItem
+  ---@type stl.c.subscribers.ISubscriberItem
   local item = { subscriber = subscriber, unsubscribed = false }
 
   table.insert(self._items, item)
   self._subscribing_count = self._subscribing_count + 1
 
-  ---@type ark.c.IUnsubscribable
+  ---@type stl.c.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if item.unsubscribed then
@@ -154,7 +154,7 @@ end
 function M:__arrange__()
   local items = self._items
   if #items >= self.ARRANGE_THRESHOLD and self._subscribing_count * 2 <= #items then
-    ---@type ark.c.subscribers.ISubscriberItem[]
+    ---@type stl.c.subscribers.ISubscriberItem[]
     local next_items = {}
 
     local i = 1

@@ -11,12 +11,12 @@
 ---@field public width                  integer
 
 ---@class dot.context.explorer.state
----@field public flag_foldempty         ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_show_hidden       ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
----@field public trash                  ark.c.Observable
----@field public width                  ark.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_show_hidden       stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
+---@field public trash                  stl.c.Observable
+---@field public width                  stl.c.Observable
 
 ---@class dot.context.explorer : dot.context.explorer.state
 ---@field public defaults               fun(): dot.context.explorer.data
@@ -99,22 +99,22 @@ end
 
 local _defaults = M.defaults() ---@type dot.context.explorer.data
 
----@type ark.c.Observable
-M.flag_foldempty = ark.c.Observable.from_value(_defaults.flag_foldempty)
+---@type stl.c.Observable
+M.flag_foldempty = stl.c.Observable.from_value(_defaults.flag_foldempty)
 
----@type ark.c.Observable
-M.flag_selected = ark.c.Observable.from_value(_defaults.flag_selected)
+---@type stl.c.Observable
+M.flag_selected = stl.c.Observable.from_value(_defaults.flag_selected)
 
----@type ark.c.Observable
-M.flag_show_hidden = ark.c.Observable.from_value(_defaults.flag_show_hidden)
+---@type stl.c.Observable
+M.flag_show_hidden = stl.c.Observable.from_value(_defaults.flag_show_hidden)
 
----@type ark.c.Observable
-M.flag_viewtype = ark.c.Observable.from_value(_defaults.flag_viewtype)
+---@type stl.c.Observable
+M.flag_viewtype = stl.c.Observable.from_value(_defaults.flag_viewtype)
 
----@type ark.c.Observable
-M.trash = ark.c.Observable.from_value(_defaults.trash)
+---@type stl.c.Observable
+M.trash = stl.c.Observable.from_value(_defaults.trash)
 
----@type ark.c.Observable
-M.width = ark.c.Observable.from_value(_defaults.width)
+---@type stl.c.Observable
+M.width = stl.c.Observable.from_value(_defaults.width)
 
 return M

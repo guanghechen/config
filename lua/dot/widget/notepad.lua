@@ -276,9 +276,9 @@ end
 ---@field protected _suspend_sync       boolean
 ---@field protected _buf_autocmds       integer[]
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar|nil
----@field protected _subscription_active ark.c.IUnsubscribable|nil
----@field protected _subscription_winbar ark.c.IUnsubscribable|nil
----@field protected _subscription_source ark.c.IUnsubscribable|nil
+---@field protected _subscription_active stl.c.IUnsubscribable|nil
+---@field protected _subscription_winbar stl.c.IUnsubscribable|nil
+---@field protected _subscription_source stl.c.IUnsubscribable|nil
 local M = {}
 M.__index = M
 
@@ -321,7 +321,7 @@ end
 ---@return nil
 function M:__setup_subscriptions__()
   self._subscription_active = dot.state.notepad.o_activated_uuid:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function(next_uuid)
         self:__on_active_uuid_changed__(next_uuid)
       end,
@@ -330,7 +330,7 @@ function M:__setup_subscriptions__()
   )
 
   self._subscription_winbar = dot.state.status.dirtier_notepadline:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         if self._nvimbar ~= nil then
           self._nvimbar:render()
@@ -341,7 +341,7 @@ function M:__setup_subscriptions__()
   )
 
   self._subscription_source = dot.context.module.notepad_source:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function(source_name)
         self:attach(source_name)
       end,

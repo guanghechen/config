@@ -23,9 +23,9 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@class dot.module.explorer.widget.IProps
 ---@field public name                   string
 ---@field public root                   ?string
----@field public o_flag_foldempty       ark.c.Observable
----@field public o_flag_hidden          ark.c.Observable
----@field public o_width                ark.c.Observable
+---@field public o_flag_foldempty       stl.c.Observable
+---@field public o_flag_hidden          stl.c.Observable
+---@field public o_width                stl.c.Observable
 ---@field public flags                  ?dot.module.explorer.widget.IFlagItem[]
 ---@field public on_disposed            ?fun(): nil
 
@@ -41,11 +41,11 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field protected _keymaps            ark.t.IKeymap[]
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
 ---@field protected _on_disposed        fun(): nil|nil
----@field protected _o_width            ark.c.Observable
+---@field protected _o_width            stl.c.Observable
 ---@field protected _prev_cursor_lnum   integer|nil
 ---@field protected _render_result      dot.module.explorer.view.IRenderResult|nil
 ---@field protected _resource_manager   dot.module.explorer.resource.FileManager
----@field protected _subscriptions      ark.c.IUnsubscribable[]
+---@field protected _subscriptions      stl.c.IUnsubscribable[]
 ---@field protected _tree               dot.module.explorer.Tree
 ---@field protected _view               dot.module.explorer.View
 ---@field protected _winnr              integer|nil
@@ -58,8 +58,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  local o_flag_foldempty = props.o_flag_foldempty ---@type ark.c.Observable
-  local o_flag_hidden = props.o_flag_hidden ---@type ark.c.Observable
+  local o_flag_foldempty = props.o_flag_foldempty ---@type stl.c.Observable
+  local o_flag_hidden = props.o_flag_hidden ---@type stl.c.Observable
   local show_hidden = o_flag_hidden:snapshot() ---@type boolean
 
   local self = setmetatable({}, M)
@@ -1383,7 +1383,7 @@ function M:__setup_subscriptions__()
   local tree = self._tree ---@type dot.module.explorer.Tree
 
   local sub_root_uri = tree.o_root_uri:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         self:__update_winbar__()
         dot.state.status.dirtier_tabline:mark_dirty()
@@ -1394,7 +1394,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_root_uri
 
   local sub_show_hidden = tree.o_flag_hidden:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function(show_hidden)
         self._resource_manager:set_show_hidden(show_hidden)
         self._tree:refresh(true)
@@ -1406,7 +1406,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_show_hidden
 
   local sub_foldempty = tree.o_flag_foldempty:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         self:__refresh__()
       end,
@@ -1416,7 +1416,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_foldempty
 
   local sub_width = self._o_width:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         self:resize()
       end,
@@ -1426,7 +1426,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_width
 
   local sub_flag_selected = dot.context.explorer.flag_selected:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         self:__refresh__()
       end,
@@ -1436,7 +1436,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_flag_selected
 
   local sub_flag_viewtype = dot.context.explorer.flag_viewtype:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         self:__refresh__()
       end,
@@ -1446,7 +1446,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_flag_viewtype
 
   local sub_git_staged = dot.git.state.o_staged_files:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         if self:isvisible() then
           self:__render__()
@@ -1458,7 +1458,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_git_staged
 
   local sub_git_unstaged = dot.git.state.o_unstaged_files:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         if self:isvisible() then
           self:__render__()
@@ -1470,7 +1470,7 @@ function M:__setup_subscriptions__()
   self._subscriptions[#self._subscriptions + 1] = sub_git_unstaged
 
   local sub_diagnostic = dot.lsp.diagnostic.subscribe_all(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         if self:isvisible() then
           self:__render__()

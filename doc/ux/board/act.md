@@ -191,7 +191,7 @@ lua/dot/module/clipboard/mac.lua -> lua/dot/haha/mac.lua
 
 ### 防抖渲染
 
-预览窗口的渲染使用 `ark.c.Scheduler` 进行防抖处理（64ms），避免频繁输入时的性能问题。
+预览窗口的渲染使用 `stl.c.Scheduler` 进行防抖处理（64ms），避免频繁输入时的性能问题。
 
 ### 窗口布局
 

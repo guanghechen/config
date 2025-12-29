@@ -11,7 +11,7 @@ local __module_name__ = "dot.module.searcher.finder" ---@type string
 ---@class dot.module.searcher.IFinderProps
 ---@field public name                   string
 ---@field public keymaps                ark.t.IKeymap[]
----@field public input                  ark.c.Observable
+---@field public input                  stl.c.Observable
 ---@field public title                  string
 ---@field public prompt_sign?           string
 ---@field public prompt_sign_hl?        string
@@ -19,8 +19,8 @@ local __module_name__ = "dot.module.searcher.finder" ---@type string
 ---@class dot.module.searcher.Finder
 ---@field public fullname               string
 ---@field public keymaps                ark.t.IKeymap[]
----@field public input                  ark.c.Observable
----@field public linecount              ark.c.Observable
+---@field public input                  stl.c.Observable
+---@field public linecount              stl.c.Observable
 ---@field public title                  string
 ---@field public prompt_sign_group      string
 ---@field public prompt_sign_name       string
@@ -37,8 +37,8 @@ function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local keymaps = props.keymaps ---@type ark.t.IKeymap[]
-  local input = props.input ---@type ark.c.Observable
-  local linecount = ark.c.Observable.from_value(0) ---@type ark.c.Observable
+  local input = props.input ---@type stl.c.Observable
+  local linecount = stl.c.Observable.from_value(0) ---@type stl.c.Observable
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
   local prompt_sign = props.prompt_sign ---@type string|nil
   local prompt_sign_hl = props.prompt_sign_hl or "m_pk_finder_prompt" ---@type string
@@ -76,7 +76,7 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local linecount = self.linecount ---@type ark.c.Observable
+  local linecount = self.linecount ---@type stl.c.Observable
 
   self.input = nil
   self.keymaps = nil

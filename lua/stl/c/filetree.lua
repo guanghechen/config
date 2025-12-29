@@ -1,31 +1,31 @@
-local __module_name__ = "ark.c.filetree" ---@type string
+local __module_name__ = "stl.c.filetree" ---@type string
 
----@alias ark.c.IFiletreeTraverseConditional
----| fun(ctx: ark.c.IFiletreeTraverseContext, node: ark.c.IFiletreeNode, cur: integer): ark.c.ITreeTraverseConditionalEnum
+---@alias stl.c.IFiletreeTraverseConditional
+---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer): stl.c.ITreeTraverseConditionalEnum
 
----@alias ark.c.IFiletreeTraverseHandler
----| fun(ctx: ark.c.IFiletreeTraverseContext, node: ark.c.IFiletreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
+---@alias stl.c.IFiletreeTraverseHandler
+---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer, is_lastchild: boolean, onlychild: string|nil, childcount: integer): nil
 
----@alias ark.c.IFiletreeTraverseRecursive
----| fun(ctx: ark.c.IFiletreeTraverseContext, node: ark.c.IFiletreeNode, cur: integer, is_lastchild: boolean): nil
+---@alias stl.c.IFiletreeTraverseRecursive
+---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer, is_lastchild: boolean): nil
 
----@alias ark.c.IFiletreeQuickTraverseHandler
----| fun(ctx: ark.c.IFiletreeTraverseContext, node: ark.c.IFiletreeNode, cur: integer): nil
+---@alias stl.c.IFiletreeQuickTraverseHandler
+---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer): nil
 
----@alias ark.c.IFiletreeQuickTraverseRecursive
----| fun(ctx: ark.c.IFiletreeTraverseContext, node: ark.c.IFiletreeNode, cur: integer): nil
+---@alias stl.c.IFiletreeQuickTraverseRecursive
+---| fun(ctx: stl.c.IFiletreeTraverseContext, node: stl.c.IFiletreeNode, cur: integer): nil
 
----@alias ark.c.IFiletreeUnsafeTraverseCallback
----| fun(ctx: ark.c.IFiletreeTraverseContext): nil
+---@alias stl.c.IFiletreeUnsafeTraverseCallback
+---| fun(ctx: stl.c.IFiletreeTraverseContext): nil
 
----@class ark.c.IFiletreeTraverseContext
----@field public nodemap                table<string, ark.c.IFiletreeNode>
----@field public rootnode               ark.c.IFiletreeNode
+---@class stl.c.IFiletreeTraverseContext
+---@field public nodemap                table<string, stl.c.IFiletreeNode>
+---@field public rootnode               stl.c.IFiletreeNode
 
----@class ark.c.IFiletreeNode : ark.c.ITreeNode
----@field public data                   ark.c.IFiletreeNodeData
+---@class stl.c.IFiletreeNode : stl.c.ITreeNode
+---@field public data                   stl.c.IFiletreeNodeData
 
----@class ark.c.IFiletreeNodeData
+---@class stl.c.IFiletreeNodeData
 ---@field public basename               string
 ---@field public fileicon               string
 ---@field public fileicon_hln           string
@@ -44,7 +44,7 @@ local FILEPATH_TO_UUID = {
 local FILETREE_ROOT_FILEPATH = stl.env.IS_WIN and "" or "/" ---@type string
 local FILETREE_ROOT_UUID = FILEPATH_TO_UUID[FILETREE_ROOT_FILEPATH] ---@type string
 
----@type table<string, ark.c.IFiletreeNodeData>
+---@type table<string, stl.c.IFiletreeNodeData>
 local FILENODE_DATAMAP = {
   [FILETREE_ROOT_UUID] = {
     basename = FILETREE_ROOT_FILEPATH,
@@ -61,51 +61,51 @@ local FILETYPE_PRIORITY_MAP = {
   file = 3,
 }
 
----@class ark.c.IFiletreeProps
+---@class stl.c.IFiletreeProps
 ---@field public name                   string
 
----@class ark.c.IReadonlyFiletree : ark.c.IReadonlyTree
+---@class stl.c.IReadonlyFiletree : stl.c.IReadonlyTree
 ---@field public fullname               string
 ---@field public root                   string
----@field public isdisposed             fun(self: ark.c.IReadonlyFiletree): boolean
----@field public isdescendant           fun(self: ark.c.IReadonlyFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: ark.c.IReadonlyFiletree, uuid: string): boolean
----@field public retrieve               fun(self: ark.c.IReadonlyFiletree, uuid: string): ark.c.IFiletreeNode|nil
----@field public quick_traverse         fun(self: ark.c.IReadonlyFiletree, root: string|nil, fn: ark.c.IFiletreeQuickTraverseHandler, conditional: ark.c.IFiletreeTraverseConditional|nil): ark.c.IReadonlyFiletree
----@field public traverse               fun(self: ark.c.IReadonlyFiletree, root: string|nil, fn: ark.c.IFiletreeTraverseHandler, conditional: ark.c.IFiletreeTraverseConditional|nil): ark.c.IReadonlyFiletree
----@field public unsafe_traverse        fun(self: ark.c.IReadonlyFiletree, root: string|nil, traverse: ark.c.IFiletreeUnsafeTraverseCallback): ark.c.IReadonlyFiletree
----@field public calc_include_uuid_set  fun(self: ark.c.IReadonlyFiletree, uuids: string[]): table<string, boolean>
+---@field public isdisposed             fun(self: stl.c.IReadonlyFiletree): boolean
+---@field public isdescendant           fun(self: stl.c.IReadonlyFiletree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: stl.c.IReadonlyFiletree, uuid: string): boolean
+---@field public retrieve               fun(self: stl.c.IReadonlyFiletree, uuid: string): stl.c.IFiletreeNode|nil
+---@field public quick_traverse         fun(self: stl.c.IReadonlyFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IReadonlyFiletree
+---@field public traverse               fun(self: stl.c.IReadonlyFiletree, root: string|nil, fn: stl.c.IFiletreeTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IReadonlyFiletree
+---@field public unsafe_traverse        fun(self: stl.c.IReadonlyFiletree, root: string|nil, traverse: stl.c.IFiletreeUnsafeTraverseCallback): stl.c.IReadonlyFiletree
+---@field public calc_include_uuid_set  fun(self: stl.c.IReadonlyFiletree, uuids: string[]): table<string, boolean>
 
----@class ark.c.IFiletree : ark.c.ITree , ark.c.IReadonlyFiletree
+---@class stl.c.IFiletree : stl.c.ITree , stl.c.IReadonlyFiletree
 ---@field public fullname               string
 ---@field public root                   string
----@field public clear                  fun(self: ark.c.IFiletree): ark.c.IFiletree
----@field public dispose                fun(self: ark.c.IFiletree): nil
----@field public isdisposed             fun(self: ark.c.IFiletree): boolean
----@field public isdescendant           fun(self: ark.c.IFiletree, ancestor: string, uuid: string): boolean
----@field public isexistent             fun(self: ark.c.IFiletree, uuid: string): boolean
----@field public retrieve               fun(self: ark.c.IFiletree, uuid: string): ark.c.IFiletreeNode|nil
----@field public quick_traverse         fun(self: ark.c.IFiletree, root: string|nil, fn: ark.c.IFiletreeQuickTraverseHandler, conditional: ark.c.IFiletreeTraverseConditional|nil): ark.c.IFiletree
----@field public traverse               fun(self: ark.c.IFiletree, root: string|nil, fn: ark.c.IFiletreeTraverseHandler, conditional: ark.c.IFiletreeTraverseConditional|nil): ark.c.IFiletree
----@field public unsafe_traverse        fun(self: ark.c.IFiletree, root: string|nil, traverse: ark.c.IFiletreeUnsafeTraverseCallback): ark.c.IFiletree
----@field public calc_include_uuid_set  fun(self: ark.c.IFiletree, uuids: string[]): table<string, boolean>
----@field public empty                  fun(self: ark.c.IFiletree, uuid: string): ark.c.IFiletree
----@field public insert                 fun(self: ark.c.IFiletree, parent: string, uuid: string, data: ark.c.IFiletreeNodeData): ark.c.IFiletreeNode
----@field public insert_directory_absolute fun(self: ark.c.IFiletree, dirpath: string): ark.c.IFiletreeNode
----@field public insert_directory_relative fun(self: ark.c.IFiletree, cwd: string, dirpath: string): ark.c.IFiletreeNode
----@field public insert_file_absolute   fun(self: ark.c.IFiletree, filepath: string): ark.c.IFiletreeNode
----@field public insert_file_relative   fun(self: ark.c.IFiletree, cwd: string, filepath: string): ark.c.IFiletreeNode
----@field public print                  fun(self: ark.c.IFiletree, rootuuid: string|nil): string[]
----@field public remove                 fun(self: ark.c.IFiletree, uuid: string): ark.c.IFiletree
----@field public reset                  fun(self: ark.c.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): ark.c.IFiletree
+---@field public clear                  fun(self: stl.c.IFiletree): stl.c.IFiletree
+---@field public dispose                fun(self: stl.c.IFiletree): nil
+---@field public isdisposed             fun(self: stl.c.IFiletree): boolean
+---@field public isdescendant           fun(self: stl.c.IFiletree, ancestor: string, uuid: string): boolean
+---@field public isexistent             fun(self: stl.c.IFiletree, uuid: string): boolean
+---@field public retrieve               fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletreeNode|nil
+---@field public quick_traverse         fun(self: stl.c.IFiletree, root: string|nil, fn: stl.c.IFiletreeQuickTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IFiletree
+---@field public traverse               fun(self: stl.c.IFiletree, root: string|nil, fn: stl.c.IFiletreeTraverseHandler, conditional: stl.c.IFiletreeTraverseConditional|nil): stl.c.IFiletree
+---@field public unsafe_traverse        fun(self: stl.c.IFiletree, root: string|nil, traverse: stl.c.IFiletreeUnsafeTraverseCallback): stl.c.IFiletree
+---@field public calc_include_uuid_set  fun(self: stl.c.IFiletree, uuids: string[]): table<string, boolean>
+---@field public empty                  fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletree
+---@field public insert                 fun(self: stl.c.IFiletree, parent: string, uuid: string, data: stl.c.IFiletreeNodeData): stl.c.IFiletreeNode
+---@field public insert_directory_absolute fun(self: stl.c.IFiletree, dirpath: string): stl.c.IFiletreeNode
+---@field public insert_directory_relative fun(self: stl.c.IFiletree, cwd: string, dirpath: string): stl.c.IFiletreeNode
+---@field public insert_file_absolute   fun(self: stl.c.IFiletree, filepath: string): stl.c.IFiletreeNode
+---@field public insert_file_relative   fun(self: stl.c.IFiletree, cwd: string, filepath: string): stl.c.IFiletreeNode
+---@field public print                  fun(self: stl.c.IFiletree, rootuuid: string|nil): string[]
+---@field public remove                 fun(self: stl.c.IFiletree, uuid: string): stl.c.IFiletree
+---@field public reset                  fun(self: stl.c.IFiletree, cwd: string, filepaths: string[], with_locations: boolean): stl.c.IFiletree
 
----@class ark.c.Filetree : ark.c.IFiletree
+---@class stl.c.Filetree : stl.c.IFiletree
 ---@field public fullname               string
 ---@field protected _disposed           boolean
----@field protected _nodemap            table<string, ark.c.ITreeNode>
+---@field protected _nodemap            table<string, stl.c.ITreeNode>
 local M = {}
 M.__index = M
-setmetatable(M, ark.c.Tree)
+setmetatable(M, stl.c.Tree)
 
 ---@param filepath                      string
 ---@return boolean
@@ -146,7 +146,7 @@ end
 ---@param filepath                      string
 ---@param filetype                      "directory" | "file"
 ---@param force                         boolean
----@return ark.c.IFiletreeNodeData
+---@return stl.c.IFiletreeNodeData
 ---@return string
 function M.resolve(filepath, filetype, force)
   local nodeuuid = FILEPATH_TO_UUID[filepath] ---@type string|nil
@@ -167,7 +167,7 @@ function M.resolve(filepath, filetype, force)
       fileicon, fileicon_hln = stl.fileicon.get_file_icon(basename) ---@type string, string
     end
 
-    ---@type ark.c.IFiletreeNodeData
+    ---@type stl.c.IFiletreeNodeData
     nodedata = {
       basename = basename,
       fileicon = fileicon,
@@ -197,20 +197,20 @@ function M.resolve(filepath, filetype, force)
   return nodedata, nodeuuid
 end
 
----@param props                         ark.c.IFiletreeProps
----@return ark.c.Filetree
+---@param props                         stl.c.IFiletreeProps
+---@return stl.c.Filetree
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s@%s", __module_name__, name) ---@type string
 
-  ---@type ark.c.Tree
-  local tree = ark.c.Tree.new({
+  ---@type stl.c.Tree
+  local tree = stl.c.Tree.new({
     name = name,
     fullname = fullname,
     rootnodedata = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true),
     node_sorter = function(left, right)
-      ---@cast left                     ark.c.IFiletreeNode
-      ---@cast right                    ark.c.IFiletreeNode
+      ---@cast left                     stl.c.IFiletreeNode
+      ---@cast right                    stl.c.IFiletreeNode
       if left.data.filetype == right.data.filetype then
         return left.data.basename < right.data.basename
       end
@@ -222,21 +222,21 @@ function M.new(props)
   })
 
   local self = setmetatable(tree, M)
-  ---@cast self                         ark.c.Filetree
+  ---@cast self                         stl.c.Filetree
 
   return self
 end
 
 ---@param dirpath                       string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 function M:insert_directory_absolute(dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
-  ---@cast nodemap                      table<string, ark.c.IFiletreeNode>
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  ---@cast nodemap                      table<string, stl.c.IFiletreeNode>
 
   local nodeuuid = M.uuid(dirpath) ---@type string
-  local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+  local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
     local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
@@ -247,7 +247,7 @@ function M:insert_directory_absolute(dirpath)
     if stl.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -258,7 +258,7 @@ function M:insert_directory_absolute(dirpath)
     for index = 2, N, 1 do
       p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -272,21 +272,21 @@ end
 
 ---@param cwd                           string
 ---@param dirpath                       string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 function M:insert_directory_relative(cwd, dirpath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
-  ---@cast nodemap                      table<string, ark.c.IFiletreeNode>
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  ---@cast nodemap                      table<string, stl.c.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string
-  local cwdnode = nodemap[cwduuid] ---@type ark.c.IFiletreeNode|nil
+  local cwdnode = nodemap[cwduuid] ---@type stl.c.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. dirpath) ---@type string
-  local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+  local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
     local pieces = yoz.path.split(dirpath, false) ---@type string[]
     local N = #pieces ---@type integer
@@ -297,7 +297,7 @@ function M:insert_directory_relative(cwd, dirpath)
     for index = 1, N, 1 do
       p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -310,15 +310,15 @@ function M:insert_directory_relative(cwd, dirpath)
 end
 
 ---@param filepath                      string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 function M:insert_file_absolute(filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
-  ---@cast nodemap                      table<string, ark.c.IFiletreeNode>
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  ---@cast nodemap                      table<string, stl.c.IFiletreeNode>
 
   local nodeuuid = M.uuid(filepath) ---@type string
-  local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+  local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
     local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
@@ -329,7 +329,7 @@ function M:insert_file_absolute(filepath)
     if stl.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -340,7 +340,7 @@ function M:insert_file_absolute(filepath)
     for index = 2, N, 1 do
       p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -352,7 +352,7 @@ function M:insert_file_absolute(filepath)
     local basename = pieces[N + 1] ---@type string
     p = p .. stl.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
-    node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+    node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
       node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -364,21 +364,21 @@ end
 
 ---@param cwd                           string
 ---@param filepath                      string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 function M:insert_file_relative(cwd, filepath)
   self:__health__()
 
-  local nodemap = self._nodemap ---@type table<string, ark.c.ITreeNode>
-  ---@cast nodemap                      table<string, ark.c.IFiletreeNode>
+  local nodemap = self._nodemap ---@type table<string, stl.c.ITreeNode>
+  ---@cast nodemap                      table<string, stl.c.IFiletreeNode>
 
   local cwduuid = M.uuid(cwd) ---@type string
-  local cwdnode = nodemap[cwduuid] ---@type ark.c.IFiletreeNode|nil
+  local cwdnode = nodemap[cwduuid] ---@type stl.c.IFiletreeNode|nil
   if cwdnode == nil or cwdnode.data.filetype ~= "directory" then
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
   local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. filepath) ---@type string
-  local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+  local node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
     local pieces = yoz.path.split(filepath, false) ---@type string[]
     local N = #pieces - 1 ---@type integer
@@ -389,7 +389,7 @@ function M:insert_file_relative(cwd, filepath)
     for index = 1, N, 1 do
       p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
-      node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+      node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
         local nodedata = M.resolve(p, "directory", true)
         node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -401,7 +401,7 @@ function M:insert_file_relative(cwd, filepath)
     local basename = pieces[N + 1] ---@type string
     p = p .. stl.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
-    node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
+    node = nodemap[nodeuuid] ---@type stl.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
       local nodedata = M.resolve(p, "file", true)
       node = self:insert(uuid_parent, nodeuuid, nodedata)
@@ -414,7 +414,7 @@ end
 ---@param cwd                           string
 ---@param filepaths                     string[]
 ---@param with_locations                boolean
----@return ark.c.Filetree
+---@return stl.c.Filetree
 function M:reset(cwd, filepaths, with_locations)
   self:__health__()
   self:clear()
@@ -423,7 +423,7 @@ function M:reset(cwd, filepaths, with_locations)
     return self
   end
 
-  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type ark.c.IFiletreeNodeData, string
+  local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type stl.c.IFiletreeNodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
   cwd = yoz.path.normalize(cwd, true, stl.env.PATH_SEP)

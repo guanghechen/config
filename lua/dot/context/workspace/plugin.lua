@@ -3,8 +3,8 @@
 ---@field public treesitter_context     boolean
 
 ---@class dot.context.plugin.state
----@field public render_markdown        ark.c.Observable
----@field public treesitter_context     ark.c.Observable
+---@field public render_markdown        stl.c.Observable
+---@field public treesitter_context     stl.c.Observable
 
 ---@class dot.context.plugin : dot.context.plugin.state
 ---@field public defaults               fun(): dot.context.plugin.data
@@ -60,7 +60,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.plugin.data
-M.render_markdown = ark.c.Observable.from_value(_defaults.render_markdown)
-M.treesitter_context = ark.c.Observable.from_value(_defaults.treesitter_context)
+M.render_markdown = stl.c.Observable.from_value(_defaults.render_markdown)
+M.treesitter_context = stl.c.Observable.from_value(_defaults.treesitter_context)
 
 return M

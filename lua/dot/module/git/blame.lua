@@ -7,10 +7,10 @@ local M = {}
 ---@type table<integer, table<integer, dot.module.git.BlameInfo>>
 local cache = {}
 
----@type table<integer, ark.c.Proc|nil>
+---@type table<integer, stl.c.Proc|nil>
 local running_procs = {}
 
----@type table<integer, ark.c.Proc|nil>
+---@type table<integer, stl.c.Proc|nil>
 local running_buffer_procs = {}
 
 ---@param output                     string
@@ -256,7 +256,7 @@ local function run_blame(bufnr, file, cwd, callback)
 
   local args = { "-C", cwd, "blame", "--porcelain", "--", file }
 
-  local proc = ark.c.Proc.new({
+  local proc = stl.c.Proc.new({
     cmd = "git",
     args = args,
     timeout = 30000,
@@ -590,7 +590,7 @@ function M.buffer_show(bufnr)
 
   local args = { "-C", cwd, "blame", "--porcelain", "--", file } ---@type string[]
 
-  local proc = ark.c.Proc.new({
+  local proc = stl.c.Proc.new({
     cmd = "git",
     args = args,
     timeout = 60000,

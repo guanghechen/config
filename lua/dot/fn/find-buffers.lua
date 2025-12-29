@@ -15,11 +15,11 @@ local title = "Find Buffers" ---@type string
 ---@field public icon_hl                string
 
 local scopes = vim.list_slice(dot.context.select.find_buffer_scopes) ---@type dot.e.FindBufferScope[]
-local o_scope = dot.context.select.find_buffer_scope ---@type ark.c.Observable
-local o_search_pattern = dot.context.select.find_buffer.search_pattern ---@type ark.c.Observable
-local o_flag_fuzzy = dot.context.select.find_buffer.flag_fuzzy ---@type ark.c.Observable
-local o_flag_regex = dot.context.select.find_buffer.flag_regex ---@type ark.c.Observable
-local o_flag_case_sensitive = dot.context.select.find_buffer.flag_case_sensitive ---@type ark.c.Observable
+local o_scope = dot.context.select.find_buffer_scope ---@type stl.c.Observable
+local o_search_pattern = dot.context.select.find_buffer.search_pattern ---@type stl.c.Observable
+local o_flag_fuzzy = dot.context.select.find_buffer.flag_fuzzy ---@type stl.c.Observable
+local o_flag_regex = dot.context.select.find_buffer.flag_regex ---@type stl.c.Observable
+local o_flag_case_sensitive = dot.context.select.find_buffer.flag_case_sensitive ---@type stl.c.Observable
 
 local IGNORED_FILETYPES = {
   stl.filetype.UX_PICKER_FINDER,

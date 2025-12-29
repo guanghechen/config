@@ -73,7 +73,7 @@ function M.flags(position, flags)
   return component
 end
 
----@param o_root_uri                    ark.c.Observable
+---@param o_root_uri                    stl.c.Observable
 ---@param position                      ark.e.NvimbarPositionEnum
 ---@param flags                         dot.module.nvimbar.component.explorer.IFlagItem[]
 ---@param get_width                     fun(): integer
@@ -153,7 +153,7 @@ function M.winbar(o_root_uri, position, flags, get_width)
   return component
 end
 
----@param o_root_uri                    ark.c.Observable
+---@param o_root_uri                    stl.c.Observable
 ---@return dot.module.nvimbar.IRawComponent
 function M.path(o_root_uri)
   local hln_path = "f_tl_explorer_path" ---@type string
@@ -234,7 +234,7 @@ function M.tabline(position)
   local cb_flag_hidden = ark.G.register_anonymous_fn(function()
     if dot.widget.explorer.widget ~= nil then
       local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
-      local o_flag_hidden = tree.o_flag_hidden ---@type ark.c.Observable
+      local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
       o_flag_hidden:next(not o_flag_hidden:snapshot())
     else
       local current = dot.context.explorer.flag_show_hidden:snapshot()
@@ -285,7 +285,7 @@ function M.tabline(position)
 
     if dot.widget.explorer.widget ~= nil then
       local tree = dot.widget.explorer.widget:get_tree() ---@type dot.module.explorer.Tree
-      local o_flag_hidden = tree.o_flag_hidden ---@type ark.c.Observable
+      local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
       show_hidden = o_flag_hidden:snapshot()
     else
       show_hidden = dot.context.explorer.flag_show_hidden:snapshot()

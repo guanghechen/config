@@ -35,7 +35,7 @@ local __module_name__ = "dot.module.board.act" ---@type string
 ---@field protected _preview_bufnr      integer|nil
 ---@field protected _preview_winnr      integer|nil
 ---@field protected _ns                 integer
----@field protected _input              ark.c.Observable
+---@field protected _input              stl.c.Observable
 ---@field protected _preview_debounced  ark.timer.IDisposableCallable
 
 ---@class dot.module.board.Act : dot.module.board.act.IState
@@ -97,7 +97,7 @@ function M.new(props)
   local recommended_width = math.max(0.1, props.width or 0.6) ---@type number
   local get_width = props.get_width ---@type dot.module.board.act.IGetWidth|nil
 
-  local input = ark.c.Observable.from_value(initial_input) ---@type ark.c.Observable
+  local input = stl.c.Observable.from_value(initial_input) ---@type stl.c.Observable
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -168,7 +168,7 @@ function M:dispose()
   local input_winnr = self._input_winnr ---@type integer|nil
   local preview_bufnr = self._preview_bufnr ---@type integer|nil
   local preview_winnr = self._preview_winnr ---@type integer|nil
-  local input = self._input ---@type ark.c.Observable
+  local input = self._input ---@type stl.c.Observable
   local preview_debounced = self._preview_debounced ---@type ark.timer.IDisposableCallable
 
   self._input_bufnr = nil

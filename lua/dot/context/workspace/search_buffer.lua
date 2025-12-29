@@ -4,19 +4,19 @@
 ---@field public flag_replace           boolean
 ---@field public flag_case_sensitive    boolean
 ---@field public search_pattern         string
----@field public search_pattern_history ark.c.history.ISerializedData
+---@field public search_pattern_history stl.c.history.ISerializedData
 ---@field public replace_pattern        string
----@field public replace_pattern_history ark.c.history.ISerializedData
+---@field public replace_pattern_history stl.c.history.ISerializedData
 
 ---@class dot.context.search_buffer.state
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_replace           ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ark.c.History
----@field public replace_pattern        ark.c.Observable
----@field public replace_pattern_history ark.c.History
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_replace           stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history stl.c.History
+---@field public replace_pattern        stl.c.Observable
+---@field public replace_pattern_history stl.c.History
 
 ---@class dot.context.search_buffer : dot.context.search_buffer.state
 ---@field public defaults               fun(): dot.context.search_buffer.data
@@ -118,18 +118,18 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.search_buffer.data
-M.flag_fuzzy = ark.c.Observable.from_value(_defaults.flag_fuzzy)
-M.flag_regex = ark.c.Observable.from_value(_defaults.flag_regex)
-M.flag_replace = ark.c.Observable.from_value(_defaults.flag_replace)
-M.flag_case_sensitive = ark.c.Observable.from_value(_defaults.flag_case_sensitive)
-M.search_pattern = ark.c.Observable.from_value(_defaults.search_pattern)
-M.search_pattern_history = ark.c.History.deserialize({
+M.flag_fuzzy = stl.c.Observable.from_value(_defaults.flag_fuzzy)
+M.flag_regex = stl.c.Observable.from_value(_defaults.flag_regex)
+M.flag_replace = stl.c.Observable.from_value(_defaults.flag_replace)
+M.flag_case_sensitive = stl.c.Observable.from_value(_defaults.flag_case_sensitive)
+M.search_pattern = stl.c.Observable.from_value(_defaults.search_pattern)
+M.search_pattern_history = stl.c.History.deserialize({
   name = "search_buffer.search_pattern",
   capacity = 100,
   data = _defaults.search_pattern_history,
 })
-M.replace_pattern = ark.c.Observable.from_value(_defaults.replace_pattern)
-M.replace_pattern_history = ark.c.History.deserialize({
+M.replace_pattern = stl.c.Observable.from_value(_defaults.replace_pattern)
+M.replace_pattern_history = stl.c.History.deserialize({
   name = "search_buffer.replace_pattern",
   capacity = 100,
   data = _defaults.replace_pattern_history,

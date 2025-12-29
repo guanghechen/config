@@ -103,8 +103,8 @@ local config = {
   },
 }
 
-local __TASKS__ = ark.c.CircularQueue.new({ capacity = 50 })
-local __TASK_HISTORY__ = ark.c.CircularQueue.new({ capacity = 200 })
+local __TASKS__ = stl.c.CircularQueue.new({ capacity = 50 })
+local __TASK_HISTORY__ = stl.c.CircularQueue.new({ capacity = 200 })
 local __WINS__ = {} ---@type dot.t.INotifierWindow[]
 
 ---@param task                          dot.t.INotifierTask
@@ -175,14 +175,14 @@ setmetatable(M, {
   end,
 })
 
----@type ark.c.Scheduler
-local scheduler = ark.c.Scheduler.new({
+---@type stl.c.Scheduler
+local scheduler = stl.c.Scheduler.new({
   name = __module_name__,
   mode = "throttle",
   delay = 256,
   timeout = 3000,
   silent = stl.fn.truthy,
-  value = ark.c.Observable.from_value(true),
+  value = stl.c.Observable.from_value(true),
   task = function()
     local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
     if notification_paused then

@@ -7,7 +7,7 @@ local __module_name__ = "era.action.lsp.reference" ---@type string
 ---@field public col                    integer
 ---@field public col_end                integer
 
-local search_pattern = ark.c.Observable.from_value("")
+local search_pattern = stl.c.Observable.from_value("")
 local flag_foldempty = dot.context.select.lsp_reference.flag_foldempty
 local flag_fuzzy = dot.context.select.lsp_reference.flag_fuzzy
 local flag_regex = dot.context.select.lsp_reference.flag_regex

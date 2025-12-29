@@ -3,8 +3,8 @@
 ---@field public bufs_relative          boolean
 
 ---@class dot.context.behavior.state
----@field public auto_im                ark.c.Observable
----@field public bufs_relative          ark.c.Observable
+---@field public auto_im                stl.c.Observable
+---@field public bufs_relative          stl.c.Observable
 
 ---@class dot.context.behavior : dot.context.behavior.state
 ---@field public defaults               fun(): dot.context.behavior.data
@@ -57,6 +57,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.behavior.data
-M.auto_im = ark.c.Observable.from_value(_defaults.auto_im)
-M.bufs_relative = ark.c.Observable.from_value(_defaults.bufs_relative)
+M.auto_im = stl.c.Observable.from_value(_defaults.auto_im)
+M.bufs_relative = stl.c.Observable.from_value(_defaults.bufs_relative)
 return M

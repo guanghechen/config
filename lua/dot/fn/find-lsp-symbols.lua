@@ -304,12 +304,12 @@ local function get_treesitter_locals(bufnr)
   return roots
 end
 
-local o_search_pattern = dot.context.select.lsp_symbols.search_pattern ---@type ark.c.Observable
-local o_flag_fuzzy = dot.context.select.lsp_symbols.flag_fuzzy ---@type ark.c.Observable
-local o_flag_regex = dot.context.select.lsp_symbols.flag_regex ---@type ark.c.Observable
-local o_flag_case_sensitive = dot.context.select.lsp_symbols.flag_case_sensitive ---@type ark.c.Observable
-local o_flag_viewtype = dot.context.select.lsp_symbols.flag_viewtype ---@type ark.c.Observable
-local o_flag_foldempty = dot.context.select.lsp_symbols.flag_foldempty ---@type ark.c.Observable
+local o_search_pattern = dot.context.select.lsp_symbols.search_pattern ---@type stl.c.Observable
+local o_flag_fuzzy = dot.context.select.lsp_symbols.flag_fuzzy ---@type stl.c.Observable
+local o_flag_regex = dot.context.select.lsp_symbols.flag_regex ---@type stl.c.Observable
+local o_flag_case_sensitive = dot.context.select.lsp_symbols.flag_case_sensitive ---@type stl.c.Observable
+local o_flag_viewtype = dot.context.select.lsp_symbols.flag_viewtype ---@type stl.c.Observable
+local o_flag_foldempty = dot.context.select.lsp_symbols.flag_foldempty ---@type stl.c.Observable
 local picker ---@type dot.module.picker.TreeComposer
 
 ---@param kindname                      string
@@ -320,7 +320,7 @@ local function get_icon(kindname)
   return icon, icon_hln
 end
 
----@param tree                          ark.c.Tree
+---@param tree                          stl.c.Tree
 ---@param callback                      fun(): nil
 local function fetch_symbols(tree, callback)
   local bufnr = filepath_sourcefile and dot.buf.loadfile(filepath_sourcefile) or nil
@@ -549,7 +549,7 @@ end
 
 ---@return nil
 local function refresh()
-  local tree = picker._tree ---@type ark.c.Tree
+  local tree = picker._tree ---@type stl.c.Tree
   local treeview = picker._treeview ---@type dot.module.picker.TreeView
 
   _tick_refresh = _tick_refresh + 1
@@ -584,7 +584,7 @@ local function refresh()
 end
 
 ---@param _                             any
----@param node                          ark.c.ITreeNode
+---@param node                          stl.c.ITreeNode
 local function render_symbol(_, node)
   local data = node.data ---@type dot.fn.find_lsp_symbols.ISymbolData
   local icon = data.icon or "●"
@@ -606,7 +606,7 @@ local function render_treeview_container(_, node, _, _, folded_depth)
 
   local limit = folded_depth + 1
   local items = {} ---@type dot.fn.find_lsp_symbols.ISymbolData[]
-  local curr = node ---@type ark.c.ITreeNode|nil
+  local curr = node ---@type stl.c.ITreeNode|nil
   while curr ~= nil and #items < limit do
     table.insert(items, 1, curr.data)
     local parentuuid = curr.parent
@@ -703,7 +703,7 @@ local function render_preview(bufnr, force)
     }
   end
 
-  local node = picker._tree:retrieve(nodeuuid) ---@type ark.c.ITreeNode|nil
+  local node = picker._tree:retrieve(nodeuuid) ---@type stl.c.ITreeNode|nil
   if node == nil or node.data == nil then
     if force then
       local lines = { "Invalid symbol data" }
@@ -807,7 +807,7 @@ picker = dot.picker.TreeComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
   flag_viewtype = o_flag_viewtype,
   flag_foldempty = o_flag_foldempty,
-  flag_selected = ark.c.Observable.from_value(false),
+  flag_selected = stl.c.Observable.from_value(false),
 
   render_listview_leaf = render_symbol,
   render_listview_location = render_location,

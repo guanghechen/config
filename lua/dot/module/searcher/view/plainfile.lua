@@ -1,11 +1,11 @@
 local __module_name__ = "dot.module.searcher.view.plainfile" ---@type string
 
 ---@class dot.module.searcher.IPlainfileViewContext
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_replace           ark.c.Observable
----@field public search_pattern         ark.c.Observable
----@field public replace_pattern        ark.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_replace           stl.c.Observable
+---@field public search_pattern         stl.c.Observable
+---@field public replace_pattern        stl.c.Observable
 ---
 ---@field public filepath               string
 ---@field public filematch              dot.module.searcher.view.filetree.IResolvedFileMatch|nil

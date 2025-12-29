@@ -95,7 +95,7 @@ stl.fn.observe({ dot.term.state.o_termuuid }, function()
 end, true)
 
 dot.state.status.dirtier_termline:subscribe(
-  ark.c.Subscriber.new({
+  stl.c.Subscriber.new({
     on_next = function()
       termline:render()
     end,

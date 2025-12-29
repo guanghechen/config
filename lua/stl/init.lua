@@ -1,3 +1,59 @@
+---@class stl.c.__mods
+local c__mods = {
+  BatchDisposable = "stl.c.batch_disposable",
+  BatchHandler = "stl.c.batch_handler",
+  CircularQueue = "stl.c.circular_queue",
+  CircularStack = "stl.c.circular_stack",
+  Dirtier = "stl.c.dirtier",
+  Disposable = "stl.c.disposable",
+  Filetree = "stl.c.filetree",
+  Frecency = "stl.c.frecency",
+  History = "stl.c.history",
+  InputHistory = "stl.c.input_history",
+  Observable = "stl.c.observable",
+  Proc = "stl.c.proc",
+  Scheduler = "stl.c.scheduler",
+  Subscriber = "stl.c.subscriber",
+  Subscribers = "stl.c.subscribers",
+  Theme = "stl.c.theme",
+  Ticker = "stl.c.ticker",
+  Tree = "stl.c.tree",
+  TreeRetriever = "stl.c.tree_retriever",
+}
+
+---@class stl.c
+---@field public __mods                 stl.c.__mods
+---@field public BatchDisposable        stl.c.BatchDisposable
+---@field public BatchHandler           stl.c.BatchHandler
+---@field public CircularQueue          stl.c.CircularQueue
+---@field public CircularStack          stl.c.CircularStack
+---@field public Dirtier                stl.c.Dirtier
+---@field public Disposable             stl.c.Disposable
+---@field public Filetree               stl.c.Filetree
+---@field public Frecency               stl.c.Frecency
+---@field public History                stl.c.History
+---@field public InputHistory           stl.c.InputHistory
+---@field public Observable             stl.c.Observable
+---@field public Proc                   stl.c.Proc
+---@field public Scheduler              stl.c.Scheduler
+---@field public Subscriber             stl.c.Subscriber
+---@field public Subscribers            stl.c.Subscribers
+---@field public Theme                  stl.c.Theme
+---@field public Ticker                 stl.c.Ticker
+---@field public Tree                   stl.c.Tree
+---@field public TreeRetriever          stl.c.TreeRetriever
+local c = setmetatable({ __mods = c__mods }, {
+  __index = function(t, k)
+    local m = c__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class stl.dict.__mods
 local dict__mods = {
   en = "stl.dict.en",
@@ -34,6 +90,7 @@ local __mods = {
 
 ---@class stl
 ---@field public __mods                 stl.__mods
+---@field public c                      stl.c
 ---@field public color                  stl.external.color
 ---@field public easing                 stl.external.easing
 ---
@@ -48,6 +105,7 @@ local __mods = {
 ---@field public stdout                 stl.stdout
 local M = setmetatable({
   __mods = __mods,
+  c = c,
   dict = dict,
 }, {
   __index = function(t, k)

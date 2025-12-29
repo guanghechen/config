@@ -1,7 +1,7 @@
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
-local dirtier = dot.state.status.dirtier_tabline ---@type ark.c.Dirtier
+local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
 local position = "f_tl" ---@type ark.e.NvimbarPositionEnum
 
 local tabline ---@type dot.module.nvimbar.Nvimbar
@@ -74,7 +74,7 @@ local function should_show_tabline()
 end
 
 local last_showtabline = 0 ---@type integer
-dirtier:subscribe(ark.c.Subscriber.new({
+dirtier:subscribe(stl.c.Subscriber.new({
   on_next = function()
     if should_show_tabline() then
       vim.o.showtabline = 2

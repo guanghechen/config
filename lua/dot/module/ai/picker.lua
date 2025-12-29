@@ -13,15 +13,15 @@ local M = {}
 --- Picker utilities
 ----------------------------------------------------------------------------------------------------
 
----@return ark.c.Observable, ark.c.Observable, ark.c.Observable, ark.c.Observable
+---@return stl.c.Observable, stl.c.Observable, stl.c.Observable, stl.c.Observable
 local function create_picker_flags()
-  return ark.c.Observable.from_value(""),
-    ark.c.Observable.from_value(true),
-    ark.c.Observable.from_value(false),
-    ark.c.Observable.from_value(false)
+  return stl.c.Observable.from_value(""),
+    stl.c.Observable.from_value(true),
+    stl.c.Observable.from_value(false),
+    stl.c.Observable.from_value(false)
 end
 
----@param flags                         ark.c.Observable[]
+---@param flags                         stl.c.Observable[]
 ---@return nil
 local function dispose_picker_flags(flags)
   for _, flag in ipairs(flags) do

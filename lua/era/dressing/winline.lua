@@ -69,12 +69,12 @@ local function resolve_nvimbar(winnr)
 
   if winline ~= nil then
     if winline.locate_scheduler == nil or winline.locate_scheduler:isdisposed() then
-      local locate_scheduler = ark.c.Scheduler.new({
+      local locate_scheduler = stl.c.Scheduler.new({
         name = string.format("locate_scheduler:%d", winnr),
         mode = "throttle",
         delay = 128,
         timeout = 10000,
-        value = ark.c.Observable.from_value(false),
+        value = stl.c.Observable.from_value(false),
         silent = silent,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
@@ -162,7 +162,7 @@ local function render(winnr)
 end
 
 dot.state.status.dirty_winline_nr:subscribe(
-  ark.c.Subscriber.new({
+  stl.c.Subscriber.new({
     on_next = function(winnr, winnr_prev)
       render(winnr)
       if winnr_prev ~= winnr then

@@ -7,8 +7,8 @@
 ---@class dot.state.qflist
 local M = {}
 
----@type ark.c.History
-M.history = ark.c.History.new({
+---@type stl.c.History
+M.history = stl.c.History.new({
   name = "qflist",
   capacity = 100,
 })

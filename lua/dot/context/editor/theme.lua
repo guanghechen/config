@@ -18,9 +18,9 @@ local __module_name__ = "dot.context.editor.theme" ---@type string
 ---@field public username               boolean
 
 ---@class dot.context.theme.state
----@field public theme                  ark.c.Observable
----@field public transparency           ark.c.Observable
----@field public username               ark.c.Observable
+---@field public theme                  stl.c.Observable
+---@field public transparency           stl.c.Observable
+---@field public username               stl.c.Observable
 ---
 ---@field public get_float_winblend     fun(): integer
 ---
@@ -105,9 +105,9 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.theme.data
-M.theme = ark.c.Observable.from_value(_defaults.theme)
-M.transparency = ark.c.Observable.from_value(_defaults.transparency)
-M.username = ark.c.Observable.from_value(_defaults.username)
+M.theme = stl.c.Observable.from_value(_defaults.theme)
+M.transparency = stl.c.Observable.from_value(_defaults.transparency)
+M.username = stl.c.Observable.from_value(_defaults.username)
 
 ---@return integer
 function M.get_float_winblend()
@@ -133,7 +133,7 @@ function M.apply_integration(params)
     }
     local h = ark.theme.hlgroup[integration]
     local hlgroup_map = h.gen_hlgroup_map(themeContext)
-    local uxTheme = ark.c.Theme.new()
+    local uxTheme = stl.c.Theme.new()
     uxTheme:registers(hlgroup_map)
     uxTheme:apply({ nsnr = nsnr, scheme = scheme })
   end
@@ -159,7 +159,7 @@ function M.apply_theme(params)
       transparency = transparency,
     })
 
-    local uxTheme = ark.c.Theme.new()
+    local uxTheme = stl.c.Theme.new()
     for _, integration in ipairs(integrations) do
       local h = ark.theme.hlgroup[integration]
       ---@return table<string, ark.t.theme.IHlgroup>

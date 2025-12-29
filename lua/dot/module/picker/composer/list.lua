@@ -58,15 +58,15 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---@field public keymaps_preview        ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
 ---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?ark.c.History
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history ?stl.c.History
 ---
 ---@field public render_preview         ?dot.module.picker.composer.list.IRenderPreview
 ---@field public render_result          ?dot.module.picker.composer.list.IRenderResult
@@ -88,13 +88,13 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---@field public result                 dot.module.picker.Result
 ---@field public preview                dot.module.picker.Preview|nil
 ---
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
 ---
 ---@field protected _disposed           boolean
 ---@field protected _composer           dot.module.picker.BasicComposer
----@field protected _scheduler_match    ark.c.Scheduler
+---@field protected _scheduler_match    stl.c.Scheduler
 ---
 ---@field protected _lnum2uuid          string[]
 ---@field protected _uuid2lnum          table<string, integer>
@@ -108,7 +108,7 @@ local __module_name__ = "dot.module.picker.composer.list" ---@type string
 ---
 ---@field protected _on_confirm         dot.module.picker.composer.list.IOnConfirm|nil
 ---@field protected _on_disposed        dot.module.picker.composer.list.IOnDisposed
----@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 ---@param props                         dot.module.picker.IListComposerProps
@@ -123,17 +123,17 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
+  local search_pattern = props.search_pattern ---@type stl.c.Observable
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
   local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
-  local flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
-  local flag_regex = props.flag_regex ---@type ark.c.Observable
-  local flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
+  local flag_fuzzy = props.flag_fuzzy ---@type stl.c.Observable
+  local flag_regex = props.flag_regex ---@type stl.c.Observable
+  local flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
   local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
@@ -198,13 +198,13 @@ function M.new(props)
     return uuid, lnum
   end
 
-  local scheduler_match = ark.c.Scheduler.new({
+  local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local input = search_pattern:snapshot() ---@type string
       self:__match__(input)
@@ -417,7 +417,7 @@ function M.new(props)
   self._on_disposed = on_disposed
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
+  local observer_unsubs = {} ---@type stl.c.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
     composer:mark_result_flags_dirty()
@@ -448,7 +448,7 @@ function M:dispose()
   local on_disposed = self._on_disposed ---@type dot.module.picker.composer.list.IOnDisposed
   local composer = self._composer
   local scheduler_match = self._scheduler_match
-  local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean

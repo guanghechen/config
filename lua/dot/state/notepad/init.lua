@@ -46,13 +46,13 @@ end
 local _source_cache = {}
 
 ---Observable for the currently activated note UUID
----@type ark.c.Observable
-local o_activated_uuid = ark.c.Observable.from_value("")
+---@type stl.c.Observable
+local o_activated_uuid = stl.c.Observable.from_value("")
 
 ---@class dot.state.notepad
 ---@field public source_configs         dot.state.notepad.ISourceConfig[]
 ---@field public source_config_map      table<string, dot.state.notepad.ISourceConfig>
----@field public o_activated_uuid       ark.c.Observable Observable for activated note UUID
+---@field public o_activated_uuid       stl.c.Observable Observable for activated note UUID
 local M = {
   source_configs = source_configs,
   source_config_map = source_config_map,

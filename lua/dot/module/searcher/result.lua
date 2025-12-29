@@ -53,18 +53,18 @@ local Nvimbar = require("dot.module.nvimbar").Nvimbar
 ---@field public draw                   dot.module.searcher.result.IDraw
 ---@field public flags                  dot.module.searcher.result.IFlagItem[]
 ---@field public keymaps                ark.t.IKeymap[]
----@field public lnum_current           ark.c.Observable
----@field public lnum_present           ark.c.Observable
----@field public lnum_total             ark.c.Observable
+---@field public lnum_current           stl.c.Observable
+---@field public lnum_present           stl.c.Observable
+---@field public lnum_total             stl.c.Observable
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _augroup_CursorMoved integer
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
----@field protected _scheduler_content  ark.c.Scheduler
----@field protected _scheduler_lnum_current ark.c.Scheduler
----@field protected _scheduler_lnum_present ark.c.Scheduler
----@field protected _scheduler_lnums_selected ark.c.Scheduler
+---@field protected _scheduler_content  stl.c.Scheduler
+---@field protected _scheduler_lnum_current stl.c.Scheduler
+---@field protected _scheduler_lnum_present stl.c.Scheduler
+---@field protected _scheduler_lnums_selected stl.c.Scheduler
 local M = {}
 M.__index = M
 
@@ -82,9 +82,9 @@ function M.new(props)
   local on_drawed = props.on_drawed or stl.fn.noop ---@type dot.module.searcher.result.IOnDrawed
   local augroup_CursorMoved = ark.vim.fn.augroup(string.format("searcher.result:CursorMoved#%s", uuid)) ---@type integer
 
-  local _o_lnum_current = ark.c.Observable.from_value(0) ---@type ark.c.Observable
-  local _o_lnum_present = ark.c.Observable.from_value(-1) ---@type ark.c.Observable
-  local _o_lnum_total = ark.c.Observable.from_value(0) ---@type ark.c.Observable
+  local _o_lnum_current = stl.c.Observable.from_value(0) ---@type stl.c.Observable
+  local _o_lnum_present = stl.c.Observable.from_value(-1) ---@type stl.c.Observable
+  local _o_lnum_total = stl.c.Observable.from_value(0) ---@type stl.c.Observable
 
   local flags = {} ---@type dot.module.searcher.result.IFlagItem[]
   if props.flags ~= nil and #props.flags > 0 then
@@ -156,14 +156,14 @@ function M.new(props)
     :place("left", c.picker.result_flags(position, flags, flags_start_index), 100)
     :place("right", c.picker.result_pos(position, _o_lnum_current, _o_lnum_total), 100)
 
-  ---@type ark.c.Scheduler
-  local scheduler_lnum_current = ark.c.Scheduler.new({
+  ---@type stl.c.Scheduler
+  local scheduler_lnum_current = stl.c.Scheduler.new({
     name = string.format("%s#lnum_current", fullname),
     mode = "throttle",
     delay = 32,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -186,14 +186,14 @@ function M.new(props)
     end,
   })
 
-  ---@type ark.c.Scheduler
-  local scheduler_lnum_present = ark.c.Scheduler.new({
+  ---@type stl.c.Scheduler
+  local scheduler_lnum_present = stl.c.Scheduler.new({
     name = string.format("%s#lnum_present", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -210,14 +210,14 @@ function M.new(props)
     end,
   })
 
-  ---@type ark.c.Scheduler
-  local scheduler_lnums_selected = ark.c.Scheduler.new({
+  ---@type stl.c.Scheduler
+  local scheduler_lnums_selected = stl.c.Scheduler.new({
     name = string.format("%s#lnums_selected", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
@@ -235,14 +235,14 @@ function M.new(props)
     end,
   })
 
-  ---@type ark.c.Scheduler
-  local scheduler_content = ark.c.Scheduler.new({
+  ---@type stl.c.Scheduler
+  local scheduler_content = stl.c.Scheduler.new({
     name = string.format("%s#content", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -381,15 +381,15 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local lnum_current = self.lnum_current ---@type ark.c.Observable
-  local lnum_present = self.lnum_present ---@type ark.c.Observable
-  local lnum_total = self.lnum_total ---@type ark.c.Observable
+  local lnum_current = self.lnum_current ---@type stl.c.Observable
+  local lnum_present = self.lnum_present ---@type stl.c.Observable
+  local lnum_total = self.lnum_total ---@type stl.c.Observable
   local augroup_CursorMoved = self._augroup_CursorMoved ---@type integer
   local nvimbar = self._nvimbar ---@type dot.module.nvimbar.Nvimbar
-  local scheduler_content = self._scheduler_content ---@type ark.c.Scheduler
-  local scheduler_lnum_current = self._scheduler_lnum_current ---@type ark.c.Scheduler
-  local scheduler_lnum_present = self._scheduler_lnum_present ---@type ark.c.Scheduler
-  local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type ark.c.Scheduler
+  local scheduler_content = self._scheduler_content ---@type stl.c.Scheduler
+  local scheduler_lnum_current = self._scheduler_lnum_current ---@type stl.c.Scheduler
+  local scheduler_lnum_present = self._scheduler_lnum_present ---@type stl.c.Scheduler
+  local scheduler_lnums_selected = self._scheduler_lnums_selected ---@type stl.c.Scheduler
 
   self.draw = nil
   self.keymaps = nil

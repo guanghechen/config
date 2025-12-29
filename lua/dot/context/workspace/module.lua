@@ -3,8 +3,8 @@
 ---@field public paste_image_filepath   string
 
 ---@class dot.context.module.state
----@field public notepad_source         ark.c.Observable
----@field public paste_image_filepath   ark.c.Observable
+---@field public notepad_source         stl.c.Observable
+---@field public paste_image_filepath   stl.c.Observable
 
 ---@class dot.context.module : dot.context.module.state
 ---@field public defaults               fun(): dot.context.module.data
@@ -60,7 +60,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.module.data
-M.notepad_source = ark.c.Observable.from_value(_defaults.notepad_source)
-M.paste_image_filepath = ark.c.Observable.from_value(_defaults.paste_image_filepath)
+M.notepad_source = stl.c.Observable.from_value(_defaults.notepad_source)
+M.paste_image_filepath = stl.c.Observable.from_value(_defaults.paste_image_filepath)
 
 return M

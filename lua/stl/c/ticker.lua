@@ -1,18 +1,18 @@
----@class ark.c.ticker.IProps
+---@class stl.c.ticker.IProps
 ---@field public start                  ?integer
 
----@class ark.c.Ticker : ark.c.Observable
+---@class stl.c.Ticker : stl.c.Observable
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, ark.c.Observable)
+setmetatable(M, stl.c.Observable)
 
----@param props                         ?ark.c.ticker.IProps
----@return ark.c.Ticker
+---@param props                         ?stl.c.ticker.IProps
+---@return stl.c.Ticker
 function M.new(props)
   local start = props and props.start or 0 ---@type integer
-  local self = setmetatable(ark.c.Observable.from_value(start), M)
-  ---@cast self                         ark.c.Ticker
+  local self = setmetatable(stl.c.Observable.from_value(start), M)
+  ---@cast self                         stl.c.Ticker
   return self
 end
 

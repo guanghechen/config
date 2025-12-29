@@ -11,54 +11,54 @@
 ---@field public tmux_zen_mode          boolean
 
 ---@class dot.state.status
----@field protected _disposables        ark.c.BatchDisposable
+---@field protected _disposables        stl.c.BatchDisposable
 ---
 ---
----@field public winnr_command          ark.c.Observable
+---@field public winnr_command          stl.c.Observable
 ---
----@field public dirtier_statusline     ark.c.Dirtier
----@field public dirtier_tabline        ark.c.Dirtier
----@field public dirtier_termline       ark.c.Dirtier
----@field public dirtier_notepadline    ark.c.Dirtier
----@field public dirty_winline_nr       ark.c.Observable
+---@field public dirtier_statusline     stl.c.Dirtier
+---@field public dirtier_tabline        stl.c.Dirtier
+---@field public dirtier_termline       stl.c.Dirtier
+---@field public dirtier_notepadline    stl.c.Dirtier
+---@field public dirty_winline_nr       stl.c.Observable
 ---
----@field public lint_schedule_nr       ark.c.Observable
+---@field public lint_schedule_nr       stl.c.Observable
 ---
----@field public msg_changes            ark.c.Observable
----@field public msg_command            ark.c.Observable
----@field public msg_lsp                ark.c.Observable
----@field public msg_mode               ark.c.Observable
+---@field public msg_changes            stl.c.Observable
+---@field public msg_command            stl.c.Observable
+---@field public msg_lsp                stl.c.Observable
+---@field public msg_mode               stl.c.Observable
 ---
 ---@field public copilots               table<integer, string>
----@field public notification_paused    ark.c.Observable
----@field public notification_level     ark.c.Observable
----@field public searching              ark.c.Observable
----@field public suppress_warning       ark.c.Observable
----@field public tmux_zen_mode          ark.c.Observable
+---@field public notification_paused    stl.c.Observable
+---@field public notification_level     stl.c.Observable
+---@field public searching              stl.c.Observable
+---@field public suppress_warning       stl.c.Observable
+---@field public tmux_zen_mode          stl.c.Observable
 local M = {
-  _disposables = ark.c.BatchDisposable.new(),
+  _disposables = stl.c.BatchDisposable.new(),
 
-  winnr_command = ark.c.Observable.from_value(0),
+  winnr_command = stl.c.Observable.from_value(0),
 
-  dirtier_statusline = ark.c.Dirtier.new({ dirty = true }),
-  dirtier_tabline = ark.c.Dirtier.new({ dirty = true }),
-  dirtier_termline = ark.c.Dirtier.new({ dirty = true }),
-  dirtier_notepadline = ark.c.Dirtier.new({ dirty = true }),
-  dirty_winline_nr = ark.c.Observable.from_value(0, stl.fn.falsy),
+  dirtier_statusline = stl.c.Dirtier.new({ dirty = true }),
+  dirtier_tabline = stl.c.Dirtier.new({ dirty = true }),
+  dirtier_termline = stl.c.Dirtier.new({ dirty = true }),
+  dirtier_notepadline = stl.c.Dirtier.new({ dirty = true }),
+  dirty_winline_nr = stl.c.Observable.from_value(0, stl.fn.falsy),
 
-  lint_schedule_nr = ark.c.Observable.from_value(0, stl.fn.falsy),
+  lint_schedule_nr = stl.c.Observable.from_value(0, stl.fn.falsy),
 
-  msg_changes = ark.c.Observable.from_value(""),
-  msg_command = ark.c.Observable.from_value(""),
-  msg_lsp = ark.c.Observable.from_value(""),
-  msg_mode = ark.c.Observable.from_value(""),
+  msg_changes = stl.c.Observable.from_value(""),
+  msg_command = stl.c.Observable.from_value(""),
+  msg_lsp = stl.c.Observable.from_value(""),
+  msg_mode = stl.c.Observable.from_value(""),
 
   copilots = {}, -- Plain object for copilot status per client
-  notification_paused = ark.c.Observable.from_value(false),
-  notification_level = ark.c.Observable.from_value("TRACE"),
-  searching = ark.c.Observable.from_value(false),
-  suppress_warning = ark.c.Observable.from_value(false),
-  tmux_zen_mode = ark.c.Observable.from_value(true),
+  notification_paused = stl.c.Observable.from_value(false),
+  notification_level = stl.c.Observable.from_value("TRACE"),
+  searching = stl.c.Observable.from_value(false),
+  suppress_warning = stl.c.Observable.from_value(false),
+  tmux_zen_mode = stl.c.Observable.from_value(true),
 }
 
 M._disposables
@@ -79,7 +79,7 @@ M._disposables
   :add_disposable(M.suppress_warning)
   :add_disposable(M.tmux_zen_mode)
 
----@param disposable                    ark.c.IDisposable
+---@param disposable                    stl.c.IDisposable
 ---@return nil
 function M.add_disposable(disposable)
   M._disposables:add_disposable(disposable)

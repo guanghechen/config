@@ -62,7 +62,7 @@ local __mods = {
 ---@field public get_storage            fun(): dot.context.storage
 ---@field public set_storage            fun(storage: dot.context.storage): nil
 ---
----@field public observe                fun(observables: ark.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
+---@field public observe                fun(observables: stl.c.Observable[], callback: fun(): nil, ignore_initial: boolean|nil): nil
 ---
 ---@field public refresh                fun(): nil
 ---@field public watch_changes          fun(params: dot.context.state.IWatchChangeParams): nil
@@ -223,8 +223,8 @@ end
 
 ---@return nil
 function M.watch_changes()
-  local ticker_editor = ark.c.Ticker.new({ start = 0 })
-  local ticker_workspace = ark.c.Ticker.new({ start = 0 })
+  local ticker_editor = stl.c.Ticker.new({ start = 0 })
+  local ticker_workspace = stl.c.Ticker.new({ start = 0 })
 
   stl.fn.observe({ M.theme.theme }, function()
     dot.context.theme.reload_theme(false, true)
@@ -286,7 +286,7 @@ function M.watch_changes()
     end)
   end, true)
 
-  ---@type ark.c.Observable[]
+  ---@type stl.c.Observable[]
   local select_states = {
     M.bookmark.pinned,
     M.flight.ai,
@@ -331,13 +331,13 @@ function M.watch_changes()
     dot.state.status.dirtier_statusline:mark_dirty()
   end)
 
-  local scheduler = ark.c.Scheduler.new({
+  local scheduler = stl.c.Scheduler.new({
     name = __module_name__,
     mode = "throttle",
     delay = 256,
     timeout = 3000,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       if M._storage.editor then
         local raw_data = ark.fs.read_json({ filepath = M._storage.editor, silent_on_bad_path = true }) or {}
@@ -356,7 +356,7 @@ function M.watch_changes()
     end,
   })
   ticker_editor:subscribe(
-    ark.c.Subscriber.new({
+    stl.c.Subscriber.new({
       on_next = function()
         scheduler:schedule()
       end,
@@ -365,7 +365,7 @@ function M.watch_changes()
   )
 
   ---! Save when leave the editor.
-  dot.state.status.add_disposable(ark.c.Disposable.new({
+  dot.state.status.add_disposable(stl.c.Disposable.new({
     on_dispose = function()
       local autosave = M.flight.autosave:snapshot() ---@type boolean
 
@@ -404,7 +404,7 @@ function M.watch_changes()
         })
       end,
     })
-    dot.state.status.add_disposable(ark.c.Disposable.new({ on_dispose = unwatch }))
+    dot.state.status.add_disposable(stl.c.Disposable.new({ on_dispose = unwatch }))
   end
 end
 

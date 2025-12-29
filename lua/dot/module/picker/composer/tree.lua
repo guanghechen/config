@@ -47,25 +47,25 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
----@field public node_sorter            ark.c.ITreeNodeSorter
+---@field public node_sorter            stl.c.ITreeNodeSorter
 ---
 ---@field public keymaps_common         ?ark.t.IKeymap[]
 ---@field public keymaps_finder         ?ark.t.IKeymap[]
 ---@field public keymaps_preview        ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public flag_foldempty         ark.c.Observable
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
 ---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?ark.c.History
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history ?stl.c.History
 ---
 ---@field public render_preview         ?dot.module.picker.preview.IDraw
 ---@field public render_listview_leaf   dot.module.picker.view.tree.IListviewLeafNodeRenderer
@@ -92,19 +92,19 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field public result                 dot.module.picker.Result
 ---@field public preview                dot.module.picker.Preview
 ---
----@field public flag_foldempty         ark.c.Observable
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _tree               ark.c.Tree
+---@field protected _tree               stl.c.Tree
 ---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          ark.view.Plainfile
----@field protected _retriever          ark.c.TreeRetriever
----@field protected _scheduler_match    ark.c.Scheduler|nil
+---@field protected _retriever          stl.c.TreeRetriever
+---@field protected _scheduler_match    stl.c.Scheduler|nil
 ---@field protected _treeview           dot.module.picker.TreeView
 ---
 ---@field protected _uuid_root          string|nil
@@ -116,7 +116,7 @@ local __module_name__ = "dot.module.picker.composer.tree" ---@type string
 ---@field protected _on_confirm         dot.module.picker.composer.tree.IOnConfirm
 ---@field protected _on_disposed        dot.module.picker.composer.tree.IOnDisposed
 ---@field protected _on_enter           dot.module.picker.composer.tree.IOnEnter|nil
----@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -130,22 +130,22 @@ function M.new(props)
   local title = props.title ---@type string
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
-  local node_sorter = props.node_sorter ---@type ark.c.ITreeNodeSorter
+  local node_sorter = props.node_sorter ---@type stl.c.ITreeNodeSorter
 
-  local o_search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
+  local o_search_pattern = props.search_pattern ---@type stl.c.Observable
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
   local keymaps_preview = props.keymaps_preview ---@type ark.t.IKeymap[]|nil
   local keymaps_result = props.keymaps_result ---@type ark.t.IKeymap[]|nil
 
-  local o_flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
-  local o_flag_regex = props.flag_regex ---@type ark.c.Observable
-  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.Observable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
-  local o_flag_selected = props.flag_selected ---@type ark.c.Observable
-  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
+  local o_flag_fuzzy = props.flag_fuzzy ---@type stl.c.Observable
+  local o_flag_regex = props.flag_regex ---@type stl.c.Observable
+  local o_flag_foldempty = props.flag_foldempty ---@type stl.c.Observable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
+  local o_flag_selected = props.flag_selected ---@type stl.c.Observable
+  local o_flag_viewtype = props.flag_viewtype ---@type stl.c.Observable
 
   local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
@@ -167,15 +167,15 @@ function M.new(props)
   local on_hidden = props.on_hidden or stl.fn.noop ---@type dot.module.picker.composer.tree.IOnHidden
   local on_refresh = props.on_refresh or stl.fn.noop ---@type dot.module.picker.composer.tree.IOnRefresh
 
-  local tree = ark.c.Tree.new({
+  local tree = stl.c.Tree.new({
     name = fullname,
     node_sorter = node_sorter,
   })
 
   local self = setmetatable({}, M)
 
-  ---@type ark.c.TreeRetriever
-  local retriever = ark.c.TreeRetriever.new({
+  ---@type stl.c.TreeRetriever
+  local retriever = stl.c.TreeRetriever.new({
     name = fullname,
   })
 
@@ -198,13 +198,13 @@ function M.new(props)
     render_treeview_location = render_treeview_location,
   })
 
-  local scheduler_match = ark.c.Scheduler.new({
+  local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local input = o_search_pattern:snapshot() ---@type string
       self:__match__(input)
@@ -334,7 +334,7 @@ function M.new(props)
         end
 
         local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-        local leafnode = tree:retrieve(leafuuid) ---@type ark.c.ITreeNode|nil
+        local leafnode = tree:retrieve(leafuuid) ---@type stl.c.ITreeNode|nil
         if leafnode == nil then
           return
         end
@@ -347,7 +347,7 @@ function M.new(props)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = tree:retrieve(rootuuid) ---@type ark.c.ITreeNode|nil
+      local rootnode = tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -824,7 +824,7 @@ function M.new(props)
   self._on_enter = on_enter
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
+  local observer_unsubs = {} ---@type stl.c.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({
     o_search_pattern,
@@ -869,10 +869,10 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type dot.module.picker.composer.tree.IOnDisposed
   local composer = self._composer ---@type dot.module.picker.BasicComposer
   local plainfile = self._plainfile ---@type ark.view.Plainfile
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
-  local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
+  local scheduler_match = self._scheduler_match ---@type stl.c.Scheduler
   local treeview = self._treeview ---@type dot.module.picker.TreeView
-  local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean
@@ -990,7 +990,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._tree:retrieve(rootuuid) ---@type ark.c.ITreeNode|nil
+  local node = self._tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1031,7 +1031,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -1087,7 +1087,7 @@ end
 ---@return nil
 function M:__resolve_confirmation__(nodeuuid)
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.TreeView
 
   if self:__has_selected_node__() then
@@ -1119,7 +1119,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return ark.c.ITreeNode
+---@return stl.c.ITreeNode
 ---@return ark.view.tree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type ark.view.tree.INodeState|nil
@@ -1128,7 +1128,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type ark.c.ITreeNode|nil
+  ---@type stl.c.ITreeNode|nil
   local node = self._tree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -1153,7 +1153,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
@@ -1190,7 +1190,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  local node = self._tree:retrieve(nodeuuid) ---@type ark.c.ITreeNode|nil
+  local node = self._tree:retrieve(nodeuuid) ---@type stl.c.ITreeNode|nil
   if node == nil then
     return nil, nil
   end

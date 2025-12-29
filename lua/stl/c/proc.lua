@@ -8,21 +8,21 @@ local function close(handle)
   end
 end
 
----@class ark.c.proc.IProps: uv.spawn.options,{}
+---@class stl.c.proc.IProps: uv.spawn.options,{}
 ---@field public cmd                    string
 ---@field public args                   ?(string|number)[]
 ---@field public timeout                ?number
 ---@field public run                    ?boolean
----@field public on_stdout              ?fun(proc: ark.c.Proc, data: string)
----@field public on_stderr              ?fun(proc: ark.c.Proc, data: string)
----@field public on_exit                ?fun(proc: ark.c.Proc, err: boolean)
+---@field public on_stdout              ?fun(proc: stl.c.Proc, data: string)
+---@field public on_stderr              ?fun(proc: stl.c.Proc, data: string)
+---@field public on_exit                ?fun(proc: stl.c.Proc, err: boolean)
 
----@class ark.c.proc.IMultiProps: ark.c.proc.IProps,{}
+---@class stl.c.proc.IMultiProps: stl.c.proc.IProps,{}
 ---@field public cmd                    nil
----@field public on_exit                ?fun(procs: ark.c.Proc[], err: boolean)
+---@field public on_exit                ?fun(procs: stl.c.Proc[], err: boolean)
 
----@class ark.c.Proc
----@field public opts                   ark.c.proc.IProps
+---@class stl.c.Proc
+---@field public opts                   stl.c.proc.IProps
 ---@field public handle                 ?uv.uv_process_t
 ---@field public stdout                 uv.uv_pipe_t
 ---@field public stderr                 uv.uv_pipe_t
@@ -34,8 +34,8 @@ end
 local M = {}
 M.__index = M
 
----@param opts                          ark.c.proc.IProps
----@return ark.c.Proc
+---@param opts                          stl.c.proc.IProps
+---@return stl.c.Proc
 function M.new(opts)
   local self = setmetatable({}, M)
   self.opts = opts
@@ -47,8 +47,8 @@ function M.new(opts)
   return self
 end
 
----@param procs                         ark.c.Proc[]
----@param opts                          ?ark.c.proc.IMultiProps
+---@param procs                         stl.c.Proc[]
+---@param opts                          ?stl.c.proc.IMultiProps
 function M.multi(procs, opts)
   if #procs == 0 then
     return
@@ -77,7 +77,7 @@ function M.multi(procs, opts)
     proc:run()
   end
 
-  ---@type ark.c.Proc|{procs: ark.c.Proc[]}
+  ---@type stl.c.Proc|{procs: stl.c.Proc[]}
   local ret = setmetatable({
     procs = procs,
     run = next,

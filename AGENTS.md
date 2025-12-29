@@ -49,11 +49,7 @@ Standard library with environment detection and dictionary data.
 - **`stl/json`** - JSON utilities with comment stripping support
 - **`stl/stdout`** - Colored stdout logging utilities
 - **`stl/fn`** - Utility functions (boolean, identity, noop, equals, navigate, observe)
-
-#### `lua/ark/` - Foundation Layer
-Foundation layer with algorithms, collections, and utilities.
-
-- **`ark/c/`** - Data structures and classes:
+- **`stl/c/`** - Data structures and classes:
   - `BatchDisposable`, `BatchHandler` - Batch operations
   - `CircularQueue`, `CircularStack` - Circular data structures
   - `Dirtier`, `Disposable` - Resource management
@@ -62,6 +58,9 @@ Foundation layer with algorithms, collections, and utilities.
   - `Observable`, `Subscriber`, `Subscribers` - Reactive patterns
   - `Proc`, `Scheduler`, `Ticker` - Process and timing
   - `Theme` - Theme management class
+
+#### `lua/ark/` - Foundation Layer
+Foundation layer with algorithms, collections, and utilities.
 
 - **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
 - **`ark/theme/scheme/`** - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
@@ -188,7 +187,7 @@ Loaded before ark/dot, sets up `_G.yoz`, patches, shell, and workspace.
 ### Module Access Patterns
 
 - `yoz.*` → Access Rust-native utilities directly (e.g., `yoz.path.*`, `yoz.fs.*`)
-- `ark.c.Observable` → `require("ark.c.observable")` (collections mounted on ark.c)
+- `stl.c.Observable` → `require("stl.c.observable")` (collections mounted on stl.c)
 - `ark.theme.scheme["catppuccin-mocha"]` → `require("ark.theme.scheme.catppuccin-mocha")`
 - `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
 - `dot.context.*`, `dot.state.*`, `dot.fn.*`, `dot.ux.*`, `dot.widget.*` follow the same lazy-loading pattern

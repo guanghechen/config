@@ -19,45 +19,45 @@ local __module_name__ = "ark.view.treeview" ---@type string
 ---| ark.view.tree.ILeafLocationState
 
 ---@alias ark.view.tree.IRenderListviewLeafNode
----| fun(leafnode: ark.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState): nil
+---| fun(leafnode: stl.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState): nil
 
 ---@alias ark.view.tree.IRenderListviewLeafLocations
----| fun(leafnode: ark.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState): nil
+---| fun(leafnode: stl.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState): nil
 
 ---@alias ark.view.tree.IRenderTreeviewContainerNode
----| fun(containernode: ark.c.ITreeNode, containerstate: ark.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
+---| fun(containernode: stl.c.ITreeNode, containerstate: ark.view.tree.IContainerNodeState, is_lastchild: boolean, cur: integer, dry: boolean): nil
 
 ---@alias ark.view.tree.IRenderTreeviewLeafNode
----| fun(leafnode: ark.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
+---| fun(leafnode: stl.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState, is_lastchild: boolean, cur: integer): nil
 
 ---@alias ark.view.tree.IRenderTreeviewLeafLocations
----| fun(leafnode: ark.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState, leafindent: string): nil
+---| fun(leafnode: stl.c.ITreeNode, leafstate: ark.view.tree.ILeafNodeState, leafindent: string): nil
 
 ---@alias ark.view.tree.IListviewLeafNodeRenderer
----| fun(ctx: ark.view.tree.IListviewRendererContext, node: ark.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: ark.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias ark.view.tree.IListviewLeafLocationRenderer
----| fun(ctx: ark.view.tree.IListviewRendererContext, node: ark.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, location: ark.view.tree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: ark.view.tree.IListviewRendererContext, node: stl.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, location: ark.view.tree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias ark.view.tree.ITreeviewContainerNodeRenderer
----| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: ark.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: ark.view.tree.IContainerNodeState, lnum: integer, folded_depth: integer): ark.view.tree.INodeRenderResult
 
 ---@alias ark.view.tree.ITreeviewLeafNodeRenderer
----| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias ark.view.tree.ITreeviewLeafLocationRenderer
----| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: ark.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, location: ark.view.tree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: ark.view.tree.ITreeviewRendererContext, node: stl.c.ITreeNode, nodestate: ark.view.tree.ILeafNodeState, location: ark.view.tree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@class ark.view.tree.IListviewRendererContext
----@field public rootnode               ark.c.ITreeNode
+---@field public rootnode               stl.c.ITreeNode
 ---@field public rootstate              ark.view.tree.IContainerNodeState
----@field public tree                   ark.c.IReadonlyTree
+---@field public tree                   stl.c.IReadonlyTree
 ---@field public view                   ark.view.Tree
 
 ---@class ark.view.tree.ITreeviewRendererContext
----@field public rootnode               ark.c.ITreeNode
+---@field public rootnode               stl.c.ITreeNode
 ---@field public rootstate              ark.view.tree.INodeState
----@field public tree                   ark.c.IReadonlyTree
+---@field public tree                   stl.c.IReadonlyTree
 ---@field public view                   ark.view.Tree
 
 ---@class ark.view.tree.IContainerNodeState
@@ -179,7 +179,7 @@ end
 ---@field public fullname               ?string
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
----@field public tree                   ark.c.IReadonlyTree
+---@field public tree                   stl.c.IReadonlyTree
 ---@field public render_listview_leaf   ark.view.tree.IListviewLeafNodeRenderer
 ---@field public render_listview_location   ark.view.tree.IListviewLeafLocationRenderer
 ---@field public render_treeview_container  ark.view.tree.ITreeviewContainerNodeRenderer
@@ -193,7 +193,7 @@ end
 ---@field protected _disposed           boolean
 ---@field protected _indent             string
 ---@field protected _indent_hln         string
----@field protected _tree               ark.c.IReadonlyTree
+---@field protected _tree               stl.c.IReadonlyTree
 ---
 ---@field protected _count_selected     integer
 ---@field protected _dirty_selected     boolean
@@ -218,7 +218,7 @@ function M.new(props)
   local fullname = props.fullname or string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent or "" ---@type string
   local indent_hln = props.indent_hln or "f_utw_indent" ---@type string
-  local tree = props.tree ---@type ark.c.IReadonlyTree
+  local tree = props.tree ---@type stl.c.IReadonlyTree
 
   local render_listview_leaf = props.render_listview_leaf ---@type ark.view.tree.IListviewLeafNodeRenderer
   local render_listview_location = props.render_listview_location ---@type ark.view.tree.IListviewLeafLocationRenderer
@@ -333,7 +333,7 @@ function M:render_listview(params)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local rootuuid = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -347,7 +347,7 @@ function M:render_listview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_listview = self._tick_render_listview ---@type integer
 
-  local rootnode = tree:retrieve(rootuuid) ---@type ark.c.ITreeNode|nil
+  local rootnode = tree:retrieve(rootuuid) ---@type stl.c.ITreeNode|nil
   local rootstate = statemap[rootuuid] ---@type ark.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -467,10 +467,10 @@ function M:render_listview(params)
   end
 
   if orders == nil then
-    local conditional ---@type ark.c.ITreeTraverseConditional
+    local conditional ---@type stl.c.ITreeTraverseConditional
     if only_matched then
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -484,7 +484,7 @@ function M:render_listview(params)
           return "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -499,7 +499,7 @@ function M:render_listview(params)
       end
     else
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -512,7 +512,7 @@ function M:render_listview(params)
           return "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -523,10 +523,10 @@ function M:render_listview(params)
       end
     end
 
-    local traverse ---@type ark.c.ITreeTraverseHandler
+    local traverse ---@type stl.c.ITreeTraverseHandler
     if only_matched then
       if only_selected then
-        ---@type ark.c.ITreeTraverseHandler
+        ---@type stl.c.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -540,7 +540,7 @@ function M:render_listview(params)
           end
         end
       else
-        ---@type ark.c.ITreeTraverseHandler
+        ---@type stl.c.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -555,7 +555,7 @@ function M:render_listview(params)
       end
     else
       if only_selected then
-        ---@type ark.c.ITreeTraverseHandler
+        ---@type stl.c.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -568,7 +568,7 @@ function M:render_listview(params)
           end
         end
       else
-        ---@type ark.c.ITreeTraverseHandler
+        ---@type stl.c.ITreeTraverseHandler
         traverse = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if nodestate ~= nil and nodestate.nodetype == "leaf" and nodestate.tick_invisible ~= tick_invisible then
@@ -583,7 +583,7 @@ function M:render_listview(params)
     if only_matched then
       if only_selected then
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
+          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ark.view.tree.INodeState|nil
           if
             node ~= nil
@@ -598,7 +598,7 @@ function M:render_listview(params)
         end
       else
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
+          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ark.view.tree.INodeState|nil
           if
             node ~= nil
@@ -614,7 +614,7 @@ function M:render_listview(params)
     else
       if only_selected then
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
+          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ark.view.tree.INodeState|nil
           if
             node ~= nil
@@ -628,7 +628,7 @@ function M:render_listview(params)
         end
       else
         for _, uuid in ipairs(orders) do
-          local node = tree:retrieve(uuid) ---@type ark.c.ITreeNode|nil
+          local node = tree:retrieve(uuid) ---@type stl.c.ITreeNode|nil
           local nodestate = statemap[uuid] ---@type ark.view.tree.INodeState|nil
           if
             node ~= nil
@@ -677,7 +677,7 @@ function M:render_treeview(params)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
 
   local bufnr = params.bufnr ---@type integer
   local root = params.rootuuid ~= nil and params.rootuuid or tree.root ---@type string
@@ -692,7 +692,7 @@ function M:render_treeview(params)
   local tick_selected = self._tick_selected ---@type integer
   local tick_render_treeview = self._tick_render_treeview ---@type integer
 
-  local rootnode = tree:retrieve(root) ---@type ark.c.ITreeNode|nil
+  local rootnode = tree:retrieve(root) ---@type stl.c.ITreeNode|nil
   local rootstate = statemap[root] ---@type ark.view.tree.INodeState|nil
   if rootnode == nil or (rootstate ~= nil and rootstate.tick_invisible == tick_invisible) then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
@@ -938,11 +938,11 @@ function M:render_treeview(params)
     end
   end
 
-  local conditional ---@type ark.c.ITreeTraverseConditional
+  local conditional ---@type stl.c.ITreeTraverseConditional
   if only_expanded then
     if only_matched then
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -956,7 +956,7 @@ function M:render_treeview(params)
           return nodestate.collapsed and "goodnode" or "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -971,7 +971,7 @@ function M:render_treeview(params)
       end
     else
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -984,7 +984,7 @@ function M:render_treeview(params)
           return nodestate.collapsed and "goodnode" or "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -997,7 +997,7 @@ function M:render_treeview(params)
   else
     if only_matched then
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -1011,7 +1011,7 @@ function M:render_treeview(params)
           return "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -1026,7 +1026,7 @@ function M:render_treeview(params)
       end
     else
       if only_selected then
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if
@@ -1039,7 +1039,7 @@ function M:render_treeview(params)
           return "goodroot"
         end
       else
-        ---@type ark.c.ITreeTraverseConditional
+        ---@type stl.c.ITreeTraverseConditional
         conditional = function(_, node)
           local nodestate = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
           if nodestate == nil or nodestate.tick_invisible == tick_invisible then
@@ -1051,9 +1051,9 @@ function M:render_treeview(params)
     end
   end
 
-  local traverse ---@type ark.c.ITreeTraverseHandler
+  local traverse ---@type stl.c.ITreeTraverseHandler
   if foldempty then
-    ---@type ark.c.ITreeTraverseHandler
+    ---@type stl.c.ITreeTraverseHandler
     traverse = function(_, node, cur, is_lastchild, onlychild)
       if cur < last_cur then
         for index = cur, last_cur, 1 do
@@ -1100,7 +1100,7 @@ function M:render_treeview(params)
       })
     end
   else
-    ---@type ark.c.ITreeTraverseHandler
+    ---@type stl.c.ITreeTraverseHandler
     traverse = function(_, node, cur, is_lastchild)
       if cur < last_cur then
         for index = cur, last_cur, 1 do
@@ -1265,7 +1265,7 @@ function M:remove(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
 
   tree:quick_traverse(uuid, function(_, node)
     local state = statemap[node.uuid] ---@type ark.view.tree.INodeState|nil
@@ -1364,7 +1364,7 @@ function M:toggle_select(uuid, selected, only_visible)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
   local count_selected = self._count_selected ---@type integer
   local tick_invisible = only_visible and self._tick_invisible or -1 ---@type integer
   local tick_selected = self._tick_selected ---@type integer
@@ -1409,7 +1409,7 @@ end
 function M:collapse(uuid, value, recursive)
   self:__health__()
 
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
   if not tree:isexistent(uuid) then
     ark.reporter.error({
       from = self.fullname,
@@ -1479,7 +1479,7 @@ function M:mark_subroot_invisible(uuid)
   self:__health__()
 
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
   local tick_invisible = self._tick_invisible ---@type integer
 
   tree:quick_traverse(uuid, function(_, node)
@@ -1539,20 +1539,20 @@ function M:__refresh_selected_maximum__()
   end
   self._dirty_selected = false ---@type boolean
 
-  local tree = self._tree ---@type ark.c.IReadonlyTree
+  local tree = self._tree ---@type stl.c.IReadonlyTree
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
 
   tree:unsafe_traverse(nil, function(ctx)
-    local rootnode = ctx.rootnode ---@type ark.c.ITreeNode
-    local nodemap = ctx.nodemap ---@type table<string, ark.c.ITreeNode>
+    local rootnode = ctx.rootnode ---@type stl.c.ITreeNode
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.ITreeNode>
 
-    ---@param node                      ark.c.ITreeNode
+    ---@param node                      stl.c.ITreeNode
     ---@return integer
     local function recursive(node)
       local childstate = statemap[node.uuid] ---@type ark.view.tree.INodeState
       local tick = childstate.tick_selected ---@type integer
       for _, childuuid in ipairs(node.children) do
-        local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
+        local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
         local t = recursive(childnode) ---@type integer
         tick = tick < t and t or tick ---@type integer
       end
@@ -1561,7 +1561,7 @@ function M:__refresh_selected_maximum__()
     end
 
     for _, childuuid in ipairs(rootnode.children) do
-      local childnode = nodemap[childuuid] ---@type ark.c.ITreeNode
+      local childnode = nodemap[childuuid] ---@type stl.c.ITreeNode
       recursive(childnode) ---@type integer
     end
   end)

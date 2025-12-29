@@ -113,10 +113,10 @@ function M.select(items, opts, on_choice)
   title = (#title > 1 and string.sub(title, 1, 1) ~= " ") and " " .. title .. " " or title ---@type string
 
   local is_new_context = context == nil ---@type boolean
-  local search_pattern ---@type ark.c.Observable
-  local flag_fuzzy ---@type ark.c.Observable
-  local flag_regex ---@type ark.c.Observable
-  local flag_case_sensitive ---@type ark.c.Observable
+  local search_pattern ---@type stl.c.Observable
+  local flag_fuzzy ---@type stl.c.Observable
+  local flag_regex ---@type stl.c.Observable
+  local flag_case_sensitive ---@type stl.c.Observable
 
   if context then
     -- Use existing context observables
@@ -126,10 +126,10 @@ function M.select(items, opts, on_choice)
     flag_case_sensitive = context.flag_case_sensitive
   else
     -- Create new observables
-    search_pattern = ark.c.Observable.from_value("")
-    flag_fuzzy = ark.c.Observable.from_value(true)
-    flag_regex = ark.c.Observable.from_value(false)
-    flag_case_sensitive = ark.c.Observable.from_value(false)
+    search_pattern = stl.c.Observable.from_value("")
+    flag_fuzzy = stl.c.Observable.from_value(true)
+    flag_regex = stl.c.Observable.from_value(false)
+    flag_case_sensitive = stl.c.Observable.from_value(false)
   end
 
   -- Handle dimension options

@@ -18,14 +18,14 @@ local __module_name__ = "dot.context.workspace.lsp" ---@type string
 ---@field public spellcheck             boolean
 
 ---@class dot.context.lsp.state
----@field public breakpoints            ark.c.Observable
----@field public code_lens              ark.c.Observable
----@field public diagnostics_virt_lines ark.c.Observable
----@field public inlay_hints            ark.c.Observable
----@field public python_debug_host      ark.c.Observable
----@field public python_debug_port      ark.c.Observable
----@field public python_venv_path       ark.c.Observable
----@field public spellcheck             ark.c.Observable
+---@field public breakpoints            stl.c.Observable
+---@field public code_lens              stl.c.Observable
+---@field public diagnostics_virt_lines stl.c.Observable
+---@field public inlay_hints            stl.c.Observable
+---@field public python_debug_host      stl.c.Observable
+---@field public python_debug_port      stl.c.Observable
+---@field public python_venv_path       stl.c.Observable
+---@field public spellcheck             stl.c.Observable
 ---
 ---@field public get_python_bin_path    fun(): string|nil, string|nil
 ---@field public refresh_breakpoints    fun(): nil
@@ -153,14 +153,14 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local data = M.defaults() ---@type dot.context.lsp.data
-M.breakpoints = ark.c.Observable.from_value(data.breakpoints)
-M.code_lens = ark.c.Observable.from_value(data.code_lens)
-M.diagnostics_virt_lines = ark.c.Observable.from_value(data.diagnostics_virt_lines)
-M.inlay_hints = ark.c.Observable.from_value(data.inlay_hints)
-M.python_debug_host = ark.c.Observable.from_value(data.python_debug_host)
-M.python_debug_port = ark.c.Observable.from_value(data.python_debug_port)
-M.python_venv_path = ark.c.Observable.from_value(data.python_venv_path)
-M.spellcheck = ark.c.Observable.from_value(data.spellcheck)
+M.breakpoints = stl.c.Observable.from_value(data.breakpoints)
+M.code_lens = stl.c.Observable.from_value(data.code_lens)
+M.diagnostics_virt_lines = stl.c.Observable.from_value(data.diagnostics_virt_lines)
+M.inlay_hints = stl.c.Observable.from_value(data.inlay_hints)
+M.python_debug_host = stl.c.Observable.from_value(data.python_debug_host)
+M.python_debug_port = stl.c.Observable.from_value(data.python_debug_port)
+M.python_venv_path = stl.c.Observable.from_value(data.python_venv_path)
+M.spellcheck = stl.c.Observable.from_value(data.spellcheck)
 
 ---@return string|nil
 ---@return string|nil

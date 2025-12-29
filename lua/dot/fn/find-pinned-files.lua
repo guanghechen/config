@@ -1,18 +1,18 @@
 local name = "dot.fn.find_pinned_files" ---@type string
 local title = "Find Pinned Files" ---@type string
 
-local search_pattern = ark.c.Observable.from_value("")
-local search_pattern_history = ark.c.InputHistory.new({
+local search_pattern = stl.c.Observable.from_value("")
+local search_pattern_history = stl.c.InputHistory.new({
   name = name,
   capacity = 5,
   input = search_pattern,
 })
-local o_flag_foldempty = ark.c.Observable.from_value(true)
-local o_flag_fuzzy = ark.c.Observable.from_value(false)
-local o_flag_regex = ark.c.Observable.from_value(false)
-local o_flag_case_sensitive = ark.c.Observable.from_value(true)
-local o_flag_selected = ark.c.Observable.from_value(false)
-local o_flag_viewtype = ark.c.Observable.from_value("tree")
+local o_flag_foldempty = stl.c.Observable.from_value(true)
+local o_flag_fuzzy = stl.c.Observable.from_value(false)
+local o_flag_regex = stl.c.Observable.from_value(false)
+local o_flag_case_sensitive = stl.c.Observable.from_value(true)
+local o_flag_selected = stl.c.Observable.from_value(false)
+local o_flag_viewtype = stl.c.Observable.from_value("tree")
 
 ---@param picker                        dot.module.picker.FiletreeComposer
 ---@return nil

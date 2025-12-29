@@ -11,10 +11,10 @@ local MAX_HISTORY = 10
 ---@field public last_color             dot.context.colorpicker.IColorItem|nil
 
 ---@class dot.context.colorpicker.state
----@field public history                ark.c.Observable
----@field public input_mode             ark.c.Observable
----@field public output_mode            ark.c.Observable
----@field public last_color             ark.c.Observable
+---@field public history                stl.c.Observable
+---@field public input_mode             stl.c.Observable
+---@field public output_mode            stl.c.Observable
+---@field public last_color             stl.c.Observable
 
 ---@class dot.context.colorpicker : dot.context.colorpicker.state
 ---@field public defaults               fun(): dot.context.colorpicker.data
@@ -169,16 +169,16 @@ end
 
 local _defaults = M.defaults() ---@type dot.context.colorpicker.data
 
----@type ark.c.Observable
-M.history = ark.c.Observable.from_value(_defaults.history)
+---@type stl.c.Observable
+M.history = stl.c.Observable.from_value(_defaults.history)
 
----@type ark.c.Observable
-M.input_mode = ark.c.Observable.from_value(_defaults.input_mode)
+---@type stl.c.Observable
+M.input_mode = stl.c.Observable.from_value(_defaults.input_mode)
 
----@type ark.c.Observable
-M.output_mode = ark.c.Observable.from_value(_defaults.output_mode)
+---@type stl.c.Observable
+M.output_mode = stl.c.Observable.from_value(_defaults.output_mode)
 
----@type ark.c.Observable
-M.last_color = ark.c.Observable.from_value(_defaults.last_color)
+---@type stl.c.Observable
+M.last_color = stl.c.Observable.from_value(_defaults.last_color)
 
 return M

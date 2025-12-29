@@ -1,34 +1,34 @@
----@class ark.c.frecency.IItem
+---@class stl.c.frecency.IItem
 ---@field public timestamps             integer[]
 ---@field public idx                    integer
 
----@class ark.c.frecency.ISerializedData
+---@class stl.c.frecency.ISerializedData
 ---@field public MAX_TIMESTAMPS         integer|nil
----@field public items                  ark.c.frecency.IItem[]
+---@field public items                  stl.c.frecency.IItem[]
 
----@class ark.c.frecency.IProps
+---@class stl.c.frecency.IProps
 ---@field public MAX_TIMESTAMPS         ?integer
----@field public items                  table<string, ark.c.frecency.IItem>
+---@field public items                  table<string, stl.c.frecency.IItem>
 ---@field public normalize              ?fun(key: string): string
 
----@class ark.c.frecency.IDeserializeProps
----@field public data                   ark.c.frecency.ISerializedData
+---@class stl.c.frecency.IDeserializeProps
+---@field public data                   stl.c.frecency.ISerializedData
 ---@field public normalize              ?fun(key: string): string
 
----@class ark.c.Frecency
+---@class stl.c.Frecency
 ---@field public MAX_TIMESTAMPS         integer
----@field protected _items              table<string, ark.c.frecency.IItem>
+---@field protected _items              table<string, stl.c.frecency.IItem>
 ---@field protected _normalize          fun(key: string): string
 local M = {}
 M.__index = M
 
----@param props                         ark.c.frecency.IProps
----@return ark.c.Frecency
+---@param props                         stl.c.frecency.IProps
+---@return stl.c.Frecency
 function M.new(props)
   local self = setmetatable({}, M)
 
   local MAX_TIMESTAMPS = props.MAX_TIMESTAMPS or 10 ---@type integer
-  local items = props.items ---@type table<string, ark.c.frecency.IItem>
+  local items = props.items ---@type table<string, stl.c.frecency.IItem>
   local normalize = props.normalize or stl.fn.identity ---@type fun(key: string): string
 
   self.MAX_TIMESTAMPS = MAX_TIMESTAMPS
@@ -38,10 +38,10 @@ function M.new(props)
   return self
 end
 
----@param props                         ark.c.frecency.IDeserializeProps
----@return ark.c.Frecency
+---@param props                         stl.c.frecency.IDeserializeProps
+---@return stl.c.Frecency
 function M.deserialize(props)
-  local data = props.data ---@type ark.c.frecency.ISerializedData
+  local data = props.data ---@type stl.c.frecency.ISerializedData
   local normalize = props.normalize ---@type (fun(key: string): string)|nil
   return M.new({
     MAX_TIMESTAMPS = data.MAX_TIMESTAMPS,
@@ -55,9 +55,9 @@ end
 function M:access(key)
   key = self._normalize(key)
   local timestamp = os.time() ---@type integer
-  local item = self._items[key] ---@type ark.c.frecency.IItem|nil
+  local item = self._items[key] ---@type stl.c.frecency.IItem|nil
   if item == nil then
-    item = { timestamps = { timestamp }, idx = 1 } ---@type ark.c.frecency.IItem
+    item = { timestamps = { timestamp }, idx = 1 } ---@type stl.c.frecency.IItem
     self._items[key] = item
   else
     local idx = item.idx == self.MAX_TIMESTAMPS and 1 or item.idx + 1 ---@type integer
@@ -66,9 +66,9 @@ function M:access(key)
   end
 end
 
----@return ark.c.frecency.ISerializedData
+---@return stl.c.frecency.ISerializedData
 function M:dump()
-  ---@type ark.c.frecency.ISerializedData
+  ---@type stl.c.frecency.ISerializedData
   local data = {
     MAX_TIMESTAMPS = self.MAX_TIMESTAMPS,
     items = self._items,
@@ -76,10 +76,10 @@ function M:dump()
   return data
 end
 
----@param data                          ark.c.frecency.ISerializedData
+---@param data                          stl.c.frecency.ISerializedData
 ---@return nil
 function M:load(data)
-  local items = data.items ---@type ark.c.frecency.IItem[]
+  local items = data.items ---@type stl.c.frecency.IItem[]
   self._items = items
 end
 
@@ -88,7 +88,7 @@ end
 function M:score(key)
   key = self._normalize(key)
   local timestamp_cur = os.time() ---@type integer
-  local item = self._items[key] ---@type ark.c.frecency.IItem|nil
+  local item = self._items[key] ---@type stl.c.frecency.IItem|nil
   local score = 0 ---@type number
   if item ~= nil then
     for _, timestamp in ipairs(item.timestamps) do

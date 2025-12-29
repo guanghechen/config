@@ -1,20 +1,20 @@
----@class ark.c.IUnsubscribable
----@field public unsubscribe            fun(self: ark.c.IUnsubscribable): nil
+---@class stl.c.IUnsubscribable
+---@field public unsubscribe            fun(self: stl.c.IUnsubscribable): nil
 
----@class ark.c.IDisposable
----@field public isdisposed             fun(self: ark.c.IDisposable): boolean Check if the disposable disposed.
----@field public dispose                fun(self: ark.c.IDisposable): boolean Dispose the disposable.
+---@class stl.c.IDisposable
+---@field public isdisposed             fun(self: stl.c.IDisposable): boolean Check if the disposable disposed.
+---@field public dispose                fun(self: stl.c.IDisposable): boolean Dispose the disposable.
 
----@class ark.c.disposable.IProps
+---@class stl.c.disposable.IProps
 ---@field public on_dispose             fun():nil
 
----@class ark.c.Disposable : ark.c.IDisposable
+---@class stl.c.Disposable : stl.c.IDisposable
 ---@field protected _on_dispose         fun():nil
 local M = {}
 M.__index = M
 
----@param props                         ark.c.disposable.IProps
----@return ark.c.Disposable
+---@param props                         stl.c.disposable.IProps
+---@return stl.c.Disposable
 function M.new(props)
   local self = setmetatable({}, M)
 
@@ -26,7 +26,7 @@ function M.new(props)
   return self
 end
 
----@param unsubscribable                ark.c.IUnsubscribable
+---@param unsubscribable                stl.c.IUnsubscribable
 function M.from_unsubscribable(unsubscribable)
   return M.new({
     on_dispose = function()

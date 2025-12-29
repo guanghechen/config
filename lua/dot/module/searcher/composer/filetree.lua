@@ -56,30 +56,30 @@ local __module_name__ = "dot.module.searcher.composer.filetree" ---@type string
 ---@field public keymaps_replacer       ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public excludes               ark.c.Observable
----@field public flag_exclude           ark.c.Observable
----@field public flag_foldempty         ark.c.Observable
----@field public flag_gitignore         ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_replace           ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
----@field public includes               ark.c.Observable
----@field public max_filesize           ark.c.Observable
----@field public max_matches            ark.c.Observable
----@field public replace_pattern        ark.c.Observable
----@field public rootpath               ark.c.Observable
----@field public search_pattern         ark.c.Observable
+---@field public excludes               stl.c.Observable
+---@field public flag_exclude           stl.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_gitignore         stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_replace           stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
+---@field public includes               stl.c.Observable
+---@field public max_filesize           stl.c.Observable
+---@field public max_matches            stl.c.Observable
+---@field public replace_pattern        stl.c.Observable
+---@field public rootpath               stl.c.Observable
+---@field public search_pattern         stl.c.Observable
 ---
 ---@field public flags_append           dot.module.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          dot.module.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public frecency               ?ark.c.Frecency
+---@field public frecency               ?stl.c.Frecency
 ---
----@field public search_pattern_history ?ark.c.History
----@field public replace_pattern_history ?ark.c.History
+---@field public search_pattern_history ?stl.c.History
+---@field public replace_pattern_history ?stl.c.History
 ---
 ---@field public on_attached            ?dot.module.searcher.composer.filetree.IOnAttached
 ---@field public on_closed              ?dot.module.searcher.composer.filetree.IOnClosed
@@ -98,28 +98,28 @@ local __module_name__ = "dot.module.searcher.composer.filetree" ---@type string
 ---@field public result                 dot.module.searcher.Result
 ---@field public preview                dot.module.searcher.Preview
 ---
----@field public excludes               ark.c.Observable
----@field public flag_exclude           ark.c.Observable
----@field public flag_foldempty         ark.c.Observable
----@field public flag_gitignore         ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_replace           ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public includes               ark.c.Observable
----@field public max_filesize           ark.c.Observable
----@field public max_matches            ark.c.Observable
----@field public replace_pattern        ark.c.Observable
----@field public rootpath               ark.c.Observable
----@field public search_pattern         ark.c.Observable
+---@field public excludes               stl.c.Observable
+---@field public flag_exclude           stl.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_gitignore         stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_replace           stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public includes               stl.c.Observable
+---@field public max_filesize           stl.c.Observable
+---@field public max_matches            stl.c.Observable
+---@field public replace_pattern        stl.c.Observable
+---@field public rootpath               stl.c.Observable
+---@field public search_pattern         stl.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _filetree           ark.c.Filetree
----@field protected _frecency           ark.c.Frecency|nil
+---@field protected _filetree           stl.c.Filetree
+---@field protected _frecency           stl.c.Frecency|nil
 ---@field protected _composer           dot.module.searcher.BasicComposer
 ---@field protected _plainfile          dot.module.searcher.PlainfileView
----@field protected _retriever          ark.c.TreeRetriever
----@field protected _scheduler_search   ark.c.Scheduler|nil
+---@field protected _retriever          stl.c.TreeRetriever
+---@field protected _scheduler_search   stl.c.Scheduler|nil
 ---@field protected _is_searching       boolean
 ---@field protected _search_pending     boolean
 ---@field protected _treeview           dot.module.searcher.FiletreeView
@@ -133,7 +133,7 @@ local __module_name__ = "dot.module.searcher.composer.filetree" ---@type string
 ---@field protected _on_attached        dot.module.searcher.composer.filetree.IOnAttached
 ---@field protected _on_confirm         dot.module.searcher.composer.filetree.IOnConfirm|nil
 ---@field protected _on_disposed        dot.module.searcher.composer.filetree.IOnDisposed
----@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -149,24 +149,24 @@ function M.new(props)
   local height = props.height ---@type number|nil
   local width = props.width ---@type number|nil
 
-  local o_excludes = props.excludes ---@type ark.c.Observable
-  local o_flag_exclude = props.flag_exclude ---@type ark.c.Observable
-  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.Observable
-  local o_flag_gitignore = props.flag_gitignore ---@type ark.c.Observable
-  local o_flag_regex = props.flag_regex ---@type ark.c.Observable
-  local o_flag_replace = props.flag_replace ---@type ark.c.Observable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
-  local o_flag_selected = props.flag_selected ---@type ark.c.Observable
-  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
-  local o_includes = props.includes ---@type ark.c.Observable
-  local o_max_filesize = props.max_filesize ---@type ark.c.Observable
-  local o_max_matches = props.max_matches ---@type ark.c.Observable
-  local o_replace_pattern = props.replace_pattern ---@type ark.c.Observable
-  local o_rootpath = props.rootpath ---@type ark.c.Observable
-  local o_search_pattern = props.search_pattern ---@type ark.c.Observable
+  local o_excludes = props.excludes ---@type stl.c.Observable
+  local o_flag_exclude = props.flag_exclude ---@type stl.c.Observable
+  local o_flag_foldempty = props.flag_foldempty ---@type stl.c.Observable
+  local o_flag_gitignore = props.flag_gitignore ---@type stl.c.Observable
+  local o_flag_regex = props.flag_regex ---@type stl.c.Observable
+  local o_flag_replace = props.flag_replace ---@type stl.c.Observable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
+  local o_flag_selected = props.flag_selected ---@type stl.c.Observable
+  local o_flag_viewtype = props.flag_viewtype ---@type stl.c.Observable
+  local o_includes = props.includes ---@type stl.c.Observable
+  local o_max_filesize = props.max_filesize ---@type stl.c.Observable
+  local o_max_matches = props.max_matches ---@type stl.c.Observable
+  local o_replace_pattern = props.replace_pattern ---@type stl.c.Observable
+  local o_rootpath = props.rootpath ---@type stl.c.Observable
+  local o_search_pattern = props.search_pattern ---@type stl.c.Observable
 
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
-  local replace_pattern_history = props.replace_pattern_history ---@type ark.c.History|nil
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
+  local replace_pattern_history = props.replace_pattern_history ---@type stl.c.History|nil
 
   local keymaps_common = props.keymaps_common ---@type ark.t.IKeymap[]|nil
   local keymaps_finder = props.keymaps_finder ---@type ark.t.IKeymap[]|nil
@@ -178,7 +178,7 @@ function M.new(props)
   local flags_prepend = props.flags_prepend ---@type dot.module.searcher.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local frecency = props.frecency ---@type ark.c.Frecency|nil
+  local frecency = props.frecency ---@type stl.c.Frecency|nil
 
   local on_attached = props.on_attached or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnAttached
   local on_closed = props.on_closed or stl.fn.noop ---@type dot.module.searcher.composer.filetree.IOnClosed
@@ -190,8 +190,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type ark.c.Filetree
-  local filetree = ark.c.Filetree.new({ name = fullname })
+  ---@type stl.c.Filetree
+  local filetree = stl.c.Filetree.new({ name = fullname })
 
   ---@type dot.module.searcher.FiletreeView
   local treeview = dot.searcher.FiletreeView.new({
@@ -208,13 +208,13 @@ function M.new(props)
     _on_refresh(self, force)
   end
 
-  ---@type ark.c.TreeRetriever
-  local retriever = ark.c.TreeRetriever.new({
+  ---@type stl.c.TreeRetriever
+  local retriever = stl.c.TreeRetriever.new({
     name = fullname,
   })
 
   ---@param nodeuuid                    string
-  ---@return ark.c.IFiletreeNode|nil
+  ---@return stl.c.IFiletreeNode|nil
   ---@return dot.module.searcher.view.filetree.INodeState|nil
   local function retrieve_node_and_state(nodeuuid)
     local nodestate = treeview:retrieve(nodeuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
@@ -227,7 +227,7 @@ function M.new(props)
       end
     end
 
-    local node = filetree:retrieve(baseuuid) ---@type ark.c.IFiletreeNode|nil
+    local node = filetree:retrieve(baseuuid) ---@type stl.c.IFiletreeNode|nil
     return node, nodestate
   end
 
@@ -276,7 +276,7 @@ function M.new(props)
   end
 
   ---@param target                      dot.t.ILocation[]
-  ---@param node                        ark.c.IFiletreeNode|nil
+  ---@param node                        stl.c.IFiletreeNode|nil
   ---@param nodestate                   dot.module.searcher.view.filetree.INodeState|nil
   ---@param include_directory           boolean
   local function append_location_payload(target, node, nodestate, include_directory)
@@ -307,13 +307,13 @@ function M.new(props)
     name = fullname,
   })
 
-  local scheduler_search = ark.c.Scheduler.new({
+  local scheduler_search = stl.c.Scheduler.new({
     name = string.format("%s#search", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       self:__search__()
       treeview:mark_cache_treeview_dirty()
@@ -492,7 +492,7 @@ function M.new(props)
       end
 
       local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local leafnode = filetree:retrieve(leafuuid) ---@type ark.c.IFiletreeNode|nil
+      local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
       if leafnode == nil then
         return
       end
@@ -504,7 +504,7 @@ function M.new(props)
     end,
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+      local rootnode = filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -517,7 +517,7 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
@@ -649,7 +649,7 @@ function M.new(props)
     end,
     replace_all = function()
       local rootuuid = self._uuid_root ---@type string|nil
-      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type ark.c.IFiletreeNode|nil
+      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -660,10 +660,10 @@ function M.new(props)
       for lnum = 1, lnum_total, 1 do
         local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if leafuuid ~= nil then
-          local leafnode = filetree:retrieve(leafuuid) ---@type ark.c.IFiletreeNode|nil
+          local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
           local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
           if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
-            ---@cast leafnode         ark.c.IFiletreeNode
+            ---@cast leafnode         stl.c.IFiletreeNode
             ---@cast leafnodestate    dot.module.searcher.view.filetree.IFileNodeState
             dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
           end
@@ -687,7 +687,7 @@ function M.new(props)
       end
 
       local rootuuid = self._uuid_root ---@type string|nil
-      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type ark.c.IFiletreeNode|nil
+      local rootnode = rootuuid ~= nil and filetree:retrieve(rootuuid) or nil ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -701,7 +701,7 @@ function M.new(props)
       if nodestate.nodetype == "location" then
         ---@cast nodestate              dot.module.searcher.view.filetree.ILeafLocationState
 
-        local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type ark.c.IFiletreeNode|nil
+        local leafnode = filetree:retrieve(nodestate.leafuuid) ---@type stl.c.IFiletreeNode|nil
         if leafnode == nil then
           ark.reporter.error({
             from = self.fullname,
@@ -816,7 +816,7 @@ function M.new(props)
         return
       end
 
-      local node = filetree:retrieve(nodeuuid) ---@type ark.c.IFiletreeNode|nil
+      local node = filetree:retrieve(nodeuuid) ---@type stl.c.IFiletreeNode|nil
       if node == nil then
         ark.reporter.error({
           from = self.fullname,
@@ -849,10 +849,10 @@ function M.new(props)
         for lnum = lnum_current, lnum_childline, 1 do
           local leafuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
           if leafuuid ~= nil then
-            local leafnode = filetree:retrieve(leafuuid) ---@type ark.c.IFiletreeNode|nil
+            local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
             local leafnodestate = treeview:retrieve(leafuuid) ---@type dot.module.searcher.view.filetree.INodeState|nil
             if leafnode ~= nil and leafnodestate ~= nil and leafnodestate.nodetype == "leaf" then
-              ---@cast leafnode         ark.c.IFiletreeNode
+              ---@cast leafnode         stl.c.IFiletreeNode
               ---@cast leafnodestate    dot.module.searcher.view.filetree.IFileNodeState
               dirtied = self:__replace_file__(cwd, leafnode, leafnodestate) or dirtied ---@type boolean
             end
@@ -874,7 +874,7 @@ function M.new(props)
       for lnum = 1, linecount, 1 do
         local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if uuid ~= nil then
-          local node = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
             local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
@@ -1417,7 +1417,7 @@ function M.new(props)
           local force = node.data.filepath ~= self._last_preview_filepath ---@type boolean
           self._last_preview_filepath = node.data.filepath ---@type string|nil
 
-          local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
+          local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
           local filepath = node.data.filepath ---@type string
           local relative_filepath = rootnode ~= nil
               and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
@@ -1580,7 +1580,7 @@ function M.new(props)
   self._on_disposed = on_disposed
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
+  local observer_unsubs = {} ---@type stl.c.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({
     o_search_pattern,
@@ -1625,10 +1625,10 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type dot.module.searcher.composer.filetree.IOnDisposed
   local composer = self._composer ---@type dot.module.searcher.BasicComposer
   local plainfile = self._plainfile ---@type dot.module.searcher.PlainfileView
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
-  local scheduler_search = self._scheduler_search ---@type ark.c.Scheduler
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
+  local scheduler_search = self._scheduler_search ---@type stl.c.Scheduler
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
-  local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean
@@ -1756,7 +1756,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+  local node = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1766,7 +1766,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local filetree = self._filetree ---@type ark.c.Filetree
+  local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   treeview:mark_cache_listview_dirty()
@@ -1801,14 +1801,14 @@ end
 function M:reset_filepaths(rootpath, cwd, filepaths)
   self:__health__()
 
-  local frecency = self._frecency ---@type ark.c.Frecency|nil
+  local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths)
 
-  local uuid_root = ark.c.Filetree.uuid(rootpath) ---@type string
-  local uuid_cwd = ark.c.Filetree.uuid(cwd) ---@type string
+  local uuid_root = stl.c.Filetree.uuid(rootpath) ---@type string
+  local uuid_cwd = stl.c.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 
@@ -1841,7 +1841,7 @@ end
 function M:__collect_selected_lnums__()
   self:__health__()
 
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   local linecount = retriever:linecount() ---@type integer
@@ -1895,7 +1895,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -1990,8 +1990,8 @@ function M:__search_internal__()
   local replace_pattern = self.replace_pattern:snapshot() ---@type string|nil
   local search_pattern = self.search_pattern:snapshot() ---@type string
 
-  local filetree = self._filetree ---@type ark.c.Filetree
-  local frecency = self._frecency ---@type ark.c.Frecency|nil
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   if #search_pattern < 1 then
@@ -2119,12 +2119,12 @@ function M:__search_internal__()
   end
 
   filetree:unsafe_traverse(nil, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, ark.c.IFiletreeNode>
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
     for _, uuid in ipairs(uuids) do
-      local o = nodemap[uuid] ---@type ark.c.IFiletreeNode
+      local o = nodemap[uuid] ---@type stl.c.IFiletreeNode
 
       for _ = o.depth - 1, 1, -1 do
-        o = nodemap[o.parent] ---@type ark.c.IFiletreeNode
+        o = nodemap[o.parent] ---@type stl.c.IFiletreeNode
 
         local s = statemap[o.uuid]
         if s == nil or s.tick_matched == tick_matched then
@@ -2153,8 +2153,8 @@ function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.searcher.BasicComposer
-  local filetree = self._filetree ---@type ark.c.Filetree
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
   if self:__has_selected_node__() then
@@ -2167,7 +2167,7 @@ function M:__open_node__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2236,7 +2236,7 @@ function M:__open_node__(nodeuuid)
 end
 
 ---@param cwd                           string
----@param node                          ark.c.IFiletreeNode
+---@param node                          stl.c.IFiletreeNode
 ---@param nodestate                     dot.module.searcher.view.filetree.IFileNodeState
 ---@return boolean
 function M:__replace_file__(cwd, node, nodestate)
@@ -2339,11 +2339,11 @@ function M:__resolve_confirmation__(nodeuuid)
   local node = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.searcher.BasicComposer
-  local filetree = self._filetree ---@type ark.c.Filetree
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.searcher.FiletreeView
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -2354,7 +2354,7 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2378,7 +2378,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 ---@return dot.module.searcher.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type dot.module.searcher.view.filetree.INodeState|nil
@@ -2387,7 +2387,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type ark.c.IFiletreeNode|nil
+  ---@type stl.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -2396,7 +2396,7 @@ function M:__retrieve__(nodeuuid)
   return node, nodestate
 end
 
----@return ark.c.IFiletreeNode|nil
+---@return stl.c.IFiletreeNode|nil
 function M:__retrieve_filenode__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
@@ -2414,14 +2414,14 @@ function M:__retrieve_filenode__()
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type ark.c.IFiletreeNode|nil
+  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type stl.c.IFiletreeNode|nil
   return node
 end
 
----@return ark.c.IFiletreeNode|nil
+---@return stl.c.IFiletreeNode|nil
 function M:__retrieve_rootnode__()
   local rootuuid = self._uuid_root ---@type string
-  local rootnode = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+  local rootnode = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   return rootnode
 end
 
@@ -2441,7 +2441,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
@@ -2479,7 +2479,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  ---@type ark.c.IFiletreeNode|nil
+  ---@type stl.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodeuuid)
   if node == nil then
     return nil, nil

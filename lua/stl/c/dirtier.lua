@@ -1,21 +1,21 @@
----@class ark.c.dirtier.IProps
+---@class stl.c.dirtier.IProps
 ---@field public dirty                  boolean
 ---@field public equals                 ?fun(a: unknown, b: unknown): boolean
 
----@class ark.c.Dirtier : ark.c.Observable
+---@class stl.c.Dirtier : stl.c.Observable
 ---@diagnostic disable-next-line: assign-type-mismatch
 local M = {}
 M.__index = M
-setmetatable(M, ark.c.Observable)
+setmetatable(M, stl.c.Observable)
 
----@param props                         ark.c.dirtier.IProps
----@return ark.c.Dirtier
+---@param props                         stl.c.dirtier.IProps
+---@return stl.c.Dirtier
 function M.new(props)
   local dirty = props.dirty ---@type boolean
   local equals = props.equals or stl.fn.falsy
 
-  local self = setmetatable(ark.c.Observable.new({ initial_value = dirty, equals = equals }), M)
-  ---@cast self                         ark.c.Dirtier
+  local self = setmetatable(stl.c.Observable.new({ initial_value = dirty, equals = equals }), M)
+  ---@cast self                         stl.c.Dirtier
 
   return self
 end

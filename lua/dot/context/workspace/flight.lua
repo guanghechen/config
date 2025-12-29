@@ -22,27 +22,27 @@
 ---@field public gitdiff_expand_all     boolean
 
 ---@class dot.context.flight.state
----@field public ai                     ark.c.Observable
----@field public ai_nes                 ark.c.Observable
----@field public autoformat             ark.c.Observable
----@field public autoload               ark.c.Observable
----@field public autosave               ark.c.Observable
----@field public devmode                ark.c.Observable
+---@field public ai                     stl.c.Observable
+---@field public ai_nes                 stl.c.Observable
+---@field public autoformat             stl.c.Observable
+---@field public autoload               stl.c.Observable
+---@field public autosave               stl.c.Observable
+---@field public devmode                stl.c.Observable
 ---
----@field public dressing_clipboard     ark.c.Observable
----@field public dressing_dim           ark.c.Observable
----@field public dressing_illuminate    ark.c.Observable
----@field public dressing_image         ark.c.Observable
----@field public dressing_indent        ark.c.Observable
----@field public dressing_input         ark.c.Observable
----@field public dressing_scroll        ark.c.Observable
----@field public dressing_select        ark.c.Observable
----@field public dressing_trailspace    ark.c.Observable
----@field public dressing_ui_attach     ark.c.Observable
----@field public dressing_virtcolumn    ark.c.Observable
----@field public dressing_winsep        ark.c.Observable
+---@field public dressing_clipboard     stl.c.Observable
+---@field public dressing_dim           stl.c.Observable
+---@field public dressing_illuminate    stl.c.Observable
+---@field public dressing_image         stl.c.Observable
+---@field public dressing_indent        stl.c.Observable
+---@field public dressing_input         stl.c.Observable
+---@field public dressing_scroll        stl.c.Observable
+---@field public dressing_select        stl.c.Observable
+---@field public dressing_trailspace    stl.c.Observable
+---@field public dressing_ui_attach     stl.c.Observable
+---@field public dressing_virtcolumn    stl.c.Observable
+---@field public dressing_winsep        stl.c.Observable
 ---
----@field public gitdiff_expand_all     ark.c.Observable
+---@field public gitdiff_expand_all     stl.c.Observable
 
 ---@class dot.context.flight : dot.context.flight.state
 ---@field public defaults               fun(): dot.context.flight.data
@@ -213,26 +213,26 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.flight.data
-M.ai = ark.c.Observable.from_value(_defaults.ai)
-M.ai_nes = ark.c.Observable.from_value(_defaults.ai_nes)
-M.autoformat = ark.c.Observable.from_value(_defaults.autoformat)
-M.autoload = ark.c.Observable.from_value(_defaults.autoload)
-M.autosave = ark.c.Observable.from_value(_defaults.autosave)
-M.devmode = ark.c.Observable.from_value(_defaults.devmode)
+M.ai = stl.c.Observable.from_value(_defaults.ai)
+M.ai_nes = stl.c.Observable.from_value(_defaults.ai_nes)
+M.autoformat = stl.c.Observable.from_value(_defaults.autoformat)
+M.autoload = stl.c.Observable.from_value(_defaults.autoload)
+M.autosave = stl.c.Observable.from_value(_defaults.autosave)
+M.devmode = stl.c.Observable.from_value(_defaults.devmode)
 
-M.dressing_clipboard = ark.c.Observable.from_value(_defaults.dressing_clipboard)
-M.dressing_dim = ark.c.Observable.from_value(_defaults.dressing_dim)
-M.dressing_illuminate = ark.c.Observable.from_value(_defaults.dressing_illuminate)
-M.dressing_image = ark.c.Observable.from_value(_defaults.dressing_image)
-M.dressing_indent = ark.c.Observable.from_value(_defaults.dressing_indent)
-M.dressing_input = ark.c.Observable.from_value(_defaults.dressing_input)
-M.dressing_scroll = ark.c.Observable.from_value(_defaults.dressing_scroll)
-M.dressing_select = ark.c.Observable.from_value(_defaults.dressing_select)
-M.dressing_trailspace = ark.c.Observable.from_value(_defaults.dressing_trailspace)
-M.dressing_ui_attach = ark.c.Observable.from_value(_defaults.dressing_ui_attach)
-M.dressing_virtcolumn = ark.c.Observable.from_value(_defaults.dressing_virtcolumn)
-M.dressing_winsep = ark.c.Observable.from_value(_defaults.dressing_winsep, stl.fn.falsy)
+M.dressing_clipboard = stl.c.Observable.from_value(_defaults.dressing_clipboard)
+M.dressing_dim = stl.c.Observable.from_value(_defaults.dressing_dim)
+M.dressing_illuminate = stl.c.Observable.from_value(_defaults.dressing_illuminate)
+M.dressing_image = stl.c.Observable.from_value(_defaults.dressing_image)
+M.dressing_indent = stl.c.Observable.from_value(_defaults.dressing_indent)
+M.dressing_input = stl.c.Observable.from_value(_defaults.dressing_input)
+M.dressing_scroll = stl.c.Observable.from_value(_defaults.dressing_scroll)
+M.dressing_select = stl.c.Observable.from_value(_defaults.dressing_select)
+M.dressing_trailspace = stl.c.Observable.from_value(_defaults.dressing_trailspace)
+M.dressing_ui_attach = stl.c.Observable.from_value(_defaults.dressing_ui_attach)
+M.dressing_virtcolumn = stl.c.Observable.from_value(_defaults.dressing_virtcolumn)
+M.dressing_winsep = stl.c.Observable.from_value(_defaults.dressing_winsep, stl.fn.falsy)
 
-M.gitdiff_expand_all = ark.c.Observable.from_value(_defaults.gitdiff_expand_all)
+M.gitdiff_expand_all = stl.c.Observable.from_value(_defaults.gitdiff_expand_all)
 
 return M

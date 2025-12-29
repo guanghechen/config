@@ -72,20 +72,20 @@ local __module_name__ = "dot.module.picker.composer.filetree" ---@type string
 ---
 ---@field public render_preview         ?dot.module.picker.preview.IDraw
 ---
----@field public flag_foldempty         ark.c.Observable
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
 ---@field public flags_append           dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          dot.module.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_start_index      ?0|1
 ---
----@field public frecency               ?ark.c.Frecency
+---@field public frecency               ?stl.c.Frecency
 ---
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?ark.c.History
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history ?stl.c.History
 ---
 ---@field public on_attached            ?dot.module.picker.composer.filetree.IOnAttached
 ---@field public on_closed              ?dot.module.picker.composer.filetree.IOnClosed
@@ -106,20 +106,20 @@ local __module_name__ = "dot.module.picker.composer.filetree" ---@type string
 ---@field public result                 dot.module.picker.Result
 ---@field public preview                dot.module.picker.Preview
 ---
----@field public flag_foldempty         ark.c.Observable
----@field public flag_fuzzy             ark.c.Observable
----@field public flag_regex             ark.c.Observable
----@field public flag_case_sensitive    ark.c.Observable
----@field public flag_selected          ark.c.Observable
----@field public flag_viewtype          ark.c.Observable
+---@field public flag_foldempty         stl.c.Observable
+---@field public flag_fuzzy             stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_case_sensitive    stl.c.Observable
+---@field public flag_selected          stl.c.Observable
+---@field public flag_viewtype          stl.c.Observable
 ---
 ---@field protected _disposed           boolean
----@field protected _filetree           ark.c.Filetree
----@field protected _frecency           ark.c.Frecency|nil
+---@field protected _filetree           stl.c.Filetree
+---@field protected _frecency           stl.c.Frecency|nil
 ---@field protected _composer           dot.module.picker.BasicComposer
 ---@field protected _plainfile          ark.view.Plainfile
----@field protected _retriever          ark.c.TreeRetriever
----@field protected _scheduler_match    ark.c.Scheduler
+---@field protected _retriever          stl.c.TreeRetriever
+---@field protected _scheduler_match    stl.c.Scheduler
 ---@field protected _treeview           dot.module.picker.FiletreeView
 ---
 ---@field protected _last_preview_filepath string|nil
@@ -131,7 +131,7 @@ local __module_name__ = "dot.module.picker.composer.filetree" ---@type string
 ---@field protected _on_attached        dot.module.picker.composer.filetree.IOnAttached
 ---@field protected _on_confirm         dot.module.picker.composer.filetree.IOnConfirm|nil
 ---@field protected _on_disposed        dot.module.picker.composer.filetree.IOnDisposed
----@field protected _observer_unsubs    ark.c.IUnsubscribable[]|nil
+---@field protected _observer_unsubs    stl.c.IUnsubscribable[]|nil
 local M = {}
 M.__index = M
 
@@ -154,20 +154,20 @@ function M.new(props)
 
   local render_preview = props.render_preview ---@type dot.module.picker.preview.IDraw|nil
 
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History|nil
-  local o_search_pattern = props.search_pattern ---@type ark.c.Observable
-  local o_flag_fuzzy = props.flag_fuzzy ---@type ark.c.Observable
-  local o_flag_regex = props.flag_regex ---@type ark.c.Observable
-  local o_flag_foldempty = props.flag_foldempty ---@type ark.c.Observable
-  local o_flag_case_sensitive = props.flag_case_sensitive ---@type ark.c.Observable
-  local o_flag_selected = props.flag_selected ---@type ark.c.Observable
-  local o_flag_viewtype = props.flag_viewtype ---@type ark.c.Observable
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History|nil
+  local o_search_pattern = props.search_pattern ---@type stl.c.Observable
+  local o_flag_fuzzy = props.flag_fuzzy ---@type stl.c.Observable
+  local o_flag_regex = props.flag_regex ---@type stl.c.Observable
+  local o_flag_foldempty = props.flag_foldempty ---@type stl.c.Observable
+  local o_flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
+  local o_flag_selected = props.flag_selected ---@type stl.c.Observable
+  local o_flag_viewtype = props.flag_viewtype ---@type stl.c.Observable
 
   local flags_append = props.flags_append ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type dot.module.picker.result.IFlagItemRaw[]|nil
   local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
-  local frecency = props.frecency ---@type ark.c.Frecency|nil
+  local frecency = props.frecency ---@type stl.c.Frecency|nil
 
   local on_attached = props.on_attached or stl.fn.noop ---@type dot.module.picker.composer.filetree.IOnAttached
   local on_closed = props.on_closed or stl.fn.noop ---@type dot.module.picker.composer.filetree.IOnClosed
@@ -181,8 +181,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type ark.c.Filetree
-  local filetree = ark.c.Filetree.new({ name = fullname })
+  ---@type stl.c.Filetree
+  local filetree = stl.c.Filetree.new({ name = fullname })
 
   ---@type dot.module.picker.FiletreeView
   local treeview = dot.picker.FiletreeView.new({
@@ -199,8 +199,8 @@ function M.new(props)
     _on_refresh(self, force)
   end
 
-  ---@type ark.c.TreeRetriever
-  local retriever = ark.c.TreeRetriever.new({
+  ---@type stl.c.TreeRetriever
+  local retriever = stl.c.TreeRetriever.new({
     name = fullname,
   })
 
@@ -209,13 +209,13 @@ function M.new(props)
     name = fullname,
   })
 
-  local scheduler_match = ark.c.Scheduler.new({
+  local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local input = o_search_pattern:snapshot() ---@type string
       self:__match__(input)
@@ -352,7 +352,7 @@ function M.new(props)
       end
 
       local leafuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-      local leafnode = filetree:retrieve(leafuuid) ---@type ark.c.IFiletreeNode|nil
+      local leafnode = filetree:retrieve(leafuuid) ---@type stl.c.IFiletreeNode|nil
       if leafnode == nil then
         return
       end
@@ -363,12 +363,12 @@ function M.new(props)
       on_attached(self, leafnode.data.filepath)
     end,
     create_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -414,7 +414,7 @@ function M.new(props)
           vim.fn.writefile({}, filepath)
           treeview:insert_filepath(filepath, false)
 
-          local uuid = ark.c.Filetree.uuid(filepath)
+          local uuid = stl.c.Filetree.uuid(filepath)
           table.insert(self._uuids_file, uuid)
           table.insert(self._uuids_order, uuid)
         end
@@ -485,12 +485,12 @@ function M.new(props)
       end
     end,
     remove_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -578,12 +578,12 @@ function M.new(props)
       end
     end,
     rename_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -703,12 +703,12 @@ function M.new(props)
       end
     end,
     move_node = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
 
-      local rootnode = self:__retrieve_rootnode__() ---@type ark.c.IFiletreeNode|nil
+      local rootnode = self:__retrieve_rootnode__() ---@type stl.c.IFiletreeNode|nil
       if rootnode == nil then
         return
       end
@@ -848,7 +848,7 @@ function M.new(props)
       local locations = {} ---@type dot.t.ILocation[]
       for lnum = lnum_from, lnum_to, 1 do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
-        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type ark.c.IFiletreeNode|nil
+        local node = nodeuuid ~= nil and filetree:retrieve(nodeuuid) or nil ---@type stl.c.IFiletreeNode|nil
         if node ~= nil and node.data.filetype == "file" then
           locations[#locations + 1] = { filepath = node.data.filepath }
         end
@@ -866,7 +866,7 @@ function M.new(props)
       while lnum <= lnum_to do
         local nodeuuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if nodeuuid ~= nil then
-          local node = filetree:retrieve(nodeuuid) ---@type ark.c.IFiletreeNode|nil
+          local node = filetree:retrieve(nodeuuid) ---@type stl.c.IFiletreeNode|nil
           if node ~= nil then
             locations[#locations + 1] = { filepath = node.data.filepath }
 
@@ -885,7 +885,7 @@ function M.new(props)
 
     attach_parent = function()
       local rootuuid = self._uuid_root ---@type string
-      local rootnode = filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+      local rootnode = filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
       if rootnode and rootnode.parent ~= rootuuid then
         treeview:mark_cache_listview_dirty()
         self._uuid_root = rootnode.parent ---@type string
@@ -898,7 +898,7 @@ function M.new(props)
       end
     end,
     copy_node_filepath = function()
-      local filenode = self:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+      local filenode = self:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
       if filenode == nil then
         return
       end
@@ -1023,7 +1023,7 @@ function M.new(props)
       for lnum = 1, linecount, 1 do
         local uuid = retriever:retrieve_uuid(lnum) ---@type string|nil
         if uuid ~= nil then
-          local node = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local node = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           if node ~= nil and node.data.filetype == "file" then
             local filepath = node.data.filepath ---@type string
             local relative_filepath = dot.path.relative(cwd, filepath) ---@type string
@@ -1544,7 +1544,7 @@ function M.new(props)
   self._on_disposed = on_disposed
   self._observer_unsubs = nil
 
-  local observer_unsubs = {} ---@type ark.c.IUnsubscribable[]
+  local observer_unsubs = {} ---@type stl.c.IUnsubscribable[]
 
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({
     o_search_pattern,
@@ -1589,10 +1589,10 @@ function M:dispose()
   local on_dispose = self._on_disposed ---@type dot.module.picker.composer.filetree.IOnDisposed
   local composer = self._composer ---@type dot.module.picker.BasicComposer
   local plainfile = self._plainfile ---@type ark.view.Plainfile
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
-  local scheduler_match = self._scheduler_match ---@type ark.c.Scheduler
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
+  local scheduler_match = self._scheduler_match ---@type stl.c.Scheduler
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
-  local observer_unsubs = self._observer_unsubs ---@type ark.c.IUnsubscribable[]|nil
+  local observer_unsubs = self._observer_unsubs ---@type stl.c.IUnsubscribable[]|nil
   self._observer_unsubs = nil
 
   local ok_unsubs = true ---@type boolean
@@ -1711,7 +1711,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local node = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+  local node = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   if node == nil then
     ark.reporter.error({
       from = __module_name__,
@@ -1721,7 +1721,7 @@ function M:attach(rootuuid)
     return self
   end
 
-  local filetree = self._filetree ---@type ark.c.Filetree
+  local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   treeview:mark_cache_listview_dirty()
@@ -1756,13 +1756,13 @@ end
 function M:reset_filepaths(cwd, filepaths, with_positions)
   self:__health__()
 
-  local frecency = self._frecency ---@type ark.c.Frecency|nil
+  local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   cwd = dot.path.normalize(cwd) ---@type string
   treeview:reset_filepaths(cwd, filepaths, with_positions)
 
-  local uuid_cwd = ark.c.Filetree.uuid(cwd) ---@type string
+  local uuid_cwd = stl.c.Filetree.uuid(cwd) ---@type string
   local uuids_file = self._treeview:collect_file_uuids(uuid_cwd) ---@type string[]
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 
@@ -1808,17 +1808,17 @@ function M:render_preview(bufnr, force)
     return result
   end
 
-  local filetree = self._filetree ---@type ark.c.Filetree
+  local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local plainfile = self._plainfile ---@type ark.view.Plainfile
-  local o_flag_foldempty = self.flag_foldempty ---@type ark.c.Observable
+  local o_flag_foldempty = self.flag_foldempty ---@type stl.c.Observable
 
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   force = force or node.data.filepath ~= self._last_preview_filepath ---@type boolean
   self._last_preview_filepath = node.data.filepath ---@type string|nil
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
   local filepath = node.data.filepath ---@type string
   local relative_filepath = rootnode ~= nil and dot.path.relative(rootnode.data.filepath or dot.path.cwd(), filepath)
     or filepath
@@ -1878,7 +1878,7 @@ end
 function M:__collect_selected_lnums__()
   self:__health__()
 
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   local linecount = retriever:linecount() ---@type integer
@@ -1916,7 +1916,7 @@ end
 function M:__has_selected_node__()
   self:__health__()
 
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local linecount = retriever:linecount() ---@type integer
   if linecount < 1 then
     return false
@@ -1949,7 +1949,7 @@ end
 ---@param input                         string
 ---@return nil
 function M:__match__(input)
-  local frecency = self._frecency ---@type ark.c.Frecency|nil
+  local frecency = self._frecency ---@type stl.c.Frecency|nil
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   if #input < 1 then
@@ -2009,8 +2009,8 @@ function M:__open_node__(nodeuuid)
   local node, nodestate = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local filetree = self._filetree ---@type ark.c.Filetree
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
   if self:__has_selected_node__() then
@@ -2023,7 +2023,7 @@ function M:__open_node__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2097,11 +2097,11 @@ function M:__resolve_confirmation__(nodeuuid)
   local node = self:__retrieve__(nodeuuid)
 
   local composer = self._composer ---@type dot.module.picker.BasicComposer
-  local filetree = self._filetree ---@type ark.c.Filetree
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local filetree = self._filetree ---@type stl.c.Filetree
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
 
-  local rootnode = filetree:retrieve(self._uuid_root) ---@type ark.c.IFiletreeNode|nil
+  local rootnode = filetree:retrieve(self._uuid_root) ---@type stl.c.IFiletreeNode|nil
 
   if self:__has_selected_node__() then
     local linecount = retriever:linecount() ---@type integer
@@ -2112,7 +2112,7 @@ function M:__resolve_confirmation__(nodeuuid)
       if uuid ~= nil then
         local isselected = treeview:isselected(uuid) ---@type boolean
         if isselected then
-          local o = filetree:retrieve(uuid) ---@type ark.c.IFiletreeNode|nil
+          local o = filetree:retrieve(uuid) ---@type stl.c.IFiletreeNode|nil
           treeview:set_selected(uuid, false)
           if o ~= nil and o.data.filetype == "file" then
             filepaths[#filepaths + 1] = o.data.filepath
@@ -2136,7 +2136,7 @@ function M:__resolve_confirmation__(nodeuuid)
 end
 
 ---@param nodeuuid                      string
----@return ark.c.IFiletreeNode
+---@return stl.c.IFiletreeNode
 ---@return dot.module.picker.view.filetree.INodeState
 function M:__retrieve__(nodeuuid)
   ---@type dot.module.picker.view.filetree.INodeState|nil
@@ -2145,7 +2145,7 @@ function M:__retrieve__(nodeuuid)
     error(string.format("Cannot retrieve nodestate by the given uuid(%s)", nodeuuid))
   end
 
-  ---@type ark.c.IFiletreeNode|nil
+  ---@type stl.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid)
   if node == nil then
     error(string.format("Cannot retrieve node by the given uuid(%s), nodetype(%s)", nodeuuid, nodestate.nodetype))
@@ -2154,7 +2154,7 @@ function M:__retrieve__(nodeuuid)
   return node, nodestate
 end
 
----@return ark.c.IFiletreeNode|nil
+---@return stl.c.IFiletreeNode|nil
 function M:__retrieve_filenode__()
   local lnum = self.result.lnum_current:snapshot() ---@type integer
   if lnum < 1 then
@@ -2172,7 +2172,7 @@ function M:__retrieve_filenode__()
   end
 
   local fileuuid = nodestate.nodetype == "location" and nodestate.leafuuid or nodeuuid ---@type string
-  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type ark.c.IFiletreeNode|nil
+  local node = fileuuid ~= nil and self._filetree:retrieve(fileuuid) or nil ---@type stl.c.IFiletreeNode|nil
   return node
 end
 
@@ -2181,8 +2181,8 @@ end
 ---@param isdir                         boolean
 ---@return nil
 function M:__update_tree_after_rename__(from, to, isdir)
-  local from_nodeuuid = ark.c.Filetree.uuid(from) ---@type string
-  local to_nodeuuid = ark.c.Filetree.uuid(to) ---@type string
+  local from_nodeuuid = stl.c.Filetree.uuid(from) ---@type string
+  local to_nodeuuid = stl.c.Filetree.uuid(to) ---@type string
 
   local filepaths = {} ---@type string[]
 
@@ -2210,7 +2210,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
     filepaths[#filepaths + 1] = to ---@type string
   end
 
-  local filetree = self._filetree ---@type ark.c.Filetree
+  local filetree = self._filetree ---@type stl.c.Filetree
   local treeview = self._treeview ---@type dot.module.picker.FiletreeView
   local selected_set = treeview:collect_selected() ---@type table<string, true>
   local scheduler_match = self._scheduler_match
@@ -2227,9 +2227,9 @@ function M:__update_tree_after_rename__(from, to, isdir)
   ---@cast statemap                     table<string, dot.module.picker.view.filetree.INodeState>
 
   filetree:unsafe_traverse(to_nodeuuid, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, ark.c.IFiletreeNode>
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
 
-    ---@param node                      ark.c.IFiletreeNode
+    ---@param node                      stl.c.IFiletreeNode
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
@@ -2245,7 +2245,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
         statemap[node.uuid] = nodestate
 
         for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type ark.c.IFiletreeNode|nil
+          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
           if childnode ~= nil then
             traverse(childnode)
           end
@@ -2285,10 +2285,10 @@ function M:__update_tree_after_rename__(from, to, isdir)
   scheduler_match:schedule()
 end
 
----@return ark.c.IFiletreeNode|nil
+---@return stl.c.IFiletreeNode|nil
 function M:__retrieve_rootnode__()
   local rootuuid = self._uuid_root ---@type string
-  local rootnode = self._filetree:retrieve(rootuuid) ---@type ark.c.IFiletreeNode|nil
+  local rootnode = self._filetree:retrieve(rootuuid) ---@type stl.c.IFiletreeNode|nil
   return rootnode
 end
 
@@ -2308,7 +2308,7 @@ end
 ---@return integer
 function M:__retrieve_lnum_range__()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local retriever = self._retriever ---@type ark.c.TreeRetriever
+  local retriever = self._retriever ---@type stl.c.TreeRetriever
 
   if winnr == self.result:get_winnr() then
     local mode = vim.fn.mode()
@@ -2346,7 +2346,7 @@ function M:__retrieve_lnum_parent__(nodeuuid)
     return lnum_parent, parentuuid
   end
 
-  ---@type ark.c.IFiletreeNode|nil
+  ---@type stl.c.IFiletreeNode|nil
   local node = self._filetree:retrieve(nodeuuid)
   if node == nil then
     return nil, nil

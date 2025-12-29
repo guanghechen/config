@@ -1,13 +1,13 @@
-local __module_name__ = "ark.c.batch_disposable" ---@type string
+local __module_name__ = "stl.c.batch_disposable" ---@type string
 
----@param disposables                   ark.c.IDisposable[]
+---@param disposables                   stl.c.IDisposable[]
 ---@return nil
 local function dispose_all(disposables)
   if #disposables <= 0 then
     return
   end
 
-  local handler = ark.c.BatchHandler.new()
+  local handler = stl.c.BatchHandler.new()
   for _, disposable in ipairs(disposables) do
     handler:run(function()
       disposable:dispose()
@@ -16,18 +16,18 @@ local function dispose_all(disposables)
   handler:summary(string.format("[%s.dispose_all] Encountered error(s) while disposing.", __module_name__))
 end
 
----@class ark.c.BatchDisposable : ark.c.IDisposable
+---@class stl.c.BatchDisposable : stl.c.IDisposable
 local M = {}
 M.__index = M
 
----@return ark.c.BatchDisposable
+---@return stl.c.BatchDisposable
 function M.new()
   local self = setmetatable({}, M)
 
   ---@type boolean
   self._disposed = false
 
-  ---@type ark.c.IDisposable[]
+  ---@type stl.c.IDisposable[]
   self._disposables = {}
   return self
 end
@@ -64,8 +64,8 @@ function M:dispose()
   end
 end
 
----@param disposable                    ark.c.IDisposable
----@return ark.c.BatchDisposable
+---@param disposable                    stl.c.IDisposable
+---@return stl.c.BatchDisposable
 function M:add_disposable(disposable)
   if disposable:isdisposed() then
     return self

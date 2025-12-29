@@ -34,9 +34,9 @@ local select_item = require("dot.context.workspace.select_item")
 ---@field public lsp_symbols            dot.context.select.item.state
 ---@field public search_file            dot.context.select.item.state
 ---
----@field public find_buffer_scope      ark.c.Observable
----@field public find_file_scope        ark.c.Observable
----@field public search_file_scope      ark.c.Observable
+---@field public find_buffer_scope      stl.c.Observable
+---@field public find_file_scope        stl.c.Observable
+---@field public search_file_scope      stl.c.Observable
 
 ---@class dot.context.select : dot.context.select.state
 ---@field public keys                   string[]
@@ -177,9 +177,9 @@ M.lsp_reference = select_item.load(nil, "lsp_reference", _defaults.lsp_reference
 M.lsp_symbols = select_item.load(nil, "lsp_symbols", _defaults.lsp_symbols)
 M.search_file = select_item.load(nil, "search_file", _defaults.search_file)
 
-M.find_buffer_scope = ark.c.Observable.from_value(_defaults.find_file_scope)
-M.find_file_scope = ark.c.Observable.from_value(_defaults.find_file_scope)
-M.search_file_scope = ark.c.Observable.from_value(_defaults.search_file_scope)
+M.find_buffer_scope = stl.c.Observable.from_value(_defaults.find_file_scope)
+M.find_file_scope = stl.c.Observable.from_value(_defaults.find_file_scope)
+M.search_file_scope = stl.c.Observable.from_value(_defaults.search_file_scope)
 
 ---@return string[]
 M.keys = {

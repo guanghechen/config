@@ -1,7 +1,7 @@
 local c = require("dot.module.nvimbar").component
 local Nvimbar = require("dot.module.nvimbar").Nvimbar
 
-local dirtier = dot.state.status.dirtier_statusline ---@type ark.c.Dirtier
+local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
 local position = "f_sl" ---@type ark.e.NvimbarPositionEnum
 
 local statusline ---@type dot.module.nvimbar.Nvimbar
@@ -54,7 +54,7 @@ statusline
   :place("right", c.nvim.msg_changes(position), 85)
   :place("right", c.nvim.msg_lsp(position), 90)
 
-dirtier:subscribe(ark.c.Subscriber.new({
+dirtier:subscribe(stl.c.Subscriber.new({
   on_next = function()
     if dirtier:is_dirty() then
       statusline:render()

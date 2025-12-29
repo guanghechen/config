@@ -3,14 +3,14 @@
 ---@field public max_filesize           string
 ---@field public max_matches            integer
 ---@field public replacement            string
----@field public replace_pattern_history ark.c.history.ISerializedData
+---@field public replace_pattern_history stl.c.history.ISerializedData
 
 ---@class dot.context.search_file.state
----@field public flag_replace           ark.c.Observable
----@field public max_filesize           ark.c.Observable
----@field public max_matches            ark.c.Observable
----@field public replacement            ark.c.Observable
----@field public replace_pattern_history ark.c.History
+---@field public flag_replace           stl.c.Observable
+---@field public max_filesize           stl.c.Observable
+---@field public max_matches            stl.c.Observable
+---@field public replacement            stl.c.Observable
+---@field public replace_pattern_history stl.c.History
 
 ---@class dot.context.search_file : dot.context.search_file.state
 ---@field public defaults               fun(): dot.context.search_file.data
@@ -89,11 +89,11 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.search_file.data
-M.flag_replace = ark.c.Observable.from_value(_defaults.flag_replace)
-M.max_filesize = ark.c.Observable.from_value(_defaults.max_filesize)
-M.max_matches = ark.c.Observable.from_value(_defaults.max_matches)
-M.replacement = ark.c.Observable.from_value(_defaults.replacement)
-M.replace_pattern_history = ark.c.History.deserialize({
+M.flag_replace = stl.c.Observable.from_value(_defaults.flag_replace)
+M.max_filesize = stl.c.Observable.from_value(_defaults.max_filesize)
+M.max_matches = stl.c.Observable.from_value(_defaults.max_matches)
+M.replacement = stl.c.Observable.from_value(_defaults.replacement)
+M.replace_pattern_history = stl.c.History.deserialize({
   name = "search_file.replace_pattern",
   capacity = 100,
   data = _defaults.replace_pattern_history,

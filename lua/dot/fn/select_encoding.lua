@@ -102,10 +102,10 @@ local function select_encoding(params)
   local title = params.title or "Select Encoding" ---@type string
   local on_select = params.on_select ---@type fun(encoding: string|nil): nil
 
-  local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
-  local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
-  local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
-  local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
+  local search_pattern = stl.c.Observable.from_value("") ---@type stl.c.Observable
+  local flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
+  local flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
+  local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
   if picker and not picker:isdisposed() then
     picker:dispose()

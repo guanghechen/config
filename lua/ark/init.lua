@@ -1,59 +1,3 @@
----@class ark.c.__mods
-local c__mods = {
-  BatchDisposable = "ark.c.batch_disposable",
-  BatchHandler = "ark.c.batch_handler",
-  CircularQueue = "ark.c.circular_queue",
-  CircularStack = "ark.c.circular_stack",
-  Dirtier = "ark.c.dirtier",
-  Disposable = "ark.c.disposable",
-  Filetree = "ark.c.filetree",
-  Frecency = "ark.c.frecency",
-  History = "ark.c.history",
-  InputHistory = "ark.c.input_history",
-  Observable = "ark.c.observable",
-  Proc = "ark.c.proc",
-  Scheduler = "ark.c.scheduler",
-  Subscriber = "ark.c.subscriber",
-  Subscribers = "ark.c.subscribers",
-  Theme = "ark.c.theme",
-  Ticker = "ark.c.ticker",
-  Tree = "ark.c.tree",
-  TreeRetriever = "ark.c.tree_retriever",
-}
-
----@class ark.c
----@field public __mods                 ark.c.__mods
----@field public BatchDisposable        ark.c.BatchDisposable
----@field public BatchHandler           ark.c.BatchHandler
----@field public CircularQueue          ark.c.CircularQueue
----@field public CircularStack          ark.c.CircularStack
----@field public Dirtier                ark.c.Dirtier
----@field public Disposable             ark.c.Disposable
----@field public Filetree               ark.c.Filetree
----@field public Frecency               ark.c.Frecency
----@field public History                ark.c.History
----@field public InputHistory           ark.c.InputHistory
----@field public Observable             ark.c.Observable
----@field public Proc                   ark.c.Proc
----@field public Scheduler              ark.c.Scheduler
----@field public Subscriber             ark.c.Subscriber
----@field public Subscribers            ark.c.Subscribers
----@field public Theme                  ark.c.Theme
----@field public Ticker                 ark.c.Ticker
----@field public Tree                   ark.c.Tree
----@field public TreeRetriever          ark.c.TreeRetriever
-local c = setmetatable({ __mods = c__mods }, {
-  __index = function(t, k)
-    local m = c__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class ark.lang.__mods
 local lang__mods = {
   python = "ark.lang.python",
@@ -242,7 +186,6 @@ local __mods = {
 ---@field public __mods                 ark.__mods
 ---@field public anim                   ark.anim
 ---@field public box                    ark.box
----@field public c                      ark.c
 ---@field public debug                  ark.debug
 ---@field public fs                     ark.fs
 ---@field public G                      ark.G
@@ -261,7 +204,6 @@ local __mods = {
 ---@field public winhint                ark.winhint
 local M = setmetatable({
   __mods = __mods,
-  c = c,
   lang = lang,
   theme = theme,
   view = view,

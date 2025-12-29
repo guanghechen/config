@@ -1,6 +1,6 @@
 local name = "dot.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
-local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
+local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
 local o_flag_exclude = dot.context.select.find_file.flag_exclude
 local o_flag_foldempty = dot.context.select.find_file.flag_foldempty
@@ -89,7 +89,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function refresh(picker, rootpath)
-  local rootuuid = ark.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
   local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
@@ -126,7 +126,7 @@ end
 ---@param rootpath                      string
 ---@return nil
 local function attach(picker, rootpath)
-  local rootuuid = ark.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
   if picker:isexistent(rootuuid) then
     picker:attach(rootuuid)
   else

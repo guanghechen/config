@@ -1,6 +1,6 @@
 local name = "dot.fn.search_in_files" ---@type string
 local title = "Search Files" ---@type string
-local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())
+local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
 local o_excludes = dot.context.select.search_file.excludes
 local o_flag_exclude = dot.context.select.search_file.flag_exclude
@@ -124,7 +124,7 @@ end
 ---@return nil
 local function attach(searcher, rootpath)
   o_rootpath:next(rootpath)
-  local rootuuid = ark.c.Filetree.uuid(rootpath) ---@type string
+  local rootuuid = stl.c.Filetree.uuid(rootpath) ---@type string
   if searcher:isexistent(rootuuid) then
     searcher:attach(rootuuid)
   else

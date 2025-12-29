@@ -7,19 +7,19 @@ local __module_name__ = "dot.module.searcher.view.filetree" ---@type string
 ---| dot.module.searcher.view.filetree.ILeafLocationState
 
 ---@alias dot.module.searcher.view.filetree.IListviewFileRenderer
----| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: ark.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias dot.module.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: ark.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias dot.module.searcher.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: ark.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): ark.view.tree.INodeRenderResult
 
 ---@alias dot.module.searcher.view.filetree.ITreeviewFileRenderer
----| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: ark.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@alias dot.module.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: ark.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
+---| fun(ctx: dot.module.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: dot.module.searcher.view.filetree.IFileNodeState, locationstate: dot.module.searcher.view.filetree.ILeafLocationState, lnum: integer): ark.view.tree.INodeRenderResult
 
 ---@class dot.module.searcher.view.filetree.IDirectoryNodeState : ark.view.tree.IContainerNodeState
 
@@ -42,15 +42,15 @@ local __module_name__ = "dot.module.searcher.view.filetree" ---@type string
 ---@field public matches                yoz.search.ITextMatch[]
 
 ---@class dot.module.searcher.view.filetree.IListviewRendererContext : ark.view.tree.IListviewRendererContext
----@field public rootnode               ark.c.IFiletreeNode
+---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              dot.module.searcher.view.filetree.IDirectoryNodeState
----@field public tree                   ark.c.IReadonlyFiletree
+---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   dot.module.searcher.FiletreeView
 
 ---@class dot.module.searcher.view.filetree.ITreeviewRendererContext : ark.view.tree.IListviewRendererContext
----@field public rootnode               ark.c.IFiletreeNode
+---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              dot.module.searcher.view.filetree.IDirectoryNodeState
----@field public tree                   ark.c.IReadonlyFiletree
+---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   dot.module.searcher.FiletreeView
 
 ---@class dot.module.searcher.view.filetree.ISearchParams
@@ -104,7 +104,7 @@ end
 
 ---@class dot.module.searcher.view.IFiletreeProps
 ---@field public name                   string
----@field public tree                   ark.c.IFiletree
+---@field public tree                   stl.c.IFiletree
 ---@field public indent                 ?string
 ---@field public indent_hln             ?string
 ---
@@ -117,7 +117,7 @@ end
 local P = ark.view.Tree ---@type ark.view.Tree
 
 ---@class dot.module.searcher.FiletreeView : ark.view.Tree
----@field protected _tree               ark.c.IFiletree
+---@field protected _tree               stl.c.IFiletree
 ---@field public statemap               table<string, dot.module.searcher.view.filetree.INodeState>
 ---@field public insert                 fun(self: dot.module.searcher.FiletreeView, uuid: string, state: ark.view.tree.INodeState): dot.module.searcher.FiletreeView
 local M = {}
@@ -131,7 +131,7 @@ function M.new(props)
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local indent = props.indent ---@type string|nil
   local indent_hln = props.indent_hln ---@type string|nil
-  local tree = props.tree ---@type ark.c.IFiletree
+  local tree = props.tree ---@type stl.c.IFiletree
 
   local render_listview_leaf = props.render_listview_leaf or M.default_render_listview_leaf ---@type dot.module.searcher.view.filetree.IListviewFileRenderer
   local render_listview_location = props.render_listview_location or M.default_render_listview_location ---@type dot.module.searcher.view.filetree.IListviewLocationRenderer
@@ -283,7 +283,7 @@ function M:search(params)
   for _, filematch in ipairs(results.items) do
     local relpath = filematch.p or "" ---@type string
     local filepath = resolve_filepath(relpath) ---@type string
-    local uuid = ark.c.Filetree.uuid(filepath) ---@type string
+    local uuid = stl.c.Filetree.uuid(filepath) ---@type string
 
     filematch_map[uuid] = {
       filepath = filepath,
@@ -403,17 +403,17 @@ function M:reset_filepaths(cwd, filepaths)
   local selected_set = self:collect_selected() ---@type table<string, true>
   self:clear()
 
-  local filetree = self._tree ---@type ark.c.IFiletree
+  local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
   local statemap = self.statemap ---@type table<string, ark.view.tree.INodeState>
   ---@cast statemap                     table<string, dot.module.searcher.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, false)
   filetree:unsafe_traverse(filetree.root, function(ctx)
-    local nodemap = ctx.nodemap ---@type table<string, ark.c.IFiletreeNode>
-    local rootnode = ctx.rootnode ---@type ark.c.IFiletreeNode
+    local nodemap = ctx.nodemap ---@type table<string, stl.c.IFiletreeNode>
+    local rootnode = ctx.rootnode ---@type stl.c.IFiletreeNode
 
-    ---@param node                      ark.c.IFiletreeNode
+    ---@param node                      stl.c.IFiletreeNode
     ---@return nil
     local function traverse(node)
       if node.data.filetype == "directory" then
@@ -429,7 +429,7 @@ function M:reset_filepaths(cwd, filepaths)
         statemap[node.uuid] = nodestate
 
         for _, uuid in ipairs(node.children) do
-          local childnode = nodemap[uuid] ---@type ark.c.IFiletreeNode|nil
+          local childnode = nodemap[uuid] ---@type stl.c.IFiletreeNode|nil
           if childnode ~= nil then
             traverse(childnode)
           end
@@ -471,7 +471,7 @@ end
 
 ---@type dot.module.searcher.view.filetree.IListviewFileRenderer
 function M.default_render_listview_leaf(ctx, node)
-  local rootnode = ctx.rootnode ---@type ark.c.IFiletreeNode
+  local rootnode = ctx.rootnode ---@type stl.c.IFiletreeNode
   local fileicon = node.data.fileicon ---@type string
   local fileicon_hln = node.data.fileicon_hln ---@type string
   local filepath = #rootnode.data.filepath < 2 and node.data.filepath
@@ -526,15 +526,15 @@ function M.default_render_treeview_container(ctx, node, nodestate, _, folded_dep
     return { text = text, highlights = highlights }
   end
 
-  local tree = ctx.tree ---@type ark.c.IReadonlyFiletree
+  local tree = ctx.tree ---@type stl.c.IReadonlyFiletree
 
   local basenames = {} ---@type string[]
   basenames[folded_depth + 1] = basename ---@type string
 
-  local o = node ---@type ark.c.IFiletreeNode
+  local o = node ---@type stl.c.IFiletreeNode
   for index = folded_depth, 1, -1 do
     local uuid_parent = o.parent ---@type string
-    o = tree:retrieve(uuid_parent) or o ---@type ark.c.IFiletreeNode
+    o = tree:retrieve(uuid_parent) or o ---@type stl.c.IFiletreeNode
     basenames[index] = o.data.basename ---@type string
   end
 

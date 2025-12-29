@@ -8,12 +8,12 @@ local metamap = {} ---@type table<string, dot.module.term.IMeta>
 local termlist = {} ---@type string[]
 
 ---@class dot.module.term.state
----@field public o_termuuid             ark.c.Observable
+---@field public o_termuuid             stl.c.Observable
 ---@field public remove                 fun(termuuid: string): nil
 ---@field public unregister             fun(termuuid: string): nil
 local M = {}
 
-M.o_termuuid = ark.c.Observable.from_value("") ---@type ark.c.Observable
+M.o_termuuid = stl.c.Observable.from_value("") ---@type stl.c.Observable
 
 ---@param termuuid                      string
 ---@return boolean

@@ -38,14 +38,14 @@ local __module_name__ = "dot.module.nvimbar" ---@type string
 
 ---@class dot.module.nvimbar.Nvimbar
 ---@field public fullname               string
----@field protected _value              ark.c.Observable
+---@field protected _value              stl.c.Observable
 ---@field protected _disposed           boolean
 ---@field protected _sep                string
 ---@field protected _sep_active         string
 ---@field protected _sep_width          integer
 ---@field protected _components         dot.module.nvimbar.IComponent[]
 ---@field protected _orders             integer[]
----@field protected _scheduler          ark.c.Scheduler
+---@field protected _scheduler          stl.c.Scheduler
 ---@field protected _get_max_width      fun(): integer
 ---@field protected _get_preset_context dot.module.nvimbar.IGetNvimbarPresetContext
 ---@field protected _isactive           fun(context: dot.module.nvimbar.INvimbarContext): boolean
@@ -99,7 +99,7 @@ function M.new(props)
   local delay = props.delay or 20 ---@type integer
   local silent = props.silent ---@type fun(): boolean
   local get_max_width = props.get_max_width ---@type fun(): integer
-  local value = ark.c.Observable.from_value("") ---@type ark.c.Observable
+  local value = stl.c.Observable.from_value("") ---@type stl.c.Observable
 
   ---@type dot.module.nvimbar.IGetNvimbarPresetContext
   local get_preset_context = props.get_preset_context
@@ -117,8 +117,8 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  ---@type ark.c.Scheduler
-  local scheduler = ark.c.Scheduler.new({
+  ---@type stl.c.Scheduler
+  local scheduler = stl.c.Scheduler.new({
     name = fullname,
     mode = "throttle",
     delay = delay,

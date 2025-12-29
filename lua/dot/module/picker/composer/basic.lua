@@ -100,8 +100,8 @@ local __highlights__ = {
 ---@field public keymaps_preview        ?ark.t.IKeymap[]
 ---@field public keymaps_result         ?ark.t.IKeymap[]
 ---
----@field public search_pattern         ark.c.Observable
----@field public search_pattern_history ?ark.c.History
+---@field public search_pattern         stl.c.Observable
+---@field public search_pattern_history ?stl.c.History
 ---@field public finder_title           string
 ---
 ---@field public result_number          boolean
@@ -136,7 +136,7 @@ local __highlights__ = {
 ---@field protected _recommended_height number
 ---@field protected _recommended_width  number
 ---
----@field protected _search_pattern_history ?ark.c.History
+---@field protected _search_pattern_history ?stl.c.History
 ---
 ---@field protected _on_cancel          dot.module.picker.composer.basic.IOnCancel
 ---@field protected _on_closed          dot.module.picker.composer.basic.IOnClosed
@@ -167,8 +167,8 @@ function M.new(props)
   local keymaps_preview = props.keymaps_preview or {} ---@type ark.t.IKeymap[]
   local keymaps_result = props.keymaps_result or {} ---@type ark.t.IKeymap[]
 
-  local search_pattern = props.search_pattern ---@type ark.c.Observable
-  local search_pattern_history = props.search_pattern_history ---@type ark.c.History
+  local search_pattern = props.search_pattern ---@type stl.c.Observable
+  local search_pattern_history = props.search_pattern_history ---@type stl.c.History
   local finder_title = string.format(" %s ", vim.trim(props.finder_title)) ---@type string
 
   local result_number = not not props.result_number ---@type boolean

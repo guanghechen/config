@@ -4,8 +4,8 @@ local equals = stl.fn.equals_shallow
 ---@class dot.state.widget
 local M = {}
 
----@type ark.c.History
-M.history = ark.c.History.new({
+---@type stl.c.History
+M.history = stl.c.History.new({
   name = "widget",
   capacity = 100,
   equals = equals,

@@ -3,8 +3,8 @@
 ---@field public relativenumber         boolean
 
 ---@class dot.context.option.state
----@field public expandtab              ark.c.Observable
----@field public relativenumber         ark.c.Observable
+---@field public expandtab              stl.c.Observable
+---@field public relativenumber         stl.c.Observable
 
 ---@class dot.context.option : dot.context.option.state
 ---@field public defaults               fun(): dot.context.option.data
@@ -60,7 +60,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 local _defaults = M.defaults() ---@type dot.context.option.data
-M.expandtab = ark.c.Observable.from_value(_defaults.expandtab)
-M.relativenumber = ark.c.Observable.from_value(_defaults.relativenumber)
+M.expandtab = stl.c.Observable.from_value(_defaults.expandtab)
+M.relativenumber = stl.c.Observable.from_value(_defaults.relativenumber)
 
 return M

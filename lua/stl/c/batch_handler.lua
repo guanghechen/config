@@ -1,8 +1,8 @@
----@class ark.c.BatchHandler
+---@class stl.c.BatchHandler
 local M = {}
 M.__index = M
 
----@return ark.c.BatchHandler
+---@return stl.c.BatchHandler
 function M.new()
   local self = setmetatable({}, M)
   self._errors = {} ---@type any[]

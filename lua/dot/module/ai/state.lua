@@ -8,8 +8,8 @@ local M = {}
 ---@type dot.module.ai.IAttachedSource[]
 local _attached_sources = {}
 
----@type ark.c.Observable
-M.o_attached = ark.c.Observable.from_value(0)
+---@type stl.c.Observable
+M.o_attached = stl.c.Observable.from_value(0)
 
 stl.fn.observe({ M.o_attached }, function()
   dot.state.status.dirtier_statusline:mark_dirty()

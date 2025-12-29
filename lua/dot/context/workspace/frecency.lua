@@ -1,8 +1,8 @@
 ---@class dot.context.frecency.data
----@field public files                  ark.c.frecency.ISerializedData
+---@field public files                  stl.c.frecency.ISerializedData
 
 ---@class dot.context.frecency.state
----@field public files                  ark.c.Frecency
+---@field public files                  stl.c.Frecency
 
 ---@class dot.context.frecency : dot.context.frecency.state
 ---@field public defaults               fun(): dot.context.frecency.data
@@ -25,7 +25,7 @@ function M.normalize(data)
   local resolved = M.defaults() ---@type dot.context.frecency.data
   if type(data) == "table" then
     for key, frecency in pairs(resolved) do
-      local data_frecency = data[key] ---@type ark.c.frecency.ISerializedData|nil
+      local data_frecency = data[key] ---@type stl.c.frecency.ISerializedData|nil
       if type(data_frecency) == "table" then
         if type(data_frecency.MAX_TIMESTAMPS) == "number" then
           frecency.MAX_TIMESTAMPS = data_frecency.MAX_TIMESTAMPS
@@ -61,8 +61,8 @@ end
 
 local _defaults = M.defaults() ---@type dot.context.frecency.data
 
----@type ark.c.Frecency
-M.files = ark.c.Frecency.deserialize({
+---@type stl.c.Frecency
+M.files = stl.c.Frecency.deserialize({
   data = _defaults.files,
   normalize = function(key)
     return yoz.fn.md5(key)

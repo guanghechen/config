@@ -36,7 +36,7 @@ local __module_name__ = "dot.module.picker.preview" ---@type string
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
 ---@field protected _last_result        dot.module.picker.preview.IDrawResult|nil
----@field protected _scheduler_content  ark.c.Scheduler
+---@field protected _scheduler_content  stl.c.Scheduler
 local M = {}
 M.__index = M
 
@@ -51,13 +51,13 @@ function M.new(props)
 
   local self = setmetatable({}, M)
 
-  local scheduler_content = ark.c.Scheduler.new({
+  local scheduler_content = stl.c.Scheduler.new({
     name = string.format("%s#content", fullname),
     mode = "debounce",
     delay = 128,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       local bufnr = self._bufnr ---@type integer|nil
       if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -122,7 +122,7 @@ function M:dispose()
   local fullname = self.fullname ---@type string
   local bufnr = self._bufnr ---@type integer|nil
   local winnr = self._winnr ---@type integer|nil
-  local scheduler_content = self._scheduler_content ---@type ark.c.Scheduler
+  local scheduler_content = self._scheduler_content ---@type stl.c.Scheduler
 
   self._bufnr = nil
   self._winnr = nil

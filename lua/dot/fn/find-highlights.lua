@@ -52,10 +52,10 @@ local function fetch_data()
   return { items = items }
 end
 
-local search_pattern = ark.c.Observable.from_value("") ---@type ark.c.Observable
-local flag_fuzzy = ark.c.Observable.from_value(true) ---@type ark.c.Observable
-local flag_regex = ark.c.Observable.from_value(false) ---@type ark.c.Observable
-local flag_case_sensitive = ark.c.Observable.from_value(false) ---@type ark.c.Observable
+local search_pattern = stl.c.Observable.from_value("") ---@type stl.c.Observable
+local flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
+local flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
+local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
 ---@type dot.module.picker.ListComposer
 local picker = dot.picker.ListComposer.new({

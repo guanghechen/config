@@ -4,9 +4,9 @@
 
 ---@class dot.tab.IMeta
 ---@field public bufs                   dot.tab.IBufItem[]
----@field public winnr_fixed            ark.c.Observable
----@field public winnr_float            ark.c.Observable
----@field public winnr_sourcefile       ark.c.Observable
+---@field public winnr_fixed            stl.c.Observable
+---@field public winnr_float            stl.c.Observable
+---@field public winnr_sourcefile       stl.c.Observable
 ---@field public tabtype                ark.vim.tab.TypeEnum
 
 local meta_map = {} ---@type table<integer, dot.tab.IMeta>
@@ -146,7 +146,7 @@ function M.retrieve_winnr_sourcefile(tabnr)
     return nil
   end
 
-  local o_winnr_sourcefile = meta.winnr_sourcefile ---@type ark.c.Observable
+  local o_winnr_sourcefile = meta.winnr_sourcefile ---@type stl.c.Observable
   local winnr_sourcefile = o_winnr_sourcefile:snapshot() ---@type integer|nil
 
   if winnr_sourcefile == nil or not dot.win.is_sourcefile(winnr_sourcefile) then
@@ -307,9 +307,9 @@ function M.resolve(tabnr, force)
   local tabtype = M.resolve_type(tabnr, force) ---@type ark.vim.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = ark.c.Observable.from_value(ark.vim.win.is_fixed(winnr) and winnr or 0) ---@type ark.c.Observable
-  local winnr_float = ark.c.Observable.from_value(ark.vim.win.is_float(winnr) and winnr or 0) ---@type ark.c.Observable
-  local winnr_sourcefile = ark.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0) ---@type ark.c.Observable
+  local winnr_fixed = stl.c.Observable.from_value(ark.vim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable
+  local winnr_float = stl.c.Observable.from_value(ark.vim.win.is_float(winnr) and winnr or 0) ---@type stl.c.Observable
+  local winnr_sourcefile = stl.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0) ---@type stl.c.Observable
 
   ---@type dot.tab.IMeta
   meta = {

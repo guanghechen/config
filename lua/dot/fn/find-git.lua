@@ -1,7 +1,7 @@
 local name = "dot.fn.find_git" ---@type string
 local title = "Find Git" ---@type string
 
-local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
+local search_pattern_history = stl.c.InputHistory.new({ name = name, capacity = 5 })
 local o_search_pattern = dot.context.select.find_git.search_pattern
 local o_flag_foldempty = dot.context.select.find_git.flag_foldempty
 local o_flag_fuzzy = dot.context.select.find_git.flag_fuzzy

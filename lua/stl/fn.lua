@@ -145,14 +145,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param observables                   ark.c.Observable[]
+---@param observables                   stl.c.Observable[]
 ---@param callback                      fun(): nil
 ---@param ignore_initial                ?boolean
----@return ark.c.IUnsubscribable
+---@return stl.c.IUnsubscribable
 function M.observe(observables, callback, ignore_initial)
-  local unsubscribables = {} ---@type ark.c.IUnsubscribable[]
+  local unsubscribables = {} ---@type stl.c.IUnsubscribable[]
   for _, observable in ipairs(observables) do
-    local subscriber = ark.c.Subscriber.new({
+    local subscriber = stl.c.Subscriber.new({
       on_next = function()
         vim.schedule(callback)
       end,
@@ -163,7 +163,7 @@ function M.observe(observables, callback, ignore_initial)
 
   local unsubscribed = false ---@type boolean
 
-  ---@type ark.c.IUnsubscribable
+  ---@type stl.c.IUnsubscribable
   local unsubscribe = {
     unsubscribe = function()
       if unsubscribed then
@@ -171,7 +171,7 @@ function M.observe(observables, callback, ignore_initial)
       end
       unsubscribed = true
 
-      local batcher = ark.c.BatchHandler.new()
+      local batcher = stl.c.BatchHandler.new()
       for _, unsubscribable in ipairs(unsubscribables) do
         batcher:run(unsubscribable.unsubscribe, unsubscribable)
       end

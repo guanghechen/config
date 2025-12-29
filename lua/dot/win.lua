@@ -8,12 +8,12 @@ local vim_win = require("ark.vim.win")
 ---@class dot.win.IWinline
 ---@field public bufnr                  integer
 ---@field public locate_cancel          (fun(): nil)|nil
----@field public locate_scheduler       ark.c.Scheduler|nil
+---@field public locate_scheduler       stl.c.Scheduler|nil
 ---@field public lsp_symbols            dot.t.ILspSymbol[]|nil
 ---@field public nvimbar                dot.module.nvimbar.Nvimbar
 
 ---@class dot.win.IMeta
----@field public history                ark.c.History|nil
+---@field public history                stl.c.History|nil
 ---@field public winline                dot.win.IWinline|nil
 ---@field public wintype                ark.vim.win.TypeEnum|nil
 
@@ -293,7 +293,7 @@ function M.fork(winnr_source, winnr_target)
     if meta_target.history ~= nil then
       meta_target.history:clear()
     end
-    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type ark.c.History
+    local history_forked = meta_source.history:fork({ name = "win_filepath" }) ---@type stl.c.History
     meta_target.history = history_forked
   end
 
@@ -322,7 +322,7 @@ function M.resolve(winnr, force)
   end
 
   if meta.history == nil then
-    meta.history = ark.c.History.new({
+    meta.history = stl.c.History.new({
       name = "win#bufs",
       capacity = ark.var.WIN_BUF_HISTORY_CAPACITY,
       ---@param x                       dot.win.IFilepathHistoryItem
@@ -641,7 +641,7 @@ function M.on_buf_enter(winnr, bufnr)
   end
 
   local fp = meta_buf.filepath ---@type string
-  local history = meta_win.history ---@type ark.c.History
+  local history = meta_win.history ---@type stl.c.History
   local item = { bufnr = bufnr, filepath = fp } ---@type dot.win.IFilepathHistoryItem
   history:push(item)
 end

@@ -1,14 +1,14 @@
 ---@class dot.module.git.state
 local M = {}
 
----@type ark.c.Observable<string>
-M.o_branch = ark.c.Observable.from_value("")
+---@type stl.c.Observable<string>
+M.o_branch = stl.c.Observable.from_value("")
 
----@type ark.c.Observable<string[]>
-M.o_staged_files = ark.c.Observable.from_value({})
+---@type stl.c.Observable<string[]>
+M.o_staged_files = stl.c.Observable.from_value({})
 
----@type ark.c.Observable<string[]>
-M.o_unstaged_files = ark.c.Observable.from_value({})
+---@type stl.c.Observable<string[]>
+M.o_unstaged_files = stl.c.Observable.from_value({})
 
 ---@type string|nil
 local user_name = nil

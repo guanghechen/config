@@ -1,29 +1,29 @@
-local __module_name__ = "ark.c.subscriber" ---@type string
+local __module_name__ = "stl.c.subscriber" ---@type string
 
----@alias ark.c.subscriber.IOnDispose
+---@alias stl.c.subscriber.IOnDispose
 ---| fun(): nil
 
----@alias ark.c.subscriber.IOnNext
+---@alias stl.c.subscriber.IOnNext
 ---| fun(value: any, value_prev: any|nil):nil
 
----@class ark.c.ISubscriber : ark.c.IDisposable
----@field public next                   fun(self: ark.c.ISubscriber, value: ark.t.T, value_prev: ark.t.T| nil): nil
+---@class stl.c.ISubscriber : stl.c.IDisposable
+---@field public next                   fun(self: stl.c.ISubscriber, value: ark.t.T, value_prev: ark.t.T| nil): nil
 
----@class ark.c.subscriber.IProps
----@field public on_dispose             ark.c.subscriber.IOnDispose|nil
----@field public on_next                ark.c.subscriber.IOnNext
+---@class stl.c.subscriber.IProps
+---@field public on_dispose             stl.c.subscriber.IOnDispose|nil
+---@field public on_next                stl.c.subscriber.IOnNext
 
----@class ark.c.Subscriber : ark.c.ISubscriber
----@field protected _on_dispose         ark.c.subscriber.IOnDispose
----@field protected _on_next            ark.c.subscriber.IOnNext
+---@class stl.c.Subscriber : stl.c.ISubscriber
+---@field protected _on_dispose         stl.c.subscriber.IOnDispose
+---@field protected _on_next            stl.c.subscriber.IOnNext
 local M = {}
 M.__index = M
 
----@param props                         ark.c.subscriber.IProps
----@return ark.c.Subscriber
+---@param props                         stl.c.subscriber.IProps
+---@return stl.c.Subscriber
 function M.new(props)
-  local on_dispose = props.on_dispose or stl.fn.noop ---@type ark.c.subscriber.IOnDispose
-  local on_next = props.on_next ---@type ark.c.subscriber.IOnNext
+  local on_dispose = props.on_dispose or stl.fn.noop ---@type stl.c.subscriber.IOnDispose
+  local on_next = props.on_next ---@type stl.c.subscriber.IOnNext
 
   local self = setmetatable({}, M)
   self._disposed = false
@@ -43,7 +43,7 @@ function M:dispose()
     return
   end
 
-  local on_dispose = self._on_dispose ---@type ark.c.subscriber.IOnDispose
+  local on_dispose = self._on_dispose ---@type stl.c.subscriber.IOnDispose
 
   self._disposed = true
   self._on_next = nil

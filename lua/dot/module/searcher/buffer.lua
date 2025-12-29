@@ -18,10 +18,10 @@ local function calculate_dynamic_height(pattern_line_count)
   return base_height + extra_lines
 end
 
----@param o_flag_fuzzy                  ark.c.Observable
----@param o_flag_regex                  ark.c.Observable
----@param o_flag_case_sensitive         ark.c.Observable
----@param o_flag_replace                ark.c.Observable
+---@param o_flag_fuzzy                  stl.c.Observable
+---@param o_flag_regex                  stl.c.Observable
+---@param o_flag_case_sensitive         stl.c.Observable
+---@param o_flag_replace                stl.c.Observable
 ---@param title                         string
 ---@return dot.module.searcher.result.IFlagItem[], dot.module.searcher.result.IFlagItemRaw[]
 local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensitive, o_flag_replace, title)
@@ -145,27 +145,27 @@ local function collect_buffer_content(bufnr)
 end
 
 ---@class dot.module.searcher.buffer.ISearcherProps
----@field public o_flag_fuzzy?          ark.c.Observable
----@field public o_flag_regex?          ark.c.Observable
----@field public o_flag_replace?        ark.c.Observable
----@field public o_flag_case_sensitive? ark.c.Observable
----@field public o_search_pattern?      ark.c.Observable
----@field public o_search_pattern_history? ark.c.History
----@field public o_replace_pattern?     ark.c.Observable
----@field public o_replace_pattern_history? ark.c.History
+---@field public o_flag_fuzzy?          stl.c.Observable
+---@field public o_flag_regex?          stl.c.Observable
+---@field public o_flag_replace?        stl.c.Observable
+---@field public o_flag_case_sensitive? stl.c.Observable
+---@field public o_search_pattern?      stl.c.Observable
+---@field public o_search_pattern_history? stl.c.History
+---@field public o_replace_pattern?     stl.c.Observable
+---@field public o_replace_pattern_history? stl.c.History
 
 ---@class dot.module.searcher.buffer.Searcher : dot.t.IWidget
 ---@field public name                   string
 ---@field public title                  string
----@field public o_flag_fuzzy           ark.c.Observable
----@field public o_flag_regex           ark.c.Observable
----@field public o_flag_replace         ark.c.Observable
----@field public o_flag_case_sensitive  ark.c.Observable
----@field public o_search_pattern       ark.c.Observable
----@field public o_search_pattern_linecount ark.c.Observable
----@field public o_replace_pattern      ark.c.Observable
----@field public o_match_index          ark.c.Observable
----@field public o_match_total          ark.c.Observable
+---@field public o_flag_fuzzy           stl.c.Observable
+---@field public o_flag_regex           stl.c.Observable
+---@field public o_flag_replace         stl.c.Observable
+---@field public o_flag_case_sensitive  stl.c.Observable
+---@field public o_search_pattern       stl.c.Observable
+---@field public o_search_pattern_linecount stl.c.Observable
+---@field public o_replace_pattern      stl.c.Observable
+---@field public o_match_index          stl.c.Observable
+---@field public o_match_total          stl.c.Observable
 ---@field protected _winnr_finder       integer|nil
 ---@field protected _bufnr_finder       integer|nil
 ---@field protected _winnr_replacer     integer|nil
@@ -173,7 +173,7 @@ end
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
----@field protected _scheduler_search   ark.c.Scheduler
+---@field protected _scheduler_search   stl.c.Scheduler
 ---@field protected _nvimbar            dot.module.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     ark.t.IKeymap[]
 ---@field protected _replacer_keymaps   ark.t.IKeymap[]
@@ -188,15 +188,15 @@ M.__index = M
 ---@return dot.module.searcher.buffer.Searcher
 function M.new(props)
   props = props or {}
-  local o_flag_fuzzy = props.o_flag_fuzzy or ark.c.Observable.from_value(false)
-  local o_flag_regex = props.o_flag_regex or ark.c.Observable.from_value(false)
-  local o_flag_replace = props.o_flag_replace or ark.c.Observable.from_value(false)
-  local o_flag_case_sensitive = props.o_flag_case_sensitive or ark.c.Observable.from_value(true)
-  local o_search_pattern = props.o_search_pattern or ark.c.Observable.from_value("")
-  local o_replace_pattern = props.o_replace_pattern or ark.c.Observable.from_value("")
-  local o_search_pattern_linecount = ark.c.Observable.from_value(1)
-  local o_match_index = ark.c.Observable.from_value(0)
-  local o_match_total = ark.c.Observable.from_value(0)
+  local o_flag_fuzzy = props.o_flag_fuzzy or stl.c.Observable.from_value(false)
+  local o_flag_regex = props.o_flag_regex or stl.c.Observable.from_value(false)
+  local o_flag_replace = props.o_flag_replace or stl.c.Observable.from_value(false)
+  local o_flag_case_sensitive = props.o_flag_case_sensitive or stl.c.Observable.from_value(true)
+  local o_search_pattern = props.o_search_pattern or stl.c.Observable.from_value("")
+  local o_replace_pattern = props.o_replace_pattern or stl.c.Observable.from_value("")
+  local o_search_pattern_linecount = stl.c.Observable.from_value(1)
+  local o_match_index = stl.c.Observable.from_value(0)
+  local o_match_total = stl.c.Observable.from_value(0)
 
   local self = setmetatable({}, M)
   self.name = __module_name__
@@ -211,13 +211,13 @@ function M.new(props)
 
   local nvimbar = self:__create_nvimbar__(o_match_index, o_match_total, flags)
 
-  local scheduler_search = ark.c.Scheduler.new({
+  local scheduler_search = stl.c.Scheduler.new({
     name = string.format("%s#search", __module_name__),
     mode = "debounce",
     delay = 64,
     timeout = 0,
     silent = stl.fn.falsy,
-    value = ark.c.Observable.from_value(true),
+    value = stl.c.Observable.from_value(true),
     task = function()
       self:__search__()
     end,
@@ -1052,7 +1052,7 @@ function M:__create_keymaps__(raw_flags, window_type)
       key = "tr",
       desc = string.format("%s: toggle replace mode", self.title),
       callback = function()
-        local flag = self.o_flag_replace ---@type ark.c.Observable
+        local flag = self.o_flag_replace ---@type stl.c.Observable
         flag:next(not flag:snapshot())
       end,
     }
@@ -1071,8 +1071,8 @@ function M:__create_keymaps__(raw_flags, window_type)
 end
 
 ---@protected
----@param o_match_index                 ark.c.Observable
----@param o_match_total                 ark.c.Observable
+---@param o_match_index                 stl.c.Observable
+---@param o_match_total                 stl.c.Observable
 ---@param flags                         dot.module.searcher.result.IFlagItem[]
 ---@return dot.module.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)

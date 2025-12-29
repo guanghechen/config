@@ -39,8 +39,8 @@ function M.result_flags(position, flags, flags_start_index)
 end
 
 ---@param position                      ark.e.NvimbarPositionEnum
----@param result_lnum                   ark.c.Observable
----@param result_total                  ark.c.Observable
+---@param result_lnum                   stl.c.Observable
+---@param result_total                  stl.c.Observable
 ---@return dot.module.nvimbar.IRawComponent
 function M.result_pos(position, result_lnum, result_total)
   local hln_text = position .. "_picker_result_pos_text" ---@type string

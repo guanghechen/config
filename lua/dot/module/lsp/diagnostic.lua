@@ -25,10 +25,10 @@ local M = {}
 ---@type table<integer, dot.module.lsp.diagnostic.IBufferDiagnostics>
 M._buffers = {}
 
----@type ark.c.Subscribers
-M._subscribers_all = ark.c.Subscribers.new()
+---@type stl.c.Subscribers
+M._subscribers_all = stl.c.Subscribers.new()
 
----@type table<integer, ark.c.Subscribers>
+---@type table<integer, stl.c.Subscribers>
 M._subscribers_bufnr = {}
 
 ---@type integer
@@ -126,7 +126,7 @@ local function do_refresh()
 
   for bufnr, change in pairs(changed_bufnrs) do
     if not equals_buffer(change.prev, change.next) then
-      local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+      local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
       if subscribers ~= nil then
         subscribers:notify(change.next)
       end
@@ -247,19 +247,19 @@ function M.refresh()
   refresh_debounced()
 end
 
----@param subscriber                     ark.c.ISubscriber
----@return ark.c.IUnsubscribable
+---@param subscriber                     stl.c.ISubscriber
+---@return stl.c.IUnsubscribable
 function M.subscribe_all(subscriber)
   return M._subscribers_all:subscribe(subscriber)
 end
 
 ---@param bufnr                          integer
----@param subscriber                     ark.c.ISubscriber
----@return ark.c.IUnsubscribable
+---@param subscriber                     stl.c.ISubscriber
+---@return stl.c.IUnsubscribable
 function M.subscribe_bufnr(bufnr, subscriber)
-  local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+  local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
   if subscribers == nil then
-    subscribers = ark.c.Subscribers.new()
+    subscribers = stl.c.Subscribers.new()
     M._subscribers_bufnr[bufnr] = subscribers
   end
   return subscribers:subscribe(subscriber)
@@ -281,7 +281,7 @@ function M.setup()
     callback = function(args)
       local bufnr = args.buf ---@type integer
       M._buffers[bufnr] = nil
-      local subscribers = M._subscribers_bufnr[bufnr] ---@type ark.c.Subscribers|nil
+      local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
       if subscribers ~= nil then
         subscribers:dispose()
         M._subscribers_bufnr[bufnr] = nil

@@ -14,19 +14,19 @@
 local name = "dot.fn.find_diagnostics" ---@type string
 local title = "Find diagnostics" ---@type string
 
-local o_search_pattern = dot.context.select.find_diagnostics.search_pattern ---@type ark.c.Observable
-local o_flag_foldempty = dot.context.select.find_diagnostics.flag_foldempty ---@type ark.c.Observable
-local o_flag_fuzzy = dot.context.select.find_diagnostics.flag_fuzzy ---@type ark.c.Observable
-local o_flag_regex = dot.context.select.find_diagnostics.flag_regex ---@type ark.c.Observable
-local o_flag_case_sensitive = dot.context.select.find_diagnostics.flag_case_sensitive ---@type ark.c.Observable
-local o_flag_selected = dot.context.select.find_diagnostics.flag_selected ---@type ark.c.Observable
-local o_flag_viewtype = dot.context.select.find_diagnostics.flag_viewtype ---@type ark.c.Observable
+local o_search_pattern = dot.context.select.find_diagnostics.search_pattern ---@type stl.c.Observable
+local o_flag_foldempty = dot.context.select.find_diagnostics.flag_foldempty ---@type stl.c.Observable
+local o_flag_fuzzy = dot.context.select.find_diagnostics.flag_fuzzy ---@type stl.c.Observable
+local o_flag_regex = dot.context.select.find_diagnostics.flag_regex ---@type stl.c.Observable
+local o_flag_case_sensitive = dot.context.select.find_diagnostics.flag_case_sensitive ---@type stl.c.Observable
+local o_flag_selected = dot.context.select.find_diagnostics.flag_selected ---@type stl.c.Observable
+local o_flag_viewtype = dot.context.select.find_diagnostics.flag_viewtype ---@type stl.c.Observable
 
-local search_pattern_history = ark.c.InputHistory.new({ name = name, capacity = 5 })
-local o_bufnr_sourcefile = ark.c.Observable.from_value(nil)---@type ark.c.Observable
-local o_rootpath = ark.c.Observable.from_value(dot.path.cwd())---@type ark.c.Observable
-local o_flag_buffer = ark.c.Observable.from_value(false)---@type ark.c.Observable
-local o_flag_severity = ark.c.Observable.from_value(nil)
+local search_pattern_history = stl.c.InputHistory.new({ name = name, capacity = 5 })
+local o_bufnr_sourcefile = stl.c.Observable.from_value(nil)---@type stl.c.Observable
+local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())---@type stl.c.Observable
+local o_flag_buffer = stl.c.Observable.from_value(false)---@type stl.c.Observable
+local o_flag_severity = stl.c.Observable.from_value(nil)
 
 local picker ---@type dot.module.picker.FiletreeComposer
 
@@ -53,7 +53,7 @@ local function refresh(force)
     return
   end
 
-  local filetree = picker._filetree ---@type ark.c.Filetree
+  local filetree = picker._filetree ---@type stl.c.Filetree
   local treeview = picker._treeview ---@type dot.module.picker.FiletreeView
   local rootpath = o_rootpath:snapshot() ---@type string
 
@@ -128,7 +128,7 @@ local function refresh(force)
     local severity = type(severity_raw) == "number" and vim.diagnostic.severity[severity_raw] or tostring(severity_raw) ---@type string
     ---@cast severity                 dot.fn.find_diagnostics.SeverityEnum
 
-    local leafuuid = ark.c.Filetree.uuid(filepath) ---@type string
+    local leafuuid = stl.c.Filetree.uuid(filepath) ---@type string
     local leafnodestate = statemap[leafuuid] ---@type dot.module.picker.view.filetree.INodeState|nil
     if leafnodestate == nil then
       goto continue
@@ -263,7 +263,7 @@ picker = dot.picker.FiletreeComposer.new({
   end,
 
   on_preview_rendered = function(_, bufnr)
-    local filenode = picker:__retrieve_filenode__() ---@type ark.c.IFiletreeNode|nil
+    local filenode = picker:__retrieve_filenode__() ---@type stl.c.IFiletreeNode|nil
     if filenode == nil then
       return
     end

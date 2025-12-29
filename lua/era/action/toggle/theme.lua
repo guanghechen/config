@@ -35,7 +35,7 @@ local COLORS_TO_DISPLAY = {
 
 local MAX_WIDTH_THEMENAME = 24 ---@type integer
 local themes = dot.command.definitions.toggle.theme.candidates ---@type string[]
-local o_theme = dot.context.theme.theme ---@type ark.c.Observable
+local o_theme = dot.context.theme.theme ---@type stl.c.Observable
 
 ---@type dot.module.picker.composer.list.IRenderResult
 local function render_result(_, bufnr, itemmap, matches)
