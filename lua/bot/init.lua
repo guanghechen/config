@@ -6,6 +6,7 @@ local M = {}
 ---@return nil
 function M.setup()
   _G.yoz = require("yoz") ---@type yoz
+  _G.stl = require("stl") ---@type stl
 
   M.setup_patches()
   M.setup_shell()
@@ -57,7 +58,7 @@ function M.setup_clipboard()
     }
   end
 
-  local env = require("ark.env")
+  local env = require("stl.env")
   if env.IS_MAC then
     if env.IS_TMUX then
       vim.g.clipboard = tmux_clipboard()
@@ -72,7 +73,7 @@ end
 
 ---@return nil
 function M.setup_shell()
-  local env = require("ark.env")
+  local env = require("stl.env")
   if env.IS_MAC then
   -- vim.o.shell = "/bin/bash"
   elseif env.IS_NIX or env.IS_WSL then
@@ -110,7 +111,7 @@ function M.setup_workspace()
     local cwd = vim.uv.cwd() or vim.fn.getcwd() ---@type string
     local p = vim.fn.expand("%:p:h")
 
-    local env = require("ark.env")
+    local env = require("stl.env")
     local A = env.locate_gitroot(p)
     local B = env.locate_gitroot(cwd)
 

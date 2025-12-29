@@ -574,7 +574,7 @@ function M:flush()
   -- Error handling for file write failures
   local ok, err = pcall(function()
     local dirpath = dot.path.dirname(self.filepath)
-    ark.env.mkdirs(dirpath, true)
+    stl.env.mkdirs(dirpath, true)
 
     cleanup_orders(self._state.items, self._state.orders)
 

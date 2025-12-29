@@ -180,7 +180,7 @@ local commands = {
       vim.list_extend(args, { "-write", "{file}", "-identify", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{file}.info" })
       return {
         { cmd = "magick", args = args },
-        not ark.env.IS_WIN and { cmd = "convert", args = args } or nil,
+        not stl.env.IS_WIN and { cmd = "convert", args = args } or nil,
       }
     end,
   },
@@ -254,7 +254,7 @@ Convert.__index = Convert
 function Convert.new(opts)
   local state = require("dot.module.image.state")
   local s = state.data
-  ark.env.mkdirs(s.tmpdir, true)
+  stl.env.mkdirs(s.tmpdir, true)
   local self = setmetatable({}, Convert)
   opts.src, self.page = state.get_page(opts.src)
   opts.src = state.norm_src(opts.src)

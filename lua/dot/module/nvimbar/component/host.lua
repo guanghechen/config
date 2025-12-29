@@ -9,7 +9,7 @@ function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string
   local hln_sep = position .. "_host_username_sep" ---@type string
 
-  local text_with_icon = " " .. ark.icon.os.current .. " " .. ark.env.USERNAME ---@type string
+  local text_with_icon = " " .. ark.icon.os.current .. " " .. stl.env.USERNAME ---@type string
   local text_icon_only = ark.icon.os.current .. " " ---@type string
 
   ---@type dot.module.nvimbar.IRawComponent

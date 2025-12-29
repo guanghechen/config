@@ -41,7 +41,7 @@ local FILEPATH_TO_UUID = {
   ["/"] = "6666cd76f96956469e7be39d750cc7d9",
 }
 
-local FILETREE_ROOT_FILEPATH = ark.env.IS_WIN and "" or "/" ---@type string
+local FILETREE_ROOT_FILEPATH = stl.env.IS_WIN and "" or "/" ---@type string
 local FILETREE_ROOT_UUID = FILEPATH_TO_UUID[FILETREE_ROOT_FILEPATH] ---@type string
 
 ---@type table<string, ark.c.IFiletreeNodeData>
@@ -118,10 +118,10 @@ local function is_cwd_chain(filepath)
   local N1 = #cwd ---@type integer
   local N2 = #filepath ---@type integer
   if N1 < N2 then
-    return filepath:sub(1, N1 + 1) == cwd .. ark.env.PATH_SEP
+    return filepath:sub(1, N1 + 1) == cwd .. stl.env.PATH_SEP
   end
 
-  return cwd:sub(1, N2 + 1) == filepath .. ark.env.PATH_SEP
+  return cwd:sub(1, N2 + 1) == filepath .. stl.env.PATH_SEP
 end
 
 ---@param filepath                      string
@@ -244,7 +244,7 @@ function M:insert_directory_absolute(dirpath)
     local p = "" ---@type string
     local uuid_parent = FILETREE_ROOT_UUID ---@type string
 
-    if ark.env.IS_WIN then
+    if stl.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
@@ -256,7 +256,7 @@ function M:insert_directory_absolute(dirpath)
     end
 
     for index = 2, N, 1 do
-      p = p .. ark.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -285,7 +285,7 @@ function M:insert_directory_relative(cwd, dirpath)
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
-  local nodeuuid = M.uuid(cwd .. ark.env.PATH_SEP .. dirpath) ---@type string
+  local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. dirpath) ---@type string
   local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "directory" then
     local pieces = yoz.path.split(dirpath, false) ---@type string[]
@@ -295,7 +295,7 @@ function M:insert_directory_relative(cwd, dirpath)
     local uuid_parent = cwduuid ---@type string
 
     for index = 1, N, 1 do
-      p = p .. ark.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -326,7 +326,7 @@ function M:insert_file_absolute(filepath)
     local p = "" ---@type string
     local uuid_parent = FILETREE_ROOT_UUID ---@type string
 
-    if ark.env.IS_WIN then
+    if stl.env.IS_WIN then
       p = pieces[1] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
@@ -338,7 +338,7 @@ function M:insert_file_absolute(filepath)
     end
 
     for index = 2, N, 1 do
-      p = p .. ark.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -350,7 +350,7 @@ function M:insert_file_absolute(filepath)
     end
 
     local basename = pieces[N + 1] ---@type string
-    p = p .. ark.env.PATH_SEP .. basename ---@type string
+    p = p .. stl.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
     node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
@@ -377,7 +377,7 @@ function M:insert_file_relative(cwd, filepath)
     cwdnode = self:insert_directory_absolute(cwd)
   end
 
-  local nodeuuid = M.uuid(cwd .. ark.env.PATH_SEP .. filepath) ---@type string
+  local nodeuuid = M.uuid(cwd .. stl.env.PATH_SEP .. filepath) ---@type string
   local node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
   if node == nil or node.data.filetype ~= "file" then
     local pieces = yoz.path.split(filepath, false) ---@type string[]
@@ -387,7 +387,7 @@ function M:insert_file_relative(cwd, filepath)
     local uuid_parent = cwduuid ---@type string
 
     for index = 1, N, 1 do
-      p = p .. ark.env.PATH_SEP .. pieces[index] ---@type string
+      p = p .. stl.env.PATH_SEP .. pieces[index] ---@type string
       nodeuuid = M.uuid(p) ---@type string
       node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
       if node == nil or node.data.filetype ~= "directory" then
@@ -399,7 +399,7 @@ function M:insert_file_relative(cwd, filepath)
     end
 
     local basename = pieces[N + 1] ---@type string
-    p = p .. ark.env.PATH_SEP .. basename ---@type string
+    p = p .. stl.env.PATH_SEP .. basename ---@type string
     nodeuuid = M.uuid(p) ---@type string
     node = nodemap[nodeuuid] ---@type ark.c.IFiletreeNode|nil
     if node == nil or node.data.filetype ~= "file" then
@@ -426,8 +426,8 @@ function M:reset(cwd, filepaths, with_locations)
   local rootdata, rootuuid = M.resolve(FILETREE_ROOT_FILEPATH, "directory", true) ---@type ark.c.IFiletreeNodeData, string
   self:insert(rootuuid, rootuuid, rootdata)
 
-  cwd = yoz.path.normalize(cwd, true, ark.env.PATH_SEP)
-  local P = cwd == "/" and "/" or (cwd .. ark.env.PATH_SEP) ---@type string
+  cwd = yoz.path.normalize(cwd, true, stl.env.PATH_SEP)
+  local P = cwd == "/" and "/" or (cwd .. stl.env.PATH_SEP) ---@type string
   local L = #P ---@type integer
 
   local visited_filepaths = {} ---@type table<string, boolean>

@@ -128,8 +128,8 @@ local function render(winnr)
     local should_show_winline = string.sub(filepath, 1, 19) ~= "diffview:///panels/" ---@type boolean
     if should_show_winline then
       local text = string.sub(filepath, 12) ---@type string
-      if string.sub(text, 1, #ark.env.HOME_NVIM_CONFIG) == ark.env.HOME_NVIM_CONFIG then
-        text = "<NVIM_HOME>" .. string.sub(text, #ark.env.HOME_NVIM_CONFIG + 1)
+      if string.sub(text, 1, #stl.env.HOME_NVIM_CONFIG) == stl.env.HOME_NVIM_CONFIG then
+        text = "<NVIM_HOME>" .. string.sub(text, #stl.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
       vim.wo[winnr].winbar = txt(winbar, "f_wl_text")

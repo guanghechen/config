@@ -122,7 +122,7 @@ local function __tmux_navigate__(direction)
   end
 end
 
-local navigate = ark.env.IS_TMUX and __tmux_navigate__ or __vim_navigate__
+local navigate = stl.env.IS_TMUX and __tmux_navigate__ or __vim_navigate__
 M.navigate = navigate
 
 ---@return nil

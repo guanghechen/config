@@ -1,4 +1,4 @@
-if ark.env.IS_WIN then
+if stl.env.IS_WIN then
   return
 end
 

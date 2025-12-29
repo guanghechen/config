@@ -7,7 +7,7 @@
 local M = {
   options = {
     lockfile = dot.path.normalize(vim.fn.stdpath("config") .. "/lazy-lock.json"),
-    root = dot.path.normalize(ark.env.HOME_NVIM_DATA .. "/lazy"),
+    root = dot.path.normalize(stl.env.HOME_NVIM_DATA .. "/lazy"),
     ui = {
       size = { width = 119, height = 0.8 },
       border = "rounded",

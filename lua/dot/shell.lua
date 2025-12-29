@@ -4,7 +4,7 @@ local __module_name__ = "dot.shell" ---@type string
 ---@field public format_command         fun(command?: string): string
 local M = {}
 
-if ark.env.IS_MAC or ark.env.IS_NIX or ark.env.IS_WSL then
+if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -15,7 +15,7 @@ if ark.env.IS_MAC or ark.env.IS_NIX or ark.env.IS_WSL then
       return "sh -c " .. vim.fn.shellescape(cmd)
     end
   end
-elseif ark.env.IS_WIN then
+elseif stl.env.IS_WIN then
   ---@param cmd                         ?string|nil
   ---@return string
   function M.format_command(cmd)
@@ -31,7 +31,7 @@ else
     from = __module_name__,
     subject = "format_command",
     message = "Bad env",
-    details = { env = ark.env },
+    details = { env = stl.env },
   })
 end
 

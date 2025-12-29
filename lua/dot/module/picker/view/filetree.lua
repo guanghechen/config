@@ -530,7 +530,7 @@ function M:reset_filepaths(cwd, filepaths, with_locations)
         local filepath, lnum, col, col_end = ark.string.parse_filepath_with_location(p) ---@type string, integer|nil, integer|nil
         if lnum ~= nil then
           if not yoz.path.is_absolute(filepath) then
-            filepath = cwd .. ark.env.PATH_SEP .. filepath ---@type string
+            filepath = cwd .. stl.env.PATH_SEP .. filepath ---@type string
           end
 
           local fileuuid = ark.c.Filetree.uuid(filepath) ---@type string

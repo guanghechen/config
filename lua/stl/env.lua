@@ -1,4 +1,4 @@
-local __module_name__ = "ark.env" ---@type string
+local __module_name__ = "stl.env" ---@type string
 
 local os_name = vim.uv.os_uname().sysname ---@type string|nil
 
@@ -24,7 +24,7 @@ local IS_GHOSTTY = os.getenv("GHOSTTY_RESOURCES_DIR") ~= nil or TERM_PROGRAM == 
 
 local IS_HEADLESS = #vim.api.nvim_list_uis() == 0 ---@type boolean
 
----@class ark.env
+---@class stl.env
 local M = {}
 
 ---! OS settings

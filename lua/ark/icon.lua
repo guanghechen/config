@@ -1,4 +1,4 @@
-local env = require("ark.env")
+local env = require("stl.env")
 
 ---@class ark.icon
 local M = {}

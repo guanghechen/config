@@ -247,7 +247,6 @@ local __mods = {
   anim = "ark.anim",
   box = "ark.box",
   debug = "ark.debug",
-  env = "ark.env",
   fileicon = "ark.fileicon",
   filetype = "ark.filetype",
   fn = "ark.fn",
@@ -277,7 +276,6 @@ local __mods = {
 ---@field public debug                  ark.debug
 ---@field public dict                   ark.dict
 ---@field public easing                 ark.external.easing
----@field public env                    ark.env
 ---@field public fileicon               ark.fileicon
 ---@field public filetype               ark.filetype
 ---@field public fn                     ark.fn

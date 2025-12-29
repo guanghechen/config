@@ -7,11 +7,11 @@
 ---@field public set_input_method       fun(input_method: dot.module.im.InputMethod): nil
 local M = {}
 
-if ark.env.IS_MAC then
+if stl.env.IS_MAC then
   M = require("dot.module.im.mac")
-elseif ark.env.IS_WSL then
+elseif stl.env.IS_WSL then
   M = require("dot.module.im.wsl")
-elseif ark.env.IS_WIN then
+elseif stl.env.IS_WIN then
   M = require("dot.module.im.win")
 end
 

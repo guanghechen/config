@@ -4,13 +4,13 @@
 ---@field public paste_image_from_clipboard fun(filepath_target: string): boolean
 local M = {}
 
-if ark.env.IS_MAC then
+if stl.env.IS_MAC then
   M = require("dot.module.clipboard.mac")
-elseif ark.env.IS_WSL then
+elseif stl.env.IS_WSL then
   M = require("dot.module.clipboard.wsl")
-elseif ark.env.IS_NIX then
+elseif stl.env.IS_NIX then
   M = require("dot.module.clipboard.nix")
-elseif ark.env.IS_WIN then
+elseif stl.env.IS_WIN then
   M = require("dot.module.clipboard.win")
 end
 

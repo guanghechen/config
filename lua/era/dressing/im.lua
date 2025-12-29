@@ -1,4 +1,4 @@
-if ark.env.IS_NIX then
+if stl.env.IS_NIX then
   return
 end
 

@@ -55,7 +55,7 @@ end
 ---@return string|nil
 local function detectLspServer()
   local _, binPath = dot.lsp.locate_lsp_root(
-    dot.path.cwd() .. ark.env.PATH_SEP .. "a.css",
+    dot.path.cwd() .. stl.env.PATH_SEP .. "a.css",
     { "./node_modules/.bin/tailwindcss-language-server" }
   )
   if binPath ~= nil and vim.fn.executable(binPath) == 1 then

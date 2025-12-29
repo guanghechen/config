@@ -1,11 +1,11 @@
-local SEP = ark.env.PATH_SEP ---@type string
-local HOME_CONFIG = ark.env.HOME_CONFIG ---@type string
-local HOME_CONFIG_SHARED = ark.env.HOME_CONFIG_SHARED ---@type string
-local HOME_NVIM_CACHE = ark.env.HOME_NVIM_CACHE ---@type string
-local HOME_NVIM_CONFIG = ark.env.HOME_NVIM_CONFIG ---@type string
-local HOME_NVIM_DATA = ark.env.HOME_NVIM_DATA ---@type string
-local HOME_CONTEXT = ark.env.HOME_CONTEXT ---@type string
-local HOME_SHARED = ark.env.HOME_SHARED ---@type string
+local SEP = stl.env.PATH_SEP ---@type string
+local HOME_CONFIG = stl.env.HOME_CONFIG ---@type string
+local HOME_CONFIG_SHARED = stl.env.HOME_CONFIG_SHARED ---@type string
+local HOME_NVIM_CACHE = stl.env.HOME_NVIM_CACHE ---@type string
+local HOME_NVIM_CONFIG = stl.env.HOME_NVIM_CONFIG ---@type string
+local HOME_NVIM_DATA = stl.env.HOME_NVIM_DATA ---@type string
+local HOME_CONTEXT = stl.env.HOME_CONTEXT ---@type string
+local HOME_SHARED = stl.env.HOME_SHARED ---@type string
 
 local CWD ---@type string
 local CWD_URI ---@type string
@@ -14,7 +14,7 @@ local WORKSPACE_URI ---@type string
 local IS_GIT_REPO ---@type boolean
 do
   local cwd = vim.fn.getcwd() ---@type string
-  local gitrepo = ark.env.locate_gitroot(cwd) ---@type string|nil
+  local gitrepo = stl.env.locate_gitroot(cwd) ---@type string|nil
   CWD = cwd ---@type string
   CWD_URI = yoz.uri.from_filepath(cwd .. "/") ---@type string
   WORKSPACE = gitrepo or cwd ---@type string
@@ -218,7 +218,7 @@ function M.locate_cache_filepath(filename)
 
   local dirpath = M.join(HOME_NVIM_CACHE, "guanghechen" .. SEP .. workspace_name .. "@" .. hash) ---@type string
   local filepath = M.join(dirpath, filename) ---@type string
-  ark.env.mkdirs(dirpath, true)
+  stl.env.mkdirs(dirpath, true)
   return filepath
 end
 

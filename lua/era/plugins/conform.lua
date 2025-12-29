@@ -71,7 +71,7 @@ local ignored = {
 
 ---@class era.plugin.conform.config
 local config = {
-  prettier_bin_path = ark.env.IS_WIN and dot.path.normalize("node_modules/.bin/prettier.cmd")
+  prettier_bin_path = stl.env.IS_WIN and dot.path.normalize("node_modules/.bin/prettier.cmd")
     or dot.path.normalize("node_modules/.bin/prettier"),
   stylua_fallback_config_path = dot.path.locate_config_shared_filepath("stylua.toml"),
   prettier_fallback_config = {

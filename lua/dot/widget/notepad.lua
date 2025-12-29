@@ -1144,7 +1144,7 @@ function M:save()
 
   local filepath = self:get_filepath()
   if #filepath > 0 then
-    ark.env.mkdirs(filepath, false)
+    stl.env.mkdirs(filepath, false)
   end
 
   local ok = self:flush()

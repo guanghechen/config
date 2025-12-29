@@ -73,7 +73,7 @@ function M.copy_file(filepath_source, filepath_target, force)
     return false
   end
 
-  ark.env.mkdirs(filepath_target, false)
+  stl.env.mkdirs(filepath_target, false)
 
   local fout, err_create = io.open(filepath_target, "wb")
   if not fout then
@@ -118,7 +118,7 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
     end
   end
 
-  ark.env.mkdirs(dirpath_target, true)
+  stl.env.mkdirs(dirpath_target, true)
 
   local handle = vim.uv.fs_scandir(dirpath_source)
   if not handle then
@@ -138,8 +138,8 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
       break
     end
 
-    local source_path = dirpath_source .. ark.env.PATH_SEP .. name
-    local target_path = dirpath_target .. ark.env.PATH_SEP .. name
+    local source_path = dirpath_source .. stl.env.PATH_SEP .. name
+    local target_path = dirpath_target .. stl.env.PATH_SEP .. name
 
     if type == "directory" then
       success = M.copy_directory(source_path, target_path, force) and success
@@ -346,7 +346,7 @@ end
 ---@param content                       string
 ---@return nil
 function M.write_file(filepath, content)
-  ark.env.mkdirs(filepath, false)
+  stl.env.mkdirs(filepath, false)
 
   local file, err_open = io.open(filepath, "wb")
   if not file then

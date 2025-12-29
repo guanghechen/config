@@ -12,7 +12,7 @@ end
 ---@param filepath                      string
 ---@return nil
 function M.save_session(filepath)
-  ark.env.mkdirs(filepath, false)
+  stl.env.mkdirs(filepath, false)
   local tmp = vim.o.sessionoptions
   vim.o.sessionoptions = ark.var.session.persistent_options
   vim.cmd("mks! " .. vim.fn.fnameescape(filepath))

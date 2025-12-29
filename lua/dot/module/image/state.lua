@@ -1,10 +1,10 @@
 ---@type string|nil
 local terminal_name = nil
-if ark.env.IS_KITTY then
+if stl.env.IS_KITTY then
   terminal_name = "kitty"
-elseif ark.env.IS_WEZTERM then
+elseif stl.env.IS_WEZTERM then
   terminal_name = "wezterm"
-elseif ark.env.IS_GHOSTTY then
+elseif stl.env.IS_GHOSTTY then
   terminal_name = "ghostty"
 end
 
@@ -21,7 +21,7 @@ local env = {
   supported = terminal_name ~= nil,
 }
 
-if ark.env.IS_TMUX then
+if stl.env.IS_TMUX then
   env.name = env.name ~= "" and (env.name .. "/tmux") or "tmux"
   env.transform = function(data)
     return ("\027Ptmux;" .. data:gsub("\027", "\027\027")) .. "\027\\"

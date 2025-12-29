@@ -30,7 +30,7 @@ local function paste_image(filepath_target)
       local src = dot.path.relative(dot.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
         if string.byte(src, 1, 1) ~= BYTE_DOT then
-          src = "." .. ark.env.PATH_SEP .. src
+          src = "." .. stl.env.PATH_SEP .. src
         end
         local filename = yoz.path.basename(filepath_target) ---@type string
         local alt = vim.fn.fnamemodify(filename, ":r") ---@type string
@@ -48,7 +48,7 @@ end
 ---@param workspace                     string
 ---@return nil
 local function do_paste(filepath_target, workspace)
-  ark.env.mkdirs(filepath_target, false)
+  stl.env.mkdirs(filepath_target, false)
 
   local ok = paste_image(filepath_target) ---@type boolean
   if ok then

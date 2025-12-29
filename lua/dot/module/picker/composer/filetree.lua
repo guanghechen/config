@@ -383,7 +383,7 @@ function M.new(props)
       local nodepath = filenode.data.filepath ---@type string
       local relpath = dot.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. ark.env.PATH_SEP ---@type string
+        relpath = relpath .. stl.env.PATH_SEP ---@type string
       end
 
       ---@param filepath                string|nil
@@ -407,10 +407,10 @@ function M.new(props)
         end
 
         if isdir then
-          ark.env.mkdirs(filepath, true)
+          stl.env.mkdirs(filepath, true)
           treeview:insert_dirpath(filepath)
         else
-          ark.env.mkdirs(filepath, false)
+          stl.env.mkdirs(filepath, false)
           vim.fn.writefile({}, filepath)
           treeview:insert_filepath(filepath, false)
 
@@ -425,7 +425,7 @@ function M.new(props)
       ---@return nil
       local function handle()
         vim.ui.input({
-          prompt = string.format(" New file / directory ", ark.env.PATH_SEP),
+          prompt = string.format(" New file / directory ", stl.env.PATH_SEP),
           default = relpath,
           relative = "cursor",
         }, function(filepath)
@@ -505,7 +505,7 @@ function M.new(props)
       local rootpath = rootnode.data.filepath ---@type string
       local relpath = dot.path.relative(rootpath, nodepath) ---@type string
       if filenode.data.filetype == "directory" and #relpath > 0 then
-        relpath = relpath .. ark.env.PATH_SEP ---@type string
+        relpath = relpath .. stl.env.PATH_SEP ---@type string
       end
 
       ---@param answer                  string|nil
@@ -634,7 +634,7 @@ function M.new(props)
         -- Ensure destination directory exists
         local dest_dir = dot.path.dirname(next_filepath)
         if not yoz.path.is_exist(dest_dir) then
-          ark.env.mkdirs(dest_dir, true)
+          stl.env.mkdirs(dest_dir, true)
         end
 
         if yoz.path.is_exist(next_filepath) then
@@ -756,7 +756,7 @@ function M.new(props)
         -- Ensure destination directory exists
         local dest_dir = dot.path.dirname(next_filepath)
         if not yoz.path.is_exist(dest_dir) then
-          ark.env.mkdirs(dest_dir, true)
+          stl.env.mkdirs(dest_dir, true)
         end
 
         if yoz.path.is_exist(next_filepath) then
@@ -1965,7 +1965,7 @@ function M:__match__(input)
     return
   end
 
-  local pattern = input:gsub("[/\\]", ark.env.PATH_SEP) ---@type string
+  local pattern = input:gsub("[/\\]", stl.env.PATH_SEP) ---@type string
 
   ---@type string[]
   local uuids_order = treeview:match({
@@ -2202,7 +2202,7 @@ function M:__update_tree_after_rename__(from, to, isdir)
 
     if result ~= nil and result.files ~= nil then
       for _, relative_filepath in ipairs(result.files) do
-        local to_filepath = to .. ark.env.PATH_SEP .. relative_filepath ---@type string
+        local to_filepath = to .. stl.env.PATH_SEP .. relative_filepath ---@type string
         filepaths[#filepaths + 1] = to_filepath
       end
     end

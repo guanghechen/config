@@ -54,7 +54,7 @@ local M = {}
 ---@return dot.context.flight.data
 function M.defaults()
   local workspace = dot.path.workspace() ---@type string
-  local is_home_config_dir = workspace == ark.env.HOME_NVIM_CONFIG ---@type boolean
+  local is_home_config_dir = workspace == stl.env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = dot.path.is_git_repo() ---@type boolean
   local is_thirdparty = dot.path.is_repo_thirdparty() ---@type boolean
   local is_playground = dot.path.is_repo_playground() ---@type boolean

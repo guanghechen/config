@@ -8,7 +8,7 @@ local txt = ark.vim.fn.txt
 
 ---@type { prefix: string, replacement: string }[]
 local PATH_PREFIX_MAP = {
-  { prefix = ark.env.HOME_USER, replacement = "~" },
+  { prefix = stl.env.HOME_USER, replacement = "~" },
 }
 
 ---@param path                          string

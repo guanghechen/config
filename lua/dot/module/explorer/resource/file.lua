@@ -457,7 +457,7 @@ function M:remove(uri, on_removed)
   local is_directory = stat.type == "directory" ---@type boolean
 
   if use_trash then
-    if ark.env.IS_MAC then
+    if stl.env.IS_MAC then
       local result = vim.system({ "trash", "-F", filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
@@ -468,7 +468,7 @@ function M:remove(uri, on_removed)
           details = { stderr = result.stderr },
         })
       end
-    elseif ark.env.IS_WSL then
+    elseif stl.env.IS_WSL then
       local win_path = vim.fn.system({ "wslpath", "-w", filepath }):gsub("\n", "")
       local ps_script ---@type string
       if is_directory then
@@ -492,7 +492,7 @@ function M:remove(uri, on_removed)
           details = { stderr = result.stderr },
         })
       end
-    elseif ark.env.IS_NIX then
+    elseif stl.env.IS_NIX then
       local result = vim.system({ "gio", "trash", filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
@@ -503,7 +503,7 @@ function M:remove(uri, on_removed)
           details = { stderr = result.stderr },
         })
       end
-    elseif ark.env.IS_WIN then
+    elseif stl.env.IS_WIN then
       local ps_script ---@type string
       if is_directory then
         ps_script = string.format(
