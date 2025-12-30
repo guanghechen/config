@@ -711,13 +711,13 @@ command
   .implement({
     uuid = K.log.preview_json_normal.uuid,
     action = function()
-      require("fml.action.log").preview_json_normal()
+      era.widget.log.preview_json_normal()
     end,
   })
   .implement({
     uuid = K.log.preview_json_visual.uuid,
     action = function()
-      require("fml.action.log").preview_json_visual()
+      era.widget.log.preview_json_visual()
     end,
   })
 

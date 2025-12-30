@@ -203,12 +203,14 @@ local view = setmetatable({
 ---@class era.widget.__mods
 local __widget__mods = {
   explorer = "era.widget.explorer",
+  log = "era.widget.log",
   win_history = "era.widget.win-history",
 }
 
 ---@class era.widget
 ---@field public __mods                 era.widget.__mods
 ---@field public explorer               era.widget.explorer
+---@field public log                    era.widget.log
 ---@field public win_history            era.widget.win_history
 local widget = setmetatable({
   __mods = __widget__mods,

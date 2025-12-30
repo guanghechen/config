@@ -1,5 +1,6 @@
-local __module_name__ = "fml.action.log" ---@type string
+local __module_name__ = "era.widget.log" ---@type string
 
+---@class era.widget.log
 local M = {}
 
 ---@param content                       string
