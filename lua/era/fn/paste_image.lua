@@ -94,7 +94,7 @@ local function paste()
       local input_row = input_cfg.row or 3 ---@type integer
       local input_col = input_cfg.col or 0 ---@type integer
 
-      era.view.Select.confirm({
+      era.m.select.confirm({
         title = "File exists, overwrite?",
         relative = "editor",
         row = input_row + 3,

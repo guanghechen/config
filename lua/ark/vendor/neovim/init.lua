@@ -44,7 +44,7 @@ vim.schedule(function()
   era.m.input.dressing()
   era.m.lsp.dressing()
   era.m.python_venv.dressing()
-  require("fml.dressing.select")
+  era.m.select.dressing()
   era.m.image.dressing()
   pcall(require, "ark.vendor.local.dressing")
 

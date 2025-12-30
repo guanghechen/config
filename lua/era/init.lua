@@ -92,6 +92,7 @@ local __m__mods = {
   python_venv = "era.m.python_venv",
   scroll = "era.m.scroll",
   searcher = "era.m.searcher",
+  select = "era.m.select",
   statuscolumn = "era.m.statuscolumn",
   statusline = "era.m.statusline",
   tabline = "era.m.tabline",
@@ -126,6 +127,7 @@ local __m__mods = {
 ---@field public python_venv            era.m.python_venv
 ---@field public scroll                 era.m.scroll
 ---@field public searcher               era.m.searcher
+---@field public select                 era.m.select
 ---@field public statuscolumn           era.m.statuscolumn
 ---@field public statusline             era.m.statusline
 ---@field public tabline                era.m.tabline
@@ -157,7 +159,6 @@ local __view__mods = {
   Keysheet = "era.view.keysheet",
   Plainfile = "era.view.plainfile",
   Printer = "era.view.printer",
-  Select = "era.view.select",
   Setting = "era.view.setting",
   Textarea = "era.view.textarea",
   Tree = "era.view.tree",
@@ -170,7 +171,6 @@ local __view__mods = {
 ---@field public Keysheet               era.view.Keysheet
 ---@field public Plainfile              era.view.Plainfile
 ---@field public Printer                era.view.Printer
----@field public Select                 era.view.Select
 ---@field public Setting                era.view.Setting
 ---@field public Textarea               era.view.Textarea
 ---@field public Tree                   era.view.Tree
