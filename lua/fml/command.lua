@@ -770,7 +770,7 @@ command
   .implement({
     uuid = K.lsp.select_python_venv.uuid,
     action = function()
-      require("fml.action.lsp.python_venv").activate_venv()
+      era.m.python_venv.select_venv()
     end,
   })
 
