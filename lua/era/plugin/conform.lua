@@ -69,7 +69,7 @@ local ignored = {
   },
 }
 
----@class fml.plugin.conform.config
+---@class era.plugin.conform.config
 local config = {
   prettier_bin_path = stl.env.IS_WIN and dot.path.normalize("node_modules/.bin/prettier.cmd")
     or dot.path.normalize("node_modules/.bin/prettier"),

@@ -1,6 +1,6 @@
 ---@see https://github.com/mason-org/mason.nvim/tree/57e5a8addb8c71fb063ee4acda466c7cf6ad2800
 
-local __module_name__ = "fml.plugin.mason" ---@type string
+local __module_name__ = "era.plugin.mason" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@class fml.plugin.mason
+---@class era.plugin.mason
 ---@field public get_mason_ensure_installed fun(): string[]
 ---@field public install                fun(packages: string[], force: boolean, on_close: fun(): nil): nil
 ---@field public install_all            fun(force: boolean, on_close: fun(): nil): nil
@@ -142,7 +142,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type fml.plugin.ISpec
+---@type era.plugin.ISpec
 M.spec = {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },

@@ -1,6 +1,6 @@
 ---@see https://github.com/nvim-treesitter/nvim-treesitter/tree/c5871d9d870c866fea9f271f1a3b3f29049a4793
 
-local __module_name__ = "fml.plugin.nvim-treesitter" ---@type string
+local __module_name__ = "era.plugin.nvim-treesitter" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
@@ -243,7 +243,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@class fml.plugin.nvim_treesitter
+---@class era.plugin.nvim_treesitter
 ---@field public swap_conditional_branches fun(): nil
 ---@field public swap_next_parameter      fun(): nil
 ---@field public swap_prev_parameter      fun(): nil
@@ -255,7 +255,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type fml.plugin.ISpec
+---@type era.plugin.ISpec
 M.spec = {
   name = "nvim-treesitter",
   lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline

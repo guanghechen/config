@@ -1,6 +1,6 @@
-local __module_name__ = "fml.cmp.dict" ---@type string
+local __module_name__ = "era.cmp.dict" ---@type string
 
----@alias fml.cmp.dict.IMatchMode
+---@alias era.cmp.dict.IMatchMode
 ---| "prefix"
 ---| "substring"
 
@@ -8,16 +8,16 @@ local __module_name__ = "fml.cmp.dict" ---@type string
 ---| string
 ---| { kind: lsp.MarkupKind, value: string, draw?: fun(opts?: unknown) }
 
----@class fml.cmp.dict.IConfig
+---@class era.cmp.dict.IConfig
 ---@field public max_items              integer
 ---@field public min_keyword_length     integer
----@field public match_mode             fml.cmp.dict.IMatchMode
+---@field public match_mode             era.cmp.dict.IMatchMode
 ---@field public include_compounds      boolean
 ---@field public adjust_case            boolean
 ---@field public language               string
 
----@class fml.cmp.dict
----@field public opts                   fml.cmp.dict.IConfig
+---@class era.cmp.dict
+---@field public opts                   era.cmp.dict.IConfig
 ---@field public entries                { word: string, documentation: string }[]
 ---@field public kind_text              integer
 ---@field public insert_format          integer
@@ -117,7 +117,7 @@ end
 function M.new(opts)
   local self = setmetatable({}, { __index = M })
 
-  self.opts = vim.tbl_deep_extend("keep", opts or {}, defaults) ---@type fml.cmp.dict.IConfig
+  self.opts = vim.tbl_deep_extend("keep", opts or {}, defaults) ---@type era.cmp.dict.IConfig
   local loaded = stl.dict.en ---@type { [1]: string, [2]: string }[]
   local entries = {} ---@type { word: string, documentation: string }[]
   for index, item in ipairs(loaded) do

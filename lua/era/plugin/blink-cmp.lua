@@ -8,7 +8,7 @@ return {
     "friendly-snippets",
   },
   opts = function()
-    ---@class fml.plugin.blink_cmp.actions
+    ---@class era.plugin.blink_cmp.actions
     local actions = {
       ---@return boolean|nil
       has_native_completion = function()
@@ -345,7 +345,7 @@ return {
           },
           dict = {
             name = "dict",
-            module = "fml.plugin.blink-cmp.dict",
+            module = "era.plugin.blink-cmp.dict",
             score_offset = 95,
           },
           lsp = {
@@ -365,7 +365,7 @@ return {
           },
           path_at = {
             name = "path_at",
-            module = "fml.plugin.blink-cmp.path",
+            module = "era.plugin.blink-cmp.path",
             score_offset = 210,
             timeout_ms = 2000,
             opts = {
@@ -380,7 +380,7 @@ return {
           },
           slash = {
             name = "slash",
-            module = "fml.plugin.blink-cmp.slash",
+            module = "era.plugin.blink-cmp.slash",
             score_offset = 220,
           },
           snippets = {

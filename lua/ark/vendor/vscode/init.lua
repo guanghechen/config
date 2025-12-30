@@ -8,7 +8,7 @@ require("ark.vendor.vscode.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-require("fml.plugin")
+require("era.plugin")
 pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()

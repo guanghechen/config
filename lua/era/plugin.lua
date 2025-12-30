@@ -1,6 +1,6 @@
-local __module_name__ = "fml.plugin" ---@type string
+local __module_name__ = "era.plugin" ---@type string
 
----@class fml.plugin.bootstrap.conds
+---@class era.plugin.bootstrap.conds
 local conds = {
   common = function()
     return true
@@ -86,11 +86,11 @@ for _, raw_spec in ipairs(raw_specs) do
     cond = cond,
   }
 
-  -- Load plugin details from fml.plugin.*
-  local spec_module_name = "fml.plugin." .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
+  -- Load plugin details from era.plugin.*
+  local spec_module_name = "era.plugin." .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
   if ok and spec_module then
-    local spec_details = spec_module.spec or spec_module ---@type fml.plugin.ISpec
+    local spec_details = spec_module.spec or spec_module ---@type era.plugin.ISpec
     spec = vim.tbl_deep_extend("force", spec, spec_details)
     spec.cond = cond
     spec.url = url

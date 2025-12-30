@@ -4,10 +4,10 @@ local default_storage = dot.get_default_storage() ---@type dot.context.storage
 local storage = { editor = default_storage.editor, workspace = default_storage.workspace } ---@type dot.context.storage
 dot.setup_context(storage)
 
-require("fml.plugin")
+require("era.plugin")
 
 require("mason")
-local action = require("fml.plugin.mason")
+local action = require("era.plugin.mason")
 
 stl.stdout.info("[guanghechen]", "Installing Mason packages...")
 action.install_all(false, function()

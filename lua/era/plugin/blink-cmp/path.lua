@@ -1,8 +1,8 @@
-local __module_name__ = "fml.cmp.path" ---@type string
+local __module_name__ = "era.cmp.path" ---@type string
 
 local uv = vim.uv
 
----@class fml.cmp.path.config
+---@class era.cmp.path.config
 ---@field public trailing_slash         boolean
 ---@field public label_trailing_slash   boolean
 ---@field public show_hidden_files_by_default boolean
@@ -24,7 +24,7 @@ local config = {
   gc_threshold_mb = 100, -- Trigger GC if memory usage exceeds 100MB
 }
 
----@class fml.cmp.path.util
+---@class era.cmp.path.util
 local util = {}
 
 ---Get current timestamp in milliseconds
@@ -42,22 +42,22 @@ function util.cancel_timer(timer)
   end
 end
 
----@class fml.cmp.path.context
+---@class era.cmp.path.context
 ---@field public start_ts               integer
 ---@field public state                  table|nil
 ---@field public active_scans           integer
 ---@field public last_dirname           string|nil
 
----@class fml.cmp.path
----@field public opts                   fml.cmp.path.config
----@field public context                fml.cmp.path.context
+---@class era.cmp.path
+---@field public opts                   era.cmp.path.config
+---@field public context                era.cmp.path.context
 ---@field public debounce_timer         uv.uv_timer_t|nil
 local M = {}
 
 function M.new(opts)
   local self = setmetatable({}, { __index = M })
 
-  ---@type fml.cmp.path.config
+  ---@type era.cmp.path.config
   opts = vim.tbl_deep_extend("keep", opts or {}, config)
 
   self.opts = opts
@@ -70,7 +70,7 @@ end
 function M:reset_context(ts)
   ts = ts or util.timestamp()
 
-  ---@type fml.cmp.path.context
+  ---@type era.cmp.path.context
   self.context = {
     start_ts = ts,
     state = nil,

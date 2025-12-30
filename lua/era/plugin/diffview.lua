@@ -1,6 +1,6 @@
 ---@see https://github.com/sindrets/diffview.nvim/tree/4516612fe98ff56ae0415a259ff6361a89419b0a
 
-local __module_name__ = "fml.plugin.diffview" ---@type string
+local __module_name__ = "era.plugin.diffview" ---@type string
 
 ----------------------------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@class fml.plugin.diffview
+---@class era.plugin.diffview
 ---@field public close                  fun(): nil
 ---@field public diffview               fun(): nil
 ---@field public diff_staged            fun(): nil
@@ -83,7 +83,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type fml.plugin.ISpec
+---@type era.plugin.ISpec
 M.spec = {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },

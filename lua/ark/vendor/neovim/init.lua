@@ -9,13 +9,13 @@ pcall(require, "ark.vendor.local.keymap")
 
 era.m.notifier.dressing()
 era.m.ui_attach.dressing()
-require("fml.command")
+require("era.command")
 
 if dot.path.is_git_repo() then
   era.m.git.setup()
 end
 
-require("fml.plugin")
+require("era.plugin")
 pcall(require, "ark.vendor.local.plugin")
 
 ---! Reload session if not specify file and current directory is a git repository.
