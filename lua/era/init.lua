@@ -13,6 +13,8 @@ local __fn__mods = {
   find_pinned_files = "era.fn.find-pinned-files",
   find_vim_options = "era.fn.find-vim-options",
   insert_splitline = "era.fn.insert-splitline",
+  mock_miniicons = "era.fn.mock_miniicons",
+  mock_web_devicons = "era.fn.mock_web_devicons",
   paste_image = "era.fn.paste_image",
   paste_image_as_base64 = "era.fn.paste_image_as_base64",
   pick_win = "era.fn.pick_win",
@@ -41,6 +43,8 @@ local __fn__mods = {
 ---@field public find_pinned_files      fun(): nil
 ---@field public find_vim_options       fun(): nil
 ---@field public insert_splitline       fun(): nil
+---@field public mock_miniicons         fun(): nil
+---@field public mock_web_devicons      fun(): nil
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               era.fn.pick_win

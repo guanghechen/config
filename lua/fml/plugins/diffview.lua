@@ -268,7 +268,7 @@ return {
     }
   end,
   config = function(_, opts)
-    require("fml.dressing.plugin").mock_web_devicons()
+    era.fn.mock_web_devicons()
 
     require("diffview").setup(opts)
   end,
