@@ -7,7 +7,7 @@ dot.setup_context(storage)
 require("fml.plugin")
 
 require("mason")
-local action = require("fml.action.plugin.mason")
+local action = require("fml.plugin.mason")
 
 stl.stdout.info("[guanghechen]", "Installing Mason packages...")
 action.install_all(false, function()

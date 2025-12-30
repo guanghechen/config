@@ -1533,19 +1533,19 @@ command
   .implement({
     uuid = K.code.swap_conditional_branches.uuid,
     action = function()
-      require("fml.action.plugin.nvim-treesitter").swap_conditional_branches()
+      require("fml.plugin.nvim-treesitter").swap_conditional_branches()
     end,
   })
   .implement({
     uuid = K.code.swap_next_parameter.uuid,
     action = function()
-      require("fml.action.plugin.nvim-treesitter").swap_next_parameter()
+      require("fml.plugin.nvim-treesitter").swap_next_parameter()
     end,
   })
   .implement({
     uuid = K.code.swap_prev_parameter.uuid,
     action = function()
-      require("fml.action.plugin.nvim-treesitter").swap_prev_parameter()
+      require("fml.plugin.nvim-treesitter").swap_prev_parameter()
     end,
   })
 
@@ -1554,7 +1554,7 @@ command.implement({
   uuid = K.explorer.toggle.uuid,
   tabtype = stl.nvim.tab.Types.DIFFVIEW,
   action = function()
-    require("fml.action.plugin.diffview").toggle()
+    require("fml.plugin.diffview").toggle()
   end,
 })
 
@@ -1563,19 +1563,19 @@ command
   .implement({
     uuid = K.git.diffview.uuid,
     action = function()
-      require("fml.action.plugin.diffview").diffview()
+      require("fml.plugin.diffview").diffview()
     end,
   })
   .implement({
     uuid = K.git.history.uuid,
     action = function()
-      require("fml.action.plugin.diffview").history()
+      require("fml.plugin.diffview").history()
     end,
   })
   .implement({
     uuid = K.git.history_file.uuid,
     action = function()
-      require("fml.action.plugin.diffview").history_file()
+      require("fml.plugin.diffview").history_file()
     end,
   })
 
@@ -1584,6 +1584,6 @@ command.implement({
   uuid = K.refresh.all.uuid,
   tabtype = stl.nvim.tab.Types.DIFFVIEW,
   action = function()
-    require("fml.action.plugin.diffview").refresh()
+    require("fml.plugin.diffview").refresh()
   end,
 })

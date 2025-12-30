@@ -90,7 +90,8 @@ for _, raw_spec in ipairs(raw_specs) do
   local spec_module_name = "fml.plugin." .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
   if ok and spec_module then
-    spec = vim.tbl_deep_extend("force", spec, spec_module)
+    local spec_details = spec_module.spec or spec_module ---@type fml.plugin.ISpec
+    spec = vim.tbl_deep_extend("force", spec, spec_details)
     spec.cond = cond
     spec.url = url
     spec.branch = branch
