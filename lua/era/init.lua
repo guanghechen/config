@@ -20,6 +20,7 @@ local __fn__mods = {
   pick_win = "era.fn.pick_win",
   refresh_all = "era.fn.refresh_all",
   rename = "era.fn.rename",
+  resume_last_widget = "era.fn.resume_last_widget",
   run_code = "era.fn.run_code",
   run_code_as_neovim_command = "era.fn.run_code_as_neovim_command",
   search_in_buffer = "era.fn.search-in-buffer",
@@ -51,6 +52,7 @@ local __fn__mods = {
 ---@field public pick_win               era.fn.pick_win
 ---@field public refresh_all            fun(): nil
 ---@field public rename                 era.fn.rename
+---@field public resume_last_widget     fun(): nil
 ---@field public run_code               fun(force: boolean): nil
 ---@field public run_code_as_neovim_command fun(): nil
 ---@field public search_in_buffer       fun(): nil

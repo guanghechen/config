@@ -1,15 +1,5 @@
----@class fml.action.ux
-local M = {}
-
----@param arg                           unknown|nil
 ---@return nil
-function M.reload_theme(arg)
-  local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
-  dot.context.theme.reload_theme(force, true)
-end
-
----@return nil
-function M.resume_last_widget()
+local function resume_last_widget()
   if dot.state.widget.resume() then
     local widget, widget_index = dot.state.widget.get_widget_visible() ---@type dot.t.IWidget|nil
     if widget ~= nil and widget_index ~= nil then
@@ -26,4 +16,4 @@ function M.resume_last_widget()
   end
 end
 
-return M
+return resume_last_widget

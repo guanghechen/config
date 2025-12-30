@@ -1355,13 +1355,14 @@ command
   .implement({
     uuid = K.ux.reload_theme.uuid,
     action = function(arg)
-      require("fml.action.ux").reload_theme(arg)
+      local force = type(arg) == "string" and arg:lower() == "force" ---@type boolean
+      dot.context.theme.reload_theme(force, true)
     end,
   })
   .implement({
     uuid = K.ux.resume_last_widget.uuid,
     action = function()
-      require("fml.action.ux").resume_last_widget()
+      era.fn.resume_last_widget()
     end,
   })
 
