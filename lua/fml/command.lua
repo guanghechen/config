@@ -702,7 +702,7 @@ command
 command.implement({
   uuid = K.lint.spellcheck_register.uuid,
   action = function()
-    require("fml.action.lint").spellcheck_register()
+    era.m.lint.spellcheck_register()
   end,
 })
 

@@ -1,6 +1,6 @@
-local __module_name__ = "fml.action.lint" ---@type string
+local __module_name__ = "era.m.lint" ---@type string
 
----@class fml.action.lint.IWordContext
+---@class era.m.lint.IWordContext
 ---@field public text                   string
 ---@field public normalized             string
 ---@field public start_col              integer
@@ -9,7 +9,7 @@ local __module_name__ = "fml.action.lint" ---@type string
 ---@param bufnr                         integer
 ---@param lnum                          integer
 ---@param col                           integer
----@return fml.action.lint.IWordContext|nil
+---@return era.m.lint.IWordContext|nil
 local function resolve_word_context(bufnr, lnum, col)
   local line = vim.api.nvim_buf_get_lines(bufnr, lnum, lnum + 1, false)[1]
   if type(line) ~= "string" then
@@ -66,7 +66,7 @@ local function word_under_cursor()
   return nil
 end
 
----@class fml.action.lint
+---@class era.m.lint
 local M = {}
 
 ---@return string|nil
@@ -77,7 +77,7 @@ end
 ---@param bufnr                         integer
 ---@param lnum                          integer
 ---@param col                           integer
----@return fml.action.lint.IWordContext|nil
+---@return era.m.lint.IWordContext|nil
 function M.word_context(bufnr, lnum, col)
   return resolve_word_context(bufnr, lnum, col)
 end
@@ -96,7 +96,7 @@ end
 
 ---@param bufnr                         integer
 ---@param lnum                          integer
----@param context                       fml.action.lint.IWordContext|nil
+---@param context                       era.m.lint.IWordContext|nil
 ---@return vim.Diagnostic|nil
 function M.find_cspell_diagnostic(bufnr, lnum, context)
   if context == nil then
@@ -144,7 +144,7 @@ function M.cspell_suggestions_from_diagnostic(diagnostic)
   return stl.string.parse_comma_list(chunk)
 end
 
----@param context                       fml.action.lint.IWordContext|nil
+---@param context                       era.m.lint.IWordContext|nil
 ---@param suggestion                    string
 ---@return string
 function M.preview_cspell_suggestion(context, suggestion)
