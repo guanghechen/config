@@ -104,7 +104,7 @@ local fns = {
   ---@return string
   find_prettier_binpath = function(dirname)
     local binpath = yoz.path.locate_nearest(dirname, { config.prettier_bin_path }) ---@type string|nil
-    return binpath or era.m.lsp.locate_mason_bin_path("prettier") ---@type string
+    return binpath or era.m.lsp.fn.locate_mason_bin_path("prettier") ---@type string
   end,
 
   ---@param dirname                     string

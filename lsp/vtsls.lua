@@ -23,7 +23,7 @@ local function root_dir(bufnr, on_dir)
   end
 
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.m.lsp.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = era.m.lsp.fn.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
@@ -201,7 +201,7 @@ local function on_init(client, config)
 end
 
 local paths = {
-  vue_ls = era.m.lsp.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
+  vue_ls = era.m.lsp.fn.locate_mason_pkg_path("vue-language-server", "/node_modules/@vue/language-server", true),
 }
 
 local vue_plugin = paths.vue_ls and {

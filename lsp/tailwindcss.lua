@@ -48,13 +48,13 @@ local filetypes = {
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
   local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.m.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = era.m.lsp.fn.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
 ---@return string|nil
 local function detectLspServer()
-  local _, binPath = era.m.lsp.locate_lsp_root(
+  local _, binPath = era.m.lsp.fn.locate_lsp_root(
     dot.path.cwd() .. stl.env.PATH_SEP .. "a.css",
     { "./node_modules/.bin/tailwindcss-language-server" }
   )

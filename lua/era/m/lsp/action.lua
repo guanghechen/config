@@ -1,4 +1,4 @@
-local __module_name__ = "fml.dressing.lsp_action" ---@type string
+local __module_name__ = "era.m.lsp.action" ---@type string
 
 local api = vim.api
 
@@ -216,9 +216,12 @@ local function make_provider_context(opts, context, bufnr, winnr, mode, lnum, cu
   }
 end
 
+---@class era.m.lsp.action
+local M = {}
+
 ---@param opts                          table|nil
 ---@return nil
-local function custom_code_action(opts)
+function M.code_action(opts)
   opts = opts or {}
   local context = opts.context and vim.deepcopy(opts.context) or {} ---@type lsp.CodeActionContext
   local has_external_diagnostics = context.diagnostics ~= nil
@@ -460,4 +463,4 @@ local function custom_code_action(opts)
   end
 end
 
-vim.lsp.buf.code_action = custom_code_action
+return M
