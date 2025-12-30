@@ -37,7 +37,7 @@ local fn_switch_source_registry = {}
 local M = {}
 
 ---@param position                      stl.e.NvimbarPositionEnum
----@param notepad                       era.widget.Notepad
+---@param notepad                       era.m.notepad.View
 ---@return era.m.nvimbar.IRawComponent
 function M.items(position, notepad)
   local hln_button = position .. "_notepad_button" ---@type string
@@ -58,7 +58,7 @@ function M.items(position, notepad)
   local arrow_reserved_width = vim.api.nvim_strwidth(" " .. icon_arrow_left .. "  99 ") ---@type integer
   local hln_arrow = stl.nvim.fn.make_bg_transparency(hln_button) ---@type string
 
-  ---@param item                        dot.t.INotepadItemMeta
+  ---@param item                        era.m.notepad.state.INotepadItemMeta
   ---@return string
   local function format_name(item)
     local name = vim.trim(item.name or "") ---@type string
@@ -71,7 +71,7 @@ function M.items(position, notepad)
     return name
   end
 
-  ---@param item                        dot.t.INotepadItemMeta
+  ---@param item                        era.m.notepad.state.INotepadItemMeta
   ---@param index                       integer
   ---@param relative_distance           integer|nil
   ---@return string
@@ -95,7 +95,7 @@ function M.items(position, notepad)
     return text, btn(hl_text, fn_switch_notepad, { index })
   end
 
-  ---@param item                        dot.t.INotepadItemMeta
+  ---@param item                        era.m.notepad.state.INotepadItemMeta
   ---@param index                       integer
   ---@return string
   ---@return string
@@ -117,7 +117,7 @@ function M.items(position, notepad)
     name = "notepad:items",
     atomic = false,
     render = function(_, remain_width)
-      local entries = {} ---@type { item: dot.t.INotepadItemMeta, index: integer }[]
+      local entries = {} ---@type { item: era.m.notepad.state.INotepadItemMeta, index: integer }[]
       for item, index in notepad:iterator() do
         entries[#entries + 1] = { item = item, index = index }
       end
@@ -283,7 +283,7 @@ function M.add_button(position)
 end
 
 ---@param position                      stl.e.NvimbarPositionEnum
----@param notepad                       era.widget.Notepad
+---@param notepad                       era.m.notepad.View
 ---@return era.m.nvimbar.IRawComponent
 function M.source(position, notepad)
   local hln_source = position .. "_notepad_source" ---@type string
@@ -306,9 +306,9 @@ function M.source(position, notepad)
     name = "notepad:source",
     atomic = true,
     render = function(_, remain_width)
-      local source = notepad:get_source() ---@type dot.t.INotepadSource
+      local source = notepad:get_source() ---@type era.m.notepad.state.INotepadSource
       local source_name = source.name ---@type string
-      local _, config = dot.state.notepad.retrieve_source(source_name)
+      local _, config = era.m.notepad.state.retrieve_source(source_name)
       local engine = config.engine ---@type 'json'|'folder'
 
       local text_source = source_name .. "@" .. engine .. " " .. icon_source .. " " ---@type string

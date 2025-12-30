@@ -88,6 +88,7 @@ local __m__mods = {
   inspect = "era.m.inspect",
   lsp = "era.m.lsp",
   maximize = "era.m.maximize",
+  notepad = "era.m.notepad",
   notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
   picker = "era.m.picker",
@@ -126,6 +127,7 @@ local __m__mods = {
 ---@field public inspect                era.m.inspect
 ---@field public lsp                    era.m.lsp
 ---@field public maximize               era.m.maximize
+---@field public notepad                era.m.notepad
 ---@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar
 ---@field public picker                 era.m.picker
@@ -197,13 +199,11 @@ local view = setmetatable({
 ---@class era.widget.__mods
 local __widget__mods = {
   explorer = "era.widget.explorer",
-  Notepad = "era.widget.notepad",
 }
 
 ---@class era.widget
 ---@field public __mods                 era.widget.__mods
 ---@field public explorer               era.widget.explorer
----@field public Notepad                era.widget.Notepad
 local widget = setmetatable({
   __mods = __widget__mods,
 }, {

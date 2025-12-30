@@ -780,50 +780,50 @@ command
     uuid = K.notepad.append_content.uuid,
     action = function(args)
       if type(args) == "string" and #args > 0 then
-        require("fml.action.notepad").append_content(args)
+        era.m.notepad.action.append_content(args)
       end
     end,
   })
   .implement({
     uuid = K.notepad.toggle.uuid,
     action = function()
-      require("fml.action.notepad").toggle()
+      era.m.notepad.action.toggle()
     end,
   })
   .implement({
     uuid = K.notepad.show.uuid,
     action = function()
-      require("fml.action.notepad").show()
+      era.m.notepad.action.show()
     end,
   })
   .implement({
     uuid = K.notepad.close.uuid,
     action = function()
-      require("fml.action.notepad").close()
+      era.m.notepad.action.close()
     end,
   })
   .implement({
     uuid = K.notepad.save.uuid,
     action = function()
-      require("fml.action.notepad").save()
+      era.m.notepad.action.save()
     end,
   })
   .implement({
     uuid = K.notepad.create.uuid,
     action = function()
-      require("fml.action.notepad").create()
+      era.m.notepad.action.create()
     end,
   })
   .implement({
     uuid = K.notepad.destroy.uuid,
     action = function()
-      require("fml.action.notepad").destroy()
+      era.m.notepad.action.destroy()
     end,
   })
   .implement({
     uuid = K.notepad.rename.uuid,
     action = function()
-      require("fml.action.notepad").rename()
+      era.m.notepad.action.rename()
     end,
   })
 
@@ -832,7 +832,7 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.notepad[key].uuid,
     action = function()
-      require("fml.action.notepad").focus_index(index)
+      era.m.notepad.action.focus_index(index)
     end,
   })
 end
@@ -841,13 +841,13 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.notepad["focus_left_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.notepad").focus_left(tostring(index))
+      era.m.notepad.action.focus_left(tostring(index))
     end,
   })
   command.implement({
     uuid = K.notepad["focus_right_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.notepad").focus_right(tostring(index))
+      era.m.notepad.action.focus_right(tostring(index))
     end,
   })
 end
@@ -856,91 +856,91 @@ command
   .implement({
     uuid = K.notepad.focus_left.uuid,
     action = function(args)
-      require("fml.action.notepad").focus_left(args)
+      era.m.notepad.action.focus_left(args)
     end,
   })
   .implement({
     uuid = K.notepad.focus_right.uuid,
     action = function(args)
-      require("fml.action.notepad").focus_right(args)
+      era.m.notepad.action.focus_right(args)
     end,
   })
   .implement({
     uuid = K.notepad.swap_left.uuid,
     action = function(args)
-      require("fml.action.notepad").swap_left(args)
+      era.m.notepad.action.swap_left(args)
     end,
   })
   .implement({
     uuid = K.notepad.swap_right.uuid,
     action = function(args)
-      require("fml.action.notepad").swap_right(args)
+      era.m.notepad.action.swap_right(args)
     end,
   })
   .implement({
     uuid = K.notepad.source_select.uuid,
     action = function()
-      require("fml.action.notepad").source_select()
+      era.m.notepad.action.source_select()
     end,
   })
   .implement({
     uuid = K.notepad.note_select.uuid,
     action = function()
-      require("fml.action.notepad").note_select()
+      era.m.notepad.action.note_select()
     end,
   })
   .implement({
     uuid = K.notepad.source_prev.uuid,
     action = function()
-      require("fml.action.notepad").source_prev()
+      era.m.notepad.action.source_prev()
     end,
   })
   .implement({
     uuid = K.notepad.source_next.uuid,
     action = function()
-      require("fml.action.notepad").source_next()
+      era.m.notepad.action.source_next()
     end,
   })
   .implement({
     uuid = K.notepad.change_engine.uuid,
     action = function()
-      require("fml.action.notepad").change_engine()
+      era.m.notepad.action.change_engine()
     end,
   })
   .implement({
     uuid = K.notepad.go_backward.uuid,
     action = function()
-      require("fml.action.notepad").go_backward()
+      era.m.notepad.action.go_backward()
     end,
   })
   .implement({
     uuid = K.notepad.go_forward.uuid,
     action = function()
-      require("fml.action.notepad").go_forward()
+      era.m.notepad.action.go_forward()
     end,
   })
   .implement({
     uuid = K.notepad.split_h.uuid,
     action = function()
-      require("fml.action.notepad").split("h")
+      era.m.notepad.action.split("h")
     end,
   })
   .implement({
     uuid = K.notepad.split_j.uuid,
     action = function()
-      require("fml.action.notepad").split("j")
+      era.m.notepad.action.split("j")
     end,
   })
   .implement({
     uuid = K.notepad.split_k.uuid,
     action = function()
-      require("fml.action.notepad").split("k")
+      era.m.notepad.action.split("k")
     end,
   })
   .implement({
     uuid = K.notepad.split_l.uuid,
     action = function()
-      require("fml.action.notepad").split("l")
+      era.m.notepad.action.split("l")
     end,
   })
 

@@ -1,5 +1,7 @@
 ---@diagnostic disable: invisible
 
+local S = era.m.notepad
+
 local DEFAULT_WIDTH = 0.6
 local DEFAULT_HEIGHT = 0.6
 local MAX_WIDTH = 0.9
@@ -242,7 +244,7 @@ for index = 1, 9 do
   }
 end
 
----@class era.widget.notepad.IProps
+---@class era.m.notepad.view.IProps
 ---@field public name                   ?string
 ---@field public title                  ?string
 ---@field public bufname                ?string
@@ -254,9 +256,9 @@ end
 ---@field public min_height             ?number
 ---@field public filetype               ?string
 ---@field public win_opts               ?table<string, any>
----@field public source                 ?dot.t.INotepadSource
+---@field public source                 ?era.m.notepad.state.INotepadSource
 
----@class era.widget.Notepad : dot.t.IWidget
+---@class era.m.notepad.View : dot.t.IWidget
 ---@field public name                   string|nil
 ---@field protected title               string
 ---@field protected bufname             string
@@ -279,8 +281,8 @@ end
 local M = {}
 M.__index = M
 
----@param props                         era.widget.notepad.IProps|nil
----@return era.widget.Notepad
+---@param props                         era.m.notepad.view.IProps|nil
+---@return era.m.notepad.View
 function M.new(props)
   props = props or {}
 
@@ -302,7 +304,7 @@ function M.new(props)
   self._buf_autocmds = {}
 
   local source_name = dot.context.module.notepad_source:snapshot() ---@type string
-  local source = dot.state.notepad.retrieve_source(source_name) ---@type dot.t.INotepadSource
+  local source = S.state.retrieve_source(source_name) ---@type era.m.notepad.state.INotepadSource
 
   source:load(false)
 
@@ -317,7 +319,7 @@ end
 ---@protected
 ---@return nil
 function M:__setup_subscriptions__()
-  self._subscription_active = dot.state.notepad.o_activated_uuid:subscribe(
+  self._subscription_active = S.state.o_activated_uuid:subscribe(
     stl.c.Subscriber.new({
       on_next = function(next_uuid)
         self:__on_active_uuid_changed__(next_uuid)
@@ -384,7 +386,7 @@ function M:__setup_nvimbar__()
 end
 
 ---@protected
----@return dot.t.INotepadSourceState
+---@return era.m.notepad.state.INotepadSourceState
 function M:__ensure_state__()
   local source = self:get_source()
   return source:load(false)
@@ -395,7 +397,7 @@ end
 function M:__notify_active_changed__()
   local source = self:get_source()
   local uuid = source:get_activated_uuid()
-  dot.state.notepad.focus_note(uuid)
+  S.state.focus_note(uuid)
 end
 
 ---@protected
@@ -422,14 +424,14 @@ end
 
 ---@return string
 function M:get_filepath()
-  local source = self:get_source() ---@type dot.t.INotepadSource
+  local source = self:get_source() ---@type era.m.notepad.state.INotepadSource
   return source.filepath or ""
 end
 
----@return dot.t.INotepadSource
+---@return era.m.notepad.state.INotepadSource
 function M:get_source()
   local source_name = dot.context.module.notepad_source:snapshot() ---@type string
-  local source = dot.state.notepad.retrieve_source(source_name)
+  local source = S.state.retrieve_source(source_name)
   return source
 end
 
@@ -450,9 +452,9 @@ function M:attach(source_name)
 
   dot.context.module.notepad_source:next(source_name)
 
-  local new_source = dot.state.notepad.retrieve_source(source_name)
+  local new_source = S.state.retrieve_source(source_name)
   local new_uuid = new_source:get_activated_uuid()
-  dot.state.notepad.focus_note(new_uuid)
+  S.state.focus_note(new_uuid)
 
   if bufnr ~= nil then
     self:__render_active_item__(bufnr)
@@ -493,7 +495,7 @@ function M:indexof(uuid)
 end
 
 ---@param index                         integer
----@return string|nil, dot.t.INotepadItemState|nil
+---@return string|nil, era.m.notepad.state.INotepadItemState|nil
 function M:at(index)
   local state = self:__ensure_state__()
   local uuid = state.orders[index]
@@ -507,7 +509,7 @@ function M:current()
   return self:indexof(active_uuid), active_uuid
 end
 
----@return dot.t.INotepadItemState|nil
+---@return era.m.notepad.state.INotepadItemState|nil
 function M:current_item()
   local source = self:get_source()
   local active_uuid = source:get_activated_uuid()
@@ -518,13 +520,13 @@ function M:current_item()
 end
 
 ---@param uuid                          string
----@return dot.t.INotepadItemState|nil
+---@return era.m.notepad.state.INotepadItemState|nil
 function M:get(uuid)
   local source = self:get_source()
   return source:retrieve(uuid, false)
 end
 
----@return fun():dot.t.INotepadItemState|nil, integer|nil
+---@return fun():era.m.notepad.state.INotepadItemState|nil, integer|nil
 function M:iterator()
   local state = self:__ensure_state__()
   local index = 0
@@ -562,7 +564,7 @@ function M:focus_uuid(uuid)
   source:push_history(uuid)
 
   -- Use state's focus_note to update source and notify observers
-  return dot.state.notepad.focus_note(uuid)
+  return S.state.focus_note(uuid)
 end
 
 ---@param index                         integer
@@ -588,7 +590,7 @@ function M:focus_step(step)
 end
 
 ---@param name                          string|nil
----@return dot.t.INotepadItemState
+---@return era.m.notepad.state.INotepadItemState
 function M:create(name)
   local trimmed = type(name) == "string" and vim.trim(name) or nil
   local source = self:get_source()
@@ -599,7 +601,7 @@ function M:create(name)
 end
 
 ---@param name                          string
----@return dot.t.INotepadItemState|nil
+---@return era.m.notepad.state.INotepadItemState|nil
 function M:find_first_by_name(name)
   if type(name) ~= "string" then
     return nil
@@ -620,7 +622,7 @@ function M:find_first_by_name(name)
 end
 
 ---@param name                          string
----@return dot.t.INotepadItemState
+---@return era.m.notepad.state.INotepadItemState
 function M:ensure_named_item(name)
   local trimmed = vim.trim(type(name) == "string" and name or "")
   trimmed = #trimmed > 0 and trimmed or DEFAULT_ITEM_NAME
@@ -662,7 +664,7 @@ function M:remove(uuid)
     local history_uuid = source:go_backward()
     if history_uuid ~= nil and history_uuid ~= uuid then
       -- Set the previous note from history
-      dot.state.notepad.focus_note(history_uuid)
+      S.state.focus_note(history_uuid)
     end
   end
 
@@ -674,7 +676,7 @@ function M:remove(uuid)
   if source:get_activated_uuid() == uuid then
     local fallback_uuid = state.orders[1]
     if fallback_uuid ~= nil then
-      dot.state.notepad.focus_note(fallback_uuid)
+      S.state.focus_note(fallback_uuid)
     end
   end
 
@@ -701,7 +703,7 @@ function M:go_backward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return dot.state.notepad.focus_note(uuid)
+  return S.state.focus_note(uuid)
 end
 
 ---@return boolean
@@ -723,7 +725,7 @@ function M:go_forward()
 
   -- Use state's focus_note to update source and notify observers
   -- The notification will trigger _on_active_uuid_changed which renders the buffer
-  return dot.state.notepad.focus_note(uuid)
+  return S.state.focus_note(uuid)
 end
 
 ---@param uuid                          string|nil
@@ -1061,7 +1063,7 @@ end
 ---@return string
 function M:__get_window_title__()
   local source_name = dot.context.module.notepad_source:snapshot() ---@type string
-  local _, config = dot.state.notepad.retrieve_source(source_name)
+  local _, config = S.state.retrieve_source(source_name)
   return string.format(" %s ", config.title)
 end
 
@@ -1267,7 +1269,7 @@ end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME
 M.o_active_uuid = function()
-  return dot.state.notepad.o_activated_uuid
+  return S.state.o_activated_uuid
 end
 
 return M

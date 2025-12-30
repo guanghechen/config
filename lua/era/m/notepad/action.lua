@@ -1,9 +1,11 @@
 ---@diagnostic disable: invisible
 
-local __module_name__ = "fml.action.notepad" ---@type string
+local S = era.m.notepad
 
----@type era.widget.Notepad
-local widget = era.widget.Notepad.new({ name = "notepad.default" })
+local __module_name__ = "era.m.notepad.action" ---@type string
+
+---@type era.m.notepad.View
+local widget = S.View.new({ name = "notepad.default" })
 
 local dirty_data = true ---@type boolean
 local o_search_pattern = stl.c.Observable.from_value("") ---@type stl.c.Observable
@@ -18,7 +20,7 @@ if widget:current_item() == nil then
   end
 end
 
----@class fml.action.notepad.ISourceItem : era.m.picker.composer.list.IItem
+---@class era.m.notepad.action.ISourceItem : era.m.picker.composer.list.IItem
 ---@field public data                   { name: string, title: string, filepath: string }
 ---@field public text_lower             string
 
@@ -26,11 +28,11 @@ end
 local function fetch_source_data()
   dirty_data = false
 
-  local current_source = widget:get_source() ---@type dot.t.INotepadSource
-  local items = {} ---@type fml.action.notepad.ISourceItem[]
+  local current_source = widget:get_source() ---@type era.m.notepad.state.INotepadSource
+  local items = {} ---@type era.m.notepad.action.ISourceItem[]
 
-  for _, config in ipairs(dot.state.notepad.source_configs) do
-    local source = dot.state.notepad.retrieve_source(config.name)
+  for _, config in ipairs(S.state.source_configs) do
+    local source = S.state.retrieve_source(config.name)
     items[#items + 1] = {
       uuid = config.name,
       text = config.name,
@@ -68,7 +70,7 @@ source_picker = era.m.picker.ListComposer.new({
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
     local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
-    ---@cast item fml.action.notepad.ISourceItem|nil
+    ---@cast item era.m.notepad.action.ISourceItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No source selected" })
@@ -95,7 +97,7 @@ source_picker = era.m.picker.ListComposer.new({
   end,
 
   on_confirm = function(composer, item)
-    ---@cast item fml.action.notepad.ISourceItem
+    ---@cast item era.m.notepad.action.ISourceItem
     composer:close()
     if item ~= nil then
       widget:attach(item.data.name)
@@ -133,7 +135,7 @@ local function resolve_step(args)
   return value < 1 and 1 or value
 end
 
----@class fml.action.notepad
+---@class era.m.notepad.action
 local M = {}
 
 ---@param content                       string
@@ -155,7 +157,7 @@ end
 ---@return nil
 function M.create()
   local source_name = dot.context.module.notepad_source:snapshot() ---@type string
-  local source, config = dot.state.notepad.retrieve_source(source_name)
+  local source, config = S.state.retrieve_source(source_name)
 
   local prefix = config.default_item_name() ---@type string
   local name_default = string.format("%s %d", prefix, math.max(1, widget:size() + 1)) ---@type string
@@ -168,7 +170,7 @@ function M.create()
     end
 
     local name = vim.trim(input) ---@type string
-    local item ---@type dot.t.INotepadItemState|nil
+    local item ---@type era.m.notepad.state.INotepadItemState|nil
     if #name == 0 then
       item = widget:create(nil)
     else
@@ -209,7 +211,7 @@ end
 
 ---@return nil
 function M.destroy()
-  local item = widget:current_item() ---@type dot.t.INotepadItemState|nil
+  local item = widget:current_item() ---@type era.m.notepad.state.INotepadItemState|nil
   if item == nil then
     stl.reporter.warn({
       from = __module_name__,
@@ -292,7 +294,7 @@ end
 
 ---@return nil
 function M.rename()
-  local item = widget:current_item() ---@type dot.t.INotepadItemState|nil
+  local item = widget:current_item() ---@type era.m.notepad.state.INotepadItemState|nil
   if item == nil then
     stl.reporter.warn({
       from = __module_name__,
@@ -412,10 +414,10 @@ end
 
 ---@return nil
 function M.source_prev()
-  local current_source = widget:get_source() ---@type dot.t.INotepadSource
+  local current_source = widget:get_source() ---@type era.m.notepad.state.INotepadSource
   local current_index = nil ---@type integer|nil
 
-  for i, config in ipairs(dot.state.notepad.source_configs) do
+  for i, config in ipairs(S.state.source_configs) do
     if config.name == current_source.name then
       current_index = i
       break
@@ -428,10 +430,10 @@ function M.source_prev()
 
   local prev_index = current_index - 1
   if prev_index < 1 then
-    prev_index = #dot.state.notepad.source_configs
+    prev_index = #S.state.source_configs
   end
 
-  local prev_config = dot.state.notepad.source_configs[prev_index]
+  local prev_config = S.state.source_configs[prev_index]
   widget:attach(prev_config.name)
   dirty_data = true
   stl.reporter.info({
@@ -443,10 +445,10 @@ end
 
 ---@return nil
 function M.source_next()
-  local current_source = widget:get_source() ---@type dot.t.INotepadSource
+  local current_source = widget:get_source() ---@type era.m.notepad.state.INotepadSource
   local current_index = nil ---@type integer|nil
 
-  for i, config in ipairs(dot.state.notepad.source_configs) do
+  for i, config in ipairs(S.state.source_configs) do
     if config.name == current_source.name then
       current_index = i
       break
@@ -458,11 +460,11 @@ function M.source_next()
   end
 
   local next_index = current_index + 1
-  if next_index > #dot.state.notepad.source_configs then
+  if next_index > #S.state.source_configs then
     next_index = 1
   end
 
-  local next_config = dot.state.notepad.source_configs[next_index]
+  local next_config = S.state.source_configs[next_index]
   widget:attach(next_config.name)
   dirty_data = true
   stl.reporter.info({
@@ -472,15 +474,15 @@ function M.source_next()
   })
 end
 
----@class fml.action.notepad.INoteItem : era.m.picker.composer.list.IItem
----@field public data                   dot.t.INotepadItemMeta
+---@class era.m.notepad.action.INoteItem : era.m.picker.composer.list.IItem
+---@field public data                   era.m.notepad.state.INotepadItemMeta
 ---@field public text_lower             string
 
 ---@return era.m.picker.composer.list.IResetData
 local function fetch_notes_data()
-  local source = widget:get_source() ---@type dot.t.INotepadSource
-  local current_item = widget:current_item() ---@type dot.t.INotepadItemState|nil
-  local items = {} ---@type fml.action.notepad.INoteItem[]
+  local source = widget:get_source() ---@type era.m.notepad.state.INotepadSource
+  local current_item = widget:current_item() ---@type era.m.notepad.state.INotepadItemState|nil
+  local items = {} ---@type era.m.notepad.action.INoteItem[]
 
   for _, note_meta in ipairs(source:list()) do
     items[#items + 1] = {
@@ -516,7 +518,7 @@ notes_picker = era.m.picker.ListComposer.new({
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
     local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
-    ---@cast item fml.action.notepad.INoteItem|nil
+    ---@cast item era.m.notepad.action.INoteItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No note selected" })
@@ -529,8 +531,8 @@ notes_picker = era.m.picker.ListComposer.new({
       }
     end
 
-    local source = widget:get_source() ---@type dot.t.INotepadSource
-    local note = source:retrieve(item.data.uuid) ---@type dot.t.INotepadItemState|nil
+    local source = widget:get_source() ---@type era.m.notepad.state.INotepadSource
+    local note = source:retrieve(item.data.uuid) ---@type era.m.notepad.state.INotepadItemState|nil
 
     if note == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Failed to load note content" })
@@ -557,7 +559,7 @@ notes_picker = era.m.picker.ListComposer.new({
   end,
 
   on_confirm = function(composer, item)
-    ---@cast item fml.action.notepad.INoteItem
+    ---@cast item era.m.notepad.action.INoteItem
     composer:close()
     if item ~= nil then
       widget:focus_uuid(item.data.uuid)
@@ -573,7 +575,7 @@ notes_picker = era.m.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.notepad.IEngineItem : era.m.picker.composer.list.IItem
+---@class era.m.notepad.action.IEngineItem : era.m.picker.composer.list.IItem
 ---@field public data                   { engine: 'json'|'folder', description: string }
 ---@field public text_lower             string
 
@@ -593,7 +595,7 @@ engine_picker = era.m.picker.ListComposer.new({
   render_preview = function(composer, bufnr, _)
     local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
     local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
-    ---@cast item fml.action.notepad.IEngineItem|nil
+    ---@cast item era.m.notepad.action.IEngineItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No engine selected" })
@@ -617,11 +619,11 @@ engine_picker = era.m.picker.ListComposer.new({
   end,
 
   on_confirm = function(composer, item)
-    ---@cast item fml.action.notepad.IEngineItem
+    ---@cast item era.m.notepad.action.IEngineItem
     composer:close()
     if item ~= nil then
       local current_source = widget:get_source()
-      local current_config = dot.state.notepad.source_config_map[current_source.name]
+      local current_config = S.state.source_config_map[current_source.name]
 
       if current_config.engine == item.data.engine then
         stl.reporter.info({
@@ -632,7 +634,7 @@ engine_picker = era.m.picker.ListComposer.new({
         return
       end
 
-      if dot.state.notepad.migrate_source_engine(current_source.name, item.data.engine) then
+      if S.state.migrate_source_engine(current_source.name, item.data.engine) then
         widget:attach(current_source.name)
         dirty_data = true
       end
@@ -646,9 +648,9 @@ engine_picker = era.m.picker.ListComposer.new({
 ---@return nil
 function M.change_engine()
   local current_source = widget:get_source()
-  local current_config = dot.state.notepad.source_config_map[current_source.name]
+  local current_config = era.m.notepad.state.source_config_map[current_source.name]
 
-  ---@type fml.action.notepad.IEngineItem[]
+  ---@type era.m.notepad.action.IEngineItem[]
   local items = {
     {
       uuid = "json",

@@ -1,11 +1,10 @@
----@class dot.state.notepad.ISourceConfig : dot.t.INotepadSourceConfig
+---@class era.m.notepad.state.ISourceConfig : era.m.notepad.state.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'folder' Source engine type
 
-local NotepadJsonSource = require("dot.state.notepad.source-json")
-local NotepadFolderSource = require("dot.state.notepad.source-folder")
+local S = era.m.notepad
 
----@type dot.state.notepad.ISourceConfig[]
+---@type era.m.notepad.state.ISourceConfig[]
 local source_configs = {
   {
     name = "workspace:notes",
@@ -36,22 +35,22 @@ local source_configs = {
   },
 }
 
----@type table<string, dot.state.notepad.ISourceConfig>
+---@type table<string, era.m.notepad.state.ISourceConfig>
 local source_config_map = {}
 for _, config in ipairs(source_configs) do
   source_config_map[config.name] = config
 end
 
----@type table<string, dot.t.INotepadSource>
+---@type table<string, era.m.notepad.state.INotepadSource>
 local _source_cache = {}
 
 ---Observable for the currently activated note UUID
 ---@type stl.c.Observable
 local o_activated_uuid = stl.c.Observable.from_value("")
 
----@class dot.state.notepad
----@field public source_configs         dot.state.notepad.ISourceConfig[]
----@field public source_config_map      table<string, dot.state.notepad.ISourceConfig>
+---@class era.m.notepad.state
+---@field public source_configs         era.m.notepad.state.ISourceConfig[]
+---@field public source_config_map      table<string, era.m.notepad.state.ISourceConfig>
 ---@field public o_activated_uuid       stl.c.Observable Observable for activated note UUID
 local M = {
   source_configs = source_configs,
@@ -60,7 +59,7 @@ local M = {
 }
 
 ---Build name-to-uuid index from items
----@param items                         table<string, dot.t.INotepadItemState>
+---@param items                         table<string, era.m.notepad.state.INotepadItemState>
 ---@return table<string, string>
 function M.build_name_index(items)
   local name_to_uuid = {} ---@type table<string, string>
@@ -119,7 +118,7 @@ function M.migrate_source_engine(name, target_engine)
   local config = M.source_config_map[name]
   if config == nil then
     stl.reporter.error({
-      from = "dot.state.notepad",
+      from = "era.m.notepad.state",
       subject = "Migration Failed",
       message = string.format("Source '%s' not found", name),
     })
@@ -128,7 +127,7 @@ function M.migrate_source_engine(name, target_engine)
 
   if config.engine == target_engine then
     stl.reporter.warn({
-      from = "dot.state.notepad",
+      from = "era.m.notepad.state",
       subject = "Migration Skipped",
       message = string.format("Source '%s' is already using %s engine", name, target_engine),
     })
@@ -159,14 +158,14 @@ function M.migrate_source_engine(name, target_engine)
 
   local new_source
   if target_engine == "folder" then
-    new_source = NotepadFolderSource.new(new_config)
+    new_source = S.FolderSource.new(new_config)
   else
-    new_source = NotepadJsonSource.new(new_config)
+    new_source = S.JsonSource.new(new_config)
   end
 
   if not new_source:load_from_json(json_data) then
     stl.reporter.error({
-      from = "dot.state.notepad",
+      from = "era.m.notepad.state",
       subject = "Migration Failed",
       message = string.format("Failed to import data to %s engine", target_engine),
     })
@@ -184,7 +183,7 @@ function M.migrate_source_engine(name, target_engine)
   _source_cache[name] = new_source
 
   stl.reporter.info({
-    from = "dot.state.notepad",
+    from = "era.m.notepad.state",
     subject = "Migration Complete",
     message = string.format("Migrated '%s' from %s to %s", config.title, source_engine, target_engine),
   })
@@ -223,8 +222,8 @@ function M.remove_from_name_index(name_to_uuid, name)
 end
 
 ---@param name                          string
----@return dot.t.INotepadSource
----@return dot.state.notepad.ISourceConfig
+---@return era.m.notepad.state.INotepadSource
+---@return era.m.notepad.state.ISourceConfig
 function M.retrieve_source(name)
   local config = M.source_config_map[name]
 
@@ -235,9 +234,9 @@ function M.retrieve_source(name)
 
     local source
     if config.engine == "folder" then
-      source = NotepadFolderSource.new(config)
+      source = S.FolderSource.new(config)
     else
-      source = NotepadJsonSource.new(config)
+      source = S.JsonSource.new(config)
     end
     _source_cache[name] = source
     return source, config
@@ -246,7 +245,7 @@ function M.retrieve_source(name)
   local default_config = source_configs[1]
   local default_name = default_config.name
   if _source_cache[default_name] == nil then
-    _source_cache[default_name] = NotepadJsonSource.new(default_config)
+    _source_cache[default_name] = S.JsonSource.new(default_config)
   end
   return _source_cache[default_name], default_config
 end
@@ -258,7 +257,7 @@ function M.toggle_source_engine(name)
   local config = M.source_config_map[name]
   if config == nil then
     stl.reporter.error({
-      from = "dot.state.notepad",
+      from = "era.m.notepad.state",
       subject = "Toggle Failed",
       message = string.format("Source '%s' not found", name),
     })
