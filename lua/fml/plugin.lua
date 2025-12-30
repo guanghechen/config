@@ -86,9 +86,8 @@ for _, raw_spec in ipairs(raw_specs) do
     cond = cond,
   }
 
-  -- Load plugin details from fml.plugins.*
-  local spec_module_name = "fml.plugins."
-    .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
+  -- Load plugin details from fml.plugin.*
+  local spec_module_name = "fml.plugin." .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
   local ok, spec_module = pcall(require, spec_module_name)
   if ok and spec_module then
     spec = vim.tbl_deep_extend("force", spec, spec_module)

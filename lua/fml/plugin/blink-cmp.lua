@@ -8,7 +8,7 @@ return {
     "friendly-snippets",
   },
   opts = function()
-    ---@class fml.plugins.blink_cmp.actions
+    ---@class fml.plugin.blink_cmp.actions
     local actions = {
       ---@return boolean|nil
       has_native_completion = function()

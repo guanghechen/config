@@ -201,8 +201,8 @@ for _, raw_spec in ipairs(raw_specs) do
     main = raw_spec.main,
     cond = raw_spec.cond,
   }
-  -- Load additional config from fml.plugins.*
-  local ok, details = pcall(require, "fml.plugins." .. name)
+  -- Load additional config from fml.plugin.*
+  local ok, details = pcall(require, "fml.plugin." .. name)
   if ok then
     spec = vim.tbl_deep_extend("force", spec, details)
   end

@@ -1,6 +1,6 @@
 ---@see https://github.com/mfussenegger/nvim-lint/tree/d1118791070d090777398792a73032a0ca5c79ff
 
-local __module_name__ = "fml.plugins.nvim-lint" ---@type string
+local __module_name__ = "fml.plugin.nvim-lint" ---@type string
 
 local config = {
   excluded = {
