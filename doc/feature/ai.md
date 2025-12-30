@@ -88,16 +88,10 @@ Each prompt has a `render(ctx)` function that returns:
 ## Implementation Structure
 
 ```
-lua/eve/ux/widget/ai/
+lua/era/m/ai/
 ├── init.lua      # Module entry
-├── action.lua    # Core actions (attach, detach, send)
 ├── config.lua    # Agent configs
-├── picker.lua    # Picker UI for attach/detach/send target
-├── proc.lua      # Process detection for running agents
 ├── prompt.lua    # Prompt definitions and context helpers
-├── state.lua     # Attached sources state management
-├── term.lua      # Neovim terminal management
-├── tmux.lua      # Tmux operations (list, create, send)
 └── types.lua     # Type definitions
 ```
 
@@ -122,14 +116,11 @@ Registered in `lua/fml/command.lua`:
 
 ## Statusline Component
 
-`lua/eve/ux/nvimbar/component/ai.lua`:
-- Shows attached agent count and names
-- Clickable to open detach picker
-- Uses `{position}_ai_status_icon` and `{position}_ai_status_text` highlight groups (e.g., `sl_ai_status_icon`)
+`lua/era/m/nvimbar/component/` provides AI-related statusline components.
 
 ## Highlight Groups
 
-Defined in `lua/eve/constant/hlgroup/widget.lua`:
+Defined in theme highlight groups:
 - `f_us_ai_attached`: brightGreen, bold (attached items)
 - `f_us_ai_new`: fg2 (create new options)
 - `f_us_ai_prompt_header`: purple, bold (prompt preview header)

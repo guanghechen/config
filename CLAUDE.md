@@ -13,370 +13,445 @@ This is a sophisticated, deeply-customized Neovim configuration that combines Lu
 The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
 
 ```
-yoz → stl → dot → fml → vendor
+yoz → stl → dot → era → ark/vendor
 ```
 
-- **yoz**: Rust-native standard library, completely independent Lua extension, does not depend on Neovim
-- **stl**: Standard library with no external dependencies, may use `yoz` and `vim` global variables
-- **dot**: Configuration, environment variables, utility functions, UX components; only depends on yoz/stl
-- **fml**: Actions, dressing (UI styling and components), and plugin configurations
-- **vendor**: Environment-specific entry points for neovim/neovide/vscode
+| Layer | Module   | Description                                                                   |
+|:------|:---------|:------------------------------------------------------------------------------|
+| L0    | `yoz`    | Rust-native library, independent Lua extension, no Neovim dependency          |
+| L1    | `stl`    | Standard library, may use `yoz` and `vim` globals                             |
+| L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl   |
+| L3    | `era`    | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot   |
+| L4    | `vendor` | Environment entry points: neovim/neovide/vscode                               |
 
 ### Global Variables
 
-Three global variables are exposed via `_G`:
-- `_G.yoz` → `require("yoz")` - Rust-powered helpers (set in `bot/init.lua`)
-- `_G.stl` → `require("stl")` - Standard library for environment and dictionary (set in `bot/init.lua`)
-- `_G.dot` → `require("dot")` - Configuration and core framework (set in `bot/init.lua`)
+Three global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
+- `_G.yoz` → `require("yoz")` - Rust-powered helpers
+- `_G.stl` → `require("stl")` - Standard library
+- `_G.dot` → `require("dot")` - Core framework
 
 ### Core Module Structure
 
 #### `lua/yoz` - Rust Native Module
+
 Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
-- Exposes: `dict`, `fn`, `fs`, `path`, `replace`, `find`, `search`, `string`, `uri`
-- Type definitions: `lua/__types__/yoz/`
+
+**Submodules:**
+
+| Module         | Description                                                           |
+|:---------------|:----------------------------------------------------------------------|
+| `yoz.dict`     | Dictionary search for English word completion                          |
+| `yoz.find`     | File finding (fd-like)                                                 |
+| `yoz.fn`       | Utility functions (uuid, md5)                                          |
+| `yoz.fs`       | File system operations (collect_files, readdir, move, get_filesize)    |
+| `yoz.path`     | Path handling (normalize, join, relative, resolve, split, basename)    |
+| `yoz.replace`  | Text replacement with regex support and preview                        |
+| `yoz.search`   | Content search (ripgrep-like, search_in_files, search_in_lines)        |
+| `yoz.string`   | String utilities (calc_linewidths, count_lines, parse_lines)           |
+| `yoz.uri`      | URI handling (encode/decode, filepath conversion)                      |
+
+Type definitions: `lua/__types__/yoz/`
 
 #### `lua/stl/` - Standard Library Layer
+
 Standard library with environment detection and dictionary data.
 
-- **`stl/dict/`** - Dictionary data (e.g., `en` for English word pairs)
-- **`stl/env`** - Environment detection (OS, terminal, paths)
-- **`stl/external/`** - External utilities (`color`, `easing`)
-- **`stl/fileicon`** - File icon definitions (directories, files, extensions, filetypes, LSP, OS)
-- **`stl/filetype`** - Filetype constants and utility functions for file type detection
-- **`stl/icon`** - Icon definitions (UI, diagnostics, LSP, DAP, Git, filetypes, etc.)
-- **`stl/json`** - JSON utilities with comment stripping support
-- **`stl/stdout`** - Colored stdout logging utilities
-- **`stl/fn`** - Utility functions (boolean, identity, noop, equals, navigate, observe)
-- **`stl/c/`** - Data structures and classes:
-  - `BatchDisposable`, `BatchHandler` - Batch operations
-  - `CircularQueue`, `CircularStack` - Circular data structures
-  - `Dirtier`, `Disposable` - Resource management
-  - `Filetree`, `Tree`, `TreeRetriever` - Tree structures
-  - `Frecency`, `History`, `InputHistory` - Tracking utilities
-  - `Observable`, `Subscriber`, `Subscribers` - Reactive patterns
-  - `Proc`, `Scheduler`, `Ticker` - Process and timing
-  - `Theme` - Theme management class
+**Key Modules:**
 
-#### `lua/ark/` - Foundation Layer
-Foundation layer with algorithms, collections, and utilities.
+| Module             | Description                                                          |
+|:-------------------|:---------------------------------------------------------------------|
+| `stl.env`          | Environment detection (OS, terminal, paths, IS_MAC/WIN/WSL/NIX)      |
+| `stl.fn`           | Utility functions (boolean, identity, noop, equals_*, navigate_*, observe) |
+| `stl.reporter`     | Notification system (debug/info/warn/error with structured options)  |
+| `stl.fileicon`     | File icon definitions                                                 |
+| `stl.filetype`     | Filetype constants and detection utilities                           |
+| `stl.icon`         | Icon definitions (UI, diagnostics, LSP, DAP, Git)                    |
+| `stl.json`         | JSON utilities with comment stripping                                 |
+| `stl.fs`           | File system utilities (read_json, write_json, watch_file)            |
 
-- **`ark/lang/`** - Language-specific utilities (`python`, `tailwind`)
-- **`ark/view/`** - View renderers (`Plainfile`, `Printer`, `Tree`)
+**Data Structures (`stl.c.*`):**
 
-- **Core utilities**: `anim`, `box`, `debug`, `fs`, `hot`, `nvim`, `reporter`, `string`, `table`, `time`, `timer`, `tmux`, `var`, `winhint`
+| Class              | Description                                                          |
+|:-------------------|:---------------------------------------------------------------------|
+| `Observable`       | Reactive value container with subscription support                   |
+| `Subscriber`       | Observer for Observable changes                                       |
+| `Subscribers`      | Collection of subscribers                                             |
+| `History`          | Navigation history with capacity limit                               |
+| `Frecency`         | Frequency + recency based ranking                                    |
+| `Scheduler`        | Throttle/debounce task scheduling                                    |
+| `Ticker`           | Counter with subscription support                                     |
+| `Disposable`       | Resource cleanup abstraction                                          |
+| `BatchDisposable`  | Batch disposal of multiple resources                                  |
+| `BatchHandler`     | Batch operation handler with error collection                        |
+| `Dirtier`          | Dirty state tracking                                                  |
+| `CircularQueue`    | Fixed-size circular queue                                             |
+| `CircularStack`    | Fixed-size circular stack                                             |
+| `Tree`             | Generic tree structure                                                |
+| `Filetree`         | File tree with lazy loading                                           |
+| `Theme`            | Theme management with highlight compilation                          |
+| `Proc`             | Process management                                                    |
 
-#### `lua/dot/` - Configuration and Core Framework Layer
+#### `lua/dot/` - Core Framework Layer
 
-- **`dot/context/`** - Persistent context management:
-  - `editor/` - Editor-level settings (`behavior`, `theme`)
-  - `session/` - Session-level settings (`tab`)
-  - `workspace/` - Workspace-level settings (`bookmark`, `colorpicker`, `explorer`, `flight`, `frecency`, `lsp`, `module`, `option`, `plugin`, `search_buffer`, `search_file`, `select`, `select_item`)
+**Context System (`dot.context.*`):**
 
-- **`dot/fn/`** - Utility functions:
-  - `add_locations_to_ai`, `paste_image`, `paste_image_as_base64`, `pick_win`, `rename`, `select_copy_filepath`, `select_copy_filepaths`, `select_encoding`
+Persistent configuration with Observable-based state management:
 
-- **`dot/module/`** - Modular UI components:
-  - `ai/` - AI integration (action, config, picker, proc, prompt, state, term, tmux, types)
-  - `board/` - Information boards (act, fileinfo, git-hunk, keysheet)
-  - `clipboard/` - Cross-platform clipboard (mac, nix, win, wsl)
-  - `colorpicker/` - Color picker UI
-  - `explorer/` - File explorer (node, resource/file, state, tree, types, view, widget)
-  - `git/` - Git integration (blame, browse, buffer, cmd, diff, hunk, repo, sign, state, status, types, watcher)
-  - `image/` - Image handling (convert, doc, image, inline, placement, state, terminal)
-  - `im/` - Input method switching (mac, win, wsl)
-  - `nvimbar/` - Status/tab/window bar components
-  - `picker/` - Picker UI (composer/basic, composer/filetree, composer/list, composer/tree, finder, preview, result, view/filetree, view/tree)
-  - `searcher/` - Search and replace UI (buffer, composer/basic, composer/filetree, finder, preview, result, view/filetree, view/plainfile)
-  - `illuminate.lua` - Reference highlighting
-  - `winpicker.lua` - Window picker
+| Scope       | Modules                                                                          |
+|:------------|:---------------------------------------------------------------------------------|
+| `editor/`   | `behavior`, `theme` - Editor-wide settings                                       |
+| `session/`  | `tab` - Session-level settings                                                   |
+| `workspace/`| `bookmark`, `colorpicker`, `explorer`, `flight`, `frecency`, `lsp`, `module`, `option`, `plugin`, `search_buffer`, `search_file`, `select` |
 
-- **`dot/state/`** - Application state management:
-  - `maximized`, `notepad/`, `qflist`, `status`, `widget`
+**Command System (`dot.command`):**
 
-- **`dot/theme/`** - Theme system:
-  - `scheme/` - Color scheme definitions (18 schemes: catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc variants)
-  - `hlgroup/` - Highlight group definitions with theme-specific overrides (`catppuccin/`, `gruvbox/`, `onehalf/`, `tokyonight/`, `vsc/`)
-  - Highlight group modules: `basic`, `common`, `lsp`, `module`, `nvimbar`, `plugin`, `treesitter`, `widget`
+Definition-implementation separation pattern:
 
-- **`dot/ux/`** - UX components (`select`, `setting`, `textarea`)
-- **`dot/widget/`** - Widgets (`explorer`, `Notepad`, `Terminal`)
+```lua
+-- Define command (creates vim user command)
+D.new("Fbufclose", "buf: close")
 
-- **Core modules**: `G`, `autocmd`, `buf`, `command`, `lsp`, `lsp_action`, `notifier`, `path`, `session`, `shell`, `tab`, `term`, `uri`, `win`
+-- Implement command (can be tab-type specific)
+M.implement({ uuid = "Fbufclose", action = function() ... end })
+M.implement({ uuid = "Fbufclose", tabtype = "terminal", action = function() ... end })
 
-#### `lua/fml/` - Frontend Configuration Layer
+-- Execute command
+dot.command.execute("Fbufclose")
+```
 
-- **`fml/action/`** - Action handlers:
-  - `ai.lua` - AI actions
-  - `buf/` - Buffer actions (close, focus, new, pin, save, swap)
-  - `code/` - Code actions (run, splitline)
-  - `copy.lua` - Copy actions
-  - `diagnostic.lua` - Diagnostic actions
-  - `find/` - Find actions (buffers, diagnostics, explorer, files, git, highlights, keymaps, lsp_symbols, notification, pinned_files, vim_options)
-  - `inspect.lua` - Inspection actions
-  - `lint.lua` - Lint actions
-  - `log.lua` - Log actions
-  - `lsp/` - LSP actions (python_venv, reference, server)
-  - `notepad.lua` - Notepad actions
-  - `refresh.lua` - Refresh actions
-  - `search/` - Search actions (buffer, files)
-  - `session.lua` - Session actions
-  - `tab/` - Tab actions (close, focus, new)
-  - `term/` - Terminal actions (create, destroy, focus, lazygit, swap, yazi)
-  - `toggle/` - Toggle actions (list, maximize/, theme)
-  - `ux.lua` - UX actions
-  - `win/` - Window actions (close, focus, history, mark, picker, resize, split)
+**Core Modules:**
 
-- **`fml/dressing/`** - UI styling and rendering:
-  - `commentstring.lua` - Comment string handling
-  - `dim.lua` - Dim inactive windows
-  - `foldtext.lua` - Fold text rendering
-  - `im.lua` - Input method integration
-  - `image.lua` - Image rendering
-  - `input.lua` - Input UI
-  - `lsp.lua` - LSP UI integration
-  - `lsp_action.lua` - LSP action UI
-  - `notifier.lua` - Notification system
-  - `plugin.lua` - Plugin UI integration
-  - `python_venv.lua` - Python venv UI
-  - `scroll.lua` - Smooth scrolling
-  - `select/` - Selection UI (codeaction, fallback, snacks providers)
-  - `statuscolumn.lua` - Status column rendering
-  - `statusline.lua` - Status line rendering
-  - `tabline.lua` - Tab line rendering
-  - `trailspace.lua` - Trailing space highlighting
-  - `ui_attach/` - UI attach handlers (cmdline, messages, popupmenu, state)
-  - `virtcolumn.lua` - Virtual column
-  - `winline.lua` - Window line rendering
-  - `winsep/` - Window separator styling
+| Module        | Description                                                          |
+|:--------------|:---------------------------------------------------------------------|
+| `dot.buf`     | Buffer utilities (loadfile, resolve metadata, pick_filepath)         |
+| `dot.win`     | Window utilities (is_sourcefile, pick_sourcefile, locate_symbols)    |
+| `dot.tab`     | Tab utilities (resolve_type, get_bufnrs)                             |
+| `dot.path`    | Path utilities (workspace, cwd, locate_* helpers)                    |
+| `dot.var`     | Constants (namespaces, signs, themes, togglers, zindex)              |
+| `dot.session` | Session save/restore                                                  |
+| `dot.lsp`     | LSP utilities                                                         |
+| `dot.notifier`| Custom notification system                                            |
 
-- **`fml/command.lua`** - Command definitions connecting `dot.command` to `fml.action`
+**Theme System (`dot.theme.*`):**
 
-- **`fml/action/plugin/`** - Plugin-specific actions (`diffview`, `mason`, `nvim-treesitter`)
-- **`fml/cmp/`** - Completion configurations (`dict`, `path`)
-- **`fml/plugins/`** - Individual plugin configurations:
-  - blink-cmp, blink-indent, blink-pairs
-  - conform, diffview, flash
-  - mason, mini-ai, mini-hipatterns, mini-indentscope, mini-splitjoin, mini-surround
-  - nvim-dap, nvim-dap-ui, nvim-dap-virtual-text, nvim-lint
-  - nvim-treesitter, nvim-treesitter-context, nvim-treesitter-textobjects
-  - render-markdown, which-key
-- **`fml/plugin.lua`** - Plugin repository and lazy loading setup
+| Component      | Description                                                         |
+|:---------------|:--------------------------------------------------------------------|
+| `scheme/`      | 18 color schemes (catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc) |
+| `hlgroup/`     | Highlight groups with theme-specific overrides                       |
 
-#### `lua/ark/vendor/` - Environment-specific Entry Points
+**State Management (`dot.state.*`):**
 
-- **`ark/vendor/neovim/`** - Standard Neovim setup (`init`, `keymap`, `option`)
-- **`ark/vendor/neovide/`** - Neovide GUI setup (`init`, `keymap`, `option`)
-- **`ark/vendor/vscode/`** - VSCode extension setup (`action`, `init`, `keymap`, `option`)
+| Module       | Description                                                          |
+|:-------------|:---------------------------------------------------------------------|
+| `status`     | Global status (dirtiers, disposables, observables for LSP/mode messages) |
+| `maximized`  | Window maximize state                                                 |
+| `notepad/`   | Notepad widget state                                                  |
+| `qflist`     | Quickfix list state                                                   |
+| `widget`     | Active widget tracking                                                |
 
-#### `lua/ark/` - Bootstrap Module
-Loaded before stl/dot, sets up `_G.yoz`, `_G.stl`, `_G.dot`, patches, shell, and workspace.
-- `bootstrap.lua` - Main bootstrap
-- `autocmd.lua`, `keymap.lua`, `option.lua` - Early configuration
+#### `lua/era/` - Business Layer
 
-#### Supporting Directories
+**Modules (`era/m/`):**
 
-- **`ftplugin/`** - Filetype-specific settings (`bigfile`, `gitcommit`, `html`, `jsonl`, `log`, `markdown`, `text`)
-- **`lsp/`** - Language server configurations (21 servers)
-- **`queries/`** - TreeSitter queries for various languages
-- **`rust/yoz/`** - Rust source code for performance-critical operations
-- **`doc/`** - Documentation and issue tracking
-- **`lua/__types__/`** - Type definitions for LSP (`dot/`, `plugin/`, `stl/`, `yoz/`)
+| Module        | Description                                                          |
+|:--------------|:---------------------------------------------------------------------|
+| `ai/`         | AI integration (config, prompt, types)                               |
+| `clipboard/`  | Cross-platform clipboard (mac, win, wsl)                             |
+| `colorpicker/`| Color picker UI with format conversion                               |
+| `explorer/`   | File explorer (node, view, types)                                    |
+| `git/`        | Git integration (state, buffer, repo, types)                         |
+| `lsp/`        | LSP utilities (types, symbol path finding)                           |
+| `nvimbar/`    | Status/tab/window bar components                                     |
+| `picker/`     | Picker UI (finder, preview, composer)                                |
+| `plugin/`     | Custom plugin loader (loader, state, view, types)                    |
+| `searcher/`   | Search and replace UI (finder, preview, composer)                    |
+| `term/`       | Terminal management                                                   |
+| `winsep/`     | Window separator styling                                              |
+
+**Functions (`era/fn/`):**
+
+| Function               | Description                                           |
+|:-----------------------|:------------------------------------------------------|
+| `find-buffers`         | Find open buffers                                      |
+| `find-files`           | Find files in workspace                                |
+| `find-diagnostics`     | Find diagnostics                                       |
+| `find-lsp-symbols`     | Find LSP symbols                                       |
+| `search-in-files`      | Search and replace in files                            |
+| `search-in-buffer`     | Search in current buffer                               |
+| `pick_win`             | Window picker                                          |
+| `rename`               | File/symbol rename                                     |
+| `run_code`             | Code runner                                            |
+
+**Views (`era/view/`):**
+
+| View         | Description                                                          |
+|:-------------|:---------------------------------------------------------------------|
+| `act`        | Action board                                                          |
+| `keysheet`   | Keymap reference                                                      |
+| `plainfile`  | Plain file renderer                                                   |
+| `printer`    | Generic text printer                                                  |
+| `setting`    | Settings UI                                                           |
+| `textarea`   | Text area component                                                   |
+| `tree`       | Tree view renderer                                                    |
+
+**Plugin Configs (`era/plugin/`):**
+
+Individual plugin configurations: blink-cmp, flash, mini-*, nvim-dap, nvim-treesitter, etc.
+
+#### `lua/ark/` - Bootstrap Layer
+
+Loaded before stl/dot, sets up global variables, patches, and workspace.
+
+| File             | Description                                           |
+|:-----------------|:------------------------------------------------------|
+| `bootstrap.lua`  | Main bootstrap (sets _G.yoz, _G.stl, _G.dot)          |
+| `autocmd.lua`    | Early autocommands                                     |
+| `keymap.lua`     | Early keymaps                                          |
+| `option.lua`     | Early options                                          |
+
+**Vendor Entry Points (`ark/vendor/`):**
+
+| Vendor      | Description                                                          |
+|:------------|:---------------------------------------------------------------------|
+| `neovim/`   | Standard Neovim setup                                                 |
+| `neovide/`  | Neovide GUI setup                                                     |
+| `vscode/`   | VSCode extension setup                                                |
 
 ### Module Access Patterns
 
-- `stl.c.Observable` → `require("stl.c.observable")` (collections mounted on stl.c)
-- `dot.theme.scheme["catppuccin-mocha"]` → `require("dot.theme.scheme.catppuccin-mocha")`
-- `dot.buf.*` → `require("dot.buf").*` (modules mounted directly via metatable)
-- `dot.context.*`, `dot.state.*`, `dot.fn.*`, `era.view.*`, `era.widget.*` follow the same lazy-loading pattern
-- `era.git.*`, `era.picker.*`, `era.searcher.*`, `era.board.*` → module subcomponents
-- `dot.buf.retrieve_selected_text()` → returns the current visual selection text (empty when nothing selected)
+**Lazy Loading via Metatable:**
 
-### Vendor Entry Points
+```lua
+-- Access triggers require() on first use
+dot.buf.loadfile(filepath)     -- requires "dot.buf"
+stl.c.Observable.new({...})    -- requires "stl.c.observable"
+era.m.picker.open({...})       -- requires "era.m.picker"
+```
 
-The configuration supports multiple environments through conditional loading in `init.lua:9-19`:
-- **Standard Neovim**: `ark/vendor/neovim/` (default path)
-- **Neovide GUI**: `ark/vendor/neovide/` (when `vim.g.neovide` is set)
-- **VSCode Extension**: `ark/vendor/vscode/` (when `vim.g.vscode` is set)
+**Common Patterns:**
 
-Each vendor entry point includes environment-specific:
-- `init.lua`: Main setup and loading sequence
-- `option.lua`: Environment-specific options
-- `keymap.lua`: Key mappings
+```lua
+-- Observable state
+local theme = dot.context.theme.theme:snapshot()  -- Get current value
+dot.context.theme.theme:next("gruvbox-dark")      -- Set new value
+dot.context.theme.theme:subscribe(subscriber)     -- React to changes
 
-The neovim vendor additionally loads:
-- `dot.autocmd` - Core autocommands
-- `fml.dressing.*` - UI dressing modules
-- `fml.command` - Command implementations
-- `era.git` - Git module (if in git repo)
-- `fml.plugin` - Plugin management
+-- Command execution
+dot.command.definitions.buf.close:execute()
+
+-- Path utilities (use dot.path, not vim.fs)
+local normalized = dot.path.normalize(filepath)
+local relative = dot.path.relative(dot.path.cwd(), filepath)
+
+-- Reporter (use stl.reporter, not vim.notify)
+stl.reporter.error({
+  from = __module_name__,
+  subject = "Operation",
+  message = "Error message",
+  details = { key = "value" },
+})
+```
+
+### Plugin Loader
+
+Custom lightweight plugin loader (`era/m/plugin/loader.lua`):
+
+- Supports lazy loading via `event`, `cmd`, `ft`, `keys`
+- Installs package loader for automatic plugin loading on require
+- Fires `User PluginLoad` autocmd when plugin loads
+- Fires `User VeryLazy` after UI enters
+
+```lua
+---@type era.m.plugin.IPluginSpec
+{
+  name = "plugin-name",
+  main = "plugin",           -- Optional: main module name
+  lazy = true,               -- Optional: enable lazy loading
+  event = "VeryLazy",        -- Optional: load on event
+  cmd = { "Cmd1", "Cmd2" },  -- Optional: load on command
+  ft = { "lua", "rust" },    -- Optional: load on filetype
+  keys = { { lhs = "<leader>x", rhs = function() end } },
+  dependencies = { "dep1" }, -- Optional: load dependencies first
+  config = function(spec, opts) end,
+}
+```
 
 ### Rust-Lua Bridge
 
-- **Compiled Library**: `lua/yoz` (`.so` on Unix, `.dll` on Windows)
-- **Source Code**: `rust/yoz/src/` (mlua bridge)
-  - Modules: `algorithm/`, `dict/`, `find/`, `fs/`, `path/`, `replace/`, `search/`, `string/`, `types/`, `uri/`
-- **Build**: Run `./rust/build.sh --force` after Rust changes
+| Component        | Location                                              |
+|:-----------------|:------------------------------------------------------|
+| Compiled Library | `lua/yoz.so` (Unix) / `lua/yoz.dll` (Windows)         |
+| Source Code      | `rust/yoz/src/`                                       |
+| Build Command    | `./rust/build.sh --force`                             |
 
 ## Code Conventions
 
 ### Neovim Version
 - This configuration only supports the latest Neovim version; no backward compatibility code is needed
 
-### Lua Code Standards
-- Avoid unnecessary comments except typing comments like `---@type string`
-- Use English in code and comments; avoid Chinese characters (except for special types, path links, or dict values)
-- Use `vim.hl.range` API instead of deprecated `vim.api.nvim_buf_add_highlight`
-- Use `vim.bo[bufnr].option` instead of deprecated `vim.api.nvim_buf_set_option()` and `vim.api.nvim_buf_get_option()`
-- Use `dot.path.normalize` instead of `vim.fs.normalize` for path normalization, as it provides project-specific unified handling
-- Use `bufnr` for buffer number variables (not `buf`), and `winnr` for window number variables (not `win`)
-- Use `winnrs` for window number arrays (not `wins`)
-- Use `vim.uv` directly instead of `vim.uv or vim.loop` fallback pattern
-- Prefer `vim.api` over `vim.fn` when both provide equivalent functionality:
-  - Use `vim.api.nvim_get_current_buf()` instead of `vim.fn.bufnr()`
-  - Use `vim.api.nvim_get_current_win()` instead of `vim.fn.winnr()`
-  - Use `vim.api.nvim_buf_get_lines()` instead of `vim.fn.getline()`
-  - Use `vim.api.nvim_win_get_cursor()` instead of `vim.fn.getcurpos()`
-  - Note: Some `vim.fn` functions have no `vim.api` equivalent (e.g., `vim.fn.foldclosed`, `vim.fn.mode`, `vim.fn.expand`, `vim.fn.fnamemodify`); these are acceptable
-- Prefer explicit `tabnr`/`winnr` variables over magic number `0`:
-  ```lua
-  -- Bad
-  local winnrs = vim.api.nvim_tabpage_list_wins(0)
+### Variable Naming
 
-  -- Good
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+| Convention | Example                                           |
+|:-----------|:--------------------------------------------------|
+| Buffer nr  | `bufnr` (not `buf`)                               |
+| Window nr  | `winnr` (not `win`)                               |
+| Tab nr     | `tabnr` (not `tab`)                               |
+| Arrays     | `bufnrs`, `winnrs`, `tabnrs` (not `bufs`, `wins`) |
 
-  -- When tabnr is already available, use it to get winnr
-  local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  ```
-- Add type annotations for primitive local variables:
-  ```lua
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local name = "example" ---@type string
-  local enabled = true ---@type boolean
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-  ```
+### API Preferences
 
-### Type Annotation Formatting
-- Type annotations must start at column index 40 (0-indexed, i.e., the 41st character from line start):
-  ```lua
-  ---@param name                        string
-  ---@param callback                    fun(result: boolean): nil
-  ---@return nil
-  ```
-- Union type aliases must have each union item on its own line with `---| ` prefix, using double quotes for string literals:
-  ```lua
-  ---@alias era.git.StageState
-  ---| "staged"
-  ---| "unstaged"
-  ---| "mixed"
-  ---| nil
-  ```
-- For multi-line target objects, place `---@type` annotation **above** the target, not after:
-  ```lua
-  -- Bad
-  local config = create_config({
-    key = "value",
-  }) ---@type IConfig
+```lua
+-- Prefer vim.api over vim.fn
+vim.api.nvim_get_current_buf()     -- not vim.fn.bufnr()
+vim.api.nvim_get_current_win()     -- not vim.fn.winnr()
+vim.api.nvim_buf_get_lines(...)    -- not vim.fn.getline()
+vim.api.nvim_win_get_cursor(...)   -- not vim.fn.getcurpos()
 
-  -- Good
-  ---@type IConfig
-  local config = create_config({
-    key = "value",
-  })
-  ```
-- Class field annotations must include a visibility modifier (`public`, `protected`, or `private`) and follow the same column index 40 alignment:
-  ```lua
-  ---@class foo.bar.MyClass
-  ---@field public name                 string
-  ---@field public callback             fun(): nil
-  ---@field protected _internal         integer
-  ```
-- Avoid using `private`; prefer `protected` for non-public fields
-- Adjacent type definitions (`---@alias` or `---@class`) must be separated by at least one blank line:
-  ```lua
-  -- Bad
-  ---@alias foo.TypeA string
-  ---@alias foo.TypeB number
+-- Prefer explicit variables over magic 0
+local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 
-  -- Good
-  ---@alias foo.TypeA string
+-- Use vim.uv directly (not vim.uv or vim.loop)
+vim.uv.hrtime()
 
-  ---@alias foo.TypeB number
-  ```
+-- Use vim.bo/vim.wo instead of deprecated APIs
+vim.bo[bufnr].filetype     -- not nvim_buf_get_option
+vim.wo[winnr].number       -- not nvim_win_get_option
 
-### Class Field/Method Visibility
-- All `@field` annotations must have a visibility modifier: `public`, `protected`, or `private`
-- Prefer `protected` over `private` for non-public class fields and methods
-- Protected methods must use `__<method_name>__` naming convention
-- Protected methods must be placed at the end of the class (fields are not affected by this rule)
-- Add a 100-character dash separator line above the first protected method:
-  ```lua
-  ---@class foo.bar.Example
-  local M = {}
+-- Use dot.path.normalize instead of vim.fs.normalize
+dot.path.normalize(filepath)
 
-  function M.public_method_alpha()
-  end
+-- Use vim.hl.range instead of deprecated nvim_buf_add_highlight
+vim.hl.range(bufnr, ns, hlgroup, start_pos, end_pos)
+```
 
-  function M.public_method_beta()
-  end
+### Type Annotations
 
-  ----------------------------------------------------------------------------------------------------
+**Column Alignment (column 40):**
 
-  function M.__protected_method_alpha__()
-  end
+```lua
+---@param name                        string
+---@param callback                    fun(result: boolean): nil
+---@return nil
+```
 
-  function M.__protected_method_beta__()
-  end
-  ```
-- Protected methods should be ordered alphabetically
+**Type on Same Line (single-line targets):**
+
+```lua
+local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+local name = "example" ---@type string
+```
+
+**Type Above (multi-line targets):**
+
+```lua
+---@type IConfig
+local config = create_config({
+  key = "value",
+})
+```
+
+**Union Types:**
+
+```lua
+---@alias era.git.StageState
+---| "staged"
+---| "unstaged"
+---| "mixed"
+---| nil
+```
+
+**Class Fields (visibility required, column 40 alignment):**
+
+```lua
+---@class foo.bar.MyClass
+---@field public name                 string
+---@field public callback             fun(): nil
+---@field protected _internal         integer
+```
+
+**Adjacent Type Definitions (blank line between):**
+
+```lua
+---@alias foo.TypeA string
+
+---@alias foo.TypeB number
+```
+
+### Protected Methods
+
+- Use `__method_name__` naming convention
+- Place at end of class, after 100-char separator
+- Order alphabetically
+
+```lua
+---@class foo.Example
+local M = {}
+
+function M.public_method() end
+
+----------------------------------------------------------------------------------------------------
+
+function M.__protected_alpha__() end
+
+function M.__protected_beta__() end
+```
 
 ### Error Reporting
-Use `stl.reporter` for notifications instead of `vim.notify`:
 
 ```lua
 stl.reporter.error({
   from = __module_name__,
   subject = "Operation Name",
   message = "Error message here",
-  details = { key = "value" }, -- optional, displayed as JSON
+  details = { key = "value" },  -- Optional, displayed as JSON
 })
 -- Same interface for stl.reporter.{error|warn|info|debug}
 ```
 
-### Rust Integration
-When modifying `rust/yoz/src/`:
-- Follow existing mlua patterns for serialization/deserialization
-- Keep Lua-facing APIs synchronized with Lua call sites
-- Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
+### Module Name Pattern
+
+Each module should define `__module_name__` for error reporting:
+
+```lua
+local __module_name__ = "dot.buf" ---@type string
+```
 
 ### Keymap Ordering
-When defining keymaps in a list/table, follow this ordering:
-1. Mouse keys (`<LeftMouse>`, `<2-LeftMouse>`, `<RightMouse>`, etc.)
-2. `<M-*>` (Meta/Alt keys)
-3. `<D-*>` (Command/Super keys)
-4. `<C-a>*` (Ctrl-a prefix keys)
-5. `<C-*>` (other Ctrl keys)
-6. Special keys (`<CR>`, `<Tab>`, `<BS>`, `<Esc>`, etc.)
+
+1. Mouse keys (`<LeftMouse>`, `<2-LeftMouse>`, `<RightMouse>`)
+2. `<M-*>` (Meta/Alt)
+3. `<D-*>` (Command/Super)
+4. `<C-a>*` (Ctrl-a prefix)
+5. `<C-*>` (other Ctrl)
+6. Special keys (`<CR>`, `<Tab>`, `<BS>`, `<Esc>`)
 7. Uppercase letters (A-Z)
 8. Lowercase letters (a-z)
 9. Symbols and numbers
 
 Within each category, sort alphabetically.
 
-## Plugin Management
-- **Lock File**: `lazy-lock.json` contains exact plugin versions
-- **Plugin Configs**: `fml/plugins/` for individual plugin configurations
-- **Completion**: `fml/cmp/` for completion source configurations
+### Rust Integration
 
-## Development Files
-- `init-theme.lua`: Theme testing and development
-- `init-update.lua`: Update utilities
-- `README.md`: Main documentation
-- `doc/`: Issue tracking and detailed documentation
+When modifying `rust/yoz/src/`:
+- Follow existing mlua patterns for serialization/deserialization
+- Keep Lua-facing APIs synchronized with Lua call sites
+- Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
+
+## Supporting Directories
+
+| Directory      | Description                                           |
+|:---------------|:------------------------------------------------------|
+| `ftplugin/`    | Filetype-specific settings                            |
+| `lsp/`         | 21 language server configurations                     |
+| `queries/`     | TreeSitter queries                                    |
+| `rust/yoz/`    | Rust source code                                      |
+| `doc/`         | Documentation and issue tracking                      |
+| `lua/__types__/`| Type definitions for LSP                             |
 
 ## Key Features
+
 - Rust-powered search, replace, and file operations for performance
 - Multi-environment support: Neovim, Neovide, VSCode
 - Automatic session management for git repositories
@@ -386,3 +461,4 @@ Within each category, sort alphabetically.
 - Notepad widget for scratch notes
 - Comprehensive git integration (blame, hunk navigation, staging)
 - Color picker with multiple format support
+- Custom lightweight plugin loader with lazy loading

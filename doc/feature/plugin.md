@@ -2,7 +2,7 @@
 
 ## Overview
 
-`era.plugin` is a lightweight plugin manager that provides lazy loading, update, and clean functionality. It serves as a simplified alternative to lazy.nvim with essential features.
+`era.m.plugin` is a lightweight plugin manager that provides lazy loading, update, and clean functionality. It serves as a simplified alternative to lazy.nvim with essential features.
 
 ## Features
 
@@ -15,7 +15,7 @@
 ## Architecture
 
 ```
-era.plugin/
+era.m.plugin/
 ├── init.lua     # Module entry and public API
 ├── types.lua    # Type definitions
 ├── state.lua    # Global state and configuration
@@ -49,21 +49,21 @@ init.lua (public API)
 ## Configuration
 
 ```lua
----@class era.plugin.IConfig
+---@class era.m.plugin.IConfig
 ---@field public lockfile               string       -- Lock file path
 ---@field public root                   string       -- Plugin install directory
----@field public ui                     era.plugin.IUIConfig
+---@field public ui                     era.m.plugin.IUIConfig
 
----@class era.plugin.IUIConfig
+---@class era.m.plugin.IUIConfig
 ---@field public size                   { width: number, height: number }
 ---@field public border                 string       -- Border style
----@field public icons                  era.plugin.IIcons
+---@field public icons                  era.m.plugin.IIcons
 ```
 
 ## Plugin Spec
 
 ```lua
----@class era.plugin.IPluginSpec
+---@class era.m.plugin.IPluginSpec
 ---@field public name                   string           -- Plugin name (directory name)
 ---@field public url                    string|nil       -- Git repository URL
 ---@field public branch                 string|nil       -- Git branch
@@ -102,28 +102,28 @@ local specs = {
   },
 }
 
-require("era.plugin").setup(specs)
+require("era.m.plugin").setup(specs)
 ```
 
 ### Commands
 
-| Command          | Description                    |
-|------------------|--------------------------------|
-| `:Plugin`        | Open plugin window (Home view) |
-| `:Plugin home`   | Open Home view                 |
-| `:Plugin profile`| Open Profile view              |
-| `:Plugin update` | Open Update view               |
-| `:Plugin clean`  | Open Clean view                |
+| Command            | Description                      |
+|:-------------------|:---------------------------------|
+| `:Plugin`          | Open plugin window (Home view)   |
+| `:Plugin home`     | Open Home view                   |
+| `:Plugin profile`  | Open Profile view                |
+| `:Plugin update`   | Open Update view                 |
+| `:Plugin clean`    | Open Clean view                  |
 
 ### Keymaps (in plugin window)
 
-| Key | Description                                |
-|-----|--------------------------------------------|
-| `H` | Switch to Home view                        |
-| `P` | Switch to Profile view                     |
-| `U` | Switch to Update view and start update     |
-| `X` | Switch to Clean view and start clean       |
-| `q` | Close window                               |
+| Key   | Description                              |
+|:------|:-----------------------------------------|
+| `H`   | Switch to Home view                      |
+| `P`   | Switch to Profile view                   |
+| `U`   | Switch to Update view and start update   |
+| `X`   | Switch to Clean view and start clean     |
+| `q`   | Close window                             |
 
 ## Views
 
@@ -151,25 +151,25 @@ Removes plugin directories that are not in the current specs.
 
 All highlight groups use the `m_pl_` prefix:
 
-| Group              | Description           |
-|--------------------|-----------------------|
-| `m_pl_h1`          | Active tab header     |
-| `m_pl_h2`          | Section header        |
-| `m_pl_button`      | Inactive tab header   |
-| `m_pl_bold`        | Bold text             |
-| `m_pl_comment`     | Muted/comment text    |
-| `m_pl_loaded`      | Loaded plugin icon    |
-| `m_pl_not_loaded`  | Not loaded plugin icon|
-| `m_pl_running`     | Running task icon     |
-| `m_pl_error`       | Error status          |
-| `m_pl_time`        | Load time             |
-| `m_pl_event`       | Event trigger         |
-| `m_pl_cmd`         | Command trigger       |
-| `m_pl_ft`          | Filetype trigger      |
-| `m_pl_key`         | Key trigger           |
-| `m_pl_dep`         | Dependency            |
-| `m_pl_commit_from` | Old commit hash       |
-| `m_pl_commit_to`   | New commit hash       |
+| Group              | Description             |
+|:-------------------|:------------------------|
+| `m_pl_h1`          | Active tab header       |
+| `m_pl_h2`          | Section header          |
+| `m_pl_button`      | Inactive tab header     |
+| `m_pl_bold`        | Bold text               |
+| `m_pl_comment`     | Muted/comment text      |
+| `m_pl_loaded`      | Loaded plugin icon      |
+| `m_pl_not_loaded`  | Not loaded plugin icon  |
+| `m_pl_running`     | Running task icon       |
+| `m_pl_error`       | Error status            |
+| `m_pl_time`        | Load time               |
+| `m_pl_event`       | Event trigger           |
+| `m_pl_cmd`         | Command trigger         |
+| `m_pl_ft`          | Filetype trigger        |
+| `m_pl_key`         | Key trigger             |
+| `m_pl_dep`         | Dependency              |
+| `m_pl_commit_from` | Old commit hash         |
+| `m_pl_commit_to`   | New commit hash         |
 
 ## Lock File Format
 
@@ -184,7 +184,7 @@ Compatible with lazy.nvim's `lazy-lock.json`:
 ## Integration with fml/plugin.lua
 
 ```lua
----@type era.plugin.IRawSpec[]
+---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   { name = "flash.nvim", main = "flash", cond = conds.common },
   { name = "which-key.nvim", main = "which-key", cond = conds.common },
@@ -209,5 +209,5 @@ for _, raw_spec in ipairs(raw_specs) do
   specs[#specs + 1] = spec
 end
 
-require("era.plugin").setup(specs)
+require("era.m.plugin").setup(specs)
 ```

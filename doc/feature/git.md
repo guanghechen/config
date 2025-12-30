@@ -7,7 +7,7 @@
 ## 模块架构
 
 ```
-era.git/
+era.m.git/
 ├── init.lua      -- 入口，初始化 watcher、autocmd、暴露公共 API
 ├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
 ├── repo.lua      -- Git 仓库抽象，封装常用操作
@@ -79,7 +79,7 @@ M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
 每个 buffer 维护独立的 hunk 缓存：
 
 ```lua
----@class era.git.buffer.ICache
+---@class era.m.git.buffer.ICache
 ---@field public compare_text       string[]|nil  -- HEAD 内容
 ---@field public compare_text_index string[]|nil  -- Index 内容
 ---@field public hunks              Hunk[]|nil    -- Index vs Buffer（未暂存变更）
@@ -112,14 +112,14 @@ signs_staged:  -- 已暂存变更的 sign（优先级 9，仅在无未暂存 sig
 ```
 
 Sign 类型：
-| 类型         | 符号 | 含义                    |
-|--------------|------|-------------------------|
-| add          | ┃    | 新增行                  |
-| change       | ┃    | 修改行                  |
-| delete       | ▁    | 删除行（在下一行显示）  |
-| topdelete    | ▔    | 文件开头的删除          |
-| changedelete | ~    | 修改且有删除            |
-| untracked    | ┆    | 未追踪文件的新增行      |
+| 类型         | 符号 | 含义                       |
+|:-------------|:-----|:---------------------------|
+| add          | ┃    | 新增行                     |
+| change       | ┃    | 修改行                     |
+| delete       | ▁    | 删除行（在下一行显示）     |
+| topdelete    | ▔    | 文件开头的删除             |
+| changedelete | ~    | 修改且有删除               |
+| untracked    | ┆    | 未追踪文件的新增行         |
 
 ## Hunk 操作
 
@@ -184,7 +184,7 @@ M.reset_buffer()             -- Reset 整个文件
 
 状态码映射：
 | 码   | 含义       | 优先级 |
-|------|------------|--------|
+|:-----|:-----------|:-------|
 | U    | 冲突       | 1      |
 | ?    | 未追踪     | 2      |
 | M    | 修改       | 4      |
@@ -203,7 +203,7 @@ Stage 状态：
 ## 公共 API
 
 ```lua
-local git = era.git
+local git = era.m.git
 
 -- 状态查询
 git.get_branch()                    -- 获取当前分支名

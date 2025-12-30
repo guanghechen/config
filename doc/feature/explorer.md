@@ -2,12 +2,12 @@
 
 ## 概述
 
-`era.explorer` 是一个原生文件资源管理器模块，采用基于 URI 的抽象设计，支持未来扩展至多种资源类型。模块通过 tick 机制实现高效的状态管理，使节点的展开/折叠、选中、加载等状态判断与更新都能在 O(depth) 复杂度内完成。
+`era.m.explorer` 是一个原生文件资源管理器模块，采用基于 URI 的抽象设计，支持未来扩展至多种资源类型。模块通过 tick 机制实现高效的状态管理，使节点的展开/折叠、选中、加载等状态判断与更新都能在 O(depth) 复杂度内完成。
 
 ## 架构
 
 ```
-era.explorer/
+era.m.explorer/
 ├── action.lua       # 动作逻辑（文件操作、导航等）
 ├── node.lua         # 节点定义与状态查询
 ├── tree.lua         # 树结构管理与操作
@@ -53,10 +53,10 @@ widget.lua (Widget) ← action.lua (动作)
 
 树结构包含两个特殊节点：
 
-| 节点       | 描述                           | 用途                                 |
-|------------|--------------------------------|--------------------------------------|
-| `_superroot` | 文件系统的虚拟根（如 `file:///`） | 仅作为技术实现细节，用于 URI 解析    |
-| `_root`      | 用户当前查看的根目录             | **所有业务逻辑的起点**               |
+| 节点         | 描述                                | 用途                               |
+|:-------------|:------------------------------------|:-----------------------------------|
+| `_superroot` | 文件系统的虚拟根（如 `file:///`）   | 仅作为技术实现细节，用于 URI 解析  |
+| `_root`      | 用户当前查看的根目录                | **所有业务逻辑的起点**             |
 
 **关键设计决策**：
 
@@ -74,7 +74,7 @@ widget.lua (Widget) ← action.lua (动作)
 `resource.IManager` 定义了资源操作的统一接口：
 
 ```lua
----@class era.explorer.resource.IManager
+---@class era.m.explorer.resource.IManager
 ---@field public compare      fun(left, right): integer
 ---@field public create       fun(self, uri): INode|nil
 ---@field public copy         fun(self, source_uri, target_uri): boolean
@@ -105,7 +105,7 @@ Tick 机制通过整数比较和奇偶判断解决这些问题，核心思想是
 #### 全局状态 (State)
 
 ```lua
----@class era.explorer.State
+---@class era.m.explorer.State
 ---@field public tick_expanded    integer  -- 全局展开计数器
 ---@field public tick_loaded      integer  -- 全局加载计数器
 ---@field public tick_selected    integer  -- 全局选中计数器
@@ -118,26 +118,26 @@ State 维护三个全局计数器，每次状态变更时递增以生成新的 t
 每个节点包含两层状态：
 
 ```lua
----@class era.explorer.node.IRootState
+---@class era.m.explorer.node.IRootState
 ---@field public tick_expanded    integer  -- 子树级展开 tick
 ---@field public tick_selected    integer  -- 子树级选中 tick
 
----@class era.explorer.node.INodeState
+---@class era.m.explorer.node.INodeState
 ---@field public tick_expanded    integer  -- 节点级展开 tick
 ---@field public tick_loaded      integer  -- 节点级加载 tick
 ```
 
-| 状态层    | 缩写 | 作用域             | 用途                             |
-|-----------|------|--------------------|----------------------------------|
-| RootState | rs   | 当前节点及所有后代 | 递归展开/折叠、递归选中/取消选中 |
-| NodeState | ns   | 仅当前节点         | 单节点展开/折叠、懒加载标记      |
+| 状态层    | 缩写 | 作用域             | 用途                                 |
+|:----------|:-----|:-------------------|:-------------------------------------|
+| RootState | rs   | 当前节点及所有后代 | 递归展开/折叠、递归选中/取消选中     |
+| NodeState | ns   | 仅当前节点         | 单节点展开/折叠、懒加载标记          |
 
 ### 核心规则
 
 #### 规则 1：奇偶语义
 
 | tick 奇偶     | expanded 语义 | selected 语义 |
-|---------------|---------------|---------------|
+|:--------------|:--------------|:--------------|
 | 奇数 (1,3,5…) | 展开          | 选中          |
 | 偶数 (0,2,4…) | 折叠          | 未选中        |
 
@@ -153,11 +153,11 @@ State 维护三个全局计数器，每次状态变更时递增以生成新的 t
 
 #### 规则 3：rs 与 ns 的职责划分
 
-| 操作类型        | 修改字段                  | 影响范围               |
-|-----------------|---------------------------|------------------------|
-| 单节点展开/折叠 | `node.ns.tick_expanded`   | 仅影响当前节点         |
-| 递归展开/折叠   | `node.rs.tick_expanded`   | 影响当前节点及所有后代 |
-| 选中/取消选中   | `node.rs.tick_selected`   | 影响当前节点及所有后代 |
+| 操作类型        | 修改字段                  | 影响范围                 |
+|:----------------|:--------------------------|:-------------------------|
+| 单节点展开/折叠 | `node.ns.tick_expanded`   | 仅影响当前节点           |
+| 递归展开/折叠   | `node.rs.tick_expanded`   | 影响当前节点及所有后代   |
+| 选中/取消选中   | `node.rs.tick_selected`   | 影响当前节点及所有后代   |
 
 #### 规则 4：tick_loaded 的特殊性
 
@@ -407,23 +407,23 @@ end
 
 ### 初始状态详解
 
-| 对象          | 字段           | 初始值                             | 理由                     |
-|---------------|----------------|------------------------------------|--------------------------|
-| State         | tick_expanded  | 1                                  | 奇数，方便立即使用       |
-| State         | tick_loaded    | 1                                  | 非零值作为有效标记       |
-| State         | tick_selected  | 0                                  | 偶数，所有节点初始未选中 |
-| superroot.rs  | tick_expanded  | 0                                  | 无递归展开操作           |
-| superroot.rs  | tick_selected  | 0                                  | 无选中操作               |
-| superroot.ns  | tick_expanded  | state:next_tick_expanded_odd()     | 奇数，superroot 初始展开 |
-| superroot.ns  | tick_loaded    | 0                                  | 需要加载子节点           |
-| root.rs       | tick_expanded  | 0（继承 superroot）                | 无递归展开操作           |
-| root.rs       | tick_selected  | 0（继承 superroot）                | 无选中操作               |
-| root.ns       | tick_expanded  | state:next_tick_expanded_odd()     | 奇数，root 初始展开      |
-| root.ns       | tick_loaded    | 0                                  | 需要加载子节点           |
-| 普通节点.rs   | tick_expanded  | 继承父节点                         | 保持递归状态一致         |
-| 普通节点.rs   | tick_selected  | 继承父节点                         | 保持选中状态一致         |
-| 普通节点.ns   | tick_expanded  | state:next_tick_expanded_even()    | 偶数，普通节点初始折叠   |
-| 普通节点.ns   | tick_loaded    | 0 或 1                             | 目录=0，文件=1           |
+| 对象          | 字段           | 初始值                             | 理由                       |
+|:--------------|:---------------|:-----------------------------------|:---------------------------|
+| State         | tick_expanded  | 1                                  | 奇数，方便立即使用         |
+| State         | tick_loaded    | 1                                  | 非零值作为有效标记         |
+| State         | tick_selected  | 0                                  | 偶数，所有节点初始未选中   |
+| superroot.rs  | tick_expanded  | 0                                  | 无递归展开操作             |
+| superroot.rs  | tick_selected  | 0                                  | 无选中操作                 |
+| superroot.ns  | tick_expanded  | state:next_tick_expanded_odd()     | 奇数，superroot 初始展开   |
+| superroot.ns  | tick_loaded    | 0                                  | 需要加载子节点             |
+| root.rs       | tick_expanded  | 0（继承 superroot）                | 无递归展开操作             |
+| root.rs       | tick_selected  | 0（继承 superroot）                | 无选中操作                 |
+| root.ns       | tick_expanded  | state:next_tick_expanded_odd()     | 奇数，root 初始展开        |
+| root.ns       | tick_loaded    | 0                                  | 需要加载子节点             |
+| 普通节点.rs   | tick_expanded  | 继承父节点                         | 保持递归状态一致           |
+| 普通节点.rs   | tick_selected  | 继承父节点                         | 保持选中状态一致           |
+| 普通节点.ns   | tick_expanded  | state:next_tick_expanded_even()    | 偶数，普通节点初始折叠     |
+| 普通节点.ns   | tick_loaded    | 0 或 1                             | 目录=0，文件=1             |
 
 ### State 的 tick 管理方法
 
@@ -507,15 +507,15 @@ end
 
 ### 复杂度分析
 
-| 操作               | 传统方案复杂度    | Tick 机制复杂度 |
-|--------------------|-------------------|-----------------|
-| 查询节点是否展开   | O(1)              | O(depth)        |
-| 查询节点是否选中   | O(1)              | O(depth)        |
-| 单节点展开/折叠    | O(1)              | O(1)            |
-| 递归展开/折叠子树  | O(subtree_size)   | O(1)            |
-| 全部取消选中       | O(n)              | O(1)            |
-| 标记所有节点未加载 | O(n)              | O(1)            |
-| 新建节点状态继承   | O(1) 但逻辑复杂   | O(1) 且简单     |
+| 操作               | 传统方案复杂度  | Tick 机制复杂度 |
+|:-------------------|:----------------|:----------------|
+| 查询节点是否展开   | O(1)            | O(depth)        |
+| 查询节点是否选中   | O(1)            | O(depth)        |
+| 单节点展开/折叠    | O(1)            | O(1)            |
+| 递归展开/折叠子树  | O(subtree_size) | O(1)            |
+| 全部取消选中       | O(n)            | O(1)            |
+| 标记所有节点未加载 | O(n)            | O(1)            |
+| 新建节点状态继承   | O(1) 但逻辑复杂 | O(1) 且简单     |
 
 **权衡**：状态查询从 O(1) 变为 O(depth)，但树的深度通常远小于节点总数，且递归操作和批量操作获得了显著优化。
 
@@ -536,14 +536,14 @@ end
 
 **Context 接口**：
 ```lua
----@class era.explorer.action.IContext
----@field public widget              era.explorer.Widget
----@field public tree                era.explorer.Tree
----@field public resource_manager    era.explorer.resource.FileManager
+---@class era.m.explorer.action.IContext
+---@field public widget              era.m.explorer.Widget
+---@field public tree                era.m.explorer.Tree
+---@field public resource_manager    era.m.explorer.resource.FileManager
 ---@field public fullname            string
 ---@field public get_cursor_uri      fun(): string|nil
 ---@field public get_parent_uri      fun(uri: string): string|nil
----@field public get_visual_nodes    fun(): era.explorer.Node[]
+---@field public get_visual_nodes    fun(): era.m.explorer.Node[]
 ---@field public refresh             fun(skip_refresh?: boolean): nil
 ---@field public render              fun(): nil
 ---@field public sync_cursor_to_uri  fun(uri: string): nil
@@ -658,11 +658,11 @@ Widget 层封装，提供标准 Widget API 和快捷键绑定：
 
 #### 预览格式
 
-| 操作 | 格式                                | 说明       |
-|------|-------------------------------------|------------|
-| md   | `<路径>`                            | 待删除文件 |
-| mx   | `<源路径> -> <目标路径>`            | 移动预览   |
-| mc   | `<源路径> +> <目标路径>`            | 复制预览   |
+| 操作 | 格式                       | 说明       |
+|:-----|:---------------------------|:-----------|
+| md   | `<路径>`                   | 待删除文件 |
+| mx   | `<源路径> -> <目标路径>`   | 移动预览   |
+| mc   | `<源路径> +> <目标路径>`   | 复制预览   |
 
 #### 高亮规则
 
@@ -685,87 +685,87 @@ Act UI 支持以下交互：
 
 快捷键按以下顺序排列：鼠标键 → `<M-*>` → `<D-*>` → `<C-a>*` → `<C-*>` → 特殊键 → 大写字母 → 小写字母 → 符号
 
-| 按键                              | 功能                                                         |
-|-----------------------------------|--------------------------------------------------------------|
-| `<2-LeftMouse>`                   | 双击打开文件或展开目录                                       |
-| `<M-r>` / `<D-r>` / `<C-a>r`      | 重绘（仅刷新视图）                                           |
-| `<C-q>`                           | 发送选中项到 quickfix                                        |
-| `<C-t>`                           | 新标签打开                                                   |
-| `<C-v>`                           | vsplit 打开                                                  |
-| `<C-x>`                           | split 打开                                                   |
-| `<CR>` / `l` / `o`                | 打开文件或展开目录                                           |
-| `<Tab>`                           | 切换选中状态                                                 |
-| `<BS>`                            | 设置父目录为根                                               |
-| `.`                               | 设置当前目录为根                                             |
-| `[d`                              | 跳转到上一个有诊断的文件                                     |
-| `[e`                              | 跳转到上一个有错误诊断的文件                                 |
-| `[h`                              | 跳转到上一个 git 变更文件                                    |
-| `[i`                              | 跳转到父节点行                                               |
-| `[w`                              | 跳转到上一个有警告诊断的文件                                 |
-| `]d`                              | 跳转到下一个有诊断的文件                                     |
-| `]e`                              | 跳转到下一个有错误诊断的文件                                 |
-| `]h`                              | 跳转到下一个 git 变更文件                                    |
-| `]i`                              | 跳转到最后一个子节点行                                       |
-| `]w`                              | 跳转到下一个有警告诊断的文件                                 |
-| `A`                               | 创建目录                                                     |
-| `H`                               | 切换显示隐藏文件                                             |
-| `I`                               | 禁用（阻止进入插入模式）                                     |
-| `J`                               | 选择窗口并 split 打开                                        |
-| `L`                               | 选择窗口并 vsplit 打开                                       |
-| `O`                               | 在系统文件管理器中打开                                       |
-| `R`                               | 刷新                                                         |
-| `W`                               | 折叠所有                                                     |
-| `a`                               | 创建文件                                                     |
-| `c`                               | 有选中项时：标记为复制模式；无选中项时：输入目标路径直接复制 |
-| `d`                               | 删除                                                         |
-| `gb`                              | 设置上一个根目录为根                                         |
-| `gc`                              | 设置 cwd 为根                                                |
-| `gw`                              | 设置工作区为根                                               |
-| `h`                               | 折叠目录或跳转到父节点                                       |
-| `i`                               | 禁用（阻止进入插入模式）                                     |
-| `mc`                              | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制   |
-| `md`                              | 删除所有选中项（Act UI 预览待删除文件列表）                  |
-| `mo`                              | 打开所有选中的文件                                           |
-| `mp`                              | 粘贴（将选中项复制/移动到当前目录）                          |
-| `ms`                              | 切换普通选中：已选中且为选中模式时取消选中，否则标记为选中   |
-| `mx`                              | 切换剪切选中：已选中且为剪切模式时取消选中，否则标记为剪切   |
-| `o`                               | 打开文件或展开目录                                           |
-| `oa`                              | 将位置添加到 AI（复制到剪贴板并追加到 notepad）              |
-| `oc`                              | 复制路径到剪贴板                                             |
-| `oe`                              | 打开文件资源管理器（picker）                                 |
-| `of`                              | 打开文件查找器                                               |
-| `oi`                              | 显示文件详情                                                 |
-| `oo`                              | 在系统文件管理器中打开                                       |
-| `os`                              | 打开搜索器                                                   |
-| `p`                               | 粘贴（将选中项复制/移动到当前目录）                          |
-| `q`                               | 关闭                                                         |
-| `r`                               | 重命名                                                       |
-| `w`                               | 选择窗口并打开                                               |
-| `x`                               | 有选中项时：标记为剪切模式；无选中项时：输入目标路径直接移动 |
-| `y`                               | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制   |
-| `z`                               | 递归展开/折叠                                                |
+| 按键                           | 功能                                                           |
+|:-------------------------------|:---------------------------------------------------------------|
+| `<2-LeftMouse>`                | 双击打开文件或展开目录                                         |
+| `<M-r>` / `<D-r>` / `<C-a>r`   | 重绘（仅刷新视图）                                             |
+| `<C-q>`                        | 发送选中项到 quickfix                                          |
+| `<C-t>`                        | 新标签打开                                                     |
+| `<C-v>`                        | vsplit 打开                                                    |
+| `<C-x>`                        | split 打开                                                     |
+| `<CR>` / `l` / `o`             | 打开文件或展开目录                                             |
+| `<Tab>`                        | 切换选中状态                                                   |
+| `<BS>`                         | 设置父目录为根                                                 |
+| `.`                            | 设置当前目录为根                                               |
+| `[d`                           | 跳转到上一个有诊断的文件                                       |
+| `[e`                           | 跳转到上一个有错误诊断的文件                                   |
+| `[h`                           | 跳转到上一个 git 变更文件                                      |
+| `[i`                           | 跳转到父节点行                                                 |
+| `[w`                           | 跳转到上一个有警告诊断的文件                                   |
+| `]d`                           | 跳转到下一个有诊断的文件                                       |
+| `]e`                           | 跳转到下一个有错误诊断的文件                                   |
+| `]h`                           | 跳转到下一个 git 变更文件                                      |
+| `]i`                           | 跳转到最后一个子节点行                                         |
+| `]w`                           | 跳转到下一个有警告诊断的文件                                   |
+| `A`                            | 创建目录                                                       |
+| `H`                            | 切换显示隐藏文件                                               |
+| `I`                            | 禁用（阻止进入插入模式）                                       |
+| `J`                            | 选择窗口并 split 打开                                          |
+| `L`                            | 选择窗口并 vsplit 打开                                         |
+| `O`                            | 在系统文件管理器中打开                                         |
+| `R`                            | 刷新                                                           |
+| `W`                            | 折叠所有                                                       |
+| `a`                            | 创建文件                                                       |
+| `c`                            | 有选中项时：标记为复制模式；无选中项时：输入目标路径直接复制   |
+| `d`                            | 删除                                                           |
+| `gb`                           | 设置上一个根目录为根                                           |
+| `gc`                           | 设置 cwd 为根                                                  |
+| `gw`                           | 设置工作区为根                                                 |
+| `h`                            | 折叠目录或跳转到父节点                                         |
+| `i`                            | 禁用（阻止进入插入模式）                                       |
+| `mc`                           | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制     |
+| `md`                           | 删除所有选中项（Act UI 预览待删除文件列表）                    |
+| `mo`                           | 打开所有选中的文件                                             |
+| `mp`                           | 粘贴（将选中项复制/移动到当前目录）                            |
+| `ms`                           | 切换普通选中：已选中且为选中模式时取消选中，否则标记为选中     |
+| `mx`                           | 切换剪切选中：已选中且为剪切模式时取消选中，否则标记为剪切     |
+| `o`                            | 打开文件或展开目录                                             |
+| `oa`                           | 将位置添加到 AI（复制到剪贴板并追加到 notepad）                |
+| `oc`                           | 复制路径到剪贴板                                               |
+| `oe`                           | 打开文件资源管理器（picker）                                   |
+| `of`                           | 打开文件查找器                                                 |
+| `oi`                           | 显示文件详情                                                   |
+| `oo`                           | 在系统文件管理器中打开                                         |
+| `os`                           | 打开搜索器                                                     |
+| `p`                            | 粘贴（将选中项复制/移动到当前目录）                            |
+| `q`                            | 关闭                                                           |
+| `r`                            | 重命名                                                         |
+| `w`                            | 选择窗口并打开                                                 |
+| `x`                            | 有选中项时：标记为剪切模式；无选中项时：输入目标路径直接移动   |
+| `y`                            | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制     |
+| `z`                            | 递归展开/折叠                                                  |
 
 ### Visual Mode 快捷键
 
-| 按键                              | 功能                                                         |
-|-----------------------------------|--------------------------------------------------------------|
-| `<Tab>` / `ms`                    | 切换普通选中：全选中且为选中模式时取消选中，否则标记为选中   |
-| `c` / `mc`                        | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制   |
-| `d`                               | 删除选中项                                                   |
-| `oa`                              | 将选中项添加到 AI                                            |
-| `x` / `mx`                        | 切换剪切选中：全选中且为剪切模式时取消选中，否则标记为剪切   |
-| `y` / `my`                        | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制   |
+| 按键           | 功能                                                           |
+|:---------------|:---------------------------------------------------------------|
+| `<Tab>` / `ms` | 切换普通选中：全选中且为选中模式时取消选中，否则标记为选中     |
+| `c` / `mc`     | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制     |
+| `d`            | 删除选中项                                                     |
+| `oa`           | 将选中项添加到 AI                                              |
+| `x` / `mx`     | 切换剪切选中：全选中且为剪切模式时取消选中，否则标记为剪切     |
+| `y` / `my`     | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制     |
 
 ## 扩展指南
 
 ### 添加新的 Resource 类型
 
 1. 在 `resource/` 目录下创建新实现（如 `sftp.lua`）
-2. 实现 `era.explorer.resource.IManager` 接口
+2. 实现 `era.m.explorer.resource.IManager` 接口
 3. 在创建 Tree 时传入新的 resource_manager
 
 ```lua
-local SftpManager = require("era.explorer.resource.sftp")
+local SftpManager = require("era.m.explorer.resource.sftp")
 local tree = Tree.new({
   name = "sftp-explorer",
   protocol = "sftp://",
