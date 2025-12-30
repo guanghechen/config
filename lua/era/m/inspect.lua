@@ -1,6 +1,6 @@
-local __module_name__ = "fml.action.inspect" ---@type string
+local __module_name__ = "era.m.inspect" ---@type string
 
----@class fml.action.inspect
+---@class era.m.inspect
 local M = {}
 
 ---@return nil

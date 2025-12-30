@@ -658,43 +658,43 @@ command
   .implement({
     uuid = K.inspect.inspect_buf.uuid,
     action = function()
-      require("fml.action.inspect").inspect_buf()
+      era.m.inspect.inspect_buf()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_pos.uuid,
     action = function()
-      require("fml.action.inspect").inspect_pos()
+      era.m.inspect.inspect_pos()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_state.uuid,
     action = function()
-      require("fml.action.inspect").inspect_state()
+      era.m.inspect.inspect_state()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_state_full.uuid,
     action = function()
-      require("fml.action.inspect").inspect_state_full()
+      era.m.inspect.inspect_state_full()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_tab.uuid,
     action = function()
-      require("fml.action.inspect").inspect_tab()
+      era.m.inspect.inspect_tab()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_tree.uuid,
     action = function()
-      require("fml.action.inspect").inspect_tree()
+      era.m.inspect.inspect_tree()
     end,
   })
   .implement({
     uuid = K.inspect.inspect_window.uuid,
     action = function()
-      require("fml.action.inspect").inspect_window()
+      era.m.inspect.inspect_window()
     end,
   })
 

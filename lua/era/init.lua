@@ -84,6 +84,7 @@ local __m__mods = {
   im = "era.m.im",
   image = "era.m.image",
   input = "era.m.input",
+  inspect = "era.m.inspect",
   lsp = "era.m.lsp",
   maximize = "era.m.maximize",
   notifier = "era.m.notifier",
@@ -120,6 +121,7 @@ local __m__mods = {
 ---@field public im                     era.m.im
 ---@field public image                  era.m.image
 ---@field public input                  era.m.input
+---@field public inspect                era.m.inspect
 ---@field public lsp                    era.m.lsp
 ---@field public maximize               era.m.maximize
 ---@field public notifier               era.m.notifier
