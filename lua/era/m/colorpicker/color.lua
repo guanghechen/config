@@ -1,8 +1,7 @@
-local convert = require("era.m.colorpicker.convert")
-local mode = require("era.m.colorpicker.mode")
+local S = era.m.colorpicker
 
-local INPUTS = { mode.input.hex, mode.input.rgb, mode.input.hsl, mode.input.hsv }
-local OUTPUTS = { mode.output.hex, mode.output.rgb, mode.output.hsl, mode.output.hsv }
+local INPUTS = { S.mode.input.hex, S.mode.input.rgb, S.mode.input.hsl, S.mode.input.hsv }
+local OUTPUTS = { S.mode.output.hex, S.mode.output.rgb, S.mode.output.hsl, S.mode.output.hsv }
 
 ---@param name                          era.m.colorpicker.InputModeName|nil
 ---@return integer
@@ -102,7 +101,7 @@ end
 function M:set(value)
   local input = self:input()
   for i = 1, 3 do
-    self._value[i] = convert.clamp(value[i], 0, input.max[i])
+    self._value[i] = S.convert.clamp(value[i], 0, input.max[i])
   end
 end
 
@@ -127,7 +126,7 @@ end
 ---@param alpha                         integer
 ---@return nil
 function M:set_alpha(alpha)
-  self._alpha = convert.clamp(alpha, 0, 100)
+  self._alpha = S.convert.clamp(alpha, 0, 100)
 end
 
 ---@return boolean
@@ -161,13 +160,13 @@ end
 ---@return nil
 function M:set_component(index, new_value)
   local input = self:input()
-  self._value[index] = convert.clamp(new_value, 0, input.max[index])
+  self._value[index] = S.convert.clamp(new_value, 0, input.max[index])
 end
 
 ---@return string
 function M:hex()
   local r, g, b = self:get_rgb()
-  return convert.hex_stringify(r, g, b)
+  return S.convert.hex_stringify(r, g, b)
 end
 
 ---@param index                         integer|nil

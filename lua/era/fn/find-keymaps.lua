@@ -264,13 +264,41 @@ local picker = era.m.picker.ListComposer.new({
     local nsnr_content = dot.var.nsnr.picker_preview
     local LABEL_WIDTH = 13
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 0, 0 }, { 0, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "m_skm_lhs", { 0, LABEL_WIDTH }, { 0, LABEL_WIDTH + #data.lhs }, { priority = 10 })
+    vim.hl.range(
+      bufnr,
+      nsnr_content,
+      "m_skm_lhs",
+      { 0, LABEL_WIDTH },
+      { 0, LABEL_WIDTH + #data.lhs },
+      { priority = 10 }
+    )
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 1, 0 }, { 1, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "m_skm_mode", { 1, LABEL_WIDTH }, { 1, LABEL_WIDTH + #data.mode }, { priority = 10 })
+    vim.hl.range(
+      bufnr,
+      nsnr_content,
+      "m_skm_mode",
+      { 1, LABEL_WIDTH },
+      { 1, LABEL_WIDTH + #data.mode },
+      { priority = 10 }
+    )
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 2, 0 }, { 2, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "m_skm_desc", { 2, LABEL_WIDTH }, { 2, LABEL_WIDTH + #data.desc }, { priority = 10 })
+    vim.hl.range(
+      bufnr,
+      nsnr_content,
+      "m_skm_desc",
+      { 2, LABEL_WIDTH },
+      { 2, LABEL_WIDTH + #data.desc },
+      { priority = 10 }
+    )
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 3, 0 }, { 3, LABEL_WIDTH }, { priority = 10 })
-    vim.hl.range(bufnr, nsnr_content, "m_skm_source", { 3, LABEL_WIDTH }, { 3, LABEL_WIDTH + #data.source }, { priority = 10 })
+    vim.hl.range(
+      bufnr,
+      nsnr_content,
+      "m_skm_source",
+      { 3, LABEL_WIDTH },
+      { 3, LABEL_WIDTH + #data.source },
+      { priority = 10 }
+    )
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
     vim.hl.range(bufnr, nsnr_content, "m_skm_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
 

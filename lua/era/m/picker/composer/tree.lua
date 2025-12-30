@@ -551,18 +551,18 @@ function M.new(props)
       desc = "tree: open",
       callback = actions.open_node,
     },
-  {
-    modes = { "i", "n", "x" },
-    key = "<C-h>",
-    desc = "tree: collapse",
-    callback = actions.collapse_node,
-  },
-  {
-    modes = { "i", "n", "x" },
-    key = "<C-l>",
-    desc = "tree: open",
-    callback = actions.open_node,
-  },
+    {
+      modes = { "i", "n", "x" },
+      key = "<C-h>",
+      desc = "tree: collapse",
+      callback = actions.collapse_node,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "<C-l>",
+      desc = "tree: open",
+      callback = actions.open_node,
+    },
     {
       modes = { "n", "x" },
       key = "<Tab>",

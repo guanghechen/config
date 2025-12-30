@@ -1,6 +1,6 @@
 local __module_name__ = "era.m.ai.state" ---@type string
 
-local config = require("era.m.ai.config")
+local S = era.m.ai
 
 ---@class era.m.ai.state
 local M = {}
@@ -46,7 +46,7 @@ function M.attach(source)
   _attached_sources[#_attached_sources + 1] = vim.tbl_extend("force", source, { attached_at = vim.uv.now() })
   M.o_attached:next(#_attached_sources)
 
-  local agent_label = config.agent_labels[source.agent] or source.agent
+  local agent_label = S.config.agent_labels[source.agent] or source.agent
   stl.reporter.info({
     from = __module_name__,
     subject = "Agent Attached",
@@ -73,7 +73,7 @@ function M.detach(source_id, close_terminal)
     _attached_sources = new_sources
     M.o_attached:next(#_attached_sources)
 
-    local agent_label = config.agent_labels[detached_source.agent] or detached_source.agent
+    local agent_label = S.config.agent_labels[detached_source.agent] or detached_source.agent
     stl.reporter.info({
       from = __module_name__,
       subject = "Agent Detached",
@@ -81,11 +81,10 @@ function M.detach(source_id, close_terminal)
     })
 
     if close_terminal ~= false and detached_source.type == "tmux" and detached_source.tmux_pane then
-      local term = require("era.m.ai.term")
       local term_uuid = string.format("ai:%s:%s", detached_source.agent, detached_source.tmux_pane.pane_id)
-      local termmeta = term.get(term_uuid)
+      local termmeta = S.term.get(term_uuid)
       if termmeta then
-        term.on_closed(termmeta)
+        S.term.on_closed(termmeta)
       end
     end
   end

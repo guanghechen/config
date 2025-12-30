@@ -418,8 +418,8 @@ function M.collect_async(opts, callback)
   local status_groups = create_status_groups()
 
   local pending = include_untracked and 3 or 2 ---@type integer
-  local cancelled = false                  ---@type boolean
-  local cancel_fns = {}                    ---@type (fun(): nil)[]
+  local cancelled = false ---@type boolean
+  local cancel_fns = {} ---@type (fun(): nil)[]
 
   local function finalize_all()
     if not cancelled then
@@ -450,19 +450,23 @@ function M.collect_async(opts, callback)
     end
   end
 
-  local cancel_fn1 = era.m.git.cmd.run_async({ "diff", "--staged", "--name-status", base, "--" }, { cwd = workspace }, function(lines, code)
-    if not cancelled and code == 0 then
-      for _, line in ipairs(lines) do
-        local status, relative = parse_name_status_line(line)
-        if status ~= nil and relative ~= nil then
-          local absolute = dot.path.normalize(dot.path.join(workspace, relative))
-          local entry = ensure_entry(status_map, absolute, relative)
-          apply_status_code(entry, "staged", status)
+  local cancel_fn1 = era.m.git.cmd.run_async(
+    { "diff", "--staged", "--name-status", base, "--" },
+    { cwd = workspace },
+    function(lines, code)
+      if not cancelled and code == 0 then
+        for _, line in ipairs(lines) do
+          local status, relative = parse_name_status_line(line)
+          if status ~= nil and relative ~= nil then
+            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+            local entry = ensure_entry(status_map, absolute, relative)
+            apply_status_code(entry, "staged", status)
+          end
         end
       end
+      maybe_finalize()
     end
-    maybe_finalize()
-  end)
+  )
   cancel_fns[#cancel_fns + 1] = cancel_fn1
 
   local cancel_fn2 = era.m.git.cmd.run_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
@@ -481,27 +485,31 @@ function M.collect_async(opts, callback)
   cancel_fns[#cancel_fns + 1] = cancel_fn2
 
   if include_untracked then
-    local cancel_fn3 = era.m.git.cmd.run_async({ "ls-files", "--exclude-standard", "--others" }, { cwd = workspace }, function(lines, code)
-      if not cancelled and code == 0 then
-        for _, line in ipairs(lines) do
-          if type(line) == "string" and #line > 0 then
-            local relative = line:gsub('^"', ""):gsub('"$', "")
-            relative = stl.string.octal_to_utf8(relative)
-            relative = dot.path.normalize(relative)
+    local cancel_fn3 = era.m.git.cmd.run_async(
+      { "ls-files", "--exclude-standard", "--others" },
+      { cwd = workspace },
+      function(lines, code)
+        if not cancelled and code == 0 then
+          for _, line in ipairs(lines) do
+            if type(line) == "string" and #line > 0 then
+              local relative = line:gsub('^"', ""):gsub('"$', "")
+              relative = stl.string.octal_to_utf8(relative)
+              relative = dot.path.normalize(relative)
 
-            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
-            local entry = ensure_entry(status_map, absolute, relative)
-            entry.codes["?"] = true
-            entry.unstaged["?"] = true
-            local bitflag = ensure_status_bit("?")
-            if bitflag ~= 0 then
-              entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
+              local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+              local entry = ensure_entry(status_map, absolute, relative)
+              entry.codes["?"] = true
+              entry.unstaged["?"] = true
+              local bitflag = ensure_status_bit("?")
+              if bitflag ~= 0 then
+                entry.unstaged_bits = bit.bor(entry.unstaged_bits or 0, bitflag)
+              end
             end
           end
         end
+        maybe_finalize()
       end
-      maybe_finalize()
-    end)
+    )
     cancel_fns[#cancel_fns + 1] = cancel_fn3
   end
 

@@ -239,12 +239,7 @@ end
 
 ---@return nil
 function M.goto_references()
-  focus(
-    "LSP References",
-    "textDocument/references",
-    "support_references",
-    { context = { includeDeclaration = true } }
-  )
+  focus("LSP References", "textDocument/references", "support_references", { context = { includeDeclaration = true } })
 end
 
 ---@return nil

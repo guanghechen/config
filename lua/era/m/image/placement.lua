@@ -342,7 +342,10 @@ function M:render_grid(loc)
       local virt_lines = {} ---@type {[1]: string, [2]: string}[][]
       table.insert(virt_lines, { { padding }, { top_border, border_hl } })
       for _, l in ipairs(img) do
-        table.insert(virt_lines, { { padding }, { border_chars[8], border_hl }, { l, hl }, { border_chars[4], border_hl } })
+        table.insert(
+          virt_lines,
+          { { padding }, { border_chars[8], border_hl }, { l, hl }, { border_chars[4], border_hl } }
+        )
       end
       table.insert(virt_lines, { { padding }, { bottom_border, border_hl } })
       extmarks[#extmarks + 1] = {

@@ -547,9 +547,7 @@ function M.calc_signs(hunk, min_lnum, max_lnum, next_hunk)
     end
   else
     local is_change_hunk = hunk.type == "change" ---@type boolean
-    local next_is_adjacent_delete = next_hunk
-      and next_hunk.type == "delete"
-      and next_hunk.added.start == start + count
+    local next_is_adjacent_delete = next_hunk and next_hunk.type == "delete" and next_hunk.added.start == start + count
     local has_extra_removes = is_change_hunk and removed_count > count
 
     for i = 0, count - 1 do

@@ -189,16 +189,19 @@ function M.diagnostics(position)
       local diag_data = era.m.lsp.diagnostic.get_by_bufnr(context.bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
 
       local text_hl = "" ---@type string
-      local text_count_error = diag_data.error > 0 and stl.icon.diagnostic.Error_alt .. " " .. diag_data.error .. " " or ""
+      local text_count_error = diag_data.error > 0 and stl.icon.diagnostic.Error_alt .. " " .. diag_data.error .. " "
+        or ""
       text_hl = text_hl .. btn(txt(text_count_error, hln_diagnostics_error), fn_show_error)
 
-      local text_count_warn = diag_data.warn > 0 and stl.icon.diagnostic.Warning_alt .. " " .. diag_data.warn .. " " or ""
+      local text_count_warn = diag_data.warn > 0 and stl.icon.diagnostic.Warning_alt .. " " .. diag_data.warn .. " "
+        or ""
       text_hl = text_hl .. btn(txt(text_count_warn, hln_diagnostics_warn), fn_show_warn)
 
       local text_count_hint = diag_data.hint > 0 and stl.icon.diagnostic.Hint_alt .. " " .. diag_data.hint .. " " or ""
       text_hl = text_hl .. btn(txt(text_count_hint, hln_diagnostics_hint), fn_show_hint)
 
-      local text_count_info = diag_data.info > 0 and stl.icon.diagnostic.Information_alt .. " " .. diag_data.info .. " " or ""
+      local text_count_info = diag_data.info > 0 and stl.icon.diagnostic.Information_alt .. " " .. diag_data.info .. " "
+        or ""
       text_hl = text_hl .. btn(txt(text_count_info, hln_diagnostics_info), fn_show_info)
 
       local text = text_count_error .. text_count_warn .. text_count_hint .. text_count_info

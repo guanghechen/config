@@ -1,4 +1,4 @@
-local config = require("era.m.ai.config")
+local S = era.m.ai
 
 ---@class era.m.ai.proc
 local M = {}
@@ -91,7 +91,7 @@ M.Procs = Procs
 ---@param agent                         era.m.ai.AgentName
 ---@return boolean
 function M.is_agent(proc, agent)
-  local tool_config = config.tools[agent]
+  local tool_config = S.config.tools[agent]
   if not tool_config then
     return false
   end
@@ -126,7 +126,7 @@ end
 function M.detect_agent(procs, pid)
   local detected = nil ---@type era.m.ai.AgentName|nil
   procs:walk(pid, function(proc)
-    for _, agent in ipairs(config.agents) do
+    for _, agent in ipairs(S.config.agents) do
       if M.is_agent(proc, agent) then
         detected = agent
         return true

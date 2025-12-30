@@ -84,7 +84,7 @@ function M.get_origin(repo)
 
   local in_origin = false ---@type boolean
   for line in content:gmatch("[^\n]+") do
-    if line:match("^%s*%[remote \"origin\"%]") then
+    if line:match('^%s*%[remote "origin"%]') then
       in_origin = true
     elseif line:match("^%s*%[") then
       in_origin = false

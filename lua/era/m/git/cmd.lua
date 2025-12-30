@@ -15,7 +15,7 @@ function M.run_async(args, opts, callback)
     cmd[#cmd + 1] = arg
   end
 
-  local cancelled = false                  ---@type boolean
+  local cancelled = false ---@type boolean
   local proc = vim.system(cmd, { text = true }, function(obj)
     if not cancelled then
       vim.schedule(function()
@@ -125,44 +125,40 @@ function M.get_abbrev_head_async(cwd, callback)
   local cancelled = false
   local proc = nil
 
-  proc = vim.system(
-    { "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" },
-    { text = true },
-    function(obj)
-      if not cancelled then
-        vim.schedule(function()
-          if cancelled then return end
+  proc = vim.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }, { text = true }, function(obj)
+    if not cancelled then
+      vim.schedule(function()
+        if cancelled then
+          return
+        end
 
-          if obj.code ~= 0 then
-            callback("", false)
-            return
-          end
+        if obj.code ~= 0 then
+          callback("", false)
+          return
+        end
 
-          local head = vim.trim(obj.stdout or "")
-          if head == "HEAD" then
-            proc = vim.system(
-              { "git", "-C", cwd, "rev-parse", "--short", "HEAD" },
-              { text = true },
-              function(obj2)
-                if not cancelled then
-                  vim.schedule(function()
-                    if cancelled then return end
-                    if obj2.code == 0 then
-                      callback(vim.trim(obj2.stdout or ""), true)
-                    else
-                      callback("", true)
-                    end
-                  end)
+        local head = vim.trim(obj.stdout or "")
+        if head == "HEAD" then
+          proc = vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj2)
+            if not cancelled then
+              vim.schedule(function()
+                if cancelled then
+                  return
                 end
-              end
-            )
-          else
-            callback(head, false)
-          end
-        end)
-      end
+                if obj2.code == 0 then
+                  callback(vim.trim(obj2.stdout or ""), true)
+                else
+                  callback("", true)
+                end
+              end)
+            end
+          end)
+        else
+          callback(head, false)
+        end
+      end)
     end
-  )
+  end)
 
   return function()
     cancelled = true
@@ -216,41 +212,37 @@ function M.get_show_text_async(cwd, object, callback)
   local cancelled = false
   local proc = nil
 
-  proc = vim.system(
-    { "git", "-C", cwd, "cat-file", "-p", object },
-    { text = true },
-    function(obj)
-      if not cancelled then
-        vim.schedule(function()
-          if cancelled then return end
+  proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = true }, function(obj)
+    if not cancelled then
+      vim.schedule(function()
+        if cancelled then
+          return
+        end
 
-          if obj.code == 0 then
-            local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-            -- Keep trailing empty string to preserve no_nl_at_eof information
-            callback(lines)
-          else
-            proc = vim.system(
-              { "git", "-C", cwd, "show", object },
-              { text = true },
-              function(obj2)
-                if not cancelled then
-                  vim.schedule(function()
-                    if cancelled then return end
-                    if obj2.code == 0 then
-                      local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
-                      callback(lines)
-                    else
-                      callback(nil)
-                    end
-                  end)
+        if obj.code == 0 then
+          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
+          -- Keep trailing empty string to preserve no_nl_at_eof information
+          callback(lines)
+        else
+          proc = vim.system({ "git", "-C", cwd, "show", object }, { text = true }, function(obj2)
+            if not cancelled then
+              vim.schedule(function()
+                if cancelled then
+                  return
                 end
-              end
-            )
-          end
-        end)
-      end
+                if obj2.code == 0 then
+                  local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
+                  callback(lines)
+                else
+                  callback(nil)
+                end
+              end)
+            end
+          end)
+        end
+      end)
     end
-  )
+  end)
 
   return function()
     cancelled = true

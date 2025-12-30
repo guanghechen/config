@@ -751,14 +751,14 @@ command
     uuid = K.lsp.goto_prev_reference.uuid,
     action = function()
       local step = vim.v.count1 ---@type integer
-      require("era.m.illuminate").jump(-step, true)
+      era.m.illuminate.jump(-step, true)
     end,
   })
   .implement({
     uuid = K.lsp.goto_next_reference.uuid,
     action = function()
       local step = vim.v.count1 ---@type integer
-      require("era.m.illuminate").jump(step, true)
+      era.m.illuminate.jump(step, true)
     end,
   })
   .implement({
@@ -1334,7 +1334,7 @@ command
 command.implement({
   uuid = K.plugin.open.uuid,
   action = function()
-    require("era.m.plugin").show()
+    era.m.plugin.show()
   end,
 })
 
@@ -1343,7 +1343,7 @@ command
   .implement({
     uuid = K.ux.color_picker.uuid,
     action = function()
-      require("era.m.colorpicker").ColorPicker.instance():pick()
+      era.m.colorpicker.ColorPicker.instance():pick()
     end,
   })
   .implement({

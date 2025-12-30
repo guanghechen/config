@@ -21,8 +21,7 @@ end
 ---@param filepath_target               string
 ---@return boolean
 local function paste_image(filepath_target)
-  local clipboard = require("era.m.clipboard")
-  local ok = clipboard.paste_image_from_clipboard(filepath_target)
+  local ok = era.m.clipboard.paste_image_from_clipboard(filepath_target)
   if ok then
     local filetype = vim.bo.filetype ---@type string
     if stl.filetype.is_sourcefile(filetype) then
@@ -59,8 +58,7 @@ end
 
 ---@return nil
 local function paste()
-  local clipboard = require("era.m.clipboard")
-  if not clipboard.has_image() then
+  if not era.m.clipboard.has_image() then
     return
   end
 

@@ -1,7 +1,5 @@
 local __module_name__ = "era.m.term.state" ---@type string
 
-require("era.m.term.types")
-
 local DEFAULT_TERM_TYPE = "5fd8db97-7c8c-4629-a99a-a2696709018b" ---@type string
 
 local metamap = {} ---@type table<string, era.m.term.IMeta>

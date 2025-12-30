@@ -333,8 +333,22 @@ end
 function M:__setup_keymaps__(bufnr, hunk, is_staged)
   ---@type stl.t.IKeymap[]
   local keymaps = {
-    { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "git-hunk: close" },
-    { modes = { "n" }, key = "<Esc>", callback = function() self:close() end, desc = "git-hunk: close" },
+    {
+      modes = { "n" },
+      key = "q",
+      callback = function()
+        self:close()
+      end,
+      desc = "git-hunk: close",
+    },
+    {
+      modes = { "n" },
+      key = "<Esc>",
+      callback = function()
+        self:close()
+      end,
+      desc = "git-hunk: close",
+    },
   }
 
   if is_staged then

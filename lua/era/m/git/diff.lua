@@ -14,7 +14,16 @@ local M = {}
 ---@param old_has_trailing_nl           boolean
 ---@param new_has_trailing_nl           boolean
 ---@return era.m.git.Hunk
-local function create_hunk(old_start, old_count, new_start, new_count, old_lines, new_lines, old_has_trailing_nl, new_has_trailing_nl)
+local function create_hunk(
+  old_start,
+  old_count,
+  new_start,
+  new_count,
+  old_lines,
+  new_lines,
+  old_has_trailing_nl,
+  new_has_trailing_nl
+)
   local removed_lines = {} ---@type string[]
   local added_lines = {} ---@type string[]
 
@@ -132,7 +141,16 @@ function M.run_diff(old_lines, new_lines)
       new_start = 1
     end
 
-    local hunk = create_hunk(old_start, old_count, new_start, new_count, old_effective, new_effective, old_has_trailing_nl, new_has_trailing_nl)
+    local hunk = create_hunk(
+      old_start,
+      old_count,
+      new_start,
+      new_count,
+      old_effective,
+      new_effective,
+      old_has_trailing_nl,
+      new_has_trailing_nl
+    )
     hunks[#hunks + 1] = hunk
   end
 

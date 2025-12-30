@@ -12,7 +12,7 @@ era.m.ui_attach.dressing()
 require("fml.command")
 
 if dot.path.is_git_repo() then
-  require("era.m.git")
+  era.m.git.setup()
 end
 
 require("fml.plugin")

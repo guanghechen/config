@@ -1,7 +1,4 @@
-local convert = require("era.m.colorpicker.convert")
-local Color = require("era.m.colorpicker.color")
-local UI = require("era.m.colorpicker.ui")
-local picker = require("era.m.colorpicker.picker")
+local S = era.m.colorpicker
 
 local WIN_HIGHLIGHT = "FloatBorder:m_cp_border,Normal:m_cp_normal,EndOfBuffer:m_cp_normal"
 
@@ -26,8 +23,8 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
   self.name = "colorpicker"
-  self._ui = UI.new(props)
-  self._color = Color.new()
+  self._ui = era.m.colorpicker.UI.new(props)
+  self._color = era.m.colorpicker.Color.new()
   self._range = nil
   self._source_bufnr = nil
   self._history_index = 0
@@ -52,7 +49,7 @@ end
 ---@return nil
 function M:pick()
   local ok, err = pcall(function()
-    local result = picker.pick()
+    local result = S.picker.pick()
     local winnr = vim.api.nvim_get_current_win()
     local row, col = unpack(vim.api.nvim_win_get_cursor(winnr))
     self._source_bufnr = vim.api.nvim_win_get_buf(winnr)
@@ -66,7 +63,7 @@ function M:pick()
       self._range = { row, col, row, col }
       local last = dot.context.colorpicker.get_last_color()
       if last then
-        local r, g, b = convert.hex_parse(last.hex)
+        local r, g, b = S.convert.hex_parse(last.hex)
         if r and g and b then
           self:__apply_color__(r, g, b, last.alpha)
         else
@@ -448,7 +445,8 @@ function M:__complete__()
     dot.context.colorpicker.set_last_color(hex, alpha)
 
     local text = self._color:str()
-    local start_row, start_col, end_row, end_col = self._range[1] - 1, self._range[2], self._range[3] - 1, self._range[4]
+    local start_row, start_col, end_row, end_col =
+      self._range[1] - 1, self._range[2], self._range[3] - 1, self._range[4]
     vim.api.nvim_buf_set_text(self._source_bufnr, start_row, start_col, end_row, end_col, { text })
   end
 end
@@ -545,7 +543,7 @@ function M:__load_history_item__(index)
     return
   end
 
-  local r, g, b = convert.hex_parse(item.hex)
+  local r, g, b = S.convert.hex_parse(item.hex)
   if r and g and b then
     self:__apply_color__(r, g, b, item.alpha)
     self._ui:update()
@@ -582,10 +580,10 @@ function M:__on_click__()
     local value = values[row] or 0
     local prefix = string.format("%s : %6d ", bar_name, value)
     local bar_start_col = vim.api.nvim_strwidth(prefix) + 1
-    local offset = convert.clamp(col - bar_start_col, 0, bar_width)
-    local ratio = convert.clamp(offset / bar_width, 0, 1)
+    local offset = S.convert.clamp(col - bar_start_col, 0, bar_width)
+    local ratio = S.convert.clamp(offset / bar_width, 0, 1)
     local max_val = input.max[row]
-    self._color:set_component(row, convert.round(max_val * ratio))
+    self._color:set_component(row, S.convert.round(max_val * ratio))
     self:__reset_to_current__()
     self._ui:update()
   elseif self._color:is_alpha_visible() and row == #input.bar_name + 1 then
@@ -593,9 +591,9 @@ function M:__on_click__()
     local alpha_bar_name = "A" .. string.rep(" ", #input.bar_name[1] - 1)
     local prefix = string.format("%s : %5d%% ", alpha_bar_name, alpha)
     local bar_start_col = vim.api.nvim_strwidth(prefix) + 1
-    local offset = convert.clamp(col - bar_start_col, 0, bar_width)
-    local ratio = convert.clamp(offset / bar_width, 0, 1)
-    self._color:set_alpha(convert.round(100 * ratio))
+    local offset = S.convert.clamp(col - bar_start_col, 0, bar_width)
+    local ratio = S.convert.clamp(offset / bar_width, 0, 1)
+    self._color:set_alpha(S.convert.round(100 * ratio))
     self:__reset_to_current__()
     self._ui:update()
   end
@@ -649,7 +647,7 @@ function M:__set_percent__(percent)
   if point.type == "color" and point.index then
     local input = self._color:input()
     local max_val = input.max[point.index]
-    self._color:set_component(point.index, convert.round(max_val * percent / 100))
+    self._color:set_component(point.index, S.convert.round(max_val * percent / 100))
   elseif point.type == "alpha" then
     self._color:set_alpha(percent)
   end

@@ -94,7 +94,6 @@ local providers = {
   },
 }
 
-
 ---@param bufnr                         integer
 ---@param mode                          string
 ---@return { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }

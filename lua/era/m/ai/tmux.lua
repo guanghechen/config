@@ -1,7 +1,6 @@
 local __module_name__ = "era.m.ai.tmux" ---@type string
 
-local config = require("era.m.ai.config")
-local proc = require("era.m.ai.proc")
+local S = era.m.ai
 
 ---@class era.m.ai.tmux
 local M = {}
@@ -120,7 +119,7 @@ end
 ---@param session_name                  string
 ---@return boolean
 function M.is_agent_session(session_name)
-  for _, agent in ipairs(config.agents) do
+  for _, agent in ipairs(S.config.agents) do
     local pattern = "^" .. agent .. "%-[0-9a-f]+$"
     if session_name:match(pattern) and #session_name == #agent + 33 then
       return true
@@ -172,11 +171,11 @@ function M.find_running_agents()
   end
 
   local panes = M.list_panes()
-  local procs = proc.Procs.new()
+  local procs = S.proc.Procs.new()
   local sources = {} ---@type era.m.ai.ISource[]
 
   for _, pane in ipairs(panes) do
-    local agent = proc.detect_agent(procs, pane.pane_pid)
+    local agent = S.proc.detect_agent(procs, pane.pane_pid)
     if agent then
       sources[#sources + 1] = {
         id = string.format("tmux:%s", pane.pane_id),
@@ -197,11 +196,11 @@ end
 ---@return era.m.ai.ITmuxPaneInfo|nil
 function M.find_existing_agent_pane(agent, cwd)
   local session_name = M.get_session_name(agent, cwd)
-  local procs = proc.Procs.new()
+  local procs = S.proc.Procs.new()
 
   for _, pane in ipairs(M.list_panes()) do
     if pane.session_name == session_name then
-      if proc.is_running_agent(procs, pane.pane_pid, agent) then
+      if S.proc.is_running_agent(procs, pane.pane_pid, agent) then
         return pane
       end
     end
@@ -218,7 +217,7 @@ end
 ---@param cwd                           string
 ---@return era.m.ai.ITmuxPaneInfo|nil
 function M.create_agent_pane(agent, cwd)
-  local tool_config = config.tools[agent]
+  local tool_config = S.config.tools[agent]
   if not tool_config then
     stl.reporter.error({
       from = __module_name__,

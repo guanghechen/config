@@ -419,12 +419,19 @@ function M.new(props)
 
   local observer_unsubs = {} ---@type stl.c.IUnsubscribable[]
 
-  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
-    composer:mark_result_flags_dirty()
-  end, true)
-  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive }, function()
-    scheduler_match:schedule()
-  end)
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
+    { search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive },
+    function()
+      composer:mark_result_flags_dirty()
+    end,
+    true
+  )
+  observer_unsubs[#observer_unsubs + 1] = stl.fn.observe(
+    { search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive },
+    function()
+      scheduler_match:schedule()
+    end
+  )
   observer_unsubs[#observer_unsubs + 1] = stl.fn.observe({ composer.result.lnum_current }, function()
     local lnum = composer.result.lnum_current:snapshot() ---@type integer
     local uuid = self._lnum2uuid[lnum] ---@type string|nil

@@ -1,4 +1,4 @@
-local convert = require("era.m.colorpicker.convert")
+local S = era.m.colorpicker
 
 local POINT_CHAR = "󰫢"
 local HISTORY_CHAR = "󱓻"
@@ -8,7 +8,7 @@ local BAR_LEN = 32
 ---@param hex                           string
 ---@return string
 local function contrast_color(hex)
-  local r, g, b = convert.hex_parse(hex)
+  local r, g, b = S.convert.hex_parse(hex)
   if not r or not g or not b then
     return "#000000"
   end
@@ -176,8 +176,8 @@ end
 ---@param max_val                       integer
 ---@return integer
 function M:__adjust_to_bar__(value, max_val)
-  local raw = convert.round(value / max_val * self._bar_len)
-  return convert.clamp(raw, 1, self._bar_len)
+  local raw = S.convert.round(value / max_val * self._bar_len)
+  return S.convert.clamp(raw, 1, self._bar_len)
 end
 
 ---@protected
@@ -224,7 +224,7 @@ function M:__build_winbar__()
   local input_str
   if input.name == "HEX" then
     if alpha then
-      input_str = string.format("#%02x%02x%02x%02x", value[1], value[2], value[3], convert.round(alpha * 255 / 100))
+      input_str = string.format("#%02x%02x%02x%02x", value[1], value[2], value[3], S.convert.round(alpha * 255 / 100))
     else
       input_str = string.format("#%02x%02x%02x", value[1], value[2], value[3])
     end
@@ -334,7 +334,7 @@ function M:__highlight__()
       local char_len = (j == point_idx) and #self._point_char or #self._bar_char
       local end_col = start_col + char_len
 
-      local new_value = convert.round((j - 0.5) / self._bar_len * max_val)
+      local new_value = S.convert.round((j - 0.5) / self._bar_len * max_val)
       local hex = self._color:hex_at(i, new_value)
       local hl = { fg = hex }
 
@@ -365,9 +365,9 @@ function M:__highlight__()
       local end_col = start_col + char_len
 
       local alpha_ratio = (i - 0.5) / self._bar_len
-      local ar = convert.round(r * alpha_ratio)
-      local ag = convert.round(g * alpha_ratio)
-      local ab = convert.round(b * alpha_ratio)
+      local ar = S.convert.round(r * alpha_ratio)
+      local ag = S.convert.round(g * alpha_ratio)
+      local ab = S.convert.round(b * alpha_ratio)
       local hex = string.format("#%02x%02x%02x", ar, ag, ab)
       local hl = { fg = hex }
 

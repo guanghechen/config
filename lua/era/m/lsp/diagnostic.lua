@@ -87,7 +87,14 @@ local function do_refresh()
 
   for bufnr, data in pairs(M._buffers) do
     changed_bufnrs[bufnr] = {
-      prev = { bufnr = bufnr, error = data.error, warn = data.warn, info = data.info, hint = data.hint, total = data.total },
+      prev = {
+        bufnr = bufnr,
+        error = data.error,
+        warn = data.warn,
+        info = data.info,
+        hint = data.hint,
+        total = data.total,
+      },
       next = data,
     }
     reset_buffer(data)

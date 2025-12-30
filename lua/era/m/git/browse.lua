@@ -142,9 +142,10 @@ function M.get_remotes(fields)
       if repo:find(host) then
         local pattern = patterns[scope]
         if type(pattern) == "string" then
-          return repo .. pattern:gsub("(%b{})", function(key)
-            return fields[key:sub(2, -2)] or key
-          end)
+          return repo
+            .. pattern:gsub("(%b{})", function(key)
+              return fields[key:sub(2, -2)] or key
+            end)
         elseif type(pattern) == "function" then
           return repo .. pattern(fields)
         end

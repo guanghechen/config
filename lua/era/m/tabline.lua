@@ -1,14 +1,11 @@
 ---@class era.m.tabline
 local M = {}
 
-local c = require("era.m.nvimbar").component
-local Nvimbar = require("era.m.nvimbar").Nvimbar
-
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
 local position = "f_tl" ---@type stl.e.NvimbarPositionEnum
 
 local tabline ---@type era.m.nvimbar.Nvimbar
-tabline = Nvimbar.new({
+tabline = era.m.nvimbar.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",
@@ -28,10 +25,10 @@ tabline = Nvimbar.new({
 })
 
 tabline
-  :place("left", c.explorer.tabline(position), 95)
+  :place("left", era.m.nvimbar.component.explorer.tabline(position), 95)
   :place(
     "left",
-    c.sidebar.of(position, stl.filetype.DIFFVIEW_FILES, function()
+    era.m.nvimbar.component.sidebar.of(position, stl.filetype.DIFFVIEW_FILES, function()
       local title = stl.icon.git.Git .. " Git Diffview" ---@type string
       return title
     end),
@@ -39,25 +36,25 @@ tabline
   )
   :place(
     "left",
-    c.sidebar.of(position, stl.filetype.DAP_UI_SCOPES, function()
+    era.m.nvimbar.component.sidebar.of(position, stl.filetype.DAP_UI_SCOPES, function()
       local title = stl.icon.ui.Bug .. " Debug" ---@type string
       return title
     end),
     95
   )
-  :place("left", c.buf.bufs(position), 95)
+  :place("left", era.m.nvimbar.component.buf.bufs(position), 95)
   --
-  :place("center", c.devmode.render_count(position), 100)
+  :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
   --
-  -- :place("right", c.cwd.cwd(position), 100)
-  -- :place("right", c.devmode.devmode(position), 100)
+  -- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
+  -- :place("right", era.m.nvimbar.component.devmode.devmode(position), 100)
   :place(
     "right",
-    c.nvim.tabs(position),
+    era.m.nvimbar.component.nvim.tabs(position),
     100
   )
 --
--- :place("right", c.cwd.cwd(position), 100)
+-- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
 
 ---@return boolean
 local function should_show_tabline()

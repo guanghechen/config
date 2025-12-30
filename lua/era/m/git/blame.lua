@@ -373,9 +373,13 @@ local function inline_schedule_update(bufnr)
     return
   end
 
-  timer:start(inline_config.delay, 0, vim.schedule_wrap(function()
-    inline_update(bufnr)
-  end))
+  timer:start(
+    inline_config.delay,
+    0,
+    vim.schedule_wrap(function()
+      inline_update(bufnr)
+    end)
+  )
 end
 
 local function inline_setup_autocmds()

@@ -1,14 +1,11 @@
 ---@class era.m.statusline
 local M = {}
 
-local c = require("era.m.nvimbar").component
-local Nvimbar = require("era.m.nvimbar").Nvimbar
-
 local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
 local position = "f_sl" ---@type stl.e.NvimbarPositionEnum
 
 local statusline ---@type era.m.nvimbar.Nvimbar
-statusline = Nvimbar.new({
+statusline = era.m.nvimbar.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
   comp_sep_hlname = position .. "_bg",
@@ -30,32 +27,32 @@ statusline = Nvimbar.new({
 })
 
 statusline
-  :place("left", c.host.username(position), 100)
-  :place("left", c.nvim.mode(position), 100)
-  :place("left", c.git.branch(position), 100)
-  :place("left", c.file.readonly(position), 95)
-  :place("left", c.file.format(position), 95)
-  :place("left", c.file.indent(position), 95)
-  :place("left", c.file.encoding(position), 100)
-  :place("left", c.file.type(position))
-  :place("left", c.file.size(position))
-  :place("left", c.file.status(position))
+  :place("left", era.m.nvimbar.component.host.username(position), 100)
+  :place("left", era.m.nvimbar.component.nvim.mode(position), 100)
+  :place("left", era.m.nvimbar.component.git.branch(position), 100)
+  :place("left", era.m.nvimbar.component.file.readonly(position), 95)
+  :place("left", era.m.nvimbar.component.file.format(position), 95)
+  :place("left", era.m.nvimbar.component.file.indent(position), 95)
+  :place("left", era.m.nvimbar.component.file.encoding(position), 100)
+  :place("left", era.m.nvimbar.component.file.type(position))
+  :place("left", era.m.nvimbar.component.file.size(position))
+  :place("left", era.m.nvimbar.component.file.status(position))
   --
-  :place("center", c.devmode.render_count(position), 100)
+  :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
   --
-  :place("right", c.nvim.pos(position), 100)
-  :place("right", c.nvim.nr(position), 100)
-  :place("right", c.nvim.pid(position), 100)
-  :place("right", c.python.env(position), 100)
-  :place("right", c.lsp.client(position), 100)
-  :place("right", c.lint.status(position), 95)
-  :place("right", c.ai.status(position), 95)
-  :place("right", c.copilot.status(position), 95)
-  :place("right", c.lsp.diagnostics(position), 95)
-  :place("right", c.nvim.msg_mode(position), 95)
-  :place("right", c.nvim.msg_command(position), 80)
-  :place("right", c.nvim.msg_changes(position), 85)
-  :place("right", c.nvim.msg_lsp(position), 90)
+  :place("right", era.m.nvimbar.component.nvim.pos(position), 100)
+  :place("right", era.m.nvimbar.component.nvim.nr(position), 100)
+  :place("right", era.m.nvimbar.component.nvim.pid(position), 100)
+  :place("right", era.m.nvimbar.component.python.env(position), 100)
+  :place("right", era.m.nvimbar.component.lsp.client(position), 100)
+  :place("right", era.m.nvimbar.component.lint.status(position), 95)
+  :place("right", era.m.nvimbar.component.ai.status(position), 95)
+  :place("right", era.m.nvimbar.component.copilot.status(position), 95)
+  :place("right", era.m.nvimbar.component.lsp.diagnostics(position), 95)
+  :place("right", era.m.nvimbar.component.nvim.msg_mode(position), 95)
+  :place("right", era.m.nvimbar.component.nvim.msg_command(position), 80)
+  :place("right", era.m.nvimbar.component.nvim.msg_changes(position), 85)
+  :place("right", era.m.nvimbar.component.nvim.msg_lsp(position), 90)
 
 ---@return nil
 function M.dressing()

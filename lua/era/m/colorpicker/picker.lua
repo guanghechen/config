@@ -1,4 +1,4 @@
-local convert = require("era.m.colorpicker.convert")
+local S = era.m.colorpicker
 
 ---@class era.m.colorpicker.picker
 local M = {}
@@ -44,7 +44,7 @@ function M.pick_hex(line, cursor_col)
           r = r,
           g = g,
           b = b,
-          alpha = a and convert.round(a * 100 / 255) or nil,
+          alpha = a and S.convert.round(a * 100 / 255) or nil,
         }
       end
     end
@@ -88,7 +88,7 @@ function M.pick_css_rgb(line, cursor_col)
       if r and g and b then
         local an = nil
         if a then
-          an = is_percent and convert.round(tonumber(a) or 0) or convert.round((tonumber(a) or 0) * 100)
+          an = is_percent and S.convert.round(tonumber(a) or 0) or S.convert.round((tonumber(a) or 0) * 100)
         end
 
         return {
@@ -142,10 +142,10 @@ function M.pick_css_hsl(line, cursor_col)
         local hn, sn, ln = tonumber(h) or 0, tonumber(s_pct) or 0, tonumber(l_pct) or 0
         local an = nil
         if a then
-          an = is_percent and convert.round(tonumber(a) or 0) or convert.round((tonumber(a) or 0) * 100)
+          an = is_percent and S.convert.round(tonumber(a) or 0) or S.convert.round((tonumber(a) or 0) * 100)
         end
 
-        local r, g, b = convert.hsl2rgb(hn, sn, ln)
+        local r, g, b = S.convert.hsl2rgb(hn, sn, ln)
         return {
           start_col = s,
           end_col = e,

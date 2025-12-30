@@ -766,21 +766,25 @@ function M:__trigger_change__()
   end
 
   self._debounce_timer:stop()
-  self._debounce_timer:start(DEBOUNCE_MS, 0, vim.schedule_wrap(function()
-    if self._disposed then
-      return
-    end
+  self._debounce_timer:start(
+    DEBOUNCE_MS,
+    0,
+    vim.schedule_wrap(function()
+      if self._disposed then
+        return
+      end
 
-    if not self._pending_change then
-      return
-    end
+      if not self._pending_change then
+        return
+      end
 
-    self._pending_change = false
+      self._pending_change = false
 
-    if self._on_change then
-      self._on_change()
-    end
-  end))
+      if self._on_change then
+        self._on_change()
+      end
+    end)
+  )
 end
 
 ---@protected

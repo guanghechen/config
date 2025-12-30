@@ -42,9 +42,11 @@ local M = setmetatable({
   end,
 })
 
--- Setup immediately when module is loaded (called from integration/neovim/init.lua)
-M.buffer.setup()
-M.blame.setup()
-M.watcher.setup()
+---@return nil
+function M.setup()
+  M.buffer.setup()
+  M.blame.setup()
+  M.watcher.setup()
+end
 
 return M

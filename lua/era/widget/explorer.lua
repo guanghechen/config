@@ -1,5 +1,3 @@
-local Widget = require("era.m.explorer.widget")
-
 ---@class era.widget.explorer
 local M = {}
 
@@ -40,7 +38,7 @@ end
 ---@return era.m.explorer.Widget
 function M.get_widget()
   if M.widget == nil then
-    M.widget = Widget.new({
+    M.widget = era.m.explorer.Widget.new({
       name = "explorer.default",
       width = dot.context.explorer.width:snapshot(),
       o_flag_foldempty = dot.context.explorer.flag_foldempty,

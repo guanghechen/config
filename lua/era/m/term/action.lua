@@ -1,6 +1,6 @@
-local __module_name__ = "era.m.term.action" ---@type string
+local S = era.m.term
 
-require("era.m.term.types")
+local __module_name__ = "era.m.term.action" ---@type string
 
 ---@type era.m.term.IProfile[]
 local profiles = {
@@ -14,14 +14,14 @@ local function apply_profile(profile)
     return
   end
 
-  era.m.term.state.create({
+  S.state.create({
     uuid = yoz.fn.uuid(),
     type = profile.type,
     name = profile.name,
     cmd = profile.cmd,
     permanent = false,
   })
-  era.m.term.widget:focus()
+  S.widget:focus()
 end
 
 ---@param name                          string
@@ -33,7 +33,7 @@ local function open_lazygit(name, cwd, args)
   local cmd = #argv > 0 and string.format("lazygit %s", argv) or "lazygit"
   local termuuid = string.format("1c2b6245-da30-499a-8e23-8c33b5bd1a77#%s", name)
 
-  era.m.term.widget:toggle_and_focus({
+  S.widget:toggle_and_focus({
     uuid = termuuid,
     name = name,
     type = "lazygit",
@@ -50,11 +50,10 @@ end
 ---@return nil
 local function open_yazi(name, cwd, filepath)
   local tempname = dot.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
-  local terminal = era.m.term.widget ---@type era.m.term.widget
 
   local dirpath = dot.path.dirname(filepath) ---@type string
   local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
-  terminal:toggle_and_focus({
+  S.widget:toggle_and_focus({
     uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
     name = name,
     type = "yazi",
@@ -64,7 +63,7 @@ local function open_yazi(name, cwd, filepath)
     autofocus = true,
     on_closed = function()
       pcall(function()
-        terminal:close()
+        S.widget:close()
 
         local filepaths = vim.fn.filereadable(tempname) == 1 and vim.fn.readfile(tempname) or {} ---@type string[]
         filepaths = vim.tbl_filter(function(p)
@@ -129,8 +128,8 @@ end
 
 ---@return nil
 function M.destroy()
-  local termindex = era.m.term.state.current() ---@type integer
-  local _, termmeta = era.m.term.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
+  local termindex = S.state.current() ---@type integer
+  local _, termmeta = S.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
   if termmeta == nil then
     stl.reporter.warn({
       from = __module_name__,
@@ -156,13 +155,13 @@ function M.destroy()
       return
     end
 
-    local next_termmeta = era.m.term.state.pick_next_term(termmeta.uuid) ---@type era.m.term.IMeta|nil
+    local next_termmeta = S.state.pick_next_term(termmeta.uuid) ---@type era.m.term.IMeta|nil
     if next_termmeta ~= nil then
-      era.m.term.state.o_termuuid:next(next_termmeta.uuid)
+      S.state.o_termuuid:next(next_termmeta.uuid)
     end
 
     vim.defer_fn(function()
-      era.m.term.event.on_closed(termmeta)
+      S.event.on_closed(termmeta)
       dot.state.status.dirtier_termline:mark_dirty()
     end, 100)
   end)
@@ -171,31 +170,31 @@ end
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_left(step)
-  local N = era.m.term.state.size() ---@type integer
-  local termuuid = era.m.term.state.o_termuuid:snapshot() ---@type string
-  local index_current = era.m.term.state.indexof(termuuid) ---@type integer
+  local N = S.state.size() ---@type integer
+  local termuuid = S.state.o_termuuid:snapshot() ---@type string
+  local index_current = S.state.indexof(termuuid) ---@type integer
   if index_current < 0 then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
   local index_next = stl.fn.navigate_circular(index_current, -step, N) ---@type integer
-  era.m.term.state.focus(index_next)
+  S.state.focus(index_next)
 end
 
 ---@param step                          integer|nil
 ---@return nil
 function M.focus_right(step)
-  local N = era.m.term.state.size() ---@type integer
-  local termuuid = era.m.term.state.o_termuuid:snapshot() ---@type string
-  local index_current = era.m.term.state.indexof(termuuid) ---@type integer
+  local N = S.state.size() ---@type integer
+  local termuuid = S.state.o_termuuid:snapshot() ---@type string
+  local index_current = S.state.indexof(termuuid) ---@type integer
   if index_current < 0 then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
   local index_next = stl.fn.navigate_circular(index_current, step, N) ---@type integer
-  era.m.term.state.focus(index_next)
+  S.state.focus(index_next)
 end
 
 ---@return nil
@@ -215,8 +214,8 @@ end
 
 ---@return nil
 function M.rename()
-  local termindex = era.m.term.state.current() ---@type integer
-  local _, termmeta = era.m.term.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
+  local termindex = S.state.current() ---@type integer
+  local _, termmeta = S.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
   if termmeta == nil then
     stl.reporter.warn({
       from = __module_name__,
@@ -232,8 +231,7 @@ function M.rename()
     default = termmeta.name,
   }
 
-  local terminal_widget = era.m.term.widget ---@type era.m.term.widget
-  local winnr = terminal_widget:get_winnr() ---@type integer|nil
+  local winnr = S.widget:get_winnr() ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local available_width = nil ---@type integer|nil
     local ok_width, width_value = pcall(vim.api.nvim_win_get_width, winnr)
@@ -274,7 +272,7 @@ function M.rename()
       return
     end
 
-    era.m.term.state.update(termmeta, { name = new_name })
+    S.state.update(termmeta, { name = new_name })
     dot.state.status.dirtier_termline:mark_dirty()
   end)
 end
@@ -282,72 +280,70 @@ end
 ---@param step                          integer|nil
 ---@return nil
 function M.swap_left(step)
-  local index_current, termuuid_current = era.m.term.state.current() ---@type integer, string|nil
+  local index_current, termuuid_current = S.state.current() ---@type integer, string|nil
   if termuuid_current == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local N = era.m.term.state.size() ---@type integer
+  local N = S.state.size() ---@type integer
   local index_next = stl.fn.navigate_circular(index_current, -step, N) ---@type integer
-  local termuuid_next = era.m.term.state.at(index_next) ---@type string|nil
+  local termuuid_next = S.state.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then
     return
   end
 
-  era.m.term.state.put(index_current, termuuid_next)
-  era.m.term.state.put(index_next, termuuid_current)
+  S.state.put(index_current, termuuid_next)
+  S.state.put(index_next, termuuid_current)
   dot.state.status.dirtier_termline:mark_dirty()
 end
 
 ---@param step                          integer|nil
 ---@return nil
 function M.swap_right(step)
-  local index_current, termuuid_current = era.m.term.state.current() ---@type integer, string|nil
+  local index_current, termuuid_current = S.state.current() ---@type integer, string|nil
   if termuuid_current == nil then
     return
   end
 
   step = math.max(1, step or vim.v.count1 or 1)
-  local N = era.m.term.state.size() ---@type integer
+  local N = S.state.size() ---@type integer
   local index_next = stl.fn.navigate_circular(index_current, step, N) ---@type integer
-  local termuuid_next = era.m.term.state.at(index_next) ---@type string|nil
+  local termuuid_next = S.state.at(index_next) ---@type string|nil
 
   if termuuid_next == nil or termuuid_next == termuuid_current then
     return
   end
 
-  era.m.term.state.put(index_current, termuuid_next)
-  era.m.term.state.put(index_next, termuuid_current)
+  S.state.put(index_current, termuuid_next)
+  S.state.put(index_next, termuuid_current)
   dot.state.status.dirtier_termline:mark_dirty()
 end
 
 ---@return nil
 function M.toggle()
-  local terminal = era.m.term.widget ---@type era.m.term.widget
-
-  local termindex = era.m.term.state.current() ---@type integer
-  local _, termmeta_current = era.m.term.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
+  local termindex = S.state.current() ---@type integer
+  local _, termmeta_current = S.state.at(termindex) ---@type string|nil, era.m.term.IMeta|nil
   local is_shell_or_runner = termmeta_current ~= nil
     and (termmeta_current.type == "runner" or termmeta_current.type == "shell")
 
-  if terminal:isvisible() then
+  if S.widget:isvisible() then
     if is_shell_or_runner then
-      terminal:toggle()
+      S.widget:toggle()
       return
     end
   else
-    terminal:focus()
+    S.widget:focus()
     if is_shell_or_runner then
       return
     end
   end
 
-  local _, termmeta_shell = era.m.term.state.find_index_by_type("shell") ---@type integer, era.m.term.IMeta|nil
+  local _, termmeta_shell = S.state.find_index_by_type("shell") ---@type integer, era.m.term.IMeta|nil
   local selected_text = stl.nvim.buf.retrieve_selected_text() ---@type string
   if termmeta_shell == nil then
-    terminal:toggle_and_focus({
+    S.widget:toggle_and_focus({
       uuid = yoz.fn.uuid(),
       type = "shell",
       name = "shell",
@@ -357,7 +353,7 @@ function M.toggle()
       selected_text = selected_text,
     })
   else
-    terminal:toggle_and_focus({
+    S.widget:toggle_and_focus({
       uuid = termmeta_shell.uuid,
       type = termmeta_shell.type,
       name = termmeta_shell.name,

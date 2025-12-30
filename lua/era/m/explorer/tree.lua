@@ -1,4 +1,4 @@
-local Node = require("era.m.explorer.node")
+local S = era.m.explorer
 
 local __module_name__ = "era.m.explorer.tree" ---@type string
 local math_floor = math.floor
@@ -38,7 +38,7 @@ function M.new(props)
   local initial_root = props.initial_root ---@type string|nil
   local default_root = initial_root or dot.path.cwd_uri() ---@type string
 
-  local superroot = Node.superroot(protocol) ---@type era.m.explorer.Node
+  local superroot = era.m.explorer.Node.superroot(protocol) ---@type era.m.explorer.Node
 
   local self = setmetatable({}, M)
   self.fullname = fullname
@@ -91,7 +91,7 @@ function M:apply_copy_paste(target_parent_uri)
     self:__load_children__(target_node, target_node_uri)
   end
 
-  local selected_nodes = Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
+  local selected_nodes = era.m.explorer.Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
   if #selected_nodes == 0 then
     return false
   end
@@ -165,7 +165,7 @@ function M:apply_copy_paste(target_parent_uri)
 
   for _, node in ipairs(selected_nodes) do
     local source_uri = node.uri ---@type string
-    local destination_uri = Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
+    local destination_uri = era.m.explorer.Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
 
     local ok, result = pcall(rm.copy, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
     if not ok then
@@ -188,8 +188,8 @@ function M:apply_copy_paste(target_parent_uri)
       return false
     end
 
-    local clone = Node.clone(node, target_node) ---@type era.m.explorer.Node
-    Node.refresh_depth(clone, target_node.depth + 1)
+    local clone = era.m.explorer.Node.clone(node, target_node) ---@type era.m.explorer.Node
+    era.m.explorer.Node.refresh_depth(clone, target_node.depth + 1)
     local insert_idx = self:__find_insertion_index__(rm, target_node.children, clone) ---@type integer
     table.insert(target_node.children, insert_idx, clone)
     target_node:sync_chidxmap(insert_idx)
@@ -233,7 +233,7 @@ function M:apply_cut_paste(target_parent_uri)
     self:__load_children__(target_node, target_node_uri)
   end
 
-  local selected_nodes = Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
+  local selected_nodes = era.m.explorer.Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
   if #selected_nodes == 0 then
     return false
   end
@@ -311,7 +311,7 @@ function M:apply_cut_paste(target_parent_uri)
     if node.parent ~= target_node then
       local parent = node.parent ---@type era.m.explorer.Node
       local source_uri = node.uri ---@type string
-      local destination_uri = Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
+      local destination_uri = era.m.explorer.Node.calc_uri(target_node_uri, node.nodename, node.nodetype) ---@type string
 
       local ok, result = pcall(rm.move, rm, source_uri, destination_uri) ---@type boolean, boolean|nil
       if not ok then
@@ -359,7 +359,7 @@ function M:apply_cut_paste(target_parent_uri)
       parent:sync_chidxmap(removal_index)
 
       node.parent = target_node
-      Node.refresh_depth(node, target_node.depth + 1)
+      era.m.explorer.Node.refresh_depth(node, target_node.depth + 1)
       local insert_idx = self:__find_insertion_index__(rm, target_node.children, node) ---@type integer
       table.insert(target_node.children, insert_idx, node)
       target_node:sync_chidxmap(insert_idx)
@@ -401,7 +401,7 @@ function M:clear()
   self:__health__()
 
   local rootname = self._superroot.nodename ---@type string
-  local superroot = Node.superroot(rootname) ---@type era.m.explorer.Node
+  local superroot = era.m.explorer.Node.superroot(rootname) ---@type era.m.explorer.Node
   self._superroot = superroot
   self._root = superroot
   self.select_mode = "select"
@@ -527,19 +527,19 @@ end
 ---@return era.m.explorer.Node[]
 function M:get_selected_nodes()
   self:__health__()
-  return Node.collect_selected(self._root)
+  return era.m.explorer.Node.collect_selected(self._root)
 end
 
 ---@return era.m.explorer.Node[]
 function M:get_selected_nodes_toplevel()
   self:__health__()
-  return Node.collect_selected_toplevel(self._root)
+  return era.m.explorer.Node.collect_selected_toplevel(self._root)
 end
 
 ---@return string[]
 function M:get_selected_uris()
   self:__health__()
-  return Node.collect_selected_uris(self._root)
+  return era.m.explorer.Node.collect_selected_uris(self._root)
 end
 
 ---@param parenturi                     string
@@ -590,7 +590,7 @@ function M:insert(parenturi, resource)
   end
 
   local children = parent.children ---@type era.m.explorer.Node[]
-  local node = Node.new(parent, resource.nodetype, resource.nodename) ---@type era.m.explorer.Node
+  local node = era.m.explorer.Node.new(parent, resource.nodetype, resource.nodename) ---@type era.m.explorer.Node
   local insert_idx = self:__find_insertion_index__(rm, children, node) ---@type integer
 
   table.insert(children, insert_idx, node)
@@ -599,7 +599,6 @@ function M:insert(parenturi, resource)
   self.ticks.structure = self.ticks.structure + 1
   return true
 end
-
 
 ---@return boolean
 function M:isdisposed()
@@ -713,7 +712,7 @@ function M:refresh(force)
     end
 
     for index, child in ipairs(node.children) do
-      local uri = Node.calc_uri(nodeuri, child.nodename, child.nodetype) ---@type string
+      local uri = era.m.explorer.Node.calc_uri(nodeuri, child.nodename, child.nodetype) ---@type string
       walk(child, index, uri)
     end
   end
@@ -802,7 +801,7 @@ function M:remove(uri)
     table.remove(parent.children, removal_index)
     parent:sync_chidxmap(removal_index)
     parent.chidxmap[node.nodename] = nil
-    Node.sync_ancestors(parent)
+    era.m.explorer.Node.sync_ancestors(parent)
 
     if self._root ~= nil then
       if self._root:is_descendant_or_self(node) then
@@ -891,7 +890,7 @@ function M:toggle_selected(uri, force_selected)
 
   self:__load_subtree__(node)
   node:set_selected_recursive(selected)
-  Node.sync_ancestors(node)
+  era.m.explorer.Node.sync_ancestors(node)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1016,7 +1015,7 @@ function M:__insert__(uri, resource, ensure_resource)
     local idx = o.chidxmap[piece] ---@type integer|nil
     if idx == nil then
       local child_nodetype = i == n and nodetype or "D" ---@type era.m.explorer.NodeTypeEnum
-      local child = Node.new(o, child_nodetype, piece) ---@type era.m.explorer.Node
+      local child = era.m.explorer.Node.new(o, child_nodetype, piece) ---@type era.m.explorer.Node
       local insert_idx = self:__find_insertion_index__(rm, o.children, child) ---@type integer
 
       table.insert(o.children, insert_idx, child)
@@ -1028,7 +1027,7 @@ function M:__insert__(uri, resource, ensure_resource)
       o = o.children[idx] ---@type era.m.explorer.Node
     end
   end
-  o.uri = Node.calc_uri(o.parent.uri, o.nodename, o.nodetype)
+  o.uri = era.m.explorer.Node.calc_uri(o.parent.uri, o.nodename, o.nodetype)
   return o, new_created
 end
 
@@ -1110,7 +1109,7 @@ function M:__load_children__(node, uri)
   local base_uri = node.uri ---@type string
   for _, item in ipairs(items) do
     if item.uri == nil then
-      item.uri = Node.calc_uri(base_uri, item.nodename, item.nodetype)
+      item.uri = era.m.explorer.Node.calc_uri(base_uri, item.nodename, item.nodetype)
     end
   end
 
@@ -1147,13 +1146,13 @@ function M:__load_children__(node, uri)
     local old_index = chidxmap[item.nodename] ---@type integer|nil
     local old_child = old_index ~= nil and children[old_index] or nil ---@type era.m.explorer.Node|nil
     if old_child == nil or old_child.nodetype ~= item.nodetype then
-      local child = Node.new(node, item.nodetype, item.nodename) ---@type era.m.explorer.Node
-      child.uri = Node.calc_uri(node.uri, child.nodename, child.nodetype)
+      local child = era.m.explorer.Node.new(node, item.nodetype, item.nodename) ---@type era.m.explorer.Node
+      child.uri = era.m.explorer.Node.calc_uri(node.uri, child.nodename, child.nodetype)
       new_children[i] = child
       new_chidxmap[item.nodename] = i
     else
       old_child.parent = node
-      old_child.uri = Node.calc_uri(node.uri, old_child.nodename, old_child.nodetype)
+      old_child.uri = era.m.explorer.Node.calc_uri(node.uri, old_child.nodename, old_child.nodetype)
       if old_child.nodetype == "F" then
         old_child.loaded = true
       end

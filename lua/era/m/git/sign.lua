@@ -377,8 +377,7 @@ end
 ---@param end_lnum                      integer|nil
 ---@return boolean
 function M.contains_range(bufnr, start_lnum, end_lnum)
-  return signs_normal:contains(bufnr, start_lnum, end_lnum)
-    or signs_staged:contains(bufnr, start_lnum, end_lnum)
+  return signs_normal:contains(bufnr, start_lnum, end_lnum) or signs_staged:contains(bufnr, start_lnum, end_lnum)
 end
 
 return M

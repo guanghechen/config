@@ -1468,15 +1468,13 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_git_unstaged
 
-  local sub_diagnostic = era.m.lsp.diagnostic.subscribe_all(
-    stl.c.Subscriber.new({
-      on_next = function()
-        if self:isvisible() then
-          self:__render__()
-        end
-      end,
-    })
-  )
+  local sub_diagnostic = era.m.lsp.diagnostic.subscribe_all(stl.c.Subscriber.new({
+    on_next = function()
+      if self:isvisible() then
+        self:__render__()
+      end
+    end,
+  }))
   self._subscriptions[#self._subscriptions + 1] = sub_diagnostic
 end
 

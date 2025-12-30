@@ -111,28 +111,32 @@ local function trigger_gitdir_refresh()
   end
 
   debounce_timer:stop()
-  debounce_timer:start(DEBOUNCE_MS, 0, vim.schedule_wrap(function()
-    local do_head = pending_head_change ---@type boolean
-    local do_branch = pending_branch_refresh ---@type boolean
-    local do_status = pending_status_change ---@type boolean
+  debounce_timer:start(
+    DEBOUNCE_MS,
+    0,
+    vim.schedule_wrap(function()
+      local do_head = pending_head_change ---@type boolean
+      local do_branch = pending_branch_refresh ---@type boolean
+      local do_status = pending_status_change ---@type boolean
 
-    pending_head_change = false
-    pending_branch_refresh = false
-    pending_status_change = false
+      pending_head_change = false
+      pending_branch_refresh = false
+      pending_status_change = false
 
-    if do_branch then
-      refresh_branch()
-    end
+      if do_branch then
+        refresh_branch()
+      end
 
-    if do_head then
-      era.m.git.buffer.invalidate_compare_text_all()
-      era.m.git.state.clear_ignored_cache()
-      era.m.git.state.refresh_async(true)
-    elseif do_status then
-      era.m.git.buffer.mark_dirty_all()
-      era.m.git.state.refresh_async(false)
-    end
-  end))
+      if do_head then
+        era.m.git.buffer.invalidate_compare_text_all()
+        era.m.git.state.clear_ignored_cache()
+        era.m.git.state.refresh_async(true)
+      elseif do_status then
+        era.m.git.buffer.mark_dirty_all()
+        era.m.git.state.refresh_async(false)
+      end
+    end)
+  )
 end
 
 local function trigger_index_refresh()
@@ -145,15 +149,19 @@ local function trigger_index_refresh()
   end
 
   index_debounce_timer:stop()
-  index_debounce_timer:start(INDEX_DEBOUNCE_MS, 0, vim.schedule_wrap(function()
-    if not pending_index_change then
-      return
-    end
-    pending_index_change = false
+  index_debounce_timer:start(
+    INDEX_DEBOUNCE_MS,
+    0,
+    vim.schedule_wrap(function()
+      if not pending_index_change then
+        return
+      end
+      pending_index_change = false
 
-    era.m.git.buffer.invalidate_index_all()
-    era.m.git.state.refresh_async(false)
-  end))
+      era.m.git.buffer.invalidate_index_all()
+      era.m.git.state.refresh_async(false)
+    end)
+  )
 end
 
 ---@param filename                   string

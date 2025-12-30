@@ -1,9 +1,6 @@
 local __module_name__ = "era.m.ai.action" ---@type string
 
-local config = require("era.m.ai.config")
-local state = require("era.m.ai.state")
-local term = require("era.m.ai.term")
-local tmux = require("era.m.ai.tmux")
+local S = era.m.ai
 
 ---@class era.m.ai.action
 local M = {}
@@ -11,7 +8,7 @@ local M = {}
 ---@param agent                         era.m.ai.AgentName
 ---@return boolean
 function M.is_tool_installed(agent)
-  local tool = config.tools[agent]
+  local tool = S.config.tools[agent]
   return tool ~= nil and vim.fn.executable(tool.cmd) == 1
 end
 
@@ -22,7 +19,7 @@ function M.collect_items()
   local cwd = dot.path.cwd()
   local has_agent_pane = {} ---@type table<era.m.ai.AgentName, boolean>
 
-  for _, source in ipairs(state.get_attached()) do
+  for _, source in ipairs(S.state.get_attached()) do
     seen_ids[source.id] = true
     items[#items + 1] = {
       type = "running",
@@ -32,8 +29,8 @@ function M.collect_items()
     }
   end
 
-  if tmux.is_available() then
-    for _, source in ipairs(tmux.find_running_agents()) do
+  if S.tmux.is_available() then
+    for _, source in ipairs(S.tmux.find_running_agents()) do
       if not seen_ids[source.id] then
         seen_ids[source.id] = true
         items[#items + 1] = {
@@ -44,14 +41,14 @@ function M.collect_items()
         }
       end
       local pane = source.tmux_pane
-      local agent_session = tmux.get_session_name(source.agent, cwd)
+      local agent_session = S.tmux.get_session_name(source.agent, cwd)
       if pane and pane.session_name == agent_session then
         has_agent_pane[source.agent] = true
       end
     end
   end
 
-  for _, agent in ipairs(config.agents) do
+  for _, agent in ipairs(S.config.agents) do
     if not has_agent_pane[agent] then
       items[#items + 1] = {
         type = "new",
@@ -79,8 +76,8 @@ end
 ---@return nil
 function M.handle_selection(item)
   if item.type == "running" and item.source then
-    if state.is_attached(item.source) then
-      state.detach(item.source.id)
+    if S.state.is_attached(item.source) then
+      S.state.detach(item.source.id)
     else
       M.attach_to_source(item.source)
     end
@@ -89,11 +86,11 @@ function M.handle_selection(item)
 
   if item.type == "new" then
     if not item.installed then
-      local tool = config.tools[item.agent]
+      local tool = S.config.tools[item.agent]
       stl.reporter.warn({
         from = __module_name__,
         subject = "handle_selection",
-        message = string.format("%s is not installed.", config.agent_labels[item.agent]),
+        message = string.format("%s is not installed.", S.config.agent_labels[item.agent]),
         details = { url = tool and tool.url or nil },
       })
       return
@@ -105,7 +102,7 @@ end
 ---@param source                        era.m.ai.ISource
 ---@return nil
 function M.attach_to_source(source)
-  state.attach(source)
+  S.state.attach(source)
 
   local pane = source.tmux_pane
   if source.type ~= "tmux" or not pane then
@@ -118,14 +115,14 @@ function M.attach_to_source(source)
       subject = "attach_to_source",
       message = string.format(
         "Attached to external %s pane (messages will be sent via tmux).",
-        config.agent_labels[source.agent]
+        S.config.agent_labels[source.agent]
       ),
     })
     return
   end
 
   local target = pane.session_name
-  term.open({
+  S.term.open({
     uuid = string.format("ai:%s:%s", source.agent, pane.pane_id),
     agent = source.agent,
     cmd = { "env", "-u", "TMUX", "tmux", "attach-session", "-t", target },
@@ -137,7 +134,7 @@ end
 ---@param cwd                           string
 ---@return nil
 function M.create_and_attach(agent, cwd)
-  if tmux.is_available() then
+  if S.tmux.is_available() then
     M.__create_and_attach_tmux__(agent, cwd)
   else
     M.__create_and_attach_native__(agent, cwd)
@@ -148,15 +145,14 @@ end
 ---@param submit                        boolean
 ---@return nil
 function M.send_to_attached(text, submit)
-  local picker = require("era.m.ai.picker")
-  local attached = state.get_attached()
+  local attached = S.state.get_attached()
 
   if #attached == 0 then
-    picker.show_attach({
+    S.picker.show_attach({
       on_select = function(choice)
         M.handle_selection(choice)
         vim.schedule(function()
-          local new_attached = state.get_attached()
+          local new_attached = S.state.get_attached()
           if #new_attached > 0 then
             M.__send_to_sources__({ new_attached[#new_attached] }, text, submit)
           end
@@ -171,7 +167,7 @@ function M.send_to_attached(text, submit)
     return
   end
 
-  picker.show_send_target(attached, function(choices)
+  S.picker.show_send_target(attached, function(choices)
     M.__send_to_sources__(choices, text, submit)
   end)
 end
@@ -184,36 +180,35 @@ function M.send_to_source(source, text, submit)
   local payload = submit and text or (vim.trim(text) .. " ")
 
   if source.type == "tmux" and source.tmux_pane then
-    local tool = config.tools[source.agent]
+    local tool = S.config.tools[source.agent]
     local pane_id = source.tmux_pane.pane_id
     if tool and tool.vim_mode then
-      tmux.send_escape_i(pane_id)
+      S.tmux.send_escape_i(pane_id)
       vim.defer_fn(function()
-        tmux.send_text(pane_id, payload)
+        S.tmux.send_text(pane_id, payload)
         if submit then
-          tmux.send_enter(pane_id)
+          S.tmux.send_enter(pane_id)
         end
       end, 50)
       return true
     end
 
-    if not tmux.send_text(pane_id, payload) then
+    if not S.tmux.send_text(pane_id, payload) then
       return false
     end
     if submit then
-      return tmux.send_enter(pane_id)
+      return S.tmux.send_enter(pane_id)
     end
     return true
   elseif source.type == "terminal" then
-    return term.send(source.id, payload, submit)
+    return S.term.send(source.id, payload, submit)
   end
   return false
 end
 
 ---@return nil
 function M.show_attach_picker()
-  local picker = require("era.m.ai.picker")
-  picker.show_attach({
+  S.picker.show_attach({
     on_select = M.handle_selection,
     on_toggle = M.handle_selection,
   })
@@ -221,7 +216,7 @@ end
 
 ---@return nil
 function M.show_detach_picker()
-  local attached = state.get_attached()
+  local attached = S.state.get_attached()
 
   if #attached == 0 then
     stl.reporter.info({
@@ -233,21 +228,18 @@ function M.show_detach_picker()
   end
 
   if #attached == 1 then
-    state.detach(attached[1].id)
+    S.state.detach(attached[1].id)
     return
   end
 
-  local picker = require("era.m.ai.picker")
-  picker.show_detach(attached, function(choice)
-    state.detach(choice.id)
+  S.picker.show_detach(attached, function(choice)
+    S.state.detach(choice.id)
   end)
 end
 
 ---@return nil
 function M.show_prompt_picker()
-  local picker = require("era.m.ai.picker")
-
-  picker.show_prompt(function(choice, result)
+  S.picker.show_prompt(function(choice, result)
     M.send_to_attached(result.text, choice.submit)
   end)
 end
@@ -259,14 +251,14 @@ end
 ---@param cwd                           string
 ---@return nil
 function M.__create_and_attach_native__(agent, cwd)
-  local tool = config.tools[agent]
+  local tool = S.config.tools[agent]
   if not tool then
     return
   end
 
   local cmd = { tool.cmd, unpack(tool.args(cwd)) }
 
-  local termmeta = term.open({
+  local termmeta = S.term.open({
     uuid = "",
     agent = agent,
     cmd = cmd,
@@ -284,7 +276,7 @@ function M.__create_and_attach_native__(agent, cwd)
     tmux_pane = nil,
   }
 
-  state.attach(source)
+  S.state.attach(source)
 end
 
 ---@protected
@@ -292,13 +284,13 @@ end
 ---@param cwd                           string
 ---@return nil
 function M.__create_and_attach_tmux__(agent, cwd)
-  local pane = tmux.find_existing_agent_pane(agent, cwd) or tmux.create_agent_pane(agent, cwd)
+  local pane = S.tmux.find_existing_agent_pane(agent, cwd) or S.tmux.create_agent_pane(agent, cwd)
 
   if not pane then
     stl.reporter.error({
       from = __module_name__,
       subject = "create_and_attach",
-      message = string.format("Failed to create %s pane.", config.agent_labels[agent]),
+      message = string.format("Failed to create %s pane.", S.config.agent_labels[agent]),
     })
     return
   end
@@ -325,7 +317,7 @@ function M.__send_to_sources__(sources, text, submit)
   local failed = {} ---@type string[]
 
   for _, source in ipairs(sources) do
-    local agent_label = config.agent_labels[source.agent] or source.agent
+    local agent_label = S.config.agent_labels[source.agent] or source.agent
     local ok = M.send_to_source(source, text, submit)
     if ok then
       succeeded[#succeeded + 1] = agent_label

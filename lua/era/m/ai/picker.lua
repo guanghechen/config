@@ -1,7 +1,6 @@
 local __module_name__ = "era.m.ai.picker" ---@type string
 
-local config = require("era.m.ai.config")
-local state = require("era.m.ai.state")
+local S = era.m.ai
 
 ---@class era.m.ai.picker.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   any
@@ -123,9 +122,7 @@ end
 ---@param items                         era.m.ai.ISelectItem[]
 ---@return era.m.ai.picker.IItem[], integer
 local function build_attach_picker_items(items)
-  local action = require("era.m.ai.action")
-  local tmux = require("era.m.ai.tmux")
-  local current_info = tmux.get_current_info()
+  local current_info = S.tmux.get_current_info()
   local current_session = current_info and current_info.session_name or ""
   local current_window = current_info and current_info.window_name or ""
 
@@ -140,9 +137,9 @@ local function build_attach_picker_items(items)
   local other_tmux_infos = {} ---@type era.m.ai.picker.IAttachItemInfo[]
 
   for _, item in ipairs(items) do
-    local agent_label = config.agent_labels[item.agent] or item.agent
-    local attached = item.source ~= nil and state.is_attached(item.source)
-    local identifier = item.source and action.get_source_identifier(item.source) or nil
+    local agent_label = S.config.agent_labels[item.agent] or item.agent
+    local attached = item.source ~= nil and S.state.is_attached(item.source)
+    local identifier = item.source and S.action.get_source_identifier(item.source) or nil
     local pane_cwd = item.source and dot.path.shorten(item.source.cwd) or nil
 
     width_agent = math.max(width_agent, #agent_label)
@@ -160,7 +157,7 @@ local function build_attach_picker_items(items)
     elseif pane then
       local same_session = pane.session_name == current_session
       local same_window = same_session and pane.window_name == current_window
-      local is_agent_session = tmux.is_agent_session(pane.session_name)
+      local is_agent_session = S.tmux.is_agent_session(pane.session_name)
       if same_window then
         category = "same_window"
       elseif is_agent_session and not same_session then
@@ -246,8 +243,6 @@ end
 ---@param attached                      era.m.ai.IAttachedSource[]
 ---@return era.m.ai.picker.IItem[], integer
 local function build_attached_picker_items(attached)
-  local action = require("era.m.ai.action")
-
   local width_agent = 0 ---@type integer
   local width_identifier = 0 ---@type integer
 
@@ -260,8 +255,8 @@ local function build_attached_picker_items(attached)
   local item_infos = {} ---@type era.m.ai.picker.IAttachedItemInfo[]
 
   for _, source in ipairs(attached) do
-    local agent_label = config.agent_labels[source.agent] or source.agent
-    local identifier = action.get_source_identifier(source)
+    local agent_label = S.config.agent_labels[source.agent] or source.agent
+    local identifier = S.action.get_source_identifier(source)
     local pane_cwd = dot.path.shorten(source.cwd)
 
     width_agent = math.max(width_agent, #agent_label)
@@ -314,8 +309,7 @@ function M.show_attach(params)
   local on_select = params.on_select
   local on_toggle = params.on_toggle
 
-  local action = require("era.m.ai.action")
-  local items = action.collect_items()
+  local items = S.action.collect_items()
   local picker_items, width = build_attach_picker_items(items)
   local winnr = vim.api.nvim_get_current_win()
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
@@ -334,7 +328,7 @@ function M.show_attach(params)
     if item then
       ---@cast item era.m.ai.picker.IItem
       on_toggle(item.data)
-      local new_items = action.collect_items()
+      local new_items = S.action.collect_items()
       local new_picker_items = build_attach_picker_items(new_items)
       picker:reset_data({ items = new_picker_items, uuid_current = item.uuid })
     end
@@ -547,14 +541,13 @@ end
 ---@param on_select                     fun(prompt: era.m.ai.IPrompt, result: era.m.ai.IPromptRenderResult): nil
 ---@return nil
 function M.show_prompt(on_select)
-  local prompt_mod = require("era.m.ai.prompt")
-  local ctx = prompt_mod.get_ctx()
+  local ctx = S.prompt.get_ctx()
 
   local picker_items = {} ---@type era.m.ai.picker.IItem[]
   local itemmap = {} ---@type table<string, era.m.ai.IPrompt>
   local result_map = {} ---@type table<string, era.m.ai.IPromptRenderResult>
 
-  for index, prompt in ipairs(prompt_mod.list) do
+  for index, prompt in ipairs(S.prompt.list) do
     local result = prompt.render(ctx)
     if result then
       local uuid = tostring(index)

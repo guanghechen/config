@@ -336,7 +336,11 @@ function M:__profile__()
     return (a.load_time or 0) > (b.load_time or 0)
   end)
 
-  self:__append__("Total:", "m_pl_h2"):__append__(" " .. string.format("%.2fms", total_time), "m_pl_comment"):__nl__():__nl__()
+  self
+    :__append__("Total:", "m_pl_h2")
+    :__append__(" " .. string.format("%.2fms", total_time), "m_pl_comment")
+    :__nl__()
+    :__nl__()
 
   if #loaded > 0 then
     self:__append__("Startup Profile", "m_pl_h2"):__nl__()

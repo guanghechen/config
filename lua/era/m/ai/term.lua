@@ -1,5 +1,7 @@
 local __module_name__ = "era.m.ai.term" ---@type string
 
+local S = era.m.ai
+
 ---@class era.m.ai.term.IMeta
 ---@field public uuid                   string
 ---@field public agent                  era.m.ai.AgentName
@@ -171,7 +173,13 @@ local function start_job(termmeta)
         stl.reporter.error({
           from = __module_name__,
           subject = "terminal unexpected exit",
-          details = { uuid = termmeta.uuid, agent = termmeta.agent, cmd = termmeta.cmd, cwd = termmeta.cwd, code = code },
+          details = {
+            uuid = termmeta.uuid,
+            agent = termmeta.agent,
+            cmd = termmeta.cmd,
+            cwd = termmeta.cwd,
+            code = code,
+          },
         })
       end
       if termmeta.jobid == jobid then
@@ -228,8 +236,6 @@ end
 ---@param termmeta                      era.m.ai.term.IMeta
 ---@return nil
 function M.on_closed(termmeta)
-  local state = require("era.m.ai.state")
-
   if termmeta.jobid ~= nil then
     vim.fn.jobstop(termmeta.jobid)
     termmeta.jobid = nil
@@ -243,7 +249,7 @@ function M.on_closed(termmeta)
     _current_uuid = nil
   end
 
-  state.detach_by_term_uuid(termmeta.uuid)
+  S.state.detach_by_term_uuid(termmeta.uuid)
 
   if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
     stl.nvim.buf.close(bufnr)

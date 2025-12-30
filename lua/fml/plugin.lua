@@ -107,4 +107,4 @@ for _, raw_spec in ipairs(raw_specs) do
   specs[#specs + 1] = spec
 end
 
-require("era.m.plugin").setup(specs)
+era.m.plugin.setup(specs)

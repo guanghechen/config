@@ -3,7 +3,7 @@ local txt = stl.nvim.fn.txt
 
 ---@type string
 local fn_show_detach = dot.G.register_anonymous_fn(function()
-  require("era.m.ai.action").show_detach_picker()
+  era.m.ai.action.show_detach_picker()
 end)
 
 ---@class era.m.nvimbar.component.ai
@@ -12,18 +12,15 @@ local M = {}
 ---@param position                      stl.e.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.status(position)
-  local state = require("era.m.ai.state")
-  local config = require("era.m.ai.config")
-
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "ai:status",
     atomic = true,
     condition = function()
-      return state.get_attached_count() > 0
+      return era.m.ai.state.get_attached_count() > 0
     end,
     render = function()
-      local attached = state.get_attached()
+      local attached = era.m.ai.state.get_attached()
       local count = #attached
 
       if count == 0 then
@@ -32,7 +29,7 @@ function M.status(position)
 
       local agent_counts = {} ---@type table<string, integer>
       for _, source in ipairs(attached) do
-        local label = config.agent_labels[source.agent] or source.agent
+        local label = era.m.ai.config.agent_labels[source.agent] or source.agent
         agent_counts[label] = (agent_counts[label] or 0) + 1
       end
 

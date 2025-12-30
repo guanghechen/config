@@ -1,4 +1,4 @@
-local convert = require("era.m.colorpicker.convert")
+local S = era.m.colorpicker
 
 ---@param r                             integer
 ---@param g                             integer
@@ -43,11 +43,11 @@ M.input = {
     bar_name = { "H", "S", "L" },
     max = { 360, 100, 100 },
     from_rgb = function(r, g, b)
-      local h, s, l = convert.rgb2hsl(r, g, b)
+      local h, s, l = S.convert.rgb2hsl(r, g, b)
       return { h, s, l }
     end,
     to_rgb = function(value)
-      return convert.hsl2rgb(value[1], value[2], value[3])
+      return S.convert.hsl2rgb(value[1], value[2], value[3])
     end,
   },
   ---@type era.m.colorpicker.IInputMode
@@ -56,11 +56,11 @@ M.input = {
     bar_name = { "H", "S", "V" },
     max = { 360, 100, 100 },
     from_rgb = function(r, g, b)
-      local h, s, v = convert.rgb2hsv(r, g, b)
+      local h, s, v = S.convert.rgb2hsv(r, g, b)
       return { h, s, v }
     end,
     to_rgb = function(value)
-      return convert.hsv2rgb(value[1], value[2], value[3])
+      return S.convert.hsv2rgb(value[1], value[2], value[3])
     end,
   },
 }
@@ -72,7 +72,7 @@ M.output = {
     name = "HEX",
     str = function(r, g, b, alpha)
       if alpha then
-        return string.format("#%02x%02x%02x%02x", r, g, b, convert.round(alpha * 255 / 100))
+        return string.format("#%02x%02x%02x%02x", r, g, b, S.convert.round(alpha * 255 / 100))
       end
       return string.format("#%02x%02x%02x", r, g, b)
     end,
@@ -91,7 +91,7 @@ M.output = {
   hsl = {
     name = "HSL",
     str = function(r, g, b, alpha)
-      local h, s, l = convert.rgb2hsl(r, g, b)
+      local h, s, l = S.convert.rgb2hsl(r, g, b)
       if alpha then
         return string.format("hsl(%d %d%% %d%% / %d%%)", h, s, l, alpha)
       end
@@ -102,7 +102,7 @@ M.output = {
   hsv = {
     name = "HSV",
     str = function(r, g, b, alpha)
-      local h, s, v = convert.rgb2hsv(r, g, b)
+      local h, s, v = S.convert.rgb2hsv(r, g, b)
       if alpha then
         return string.format("hsv(%d %d%% %d%% / %d%%)", h, s, v, alpha)
       end

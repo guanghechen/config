@@ -118,8 +118,8 @@ function M.new(props)
 
   local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
-  local c = require("era.m.nvimbar").component
-  local Nvimbar = require("era.m.nvimbar").Nvimbar
+  local c = era.m.nvimbar.component
+  local Nvimbar = era.m.nvimbar.Nvimbar
 
   local self = setmetatable({}, M)
 

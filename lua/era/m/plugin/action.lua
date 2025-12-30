@@ -275,49 +275,45 @@ function M.__update_plugins__(specs, on_progress, on_done)
             task.message = "Checking out..."
             on_progress()
 
-            vim.system(
-              { "git", "checkout", target_commit },
-              { cwd = path, text = true },
-              function(checkout_result)
-                vim.schedule(function()
-                  if checkout_result.code ~= 0 then
-                    task.status = "error"
-                    task.message = "Checkout failed"
-                    preserve_lock(spec)
+            vim.system({ "git", "checkout", target_commit }, { cwd = path, text = true }, function(checkout_result)
+              vim.schedule(function()
+                if checkout_result.code ~= 0 then
+                  task.status = "error"
+                  task.message = "Checkout failed"
+                  preserve_lock(spec)
+                  completed = completed + 1
+                  on_progress()
+                  if completed == total then
+                    State.update_lock(new_lock)
+                    on_done()
+                  end
+                  return
+                end
+
+                task.status = "done"
+                task.message = "Updated"
+                new_lock[spec.name] = { branch = branch, commit = target_commit }
+
+                if info.commit then
+                  M.__fetch_commits__(path, info.commit, target_commit, function(commits)
+                    task.commits = commits
                     completed = completed + 1
                     on_progress()
                     if completed == total then
                       State.update_lock(new_lock)
                       on_done()
                     end
-                    return
+                  end)
+                else
+                  completed = completed + 1
+                  on_progress()
+                  if completed == total then
+                    State.update_lock(new_lock)
+                    on_done()
                   end
-
-                  task.status = "done"
-                  task.message = "Updated"
-                  new_lock[spec.name] = { branch = branch, commit = target_commit }
-
-                  if info.commit then
-                    M.__fetch_commits__(path, info.commit, target_commit, function(commits)
-                      task.commits = commits
-                      completed = completed + 1
-                      on_progress()
-                      if completed == total then
-                        State.update_lock(new_lock)
-                        on_done()
-                      end
-                    end)
-                  else
-                    completed = completed + 1
-                    on_progress()
-                    if completed == total then
-                      State.update_lock(new_lock)
-                      on_done()
-                    end
-                  end
-                end)
-              end
-            )
+                end
+              end)
+            end)
           end)
         end
       )

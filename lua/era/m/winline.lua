@@ -1,9 +1,6 @@
 ---@class era.m.winline
 local M = {}
 
-local c = require("era.m.nvimbar").component
-local Nvimbar = require("era.m.nvimbar").Nvimbar
-
 local txt = stl.nvim.fn.txt
 local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
 
@@ -20,7 +17,7 @@ local function resolve_nvimbar(winnr)
   local winline = meta ~= nil and meta.winline or nil ---@type dot.win.IWinline|nil
   if winline == nil or winline.nvimbar:isdisposed() then
     local nvimbar = nil ---@type era.m.nvimbar.Nvimbar|nil
-    nvimbar = Nvimbar.new({
+    nvimbar = era.m.nvimbar.Nvimbar.new({
       name = "winline_" .. winnr,
       comp_sep = "",
       comp_sep_hlname = "f_wl_bg",
@@ -61,13 +58,13 @@ local function resolve_nvimbar(winnr)
     winline.lsp_symbols = {}
     nvimbar
       ---
-      :place("left", c.dir.path(position), 95)
-      :place("left", c.file.name(position), 100)
-      :place("left", c.lsp.symbols(position), 90)
+      :place("left", era.m.nvimbar.component.dir.path(position), 95)
+      :place("left", era.m.nvimbar.component.file.name(position), 100)
+      :place("left", era.m.nvimbar.component.lsp.symbols(position), 90)
       ---
-      :place("center", c.devmode.render_count(position), 100)
+      :place("center", era.m.nvimbar.component.devmode.render_count(position), 100)
     ---
-    -- :place("right", c.dirpath_prominent(position), 100)
+    -- :place("right", era.m.nvimbar.component.dirpath_prominent(position), 100)
   end
 
   if winline ~= nil then

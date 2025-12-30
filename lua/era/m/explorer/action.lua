@@ -1,3 +1,5 @@
+local S = era.m.explorer
+
 ---@class era.m.explorer.Action
 ---@field protected _ctx                era.m.explorer.action.IContext
 local M = {}
@@ -977,7 +979,7 @@ end
 ---@return nil
 function M:send_to_quickfix(root)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = require("era.m.explorer.node").collect_selected(root) ---@type era.m.explorer.Node[]
+  local selected_nodes = era.m.explorer.Node.collect_selected(root) ---@type era.m.explorer.Node[]
 
   if #selected_nodes == 0 then
     local uri = ctx.get_cursor_uri() ---@type string|nil
@@ -1203,7 +1205,8 @@ function M:__transfer_selected__(mode, initial_target)
   local verb_inf = is_move and "move" or "copy" ---@type string
 
   local cwd = dot.path.cwd() ---@type string
-  local default_target = initial_target and dot.path.relative(cwd, initial_target) or dot.path.relative(cwd, common_ancestor) ---@type string
+  local default_target = initial_target and dot.path.relative(cwd, initial_target)
+    or dot.path.relative(cwd, common_ancestor) ---@type string
   local ns = vim.api.nvim_create_namespace("explorer_" .. mode .. "_preview") ---@type integer
 
   ---@return integer
