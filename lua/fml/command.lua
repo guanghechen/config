@@ -6,61 +6,61 @@ command
   .implement({
     uuid = K.ai.edit.uuid,
     action = function()
-      require("fml.action.ai").edit()
+      era.m.ai.action.edit()
     end,
   })
   .implement({
     uuid = K.ai.attach_agent.uuid,
     action = function()
-      require("fml.action.ai").attach_agent()
+      era.m.ai.action.show_attach_picker()
     end,
   })
   .implement({
     uuid = K.ai.detach_agent.uuid,
     action = function()
-      require("fml.action.ai").detach_agent()
+      era.m.ai.action.show_detach_picker()
     end,
   })
   .implement({
     uuid = K.ai.submit_buffer.uuid,
     action = function()
-      require("fml.action.ai").submit_buffer()
+      era.m.ai.action.submit_buffer()
     end,
   })
   .implement({
     uuid = K.ai.submit_selection.uuid,
     action = function()
-      require("fml.action.ai").submit_selection()
+      era.m.ai.action.submit_selection()
     end,
   })
   .implement({
     uuid = K.ai.send_buffer.uuid,
     action = function()
-      require("fml.action.ai").send_buffer()
+      era.m.ai.action.send_buffer()
     end,
   })
   .implement({
     uuid = K.ai.send_selection.uuid,
     action = function()
-      require("fml.action.ai").send_selection()
+      era.m.ai.action.send_selection()
     end,
   })
   .implement({
     uuid = K.ai.send_this.uuid,
     action = function()
-      require("fml.action.ai").send_this()
+      era.m.ai.action.send_buffer()
     end,
   })
   .implement({
     uuid = K.ai.send_file.uuid,
     action = function()
-      require("fml.action.ai").send_file()
+      era.m.ai.action.send_file()
     end,
   })
   .implement({
     uuid = K.ai.select_prompt.uuid,
     action = function()
-      require("fml.action.ai").select_prompt()
+      era.m.ai.action.show_prompt_picker()
     end,
   })
 
