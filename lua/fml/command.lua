@@ -997,19 +997,19 @@ command
   .implement({
     uuid = K.session.restore.uuid,
     action = function()
-      require("fml.action.session").restore()
+      dot.session.restore()
     end,
   })
   .implement({
     uuid = K.session.restore_autosaved.uuid,
     action = function()
-      require("fml.action.session").restore_autosaved()
+      dot.session.restore_autosaved()
     end,
   })
   .implement({
     uuid = K.session.save.uuid,
     action = function()
-      require("fml.action.session").save()
+      dot.session.save()
     end,
   })
 
