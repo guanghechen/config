@@ -764,7 +764,7 @@ command
   .implement({
     uuid = K.lsp.restart.uuid,
     action = function()
-      require("fml.action.lsp.server").restart()
+      era.m.lsp.fn.restart_server()
     end,
   })
   .implement({

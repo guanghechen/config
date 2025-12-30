@@ -1,6 +1,12 @@
 local __module_name__ = "era.m.lsp.fn" ---@type string
 
----! Check if cursor is within range
+---@class era.m.lsp.fn
+local M = {}
+
+----------------------------------------------------------------------------------------------------
+-- Symbol
+----------------------------------------------------------------------------------------------------
+
 ---@param cursor                        era.m.lsp.ISymbolPos
 ---@param range                         { start: era.m.lsp.ISymbolPos, end: era.m.lsp.ISymbolPos }
 ---@return boolean
@@ -11,10 +17,6 @@ local function is_within_range(cursor, range)
     and (cursor.line < finish.line or (cursor.line == finish.line and cursor.character <= finish.character))
 end
 
----@class era.m.lsp.fn
-local M = {}
-
----! Find the symbol path recursively
 ---@param cursor                        era.m.lsp.ISymbolPos
 ---@param symbols                       any[]|nil
 ---@return any[]|nil
@@ -47,6 +49,10 @@ function M.find_symbol_path(cursor, symbols)
   end
   return nil
 end
+
+----------------------------------------------------------------------------------------------------
+-- Locate
+----------------------------------------------------------------------------------------------------
 
 ---@param dirpath                       string
 ---@param config_filenames              string[]
@@ -155,6 +161,31 @@ function M.locate_mason_pkg_path(pkg, pkg_path, silent)
   end
 
   return filepath
+end
+
+----------------------------------------------------------------------------------------------------
+-- Server
+----------------------------------------------------------------------------------------------------
+
+---@return nil
+function M.restart_server()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local clients = vim.lsp.get_clients({ bufnr = bufnr }) ---@type vim.lsp.Client[]
+
+  stl.reporter.info({
+    from = __module_name__,
+    subject = "restart_server",
+  })
+
+  for _, client in ipairs(clients) do
+    if client.name ~= "copilot" then
+      client:stop(true)
+    end
+  end
+
+  vim.defer_fn(function()
+    vim.cmd("edit")
+  end, 100)
 end
 
 return M
