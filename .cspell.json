@@ -6,7 +6,9 @@
     "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": ["~/.config/cspell/cspell.json"],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -322,6 +324,7 @@
     "clippy",
     "closeoff",
     "closeopen",
+    "cmdheight",
     "cmdline",
     "cnext",
     "codeaction",
@@ -481,6 +484,7 @@
     "fzfrc",
     "getbufvar",
     "getchar",
+    "getcharstr",
     "getcmdpos",
     "getcmdtype",
     "getcompletion",
@@ -501,9 +505,9 @@
     "github",
     "gitrepo",
     "gitstatus",
-    "glsl",
     "globpath",
     "globset",
+    "glsl",
     "gomod",
     "goodnode",
     "goodroot",
@@ -577,6 +581,8 @@
     "keymap",
     "keymaps",
     "keysheet",
+    "keystr",
+    "keytrans",
     "kindname",
     "langserver",
     "languagetree",
@@ -625,9 +631,11 @@
     "lwidths",
     "macchiato",
     "macroman",
+    "maparg",
     "mapclear",
     "mapleader",
     "maplocalleader",
+    "mapmode",
     "matchadd",
     "matchdelete",
     "matchparen",
@@ -993,4 +1001,3 @@
     "zindex"
   ]
 }
-

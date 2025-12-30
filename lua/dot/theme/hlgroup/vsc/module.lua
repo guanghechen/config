@@ -248,6 +248,23 @@ function M.gen_hlgroup_map(context)
     m_fvo_scope = { fg = u.red, bold = true },
     m_fvo_type = { fg = u.orange },
     m_fvo_value = { fg = u.fg3 },
+
+    ---module/wk
+    m_wk_desc = { fg = c.text },
+    m_wk_group = { fg = c.accentPurple, italic = true },
+    m_wk_icon_azure = { fg = c.accentBlue },
+    m_wk_icon_blue = { fg = c.accentBlue },
+    m_wk_icon_cyan = { fg = c.accentAqua },
+    m_wk_icon_green = { fg = c.success },
+    m_wk_icon_grey = { fg = c.textDim },
+    m_wk_icon_orange = { fg = c.accentOrange },
+    m_wk_icon_purple = { fg = c.accentPurple },
+    m_wk_icon_red = { fg = c.accentRed },
+    m_wk_icon_yellow = { fg = c.accentYellow },
+    m_wk_key = { fg = c.accentBlue, bold = true },
+    m_wk_pressed = { fg = c.accentRed, bold = true },
+    m_wk_normal = { fg = c.text, bg = u.bg1 },
+    m_wk_separator = { fg = c.textMuted },
   }
 end
 

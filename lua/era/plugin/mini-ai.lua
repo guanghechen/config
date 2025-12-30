@@ -111,7 +111,7 @@ return {
           end
         end
       end
-      require("which-key").add(ret, { notify = false })
+      era.m.wk.add(ret, { notify = false })
     end)
   end,
 }

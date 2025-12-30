@@ -46,6 +46,8 @@ vim.schedule(function()
   era.m.python_venv.dressing()
   era.m.select.dressing()
   era.m.image.dressing()
+  era.m.wk.dressing()
+
   pcall(require, "ark.vendor.local.dressing")
 
   dot.setup_breakpoints()

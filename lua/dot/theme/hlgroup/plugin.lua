@@ -194,23 +194,6 @@ function M.default_gen_hlgroup_map(context)
     ---! snacks.nvim
     SnacksPickerLabel = { fg = c.brightBlue, bold = true },
     SnacksPickerFile = { fg = c.brightAqua },
-
-    ---! which-key.nvim
-    WhichKey = { fg = c.blue },
-    WhichKeyDesc = { fg = c.fg3 },
-    WhichKeyGroup = { fg = c.blue },
-    WhichKeyIconAzure = { fg = c.blue },
-    WhichKeyIconBlue = { fg = c.blue },
-    WhichKeyIconCyan = { fg = c.aqua },
-    WhichKeyIconGreen = { fg = c.green },
-    WhichKeyIconGrey = { fg = c.bg4 },
-    WhichKeyIconOrange = { fg = c.orange },
-    WhichKeyIconPurple = { fg = c.purple },
-    WhichKeyIconRed = { fg = c.red },
-    WhichKeyIconYellow = { fg = c.yellow },
-    WhichKeyNormal = { fg = c.fg1, bg = t and c.none or c.bg2 },
-    WhichKeySeparator = { fg = c.bg4 },
-    WhichKeyValue = { fg = c.green },
   }
 end
 

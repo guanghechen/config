@@ -135,65 +135,66 @@ dot.command.execute("Fbufclose")
 
 **Theme System (`dot.theme.*`):**
 
-| Component      | Description                                                         |
-|:---------------|:--------------------------------------------------------------------|
+| Component      | Description                                                                      |
+|:---------------|:---------------------------------------------------------------------------------|
 | `scheme/`      | 18 color schemes (catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc) |
-| `hlgroup/`     | Highlight groups with theme-specific overrides                       |
+| `hlgroup/`     | Highlight groups with theme-specific overrides                                   |
 
 **State Management (`dot.state.*`):**
 
-| Module       | Description                                                          |
-|:-------------|:---------------------------------------------------------------------|
+| Module       | Description                                                              |
+|:-------------|:-------------------------------------------------------------------------|
 | `status`     | Global status (dirtiers, disposables, observables for LSP/mode messages) |
-| `maximized`  | Window maximize state                                                 |
-| `notepad/`   | Notepad widget state                                                  |
-| `qflist`     | Quickfix list state                                                   |
-| `widget`     | Active widget tracking                                                |
+| `maximized`  | Window maximize state                                                    |
+| `notepad/`   | Notepad widget state                                                     |
+| `qflist`     | Quickfix list state                                                      |
+| `widget`     | Active widget tracking                                                   |
 
 #### `lua/era/` - Business Layer
 
 **Modules (`era/m/`):**
 
-| Module        | Description                                                          |
-|:--------------|:---------------------------------------------------------------------|
-| `ai/`         | AI integration (config, prompt, types)                               |
-| `clipboard/`  | Cross-platform clipboard (mac, win, wsl)                             |
-| `colorpicker/`| Color picker UI with format conversion                               |
-| `explorer/`   | File explorer (node, view, types)                                    |
-| `git/`        | Git integration (state, buffer, repo, types)                         |
-| `lsp/`        | LSP utilities (types, symbol path finding)                           |
-| `nvimbar/`    | Status/tab/window bar components                                     |
-| `picker/`     | Picker UI (finder, preview, composer)                                |
-| `plugin/`     | Custom plugin loader (loader, state, view, types)                    |
-| `searcher/`   | Search and replace UI (finder, preview, composer)                    |
-| `term/`       | Terminal management                                                   |
-| `winsep/`     | Window separator styling                                              |
+| Module        | Description                                                    |
+|:--------------|:---------------------------------------------------------------|
+| `ai/`         | AI integration (config, prompt, types)                         |
+| `clipboard/`  | Cross-platform clipboard (mac, win, wsl)                       |
+| `colorpicker/`| Color picker UI with format conversion                         |
+| `explorer/`   | File explorer (node, view, types)                              |
+| `git/`        | Git integration (state, buffer, repo, types)                   |
+| `lsp/`        | LSP utilities (types, symbol path finding)                     |
+| `nvimbar/`    | Status/tab/window bar components                               |
+| `era/m/wk/`   | Key binding manager (WhichKey)                                 |
+| `picker/`     | Picker UI (finder, preview, composer)                          |
+| `plugin/`     | Custom plugin loader (loader, state, view, types)              |
+| `searcher/`   | Search and replace UI (finder, preview, composer)              |
+| `term/`       | Terminal management                                            |
+| `winsep/`     | Window separator styling                                       |
 
 **Functions (`era/fn/`):**
 
 | Function               | Description                                           |
 |:-----------------------|:------------------------------------------------------|
-| `find-buffers`         | Find open buffers                                      |
-| `find-files`           | Find files in workspace                                |
-| `find-diagnostics`     | Find diagnostics                                       |
-| `find-lsp-symbols`     | Find LSP symbols                                       |
-| `search-in-files`      | Search and replace in files                            |
-| `search-in-buffer`     | Search in current buffer                               |
-| `pick_win`             | Window picker                                          |
-| `rename`               | File/symbol rename                                     |
-| `run_code`             | Code runner                                            |
+| `find-buffers`         | Find open buffers                                     |
+| `find-files`           | Find files in workspace                               |
+| `find-diagnostics`     | Find diagnostics                                      |
+| `find-lsp-symbols`     | Find LSP symbols                                      |
+| `search-in-files`      | Search and replace in files                           |
+| `search-in-buffer`     | Search in current buffer                              |
+| `pick_win`             | Window picker                                         |
+| `rename`               | File/symbol rename                                    |
+| `run_code`             | Code runner                                           |
 
 **Views (`era/view/`):**
 
-| View         | Description                                                          |
-|:-------------|:---------------------------------------------------------------------|
-| `act`        | Action board                                                          |
-| `keysheet`   | Keymap reference                                                      |
-| `plainfile`  | Plain file renderer                                                   |
-| `printer`    | Generic text printer                                                  |
-| `setting`    | Settings UI                                                           |
-| `textarea`   | Text area component                                                   |
-| `tree`       | Tree view renderer                                                    |
+| View         | Description                                                     |
+|:-------------|:----------------------------------------------------------------|
+| `act`        | Action board                                                    |
+| `keysheet`   | Keymap reference                                                |
+| `plainfile`  | Plain file renderer                                             |
+| `printer`    | Generic text printer                                            |
+| `setting`    | Settings UI                                                     |
+| `textarea`   | Text area component                                             |
+| `tree`       | Tree view renderer                                              |
 
 **Plugin Configs (`era/plugin/`):**
 

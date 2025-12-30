@@ -93,11 +93,11 @@ local specs = {
     opts = { ... },
   },
   {
-    name = "which-key.nvim",
-    main = "which-key",
+    name = "mini.surround",
+    main = "mini.surround",
     event = { "VeryLazy" },
     config = function(spec, opts)
-      require("which-key").setup(opts)
+      require("mini.surround").setup(opts)
     end,
   },
 }
@@ -187,7 +187,7 @@ Compatible with lazy.nvim's `lazy-lock.json`:
 ---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   { name = "flash.nvim", main = "flash", cond = conds.common },
-  { name = "which-key.nvim", main = "which-key", cond = conds.common },
+  { name = "mini.surround", main = "mini.surround", cond = conds.common },
   -- ...
 }
 

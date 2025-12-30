@@ -258,6 +258,23 @@ function M.default_gen_hlgroup_map(context)
     m_fvo_scope = { fg = u.red, bold = true },
     m_fvo_type = { fg = u.orange },
     m_fvo_value = { fg = u.fg3 },
+
+    ---module/wk
+    m_wk_desc = { fg = u.fg3 },
+    m_wk_group = { fg = u.blue },
+    m_wk_icon_azure = { fg = u.blue },
+    m_wk_icon_blue = { fg = u.blue },
+    m_wk_icon_cyan = { fg = u.aqua },
+    m_wk_icon_green = { fg = u.green },
+    m_wk_icon_grey = { fg = u.bg4 },
+    m_wk_icon_orange = { fg = u.orange },
+    m_wk_icon_purple = { fg = u.purple },
+    m_wk_icon_red = { fg = u.red },
+    m_wk_icon_yellow = { fg = u.yellow },
+    m_wk_key = { fg = u.blue },
+    m_wk_pressed = { fg = u.red, bold = true },
+    m_wk_normal = { fg = u.fg1, bg = t and u.none or u.bg2 },
+    m_wk_separator = { fg = u.bg4 },
   }
 end
 

@@ -79,6 +79,7 @@ Three global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 | `era/m/searcher/` | Search and replace UI                                               |
 | `era/m/explorer/` | File explorer                                                       |
 | `era/m/nvimbar/`  | Status/tab/window bar                                               |
+| `era/m/wk/`       | Key binding manager (WhichKey)                                      |
 | `era/m/git/`      | Git integration                                                     |
 | `era/m/plugin/`   | Custom plugin loader                                                |
 | `era/fn/*`        | Action functions (find-files, search-in-files, etc.)                |

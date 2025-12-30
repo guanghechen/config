@@ -113,6 +113,7 @@ local __m__mods = {
   winline = "era.m.winline",
   winpicker = "era.m.winpicker",
   winsep = "era.m.winsep",
+  wk = "era.m.wk",
 }
 
 ---@class era.m
@@ -154,6 +155,7 @@ local __m__mods = {
 ---@field public winline                era.m.winline
 ---@field public winpicker              era.m.winpicker
 ---@field public winsep                 era.m.winsep
+---@field public wk                     era.m.wk
 local m = setmetatable({
   __mods = __m__mods,
 }, {

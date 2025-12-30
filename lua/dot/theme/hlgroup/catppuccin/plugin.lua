@@ -193,23 +193,6 @@ function M.gen_hlgroup_map(context)
     TreesitterContextBottom = { underline = true, sp = c.blue },
     TreesitterContextLineNumber = { fg = c.peach, bg = treesitter_context_bg },
     TreesitterContextLineNumberBottom = { underline = true, sp = c.blue },
-
-    ---! which-key.nvim
-    WhichKey = { fg = c.blue, bold = true },
-    WhichKeyDesc = { fg = c.subtext0 },
-    WhichKeyGroup = { fg = c.mauve, italic = true },
-    WhichKeyIconAzure = { fg = c.sky },
-    WhichKeyIconBlue = { fg = c.blue },
-    WhichKeyIconCyan = { fg = c.sky },
-    WhichKeyIconGreen = { fg = c.green },
-    WhichKeyIconGrey = { fg = c.overlay2 },
-    WhichKeyIconOrange = { fg = c.peach },
-    WhichKeyIconPurple = { fg = c.mauve },
-    WhichKeyIconRed = { fg = c.red },
-    WhichKeyIconYellow = { fg = c.yellow },
-    WhichKeyNormal = { fg = c.text, bg = cs.mix(t and c.none or c.surface0, c.surface1, 65) },
-    WhichKeySeparator = { fg = c.overlay1 },
-    WhichKeyValue = { fg = c.green },
   }
 end
 

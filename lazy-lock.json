@@ -20,6 +20,5 @@
   "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "36fcb4a4238928f0b627e1ab84ade0acc1facc2c" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a" },
   "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "ecd03f5811eb5c66d2fa420b79121b866feecd82" },
-  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "07d088bf8bdadd159eb807b90eaee86a4778383f" },
-  "which-key.nvim": { "branch": "nvim@which-key.nvim", "commit": "3aab2147e74890957785941f0c1ad87d0a44c15a" }
+  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "07d088bf8bdadd159eb807b90eaee86a4778383f" }
 }

@@ -77,6 +77,40 @@ M.listchars = {
   trail = "•",
 }
 
+---@class stl.icon.keycode
+M.keycode = {
+  Up = "",
+  Down = "",
+  Left = "",
+  Right = "",
+  C = "󰘴",
+  M = "󰘵",
+  D = "󰘳",
+  S = "󰘶",
+  ["C-a"] = "󰘳",
+  ["C-A"] = "󰘳",
+  CR = "󰌑",
+  Esc = "󱊷",
+  ScrollWheelDown = "󱕐",
+  ScrollWheelUp = "󱕑",
+  NL = "󰌑",
+  BS = "󰁮",
+  Space = "󱁐",
+  Tab = "",
+  F1 = "󱊫",
+  F2 = "󱊬",
+  F3 = "󱊭",
+  F4 = "󱊮",
+  F5 = "󱊯",
+  F6 = "󱊰",
+  F7 = "󱊱",
+  F8 = "󱊲",
+  F9 = "󱊳",
+  F10 = "󱊴",
+  F11 = "󱊵",
+  F12 = "󱊶",
+}
+
 ---@class stl.icon.symbols
 M.symbols = {
   flag_buffer = "",
@@ -351,6 +385,8 @@ M.ui = {
   Note = "󰍨",
   Outgoing = "󰏻",
   Package = "",
+  Plugin = "",
+  Paste = "󰆒",
   Pencil = "󰏫",
   Perf = "󰅒",
   Play = "",
@@ -368,6 +404,7 @@ M.ui = {
   Sort = "",
   Spell = "󰓆",
   Tab = "",
+  TabPage = "󰓩",
   Table = "",
   Telescope = "",
   Terminal = "",
