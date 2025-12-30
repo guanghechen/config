@@ -85,6 +85,7 @@ local __m__mods = {
   image = "era.m.image",
   input = "era.m.input",
   lsp = "era.m.lsp",
+  maximize = "era.m.maximize",
   notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
   picker = "era.m.picker",
@@ -120,6 +121,7 @@ local __m__mods = {
 ---@field public image                  era.m.image
 ---@field public input                  era.m.input
 ---@field public lsp                    era.m.lsp
+---@field public maximize               era.m.maximize
 ---@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar
 ---@field public picker                 era.m.picker

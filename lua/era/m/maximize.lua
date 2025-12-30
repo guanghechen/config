@@ -1,7 +1,77 @@
-local WINHIGHLIGHT = "NormalFloat:f_maximize_normal,FloatBorder:f_maximize_normal"
+local WINHIGHLIGHT_FLOAT = "NormalFloat:f_maximize_float_normal,FloatBorder:f_maximize_float_border"
+local WINHIGHLIGHT_NORMAL = "NormalFloat:f_maximize_normal,FloatBorder:f_maximize_normal"
 
----@class fml.action.toggle.maximize.normal
+---@class era.m.maximize
 local M = {}
+
+----------------------------------------------------------------------------------------------------
+-- Float window maximize
+----------------------------------------------------------------------------------------------------
+
+---@param original                      dot.state.maximized.IOriginalFloatWindow|nil
+---@return boolean
+local function restore_float(original)
+  if original == nil then
+    dot.state.maximized.clear_original_float()
+    return false
+  end
+
+  local winnr = original.winnr ---@type integer
+  if winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    dot.state.maximized.clear_original_float()
+    return false
+  end
+
+  if not stl.nvim.win.is_float(winnr) then
+    dot.state.maximized.clear_original_float()
+    return false
+  end
+
+  local cfg = vim.deepcopy(original.wincfg) ---@type vim.api.keyset.win_config
+  local ok = pcall(vim.api.nvim_win_set_config, winnr, cfg) ---@type boolean
+  vim.wo[winnr].winblend = original.winblend or 0
+  vim.wo[winnr].winhighlight = original.winhighlight or ""
+  dot.state.maximized.clear_original_float()
+  return ok
+end
+
+---@param winnr                         integer
+---@return nil
+local function maximize_float(winnr)
+  local original = dot.state.maximized.get_original_float() ---@type dot.state.maximized.IOriginalFloatWindow|nil
+  if original ~= nil then
+    if original.winnr == winnr then
+      restore_float(original)
+      return
+    end
+    restore_float(original)
+  end
+
+  local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
+  local winblend = vim.wo[winnr].winblend or 0 ---@type integer
+  local winhighlight = vim.wo[winnr].winhighlight or "" ---@type string
+
+  dot.state.maximized.set_original_float({
+    winnr = winnr,
+    winblend = winblend,
+    winhighlight = winhighlight,
+    wincfg = vim.deepcopy(wincfg),
+  })
+
+  local cfg = dot.state.maximized.compute_float_maximized_wincfg(wincfg) ---@type vim.api.keyset.win_config
+  local ok = pcall(vim.api.nvim_win_set_config, winnr, cfg) ---@type boolean
+  if not ok then
+    restore_float(dot.state.maximized.get_original_float())
+    return
+  end
+
+  vim.wo[winnr].winblend = dot.context.theme.get_float_winblend()
+  vim.wo[winnr].winhighlight = WINHIGHLIGHT_FLOAT
+end
+
+----------------------------------------------------------------------------------------------------
+-- Normal window maximize
+----------------------------------------------------------------------------------------------------
 
 ---@return { row: integer, height: integer }
 local function calc_main_area()
@@ -12,7 +82,7 @@ local function calc_main_area()
 end
 
 ---@return nil
-local function close()
+local function close_normal()
   local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original == nil then
     return
@@ -32,10 +102,10 @@ end
 
 ---@param winnr                         integer
 ---@return nil
-function M.maximize(winnr)
+local function maximize_normal(winnr)
   local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
   if original ~= nil and vim.api.nvim_win_is_valid(original.float_winnr) then
-    close()
+    close_normal()
     return
   end
 
@@ -55,7 +125,7 @@ function M.maximize(winnr)
   })
 
   local wo = vim.wo[float_winnr]
-  wo.winhighlight = WINHIGHLIGHT
+  wo.winhighlight = WINHIGHLIGHT_NORMAL
   wo.winblend = dot.context.theme.get_float_winblend()
   wo.number = true
   wo.relativenumber = dot.context.option.relativenumber:snapshot()
@@ -110,7 +180,7 @@ function M.maximize(winnr)
 
       local cfg = vim.api.nvim_win_get_config(cur_winnr) ---@type vim.api.keyset.win_config
       if cfg.relative == "" then
-        vim.schedule(close)
+        vim.schedule(close_normal)
       end
     end,
   })
@@ -118,7 +188,7 @@ function M.maximize(winnr)
   vim.api.nvim_create_autocmd("WinClosed", {
     group = augroup,
     pattern = tostring(float_winnr),
-    callback = close,
+    callback = close_normal,
   })
 
   vim.api.nvim_create_autocmd("VimResized", {
@@ -141,6 +211,30 @@ function M.maximize(winnr)
   })
 end
 
+----------------------------------------------------------------------------------------------------
+-- Public API
+----------------------------------------------------------------------------------------------------
+
+---@return nil
+function M.toggle()
+  local winnr = dot.state.status.get_winnr_command() ---@type integer|nil
+  if winnr == nil or winnr < 1 or not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local original_normal = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
+  if original_normal ~= nil and original_normal.float_winnr == winnr then
+    close_normal()
+    return
+  end
+
+  if stl.nvim.win.is_float(winnr) then
+    maximize_float(winnr)
+  else
+    maximize_normal(winnr)
+  end
+end
+
 ---@return boolean
 function M.is_zoomed()
   local original = dot.state.maximized.get_original_normal() ---@type dot.state.maximized.IOriginalNormalWindow|nil
@@ -158,7 +252,7 @@ end
 
 ---@return nil
 function M.close()
-  close()
+  close_normal()
 end
 
 return M

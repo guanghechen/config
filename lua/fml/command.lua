@@ -1254,7 +1254,7 @@ command
   .implement({
     uuid = K.toggle.maximize.uuid,
     action = function()
-      require("fml.action.toggle.maximize").maximize()
+      era.m.maximize.toggle()
     end,
   })
   .implement({
