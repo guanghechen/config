@@ -226,7 +226,7 @@ function M.rename()
     return
   end
 
-  ---@type era.m.view.input.IOptions
+  ---@type era.m.input.IOptions
   local input_opts = {
     prompt = "Enter new terminal name: ",
     default = termmeta.name,

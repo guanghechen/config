@@ -2,7 +2,6 @@
 local __mods = {
   Act = "era.m.view.act",
   Fileinfo = "era.m.view.fileinfo",
-  Input = "era.m.view.input",
   Keysheet = "era.m.view.keysheet",
   Plainfile = "era.m.view.plainfile",
   Printer = "era.m.view.printer",
@@ -16,7 +15,6 @@ local __mods = {
 ---@field public __mods                 era.m.view.__mods
 ---@field public Act                    era.m.view.Act
 ---@field public Fileinfo               era.m.view.Fileinfo
----@field public Input                  era.m.view.Input
 ---@field public Keysheet               era.m.view.Keysheet
 ---@field public Plainfile              era.m.view.Plainfile
 ---@field public Printer                era.m.view.Printer

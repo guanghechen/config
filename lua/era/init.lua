@@ -79,6 +79,7 @@ local __m__mods = {
   illuminate = "era.m.illuminate",
   im = "era.m.im",
   image = "era.m.image",
+  input = "era.m.input",
   lsp = "era.m.lsp",
   notifier = "era.m.notifier",
   nvimbar = "era.m.nvimbar",
@@ -112,6 +113,7 @@ local __m__mods = {
 ---@field public illuminate             era.m.illuminate
 ---@field public im                     era.m.im
 ---@field public image                  era.m.image
+---@field public input                  era.m.input
 ---@field public lsp                    era.m.lsp
 ---@field public notifier               era.m.notifier
 ---@field public nvimbar                era.m.nvimbar

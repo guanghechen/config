@@ -302,7 +302,7 @@ function M.rename()
     return
   end
 
-  ---@type era.m.view.input.IOptions
+  ---@type era.m.input.IOptions
   local input_opts = {
     prompt = "Rename notepad item:",
     default = item.name,
