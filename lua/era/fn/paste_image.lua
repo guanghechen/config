@@ -71,7 +71,7 @@ local function paste()
 
   local input_winnr ---@type integer
 
-  input_winnr = era.view.Input.open({
+  input_winnr = era.m.input.open({
     prompt = "Save image to",
     default = placeholder,
     relative = "editor",

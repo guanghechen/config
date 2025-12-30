@@ -83,7 +83,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type era.plugin.ISpec
+---@type era.m.plugin.IPluginSpec
 M.spec = {
   name = "diffview.nvim",
   cmd = { "DiffviewOpen", "DiffviewFileHistory" },

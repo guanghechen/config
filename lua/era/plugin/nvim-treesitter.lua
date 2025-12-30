@@ -255,7 +255,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type era.plugin.ISpec
+---@type era.m.plugin.IPluginSpec
 M.spec = {
   name = "nvim-treesitter",
   lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline

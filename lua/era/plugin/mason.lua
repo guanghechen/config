@@ -142,7 +142,7 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
----@type era.plugin.ISpec
+---@type era.m.plugin.IPluginSpec
 M.spec = {
   name = "mason.nvim",
   cmd = { "Mason", "MasonInstall", "MasonInstallAll", "MasonInstallAllForce", "MasonUpdate" },

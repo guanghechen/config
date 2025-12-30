@@ -1,5 +1,3 @@
-local S = era.m.explorer
-
 ---@class era.m.explorer.Action
 ---@field protected _ctx                era.m.explorer.action.IContext
 local M = {}
@@ -1207,8 +1205,9 @@ function M:__transfer_selected__(mode, initial_target)
   local verb_inf = is_move and "move" or "copy" ---@type string
 
   local cwd = dot.path.cwd() ---@type string
+  ---@type string
   local default_target = initial_target and dot.path.relative(cwd, initial_target)
-    or dot.path.relative(cwd, common_ancestor) ---@type string
+    or dot.path.relative(cwd, common_ancestor)
   local ns = vim.api.nvim_create_namespace("explorer_" .. mode .. "_preview") ---@type integer
 
   ---@return integer
