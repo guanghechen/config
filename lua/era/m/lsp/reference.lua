@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "fml.action.lsp.reference" ---@type string
+local __module_name__ = "era.m.lsp.reference" ---@type string
 
----@class fml.action.lsp.reference.IItem
+---@class era.m.lsp.reference.IItem
 ---@field public filepath               string
 ---@field public lnum                   integer
 ---@field public col                    integer
@@ -41,7 +41,7 @@ local picker = era.m.picker.FiletreeComposer.new({
 ---@param method                        string
 ---@param buf_flagname                  string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, items: fml.action.lsp.reference.IItem[]|nil): nil
+---@param callback                      fun(ok: boolean, items: era.m.lsp.reference.IItem[]|nil): nil
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
 local function fetch_data(method, buf_flagname, additional_params, callback)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -68,7 +68,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
 
   vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
     local errors = {} ---@type string[]
-    local items = {} ---@type fml.action.lsp.reference.IItem[]
+    local items = {} ---@type era.m.lsp.reference.IItem[]
 
     local uri_cur = params.textDocument.uri ---@type string
     local line_cur = params.position.line ---@type integer
@@ -106,11 +106,11 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
               local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
               local lnum = range.start.line + 1 ---@type integer
               local col = range.start.character ---@type integer
-              local last_item = items[#items] ---@type fml.action.lsp.reference.IItem|nil
+              local last_item = items[#items] ---@type era.m.lsp.reference.IItem|nil
               if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
                 local lnum_end = range["end"].line + 1 ---@type integer
 
-                ---@type fml.action.lsp.reference.IItem
+                ---@type era.m.lsp.reference.IItem
                 local item = {
                   filepath = filepath,
                   lnum = lnum,
@@ -142,7 +142,7 @@ local function fetch_data(method, buf_flagname, additional_params, callback)
     end
 
     if #items == 1 then
-      local item = items[1] ---@type fml.action.lsp.reference.IItem
+      local item = items[1] ---@type era.m.lsp.reference.IItem
       dot.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
       callback(true, { item })
       return
@@ -224,7 +224,7 @@ local function focus(title, method, buf_flagname, additional_params)
   end)
 end
 
----@class fml.action.lsp
+---@class era.m.lsp.reference
 local M = {}
 
 ---@return nil

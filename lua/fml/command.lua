@@ -726,25 +726,25 @@ command
   .implement({
     uuid = K.lsp.goto_definitions.uuid,
     action = function()
-      require("fml.action.lsp.reference").goto_definitions()
+      era.m.lsp.reference.goto_definitions()
     end,
   })
   .implement({
     uuid = K.lsp.goto_implementations.uuid,
     action = function()
-      require("fml.action.lsp.reference").goto_implementations()
+      era.m.lsp.reference.goto_implementations()
     end,
   })
   .implement({
     uuid = K.lsp.goto_references.uuid,
     action = function()
-      require("fml.action.lsp.reference").goto_references()
+      era.m.lsp.reference.goto_references()
     end,
   })
   .implement({
     uuid = K.lsp.goto_type_definitions.uuid,
     action = function()
-      require("fml.action.lsp.reference").goto_type_definitions()
+      era.m.lsp.reference.goto_type_definitions()
     end,
   })
   .implement({

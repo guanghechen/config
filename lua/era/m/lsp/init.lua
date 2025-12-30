@@ -6,6 +6,7 @@ local __mods = {
   diagnostic = "era.m.lsp.diagnostic",
   event = "era.m.lsp.event",
   fn = "era.m.lsp.fn",
+  reference = "era.m.lsp.reference",
 }
 
 ---@class era.m.lsp
@@ -14,6 +15,7 @@ local __mods = {
 ---@field public diagnostic             era.m.lsp.diagnostic
 ---@field public event                  era.m.lsp.event
 ---@field public fn                     era.m.lsp.fn
+---@field public reference              era.m.lsp.reference
 local M = setmetatable({
   __mods = __mods,
 }, {
