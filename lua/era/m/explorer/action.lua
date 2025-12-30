@@ -82,8 +82,10 @@ function M:collapse_or_parent()
 
   local parent_uri = ctx.get_parent_uri(uri) ---@type string
   if parent_uri ~= root_uri then
+    ctx.tree:toggle_expanded(parent_uri, false, "collapse")
     ctx.tree.o_cursor_uri:next(parent_uri)
     ctx.sync_cursor_to_uri(parent_uri)
+    ctx.refresh()
   end
 end
 
