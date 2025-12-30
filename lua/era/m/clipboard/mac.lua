@@ -6,7 +6,7 @@ local M = {}
 ---@param cmd                           string
 ---@return string
 local function format_command(cmd)
-  return dot.shell.format_command(cmd) ---@type string
+  return stl.shell.format_command(cmd) ---@type string
 end
 
 ---@return string|nil

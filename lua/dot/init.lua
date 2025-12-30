@@ -141,7 +141,6 @@ local __mods = {
   G = "dot.G",
   path = "dot.path",
   session = "dot.session",
-  shell = "dot.shell",
   tab = "dot.tab",
   uri = "dot.uri",
   var = "dot.var",
@@ -161,7 +160,6 @@ local __mods = {
 ---
 ---@field public buf                    dot.buf
 ---@field public path                   dot.path
----@field public shell                  dot.shell
 ---@field public tab                    dot.tab
 ---@field public var                    dot.var
 ---@field public win                    dot.win

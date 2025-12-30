@@ -1,6 +1,6 @@
-local __module_name__ = "dot.shell" ---@type string
+local __module_name__ = "stl.shell" ---@type string
 
----@class dot.shell
+---@class stl.shell
 ---@field public format_command         fun(command?: string): string
 local M = {}
 
