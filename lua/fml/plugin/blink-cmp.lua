@@ -345,7 +345,7 @@ return {
           },
           dict = {
             name = "dict",
-            module = "fml.cmp.dict",
+            module = "fml.plugin.blink-cmp.dict",
             score_offset = 95,
           },
           lsp = {
@@ -365,7 +365,7 @@ return {
           },
           path_at = {
             name = "path_at",
-            module = "fml.cmp.path",
+            module = "fml.plugin.blink-cmp.path",
             score_offset = 210,
             timeout_ms = 2000,
             opts = {
@@ -380,7 +380,7 @@ return {
           },
           slash = {
             name = "slash",
-            module = "fml.cmp.slash",
+            module = "fml.plugin.blink-cmp.slash",
             score_offset = 220,
           },
           snippets = {
