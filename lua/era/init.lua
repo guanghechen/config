@@ -85,6 +85,7 @@ local __m__mods = {
   nvimbar = "era.m.nvimbar",
   picker = "era.m.picker",
   plugin = "era.m.plugin",
+  python_venv = "era.m.python_venv",
   scroll = "era.m.scroll",
   searcher = "era.m.searcher",
   statuscolumn = "era.m.statuscolumn",
@@ -119,6 +120,7 @@ local __m__mods = {
 ---@field public nvimbar                era.m.nvimbar
 ---@field public picker                 era.m.picker
 ---@field public plugin                 era.m.plugin
+---@field public python_venv            era.m.python_venv
 ---@field public scroll                 era.m.scroll
 ---@field public searcher               era.m.searcher
 ---@field public statuscolumn           era.m.statuscolumn

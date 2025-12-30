@@ -1,4 +1,4 @@
-local __module_name__ = "fml.dressing.python_venv" ---@type string
+local __module_name__ = "era.m.python_venv" ---@type string
 
 ---@param text                          string
 ---@return string
@@ -81,7 +81,7 @@ end
 -- Keeps track of old system path so we can remove it when adding a new one
 local _current_bin_path = nil ---@type string|nil
 
----@class fml.dressing.python_venv
+---@class era.m.python_venv
 local M = {}
 
 -- Manages the paths to python since they are different on Linux, Mac and Windows
@@ -173,7 +173,7 @@ end
 local initialized = false ---@type boolean
 
 ---@return nil
-local function setup()
+local function __setup__()
   if not initialized then
     initialized = true
 
@@ -186,10 +186,15 @@ local function setup()
   end
 end
 
-vim.api.nvim_create_autocmd("FileType", {
-  group = stl.nvim.fn.augroup("filetype_python_venv"),
-  pattern = "python",
-  callback = setup,
-})
+----------------------------------------------------------------------------------------------------
+
+---@return nil
+function M.dressing()
+  vim.api.nvim_create_autocmd("FileType", {
+    group = stl.nvim.fn.augroup("filetype_python_venv"),
+    pattern = "python",
+    callback = __setup__,
+  })
+end
 
 return M
