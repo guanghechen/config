@@ -293,67 +293,67 @@ command
   .implement({
     uuid = K.diagnostic.goto_next.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_next()
+      era.m.lsp.diagnostic.goto_next()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_next_error.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_next_error()
+      era.m.lsp.diagnostic.goto_next_error()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_next_warn.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_next_warn()
+      era.m.lsp.diagnostic.goto_next_warn()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_next_hint.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_next_hint()
+      era.m.lsp.diagnostic.goto_next_hint()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_next_quickfix.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_next_quickfix()
+      era.m.lsp.diagnostic.goto_next_quickfix()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_prev.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_prev()
+      era.m.lsp.diagnostic.goto_prev()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_prev_error.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_prev_error()
+      era.m.lsp.diagnostic.goto_prev_error()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_prev_warn.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_prev_warn()
+      era.m.lsp.diagnostic.goto_prev_warn()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_prev_hint.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_prev_hint()
+      era.m.lsp.diagnostic.goto_prev_hint()
     end,
   })
   .implement({
     uuid = K.diagnostic.goto_prev_quickfix.uuid,
     action = function()
-      require("fml.action.diagnostic").goto_prev_quickfix()
+      era.m.lsp.diagnostic.goto_prev_quickfix()
     end,
   })
   .implement({
     uuid = K.diagnostic.line.uuid,
     action = function()
-      require("fml.action.diagnostic").line()
+      era.m.lsp.diagnostic.line()
     end,
   })
   .implement({
@@ -365,7 +365,7 @@ command
   .implement({
     uuid = K.diagnostic.to_md.uuid,
     action = function()
-      require("fml.action.diagnostic").to_md()
+      era.m.lsp.diagnostic.to_md()
     end,
   })
 
