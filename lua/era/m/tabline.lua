@@ -85,8 +85,8 @@ function M.dressing()
         vim.o.showtabline = 2
 
         if last_showtabline == 0 then
-          if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
-            dot.widget.explorer.widget:render_winbar()
+          if era.widget.explorer.widget ~= nil and era.widget.explorer.widget:isvisible() then
+            era.widget.explorer.widget:render_winbar()
           end
         end
 
@@ -96,8 +96,8 @@ function M.dressing()
         vim.o.showtabline = 0
 
         if last_showtabline ~= 0 then
-          if dot.widget.explorer.widget ~= nil and dot.widget.explorer.widget:isvisible() then
-            dot.widget.explorer.widget:render_winbar()
+          if era.widget.explorer.widget ~= nil and era.widget.explorer.widget:isvisible() then
+            era.widget.explorer.widget:render_winbar()
           end
 
           local winnrs = vim.api.nvim_list_wins() ---@type integer[]

@@ -1,6 +1,6 @@
 local Widget = require("era.m.explorer.widget")
 
----@class dot.widget.explorer
+---@class era.widget.explorer
 local M = {}
 
 stl.fn.observe({

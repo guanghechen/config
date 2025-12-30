@@ -135,30 +135,6 @@ local theme = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class dot.widget.__mods
-local __widget__mods = {
-  explorer = "dot.widget.explorer",
-  Notepad = "dot.widget.notepad",
-}
-
----@class dot.widget
----@field public __mods                 dot.widget.__mods
----@field public explorer               dot.widget.explorer
----@field public Notepad                dot.widget.Notepad
-local widget = setmetatable({
-  __mods = __widget__mods,
-}, {
-  __index = function(t, k)
-    local m = __widget__mods[k] ---@type string|nil
-    if m == nil then
-      return rawget(t, k)
-    end
-    return require(m)
-  end,
-})
-
-----------------------------------------------------------------------------------------------------
-
 ---@class dot.__mods
 local __mods = {
   buf = "dot.buf",
@@ -184,7 +160,6 @@ local __mods = {
 ---@field public state                  dot.state
 ---@field public theme                  dot.theme
 ---@field public uri                    dot.uri
----@field public widget                 dot.widget
 ---
 ---@field public buf                    dot.buf
 ---@field public path                   dot.path
@@ -202,7 +177,6 @@ local M = setmetatable({
   __mods = __mods,
   state = state,
   theme = theme,
-  widget = widget,
 }, {
   __index = function(t, k)
     local m = __mods[k] ---@type string|nil

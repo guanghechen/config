@@ -2,8 +2,8 @@
 
 local __module_name__ = "fml.action.notepad" ---@type string
 
----@type dot.widget.Notepad
-local widget = dot.widget.Notepad.new({ name = "notepad.default" })
+---@type era.widget.Notepad
+local widget = era.widget.Notepad.new({ name = "notepad.default" })
 
 local dirty_data = true ---@type boolean
 local o_search_pattern = stl.c.Observable.from_value("") ---@type stl.c.Observable

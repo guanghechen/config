@@ -245,7 +245,7 @@ for index = 1, 9 do
   }
 end
 
----@class dot.widget.notepad.IProps
+---@class era.widget.notepad.IProps
 ---@field public name                   ?string
 ---@field public title                  ?string
 ---@field public bufname                ?string
@@ -259,7 +259,7 @@ end
 ---@field public win_opts               ?table<string, any>
 ---@field public source                 ?dot.t.INotepadSource
 
----@class dot.widget.Notepad : dot.t.IWidget
+---@class era.widget.Notepad : dot.t.IWidget
 ---@field public name                   string|nil
 ---@field protected title               string
 ---@field protected bufname             string
@@ -282,8 +282,8 @@ end
 local M = {}
 M.__index = M
 
----@param props                         dot.widget.notepad.IProps|nil
----@return dot.widget.Notepad
+---@param props                         era.widget.notepad.IProps|nil
+---@return era.widget.Notepad
 function M.new(props)
   props = props or {}
 

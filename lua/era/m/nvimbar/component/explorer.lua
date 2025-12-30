@@ -25,11 +25,11 @@ end
 
 ---@return integer
 local function get_explorer_width()
-  if dot.widget.explorer.widget == nil then
+  if era.widget.explorer.widget == nil then
     return 0
   end
 
-  local winnr = dot.widget.explorer.widget:get_winnr() ---@type integer|nil
+  local winnr = era.widget.explorer.widget:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return 0
   end
@@ -232,8 +232,8 @@ function M.tabline(position)
   end) or "dot.G.noop"
 
   local cb_flag_hidden = dot.G.register_anonymous_fn(function()
-    if dot.widget.explorer.widget ~= nil then
-      local tree = dot.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
+    if era.widget.explorer.widget ~= nil then
+      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
       local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
       o_flag_hidden:next(not o_flag_hidden:snapshot())
     else
@@ -247,8 +247,8 @@ function M.tabline(position)
     local root_uri ---@type string
     local root_path ---@type string
 
-    if dot.widget.explorer.widget ~= nil then
-      local tree = dot.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
+    if era.widget.explorer.widget ~= nil then
+      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
       root_uri = tree.o_root_uri:snapshot() ---@type string
       root_path = yoz.uri.to_filepath(root_uri) or "" ---@type string
     else
@@ -283,8 +283,8 @@ function M.tabline(position)
   local function get_flags_text()
     local show_hidden ---@type boolean
 
-    if dot.widget.explorer.widget ~= nil then
-      local tree = dot.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
+    if era.widget.explorer.widget ~= nil then
+      local tree = era.widget.explorer.widget:get_tree() ---@type era.m.explorer.Tree
       local o_flag_hidden = tree.o_flag_hidden ---@type stl.c.Observable
       show_hidden = o_flag_hidden:snapshot()
     else

@@ -188,14 +188,40 @@ local view = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.widget.__mods
+local __widget__mods = {
+  explorer = "era.widget.explorer",
+  Notepad = "era.widget.notepad",
+}
+
+---@class era.widget
+---@field public __mods                 era.widget.__mods
+---@field public explorer               era.widget.explorer
+---@field public Notepad                era.widget.Notepad
+local widget = setmetatable({
+  __mods = __widget__mods,
+}, {
+  __index = function(t, k)
+    local mod = __widget__mods[k] ---@type string|nil
+    if mod == nil then
+      return rawget(t, k)
+    end
+    return require(mod)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class era
 ---@field public fn                     era.fn
 ---@field public m                      era.m
 ---@field public view                   era.view
+---@field public widget                 era.widget
 local M = {
   fn = fn,
   m = m,
   view = view,
+  widget = widget,
 }
 
 return M

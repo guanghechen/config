@@ -37,7 +37,7 @@ local fn_switch_source_registry = {}
 local M = {}
 
 ---@param position                      stl.e.NvimbarPositionEnum
----@param notepad                       dot.widget.Notepad
+---@param notepad                       era.widget.Notepad
 ---@return era.m.nvimbar.IRawComponent
 function M.items(position, notepad)
   local hln_button = position .. "_notepad_button" ---@type string
@@ -283,7 +283,7 @@ function M.add_button(position)
 end
 
 ---@param position                      stl.e.NvimbarPositionEnum
----@param notepad                       dot.widget.Notepad
+---@param notepad                       era.widget.Notepad
 ---@return era.m.nvimbar.IRawComponent
 function M.source(position, notepad)
   local hln_source = position .. "_notepad_source" ---@type string
