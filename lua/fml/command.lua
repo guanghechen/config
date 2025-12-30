@@ -264,19 +264,19 @@ command
   .implement({
     uuid = K.copy.filepath.uuid,
     action = function(arg)
-      require("fml.action.copy").copy_filepath(arg)
+      era.m.copy.copy_filepath(arg)
     end,
   })
   .implement({
     uuid = K.copy.filepath_absolute.uuid,
     action = function()
-      require("fml.action.copy").copy_filepath_absolute()
+      era.m.copy.copy_filepath_absolute()
     end,
   })
   .implement({
     uuid = K.copy.filepath_relative.uuid,
     action = function()
-      require("fml.action.copy").copy_filepath_relative()
+      era.m.copy.copy_filepath_relative()
     end,
   })
 
@@ -284,7 +284,7 @@ command
 command.implement({
   uuid = K.copy.char_under_cursor.uuid,
   action = function()
-    require("fml.action.copy").copy_char_under_cursor()
+    era.m.copy.copy_char_under_cursor()
   end,
 })
 

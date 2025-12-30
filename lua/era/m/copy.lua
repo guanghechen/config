@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.copy" ---@type string
+local __module_name__ = "era.m.copy" ---@type string
 
 ---@param candidate                     dot.command.definitions.copy.Scope
 ---@param filepath                      string
@@ -38,7 +38,7 @@ local function copy_current_filepath(candidate, filepath)
   end
 end
 
----@class fml.action.copy
+---@class era.m.copy
 local M = {}
 
 ---@return nil
