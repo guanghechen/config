@@ -1,10 +1,10 @@
 ---@diagnostic disable: invisible
-local __module_name__ = "fml.action.win_history" ---@type string
+local __module_name__ = "era.widget.win-history" ---@type string
 
----@class fml.action.win_history.IItem : era.m.picker.composer.list.IItem
----@field public data                   fml.action.win_history.IItemData
+---@class era.widget.win_history.IItem : era.m.picker.composer.list.IItem
+---@field public data                   era.widget.win_history.IItemData
 
----@class fml.action.win_history.IItemData
+---@class era.widget.win_history.IItemData
 ---@field public ordinal                integer
 ---@field public bufnr                  integer|nil
 ---@field public filepath               string|nil
@@ -25,7 +25,7 @@ end
 ---@return era.m.picker.composer.list.IResetData
 local function fetch_data(winnr_sourcefile)
   local cwd = dot.path.cwd() ---@type string
-  local items = {} ---@type fml.action.win_history.IItem[]
+  local items = {} ---@type era.widget.win_history.IItem[]
   local uuid_present = nil ---@type string|nil
 
   local meta = dot.win.resolve(winnr_sourcefile, false) ---@type dot.win.IMeta|nil
@@ -62,7 +62,7 @@ local function fetch_data(winnr_sourcefile)
         },
       }
 
-      ---@type fml.action.win_history.IItem
+      ---@type era.widget.win_history.IItem
       local item = {
         uuid = uuid,
         text = relative_filepath,
@@ -94,7 +94,7 @@ local function fetch_data(winnr_sourcefile)
           },
         }
 
-        ---@type fml.action.win_history.IItem
+        ---@type era.widget.win_history.IItem
         local item = {
           uuid = uuid,
           text = relative_filepath,
@@ -142,10 +142,10 @@ local picker = era.m.picker.ListComposer.new({
     local cwd = dot.path.cwd() ---@type string
 
     local itemmap = composer._itemmap ---@type table<string, era.m.picker.composer.list.IItem>
-    ---@cast itemmap                    table<string, fml.action.win_history.IItem>
+    ---@cast itemmap                    table<string, era.widget.win_history.IItem>
 
     for _, match in ipairs(matches) do
-      local item = itemmap[match.uuid] ---@type fml.action.win_history.IItem
+      local item = itemmap[match.uuid] ---@type era.widget.win_history.IItem
       local relative_filepath = dot.path.relative(cwd, item.data.filepath, "/") ---@type string
       local text_displayed = string.format("%s %s %s", item.uuid, item.data.icon, relative_filepath) ---@type string
       lines[#lines + 1] = text_displayed
@@ -234,7 +234,7 @@ local picker = era.m.picker.ListComposer.new({
   end,
 })
 
----@class fml.action.win
+---@class era.widget.win_history
 local M = {}
 
 ---@return nil

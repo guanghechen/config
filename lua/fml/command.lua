@@ -1425,19 +1425,19 @@ command
   .implement({
     uuid = K.win.history.uuid,
     action = function()
-      require("fml.action.win_history").history()
+      era.widget.win_history.history()
     end,
   })
   .implement({
     uuid = K.win.history_backward.uuid,
     action = function()
-      require("fml.action.win_history").history_backward()
+      era.widget.win_history.history_backward()
     end,
   })
   .implement({
     uuid = K.win.history_forward.uuid,
     action = function()
-      require("fml.action.win_history").history_forward()
+      era.widget.win_history.history_forward()
     end,
   })
 
