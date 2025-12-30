@@ -69,25 +69,25 @@ command
   .implement({
     uuid = K.buf.close.uuid,
     action = function()
-      require("fml.action.buf").close()
+      era.nvim.buf.close()
     end,
   })
   .implement({
     uuid = K.buf.close_to_leftest.uuid,
     action = function()
-      require("fml.action.buf").close_to_leftest()
+      era.nvim.buf.close_to_leftest()
     end,
   })
   .implement({
     uuid = K.buf.close_to_rightest.uuid,
     action = function()
-      require("fml.action.buf").close_to_rightest()
+      era.nvim.buf.close_to_rightest()
     end,
   })
   .implement({
     uuid = K.buf.close_others.uuid,
     action = function()
-      require("fml.action.buf").close_others()
+      era.nvim.buf.close_others()
     end,
   })
 
@@ -97,7 +97,7 @@ for index = 1, 49, 1 do
   command.implement({
     uuid = K.buf["focus_" .. bufid].uuid,
     action = function()
-      require("fml.action.buf").focus(index)
+      era.nvim.buf.focus(index)
     end,
   })
 end
@@ -105,13 +105,13 @@ for index = 1, 9, 1 do
   command.implement({
     uuid = K.buf["focus_left_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf").focus_left(index)
+      era.nvim.buf.focus_left(index)
     end,
   })
   command.implement({
     uuid = K.buf["focus_right_" .. tostring(index)].uuid,
     action = function()
-      require("fml.action.buf").focus_right(index)
+      era.nvim.buf.focus_right(index)
     end,
   })
 end
@@ -122,7 +122,7 @@ command
     action = function(args)
       local bufnr = tonumber(args) ---@type integer|nil
       if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-        require("fml.action.buf").open(bufnr)
+        era.nvim.buf.open(bufnr)
       end
     end,
   })
@@ -131,7 +131,7 @@ command
     action = function(args)
       local bufid = tonumber(args) ---@type integer|nil
       if bufid ~= nil then
-        require("fml.action.buf").focus(bufid)
+        era.nvim.buf.focus(bufid)
       end
     end,
   })
@@ -139,14 +139,14 @@ command
     uuid = K.buf.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf").focus_left(ok and step or nil)
+      era.nvim.buf.focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.buf.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.buf").focus_right(ok and step or nil)
+      era.nvim.buf.focus_right(ok and step or nil)
     end,
   })
 
@@ -154,7 +154,7 @@ command
 command.implement({
   uuid = K.buf.new.uuid,
   action = function()
-    require("fml.action.buf").new()
+    era.nvim.buf.new()
   end,
 })
 
@@ -162,7 +162,7 @@ command.implement({
 command.implement({
   uuid = K.buf.pin.uuid,
   action = function()
-    require("fml.action.buf").toggle_pin()
+    era.nvim.buf.toggle_pin()
   end,
 })
 
@@ -171,13 +171,13 @@ command
   .implement({
     uuid = K.buf.save.uuid,
     action = function(args)
-      require("fml.action.buf").save(args)
+      era.nvim.buf.save(args)
     end,
   })
   .implement({
     uuid = K.buf.save_no_format.uuid,
     action = function()
-      require("fml.action.buf").save("noformat")
+      era.nvim.buf.save("noformat")
     end,
   })
 
@@ -186,13 +186,13 @@ command
   .implement({
     uuid = K.buf.swap_left.uuid,
     action = function()
-      require("fml.action.buf").swap_left()
+      era.nvim.buf.swap_left()
     end,
   })
   .implement({
     uuid = K.buf.swap_right.uuid,
     action = function()
-      require("fml.action.buf").swap_right()
+      era.nvim.buf.swap_right()
     end,
   })
 
@@ -1018,25 +1018,25 @@ command
   .implement({
     uuid = K.tab.close.uuid,
     action = function()
-      require("fml.action.tab").close()
+      era.nvim.tab.close()
     end,
   })
   .implement({
     uuid = K.tab.close_to_leftest.uuid,
     action = function()
-      require("fml.action.tab").close_to_leftest()
+      era.nvim.tab.close_to_leftest()
     end,
   })
   .implement({
     uuid = K.tab.close_to_rightest.uuid,
     action = function()
-      require("fml.action.tab").close_to_rightest()
+      era.nvim.tab.close_to_rightest()
     end,
   })
   .implement({
     uuid = K.tab.close_others.uuid,
     action = function()
-      require("fml.action.tab").close_others()
+      era.nvim.tab.close_others()
     end,
   })
 
@@ -1045,7 +1045,7 @@ for i = 1, 10, 1 do
   command.implement({
     uuid = K.tab["focus_" .. tostring(i)].uuid,
     action = function()
-      require("fml.action.tab").focus(i)
+      era.nvim.tab.focus(i)
     end,
   })
 end
@@ -1056,7 +1056,7 @@ command
     action = function(args)
       local tabid = tonumber(args) ---@type integer|nil
       if tabid ~= nil then
-        require("fml.action.tab").focus(tabid)
+        era.nvim.tab.focus(tabid)
       end
     end,
   })
@@ -1064,14 +1064,14 @@ command
     uuid = K.tab.focus_left.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab").focus_left(ok and step or nil)
+      era.nvim.tab.focus_left(ok and step or nil)
     end,
   })
   .implement({
     uuid = K.tab.focus_right.uuid,
     action = function(args)
       local ok, step = pcall(tonumber, args)
-      require("fml.action.tab").focus_right(ok and step or nil)
+      era.nvim.tab.focus_right(ok and step or nil)
     end,
   })
 
@@ -1080,13 +1080,13 @@ command
   .implement({
     uuid = K.tab.new.uuid,
     action = function()
-      require("fml.action.tab").new()
+      era.nvim.tab.new()
     end,
   })
   .implement({
     uuid = K.tab.new_with_buf.uuid,
     action = function()
-      require("fml.action.tab").new_with_buf()
+      era.nvim.tab.new_with_buf()
     end,
   })
 
@@ -1371,13 +1371,13 @@ command
   .implement({
     uuid = K.win.close.uuid,
     action = function()
-      require("fml.action.win").close()
+      era.nvim.win.close()
     end,
   })
   .implement({
     uuid = K.win.close_others.uuid,
     action = function()
-      require("fml.action.win").close_others()
+      era.nvim.win.close_others()
     end,
   })
 
@@ -1386,37 +1386,37 @@ command
   .implement({
     uuid = K.win.focus_top.uuid,
     action = function()
-      require("fml.action.win").focus_top()
+      era.nvim.win.focus_top()
     end,
   })
   .implement({
     uuid = K.win.focus_right.uuid,
     action = function()
-      require("fml.action.win").focus_right()
+      era.nvim.win.focus_right()
     end,
   })
   .implement({
     uuid = K.win.focus_bottom.uuid,
     action = function()
-      require("fml.action.win").focus_bottom()
+      era.nvim.win.focus_bottom()
     end,
   })
   .implement({
     uuid = K.win.focus_left.uuid,
     action = function()
-      require("fml.action.win").focus_left()
+      era.nvim.win.focus_left()
     end,
   })
   .implement({
     uuid = K.win.focus_prev.uuid,
     action = function()
-      require("fml.action.win").focus_prev()
+      era.nvim.win.focus_prev()
     end,
   })
   .implement({
     uuid = K.win.focus_next.uuid,
     action = function()
-      require("fml.action.win").focus_next()
+      era.nvim.win.focus_next()
     end,
   })
 
@@ -1445,7 +1445,7 @@ command
 command.implement({
   uuid = K.win.mark_sourcefile.uuid,
   action = function()
-    require("fml.action.win").mark_sourcefile()
+    era.nvim.win.mark_sourcefile()
   end,
 })
 
@@ -1454,19 +1454,19 @@ command
   .implement({
     uuid = K.win.focus.uuid,
     action = function()
-      require("fml.action.win").picker_focus()
+      era.nvim.win.picker_focus()
     end,
   })
   .implement({
     uuid = K.win.project.uuid,
     action = function()
-      require("fml.action.win").picker_project()
+      era.nvim.win.picker_project()
     end,
   })
   .implement({
     uuid = K.win.swap.uuid,
     action = function()
-      require("fml.action.win").picker_swap()
+      era.nvim.win.picker_swap()
     end,
   })
 
@@ -1475,25 +1475,25 @@ command
   .implement({
     uuid = K.win.resize_horizontal_minus.uuid,
     action = function()
-      require("fml.action.win").resize_horizontal_minus()
+      era.nvim.win.resize_horizontal_minus()
     end,
   })
   .implement({
     uuid = K.win.resize_horizontal_plus.uuid,
     action = function()
-      require("fml.action.win").resize_horizontal_plus()
+      era.nvim.win.resize_horizontal_plus()
     end,
   })
   .implement({
     uuid = K.win.resize_vertical_minus.uuid,
     action = function()
-      require("fml.action.win").resize_vertical_minus()
+      era.nvim.win.resize_vertical_minus()
     end,
   })
   .implement({
     uuid = K.win.resize_vertical_plus.uuid,
     action = function()
-      require("fml.action.win").resize_vertical_plus()
+      era.nvim.win.resize_vertical_plus()
     end,
   })
 
@@ -1502,25 +1502,25 @@ command
   .implement({
     uuid = K.win.split_above.uuid,
     action = function()
-      require("fml.action.win").split_above()
+      era.nvim.win.split_above()
     end,
   })
   .implement({
     uuid = K.win.split_right.uuid,
     action = function()
-      require("fml.action.win").split_right()
+      era.nvim.win.split_right()
     end,
   })
   .implement({
     uuid = K.win.split_below.uuid,
     action = function()
-      require("fml.action.win").split_below()
+      era.nvim.win.split_below()
     end,
   })
   .implement({
     uuid = K.win.split_left.uuid,
     action = function()
-      require("fml.action.win").split_left()
+      era.nvim.win.split_left()
     end,
   })
 

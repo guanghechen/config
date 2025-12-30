@@ -1,6 +1,6 @@
-local __module_name__ = "fml.action.tab" ---@type string
+local __module_name__ = "era.nvim.tab" ---@type string
 
----@class fml.action.tab
+---@class era.nvim.tab
 local M = {}
 
 ----------------------------------------------------------------------------------------------------

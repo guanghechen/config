@@ -1,6 +1,6 @@
-local __module_name__ = "fml.action.win" ---@type string
+local __module_name__ = "era.nvim.win" ---@type string
 
----@class fml.action.win
+---@class era.nvim.win
 ---@field public navigate               fun(direction: "p"|"n"|"h"|"j"|"k"|"l"): nil
 local M = {}
 

@@ -166,6 +166,32 @@ local m = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.nvim.__mods
+local __nvim__mods = {
+  buf = "era.nvim.buf",
+  tab = "era.nvim.tab",
+  win = "era.nvim.win",
+}
+
+---@class era.nvim
+---@field public __mods                 era.nvim.__mods
+---@field public buf                    era.nvim.buf
+---@field public tab                    era.nvim.tab
+---@field public win                    era.nvim.win
+local nvim = setmetatable({
+  __mods = __nvim__mods,
+}, {
+  __index = function(t, k)
+    local mod = __nvim__mods[k] ---@type string|nil
+    if mod == nil then
+      return rawget(t, k)
+    end
+    return require(mod)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class era.view.__mods
 local __view__mods = {
   Act = "era.view.act",
@@ -231,11 +257,13 @@ local widget = setmetatable({
 ---@class era
 ---@field public fn                     era.fn
 ---@field public m                      era.m
+---@field public nvim                   era.nvim
 ---@field public view                   era.view
 ---@field public widget                 era.widget
 local M = {
   fn = fn,
   m = m,
+  nvim = nvim,
   view = view,
   widget = widget,
 }
