@@ -1218,37 +1218,37 @@ command
   .implement({
     uuid = K.toggle.dim.uuid,
     action = function()
-      require("fml.action.toggle.list").list("dressing_dim_flight")
+      era.m.toggle.list.list("dressing_dim_flight")
     end,
   })
   .implement({
     uuid = K.toggle.expandtab.uuid,
     action = function()
-      require("fml.action.toggle.list").list("expandtab_ux")
+      era.m.toggle.list.list("expandtab_ux")
     end,
   })
   .implement({
     uuid = K.toggle.indent.uuid,
     action = function()
-      require("fml.action.toggle.list").list("dressing_indent_flight")
+      era.m.toggle.list.list("dressing_indent_flight")
     end,
   })
   .implement({
     uuid = K.toggle.list.uuid,
     action = function(arg)
-      require("fml.action.toggle.list").list(arg)
+      era.m.toggle.list.list(arg)
     end,
   })
   .implement({
     uuid = K.toggle.markdown.uuid,
     action = function()
-      require("fml.action.toggle.list").list("render_markdown_plugin")
+      era.m.toggle.list.list("render_markdown_plugin")
     end,
   })
   .implement({
     uuid = K.toggle.markdown_local.uuid,
     action = function()
-      require("fml.action.toggle.list").list("markdown_local")
+      era.m.toggle.list.list("markdown_local")
     end,
   })
   .implement({
@@ -1260,73 +1260,73 @@ command
   .implement({
     uuid = K.toggle.number_local.uuid,
     action = function()
-      require("fml.action.toggle.list").list("number_local")
+      era.m.toggle.list.list("number_local")
     end,
   })
   .implement({
     uuid = K.toggle.relativenumber.uuid,
     action = function()
-      require("fml.action.toggle.list").list("relativenumber_ux")
+      era.m.toggle.list.list("relativenumber_ux")
     end,
   })
   .implement({
     uuid = K.toggle.relativenumber_local.uuid,
     action = function()
-      require("fml.action.toggle.list").list("relativenumber_local")
+      era.m.toggle.list.list("relativenumber_local")
     end,
   })
   .implement({
     uuid = K.toggle.scroll.uuid,
     action = function()
-      require("fml.action.toggle.list").list("dressing_scroll_flight")
+      era.m.toggle.list.list("dressing_scroll_flight")
     end,
   })
   .implement({
     uuid = K.toggle.signcolumn_local.uuid,
     action = function()
-      require("fml.action.toggle.list").list("signcolumn_local")
+      era.m.toggle.list.list("signcolumn_local")
     end,
   })
   .implement({
     uuid = K.toggle.theme.uuid,
     action = function(arg)
-      require("fml.action.toggle.theme").theme(arg)
+      era.m.toggle.theme.theme(arg)
     end,
   })
   .implement({
     uuid = K.toggle.theme_variant.uuid,
     action = function()
-      require("fml.action.toggle.list").list("theme_variant_ux")
+      era.m.toggle.list.list("theme_variant_ux")
     end,
   })
   .implement({
     uuid = K.toggle.trailspace.uuid,
     action = function()
-      require("fml.action.toggle.list").list("dressing_trailspace_flight")
+      era.m.toggle.list.list("dressing_trailspace_flight")
     end,
   })
   .implement({
     uuid = K.toggle.transparency.uuid,
     action = function()
-      require("fml.action.toggle.list").list("transparency_ux")
+      era.m.toggle.list.list("transparency_ux")
     end,
   })
   .implement({
     uuid = K.toggle.username.uuid,
     action = function()
-      require("fml.action.toggle.list").list("username_ux")
+      era.m.toggle.list.list("username_ux")
     end,
   })
   .implement({
     uuid = K.toggle.virtcolumn.uuid,
     action = function()
-      require("fml.action.toggle.list").list("dressing_virtcolumn_flight")
+      era.m.toggle.list.list("dressing_virtcolumn_flight")
     end,
   })
   .implement({
     uuid = K.toggle.wrap_local.uuid,
     action = function()
-      require("fml.action.toggle.list").list("wrap_local")
+      era.m.toggle.list.list("wrap_local")
     end,
   })
 

@@ -1,4 +1,4 @@
-local __module_name__ = "fml.action.toggle.theme" ---@type string
+local __module_name__ = "era.m.toggle.theme" ---@type string
 
 local COLORS_TO_DISPLAY = {
   "bg0",
@@ -119,7 +119,7 @@ local function apply_theme(theme)
   end
 end
 
----@class fml.action.toggle.theme
+---@class era.m.toggle.theme
 local M = {}
 
 ---@param arg                           unknown|nil

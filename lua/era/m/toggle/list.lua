@@ -1,13 +1,13 @@
-local __module_name__ = "fml.action.toggle.list" ---@type string
+local __module_name__ = "era.m.toggle.list" ---@type string
 
----@class fml.action.toggle.IItem
+---@class era.m.toggle.IItem
 ---@field public title                  string
 ---@field public group                  string|nil
 ---@field public snapshot               fun(): string, string
 ---@field public action                 fun(): nil
 
----@class fml.action.toggle.IListItem : era.m.picker.composer.list.IItem
----@field public data                   fml.action.toggle.IItem
+---@class era.m.toggle.IListItem : era.m.picker.composer.list.IItem
+---@field public data                   era.m.toggle.IItem
 
 ---@type table<string, integer>
 local group_priorities = {
@@ -74,7 +74,7 @@ local group_flags = {
   },
 }
 
----@type table<string, table<string, fml.action.toggle.IItem>>
+---@type table<string, table<string, era.m.toggle.IItem>>
 local group_items = {
   flight = {},
   ["local"] = {
@@ -476,7 +476,7 @@ local group_items = {
   misc = {},
 }
 
-local toggle_item_map = {} ---@type table<string, fml.action.toggle.IItem>
+local toggle_item_map = {} ---@type table<string, era.m.toggle.IItem>
 local toggle_item_names = {} ---@type string[]
 
 do
@@ -520,8 +520,8 @@ do
 
   toggle_item_names = vim.tbl_keys(toggle_item_map) ---@type string[]
   table.sort(toggle_item_names, function(x, y)
-    local vx = toggle_item_map[x] ---@type fml.action.toggle.IItem
-    local vy = toggle_item_map[y] ---@type fml.action.toggle.IItem
+    local vx = toggle_item_map[x] ---@type era.m.toggle.IItem
+    local vy = toggle_item_map[y] ---@type era.m.toggle.IItem
 
     local px = group_priorities[vx.group] or 1000000 ---@type integer
     local py = group_priorities[vy.group] or 1000000 ---@type integer
@@ -539,10 +539,10 @@ local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Ob
 local function fetch_data()
   dirty_data = false
 
-  local items = {} ---@type fml.action.toggle.IListItem[]
+  local items = {} ---@type era.m.toggle.IListItem[]
 
   for _, flag in ipairs(toggle_item_names) do
-    local item = toggle_item_map[flag] ---@type fml.action.toggle.IItem
+    local item = toggle_item_map[flag] ---@type era.m.toggle.IItem
     local text_group = item.group or "" ---@type string
     local text_flag, hln_flag = item.snapshot()
 
@@ -564,7 +564,7 @@ local function fetch_data()
       { coll = offset, colr = offset + #text_flag, hlname = hln_flag },
     }
 
-    ---@type fml.action.toggle.IListItem
+    ---@type era.m.toggle.IListItem
     local list_item = {
       uuid = flag,
       text = text,
@@ -586,7 +586,7 @@ local function execute_action(picker)
   if lnum_current >= 1 then
     local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
     if item then
-      ---@cast item fml.action.toggle.IListItem
+      ---@cast item era.m.toggle.IListItem
       item.data.action()
       local data = fetch_data()
       picker:reset_data(data)
@@ -601,7 +601,7 @@ local function render_result(_, bufnr, itemmap, matches)
 
   for _, match in ipairs(matches) do
     local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-    ---@cast item                       fml.action.toggle.IListItem
+    ---@cast item                       era.m.toggle.IListItem
 
     lines[#lines + 1] = item.text
     uuids[#uuids + 1] = item.uuid
@@ -614,7 +614,7 @@ local function render_result(_, bufnr, itemmap, matches)
 
   for lnum, match in ipairs(matches) do
     local item = itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
-    ---@cast item                       fml.action.toggle.IListItem
+    ---@cast item                       era.m.toggle.IListItem
 
     local row = lnum - 1 ---@type integer
     if item and item.highlights then
@@ -641,7 +641,7 @@ dot.command.define({
   candidates = toggle_item_names,
 }, true)
 
----@class fml.action.toggle.list
+---@class era.m.toggle.list
 local M = {}
 
 local picker ---@type era.m.picker.ListComposer
@@ -714,7 +714,7 @@ picker = era.m.picker.ListComposer.new({
       return
     end
 
-    ---@cast item fml.action.toggle.IListItem
+    ---@cast item era.m.toggle.IListItem
     composer:close()
 
     dirty_data = true
@@ -732,7 +732,7 @@ picker = era.m.picker.ListComposer.new({
 function M.list(arg)
   local flag_name = type(arg) == "string" and arg:lower() or "" ---@type string
   if toggle_item_map[flag_name] ~= nil then
-    local item = toggle_item_map[flag_name] ---@type fml.action.toggle.IItem
+    local item = toggle_item_map[flag_name] ---@type era.m.toggle.IItem
     item.action()
   else
     if dirty_data then

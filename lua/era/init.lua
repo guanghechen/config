@@ -106,6 +106,7 @@ local __m__mods = {
   statusline = "era.m.statusline",
   tabline = "era.m.tabline",
   term = "era.m.term",
+  toggle = "era.m.toggle",
   trailspace = "era.m.trailspace",
   ui_attach = "era.m.ui_attach",
   virtcolumn = "era.m.virtcolumn",
@@ -146,6 +147,7 @@ local __m__mods = {
 ---@field public statusline             era.m.statusline
 ---@field public tabline                era.m.tabline
 ---@field public term                   era.m.term
+---@field public toggle                 era.m.toggle
 ---@field public trailspace             era.m.trailspace
 ---@field public ui_attach              era.m.ui_attach
 ---@field public virtcolumn             era.m.virtcolumn
