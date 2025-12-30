@@ -11,7 +11,7 @@ local o_flag_selected = dot.context.select.find_git.flag_selected
 local o_flag_viewtype = dot.context.select.find_git.flag_viewtype
 
 local git_filepaths_dirty = true
-local picker ---@type era.picker.FiletreeComposer
+local picker ---@type era.m.picker.FiletreeComposer
 
 ---@param force                         boolean
 ---@param callback                      fun()|nil
@@ -24,7 +24,7 @@ local function refresh(force, callback)
     return
   end
 
-  era.git.state.status_async("HEAD", function(workspace, status)
+  era.m.git.state.status_async("HEAD", function(workspace, status)
     local filepaths = {} ---@type string[]
     for filepath in pairs(status) do
       filepaths[#filepaths + 1] = filepath
@@ -38,7 +38,7 @@ local function refresh(force, callback)
   end)
 end
 
-picker = era.picker.FiletreeComposer.new({
+picker = era.m.picker.FiletreeComposer.new({
   name = name,
   frecency = dot.context.frecency.files,
   permanent = true,
@@ -65,7 +65,7 @@ picker = era.picker.FiletreeComposer.new({
     refresh(false, nil)
   end,
   on_refresh = function()
-    era.git.state.refresh_async(true, function()
+    era.m.git.state.refresh_async(true, function()
       refresh(true, nil)
     end)
   end,

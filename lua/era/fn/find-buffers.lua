@@ -2,7 +2,7 @@
 local name = "era.fn.find_buffers" ---@type string
 local title = "Find Buffers" ---@type string
 
----@class era.fn.find_buffers.IItem : era.picker.composer.list.IItem
+---@class era.fn.find_buffers.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   era.fn.find_buffers.IItemData
 
 ---@class era.fn.find_buffers.IItemData
@@ -109,7 +109,7 @@ local function create_buffer_item(bufnr, cwd)
   }
 end
 
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
   local cwd = dot.path.cwd() ---@type string
   local scope = dot.context.select.find_buffer_scope:snapshot() ---@type dot.e.FindBufferScope
@@ -128,12 +128,12 @@ local function fetch_data()
     return a.data.bufnr < b.data.bufnr
   end)
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker ---@type era.picker.ListComposer
-picker = era.picker.ListComposer.new({
+local picker ---@type era.m.picker.ListComposer
+picker = era.m.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -199,7 +199,7 @@ picker = era.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type era.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -210,7 +210,7 @@ picker = era.picker.ListComposer.new({
       desc = "buffer: close",
       callback = function()
         local lnum = picker._composer:get_result_lnum() ---@type integer
-        local item = picker:retrieve(lnum) ---@type era.picker.composer.list.IItem|nil
+        local item = picker:retrieve(lnum) ---@type era.m.picker.composer.list.IItem|nil
         ---@cast item                   era.fn.find_buffers.IItem|nil
         if item == nil then
           return
@@ -260,7 +260,7 @@ picker = era.picker.ListComposer.new({
     end
   end,
   on_refresh = function(composer)
-    local data = fetch_data() ---@type era.picker.composer.list.IResetData
+    local data = fetch_data() ---@type era.m.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

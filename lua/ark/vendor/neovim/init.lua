@@ -7,12 +7,12 @@ require("ark.vendor.neovim.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 
-era.notifier.dressing()
-era.ui_attach.dressing()
+era.m.notifier.dressing()
+era.m.ui_attach.dressing()
 require("fml.command")
 
 if dot.path.is_git_repo() then
-  require("era.git")
+  require("era.m.git")
 end
 
 require("fml.plugin")
@@ -27,26 +27,26 @@ if dot.path.is_git_repo() then
 end
 
 vim.schedule(function()
-  era.statusline.dressing()
-  era.tabline.dressing()
-  era.winline.dressing()
+  era.m.statusline.dressing()
+  era.m.tabline.dressing()
+  era.m.winline.dressing()
 
-  era.commentstring.dressing()
-  era.foldtext.dressing()
-  era.scroll.dressing()
-  era.statuscolumn.dressing()
-  era.trailspace.dressing()
-  era.virtcolumn.dressing()
-  era.winsep.dressing()
+  era.m.commentstring.dressing()
+  era.m.foldtext.dressing()
+  era.m.scroll.dressing()
+  era.m.statuscolumn.dressing()
+  era.m.trailspace.dressing()
+  era.m.virtcolumn.dressing()
+  era.m.winsep.dressing()
 
-  era.dim.dressing()
-  era.im.dressing()
+  era.m.dim.dressing()
+  era.m.im.dressing()
   require("fml.dressing.input")
   require("fml.dressing.lsp")
   require("fml.dressing.lsp_action")
   require("fml.dressing.python_venv")
   require("fml.dressing.select")
-  era.image.dressing()
+  era.m.image.dressing()
   pcall(require, "ark.vendor.local.dressing")
 
   dot.setup_breakpoints()

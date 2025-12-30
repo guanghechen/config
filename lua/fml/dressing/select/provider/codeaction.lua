@@ -37,7 +37,7 @@ local LSP_CLIENT_NAME_ORDERS = {
 
 ---@param items                         any[]
 ---@param opts                          fml.dressing.select.IOptions
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 ---@return integer
 ---@diagnostic disable-next-line: unused-local
 local function codeaction_provider(items, opts)
@@ -115,7 +115,7 @@ local function codeaction_provider(items, opts)
     select_items[#select_items + 1] = select_item
   end
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   local data = { items = select_items }
   local width = width_order + width_content + width_client_name + 4 ---@type integer
   return data, width

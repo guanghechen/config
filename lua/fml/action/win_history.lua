@@ -1,7 +1,7 @@
 ---@diagnostic disable: invisible
 local __module_name__ = "fml.action.win_history" ---@type string
 
----@class fml.action.win_history.IItem : era.picker.composer.list.IItem
+---@class fml.action.win_history.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   fml.action.win_history.IItemData
 
 ---@class fml.action.win_history.IItemData
@@ -22,7 +22,7 @@ local function gen_uuid_from_ordinal(ordinal)
 end
 
 ---@param winnr_sourcefile              integer
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data(winnr_sourcefile)
   local cwd = dot.path.cwd() ---@type string
   local items = {} ---@type fml.action.win_history.IItem[]
@@ -35,7 +35,7 @@ local function fetch_data(winnr_sourcefile)
       message = "No history found.",
       details = { cwd = cwd, winnr_source = winnr_sourcefile },
     })
-    ---@type era.picker.composer.list.IResetData
+    ---@type era.m.picker.composer.list.IResetData
     return { items = {} }
   end
 
@@ -114,7 +114,7 @@ local function fetch_data(winnr_sourcefile)
     end
   end
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return { items = items, uuid_present = uuid_present, uuid_current = uuid_present }
 end
 
@@ -123,8 +123,8 @@ local flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
 local flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
----@type era.picker.ListComposer
-local picker = era.picker.ListComposer.new({
+---@type era.m.picker.ListComposer
+local picker = era.m.picker.ListComposer.new({
   name = "window-history",
   permanent = true,
   title = "Find Window History",
@@ -141,7 +141,7 @@ local picker = era.picker.ListComposer.new({
     local uuids = {} ---@type string[]
     local cwd = dot.path.cwd() ---@type string
 
-    local itemmap = composer._itemmap ---@type table<string, era.picker.composer.list.IItem>
+    local itemmap = composer._itemmap ---@type table<string, era.m.picker.composer.list.IItem>
     ---@cast itemmap                    table<string, fml.action.win_history.IItem>
 
     for _, match in ipairs(matches) do
@@ -182,7 +182,7 @@ local picker = era.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type era.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -225,7 +225,7 @@ local picker = era.picker.ListComposer.new({
   end,
   on_refresh = function(composer)
     if last_winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(last_winnr_sourcefile) then
-      local data = fetch_data(last_winnr_sourcefile) ---@type era.picker.composer.list.IResetData
+      local data = fetch_data(last_winnr_sourcefile) ---@type era.m.picker.composer.list.IResetData
       composer:reset_data(data)
     end
   end,
@@ -263,7 +263,7 @@ function M.history()
   last_winnr_sourcefile = winnr_sourcefile ---@type integer
   search_pattern:next("")
 
-  local data = fetch_data(winnr_sourcefile) ---@type era.picker.composer.list.IResetData
+  local data = fetch_data(winnr_sourcefile) ---@type era.m.picker.composer.list.IResetData
   picker:reset_data(data)
   picker:focus()
 end

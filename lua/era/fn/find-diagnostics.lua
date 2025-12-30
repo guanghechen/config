@@ -28,7 +28,7 @@ local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())---@type stl.c.Obs
 local o_flag_buffer = stl.c.Observable.from_value(false)---@type stl.c.Observable
 local o_flag_severity = stl.c.Observable.from_value(nil)
 
-local picker ---@type era.picker.FiletreeComposer
+local picker ---@type era.m.picker.FiletreeComposer
 
 ---@param force                         boolean
 ---@return nil
@@ -54,7 +54,7 @@ local function refresh(force)
   end
 
   local filetree = picker._filetree ---@type stl.c.Filetree
-  local treeview = picker._treeview ---@type era.picker.FiletreeView
+  local treeview = picker._treeview ---@type era.m.picker.FiletreeView
   local rootpath = o_rootpath:snapshot() ---@type string
 
   if bufnr_sourcefile ~= nil then
@@ -116,8 +116,8 @@ local function refresh(force)
 
   picker:reset_filepaths(rootpath, filepaths, false)
 
-  local statemap = treeview.statemap ---@type table<string, era.view.tree.INodeState>
-  ---@cast statemap                     table<string, era.picker.view.filetree.INodeState>
+  local statemap = treeview.statemap ---@type table<string, era.m.view.tree.INodeState>
+  ---@cast statemap                     table<string, era.m.picker.view.filetree.INodeState>
 
   for _, diagnostic in ipairs(diagnostics) do
     local bufnr = diagnostic.bufnr
@@ -129,7 +129,7 @@ local function refresh(force)
     ---@cast severity                 era.fn.find_diagnostics.SeverityEnum
 
     local leafuuid = stl.c.Filetree.uuid(filepath) ---@type string
-    local leafnodestate = statemap[leafuuid] ---@type era.picker.view.filetree.INodeState|nil
+    local leafnodestate = statemap[leafuuid] ---@type era.m.picker.view.filetree.INodeState|nil
     if leafnodestate == nil then
       goto continue
     end
@@ -147,7 +147,7 @@ local function refresh(force)
       goto continue
     end
 
-    local locations = leafnodestate.locations or {} ---@type era.picker.view.filetree.ILocationNodeState[]
+    local locations = leafnodestate.locations or {} ---@type era.m.picker.view.filetree.ILocationNodeState[]
     leafnodestate.locations = locations
 
     ---@type era.fn.find_diagnostics.ILocationData
@@ -180,7 +180,7 @@ local function refresh(force)
       }
     end
 
-    ---@class era.picker.view.filetree.ILocationNodeState
+    ---@class era.m.picker.view.filetree.ILocationNodeState
     local location = {
       nodetype = "location",
       leafuuid = leafuuid,
@@ -200,7 +200,7 @@ local function refresh(force)
   end
 end
 
-picker = era.picker.FiletreeComposer.new({
+picker = era.m.picker.FiletreeComposer.new({
   name = name,
   permanent = true,
   title = title,

@@ -15,7 +15,7 @@ local title = "LSP Symbols" ---@type string
 ---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
-local plainfile = era.view.Plainfile.new({ name = name }) ---@type era.view.Plainfile
+local plainfile = era.m.view.Plainfile.new({ name = name }) ---@type era.m.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore
@@ -310,7 +310,7 @@ local o_flag_regex = dot.context.select.lsp_symbols.flag_regex ---@type stl.c.Ob
 local o_flag_case_sensitive = dot.context.select.lsp_symbols.flag_case_sensitive ---@type stl.c.Observable
 local o_flag_viewtype = dot.context.select.lsp_symbols.flag_viewtype ---@type stl.c.Observable
 local o_flag_foldempty = dot.context.select.lsp_symbols.flag_foldempty ---@type stl.c.Observable
-local picker ---@type era.picker.TreeComposer
+local picker ---@type era.m.picker.TreeComposer
 
 ---@param kindname                      string
 ---@return string, string
@@ -550,7 +550,7 @@ end
 ---@return nil
 local function refresh()
   local tree = picker._tree ---@type stl.c.Tree
-  local treeview = picker._treeview ---@type era.picker.TreeView
+  local treeview = picker._treeview ---@type era.m.picker.TreeView
 
   _tick_refresh = _tick_refresh + 1
   local tick_refresh = _tick_refresh
@@ -598,7 +598,7 @@ local function render_symbol(_, node)
   }
 end
 
----@type era.picker.view.tree.ITreeviewContainerNodeRenderer
+---@type era.m.picker.view.tree.ITreeviewContainerNodeRenderer
 local function render_treeview_container(_, node, _, _, folded_depth)
   if folded_depth == 0 then
     return render_symbol(_, node)
@@ -773,7 +773,7 @@ local function goto_symbol(nodeuuid)
   vim.cmd("normal! zv zz")
 end
 
-picker = era.picker.TreeComposer.new({
+picker = era.m.picker.TreeComposer.new({
   name = name,
   permanent = true,
   title = title,

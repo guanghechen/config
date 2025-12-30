@@ -1,6 +1,6 @@
 ---@return string|nil
 local function paste_image_as_base64()
-  local clipboard = require("era.clipboard")
+  local clipboard = require("era.m.clipboard")
   if not clipboard.has_image() then
     return nil
   end

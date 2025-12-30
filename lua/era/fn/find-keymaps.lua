@@ -9,7 +9,7 @@ local title = "Find Keymaps" ---@type string
 ---@field public desc                   string
 ---@field public source                 string
 
----@class era.fn.find_keymaps.IItem : era.picker.composer.list.IItem
+---@class era.fn.find_keymaps.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   era.fn.find_keymaps.IItemData
 
 local WIDTH_LHS = 28 ---@type integer
@@ -55,7 +55,7 @@ local function get_sort_key(lhs)
   end
 end
 
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
   dirty_data = false
 
@@ -163,11 +163,11 @@ local function fetch_data()
     return a.data.mode < b.data.mode
   end)
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return { items = items }
 end
 
-local picker = era.picker.ListComposer.new({
+local picker = era.m.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -211,7 +211,7 @@ local picker = era.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type era.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
     return data
   end,
 
@@ -222,7 +222,7 @@ local picker = era.picker.ListComposer.new({
     if lnum_current < 1 then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type era.picker.preview.IDrawResult
+      ---@type era.m.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -232,13 +232,13 @@ local picker = era.picker.ListComposer.new({
       return result
     end
 
-    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
     ---@cast item era.fn.find_keymaps.IItem|nil
 
     if item == nil then
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No keymap selected" })
 
-      ---@type era.picker.preview.IDrawResult
+      ---@type era.m.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -274,7 +274,7 @@ local picker = era.picker.ListComposer.new({
     vim.hl.range(bufnr, nsnr_content, "m_skm_label", { 5, 0 }, { 5, 4 }, { priority = 10 })
     vim.hl.range(bufnr, nsnr_content, "m_skm_rhs", { 6, 0 }, { 6, #data.rhs }, { priority = 10 })
 
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -305,7 +305,7 @@ local picker = era.picker.ListComposer.new({
 
   on_refresh = function(composer)
     dirty_data = true
-    local data = fetch_data() ---@type era.picker.composer.list.IResetData
+    local data = fetch_data() ---@type era.m.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

@@ -33,7 +33,7 @@ local function setup_node()
         command = "node",
         -- 💀 Make sure to update this path to point to your installation
         args = {
-          era.lsp.locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
+          era.m.lsp.locate_mason_pkg_path("js-debug-adapter", "/js-debug/src/dapDebugServer.js"),
           "${port}",
         },
       },

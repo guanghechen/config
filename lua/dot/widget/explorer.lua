@@ -1,4 +1,4 @@
-local Widget = require("era.explorer.widget")
+local Widget = require("era.m.explorer.widget")
 
 ---@class dot.widget.explorer
 local M = {}
@@ -16,12 +16,12 @@ stl.fn.observe({
   end
 end, true)
 
----@type era.explorer.Widget|nil
+---@type era.m.explorer.Widget|nil
 M.widget = nil
 
 ---@return nil
 function M.focus()
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   widget:focus()
 end
 
@@ -37,7 +37,7 @@ function M.focus_workspace()
   M.set_root(workspace)
 end
 
----@return era.explorer.Widget
+---@return era.m.explorer.Widget
 function M.get_widget()
   if M.widget == nil then
     M.widget = Widget.new({
@@ -54,13 +54,13 @@ end
 
 ---@return nil
 function M.hide()
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   widget:hide()
 end
 
 ---@return nil
 function M.refresh()
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   widget:refresh()
 end
 
@@ -78,7 +78,7 @@ function M.reveal(filepath)
   filepath = dot.path.normalize(filepath)
   local uri = yoz.uri.from_filepath(filepath) ---@type string
 
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   local was_visible = widget:isvisible() ---@type boolean
   widget:focus()
   if not was_visible then
@@ -100,21 +100,21 @@ function M.set_root(root)
   root = dot.path.normalize(root)
   local uri = yoz.uri.from_filepath(root .. "/") ---@type string
 
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   widget:set_root(uri)
 end
 
 ---@return nil
 function M.toggle()
-  local widget = M.get_widget() ---@type era.explorer.Widget
+  local widget = M.get_widget() ---@type era.m.explorer.Widget
   widget:toggle()
 end
 
 ----------------------------------------------------------------------------------------------------
 
----@return era.explorer.widget.IFlagItem[]
+---@return era.m.explorer.widget.IFlagItem[]
 function M.__get_flags__()
-  ---@type era.explorer.widget.IFlagItem[]
+  ---@type era.m.explorer.widget.IFlagItem[]
   return {
     {
       desc = "explorer: toggle selected only",

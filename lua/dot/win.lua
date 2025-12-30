@@ -10,7 +10,7 @@ local vim_win = require("stl.nvim.win")
 ---@field public locate_cancel          (fun(): nil)|nil
 ---@field public locate_scheduler       stl.c.Scheduler|nil
 ---@field public lsp_symbols            dot.t.ILspSymbol[]|nil
----@field public nvimbar                era.nvimbar.Nvimbar
+---@field public nvimbar                era.m.nvimbar.Nvimbar
 
 ---@class dot.win.IMeta
 ---@field public history                stl.c.History|nil
@@ -454,7 +454,7 @@ function M.locate_symbols(winnr, callback)
     local cursor_line = cursor_row - 1 ---@type integer
     local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
     local cursor_pos = { line = cursor_line, character = cursor_character }
-    local symbol_path = era.lsp.find_symbol_path(cursor_pos, symbols)
+    local symbol_path = era.m.lsp.find_symbol_path(cursor_pos, symbols)
     local lsp_symbols = {} ---@type dot.t.ILspSymbol[]
 
     local k = 1 ---@type integer

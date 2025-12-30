@@ -1,4 +1,4 @@
----@class era.fn.select_encoding.IItem : era.picker.composer.list.IItem
+---@class era.fn.select_encoding.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   era.fn.select_encoding.IItemData
 
 ---@class era.fn.select_encoding.IItemData
@@ -62,7 +62,7 @@ local fileencodings = {
 }
 
 ---@param present                       string|nil
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data(present)
   local items = {} ---@type era.fn.select_encoding.IItem[]
   local uuid_present = nil ---@type string|nil
@@ -88,15 +88,15 @@ local function fetch_data(present)
     end
   end
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return { items = items, uuid_present = uuid_present, uuid_current = uuid_present }
 end
 
----@type era.picker.ListComposer|nil
+---@type era.m.picker.ListComposer|nil
 local picker = nil
 
 ---@param params                        era.fn.select_encoding.IParams
----@return era.picker.ListComposer
+---@return era.m.picker.ListComposer
 local function select_encoding(params)
   local present = params.present ---@type string|nil
   local title = params.title or "Select Encoding" ---@type string
@@ -111,8 +111,8 @@ local function select_encoding(params)
     picker:dispose()
   end
 
-  ---@type era.picker.ListComposer
-  picker = era.picker.ListComposer.new({
+  ---@type era.m.picker.ListComposer
+  picker = era.m.picker.ListComposer.new({
     name = "select-encoding",
     permanent = false,
     title = title,
@@ -144,7 +144,7 @@ local function select_encoding(params)
     end,
   })
 
-  local data = fetch_data(present) ---@type era.picker.composer.list.IResetData
+  local data = fetch_data(present) ---@type era.m.picker.composer.list.IResetData
   picker:reset_data(data)
   picker:focus()
   return picker

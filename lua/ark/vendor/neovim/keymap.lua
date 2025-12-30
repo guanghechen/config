@@ -24,7 +24,7 @@ ms({ "n", "x" }, "<leader>3", K.find.git_not_committed)
 ms({ "n", "x" }, "z;", K.toggle.maximize)
 
 vim.keymap.set("n", "<leader><Esc>", function()
-  era.git.hunk.clear_nav()
+  era.m.git.hunk.clear_nav()
   vim.cmd("nohlsearch")
 end, { silent = true, desc = "Clear search highlight and hunk nav" })
 ------------------------------------------------------------------------------------------#enhance--

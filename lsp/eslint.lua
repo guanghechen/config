@@ -32,7 +32,7 @@ local FLAT_CONFIG_FILENAMES = {
 ---@param params                        lsp.InitializeParams
 ---@param config                        any
 local function before_init(params, config)
-  era.lsp.event.before_init(params, config)
+  era.m.lsp.event.before_init(params, config)
 
   -- The "workspaceFolder" is a VSCode concept. It limits how far the server will traverse the
   -- file system when locating the ESLint config file (e.g., .eslintrc).
@@ -75,7 +75,7 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_attach(client, bufnr)
-  era.lsp.event.on_attach(client, bufnr)
+  era.m.lsp.event.on_attach(client, bufnr)
 
   vim.api.nvim_buf_create_user_command(0, "LspEslintFixAll", function()
     client:request_sync("workspace/executeCommand", {
@@ -93,26 +93,26 @@ end
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 local function on_detach(client, bufnr)
-  era.lsp.event.on_detach(client, bufnr)
+  era.m.lsp.event.on_detach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
 ---@param config                        any
 local function on_init(client, config)
-  era.lsp.event.on_init(client, config)
+  era.m.lsp.event.on_init(client, config)
 end
 
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
   local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
+  local rootdir = era.m.lsp.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
 
 ---@type vim.lsp.Config
 return {
-  capabilities = era.lsp.event.get_capabilities(),
+  capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "vscode-eslint-language-server", "--stdio" },
   filetypes = {
     "javascript",

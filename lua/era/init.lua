@@ -51,7 +51,7 @@ local __fn__mods = {
 ---@field public search_in_files        fun(rootpath: string|"cwd"|"directory"|"workspace"|"file"|nil, reset_input: boolean|nil): nil
 ---@field public select_copy_filepath   fun(params: era.fn.select_copy_filepath.IParams): integer
 ---@field public select_copy_filepaths  fun(params: era.fn.select_copy_filepaths.IParams): integer
----@field public select_encoding        fun(params: era.fn.select_encoding.IParams): era.picker.ListComposer
+---@field public select_encoding        fun(params: era.fn.select_encoding.IParams): era.m.picker.ListComposer
 local fn = setmetatable({
   __mods = __fn__mods,
 }, {
@@ -66,82 +66,90 @@ local fn = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
----@class era.__mods
-local __mods = {
-  ai = "era.ai",
-  clipboard = "era.clipboard",
-  colorpicker = "era.colorpicker",
-  commentstring = "era.commentstring",
-  dim = "era.dim",
-  explorer = "era.explorer",
-  foldtext = "era.foldtext",
-  git = "era.git",
-  illuminate = "era.illuminate",
-  im = "era.im",
-  image = "era.image",
-  lsp = "era.lsp",
-  notifier = "era.notifier",
-  nvimbar = "era.nvimbar",
-  picker = "era.picker",
-  plugin = "era.plugin",
-  scroll = "era.scroll",
-  searcher = "era.searcher",
-  statuscolumn = "era.statuscolumn",
-  statusline = "era.statusline",
-  tabline = "era.tabline",
-  term = "era.term",
-  trailspace = "era.trailspace",
-  ui_attach = "era.ui_attach",
-  view = "era.view",
-  virtcolumn = "era.virtcolumn",
-  winline = "era.winline",
-  winpicker = "era.winpicker",
-  winsep = "era.winsep",
+---@class era.m.__mods
+local __m__mods = {
+  ai = "era.m.ai",
+  clipboard = "era.m.clipboard",
+  colorpicker = "era.m.colorpicker",
+  commentstring = "era.m.commentstring",
+  dim = "era.m.dim",
+  explorer = "era.m.explorer",
+  foldtext = "era.m.foldtext",
+  git = "era.m.git",
+  illuminate = "era.m.illuminate",
+  im = "era.m.im",
+  image = "era.m.image",
+  lsp = "era.m.lsp",
+  notifier = "era.m.notifier",
+  nvimbar = "era.m.nvimbar",
+  picker = "era.m.picker",
+  plugin = "era.m.plugin",
+  scroll = "era.m.scroll",
+  searcher = "era.m.searcher",
+  statuscolumn = "era.m.statuscolumn",
+  statusline = "era.m.statusline",
+  tabline = "era.m.tabline",
+  term = "era.m.term",
+  trailspace = "era.m.trailspace",
+  ui_attach = "era.m.ui_attach",
+  view = "era.m.view",
+  virtcolumn = "era.m.virtcolumn",
+  winline = "era.m.winline",
+  winpicker = "era.m.winpicker",
+  winsep = "era.m.winsep",
 }
 
----@class era
----@field public __mods                 era.__mods
----@field public ai                     era.ai
----@field public clipboard              era.clipboard
----@field public colorpicker            era.colorpicker
----@field public commentstring          era.commentstring
----@field public dim                    era.dim
----@field public explorer               era.explorer
----@field public fn                     era.fn
----@field public foldtext               era.foldtext
----@field public git                    era.git
----@field public illuminate             era.illuminate
----@field public im                     era.im
----@field public image                  era.image
----@field public lsp                    era.lsp
----@field public notifier               era.notifier
----@field public nvimbar                era.nvimbar
----@field public picker                 era.picker
----@field public plugin                 era.plugin
----@field public scroll                 era.scroll
----@field public searcher               era.searcher
----@field public statuscolumn           era.statuscolumn
----@field public statusline             era.statusline
----@field public tabline                era.tabline
----@field public term                   era.term
----@field public trailspace             era.trailspace
----@field public ui_attach              era.ui_attach
----@field public view                   era.view
----@field public virtcolumn             era.virtcolumn
----@field public winline                era.winline
----@field public winpicker              era.winpicker
----@field public winsep                 era.winsep
-local M = setmetatable({
-  __mods = __mods,
-  fn = fn,
+---@class era.m
+---@field public __mods                 era.m.__mods
+---@field public ai                     era.m.ai
+---@field public clipboard              era.m.clipboard
+---@field public colorpicker            era.m.colorpicker
+---@field public commentstring          era.m.commentstring
+---@field public dim                    era.m.dim
+---@field public explorer               era.m.explorer
+---@field public foldtext               era.m.foldtext
+---@field public git                    era.m.git
+---@field public illuminate             era.m.illuminate
+---@field public im                     era.m.im
+---@field public image                  era.m.image
+---@field public lsp                    era.m.lsp
+---@field public notifier               era.m.notifier
+---@field public nvimbar                era.m.nvimbar
+---@field public picker                 era.m.picker
+---@field public plugin                 era.m.plugin
+---@field public scroll                 era.m.scroll
+---@field public searcher               era.m.searcher
+---@field public statuscolumn           era.m.statuscolumn
+---@field public statusline             era.m.statusline
+---@field public tabline                era.m.tabline
+---@field public term                   era.m.term
+---@field public trailspace             era.m.trailspace
+---@field public ui_attach              era.m.ui_attach
+---@field public view                   era.m.view
+---@field public virtcolumn             era.m.virtcolumn
+---@field public winline                era.m.winline
+---@field public winpicker              era.m.winpicker
+---@field public winsep                 era.m.winsep
+local m = setmetatable({
+  __mods = __m__mods,
 }, {
   __index = function(t, k)
-    local m = __mods[k] ---@type string|nil
-    if m == nil then
+    local mod = __m__mods[k] ---@type string|nil
+    if mod == nil then
       return rawget(t, k)
     end
-    return require(m)
+    return require(mod)
   end,
 })
+
+----------------------------------------------------------------------------------------------------
+
+---@class era
+---@field public fn                     era.fn
+---@field public m                      era.m
+local M = {
+  fn = fn,
+  m = m,
+}
 
 return M

@@ -2,7 +2,7 @@
 local name = "era.fn.find_highlights" ---@type string
 local title = "Find Highlights" ---@type string
 
----@class era.fn.find_highlights.IItem : era.picker.composer.list.IItem
+---@class era.fn.find_highlights.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   era.fn.find_highlights.IItemData
 
 ---@class era.fn.find_highlights.IItemData
@@ -13,7 +13,7 @@ local _hlnames = nil ---@type string[]?
 local _hlgroups = nil ---@type table<string, vim.api.keyset.get_hl_info>?
 local _last_preview_bufnr = -1 ---@type integer
 
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
   local hlgroups = vim.api.nvim_get_hl(0, { create = false }) ---@type table<string, vim.api.keyset.get_hl_info>
   local hlnames = {} ---@type string[]
@@ -48,7 +48,7 @@ local function fetch_data()
     items[#items + 1] = item
   end
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return { items = items }
 end
 
@@ -57,8 +57,8 @@ local flag_fuzzy = stl.c.Observable.from_value(true) ---@type stl.c.Observable
 local flag_regex = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 local flag_case_sensitive = stl.c.Observable.from_value(false) ---@type stl.c.Observable
 
----@type era.picker.ListComposer
-local picker = era.picker.ListComposer.new({
+---@type era.m.picker.ListComposer
+local picker = era.m.picker.ListComposer.new({
   name = name,
   permanent = true,
   title = title,
@@ -106,7 +106,7 @@ local picker = era.picker.ListComposer.new({
       end
     end
 
-    local data = { uuids = uuids } ---@type era.picker.composer.list.IRenderResultData
+    local data = { uuids = uuids } ---@type era.m.picker.composer.list.IRenderResultData
     return data
   end,
   render_preview = function(composer, bufnr, force)
@@ -116,7 +116,7 @@ local picker = era.picker.ListComposer.new({
       -- Render empty buffer
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No highlight selected" })
 
-      ---@type era.picker.preview.IDrawResult
+      ---@type era.m.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = true,
@@ -180,12 +180,12 @@ local picker = era.picker.ListComposer.new({
       _last_preview_bufnr = bufnr
     end
 
-    local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
+    local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
     ---@cast item                       era.fn.find_highlights.IItem|nil
 
     local lnum_target = item and item.data.lnum or lnum_current ---@type integer
 
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = true,
       number = true,
@@ -206,7 +206,7 @@ local picker = era.picker.ListComposer.new({
     end
   end,
   on_refresh = function(composer)
-    local data = fetch_data() ---@type era.picker.composer.list.IResetData
+    local data = fetch_data() ---@type era.m.picker.composer.list.IResetData
     composer:reset_data(data)
   end,
 })

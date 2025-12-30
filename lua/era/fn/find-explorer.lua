@@ -27,7 +27,7 @@ local title = "Find Explorer" ---@type string
 ---@class era.fn.find_explorer.IItemData
 ---@field public fileitem               era.fn.find_explorer.IFileItem
 
----@class era.fn.find_explorer.IItem : era.picker.composer.list.IItem
+---@class era.fn.find_explorer.IItem : era.m.picker.composer.list.IItem
 ---@field public data                   era.fn.find_explorer.IItemData
 
 local dir_datamap = {} ---@type table<string, era.fn.find_explorer.IDirItem>
@@ -343,7 +343,7 @@ local function gen_title()
   return "File explorer (" .. dirpath .. ")" ---@type string
 end
 
----@return era.picker.composer.list.IResetData
+---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
   local dirpath = dot.path.normalize(state_cwd:snapshot()) ---@type string
   local parent_dirpath = dot.path.dirname(dirpath) ---@type string
@@ -404,22 +404,22 @@ local function fetch_data()
     uuid_current = items[2].uuid
   end
 
-  ---@type era.picker.composer.list.IResetData
+  ---@type era.m.picker.composer.list.IResetData
   return {
     items = items,
     uuid_current = uuid_current,
   }
 end
 
----@param composer                      era.picker.ListComposer
+---@param composer                      era.m.picker.ListComposer
 ---@param bufnr                         integer
----@return era.picker.preview.IDrawResult
+---@return era.m.picker.preview.IDrawResult
 local function preview_render(composer, bufnr)
   local lnum_current = composer.result.lnum_current:snapshot() ---@type integer
 
   if lnum_current < 1 then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No file selected" })
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -430,10 +430,10 @@ local function preview_render(composer, bufnr)
     return result
   end
 
-  local item = composer:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
+  local item = composer:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
   if item == nil then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No file selected" })
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -448,7 +448,7 @@ local function preview_render(composer, bufnr)
   local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem|nil
   if fileitem == nil then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Cannot found the file." })
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -470,7 +470,7 @@ local function preview_render(composer, bufnr)
         vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
       end
 
-      ---@type era.picker.preview.IDrawResult
+      ---@type era.m.picker.preview.IDrawResult
       local result = {
         cursorline = true,
         number = true,
@@ -481,7 +481,7 @@ local function preview_render(composer, bufnr)
       return result
     else
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Not a text file, cannot preview." })
-      ---@type era.picker.preview.IDrawResult
+      ---@type era.m.picker.preview.IDrawResult
       local result = {
         cursorline = false,
         number = false,
@@ -581,7 +581,7 @@ local function preview_render(composer, bufnr)
       result_title = dot.path.normalize(fileitem.path)
     end
 
-    ---@type era.picker.preview.IDrawResult
+    ---@type era.m.picker.preview.IDrawResult
     local result = {
       cursorline = false,
       number = false,
@@ -594,7 +594,7 @@ local function preview_render(composer, bufnr)
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Cannot preview this item." })
 
-  ---@type era.picker.preview.IDrawResult
+  ---@type era.m.picker.preview.IDrawResult
   local result = {
     cursorline = false,
     number = false,
@@ -605,8 +605,8 @@ local function preview_render(composer, bufnr)
   return result
 end
 
-local picker ---@type era.picker.ListComposer
-picker = era.picker.ListComposer.new({
+local picker ---@type era.m.picker.ListComposer
+picker = era.m.picker.ListComposer.new({
   name = name,
   autosort = false,
   permanent = true,
@@ -628,7 +628,7 @@ picker = era.picker.ListComposer.new({
       desc = "filetree: add to ai",
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
-        local item = picker:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
+        local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
         ---@cast item                   era.fn.find_explorer.IItem|nil
 
         if item ~= nil then
@@ -645,7 +645,7 @@ picker = era.picker.ListComposer.new({
       desc = "filetree: add to ai",
       callback = function()
         local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
-        local item = picker:retrieve(lnum_current) ---@type era.picker.composer.list.IItem|nil
+        local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
         ---@cast item                   era.fn.find_explorer.IItem|nil
 
         if item ~= nil then
