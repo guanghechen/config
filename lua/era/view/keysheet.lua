@@ -1,8 +1,8 @@
----@class era.m.view.keysheet.IProps
+---@class era.view.keysheet.IProps
 ---@field public title                  ?string
 ---@field public keymaps                stl.t.IKeymap[]
 
----@class era.m.view.keysheet.IState
+---@class era.view.keysheet.IState
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
@@ -10,7 +10,7 @@
 ---@field protected _title              string
 ---@field protected _keymaps            stl.t.IKeymap[]
 
----@class era.m.view.Keysheet : era.m.view.keysheet.IState
+---@class era.view.Keysheet : era.view.keysheet.IState
 local M = {}
 M.__index = M
 
@@ -18,8 +18,8 @@ local COLUMN_GAP = 4 ---@type integer
 local PADDING_LEFT = 2 ---@type integer
 local PADDING_RIGHT = 2 ---@type integer
 
----@param props                         era.m.view.keysheet.IProps
----@return era.m.view.Keysheet
+---@param props                         era.view.keysheet.IProps
+---@return era.view.Keysheet
 function M.new(props)
   local self = setmetatable({}, M)
   self._disposed = false
@@ -160,12 +160,12 @@ function M:__render__(available_width)
   local mode_width = 0 ---@type integer
   local desc_width = 0 ---@type integer
 
-  ---@class era.m.view.keysheet.IItem
+  ---@class era.view.keysheet.IItem
   ---@field public key                    string
   ---@field public modes                  string
   ---@field public desc                   string
 
-  ---@type era.m.view.keysheet.IItem[]
+  ---@type era.view.keysheet.IItem[]
   local items = {}
   for _, km in ipairs(keymaps) do
     if km.disabled then
@@ -202,7 +202,7 @@ function M:__render__(available_width)
 
     for col = 1, columns do
       local idx = (col - 1) * rows + row ---@type integer
-      local item = items[idx] ---@type era.m.view.keysheet.IItem|nil
+      local item = items[idx] ---@type era.view.keysheet.IItem|nil
       if item == nil then
         break
       end

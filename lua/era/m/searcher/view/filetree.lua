@@ -7,27 +7,27 @@ local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 ---| era.m.searcher.view.filetree.ILeafLocationState
 
 ---@alias era.m.searcher.view.filetree.IListviewFileRenderer
----| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.m.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
 
 ---@alias era.m.searcher.view.filetree.IListviewLocationRenderer
----| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.m.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.IListviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
 
 ---@alias era.m.searcher.view.filetree.ITreeviewDirectoryRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): era.m.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IDirectoryNodeState, lnum: integer, folded_depth: integer): era.view.tree.INodeRenderResult
 
 ---@alias era.m.searcher.view.filetree.ITreeviewFileRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.m.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, lnum: integer): era.view.tree.INodeRenderResult
 
 ---@alias era.m.searcher.view.filetree.ITreeviewLocationRenderer
----| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.m.view.tree.INodeRenderResult
+---| fun(ctx: era.m.searcher.view.filetree.ITreeviewRendererContext, node: stl.c.IFiletreeNode, nodestate: era.m.searcher.view.filetree.IFileNodeState, locationstate: era.m.searcher.view.filetree.ILeafLocationState, lnum: integer): era.view.tree.INodeRenderResult
 
----@class era.m.searcher.view.filetree.IDirectoryNodeState : era.m.view.tree.IContainerNodeState
+---@class era.m.searcher.view.filetree.IDirectoryNodeState : era.view.tree.IContainerNodeState
 
----@class era.m.searcher.view.filetree.IFileNodeState : era.m.view.tree.ILeafNodeState
+---@class era.m.searcher.view.filetree.IFileNodeState : era.view.tree.ILeafNodeState
 ---@field public locations              era.m.searcher.view.filetree.ILeafLocationState|nil
 ---@field public filematch              era.m.searcher.view.filetree.IResolvedFileMatch|nil
 
----@class era.m.searcher.view.filetree.ILeafLocationState : era.m.view.tree.ILeafLocationState
+---@class era.m.searcher.view.filetree.ILeafLocationState : era.view.tree.ILeafLocationState
 ---@field public lnum                   integer
 ---@field public col                    ?integer
 ---@field public col_end                ?integer
@@ -41,13 +41,13 @@ local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 ---@field public relative               string
 ---@field public matches                yoz.search.ITextMatch[]
 
----@class era.m.searcher.view.filetree.IListviewRendererContext : era.m.view.tree.IListviewRendererContext
+---@class era.m.searcher.view.filetree.IListviewRendererContext : era.view.tree.IListviewRendererContext
 ---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              era.m.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
 ---@field public view                   era.m.searcher.FiletreeView
 
----@class era.m.searcher.view.filetree.ITreeviewRendererContext : era.m.view.tree.IListviewRendererContext
+---@class era.m.searcher.view.filetree.ITreeviewRendererContext : era.view.tree.IListviewRendererContext
 ---@field public rootnode               stl.c.IFiletreeNode
 ---@field public rootstate              era.m.searcher.view.filetree.IDirectoryNodeState
 ---@field public tree                   stl.c.IReadonlyFiletree
@@ -114,12 +114,12 @@ end
 ---@field public render_treeview_leaf   ?era.m.searcher.view.filetree.ITreeviewFileRenderer
 ---@field public render_treeview_location   ?era.m.searcher.view.filetree.ITreeviewLocationRenderer
 
-local P = era.m.view.Tree ---@type era.m.view.Tree
+local P = era.view.Tree ---@type era.view.Tree
 
----@class era.m.searcher.FiletreeView : era.m.view.Tree
+---@class era.m.searcher.FiletreeView : era.view.Tree
 ---@field protected _tree               stl.c.IFiletree
 ---@field public statemap               table<string, era.m.searcher.view.filetree.INodeState>
----@field public insert                 fun(self: era.m.searcher.FiletreeView, uuid: string, state: era.m.view.tree.INodeState): era.m.searcher.FiletreeView
+---@field public insert                 fun(self: era.m.searcher.FiletreeView, uuid: string, state: era.view.tree.INodeState): era.m.searcher.FiletreeView
 local M = {}
 M.__index = M
 setmetatable(M, P)
@@ -139,7 +139,7 @@ function M.new(props)
   local render_treeview_leaf = props.render_treeview_leaf or M.default_render_treeview_leaf ---@type era.m.searcher.view.filetree.ITreeviewFileRenderer
   local render_treeview_location = props.render_treeview_location or M.default_render_treeview_location ---@type era.m.searcher.view.filetree.ITreeviewLocationRenderer
 
-  local super = era.m.view.Tree.new({
+  local super = era.view.Tree.new({
     name = name,
     fullname = fullname,
     indent = indent,
@@ -188,7 +188,7 @@ end
 function M:retrieve(uuid)
   self:__health__()
 
-  local statemap = self.statemap ---@type table<string, era.m.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.searcher.view.filetree.INodeState>
 
   local nodestate = statemap[uuid] ---@type era.m.searcher.view.filetree.INodeState|nil
@@ -405,7 +405,7 @@ function M:reset_filepaths(cwd, filepaths)
 
   local filetree = self._tree ---@type stl.c.IFiletree
   local tick_selected = self._tick_selected ---@type integer
-  local statemap = self.statemap ---@type table<string, era.m.view.tree.INodeState>
+  local statemap = self.statemap ---@type table<string, era.view.tree.INodeState>
   ---@cast statemap                     table<string, era.m.searcher.view.filetree.INodeState>
 
   filetree:reset(cwd, filepaths, false)

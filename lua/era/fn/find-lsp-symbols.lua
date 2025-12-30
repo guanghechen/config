@@ -15,7 +15,7 @@ local title = "LSP Symbols" ---@type string
 ---@field public selection_col          integer?
 
 local filepath_sourcefile = nil ---@type string|nil
-local plainfile = era.m.view.Plainfile.new({ name = name }) ---@type era.m.view.Plainfile
+local plainfile = era.view.Plainfile.new({ name = name }) ---@type era.view.Plainfile
 local _tick_refresh = 0 ---@type integer
 
 -- stylua: ignore

@@ -1,4 +1,4 @@
----@alias era.m.view.select.ItemKey
+---@alias era.view.select.ItemKey
 ---| "1"
 ---| "2"
 ---| "3"
@@ -11,24 +11,24 @@
 ---| "y"
 ---| "n"
 
----@alias era.m.view.select.PositionEnum
+---@alias era.view.select.PositionEnum
 ---| "cursor"
 ---| "center"
 
----@class era.m.view.select.IItem
----@field public key                    era.m.view.select.ItemKey
+---@class era.view.select.IItem
+---@field public key                    era.view.select.ItemKey
 ---@field public text                   string
 
----@class era.m.view.select.IProps : vim.api.keyset.win_config
+---@class era.view.select.IProps : vim.api.keyset.win_config
 ---@field public title                  string|nil
----@field public position               era.m.view.select.PositionEnum|nil
----@field public items                  era.m.view.select.IItem[]
----@field public default_key            era.m.view.select.ItemKey|nil
----@field public on_choice              fun(item: era.m.view.select.IItem|nil): nil
+---@field public position               era.view.select.PositionEnum|nil
+---@field public items                  era.view.select.IItem[]
+---@field public default_key            era.view.select.ItemKey|nil
+---@field public on_choice              fun(item: era.view.select.IItem|nil): nil
 
----@class era.m.view.select.IConfirmProps : vim.api.keyset.win_config
+---@class era.view.select.IConfirmProps : vim.api.keyset.win_config
 ---@field public title                  string|nil
----@field public position               era.m.view.select.PositionEnum|nil
+---@field public position               era.view.select.PositionEnum|nil
 ---@field public yes_text               string|nil
 ---@field public no_text                string|nil
 ---@field public default_yes            boolean|nil
@@ -44,16 +44,16 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:m_ch_normal",
 }, ",")
 
----@class era.m.view.Select
+---@class era.view.Select
 local M = {}
 
----@param props                         era.m.view.select.IProps
+---@param props                         era.view.select.IProps
 ---@return integer
 function M.open(props)
   local parent_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local items = props.items ---@type era.m.view.select.IItem[]
-  local default_key = props.default_key ---@type era.m.view.select.ItemKey|nil
-  local on_choice = props.on_choice ---@type fun(item: era.m.view.select.IItem|nil): nil
+  local items = props.items ---@type era.view.select.IItem[]
+  local default_key = props.default_key ---@type era.view.select.ItemKey|nil
+  local on_choice = props.on_choice ---@type fun(item: era.view.select.IItem|nil): nil
 
   local title = props.title and string.format(" %s ", props.title) or "" ---@type string
   local title_width = vim.api.nvim_strwidth(title) ---@type integer
@@ -103,7 +103,7 @@ function M.open(props)
   vim.bo[bufnr].swapfile = false
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
-  local position = props.position or "center" ---@type era.m.view.select.PositionEnum
+  local position = props.position or "center" ---@type era.view.select.PositionEnum
 
   local relative ---@type string
   local relative_win ---@type integer|nil
@@ -193,7 +193,7 @@ function M.open(props)
 
   local disposed = false ---@type boolean
 
-  ---@param item                        era.m.view.select.IItem|nil
+  ---@param item                        era.view.select.IItem|nil
   ---@return nil
   local function dispose(item)
     if disposed then
@@ -227,7 +227,7 @@ function M.open(props)
       end
       local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
       local index = cursor[1] ---@type integer
-      local item = items[index] ---@type era.m.view.select.IItem
+      local item = items[index] ---@type era.view.select.IItem
       dispose(item)
     end,
   }
@@ -316,7 +316,7 @@ function M.open(props)
   return winnr
 end
 
----@param props                         era.m.view.select.IConfirmProps
+---@param props                         era.view.select.IConfirmProps
 ---@return integer
 function M.confirm(props)
   local yes_text = props.yes_text or "Yes" ---@type string

@@ -519,8 +519,8 @@ function M:delete_selected()
 
   local fullname = ctx.fullname ---@type string
 
-  ---@type era.m.view.Act
-  local act = era.m.view.Act.new({
+  ---@type era.view.Act
+  local act = era.view.Act.new({
     name = "explorer_delete",
     title = string.format("%s Delete %d item(s)", stl.icon.diagnostic.Warning, #selected_nodes),
     initial_input = "y",
@@ -1028,7 +1028,7 @@ end
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return nil
 function M:show_keysheet(keymaps)
-  local keysheet = era.m.view.Keysheet.new({
+  local keysheet = era.view.Keysheet.new({
     title = "Explorer Help",
     keymaps = keymaps,
   })
@@ -1045,7 +1045,7 @@ function M:show_file_info()
 
   local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
 
-  local fileinfo = era.m.view.Fileinfo.new({ filepath = filepath })
+  local fileinfo = era.view.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
 end
 
@@ -1240,8 +1240,8 @@ function M:__transfer_selected__(mode, initial_target)
 
   local fullname = ctx.fullname ---@type string
 
-  ---@type era.m.view.Act
-  local act = era.m.view.Act.new({
+  ---@type era.view.Act
+  local act = era.view.Act.new({
     name = "explorer_" .. mode,
     title = string.format("%s %s %d item(s)", icon, verb_past:gsub("ed$", ""), #selected_nodes),
     initial_input = default_target,

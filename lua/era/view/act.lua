@@ -1,34 +1,34 @@
-local __module_name__ = "era.m.view.act" ---@type string
+local __module_name__ = "era.view.act" ---@type string
 
----@alias era.m.view.act.IRenderPreview
+---@alias era.view.act.IRenderPreview
 ---| fun(bufnr: integer, input: string): nil
 
----@alias era.m.view.act.IOnConfirm
+---@alias era.view.act.IOnConfirm
 ---| fun(input: string): nil
 
----@alias era.m.view.act.IOnCancel
+---@alias era.view.act.IOnCancel
 ---| fun(): nil
 
----@alias era.m.view.act.IOnInputChange
+---@alias era.view.act.IOnInputChange
 ---| fun(input: string): nil
 
----@alias era.m.view.act.IGetWidth
+---@alias era.view.act.IGetWidth
 ---| fun(): integer
 
----@class era.m.view.act.IProps
+---@class era.view.act.IProps
 ---@field public name                   string
 ---@field public title                  string
 ---@field public initial_input          ?string
 ---@field public preview_lines          ?integer
----@field public render_preview         era.m.view.act.IRenderPreview
----@field public on_input_change        ?era.m.view.act.IOnInputChange
----@field public on_confirm             era.m.view.act.IOnConfirm
----@field public on_cancel              ?era.m.view.act.IOnCancel
+---@field public render_preview         era.view.act.IRenderPreview
+---@field public on_input_change        ?era.view.act.IOnInputChange
+---@field public on_confirm             era.view.act.IOnConfirm
+---@field public on_cancel              ?era.view.act.IOnCancel
 ---@field public keymaps                ?stl.t.IKeymap[]
 ---@field public width                  ?number
----@field public get_width              ?era.m.view.act.IGetWidth
+---@field public get_width              ?era.view.act.IGetWidth
 
----@class era.m.view.act.IState
+---@class era.view.act.IState
 ---@field protected _disposed           boolean
 ---@field protected _input_bufnr        integer|nil
 ---@field protected _input_winnr        integer|nil
@@ -38,23 +38,23 @@ local __module_name__ = "era.m.view.act" ---@type string
 ---@field protected _input              stl.c.Observable
 ---@field protected _preview_debounced  stl.timer.IDisposableCallable
 
----@class era.m.view.Act : era.m.view.act.IState
+---@class era.view.Act : era.view.act.IState
 ---@field public fullname               string
 ---@field public title                  string
----@field public render_preview         era.m.view.act.IRenderPreview
----@field public on_input_change        era.m.view.act.IOnInputChange
----@field public on_confirm             era.m.view.act.IOnConfirm
----@field public on_cancel              era.m.view.act.IOnCancel
+---@field public render_preview         era.view.act.IRenderPreview
+---@field public on_input_change        era.view.act.IOnInputChange
+---@field public on_confirm             era.view.act.IOnConfirm
+---@field public on_cancel              era.view.act.IOnCancel
 ---@field protected _keymaps            stl.t.IKeymap[]
 ---@field protected _preview_lines      integer
 ---@field protected _recommended_width  number
----@field protected _get_width          era.m.view.act.IGetWidth|nil
+---@field protected _get_width          era.view.act.IGetWidth|nil
 local M = {}
 M.__index = M
 
 local MAX_WIDTH = 120 ---@type integer
 
----@class era.m.view.act.borders
+---@class era.view.act.borders
 ---@field public input                  string[]
 ---@field public preview                string[]
 local __borders__ = {
@@ -64,7 +64,7 @@ local __borders__ = {
   -- stylua: ignore end
 }
 
----@class era.m.view.act.highlights
+---@class era.view.act.highlights
 ---@field public input                  string
 ---@field public preview                string
 local __highlights__ = {
@@ -79,23 +79,23 @@ local __highlights__ = {
   }, ","),
 }
 
----@param props                         era.m.view.act.IProps
----@return era.m.view.Act
+---@param props                         era.view.act.IProps
+---@return era.view.Act
 function M.new(props)
   local name = props.name ---@type string
   local fullname = string.format("%s -> %s", name, __module_name__) ---@type string
   local title = string.format(" %s ", vim.trim(props.title)) ---@type string
   local initial_input = props.initial_input or "" ---@type string
 
-  local render_preview = props.render_preview ---@type era.m.view.act.IRenderPreview
-  local on_input_change = props.on_input_change or stl.fn.noop ---@type era.m.view.act.IOnInputChange
-  local on_confirm = props.on_confirm ---@type era.m.view.act.IOnConfirm
-  local on_cancel = props.on_cancel or stl.fn.noop ---@type era.m.view.act.IOnCancel
+  local render_preview = props.render_preview ---@type era.view.act.IRenderPreview
+  local on_input_change = props.on_input_change or stl.fn.noop ---@type era.view.act.IOnInputChange
+  local on_confirm = props.on_confirm ---@type era.view.act.IOnConfirm
+  local on_cancel = props.on_cancel or stl.fn.noop ---@type era.view.act.IOnCancel
 
   local keymaps = props.keymaps or {} ---@type stl.t.IKeymap[]
   local preview_lines = props.preview_lines or 5 ---@type integer
   local recommended_width = math.max(0.1, props.width or 0.6) ---@type number
-  local get_width = props.get_width ---@type era.m.view.act.IGetWidth|nil
+  local get_width = props.get_width ---@type era.view.act.IGetWidth|nil
 
   local input = stl.c.Observable.from_value(initial_input) ---@type stl.c.Observable
 

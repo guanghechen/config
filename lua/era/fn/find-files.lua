@@ -36,7 +36,7 @@ local function edit_setting(picker)
     excludes = s_excludes,
   }
 
-  era.m.view.Setting
+  era.view.Setting
     .new({
       position = "center",
       width = 100,

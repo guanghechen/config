@@ -164,7 +164,7 @@ local group_items = {
         if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
           reopen()
         else
-          era.m.view.Select.open({
+          era.view.Select.open({
             relative = "editor",
             row = vim.o.lines - 3,
             col = vim.o.columns - offset_right - 12,
@@ -232,7 +232,7 @@ local group_items = {
         ---@param callback              fun(fileformat_next: string|nil): nil
         ---@return nil
         local function select_fileformat(callback)
-          era.m.view.Select.open({
+          era.view.Select.open({
             relative = "editor",
             row = vim.o.lines - 4,
             col = vim.o.columns - offset_right - 12,

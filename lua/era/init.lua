@@ -94,7 +94,6 @@ local __m__mods = {
   term = "era.m.term",
   trailspace = "era.m.trailspace",
   ui_attach = "era.m.ui_attach",
-  view = "era.m.view",
   virtcolumn = "era.m.virtcolumn",
   winline = "era.m.winline",
   winpicker = "era.m.winpicker",
@@ -129,7 +128,6 @@ local __m__mods = {
 ---@field public term                   era.m.term
 ---@field public trailspace             era.m.trailspace
 ---@field public ui_attach              era.m.ui_attach
----@field public view                   era.m.view
 ---@field public virtcolumn             era.m.virtcolumn
 ---@field public winline                era.m.winline
 ---@field public winpicker              era.m.winpicker
@@ -148,12 +146,52 @@ local m = setmetatable({
 
 ----------------------------------------------------------------------------------------------------
 
+---@class era.view.__mods
+local __view__mods = {
+  Act = "era.view.act",
+  Fileinfo = "era.view.fileinfo",
+  Keysheet = "era.view.keysheet",
+  Plainfile = "era.view.plainfile",
+  Printer = "era.view.printer",
+  Select = "era.view.select",
+  Setting = "era.view.setting",
+  Textarea = "era.view.textarea",
+  Tree = "era.view.tree",
+}
+
+---@class era.view
+---@field public __mods                 era.view.__mods
+---@field public Act                    era.view.Act
+---@field public Fileinfo               era.view.Fileinfo
+---@field public Keysheet               era.view.Keysheet
+---@field public Plainfile              era.view.Plainfile
+---@field public Printer                era.view.Printer
+---@field public Select                 era.view.Select
+---@field public Setting                era.view.Setting
+---@field public Textarea               era.view.Textarea
+---@field public Tree                   era.view.Tree
+local view = setmetatable({
+  __mods = __view__mods,
+}, {
+  __index = function(t, k)
+    local mod = __view__mods[k] ---@type string|nil
+    if mod == nil then
+      return rawget(t, k)
+    end
+    return require(mod)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class era
 ---@field public fn                     era.fn
 ---@field public m                      era.m
+---@field public view                   era.view
 local M = {
   fn = fn,
   m = m,
+  view = view,
 }
 
 return M
