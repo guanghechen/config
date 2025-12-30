@@ -1,6 +1,7 @@
 local __module_name__ = "era.m.im.mac" ---@type string
+-- cspell:ignore SCIM ITABC
 
----@class era.m.im.mac : era.im
+---@class era.m.im.mac : era.m.im
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")

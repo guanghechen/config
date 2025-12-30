@@ -1,5 +1,3 @@
-local S = era.m.explorer
-
 local __module_name__ = "era.m.explorer.tree" ---@type string
 local math_floor = math.floor
 
@@ -1073,7 +1071,7 @@ function M:__load__(node, nodeindex, uri, force)
       loaded = resource_node.nodetype == "F",
       selected = parent.selected,
       has_selected = parent.selected,
-    }, Node)
+    }, era.m.explorer.Node)
 
     node.parent.children[nodeindex] = new_node
 

@@ -140,12 +140,12 @@ end
 ---@class era.m.notifier
 local M = {}
 setmetatable(M, {
-  ---@param self                        era.notifier
+  ---@param _                           era.m.notifier
   ---@param msg                         string
   ---@param level0                      integer
   ---@param opts                        any
   ---@return nil
-  __call = function(self, msg, level0, opts)
+  __call = function(_, msg, level0, opts)
     opts = opts or {}
 
     local level = M.resolve_level(level0) ---@type stl.e.LogLevelEnum
@@ -162,7 +162,7 @@ setmetatable(M, {
     local anonymous = type(opts.anonymous) == "boolean" and opts.anonymous or false ---@type boolean
     local silent = type(opts.silent) == "boolean" and opts.silent or false ---@type boolean
 
-    self.notify({
+    M.notify({
       level = level,
       group = group,
       title = title,

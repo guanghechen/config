@@ -12,10 +12,10 @@ local winhighlight = table.concat({
 local M = {}
 M.__index = M
 
-M.renderers = {} ---@type table<string, era.winpicker>
+M.renderers = {} ---@type table<string, era.m.winpicker>
 
 ---@param char                          string
----@return era.winpicker
+---@return era.m.winpicker
 function M.new(char)
   if M.renderers[char] ~= nil then
     return M.renderers[char]

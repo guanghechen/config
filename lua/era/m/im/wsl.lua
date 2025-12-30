@@ -1,6 +1,6 @@
 local __module_name__ = "era.m.im.wsl" ---@type string
 
----@class era.m.im.wsl : era.im
+---@class era.m.im.wsl : era.m.im
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")

@@ -1,14 +1,12 @@
 {
   "ignorePaths": [
     "lsp/yamlls.lua",
-    "lua/dot/module/image/terminal.lua",
+    "lua/era/m/image/terminal.lua",
     "lua/stl/dict/",
     "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -994,3 +992,4 @@
     "zindex"
   ]
 }
+

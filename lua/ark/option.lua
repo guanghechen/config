@@ -13,6 +13,7 @@ vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
 -- Disabled Builtins -------------------------------------------------------------------------------
+-- cspell:ignore logipat matchit optwin rrhelper synmenu
 
 vim.g.loaded_2html_plugin = 1
 vim.g.loaded_bugreport = 1
