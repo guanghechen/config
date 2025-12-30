@@ -18,6 +18,7 @@ local __fn__mods = {
   paste_image = "era.fn.paste_image",
   paste_image_as_base64 = "era.fn.paste_image_as_base64",
   pick_win = "era.fn.pick_win",
+  refresh_all = "era.fn.refresh_all",
   rename = "era.fn.rename",
   run_code = "era.fn.run_code",
   run_code_as_neovim_command = "era.fn.run_code_as_neovim_command",
@@ -48,6 +49,7 @@ local __fn__mods = {
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               era.fn.pick_win
+---@field public refresh_all            fun(): nil
 ---@field public rename                 era.fn.rename
 ---@field public run_code               fun(force: boolean): nil
 ---@field public run_code_as_neovim_command fun(): nil

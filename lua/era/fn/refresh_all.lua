@@ -1,10 +1,7 @@
-local __module_name__ = "fml.action.refresh" ---@type string
-
----@class fml.action.refresh
-local M = {}
+local __module_name__ = "era.fn.refresh_all" ---@type string
 
 ---@return nil
-function M.refresh_all()
+local function refresh_all()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local bufnr_sourcefile = dot.tab.retrieve_bufnr_sourcefile(tabnr) ---@type integer|nil
   local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
@@ -60,4 +57,4 @@ function M.refresh_all()
   })
 end
 
-return M
+return refresh_all

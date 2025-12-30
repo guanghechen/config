@@ -949,7 +949,7 @@ command.implement({
   uuid = K.refresh.all.uuid,
   tabtype = stl.nvim.tab.Types.NORMAL,
   action = function()
-    require("fml.action.refresh").refresh_all()
+    era.fn.refresh_all()
   end,
 })
 
