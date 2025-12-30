@@ -230,7 +230,7 @@ function M.gen_hlgroup_map(context)
     m_term_bg = { bg = u.bg0 },
     m_term_current = { bg = u.bg2 },
 
-    ---fml/dressing/select/codeaction
+    ---era/m/select/provider-codeaction
     m_sca_client_name = { fg = u.fg4, bg = c.none },
     m_sca_content = { fg = u.fg1, bg = c.none },
     m_sca_order = { fg = u.red, bg = c.none },

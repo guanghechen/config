@@ -69,7 +69,7 @@ local function generate_highlights(text)
 end
 
 ---@param items                         any[]
----@param opts                          fml.dressing.select.IOptions
+---@param opts                          era.m.select.IOptions
 ---@return era.m.picker.composer.list.IResetData
 ---@return integer
 ---@return era.m.picker.composer.list.IRenderResult|nil
@@ -77,7 +77,7 @@ end
 local function snacks_provider(items, opts)
   local format_item = opts.format_item or (opts.snacks and opts.snacks.format) or stl.fn.identity ---@type fun(item): string|nil
   local width = 0 ---@type integer
-  local select_items = {} ---@type fml.dressing.select.IItem[]
+  local select_items = {} ---@type era.m.select.ISelectItem[]
 
   for i = 1, #items do
     local item = items[i]
@@ -111,7 +111,7 @@ local function snacks_provider(items, opts)
       end
 
       local item = composer:retrieve(lnum_current)
-      ---@cast item fml.dressing.select.IItem|nil
+      ---@cast item era.m.select.ISelectItem|nil
       if not item then
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "No item selected" })
         return { cursorline = false, number = false, title = "Preview", wrap = false }

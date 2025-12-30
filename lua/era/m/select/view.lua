@@ -44,7 +44,7 @@ local WIN_HIGHLIGHT = table.concat({
   "Normal:m_ch_normal",
 }, ",")
 
----@class era.m.select
+---@class era.m.select.view
 local M = {}
 
 ---@param props                         era.m.select.IProps
@@ -340,11 +340,6 @@ function M.confirm(props)
       on_choice(item ~= nil and item.key == "y")
     end,
   })
-end
-
----@return nil
-function M.dressing()
-  require("fml.dressing.select")
 end
 
 return M

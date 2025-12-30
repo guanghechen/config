@@ -1,12 +1,12 @@
----@class fml.dressing.provider.codeaction.IItemData : fml.dressing.select.IItemData
+---@class era.m.select.provider.codeaction.IItemData : era.m.select.IItemData
 ---@field public index                  integer
 ---@field public client_name            string
 ---@field public content                string
 ---@field public order_client           integer
 ---@field public order_type             integer
 
----@class fml.dressing.provider.codeaction.IItem : fml.dressing.select.IItem
----@field public data                   fml.dressing.provider.codeaction.IItemData
+---@class era.m.select.provider.codeaction.IItem : era.m.select.ISelectItem
+---@field public data                   era.m.select.provider.codeaction.IItemData
 
 local ACTION_TYPE_ORDERS = {
   ["Add"] = 1,
@@ -36,7 +36,7 @@ local LSP_CLIENT_NAME_ORDERS = {
 }
 
 ---@param items                         any[]
----@param opts                          fml.dressing.select.IOptions
+---@param opts                          era.m.select.IOptions
 ---@return era.m.picker.composer.list.IResetData
 ---@return integer
 ---@diagnostic disable-next-line: unused-local
@@ -44,7 +44,7 @@ local function codeaction_provider(items, opts)
   local width_order = #tostring(#items) ---@type integer
   local width_content = 0 ---@type integer
   local width_client_name = 0 ---@type integer
-  local item_data_list = {} ---@type fml.dressing.provider.codeaction.IItemData[]
+  local item_data_list = {} ---@type era.m.select.provider.codeaction.IItemData[]
 
   for index, item in ipairs(items) do
     local order = stl.string.pad_start(tostring(index), width_order, " ") ---@type string
@@ -63,7 +63,7 @@ local function codeaction_provider(items, opts)
     local order_type = action_type ~= nil and ACTION_TYPE_ORDERS[action_type:lower()] or math.huge ---@type integer
     local order_client = LSP_CLIENT_NAME_ORDERS[client_name] or math.huge ---@type integer
 
-    ---@type fml.dressing.provider.codeaction.IItemData
+    ---@type era.m.select.provider.codeaction.IItemData
     local item_data = {
       original_item = item,
       index = index,
@@ -86,7 +86,7 @@ local function codeaction_provider(items, opts)
     return a.index < b.index
   end)
 
-  local select_items = {} ---@type fml.dressing.provider.codeaction.IItem[]
+  local select_items = {} ---@type era.m.select.provider.codeaction.IItem[]
   for index, item_data in ipairs(item_data_list) do
     local uuid = stl.string.pad_start(tostring(item_data.index), width_order, " ") ---@type string
     local order = stl.string.pad_start(tostring(index), width_order, " ") ---@type string
@@ -96,7 +96,7 @@ local function codeaction_provider(items, opts)
     local text_client_name = item_data.client_name ---@type string
     local text = order .. ": " .. text_content .. "  " .. text_client_name ---@type string
 
-    ---@type fml.dressing.provider.codeaction.IItem
+    ---@type era.m.select.provider.codeaction.IItem
     local select_item = {
       uuid = uuid,
       text = text,
