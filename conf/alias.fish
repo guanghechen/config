@@ -36,16 +36,16 @@ alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
 ### claude code
-alias ccc='claude --dangerously-skip-permissions'
-alias spec-status='bash .specify/scripts/bash/check-prerequisites.sh'
+alias ccc='ANTHROPIC_API_KEY='' ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.5" ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.5" claude --dangerously-skip-permissions'
+abbr -a cc0 'ANTHROPIC_API_KEY='' ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.5" ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.5" claude --dangerously-skip-permissions'
 
 ### codex
-alias cx0='codex --profile=github-copilot'
-alias cx1='codex --profile=azure'
-alias cx2='codex --profile=azure2'
-abbr -a cy0 'codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
-abbr -a cy1 'codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
-abbr -a cy2 'codex --profile=azure2 --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx0 'codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx1 'codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
+
+### gemini
+alias ggg='GOOGLE_CLOUD_PROJECT= GOOGLE_GEMINI_BASE_URL="$GHC_GEMINI_BASE_URL" GEMINI_API_KEY="$GHC_GEMINI_AUTH_TOKEN" gemini --model="gemini-3-pro-preview" --yolo'
+abbr -a gg0 'GOOGLE_CLOUD_PROJECT= GOOGLE_GEMINI_BASE_URL="$GHC_GEMINI_BASE_URL" GEMINI_API_KEY="$GHC_GEMINI_AUTH_TOKEN" gemini --model="gemini-3-pro-preview" --yolo'
 
 ### fzf
 alias fzf="$HOMEBREW_PREFIX/bin/fzf"
