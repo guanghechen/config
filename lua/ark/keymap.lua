@@ -48,7 +48,7 @@ mk({ "i" }, "<cr>", "<cr><C-g>u")
 mk({ "i" }, "<space>", "<space><C-g>u")
 
 ---! better copy/paste list
-mk({ "i", "n", "x" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>gg0vG$", "system: select all")
+mk({ "i", "n", "x" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>ggVG", "system: select all")
 mk({ "i", "n", "x" }, { "<C-a>v", "<D-v>", "<M-v>" }, '<esc>"+p', "system: paste from clipboard")
 mk({ "x" }, { "<C-a>c", "<D-c>", "<M-c>" }, '"+y', "system: copy to clipboard")
 mk({ "x" }, { "<C-a>x", "<D-x>", "<M-x>" }, '"+x', "system: cut to clipboard")
