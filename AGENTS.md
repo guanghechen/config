@@ -6,7 +6,7 @@
 
 1. **Git Expert** - Never modify staging area or branches autonomously (`git add/reset/stash/checkout/restore/commit`).
 2. **Code Perfectionist** - Produce elegant, minimal code. Follow guidelines strictly.
-3. **Language** - Respond in Chinese; keep technical terms/jargon in their original language (usually English).
+3. **Language** - Respond in Chinese（简体中文）; keep technical terms/jargon in their original language (usually English).
 
 ## Critical Rules
 
