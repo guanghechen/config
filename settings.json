@@ -1,23 +1,49 @@
 {
+  "useSmartEdit": true,
+  "useWriteTodos": true,
+  "context": {
+    "fileName": ["GEMINI.md", "AGENTS.md"],
+    "fileFiltering": {
+      "disableFuzzySearch": false,
+      "enableRecursiveFileSearch": true,
+      "respectGitIgnore": true,
+      "respectGeminiIgnore": true
+    }
+  },
+  "general": {
+    "debugKeystrokeLogging": false,
+    "disableAutoUpdate": true,
+    "disableUpdateNag": false,
+    "enablePromptCompletion": true,
+    "preferredEditor": "nvim",
+    "previewFeatures": true,
+    "retryFetchErrors": true,
+    "vimMode": true,
+    "checkpointing": {
+      "enabled": true
+    },
+    "sessionRetention": {
+      "enabled": true,
+      "maxAge": "14d",
+      "minRetention": "3d"
+    }
+  },
+  "output": {
+    "format": "text"
+  },
+  "privacy": {
+    "usageStatisticsEnabled": false
+  },
   "security": {
+    "blockGitExtensions": false,
+    "disableYoloMode": false,
+    "enablePermanentToolApproval": false,
     "auth": {
       "selectedType": "oauth-personal"
     },
     "folderTrust": {
       "enabled": true
     }
-  },
-  "general": {
-    "debugKeystrokeLogging": true,
-    "disableAutoUpdate": true,
-    "disableUpdateNag": false,
-    "enablePromptCompletion": true,
-    "preferredEditor": "nvim",
-    "vimMode": true,
-    "previewFeatures": true
-  },
-  "privacy": {
-    "usageStatisticsEnabled": false
   },
   "telemetry": {
     "enabled": false
@@ -27,16 +53,24 @@
   },
   "ui": {
     "hideBanner": true,
-    "hideTips": true,
+    "hideContextSummary": false,
+    "hideFooter": false,
+    "hideTips": false,
     "hideWindowTitle": true,
+    "incrementalRendering": false,
+    "showCitations": true,
+    "showLineNumbers": true,
+    "showMemoryUsage": false,
     "showModelInfoInChat": true,
     "showStatusInTitle": true,
     "theme": "$GEMINI_CONFIG_DIR/local/theme.json",
+    "useAlternateBuffer": false,
+    "useFullWidth": true,
     "footer": {
-      "hideContextPercentage": false
+      "hideContextPercentage": false,
+      "hideCWD": false,
+      "hideModelInfo": false,
+      "hideSandboxStatus": false
     }
-  },
-  "useSmartEdit": true,
-  "useWriteTodos": true
+  }
 }
-
