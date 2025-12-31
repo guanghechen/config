@@ -67,4 +67,4 @@ Within each category: alphabetical order (case-sensitive), but keep semantically
 
 ## Output
 
-Respond in Chinese, but keep code, file paths, and technical terms in English.
+Respond in Chinese (简体中文), but keep code, file paths, and technical terms in English.
