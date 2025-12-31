@@ -1,0 +1,8 @@
+{
+  "ignorePaths": [],
+  "import": ["~/.config/cspell/cspell.json"],
+  "language": "en",
+  "version": "0.2",
+  "words": ["skhd", "sourcecodes", "yabai"]
+}
+
