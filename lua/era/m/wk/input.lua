@@ -66,6 +66,33 @@ end
 -- Protected
 ----------------------------------------------------------------------------------------------------
 
+---Check if a single-char key is safe to use as a trigger in normal mode.
+---Only g, z (lowercase) and Z (uppercase) are considered safe.
+---@param key                            string
+---@return boolean
+local function is_safe_single_key(key)
+  if #key ~= 1 then
+    return true
+  end
+  -- Only g and z are safe for lowercase
+  if key:match("^[a-z]$") and not key:match("^[gz]$") then
+    return false
+  end
+  -- Only Z is safe for uppercase
+  if key:match("^[A-Z]$") and not key:match("^[Z]$") then
+    return false
+  end
+  -- [ and ] are safe (used for prev/next groups)
+  if key == "[" or key == "]" then
+    return true
+  end
+  -- Other single chars (symbols, digits) are not safe
+  if key:match("^[^a-zA-Z%[%]]$") then
+    return false
+  end
+  return true
+end
+
 ---Bind trigger keymap
 ---@param bufnr                          integer
 ---@param mode                           string
@@ -74,6 +101,11 @@ end
 function M.__bind__(bufnr, mode, trigger_key, tree_key)
   local id = bufnr .. ":" .. mode .. ":" .. trigger_key
   if M.triggers[id] then
+    return
+  end
+
+  -- In normal mode, only allow safe single-char keys as triggers
+  if mode == "n" and not is_safe_single_key(tree_key) then
     return
   end
 
