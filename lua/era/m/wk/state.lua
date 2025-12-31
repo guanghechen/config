@@ -22,14 +22,7 @@ local DEFAULT_OPTS = {
       { "]", group = "next", icon = { icon = stl.icon.ui.Right, color = "cyan" } },
       { "[", group = "prev", icon = { icon = stl.icon.ui.Left, color = "cyan" } },
       { "<leader>a", group = "ai", icon = { icon = stl.icon.app.Copilot, color = "purple" } },
-      {
-        "<leader>b",
-        group = "buffer",
-        icon = { icon = stl.icon.ui.Buffer, color = "blue" },
-        expand = function()
-          return S.extras.expand.buf()
-        end,
-      },
+      { "<leader>b", group = "buffer", icon = { icon = stl.icon.ui.Buffer, color = "blue" } },
       { "<leader>0", group = "buffer focus", icon = { icon = stl.icon.ui.Tab, color = "blue" } },
       { "<leader>c", group = "code", icon = { icon = stl.icon.ui.CodeAction, color = "green" } },
       { "<leader>d", group = "debug", icon = { icon = stl.icon.ui.Bug, color = "orange" } },
@@ -44,15 +37,7 @@ local DEFAULT_OPTS = {
       { "<leader>s", group = "search/replace", icon = { icon = stl.icon.symbols.flag_replace, color = "purple" } },
       { "<leader>t", group = "tab/toggle", icon = { icon = stl.icon.ui.TabPage, color = "yellow" } },
       { "<leader>u", group = "ui", icon = { icon = stl.icon.ui.Gear, color = "orange" } },
-      {
-        "<leader>w",
-        group = "window",
-        proxy = "<c-w>",
-        icon = { icon = stl.icon.ui.Window, color = "green" },
-        expand = function()
-          return S.extras.expand.win()
-        end,
-      },
+      { "<leader>w", group = "window", proxy = "<c-w>", icon = { icon = stl.icon.ui.Window, color = "green" } },
       { "<leader>x", group = "diagnostics/quickfix", icon = { icon = stl.icon.diagnostic.Warning_alt, color = "red" } },
       ---@diagnostic enable: missing-fields, assign-type-mismatch
     },

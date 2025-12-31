@@ -1,5 +1,4 @@
 ---@class era.m.wk
----@field public extras                    era.m.wk.extras
 ---@field public input                     era.m.wk.input
 ---@field public state                     era.m.wk.state
 ---@field public tree                      era.m.wk.tree
@@ -9,7 +8,6 @@ local M = {}
 
 ---@type table<string, string>
 local __mods__ = {
-  extras = "era.m.wk.extras",
   input = "era.m.wk.input",
   state = "era.m.wk.state",
   tree = "era.m.wk.tree",
