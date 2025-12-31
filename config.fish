@@ -50,8 +50,18 @@ set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8
 set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
+
+## setup environments (for agent)
+set -gx ANTHROPIC_BASE_URL "$GHC_ANTHROPIC_BASE_URL"
+set -gx ANTHROPIC_AUTH_TOKEN "$GHC_ANTHROPIC_AUTH_TOKEN"
+set -gx ANTHROPIC_MODEL "claude-opus-4.5"
+set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-sonnet-4.5"
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
+
 set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
+
+set -gx GOOGLE_GEMINI_BASE_URL "$GHC_GEMINI_BASE_URL"
+set -gx GEMINI_API_KEY "$GHC_GEMINI_AUTH_TOKEN"
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 ## platform specific
