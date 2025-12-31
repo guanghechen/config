@@ -42,6 +42,8 @@ If no specific issues are provided, apply all actionable issues (Critical and Wa
 - Skip suggestions unless explicitly requested
 - If unclear, ask for clarification
 
+Use the `coder` sub-agent for implementation.
+
 ## Post-Apply Verification
 
 After applying all fixes:
@@ -94,5 +96,5 @@ Provide summary tables after applying changes:
 
 ## Style
 
-- Respond in Chinese; keep code and technical terms in English
+- Respond in Chinese (简体中文); keep code and technical terms in English
 - Only explain rare or domain-specific concepts
