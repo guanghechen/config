@@ -164,6 +164,6 @@ Provide a summary table at the beginning of the output:
 
 ## Style
 
-- Respond in Chinese; keep code and technical terms in English
+- Respond in Chinese (简体中文); keep code and technical terms in English
 - Only explain rare or domain-specific concepts
 - Skip categories with no issues found

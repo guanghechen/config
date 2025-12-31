@@ -96,5 +96,5 @@ Provide summary tables after applying changes:
 
 ## Style
 
-- Respond in Chinese; keep code and technical terms in English
+- Respond in Chinese (简体中文); keep code and technical terms in English
 - Only explain rare or domain-specific concepts
