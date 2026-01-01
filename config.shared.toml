@@ -10,7 +10,7 @@ inherit = "all"
 
 [model_providers.github-copilot]
 name = "github-copilot"
-base_url = "http://localhost:4747"
+base_url = "http://localhost:4747/api/codex"
 env_key = "GHC_CODEX_AUTH_TOKEN"
 wire_api = "responses"
 request_max_retries = 3
