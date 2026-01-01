@@ -206,16 +206,16 @@ M.definitions = {}
 
 ---@class dot.command.definitions.ai
 M.definitions.ai = {
-  edit = D.new("Faiedit", "ai: edit"),
   attach_agent = D.new("Faiattachagent", "ai: attach agent"),
   detach_agent = D.new("Faidetachagent", "ai: detach agent"),
+  edit = D.new("Faiedit", "ai: edit"),
+  select_prompt = D.new("Faiselectprompt", "ai: select prompt"),
+  send_buffer = D.new("Faisendbuffer", "ai: send buffer"),
+  send_file = D.new("Faisendfile", "ai: send file"),
+  send_selection = D.new("Faisendselection", "ai: send selection"),
   submit_buffer = D.new("Faisubmitbuffer", "ai: submit buffer"),
   submit_selection = D.new("Faisubmitselection", "ai: submit selection"),
-  send_buffer = D.new("Faisendbuffer", "ai: send buffer"),
-  send_selection = D.new("Faisendselection", "ai: send selection"),
-  send_this = D.new("Faisendthis", "ai: send this"),
-  send_file = D.new("Faisendfile", "ai: send file"),
-  select_prompt = D.new("Faiselectprompt", "ai: select prompt"),
+  submit_to = D.new("Faisubmitto", "ai: submit to"),
 }
 
 ---@class dot.command.definitions.buf

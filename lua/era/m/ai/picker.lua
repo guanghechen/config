@@ -538,6 +538,131 @@ function M.show_send_target(attached, on_select)
   picker:focus()
 end
 
+---@param on_select                     fun(sources: era.m.ai.ISource[]): nil
+---@return nil
+function M.show_submit_to(on_select)
+  local items = S.action.collect_items()
+
+  local running_items = {} ---@type era.m.ai.ISelectItem[]
+  for _, item in ipairs(items) do
+    if item.type == "running" and item.source then
+      running_items[#running_items + 1] = item
+    end
+  end
+
+  if #running_items == 0 then
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "show_send_to",
+      message = "No running agents found.",
+    })
+    return
+  end
+
+  local picker_items, width = build_attach_picker_items(running_items)
+  local winnr = vim.api.nvim_get_current_win()
+  local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
+  local picker_height, picker_width = calc_picker_dimensions(picker_items, width)
+
+  local selected_set = {} ---@type table<string, boolean>
+  local source_map = {} ---@type table<string, era.m.ai.ISource>
+
+  for _, picker_item in ipairs(picker_items) do
+    ---@cast picker_item era.m.ai.picker.IItem
+    local select_item = picker_item.data ---@type era.m.ai.ISelectItem
+    if select_item.source then
+      source_map[picker_item.uuid] = select_item.source
+    end
+  end
+
+  ---@type era.m.picker.ListComposer|nil
+  local picker = nil
+
+  ---@return nil
+  local function toggle_current_selection()
+    if not picker then
+      return
+    end
+    local lnum = picker.result.lnum_current:snapshot()
+    local item = picker:retrieve(lnum)
+    if item then
+      selected_set[item.uuid] = not selected_set[item.uuid] or nil
+      picker.result:refresh_signs()
+    end
+  end
+
+  ---@return nil
+  local function confirm_selection()
+    if not picker then
+      return
+    end
+
+    local results = {} ---@type era.m.ai.ISource[]
+    local has_selection = next(selected_set) ~= nil
+
+    if has_selection then
+      for uuid, _ in pairs(selected_set) do
+        if source_map[uuid] then
+          results[#results + 1] = source_map[uuid]
+        end
+      end
+    else
+      local lnum = picker.result.lnum_current:snapshot()
+      local picker_item = picker:retrieve(lnum)
+      if picker_item and source_map[picker_item.uuid] then
+        results[#results + 1] = source_map[picker_item.uuid]
+      end
+    end
+
+    restore_window(winnr)
+    picker:close()
+
+    if #results > 0 then
+      on_select(results)
+    end
+  end
+
+  ---@param _                           integer
+  ---@param lnum                        integer
+  ---@return boolean
+  local function isselected(_, lnum)
+    if not picker then
+      return false
+    end
+    local item = picker:retrieve(lnum)
+    return item ~= nil and selected_set[item.uuid] == true
+  end
+
+  picker = era.m.picker.ListComposer.new({
+    name = __module_name__,
+    permanent = false,
+    title = " Submit to (Tab: toggle, Enter: confirm) ",
+    height = picker_height,
+    width = picker_width,
+    search_pattern = search_pattern,
+    flag_fuzzy = flag_fuzzy,
+    flag_regex = flag_regex,
+    flag_case_sensitive = flag_case_sensitive,
+    result_is_selected = isselected,
+    keymaps_result = {
+      { modes = { "n" }, key = "<Tab>", callback = toggle_current_selection, desc = "Toggle selection" },
+      { modes = { "n" }, key = "<S-Tab>", callback = toggle_current_selection, desc = "Toggle selection" },
+    },
+    on_cancel = function()
+      restore_window(winnr)
+    end,
+    on_confirm = function()
+      confirm_selection()
+    end,
+    on_disposed = function()
+      dispose_picker_flags({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive })
+    end,
+  })
+
+  picker:reset_data({ items = picker_items })
+  picker:focus()
+end
+
 ---@param on_select                     fun(prompt: era.m.ai.IPrompt, result: era.m.ai.IPromptRenderResult): nil
 ---@return nil
 function M.show_prompt(on_select)

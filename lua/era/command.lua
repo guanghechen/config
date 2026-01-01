@@ -4,12 +4,6 @@ local K = dot.command.definitions ---@type dot.command.definitions
 --[ai] ---------------------------------------------------------------------------------------------
 command
   .implement({
-    uuid = K.ai.edit.uuid,
-    action = function()
-      era.m.ai.action.edit()
-    end,
-  })
-  .implement({
     uuid = K.ai.attach_agent.uuid,
     action = function()
       era.m.ai.action.show_attach_picker()
@@ -19,6 +13,36 @@ command
     uuid = K.ai.detach_agent.uuid,
     action = function()
       era.m.ai.action.show_detach_picker()
+    end,
+  })
+  .implement({
+    uuid = K.ai.edit.uuid,
+    action = function()
+      era.m.ai.action.edit()
+    end,
+  })
+  .implement({
+    uuid = K.ai.select_prompt.uuid,
+    action = function()
+      era.m.ai.action.show_prompt_picker()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_buffer.uuid,
+    action = function()
+      era.m.ai.action.send_buffer()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_file.uuid,
+    action = function()
+      era.m.ai.action.send_file()
+    end,
+  })
+  .implement({
+    uuid = K.ai.send_selection.uuid,
+    action = function()
+      era.m.ai.action.send_selection()
     end,
   })
   .implement({
@@ -34,33 +58,9 @@ command
     end,
   })
   .implement({
-    uuid = K.ai.send_buffer.uuid,
+    uuid = K.ai.submit_to.uuid,
     action = function()
-      era.m.ai.action.send_buffer()
-    end,
-  })
-  .implement({
-    uuid = K.ai.send_selection.uuid,
-    action = function()
-      era.m.ai.action.send_selection()
-    end,
-  })
-  .implement({
-    uuid = K.ai.send_this.uuid,
-    action = function()
-      era.m.ai.action.send_buffer()
-    end,
-  })
-  .implement({
-    uuid = K.ai.send_file.uuid,
-    action = function()
-      era.m.ai.action.send_file()
-    end,
-  })
-  .implement({
-    uuid = K.ai.select_prompt.uuid,
-    action = function()
-      era.m.ai.action.show_prompt_picker()
+      era.m.ai.action.submit_to()
     end,
   })
 

@@ -30,16 +30,16 @@ end, { silent = true, desc = "Clear search highlight and hunk nav" })
 ------------------------------------------------------------------------------------------#enhance--
 
 --#[a]i---------------------------------------------------------------------------------------------
-ms({ "n", "x" }, "<leader>ae", K.ai.edit)
 ms({ "n", "x" }, "<leader>aa", K.ai.attach_agent)
 ms({ "n", "x" }, "<leader>ad", K.ai.detach_agent)
-ms({ "n" }, "<leader>ax", K.ai.submit_buffer)
-ms({ "x" }, "<leader>ax", K.ai.submit_selection)
+ms({ "n", "x" }, "<leader>ae", K.ai.edit)
 ms({ "n" }, "<leader>as", K.ai.send_buffer)
 ms({ "x" }, "<leader>as", K.ai.send_selection)
-ms({ "n", "x" }, "<leader>at", K.ai.send_this)
 ms({ "n", "x" }, "<leader>af", K.ai.send_file)
 ms({ "n", "x" }, "<leader>ap", K.ai.select_prompt)
+ms({ "n" }, "<leader>ax", K.ai.submit_buffer)
+ms({ "x" }, "<leader>ax", K.ai.submit_selection)
+ms({ "n", "x" }, "<leader>at", K.ai.submit_to)
 ---------------------------------------------------------------------------------------------#[a]i--
 
 --#[b]uf--------------------------------------------------------------------------------------------

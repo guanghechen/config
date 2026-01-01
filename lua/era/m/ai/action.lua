@@ -172,7 +172,7 @@ function M.send_to_attached(text, submit)
   end)
 end
 
----@param source                        era.m.ai.IAttachedSource
+---@param source                        era.m.ai.ISource
 ---@param text                          string
 ---@param submit                        boolean
 ---@return boolean
@@ -330,6 +330,15 @@ function M.send_buffer()
 end
 
 ---@return nil
+function M.submit_to()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local text = stl.nvim.buf.retrieve_split_block(winnr) ---@type string
+  S.picker.show_submit_to(function(sources)
+    M.__send_to_sources__(sources, text, true)
+  end)
+end
+
+---@return nil
 function M.send_file()
   local filepath = vim.api.nvim_buf_get_name(0) ---@type string
   if filepath == "" then
@@ -434,7 +443,7 @@ function M.__create_and_attach_tmux__(agent, cwd)
 end
 
 ---@protected
----@param sources                       era.m.ai.IAttachedSource[]
+---@param sources                       era.m.ai.ISource[]
 ---@param text                          string
 ---@param submit                        boolean
 ---@return nil
