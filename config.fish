@@ -62,6 +62,7 @@ set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
 
 set -gx GOOGLE_GEMINI_BASE_URL "$GHC_GEMINI_BASE_URL"
 set -gx GEMINI_API_KEY "$GHC_GEMINI_AUTH_TOKEN"
+set -gx GEMINI_MODEL "gemini-3-pro-preview"
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 ## platform specific
