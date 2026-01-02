@@ -1,4 +1,4 @@
-import type { TsukiEventNameEnum, TsukiEventResponseCodeEnum } from '../enum/event'
+import type { TsukiEventNameEnum, TsukiEventResponseCodeEnum, TsukiTargetEnum } from '../enum/event'
 
 export interface ITsukiResponseError {
   readonly message: string
@@ -15,9 +15,11 @@ export interface ITsukiRequestContext {
   readonly sender: chrome.runtime.MessageSender
   readonly eventName: TsukiEventNameEnum
   readonly eventData: unknown
+  readonly target: TsukiTargetEnum
 }
 
 export interface ITsukiRequestData {
   readonly event: TsukiEventNameEnum
   readonly payload: unknown
+  readonly target: TsukiTargetEnum
 }

@@ -15,6 +15,7 @@ async function setup(): Promise<void> {
       sender,
       eventName: data.event,
       eventData: data.payload,
+      target: data.target,
     }
 
     void handleEvent(context)

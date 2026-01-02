@@ -2,6 +2,11 @@ export enum TsukiEventNameEnum {
   FOCUS_ME = '@tsuki/focus_me',
 }
 
+export enum TsukiTargetEnum {
+  BROADCAST = '@@tsuki-broad@@',
+  CURRENT = '@@tsuki-current@@',
+}
+
 export enum TsukiEventResponseCodeEnum {
   SUCCEED = 200,
   BAD_REQUEST = 400,
