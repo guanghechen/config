@@ -86,22 +86,25 @@ for _, raw_spec in ipairs(raw_specs) do
   }
 
   -- Load plugin details from era.plugin.*
-  local spec_module_name = "era.plugin." .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
-  local ok, spec_module = pcall(require, spec_module_name)
-  if ok and spec_module then
-    local spec_details = spec_module.spec or spec_module ---@type era.m.plugin.IPluginSpec
-    spec = vim.tbl_deep_extend("force", spec, spec_details)
-    spec.cond = cond
-    spec.url = url
-    spec.branch = branch
-    spec.main = main or spec.main
-  elseif not vim.list_contains(no_details_module_names, name) then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "resolve plugin details",
-      message = "Failed to resolve the details of plugin: " .. name,
-      details = { basic = spec, error = spec_module },
-    })
+  if cond() then
+    local spec_module_name = "era.plugin."
+      .. name:gsub("%.nvim$", ""):gsub("%.lua$", ""):gsub("%.", "-"):gsub("%_", "-")
+    local ok, spec_module = pcall(require, spec_module_name)
+    if ok and spec_module then
+      local spec_details = spec_module.spec or spec_module ---@type era.m.plugin.IPluginSpec
+      spec = vim.tbl_deep_extend("force", spec, spec_details)
+      spec.cond = cond
+      spec.url = url
+      spec.branch = branch
+      spec.main = main or spec.main
+    elseif not vim.list_contains(no_details_module_names, name) then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "resolve plugin details",
+        message = "Failed to resolve the details of plugin: " .. name,
+        details = { basic = spec, error = spec_module },
+      })
+    end
   end
 
   specs[#specs + 1] = spec
