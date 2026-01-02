@@ -2,7 +2,10 @@
   "useSmartEdit": true,
   "useWriteTodos": true,
   "context": {
-    "fileName": ["GEMINI.md", "AGENTS.md"],
+    "fileName": [
+      "GEMINI.md",
+      "AGENTS.md"
+    ],
     "fileFiltering": {
       "disableFuzzySearch": false,
       "enableRecursiveFileSearch": true,
@@ -39,7 +42,7 @@
     "disableYoloMode": false,
     "enablePermanentToolApproval": false,
     "auth": {
-      "selectedType": "oauth-personal"
+      "selectedType": "gemini-api-key"
     },
     "folderTrust": {
       "enabled": true
