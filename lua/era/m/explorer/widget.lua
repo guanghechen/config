@@ -43,6 +43,7 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field protected _on_disposed        fun(): nil|nil
 ---@field protected _o_width            stl.c.Observable
 ---@field protected _prev_cursor_lnum   integer|nil
+---@field protected _unregister_fns     fun(): nil[]
 ---@field protected _render_result      era.m.explorer.view.IRenderResult|nil
 ---@field protected _resource_manager   era.m.explorer.resource.FileManager
 ---@field protected _subscriptions      stl.c.IUnsubscribable[]
@@ -101,6 +102,7 @@ function M.new(props)
   self._on_disposed = props.on_disposed
   self._o_width = props.o_width
   self._prev_cursor_lnum = nil
+  self._unregister_fns = {}
   self._render_result = nil
   self._resource_manager = resource_manager
   self._subscriptions = {}
@@ -161,6 +163,11 @@ function M:dispose()
     pcall(vim.api.nvim_del_autocmd, autocmd_id)
   end
   self._autocmd_ids = {}
+
+  for _, unregister in ipairs(self._unregister_fns) do
+    unregister()
+  end
+  self._unregister_fns = {}
 
   self:hide()
   self._tree:dispose()
@@ -379,9 +386,11 @@ function M:__create_nvimbar__()
   ---@type era.m.nvimbar.component.explorer.IFlagItem[]
   local nvimbar_flags = {}
   for _, flag in ipairs(flags) do
+    local fn_path, unregister = dot.G.register_anonymous_fn(flag.callback)
+    self._unregister_fns[#self._unregister_fns + 1] = unregister
     nvimbar_flags[#nvimbar_flags + 1] = {
       desc = flag.desc,
-      callback = dot.G.register_anonymous_fn(flag.callback) or "dot.G.noop",
+      callback = fn_path,
       snapshot = flag.snapshot,
     }
   end

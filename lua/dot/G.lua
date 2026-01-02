@@ -10,6 +10,7 @@ M.noop = stl.fn.noop
 ---@param fn                            fun(...): nil
 ---@param fn_name                       string|nil
 ---@return string
+---@return fun(): nil
 function M.register_anonymous_fn(fn, fn_name)
   if fn_name == nil then
     id = id + 1
@@ -17,7 +18,12 @@ function M.register_anonymous_fn(fn, fn_name)
   end
 
   gfn[fn_name] = fn
-  return "dot.G." .. fn_name
+
+  local unregister = function()
+    gfn[fn_name] = nil
+  end
+
+  return "dot.G." .. fn_name, unregister
 end
 
 return M
