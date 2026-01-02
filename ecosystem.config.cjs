@@ -40,6 +40,7 @@ const config = {
       args: `run start:copilot --host=${GHC_COPILOT_API_HOST} --port=${GHC_COPILOT_API_PORT} --no-colorful`,
       env: {
         NODE_ENV: 'production',
+        PWD: repos.agent_api,
       },
     },
     {
@@ -50,6 +51,7 @@ const config = {
       args: `run start start --port=${GHC_COPILOT_API_PORT}`,
       env: {
         NODE_ENV: 'production',
+        PWD: repos.copilot_api,
         HOST: GHC_COPILOT_API_HOST,
       },
     },
@@ -62,6 +64,7 @@ const config = {
       // args: `run start start -v`,
       env: {
         NODE_ENV: 'production',
+        PWD: repos.copilot_api,
         HOST: GHC_COPILOT_API_HOST,
       },
     },
@@ -73,6 +76,7 @@ const config = {
       args: `run start start --port=4848`,
       env: {
         NODE_ENV: 'production',
+        PWD: repos.copilot_api_codex,
         HOST: GHC_COPILOT_API_HOST,
       },
     },
@@ -85,6 +89,7 @@ const config = {
       watch: true,
       env: {
         NODE_ENV: 'development',
+        PWD: repos.yoz,
       },
     },
     ...(LOCAL_TASKS.apps || []),
