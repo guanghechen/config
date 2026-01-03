@@ -1,9 +1,4 @@
-Set-Alias lg lazygit
-
-function ll {
-  lsd -l $args
-}
-
+## claude
 function ccc {
   claude --dangerously-skip-permissions @args
 }
@@ -26,6 +21,26 @@ function cx1 {
   codex --profile=azure --dangerously-bypass-approvals-and-sandbox @args
 }
 
+## conda (lazy)
+function conda {
+  if (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
+    (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
+  }
+  & conda @args
+}
+
+## fnm (lazy)
+function __fnm_init__ {
+  if (-not $env:__FNM_INITIALIZED) {
+    fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
+    $env:__FNM_INITIALIZED = "1"
+  }
+}
+function node { __fnm_init__; & node @args }
+function npm { __fnm_init__; & npm @args }
+function npx { __fnm_init__; & npx @args }
+function pnpm { __fnm_init__; & pnpm @args }
+
 ## gemini
 function ggg {
   gemini --model='gemini-3-pro-preview' --yolo @args
@@ -36,6 +51,14 @@ function gg0 {
   $env:GOOGLE_GEMINI_BASE_URL = $env:GHC_GEMINI_BASE_URL
   $env:GEMINI_API_KEY = $env:GHC_GEMINI_AUTH_TOKEN
   gemini --model='gemini-3-pro-preview' --yolo @args
+}
+
+## lazygit
+Set-Alias lg lazygit
+
+## lsd
+function ll {
+  lsd -l @args
 }
 
 ## yazi
@@ -49,3 +72,12 @@ function y {
   Remove-Item -Path $tmp
 }
 
+## zoxide (lazy)
+function __zoxide_init__ {
+  if (-not $env:__ZOXIDE_INITIALIZED) {
+    zoxide init powershell | Out-String | Invoke-Expression
+    $env:__ZOXIDE_INITIALIZED = "1"
+  }
+}
+function z { __zoxide_init__; & z @args }
+function zi { __zoxide_init__; & zi @args }
