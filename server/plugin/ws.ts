@@ -35,7 +35,7 @@ const plugin = (): Plugin => {
               const payload: IResponsePayloadFileSwitch = { workspace, filepath: relativePath }
               server.ws.send({
                 type: 'custom',
-                event: ServerCustomEventType.FILE_SWITCHED,
+                event: ServerCustomEventType.FILE_SWITCH_ASK,
                 data: payload,
               })
 

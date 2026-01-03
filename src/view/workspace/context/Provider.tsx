@@ -103,13 +103,29 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
       if (data.workspace === workspace && data.filepath === filepath) viewmodel.markFilepathDirty()
     }
 
+    const handleFileSwitchAsk = (data: IResponsePayloadFileSwitch): void => {
+      if (unsubscribed) return
+
+      // Send file_switch event to tsuki
+      window.postMessage({
+        action: '@@tsuki-current@@',
+        tsuki: {
+          event: 'file_switch',
+          payload: {
+            workspace: data.workspace,
+            filepath: data.filepath,
+          },
+        },
+      })
+    }
+
     const handleFileSwitch = (data: IResponsePayloadFileSwitch): void => {
       if (unsubscribed) return
 
       if (!data.workspace && data.filepath) {
         unsubscribed = true
         meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-        meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+        meta.hot.off(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
         void navigateRef.current(`/file?filepath=${encodeURIComponent(data.filepath)}`)
         return
       }
@@ -121,7 +137,7 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
       else viewmodel.markFilepathDirty()
 
       window.postMessage({
-        action: '@@tsuki-event@@',
+        action: '@@tsuki-current@@',
         tsuki: {
           event: 'focus_me',
           payload: {},
@@ -129,12 +145,24 @@ const useHMR = (viewmodel: WorkspaceViewViewModel): void => {
       })
     }
 
+    // Listen to window message for FILE_SWITCH
+    const handleWindowMessage = (event: MessageEvent): void => {
+      if (unsubscribed) return
+      if (event.source !== window || !event.data) return
+      if (event.data.action === 'FILE_SWITCH') {
+        handleFileSwitch(event.data.payload)
+      }
+    }
+
     meta.hot.on(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-    meta.hot.on(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+    meta.hot.on(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
+    window.addEventListener('message', handleWindowMessage)
+
     return () => {
       unsubscribed = true
       meta.hot.off(ServerCustomEventType.FILE_CHANGED, handleFileChanged)
-      meta.hot.off(ServerCustomEventType.FILE_SWITCHED, handleFileSwitch)
+      meta.hot.off(ServerCustomEventType.FILE_SWITCH_ASK, handleFileSwitchAsk)
+      window.removeEventListener('message', handleWindowMessage)
     }
   }, [viewmodel])
 }
