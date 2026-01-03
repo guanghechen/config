@@ -45,7 +45,7 @@ export interface IHighlightTokens {
   getTokenProps(input: ITokenInputProps): ITokenOutputProps
 }
 
-interface PrismThemeEntry {
+export interface IPrismThemeEntry {
   color?: string
   backgroundColor?: string
   fontStyle?: 'normal' | 'italic'
@@ -67,10 +67,10 @@ interface PrismThemeEntry {
 }
 
 export interface IPrismThemeScheme {
-  plain: PrismThemeEntry
+  plain: IPrismThemeEntry
   styles: Array<{
     types: string[]
-    style: PrismThemeEntry
+    style: IPrismThemeEntry
     languages?: string[]
   }>
 }
