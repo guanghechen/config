@@ -253,69 +253,128 @@ function M:__setup_keymaps__()
     end
   end
 
-  vim.keymap.set("n", "<Esc>", function()
-    self:close()
-  end, { buffer = bufnr, nowait = true, desc = "Close" })
-
-  vim.keymap.set("n", "H", function()
-    self.state.mode = "home"
-    self.widget:update()
-  end, { buffer = bufnr, nowait = true, desc = "Home" })
-
-  vim.keymap.set("n", "I", function()
-    local Action = require("era.m.plugin.action")
-    self.state.mode = "install"
-    self.widget:update()
-    if not Action.is_running() then
-      Action.install(function()
-        if self:isvisible() then
+  ---@type stl.t.IKeymap[]
+  local keymaps = {
+    {
+      modes = { "n" },
+      key = "H",
+      callback = function()
+        self.state.mode = "home"
+        self.widget:update()
+      end,
+      desc = "Home",
+    },
+    {
+      modes = { "n" },
+      key = "I",
+      callback = function()
+        local Action = require("era.m.plugin.action")
+        self.state.mode = "install"
+        self.widget:update()
+        if not Action.is_running() then
+          Action.install(function()
+            if self:isvisible() then
+              self.widget:update()
+            end
+          end, function()
+            if self:isvisible() then
+              self.widget:update()
+            end
+          end)
           self.widget:update()
         end
-      end, function()
-        if self:isvisible() then
+      end,
+      desc = "Install",
+    },
+    {
+      modes = { "n" },
+      key = "P",
+      callback = function()
+        self.state.mode = "profile"
+        self.widget:update()
+      end,
+      desc = "Profile",
+    },
+    {
+      modes = { "n" },
+      key = "U",
+      callback = function()
+        local Action = require("era.m.plugin.action")
+        self.state.mode = "update"
+        self.widget:update()
+        if not Action.is_running() then
+          Action.update(function()
+            if self:isvisible() then
+              self.widget:update()
+            end
+          end, function()
+            if self:isvisible() then
+              self.widget:update()
+            end
+          end)
           self.widget:update()
         end
-      end)
-      self.widget:update()
-    end
-  end, { buffer = bufnr, nowait = true, desc = "Install" })
+      end,
+      desc = "Update",
+    },
+    {
+      modes = { "n" },
+      key = "X",
+      callback = function()
+        local Action = require("era.m.plugin.action")
+        self.state.mode = "clean"
+        self.widget:update()
+        if not Action.is_running() then
+          Action.clean(function()
+            if self:isvisible() then
+              self.widget:update()
+            end
+          end)
+          self.widget:update()
+        end
+      end,
+      desc = "Clean",
+    },
+    {
+      modes = { "n" },
+      key = "gb",
+      callback = function()
+        local Action = require("era.m.plugin.action")
+        if Action.is_running() then
+          return
+        end
 
-  vim.keymap.set("n", "P", function()
-    self.state.mode = "profile"
-    self.widget:update()
-  end, { buffer = bufnr, nowait = true, desc = "Profile" })
+        local cursor = vim.api.nvim_win_get_cursor(self.winnr) ---@type integer[]
+        local line = cursor[1] ---@type integer
+        local name = self.widget:get_plugin_at_line(line) ---@type string|nil
+        if not name then
+          return
+        end
 
-  vim.keymap.set("n", "U", function()
-    local Action = require("era.m.plugin.action")
-    self.state.mode = "update"
-    self.widget:update()
-    if not Action.is_running() then
-      Action.update(function()
-        if self:isvisible() then
-          self.widget:update()
-        end
-      end, function()
-        if self:isvisible() then
-          self.widget:update()
-        end
-      end)
-      self.widget:update()
-    end
-  end, { buffer = bufnr, nowait = true, desc = "Update" })
+        Action.build(name, function()
+          if self:isvisible() then
+            self.widget:update()
+          end
+        end, function()
+          if self:isvisible() then
+            self.widget:update()
+          end
+        end)
+        self.widget:update()
+      end,
+      desc = "Build",
+    },
+    {
+      modes = { "n" },
+      key = "q",
+      callback = function()
+        self:close()
+      end,
+      desc = "Close",
+    },
+  }
 
-  vim.keymap.set("n", "X", function()
-    local Action = require("era.m.plugin.action")
-    self.state.mode = "clean"
-    self.widget:update()
-    if not Action.is_running() then
-      Action.clean(function()
-        if self:isvisible() then
-          self.widget:update()
-        end
-      end)
-      self.widget:update()
-    end
-  end, { buffer = bufnr, nowait = true, desc = "Clean" })
+  stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, nowait = true })
 end
 
 return M

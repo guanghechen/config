@@ -210,6 +210,7 @@ function M.gen_hlgroup_map(context)
     m_pl_not_loaded = { fg = c.textMuted },
     m_pl_running = { fg = c.accentYellow },
     m_pl_source = { fg = c.accentPurple },
+    m_pl_step = { fg = c.accentAqua },
     m_pl_time = { fg = c.accentPurple },
 
     ---module/searcher

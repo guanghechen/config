@@ -10,6 +10,12 @@
 ---| "done"
 ---| "error"
 
+---@alias era.m.plugin.TaskStepEnum
+---| "cloning"
+---| "fetching"
+---| "checkout"
+---| "building"
+
 ---@class era.m.plugin.IConfig
 ---@field public lockfile               string
 ---@field public root                   string
@@ -52,6 +58,7 @@
 ---@class era.m.plugin.ITaskState
 ---@field public name                   string
 ---@field public status                 era.m.plugin.TaskStatusEnum
+---@field public step                   era.m.plugin.TaskStepEnum|nil
 ---@field public message                string
 ---@field public from_commit            string|nil
 ---@field public to_commit              string|nil

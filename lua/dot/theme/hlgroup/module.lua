@@ -219,6 +219,7 @@ function M.default_gen_hlgroup_map(context)
     m_pl_not_loaded = { fg = u.fg4 },
     m_pl_running = { fg = u.yellow },
     m_pl_source = { fg = u.purple },
+    m_pl_step = { fg = u.aqua },
     m_pl_time = { fg = u.purple },
     m_pl_title = { fg = u.purple, bold = true },
 

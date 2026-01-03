@@ -6,6 +6,7 @@ local State = require("era.m.plugin.state")
 ---@field protected _view               era.m.plugin.View
 ---@field protected _lines              era.m.plugin.ITextSegment[][]
 ---@field protected _required_by        table<string, string[]>
+---@field protected _line_to_plugin     table<integer, string>
 local M = {}
 M.__index = M
 
@@ -16,6 +17,7 @@ function M.new(view)
   self._view = view
   self._lines = {}
   self._required_by = {}
+  self._line_to_plugin = {}
   self.padding = 2
   self.wrap = view.win_opts.width
   return self
@@ -24,6 +26,7 @@ end
 ---@return nil
 function M:update()
   self._lines = {}
+  self._line_to_plugin = {}
   self:__build_required_by__()
   self:__title__()
 
@@ -261,6 +264,9 @@ function M:__render_plugin__(state, show_time)
   end
 
   self:__append_triggers__(spec)
+
+  self._line_to_plugin[#self._lines] = spec.name
+
   self:__nl__()
 end
 
@@ -288,10 +294,30 @@ function M:__collect_to_clean__()
   return State.collect_orphan_plugins()
 end
 
+---@return era.m.plugin.ITaskState[]
+function M:__collect_working__()
+  local Action = require("era.m.plugin.action")
+  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
+  local working = {} ---@type era.m.plugin.ITaskState[]
+
+  for _, task in pairs(tasks) do
+    if task.status == "running" or task.status == "done" or task.status == "error" then
+      working[#working + 1] = task
+    end
+  end
+
+  table.sort(working, function(a, b)
+    return a.name < b.name
+  end)
+
+  return working
+end
+
 ---@return nil
 function M:__home__()
   local loaded, not_loaded = self:__collect_plugins__()
   local to_clean = self:__collect_to_clean__()
+  local working = self:__collect_working__()
   local total = #loaded + #not_loaded ---@type integer
 
   table.sort(loaded, function(a, b)
@@ -302,6 +328,14 @@ function M:__home__()
   end)
 
   self:__append__("Total:", "m_pl_h2"):__append__(" " .. total .. " plugins", "m_pl_comment"):__nl__():__nl__()
+
+  if #working > 0 then
+    self:__append__("Working", "m_pl_h2"):__append__(" (" .. #working .. ")", "m_pl_comment"):__nl__()
+    for _, task in ipairs(working) do
+      self:__render_task_progress__(task)
+    end
+    self:__nl__()
+  end
 
   if #to_clean > 0 then
     self:__append__("Clean", "m_pl_h2"):__append__(" (" .. #to_clean .. ")", "m_pl_comment"):__nl__()
@@ -367,6 +401,7 @@ function M:__install__()
   local Action = require("era.m.plugin.action")
   local Loader = require("era.m.plugin.loader")
   local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
+  local history = Action.get_history() ---@type table<string, era.m.plugin.ITaskState>
   local is_running = Action.is_running() ---@type boolean
 
   if is_running then
@@ -382,7 +417,10 @@ function M:__install__()
     return
   end
 
-  if vim.tbl_isempty(tasks) then
+  -- Use current tasks if available, otherwise use history
+  local display_tasks = vim.tbl_isempty(tasks) and history or tasks ---@type table<string, era.m.plugin.ITaskState>
+
+  if vim.tbl_isempty(display_tasks) then
     self:__append__("Press ", "m_pl_comment")
     self:__append__("I", "m_pl_key")
     self:__append__(" to install missing plugins", "m_pl_comment"):__nl__()
@@ -391,14 +429,14 @@ function M:__install__()
 
   self:__append__("Install Complete", "m_pl_h2"):__nl__():__nl__()
 
-  local names = vim.tbl_keys(tasks) ---@type string[]
+  local names = vim.tbl_keys(display_tasks) ---@type string[]
   table.sort(names)
 
   local installed = {} ---@type era.m.plugin.ITaskState[]
   local errors = {} ---@type era.m.plugin.ITaskState[]
 
   for _, name in ipairs(names) do
-    local task = tasks[name]
+    local task = display_tasks[name]
     if task.status == "error" then
       errors[#errors + 1] = task
     else
@@ -427,6 +465,7 @@ function M:__update__()
   local Action = require("era.m.plugin.action")
   local Loader = require("era.m.plugin.loader")
   local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
+  local history = Action.get_history() ---@type table<string, era.m.plugin.ITaskState>
   local is_running = Action.is_running() ---@type boolean
 
   if is_running then
@@ -442,7 +481,10 @@ function M:__update__()
     return
   end
 
-  if vim.tbl_isempty(tasks) then
+  -- Use current tasks if available, otherwise use history
+  local display_tasks = vim.tbl_isempty(tasks) and history or tasks ---@type table<string, era.m.plugin.ITaskState>
+
+  if vim.tbl_isempty(display_tasks) then
     self:__append__("Press ", "m_pl_comment")
     self:__append__("U", "m_pl_key")
     self:__append__(" to update all plugins", "m_pl_comment"):__nl__()
@@ -451,7 +493,7 @@ function M:__update__()
 
   self:__append__("Update Complete", "m_pl_h2"):__nl__():__nl__()
 
-  local names = vim.tbl_keys(tasks) ---@type string[]
+  local names = vim.tbl_keys(display_tasks) ---@type string[]
   table.sort(names)
 
   local updated = {} ---@type era.m.plugin.ITaskState[]
@@ -459,7 +501,7 @@ function M:__update__()
   local errors = {} ---@type era.m.plugin.ITaskState[]
 
   for _, name in ipairs(names) do
-    local task = tasks[name]
+    local task = display_tasks[name]
     if task.status == "error" then
       errors[#errors + 1] = task
     elseif task.from_commit and task.to_commit and task.from_commit ~= task.to_commit then
@@ -529,7 +571,9 @@ function M:__clean__()
 
   for _, name in ipairs(to_clean) do
     self:__append__("  ", nil)
-    self:__append__(name, "m_pl_bold"):__nl__()
+    self:__append__(name, "m_pl_bold")
+    self._line_to_plugin[#self._lines] = name
+    self:__nl__()
   end
 end
 
@@ -554,10 +598,18 @@ function M:__render_task_progress__(task)
   self:__append__("  " .. status_icon .. " ", status_hl)
   self:__append__(task.name, "m_pl_bold")
 
+  if task.step then
+    self:__append__(" [", "m_pl_comment")
+    self:__append__(task.step, "m_pl_step")
+    self:__append__("]", "m_pl_comment")
+  end
+
   if task.message and task.message ~= "" then
     self:__append__(" ", nil)
     self:__append__(task.message, "m_pl_comment")
   end
+
+  self._line_to_plugin[#self._lines] = task.name
 
   self:__nl__()
 end
@@ -591,9 +643,12 @@ function M:__render_task_result__(task, plugin_state)
     self:__append__(task.to_commit, "m_pl_commit_to")
   end
 
-  if plugin_state then
-    self:__append_triggers__(plugin_state.spec)
+  if task.message and task.message ~= "" then
+    self:__append__(" ", nil)
+    self:__append__(task.message, "m_pl_comment")
   end
+
+  self._line_to_plugin[#self._lines] = task.name
 
   self:__nl__()
 
@@ -621,6 +676,12 @@ function M:__render_commit__(commit)
 
   self:__append__(" " .. commit.time, "m_pl_commit_time")
   self:__nl__()
+end
+
+---@param line                          integer
+---@return string|nil
+function M:get_plugin_at_line(line)
+  return self._line_to_plugin[line]
 end
 
 return M
