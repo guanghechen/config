@@ -14,6 +14,7 @@ const SENSITIVE_PATHS = [
   //
   /(?:^|[\\/])\.ssh[\\/]/,
   /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
+  /(?:^|[\\/])local[\\/]env\.[^/\\]+$/,
 ]
 
 function isSensitiveFile(filepath) {
