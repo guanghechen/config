@@ -26,9 +26,9 @@ function __conda_init__ {
   if (-not $env:__CONDA_INITIALIZED) {
     if (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
       (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
-      $env:__CONDA_INITIALIZED = "1"
-      Remove-Item -Path Function:conda -ErrorAction SilentlyContinue
     }
+    $env:__CONDA_INITIALIZED = "1"
+    Remove-Item -Path Function:conda -ErrorAction SilentlyContinue
   }
 }
 function conda { __conda_init__; & conda @args }
