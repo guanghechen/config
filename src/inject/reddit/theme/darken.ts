@@ -76,4 +76,3 @@ export const darkTheme: string = `
     border: 1px solid #343536 !important;
   }
 `.trim()
-

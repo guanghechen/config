@@ -12,4 +12,4 @@ const App: React.FC = () => {
   )
 }
 
-createRoot(document.getElementById('root')!).render((<App />) as any)
+createRoot(document.getElementById('root')!).render(<App />)

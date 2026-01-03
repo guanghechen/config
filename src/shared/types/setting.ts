@@ -1,8 +1,8 @@
 import type { LogLevel } from '../enum/reporter'
-import type { Mutable } from './common'
+import type { IMutable } from './common'
 
 export interface IServerSettings {
   readonly loglevel: LogLevel
 }
 
-export type IMutableServerSettings = Mutable<IServerSettings>
+export type IMutableServerSettings = IMutable<IServerSettings>
