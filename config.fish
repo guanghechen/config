@@ -51,6 +51,16 @@ set -gx PYTHONIOENCODING utf8
 set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
 
+## platform specific
+if test (uname) = Darwin
+    source ~/.config/fish/conf/platform/mac.fish
+else if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
+    source ~/.config/fish/conf/platform/wsl.fish
+else
+    source ~/.config/fish/conf/platform/nix.fish
+end
+source ~/.config/fish/conf/platform/local.fish
+
 ## setup environments (for agent)
 set -gx ANTHROPIC_BASE_URL "$GHC_ANTHROPIC_BASE_URL"
 set -gx ANTHROPIC_AUTH_TOKEN "$GHC_ANTHROPIC_AUTH_TOKEN"
@@ -62,18 +72,8 @@ set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
 
 set -gx GOOGLE_GEMINI_BASE_URL "$GHC_GEMINI_BASE_URL"
 set -gx GEMINI_API_KEY "$GHC_GEMINI_AUTH_TOKEN"
-set -gx GEMINI_MODEL "gemini-3-pro-preview"
+set -gx GEMINI_MODEL gemini-3-pro-preview
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
-
-## platform specific
-if test (uname) = Darwin
-    source ~/.config/fish/conf/platform/mac.fish
-else if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
-    source ~/.config/fish/conf/platform/wsl.fish
-else
-    source ~/.config/fish/conf/platform/nix.fish
-end
-source ~/.config/fish/conf/platform/local.fish
 
 source ~/.config/fish/conf/app.fish
 source ~/.config/fish/conf/theme.fish
