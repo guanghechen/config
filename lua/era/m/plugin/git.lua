@@ -1,136 +1,63 @@
+---@class era.m.plugin.IGitInfo
+---@field public branch                 string|nil
+---@field public commit                 string|nil
+
 ---@class era.m.plugin.git
 local M = {}
 
----@param repo                          string
----@return string|nil
-function M.head(repo)
-  return M.__read_first_line__(repo .. "/.git/HEAD")
+-- Forward all functions to stl.git
+M.head = function(repo)
+  return stl.git.head(repo)
 end
 
----@param repo                          string
----@param ...                           string
----@return string|nil
-function M.ref(repo, ...)
-  local ref = table.concat({ ... }, "/") ---@type string
-  return M.__read_first_line__(repo .. "/.git/refs/" .. ref) or M.packed_ref(repo, ref)
+M.ref = function(repo, ...)
+  return stl.git.ref(repo, ...)
 end
 
----@param repo                          string
----@param ref                           string
----@return string|nil
-function M.packed_ref(repo, ref)
-  local content = M.__read_all__(repo .. "/.git/packed-refs")
-  if not content then
-    return nil
-  end
-
-  for line in content:gmatch("[^\n]+") do
-    local commit, name = line:match("^(%x+) refs/(.*)$")
-    if name == ref then
-      return commit
-    end
-  end
-  return nil
+M.packed_ref = function(repo, ref)
+  return stl.git.packed_ref(repo, ref)
 end
 
----@param repo                          string
----@return era.m.plugin.IGitInfo|nil
-function M.info(repo)
-  local line = M.head(repo)
-  if not line then
-    return nil
-  end
-
-  local ref, branch = line:match("ref: refs/(heads/(.*))")
-  if ref then
-    return {
-      branch = branch,
-      commit = M.ref(repo, ref),
-    }
-  else
-    return { commit = line }
-  end
+M.info = function(repo)
+  return stl.git.info(repo)
 end
 
----@param repo                          string
----@param branch                        string
----@param origin                        boolean|nil
----@return string|nil
-function M.get_commit(repo, branch, origin)
-  if origin then
-    return M.ref(repo, "remotes/origin", branch) or M.ref(repo, "heads", branch)
-  else
-    return M.ref(repo, "heads", branch)
-  end
+M.get_commit = function(repo, branch, origin)
+  return stl.git.get_commit(repo, branch, origin)
 end
 
----@param repo                          string
----@return string|nil
-function M.get_branch(repo)
-  local line = M.head(repo)
-  if line then
-    return line:match("ref: refs/heads/(.*)")
-  end
-  return nil
+M.get_branch = function(repo)
+  return stl.git.get_branch(repo)
 end
 
----@param repo                          string
----@return string|nil
-function M.get_origin(repo)
-  local content = M.__read_all__(repo .. "/.git/config")
-  if not content then
-    return nil
-  end
-
-  local in_origin = false ---@type boolean
-  for line in content:gmatch("[^\n]+") do
-    if line:match('^%s*%[remote "origin"%]') then
-      in_origin = true
-    elseif line:match("^%s*%[") then
-      in_origin = false
-    elseif in_origin then
-      local url = line:match("^%s*url%s*=%s*(.+)%s*$")
-      if url then
-        return url
-      end
-    end
-  end
-  return nil
+M.get_origin = function(repo)
+  return stl.git.get_origin(repo)
 end
 
----@param a                             era.m.plugin.IGitInfo
----@param b                             era.m.plugin.IGitInfo
----@return boolean
-function M.eq(a, b)
-  local ra = a.commit and a.commit:sub(1, 7) ---@type string|nil
-  local rb = b.commit and b.commit:sub(1, 7) ---@type string|nil
-  return ra == rb
+M.eq = function(a, b)
+  return stl.git.eq(a, b)
+end
+
+M.clone = function(url, path, branch, callback)
+  return stl.git.clone(url, path, branch, callback)
 end
 
 ----------------------------------------------------------------------------------------------------
 
+-- Keep these as protected methods for backward compatibility
+-- They're simple file reading utilities that era.m.plugin.git might use internally
+
 ---@param path                          string
 ---@return string|nil
 function M.__read_all__(path)
-  local f = io.open(path, "r")
-  if not f then
-    return nil
-  end
-  local content = f:read("*a") ---@type string
-  f:close()
-  return content
+  return stl.git.__read_all__(path)
 end
 
 ---@param path                          string
 ---@return string|nil
 function M.__read_first_line__(path)
-  local f = io.open(path, "r")
-  if not f then
-    return nil
-  end
-  local line = f:read("*l") ---@type string|nil
-  f:close()
-  return line
+  return stl.git.__read_first_line__(path)
 end
 
 return M
+

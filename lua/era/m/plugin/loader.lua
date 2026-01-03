@@ -301,9 +301,17 @@ function M.__setup_lazy_cmds__(spec, state)
     vim.api.nvim_create_user_command(cmd, function(cmd_opts)
       vim.api.nvim_del_user_command(cmd)
       M.__load_plugin__(state)
-      vim.cmd(string.format("%s %s", cmd, cmd_opts.args or ""))
+      vim.api.nvim_cmd({
+        cmd = cmd,
+        args = cmd_opts.fargs,
+        bang = cmd_opts.bang,
+        mods = cmd_opts.smods,
+        range = cmd_opts.range,
+      }, {})
     end, {
       nargs = "*",
+      bang = true,
+      range = true,
       complete = function()
         vim.api.nvim_del_user_command(cmd)
         M.__load_plugin__(state)

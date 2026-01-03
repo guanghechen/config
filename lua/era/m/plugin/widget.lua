@@ -30,6 +30,8 @@ function M:update()
   local mode = self._view.state.mode ---@type era.m.plugin.ViewModeEnum
   if mode == "profile" then
     self:__profile__()
+  elseif mode == "install" then
+    self:__install__()
   elseif mode == "update" then
     self:__update__()
   elseif mode == "clean" then
@@ -147,6 +149,14 @@ function M:__title__()
     self:__append__(" Profile " .. icons.lazy, "m_pl_h1")
   else
     self:__append__(" Profile (P) ", "m_pl_button")
+  end
+
+  self:__append__(" ")
+
+  if self._view.state.mode == "install" then
+    self:__append__(" Install " .. icons.lazy, "m_pl_h1")
+  else
+    self:__append__(" Install (I) ", "m_pl_button")
   end
 
   self:__append__(" ")
@@ -349,6 +359,66 @@ function M:__profile__()
     end
   else
     self:__append__("  No plugins loaded yet", "m_pl_comment"):__nl__()
+  end
+end
+
+---@return nil
+function M:__install__()
+  local Action = require("era.m.plugin.action")
+  local Loader = require("era.m.plugin.loader")
+  local tasks = Action.get_tasks() ---@type table<string, era.m.plugin.ITaskState>
+  local is_running = Action.is_running() ---@type boolean
+
+  if is_running then
+    self:__append__("Installing plugins...", "m_pl_h2"):__nl__():__nl__()
+
+    local names = vim.tbl_keys(tasks) ---@type string[]
+    table.sort(names)
+
+    for _, name in ipairs(names) do
+      local task = tasks[name]
+      self:__render_task_progress__(task)
+    end
+    return
+  end
+
+  if vim.tbl_isempty(tasks) then
+    self:__append__("Press ", "m_pl_comment")
+    self:__append__("I", "m_pl_key")
+    self:__append__(" to install missing plugins", "m_pl_comment"):__nl__()
+    return
+  end
+
+  self:__append__("Install Complete", "m_pl_h2"):__nl__():__nl__()
+
+  local names = vim.tbl_keys(tasks) ---@type string[]
+  table.sort(names)
+
+  local installed = {} ---@type era.m.plugin.ITaskState[]
+  local errors = {} ---@type era.m.plugin.ITaskState[]
+
+  for _, name in ipairs(names) do
+    local task = tasks[name]
+    if task.status == "error" then
+      errors[#errors + 1] = task
+    else
+      installed[#installed + 1] = task
+    end
+  end
+
+  if #errors > 0 then
+    self:__append__("Errors", "m_pl_h2"):__append__(" (" .. #errors .. ")", "m_pl_comment"):__nl__()
+    for _, task in ipairs(errors) do
+      self:__render_task_result__(task, Loader.get(task.name))
+    end
+    self:__nl__()
+  end
+
+  if #installed > 0 then
+    self:__append__("Installed", "m_pl_h2"):__append__(" (" .. #installed .. ")", "m_pl_comment"):__nl__()
+    for _, task in ipairs(installed) do
+      self:__render_task_result__(task, Loader.get(task.name))
+    end
   end
 end
 

@@ -1,6 +1,7 @@
 ---@alias era.m.plugin.ViewModeEnum
 ---| "home"
 ---| "profile"
+---| "install"
 ---| "update"
 ---| "clean"
 

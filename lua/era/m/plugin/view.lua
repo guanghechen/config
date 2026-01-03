@@ -45,6 +45,23 @@ function M.show(mode)
   _instance.winnr = nil
   _instance.win_opts = {}
   _instance:focus()
+
+  -- Auto-detect missing plugins and show install mode
+  if not mode then
+    local State = require("era.m.plugin.state")
+    local has_missing = false ---@type boolean
+    for _, spec in ipairs(State.specs) do
+      local path = dot.path.join(State.options.root, spec.name) ---@type string
+      if not yoz.path.is_exist(path) then
+        has_missing = true
+        break
+      end
+    end
+    if has_missing then
+      _instance.state.mode = "install"
+      _instance.widget:update()
+    end
+  end
 end
 
 ---@return nil
@@ -244,6 +261,24 @@ function M:__setup_keymaps__()
     self.state.mode = "home"
     self.widget:update()
   end, { buffer = bufnr, nowait = true, desc = "Home" })
+
+  vim.keymap.set("n", "I", function()
+    local Action = require("era.m.plugin.action")
+    self.state.mode = "install"
+    self.widget:update()
+    if not Action.is_running() then
+      Action.install(function()
+        if self:isvisible() then
+          self.widget:update()
+        end
+      end, function()
+        if self:isvisible() then
+          self.widget:update()
+        end
+      end)
+      self.widget:update()
+    end
+  end, { buffer = bufnr, nowait = true, desc = "Install" })
 
   vim.keymap.set("n", "P", function()
     self.state.mode = "profile"

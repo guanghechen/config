@@ -16,6 +16,8 @@ function M.setup(specs)
     local mode = "home" ---@type era.m.plugin.ViewModeEnum
     if cmd.args == "profile" then
       mode = "profile"
+    elseif cmd.args == "install" then
+      mode = "install"
     elseif cmd.args == "update" then
       mode = "update"
     elseif cmd.args == "clean" then
@@ -25,7 +27,7 @@ function M.setup(specs)
   end, {
     nargs = "?",
     complete = function()
-      return { "home", "profile", "update", "clean" }
+      return { "home", "profile", "install", "update", "clean" }
     end,
     desc = "Open plugin info window",
   })
