@@ -1,5 +1,6 @@
 export enum TsukiEventNameEnum {
   FOCUS_ME = '@tsuki/focus_me',
+  FILE_SWITCH = '@tsuki/file_switch',
 }
 
 export enum TsukiTargetEnum {

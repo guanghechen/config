@@ -1,12 +1,15 @@
 import { TsukiEventNameEnum, TsukiEventResponseCodeEnum } from '@/shared/enum/event'
 import type { ITsukiRequestContext, ITsukiResponseData } from '@/shared/types/event'
 import { reporter } from '../state'
+import { handleFileSwitchEvent } from './file-switch'
 import { handleFocusMeEvent } from './focus-me'
 
 export async function handleEvent(context: ITsukiRequestContext): Promise<ITsukiResponseData> {
   switch (context.eventName) {
     case TsukiEventNameEnum.FOCUS_ME:
       return handleFocusMeEvent(context)
+    case TsukiEventNameEnum.FILE_SWITCH:
+      return handleFileSwitchEvent(context)
     default: {
       reporter.warn('[tsuki.server] Unknown event:', context.eventName)
       const response: ITsukiResponseData = {
