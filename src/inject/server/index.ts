@@ -32,6 +32,8 @@ async function setup(): Promise<void> {
         }
         sendResponse(response)
       })
+
+    return true // Keep the message channel open for async sendResponse
   })
 }
 

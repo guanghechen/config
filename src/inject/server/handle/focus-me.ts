@@ -14,7 +14,7 @@ export async function handleFocusMeEvent(
     return {
       code: TsukiEventResponseCodeEnum.BAD_REQUEST,
       error: {
-        message: 'ccess denied: only localhost sources are allowed',
+        message: 'Access denied: only localhost sources are allowed',
         details: { url },
       },
     }
