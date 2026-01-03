@@ -1,9 +1,4 @@
-# Upgrade dev env.
-function ghc-upgrade {
-  pwsh "$env:XDG_CONFIG_HOME\guanghechen\win\setup.ps1"
-}
-
-function Script:Sync-GhcGitWorktrees {
+function __ghc_update_sync_worktrees__ {
   param(
     [string]$RepoRoot,
     [string]$RepoMain,
@@ -14,7 +9,7 @@ function Script:Sync-GhcGitWorktrees {
   )
 
   if (-not (Test-Path -Path $RepoRoot)) {
-    Write-Host ("   [{0}] mkdir -p {1}" -f $RepoName, $RepoRoot) -ForegroundColor Blue
+    Write-Host ("   [{0}] mkdir -p {1}" -f $RepoName, $RepoRoot) -ForegroundColor Blue
     New-Item -ItemType Directory -Path $RepoRoot -Force | Out-Null
     Write-Host
   }
@@ -24,12 +19,12 @@ function Script:Sync-GhcGitWorktrees {
     $gitPath = Join-Path $RepoMain ".git"
 
     if (Test-Path $gitPath) {
-      Write-Host "   [$RepoName] fetching and merging origin/$mainBranch" -ForegroundColor Blue
+      Write-Host "   [$RepoName] fetching and merging origin/$mainBranch" -ForegroundColor Blue
       git -C "$RepoMain" fetch origin
       git -C "$RepoMain" merge "origin/$mainBranch" --ff-only
       Write-Host
     } else {
-      Write-Host "   [$RepoName] cloning $RepoUrl (branch: $mainBranch)" -ForegroundColor Blue
+      Write-Host "   [$RepoName] cloning $RepoUrl (branch: $mainBranch)" -ForegroundColor Blue
       git -C "$RepoRoot" clone $RepoUrl --branch=$mainBranch "$RepoMain"
       Write-Host
     }
@@ -46,11 +41,11 @@ function Script:Sync-GhcGitWorktrees {
     $repoPath = Join-Path $RepoRoot $branch
 
     if (Test-Path -Path $repoPath) {
-      Write-Host "   [$RepoName] syncing $branch" -ForegroundColor Blue
+      Write-Host "   [$RepoName] syncing $branch" -ForegroundColor Blue
       git -C "$repoPath" merge "origin/$branch" --ff-only
       Write-Host
     } elseif ($isRequired) {
-      Write-Host "   [$RepoName] add new worktree of $branch" -ForegroundColor Blue
+      Write-Host "   [$RepoName] add new worktree of $branch" -ForegroundColor Blue
       git -C "$RepoMain" worktree add "$repoPath" $branch
       Write-Host
     }
@@ -58,7 +53,7 @@ function Script:Sync-GhcGitWorktrees {
 }
 
 # Update config repositories.
-function ghc-update {
+function f_ghc-update {
   $configRoot = "$env:XDG_CONFIG_HOME"
   $configMain = Join-Path $configRoot "guanghechen"
   $configUrl = "https://github.com/guanghechen/config.git"
@@ -99,11 +94,11 @@ function ghc-update {
     "yoz"
   )
 
-  Write-Host "  [$configMain] syncing..." -ForegroundColor Green
-  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "main" -Branches @($configMainBranch)
-  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "required" -Branches $configRequiredBranches
-  Sync-GhcGitWorktrees -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "optional" -Branches $configOptionalBranches
-  Write-Host "  [config] done." -ForegroundColor Cyan
+  Write-Host "  [$configMain] syncing..." -ForegroundColor Green
+  __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "main" -Branches @($configMainBranch)
+  __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "required" -Branches $configRequiredBranches
+  __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "optional" -Branches $configOptionalBranches
+  Write-Host "  [config] done." -ForegroundColor Cyan
   Write-Host
 
   #----------------------------------------------------------------------------------------------#
@@ -116,9 +111,9 @@ function ghc-update {
   $wikiRequiredBranches = @("translator", "wiki-note")
   $wikiOptionalBranches = @()
 
-  Write-Host "  [$wikiMain] syncing..." -ForegroundColor Green
-  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "main" -Branches @($wikiMainBranch)
-  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "required" -Branches $wikiRequiredBranches
-  Sync-GhcGitWorktrees -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "optional" -Branches $wikiOptionalBranches
-  Write-Host "  [wiki] done." -ForegroundColor Cyan
+  Write-Host "  [$wikiMain] syncing..." -ForegroundColor Green
+  __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "main" -Branches @($wikiMainBranch)
+  __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "required" -Branches $wikiRequiredBranches
+  __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "optional" -Branches $wikiOptionalBranches
+  Write-Host "  [wiki] done." -ForegroundColor Cyan
 }

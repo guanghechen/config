@@ -1,4 +1,4 @@
-function ghc-proxy {
+function f_ghc-proxy {
   param (
     [string]$action
   )
@@ -36,11 +36,9 @@ function ghc-proxy {
   } else {
     $currentHttpProxy = [System.Environment]::GetEnvironmentVariable("HTTP_PROXY", [System.EnvironmentVariableTarget]::User)
     if ($currentHttpProxy) {
-      ghc-proxy off
+      f_ghc-proxy off
     } else {
-      ghc-proxy on
+      f_ghc-proxy on
     }
   }
 }
-
-

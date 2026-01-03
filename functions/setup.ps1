@@ -1,8 +1,21 @@
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\bootstrap.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\claude.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\proxy.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\swap-alt-win.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\theme.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\ghc\yoz.ps1"
+## Lazy load helper
+function __lazy_load__ {
+  param([string]$FuncName)
+  $filePath = "$env:XDG_CONFIG_HOME\pwsh\functions\f_$FuncName.ps1"
+  . $filePath
+  & "f_$FuncName" @args
+}
+
+## Lazy loaded functions
+function ghc-upgrade { __lazy_load__ 'ghc-upgrade' @args }
+function ghc-update { __lazy_load__ 'ghc-update' @args }
+function ghc-claude-remote { __lazy_load__ 'ghc-claude-remote' @args }
+function ghc-proxy { __lazy_load__ 'ghc-proxy' @args }
+function ghc-theme-apply { __lazy_load__ 'ghc-theme-apply' @args }
+function ghc-theme-toggle { __lazy_load__ 'ghc-theme-toggle' @args }
+function ghc-theme-gen { __lazy_load__ 'ghc-theme-gen' @args }
+function swap-alt-win { __lazy_load__ 'swap-alt-win' @args }
+function yoz { __lazy_load__ 'yoz' @args }
+
+## Immediately loaded functions
 . "$env:XDG_CONFIG_HOME\pwsh\functions\prompt.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\yazi.ps1"
