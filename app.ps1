@@ -1,9 +1,11 @@
 ## claude
 function ccc {
+  __fnm_init__
   claude --dangerously-skip-permissions @args
 }
 
 function cc0 {
+  __fnm_init__
   $env:ANTHROPIC_API_KEY = ''
   $env:ANTHROPIC_BASE_URL = $env:GHC_ANTHROPIC_BASE_URL
   $env:ANTHROPIC_AUTH_TOKEN = $env:GHC_ANTHROPIC_AUTH_TOKEN
@@ -14,10 +16,12 @@ function cc0 {
 
 ## codex
 function cx0 {
+  __fnm_init__
   codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cx1 {
+  __fnm_init__
   codex --profile=azure --dangerously-bypass-approvals-and-sandbox @args
 }
 
@@ -48,10 +52,12 @@ function pnpm { __fnm_init__; pnpm @args }
 
 ## gemini
 function ggg {
+  __fnm_init__
   gemini --model='gemini-3-pro-preview' --yolo @args
 }
 
 function gg0 {
+  __fnm_init__
   $env:GOOGLE_CLOUD_PROJECT = ''
   $env:GOOGLE_GEMINI_BASE_URL = $env:GHC_GEMINI_BASE_URL
   $env:GEMINI_API_KEY = $env:GHC_GEMINI_AUTH_TOKEN
