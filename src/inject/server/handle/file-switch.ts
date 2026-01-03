@@ -1,6 +1,6 @@
 import { TsukiEventResponseCodeEnum } from '@/shared/enum/event'
 import type { ITsukiRequestContext, ITsukiResponseData } from '@/shared/types/event'
-import { isLocalhost } from '@/shared/util/url'
+import { isLocalhost, isYozUrl } from '@/shared/util/url'
 import { reporter } from '../state'
 
 interface IFileSwitchPayload {
@@ -37,40 +37,71 @@ export async function handleFileSwitchEvent(
     }
   }
 
-  // Check if the sender tab is the active tab
-  if (!sender.tab?.active) {
-    // Silently ignore if not active tab
-    reporter.debug('[tsuki.server] Ignore file switch event from inactive tab:', tabid)
-    const response: ITsukiResponseData = {
-      code: TsukiEventResponseCodeEnum.SUCCEED,
-    }
-    return response
+  const payload = eventData as IFileSwitchPayload
+
+  // If sender tab is active, send FILE_SWITCH directly
+  if (sender.tab?.active) {
+    return sendFileSwitchToTab(tabid, payload)
   }
 
-  // Send FILE_SWITCH message to the active tab
-  const payload = eventData as IFileSwitchPayload
+  // Sender tab is not active, check if there's only one yoz tab
+  const yozTabs = await queryYozTabs()
+  if (yozTabs.length === 1) {
+    const targetTab = yozTabs[0]
+    if (targetTab.id) {
+      // Focus the only yoz tab and send FILE_SWITCH
+      await focusTab(targetTab.id, targetTab.windowId)
+      return sendFileSwitchToTab(targetTab.id, payload)
+    }
+  }
+
+  // Multiple yoz tabs or no yoz tabs, silently ignore
+  reporter.debug('[tsuki.server] Ignore file switch: not active and multiple yoz tabs exist')
+  return { code: TsukiEventResponseCodeEnum.SUCCEED }
+}
+
+async function queryYozTabs(): Promise<chrome.tabs.Tab[]> {
+  return new Promise(resolve => {
+    chrome.tabs.query({}, tabs => {
+      const yozTabs = tabs.filter(tab => tab.url && isYozUrl(tab.url))
+      resolve(yozTabs)
+    })
+  })
+}
+
+async function focusTab(tabId: number, windowId?: number): Promise<void> {
+  return new Promise(resolve => {
+    chrome.tabs.update(tabId, { active: true }, () => {
+      if (windowId) {
+        chrome.windows.update(windowId, { focused: true }, () => resolve())
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+
+function sendFileSwitchToTab(
+  tabId: number,
+  payload: IFileSwitchPayload,
+): Promise<ITsukiResponseData> {
   return new Promise<ITsukiResponseData>(resolve => {
-    chrome.tabs.sendMessage(tabid, { action: 'FILE_SWITCH', payload }, response => {
+    chrome.tabs.sendMessage(tabId, { action: 'FILE_SWITCH', payload }, () => {
       if (chrome.runtime.lastError) {
         reporter.error(
           '[tsuki.server] Error sending file switch message:',
           chrome.runtime.lastError,
         )
-        const errorResponse: ITsukiResponseData = {
+        resolve({
           code: TsukiEventResponseCodeEnum.SERVER_ERROR,
           error: {
             message: chrome.runtime.lastError.message || 'failed to send file switch message',
-            details: { tabid, payload },
+            details: { tabId, payload },
           },
-        }
-        resolve(errorResponse)
+        })
         return
       }
-
-      const successResponse: ITsukiResponseData = {
-        code: TsukiEventResponseCodeEnum.SUCCEED,
-      }
-      resolve(successResponse)
+      resolve({ code: TsukiEventResponseCodeEnum.SUCCEED })
     })
   })
 }
