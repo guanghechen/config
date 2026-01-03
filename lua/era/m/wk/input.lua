@@ -206,7 +206,7 @@ function M.__loop__(prefix)
   end
 
   local key = vim.fn.keytrans(char)
-  local now = (vim.uv or vim.loop).hrtime() / 1e6
+  local now = vim.uv.hrtime() / 1e6
   S.state.started_at = now
 
   -- User pressed a key, cancel any pending popup timer and reset show_popup
