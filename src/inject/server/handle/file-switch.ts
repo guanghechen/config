@@ -4,7 +4,7 @@ import type {
   ITsukiRequestContext,
   ITsukiResponseData,
 } from '@/shared/types/event'
-import { isLocalhost, isYozUrl } from '@/shared/util/url'
+import { isLocalhost } from '@/shared/util/url'
 import { reporter } from '../state'
 
 export async function handleFileSwitchEvent(
@@ -60,9 +60,15 @@ export async function handleFileSwitchEvent(
 
 async function queryYozTabs(): Promise<chrome.tabs.Tab[]> {
   return new Promise(resolve => {
-    chrome.tabs.query({}, tabs => {
-      const yozTabs = tabs.filter(tab => tab.url && isYozUrl(tab.url))
-      resolve(yozTabs)
+    // Use URL pattern to filter tabs at query level for better performance
+    const urlPatterns = [
+      `http://localhost:${__YOZ_SERVER_PORT__}/*`,
+      `https://localhost:${__YOZ_SERVER_PORT__}/*`,
+      `http://127.0.0.1:${__YOZ_SERVER_PORT__}/*`,
+      `https://127.0.0.1:${__YOZ_SERVER_PORT__}/*`,
+    ]
+    chrome.tabs.query({ url: urlPatterns }, tabs => {
+      resolve(tabs)
     })
   })
 }

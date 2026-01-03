@@ -31,7 +31,7 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
         action: 'FILE_SWITCH',
         payload: message.payload,
       },
-      '*',
+      window.location.origin,
     )
   }
 })
