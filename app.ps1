@@ -23,8 +23,11 @@ function cx1 {
 
 ## conda (lazy)
 function conda {
-  if (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
-    (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
+  if (-not $env:__CONDA_INITIALIZED) {
+    if (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
+      (& "$env:APP_HOME_MINIFORGE\Scripts\conda.exe" "shell.powershell" "hook") | Out-String | ?{$_} | Invoke-Expression
+      $env:__CONDA_INITIALIZED = "1"
+    }
   }
   & conda @args
 }
