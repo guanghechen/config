@@ -3,7 +3,13 @@ import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser'
 import fs from 'node:fs'
 import path from 'node:path'
-import { SOURCE_INJECT_DIR, TARGET_DIR, extensionManifest, isProduction } from './script/env.mjs'
+import {
+  SOURCE_INJECT_DIR,
+  TARGET_DIR,
+  YOZ_SERVER_PORT,
+  extensionManifest,
+  isProduction,
+} from './script/env.mjs'
 
 export default async function rollupConfig() {
   const entries = fs
@@ -50,6 +56,7 @@ export default async function rollupConfig() {
                 'process.env.SBSExtensionVersionMinimal': JSON.stringify(
                   extensionManifest.version_minimal,
                 ),
+                __YOZ_SERVER_PORT__: JSON.stringify(YOZ_SERVER_PORT),
               }),
               isProduction &&
                 terser({

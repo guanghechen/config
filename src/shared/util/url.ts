@@ -11,12 +11,12 @@ export function isLocalhost(url: string): boolean {
 }
 
 /**
- * Checks if a URL is a yoz page (localhost with port 7071)
+ * Checks if a URL is a yoz page (localhost with YOZ_SERVER_PORT)
  */
 export function isYozUrl(url: string): boolean {
   try {
     const urlObj = new URL(url)
-    return isLocalhost(url) && urlObj.port === '7071'
+    return isLocalhost(url) && urlObj.port === __YOZ_SERVER_PORT__
   } catch (e) {
     return false
   }

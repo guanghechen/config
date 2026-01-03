@@ -44,19 +44,18 @@ export async function handleFileSwitchEvent(
     return sendFileSwitchToTab(tabid, payload)
   }
 
-  // Sender tab is not active, check if there's only one yoz tab
+  // Sender tab is not active, find the most recently accessed yoz tab
   const yozTabs = await queryYozTabs()
-  if (yozTabs.length === 1) {
-    const targetTab = yozTabs[0]
+  if (yozTabs.length > 0) {
+    // Sort by lastAccessed descending, pick the most recent one
+    const targetTab = yozTabs.sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))[0]
     if (targetTab.id) {
-      // Focus the only yoz tab and send FILE_SWITCH
       await focusTab(targetTab.id, targetTab.windowId)
       return sendFileSwitchToTab(targetTab.id, payload)
     }
   }
 
-  // Multiple yoz tabs or no yoz tabs, silently ignore
-  reporter.debug('[tsuki.server] Ignore file switch: not active and multiple yoz tabs exist')
+  // No yoz tabs, silently ignore
   return { code: TsukiEventResponseCodeEnum.SUCCEED }
 }
 
