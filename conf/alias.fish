@@ -37,7 +37,7 @@ alias vdir='vdir --color=auto'
 
 ### claude code
 alias ccc='claude --dangerously-skip-permissions'
-abbr -a cc0 'ANTHROPIC_API_KEY='' ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.5" ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.5" claude --dangerously-skip-permissions'
+abbr -a cc0 'ANTHROPIC_API_KEY='' ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.5" ANTHROPIC_SMALL_FAST_MODEL="claude-haiku-4.5" claude --dangerously-skip-permissions'
 
 ### codex
 abbr -a cx0 'codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
