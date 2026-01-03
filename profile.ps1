@@ -18,4 +18,5 @@ if (Test-Path $localEnvPath) {
 
 . "$env:XDG_CONFIG_HOME\pwsh\env.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\app.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\functions\setup.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\prompt.ps1"
+. "$env:XDG_CONFIG_HOME\pwsh\fn.ps1"
