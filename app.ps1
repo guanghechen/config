@@ -34,12 +34,13 @@ function __fnm_init__ {
   if (-not $env:__FNM_INITIALIZED) {
     fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
     $env:__FNM_INITIALIZED = "1"
+    Remove-Item -Path Function:node, Function:npm, Function:npx, Function:pnpm -ErrorAction SilentlyContinue
   }
 }
-function node { __fnm_init__; & node @args }
-function npm { __fnm_init__; & npm @args }
-function npx { __fnm_init__; & npx @args }
-function pnpm { __fnm_init__; & pnpm @args }
+function node { __fnm_init__; node @args }
+function npm { __fnm_init__; npm @args }
+function npx { __fnm_init__; npx @args }
+function pnpm { __fnm_init__; pnpm @args }
 
 ## gemini
 function ggg {
