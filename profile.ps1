@@ -11,11 +11,11 @@ Set-PSReadLineOption -Colors @{
   Default                 = "White"
 }
 
-. "$env:XDG_CONFIG_HOME\pwsh\config.ps1"
-$localConfigPath = "$env:XDG_CONFIG_HOME\pwsh\local\config.ps1"
-if (Test-Path $localConfigPath) {
-  . $localConfigPath
+$localEnvPath = "$env:XDG_CONFIG_HOME\pwsh\local\env.ps1"
+if (Test-Path $localEnvPath) {
+  . $localEnvPath
 }
+. "$env:XDG_CONFIG_HOME\pwsh\env.ps1"
 
 ## Setup conda
 If (Test-Path "$env:APP_HOME_MINIFORGE\Scripts\conda.exe") {
@@ -34,7 +34,4 @@ fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
 
 ## Setup zoxide (need ensure executed at the last line. see https://github.com/ajeetdsouza/zoxide/issues/707#issuecomment-1959685345)
 zoxide init powershell | Out-String | Invoke-Expression
-
-## Setup default envs
-ghc-claude-local
 
