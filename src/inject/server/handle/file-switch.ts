@@ -1,12 +1,11 @@
 import { TsukiEventResponseCodeEnum } from '@/shared/enum/event'
-import type { ITsukiRequestContext, ITsukiResponseData } from '@/shared/types/event'
+import type {
+  IFileSwitchPayload,
+  ITsukiRequestContext,
+  ITsukiResponseData,
+} from '@/shared/types/event'
 import { isLocalhost, isYozUrl } from '@/shared/util/url'
 import { reporter } from '../state'
-
-interface IFileSwitchPayload {
-  workspace: string | null
-  filepath: string
-}
 
 export async function handleFileSwitchEvent(
   context: ITsukiRequestContext,

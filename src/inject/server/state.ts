@@ -8,7 +8,6 @@ export const states = {
   $settings: new State<IServerSettings>(serverSettingsResolver.defaults(), { equals: isEqual }),
 }
 
-export const senderMap: Map<string, number> = new Map()
 export const reporter = new Reporter({
   name: 'wulala.server',
   date: true,

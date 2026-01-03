@@ -23,3 +23,8 @@ export interface ITsukiRequestData {
   readonly payload: unknown
   readonly target: TsukiTargetEnum
 }
+
+export interface IFileSwitchPayload {
+  readonly workspace: string | null
+  readonly filepath: string
+}
