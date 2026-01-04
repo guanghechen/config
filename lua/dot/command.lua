@@ -621,6 +621,11 @@ M.definitions.ux = {
   resume_last_widget = D.new("Fuxresume", "ux: resume last widget"),
 }
 
+---@class dot.command.definitions.view
+M.definitions.view = {
+  notifications = D.new("Fviewnotifications", "view: notification history"),
+}
+
 ---@class dot.command.definitions.win
 M.definitions.win = {
   close = D.new("Fwinclose", "win: close"),

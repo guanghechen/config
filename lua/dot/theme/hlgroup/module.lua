@@ -172,6 +172,27 @@ function M.default_gen_hlgroup_map(context)
     m_in_current = { bg = u.bg3 },
     m_in_normal = { bg = bg_pane },
 
+    ---module/notifications
+    m_nf_body = { fg = u.fg3 },
+    m_nf_current = { bg = u.bg3 },
+    m_nf_icon_debug = { fg = u.fg3 },
+    m_nf_icon_error = { fg = u.red },
+    m_nf_icon_info = { fg = u.blue },
+    m_nf_icon_trace = { fg = u.fg4 },
+    m_nf_icon_warn = { fg = u.yellow },
+    m_nf_level_debug = { fg = u.fg3 },
+    m_nf_level_error = { fg = u.red },
+    m_nf_level_info = { fg = u.blue },
+    m_nf_level_trace = { fg = u.fg4 },
+    m_nf_level_warn = { fg = u.yellow },
+    m_nf_normal = { fg = u.fg1, bg = bg_pane },
+    m_nf_time = { fg = u.fg4 },
+    m_nf_title_debug = { fg = u.fg2 },
+    m_nf_title_error = { fg = u.brightRed },
+    m_nf_title_info = { fg = u.fg1 },
+    m_nf_title_trace = { fg = u.fg3 },
+    m_nf_title_warn = { fg = u.brightYellow },
+
     ---module/picker
     m_pk_finder_normal = { fg = u.fg1, bg = bg_pane },
     m_pk_finder_prompt = { fg = u.red, bg = bg_pane },

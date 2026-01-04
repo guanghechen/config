@@ -1366,6 +1366,14 @@ command
     end,
   })
 
+--[view] -------------------------------------------------------------------------------------------
+command.implement({
+  uuid = K.view.notifications.uuid,
+  action = function()
+    era.view.notifications.open()
+  end,
+})
+
 --[win] close---------------------------------------------------------------------------------------
 command
   .implement({

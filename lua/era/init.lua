@@ -201,6 +201,7 @@ local __view__mods = {
   Act = "era.view.act",
   Fileinfo = "era.view.fileinfo",
   Keysheet = "era.view.keysheet",
+  notifications = "era.view.notifications",
   Plainfile = "era.view.plainfile",
   Printer = "era.view.printer",
   Setting = "era.view.setting",
@@ -213,6 +214,7 @@ local __view__mods = {
 ---@field public Act                    era.view.Act
 ---@field public Fileinfo               era.view.Fileinfo
 ---@field public Keysheet               era.view.Keysheet
+---@field public notifications          { open: fun(): nil, close: fun(): nil }
 ---@field public Plainfile              era.view.Plainfile
 ---@field public Printer                era.view.Printer
 ---@field public Setting                era.view.Setting
