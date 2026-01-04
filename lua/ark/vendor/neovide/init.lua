@@ -41,7 +41,7 @@ vim.schedule(function()
   era.m.winsep.dressing()
 
   era.m.dim.dressing()
-  era.m.im.dressing()
+  -- era.m.im.dressing()
   era.m.input.dressing()
   era.m.lsp.dressing()
   era.m.python_venv.dressing()

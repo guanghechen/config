@@ -13,6 +13,6 @@ pcall(require, "ark.vendor.local.plugin")
 
 vim.schedule(function()
   era.m.commentstring.dressing()
-  era.m.im.dressing()
+  -- era.m.im.dressing()
   pcall(require, "ark.vendor.local.dressing")
 end)
