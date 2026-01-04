@@ -6,7 +6,7 @@
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 
-const targetSize = process.argv[2] || "128000";
+const targetSize = process.argv[2] || "150000";
 const pattern = /function NO\(A\)\{if\(A\.includes\("\[1m\]"\)\)return 1e6;return \d+\}/;
 
 function getCliPath() {
