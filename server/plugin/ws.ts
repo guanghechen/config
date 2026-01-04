@@ -33,11 +33,6 @@ const plugin = (): Plugin => {
             if (filepath) {
               const { workspace, relativePath } = state.sharpFilepath(filepath)
               const payload: IResponsePayloadFileSwitch = { workspace, filepath: relativePath }
-              server.ws.send({
-                type: 'custom',
-                event: ServerCustomEventType.FILE_SWITCH_ASK,
-                data: payload,
-              })
 
               const force: boolean = state.fileSwitchArgForce$.getSnapshot()
               if (force) {
@@ -63,6 +58,12 @@ const plugin = (): Plugin => {
                     state.reporter.error('Failed to notify the FILE_SWITCHED event. error:', error)
                   }
                 }
+              } else {
+                server.ws.send({
+                  type: 'custom',
+                  event: ServerCustomEventType.FILE_SWITCH_ASK,
+                  data: payload,
+                })
               }
             }
           },
