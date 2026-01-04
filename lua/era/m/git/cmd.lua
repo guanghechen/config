@@ -274,7 +274,9 @@ end
 ---@return fun(): nil                cancel_fn
 function M.hash_object_async(cwd, file, lines, callback)
   local stdin = table.concat(lines, "\n")
-  if #lines > 0 then
+  -- Only add trailing newline if the last element is NOT already an empty string
+  -- (empty string at end indicates the original file had a trailing newline)
+  if #lines > 0 and lines[#lines] ~= "" then
     stdin = stdin .. "\n"
   end
 

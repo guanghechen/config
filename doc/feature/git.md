@@ -139,6 +139,19 @@ M.stage_buffer(callback)     -- Stage 整个文件
 M.reset_buffer()             -- Reset 整个文件
 ```
 
+### 操作模式规则
+
+**Normal Mode:**
+- 只对当前光标所在行所属的 hunk 生效
+- Stage: 作用于 unstaged hunk
+- Unstage: 作用于 staged hunk
+- Reset: 作用于 unstaged hunk
+
+**Visual Mode:**
+- 选中 [Li, Lj] 行后，找到这些行所覆盖的所有 hunks
+- Stage/Unstage: 依次处理每个被选中的 hunk
+- Reset: **只作用于 unstaged hunks**，忽略所有 staged hunks
+
 ### Stage/Unstage 实现
 
 **Stage Hunk:**

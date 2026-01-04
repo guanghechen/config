@@ -580,24 +580,28 @@ function M.reset_hunk(bufnr, range)
     return false, "Buffer not attached"
   end
 
-  local hunk ---@type era.m.git.Hunk|nil
+  local hunks ---@type era.m.git.Hunk[]
   if range then
-    hunk = era.m.git.hunk.create_partial(buf_cache.hunks, range[1], range[2])
+    hunks = era.m.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
   else
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
+    local hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
+    hunks = hunk and { hunk } or {}
   end
 
-  if not hunk then
+  if #hunks == 0 then
     return false, "No hunk at cursor"
   end
 
-  -- For topdelete (added.start = 0), insert at beginning (index 0)
-  local start_line = hunk.added.start == 0 and 0 or (hunk.added.start - 1) ---@type integer
-  local end_line = start_line + hunk.added.count ---@type integer
-
-  vim.api.nvim_buf_set_lines(bufnr, start_line, end_line, false, hunk.removed.lines)
+  -- Process hunks from bottom to top to avoid line number offset issues
+  for i = #hunks, 1, -1 do
+    local hunk = hunks[i] ---@type era.m.git.Hunk
+    -- For topdelete (added.start = 0), insert at beginning (index 0)
+    local start_line = hunk.added.start == 0 and 0 or (hunk.added.start - 1) ---@type integer
+    local end_line = start_line + hunk.added.count ---@type integer
+    vim.api.nvim_buf_set_lines(bufnr, start_line, end_line, false, hunk.removed.lines)
+  end
 
   return true, nil
 end
@@ -784,30 +788,59 @@ function M.unstage_hunk(bufnr, range, callback)
     return
   end
 
-  local selected_hunks = {} ---@type era.m.git.Hunk[]
+  -- hunks_staged is from filter_common(diff(HEAD, Buffer), diff(Index, Buffer))
+  -- Its coordinates are in Buffer line numbers, but apply_inverted_hunks needs
+  -- hunks with Index coordinates. Compute diff(HEAD, Index) for correct coordinates.
+  local hunks_head_to_index = era.m.git.diff.run_diff(head_lines, index_lines)
+
+  if #hunks_head_to_index == 0 then
+    if callback then
+      callback(false, "No staged changes found")
+    end
+    return
+  end
+
+  -- User selects hunks based on Buffer line numbers (from hunks_staged).
+  -- We need to find the corresponding hunks in hunks_head_to_index.
+  -- Since both represent the same staged changes, we match by hunk index.
+  local selected_indices = {} ---@type table<integer, boolean>
 
   if range then
     local top, bot = range[1], range[2] ---@type integer, integer
-    for _, hunk in ipairs(hunks_staged) do
-      -- For topdelete (added.start = 0, vend = 0), use effective position 1
+    for i, hunk in ipairs(hunks_staged) do
       local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
       local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
       if not (effective_vend < top or effective_start > bot) then
-        selected_hunks[#selected_hunks + 1] = hunk
+        selected_indices[i] = true
       end
     end
   else
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    local hunk = era.m.git.hunk.find(lnum, hunks_staged)
-    if hunk then
-      selected_hunks[1] = hunk
+    local _, idx = era.m.git.hunk.find(lnum, hunks_staged)
+    if idx then
+      selected_indices[idx] = true
+    end
+  end
+
+  if not next(selected_indices) then
+    if callback then
+      callback(false, "No staged hunk at cursor")
+    end
+    return
+  end
+
+  -- Select corresponding hunks from hunks_head_to_index
+  local selected_hunks = {} ---@type era.m.git.Hunk[]
+  for i, hunk in ipairs(hunks_head_to_index) do
+    if selected_indices[i] then
+      selected_hunks[#selected_hunks + 1] = hunk
     end
   end
 
   if #selected_hunks == 0 then
     if callback then
-      callback(false, "No staged hunk at cursor")
+      callback(false, "Failed to map staged hunks")
     end
     return
   end
