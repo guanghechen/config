@@ -52,26 +52,25 @@ function prompt {
 
   if ($gitBranch -ne "") {
     Write-Host "(" -nonewline -foregroundcolor White
-    Write-Host "`e[1m$gitBranch" -nonewline -foregroundcolor DarkMagenta
-    if ($aheadCount -gt 0 -and $behindCount -gt 0) {
-      Write-Host " ⇕$aheadCount/$behindCount" -nonewline -foregroundcolor DarkRed
-    } elseif ($aheadCount -gt 0) {
-      Write-Host " ↑$aheadCount" -nonewline -foregroundcolor DarkGreen
-    } elseif ($behindCount -gt 0) {
-      Write-Host " ↓$behindCount" -nonewline -foregroundcolor DarkRed
+    Write-Host "`e[1m$gitBranch" -nonewline -foregroundcolor DarkMagenta
+    if ($aheadCount -gt 0) {
+      Write-Host "⇡$aheadCount" -nonewline -foregroundcolor DarkGreen
+    }
+    if ($behindCount -gt 0) {
+      Write-Host "⇣$behindCount" -nonewline -foregroundcolor DarkRed
     }
     Write-Host "|" -nonewline -foregroundcolor White
     if ($addedCount -gt 0) {
-      Write-Host "+$addedCount" -nonewline -foregroundcolor DarkBlue
+      Write-Host "+$addedCount" -nonewline -foregroundcolor DarkGreen
     }
     if ($modifiedCount -gt 0) {
-      Write-Host "●$modifiedCount" -nonewline -foregroundcolor DarkYellow
+      Write-Host "󰧞$modifiedCount" -nonewline -foregroundcolor DarkYellow
     }
     if ($untrackedCount -gt 0) {
-      Write-Host "?$untrackedCount" -nonewline -foregroundcolor White
+      Write-Host "?$untrackedCount" -nonewline -foregroundcolor DarkGray
     }
     if ($addedCount -eq 0 -and $modifiedCount -eq 0 -and $untrackedCount -eq 0) {
-      Write-Host "✔" -nonewline -foregroundcolor DarkGreen
+      Write-Host "✓" -nonewline -foregroundcolor DarkGreen
     }
     Write-Host ") " -nonewline -foregroundcolor White
   }
