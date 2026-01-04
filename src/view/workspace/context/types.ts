@@ -1,4 +1,4 @@
-import type { FileTreeModeEnum } from '@/component/filetree/context/types'
+import type { FileTreeModeEnum } from '@/container/filetree/context/types'
 
 export interface IWorkspaceItem {
   readonly tag: string

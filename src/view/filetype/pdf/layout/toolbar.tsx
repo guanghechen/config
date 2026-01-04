@@ -11,7 +11,7 @@ import {
   ViewStreamIcon,
   ZoomInIcon,
   ZoomOutIcon,
-} from '@/component/icon/material'
+} from '@/common/component/icon/material'
 import { usePdfViewViewModel } from '../context'
 
 export const Toolbar: React.FC = () => {

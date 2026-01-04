@@ -1,6 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
-import { CodeBox } from '@/component/CodeBox'
+import { CodeBox } from '@/common/component/CodeBox'
 import type { ITextTransformStep } from '@/shared/types'
 import { TextTransformStepTypeEnum } from '@/shared/types'
 

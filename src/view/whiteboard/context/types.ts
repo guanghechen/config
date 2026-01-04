@@ -1,7 +1,6 @@
-export interface IFileHandle {
-  readonly handle: FileSystemFileHandle | null
-  readonly filename: string | null
-}
+import type { IFileHandle } from '@/common/util/file-system-access'
+
+export type { IFileHandle }
 
 export interface IWhiteboardViewData {
   readonly content: string | null

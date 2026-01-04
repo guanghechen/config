@@ -1,6 +1,6 @@
 import React from 'react'
-import { CopyButton } from '@/component/button/copy'
-import { calcExtname } from '@/util/path'
+import { CopyButton } from '@/common/component/button/copy'
+import { calcExtname } from '@/common/util/path'
 
 interface IProps {
   readonly filepath: string

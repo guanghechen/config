@@ -1,6 +1,6 @@
 import cn from 'clsx'
 import React from 'react'
-import { Json } from '@/component/json'
+import { Json } from '@/container/json'
 import type { ITextTransformedNode } from '@/shared/types'
 import type { IChainPath } from '../context'
 import {

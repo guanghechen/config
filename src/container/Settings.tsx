@@ -2,7 +2,7 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import cn from 'clsx'
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { SettingsIcon } from '@/component/icon/material'
+import { SettingsIcon } from '@/common/component/icon/material'
 import { listedRoutes } from '@/route'
 import { ThemeToggle } from './ThemeToggle'
 

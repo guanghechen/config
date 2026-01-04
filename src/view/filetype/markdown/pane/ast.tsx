@@ -1,7 +1,7 @@
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { Json } from '@/component/json'
-import { useMarkdownAst } from '@/component/markdown'
+import { Json } from '@/container/json'
+import { useMarkdownAst } from '@/container/markdown'
 
 export const AstPane: React.FC = () => {
   const ast: Root = useMarkdownAst()

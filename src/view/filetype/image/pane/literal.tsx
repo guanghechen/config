@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { LiteralBox } from '@/component/LiteralBox'
+import { LiteralBox } from '@/common/component/LiteralBox'
 import { useImageViewViewModel } from '../context'
 
 export const LiteralPane: React.FC = () => {

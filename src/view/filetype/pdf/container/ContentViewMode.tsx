@@ -1,7 +1,11 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { ChevronDownIcon, ViewPageByPageIcon, ViewStreamIcon } from '@/component/icon/material'
+import {
+  ChevronDownIcon,
+  ViewPageByPageIcon,
+  ViewStreamIcon,
+} from '@/common/component/icon/material'
 import { usePdfViewViewModel } from '../context'
 
 export const ContentViewMode: React.FC = () => {

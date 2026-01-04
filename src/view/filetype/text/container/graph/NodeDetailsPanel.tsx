@@ -2,7 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Node } from '@xyflow/react'
 import cn from 'clsx'
 import React from 'react'
-import { Json } from '@/component/json'
+import { Json } from '@/container/json'
 import { useTextViewViewModel } from '../../context'
 import type { IReactFlowNodeData } from '../../util/graph/adaptor'
 

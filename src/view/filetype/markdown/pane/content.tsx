@@ -3,8 +3,8 @@ import type { Heading, Root } from '@yozora/ast'
 import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
 import throttle from 'lodash.throttle'
 import React from 'react'
-import { NodesRenderer, ReactMarkdown, useMarkdownAst } from '@/component/markdown'
-import { ReactMarkdownContent } from '@/component/markdown/ReactMarkdownContent'
+import { NodesRenderer, ReactMarkdown, useMarkdownAst } from '@/container/markdown'
+import { ReactMarkdownContent } from '@/container/markdown/ReactMarkdownContent'
 import { useMarkdownViewViewModel } from '../context'
 
 export const ContentPane: React.FC = () => {

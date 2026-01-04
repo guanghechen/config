@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { Json } from '@/component/json'
+import { Json } from '@/container/json'
 import { useJsonViewViewModel } from '../context'
 import { DEFAULT_JSON } from '../mock-data'
 

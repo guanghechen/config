@@ -8,7 +8,7 @@ import {
   RotateRightIcon,
   ZoomInIcon,
   ZoomOutIcon,
-} from '@/component/icon/material'
+} from '@/common/component/icon/material'
 import { useImageViewViewModel } from '../context'
 
 export const Toolbar: React.FC = () => {

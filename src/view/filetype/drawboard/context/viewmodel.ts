@@ -1,6 +1,6 @@
 import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
-import type { IDrawboardElement } from '@/component/drawboard'
+import type { IDrawboardElement } from '@/container/drawboard'
 import type { IDrawboardViewData } from './types'
 import { ModeEnum } from './types'
 

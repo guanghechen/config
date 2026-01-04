@@ -2,9 +2,9 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { FileTypeIcon } from '@/component/icon/filetype'
+import { FileTypeIcon } from '@/common/component/icon/filetype'
+import { useKeyBinding } from '@/common/keybindings'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
-import { useKeyBinding } from '@/keybindings'
 import { useWorkspaceViewmodel } from '../context'
 
 interface FileItem {

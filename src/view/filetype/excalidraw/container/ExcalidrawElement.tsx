@@ -1,7 +1,7 @@
 import type { AppState } from '@excalidraw/excalidraw/types'
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { MarkdownContentProvider, ReactMarkdown, parseMarkdown } from '@/component/markdown'
+import { MarkdownContentProvider, ReactMarkdown, parseMarkdown } from '@/container/markdown'
 
 interface ITextElement {
   readonly id: string

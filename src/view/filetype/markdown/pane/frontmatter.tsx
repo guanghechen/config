@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { Json } from '@/component/json'
+import { Json } from '@/container/json'
 import { useMarkdownViewViewModel } from '../context'
 
 export const FrontmatterPane: React.FC = () => {

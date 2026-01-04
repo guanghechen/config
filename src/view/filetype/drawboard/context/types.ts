@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-literal-enum-member */
-import type { IDrawboardElement } from '@/component/drawboard'
+import type { IDrawboardElement } from '@/container/drawboard'
 
 const bit: number = 1
 

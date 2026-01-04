@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { FilePath } from '@/component/FilePath'
+import { FilePath } from '@/common/component/FilePath'
 import { useWorkspaceViewmodel } from '../context'
 
 export const Menu: React.FC = () => {

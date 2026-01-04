@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Root } from '@yozora/ast'
 import React from 'react'
-import { MarkdownContentProvider } from '@/component/markdown'
+import { MarkdownContentProvider } from '@/container/markdown'
 import { useMarkdownViewViewModel } from './context'
 import { Main } from './layout/main'
 import { ModeToggle } from './layout/mode'

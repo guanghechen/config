@@ -1,8 +1,8 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { IPrismThemeScheme } from '@/component/code-highlighter'
-import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/component/code-highlighter'
-import { LiteralBox } from '@/component/LiteralBox'
+import type { IPrismThemeScheme } from '@/common/component/code-highlighter'
+import { CodeHighlighter, vscDarkTheme, vscLightTheme } from '@/common/component/code-highlighter'
+import { LiteralBox } from '@/common/component/LiteralBox'
 import { SiteTheme, useSiteViewmodel } from '@/context/site'
 import { useJsonViewViewModel } from '../context'
 

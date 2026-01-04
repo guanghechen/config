@@ -1,5 +1,5 @@
 import React from 'react'
-import { MultiInput } from '@/component/MultiInput'
+import { MultiInput } from '@/common/component/MultiInput'
 import type { IChainPath } from '../context'
 import { createChainPath, getPathColorClasses } from '../utils'
 

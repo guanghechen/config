@@ -2,7 +2,7 @@ import type { IState } from '@guanghechen/react-viewmodel'
 import { State, ViewModel } from '@guanghechen/react-viewmodel'
 import debounce from 'lodash.debounce'
 import { toast } from 'react-toastify'
-import { FileSystemAccessStorage, generateDefaultFilename } from '../../../util/file-system-access'
+import { FileSystemAccessStorage, generateDefaultFilename } from '@/common/util/file-system-access'
 import type { IFileHandle, IWhiteboardContentData, IWhiteboardViewData } from './types'
 
 // Optimized constant map for whiteboard filetype to editor language mapping

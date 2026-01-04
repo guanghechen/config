@@ -9,7 +9,7 @@ import {
   RotateRightIcon,
   ZoomInIcon,
   ZoomOutIcon,
-} from '@/component/icon/material'
+} from '@/common/component/icon/material'
 import { useSvgViewViewModel } from '../context'
 
 export const Toolbar: React.FC = () => {

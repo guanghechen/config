@@ -1,14 +1,14 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue, useViewModel } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/component/filetree'
+import type { FileTreeModeEnum, IFileTreeContext, IFileTreeFileNode } from '@/container/filetree'
 import {
   FileTreeComposer,
   FileTreeContextType,
   FileTreeMode,
   FileTreeSearch,
   FileTreeViewModel,
-} from '@/component/filetree'
+} from '@/container/filetree'
 import { useGetWorkspaceFiles } from '@/hook/api/workspace/files'
 import { useWorkspaceViewmodel } from '../context'
 

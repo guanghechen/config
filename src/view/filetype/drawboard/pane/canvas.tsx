@@ -1,9 +1,9 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { Drawboard } from '@/component/drawboard'
-import type { IDrawboardElement } from '@/component/drawboard'
-import { createCrossPlatformKeybinding, useKeyBindings } from '@/keybindings'
+import { createCrossPlatformKeybinding, useKeyBindings } from '@/common/keybindings'
+import { Drawboard } from '@/container/drawboard'
+import type { IDrawboardElement } from '@/container/drawboard'
 import type { IDrawboardData } from '../context'
 import { useDrawboardViewViewModel } from '../context'
 

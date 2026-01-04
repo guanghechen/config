@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import React from 'react'
-import { usePrettier } from '@/hook/usePrettier'
-import { isLanguageSupported } from '@/util/prettier'
+import { usePrettier } from '@/common/hook/usePrettier'
+import { isLanguageSupported } from '@/common/util/prettier'
 
 interface IProps {
   readonly code: string

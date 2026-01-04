@@ -1,7 +1,7 @@
 import React from 'react'
+import { useAutoCleanBlobUrl } from '@/common/hook/useAutoCleanBlobUrl'
 import { getFile } from '@/hook/api/file'
 import type { IFetchFileData, IFetchFileResult } from '@/shared/types/api'
-import { useAutoCleanBlobUrl } from './useAutoCleanBlobUrl'
 
 export const useFileResult = <T extends IFetchFileData = IFetchFileData>(
   workspace: string | null,

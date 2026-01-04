@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
-import { CheckIcon, MenuIcon } from '@/component/icon/material'
+import { CheckIcon, MenuIcon } from '@/common/component/icon/material'
 import { useWorkspaceViewmodel } from '../context'
 
 export const FiletreeToggler: React.FC = () => {

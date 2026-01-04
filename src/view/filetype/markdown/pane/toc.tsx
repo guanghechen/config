@@ -1,7 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { IHeadingToc } from '@yozora/ast-util'
 import React from 'react'
-import { MarkdownToc } from '@/component/markdown'
+import { MarkdownToc } from '@/container/markdown'
 import { useMarkdownViewViewModel } from '../context'
 
 export const TocPane: React.FC = () => {

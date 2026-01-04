@@ -2,7 +2,7 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import cn from 'clsx'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRightIcon, ViewStreamIcon } from '@/component/icon/material'
+import { ChevronRightIcon, ViewStreamIcon } from '@/common/component/icon/material'
 import { useWorkspaceViewmodel } from '../context'
 
 export const WorkspaceSelector: React.FC = () => {

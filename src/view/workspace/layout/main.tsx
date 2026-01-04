@@ -1,6 +1,6 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
-import { calcExtname } from '@/util/path'
+import { calcExtname } from '@/common/util/path'
 import { DrawboardAdaptor } from '@/view/file/container/DrawboardAdaptor'
 import { ExcalidrawAdaptor } from '@/view/file/container/ExcalidrawAdaptor'
 import { HtmlAdaptor } from '@/view/file/container/HtmlAdaptor'
