@@ -23,6 +23,7 @@ end
 
 ## Abbr
 abbr -a ghc-gen-secret "node -e \"console.log(crypto.randomBytes(32).toString('base64'))\" | clip.exe"
+abbr -a ghc-invisible-space "node -e \"process.stdout.write('\u00A0')\" | clip.exe"
 
 ## Setup vpn
 if command -v ipconfig.exe >/dev/null
