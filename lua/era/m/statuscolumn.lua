@@ -243,20 +243,10 @@ local function statuscolumn()
   end
 
   local components = { "", "", "" } ---@type string[]
-  if (nu or rnu) and vim.v.virtnum == 0 then
-    local num ---@type number
-    if rnu and nu and vim.v.relnum == 0 then
-      num = vim.v.lnum
-    elseif rnu then
-      num = vim.v.relnum
-    else
-      num = vim.v.lnum
-    end
-    components[2] = "%=" .. num .. " "
-  end
-
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local show_folds = vim.v.virtnum == 0 and vim.wo[winnr].foldcolumn ~= "0" ---@type boolean
+  local git_hl ---@type string|nil
+
   if show_signs or show_folds then
     local signs = line_signs(winnr, bufnr, vim.v.lnum, wanted) ---@type era.m.statuscolumn.ISign[]
 
@@ -270,11 +260,14 @@ local function statuscolumn()
       local right = find_sign(signs_by_type, right_c)
 
       local git = signs_by_type.git
-      if git and left and left.type == "fold" then
-        left.texthl = git.texthl
-      end
-      if git and right and right.type == "fold" then
-        right.texthl = git.texthl
+      if git then
+        git_hl = git.texthl
+        if left and left.type == "fold" then
+          left.texthl = git.texthl
+        end
+        if right and right.type == "fold" then
+          right.texthl = git.texthl
+        end
       end
 
       components[1] = left and get_icon(left) or "  " -- left
@@ -282,6 +275,22 @@ local function statuscolumn()
     else
       components[1] = "  "
       components[3] = "  "
+    end
+  end
+
+  if (nu or rnu) and vim.v.virtnum == 0 then
+    local num ---@type number
+    if rnu and nu and vim.v.relnum == 0 then
+      num = vim.v.lnum
+    elseif rnu then
+      num = vim.v.relnum
+    else
+      num = vim.v.lnum
+    end
+    if git_hl then
+      components[2] = "%#" .. git_hl .. "#%=" .. num .. " %*"
+    else
+      components[2] = "%=" .. num .. " "
     end
   end
   components[1] = vim.b[bufnr].era_statuscolumn_left ~= false and components[1] or ""
