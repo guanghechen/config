@@ -114,7 +114,7 @@ end
 ---@param name                          string
 ---@return boolean
 local function is_git_sign(name)
-  return name:find("^fg_sign_") ~= nil
+  return name:find("^m_git_sign_") ~= nil
 end
 
 -- Returns a list of regular and extmark signs sorted by priority (low to high)
