@@ -3,8 +3,8 @@
 import { readFileSync } from 'node:fs'
 
 const GIT_SENSITIVE_COMMANDS = [
-  { pattern: /\bgit\s+push\b/, name: 'git push' },
-  { pattern: /\bgit\s+commit\b/, name: 'git commit' },
+  { pattern: /\bgit\s+(?:-C\s+\S+\s+)?push\b/, name: 'git push' },
+  { pattern: /\bgit\s+(?:-C\s+\S+\s+)?commit\b/, name: 'git commit' },
 ]
 
 function main() {
