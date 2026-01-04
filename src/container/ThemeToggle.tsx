@@ -9,7 +9,12 @@ const themeOptions = [
   { value: SiteTheme.DARKEN, label: 'Dark', icon: DarkModeIcon },
 ]
 
-export const ThemeToggle: React.FC = () => {
+interface IProps {
+  readonly onSelect?: () => void
+}
+
+export const ThemeToggle: React.FC<IProps> = props => {
+  const { onSelect } = props
   const viewmodel = useSiteViewmodel()
   const theme: SiteTheme = useStateValue(viewmodel.theme$)
   const [isOpen, setIsOpen] = React.useState(false)
@@ -18,8 +23,9 @@ export const ThemeToggle: React.FC = () => {
     (newTheme: SiteTheme): void => {
       setIsOpen(false)
       viewmodel.theme$.next(newTheme)
+      onSelect?.()
     },
-    [viewmodel],
+    [viewmodel, onSelect],
   )
 
   const handleToggle = React.useCallback((e: React.MouseEvent): void => {

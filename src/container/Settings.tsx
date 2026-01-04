@@ -29,6 +29,10 @@ export const Settings: React.FC<IProps> = props => {
     setMenuState(MenuState.CLOSED)
   })
 
+  const closeMenu = useEventCallback((): void => {
+    setMenuState(MenuState.CLOSED)
+  })
+
   const toggleMenu = useEventCallback((e: React.MouseEvent): void => {
     e.stopPropagation()
     setMenuState(menuState === MenuState.CLOSED ? MenuState.OPEN : MenuState.CLOSED)
@@ -76,7 +80,7 @@ export const Settings: React.FC<IProps> = props => {
               </React.Fragment>
             )}
             <div>
-              <ThemeToggle />
+              <ThemeToggle onSelect={closeMenu} />
             </div>
             <div className="my-1 border-b border-gray-200 dark:border-gray-600" />
             <div className="space-y-0.5">
