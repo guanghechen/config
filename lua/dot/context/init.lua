@@ -201,7 +201,6 @@ function M.save(storage)
       module = M.module.dump(),
       option = M.option.dump(),
       plugin = M.plugin.dump(),
-      search = M.search_file.dump(),
       search_buffer = M.search_buffer.dump(),
       search_file = M.search_file.dump(),
       select = M.select.dump(),
