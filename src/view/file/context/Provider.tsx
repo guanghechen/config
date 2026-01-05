@@ -26,6 +26,7 @@ export const FileViewProvider: React.FC<{ children: React.ReactNode }> = props =
     const filepath: string | null = decodeURIComponent(usp.get('filepath') || '') || null
     return new FileViewViewModel({
       filepath: filepath ?? viewData.filepath,
+      filepathHistory: viewData.filepathHistory,
     })
   })
   const context: IFileContext | null = React.useMemo<IFileContext | null>(
@@ -49,9 +50,10 @@ FileViewProvider.displayName = 'FileViewProvider'
 const SideEffect: React.FC<ISideEffectProps> = props => {
   const { viewmodel } = props
 
-  usePersistAsync(viewmodel, storageKey, [viewmodel.filepath$])
+  usePersistAsync(viewmodel, storageKey, [viewmodel.filepath$, viewmodel.filepathHistory$])
   useHMR(viewmodel)
   useUrlParams(viewmodel)
+  useHistoryTracking(viewmodel)
   useMermaidSyncThemeEffect()
 
   return <React.Fragment />
@@ -155,4 +157,14 @@ const useUrlParams = (viewmodel: FileViewViewModel): void => {
     const newUrl = `${window.location.pathname}?${usp.toString()}`
     window.history.replaceState(null, '', newUrl)
   }, [filepath])
+}
+
+const useHistoryTracking = (viewmodel: FileViewViewModel): void => {
+  const filepath: string | null = useStateValue(viewmodel.filepath$)
+
+  React.useEffect(() => {
+    if (filepath) {
+      viewmodel.addToHistory(filepath)
+    }
+  }, [filepath, viewmodel])
 }

@@ -2,21 +2,36 @@ import cn from 'clsx'
 import React from 'react'
 import { AnchorButton } from './button/anchor'
 import { CopyButton } from './button/copy'
+import { HistoryButton } from './button/history'
+import { HistoryDropdown } from './HistoryDropdown'
 
 interface IProps {
   readonly workspace: string | null
   readonly filepath: string
+  readonly history?: string[]
+  readonly onHistorySelect?: (filepath: string) => void
 }
 
-export class FilePath extends React.PureComponent<IProps> {
+interface IState {
+  readonly showHistory: boolean
+}
+
+export class FilePath extends React.PureComponent<IProps, IState> {
   public static readonly displayName: string = 'FilePath'
 
+  constructor(props: IProps) {
+    super(props)
+    this.state = { showHistory: false }
+  }
+
   public override render(): React.ReactElement {
-    const { filepath } = this.props
+    const { filepath, history, onHistorySelect } = this.props
+    const { showHistory } = this.state
     const { calcContentForCopy } = this
 
     const displayPath = filepath.length > 48 ? `...${filepath.slice(-48)}` : filepath
     const shouldShowTooltip = filepath.length > 48
+    const hasHistory = history && history.length > 0
 
     return (
       <div className="flex items-center gap-2">
@@ -38,8 +53,29 @@ export class FilePath extends React.PureComponent<IProps> {
           calcContentForCopy={calcContentForCopy}
         />
         <AnchorButton workspace={null} filepath={filepath} />
+        {onHistorySelect && (
+          <div className="relative">
+            <HistoryButton onClick={this.handleHistoryClick} disabled={!hasHistory} />
+            {showHistory && hasHistory && (
+              <HistoryDropdown
+                history={history}
+                currentFilepath={filepath}
+                onSelect={onHistorySelect}
+                onClose={this.handleHistoryClose}
+              />
+            )}
+          </div>
+        )}
       </div>
     )
+  }
+
+  protected handleHistoryClick = (): void => {
+    this.setState(prev => ({ showHistory: !prev.showHistory }))
+  }
+
+  protected handleHistoryClose = (): void => {
+    this.setState({ showHistory: false })
   }
 
   protected calcContentForCopy = (): string => {

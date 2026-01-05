@@ -1,5 +1,6 @@
 export interface IFileViewData {
   readonly filepath: string | null
+  readonly filepathHistory: string[]
 }
 
 export interface IFileContentData {
