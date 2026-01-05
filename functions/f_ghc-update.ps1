@@ -82,6 +82,7 @@ function f_ghc-update {
     "nvim",
     "nvim-lazy",
     "nvim-nvchad",
+    "opencode",
     "ora",
     "pm2",
     "ripgrep",
