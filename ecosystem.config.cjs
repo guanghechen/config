@@ -36,7 +36,7 @@ const config = {
       enabled: enabled.agent_api,
       name: 'agent-api',
       cwd: repos.agent_api,
-      script: 'yarn',
+      script: 'pnpm',
       args: `run start:copilot --host=${GHC_COPILOT_API_HOST} --port=${GHC_COPILOT_API_PORT} --no-colorful`,
       env: {
         NODE_ENV: 'production',
