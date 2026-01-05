@@ -60,8 +60,7 @@ export class FilePath extends React.PureComponent<IProps, IState> {
               <HistoryDropdown
                 history={history}
                 currentFilepath={filepath}
-                onSelect={onHistorySelect}
-                onClose={this.handleHistoryClose}
+                onSelect={this.handleHistorySelect}
               />
             )}
           </div>
@@ -74,7 +73,8 @@ export class FilePath extends React.PureComponent<IProps, IState> {
     this.setState(prev => ({ showHistory: !prev.showHistory }))
   }
 
-  protected handleHistoryClose = (): void => {
+  protected handleHistorySelect = (filepath: string): void => {
+    this.props.onHistorySelect?.(filepath)
     this.setState({ showHistory: false })
   }
 

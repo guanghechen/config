@@ -5,34 +5,16 @@ interface IProps {
   readonly history: string[]
   readonly currentFilepath: string | null
   readonly onSelect: (filepath: string) => void
-  readonly onClose: () => void
 }
 
 export class HistoryDropdown extends React.PureComponent<IProps> {
   public static readonly displayName: string = 'HistoryDropdown'
-
-  private dropdownRef = React.createRef<HTMLDivElement>()
-
-  public override componentDidMount(): void {
-    document.addEventListener('mousedown', this.handleClickOutside)
-  }
-
-  public override componentWillUnmount(): void {
-    document.removeEventListener('mousedown', this.handleClickOutside)
-  }
-
-  protected handleClickOutside = (event: MouseEvent): void => {
-    if (this.dropdownRef.current && !this.dropdownRef.current.contains(event.target as Node)) {
-      this.props.onClose()
-    }
-  }
 
   public override render(): React.ReactElement {
     const { history, currentFilepath } = this.props
 
     return (
       <div
-        ref={this.dropdownRef}
         className={cn(
           'absolute top-full left-0 mt-1 z-50',
           'w-80 max-h-80 overflow-hidden',
@@ -65,14 +47,13 @@ export class HistoryDropdown extends React.PureComponent<IProps> {
     index: number,
     currentFilepath: string | null,
   ): React.ReactElement => {
-    const { onSelect, onClose } = this.props
+    const { onSelect } = this.props
     const isCurrent = filepath === currentFilepath
     const filename = filepath.split('/').pop() || filepath
     const directory = filepath.slice(0, filepath.length - filename.length - 1)
 
     const handleClick = (): void => {
       onSelect(filepath)
-      onClose()
     }
 
     return (
