@@ -20,11 +20,11 @@ The `src/` directory follows a strict 7-layer architecture with DAG-based depend
 |  L4   | `context/`             | Top-level / cross-page state contexts with simple hooks (only the simplest hooks allowed)                        |
 |  L5   | `hook/`                | Business hooks that can compose and access `context/`                                                            |
 |  L6   | `container/`           | Stateful components connecting to `context/`; the ONLY component library consumable by `view/`                   |
-|  L7   | `view/`                | Pages or major page blocks; can ONLY consume `container/`, NOT `common/component/` directly                      |
+|  L7   | `view/`                | Pages or major page blocks; can consume both `container/` and `common/` layers                                   |
 
 ### Key Principles
 
 - **DAG Dependency**: Lower layers cannot import from higher layers
 - **L6 container/**: The bridge between state (context) and UI (view)
-- **L7 view/**: Must use `container/` for all stateful components; direct use of `common/component/` is forbidden
+- **L7 view/**: Can use `container/` for stateful components and `common/` for pure presentational components
 
