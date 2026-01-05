@@ -28,7 +28,6 @@ local ensure_filetypes = {
   "javascript",
   "json",
   "json5",
-  "jsonc",
   "js",
   "jsx",
   "less",
