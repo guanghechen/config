@@ -9,6 +9,12 @@ M.triggers = {}
 ---@type uv.uv_timer_t?
 M.delay_timer = nil
 
+---@type integer Recursion counter for detecting infinite loops
+M.recursion = 0
+
+---@type uv.uv_timer_t? Timer to reset recursion counter
+M.recursion_timer = nil
+
 ---Attach triggers to buffer
 ---@param bufnr                          integer
 function M.attach(bufnr)
@@ -306,6 +312,24 @@ function M.__start__(bufnr, mode, key)
       M.triggers[id] = nil
     end
     M.__feed_with_context__(key, mode)
+    return
+  end
+
+  -- Recursion protection
+  M.recursion = M.recursion + 1
+  if not M.recursion_timer then
+    M.recursion_timer = vim.uv.new_timer()
+  end
+  M.recursion_timer:start(500, 0, function()
+    M.recursion = 0
+  end)
+  if M.recursion > 50 then
+    M.recursion = 0
+    stl.reporter.error({
+      from = "era.m.wk.input",
+      subject = "Recursion detected",
+      message = "Possible infinite loop in keymap configuration",
+    })
     return
   end
 
