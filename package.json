@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    ":upgrade": "yarn upgrade-interactive && yarn format",
-    "build": "tsc -b && vite build --emptyOutDir && yarn inject:build",
-    "format": "yarn format:lintfix && yarn format:prettier",
+    ":upgrade": "pnpm update --interactive --latest && pnpm format",
+    "build": "tsc -b && vite build --emptyOutDir && pnpm inject:build",
+    "format": "pnpm format:lintfix && pnpm format:prettier",
     "format:prettier": "prettier . --write",
     "format:lintfix": "eslint . --fix",
     "inject:build": "rollup -c rollup.config.inject.mjs",
