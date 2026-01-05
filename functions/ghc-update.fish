@@ -29,6 +29,7 @@ function ghc-update
         nvim \
         nvim-lazy \
         nvim-nvchad \
+        opencode \
         ora \
         pm2 \
         pwsh \
