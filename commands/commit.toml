@@ -38,10 +38,15 @@ Arguments can contain scope, hints, or both. Parse them intelligently.
 !{git log --oneline -10}
 ```
 
-## Requirements
+## Workflow
 
-1. **Determine commit scope**: Based on the arguments above, decide which files to include in this commit.
-2. **Write commit message** following **Conventional Commits** with **Gitmoji** prefix:
+1. **Handle index.lock**: If you encounter `fatal: Unable to create '.../.git/index.lock': File exists`, **automatically delete the lock file** (`rm -f .git/index.lock`) and retry.
+2. **Determine commit scope**: Based on the arguments above, decide which files to include in this commit.
+3. **Decide whether to split commits**:
+   - **DO NOT ask** if the changes are logically cohesive (single feature, single fix, single refactor, etc.)
+   - **Only ask** if the changes are clearly unrelated (e.g., a bug fix mixed with an unrelated new feature)
+   - When in doubt, **proceed with a single commit** — do not ask.
+4. **Write commit message** following **Conventional Commits** with **Gitmoji** prefix:
    - **Format**: `:gitmoji: <type>[optional scope]: <description>`
    - **Types and Gitmoji mapping** (choose the most appropriate):
      | Type       | Gitmoji                   | Description                             |
@@ -91,10 +96,11 @@ Arguments can contain scope, hints, or both. Parse them intelligently.
    - **Breaking changes**: Append exclamation mark after type/scope, e.g., `:boom: feat(api)!: change response format`
    - The commit message **MUST** be written in English.
    - Use simple, clear vocabulary. Avoid overly complex words, except for technical terms which are always acceptable.
-3. **Stage and commit**: Stage only the relevant files (based on scope) and create the commit.
+5. **Stage and commit**: Stage only the relevant files (based on scope) and create the commit.
 
 ## Notes
 
 - If there are no changes to commit, inform the user.
 - If changes include files that should not be committed (e.g., temporary files, sensitive data), ask for confirmation before proceeding.
+- **Do not ask for confirmation** before creating the commit unless one of the above exceptions applies.
 """
