@@ -11,7 +11,7 @@
 ## Critical Rules
 
 1. **CRITICAL**: Never read git-ignored files unless path explicitly given.
-2. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`).
+2. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`, `local/env.*`).
 
 ## Coding
 
