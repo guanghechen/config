@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "format": "yarn format:lintfix && yarn format:prettier",
+    "format": "pnpm format:lintfix && pnpm format:prettier",
     "format:prettier": "prettier . --write",
     "format:lintfix": "eslint . --fix",
     "start": "cross-env LOG_LEVEL=verbose vite --force",
     "run:ts": "TS_NODE_PROJECT=tsconfig.node.json node --loader ts-node/esm",
-    ":upgrade": "yarn upgrade-interactive && yarn format"
+    ":upgrade": "pnpm update --interactive && pnpm format"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.0",

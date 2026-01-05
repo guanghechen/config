@@ -4,7 +4,7 @@
 
 ## Additional Requirements
 
-1. **MUST**: run `yarn format` if you want to verify your changes, never try to run other `yarn` or `npm` commands to verify the changes.
+1. **MUST**: run `pnpm format` if you want to verify your changes, never try to run other `pnpm` or `npm` commands to verify the changes.
 
 ## Architecture: 7-Layer DAG Structure
 
