@@ -11,7 +11,10 @@ export const ContentList: React.FC = () => {
   const viewmodel = useTextViewViewModel()
   const transformedNodes: ITextTransformedNode[] = useStateValue(viewmodel.records$)
   const transformConfig: ITextTransformConfig = useStateValue(viewmodel.transformConfig$)
-  const chainPaths: IChainPath[] = stringArrayToChainPaths(transformConfig.chainPaths)
+  const chainPaths: IChainPath[] = React.useMemo(
+    () => stringArrayToChainPaths(transformConfig.chainPaths),
+    [transformConfig.chainPaths],
+  )
   const expandTick: number = useStateValue(viewmodel.expandTick$)
   const activeRecordIndex: number | null = useStateValue(viewmodel.activeRecordIndex$)
 

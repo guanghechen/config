@@ -1,14 +1,9 @@
 import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
-import cn from 'clsx'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import React from 'react'
-import { FileTypeIcon } from '@/common/component/icon/filetype'
-import type {
-  FileTreeViewModel,
-  IFileTreeFileNode,
-  IFileTreeFolderNodeMutable,
-  IFileTreeNode,
-} from './context'
+import type { FileTreeViewModel, IFileTreeFileNode, IFileTreeNode } from './context'
+import { FileListItem } from './FileListItem'
 
 interface IProps {
   readonly viewmodel: FileTreeViewModel
@@ -22,89 +17,63 @@ export const FileList: React.FC<IProps> = props => {
   const searchKeyword: string = useStateValue(viewmodel.searchKeyword$)
   const nodeDataDirtyTick: number = useStateValue<number>(viewmodel.nodeDataDirtyTick$)
 
-  const [tick, setTick] = React.useState<number>(0)
+  const parentRef = React.useRef<HTMLDivElement>(null)
 
   const onNodeClick = useEventCallback((node: IFileTreeNode) => {
     switch (node.type) {
       case 'file':
         onFileNodeClick(node)
         break
-      case 'folder': {
-        if (searchKeyword.length > 0) return
-
-        const o = node as IFileTreeFolderNodeMutable
-        o.collapsed = !o.collapsed
-        setTick(tick => tick + 1)
+      case 'folder':
         break
-      }
       default:
         console.error('Unknown node type:', node)
     }
   })
 
-  const elements: React.ReactElement[] = React.useMemo<React.ReactElement[]>(() => {
+  const filteredNodes: IFileTreeFileNode[] = React.useMemo<IFileTreeFileNode[]>(() => {
+    if (searchKeyword.length < 1) return fileNodes
+
     const keyword = searchKeyword.toLowerCase()
-    const list: React.ReactElement[] = []
-    for (const node of fileNodes) {
-      const visible: boolean = searchKeyword.length < 1 || node.filepath_lower.includes(keyword)
-      const activate: boolean = node.filepath === currentFilepath
-      const element: React.ReactElement = (
-        <div
-          key={node.uuid}
-          className={cn('select-none px-1 py-1 hover:bg-gray-200 dark:hover:bg-gray-600', {
-            'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-gray-100': activate,
-            hidden: !visible,
-          })}
-          onClick={() => onNodeClick(node)}
-        >
-          <div className="flex cursor-pointer items-center">
-            <span className="mr-1 flex-shrink-0">
-              <FileTypeIcon extname={node.extname} />
-            </span>
-            <span className="truncate">
-              {searchKeyword.length > 0
-                ? highlightMatches(node.filepath_lower, keyword)
-                : node.filepath}
-            </span>
-          </div>
-        </div>
-      )
-      list.push(element)
-    }
-
-    return list
+    return fileNodes.filter(node => node.filepath_lower.includes(keyword))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileNodes, searchKeyword, viewmodel, currentFilepath, tick, nodeDataDirtyTick])
+  }, [fileNodes, searchKeyword, nodeDataDirtyTick])
 
-  return <div className="p-2 text-sm">{elements}</div>
+  const virtualizer = useVirtualizer({
+    count: filteredNodes.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 33,
+    overscan: 5,
+  })
+
+  return (
+    <div ref={parentRef} className="p-2 text-sm overflow-auto" style={{ height: '100%' }}>
+      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+        {virtualizer.getVirtualItems().map(virtualItem => {
+          const node = filteredNodes[virtualItem.index]
+
+          return (
+            <div
+              key={node.uuid}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <FileListItem
+                node={node}
+                currentFilepath={currentFilepath}
+                searchKeyword={searchKeyword}
+                onNodeClick={onNodeClick}
+              />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 FileList.displayName = 'FileList'
-
-const highlightMatches = (text: string, keyword: string): React.ReactNode[] => {
-  const result: React.ReactNode[] = []
-
-  let lastIndex = 0
-  for (let index = text.indexOf(keyword, lastIndex); index !== -1; ) {
-    if (index > lastIndex) {
-      result.push(text.substring(lastIndex, index))
-    }
-
-    result.push(
-      <span
-        key={`highlight-${index}`}
-        className="rounded-sm bg-yellow-200 text-gray-900 dark:bg-yellow-700 dark:text-gray-100"
-      >
-        {text.substring(index, index + keyword.length)}
-      </span>,
-    )
-
-    lastIndex = index + keyword.length
-    index = text.indexOf(keyword, lastIndex)
-  }
-
-  if (lastIndex < text.length) {
-    result.push(text.substring(lastIndex))
-  }
-
-  return result
-}

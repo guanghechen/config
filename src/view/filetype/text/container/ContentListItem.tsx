@@ -19,7 +19,7 @@ interface IProps {
   readonly isActive?: boolean
 }
 
-export const ContentListItem: React.FC<IProps> = props => {
+const ContentListItemComponent: React.FC<IProps> = props => {
   const { index, node, chainPaths, expandTick, isActive = false } = props
   const { parents, data, title } = node
   const [expanded, setExpanded] = React.useState(false)
@@ -141,4 +141,14 @@ export const ContentListItem: React.FC<IProps> = props => {
   )
 }
 
+export const ContentListItem = React.memo(
+  ContentListItemComponent,
+  (prevProps, nextProps) =>
+    prevProps.index === nextProps.index &&
+    prevProps.node === nextProps.node &&
+    prevProps.expandTick === nextProps.expandTick &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.chainPaths.length === nextProps.chainPaths.length &&
+    prevProps.chainPaths.every((cp, i) => cp === nextProps.chainPaths[i]),
+)
 ContentListItem.displayName = 'TextViewContentListItem'

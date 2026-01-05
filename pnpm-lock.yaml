@@ -31,6 +31,9 @@ importers:
       '@monaco-editor/react':
         specifier: 4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@tanstack/react-virtual':
+        specifier: ^3.13.16
+        version: 3.13.16(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@types/cookie':
         specifier: 1.0.0
         version: 1.0.0
@@ -1922,6 +1925,21 @@ packages:
       }
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
+
+  '@tanstack/react-virtual@3.13.16':
+    resolution:
+      {
+        integrity: sha512-y4xLKvLu6UZWiGdNcgk3yYlzCznYIV0m8dSyUzr3eAC0dHLos5V74qhUHxutYddFGgGU8sWLkp6H5c2RCrsrXw==,
+      }
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/virtual-core@3.13.16':
+    resolution:
+      {
+        integrity: sha512-njazUC8mDkrxWmyZmn/3eXrDcP8Msb3chSr4q6a65RmwdSbMlMCdnOphv6/8mLO7O3Fuza5s4M4DclmvAO5w0w==,
+      }
 
   '@tsconfig/node10@1.0.12':
     resolution:
@@ -7971,6 +7989,14 @@ snapshots:
       '@tailwindcss/oxide': 4.1.13
       tailwindcss: 4.1.13
       vite: 7.1.4(@types/node@20.19.13)(jiti@2.6.1)(lightningcss@1.30.1)(yaml@2.8.1)
+
+  '@tanstack/react-virtual@3.13.16(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+    dependencies:
+      '@tanstack/virtual-core': 3.13.16
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+
+  '@tanstack/virtual-core@3.13.16': {}
 
   '@tsconfig/node10@1.0.12': {}
 
