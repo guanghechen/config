@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "theme": {
+    "primary": "#005FB8",
+    "secondary": "#AF00DB",
+    "accent": "#E75480",
+    "text": "#000000",
+    "textMuted": "#8B949E",
+    "background": "#FFFFFF",
+
+    "error": "#F85149",
+    "warning": "#795E26",
+    "success": "#2EA043",
+    "info": "#267F99",
+
+    "backgroundPanel": "#F2F2F2",
+    "backgroundElement": "#E8E8E8",
+    "border": "#D3D3D3",
+    "borderActive": "#E75480",
+    "borderSubtle": "#E8E8E8",
+
+    "diffAdded": "#2EA043",
+    "diffRemoved": "#F85149",
+    "diffContext": "#8B949E",
+    "diffHunkHeader": "#AF00DB",
+    "diffHighlightAdded": "#098658",
+    "diffHighlightRemoved": "#F85149",
+    "diffAddedBg": "#E8E8E8",
+    "diffRemovedBg": "#E8E8E8",
+
+    "markdownText": "#3B3B3B",
+    "markdownHeading": "#C72E0F",
+    "markdownLink": "#005FB8",
+    "markdownCode": "#267F99",
+    "markdownBlockQuote": "#8B949E",
+    "markdownEmph": "#795E26",
+    "markdownStrong": "#C72E0F",
+
+    "syntaxComment": "#939393",
+    "syntaxKeyword": "#AF00DB",
+    "syntaxFunction": "#795E26",
+    "syntaxVariable": "#3B3B3B",
+    "syntaxString": "#2EA043",
+    "syntaxNumber": "#267F99",
+    "syntaxType": "#795E26",
+    "syntaxOperator": "#E75480",
+    "syntaxPunctuation": "#767676"
+  }
+}
