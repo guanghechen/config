@@ -60,6 +60,7 @@
 ---@field public status                 era.m.plugin.TaskStatusEnum
 ---@field public step                   era.m.plugin.TaskStepEnum|nil
 ---@field public message                string
+---@field public output                 string[]|nil
 ---@field public from_commit            string|nil
 ---@field public to_commit              string|nil
 ---@field public commits                era.m.plugin.ICommitInfo[]|nil

@@ -178,7 +178,7 @@ function M.build(name, on_progress, on_done)
   on_progress()
 
   local path = dot.path.join(State.options.root, name) ---@type string
-  M.__run_build__(spec, path, function(ok, err)
+  M.__run_build__(spec, path, task, on_progress, function(ok, err)
     if ok then
       task.status = "done"
       task.step = nil
@@ -312,9 +312,11 @@ end
 
 ---@param spec                          era.m.plugin.IPluginSpec
 ---@param path                          string
+---@param task                          era.m.plugin.ITaskState|nil
+---@param on_output                     (fun(): nil)|nil
 ---@param callback                      fun(ok: boolean, err: string|nil): nil
 ---@return nil
-function M.__run_build__(spec, path, callback)
+function M.__run_build__(spec, path, task, on_output, callback)
   local build = spec.build
   if not build then
     callback(true, nil)
@@ -342,7 +344,33 @@ function M.__run_build__(spec, path, callback)
       return
     end
 
-    vim.system({ "sh", "-c", build }, { cwd = path, text = true }, function(result)
+    local output_lines = {} ---@type string[]
+    local MAX_OUTPUT_LINES = 8 ---@type integer
+
+    ---@param err string|nil
+    ---@param data string|nil
+    local function on_data(err, data)
+      if err or not data or not task then
+        return
+      end
+      for line in data:gmatch("[^\r\n]+") do
+        output_lines[#output_lines + 1] = line
+        if #output_lines > MAX_OUTPUT_LINES then
+          table.remove(output_lines, 1)
+        end
+      end
+      task.output = output_lines
+      if on_output then
+        vim.schedule(on_output)
+      end
+    end
+
+    vim.system(stl.shell.get_shell_args(build), {
+      cwd = path,
+      text = true,
+      stdout = on_data,
+      stderr = on_data,
+    }, function(result)
       vim.schedule(function()
         if result.code == 0 then
           callback(true, nil)
@@ -424,7 +452,7 @@ function M.__install_plugins__(specs, on_progress, on_done)
             task.message = "Building..."
             on_progress()
 
-            M.__run_build__(spec, path, function(build_ok, build_err)
+            M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
               if not build_ok then
                 task.status = "error"
                 task.step = nil
@@ -529,7 +557,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
               task.message = "Building..."
               on_progress()
 
-              M.__run_build__(spec, path, function(build_ok, build_err)
+              M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
                 if not build_ok then
                   task.status = "error"
                   task.step = nil
@@ -639,7 +667,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
                     task.message = "Building..."
                     on_progress()
 
-                    M.__run_build__(spec, path, function(build_ok, build_err)
+                    M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
                       if not build_ok then
                         task.status = "error"
                         task.step = nil

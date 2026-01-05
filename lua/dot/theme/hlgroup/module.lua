@@ -238,6 +238,7 @@ function M.default_gen_hlgroup_map(context)
     m_pl_loaded = { fg = u.green },
     m_pl_normal = { bg = cs.mix(u.bg0, u.bg1, 80), blend = 50 },
     m_pl_not_loaded = { fg = u.fg4 },
+    m_pl_output = { fg = u.fg4 },
     m_pl_running = { fg = u.yellow },
     m_pl_source = { fg = u.purple },
     m_pl_step = { fg = u.aqua },

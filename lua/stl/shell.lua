@@ -2,6 +2,7 @@ local __module_name__ = "stl.shell" ---@type string
 
 ---@class stl.shell
 ---@field public format_command         fun(command?: string): string
+---@field public get_shell_args         fun(command: string): string[]
 local M = {}
 
 if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
@@ -15,6 +16,12 @@ if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
       return "sh -c " .. vim.fn.shellescape(cmd)
     end
   end
+
+  ---@param cmd                         string
+  ---@return string[]
+  function M.get_shell_args(cmd)
+    return { "sh", "-c", cmd }
+  end
 elseif stl.env.IS_WIN then
   ---@param cmd                         ?string|nil
   ---@return string
@@ -25,6 +32,12 @@ elseif stl.env.IS_WIN then
     else
       return 'pwsh.exe -NoProfile -Command "' .. cmd:gsub('"', "'") .. '"'
     end
+  end
+
+  ---@param cmd                         string
+  ---@return string[]
+  function M.get_shell_args(cmd)
+    return { "pwsh.exe", "-NoProfile", "-Command", cmd }
   end
 else
   stl.reporter.error({

@@ -612,6 +612,12 @@ function M:__render_task_progress__(task)
   self._line_to_plugin[#self._lines] = task.name
 
   self:__nl__()
+
+  if task.output and #task.output > 0 then
+    for _, line in ipairs(task.output) do
+      self:__append__("      " .. line, "m_pl_output"):__nl__()
+    end
+  end
 end
 
 ---@param task                          era.m.plugin.ITaskState
