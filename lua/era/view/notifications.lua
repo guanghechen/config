@@ -127,7 +127,7 @@ function M:__create_win__()
   end
 
   if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
-    local width = math.min(100, vim.o.columns - 4) ---@type integer
+    local width = math.min(132, vim.o.columns - 4) ---@type integer
     local height = math.floor(vim.o.lines * 0.8) ---@type integer
     local row = math.floor((vim.o.lines - height) / 2) ---@type integer
     local col = math.floor((vim.o.columns - width) / 2) ---@type integer
