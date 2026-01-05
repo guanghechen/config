@@ -301,13 +301,19 @@ function M.__setup_lazy_cmds__(spec, state)
     vim.api.nvim_create_user_command(cmd, function(cmd_opts)
       vim.api.nvim_del_user_command(cmd)
       M.__load_plugin__(state)
-      vim.api.nvim_cmd({
+      local cmd_spec = {
         cmd = cmd,
         args = cmd_opts.fargs,
         bang = cmd_opts.bang,
         mods = cmd_opts.smods,
-        range = cmd_opts.range,
-      }, {})
+        count = cmd_opts.count >= 0 and cmd_opts.range == 0 and cmd_opts.count or nil,
+      }
+      if cmd_opts.range == 1 then
+        cmd_spec.range = { cmd_opts.line1 }
+      elseif cmd_opts.range == 2 then
+        cmd_spec.range = { cmd_opts.line1, cmd_opts.line2 }
+      end
+      vim.api.nvim_cmd(cmd_spec, {})
     end, {
       nargs = "*",
       bang = true,
