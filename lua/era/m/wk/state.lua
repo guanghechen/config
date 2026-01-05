@@ -106,11 +106,25 @@ function M.resume(bufnr, mode)
   S.input.attach(bufnr)
 end
 
----Schedule resume on next tick
+---Schedule resume on next tick (macro-safe)
 ---@param bufnr                          integer
 ---@param mode                           string
 function M.schedule_resume(bufnr, mode)
   vim.schedule(function()
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      M.suspended[bufnr .. ":" .. mode] = nil
+      return
+    end
+    if S.util.in_macro() then
+      vim.defer_fn(function()
+        if vim.api.nvim_buf_is_valid(bufnr) and not S.util.in_macro() then
+          M.resume(bufnr, mode)
+        else
+          M.suspended[bufnr .. ":" .. mode] = nil
+        end
+      end, 100)
+      return
+    end
     M.resume(bufnr, mode)
   end)
 end
@@ -443,6 +457,18 @@ function M.__setup_autocmds__()
       for mode, _ in pairs(M.get_trigger_modes()) do
         M.suspended[ev.buf .. ":" .. mode] = nil
         S.input.detach(ev.buf, mode)
+      end
+    end,
+  })
+
+  -- Handle macro recording
+  vim.api.nvim_create_autocmd({ "RecordingEnter", "RecordingLeave" }, {
+    group = group,
+    callback = function(ev)
+      if ev.event == "RecordingEnter" then
+        S.input.stop()
+      else
+        S.input.attach(vim.api.nvim_get_current_buf())
       end
     end,
   })

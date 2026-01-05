@@ -3,6 +3,12 @@ local M = {}
 
 local KEY_ICONS = stl.icon.keycode ---@type table<string, string>
 
+---Check if currently recording or executing a macro
+---@return boolean
+function M.in_macro()
+  return vim.fn.reg_recording() ~= "" or vim.fn.reg_executing() ~= ""
+end
+
 ---Parse mode string into array
 ---@param str                            string
 ---@return era.m.wk.Mode[]

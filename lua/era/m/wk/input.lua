@@ -297,6 +297,18 @@ end
 ---@param mode                           string
 ---@param key                            string
 function M.__start__(bufnr, mode, key)
+  -- Don't intercept during macro recording/execution
+  if S.util.in_macro() then
+    local trigger_key = M.__resolve_key__(key)
+    local id = bufnr .. ":" .. mode .. ":" .. trigger_key
+    if M.triggers[id] then
+      pcall(vim.keymap.del, mode, trigger_key, { buffer = bufnr })
+      M.triggers[id] = nil
+    end
+    M.__feed_with_context__(key, mode)
+    return
+  end
+
   S.state.bufnr = bufnr
   S.state.mode = mode
   S.state.keys = key
