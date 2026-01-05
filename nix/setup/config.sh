@@ -34,6 +34,7 @@ clone_or_update_config_repo() {
     "neovide"
     "nvim-lazy"
     "nvim-nvchad"
+    "opencode"
     "pwsh"
     "skhd"
     "tsuki"

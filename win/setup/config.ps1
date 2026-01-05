@@ -30,6 +30,7 @@ $repo_optional_branches = @(
   "neovide",
   "nvim-lazy",
   "nvim-nvchad",
+  "opencode",
   "ora",
   "pm2",
   "skhd",
