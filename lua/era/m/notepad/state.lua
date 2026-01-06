@@ -25,6 +25,15 @@ local source_configs = {
     end,
   },
   {
+    name = "workspace:todos",
+    title = "Todos (workspace)",
+    engine = "folder",
+    filepath = dot.path.locate_workspace_local_filepath(".neovim/todos"),
+    default_item_name = function()
+      return tostring(os.date("%Y-%m-%d"))
+    end,
+  },
+  {
     name = "shared:notes",
     title = "Notes (shared)",
     engine = "json",
