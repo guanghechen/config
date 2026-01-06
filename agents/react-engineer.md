@@ -1,7 +1,7 @@
 ---
 name: react-engineer
 description: Use this agent only when explicitly requested by the user (e.g., "use react-engineer agent", "use the react agent"). Do not trigger automatically.
-color: blue
+color: red
 ---
 
 # React Engineer Agent
