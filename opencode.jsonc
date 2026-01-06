@@ -1,11 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "autoshare": false,
   "autoupdate": false,
   "default_agent": "plan",
   "model": "github-copilot/claude-opus-4.5",
   "small_model": "github-copilot/claude-sonnet-4.5",
   "share": "disabled",
   "theme": "local",
+  "username": "guanghechen",
   "compaction": {
     "auto": true,
     "prune": true,
@@ -62,7 +64,6 @@
     },
   },
   "server": {
-    "port": 4096,
     "hostname": "127.0.0.1",
     "mdns": false,
     "cors": [],
