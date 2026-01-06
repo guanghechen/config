@@ -18,4 +18,50 @@
     },
     "diff_style": "auto",
   },
+  "permission": {
+    // Sensitive files - deny by default
+    "read": {
+      "*": "allow",
+      // HTTP request/response files
+      "*.http_request": "deny",
+      "*.http_response": "deny",
+      // Environment files
+      ".env.local": "deny",
+      "**/.env.local": "deny",
+      // Git credentials
+      ".git-credentials": "deny",
+      "**/.git-credentials": "deny",
+      // SSH directory
+      ".ssh/**": "deny",
+      "**/.ssh/**": "deny",
+      // Local config files with secrets
+      "**/local/config.fish": "ask",
+      "**/local/config.ps1": "ask",
+      "**/local/env.*": "deny",
+    },
+    "edit": {
+      "*": "allow",
+      // Same sensitive patterns for edit
+      "*.http_request": "deny",
+      "*.http_response": "deny",
+      ".env.local": "deny",
+      "**/.env.local": "deny",
+      ".git-credentials": "deny",
+      "**/.git-credentials": "deny",
+      ".ssh/**": "deny",
+      "**/.ssh/**": "deny",
+      "**/local/env.*": "deny",
+    },
+    // Git operations - ask before modifying staging area
+    "bash": {
+      "*": "allow",
+      "git add *": "ask",
+      "git reset *": "ask",
+      "git stash *": "ask",
+      "git checkout *": "ask",
+      "git restore *": "ask",
+      "git commit *": "ask",
+      "git push *": "ask",
+    },
+  },
 }
