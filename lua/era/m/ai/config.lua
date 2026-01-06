@@ -2,7 +2,7 @@
 local M = {}
 
 ---@type era.m.ai.AgentName[]
-M.agents = { "claude", "codex", "copilot", "gemini" }
+M.agents = { "claude", "codex", "copilot", "gemini", "opencode" }
 
 ---@type table<era.m.ai.AgentName, string>
 M.agent_labels = {
@@ -10,6 +10,7 @@ M.agent_labels = {
   codex = "codex",
   copilot = "copilot",
   gemini = "gemini",
+  opencode = "opencode",
 }
 
 ---@type table<era.m.ai.AgentName, era.m.ai.IToolConfig>
@@ -61,6 +62,18 @@ M.tools = {
     proc_pattern = "\\<gemini\\>",
     url = "https://github.com/google-gemini/gemini-cli",
     vim_mode = true,
+  },
+  opencode = {
+    cmd = "opencode",
+    args = function()
+      return {}
+    end,
+    env = function()
+      return {}
+    end,
+    proc_pattern = "\\<opencode\\>",
+    url = "https://github.com/sst/opencode",
+    vim_mode = false,
   },
 }
 

@@ -8,6 +8,7 @@ A custom implementation replacing sidekick.nvim for AI agent CLI integration.
 - codex (OpenAI Codex)
 - copilot (GitHub Copilot CLI)
 - gemini (Google Gemini CLI)
+- opencode (SST OpenCode)
 
 ## Supported Backends
 

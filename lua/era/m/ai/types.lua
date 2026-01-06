@@ -3,6 +3,7 @@
 ---| "codex"
 ---| "copilot"
 ---| "gemini"
+---| "opencode"
 
 ---@alias era.m.ai.SourceType
 ---| "tmux"
