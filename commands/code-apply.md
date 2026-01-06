@@ -1,9 +1,8 @@
 ---
 description: Apply fixes based on previous code analysis
-agent: coder
 ---
 
-Apply fixes based on the previous code analysis.
+Apply fixes based on the previous code analysis. Use `@coder` for implementation.
 
 ## Issues to Apply
 
@@ -54,13 +53,13 @@ After applying all fixes:
 1. **Re-review** each fixed issue to verify proper resolution
 2. **Update files** based on resolution status:
 
-| Status      | Marker                       | Stored In                             |
-| ----------- | ---------------------------- | ------------------------------------- |
-| Fixed       | `󰄬 ~~[fixed] ...~~`          | analysis file (`cc.md`)               |
-| Done        | `󰄬 ~~[done] ...~~`           | analysis file (`cc.md`)               |
-| By Design   | `󰛨 ~~[By Design] ...~~`      | **`baseline.md`** (permanent)         |
-| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`      | analysis file (`cc.md`)               |
-| False Alarm | `󱙝 ~~[False Alarm] ...~~`    | analysis file (`cc.md`)               |
+| Status      | Marker                    | Stored In                   |
+| ----------- | ------------------------- | --------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ...~~`       | analysis file (`cc.md`)     |
+| Done        | `󰄬 ~~[done] ...~~`        | analysis file (`cc.md`)     |
+| By Design   | `󰛨 ~~[By Design] ...~~`   | **`baseline.md`** (permanent) |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`   | analysis file (`cc.md`)     |
+| False Alarm | `󱙝 ~~[False Alarm] ...~~` | analysis file (`cc.md`)     |
 
 3. **Report** summary using the table format below
 

@@ -1,6 +1,5 @@
 ---
 description: Execute coding task with coder agent
-agent: coder
 ---
 
 You are an expert software engineer. Execute the coding task based on the input below.
@@ -17,4 +16,4 @@ You are an expert software engineer. Execute the coding task based on the input 
 $ARGUMENTS
 ``````
 
-Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions.
+Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions. Use `@coder` for implementation.
