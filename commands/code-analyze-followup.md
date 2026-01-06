@@ -1,0 +1,165 @@
+---
+description: Follow-up analysis after fixing issues from previous review
+---
+
+Perform a follow-up analysis after completing fixes for previously identified issues.
+
+## Review Target
+
+``````text
+$ARGUMENTS
+``````
+
+This command is used after addressing most issues from a previous analysis:
+1. Re-analyze the same target with fresh perspective
+2. Leverage `baseline.md` to suppress By Design issues
+3. Update stale file paths and line ranges due to code changes
+4. Discover any new issues introduced during fixes
+
+## Workflow
+
+### Step 1: Locate Previous Analysis
+
+Search for existing `.code-analyzer/{topic}/` directories related to the given topic:
+- Match by topic keywords in directory name or file content
+- If multiple matches found, list them and ask user to select
+- If no match found, inform user and suggest using `/code-analyze` instead
+
+### Step 2: Read Baseline and Analysis
+
+1. **Read `baseline.md`** - Get By Design decisions (permanently suppressed)
+2. **Read analysis file** (`cc.md` etc.) - Get previous issues and their statuses:
+   - `󰜺 ~~[Won't Fix] ...~~` - Preserve in analysis file
+   - `󱙝 ~~[False Alarm] ...~~` - Preserve in analysis file
+   - `󰄬 ~~[fixed] ...~~` / `󰄬 ~~[done] ...~~` - Re-verify
+
+### Step 3: Validate and Update Records
+
+For preserved issues in analysis file (Won't Fix / False Alarm):
+
+1. **Check if code still exists**:
+   - File deleted → Remove the record entirely
+   - Code block deleted → Remove the record entirely
+
+2. **Update stale locations**:
+   - Use semantic matching (function names, variable names, code patterns) to relocate
+   - Update `**Location**` field with new `filepath:line` or `filepath:line-range`
+   - If code moved to a different file, update the file path
+
+3. **Keep issue content intact** - Do not modify description or recommendation
+
+For By Design issues in baseline:
+- Update locations if code moved
+- Remove if code no longer exists
+
+### Step 4: Perform Fresh Analysis
+
+Re-analyze the original target with:
+- Full scope as defined in Step 1
+- Same review focus areas as `/code-analyze`
+- **Suppress** issues documented in `baseline.md` (By Design)
+- **Suppress** issues in analysis file (Won't Fix / False Alarm)
+
+### Step 5: Generate Output
+
+Produce a comprehensive report:
+
+1. **Summary** - Issue counts by category and severity, plus preserved/removed counts
+2. **New Issues** - Newly discovered issues grouped by category
+3. **Preserved Issues** - Collapsed section with Won't Fix / False Alarm issues (NOT By Design - those are in baseline)
+
+## Issue Format
+
+Same as `/code-analyze`. Group by category using hierarchical numbering (e.g., `1.1`, `2.1`).
+
+For each issue:
+- **Location**: File path and line number(s)
+- **Severity**: Critical / Warning / Suggestion
+- **Description**: Clear explanation
+- **Recommendation**: How to fix
+
+## Summary Table
+
+Provide summary tables at the beginning:
+
+```markdown
+## Summary
+
+### New Issues
+
+| Category           | Critical | Warning | Suggestion | Total |
+| ------------------ | -------- | ------- | ---------- | ----- |
+| 1. Logic Errors    | 0        | 1       | 0          | 1     |
+| 2. Performance     | 0        | 0       | 1          | 1     |
+| **Total**          | **0**    | **1**   | **1**      | **2** |
+
+### Preserved & Removed
+
+| Status          | Count |
+| --------------- | ----- |
+| Won't Fix       | 1     |
+| False Alarm     | 0     |
+| Records Removed | 1     |
+| By Design (baseline) | 2 |
+```
+
+- Skip rows for categories/statuses with 0 count (except **Total** row)
+- By Design count is from `baseline.md`, shown for reference only
+
+## Output Format
+
+```markdown
+# Code Analysis Follow-up: {topic}
+
+> Re-analyzed: {original-target}
+> Previous analysis: {previous-file-path}
+> Baseline: {baseline-file-path}
+> Date: {current-date}
+
+## Summary
+...
+
+---
+
+## New Issues
+
+### 1. Logic Errors
+
+#### 1.1 [Warning] New issue title
+- **Location**: `src/file.ts:42`
+- **Description**: ...
+- **Recommendation**: ...
+
+---
+
+<details>
+<summary>📋 Preserved Issues (X items)</summary>
+
+### Won't Fix
+
+#### 󰜺 ~~[Won't Fix] Original issue title~~
+- **Location**: `src/file.ts:72`
+- **Description**: ...
+
+### False Alarm
+
+#### 󱙝 ~~[False Alarm] Original issue title~~
+- **Location**: `src/file.ts:85`
+- **Description**: ...
+
+</details>
+```
+
+Note: By Design issues are NOT shown here - they are in `baseline.md` and permanently suppressed.
+
+## Output Requirement
+
+1. **Display** the full report in the conversation
+2. **Overwrite** the analysis file (`.code-analyzer/{topic}/cc.md`)
+3. **Update** `baseline.md` if any By Design locations changed or records removed
+
+## Style
+
+- Respond in Chinese (简体中文); keep code and technical terms in English
+- Only explain rare or domain-specific concepts
+- Skip categories with no issues found
