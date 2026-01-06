@@ -1,4 +1,4 @@
-Please create a git commit based on our current changes.
+Create a git commit based on current changes. Prefer executing git commands directly; only pause to ask if you have questions or concerns.
 
 ## Arguments (Optional)
 
@@ -19,7 +19,9 @@ Arguments can contain scope, hints, or both. Parse them intelligently.
 
 ## Workflow
 
-1. **Handle index.lock**: If you encounter `fatal: Unable to create '.../.git/index.lock': File exists`, **automatically delete the lock file** (`rm -f .git/index.lock`) and retry.
+Prefer executing git commands directly via tool calls. Only pause to ask if you encounter ambiguity or concerns.
+
+1. **Handle index.lock**: If you encounter `fatal: Unable to create '.../.git/index.lock': File exists`, automatically delete the lock file (`rm -f .git/index.lock`) and retry.
 2. **Analyze current changes**: Run `git status` and `git diff` to understand what has been modified.
 3. **Review commit history**: Run `git log --oneline -10` to understand the existing commit message style and conventions.
 4. **Determine commit scope**: Based on the arguments above, decide which files to include in this commit.
