@@ -2,7 +2,7 @@
 description: Create a git commit based on current changes
 ---
 
-Create a git commit based on current changes. See `~/.config/opencode/agents/git-committer.md` for the full commit workflow spec.
+Use `@git-committer` to create a git commit based on current changes.
 
 ## Arguments (Optional)
 
