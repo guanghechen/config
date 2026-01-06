@@ -7,10 +7,10 @@ local S = era.m.notepad
 ---@type era.m.notepad.state.ISourceConfig[]
 local source_configs = {
   {
-    name = "workspace:temp",
-    title = "Temp (workspace)",
-    engine = "json",
-    filepath = dot.path.locate_workspace_filepath("notepad/temp.json"),
+    name = "workspace:local",
+    title = "Local (workspace)",
+    engine = "folder",
+    filepath = dot.path.locate_workspace_config(".neovim/local/notepad.json"),
     default_item_name = function()
       return "Note"
     end,
@@ -19,7 +19,7 @@ local source_configs = {
     name = "workspace:notes",
     title = "Notes (workspace)",
     engine = "folder",
-    filepath = dot.path.locate_workspace_local_filepath(".neovim/notes"),
+    filepath = dot.path.locate_workspace_config(".neovim/notes"),
     default_item_name = function()
       return "Note"
     end,
@@ -28,7 +28,7 @@ local source_configs = {
     name = "workspace:todos",
     title = "Todos (workspace)",
     engine = "folder",
-    filepath = dot.path.locate_workspace_local_filepath(".neovim/todos"),
+    filepath = dot.path.locate_workspace_config(".neovim/todos"),
     default_item_name = function()
       return tostring(os.date("%Y-%m-%d"))
     end,
