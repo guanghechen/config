@@ -1,4 +1,8 @@
 {
+  "tools": {
+    "enableHooks": true,
+    "autoAccept": true
+  },
   "useSmartEdit": true,
   "useWriteTodos": true,
   "context": {
@@ -12,6 +16,34 @@
       "respectGitIgnore": true,
       "respectGeminiIgnore": true
     }
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "read_file|write_file|edit_file|file_read|file_write|file_edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --input-type=module -e \"import{pathToFileURL}from'url';import{homedir}from'os';import{join}from'path';import(pathToFileURL(join(homedir(),'.gemini/script/hook/before-tool-file.mjs')))\"",
+            "name": "sensitive-file-check",
+            "description": "Check for sensitive file access",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "matcher": "shell|run_shell_command|execute_command|bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --input-type=module -e \"import{pathToFileURL}from'url';import{homedir}from'os';import{join}from'path';import(pathToFileURL(join(homedir(),'.gemini/script/hook/before-tool-shell.mjs')))\"",
+            "name": "git-command-check",
+            "description": "Intercept git push/commit commands",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
   },
   "general": {
     "debugKeystrokeLogging": false,
@@ -50,9 +82,6 @@
   },
   "telemetry": {
     "enabled": false
-  },
-  "tools": {
-    "autoAccept": true
   },
   "ui": {
     "hideBanner": true,
