@@ -99,8 +99,6 @@ function M:load(force)
           if type(entry) == "table" then
             local uuid = type(entry.uuid) == "string" and entry.uuid or nil
             if uuid ~= nil and #uuid > 0 then
-              local created_at = type(entry.created_at) == "string" and entry.created_at or S.state.now_iso_utc()
-              local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
               local original_name = type(entry.name) == "string" and entry.name or nil
               local name = S.state.normalize_name(original_name, self.default_item_name)
 
@@ -109,8 +107,6 @@ function M:load(force)
                 name = name,
                 content = nil,
                 original = type(entry.content) == "string" and entry.content or "",
-                created_at = created_at,
-                updated_at = updated_at,
               }
               name_to_uuid[name] = uuid
             end
@@ -140,15 +136,12 @@ function M:load(force)
     -- Ensure at least one note exists
     if #orders == 0 then
       local uuid = yoz.fn.uuid()
-      local now = S.state.now_iso_utc()
       local name = S.state.normalize_name(nil, self.default_item_name)
       local item = {
         uuid = uuid,
         name = name,
         content = "",
         original = "",
-        created_at = now,
-        updated_at = now,
       }
       items_map[uuid] = item
       name_to_uuid[name] = uuid
@@ -177,15 +170,12 @@ function M:load(force)
 
     -- Create default note even on error
     local uuid = yoz.fn.uuid()
-    local now = S.state.now_iso_utc()
     local name = S.state.normalize_name(nil, self.default_item_name)
     local item = {
       uuid = uuid,
       name = name,
       content = "",
       original = "",
-      created_at = now,
-      updated_at = now,
     }
     items_map[uuid] = item
     name_to_uuid[name] = uuid
@@ -218,8 +208,6 @@ function M:list()
       result[#result + 1] = {
         uuid = item.uuid,
         name = item.name,
-        created_at = item.created_at,
-        updated_at = item.updated_at,
       }
     end
   end
@@ -318,15 +306,12 @@ function M:create(name, content)
   end
 
   local uuid = yoz.fn.uuid()
-  local now = S.state.now_iso_utc()
   local initial_content = content or ""
   local item = {
     uuid = uuid,
     name = normalized_name,
     content = initial_content,
     original = initial_content,
-    created_at = now,
-    updated_at = now,
   }
 
   state.items[uuid] = item
@@ -376,7 +361,6 @@ function M:update(uuid, patch)
   end
 
   if modified then
-    item.updated_at = S.state.now_iso_utc()
     self:__schedule_flush__()
   end
   return modified
@@ -415,7 +399,6 @@ function M:rename(uuid, new_name)
   -- Update name index
   era.m.notepad.state.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
-  item.updated_at = S.state.now_iso_utc()
   self:__schedule_flush__()
 
   return true
@@ -451,7 +434,6 @@ function M:append_content(uuid, text)
   end
 
   item.content = new_content
-  item.updated_at = S.state.now_iso_utc()
   self:__schedule_flush__()
   return true
 end
@@ -592,8 +574,6 @@ function M:flush()
           uuid = item.uuid,
           name = item.name,
           content = content_to_save,
-          created_at = item.created_at,
-          updated_at = item.updated_at,
         }
         existing[uuid] = true
         -- Update original after successful save preparation
@@ -611,8 +591,6 @@ function M:flush()
           uuid = item.uuid,
           name = item.name,
           content = content_to_save,
-          created_at = item.created_at,
-          updated_at = item.updated_at,
         }
         -- Update original after successful save preparation
         if item.content ~= nil then
@@ -656,8 +634,6 @@ function M:dump_to_json()
         uuid = item.uuid,
         name = item.name,
         content = item.content,
-        created_at = item.created_at,
-        updated_at = item.updated_at,
       }
     end
   end
@@ -684,8 +660,6 @@ function M:load_from_json(json_data)
     for _, entry in ipairs(json_data.items) do
       if type(entry) == "table" and type(entry.uuid) == "string" and #entry.uuid > 0 then
         local uuid = entry.uuid
-        local created_at = type(entry.created_at) == "string" and entry.created_at or S.state.now_iso_utc()
-        local updated_at = type(entry.updated_at) == "string" and entry.updated_at or created_at
         local name = S.state.normalize_name(entry.name, self.default_item_name)
 
         items_map[uuid] = {
@@ -693,8 +667,6 @@ function M:load_from_json(json_data)
           name = name,
           content = nil,
           original = type(entry.content) == "string" and entry.content or "",
-          created_at = created_at,
-          updated_at = updated_at,
         }
       end
     end

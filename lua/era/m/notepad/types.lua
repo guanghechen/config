@@ -1,8 +1,6 @@
 ---@class era.m.notepad.state.INotepadItemMeta
 ---@field public uuid                   string Unique identifier (UUID v4)
 ---@field public name                   string Human-readable name
----@field public created_at             string ISO 8601 UTC timestamp (managed by source)
----@field public updated_at             string ISO 8601 UTC timestamp (managed by source)
 
 ---@class era.m.notepad.state.INotepadItemState : era.m.notepad.state.INotepadItemMeta
 ---@field public content                string|nil Note content (nil if not loaded)
@@ -21,7 +19,7 @@
 ---@field public default_item_name      fun(): string Default name generator for untitled items
 
 ---@class era.m.notepad.state.INotepadSourceData
----@field public items                  table[] Array of note items with {uuid, name, content, created_at, updated_at}
+---@field public items                  table[] Array of note items with {uuid, name, content}
 ---@field public orders                 string[] Ordered list of UUIDs
 ---@field public activated_item_uuid    string|nil Currently active note UUID
 

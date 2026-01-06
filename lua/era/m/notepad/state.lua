@@ -225,12 +225,6 @@ function M.normalize_name(name, default_name)
   return name
 end
 
----Generate ISO 8601 UTC timestamp
----@return string
-function M.now_iso_utc()
-  return tostring(os.date("!%Y-%m-%dT%H:%M:%SZ"))
-end
-
 ---Remove name from index
 ---@param name_to_uuid                  table<string, string>
 ---@param name                          string
