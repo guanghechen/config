@@ -51,13 +51,13 @@ After applying all fixes:
 1. **Re-review** each fixed issue to verify proper resolution
 2. **Update files** based on resolution status:
 
-| Status      | Marker                       | Stored In                             |
-| ----------- | ---------------------------- | ------------------------------------- |
-| Fixed       | `󰄬 ~~[fixed] ...~~`          | analysis file (`codex.md`)            |
-| Done        | `󰄬 ~~[done] ...~~`           | analysis file (`codex.md`)            |
-| By Design   | `󰛨 ~~[By Design] ...~~`      | **`baseline.md`** (permanent)         |
-| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`      | analysis file (`codex.md`)            |
-| False Alarm | `󱙝 ~~[False Alarm] ...~~`    | analysis file (`codex.md`)            |
+| Status      | Marker                    | Stored In                     |
+| ----------- | ------------------------- | ----------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ...~~`       | analysis file (`codex.md`)    |
+| Done        | `󰄬 ~~[done] ...~~`        | analysis file (`codex.md`)    |
+| By Design   | `󰛨 ~~[By Design] ...~~`   | **`baseline.md`** (permanent) |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`   | analysis file (`codex.md`)    |
+| False Alarm | `󱙝 ~~[False Alarm] ...~~` | analysis file (`codex.md`)    |
 
 3. **Report** summary using the table format below
 
