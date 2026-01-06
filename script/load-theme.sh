@@ -4,7 +4,7 @@ function _ghc_tmux_load_theme_ {
   local status_mode
   status_mode=$(tmux show -gqv @GHC_SL_MODE)
   if [ -z "$status_mode" ]; then
-    status_mode="01"
+    status_mode="03"
     tmux set -g @GHC_SL_MODE "$status_mode"
   fi
 
