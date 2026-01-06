@@ -268,4 +268,10 @@ function M.locate_workspace_filepath(filename)
   return M.locate_context_filepath("workspaces" .. SEP .. session_dir .. SEP .. filename)
 end
 
+---@param filename                      string
+---@return string
+function M.locate_workspace_local_filepath(filename)
+  return M.join(WORKSPACE, filename)
+end
+
 return M

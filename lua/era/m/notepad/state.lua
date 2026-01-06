@@ -7,10 +7,19 @@ local S = era.m.notepad
 ---@type era.m.notepad.state.ISourceConfig[]
 local source_configs = {
   {
+    name = "workspace:temp",
+    title = "Temp (workspace)",
+    engine = "json",
+    filepath = dot.path.locate_workspace_filepath("notepad/temp.json"),
+    default_item_name = function()
+      return "Note"
+    end,
+  },
+  {
     name = "workspace:notes",
     title = "Notes (workspace)",
-    engine = "json",
-    filepath = dot.path.locate_workspace_filepath("notepad/notes.json"),
+    engine = "folder",
+    filepath = dot.path.locate_workspace_local_filepath(".neovim/notes"),
     default_item_name = function()
       return "Note"
     end,
