@@ -1,0 +1,12 @@
+{
+  "activated_item_uuid": "90ec9cae-2a83-45cc-9437-1afcaa41b6ac",
+  "items": [
+    {
+      "name": "sync-agents",
+      "uuid": "90ec9cae-2a83-45cc-9437-1afcaa41b6ac"
+    }
+  ],
+  "orders": [
+    "90ec9cae-2a83-45cc-9437-1afcaa41b6ac"
+  ]
+}
