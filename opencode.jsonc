@@ -1,23 +1,15 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": false,
+  "default_agent": "plan",
   "model": "anthropic/claude-sonnet-4-5",
+  "share": "disabled",
   "theme": "local",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+  },
   "provider": {},
-  "server": {
-    "port": 4096,
-    "hostname": "127.0.0.1",
-    "mdns": false,
-    "cors": [],
-  },
-  "tools": {},
-  "tui": {
-    "scroll_speed": 3,
-    "scroll_acceleration": {
-      "enabled": true,
-    },
-    "diff_style": "auto",
-  },
   "permission": {
     // Sensitive files - deny by default
     "read": {
@@ -63,5 +55,38 @@
       "git commit *": "ask",
       "git push *": "ask",
     },
+  },
+  "server": {
+    "port": 4096,
+    "hostname": "127.0.0.1",
+    "mdns": false,
+    "cors": [],
+  },
+  "tools": {},
+  "tui": {
+    "scroll_speed": 3,
+    "scroll_acceleration": {
+      "enabled": true,
+    },
+    "diff_style": "auto",
+  },
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      ".cache/**",
+      ".next/**",
+      ".yarn/**",
+      "build/**",
+      "debug/**",
+      "dist/**",
+      "local/**",
+      "node_modules/**",
+      "target/**",
+      "tmp/**",
+      "*.pdf",
+      "*.mkv",
+      "*.mp4",
+      "*.zip",
+    ],
   },
 }
