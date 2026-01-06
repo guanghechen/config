@@ -18,10 +18,11 @@
    - CLAUDE.md 同步到 ~/.config/opencode/AGENTS.md 下。 
    - commands/ 同步到 ~/.config/opencode/commands/ 下
    - agents/   同步到 ~/.config/opencode/agents/ 下
-   - opencode 支持 subagents，通过 `@{agent}` 的方式如 `@git-committer` 来引用一个 subagent
+   - opencode 支持 subagents，通过 `@{agent}` 的方式如 `@coder` 来引用 `coder` subagent
 
 等所有的同步完成后，依次进入 codex / gemini / opencode 的配置目录进行提交，提交遵循我们的 /commit (commands/commit.md) 的规范
 
 ## Hints
 
-1. claude code 支持 subagents，不过引用的时候是通过 `@agent-{agent}` 的方式如 `@agent-git-committer` 来引用一个 subagent
+1. claude code 支持 subagents，不过引用的时候是通过 `@agent-{agent}` 的方式如 `@agent-coder` 来引用 `coder` subagent
+
