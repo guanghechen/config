@@ -1,7 +1,8 @@
 # Setup path
-fish_add_path --append /mnt/c/WINDOWS/System32/
-fish_add_path --append /mnt/c/WINDOWS
 fish_add_path --append "/mnt/c/Program Files/PowerShell/7/"
+fish_add_path --append "/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/"
+fish_add_path --append /mnt/c/WINDOWS/System32/
+fish_add_path --append /mnt/c/WINDOWS/
 
 ## Aliases
 alias chmod='chmod --preserve-root' # the `--preserve-root` option not worked in MacOS.
