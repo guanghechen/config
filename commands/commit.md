@@ -1,4 +1,4 @@
-Use the `git-committer` agent to create a git commit based on current changes.
+Use `@agent-git-committer` to create a git commit based on current changes.
 
 ## Arguments (Optional)
 
