@@ -21,7 +21,7 @@
 4. **ALWAYS**: Work until completion; discuss when stuck on complex decisions.
 5. **ALWAYS**: Architecture - DAG dependencies, single responsibility, consistent module structure, minimal public API, simplicity first.
 6. **ALWAYS**: Trailing newline required; validate only at system boundaries.
-7. **RECOMMENDED**: Use `coder` subagent for non-trivial coding tasks (features, refactoring, bug fixes).
+7. **RECOMMENDED**: See `~/.config/codex/agents/coder.md` for coding tasks (features, refactoring, bug fixes).
 
 ## Documentation
 
