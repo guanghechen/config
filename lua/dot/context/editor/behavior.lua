@@ -1,10 +1,12 @@
 ---@class dot.context.behavior.data
 ---@field public auto_im                boolean
 ---@field public bufs_relative          boolean
+---@field public notify_notepad_ss      boolean
 
 ---@class dot.context.behavior.state
 ---@field public auto_im                stl.c.Observable
 ---@field public bufs_relative          stl.c.Observable
+---@field public notify_notepad_ss      stl.c.Observable
 
 ---@class dot.context.behavior : dot.context.behavior.state
 ---@field public defaults               fun(): dot.context.behavior.data
@@ -19,6 +21,7 @@ function M.defaults()
   return {
     auto_im = true,
     bufs_relative = true,
+    notify_notepad_ss = false,
   }
 end
 
@@ -33,6 +36,9 @@ function M.normalize(data)
     if type(data.bufs_relative) == "boolean" then
       resolved.bufs_relative = data.bufs_relative
     end
+    if type(data.notify_notepad_ss) == "boolean" then
+      resolved.notify_notepad_ss = data.notify_notepad_ss
+    end
   end
   return resolved
 end
@@ -43,6 +49,7 @@ function M.dump()
   return {
     auto_im = M.auto_im:snapshot(),
     bufs_relative = M.bufs_relative:snapshot(),
+    notify_notepad_ss = M.notify_notepad_ss:snapshot(),
   }
 end
 
@@ -52,6 +59,7 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.behavior.data
   M.auto_im:next(data.auto_im)
   M.bufs_relative:next(data.bufs_relative)
+  M.notify_notepad_ss:next(data.notify_notepad_ss)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -59,4 +67,5 @@ end
 local _defaults = M.defaults() ---@type dot.context.behavior.data
 M.auto_im = stl.c.Observable.from_value(_defaults.auto_im)
 M.bufs_relative = stl.c.Observable.from_value(_defaults.bufs_relative)
+M.notify_notepad_ss = stl.c.Observable.from_value(_defaults.notify_notepad_ss)
 return M

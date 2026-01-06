@@ -102,11 +102,13 @@ source_picker = era.m.picker.ListComposer.new({
     if item ~= nil then
       widget:attach(item.data.name)
       dirty_data = true
-      stl.reporter.info({
-        from = __module_name__,
-        subject = "source_select",
-        message = string.format("Switched to '%s' notepad source.", item.data.name),
-      })
+      if dot.context.behavior.notify_notepad_ss:snapshot() then
+        stl.reporter.info({
+          from = __module_name__,
+          subject = "source_select",
+          message = string.format("Switched to '%s' notepad source.", item.data.name),
+        })
+      end
     end
   end,
   on_disposed = function()
@@ -436,11 +438,13 @@ function M.source_prev()
   local prev_config = S.state.source_configs[prev_index]
   widget:attach(prev_config.name)
   dirty_data = true
-  stl.reporter.info({
-    from = __module_name__,
-    subject = "source_prev",
-    message = string.format("Switched to '%s' notepad source.", prev_config.title),
-  })
+  if dot.context.behavior.notify_notepad_ss:snapshot() then
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "source_prev",
+      message = string.format("Switched to '%s' notepad source.", prev_config.title),
+    })
+  end
 end
 
 ---@return nil
@@ -467,11 +471,13 @@ function M.source_next()
   local next_config = S.state.source_configs[next_index]
   widget:attach(next_config.name)
   dirty_data = true
-  stl.reporter.info({
-    from = __module_name__,
-    subject = "source_next",
-    message = string.format("Switched to '%s' notepad source.", next_config.title),
-  })
+  if dot.context.behavior.notify_notepad_ss:snapshot() then
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "source_next",
+      message = string.format("Switched to '%s' notepad source.", next_config.title),
+    })
+  end
 end
 
 ---@class era.m.notepad.action.INoteItem : era.m.picker.composer.list.IItem
