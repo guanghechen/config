@@ -4,6 +4,22 @@ source $HOME/.config/guanghechen/nix/setup/path.sh
 
 FONT_COMMON_DIR="/Library/Fonts"
 FONT_LOCAL_DIR="$HOME/Library/Fonts"
+FORCE=false
+
+for arg in "$@"; do
+  case $arg in
+    --force)
+      FORCE=true
+      shift
+      ;;
+  esac
+done
+
+if [ "$FORCE" = true ] && [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
+  printf "\n\e[94m  [setup font (Maple)] Force removing existing Maple fonts...\e[0m\n"
+  rm -rf "$FONT_LOCAL_DIR"/MapleMono*
+  sudo rm -rf "$FONT_COMMON_DIR"/MapleMono*
+fi
 
 if [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
   printf "\n\e[94m  [setup font (Maple)] Maple is already installed.\e[0m\n"

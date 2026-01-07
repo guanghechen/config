@@ -3,8 +3,23 @@
 source $HOME/.config/guanghechen/nix/setup/path.sh
 
 FONT_DIR="/usr/share/fonts/RobotoMono"
+FORCE=false
 
-if [ -d $FONT_DIR ]; then
+for arg in "$@"; do
+  case $arg in
+    --force)
+      FORCE=true
+      shift
+      ;;
+  esac
+done
+
+if [ "$FORCE" = true ] && [ -d "$FONT_DIR" ]; then
+  printf "\n\e[94m  [setup font (RobotoMono)] Force removing existing RobotoMono fonts...\e[0m\n"
+  sudo rm -rf "$FONT_DIR"
+fi
+
+if [ -d "$FONT_DIR" ]; then
   printf "\n\e[94m  [setup font (RobotoMono)] RobotoMono is already installed.\e[0m\n"
 else
   mkdir -p  ~/download/fonts/RobotoMono
