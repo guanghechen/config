@@ -250,19 +250,20 @@ local function start_watcher(gitdir, commondir)
   end
 
   -- For worktrees, refs are stored in commondir, not gitdir
-  -- Watch commondir to detect HEAD/refs changes from other terminals
+  -- Watch commondir/refs/heads to detect branch updates from local or other worktree commits
+  -- Note: fs_event does not recursively watch subdirectories
   if commondir and commondir ~= gitdir then
-    fs_watcher_commondir = vim.uv.new_fs_event()
-    if fs_watcher_commondir then
-      fs_watcher_commondir:start(commondir, {}, function(err, filename)
-        if err or not filename then
-          return
-        end
-        -- Only care about refs changes in commondir
-        if filename == "refs" or vim.startswith(filename, "refs/") then
-          on_fs_event(filename)
-        end
-      end)
+    local refs_heads_path = commondir .. "/refs/heads" ---@type string
+    if vim.uv.fs_stat(refs_heads_path) then
+      fs_watcher_commondir = vim.uv.new_fs_event()
+      if fs_watcher_commondir then
+        fs_watcher_commondir:start(refs_heads_path, {}, function(err, filename)
+          if err or not filename then
+            return
+          end
+          on_fs_event("refs/heads/" .. filename)
+        end)
+      end
     end
   end
 end

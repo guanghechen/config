@@ -104,22 +104,21 @@ my-worktree/
 │  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
 │  │         fs_watcher_dir             │  │    fs_watcher_commondir      │   │
 │  │                                    │  │      (worktree only)         │   │
-│  │  监听: gitdir/                     │  │  监听: commondir/            │   │
-│  │  处理: HEAD、refs、index 变化      │  │  处理: refs/ 变化            │   │
+│  │  监听: gitdir/                     │  │  监听: commondir/refs/heads  │   │
+│  │  处理: HEAD、refs、index 变化      │  │  处理: 分支 refs 变化        │   │
 │  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
 │                 │                                       │                    │
 │                 ▼                                       ▼                    │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │                        事件过滤                                      │    │
 │  │  - 忽略 index.lock、.watchman-cookie                                │    │
-│  │  - commondir 只关心 refs/ 变化                                      │    │
 │  └─────────────────────────────────────────────────────────────────────┘    │
 │                 │                                       │                    │
 │                 ▼                                       ▼                    │
 │  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
 │  │  filename == "index"?              │  │      on_fs_event             │   │
 │  │  ├─ Yes → on_index_event           │  │                              │   │
-│  │  └─ No  → on_fs_event              │  │      refs/ 变化              │   │
+│  │  └─ No  → on_fs_event              │  │      分支文件变化            │   │
 │  │          (HEAD/refs 变化)          │  │      触发全量刷新            │   │
 │  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
 │                 │                                       │                    │
@@ -181,10 +180,12 @@ my-worktree/
 #### Worktree 支持
 
 通过 `repo.lua` 的 `resolve_commondir()` 函数读取 `gitdir/commondir` 文件获取主 git 目录路径。
-当检测到 commondir 存在且与 gitdir 不同时，额外启动 `fs_watcher_commondir` 监听主 git 目录的 refs 变化。
+当检测到 commondir 存在且与 gitdir 不同时，额外启动 `fs_watcher_commondir` 监听 `commondir/refs/heads/` 目录。
 
-这解决了 worktree 场景下外部 commit 无法检测的问题：
-- 普通仓库：commit 后 `gitdir/HEAD` 或 `gitdir/refs/` 变化，`fs_watcher_dir` 能检测到
+**重要**：libuv `fs_event` 不会递归监听子目录，所以必须直接监听 `refs/heads/` 目录才能检测到分支文件的变化。
+
+这解决了 worktree 场景下 commit 无法检测的问题：
+- 普通仓库：commit 后 `gitdir/refs/heads/<branch>` 变化，`fs_watcher_dir` 能检测到
 - Worktree：commit 后 `commondir/refs/heads/<branch>` 变化，需要 `fs_watcher_commondir` 检测
 
 ## Buffer 管理
