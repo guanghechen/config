@@ -9,6 +9,7 @@ local function refresh_all()
   vim.cmd("checktime")
   dot.tab.refresh()
   era.m.git.state.refresh_async(true)
+  era.m.git.buffer.invalidate_compare_text_all()
 
   pcall(function()
     if vim.treesitter and bufnr_sourcefile ~= nil then
