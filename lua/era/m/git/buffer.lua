@@ -1,4 +1,4 @@
-local DEBOUNCE_MS = 200 ---@type integer
+local THROTTLE_MS = 200 ---@type integer
 
 ---@class era.m.git.buffer
 local M = {}
@@ -167,50 +167,69 @@ local function update_hunks(buf_cache, callback)
     local compare_text_index = buf_cache.compare_text_index or {}
     local compare_text_head = buf_cache.compare_text or {}
 
-    buf_cache.hunks = era.m.git.diff.run_diff(compare_text_index, buf_lines)
-
-    if compare_text_index == compare_text_head then
-      buf_cache.hunks_staged = nil
-    else
-      local hunks_head = era.m.git.diff.run_diff(compare_text_head, buf_lines)
-      buf_cache.hunks_staged = era.m.git.diff.filter_common(hunks_head, buf_cache.hunks)
-    end
-
-    era.m.git.hunk.set(bufnr, buf_cache.hunks)
-
-    local hunks_changed = era.m.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
-    local hunks_staged_changed = era.m.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
-
-    if should_force_update or hunks_changed or hunks_staged_changed then
-      era.m.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
-        untracked = buf_cache.untracked,
-        force = should_force_update,
-      })
-    end
-
-    buf_cache.dirty = false
-
-    -- Complete current update
-    lock.running = false
-    if callback then
-      callback()
-    end
-
-    -- Check if there's a scheduled update waiting
-    if lock.scheduled then
-      lock.scheduled = false
-      local pending_cb = lock.pending_callback
-      lock.pending_callback = nil
-      -- Use vim.schedule to avoid deep recursion
-      vim.schedule(function()
-        local current_cache = cache[bufnr]
-        if current_cache and current_cache.attached then
-          update_hunks(current_cache, pending_cb)
-        elseif pending_cb then
-          pending_cb()
+    local function on_diff_complete()
+      if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
+        lock.running = false
+        lock.scheduled = false
+        lock.pending_callback = nil
+        if callback then
+          callback()
         end
-      end)
+        return
+      end
+
+      era.m.git.hunk.set(bufnr, buf_cache.hunks)
+
+      local hunks_changed = era.m.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
+      local hunks_staged_changed = era.m.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
+
+      if should_force_update or hunks_changed or hunks_staged_changed then
+        era.m.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
+          untracked = buf_cache.untracked,
+          force = should_force_update,
+        })
+      end
+
+      buf_cache.dirty = false
+
+      -- Complete current update
+      lock.running = false
+      if callback then
+        callback()
+      end
+
+      -- Check if there's a scheduled update waiting
+      if lock.scheduled then
+        lock.scheduled = false
+        local pending_cb = lock.pending_callback
+        lock.pending_callback = nil
+        -- Use vim.schedule to avoid deep recursion
+        vim.schedule(function()
+          local current_cache = cache[bufnr]
+          if current_cache and current_cache.attached then
+            update_hunks(current_cache, pending_cb)
+          elseif pending_cb then
+            pending_cb()
+          end
+        end)
+      end
     end
+
+    -- Compute unstaged hunks (Index vs Buffer)
+    era.m.git.diff.run_diff_async(compare_text_index, buf_lines, function(hunks)
+      buf_cache.hunks = hunks
+
+      if compare_text_index == compare_text_head then
+        buf_cache.hunks_staged = nil
+        on_diff_complete()
+      else
+        -- Compute staged hunks (HEAD vs Buffer, then filter)
+        era.m.git.diff.run_diff_async(compare_text_head, buf_lines, function(hunks_head)
+          buf_cache.hunks_staged = era.m.git.diff.filter_common(hunks_head, buf_cache.hunks)
+          on_diff_complete()
+        end)
+      end
+    end)
   end
 
   local need_head = not buf_cache.compare_text ---@type boolean
@@ -328,14 +347,14 @@ function M.attach(bufnr, opts)
       relpath = relpath,
       repo = r,
       untracked = false,
-      update_debounced = nil,
+      update_throttled = nil,
     }
 
-    buf_cache.update_debounced = stl.timer.debounce(function()
+    buf_cache.update_throttled = stl.timer.throttle(function()
       if cache[bufnr] and buf_cache.attached then
         update_hunks(buf_cache)
       end
-    end, DEBOUNCE_MS)
+    end, THROTTLE_MS)
 
     cache[bufnr] = buf_cache
 
@@ -362,8 +381,8 @@ function M.attach(bufnr, opts)
           bc.force_next_update = true
         end
 
-        if is_buf_visible(buf) and bc.update_debounced then
-          bc.update_debounced()
+        if is_buf_visible(buf) and bc.update_throttled then
+          bc.update_throttled()
         else
           bc.dirty = true
         end
@@ -374,8 +393,8 @@ function M.attach(bufnr, opts)
           return
         end
         bc.force_next_update = true
-        if is_buf_visible(buf) and bc.update_debounced then
-          bc.update_debounced()
+        if is_buf_visible(buf) and bc.update_throttled then
+          bc.update_throttled()
         else
           bc.dirty = true
         end
@@ -431,8 +450,8 @@ function M.detach(bufnr)
   buf_cache.attached = false
   clear_update_lock(bufnr)
 
-  if buf_cache.update_debounced then
-    buf_cache.update_debounced:dispose()
+  if buf_cache.update_throttled then
+    buf_cache.update_throttled:dispose()
   end
 
   era.m.git.sign.clear(bufnr)
@@ -922,8 +941,8 @@ function M.setup()
         return
       end
       buf_cache.force_next_update = true
-      if buf_cache.update_debounced then
-        buf_cache.update_debounced()
+      if buf_cache.update_throttled then
+        buf_cache.update_throttled()
       end
     end,
   })

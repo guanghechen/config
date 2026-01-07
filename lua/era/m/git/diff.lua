@@ -154,7 +154,117 @@ function M.run_diff(old_lines, new_lines)
     hunks[#hunks + 1] = hunk
   end
 
-  return hunks
+  return M.denoise_hunks(hunks)
+end
+
+---Worker function for async diff (self-contained, no external dependencies)
+---Must use vim.mpack.encode to return table data from worker thread
+---@type string
+local DIFF_WORKER_FN = [[
+return function(a, b)
+  local diff_opts = { result_type = "indices", algorithm = "histogram" }
+  local ok, raw = pcall(vim.diff, a, b, diff_opts)
+  if not ok or type(raw) ~= "table" then
+    return ""
+  end
+  return vim.mpack.encode(raw)
+end
+]]
+
+---@type (fun(a: string, b: string): string)|nil
+local diff_worker_fn = nil
+
+---@param old_lines                     string[]
+---@param new_lines                     string[]
+---@param callback                      fun(hunks: era.m.git.Hunk[]): nil
+function M.run_diff_async(old_lines, new_lines, callback)
+  local old_has_trailing_nl = #old_lines > 0 and old_lines[#old_lines] == "" ---@type boolean
+  local new_has_trailing_nl = #new_lines > 0 and new_lines[#new_lines] == "" ---@type boolean
+
+  local old_effective = old_lines ---@type string[]
+  local new_effective = new_lines ---@type string[]
+
+  if old_has_trailing_nl then
+    old_effective = {}
+    for i = 1, #old_lines - 1 do
+      old_effective[i] = old_lines[i]
+    end
+  end
+
+  if new_has_trailing_nl then
+    new_effective = {}
+    for i = 1, #new_lines - 1 do
+      new_effective[i] = new_lines[i]
+    end
+  end
+
+  local a = table.concat(old_effective, "\n") ---@type string
+  local b = table.concat(new_effective, "\n") ---@type string
+
+  if #old_effective > 0 then
+    a = a .. "\n"
+  end
+  if #new_effective > 0 then
+    b = b .. "\n"
+  end
+
+  -- Lazy load worker function
+  if not diff_worker_fn then
+    diff_worker_fn = assert(loadstring(DIFF_WORKER_FN))()
+  end
+
+  local work = vim.uv.new_work(
+    diff_worker_fn,
+    vim.schedule_wrap(function(raw_encoded)
+      if not raw_encoded or raw_encoded == "" then
+        callback({})
+        return
+      end
+
+      local ok, raw = pcall(vim.mpack.decode, raw_encoded)
+      if not ok or type(raw) ~= "table" then
+        callback({})
+        return
+      end
+
+      local hunks = {} ---@type era.m.git.Hunk[]
+
+      for _, result in ipairs(raw) do
+        local old_start = result[1] ---@type integer
+        local old_count = result[2] ---@type integer
+        local new_start = result[3] ---@type integer
+        local new_count = result[4] ---@type integer
+
+        if old_start == 0 then
+          old_start = 1
+        end
+        if new_start == 0 and new_count > 0 then
+          new_start = 1
+        end
+
+        local hunk = create_hunk(
+          old_start,
+          old_count,
+          new_start,
+          new_count,
+          old_effective,
+          new_effective,
+          old_has_trailing_nl,
+          new_has_trailing_nl
+        )
+        hunks[#hunks + 1] = hunk
+      end
+
+      callback(M.denoise_hunks(hunks))
+    end)
+  )
+
+  if work then
+    work:queue(a, b)
+  else
+    -- Fallback to sync if worker creation fails
+    callback(M.run_diff(old_lines, new_lines))
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -487,6 +597,81 @@ function M.compute_hunk_word_diff(hunk)
         new_lnum = i,
         changes = word_changes,
       }
+    end
+  end
+
+  return result
+end
+
+----------------------------------------------------------------------------------------------------
+-- Hunk denoise
+----------------------------------------------------------------------------------------------------
+
+---Merge hunks that are close together (gap <= 2 lines, matching VSCode behavior)
+---@param hunks                          era.m.git.Hunk[]
+---@return era.m.git.Hunk[]
+function M.denoise_hunks(hunks)
+  if #hunks <= 1 then
+    return hunks
+  end
+
+  local result = { hunks[1] } ---@type era.m.git.Hunk[]
+
+  for i = 2, #hunks do
+    local prev = result[#result] ---@type era.m.git.Hunk
+    local curr = hunks[i] ---@type era.m.git.Hunk
+
+    local prev_end = prev.added.start + prev.added.count ---@type integer
+    local gap = curr.added.start - prev_end ---@type integer
+
+    if gap <= 2 then
+      local new_removed_lines = {} ---@type string[]
+      for _, line in ipairs(prev.removed.lines) do
+        new_removed_lines[#new_removed_lines + 1] = line
+      end
+      for _, line in ipairs(curr.removed.lines) do
+        new_removed_lines[#new_removed_lines + 1] = line
+      end
+
+      local new_added_lines = {} ---@type string[]
+      for _, line in ipairs(prev.added.lines) do
+        new_added_lines[#new_added_lines + 1] = line
+      end
+      for _, line in ipairs(curr.added.lines) do
+        new_added_lines[#new_added_lines + 1] = line
+      end
+
+      local new_old_count = prev.removed.count + curr.removed.count ---@type integer
+      local new_new_count = prev.added.count + curr.added.count ---@type integer
+
+      local new_hunk_type ---@type era.m.git.HunkType
+      if new_old_count == 0 then
+        new_hunk_type = "add"
+      elseif new_new_count == 0 then
+        new_hunk_type = "delete"
+      else
+        new_hunk_type = "change"
+      end
+
+      result[#result] = {
+        type = new_hunk_type,
+        head = string.format("@@ -%d,%d +%d,%d @@", prev.removed.start, new_old_count, prev.added.start, new_new_count),
+        added = {
+          start = prev.added.start,
+          count = new_new_count,
+          lines = new_added_lines,
+          no_nl_at_eof = curr.added.no_nl_at_eof or prev.added.no_nl_at_eof,
+        },
+        removed = {
+          start = prev.removed.start,
+          count = new_old_count,
+          lines = new_removed_lines,
+          no_nl_at_eof = curr.removed.no_nl_at_eof or prev.removed.no_nl_at_eof,
+        },
+        vend = curr.vend,
+      }
+    else
+      result[#result + 1] = curr
     end
   end
 

@@ -98,7 +98,7 @@
 ---@field public relpath                string
 ---@field public repo                   era.m.git.Repo
 ---@field public untracked              boolean
----@field public update_debounced       stl.timer.IDisposableCallable|nil
+---@field public update_throttled      stl.timer.IDisposableCallable|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Blame types
