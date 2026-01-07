@@ -4,15 +4,17 @@
 // Example: node limit-128k.mjs 128000
 
 import { execSync } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, realpathSync } from "fs";
 
 const targetSize = process.argv[2] || "150000";
 const pattern = /function NO\(A\)\{if\(A\.includes\("\[1m\]"\)\)return 1e6;return \d+\}/;
 
 function getCliPath() {
+  const isWindows = process.platform === "win32";
   try {
-    const which = execSync("which claude", { encoding: "utf-8" }).trim();
-    return execSync(`realpath "${which}"`, { encoding: "utf-8" }).trim();
+    const cmd = isWindows ? "where claude" : "which claude";
+    const which = execSync(cmd, { encoding: "utf-8" }).trim().split(/\r?\n/)[0];
+    return realpathSync(which);
   } catch {
     return null;
   }

@@ -3,7 +3,7 @@
 // Usage: node image-paste.mjs
 
 import { execSync } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, realpathSync } from "fs";
 
 // Patterns to patch - add bmp detection in clipboard check, convert to png for API
 // Claude API only supports: image/png, image/jpeg, image/gif, image/webp
@@ -25,9 +25,11 @@ const patches = [
 ];
 
 function getCliPath() {
+  const isWindows = process.platform === "win32";
   try {
-    const which = execSync("which claude", { encoding: "utf-8" }).trim();
-    return execSync(`realpath "${which}"`, { encoding: "utf-8" }).trim();
+    const cmd = isWindows ? "where claude" : "which claude";
+    const which = execSync(cmd, { encoding: "utf-8" }).trim().split(/\r?\n/)[0];
+    return realpathSync(which);
   } catch {
     return null;
   }
