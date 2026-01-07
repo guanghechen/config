@@ -9,6 +9,7 @@ function __lazy_load__ {
 ## Lazy loaded functions
 function ghc-claude-remote { __lazy_load__ 'ghc-claude-remote' @args }
 function ghc-opensource { __lazy_load__ 'ghc-opensource' @args }
+function ghc-patch-claude { __lazy_load__ 'ghc-patch-claude' @args }
 function ghc-proxy { __lazy_load__ 'ghc-proxy' @args }
 function ghc-theme-apply { __lazy_load__ 'ghc-theme-apply' @args }
 function ghc-theme-gen { __lazy_load__ 'ghc-theme-gen' @args }
