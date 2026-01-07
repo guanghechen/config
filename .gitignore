@@ -13,3 +13,4 @@ todos/
 *.local.json
 history.jsonl
 stats-cache.json
+image-cache/
