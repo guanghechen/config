@@ -5,20 +5,22 @@
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 
-// Patterns to patch - just add bmp to detection, no conversion needed
+// Patterns to patch - add bmp detection in clipboard check, convert to png for API
+// Claude API only supports: image/png, image/jpeg, image/gif, image/webp
+// So BMP must be converted to PNG before sending
 const patches = [
   {
     name: "checkImage grep pattern",
+    // Add bmp to clipboard format detection
     search: /grep -E "image\/\(png\|jpeg\|jpg\|gif\|webp\)"/g,
     replace: 'grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
   },
   {
-    name: "saveImage wl-paste command",
-    // Match: wl-paste --type image/png > (original)
-    // Or: wl-paste --type image/png ... convert ... > (old patch with convert)
-    // But not: wl-paste --type image/bmp > (already patched without convert)
-    search: /wl-paste --type image\/png(?: 2>\/dev\/null \|\| wl-paste --type image\/bmp \| convert bmp:- png:-)?(?= >)/g,
-    replace: "wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp",
+    name: "wl-paste with BMP to PNG conversion",
+    // Use ImageMagick to convert BMP to PNG since Claude API doesn't support BMP
+    // Only match if not already patched with magick conversion
+    search: "wl-paste --type image/png >",
+    replace: "wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >",
   },
 ];
 
