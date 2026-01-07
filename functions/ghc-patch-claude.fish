@@ -1,11 +1,18 @@
 function ghc-patch-claude --description "Patch Claude Code with custom modifications"
     set -l script_dir ~/.config/claude/script
-    set -l scripts limit-128k.mjs image-paste.mjs
 
     # Check if claude is installed
     if not command -q claude
         echo "❌ Claude Code not installed"
         return 1
+    end
+
+    # All platforms: limit-128k
+    set -l scripts limit-128k.mjs
+
+    # WSL only: image-paste
+    if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
+        set -a scripts image-paste.mjs
     end
 
     # Run each patch script
