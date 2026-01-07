@@ -413,7 +413,7 @@ function M.attach(bufnr, opts)
     if r then
       repo = r
       era.m.git.state.o_branch:next(r.abbrev_head)
-      era.m.git.watcher.update(r.gitdir)
+      era.m.git.watcher.update(r.gitdir, r.commondir)
     end
     do_attach(r)
   end)

@@ -3,6 +3,28 @@
 local M = {}
 M.__index = M
 
+---@param gitdir                      string
+---@return string|nil
+local function resolve_commondir(gitdir)
+  local commondir_file = gitdir .. "/commondir" ---@type string
+  if vim.uv.fs_stat(commondir_file) == nil then
+    return nil
+  end
+
+  local lines = vim.fn.readfile(commondir_file, "", 1) ---@type string[]
+  if #lines == 0 or lines[1] == "" then
+    return nil
+  end
+
+  local commondir = dot.path.normalize(gitdir .. "/" .. lines[1]) ---@type string
+  local stat = vim.uv.fs_stat(commondir) ---@type uv.fs_stat.result|nil
+  if stat and stat.type == "directory" then
+    return commondir
+  end
+
+  return nil
+end
+
 ---@param toplevel                   string
 ---@param callback                   fun(repo: era.m.git.Repo|nil)
 function M.new(toplevel, callback)
@@ -15,6 +37,7 @@ function M.new(toplevel, callback)
     era.m.git.cmd.get_abbrev_head_async(resolved_toplevel, function(abbrev_head, detached)
       local self = setmetatable({}, M)
       self.abbrev_head = abbrev_head
+      self.commondir = resolve_commondir(gitdir)
       self.detached = detached
       self.gitdir = gitdir
       self.toplevel = resolved_toplevel

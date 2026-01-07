@@ -10,9 +10,9 @@
 era.m.git/
 ├── init.lua      -- 入口，初始化 watcher、autocmd、暴露公共 API
 ├── state.lua     -- 全局状态管理（branch、staged/unstaged files、status cache）
-├── repo.lua      -- Git 仓库抽象，封装常用操作
+├── repo.lua      -- Git 仓库抽象，封装常用操作，支持 worktree (commondir)
 ├── cmd.lua       -- Git 命令封装（async/sync）
-├── watcher.lua   -- 文件系统监听（.git 目录和 index）
+├── watcher.lua   -- 文件系统监听（gitdir、index、commondir）
 ├── buffer.lua    -- Buffer 级别的 Hunk 计算和缓存
 ├── hunk.lua      -- Hunk 操作（查找、导航、创建 patch、stage/unstage）
 ├── sign.lua      -- Sign 显示（使用 decoration provider）
@@ -65,12 +65,127 @@ M.o_unstaged_files  -- Observable<string[]>: 未暂存的文件列表
 
 ### watcher.lua
 
-通过 `vim.uv.new_fs_event()` 监听 `.git` 目录和 `index` 文件的变化：
+通过 `vim.uv.new_fs_event()` 监听 Git 目录变化，支持普通仓库和 worktree：
 
-- 监听 `.git/` 目录（分支切换、配置变更等）
-- 监听 `.git/index` 文件（stage/unstage 操作）
-- 过滤 `index.lock` 和 `.watchman-cookie` 等临时文件
-- 使用 200ms debounce 防止频繁刷新
+#### Git 目录结构
+
+**普通仓库：**
+```
+project/
+└── .git/                    # gitdir
+    ├── HEAD                 # 当前分支引用
+    ├── index                # staging area
+    ├── refs/heads/          # 本地分支
+    └── refs/remotes/        # 远程分支
+```
+
+**Worktree：**
+```
+main-repo/
+└── .git/                              # commondir (主 git 目录)
+    ├── refs/heads/                    # 所有分支的 refs 存储在这里
+    ├── objects/                       # 所有 git objects
+    └── worktrees/my-worktree/         # gitdir (worktree 专属目录)
+        ├── HEAD                       # 内容: "ref: refs/heads/<branch>"
+        ├── index                      # worktree 的 staging area
+        └── commondir                  # 内容: "../.." (指向主 git 目录)
+
+my-worktree/
+└── .git                               # 文件，内容指向 gitdir
+```
+
+#### Watcher 架构
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              watcher.lua                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
+│  │         fs_watcher_dir             │  │    fs_watcher_commondir      │   │
+│  │                                    │  │      (worktree only)         │   │
+│  │  监听: gitdir/                     │  │  监听: commondir/            │   │
+│  │  处理: HEAD、refs、index 变化      │  │  处理: refs/ 变化            │   │
+│  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
+│                 │                                       │                    │
+│                 ▼                                       ▼                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                        事件过滤                                      │    │
+│  │  - 忽略 index.lock、.watchman-cookie                                │    │
+│  │  - commondir 只关心 refs/ 变化                                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                 │                                       │                    │
+│                 ▼                                       ▼                    │
+│  ┌────────────────────────────────────┐  ┌──────────────────────────────┐   │
+│  │  filename == "index"?              │  │      on_fs_event             │   │
+│  │  ├─ Yes → on_index_event           │  │                              │   │
+│  │  └─ No  → on_fs_event              │  │      refs/ 变化              │   │
+│  │          (HEAD/refs 变化)          │  │      触发全量刷新            │   │
+│  └──────────────┬─────────────────────┘  └──────────────┬───────────────┘   │
+│                 │                                       │                    │
+└─────────────────┼───────────────────────────────────────┼────────────────────┘
+                  │                                       │
+                  ▼                                       ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                          buffer.lua 刷新策略                                  │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  invalidate_compare_text_all()          invalidate_index_all()                │
+│  ┌─────────────────────────────┐        ┌─────────────────────────────┐      │
+│  │ 清除:                       │        │ 清除:                       │      │
+│  │ - compare_text (HEAD)       │        │ - compare_text_index        │      │
+│  │ - compare_text_index        │        │ - object_name               │      │
+│  │ - object_name               │        │                             │      │
+│  │                             │        │ 触发场景:                   │      │
+│  │ 触发场景:                   │        │ - git add/reset (stage)     │      │
+│  │ - git commit                │        │ - 内部 stage/unstage 操作   │      │
+│  │ - git checkout              │        │                             │      │
+│  │ - git reset --hard          │        │                             │      │
+│  │ - 外部 commit (worktree)    │        │                             │      │
+│  └─────────────────────────────┘        └─────────────────────────────┘      │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 事件触发矩阵
+
+| Git 操作 | gitdir 变化 | index 变化 | commondir 变化 | 刷新动作 |
+|:---------|:------------|:-----------|:---------------|:---------|
+| `git add` | - | ✓ index | - | `invalidate_index_all` |
+| `git reset <file>` | - | ✓ index | - | `invalidate_index_all` |
+| `git commit` (本地) | ✓ HEAD | ✓ index | - | `invalidate_compare_text_all` |
+| `git commit` (外部 worktree) | - | ✓ index | ✓ refs/ | `invalidate_compare_text_all` |
+| `git checkout` | ✓ HEAD | ✓ index | - | `invalidate_compare_text_all` |
+| `git pull/fetch` | ✓ FETCH_HEAD | - | - | `mark_dirty_all` + status 刷新 |
+
+#### Debounce 策略
+
+- **gitdir/commondir 事件**: 150ms debounce，合并多个事件
+- **index 事件**: 100ms debounce，快速响应 stage/unstage
+
+#### fs_event 行为差异
+
+**重要发现**：libuv 的 `fs_event` 监听单个文件 vs 监听目录时行为不同：
+
+| 监听方式                            | `git add` | `git reset`/`git unstage` |
+|:------------------------------------|:----------|:--------------------------|
+| 文件级 (`fs_event` on `index`)      | ✓ 触发    | ✗ 可能丢失                |
+| 目录级 (`fs_event` on `gitdir/`)    | ✓ 触发    | ✓ 触发                    |
+
+原因：Git 不同操作使用不同的写入策略：
+- `git add`：直接写入 index 文件
+- `git reset`：可能通过 rename `index.lock` → `index` 实现原子写入
+
+**解决方案**：仅使用目录级 `fs_watcher_dir` 监听 gitdir，当检测到 `index` 文件变化时调用 `on_index_event()`。这比文件级监听更可靠，且避免了重复事件。
+
+#### Worktree 支持
+
+通过 `repo.lua` 的 `resolve_commondir()` 函数读取 `gitdir/commondir` 文件获取主 git 目录路径。
+当检测到 commondir 存在且与 gitdir 不同时，额外启动 `fs_watcher_commondir` 监听主 git 目录的 refs 变化。
+
+这解决了 worktree 场景下外部 commit 无法检测的问题：
+- 普通仓库：commit 后 `gitdir/HEAD` 或 `gitdir/refs/` 变化，`fs_watcher_dir` 能检测到
+- Worktree：commit 后 `commondir/refs/heads/<branch>` 变化，需要 `fs_watcher_commondir` 检测
 
 ## Buffer 管理
 

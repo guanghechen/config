@@ -56,6 +56,7 @@
 ---@field public abbrev_head            string
 ---@field public add_intent_to_add      fun(self: era.m.git.Repo, file: string, callback: fun(ok: boolean))
 ---@field public apply_patch            fun(self: era.m.git.Repo, patch: string, reverse: boolean|nil, callback: fun(ok: boolean, err: string|nil))
+---@field public commondir              string|nil
 ---@field public detached               boolean
 ---@field public get_file_info          fun(self: era.m.git.Repo, file: string, callback: fun(info: era.m.git.FileInfo|nil))
 ---@field public get_relpath            fun(self: era.m.git.Repo, file: string): string

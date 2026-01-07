@@ -8,7 +8,7 @@ local M = {}
 local fs_watcher_dir = nil
 
 ---@type uv.uv_fs_event_t|nil
-local fs_watcher_index = nil
+local fs_watcher_commondir = nil
 
 ---@type uv.uv_timer_t|nil
 local debounce_timer = nil
@@ -18,6 +18,9 @@ local index_debounce_timer = nil
 
 ---@type string|nil
 local current_gitdir = nil
+
+---@type string|nil
+local current_commondir = nil
 
 ---@type boolean
 local pending_head_change = false
@@ -208,23 +211,26 @@ local function stop_watcher()
     fs_watcher_dir = nil
   end
 
-  if fs_watcher_index and not fs_watcher_index:is_closing() then
-    fs_watcher_index:stop()
-    fs_watcher_index:close()
-    fs_watcher_index = nil
+  if fs_watcher_commondir and not fs_watcher_commondir:is_closing() then
+    fs_watcher_commondir:stop()
+    fs_watcher_commondir:close()
+    fs_watcher_commondir = nil
   end
 
   current_gitdir = nil
+  current_commondir = nil
 end
 
 ---@param gitdir                     string
-local function start_watcher(gitdir)
-  if current_gitdir == gitdir then
+---@param commondir                  string|nil
+local function start_watcher(gitdir, commondir)
+  if current_gitdir == gitdir and current_commondir == commondir then
     return
   end
 
   stop_watcher()
   current_gitdir = gitdir
+  current_commondir = commondir
 
   fs_watcher_dir = vim.uv.new_fs_event()
   if fs_watcher_dir then
@@ -236,21 +242,26 @@ local function start_watcher(gitdir)
         return
       end
       if filename == "index" then
+        on_index_event()
         return
       end
       on_fs_event(filename)
     end)
   end
 
-  local index_path = gitdir .. "/index" ---@type string
-  if vim.uv.fs_stat(index_path) then
-    fs_watcher_index = vim.uv.new_fs_event()
-    if fs_watcher_index then
-      fs_watcher_index:start(index_path, {}, function(err)
-        if err then
+  -- For worktrees, refs are stored in commondir, not gitdir
+  -- Watch commondir to detect HEAD/refs changes from other terminals
+  if commondir and commondir ~= gitdir then
+    fs_watcher_commondir = vim.uv.new_fs_event()
+    if fs_watcher_commondir then
+      fs_watcher_commondir:start(commondir, {}, function(err, filename)
+        if err or not filename then
           return
         end
-        on_index_event()
+        -- Only care about refs changes in commondir
+        if filename == "refs" or vim.startswith(filename, "refs/") then
+          on_fs_event(filename)
+        end
       end)
     end
   end
@@ -266,7 +277,7 @@ local function init_watcher()
     if r then
       era.m.git.state.o_branch:next(r.abbrev_head)
       era.m.git.state.refresh_user_info()
-      M.update(r.gitdir)
+      M.update(r.gitdir, r.commondir)
       era.m.git.state.refresh_async()
     end
   end)
@@ -292,10 +303,11 @@ function M.setup()
 end
 
 ---@param gitdir                     string|nil
+---@param commondir                  string|nil
 ---@return nil
-function M.update(gitdir)
+function M.update(gitdir, commondir)
   if gitdir then
-    start_watcher(gitdir)
+    start_watcher(gitdir, commondir)
   else
     stop_watcher()
   end
