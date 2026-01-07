@@ -42,10 +42,6 @@
 ---@field public not_loaded             string
 ---@field public source                 string
 
----@class era.m.plugin.IGitInfo
----@field public branch                 string|nil
----@field public commit                 string|nil
-
 ---@class era.m.plugin.ILockEntry
 ---@field public branch                 string
 ---@field public commit                 string

@@ -48,7 +48,7 @@ vim.schedule(function()
   era.m.select.dressing()
   era.m.image.dressing()
   era.m.wk.dressing()
-  
+
   pcall(require, "ark.vendor.neovide.dressing")
   pcall(require, "ark.vendor.local.dressing")
 
