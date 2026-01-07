@@ -625,21 +625,11 @@ function M.denoise_hunks(hunks)
     local gap = curr.added.start - prev_end ---@type integer
 
     if gap <= 2 then
-      local new_removed_lines = {} ---@type string[]
-      for _, line in ipairs(prev.removed.lines) do
-        new_removed_lines[#new_removed_lines + 1] = line
-      end
-      for _, line in ipairs(curr.removed.lines) do
-        new_removed_lines[#new_removed_lines + 1] = line
-      end
+      local new_removed_lines = vim.list_extend({}, prev.removed.lines) ---@type string[]
+      vim.list_extend(new_removed_lines, curr.removed.lines)
 
-      local new_added_lines = {} ---@type string[]
-      for _, line in ipairs(prev.added.lines) do
-        new_added_lines[#new_added_lines + 1] = line
-      end
-      for _, line in ipairs(curr.added.lines) do
-        new_added_lines[#new_added_lines + 1] = line
-      end
+      local new_added_lines = vim.list_extend({}, prev.added.lines) ---@type string[]
+      vim.list_extend(new_added_lines, curr.added.lines)
 
       local new_old_count = prev.removed.count + curr.removed.count ---@type integer
       local new_new_count = prev.added.count + curr.added.count ---@type integer

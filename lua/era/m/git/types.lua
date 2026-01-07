@@ -72,11 +72,9 @@
 
 ---@class era.m.git.FileInfo
 ---@field public has_conflicts          boolean|nil
----@field public i_crlf                 boolean|nil
 ---@field public mode_bits              string|nil
 ---@field public object_name            string|nil
 ---@field public relpath                string|nil
----@field public w_crlf                 boolean|nil
 
 ----------------------------------------------------------------------------------------------------
 -- Buffer types
