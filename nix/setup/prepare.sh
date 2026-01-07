@@ -7,6 +7,11 @@ sudo apt remove -y tmux
 sudo apt install -y curl git locales wget
 sudo apt install -y build-essential libvips-dev unixodbc
 sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim
+
+if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+  sudo apt install -y wl-clipboard
+fi
+
 sudo apt autoremove
 sudo apt autoclean
 printf "\e[96m  [preparation] done.\e[0m\n"
