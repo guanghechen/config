@@ -45,13 +45,6 @@ function M.attach(source)
 
   _attached_sources[#_attached_sources + 1] = vim.tbl_extend("force", source, { attached_at = vim.uv.now() })
   M.o_attached:next(#_attached_sources)
-
-  local agent_label = S.config.agent_labels[source.agent] or source.agent
-  stl.reporter.info({
-    from = __module_name__,
-    subject = "Agent Attached",
-    message = string.format("Attached to %s.", agent_label),
-  })
 end
 
 ---@param source_id                     string
@@ -76,6 +69,7 @@ function M.detach(source_id, close_terminal)
     local agent_label = S.config.agent_labels[detached_source.agent] or detached_source.agent
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "Agent Detached",
       message = string.format("Detached from %s.", agent_label),
     })
@@ -98,6 +92,7 @@ function M.detach_all()
 
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "Agent Detached",
       message = "Detached from all agents.",
     })

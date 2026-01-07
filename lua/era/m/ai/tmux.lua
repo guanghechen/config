@@ -221,6 +221,7 @@ function M.create_agent_pane(agent, cwd)
   if not tool_config then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "create_agent_pane",
       message = string.format("Unknown agent: %s", agent),
     })
@@ -249,6 +250,7 @@ function M.create_agent_pane(agent, cwd)
   if not result or #result == 0 then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "create_agent_pane",
       message = string.format("Failed to create tmux session for %s.", agent),
     })
@@ -259,6 +261,7 @@ function M.create_agent_pane(agent, cwd)
   if not pane then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "create_agent_pane",
       message = "Failed to parse tmux pane info.",
     })

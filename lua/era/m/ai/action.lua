@@ -89,6 +89,7 @@ function M.handle_selection(item)
       local tool = S.config.tools[item.agent]
       stl.reporter.warn({
         from = __module_name__,
+        group = "ai",
         subject = "handle_selection",
         message = string.format("%s is not installed.", S.config.agent_labels[item.agent]),
         details = { url = tool and tool.url or nil },
@@ -112,6 +113,7 @@ function M.attach_to_source(source)
   if source.external then
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "attach_to_source",
       message = string.format(
         "Attached to external %s pane (messages will be sent via tmux).",
@@ -221,6 +223,7 @@ function M.show_detach_picker()
   if #attached == 0 then
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "show_detach_picker",
       message = "No agents attached.",
     })
@@ -254,6 +257,7 @@ function M.edit()
   if vim.bo[bufnr].buftype ~= "" then
     stl.reporter.warn({
       from = __module_name__,
+      group = "ai",
       subject = "edit",
       message = "Cannot edit non-standard buffer",
     })
@@ -264,6 +268,7 @@ function M.edit()
   if filepath == "" then
     stl.reporter.warn({
       from = __module_name__,
+      group = "ai",
       subject = "edit",
       message = "Cannot edit unnamed buffer",
     })
@@ -301,6 +306,7 @@ function M.edit()
   if location == nil then
     stl.reporter.warn({
       from = __module_name__,
+      group = "ai",
       subject = "edit",
       message = "Failed to format selection location.",
       details = {
@@ -344,6 +350,7 @@ function M.send_file()
   if filepath == "" then
     stl.reporter.warn({
       from = __module_name__,
+      group = "ai",
       subject = "send_file",
       message = "Cannot send: buffer has no file path.",
     })
@@ -424,6 +431,7 @@ function M.__create_and_attach_tmux__(agent, cwd)
   if not pane then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "create_and_attach",
       message = string.format("Failed to create %s pane.", S.config.agent_labels[agent]),
     })
@@ -464,6 +472,7 @@ function M.__send_to_sources__(sources, text, submit)
   if #succeeded > 0 then
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "Message Sent",
       message = string.format("Sent to %s.", table.concat(succeeded, ", ")),
     })
@@ -472,6 +481,7 @@ function M.__send_to_sources__(sources, text, submit)
   if #failed > 0 then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "Send Failed",
       message = string.format("Failed to send to %s.", table.concat(failed, ", ")),
     })

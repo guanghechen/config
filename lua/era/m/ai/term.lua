@@ -172,6 +172,7 @@ local function start_job(termmeta)
       if code ~= 0 and code ~= 1 and code ~= 129 then
         stl.reporter.error({
           from = __module_name__,
+          group = "ai",
           subject = "terminal unexpected exit",
           details = {
             uuid = termmeta.uuid,
@@ -291,6 +292,7 @@ function M.send(uuid, text, submit)
   if not ok then
     stl.reporter.error({
       from = __module_name__,
+      group = "ai",
       subject = "send",
       message = "Failed to send text to terminal.",
       details = { error = err },

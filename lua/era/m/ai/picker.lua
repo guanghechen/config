@@ -553,6 +553,7 @@ function M.show_submit_to(on_select)
   if #running_items == 0 then
     stl.reporter.info({
       from = __module_name__,
+      group = "ai",
       subject = "show_send_to",
       message = "No running agents found.",
     })
