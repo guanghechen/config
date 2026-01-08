@@ -1,6 +1,66 @@
 local command = dot.command ---@type dot.command
 local K = dot.command.definitions ---@type dot.command.definitions
 
+--[acp] --------------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.acp.cancel.uuid,
+    action = function()
+      era.m.acp.cancel()
+    end,
+  })
+  .implement({
+    uuid = K.acp.clear.uuid,
+    action = function()
+      era.m.acp.clear()
+    end,
+  })
+  .implement({
+    uuid = K.acp.close.uuid,
+    action = function()
+      era.m.acp.close()
+    end,
+  })
+  .implement({
+    uuid = K.acp.focus.uuid,
+    action = function()
+      era.m.acp.focus()
+    end,
+  })
+  .implement({
+    uuid = K.acp.new.uuid,
+    action = function()
+      era.m.acp.new_session()
+    end,
+  })
+  .implement({
+    uuid = K.acp.open.uuid,
+    action = function(args)
+      local provider = args ~= "" and args or nil
+      era.m.acp.open({ provider = provider })
+    end,
+  })
+  .implement({
+    uuid = K.acp.select_provider.uuid,
+    action = function()
+      era.m.acp.select_provider()
+    end,
+  })
+  .implement({
+    uuid = K.acp.submit.uuid,
+    action = function(args)
+      local content = args ~= "" and args or nil
+      era.m.acp.submit(content)
+    end,
+  })
+  .implement({
+    uuid = K.acp.toggle.uuid,
+    action = function(args)
+      local provider = args ~= "" and args or nil
+      era.m.acp.toggle({ provider = provider })
+    end,
+  })
+
 --[ai] ---------------------------------------------------------------------------------------------
 command
   .implement({

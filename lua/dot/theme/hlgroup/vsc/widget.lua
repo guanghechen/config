@@ -13,6 +13,28 @@ function M.gen_hlgroup_map(context)
   local bg_pane = t and u.bg0 or c.none ---@type string
 
   return {
+    ---acp (AI Chat Panel)
+    f_acp_normal = { fg = u.fg1, bg = u.bg0 },
+    f_acp_border = { fg = u.purple, bg = u.bg0 },
+    f_acp_title = { fg = u.fg1, bg = u.bg2, bold = true },
+    f_acp_title_sep = { fg = u.bg2, bg = u.bg0 },
+    f_acp_input_title = { fg = u.fg1, bg = u.bg2, bold = true },
+    f_acp_input_title_sep = { fg = u.bg2, bg = u.bg0 },
+    f_acp_input_normal = { fg = u.fg1, bg = u.bg1 },
+    f_acp_hint = { fg = u.fg4, bg = u.bg0 },
+    f_acp_banner_label = { fg = u.purple, bold = true },
+    f_acp_banner_key = { fg = u.fg4 },
+    f_acp_banner_value = { fg = u.fg2 },
+    f_acp_banner_sep = { fg = u.bg3 },
+    f_acp_tool_border = { fg = u.bg4 },
+    f_acp_tool_icon = { fg = u.blue },
+    f_acp_tool_name = { fg = u.aqua, bold = true },
+    f_acp_tool_header = { fg = u.fg1, bg = u.bg2 },
+    f_acp_tool_success = { fg = u.green },
+    f_acp_tool_error = { fg = u.red },
+    f_acp_image = { fg = u.orange, bold = true },
+    f_acp_resource = { fg = u.aqua, bold = true },
+
     ---buffers
     f_buf_nr = { fg = u.fg4 },
     f_buf_filetype = { fg = u.fg3 },

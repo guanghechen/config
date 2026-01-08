@@ -204,6 +204,19 @@ end
 ---@class dot.command.definitions
 M.definitions = {}
 
+---@class dot.command.definitions.acp
+M.definitions.acp = {
+  cancel = D.new("Facpcancel", "acp: cancel"),
+  clear = D.new("Facpclear", "acp: clear session"),
+  close = D.new("Facpclose", "acp: close"),
+  focus = D.new("Facpfocus", "acp: focus"),
+  new = D.new("Facpnew", "acp: new session"),
+  open = D.new("Facpopen", "acp: open", "?", { "claude", "gemini", "openai", "codex", "opencode" }),
+  select_provider = D.new("Facpselectprovider", "acp: select provider"),
+  submit = D.new("Facpsubmit", "acp: submit", "?"),
+  toggle = D.new("Facptoggle", "acp: toggle", "?", { "claude", "gemini", "openai", "codex", "opencode" }),
+}
+
 ---@class dot.command.definitions.ai
 M.definitions.ai = {
   attach_agent = D.new("Faiattachagent", "ai: attach agent"),
