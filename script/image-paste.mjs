@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 // Patch Claude Code to support image/bmp format in clipboard
 // Usage: node image-paste.mjs
+//
+// Patches:
+// 1. Linux: Add BMP format support for clipboard image detection
+// 2. Linux: Add BMP to PNG conversion fallback for wl-paste
+// 3. Windows: Change image paste shortcut from Alt+V to Ctrl+V
+//    (Useful when terminal uses Alt+V for system clipboard paste)
 
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
@@ -17,6 +23,14 @@ const patches = [
     name: "wl-paste with BMP to PNG conversion",
     search: "wl-paste --type image/png >",
     replace: "wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >",
+  },
+  {
+    // Original: ju=vQ()==="windows"?{displayText:`${gB1}+v`,check:(A,Q)=>Q.meta&&...
+    // Changed:  ju=vQ()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&...
+    // This makes Windows use Ctrl+V instead of Alt+V for image paste
+    name: "Windows image paste shortcut (Alt+V -> Ctrl+V)",
+    search: /ju=vQ\(\)==="windows"\?\{displayText:`\$\{gB1\}\+v`,check:\(A,Q\)=>Q\.meta&&/g,
+    replace: 'ju=vQ()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&',
   },
 ];
 
