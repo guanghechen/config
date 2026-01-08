@@ -308,7 +308,7 @@ command
   .implement({
     uuid = K.code.insert_splitline.uuid,
     action = function()
-      era.fn.insert_splitline()
+      era.m.splitline.insert()
     end,
   })
   .implement({

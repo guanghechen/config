@@ -12,7 +12,6 @@ local __fn__mods = {
   find_notifications = "era.fn.find-notifications",
   find_pinned_files = "era.fn.find-pinned-files",
   find_vim_options = "era.fn.find-vim-options",
-  insert_splitline = "era.fn.insert-splitline",
   mock_miniicons = "era.fn.mock-miniicons",
   mock_web_devicons = "era.fn.mock-web-devicons",
   paste_image = "era.fn.paste-image",
@@ -44,7 +43,6 @@ local __fn__mods = {
 ---@field public find_notifications     fun(): nil
 ---@field public find_pinned_files      fun(): nil
 ---@field public find_vim_options       fun(): nil
----@field public insert_splitline       fun(): nil
 ---@field public mock_miniicons         fun(): nil
 ---@field public mock_web_devicons      fun(): nil
 ---@field public paste_image            fun(): nil
@@ -103,6 +101,7 @@ local __m__mods = {
   scroll = "era.m.scroll",
   searcher = "era.m.searcher",
   select = "era.m.select",
+  splitline = "era.m.splitline",
   statuscolumn = "era.m.statuscolumn",
   statusline = "era.m.statusline",
   tabline = "era.m.tabline",
@@ -146,6 +145,7 @@ local __m__mods = {
 ---@field public scroll                 era.m.scroll
 ---@field public searcher               era.m.searcher
 ---@field public select                 era.m.select
+---@field public splitline              era.m.splitline
 ---@field public statuscolumn           era.m.statuscolumn
 ---@field public statusline             era.m.statusline
 ---@field public tabline                era.m.tabline

@@ -343,7 +343,7 @@ end
 ---@return nil
 function M.submit_to()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local text = stl.nvim.buf.retrieve_split_block(winnr) ---@type string
+  local text = era.m.splitline.retrieve_block(winnr) ---@type string
   S.picker.show_submit_to(function(sources)
     M.__send_to_sources__(sources, text, true)
   end)
@@ -379,7 +379,7 @@ end
 ---@return nil
 function M.submit_buffer()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local text = stl.nvim.buf.retrieve_split_block(winnr) ---@type string
+  local text = era.m.splitline.retrieve_block(winnr) ---@type string
   M.send_to_attached(text, true)
 end
 

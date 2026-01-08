@@ -8,8 +8,6 @@
 ---| "terminal"
 ---| "prompt"
 
-local CONTENT_SPLITLINE = string.rep("-", 100) ---@type string
-
 ---@class stl.nvim.buf.Types
 local Types = {
   EMPTY = "",
@@ -37,7 +35,6 @@ local bufnr_to_filepath = {} ---@type table<integer, string>
 ---@class stl.nvim.buf
 local M = {}
 
-M.CONTENT_SPLITLINE = CONTENT_SPLITLINE ---@type string
 M.Types = vim.deepcopy(Types)
 
 ---@param bufnr                         integer|nil
@@ -169,41 +166,6 @@ function M.retrieve_selected_text()
   local selected_text = vim.fn.getreg("v") ---@type string
   vim.fn.setreg("v", saved_reg)
   return selected_text or ""
-end
-
----@param winnr                         integer
----@return string
-function M.retrieve_split_block(winnr)
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  local cursor_line = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-
-  local lft = 0 ---@type integer
-  for i = cursor_line, 1, -1 do
-    if lines[i] == CONTENT_SPLITLINE then
-      lft = i
-      break
-    end
-  end
-
-  local rht = #lines + 1 ---@type integer
-  for i = cursor_line, #lines do
-    if lines[i] == CONTENT_SPLITLINE then
-      rht = i
-      break
-    end
-  end
-
-  while lft + 1 < rht and lines[lft + 1]:match("^%s*$") do
-    lft = lft + 1
-  end
-
-  while rht - 1 > lft and lines[rht - 1]:match("^%s*$") do
-    rht = rht - 1
-  end
-
-  local text = table.concat(lines, "\n", lft + 1, rht - 1) ---@type string
-  return text
 end
 
 ---@return integer
