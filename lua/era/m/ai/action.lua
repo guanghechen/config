@@ -188,18 +188,15 @@ function M.send_to_source(source, text, submit)
       S.tmux.send_escape_i(pane_id)
       vim.defer_fn(function()
         S.tmux.send_text(pane_id, payload)
-        if submit then
-          S.tmux.send_enter(pane_id)
-        end
-      end, 50)
-      return true
-    end
-
-    if not S.tmux.send_text(pane_id, payload) then
+      end, 100)
+    elseif not S.tmux.send_text(pane_id, payload) then
       return false
     end
+
     if submit then
-      return S.tmux.send_enter(pane_id)
+      vim.defer_fn(function()
+        S.tmux.send_enter(pane_id)
+      end, 200)
     end
     return true
   elseif source.type == "terminal" then
