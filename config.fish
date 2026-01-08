@@ -51,15 +51,18 @@ set -gx PYTHONIOENCODING utf8
 set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
 
+if test -f "$HOME/.config/fish/local/env.fish"
+    source "$HOME/.config/fish/local/env.fish"
+end
+
 ## platform specific
 if test (uname) = Darwin
-    source ~/.config/fish/conf/platform/mac.fish
+    source ~/.config/fish/conf/platform/mac/config.fish
 else if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
-    source ~/.config/fish/conf/platform/wsl.fish
+    source ~/.config/fish/conf/platform/wsl/config.fish
 else
-    source ~/.config/fish/conf/platform/nix.fish
+    source ~/.config/fish/conf/platform/nix/config.fish
 end
-source ~/.config/fish/conf/platform/local.fish
 
 ## setup environments (for agent)
 set -gx ANTHROPIC_BASE_URL "$GHC_ANTHROPIC_BASE_URL"
