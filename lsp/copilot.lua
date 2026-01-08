@@ -154,6 +154,7 @@ return {
     },
   },
   filetypes = {
+    "acp-input",
     "c",
     "cpp",
     "go",
@@ -161,11 +162,12 @@ return {
     "javascriptreact",
     "json",
     "lua",
+    "markdown",
+    "notepad",
     "python",
     "rust",
     "typescript",
     "typescriptreact",
-    "markdown",
   },
   handlers = {
     -- Status handler for authentication monitoring (LazyVim pattern)
