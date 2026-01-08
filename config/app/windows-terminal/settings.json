@@ -1211,6 +1211,10 @@
       "keys": "ctrl+alt+0"
     },
     {
+      "id": "Terminal.FindText",
+      "keys": "ctrl+alt+f"
+    },
+    {
       "id": "Terminal.OpenNewTabDropdown",
       "keys": "ctrl+alt+n"
     },
