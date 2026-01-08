@@ -3,97 +3,69 @@
 // Usage: node limit-128k.mjs [size]
 // Example: node limit-128k.mjs 128000
 
-import { execSync } from "child_process";
-import { readFileSync, writeFileSync, realpathSync } from "fs";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { platform } from "node:os";
+import { dirname, join } from "node:path";
 
 const targetSize = process.argv[2] || "150000";
 
-// v2.1.1+: ...return JO9}var JO9=200000
-const patternV2 = /return JO9\}var JO9=\d+/;
-
-// v2.0.x: function NO(A){if(A.includes("[1m]"))return 1e6;return \d+}
-const patternV1 = /function NO\(A\)\{if\(A\.includes\("\[1m\]"\)\)return 1e6;return \d+\}/;
+const patterns = [
+  { name: "v2.1+", regex: /return JO9\}var JO9=\d+/, replacement: `return JO9}var JO9=${targetSize}` },
+  { name: "v2.0", regex: /function NO\(A\)\{if\(A\.includes\("\[1m\]"\)\)return 1e6;return \d+\}/, replacement: `function NO(A){if(A.includes("[1m]"))return 1e6;return ${targetSize}}` },
+];
 
 function getCliPath() {
-  const isWindows = process.platform === "win32";
+  const isNativeWindows = platform() === "win32";
+
   try {
-    const cmd = isWindows ? "where claude" : "which claude";
+    const cmd = isNativeWindows ? "where.exe claude" : "which claude";
     const which = execSync(cmd, { encoding: "utf-8" }).trim().split(/\r?\n/)[0];
+
+    if (isNativeWindows) {
+      const cliJs = join(dirname(which), "node_modules", "@anthropic-ai", "claude-code", "cli.js");
+      return existsSync(cliJs) ? cliJs : null;
+    }
+
     return realpathSync(which);
   } catch {
     return null;
   }
 }
 
-function main() {
-  const cliPath = getCliPath();
-  if (!cliPath) {
-    console.error("❌ Claude Code not found");
-    process.exit(1);
-  }
-
-  const content = readFileSync(cliPath, "utf-8");
-
-  // Try v2.1.1+ pattern first
-  let matchV2 = content.match(patternV2);
-  if (matchV2) {
-    const currentSize = matchV2[0].match(/JO9=(\d+)$/)?.[1];
-
-    if (currentSize === targetSize) {
-      console.log(`✓ Already patched to ${targetSize}`);
-      process.exit(0);
-    }
-
-    console.log(`Patching (v2.1+): ${currentSize} → ${targetSize}`);
-    console.log(`File: ${cliPath}`);
-
-    const newContent = content.replace(patternV2, `return JO9}var JO9=${targetSize}`);
-    writeFileSync(cliPath, newContent);
-
-    // Verify
-    const verify = readFileSync(cliPath, "utf-8");
-    if (verify.includes(`return JO9}var JO9=${targetSize}`)) {
-      console.log("✓ Patched successfully");
-    } else {
-      console.error("❌ Patch failed");
-      process.exit(1);
-    }
-    return;
-  }
-
-  // Fallback to v2.0.x pattern
-  let matchV1 = content.match(patternV1);
-  if (matchV1) {
-    const currentSize = matchV1[0].match(/return (\d+)\}$/)?.[1];
-
-    if (currentSize === targetSize) {
-      console.log(`✓ Already patched to ${targetSize}`);
-      process.exit(0);
-    }
-
-    console.log(`Patching (v2.0): ${currentSize} → ${targetSize}`);
-    console.log(`File: ${cliPath}`);
-
-    const newFunc = `function NO(A){if(A.includes("[1m]"))return 1e6;return ${targetSize}}`;
-    const newContent = content.replace(patternV1, newFunc);
-    writeFileSync(cliPath, newContent);
-
-    // Verify
-    const verify = readFileSync(cliPath, "utf-8");
-    if (verify.includes(`return ${targetSize}}`)) {
-      console.log("✓ Patched successfully");
-    } else {
-      console.error("❌ Patch failed");
-      process.exit(1);
-    }
-    return;
-  }
-
-  console.error("❌ Cannot find context window size pattern in cli.js");
-  console.error("   Checked patterns:");
-  console.error("   - v2.1+: return JO9}var JO9=<number>");
-  console.error("   - v2.0:  function NO(A){...return <number>}");
+const cliPath = getCliPath();
+if (!cliPath) {
+  console.error("❌ Claude Code not found");
   process.exit(1);
 }
 
-main();
+console.log(`File: ${cliPath}\n`);
+
+const content = readFileSync(cliPath, "utf-8");
+
+for (const { name, regex, replacement } of patterns) {
+  const match = content.match(regex);
+  if (!match) continue;
+
+  if (content.includes(replacement)) {
+    console.log(`✓ [context-window] Already patched to ${targetSize}`);
+    process.exit(0);
+  }
+
+  console.log(`✓ [context-window] Patching (${name}): ${match[0].match(/\d+$/)?.[0]} → ${targetSize}`);
+
+  writeFileSync(cliPath, content.replace(regex, replacement));
+
+  if (readFileSync(cliPath, "utf-8").includes(replacement)) {
+    console.log("\n✓ Patched 1 location(s) successfully");
+  } else {
+    console.error("\n❌ Patch verification failed");
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
+console.error("❌ [context-window] Pattern not found");
+console.error("   Checked patterns:");
+for (const { name } of patterns) console.error(`   - ${name}`);
+process.exit(1);
