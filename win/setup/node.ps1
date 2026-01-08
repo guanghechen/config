@@ -13,6 +13,7 @@ npm install -g npm bun pm2 yarn prettier
 
 Write-Host "  [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot" -ForegroundColor Blue
 npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot
+pwsh -Command "ghc-patch-claude" # make patches for claude code
 
 # Setup ora
 $ora_repopath = Join-Path "$env:XDG_CONFIG_HOME" "ora"
