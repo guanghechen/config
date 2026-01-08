@@ -17,6 +17,10 @@ local function ai_buffer(ai_type)
   return { from = { line = start_line, col = 1 }, to = { line = end_line, col = to_col } }
 end
 
+local function ai_splitline(ai_type)
+  return era.m.splitline.ai_textobject(ai_type)
+end
+
 return {
   name = "mini.ai",
   event = "VeryLazy",
@@ -44,6 +48,7 @@ return {
         n = { "%-?%d+%.?%d*" }, --- number with natural decimal point
         u = ai.gen_spec.function_call(), -- u for "Usage"
         U = ai.gen_spec.function_call({ name_pattern = "[%w_]" }), -- without dot in function name
+        s = ai_splitline, -- splitline block
       },
       mappings = {
         around = "a",
@@ -87,6 +92,7 @@ return {
         { "n", desc = "number" },
         { "o", desc = "block, conditional, loop" },
         { "q", desc = "quote `\"'" },
+        { "s", desc = "splitline block" },
         { "t", desc = "tag" },
         { "u", desc = "use/call" },
         { "{", desc = "{} block" },
