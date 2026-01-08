@@ -38,7 +38,7 @@ function M.show(mode)
 
   _instance = setmetatable({}, M)
   _instance.name = "plugin"
-  _instance.state = { mode = mode or "home" }
+  _instance.state = { mode = mode or "profile" }
   _instance._augroup = nil
   _instance._disposed = false
   _instance.bufnr = nil
