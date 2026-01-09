@@ -25,12 +25,14 @@ const patches = [
     replace: "wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >",
   },
   {
-    // Original: ju=vQ()==="windows"?{displayText:`${gB1}+v`,check:(A,Q)=>Q.meta&&...
-    // Changed:  ju=vQ()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&...
+    // Original: hu=TQ()==="windows"?{displayText:`${sB1}+v`,check:(A,Q)=>Q.meta&&...
+    // Changed:  hu=TQ()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&...
     // This makes Windows use Ctrl+V instead of Alt+V for image paste
     name: "Windows image paste shortcut (Alt+V -> Ctrl+V)",
-    search: /ju=vQ\(\)==="windows"\?\{displayText:`\$\{gB1\}\+v`,check:\(A,Q\)=>Q\.meta&&/g,
-    replace: 'ju=vQ()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&',
+    search: /(\w+)=TQ\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/g,
+    replace: (_, varName, arg1, arg2) =>
+      `${varName}=TQ()==="windows"?{displayText:"ctrl+v",check:(${arg1},${arg2})=>${arg2}.ctrl&&`,
+    verify: 'TQ()==="windows"?{displayText:"ctrl+v",check:',
   },
 ];
 
@@ -63,14 +65,15 @@ console.log(`File: ${cliPath}\n`);
 let content = readFileSync(cliPath, "utf-8");
 let patchedCount = 0;
 
-for (const { name, search, replace } of patches) {
+for (const { name, search, replace, verify } of patches) {
   const isRegex = search instanceof RegExp;
   if (isRegex) search.lastIndex = 0;
 
+  const verifyStr = verify || replace;
   const hasOld = isRegex ? search.test(content) : content.includes(search);
   if (isRegex) search.lastIndex = 0;
 
-  if (content.includes(replace) && !hasOld) {
+  if (content.includes(verifyStr) && !hasOld) {
     console.log(`✓ [${name}] Already patched`);
     continue;
   }
@@ -93,8 +96,8 @@ if (patchedCount === 0) {
 writeFileSync(cliPath, content);
 
 const verify = readFileSync(cliPath, "utf-8");
-const allVerified = patches.every(({ name, replace }) => {
-  const ok = verify.includes(replace);
+const allVerified = patches.every(({ name, replace, verify: verifyStr }) => {
+  const ok = verify.includes(verifyStr || replace);
   if (!ok) console.error(`❌ [${name}] Verification failed`);
   return ok;
 });
