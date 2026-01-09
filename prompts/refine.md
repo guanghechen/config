@@ -29,5 +29,3 @@ The argument can be one of the following:
 - Preserve any code snippets and file paths exactly as provided; do not translate or refine them
 - Do not introduce new information
 - Keep the voice consistent with the source
-
-

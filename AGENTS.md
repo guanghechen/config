@@ -21,7 +21,7 @@
 4. **ALWAYS**: Work until completion; discuss when stuck on complex decisions.
 5. **ALWAYS**: Architecture - DAG dependencies, single responsibility, consistent module structure, minimal public API, simplicity first.
 6. **ALWAYS**: Trailing newline required; validate only at system boundaries.
-7. **RECOMMENDED**: See `~/.config/codex/agents/coder.md` for coding tasks (features, refactoring, bug fixes).
+7. **RECOMMENDED**: For non-trivial coding tasks (features, refactoring, bug fixes), see `~/.config/codex/agents/coder.md`.
 
 ## Documentation
 
@@ -32,3 +32,4 @@
 
 1. Prefer `fd` over `find`, `rg` over `grep`.
 2. Fork existing code for new features; avoid rewriting unless modification is simple.
+3. Use `tmux capture-pane -ep -t %{pane_id}` to view a tmux pane's current buffer with ANSI colors.

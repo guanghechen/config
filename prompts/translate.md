@@ -34,4 +34,3 @@ You are a highly proficient bilingual assistant.
 ``````text
 $ARGUMENTS
 ``````
-
