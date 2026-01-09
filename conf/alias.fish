@@ -75,6 +75,7 @@ end
 alias tnew='tmux new -s' # Create a new tmux session
 alias tkill='tmux kill-session -t' # Kill a tmux session
 alias tkill-all='tmux list-sessions | awk -F: \'{print $1}\' | xargs -I {} tmux kill-session -t "{}"'
+abbr -a tagent "bash $HOME/.config/tmux/templates/agent.sh"
 abbr -a tbtop "bash $HOME/.config/tmux/templates/btop.sh"
 abbr -a tcap "tmux capture-pane -ep -t %"
 alias tdetach='tmux detach' # Detach from the session
