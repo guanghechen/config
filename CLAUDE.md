@@ -32,3 +32,4 @@
 
 1. Prefer `fd` over `find`, `rg` over `grep`.
 2. Fork existing code for new features; avoid rewriting unless modification is simple.
+3. Use `tmux capture-pane -ep -t %{pane_id}` to view a tmux pane's current buffer with ANSI colors.
