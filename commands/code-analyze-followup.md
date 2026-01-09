@@ -1,5 +1,5 @@
 ---
-description: Follow-up analysis after fixing issues from previous review
+description: Follow-up analysis after completing fixes for previous issues
 ---
 
 Perform a follow-up analysis after completing fixes for previously identified issues.
@@ -28,7 +28,7 @@ Search for existing `.code-analyzer/{topic}/` directories related to the given t
 ### Step 2: Read Baseline and Analysis
 
 1. **Read `baseline.md`** - Get By Design decisions (permanently suppressed)
-2. **Read analysis file** (`cc.md` etc.) - Get previous issues and their statuses:
+2. **Read analysis file** (`opencode.md` etc.) - Get previous issues and their statuses:
    - `󰜺 ~~[Won't Fix] ...~~` - Preserve in analysis file
    - `󱙝 ~~[False Alarm] ...~~` - Preserve in analysis file
    - `󰄬 ~~[fixed] ...~~` / `󰄬 ~~[done] ...~~` - Re-verify
@@ -95,12 +95,12 @@ Provide summary tables at the beginning:
 
 ### Preserved & Removed
 
-| Status          | Count |
-| --------------- | ----- |
-| Won't Fix       | 1     |
-| False Alarm     | 0     |
-| Records Removed | 1     |
-| By Design (baseline) | 2 |
+| Status               | Count |
+| -------------------- | ----- |
+| Won't Fix            | 1     |
+| False Alarm          | 0     |
+| Records Removed      | 1     |
+| By Design (baseline) | 2     |
 ```
 
 - Skip rows for categories/statuses with 0 count (except **Total** row)
@@ -155,7 +155,7 @@ Note: By Design issues are NOT shown here - they are in `baseline.md` and perman
 ## Output Requirement
 
 1. **Display** the full report in the conversation
-2. **Overwrite** the analysis file (`.code-analyzer/{topic}/cc.md`)
+2. **Overwrite** the analysis file (`.code-analyzer/{topic}/opencode.md`)
 3. **Update** `baseline.md` if any By Design locations changed or records removed
 
 ## Style

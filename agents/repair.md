@@ -1,7 +1,7 @@
 ---
+name: repair
 description: Iterative repair agent for fixing bugs, optimizing performance, or refactoring code. Analyzes, fixes, verifies, then repeats until no valuable improvements remain.
-mode: subagent
-color: "#e67e22"
+color: orange
 ---
 
 # Repair Agent

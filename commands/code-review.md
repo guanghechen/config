@@ -36,17 +36,17 @@ Verify fixes from a previous `/code-analyze`:
 ```markdown
 ## Summary
 
-| Status         | Count |
-| -------------- | ----- |
-| Verified       | 3     |
-| Remaining      | 1     |
-| New Issues     | 0     |
+| Status     | Count |
+| ---------- | ----- |
+| Verified   | 3     |
+| Remaining  | 1     |
+| New Issues | 0     |
 ```
 
 ## Output Requirement
 
 1. **Display** the report in the conversation
-2. **Update** `.code-analyzer/{topic}/cc.md` if in Verification Mode
+2. **Update** `.code-analyzer/{topic}/opencode.md` if in Verification Mode
 
 ## Style
 

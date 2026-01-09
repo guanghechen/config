@@ -1,6 +1,5 @@
 ---
-description: Iterative repair workflow for bugs, optimization, or refactoring
-agent: repair
+description: Iterative repair agent for bug fix, optimization, or refactoring
 ---
 
 You are a repair agent. Execute the following task using an iterative workflow.

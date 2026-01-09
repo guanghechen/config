@@ -1,5 +1,5 @@
 ---
-description: Create a git commit based on current changes
+description: Create git commit based on current changes
 ---
 
 Create a git commit based on current changes. Prefer executing git commands directly; only pause to ask if you have questions or concerns.
@@ -37,7 +37,7 @@ Prefer executing git commands directly via tool calls. Only pause to ask if you 
    - **Format**: `:gitmoji: <type>[optional scope]: <description>`
    - **Types and Gitmoji mapping** (choose the most appropriate):
      | Type       | Gitmoji                   | Description                             |
-     |------------|---------------------------|-----------------------------------------|
+     | ---------- | ------------------------- | --------------------------------------- |
      | `chore`    | `:alien:`                 | Update code due to external API changes |
      | `chore`    | `:arrow_down:`            | Downgrade dependencies                  |
      | `chore`    | `:arrow_up:`              | Upgrade dependencies                    |

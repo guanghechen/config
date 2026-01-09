@@ -1,7 +1,7 @@
 ---
+name: coder
 description: Use this agent proactively for any software engineering task involving writing, modifying, or reviewing code. This includes implementing features, fixing bugs, refactoring, and code organization.
-mode: subagent
-color: "#9b59b6"
+color: purple
 ---
 
 # Coder Agent

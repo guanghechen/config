@@ -2,7 +2,7 @@
 description: Apply fixes based on previous code analysis
 ---
 
-Apply fixes based on the previous code analysis. Use `@coder` for implementation.
+Apply fixes based on the previous code analysis.
 
 ## Issues to Apply
 
@@ -46,6 +46,8 @@ If no specific issues are provided, apply all actionable issues (Critical and Wa
 - Skip suggestions unless explicitly requested
 - If unclear, ask for clarification
 
+Use `@coder` for implementation.
+
 ## Post-Apply Verification
 
 After applying all fixes:
@@ -53,13 +55,13 @@ After applying all fixes:
 1. **Re-review** each fixed issue to verify proper resolution
 2. **Update files** based on resolution status:
 
-| Status      | Marker                    | Stored In                   |
-| ----------- | ------------------------- | --------------------------- |
-| Fixed       | `󰄬 ~~[fixed] ...~~`       | analysis file (`cc.md`)     |
-| Done        | `󰄬 ~~[done] ...~~`        | analysis file (`cc.md`)     |
+| Status      | Marker                    | Stored In                     |
+| ----------- | ------------------------- | ----------------------------- |
+| Fixed       | `󰄬 ~~[fixed] ...~~`       | analysis file (`opencode.md`)       |
+| Done        | `󰄬 ~~[done] ...~~`        | analysis file (`opencode.md`)       |
 | By Design   | `󰛨 ~~[By Design] ...~~`   | **`baseline.md`** (permanent) |
-| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`   | analysis file (`cc.md`)     |
-| False Alarm | `󱙝 ~~[False Alarm] ...~~` | analysis file (`cc.md`)     |
+| Won't Fix   | `󰜺 ~~[Won't Fix] ...~~`   | analysis file (`opencode.md`)       |
+| False Alarm | `󱙝 ~~[False Alarm] ...~~` | analysis file (`opencode.md`)       |
 
 3. **Report** summary using the table format below
 
@@ -93,7 +95,7 @@ Provide summary tables after applying changes:
 ## Output Requirement
 
 1. **Display** the summary in the conversation
-2. **Update** the analysis file (`.code-analyzer/{topic}/cc.md`) with resolution markers
+2. **Update** the analysis file (`.code-analyzer/{topic}/opencode.md`) with resolution markers
 3. **Append to `baseline.md`** if any issues marked as By Design (create file if not exists)
 
 ## Style

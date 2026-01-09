@@ -1,5 +1,5 @@
 ---
-description: Comprehensive code review on specified target
+description: Perform comprehensive code review on specified target
 ---
 
 Perform a comprehensive code review on the specified target.
@@ -158,7 +158,7 @@ Provide a summary table at the beginning of the output:
 ### New Analysis Mode
 1. Read `baseline.md` if exists; suppress documented By Design issues
 2. **Display** the full review output in the conversation
-3. **Save** analysis to `{cwd}/.code-analyzer/{topic}/cc.md`
+3. **Save** analysis to `{cwd}/.code-analyzer/{topic}/opencode.md`
    - `{topic}`: concise kebab-case title (e.g., `git-module`, `user-auth-service`)
 
 ### Re-analyze Mode
