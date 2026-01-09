@@ -18,6 +18,10 @@ M.recursion_timer = nil
 ---Attach triggers to buffer
 ---@param bufnr                          integer
 function M.attach(bufnr)
+  if not S.state.ready then
+    return
+  end
+
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -199,6 +203,16 @@ function M.__feed_with_context__(keys, mode)
   vim.api.nvim_feedkeys(feed, "mit", false)
 end
 
+---Check if timed out based on vim.o.timeoutlen
+---@return boolean
+function M.__is_timedout__()
+  if not vim.o.timeout then
+    return false
+  end
+  local delta = vim.uv.hrtime() / 1e6 - S.state.started_at
+  return delta > vim.o.timeoutlen
+end
+
 ---Input loop
 ---@param prefix                         string
 function M.__loop__(prefix)
@@ -212,6 +226,7 @@ function M.__loop__(prefix)
   end
 
   local key = vim.fn.keytrans(char)
+  local timedout = M.__is_timedout__()
   local now = vim.uv.hrtime() / 1e6
   S.state.started_at = now
 
@@ -246,7 +261,15 @@ function M.__loop__(prefix)
 
   local node = S.state.get_node(new_prefix)
   if node then
-    if node.is_group or next(node.children) ~= nil then
+    local has_children = node.is_group or next(node.children) ~= nil
+    local has_action = node.rhs ~= nil
+    local is_nowait = node.nowait or (timedout and has_action)
+
+    -- If nowait is set or timed out with action, execute immediately
+    if is_nowait and has_action then
+      M.__execute__(node, new_prefix)
+      return
+    elseif has_children then
       if S.state.show_popup then
         S.view.render()
       else

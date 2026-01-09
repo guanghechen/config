@@ -27,12 +27,18 @@ setmetatable(M, {
   end,
 })
 
----@type boolean
-M.ready = false
-
 ---Setup which-key with default configuration
 function M.dressing()
   M.state.setup()
+
+  stl.fn.observe({ dot.context.plugin.which_key }, function()
+    local enabled = dot.context.plugin.which_key:snapshot() ---@type boolean
+    if enabled then
+      M.state.enable()
+    else
+      M.state.disable()
+    end
+  end, false)
 end
 
 ---Add mappings
@@ -45,7 +51,7 @@ end
 ---Show which-key manually
 ---@param opts                           era.m.wk.IShowOpts?
 function M.show(opts)
-  if not M.ready then
+  if not M.state.ready then
     return
   end
   opts = opts or {}

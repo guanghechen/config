@@ -71,6 +71,7 @@ local group_flags = {
   plugin = {
     render_markdown = dot.context.plugin.render_markdown,
     treesitter_context = dot.context.plugin.treesitter_context,
+    which_key = dot.context.plugin.which_key,
   },
 }
 

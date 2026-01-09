@@ -46,6 +46,8 @@ local DEFAULT_OPTS = {
 
 ---@class era.m.wk.state
 local M = {
+  ---@type boolean Whether which-key is enabled and ready to handle input
+  ready = false,
   ---@type era.m.wk.ISetupOpts
   opts = DEFAULT_OPTS,
   ---@type table<integer, table<era.m.wk.Mode, table<string, era.m.wk.INode>>>
@@ -74,14 +76,35 @@ local M = {
 -- Setup
 ----------------------------------------------------------------------------------------------------
 
----Setup with default configuration
+---Setup autocmds (called once during initialization)
 function M.setup()
   M.__setup_autocmds__()
-  M.__attach__(vim.api.nvim_get_current_buf())
-  S.ready = true
 end
 
----Reset state
+---Enable which-key (can be called multiple times)
+function M.enable()
+  if M.ready then
+    return
+  end
+  M.ready = true
+  M.__attach__(vim.api.nvim_get_current_buf())
+end
+
+---Disable which-key (can be called multiple times)
+function M.disable()
+  if not M.ready then
+    return
+  end
+  M.ready = false
+  S.input.stop()
+  for bufnr, _ in pairs(M.buf_trees) do
+    for mode, _ in pairs(M.get_trigger_modes()) do
+      S.input.detach(bufnr, mode)
+    end
+  end
+end
+
+---Reset session state (called when stopping input)
 function M.reset()
   M.keys = ""
   M.winnr = nil
@@ -155,7 +178,7 @@ end
 ---@param mappings                       era.m.wk.IMapping | era.m.wk.IMapping[]
 ---@param opts                           era.m.wk.IAddOpts?
 function M.add(mappings, opts)
-  if not S.ready then
+  if not M.ready then
     vim.schedule(function()
       M.add(mappings, opts)
     end)
@@ -326,6 +349,10 @@ end
 ---Attach to buffer
 ---@param bufnr                          integer
 function M.__attach__(bufnr)
+  if not M.ready then
+    return
+  end
+
   if not vim.api.nvim_buf_is_valid(bufnr) or M.is_disabled(vim.bo[bufnr].filetype) then
     return
   end
@@ -392,6 +419,7 @@ function M.__load_keymaps__(bufnr, mode)
           S.util.normalize_lhs(km.lhs),
           km.callback or km.rhs,
           desc = km.desc or km.rhs or km.lhs,
+          nowait = km.nowait == 1,
         })
       end
     end

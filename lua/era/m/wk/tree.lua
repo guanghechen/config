@@ -31,6 +31,7 @@ function M.add(tree_tbl, mapping)
         icon = nil,
         is_group = false,
         rhs = nil,
+        nowait = nil,
         proxy = nil,
         expand = nil,
         children = {},
@@ -48,6 +49,7 @@ function M.add(tree_tbl, mapping)
         node.desc = mapping.desc or (type(rhs) == "string" and rhs) or ""
       end
       node.icon = mapping.icon or node.icon
+      node.nowait = mapping.nowait or node.nowait
       node.proxy = mapping.proxy or node.proxy
       node.expand = mapping.expand or node.expand
     else
