@@ -24,6 +24,10 @@ tmux new-window -t "$SESSION" -n "opencode" -c "$HOME/.config/opencode/"
 sleep 1
 tmux rename-window -t "$SESSION:1" "claude" # override hook rename
 
-# Select first window and attach
+# Select first window and attach or switch
 tmux select-window -t "$SESSION:claude"
-tmux attach-session -t "$SESSION"
+if [[ -n "$TMUX" ]]; then
+  tmux switch-client -t "$SESSION"
+else
+  tmux attach-session -t "$SESSION"
+fi

@@ -26,6 +26,10 @@ tmux send-keys -t "$SESSION:dashboard" "btop -p 0" Enter
 tmux send-keys -t "$SESSION:tmux" "btop -p 2 --filter tmux" Enter
 tmux send-keys -t "$SESSION:nvim" "btop -p 2 --filter nvim" Enter
 
-# Select first window and attach
+# Select first window and attach or switch
 tmux select-window -t "$SESSION:dashboard"
-tmux attach-session -t "$SESSION"
+if [[ -n "$TMUX" ]]; then
+  tmux switch-client -t "$SESSION"
+else
+  tmux attach-session -t "$SESSION"
+fi
