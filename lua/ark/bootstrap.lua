@@ -59,10 +59,18 @@ end
 ---@return nil
 function M.setup_shell()
   if stl.env.IS_MAC then
-  -- vim.o.shell = "/bin/bash"
-  elseif stl.env.IS_NIX or stl.env.IS_WSL then
-  -- vim.o.shell = "/usr/bin/bash"
-  -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
+    -- vim.o.shell = "/bin/bash"
+  elseif stl.env.IS_NIX then
+    -- vim.o.shell = "/usr/bin/bash"
+    -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
+  elseif stl.env.IS_WSL then
+    -- vim.o.shell = "/usr/bin/bash"
+    -- vim.o.shell = "/home/linuxbrew/.linuxbrew/bin/fish"
+    ---@diagnostic disable-next-line: unused-local, duplicate-set-field
+    vim.ui.open = function(path, opt)
+      vim.fn.jobstart({ "fish", "-c", "open " .. vim.fn.shellescape(path) }, { detach = true })
+      return nil, function() end
+    end
   elseif stl.env.IS_WIN then
     vim.o.shell = "pwsh"
 
