@@ -8,7 +8,7 @@ import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { platform } from "node:os";
 import { dirname, join } from "node:path";
 
-const targetSize = process.argv[2] || "150000";
+const targetSize = process.argv[2] || "144000";
 
 const patterns = [
   { name: "v2.1+", regex: /return JO9\}var JO9=\d+/, replacement: `return JO9}var JO9=${targetSize}` },
