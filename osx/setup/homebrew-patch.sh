@@ -22,3 +22,6 @@ brew install --cask wezterm
 brew install koekeishiya/formulae/skhd
 brew install koekeishiya/formulae/yabai
 brew install FelixKratz/formulae/borders
+
+### Install OSX System Utilities
+brew install mole
