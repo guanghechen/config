@@ -99,7 +99,7 @@ function M.find_fixed_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and vim_win.is_fixed(winnr) then
+    if (filetype == nil or vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype) and vim_win.is_fixed(winnr) then
       return winnr
     end
   end
@@ -113,7 +113,7 @@ function M.find_floating_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype and vim_win.is_float(winnr) then
+    if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype and vim_win.is_float(winnr) then
       return winnr
     end
   end
@@ -127,7 +127,7 @@ function M.find_sourcefile_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.bo[bufnr].filetype == filetype) and M.is_sourcefile(winnr) then
+    if (filetype == nil or vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype) and M.is_sourcefile(winnr) then
       return winnr
     end
   end
@@ -164,7 +164,7 @@ function M.is_projectable(winnr)
     return wintype_attrs.projectable[meta.wintype] == true
   end
 
-  if vim.wo[winnr].winfixbuf or vim_win.is_float(winnr) then
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or vim_win.is_float(winnr) then
     return false
   end
 
@@ -183,7 +183,7 @@ function M.is_sourcefile(winnr)
     return wintype_attrs.sourcefile[meta.wintype] == true
   end
 
-  if vim.wo[winnr].winfixbuf or vim_win.is_float(winnr) then
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or vim_win.is_float(winnr) then
     return false
   end
 

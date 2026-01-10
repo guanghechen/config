@@ -54,12 +54,12 @@ function M:create_buf()
   end
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[self._bufnr].filetype = stl.filetype.ACP_OUTPUT
-  vim.bo[self._bufnr].buftype = "nofile"
-  vim.bo[self._bufnr].bufhidden = "hide"
-  vim.bo[self._bufnr].swapfile = false
-  vim.bo[self._bufnr].modifiable = false
-  vim.bo[self._bufnr].syntax = "markdown"
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_OUTPUT, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("syntax", "markdown", { buf = self._bufnr })
 end
 
 ---@return nil
@@ -128,10 +128,10 @@ function M:append_image(image_content)
     "",
   }
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   local start_line = vim.api.nvim_buf_line_count(bufnr)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Highlight image info
   vim.hl.range(bufnr, self._ns, "f_acp_image", { start_line, 0 }, { start_line, #lines[1] })
@@ -159,10 +159,10 @@ function M:append_resource(resource_content)
   end
   lines[#lines + 1] = ""
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   local start_line = vim.api.nvim_buf_line_count(bufnr)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Highlight resource info
   vim.hl.range(bufnr, self._ns, "f_acp_resource", { start_line, 0 }, { start_line, #lines[1] })
@@ -178,7 +178,7 @@ function M:append_text(text)
     return
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1] or ""
@@ -191,7 +191,7 @@ function M:append_text(text)
     vim.api.nvim_buf_set_lines(bufnr, line_count - 1, line_count, false, lines)
   end
 
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   self:__scroll_to_bottom__()
 end
 
@@ -232,7 +232,7 @@ function M:append_tool_call(tool_call)
 
     local line = indent .. "╭─ " .. content .. " ─" .. padding .. "╮"
 
-    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     local start_line = vim.api.nvim_buf_line_count(bufnr)
     local is_empty = start_line == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
 
@@ -243,7 +243,7 @@ function M:append_tool_call(tool_call)
       vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", line })
       start_line = start_line + 1
     end
-    vim.bo[bufnr].modifiable = false
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
     -- Store line range
     self._tool_line_ranges[tool_call.id] = { start = start_line, ["end"] = start_line }
@@ -302,7 +302,7 @@ function M:append_tool_call(tool_call)
     end
     lines[#lines + 1] = bottom_line
 
-    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     local start_line = vim.api.nvim_buf_line_count(bufnr)
     local is_empty = start_line == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
 
@@ -312,7 +312,7 @@ function M:append_tool_call(tool_call)
     else
       vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
     end
-    vim.bo[bufnr].modifiable = false
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
     local top_idx = start_line + 1
     local header_idx = start_line + 2
@@ -418,10 +418,10 @@ function M:append_tool_result(tool_call_id, result, is_error)
     "",
   }
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   local start_line = vim.api.nvim_buf_line_count(bufnr)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Highlight result line
   local result_line_len = #lines[1]
@@ -442,7 +442,7 @@ function M:append_assistant_header(agent_label)
   local header = "## 󱚥 " .. agent_label
   local lines = { header, "", "" }
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local is_empty = line_count == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
 
@@ -454,7 +454,7 @@ function M:append_assistant_header(agent_label)
     self._assistant_header_line = line_count
   end
 
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   self:__scroll_to_bottom__()
 end
 
@@ -475,9 +475,9 @@ function M:update_assistant_spinner(spinner_frame)
     header = "## 󱚥 " .. label
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, header_line, header_line + 1, false, { header })
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 end
 
 ---@return nil
@@ -500,9 +500,9 @@ function M:clear()
     return
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 end
 
 ---@param config                       era.m.acp.IProviderConfig
@@ -544,9 +544,9 @@ function M:show_banner(config, cwd)
   lines[#lines + 1] = "  " .. string.rep("─", math.max(max_line_width - 2, 0))
   lines[#lines + 1] = ""
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Highlight label line (line 1, 0-indexed)
   local label_len = #lines[2]
@@ -591,7 +591,7 @@ function M:__append_lines__(lines)
     return
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   local line_count = vim.api.nvim_buf_line_count(bufnr)
   local is_empty = line_count == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
 
@@ -601,7 +601,7 @@ function M:__append_lines__(lines)
     vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
   end
 
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   self:__scroll_to_bottom__()
 end
 
@@ -804,9 +804,9 @@ function M:update_tool_expanded(tool_id, expanded)
   end
 
   -- Delete old lines
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range["end"] + 1, false, {})
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Re-render the tool call
   local icon = self:__get_tool_icon__(tool_call.name)
@@ -827,9 +827,9 @@ function M:update_tool_expanded(tool_id, expanded)
 
     local line = indent .. "╭─ " .. content .. " ─" .. padding .. "╮"
 
-    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range.start, false, { line })
-    vim.bo[bufnr].modifiable = false
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
     local start_line = line_range.start
 
@@ -888,9 +888,9 @@ function M:update_tool_expanded(tool_id, expanded)
     end
     lines[#lines + 1] = bottom_line
 
-    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range.start, false, lines)
-    vim.bo[bufnr].modifiable = false
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
     local start_line = line_range.start
     local top_idx = start_line

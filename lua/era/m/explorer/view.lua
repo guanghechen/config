@@ -199,9 +199,9 @@ function M:render(bufnr, tree, root, options)
     end
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   vim.api.nvim_buf_clear_namespace(bufnr, self._nsnr, 0, -1)
   for _, hl in ipairs(highlights) do

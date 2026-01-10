@@ -316,9 +316,12 @@ local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 -- Use vim.uv directly (not vim.uv or vim.loop)
 vim.uv.hrtime()
 
--- Use vim.bo/vim.wo instead of deprecated APIs
-vim.bo[bufnr].filetype     -- not nvim_buf_get_option
-vim.wo[winnr].number       -- not nvim_win_get_option
+-- Buffer/window options: use nvim_set_option_value / nvim_get_option_value
+-- Reason: unified API, explicit scope control, supports dynamic option names
+vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
+vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+vim.api.nvim_get_option_value("cursorline", { win = winnr })
 
 -- Use dot.path.normalize instead of vim.fs.normalize
 dot.path.normalize(filepath)

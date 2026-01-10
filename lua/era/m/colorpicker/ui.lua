@@ -154,9 +154,9 @@ end
 ---@return nil
 function M:__refresh__()
   local buffer, width = self:__build_buffer__()
-  vim.bo[self._bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self._bufnr })
   vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, buffer)
-  vim.bo[self._bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
   self:__highlight__()
 
   vim.api.nvim_win_set_config(self._winnr, {
@@ -167,7 +167,7 @@ function M:__refresh__()
     footer = self:__build_footer__(),
     footer_pos = "right",
   })
-  vim.wo[self._winnr].winbar = self:__build_winbar__()
+  vim.api.nvim_set_option_value("winbar", self:__build_winbar__(), { win = self._winnr, scope = "local" })
   vim.api.nvim_win_set_hl_ns(self._winnr, self._ns_id)
 end
 

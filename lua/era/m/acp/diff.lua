@@ -69,11 +69,11 @@ function M:__create_window__()
   end
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[self._bufnr].filetype = "diff"
-  vim.bo[self._bufnr].buftype = "nofile"
-  vim.bo[self._bufnr].bufhidden = "wipe"
-  vim.bo[self._bufnr].swapfile = false
-  vim.bo[self._bufnr].modifiable = false
+  vim.api.nvim_set_option_value("filetype", "diff", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
 
   local width = math.floor(vim.o.columns * 0.9)
   local height = math.floor(vim.o.lines * 0.9)
@@ -92,11 +92,11 @@ function M:__create_window__()
     title_pos = "center",
   })
 
-  vim.wo[self._winnr].wrap = false
-  vim.wo[self._winnr].number = true
-  vim.wo[self._winnr].relativenumber = false
-  vim.wo[self._winnr].cursorline = true
-  vim.wo[self._winnr].winhighlight = "Normal:f_acp_normal"
+  vim.api.nvim_set_option_value("wrap", false, { win = self._winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = self._winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = self._winnr, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", true, { win = self._winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_normal", { win = self._winnr, scope = "local" })
 end
 
 ---@protected
@@ -176,9 +176,9 @@ function M:__render_unified__()
     lines[#lines + 1] = ""
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Apply highlights
   vim.api.nvim_buf_clear_namespace(bufnr, self._ns, 0, -1)
@@ -248,9 +248,9 @@ function M:__render_side_by_side__()
     lines[#lines + 1] = ""
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   -- Apply highlights
   vim.api.nvim_buf_clear_namespace(bufnr, self._ns, 0, -1)

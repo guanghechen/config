@@ -40,11 +40,11 @@ function M:__create_buf_as_needed__()
   local bufnr_hint = self.bufnr_hint ---@type integer|nil
   if bufnr_hint == nil or not vim.api.nvim_buf_is_valid(bufnr_hint) then
     bufnr_hint = vim.api.nvim_create_buf(false, true) ---@type integer
-    vim.bo[bufnr_hint].bufhidden = "hide"
-    vim.bo[bufnr_hint].buflisted = false
-    vim.bo[bufnr_hint].buftype = "nofile"
-    vim.bo[bufnr_hint].filetype = stl.filetype.WINPICKER_MASK
-    vim.bo[bufnr_hint].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "hide", { buf = bufnr_hint })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr_hint })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr_hint })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.WINPICKER_MASK, { buf = bufnr_hint })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr_hint })
     self.bufnr_hint = bufnr_hint
   end
 
@@ -88,20 +88,20 @@ function M:show(winnr)
     dot.win.set_type(winnr_hint, stl.nvim.win.Types.WINPICKER)
     vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr_hint].number = false
-    vim.wo[winnr_hint].relativenumber = false
-    vim.wo[winnr_hint].signcolumn = "no"
-    vim.wo[winnr_hint].spell = false
-    vim.wo[winnr_hint].wrap = false
+    vim.api.nvim_set_option_value("number", false, { win = winnr_hint, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = winnr_hint, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr_hint, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr_hint, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr_hint, scope = "local" })
   else
-    vim.wo[winnr_hint].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr_hint, scope = "local" })
     vim.api.nvim_win_set_config(winnr_hint, wincfg_hint)
     vim.api.nvim_win_set_buf(winnr_hint, bufnr_hint)
   end
 
-  vim.wo[winnr_hint].cursorline = false
-  vim.wo[winnr_hint].winfixbuf = true
-  vim.wo[winnr_hint].winhighlight = winhighlight
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr_hint, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr_hint, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", winhighlight, { win = winnr_hint, scope = "local" })
   return winnr_hint
 end
 

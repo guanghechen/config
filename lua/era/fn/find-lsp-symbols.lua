@@ -109,7 +109,7 @@ local function get_kind_filter(bufnr)
   if not bufnr then
     return KIND_FILTER_DEFAULT
   end
-  local ft = vim.bo[bufnr].filetype
+  local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
   return KIND_FILTER_BY_FT[ft] or KIND_FILTER_DEFAULT
 end
 
@@ -839,7 +839,7 @@ local function find_lsp_symbols()
   local filepath = nil ---@type string|nil
 
   if bufnr ~= nil then
-    local buftype = vim.bo[bufnr].buftype ---@type string
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
     if buftype == "" or buftype == "nowrite" then
       filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if filepath == "" then

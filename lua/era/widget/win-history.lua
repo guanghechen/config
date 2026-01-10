@@ -273,7 +273,7 @@ function M.history_backward()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype == "quickfix" then
     dot.state.qflist.backward()
     return
@@ -340,7 +340,7 @@ function M.history_forward()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype == "quickfix" then
     dot.state.qflist.forward()
     return

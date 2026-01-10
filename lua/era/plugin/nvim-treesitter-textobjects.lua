@@ -112,7 +112,7 @@ return {
         if key:find("[cC]") then
           local fallback = vim.api.nvim_replace_termcodes(key, true, true, true)
           callback = function()
-            if vim.wo.diff then
+            if vim.api.nvim_get_option_value("diff", { win = 0 }) then
               vim.api.nvim_feedkeys(fallback, "n", false)
             else
               move[method](query, source)

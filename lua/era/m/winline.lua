@@ -39,7 +39,7 @@ local function resolve_nvimbar(winnr)
       end,
       on_fulfilled = function(result)
         if vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
+          vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
         end
       end,
       validate = function()
@@ -118,7 +118,7 @@ local function render(winnr)
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if stl.filetype.has_external_winline(filetype) then
     return
   end
@@ -132,11 +132,11 @@ local function render(winnr)
         text = "<NVIM_HOME>" .. string.sub(text, #stl.env.HOME_NVIM_CONFIG + 1)
       end
       local winbar = "diffview://" .. text
-      vim.wo[winnr].winbar = txt(winbar, "f_wl_text")
+      vim.api.nvim_set_option_value("winbar", txt(winbar, "f_wl_text"), { win = winnr, scope = "local" })
     end
     return
   end
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype == "nofile" then
     return
   end
@@ -156,7 +156,7 @@ local function render(winnr)
   end
 
   if stl.filetype.is_sourcefile(filetype) then
-    vim.wo[winnr].winbar = txt(filepath, "f_wl_text")
+    vim.api.nvim_set_option_value("winbar", txt(filepath, "f_wl_text"), { win = winnr, scope = "local" })
     return
   end
 end

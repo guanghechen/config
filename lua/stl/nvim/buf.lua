@@ -52,7 +52,7 @@ function M.is_editable(bufnr)
   if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
-  return vim.bo[bufnr].buftype == "" and vim.bo[bufnr].modifiable and not vim.bo[bufnr].readonly
+  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" and vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) and not vim.api.nvim_get_option_value("readonly", { buf = bufnr })
 end
 
 ---@param bufnr                         integer|nil
@@ -62,12 +62,12 @@ function M.is_sourcefile(bufnr)
     return false
   end
 
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype_attrs.sourcefile[buftype] ~= true then
     return false
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if stl.filetype.is_not_sourcefile(filetype) then
     return false
   end
@@ -155,7 +155,7 @@ end
 ---@return string
 function M.retrieve_selected_text()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype == Types.TERMINAL or buftype == Types.PROMPT then
     return ""
   end

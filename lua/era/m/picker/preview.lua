@@ -64,11 +64,11 @@ function M.new(props)
         return
       end
 
-      vim.bo[bufnr].modifiable = true
-      vim.bo[bufnr].readonly = false
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+      vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
       local ok, result = pcall(draw, bufnr, false) ---@type boolean, era.m.picker.preview.IDrawResult
-      vim.bo[bufnr].modifiable = false
-      vim.bo[bufnr].readonly = true
+      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+      vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
       if not ok then
         stl.reporter.error({
@@ -197,12 +197,12 @@ function M:create_buf()
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = stl.filetype.UX_PICKER_PREVIEW
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.UX_PICKER_PREVIEW, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
   return bufnr, true
@@ -241,39 +241,39 @@ function M:create_win(winopts, dimension)
   self._winnr = winnr
 
   dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_PREVIEW)
-  vim.wo[winnr].listchars = string.format(
+  vim.api.nvim_set_option_value("listchars", string.format(
     "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
     stl.icon.listchars.eol,
     stl.icon.listchars.lead,
     stl.icon.listchars.nbsp,
     stl.icon.listchars.space,
     stl.icon.listchars.trail
-  )
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winhighlight = winopts.winhighlight
+  ), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
 
   if result == nil then
-    vim.wo[winnr].cursorline = true
-    vim.wo[winnr].number = true
-    vim.wo[winnr].relativenumber = true
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].list = true
+    vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", true, { win = winnr, scope = "local" })
   else
     if result.cursorline ~= nil then
-      vim.wo[winnr].cursorline = result.cursorline
+      vim.api.nvim_set_option_value("cursorline", result.cursorline, { win = winnr, scope = "local" })
     end
     if result.number ~= nil then
-      vim.wo[winnr].number = result.number
-      vim.wo[winnr].relativenumber = result.number
+      vim.api.nvim_set_option_value("number", result.number, { win = winnr, scope = "local" })
+      vim.api.nvim_set_option_value("relativenumber", result.number, { win = winnr, scope = "local" })
     end
     if result.wrap ~= nil then
-      vim.wo[winnr].wrap = result.wrap
+      vim.api.nvim_set_option_value("wrap", result.wrap, { win = winnr, scope = "local" })
     end
     if result.whitespaces ~= nil then
-      vim.wo[winnr].list = result.whitespaces
+      vim.api.nvim_set_option_value("list", result.whitespaces, { win = winnr, scope = "local" })
     end
     if result.lnum ~= nil then
       pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })
@@ -374,16 +374,16 @@ function M:__update_winopts__()
   wincfg.title_pos = #result.title > 0 and "center" or nil
 
   if result.cursorline ~= nil then
-    vim.wo[winnr].cursorline = result.cursorline
+    vim.api.nvim_set_option_value("cursorline", result.cursorline, { win = winnr, scope = "local" })
   end
   if result.number ~= nil then
-    vim.wo[winnr].number = result.number
+    vim.api.nvim_set_option_value("number", result.number, { win = winnr, scope = "local" })
   end
   if result.wrap ~= nil then
-    vim.wo[winnr].wrap = result.wrap
+    vim.api.nvim_set_option_value("wrap", result.wrap, { win = winnr, scope = "local" })
   end
   if result.whitespaces ~= nil then
-    vim.wo[winnr].list = result.whitespaces
+    vim.api.nvim_set_option_value("list", result.whitespaces, { win = winnr, scope = "local" })
   end
   if result.lnum ~= nil then
     pcall(vim.api.nvim_win_set_cursor, winnr, { result.lnum, result.col or 0 })

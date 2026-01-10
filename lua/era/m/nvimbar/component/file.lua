@@ -42,12 +42,12 @@ function M.encoding(position)
     end,
     render = function(context)
       local bufnr = context.bufnr ---@type integer
-      local encoding = vim.bo[bufnr].fileencoding ---@type string
+      local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ---@type string
 
       local text = #encoding > 0 and encoding or "unknown" ---@type string
       local hl_text = txt(text, hln_text)
 
-      local buftype = vim.bo[bufnr].buftype ---@type string
+      local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
       if buftype == "" or buftype == "nowrite" then
         hl_text = btn(hl_text, fn_on_fileencoding_clicked)
       end
@@ -71,7 +71,7 @@ function M.format(position)
     end,
     render = function(context)
       local bufnr = context.bufnr ---@type integer
-      local fileformat = vim.bo[bufnr].fileformat ---@type string
+      local fileformat = vim.api.nvim_get_option_value("fileformat", { buf = bufnr }) ---@type string
 
       local icon_fileformat = fileformat_icon_map[fileformat] or stl.icon.os.current ---@type string
       local text_fileformat = fileformat_text_map[fileformat] or fileformat ---@type string
@@ -79,7 +79,7 @@ function M.format(position)
       local text = string.format("%s %s", icon_fileformat, text_fileformat) ---@type string
       local hl_text = txt(text, hln_text) ---@type string
 
-      if vim.bo[bufnr].buftype == "" then
+      if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
         hl_text = btn(hl_text, fn_on_fileformat_clicked)
       end
       return text, hl_text, true
@@ -102,7 +102,7 @@ function M.indent(position)
       return stl.filetype.is_sourcefile(context.filetype)
     end,
     render = function(context)
-      local shiftwidth = vim.bo[context.bufnr].shiftwidth ---@type integer
+      local shiftwidth = vim.api.nvim_get_option_value("shiftwidth", { buf = context.bufnr }) ---@type integer
       local text = string.format("%s %d", icon_shiftwidth, shiftwidth) ---@type string
       local hl_text = txt(text, hln_text)
       return text, hl_text, true
@@ -124,7 +124,7 @@ function M.name(position)
     render = function(context)
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-      local is_mod = vim.bo[context.bufnr].modified ---@type boolean
+      local is_mod = vim.api.nvim_get_option_value("modified", { buf = context.bufnr }) ---@type boolean
       local text_mod = is_mod and " " or "" ---@type string
       if context.winnr ~= winnr_sourcefile then
         local text = context.fileicon .. " " .. context.filename .. text_mod ---@type string
@@ -202,7 +202,7 @@ function M.readonly(position)
     name = "file:readonly",
     atomic = true,
     condition = function()
-      return vim.bo.readonly
+      return vim.api.nvim_get_option_value("readonly", { buf = 0 })
     end,
     render = function()
       local text = stl.icon.ui.Lock .. " [RO]" ---@type string

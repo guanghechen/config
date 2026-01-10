@@ -190,7 +190,7 @@ local function action_swap_conditional_branches()
     return
   end
 
-  local filetype = vim.bo[bufnr_sourcefile].filetype
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr_sourcefile })
   local lang = vim.treesitter.language.get_lang(filetype)
   if not lang or not pcall(vim.treesitter.language.inspect, lang) then
     stl.reporter.error({
@@ -286,8 +286,8 @@ M.spec = {
       pattern = ensure_filetypes,
       callback = function()
         vim.treesitter.start()
-        vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = 0, scope = "local" })
+        vim.api.nvim_set_option_value("indentexpr", "v:lua.require'nvim-treesitter'.indentexpr()", { buf = 0 })
       end,
     })
   end,

@@ -107,13 +107,13 @@ function M:create_buf_as_needed()
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = stl.filetype.WINSEP
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.WINSEP, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   local winnr = self._winnr ---@type integer|nil
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -129,11 +129,11 @@ end
 ---@param lines                         string[]
 ---@return nil
 function M.set_content(bufnr, lines)
-  vim.bo[bufnr].modifiable = true
-  vim.bo[bufnr].readonly = false
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 end
 
 ---@param row                           integer
@@ -207,21 +207,21 @@ function M:show()
     dot.win.set_type(winnr, stl.nvim.win.Types.WINSEP)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = false
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   else
     local cfg = self._cfg ---@type vim.api.keyset.win_config
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_config(winnr, cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
   end
 
-  vim.wo[winnr].winhighlight = winhighlight
-  vim.wo[winnr].winfixbuf = true
+  vim.api.nvim_set_option_value("winhighlight", winhighlight, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 end
 
 return M

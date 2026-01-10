@@ -259,7 +259,7 @@ end
 ---@return nil
 function M.edit()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  if vim.bo[bufnr].buftype ~= "" then
+  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ~= "" then
     stl.reporter.warn({
       from = __module_name__,
       group = "ai",

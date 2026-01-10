@@ -202,7 +202,7 @@ function M.dressing()
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.filetype.get_option = function(filetype, option)
     if filetype == "comment" then
-      filetype = vim.bo.filetype
+      filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
     end
 
     if option == "commentstring" then

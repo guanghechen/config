@@ -86,9 +86,9 @@ function M.show(opts)
 
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].filetype = "acp_confirm"
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "acp_confirm", { buf = bufnr })
 
   local width = 70
   local height = #lines
@@ -107,7 +107,7 @@ function M.show(opts)
     title_pos = "center",
   })
 
-  vim.wo[winnr].winhighlight = "Normal:f_acp_normal,FloatBorder:f_acp_border,FloatTitle:f_acp_title"
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_normal,FloatBorder:f_acp_border,FloatTitle:f_acp_title", { win = winnr, scope = "local" })
 
   local title_line_len = #lines[title_line_idx + 1]
   vim.hl.range(bufnr, NS, "f_acp_banner_label", { title_line_idx, 0 }, { title_line_idx, title_line_len })

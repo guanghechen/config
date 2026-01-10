@@ -43,7 +43,7 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field protected _on_disposed        fun(): nil|nil
 ---@field protected _o_width            stl.c.Observable
 ---@field protected _prev_cursor_lnum   integer|nil
----@field protected _unregister_fns     fun(): nil[]
+---@field protected _unregister_fns     (fun(): nil)[]
 ---@field protected _render_result      era.m.explorer.view.IRenderResult|nil
 ---@field protected _resource_manager   era.m.explorer.resource.FileManager
 ---@field protected _subscriptions      stl.c.IUnsubscribable[]
@@ -365,11 +365,11 @@ function M:__create_buf_as_needed__()
   bufnr = vim.api.nvim_create_buf(false, true)
   self._bufnr = bufnr
 
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = "explorer"
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "explorer", { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   self:__setup_keymaps__(bufnr)
   return bufnr
@@ -423,7 +423,7 @@ function M:__create_nvimbar__()
     on_fulfilled = function(result)
       local winnr = self._winnr ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.wo[winnr].winbar = result
+        vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
     end,
   }):place("left", c.explorer.winbar(self._tree.o_root_uri, position, nvimbar_flags, get_width), 100)
@@ -446,17 +446,17 @@ function M:__create_win_as_needed__()
   winnr = vim.api.nvim_get_current_win() ---@type integer
   self._winnr = winnr
 
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].foldcolumn = "0"
-  vim.wo[winnr].foldlevel = 99
-  vim.wo[winnr].list = false
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].winfixwidth = true
-  vim.wo[winnr].wrap = false
-  vim.wo[winnr].winhighlight = EXPLORER_WIN_HIGHLIGHT
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldlevel", 99, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixwidth", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", EXPLORER_WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 
   dot.win.set_type(winnr, stl.nvim.win.Types.EXPLORER)
 
@@ -1553,7 +1553,7 @@ function M:__update_winbar__()
 
   if vim.o.showtabline ~= 0 then
     -- When tabline is shown, hide winbar (info displayed in tabline instead)
-    vim.wo[winnr].winbar = nil
+    vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
     return
   end
 

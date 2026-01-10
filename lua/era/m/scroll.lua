@@ -16,7 +16,11 @@ local MOUSE_SCROLL_UP = vim.api.nvim_replace_termcodes("<ScrollWheelUp>", true, 
 ---@field public changedtick            integer
 ---@field public last                   integer
 ---@field public timer                  uv.uv_timer_t|nil
----@field public wincfg                 vim.api.keyset.win_config
+---@field public wincfg                 era.m.scroll.IWincfg
+
+---@class era.m.scroll.IWincfg : vim.api.keyset.win_config
+---@field public virtualedit            string|nil
+---@field public scrolloff              integer|nil
 
 ---@class era.m.scroll.IConfig
 ---@field public duration               integer
@@ -56,7 +60,7 @@ local function is_enabled(bufnr)
     return false
   end
 
-  if vim.bo[bufnr].buftype == "terminal" then
+  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "terminal" then
     return false
   end
 
@@ -99,7 +103,7 @@ local function stop_animation(state)
 
   if vim.api.nvim_win_is_valid(state.winnr) then
     for k, v in pairs(state.wincfg) do
-      vim.wo[state.winnr][k] = v
+      vim.api.nvim_set_option_value(k, v, { win = state.winnr, scope = "local" })
     end
   end
   state.wincfg = {}
@@ -179,7 +183,7 @@ local function check_scroll(winnr)
     return
   end
 
-  if vim.wo[state.winnr].scrollbind and vim.api.nvim_get_current_win() ~= state.winnr then
+  if vim.api.nvim_get_option_value("scrollbind", { win = state.winnr }) and vim.api.nvim_get_current_win() ~= state.winnr then
     stop_animation(state)
     return
   end
@@ -199,10 +203,10 @@ local function check_scroll(winnr)
   state.target = vim.deepcopy(state.view)
   stop_animation(state)
 
-  state.wincfg.virtualedit = state.wincfg.virtualedit or vim.wo[state.winnr].virtualedit
-  state.wincfg.scrolloff = state.wincfg.scrolloff or vim.wo[state.winnr].scrolloff
-  vim.wo[state.winnr].virtualedit = "all"
-  vim.wo[state.winnr].scrolloff = 0
+  state.wincfg.virtualedit = state.wincfg.virtualedit or vim.api.nvim_get_option_value("virtualedit", { win = state.winnr })
+  state.wincfg.scrolloff = state.wincfg.scrolloff or vim.api.nvim_get_option_value("scrolloff", { win = state.winnr })
+  vim.api.nvim_set_option_value("virtualedit", "all", { win = state.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("scrolloff", 0, { win = state.winnr, scope = "local" })
 
   local now = vim.uv.hrtime() ---@type integer
   local repeat_delta = (now - state.last) / 1e6 ---@type number

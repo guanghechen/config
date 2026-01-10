@@ -736,9 +736,9 @@ function M:__create_finder_buffer_as_needed__()
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   -- Use finder keymaps
   stl.nvim.fn.bindkeys(self._finder_keymaps, { bufnr = bufnr, noremap = true, silent = true })
@@ -782,9 +782,9 @@ function M:__create_replacer_buffer_as_needed__()
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   -- Use replacer keymaps
   stl.nvim.fn.bindkeys(self._replacer_keymaps, { bufnr = bufnr, noremap = true, silent = true })
@@ -846,18 +846,18 @@ function M:__create_finder_window_as_needed__()
   })
   self._winnr_finder = popup_winnr
 
-  vim.wo[popup_winnr].cursorline = false
-  vim.wo[popup_winnr].number = false
-  vim.wo[popup_winnr].relativenumber = false
-  vim.wo[popup_winnr].signcolumn = "yes"
-  vim.wo[popup_winnr].spell = false
-  vim.wo[popup_winnr].winblend = winblend
-  vim.wo[popup_winnr].winfixbuf = true
-  vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
-  vim.wo[popup_winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:Normal,FloatBorder:FloatBorder", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = popup_winnr, scope = "local" })
 
   -- Set nvimbar immediately when finder window is created
-  vim.wo[popup_winnr].winbar = self._nvimbar:snapshot()
+  vim.api.nvim_set_option_value("winbar", self._nvimbar:snapshot(), { win = popup_winnr, scope = "local" })
   self._nvimbar:render()
 
   return popup_winnr, true
@@ -900,15 +900,15 @@ function M:__create_replacer_window_as_needed__()
   })
   self._winnr_replacer = popup_winnr
 
-  vim.wo[popup_winnr].cursorline = false
-  vim.wo[popup_winnr].number = false
-  vim.wo[popup_winnr].relativenumber = false
-  vim.wo[popup_winnr].signcolumn = "yes"
-  vim.wo[popup_winnr].spell = false
-  vim.wo[popup_winnr].winblend = winblend
-  vim.wo[popup_winnr].winfixbuf = true
-  vim.wo[popup_winnr].winhighlight = "Normal:Normal,FloatBorder:FloatBorder"
-  vim.wo[popup_winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:Normal,FloatBorder:FloatBorder", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = popup_winnr, scope = "local" })
 
   return popup_winnr, true
 end
@@ -1106,7 +1106,7 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
     on_fulfilled = function(result)
       local winnr = self._winnr_finder ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.wo[winnr].winbar = result
+        vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
     end,
     validate = function()

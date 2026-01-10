@@ -380,11 +380,11 @@ function M.__create_buf_as_needed__(win)
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     win.bufnr = bufnr
 
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.NOTIFY
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.NOTIFY, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
     ---@type stl.t.IKeymap[]
     local keymaps = {
@@ -410,10 +410,10 @@ function M.__create_buf_as_needed__(win)
       end
     end
   else
-    vim.bo[bufnr].readonly = false
+    vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   local lines = win.task.lines ---@type string[]
   if win.task.isempty then
@@ -428,8 +428,8 @@ function M.__create_buf_as_needed__(win)
     vim.api.nvim_buf_set_lines(bufnr, 1, -1, false, lines)
   end
 
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   if win.task.highlights then
     local nsnr = dot.var.nsnr.notify ---@type integer
@@ -476,16 +476,16 @@ function M.__create_win_as_needed__(win)
     dot.win.set_type(winnr, stl.nvim.win.Types.NOTIFY)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].conceallevel = 0
-    vim.wo[winnr].concealcursor = "n"
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = false
+    vim.api.nvim_set_option_value("conceallevel", 0, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("concealcursor", "n", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
   end
@@ -494,10 +494,10 @@ function M.__create_win_as_needed__(win)
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local winhighlight = config.winhighlight[task.level] ---@type string
 
-  vim.wo[winnr].winbar = winbar
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winhighlight = winhighlight
+  vim.api.nvim_set_option_value("winbar", winbar, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", winhighlight, { win = winnr, scope = "local" })
   return winnr
 end
 
@@ -687,13 +687,13 @@ function M.__handle__()
       local width = measure_task_width(task) ---@type integer
       local height = measure_task_height(task) ---@type integer
       local wincfg = vim.api.nvim_win_get_config(win.winnr) ---@type vim.api.keyset.win_config
-      local winbar = wincfg.width ~= width and M.__gen_winbar__(task, width) or vim.wo[win.winnr].winbar
+      local winbar = wincfg.width ~= width and M.__gen_winbar__(task, width) or vim.api.nvim_get_option_value("winbar", { win = win.winnr })
 
       wincfg.row = win.row
       wincfg.width = width
       wincfg.height = height + 1
       vim.api.nvim_win_set_config(win.winnr, wincfg)
-      vim.wo[win.winnr].winbar = winbar
+      vim.api.nvim_set_option_value("winbar", winbar, { win = win.winnr, scope = "local" })
     end
   end
 end

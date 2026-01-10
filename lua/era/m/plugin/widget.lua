@@ -45,9 +45,9 @@ function M:update()
 
   self:__trim__()
 
-  vim.bo[self._view.bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self._view.bufnr })
   self:__render__(self._view.bufnr)
-  vim.bo[self._view.bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._view.bufnr })
 end
 
 ----------------------------------------------------------------------------------------------------

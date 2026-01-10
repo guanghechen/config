@@ -189,7 +189,7 @@ return {
             local fallback_config = vim.deepcopy(config.prettier_fallback_config)
 
             -- Override prose-wrap for non-markdown files
-            if vim.bo[ctx.buf].filetype ~= "markdown" then
+            if vim.api.nvim_get_option_value("filetype", { buf = ctx.buf }) ~= "markdown" then
               fallback_config.proseWrap = "preserve"
             end
             vim.list_extend(args, fns.config_to_args(fallback_config))
@@ -209,7 +209,7 @@ return {
       },
     },
     format_on_save = function(bufnr)
-      local filetype = vim.bo[bufnr].filetype ---@type string
+      local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
       if ignored.filetypes[filetype] then
         return
       end

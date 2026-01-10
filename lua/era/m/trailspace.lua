@@ -18,12 +18,12 @@ local function highlight()
   end
 
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if buftype ~= "" and buftype ~= "nowrite" then
     return
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if not stl.filetype.is_sourcefile(filetype) then
     return
   end

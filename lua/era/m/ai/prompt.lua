@@ -52,7 +52,7 @@ end
 ---@return era.m.ai.IText
 local function get_highlighted_lines(bufnr, start_row, end_row)
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_row, end_row, false)
-  local ft = vim.bo[bufnr].filetype
+  local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
   local lang = ft and vim.treesitter.language.get_lang(ft) or nil
 
   if not lang then
@@ -143,7 +143,7 @@ function M.get_ctx()
     bufnr = bufnr,
     cwd = dot.path.cwd(),
     filepath = filepath ~= "" and filepath or nil,
-    filetype = vim.bo[bufnr].filetype,
+    filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }),
     selection_range = selection_range,
   }
 end

@@ -129,7 +129,7 @@ end
 ---@param bufnr                          integer
 ---@return string[]
 function M.get_packages(bufnr)
-  if vim.bo[bufnr].filetype ~= "tex" then
+  if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ~= "tex" then
     return {}
   end
   return cache(bufnr, "packages", function()

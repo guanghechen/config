@@ -618,7 +618,7 @@ command
   .implement({
     uuid = K.git.hunk_goto_prev.uuid,
     action = function()
-      if vim.wo.diff then
+      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
         vim.cmd.normal({ "[c", bang = true })
       else
         era.m.git.hunk.nav("prev")
@@ -628,7 +628,7 @@ command
   .implement({
     uuid = K.git.hunk_goto_next.uuid,
     action = function()
-      if vim.wo.diff then
+      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
         vim.cmd.normal({ "]c", bang = true })
       else
         era.m.git.hunk.nav("next")
@@ -638,7 +638,7 @@ command
   .implement({
     uuid = K.git.hunk_goto_prev_all.uuid,
     action = function()
-      if vim.wo.diff then
+      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
         vim.cmd.normal({ "[c", bang = true })
       else
         era.m.git.hunk.nav_all("prev")
@@ -648,7 +648,7 @@ command
   .implement({
     uuid = K.git.hunk_goto_next_all.uuid,
     action = function()
-      if vim.wo.diff then
+      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
         vim.cmd.normal({ "]c", bang = true })
       else
         era.m.git.hunk.nav_all("next")

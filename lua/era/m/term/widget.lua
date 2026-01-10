@@ -25,11 +25,11 @@ local function create_mask_buf_as_needed()
     bufnr = vim.api.nvim_create_buf(false, true)
     _terminal_mask_bufnr = bufnr
 
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].filetype = stl.filetype.TERM_MASK
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].readonly = true
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.TERM_MASK, { buf = bufnr })
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
   return bufnr
 end
@@ -63,7 +63,7 @@ local termline = Nvimbar.new({
   end,
   on_fulfilled = function(result)
     if _terminal_winnr ~= nil and vim.api.nvim_win_is_valid(_terminal_winnr) then
-      vim.wo[_terminal_winnr].winbar = result
+      vim.api.nvim_set_option_value("winbar", result, { win = _terminal_winnr, scope = "local" })
     end
   end,
 })
@@ -88,9 +88,9 @@ stl.fn.observe({ era.m.term.state.o_termuuid }, function()
     return
   end
 
-  vim.wo[winnr].winfixbuf = false
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
   vim.api.nvim_win_set_buf(winnr, termmeta.bufnr)
-  vim.wo[winnr].winfixbuf = true
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   dot.state.status.dirtier_termline:mark_dirty()
 end, true)
 
@@ -115,7 +115,7 @@ local function render_winbar_to(winnr)
   local result = termline:render(true)
   _terminal_winnr = prev_winnr
 
-  vim.wo[winnr].winbar = result
+  vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
 end
 
 ---@param direction                     'h'|'j'|'k'|'l'
@@ -349,14 +349,14 @@ function M:split(direction)
   local bufnr = M.__create_buf_as_needed__(termmeta) ---@type integer
   vim.api.nvim_win_set_buf(winnr_new, bufnr)
 
-  vim.wo[winnr_new].cursorline = false
-  vim.wo[winnr_new].list = false
-  vim.wo[winnr_new].number = false
-  vim.wo[winnr_new].relativenumber = false
-  vim.wo[winnr_new].signcolumn = "no"
-  vim.wo[winnr_new].spell = false
-  vim.wo[winnr_new].wrap = true
-  vim.wo[winnr_new].winfixbuf = true
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("list", false, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr_new, scope = "local" })
 
   render_winbar_to(winnr_new)
   self:__start_job__(termmeta)
@@ -465,14 +465,14 @@ function M.__create_buf_as_needed__(termmeta)
   end
 
   bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].filetype = stl.filetype.TERM
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = false
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.TERM, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   if termmeta.hidewipe then
-    vim.bo[bufnr].bufhidden = "wipe"
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
   end
 
   vim.api.nvim_create_autocmd("TermClose", {
@@ -530,30 +530,30 @@ function M:__create_win_as_needed__(termmeta)
     dot.win.set_type(winnr, stl.nvim.win.Types.TERMINAL)
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].winfixbuf = true
-    vim.wo[winnr].wrap = true
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
     _terminal_winnr = winnr
 
     vim.schedule(function()
       vim.cmd("startinsert")
     end)
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     ---@type dot.state.maximized.ResolveResizeResult
     resize_result = dot.state.maximized.resolve_resize_config(winnr, wincfg, { winblend = 0 })
     vim.api.nvim_win_set_config(winnr, resize_result.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
-  vim.wo[winnr].winblend = resize_result and resize_result.winblend or 0
-  vim.wo[winnr].winhighlight = TERMINAL_WIN_HIGHLIGHT
+  vim.api.nvim_set_option_value("winblend", resize_result and resize_result.winblend or 0, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", TERMINAL_WIN_HIGHLIGHT, { win = winnr, scope = "local" })
   dot.state.status.dirtier_termline:mark_dirty()
 
   termmeta.on_resized()

@@ -120,10 +120,10 @@ function M:__create_win__()
     vim.b[bufnr].miniindentscope_disable = true
     vim.b[bufnr].miniai_disable = true
     vim.b[bufnr].minihipatterns_disable = true
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.BOARD
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.BOARD, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
   if self._winnr == nil or not vim.api.nvim_win_is_valid(self._winnr) then
@@ -148,16 +148,16 @@ function M:__create_win__()
     self._winnr = winnr
 
     dot.win.set_type(winnr, stl.nvim.win.Types.BOARD)
-    vim.wo[winnr].cursorline = true
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = true
-    vim.wo[winnr].relativenumber = true
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].winblend = dot.context.theme.get_float_winblend()
-    vim.wo[winnr].winfixbuf = true
-    vim.wo[winnr].winhighlight = config.winhighlight
-    vim.wo[winnr].wrap = false
+    vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winblend", dot.context.theme.get_float_winblend(), { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", config.winhighlight, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   end
 end
 
@@ -172,7 +172,7 @@ function M:__render__()
   local winnr = self._winnr ---@type integer|nil
   local win_width = winnr and vim.api.nvim_win_get_width(winnr) or 100 ---@type integer
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, self._ns, 0, -1)
 
   local lines = {} ---@type string[]
@@ -181,7 +181,7 @@ function M:__render__()
 
   for _, task in ipairs(self._tasks) do
     local icon = stl.icon.loglevel[task.level] or " " ---@type string
-    local time = os.date("%H:%M:%S", task.timestamp) ---@type string
+    local time = os.date("%H:%M:%S", task.timestamp) --[[@as string]]
     local level = string.format("%-5s", task.level) ---@type string
     local times_str = task.times > 1 and string.format(" (x%d)", task.times) or "" ---@type string
     local title = task.title .. times_str ---@type string
@@ -226,8 +226,8 @@ function M:__render__()
     vim.hl.range(bufnr, self._ns, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
   end
 
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local lnum = task_line_map[self._cursor] or 1 ---@type integer

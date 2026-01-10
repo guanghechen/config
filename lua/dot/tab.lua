@@ -78,7 +78,7 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
   bufnrs = bufnrs or vim.api.nvim_list_bufs() ---@type integer[]
   local bufnrs_unreferenced = {} ---@type integer[]
   for _, bufnr in ipairs(bufnrs) do
-    if vim.bo[bufnr].buflisted and not bufnr_set[bufnr] then
+    if vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) and not bufnr_set[bufnr] then
       bufnrs_unreferenced[#bufnrs_unreferenced + 1] = bufnr
     end
   end
@@ -170,7 +170,7 @@ end
 ---@param pinned                        boolean|nil
 ---@return dot.tab.IMeta|nil
 function M.add_buf(tabnr, bufnr, pinned)
-  if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.bo[bufnr].buflisted then
+  if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
     return
   end
 
@@ -288,7 +288,7 @@ function M.resolve(tabnr, force)
       ---@cast buf                      dot.tab.IBufItem
       local bufnr = buf.bufnr ---@type integer
       local pinned = buf.pinned ---@type boolean
-      if not bufnr_set[bufnr] and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buflisted then
+      if not bufnr_set[bufnr] and vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
         bufnr_set[bufnr] = true
         bufs[#bufs + 1] = { bufnr = bufnr, pinned = pinned }
       end
@@ -298,7 +298,7 @@ function M.resolve(tabnr, force)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].buflisted and not bufnr_set[bufnr] then
+    if vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) and not bufnr_set[bufnr] then
       bufnr_set[bufnr] = true
       bufs[#bufs + 1] = { bufnr = bufnr, pinned = false }
     end
@@ -337,7 +337,7 @@ function M.resolve_type(tabnr, force)
   ---! Check if the diffview tab
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.bo[bufnr].filetype ---@type string
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     if filetype == stl.filetype.DIFFVIEW_FILES or filetype == stl.filetype.DIFFVIEW_FILE_HISTORY then
       tabtype = stl.nvim.tab.Types.DIFFVIEW ---@type stl.nvim.tab.TypeEnum
       break
@@ -368,7 +368,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M.on_buf_enter(tabnr, bufnr)
-  if tabnr < 1 or bufnr < 1 or not vim.bo[bufnr].buflisted then
+  if tabnr < 1 or bufnr < 1 or not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
     return
   end
 

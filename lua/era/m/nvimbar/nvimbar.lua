@@ -65,7 +65,7 @@ local function build_context(preset_context)
   local cwd = dot.path.cwd() ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local filename = yoz.path.basename(filepath) ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   local fileicon, fileicon_hl = stl.fileicon.get_file_icon(filename, filetype) ---@type string, string
 
   local git_branch = era.m.git.state.get_branch() ---@type string|nil

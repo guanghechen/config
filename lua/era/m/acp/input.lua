@@ -49,11 +49,11 @@ function M:create_buf()
   end
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[self._bufnr].filetype = stl.filetype.ACP_INPUT
-  vim.bo[self._bufnr].buftype = "nofile"
-  vim.bo[self._bufnr].bufhidden = "hide"
-  vim.bo[self._bufnr].swapfile = false
-  vim.bo[self._bufnr].syntax = "markdown"
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_INPUT, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("syntax", "markdown", { buf = self._bufnr })
 
   self:__setup_keymaps__()
 end

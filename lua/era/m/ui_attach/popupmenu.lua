@@ -87,11 +87,11 @@ function M._show(state)
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     state.bufnr = bufnr
 
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.UX_POPUPMENU
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.UX_POPUPMENU, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
@@ -135,13 +135,13 @@ function M._show(state)
     dot.win.set_type(winnr, stl.nvim.win.Types.POPUPMENU)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].winhighlight = "Normal:f_up_normal,FloatBorder:f_up_border,CursorLine:f_up_normal"
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:f_up_normal,FloatBorder:f_up_border,CursorLine:f_up_normal", { win = winnr, scope = "local" })
   else
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)

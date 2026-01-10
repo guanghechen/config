@@ -206,10 +206,10 @@ function M:open(params)
     local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     self._bufnr = bufnr
 
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = self.filetype
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", self.filetype, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
     vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] = true
     stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, noremap = true, silent = true })
 
@@ -246,7 +246,7 @@ function M:open(params)
   end
 
   for key, value in pairs(self.win_opts) do
-    vim.wo[self._winnr][key] = value
+    vim.api.nvim_set_option_value(key, value, { win = self._winnr, scope = "local" })
   end
 end
 

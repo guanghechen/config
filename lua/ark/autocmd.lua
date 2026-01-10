@@ -34,7 +34,7 @@ vim.filetype.add({
           return
         end
 
-        if vim.bo[bufnr].filetype == "bigfile" then
+        if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == "bigfile" then
           return
         end
 
@@ -170,7 +170,7 @@ vim.api.nvim_create_autocmd("FileType", {
   callback = function(event)
     local bufnr = event.buf ---@type integer|nil
     if bufnr ~= nil then
-      vim.bo[bufnr].buflisted = false
+      vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
       local function action()
         vim.cmd("close")
         pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
@@ -192,7 +192,8 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = augroup("check_file_change"),
   callback = function()
-    if vim.bo.buftype == "" or vim.bo.buftype == "nowrite" then
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 }) ---@type string
+    if buftype == "" or buftype == "nowrite" then
       vim.cmd("checktime")
     end
   end,

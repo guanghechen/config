@@ -461,11 +461,11 @@ function M:__create_buf_as_needed__()
   local bufnr = vim.api.nvim_create_buf(false, true)
   self._bufnr = bufnr
 
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = "colorpicker"
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "colorpicker", { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   stl.nvim.fn.bindkeys(self._keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
@@ -485,8 +485,8 @@ function M:__create_win_as_needed__(bufnr)
   local winnr = vim.api.nvim_open_win(bufnr, true, win_opts)
   self._winnr = winnr
 
-  vim.wo[winnr].signcolumn = "yes:1"
-  vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
+  vim.api.nvim_set_option_value("signcolumn", "yes:1", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 
   self._ui:set_winnr(winnr)
   self:__attach_autocmds__()

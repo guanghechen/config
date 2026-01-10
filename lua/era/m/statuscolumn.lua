@@ -223,9 +223,9 @@ local function statuscolumn()
   setup()
 
   local winnr = vim.g.statusline_winid ---@type integer
-  local nu = vim.wo[winnr].number ---@type boolean
-  local rnu = vim.wo[winnr].relativenumber ---@type boolean
-  local show_signs = vim.v.virtnum == 0 and vim.wo[winnr].signcolumn ~= "no" ---@type boolean
+  local nu = vim.api.nvim_get_option_value("number", { win = winnr }) ---@type boolean
+  local rnu = vim.api.nvim_get_option_value("relativenumber", { win = winnr }) ---@type boolean
+  local show_signs = vim.v.virtnum == 0 and vim.api.nvim_get_option_value("signcolumn", { win = winnr }) ~= "no" ---@type boolean
   if not (show_signs or nu or rnu) then
     return ""
   end
@@ -244,7 +244,7 @@ local function statuscolumn()
 
   local components = { "", "", "" } ---@type string[]
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local show_folds = vim.v.virtnum == 0 and vim.wo[winnr].foldcolumn ~= "0" ---@type boolean
+  local show_folds = vim.v.virtnum == 0 and vim.api.nvim_get_option_value("foldcolumn", { win = winnr }) ~= "0" ---@type boolean
   local git_hl ---@type string|nil
 
   if show_signs or show_folds then

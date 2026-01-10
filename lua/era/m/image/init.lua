@@ -77,17 +77,17 @@ function M.dressing()
           "- **file**: `" .. filename .. "`",
           "- unsupported image format",
         }
-        vim.bo[bufnr].modifiable = true
-        vim.bo[bufnr].filetype = "markdown"
+        vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+        vim.api.nvim_set_option_value("filetype", "markdown", { buf = bufnr })
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-        vim.bo[bufnr].modifiable = false
-        vim.bo[bufnr].modified = false
+        vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+        vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
       else
         local Placement = require("era.m.image.placement")
-        vim.bo[bufnr].filetype = "image"
-        vim.bo[bufnr].modifiable = false
-        vim.bo[bufnr].modified = false
-        vim.bo[bufnr].swapfile = false
+        vim.api.nvim_set_option_value("filetype", "image", { buf = bufnr })
+        vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+        vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
+        vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
         Placement.new(bufnr, filename, { conceal = true, auto_resize = true })
       end
     end,
@@ -96,7 +96,7 @@ function M.dressing()
     pattern = "*" .. table.concat(state.data.extnames, ",*"),
     group = group,
     callback = function(e)
-      vim.bo[e.buf].modified = false
+      vim.api.nvim_set_option_value("modified", false, { buf = e.buf })
     end,
   })
 
@@ -109,7 +109,7 @@ function M.dressing()
     vim.api.nvim_create_autocmd("FileType", {
       group = group,
       callback = function(e)
-        local filetype = vim.bo[e.buf].filetype
+        local filetype = vim.api.nvim_get_option_value("filetype", { buf = e.buf })
         local lang = vim.treesitter.language.get_lang(filetype)
         if vim.tbl_contains(supported_langs, lang) then
           vim.schedule(function()

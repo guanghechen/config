@@ -31,13 +31,13 @@ function M.insert()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
 
-  if vim.bo[bufnr].readonly or not vim.bo[bufnr].modifiable then
+  if vim.api.nvim_get_option_value("readonly", { buf = bufnr }) or not vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) then
     local FEEDBACK_KEY = dot.var.K_CODE_INSERT_SPLITLINE ---@type string
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(FEEDBACK_KEY, true, false, true), "n", false)
     return
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if not SPLITLINE_FILETYPES[filetype] then
     local FEEDBACK_KEY = dot.var.K_CODE_INSERT_SPLITLINE ---@type string
     vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(FEEDBACK_KEY, true, false, true), "n", false)

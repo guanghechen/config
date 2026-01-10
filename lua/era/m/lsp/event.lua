@@ -42,7 +42,7 @@ function M.rename_buf(from, to)
   local from_bufnr = vim.fn.bufnr(from) ---@type integer
   if from_bufnr >= 0 then
     local to_bufnr = vim.fn.bufadd(to) ---@type integer
-    vim.bo[to_bufnr].buflisted = true
+    vim.api.nvim_set_option_value("buflisted", true, { buf = to_bufnr })
     for _, win in ipairs(vim.fn.win_findbuf(from_bufnr)) do
       vim.api.nvim_win_call(win, function()
         vim.cmd("buffer " .. to_bufnr)
@@ -140,7 +140,7 @@ function M.on_attach(client, bufnr)
   vim.b[bufnr].support_references = support_references ---@type integer
   vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 
-  if vim.bo[bufnr].buftype == "" then
+  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
     -- code lens
     if support_codelens == 1 then
       local enable_code_lens = dot.context.lsp.code_lens:snapshot() ---@type boolean
@@ -169,7 +169,7 @@ function M.on_attach(client, bufnr)
   end
 
   if support_foldingRange == 1 then
-    vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
+    vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.lsp.foldexpr()", { win = 0, scope = "local" })
   end
 
   -- illuminate

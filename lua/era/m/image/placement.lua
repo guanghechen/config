@@ -165,11 +165,11 @@ function M:error()
     end
   end
   local lines = vim.split(msg, "\n")
-  vim.bo[self.bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)
-  vim.bo[self.bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
   if not vim.treesitter.start(self.bufnr, "markdown") then
-    vim.bo[self.bufnr].syntax = "markdown"
+    vim.api.nvim_set_option_value("syntax", "markdown", { buf = self.bufnr })
   end
 end
 
@@ -274,7 +274,7 @@ function M:render_grid(loc)
 
   local can_overlay = (#lines > 1 or not has_after)
   for _, winnr in ipairs(can_overlay and self:wins() or {}) do
-    if vim.wo[winnr].wrap then
+    if vim.api.nvim_get_option_value("wrap", { win = winnr }) then
       local info = vim.fn.getwininfo(winnr)[1]
       if info.width - info.textoff < text_width then
         can_overlay = false
@@ -514,7 +514,7 @@ function M:update()
   if not self.opts.inline then
     for _, winnr in ipairs(cur_state.wins) do
       for k, v in pairs(s.wo or {}) do
-        vim.wo[winnr][k] = v
+        vim.api.nvim_set_option_value(k, v, { win = winnr, scope = "local" })
       end
     end
   end
@@ -576,9 +576,9 @@ function M:__progress__()
   if self.opts.inline or self:ready() then
     return
   end
-  vim.bo[self.bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
-  vim.bo[self.bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
   local timer = assert(uv.new_timer())
   timer:start(
     0,

@@ -40,12 +40,12 @@ local function should_show_buffer(bufnr, scope, tabnr)
     return true
   end
 
-  local buftype = vim.bo[bufnr].buftype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
   if scope == "T" then
     return buftype == "terminal"
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if scope == "F" then
     return dot.tab.has_buf(tabnr, bufnr)
   end
@@ -63,8 +63,8 @@ end
 ---@param cwd                           string
 ---@return era.fn.find_buffers.IItem
 local function create_buffer_item(bufnr, cwd)
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local relative_filepath = dot.path.relative(cwd, filepath, "/") ---@type string
   local filename = yoz.path.basename(filepath)
@@ -223,7 +223,7 @@ picker = era.m.picker.ListComposer.new({
           return
         end
 
-        if not vim.bo[bufnr].buflisted then
+        if not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
           vim.api.nvim_buf_delete(bufnr, { force = true })
           local data = fetch_data()
           picker:reset_data(data)

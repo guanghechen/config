@@ -61,7 +61,7 @@ function M.find_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.bo[bufnr].filetype == filetype then
+    if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype then
       return winnr
     end
   end

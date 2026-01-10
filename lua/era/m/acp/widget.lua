@@ -277,52 +277,52 @@ end
 ---@param winnr                        integer
 ---@return nil
 function M:__setup_output_win__(winnr)
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].linebreak = true
-  vim.wo[winnr].number = true
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].statuscolumn = "%l "
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].foldcolumn = "0"
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winfixheight = false
-  vim.wo[winnr].winbar = ""
-  vim.wo[winnr].winhighlight = "Normal:f_acp_normal"
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("linebreak", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("statuscolumn", "%l ", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixheight", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_normal", { win = winnr, scope = "local" })
 end
 
 ---@protected
 ---@param winnr                        integer
 ---@return nil
 function M:__setup_input_win__(winnr)
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].linebreak = true
-  vim.wo[winnr].number = true
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].statuscolumn = "%l "
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].foldcolumn = "0"
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winfixheight = true
-  vim.wo[winnr].winhighlight = "Normal:f_acp_input_normal"
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("linebreak", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("statuscolumn", "%l ", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixheight", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_input_normal", { win = winnr, scope = "local" })
 end
 
 ---@protected
 ---@param winnr                        integer
 ---@return nil
 function M:__setup_sidebar_win__(winnr)
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].linebreak = true
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "no"
-  vim.wo[winnr].cursorline = true
-  vim.wo[winnr].foldcolumn = "0"
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winfixwidth = true
-  vim.wo[winnr].winbar = ""
-  vim.wo[winnr].winhighlight = "Normal:f_acp_normal"
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("linebreak", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixwidth", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_normal", { win = winnr, scope = "local" })
 end
 
 ---@protected
@@ -346,7 +346,7 @@ function M:__update_input_winbar__(winnr, focused)
     .. "%#" .. hl_title .. "#" .. title
     .. "%#" .. hl_sep .. "#" .. sep_r
     .. "%="
-  vim.wo[winnr].winbar = winbar
+  vim.api.nvim_set_option_value("winbar", winbar, { win = winnr, scope = "local" })
 end
 
 ---@protected

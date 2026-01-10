@@ -98,7 +98,7 @@ local function get_buf_lines(bufnr)
   -- Append empty string if buffer has EOL (trailing newline)
   -- This matches the format from git cat-file: "line1\nline2\n" -> {"line1", "line2", ""}
   -- nvim_buf_get_lines doesn't include trailing newline info, so we check vim.bo.eol
-  if vim.bo[bufnr].eol and #lines > 0 then
+  if vim.api.nvim_get_option_value("eol", { buf = bufnr }) and #lines > 0 then
     lines[#lines + 1] = ""
   end
   return lines
@@ -300,7 +300,7 @@ function M.attach(bufnr, opts)
     return false
   end
 
-  if vim.bo[bufnr].buftype ~= "" then
+  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ~= "" then
     return false
   end
 

@@ -70,7 +70,7 @@ function M:conceal()
   for _, img in pairs(self.imgs) do
     img:show()
   end
-  if vim.wo.concealcursor:find(mode) then
+  if vim.api.nvim_get_option_value("concealcursor", { win = 0 }):find(mode) then
     return
   end
   local from, to = vim.fn.line("v"), vim.fn.line(".")

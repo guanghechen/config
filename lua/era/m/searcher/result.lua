@@ -149,7 +149,7 @@ function M.new(props)
     on_fulfilled = function(result)
       local winnr = self._winnr ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-        vim.wo[winnr].winbar = result
+        vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
     end,
   })
@@ -249,11 +249,11 @@ function M.new(props)
         return
       end
 
-      vim.bo[bufnr].modifiable = true
-      vim.bo[bufnr].readonly = false
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+      vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
       local ok, result = pcall(draw, bufnr) ---@type boolean, era.m.searcher.result.IDrawResult
-      vim.bo[bufnr].modifiable = false
-      vim.bo[bufnr].readonly = true
+      vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+      vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
       local lnum_total = vim.api.nvim_buf_line_count(bufnr) ---@type integer
       if lnum_total == 1 then
@@ -326,7 +326,7 @@ function M.new(props)
     local winnr = self._winnr ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       local lnum_total = _o_lnum_total:snapshot() ---@type integer
-      vim.wo[winnr].cursorline = lnum_total > 0
+      vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
       nvimbar:render()
     end
   end)
@@ -489,12 +489,12 @@ function M:create_buf()
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
   vim.b[bufnr].miniindentscope_disable = true
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = stl.filetype.UX_PICKER_RESULT
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.UX_PICKER_RESULT, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
 
@@ -537,16 +537,16 @@ function M:create_win(winopts, dimension)
   dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_RESULT)
 
   local lnum_total = self.lnum_total:snapshot() ---@type integer
-  vim.wo[winnr].cursorline = lnum_total > 0
-  vim.wo[winnr].number = winopts.number
-  vim.wo[winnr].relativenumber = winopts.number
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].winbar = self._nvimbar:render(true)
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winhighlight = winopts.winhighlight
-  vim.wo[winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", winopts.number, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", winopts.number, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winbar", self._nvimbar:render(true), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", winopts.winhighlight, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
 
   vim.schedule(function()
     local lnum = self.lnum_current:snapshot() ---@type integer

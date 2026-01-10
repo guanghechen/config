@@ -78,7 +78,7 @@ function M:render(bufnr, filepath, force)
     local bufnr_sourcefile = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
     if bufnr_sourcefile ~= nil then
       lines = vim.api.nvim_buf_get_lines(bufnr_sourcefile, 0, -1, false) ---@type string[]
-      filetype = vim.bo[bufnr_sourcefile].filetype ---@type string
+      filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr_sourcefile }) ---@type string
       if filetype == "" then
         filetype = vim.filetype.match({ filename = filename }) or "text" ---@type string
       end

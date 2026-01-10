@@ -59,7 +59,7 @@ vim.api.nvim_create_autocmd("FileType", {
       return
     end
 
-    local filetype = vim.bo[bufnr].filetype ---@type string
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     if stl.filetype.is_not_sourcefile(filetype) then
       vim.b[bufnr].miniindentscope_disable = true
       vim.b[bufnr].minipairs_disable = true
@@ -123,9 +123,9 @@ vim.api.nvim_create_autocmd({ "VimEnter", "SessionLoadPost" }, {
           if new_filepath ~= nil then
             existed_filepaths[new_filepath] = true
             if stl.nvim.buf.is_valid(bufnr) then
-              local filetype = vim.bo[bufnr].filetype ---@type string
-              vim.bo[bufnr].filetype = #filetype > 0 and filetype or "text" ---@type string
-              vim.bo[bufnr].swapfile = false
+              local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+              vim.api.nvim_set_option_value("filetype", #filetype > 0 and filetype or "text", { buf = bufnr })
+              vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
               vim.api.nvim_buf_set_name(bufnr, new_filepath)
             end
           end
@@ -227,15 +227,15 @@ vim.api.nvim_create_autocmd("WinEnter", {
         if meta ~= nil then
           local winnr_float_last = meta.winnr_float:snapshot() ---@type integer|nil
           if winnr_float_last ~= nil and winnr_float_last > 0 and vim.api.nvim_win_is_valid(winnr_float_last) then
-            local winhighlight = vim.wo[winnr_float_last].winhighlight ---@type string
+            local winhighlight = vim.api.nvim_get_option_value("winhighlight", { win = winnr_float_last }) ---@type string
             local winhighlight_next = winhighlight:gsub("FloatBorder:FloatActiveBorder", "FloatBorder:FloatBorder")
-            vim.wo[winnr_float_last].winhighlight = winhighlight_next
+            vim.api.nvim_set_option_value("winhighlight", winhighlight_next, { win = winnr_float_last, scope = "local" })
           end
           meta.winnr_float:next(winnr)
         end
-        local winhighlight = vim.wo[winnr].winhighlight ---@type string
+        local winhighlight = vim.api.nvim_get_option_value("winhighlight", { win = winnr }) ---@type string
         local winhighlight_next = winhighlight:gsub("FloatBorder:FloatBorder", "FloatBorder:FloatActiveBorder") ---@type string
-        vim.wo[winnr].winhighlight = winhighlight_next
+        vim.api.nvim_set_option_value("winhighlight", winhighlight_next, { win = winnr, scope = "local" })
       end
 
       dot.state.status.dirty_winline_nr:next(winnr)
@@ -299,8 +299,8 @@ if 1 == 0 then
       local winnr = vim.api.nvim_get_current_win() ---@type integer
       local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
       local bufname = vim.api.nvim_buf_get_name(bufnr) ---@type string
-      local buftype = vim.bo[bufnr].buftype ---@type string
-      local filetype = vim.bo[bufnr].filetype ---@type string
+      local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+      local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
 
       vim.schedule(function()
         if not vim.api.nvim_win_is_valid(winnr) then
@@ -309,8 +309,8 @@ if 1 == 0 then
 
         local bufnr2 = vim.api.nvim_win_get_buf(winnr) ---@type integer
         local bufname2 = vim.api.nvim_buf_get_name(bufnr2) ---@type string
-        local buftype2 = vim.bo[bufnr2].buftype ---@type string
-        local filetype2 = vim.bo[bufnr2].filetype ---@type string
+        local buftype2 = vim.api.nvim_get_option_value("buftype", { buf = bufnr2 }) ---@type string
+        local filetype2 = vim.api.nvim_get_option_value("filetype", { buf = bufnr2 }) ---@type string
         stl.debug.log_silent({
           arg = arg,
           winnr = winnr,

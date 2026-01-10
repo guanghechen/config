@@ -376,7 +376,7 @@ function M:__setup_nvimbar__()
       on_fulfilled = function(result)
         local winnr = widget._winnr
         if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-          vim.wo[winnr].winbar = result
+          vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
         end
       end,
     })
@@ -917,7 +917,7 @@ function M:__render_active_item__(bufnr)
 
   self._suspend_sync = true
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modified = false
+  vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
   self._suspend_sync = false
 end
 
@@ -1001,13 +1001,13 @@ function M:ensure_buf()
   self._bufnr = bufnr
 
   vim.api.nvim_buf_set_name(bufnr, self.bufname)
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = self.filetype
-  vim.bo[bufnr].modifiable = true
-  vim.bo[bufnr].readonly = false
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", self.filetype, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   self:__attach_autocmds__(bufnr)
   self:__render_active_item__(bufnr)
@@ -1098,28 +1098,28 @@ function M:ensure_win()
     self._winnr = winnr
     dot.win.set_type(winnr, stl.nvim.win.Types.TEXTAREA)
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })
     vim.api.nvim_win_set_config(winnr, resize.cfg)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     winblend = resize.winblend or winblend
   end
 
-  vim.wo[winnr].cursorline = true
-  vim.wo[winnr].list = true
-  vim.wo[winnr].number = true
-  vim.wo[winnr].relativenumber = true
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].spell = true
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].winblend = winblend
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("list", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
 
   for key, value in pairs(self.win_opts) do
     if key ~= "winhighlight" or is_new_win then
-      vim.wo[winnr][key] = value
+      vim.api.nvim_set_option_value(key, value, { win = winnr, scope = "local" })
     end
   end
-  vim.wo[winnr].winfixbuf = true
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 
   if self._nvimbar ~= nil then
     self._nvimbar:render()
@@ -1150,7 +1150,7 @@ function M:save()
   local ok = self:flush()
 
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-    vim.bo[bufnr].modified = false
+    vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
   end
 
   return ok
@@ -1201,7 +1201,7 @@ function M:resize()
   end
 
   local rect = self:measure_rect()
-  vim.wo[winnr].winfixbuf = false
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
 
   local resize = dot.state.maximized.resolve_resize_config(winnr, {
     relative = "editor",
@@ -1214,9 +1214,9 @@ function M:resize()
 
   vim.api.nvim_win_set_config(winnr, resize.cfg)
   if resize.winblend ~= nil then
-    vim.wo[winnr].winblend = resize.winblend
+    vim.api.nvim_set_option_value("winblend", resize.winblend, { win = winnr, scope = "local" })
   end
-  vim.wo[winnr].winfixbuf = true
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 
   if self._nvimbar ~= nil then
     self._nvimbar:render()
@@ -1264,7 +1264,7 @@ function M:render_winbar_to(winnr)
   local result = self._nvimbar:render(true)
   self._winnr = prev_winnr
 
-  vim.wo[winnr].winbar = result
+  vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
 end
 
 M.BUFFER_VAR = BUFFER_VAR_NAME

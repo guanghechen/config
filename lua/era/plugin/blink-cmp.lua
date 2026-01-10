@@ -47,7 +47,7 @@ return {
 
     return {
       enabled = function()
-        if vim.bo.buftype == "nowrite" then
+        if vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "nowrite" then
           return false
         end
 
@@ -58,7 +58,7 @@ return {
           return false
         end
 
-        local filetype = vim.bo.filetype ---@type string
+        local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
         if not stl.filetype.is_cmp_enabled(filetype) then
           return false
         end
@@ -319,7 +319,7 @@ return {
                   end
 
                   local bufnr = buf.bufnr ---@type integer
-                  if vim.bo[bufnr].buftype == "" then
+                  if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
                     -- Only include buffers that are reasonably sized (< 1MB)
                     local bufname = vim.api.nvim_buf_get_name(bufnr)
                     if bufname ~= "" then

@@ -73,7 +73,7 @@ local function refresh(force)
 
   if bufnr_sourcefile ~= nil then
     local filepath = vim.api.nvim_buf_get_name(bufnr_sourcefile) ---@type string
-    if vim.bo[bufnr_sourcefile].buftype == "" and #filepath ~= 0 then
+    if vim.api.nvim_get_option_value("buftype", { buf = bufnr_sourcefile }) == "" and #filepath ~= 0 then
       for _, diagnostic in ipairs(original_diagnostics) do
         if diagnostic.bufnr == bufnr_sourcefile then
           diagnostics[#diagnostics + 1] = diagnostic
@@ -88,7 +88,7 @@ local function refresh(force)
   else
     for _, diagnostic in ipairs(original_diagnostics) do
       local bufnr = diagnostic.bufnr
-      if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].buftype == "" then
+      if bufnr and vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
         local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
         if filepath ~= "" and yoz.path.is_descendant(rootpath, filepath) then
           diagnostics[#diagnostics + 1] = diagnostic

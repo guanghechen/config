@@ -8,11 +8,11 @@ vim.b[bufnr].completion = false
 vim.b[bufnr].minihipatterns_disable = true
 vim.b[bufnr].miniindentscope_disable = true
 
-vim.bo[bufnr].swapfile = false
-vim.bo[bufnr].undolevels = 100
+vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+vim.api.nvim_set_option_value("undolevels", 100, { buf = bufnr })
 
-vim.wo[winnr].foldmethod = "manual"
-vim.wo[winnr].spell = false
+vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr, scope = "local" })
+vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
 
 pcall(vim.treesitter.stop, bufnr)
 
@@ -21,7 +21,7 @@ vim.schedule(function()
     return
   end
   local filetype = vim.filetype.match({ buf = bufnr }) or "" ---@type string
-  vim.bo[bufnr].syntax = filetype
+  vim.api.nvim_set_option_value("syntax", filetype, { buf = bufnr })
 end)
 
 stl.reporter.warn({

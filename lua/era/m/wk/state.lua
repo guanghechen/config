@@ -353,7 +353,7 @@ function M.__attach__(bufnr)
     return
   end
 
-  if not vim.api.nvim_buf_is_valid(bufnr) or M.is_disabled(vim.bo[bufnr].filetype) then
+  if not vim.api.nvim_buf_is_valid(bufnr) or M.is_disabled(vim.api.nvim_get_option_value("filetype", { buf = bufnr })) then
     return
   end
 

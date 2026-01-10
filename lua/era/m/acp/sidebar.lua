@@ -71,11 +71,11 @@ function M:create_buf()
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
 
-  vim.bo[self._bufnr].buftype = "nofile"
-  vim.bo[self._bufnr].bufhidden = "wipe"
-  vim.bo[self._bufnr].swapfile = false
-  vim.bo[self._bufnr].filetype = "acp-sidebar"
-  vim.bo[self._bufnr].modifiable = false
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("filetype", "acp-sidebar", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
 
   self:__setup_keymaps__()
 end
@@ -178,9 +178,9 @@ function M:refresh()
     end
   end
 
-  vim.bo[self._bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = self._bufnr })
   vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, lines)
-  vim.bo[self._bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
 
   self:__apply_highlights__(lines, plan, context_files)
 end

@@ -164,13 +164,13 @@ function M.mark_sourcefile()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   dot.win.set_type(winnr, nil)
 
-  vim.wo[winnr].cursorline = true
-  vim.wo[winnr].number = true
-  vim.wo[winnr].relativenumber = true
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].winfixbuf = false
-  vim.wo[winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -282,15 +282,15 @@ function M.split(direction)
 
   local bufnr_original = vim.api.nvim_win_get_buf(winnr_original) ---@type integer
   local bufnr_scratch = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr_scratch].buflisted = false
-  vim.bo[bufnr_scratch].buftype = "nofile"
-  vim.bo[bufnr_scratch].filetype = "text"
-  vim.bo[bufnr_scratch].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr_scratch })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr_scratch })
+  vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr_scratch })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr_scratch })
 
-  if vim.wo[winnr_original].winfixbuf then
-    vim.wo[winnr_original].winfixbuf = false
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr_original }) then
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr_original, scope = "local" })
     vim.api.nvim_win_set_buf(winnr_original, bufnr_scratch)
-    vim.wo[winnr_original].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr_original, scope = "local" })
   else
     vim.api.nvim_win_set_buf(winnr_original, bufnr_scratch)
   end
@@ -299,17 +299,17 @@ function M.split(direction)
   vim.api.nvim_win_set_buf(winnr_original, bufnr_original)
   vim.api.nvim_win_set_buf(winnr_target, bufnr_scratch)
 
-  vim.wo[winnr_target].cursorline = true
-  vim.wo[winnr_target].number = true
-  vim.wo[winnr_target].relativenumber = true
-  vim.wo[winnr_target].signcolumn = "yes"
-  vim.wo[winnr_target].spell = false
-  vim.wo[winnr_target].winfixbuf = false
-  vim.wo[winnr_target].wrap = false
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", true, { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr_target, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr_target, scope = "local" })
 
   vim.schedule(function()
     if vim.api.nvim_buf_is_valid(bufnr_scratch) then
-      vim.bo[bufnr_scratch].bufhidden = "wipe"
+      vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr_scratch })
     end
   end)
 end

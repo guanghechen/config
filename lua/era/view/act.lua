@@ -125,11 +125,11 @@ function M.new(props)
       return
     end
 
-    vim.bo[bufnr].modifiable = true
-    vim.bo[bufnr].readonly = false
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+    vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
     local ok, result = pcall(render_preview, bufnr, input:snapshot())
-    vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].readonly = true
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
     if not ok then
       stl.reporter.error({
@@ -305,15 +305,15 @@ function M:__create_wins__()
   self._input_winnr = input_winnr
 
   dot.win.set_type(input_winnr, stl.nvim.win.Types.BOARD)
-  vim.wo[input_winnr].cursorline = false
-  vim.wo[input_winnr].number = false
-  vim.wo[input_winnr].relativenumber = false
-  vim.wo[input_winnr].signcolumn = "yes"
-  vim.wo[input_winnr].spell = false
-  vim.wo[input_winnr].winblend = winblend
-  vim.wo[input_winnr].winfixbuf = true
-  vim.wo[input_winnr].winhighlight = __highlights__.input
-  vim.wo[input_winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", false, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", __highlights__.input, { win = input_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = input_winnr, scope = "local" })
 
   local preview_bufnr = self:__create_preview_buf__() ---@type integer
   local preview_winnr = vim.api.nvim_open_win(preview_bufnr, false, {
@@ -331,15 +331,15 @@ function M:__create_wins__()
   self._preview_winnr = preview_winnr
 
   dot.win.set_type(preview_winnr, stl.nvim.win.Types.BOARD)
-  vim.wo[preview_winnr].cursorline = false
-  vim.wo[preview_winnr].number = false
-  vim.wo[preview_winnr].relativenumber = false
-  vim.wo[preview_winnr].signcolumn = "no"
-  vim.wo[preview_winnr].spell = false
-  vim.wo[preview_winnr].winblend = winblend
-  vim.wo[preview_winnr].winfixbuf = true
-  vim.wo[preview_winnr].winhighlight = __highlights__.preview
-  vim.wo[preview_winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", false, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "no", { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", __highlights__.preview, { win = preview_winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = preview_winnr, scope = "local" })
 
   self._preview_debounced()
 end
@@ -358,10 +358,10 @@ function M:__create_input_buf__()
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = stl.filetype.BOARD
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.BOARD, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   local initial_input = self._input:snapshot() ---@type string
   local initial_lines = { initial_input } ---@type string[]
@@ -405,12 +405,12 @@ function M:__create_preview_buf__()
   vim.b[bufnr].miniindentscope_disable = true
   vim.b[bufnr].miniai_disable = true
   vim.b[bufnr].minihipatterns_disable = true
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = stl.filetype.BOARD
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.BOARD, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
   return bufnr
 end

@@ -45,12 +45,12 @@ end
 ---@return integer
 local function create_buf(termmeta)
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].bufhidden = "hide"
-  vim.bo[bufnr].filetype = stl.filetype.AI_TERMINAL
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = false
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.AI_TERMINAL, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   vim.api.nvim_create_autocmd("TermClose", {
     buffer = bufnr,
@@ -119,9 +119,9 @@ local function create_win(termmeta)
   local bufnr = termmeta.bufnr
 
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_buf(winnr, bufnr)
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
     vim.api.nvim_set_current_win(winnr)
   else
     vim.cmd("botright vsplit")
@@ -129,15 +129,15 @@ local function create_win(termmeta)
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_width(winnr, DEFAULT_WIDTH)
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].winfixbuf = true
-    vim.wo[winnr].winfixwidth = true
-    vim.wo[winnr].wrap = true
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixwidth", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
 
     _winnr = winnr
   end

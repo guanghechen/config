@@ -94,13 +94,13 @@ function M.open(props)
     vim.hl.range(bufnr, nsnr, "m_ch_key", { row, key_start }, { row, key_end })
   end
 
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = "choices"
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].readonly = true
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "choices", { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local position = props.position or "center" ---@type era.m.select.PositionEnum
@@ -164,15 +164,15 @@ function M.open(props)
   dot.win.set_type(winnr, stl.nvim.win.Types.SELECT)
   vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-  vim.wo[winnr].cursorline = true
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
-  vim.wo[winnr].wrap = false
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
 
   vim.api.nvim_win_set_cursor(winnr, { default_index, 0 })
 

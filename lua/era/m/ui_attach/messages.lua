@@ -63,17 +63,17 @@ function M.history_show(task)
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     states.message.history_bufnr = bufnr
 
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.UX_MESSAGE_HISTORY
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.UX_MESSAGE_HISTORY, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.attach, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   for lnum, entry in ipairs(entries) do
     local offset = 0 ---@type integer
@@ -116,19 +116,19 @@ function M.history_show(task)
     dot.win.set_type(winnr, stl.nvim.win.Types.BOARD)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = true
-    vim.wo[winnr].number = true
-    vim.wo[winnr].relativenumber = true
-    vim.wo[winnr].signcolumn = "yes"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].winfixbuf = true
-    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
-    vim.wo[winnr].wrap = false
+    vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 end
 

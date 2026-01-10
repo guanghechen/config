@@ -239,8 +239,8 @@ function M.watch_changes()
     local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
     vim.o.expandtab = flag
     for _, bufnr in ipairs(bufnrs) do
-      if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype == "" then
-        vim.bo[bufnr].expandtab = flag
+      if vim.api.nvim_buf_is_loaded(bufnr) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
+        vim.api.nvim_set_option_value("expandtab", flag, { buf = bufnr })
       end
     end
   end, true)
@@ -252,8 +252,8 @@ function M.watch_changes()
     local winnrs = vim.api.nvim_list_wins() ---@type integer[]
     vim.o.relativenumber = flag
     for _, winnr in ipairs(winnrs) do
-      if vim.wo[winnr].number then
-        vim.wo[winnr].relativenumber = flag
+      if vim.api.nvim_get_option_value("number", { win = winnr }) then
+        vim.api.nvim_set_option_value("relativenumber", flag, { win = winnr, scope = "local" })
       end
     end
   end, true)

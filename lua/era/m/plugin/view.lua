@@ -48,10 +48,10 @@ function M.show(mode)
 
   -- Auto-detect missing plugins and show install mode
   if not mode then
-    local State = require("era.m.plugin.state")
+    local PluginState = require("era.m.plugin.state")
     local has_missing = false ---@type boolean
-    for _, spec in ipairs(State.specs) do
-      local path = dot.path.join(State.options.root, spec.name) ---@type string
+    for _, spec in ipairs(PluginState.specs) do
+      local path = dot.path.join(PluginState.options.root, spec.name) ---@type string
       if not yoz.path.is_exist(path) then
         has_missing = true
         break
@@ -192,17 +192,17 @@ function M:__mount__()
   self.bufnr = vim.api.nvim_create_buf(false, true)
   self.winnr = vim.api.nvim_open_win(self.bufnr, true, self.win_opts)
 
-  vim.bo[self.bufnr].buftype = "nofile"
-  vim.bo[self.bufnr].filetype = "dot_plugin"
-  vim.bo[self.bufnr].bufhidden = "wipe"
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = self.bufnr })
+  vim.api.nvim_set_option_value("filetype", "dot_plugin", { buf = self.bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = self.bufnr })
 
-  vim.wo[self.winnr].conceallevel = 3
-  vim.wo[self.winnr].foldenable = false
-  vim.wo[self.winnr].spell = false
-  vim.wo[self.winnr].wrap = true
-  vim.wo[self.winnr].winhighlight = "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title"
-  vim.wo[self.winnr].colorcolumn = ""
-  vim.wo[self.winnr].winbar = ""
+  vim.api.nvim_set_option_value("conceallevel", 3, { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("foldenable", false, { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", true, { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:m_pl_normal,FloatBorder:FloatActiveBorder,FloatTitle:m_pl_title", { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("colorcolumn", "", { win = self.winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winbar", "", { win = self.winnr, scope = "local" })
 
   self._augroup = vim.api.nvim_create_augroup("dot_plugin_view_" .. self.winnr, { clear = true })
   vim.api.nvim_create_autocmd("WinClosed", {

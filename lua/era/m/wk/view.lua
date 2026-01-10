@@ -144,9 +144,9 @@ function M.__create_win__(layout)
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   local winnr = vim.api.nvim_open_win(bufnr, false, {
     relative = "editor",
@@ -159,7 +159,7 @@ function M.__create_win__(layout)
     zindex = WK_ZINDEX,
   })
 
-  vim.wo[winnr].winhighlight = "Normal:m_wk_normal"
+  vim.api.nvim_set_option_value("winhighlight", "Normal:m_wk_normal", { win = winnr, scope = "local" })
 
   return winnr, bufnr
 end
@@ -242,7 +242,7 @@ function M.__draw__(bufnr, layout)
   highlights[#lines] = footer_hl
 
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.bo[bufnr].modifiable = false
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   for row_idx, row_hl in pairs(highlights) do
     for _, hl in ipairs(row_hl) do

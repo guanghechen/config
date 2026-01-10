@@ -218,11 +218,11 @@ function M._show(state)
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     state.bufnr = bufnr
 
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.UX_CMDLINE
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.UX_CMDLINE, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
   local width = math.min(math.floor(vim.o.columns * 0.8), 80) ---@type integer
@@ -253,19 +253,19 @@ function M._show(state)
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
   local hln_icon = "f_uc_icon_" .. state.type ---@type string
@@ -275,12 +275,12 @@ function M._show(state)
   local line = concealed and string.format("%s%s ", state.icon, state.second)
     or string.format("%s%s%s ", state.icon, state.first, state.second)
 
-  vim.bo[bufnr].syntax = nil
+  vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
 
   if state.language ~= nil and not vim.b[bufnr].ts_highlight then
-    vim.bo[bufnr].syntax = state.language
+    vim.api.nvim_set_option_value("syntax", state.language, { buf = bufnr })
   end
 
   vim.hl.range(bufnr, nsnrs.cmdline, hln_icon, { 0, 0 }, { 0, #state.icon })
@@ -346,11 +346,11 @@ function M._render_block(block)
     bufnr = vim.api.nvim_create_buf(false, true)
     block.bufnr = bufnr
 
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.UX_CMDLINE
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.UX_CMDLINE, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
   local width = 0 ---@type integer
@@ -388,14 +388,14 @@ function M._render_block(block)
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].relativenumber = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = false
-    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal", { win = winnr, scope = "local" })
   else
     vim.api.nvim_win_set_config(winnr, wincfg)
   end
@@ -428,11 +428,11 @@ function M._show_confirm(state, msg_show_task)
     bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
     state.bufnr = bufnr
 
-    vim.bo[bufnr].bufhidden = "wipe"
-    vim.bo[bufnr].buflisted = false
-    vim.bo[bufnr].buftype = "nofile"
-    vim.bo[bufnr].filetype = stl.filetype.UX_CMDLINE
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+    vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+    vim.api.nvim_set_option_value("filetype", stl.filetype.UX_CMDLINE, { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   end
 
   local buttons = {} ---@type string[]
@@ -555,22 +555,22 @@ function M._show_confirm(state, msg_show_task)
     dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-    vim.wo[winnr].cursorline = false
-    vim.wo[winnr].list = false
-    vim.wo[winnr].number = false
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].spell = false
-    vim.wo[winnr].wrap = true
-    vim.wo[winnr].winhighlight = "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal"
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winhighlight", "Normal:f_uc_normal,FloatBorder:f_uc_border,CursorLine:f_uc_normal", { win = winnr, scope = "local" })
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   else
-    vim.wo[winnr].winfixbuf = false
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     vim.api.nvim_win_set_buf(winnr, bufnr)
     vim.api.nvim_win_set_config(winnr, wincfg)
-    vim.wo[winnr].winfixbuf = true
+    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   end
 
-  vim.bo[bufnr].syntax = nil
+  vim.api.nvim_set_option_value("syntax", nil, { buf = bufnr })
   vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.cmdline, 0, -1)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
@@ -580,7 +580,7 @@ function M._show_confirm(state, msg_show_task)
   end
 
   if state.language ~= nil and not vim.b[bufnr].ts_highlight then
-    vim.bo[bufnr].syntax = "markdown"
+    vim.api.nvim_set_option_value("syntax", "markdown", { buf = bufnr })
   end
   vim.api.nvim__redraw({ cursor = false, win = winnr, flush = true })
 

@@ -24,7 +24,7 @@ function M.loadfile(filepath)
 
   local bufnr_sourcefile = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
   if bufnr_sourcefile ~= nil then
-    vim.bo[bufnr_sourcefile].buflisted = true
+    vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr_sourcefile })
     return bufnr_sourcefile
   end
 
@@ -34,9 +34,9 @@ function M.loadfile(filepath)
       return nil
     end
 
-    vim.bo[bufnr].buflisted = true
-    vim.bo[bufnr].buftype = ""
-    vim.bo[bufnr].swapfile = false
+    vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+    vim.api.nvim_set_option_value("buftype", "", { buf = bufnr })
+    vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
     local ok, error = pcall(vim.fn.bufload, bufnr)
     if not ok then
@@ -53,7 +53,7 @@ function M.loadfile(filepath)
       return nil
     end
 
-    vim.bo[bufnr].swapfile = vim.o.swapfile
+    vim.api.nvim_set_option_value("swapfile", vim.o.swapfile, { buf = bufnr })
     -- vim.api.nvim_exec_autocmds("FileReadPost", { buffer = bufnr })
     -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = bufnr })
     return bufnr
@@ -92,7 +92,7 @@ function M.resolve(bufnr, force)
     return nil
   end
 
-  if not vim.bo[bufnr].buflisted then
+  if not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
     return nil
   end
 

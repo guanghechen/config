@@ -142,7 +142,7 @@ local runners = {
       local function handle(termmeta)
         local bufnr = termmeta.bufnr ---@type integer|nil
         if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
-          local channel_id = vim.bo[bufnr].channel ---@type integer
+          local channel_id = vim.api.nvim_get_option_value("channel", { buf = bufnr }) ---@type integer
           local cmd = "node " .. vim.fn.shellescape(filepath) .. "\n" ---@type string
           vim.fn.chansend(channel_id, cmd)
         end

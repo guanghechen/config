@@ -29,8 +29,8 @@ local function restore_float(original)
 
   local cfg = vim.deepcopy(original.wincfg) ---@type vim.api.keyset.win_config
   local ok = pcall(vim.api.nvim_win_set_config, winnr, cfg) ---@type boolean
-  vim.wo[winnr].winblend = original.winblend or 0
-  vim.wo[winnr].winhighlight = original.winhighlight or ""
+  vim.api.nvim_set_option_value("winblend", original.winblend or 0, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", original.winhighlight or "", { win = winnr, scope = "local" })
   dot.state.maximized.clear_original_float()
   return ok
 end
@@ -48,8 +48,8 @@ local function maximize_float(winnr)
   end
 
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
-  local winblend = vim.wo[winnr].winblend or 0 ---@type integer
-  local winhighlight = vim.wo[winnr].winhighlight or "" ---@type string
+  local winblend = vim.api.nvim_get_option_value("winblend", { win = winnr }) or 0 ---@type integer
+  local winhighlight = vim.api.nvim_get_option_value("winhighlight", { win = winnr }) or "" ---@type string
 
   dot.state.maximized.set_original_float({
     winnr = winnr,
@@ -65,8 +65,8 @@ local function maximize_float(winnr)
     return
   end
 
-  vim.wo[winnr].winblend = dot.context.theme.get_float_winblend()
-  vim.wo[winnr].winhighlight = WINHIGHLIGHT_FLOAT
+  vim.api.nvim_set_option_value("winblend", dot.context.theme.get_float_winblend(), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", WINHIGHLIGHT_FLOAT, { win = winnr, scope = "local" })
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -124,15 +124,15 @@ local function maximize_normal(winnr)
     zindex = dot.win.resolve_zindex(),
   })
 
-  local wo = vim.wo[float_winnr]
-  wo.winhighlight = WINHIGHLIGHT_NORMAL
-  wo.winblend = dot.context.theme.get_float_winblend()
-  wo.number = true
-  wo.relativenumber = dot.context.option.relativenumber:snapshot()
-  wo.signcolumn = "yes"
-  wo.cursorline = true
-  wo.wrap = false
-  wo.foldcolumn = "0"
+  local wo = winnr
+  vim.api.nvim_set_option_value("winhighlight", WINHIGHLIGHT_NORMAL, { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", dot.context.theme.get_float_winblend(), { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", dot.context.option.relativenumber:snapshot(), { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", true, { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = wo, scope = "local" })
+  vim.api.nvim_set_option_value("foldcolumn", "0", { win = wo, scope = "local" })
 
   vim.fn.winrestview(view)
 

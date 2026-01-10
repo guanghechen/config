@@ -79,7 +79,7 @@ local function do_lint(bufnr)
     return
   end
 
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   if stl.filetype.is_not_sourcefile(filetype) then
     return
   end

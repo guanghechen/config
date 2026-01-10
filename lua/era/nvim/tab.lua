@@ -97,8 +97,8 @@ end
 ---@return integer
 function M.new()
   vim.cmd("$tabnew")
-  vim.bo.buflisted = false
-  vim.bo.bufhidden = "wipe"
+  vim.api.nvim_set_option_value("buflisted", false, { buf = 0 })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = 0 })
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   dot.tab.set_type(tabnr, stl.nvim.tab.Types.NORMAL)
@@ -111,15 +111,15 @@ function M.new_with_buf()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
   vim.cmd("$tabnew")
-  vim.bo.buflisted = false
-  vim.bo.bufhidden = "wipe"
+  vim.api.nvim_set_option_value("buflisted", false, { buf = 0 })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = 0 })
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   dot.tab.set_type(tabnr, stl.nvim.tab.Types.NORMAL)
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
-  if vim.bo[bufnr].buflisted then
+  if vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
     dot.tab.add_buf(tabnr, bufnr, false)
   end
 

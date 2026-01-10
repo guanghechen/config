@@ -14,9 +14,9 @@ function M.inspect_buf()
     details = {
       base = {
         bufnr = bufnr,
-        buflisted = vim.bo[bufnr].buflisted,
-        buftype = vim.bo[bufnr].buftype,
-        filetype = vim.bo[bufnr].filetype,
+        buflisted = vim.api.nvim_get_option_value("buflisted", { buf = bufnr }),
+        buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }),
+        filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }),
         filepath = vim.api.nvim_buf_get_name(bufnr),
       },
       meta = meta or vim.NIL,
@@ -122,8 +122,8 @@ function M.inspect_window()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
 
-  local buftype = vim.bo[bufnr].buftype ---@type string
-  local filetype = vim.bo[bufnr].filetype ---@type string
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
 
   local meta_tab = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
@@ -147,7 +147,7 @@ function M.inspect_window()
         projectable = dot.win.is_projectable(winnr),
         sourcefile = dot.win.is_sourcefile(winnr),
         swappable = dot.win.is_swappable(winnr),
-        winbar = vim.wo[winnr].winbar,
+        winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }),
       },
       z_meta = {
         buf = meta_buf,

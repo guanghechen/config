@@ -263,18 +263,18 @@ function M:__show_popup__(hunk, is_staged)
   vim.b[board_bufnr].miniindentscope_disable = true
   vim.b[board_bufnr].miniai_disable = true
   vim.b[board_bufnr].minihipatterns_disable = true
-  vim.bo[board_bufnr].bufhidden = "wipe"
-  vim.bo[board_bufnr].buflisted = false
-  vim.bo[board_bufnr].buftype = "nofile"
-  vim.bo[board_bufnr].filetype = "diff"
-  vim.bo[board_bufnr].swapfile = false
-  vim.bo[board_bufnr].modifiable = true
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = board_bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = board_bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = board_bufnr })
+  vim.api.nvim_set_option_value("filetype", "diff", { buf = board_bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = board_bufnr })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = board_bufnr })
 
   local lines, highlights, width, signs = self:__render__(hunk)
   vim.api.nvim_buf_set_lines(board_bufnr, 0, -1, false, lines)
 
-  vim.bo[board_bufnr].modifiable = false
-  vim.bo[board_bufnr].readonly = true
+  vim.api.nvim_set_option_value("modifiable", false, { buf = board_bufnr })
+  vim.api.nvim_set_option_value("readonly", true, { buf = board_bufnr })
 
   for _, hl in ipairs(highlights) do
     vim.hl.range(board_bufnr, self._ns, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
@@ -306,21 +306,21 @@ function M:__show_popup__(hunk, is_staged)
   })
   self._board_winnr = winnr
 
-  vim.wo[winnr].cursorline = true
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].signcolumn = "yes:1"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].wrap = false
-  vim.wo[winnr].winhighlight = table.concat({
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes:1", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", table.concat({
     "CursorLine:fb_git_hunk_cursorline",
     "FloatBorder:ms_b_bg0",
     "FloatTitle:ms_b_bg0",
     "Normal:fb_git_hunk_normal",
     "SignColumn:fb_git_hunk_normal",
-  }, ",")
+  }, ","), { win = winnr, scope = "local" })
 
   self:__setup_keymaps__(board_bufnr, hunk, is_staged)
 end

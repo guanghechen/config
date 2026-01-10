@@ -87,13 +87,13 @@ function M.open(opts, on_confirm)
   local initial_width = math.min(math.max(min_width, vim.api.nvim_strwidth(initial_text) + 5), MAX_WIDTH) ---@type integer
 
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "prompt"
-  vim.bo[bufnr].completefunc = "v:lua.require'era.m.input'.complete"
-  vim.bo[bufnr].filetype = stl.filetype.UX_INPUT
-  vim.bo[bufnr].omnifunc = "v:lua.require'era.m.input'.complete"
-  vim.bo[bufnr].swapfile = false
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "prompt", { buf = bufnr })
+  vim.api.nvim_set_option_value("completefunc", "v:lua.require'era.m.input'.complete", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.UX_INPUT, { buf = bufnr })
+  vim.api.nvim_set_option_value("omnifunc", "v:lua.require'era.m.input'.complete", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   local winblend = dot.context.theme.get_float_winblend() ---@type integer
   local relative = opts.relative or "cursor" ---@type "editor"|"cursor"|"win"
@@ -152,12 +152,12 @@ function M.open(opts, on_confirm)
   dot.win.set_type(winnr, stl.nvim.win.Types.INPUT)
   vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
-  vim.wo[winnr].cursorline = false
-  vim.wo[winnr].number = false
-  vim.wo[winnr].relativenumber = false
-  vim.wo[winnr].winblend = winblend
-  vim.wo[winnr].winfixbuf = true
-  vim.wo[winnr].winhighlight = WIN_HIGHLIGHT
+  vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winblend", winblend, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 
   contexts[bufnr] = { completion = opts.completion }
 

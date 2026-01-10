@@ -553,7 +553,7 @@ notes_picker = era.m.picker.ListComposer.new({
 
     local lines = vim.split(note.content or "", "\n") ---@type string[]
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    vim.bo[bufnr].filetype = "markdown"
+    vim.api.nvim_set_option_value("filetype", "markdown", { buf = bufnr })
 
     ---@type era.m.picker.preview.IDrawResult
     return {
@@ -755,14 +755,14 @@ function M.split(direction)
   local bufnr = widget:ensure_buf() ---@type integer
   vim.api.nvim_win_set_buf(winnr_new, bufnr)
 
-  vim.wo[winnr_new].cursorline = true
-  vim.wo[winnr_new].list = true
-  vim.wo[winnr_new].number = true
-  vim.wo[winnr_new].relativenumber = true
-  vim.wo[winnr_new].signcolumn = "yes"
-  vim.wo[winnr_new].spell = true
-  vim.wo[winnr_new].wrap = true
-  vim.wo[winnr_new].winfixbuf = true
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("list", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("spell", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr_new, scope = "local" })
+  vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr_new, scope = "local" })
 
   widget:render_winbar_to(winnr_new)
 end

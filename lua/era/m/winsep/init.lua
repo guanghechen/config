@@ -39,7 +39,7 @@ local winsep = {
       j_exist = fn_winnr ~= vim.fn.winnr("j") ---@type boolean
     end)
 
-    if vim.wo[winnr].winbar == "" then
+    if vim.api.nvim_get_option_value("winbar", { win = winnr }) == "" then
       height = height - 1
     end
 

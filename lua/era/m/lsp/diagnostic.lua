@@ -457,7 +457,7 @@ function M.to_md()
         local bufnr = diagnostic.bufnr
         if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
           local filename = vim.api.nvim_buf_get_name(bufnr)
-          local filetype = vim.bo[bufnr].filetype or "text" ---@type string
+          local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) or "text" ---@type string
           local relative_path = vim.fn.fnamemodify(filename, ":.")
           local line_num = diagnostic.lnum + 1
           local col_num = diagnostic.col + 1

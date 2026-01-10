@@ -168,7 +168,7 @@ function M.bufs(position)
     end
 
     local is_pinned = buf.pinned ---@type boolean
-    local is_mod = vim.bo[bufnr].modified ---@type boolean
+    local is_mod = vim.api.nvim_get_option_value("modified", { buf = bufnr }) ---@type boolean
 
     local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
     local count_error = diag_data.error ---@type integer
@@ -272,7 +272,7 @@ function M.bufs(position)
     end
 
     local is_pinned = buf.pinned ---@type boolean
-    local is_mod = vim.bo[bufnr].modified ---@type boolean
+    local is_mod = vim.api.nvim_get_option_value("modified", { buf = bufnr }) ---@type boolean
 
     local diag_data = era.m.lsp.diagnostic.get_by_bufnr(bufnr) ---@type era.m.lsp.diagnostic.IBufferDiagnostics
     local count_error = diag_data.error ---@type integer

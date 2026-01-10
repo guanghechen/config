@@ -274,11 +274,11 @@ function M.new()
   end
 
   local bufnr = vim.api.nvim_create_buf(true, true) ---@type integer
-  vim.bo[bufnr].buflisted = true
-  vim.bo[bufnr].buftype = ""
-  vim.bo[bufnr].filetype = "text"
-  vim.bo[bufnr].readonly = false
-  vim.bo[bufnr].modifiable = true
+  vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
 
   local cwd = dot.path.cwd() ---@type string
   local filepath = dot.buf.pick_filepath(cwd) ---@type string|nil
@@ -355,7 +355,7 @@ function M.save(args)
   local bufnrs_new_file = {} ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
-    if vim.bo[bufnr].modified and vim.bo[bufnr].buftype == "" then
+    if vim.api.nvim_get_option_value("modified", { buf = bufnr }) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 and yoz.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)

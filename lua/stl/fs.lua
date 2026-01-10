@@ -158,7 +158,7 @@ end
 ---@return nil
 function M.edit_file(filepath)
   vim.cmd("noswapfile tabnew " .. filepath)
-  vim.bo.backupcopy = "yes"
+  vim.api.nvim_set_option_value("backupcopy", "yes", { buf = 0 })
 end
 
 ---@param params                        stl.t.IReadFileParams

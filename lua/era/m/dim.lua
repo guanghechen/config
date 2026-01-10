@@ -38,7 +38,7 @@ local function is_buf_enabled(bufnr)
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     return false
   end
-  return vim.bo[bufnr].buftype == ""
+  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
 end
 
 ---@param winnr                         integer

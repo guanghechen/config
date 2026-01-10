@@ -142,7 +142,7 @@ return {
         },
         tailwind = {
           pattern = function()
-            local filetype = vim.bo.filetype ---@type string
+            local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
             if tailwind_filetypes[filetype] then
               return "%f[%w:-][%w:-]+%-[a-z%-]+%-%d+%f[^%w:-]"
             end
@@ -173,7 +173,7 @@ return {
 
         rgb_color = {
           pattern = function()
-            if css_filetypes[vim.bo.filetype] then
+            if css_filetypes[vim.api.nvim_get_option_value("filetype", { buf = 0 })] then
               return "rgba?%(%d+,%s*%d+,%s*%d+[^%)]*%)"
             end
           end,
@@ -196,7 +196,7 @@ return {
 
         hsl_color = {
           pattern = function()
-            if css_filetypes[vim.bo.filetype] then
+            if css_filetypes[vim.api.nvim_get_option_value("filetype", { buf = 0 })] then
               return "hsla?%(%d+,%s*%d+%%,%s*%d+%%[^%)]*%)"
             end
           end,

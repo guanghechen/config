@@ -87,7 +87,7 @@ local group_items = {
           return "unknown", "String"
         end
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
-        local encoding = vim.bo[bufnr].fileencoding ---@type string
+        local encoding = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ---@type string
         return encoding, "String"
       end,
       action = function()
@@ -97,7 +97,7 @@ local group_items = {
         end
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local buftype = vim.bo[bufnr].buftype ---@type string
+        local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
         local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           stl.reporter.error({
@@ -109,7 +109,7 @@ local group_items = {
           return
         end
 
-        if vim.bo[bufnr].modified then
+        if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
           stl.reporter.error({
             from = __module_name__,
             subject = "fileencoding_local",
@@ -121,7 +121,7 @@ local group_items = {
 
         local cwd_name = yoz.path.basename(dot.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
-        local fileencoding_cur = vim.bo[bufnr].fileencoding ---@type string
+        local fileencoding_cur = vim.api.nvim_get_option_value("fileencoding", { buf = bufnr }) ---@type string
 
         ---@return nil
         local function reopen()
@@ -153,7 +153,7 @@ local group_items = {
                 end
                 if vim.api.nvim_buf_is_valid(bufnr) then
                   vim.api.nvim_buf_call(bufnr, function()
-                    vim.bo[bufnr].fileencoding = encoding ---@type string
+                    vim.api.nvim_set_option_value("fileencoding", encoding, { buf = bufnr })
                     vim.cmd("write")
                   end)
                 end
@@ -162,7 +162,7 @@ local group_items = {
           })
         end
 
-        if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
+        if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite" or vim.api.nvim_get_option_value("readonly", { buf = bufnr }) then
           reopen()
         else
           era.m.select.open({
@@ -194,7 +194,7 @@ local group_items = {
           return "unknown", "String"
         end
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer|nil
-        local fileformat = vim.bo[bufnr].fileformat ---@type string
+        local fileformat = vim.api.nvim_get_option_value("fileformat", { buf = bufnr }) ---@type string
         return fileformat, "String"
       end,
       action = function()
@@ -204,7 +204,7 @@ local group_items = {
         end
 
         local bufnr = vim.api.nvim_win_get_buf(winnr_command) ---@type integer
-        local buftype = vim.bo[bufnr].buftype ---@type string
+        local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
         local filename = yoz.path.basename(vim.api.nvim_buf_get_name(bufnr)) ---@type string
         if buftype ~= "" and buftype ~= "nowrite" then
           stl.reporter.error({
@@ -216,7 +216,7 @@ local group_items = {
           return
         end
 
-        if vim.bo[bufnr].modified then
+        if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
           stl.reporter.error({
             from = __module_name__,
             subject = "fileformat_local",
@@ -228,7 +228,7 @@ local group_items = {
 
         local cwd_name = yoz.path.basename(dot.path.cwd()) ---@type string
         local offset_right = #cwd_name + 4 ---@type integer
-        local fileformat_cur = vim.bo[bufnr].fileformat ---@type string
+        local fileformat_cur = vim.api.nvim_get_option_value("fileformat", { buf = bufnr }) ---@type string
 
         ---@param callback              fun(fileformat_next: string|nil): nil
         ---@return nil
@@ -255,22 +255,22 @@ local group_items = {
           })
         end
 
-        if vim.bo[bufnr].buftype == "nowrite" or vim.bo[bufnr].readonly then
+        if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite" or vim.api.nvim_get_option_value("readonly", { buf = bufnr }) then
           select_fileformat(function(fileformat_next)
             if fileformat_next ~= nil then
-              vim.bo[bufnr].fileformat = fileformat_next ---@type string
+              vim.api.nvim_set_option_value("fileformat", fileformat_next, { buf = bufnr })
             end
           end)
         else
           select_fileformat(function(fileformat_next)
             if fileformat_next ~= nil then
               local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-              vim.bo[bufnr].fileformat = fileformat_next ---@type string
+              vim.api.nvim_set_option_value("fileformat", fileformat_next, { buf = bufnr })
 
               for i, line in ipairs(lines) do
                 lines[i] = line:gsub("\r$", "")
               end
-              vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines) ---@type string[]
+              vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
             end
           end)
         end
@@ -315,7 +315,7 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local enabled = vim.wo[winnr_command].number ---@type boolean
+        local enabled = vim.api.nvim_get_option_value("number", { win = winnr_command }) ---@type boolean
         return tostring(enabled), "Boolean"
       end,
       action = function()
@@ -324,8 +324,8 @@ local group_items = {
           return
         end
 
-        local flag = vim.wo[winnr_command].number ---@type boolean
-        vim.wo[winnr_command].number = not flag
+        local flag = vim.api.nvim_get_option_value("number", { win = winnr_command }) ---@type boolean
+        vim.api.nvim_set_option_value("number", not flag, { win = winnr_command, scope = "local" })
       end,
     },
     relativenumber = {
@@ -336,7 +336,7 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local enabled = vim.wo[winnr_command].relativenumber ---@type boolean
+        local enabled = vim.api.nvim_get_option_value("relativenumber", { win = winnr_command }) ---@type boolean
         return tostring(enabled), "Boolean"
       end,
       action = function()
@@ -345,8 +345,8 @@ local group_items = {
           return
         end
 
-        local flag = vim.wo[winnr_command].relativenumber ---@type boolean
-        vim.wo[winnr_command].relativenumber = not flag
+        local flag = vim.api.nvim_get_option_value("relativenumber", { win = winnr_command }) ---@type boolean
+        vim.api.nvim_set_option_value("relativenumber", not flag, { win = winnr_command, scope = "local" })
       end,
     },
     signcolumn = {
@@ -357,7 +357,7 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local signcolumn = vim.wo[winnr_command].signcolumn ---@type string
+        local signcolumn = vim.api.nvim_get_option_value("signcolumn", { win = winnr_command }) ---@type string
         local enabled = signcolumn ~= "no"
         return tostring(enabled), "Boolean"
       end,
@@ -367,11 +367,11 @@ local group_items = {
           return
         end
 
-        local signcolumn = vim.wo[winnr_command].signcolumn ---@type string
+        local signcolumn = vim.api.nvim_get_option_value("signcolumn", { win = winnr_command }) ---@type string
         if signcolumn == "no" then
-          vim.wo[winnr_command].signcolumn = "yes"
+          vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr_command, scope = "local" })
         else
-          vim.wo[winnr_command].signcolumn = "no"
+          vim.api.nvim_set_option_value("signcolumn", "no", { win = winnr_command, scope = "local" })
         end
       end,
     },
@@ -383,7 +383,7 @@ local group_items = {
           return "unknown", "Boolean"
         end
 
-        local enabled = vim.wo[winnr_command].wrap ---@type boolean
+        local enabled = vim.api.nvim_get_option_value("wrap", { win = winnr_command }) ---@type boolean
         return tostring(enabled), "Boolean"
       end,
       action = function()
@@ -392,8 +392,8 @@ local group_items = {
           return
         end
 
-        local flag = vim.wo[winnr_command].wrap ---@type boolean
-        vim.wo[winnr_command].wrap = not flag
+        local flag = vim.api.nvim_get_option_value("wrap", { win = winnr_command }) ---@type boolean
+        vim.api.nvim_set_option_value("wrap", not flag, { win = winnr_command, scope = "local" })
       end,
     },
   },

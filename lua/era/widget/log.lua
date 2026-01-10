@@ -50,13 +50,13 @@ local function show_json_preview(content)
   local lines = vim.split(json, "\n", { plain = true })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].filetype = "json"
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].modifiable = true
-  vim.bo[bufnr].readonly = false
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("filetype", "json", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("readonly", false, { buf = bufnr })
 
   -- Trigger LSP and TreeSitter attachment
   vim.schedule(function()
@@ -85,12 +85,12 @@ local function show_json_preview(content)
     noautocmd = true,
   })
 
-  vim.wo[winnr].wrap = true
-  vim.wo[winnr].number = true
-  vim.wo[winnr].relativenumber = true
-  vim.wo[winnr].signcolumn = "yes"
-  vim.wo[winnr].spell = false
-  vim.wo[winnr].cursorline = true
+  vim.api.nvim_set_option_value("wrap", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("relativenumber", true, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
 
   local keymaps = {
     {

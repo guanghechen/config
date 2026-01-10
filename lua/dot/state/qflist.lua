@@ -52,7 +52,7 @@ function M.is_quickfix_opened()
   local winnrs = vim.api.nvim_list_wins() ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local buftype = vim.bo[bufnr].buftype ---@type string
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
     if buftype == "quickfix" then
       return true
     end
