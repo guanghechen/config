@@ -1326,6 +1326,18 @@ command
     end,
   })
   .implement({
+    uuid = K.toggle.minimap.uuid,
+    action = function()
+      era.m.minimap.toggle()
+    end,
+  })
+  .implement({
+    uuid = K.toggle.minimap_local.uuid,
+    action = function()
+      era.m.minimap.toggle_local()
+    end,
+  })
+  .implement({
     uuid = K.toggle.number_local.uuid,
     action = function()
       era.m.toggle.list.list("number_local")

@@ -172,6 +172,22 @@ function M.default_gen_hlgroup_map(context)
     m_in_current = { bg = u.bg3 },
     m_in_normal = { bg = bg_pane },
 
+    ---module/minimap
+    m_mm_bg = { fg = u.bg3, bg = u.none },
+    m_mm_bar = { fg = u.blue, bg = u.none },
+    m_mm_cursor = { fg = u.fg1 },
+    m_mm_diagnostic_error = { fg = u.red },
+    m_mm_diagnostic_hint = { fg = u.aqua },
+    m_mm_diagnostic_info = { fg = u.blue },
+    m_mm_diagnostic_warn = { fg = u.yellow },
+    m_mm_git_add = { fg = u.green },
+    m_mm_git_change = { fg = u.blue },
+    m_mm_git_delete = { fg = u.red },
+    m_mm_mark = { fg = u.purple },
+    m_mm_quickfix = { fg = u.yellow },
+    m_mm_search = { fg = u.orange },
+    m_mm_search_current = { fg = u.red, bold = true },
+
     ---module/notifications
     m_nf_body = { fg = u.fg3 },
     m_nf_current = { bg = u.bg3 },

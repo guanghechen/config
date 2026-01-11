@@ -3,6 +3,9 @@ local THROTTLE_MS = 200 ---@type integer
 ---@class era.m.git.buffer
 local M = {}
 
+---@type stl.c.Ticker
+M.ticker = stl.c.Ticker.new()
+
 ---@type table<integer, era.m.git.buffer.ICache>
 local cache = {}
 
@@ -188,6 +191,7 @@ local function update_hunks(buf_cache, callback)
           untracked = buf_cache.untracked,
           force = should_force_update,
         })
+        M.ticker:tick()
       end
 
       buf_cache.dirty = false

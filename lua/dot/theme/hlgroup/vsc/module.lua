@@ -163,6 +163,22 @@ function M.gen_hlgroup_map(context)
     m_in_current = { bg = u.bg3 },
     m_in_normal = { bg = bg_pane },
 
+    ---module/minimap
+    m_mm_bg = { fg = u.bg3, bg = c.none },
+    m_mm_bar = { fg = c.accentBlue, bg = c.none },
+    m_mm_cursor = { fg = c.text },
+    m_mm_diagnostic_error = { fg = c.accentRed },
+    m_mm_diagnostic_hint = { fg = c.accentAqua },
+    m_mm_diagnostic_info = { fg = c.accentBlue },
+    m_mm_diagnostic_warn = { fg = c.accentYellow },
+    m_mm_git_add = { fg = c.editorGutter_addedBackground },
+    m_mm_git_change = { fg = c.editorGutter_modifiedBackground },
+    m_mm_git_delete = { fg = c.editorGutter_deletedBackground },
+    m_mm_mark = { fg = c.accentPurple },
+    m_mm_quickfix = { fg = c.accentYellow },
+    m_mm_search = { fg = c.accentOrange },
+    m_mm_search_current = { fg = c.accentRed, bold = true },
+
     ---module/notifications
     m_nf_body = { fg = c.textDim },
     m_nf_current = { bg = u.bg3 },

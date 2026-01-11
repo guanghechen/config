@@ -311,6 +311,7 @@ ms({ "n", "x" }, "<leader>uc", K.ux.color_picker)
 ms({ "n", "x" }, "<leader>ul", K.toggle.number_local)
 ms({ "n", "x" }, "<leader>um", K.toggle.markdown_local)
 ms({ "n", "x" }, "<leader>un", K.ux.dismiss_notifications)
+ms({ "n", "x" }, "<leader>up", K.toggle.minimap_local)
 ms({ "n", "x" }, "<leader>ur", K.toggle.relativenumber_local)
 ms({ "n", "x" }, "<leader>us", K.toggle.signcolumn_local)
 ms({ "n", "x" }, "<leader>ut", K.toggle.theme)
@@ -320,6 +321,7 @@ ms({ "n", "x" }, "<leader>uz", K.toggle.maximize)
 --------------------------------------------------------------------------------------#[t]oggle/ux--
 
 --#[v]iew-------------------------------------------------------------------------------------------
+ms({ "n", "x" }, "<leader>vm", K.toggle.minimap)
 ms({ "n", "x" }, "<leader>vn", K.view.notifications)
 -------------------------------------------------------------------------------------------#[v]iew--
 
