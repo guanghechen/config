@@ -1,4 +1,3 @@
-local Git = require("era.m.plugin.git")
 local State = require("era.m.plugin.state")
 
 ---@class era.m.plugin.action
@@ -423,7 +422,7 @@ function M.__install_plugins__(specs, on_progress, on_done)
         task.message = "Cloning..."
         on_progress()
 
-        Git.clone(url, path, spec.branch, function(ok, _, stderr)
+        stl.git.act.clone(url, path, spec.branch, function(ok, _, stderr)
           if not ok then
             task.status = "error"
             task.step = nil
@@ -433,7 +432,7 @@ function M.__install_plugins__(specs, on_progress, on_done)
             return
           end
 
-          local info = Git.info(path)
+          local info = stl.git.info.info(path)
           if not info or not info.commit then
             task.status = "error"
             task.step = nil
@@ -528,7 +527,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
           task.message = "Cloning..."
           on_progress()
 
-          Git.clone(url, path, spec.branch, function(ok, _, stderr)
+          stl.git.act.clone(url, path, spec.branch, function(ok, _, stderr)
             if not ok then
               task.status = "error"
               task.step = nil
@@ -538,7 +537,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
               return
             end
 
-            local info = Git.info(path)
+            local info = stl.git.info.info(path)
             if not info or not info.commit then
               task.status = "error"
               task.step = nil
@@ -592,7 +591,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
           return
         end
 
-        local info = Git.info(path)
+        local info = stl.git.info.info(path)
         if not info then
           task.status = "error"
           task.step = nil
@@ -621,8 +620,8 @@ function M.__update_plugins__(specs, on_progress, on_done)
                 return
               end
 
-              local branch = spec.branch or Git.get_branch(path) or "main" ---@type string
-              local target_commit = Git.get_commit(path, branch, true)
+              local branch = spec.branch or stl.git.info.get_branch(path) or "main" ---@type string
+              local target_commit = stl.git.info.get_commit(path, branch, true)
 
               if not target_commit then
                 task.status = "error"
@@ -635,7 +634,7 @@ function M.__update_plugins__(specs, on_progress, on_done)
 
               task.to_commit = target_commit:sub(1, 7)
 
-              if info.commit and Git.eq(info, { commit = target_commit }) then
+              if info.commit and stl.git.info.eq(info, { commit = target_commit }) then
                 task.status = "done"
                 task.step = nil
                 task.message = "Already up to date"
