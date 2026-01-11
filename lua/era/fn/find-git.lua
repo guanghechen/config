@@ -24,7 +24,8 @@ local function refresh(force, callback)
     return
   end
 
-  era.m.git.state.status_async("HEAD", function(workspace, status)
+  era.m.git.state.status_async("HEAD", function(status)
+    local workspace = dot.path.workspace()
     local filepaths = {} ---@type string[]
     for filepath in pairs(status) do
       filepaths[#filepaths + 1] = filepath

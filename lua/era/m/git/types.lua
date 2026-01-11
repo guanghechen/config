@@ -128,7 +128,6 @@
 ---@class era.m.git.status.ICollectOpts
 ---@field public base                   string|nil
 ---@field public include_untracked      boolean|nil
----@field public workspace              string|nil
 
 ---@class era.m.git.StatusEntry
 ---@field public categories             table<string, boolean>
@@ -146,17 +145,6 @@
 ---@field public unstaged_display       string
 
 ----------------------------------------------------------------------------------------------------
--- Browse types
-----------------------------------------------------------------------------------------------------
-
----@class era.m.git.browse.IOpenOpts
----@field public branch                 string|nil
----@field public commit                 string|nil
----@field public line_end               integer|nil
----@field public line_start             integer|nil
----@field public what                   string|nil
-
-----------------------------------------------------------------------------------------------------
 -- Aggregated cache types
 ----------------------------------------------------------------------------------------------------
 
@@ -168,7 +156,6 @@
 ---@field public staged_files           string[]
 ---@field public status_table           table<string, era.m.git.StatusEntry>
 ---@field public unstaged_files         string[]
----@field public workspace              string|nil
 
 ---@class era.m.git.status.IDirInfo
 ---@field public codes                  table<string, boolean>

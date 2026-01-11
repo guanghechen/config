@@ -585,19 +585,27 @@ command
   .implement({
     uuid = K.git.browse.uuid,
     action = function()
-      era.m.git.browse.open()
+      stl.git.browse.open({
+        cwd = dot.path.cwd(),
+      })
     end,
   })
   .implement({
     uuid = K.git.browse_permalink.uuid,
     action = function()
-      era.m.git.browse.open({ what = "permalink" })
+      stl.git.browse.open({
+        cwd = dot.path.cwd(),
+        what = "permalink",
+      })
     end,
   })
   .implement({
     uuid = K.git.browse_repo.uuid,
     action = function()
-      era.m.git.browse.open({ what = "repo" })
+      stl.git.browse.open({
+        cwd = dot.path.cwd(),
+        what = "repo",
+      })
     end,
   })
 

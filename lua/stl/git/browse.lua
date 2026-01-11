@@ -1,3 +1,7 @@
+local __module_name__ = "stl.git.browse" ---@type string
+
+local S = stl.git
+
 local REMOTE_PATTERNS = {
   { "^(https?://.*)%.git$", "%1" },
   { "^git@(.+):(.+)%.git$", "https://%1/%2" },
@@ -41,17 +45,50 @@ local URL_PATTERNS = {
   },
 }
 
----@class era.m.git.browse
+---@class stl.git.browse.IBuildFieldsOpts
+---@field public cwd                    string
+---@field public file                   string|nil
+---@field public branch                 string|nil
+---@field public commit                 string|nil
+---@field public line_start             integer|nil
+---@field public line_end               integer|nil
+---@field public scope                  string|nil
+
+---@class stl.git.browse.IFields
+---@field public cwd                    string
+---@field public scope                  string
+---@field public branch                 string|nil
+---@field public commit                 string|nil
+---@field public file                   string|nil
+---@field public line_start             integer
+---@field public line_end               integer
+
+---@class stl.git.browse.IOpenOpts
+---@field public cwd                    string
+---@field public branch                 string|nil
+---@field public commit                 string|nil
+---@field public line_start             integer|nil
+---@field public line_end               integer|nil
+---@field public what                   string|nil
+
+---@class stl.git.browse.IRemote
+---@field public name                   string
+---@field public url                    string
+
+---@class stl.git.browse
+---@field public build_fields          fun(opts: stl.git.browse.IBuildFieldsOpts): stl.git.browse.IFields
+---@field public get_remotes           fun(fields: stl.git.browse.IFields): stl.git.browse.IRemote[]
+---@field public open                  fun(opts: stl.git.browse.IOpenOpts): nil
+---@field public open_remote           fun(remote: stl.git.browse.IRemote|nil): nil
 local M = {}
 
----@param opts                       { cwd: string|nil, file: string|nil, branch: string|nil, commit: string|nil, line_start: integer|nil, line_end: integer|nil, scope: string|nil }|nil
----@return table
+---@param opts                          stl.git.browse.IBuildFieldsOpts
+---@return stl.git.browse.IFields
 function M.build_fields(opts)
-  opts = opts or {}
-  local cwd = dot.path.normalize(opts.cwd or dot.path.cwd())
+  local cwd = yoz.path.normalize(opts.cwd, true, stl.env.PATH_SEP) ---@type string
 
   local function run(args)
-    local lines, code = era.m.git.cmd.run_sync(args, { cwd = cwd })
+    local lines, code = S.exec.exec_sync(args, { cwd = cwd })
     if code ~= 0 or type(lines) ~= "table" then
       return nil
     end
@@ -118,10 +155,10 @@ function M.build_fields(opts)
   }
 end
 
----@param fields                      table
----@return table<string, string>[]
+---@param fields                        stl.git.browse.IFields
+---@return stl.git.browse.IRemote[]
 function M.get_remotes(fields)
-  local lines, code = era.m.git.cmd.run_sync({ "remote", "-v" }, { cwd = fields.cwd })
+  local lines, code = S.exec.exec_sync({ "remote", "-v" }, { cwd = fields.cwd })
   if code ~= 0 or type(lines) ~= "table" then
     return {}
   end
@@ -165,25 +202,24 @@ function M.get_remotes(fields)
   return remotes
 end
 
----@param remote                     { name: string, url: string }|nil
+---@param remote                        stl.git.browse.IRemote|nil
+---@return nil
 function M.open_remote(remote)
   if remote and remote.url then
     vim.ui.open(remote.url)
   end
 end
 
----@param opts                       era.m.git.browse.IOpenOpts|nil
+---@param opts                          stl.git.browse.IOpenOpts
+---@return nil
 function M.open(opts)
-  opts = opts or {}
-
+  local cwd = opts.cwd ---@type string
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string|nil
-  filepath = filepath ~= "" and dot.path.normalize(filepath) or nil
+  filepath = filepath ~= "" and yoz.path.normalize(filepath, true, stl.env.PATH_SEP) or nil
   local stat = filepath and vim.uv.fs_stat(filepath) or nil
   local is_file = stat and stat.type == "file"
-
-  local cwd = (is_file and filepath) and vim.fn.fnamemodify(filepath, ":h") or dot.path.cwd()
-  local git_file = (is_file and filepath) and dot.path.relative(cwd, filepath) or nil
+  local git_file = (is_file and filepath) and yoz.path.relative(cwd, filepath, false, stl.env.PATH_SEP) or nil
 
   local line_start = opts.line_start ---@type integer|nil
   local line_end = opts.line_end ---@type integer|nil
@@ -220,7 +256,7 @@ function M.open(opts)
   local remotes = M.get_remotes(fields)
   if #remotes == 0 then
     stl.reporter.error({
-      from = "era.m.git.browse",
+      from = __module_name__,
       subject = "open",
       message = "No git remotes found",
       details = { what = fields.scope, cwd = cwd, filepath = filepath },
@@ -239,7 +275,7 @@ function M.open(opts)
   end
 
   vim.ui.select(remotes, {
-    name = "era.m.git.browse",
+    name = __module_name__,
     prompt = "Select remote to browse",
     format_item = function(remote)
       local padded_name = stl.string.pad_end(remote.name, max_name_width, " ")

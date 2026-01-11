@@ -3,9 +3,7 @@
 ---@class era.m.git.__mods
 local __mods = {
   blame = "era.m.git.blame",
-  browse = "era.m.git.browse",
   buffer = "era.m.git.buffer",
-  cmd = "era.m.git.cmd",
   diff = "era.m.git.diff",
   hunk = "era.m.git.hunk",
   Hunkview = "era.m.git.hunkview",
@@ -19,9 +17,7 @@ local __mods = {
 ---@class era.m.git
 ---@field public __mods                 era.m.git.__mods
 ---@field public blame                  era.m.git.blame
----@field public browse                 era.m.git.browse
 ---@field public buffer                 era.m.git.buffer
----@field public cmd                    era.m.git.cmd
 ---@field public diff                   era.m.git.diff
 ---@field public hunk                   era.m.git.hunk
 ---@field public Hunkview               era.m.git.Hunkview

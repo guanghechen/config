@@ -74,6 +74,38 @@ local dict = setmetatable({ __mods = dict__mods }, {
 
 ----------------------------------------------------------------------------------------------------
 
+---@class stl.git.IFileInfo
+---@field public has_conflicts          boolean
+---@field public mode_bits              string|nil
+---@field public object_name            string|nil
+---@field public relpath                string
+
+---@class stl.git.__mods
+local git__mods = {
+  act = "stl.git.act",
+  browse = "stl.git.browse",
+  exec = "stl.git.exec",
+  info = "stl.git.info",
+}
+
+---@class stl.git
+---@field public __mods                 stl.git.__mods
+---@field public act                    stl.git.act
+---@field public browse                 stl.git.browse
+---@field public exec                   stl.git.exec
+---@field public info                   stl.git.info
+local git = setmetatable({ __mods = git__mods }, {
+  __index = function(t, k)
+    local m = git__mods[k] ---@type string|nil
+    if m == nil then
+      return rawget(t, k)
+    end
+    return require(m)
+  end,
+})
+
+----------------------------------------------------------------------------------------------------
+
 ---@class stl.lang.__mods
 local lang__mods = {
   python = "stl.lang.python",
@@ -135,7 +167,6 @@ local __mods = {
   filetype = "stl.filetype",
   fn = "stl.fn",
   fs = "stl.fs",
-  git = "stl.git",
   hot = "stl.hot",
   icon = "stl.icon",
   json = "stl.json",
@@ -183,6 +214,7 @@ local M = setmetatable({
   __mods = __mods,
   c = c,
   dict = dict,
+  git = git,
   lang = lang,
   nvim = nvim,
 }, {

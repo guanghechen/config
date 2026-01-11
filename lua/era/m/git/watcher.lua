@@ -97,7 +97,7 @@ local function refresh_branch()
     return
   end
 
-  era.m.git.cmd.get_abbrev_head_async(r.toplevel, function(abbrev_head)
+  stl.git.info.get_abbrev_head_async(r.toplevel, function(abbrev_head)
     r.abbrev_head = abbrev_head
     era.m.git.state.o_branch:next(abbrev_head)
     era.m.git.state.refresh_user_info()

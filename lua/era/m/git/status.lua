@@ -398,16 +398,12 @@ local function finalize_entry(entry)
 end
 
 ---@param opts                       era.m.git.status.ICollectOpts|nil
----@param callback                   fun(workspace: string, status_map: table<string, era.m.git.StatusEntry>, status_groups: table<string, table<string, boolean>>): nil
+---@param callback                   fun(status_map: table<string, era.m.git.StatusEntry>, status_groups: table<string, table<string, boolean>>): nil
 ---@return fun(): nil                cancel_fn
 function M.collect_async(opts, callback)
-  local workspace = opts and opts.workspace or dot.path.workspace()
-  if type(workspace) ~= "string" or #workspace == 0 then
-    workspace = dot.path.workspace()
-  end
-  workspace = dot.path.normalize(workspace)
+  local workspace = dot.path.workspace()
   if not dot.path.is_git_repo() then
-    callback(workspace, {}, create_status_groups())
+    callback({}, create_status_groups())
     return function() end
   end
 
@@ -439,7 +435,7 @@ function M.collect_async(opts, callback)
           end
         end
       end
-      callback(workspace, status_map, status_groups)
+      callback(status_map, status_groups)
     end
   end
 
@@ -450,7 +446,7 @@ function M.collect_async(opts, callback)
     end
   end
 
-  local cancel_fn1 = era.m.git.cmd.run_async(
+  local cancel_fn1 = stl.git.exec.exec_async(
     { "diff", "--staged", "--name-status", base, "--" },
     { cwd = workspace },
     function(lines, code)
@@ -469,7 +465,7 @@ function M.collect_async(opts, callback)
   )
   cancel_fns[#cancel_fns + 1] = cancel_fn1
 
-  local cancel_fn2 = era.m.git.cmd.run_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
+  local cancel_fn2 = stl.git.exec.exec_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
     if not cancelled and code == 0 then
       for _, line in ipairs(lines) do
         local status, relative = parse_name_status_line(line)
@@ -485,7 +481,7 @@ function M.collect_async(opts, callback)
   cancel_fns[#cancel_fns + 1] = cancel_fn2
 
   if include_untracked then
-    local cancel_fn3 = era.m.git.cmd.run_async(
+    local cancel_fn3 = stl.git.exec.exec_async(
       { "ls-files", "--exclude-standard", "--others" },
       { cwd = workspace },
       function(lines, code)
@@ -658,12 +654,9 @@ function M.calc_info(filepath, filetype, offset, highlights)
   return part, highlight
 end
 
----@param workspace                  string|nil
 ---@param status_table               table<string, era.m.git.StatusEntry>
 ---@return era.m.git.status.IAggregatedCache
-function M.aggregate(workspace, status_table)
-  local normalized_workspace = workspace and dot.path.normalize(workspace) or nil
-
+function M.aggregate(status_table)
   local file_display = {} ---@type table<string, string>
   local file_stage = {} ---@type table<string, era.m.git.StageState>
   local file_summary = {} ---@type table<string, string|nil>
@@ -706,7 +699,6 @@ function M.aggregate(workspace, status_table)
     staged_files = staged_files,
     status_table = status_entries,
     unstaged_files = unstaged_files,
-    workspace = normalized_workspace,
   }
 end
 

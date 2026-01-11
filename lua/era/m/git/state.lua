@@ -27,7 +27,6 @@ local aggregated_cache = {
   staged_files = {},
   status_table = {},
   unstaged_files = {},
-  workspace = nil,
 }
 
 ---@type table<string, boolean>
@@ -99,11 +98,11 @@ local function do_refresh()
     current_collect_cancel = nil
   end
 
-  current_collect_cancel = era.m.git.status.collect_async({ base = "HEAD" }, function(workspace, status_table)
+  current_collect_cancel = era.m.git.status.collect_async({ base = "HEAD" }, function(status_table)
     current_collect_cancel = nil
 
     if type(status_table) == "table" then
-      local aggregated = era.m.git.status.aggregate(workspace, status_table)
+      local aggregated = era.m.git.status.aggregate(status_table)
 
       aggregated_cache.dir_cache = {}
       aggregated_cache.file_display = aggregated.file_display
@@ -112,7 +111,6 @@ local function do_refresh()
       aggregated_cache.staged_files = aggregated.staged_files
       aggregated_cache.status_table = aggregated.status_table
       aggregated_cache.unstaged_files = aggregated.unstaged_files
-      aggregated_cache.workspace = aggregated.workspace
 
       initialized = true
       last_refresh = vim.uv.now()
@@ -291,10 +289,10 @@ function M.refresh_async(force, callback)
 end
 
 ---@param base                       string|nil
----@param callback                   fun(workspace: string, result: table<string, string>): nil
+---@param callback                   fun(result: table<string, string>): nil
 ---@return fun(): nil                cancel_fn
 function M.status_async(base, callback)
-  return era.m.git.status.collect_async({ base = base }, function(workspace, status_table_result)
+  return era.m.git.status.collect_async({ base = base }, function(status_table_result)
     local result = {}
     if type(status_table_result) == "table" then
       for filepath, entry in pairs(status_table_result) do
@@ -303,7 +301,7 @@ function M.status_async(base, callback)
         end
       end
     end
-    callback(workspace, result)
+    callback(result)
   end)
 end
 
@@ -318,12 +316,12 @@ function M.refresh_user_info()
   end
 
   local workspace = dot.path.workspace() ---@type string
-  era.m.git.cmd.run_async({ "config", "user.name" }, { cwd = workspace }, function(lines)
+  stl.git.exec.exec_async({ "config", "user.name" }, { cwd = workspace }, function(lines)
     if #lines > 0 then
       user_name = lines[1]
     end
   end)
-  era.m.git.cmd.run_async({ "config", "user.email" }, { cwd = workspace }, function(lines)
+  stl.git.exec.exec_async({ "config", "user.email" }, { cwd = workspace }, function(lines)
     if #lines > 0 then
       user_email = lines[1]
     end

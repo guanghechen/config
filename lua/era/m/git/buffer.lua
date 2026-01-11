@@ -272,14 +272,14 @@ local function update_hunks(buf_cache, callback)
   end
 
   if need_head then
-    era.m.git.cmd.get_show_text_async(toplevel, "HEAD:" .. relpath, function(lines)
+    stl.git.info.get_show_text_async(toplevel, "HEAD:" .. relpath, function(lines)
       buf_cache.compare_text = lines or {}
       maybe_finish()
     end)
   end
 
   if need_index then
-    era.m.git.cmd.get_show_text_async(toplevel, object_name --[[@as string]], function(lines)
+    stl.git.info.get_show_text_async(toplevel, object_name --[[@as string]], function(lines)
       buf_cache.compare_text_index = lines or buf_cache.compare_text
       maybe_finish()
     end)
@@ -412,7 +412,7 @@ function M.attach(bufnr, opts)
       return
     end
 
-    era.m.git.cmd.get_file_info_async(r.toplevel, relpath, function(file_info)
+    stl.git.info.get_file_info_async(r.toplevel, relpath, function(file_info)
       if not cache[bufnr] then
         return
       end
@@ -549,7 +549,7 @@ function M.refresh(bufnr, invalidate_compare_text, callback)
   end
 
   if invalidate_compare_text then
-    era.m.git.cmd.get_file_info_async(buf_cache.repo.toplevel, buf_cache.relpath, function(file_info)
+    stl.git.info.get_file_info_async(buf_cache.repo.toplevel, buf_cache.relpath, function(file_info)
       if not cache[bufnr] then
         if callback then
           callback()
@@ -637,7 +637,7 @@ function M.stage_buffer(bufnr, callback)
   end
 
   local relpath = buf_cache.relpath
-  era.m.git.cmd.stage_file_async(buf_cache.repo.toplevel, relpath, function(ok)
+  stl.git.act.stage_file_async(buf_cache.repo.toplevel, relpath, function(ok)
     if callback then
       callback(ok)
     end
@@ -679,7 +679,7 @@ function M.stage_hunk(bufnr, range, callback)
 
   local function do_stage()
     local patch = era.m.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)
-    era.m.git.cmd.apply_patch_async(toplevel, patch, false, function(ok, err)
+    stl.git.act.apply_patch_async(toplevel, patch, false, function(ok, err)
       if ok then
         M.refresh(bufnr, true, function()
           if callback then
@@ -695,8 +695,8 @@ function M.stage_hunk(bufnr, range, callback)
   end
 
   if not buf_cache.object_name then
-    era.m.git.cmd.add_intent_to_add_async(toplevel, relpath, function()
-      era.m.git.cmd.get_file_info_async(toplevel, relpath, function(file_info)
+    stl.git.act.add_intent_to_add_async(toplevel, relpath, function()
+      stl.git.info.get_file_info_async(toplevel, relpath, function(file_info)
         buf_cache.mode_bits = file_info and file_info.mode_bits
         buf_cache.object_name = file_info and file_info.object_name
         mode_bits = buf_cache.mode_bits
@@ -869,7 +869,7 @@ function M.unstage_hunk(bufnr, range, callback)
   local relpath = buf_cache.relpath
   local mode_bits = buf_cache.mode_bits or "100644"
 
-  era.m.git.cmd.hash_object_async(toplevel, relpath, new_index_lines, function(hash)
+  stl.git.act.hash_object_async(toplevel, relpath, new_index_lines, function(hash)
     if not hash then
       if callback then
         callback(false, "Failed to hash object")
@@ -877,7 +877,7 @@ function M.unstage_hunk(bufnr, range, callback)
       return
     end
 
-    era.m.git.cmd.update_index_async(toplevel, mode_bits, hash, relpath, function(ok)
+    stl.git.act.update_index_async(toplevel, mode_bits, hash, relpath, function(ok)
       if ok then
         M.refresh(bufnr, true, function()
           if callback then
