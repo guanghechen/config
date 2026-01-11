@@ -160,6 +160,7 @@ local __mods = {
   easing = "stl.external.easing",
 
   anim = "stl.anim",
+  async = "stl.async",
   box = "stl.box",
   debug = "stl.debug",
   env = "stl.env",
@@ -191,6 +192,7 @@ local __mods = {
 ---@field public nvim                   stl.nvim
 ---
 ---@field public anim                   stl.anim
+---@field public async                  stl.async
 ---@field public box                    stl.box
 ---@field public debug                  stl.debug
 ---@field public env                    stl.env
