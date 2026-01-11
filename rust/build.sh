@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd $SCRIPT_DIR
+cd "$SCRIPT_DIR"
 
 # ANSI color codes
 RED='\033[0;31m'
@@ -18,7 +18,7 @@ RESET='\033[0m'
 #   $1 - source_name: original package name (e.g., yoz)
 #   $2 - target_name: target package name for output (e.g., yoz)
 ghc-rust-build() {
-  cd $SCRIPT_DIR
+  cd "$SCRIPT_DIR"
 
   local source_name="$1"
   local target_name="$2"
@@ -57,12 +57,19 @@ ghc-rust-build() {
       cp "${cargo_target_dir}/release/${lib_name}" "$lua_output"
       cp "${cargo_target_dir}/release/${lib_name}" "$bin_output"
       rm -rf "$cargo_target_dir"
+
+      # Re-sign for macOS code signature validation
+      codesign --remove-signature "$lua_output" 2>/dev/null || true
+      codesign -s - "$lua_output" 2>/dev/null || true
+      codesign --remove-signature "$bin_output" 2>/dev/null || true
+      codesign -s - "$bin_output" 2>/dev/null || true
+
       echo -e "${GREEN}[neovim $source_name] ✓ built${RESET}"
     else
       echo -e "${GREEN}[neovim $source_name] ✓ cached${RESET}"
     fi
 
-  elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+  elif [[ "$(uname -s)" == Linux* ]]; then
     local lua_output="$lua_dir/${target_name}.so"
     local bin_output="$bin_dir/nix.${target_name}.so"
     local lib_name="lib${source_name}.so"
@@ -79,7 +86,7 @@ ghc-rust-build() {
       echo -e "${GREEN}[neovim $source_name] ✓ cached${RESET}"
     fi
 
-  elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+  elif [[ "$(uname -s)" == MINGW* ]]; then
     local lua_output="$lua_dir/${target_name}.dll"
     local bin_output="$bin_dir/win.${target_name}.dll"
     local lib_name="lib${source_name}.dll"
