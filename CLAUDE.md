@@ -416,10 +416,11 @@ stl.reporter.error({
 
 ### Module Name Pattern
 
-Each module should define `__module_name__` for error reporting:
+Each module should define `__module_name__` for error reporting, add a stylua ignoring rule above of it to avoid the diagnostic warning:
 
 ```lua
-local __module_name__ = "dot.buf" ---@type string
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.colorpicker.mode" ---@type string
 ```
 
 ### Keymap Ordering
