@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_explorer" ---@type string
+
 local name = "era.fn.find_explorer" ---@type string
 local title = "Find Explorer" ---@type string
 

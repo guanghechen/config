@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "dot.buf" ---@type string
 
 ---@class dot.buf.IMeta

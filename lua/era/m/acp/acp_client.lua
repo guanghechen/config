@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.acp.acp_client" ---@type string
 
 ---@alias era.m.acp.acp_client.ConnectionState

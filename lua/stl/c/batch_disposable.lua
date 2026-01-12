@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.batch_disposable" ---@type string
 
 ---@param disposables                   stl.c.IDisposable[]

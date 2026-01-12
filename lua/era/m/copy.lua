@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.copy" ---@type string
 
 ---@param candidate                     dot.command.definitions.copy.Scope

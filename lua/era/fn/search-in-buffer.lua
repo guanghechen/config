@@ -1,4 +1,4 @@
----@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.search_in_buffer" ---@type string
 
 local searcher ---@type era.m.searcher.buffer.Searcher|nil

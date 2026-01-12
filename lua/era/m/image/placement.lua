@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.image.placement" ---@type string
 
 ---@alias era.m.image.Extmark      vim.api.keyset.set_extmark|{row: integer, col: integer}

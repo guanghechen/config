@@ -1,4 +1,4 @@
----@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.view.filetree" ---@type string
 
 ---@alias era.m.searcher.view.filetree.INodeState

@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.git.state" ---@type string
+
 ---@class era.m.git.state
 local M = {}
 

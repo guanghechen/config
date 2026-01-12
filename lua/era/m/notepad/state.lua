@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.notepad.state" ---@type string
+
 ---@class era.m.notepad.state.ISourceConfig : era.m.notepad.state.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
 ---@field public engine                 'json'|'folder' Source engine type

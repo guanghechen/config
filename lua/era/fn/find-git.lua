@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_git" ---@type string
+
 local name = "era.fn.find_git" ---@type string
 local title = "Find Git" ---@type string
 

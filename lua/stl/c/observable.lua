@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.observable" ---@type string
 
 ---@class stl.c.observable.INextOptions

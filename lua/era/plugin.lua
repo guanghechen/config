@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.plugin" ---@type string
 
 ---@class era.plugin.bootstrap.conds

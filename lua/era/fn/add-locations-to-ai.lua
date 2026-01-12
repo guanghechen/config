@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.add_locations_to_ai" ---@type string
 
 ---@param locations                     dot.t.ILocation[]

@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.widget.win-history" ---@type string
 
 ---@class era.widget.win_history.IItem : era.m.picker.composer.list.IItem

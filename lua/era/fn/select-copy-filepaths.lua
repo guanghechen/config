@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.select_copy_filepaths" ---@type string
 
 ---@class era.fn.select_copy_filepaths.IParams : vim.api.keyset.win_config

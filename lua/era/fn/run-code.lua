@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.run_code" ---@type string
 
 ---@class era.fn.run_code.IRunner

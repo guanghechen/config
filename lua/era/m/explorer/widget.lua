@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.widget" ---@type string
 
 local Action = require("era.m.explorer.action")

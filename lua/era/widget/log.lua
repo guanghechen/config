@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.widget.log" ---@type string
 
 ---@class era.widget.log

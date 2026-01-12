@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.view" ---@type string
 
 local INDENT_BRANCH = "├─" ---@type string

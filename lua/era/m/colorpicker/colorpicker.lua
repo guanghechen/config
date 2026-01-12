@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.colorpicker" ---@type string
+
 local S = era.m.colorpicker
 
 local WIN_HIGHLIGHT = "FloatBorder:m_cp_border,Normal:m_cp_normal,EndOfBuffer:m_cp_normal"

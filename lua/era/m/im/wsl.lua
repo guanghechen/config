@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.im.wsl" ---@type string
 
 ---@class era.m.im.wsl : era.m.im

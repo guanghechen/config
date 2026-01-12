@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.toggle.list" ---@type string
 
 ---@class era.m.toggle.IItem

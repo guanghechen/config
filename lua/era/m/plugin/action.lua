@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.plugin.action" ---@type string
+
 local State = require("era.m.plugin.state")
 
 ---@class era.m.plugin.action

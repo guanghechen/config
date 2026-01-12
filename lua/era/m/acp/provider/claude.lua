@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.acp.provider.claude" ---@type string
 
 ---@class era.m.acp.provider.Claude : era.m.acp.IProvider

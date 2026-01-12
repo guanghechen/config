@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.env" ---@type string
 
 local os_name = vim.uv.os_uname().sysname ---@type string|nil

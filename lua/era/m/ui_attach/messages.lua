@@ -1,4 +1,5 @@
-local __module_name__ = "era.m.ui_attach.messages"
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.ui_attach.messages" ---@type string
 local states = require("era.m.ui_attach.state")
 
 local KIND_MAP = {

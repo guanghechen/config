@@ -1,4 +1,6 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.im.mac" ---@type string
+
 -- cspell:ignore SCIM ITABC
 
 ---@class era.m.im.mac : era.m.im

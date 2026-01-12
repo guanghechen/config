@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.result" ---@type string
 
 ---@alias era.m.picker.result.IDraw

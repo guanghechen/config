@@ -1,4 +1,6 @@
-local __module_name__ = "dot.win"
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "dot.win" ---@type string
+
 local vim_win = require("stl.nvim.win")
 
 ---@class dot.win.IFilepathHistoryItem
@@ -99,7 +101,8 @@ function M.find_fixed_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype) and vim_win.is_fixed(winnr) then
+    local c_filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+    if filetype == c_filetype and vim_win.is_fixed(winnr) then
       return winnr
     end
   end
@@ -127,7 +130,8 @@ function M.find_sourcefile_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if (filetype == nil or vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype) and M.is_sourcefile(winnr) then
+    local c_filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+    if c_filetype == filetype and M.is_sourcefile(winnr) then
       return winnr
     end
   end

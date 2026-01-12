@@ -1,4 +1,8 @@
 ---@diagnostic disable: invisible
+
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_keymaps" ---@type string
+
 local name = "era.fn.find_keymaps" ---@type string
 local title = "Find Keymaps" ---@type string
 

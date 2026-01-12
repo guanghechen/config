@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.image.convert" ---@type string
 
 ---@class era.m.image.convert

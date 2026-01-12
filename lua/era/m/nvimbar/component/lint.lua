@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.nvimbar.component.lint" ---@type string
+
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
 

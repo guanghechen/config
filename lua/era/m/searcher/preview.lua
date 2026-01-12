@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.preview" ---@type string
 
 ---@alias era.m.searcher.preview.IDraw
@@ -241,14 +242,18 @@ function M:create_win(winopts, dimension)
   self._winnr = winnr
 
   dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_PREVIEW)
-  vim.api.nvim_set_option_value("listchars", string.format(
-    "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
-    stl.icon.listchars.eol,
-    stl.icon.listchars.lead,
-    stl.icon.listchars.nbsp,
-    stl.icon.listchars.space,
-    stl.icon.listchars.trail
-  ), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "listchars",
+    string.format(
+      "eol:%s,lead:%s,nbsp:%s,space:%s,trail:%s",
+      stl.icon.listchars.eol,
+      stl.icon.listchars.lead,
+      stl.icon.listchars.nbsp,
+      stl.icon.listchars.space,
+      stl.icon.listchars.trail
+    ),
+    { win = winnr, scope = "local" }
+  )
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("spell", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("signcolumn", "yes", { win = winnr, scope = "local" })

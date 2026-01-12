@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.tree_retriever" ---@type string
 
 ---@class stl.c.ITreeRetrieverProps

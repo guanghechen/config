@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.acp.input" ---@type string
+
 ---@class era.m.acp.input.IInputOpts
 ---@field public session                era.m.acp.Session
 ---@field public on_submit              fun(content: string, attachments: era.m.acp.IContentBlock[]): nil

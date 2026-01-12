@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.tree" ---@type string
 
 ---@alias stl.c.ITreeTraverseConditionalEnum

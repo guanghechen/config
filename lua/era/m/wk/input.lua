@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.wk.input" ---@type string
+
 local S = era.m.wk
 
 ---@class era.m.wk.input

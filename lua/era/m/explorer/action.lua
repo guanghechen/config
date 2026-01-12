@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.explorer.action" ---@type string
+
 ---@class era.m.explorer.Action
 ---@field protected _ctx                era.m.explorer.action.IContext
 local M = {}

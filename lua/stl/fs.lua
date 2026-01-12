@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.fs" ---@type string
 
 ---@class stl.t.IReadFileParams

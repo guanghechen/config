@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_files" ---@type string
+
 local name = "era.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
 local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())

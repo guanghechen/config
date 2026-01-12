@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.input_history" ---@type string
 
 ---@class stl.c.InputHistory : stl.c.History

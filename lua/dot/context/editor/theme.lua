@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "dot.context.editor.theme" ---@type string
 
 ---@class dot.context.theme.ILoadIntegrationParams

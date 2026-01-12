@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.buffer" ---@type string
 
 local c = require("era.m.nvimbar").component
@@ -853,7 +854,11 @@ function M:__create_finder_window_as_needed__()
   vim.api.nvim_set_option_value("spell", false, { win = popup_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winblend", winblend, { win = popup_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = popup_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", "Normal:Normal,FloatBorder:FloatBorder", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    "Normal:Normal,FloatBorder:FloatBorder",
+    { win = popup_winnr, scope = "local" }
+  )
   vim.api.nvim_set_option_value("wrap", false, { win = popup_winnr, scope = "local" })
 
   -- Set nvimbar immediately when finder window is created
@@ -907,7 +912,11 @@ function M:__create_replacer_window_as_needed__()
   vim.api.nvim_set_option_value("spell", false, { win = popup_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winblend", winblend, { win = popup_winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = popup_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", "Normal:Normal,FloatBorder:FloatBorder", { win = popup_winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    "Normal:Normal,FloatBorder:FloatBorder",
+    { win = popup_winnr, scope = "local" }
+  )
   vim.api.nvim_set_option_value("wrap", false, { win = popup_winnr, scope = "local" })
 
   return popup_winnr, true

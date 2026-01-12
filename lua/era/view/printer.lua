@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.printer" ---@type string
 
 ---@class era.view.IPrinterProps

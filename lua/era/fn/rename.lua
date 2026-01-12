@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.rename" ---@type string
 
 ---@alias era.fn.rename

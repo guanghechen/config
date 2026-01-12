@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.lsp.reference" ---@type string
 
 ---@class era.m.lsp.reference.IItem

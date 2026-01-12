@@ -1,4 +1,5 @@
 ---@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.result" ---@type string
 
 local c = require("era.m.nvimbar").component

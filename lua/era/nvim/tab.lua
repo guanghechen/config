@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.nvim.tab" ---@type string
 
 ---@class era.nvim.tab

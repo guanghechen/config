@@ -1,4 +1,5 @@
-local __module_name__ = "era.fn.find_notifications"
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_notifications" ---@type string
 
 ---@class era.fn.find_notifications.IItemData
 ---@field public task                   era.t.INotifierTask

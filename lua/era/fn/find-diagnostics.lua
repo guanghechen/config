@@ -1,5 +1,8 @@
 ---@diagnostic disable: invisible
 
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.fn.find_diagnostics" ---@type string
+
 ---@alias era.fn.find_diagnostics.SeverityEnum
 ---| "ERROR"
 ---| "WARN"

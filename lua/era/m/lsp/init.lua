@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.lsp" ---@type string
 
 ---@class era.m.lsp.__mods

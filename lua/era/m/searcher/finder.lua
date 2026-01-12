@@ -1,4 +1,4 @@
----@diagnostic disable: invisible
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.finder" ---@type string
 
 ---@class era.m.searcher.finder.IWinOpts

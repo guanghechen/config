@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.notifications" ---@type string
 
 ---@class era.view.notifications.IConfig

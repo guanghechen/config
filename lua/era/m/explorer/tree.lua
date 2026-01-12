@@ -1,5 +1,5 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.explorer.tree" ---@type string
-local math_floor = math.floor
 
 ---@class era.m.explorer.ITreeProps
 ---@field public name                   string
@@ -927,7 +927,7 @@ function M:__find_insertion_index__(resource_manager, children, candidate)
   local lo = 1 ---@type integer
   local hi = #children ---@type integer
   while lo <= hi do
-    local mid = math_floor((lo + hi) / 2) ---@type integer
+    local mid = math.floor((lo + hi) / 2) ---@type integer
     local delta = resource_manager.compare(candidate, children[mid]) ---@type integer
     if delta >= 0 then
       lo = mid + 1

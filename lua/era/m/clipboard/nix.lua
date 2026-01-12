@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.clipboard.nix" ---@type string
 
 ---@class era.m.clipboard.nix

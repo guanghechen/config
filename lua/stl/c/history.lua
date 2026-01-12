@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.history" ---@type string
 
 ---@class stl.c.history.IForkParams

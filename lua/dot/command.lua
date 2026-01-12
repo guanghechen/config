@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "dot.command" ---@type string
 
 ---@alias dot.command.definitions.copy.Scope

@@ -1,3 +1,4 @@
+---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.acp.provider.opencode" ---@type string
 
 local S = era.m.acp
