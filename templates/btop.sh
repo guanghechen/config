@@ -19,12 +19,16 @@ tmux new-window -t "$SESSION" -n "tmux" -c "$BTOP_DIR"
 # Window 3: nvim - proc only, filter 'nvim' (preset 2)
 tmux new-window -t "$SESSION" -n "nvim" -c "$BTOP_DIR"
 
+# Window 4: nvim headless - proc only, filter 'nvim' (preset 2)
+tmux new-window -t "$SESSION" -n "nvim-headless" -c "$BTOP_DIR"
+
 sleep 1
 
 tmux rename-window -t "$SESSION:1" "dashboard" # override hook rename
 tmux send-keys -t "$SESSION:dashboard" "btop -p 0" Enter
-tmux send-keys -t "$SESSION:tmux" "btop -p 2 --filter tmux" Enter
-tmux send-keys -t "$SESSION:nvim" "btop -p 2 --filter nvim" Enter
+tmux send-keys -t "$SESSION:tmux" "btop -p 2 --filter 'tmux'" Enter
+tmux send-keys -t "$SESSION:nvim" "btop -p 2 --filter 'nvim'" Enter
+tmux send-keys -t "$SESSION:nvim-headless" "btop -p 2 --filter 'nvim --headless'" Enter
 
 # Select first window and attach or switch
 tmux select-window -t "$SESSION:dashboard"
