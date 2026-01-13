@@ -29,6 +29,10 @@ local function get_explorer_width()
     return 0
   end
 
+  if not era.widget.explorer.widget:has_win_in_tab() then
+    return 0
+  end
+
   local winnr = era.widget.explorer.widget:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return 0

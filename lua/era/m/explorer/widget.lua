@@ -34,7 +34,7 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field public name                   string
 ---@field public fullname               string
 ---@field protected _action             era.m.explorer.Action
----@field protected _autocmd_ids        integer[]
+---@field protected _augroup            integer
 ---@field protected _bufnr              integer|nil
 ---@field protected _disposed           boolean
 ---@field protected _flags              era.m.explorer.widget.IFlagItem[]
@@ -48,9 +48,9 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field protected _render_result      era.m.explorer.view.IRenderResult|nil
 ---@field protected _resource_manager   era.m.explorer.resource.FileManager
 ---@field protected _subscriptions      stl.c.IUnsubscribable[]
+---@field protected _tab_wins           table<integer, integer>
 ---@field protected _tree               era.m.explorer.Tree
 ---@field protected _view               era.m.explorer.View
----@field protected _winnr              integer|nil
 local M = {}
 M.__index = M
 
@@ -94,7 +94,7 @@ function M.new(props)
 
   self.name = name
   self.fullname = fullname
-  self._autocmd_ids = {}
+  self._augroup = vim.api.nvim_create_augroup(fullname, { clear = true })
   self._bufnr = nil
   self._disposed = false
   self._flags = props.flags or {}
@@ -107,9 +107,9 @@ function M.new(props)
   self._render_result = nil
   self._resource_manager = resource_manager
   self._subscriptions = {}
+  self._tab_wins = {}
   self._tree = tree
   self._view = view
-  self._winnr = nil
 
   ---@type era.m.explorer.action.IContext
   local action_ctx = {
@@ -160,17 +160,21 @@ function M:dispose()
   end
   self._subscriptions = {}
 
-  for _, autocmd_id in ipairs(self._autocmd_ids) do
-    pcall(vim.api.nvim_del_autocmd, autocmd_id)
-  end
-  self._autocmd_ids = {}
+  pcall(vim.api.nvim_del_augroup_by_id, self._augroup)
 
   for _, unregister in ipairs(self._unregister_fns) do
     unregister()
   end
   self._unregister_fns = {}
 
-  self:hide()
+  -- Close all windows
+  for _, winnr in pairs(self._tab_wins) do
+    if vim.api.nvim_win_is_valid(winnr) then
+      pcall(vim.api.nvim_win_close, winnr, true)
+    end
+  end
+  self._tab_wins = {}
+
   self._tree:dispose()
   self._resource_manager:dispose()
   self._render_result = nil
@@ -205,7 +209,7 @@ function M:get_cursor_uri()
     return nil
   end
 
-  local winnr = self._winnr ---@type integer|nil
+  local winnr = self:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return nil
   end
@@ -225,17 +229,31 @@ function M:get_tree()
   return self._tree
 end
 
+---@param tabnr                         ?integer
 ---@return integer|nil
-function M:get_winnr()
-  return self._winnr
+function M:get_winnr(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  return self._tab_wins[tabnr]
 end
 
----@return nil
-function M:hide()
-  local winnr = self._winnr ---@type integer|nil
-  self._winnr = nil
+---@param tabnr                         ?integer
+---@return boolean
+function M:has_win_in_tab(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  return self._tab_wins[tabnr] ~= nil
+end
 
-  self._resource_manager:pause_watch()
+---@param tabnr                         ?integer
+---@return nil
+function M:hide(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  local winnr = self._tab_wins[tabnr] ---@type integer|nil
+  self._tab_wins[tabnr] = nil
+
+  -- Pause watch only if no windows remain
+  if next(self._tab_wins) == nil then
+    self._resource_manager:pause_watch()
+  end
 
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
     local width = vim.api.nvim_win_get_width(winnr) ---@type integer
@@ -251,18 +269,23 @@ function M:isdisposed()
   return self._disposed
 end
 
+---@param tabnr                         ?integer
 ---@return boolean
-function M:isfocused()
-  if self._winnr == nil then
+function M:isfocused(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  local winnr = self._tab_wins[tabnr] ---@type integer|nil
+  if winnr == nil then
     return false
   end
-  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-  return winnr_current == self._winnr
+  return vim.api.nvim_get_current_win() == winnr
 end
 
+---@param tabnr                         ?integer
 ---@return boolean
-function M:isvisible()
-  return self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr)
+function M:isvisible(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  local winnr = self._tab_wins[tabnr] ---@type integer|nil
+  return winnr ~= nil and vim.api.nvim_win_is_valid(winnr)
 end
 
 ---@return nil
@@ -283,12 +306,12 @@ end
 
 ---@return nil
 function M:resize()
-  local winnr = self._winnr ---@type integer|nil
-  if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
-    return
+  local width = self:__get_effective_width__() ---@type integer
+  for _, winnr in pairs(self._tab_wins) do
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_set_width(winnr, width)
+    end
   end
-
-  vim.api.nvim_win_set_width(winnr, self:__get_effective_width__())
 end
 
 ---@param uri                           string|nil
@@ -373,7 +396,43 @@ function M:__create_buf_as_needed__()
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
 
   self:__setup_keymaps__(bufnr)
+  self:__setup_buf_autocmds__(bufnr)
   return bufnr
+end
+
+---@protected
+---@param bufnr                         integer
+---@return nil
+function M:__setup_buf_autocmds__(bufnr)
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = self._augroup,
+    buffer = bufnr,
+    callback = function()
+      self._is_focused = true
+      self:__update_cursorline__()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("BufLeave", {
+    group = self._augroup,
+    buffer = bufnr,
+    callback = function()
+      self._is_focused = false
+      self:__update_cursorline__()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("CursorMoved", {
+    group = self._augroup,
+    buffer = bufnr,
+    callback = function()
+      local uri = self:get_cursor_uri() ---@type string|nil
+      if uri ~= nil then
+        self._tree.o_cursor_uri:next(uri)
+      end
+      self:__update_cursorline__()
+    end,
+  })
 end
 
 ---@protected
@@ -397,7 +456,7 @@ function M:__create_nvimbar__()
   end
 
   local get_width = function()
-    local winnr = self._winnr ---@type integer|nil
+    local winnr = self:get_winnr() ---@type integer|nil
     if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
       return vim.api.nvim_win_get_width(winnr)
     end
@@ -414,15 +473,15 @@ function M:__create_nvimbar__()
     silent = stl.fn.falsy,
     get_max_width = get_width,
     get_preset_context = function()
-      local winnr = self._winnr ---@type integer|nil
+      local winnr = self:get_winnr() ---@type integer|nil
       return { winnr = winnr }
     end,
     is_active = function()
-      local winnr = self._winnr ---@type integer|nil
+      local winnr = self:get_winnr() ---@type integer|nil
       return winnr == vim.api.nvim_get_current_win()
     end,
     on_fulfilled = function(result)
-      local winnr = self._winnr ---@type integer|nil
+      local winnr = self:get_winnr() ---@type integer|nil
       if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
         vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
@@ -435,7 +494,8 @@ end
 ---@protected
 ---@return integer
 function M:__create_win_as_needed__()
-  local winnr = self._winnr ---@type integer|nil
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnr = self._tab_wins[tabnr] ---@type integer|nil
   local bufnr = self:__create_buf_as_needed__() ---@type integer
 
   if winnr ~= nil and vim.api.nvim_win_is_valid(winnr) then
@@ -443,9 +503,14 @@ function M:__create_win_as_needed__()
   end
 
   local width = self:__get_effective_width__() ---@type integer
-  vim.cmd(("silent noswapfile vertical topleft sbuffer %d | vertical resize %d"):format(bufnr, width))
+
+  vim.cmd("silent noswapfile vertical topleft new")
   winnr = vim.api.nvim_get_current_win() ---@type integer
-  self._winnr = winnr
+  local temp_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_buf_delete(temp_bufnr, { force = true })
+  vim.api.nvim_win_set_width(winnr, width)
+  self._tab_wins[tabnr] = winnr
 
   vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
@@ -461,37 +526,16 @@ function M:__create_win_as_needed__()
 
   dot.win.set_type(winnr, stl.nvim.win.Types.EXPLORER)
 
-  self:__update_winbar__()
+  self:__update_winbar__(tabnr)
 
-  local autocmd_id_buf_enter = vim.api.nvim_create_autocmd("BufEnter", {
-    buffer = bufnr,
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = self._augroup,
+    pattern = tostring(winnr),
+    once = true,
     callback = function()
-      self._is_focused = true
-      self:__update_cursorline__()
+      self._tab_wins[tabnr] = nil
     end,
   })
-  self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_buf_enter
-
-  local autocmd_id_buf_leave = vim.api.nvim_create_autocmd("BufLeave", {
-    buffer = bufnr,
-    callback = function()
-      self._is_focused = false
-      self:__update_cursorline__()
-    end,
-  })
-  self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_buf_leave
-
-  local autocmd_id_cursor_moved = vim.api.nvim_create_autocmd("CursorMoved", {
-    buffer = bufnr,
-    callback = function()
-      local uri = self:get_cursor_uri() ---@type string|nil
-      if uri ~= nil then
-        self._tree.o_cursor_uri:next(uri)
-      end
-      self:__update_cursorline__()
-    end,
-  })
-  self._autocmd_ids[#self._autocmd_ids + 1] = autocmd_id_cursor_moved
 
   return winnr
 end
@@ -651,7 +695,7 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
     return false
   end
 
-  local winnr = self._winnr ---@type integer|nil
+  local winnr = self:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return false
   end
@@ -1497,7 +1541,7 @@ function M:__sync_cursor_to_uri__(uri)
     return
   end
 
-  local winnr = self._winnr ---@type integer|nil
+  local winnr = self:get_winnr() ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
@@ -1512,7 +1556,7 @@ end
 ---@return nil
 function M:__update_cursorline__()
   local bufnr = self._bufnr ---@type integer|nil
-  local winnr = self._winnr ---@type integer|nil
+  local winnr = self:get_winnr() ---@type integer|nil
   if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -1545,9 +1589,11 @@ function M:__update_cursorline__()
 end
 
 ---@protected
+---@param tabnr                         ?integer
 ---@return nil
-function M:__update_winbar__()
-  local winnr = self._winnr ---@type integer|nil
+function M:__update_winbar__(tabnr)
+  tabnr = tabnr or vim.api.nvim_get_current_tabpage()
+  local winnr = self._tab_wins[tabnr] ---@type integer|nil
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     return
   end

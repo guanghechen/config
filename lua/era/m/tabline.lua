@@ -73,6 +73,14 @@ local function should_show_tabline()
   return meta == nil or #meta.bufs > 1
 end
 
+---@return boolean
+local function is_explorer_visible_in_current_tab()
+  if era.widget.explorer.widget == nil then
+    return false
+  end
+  return era.widget.explorer.widget:has_win_in_tab()
+end
+
 ---@return nil
 function M.dressing()
   local last_showtabline = 0 ---@type integer
@@ -82,7 +90,7 @@ function M.dressing()
         vim.o.showtabline = 2
 
         if last_showtabline == 0 then
-          if era.widget.explorer.widget ~= nil and era.widget.explorer.widget:isvisible() then
+          if is_explorer_visible_in_current_tab() then
             era.widget.explorer.widget:render_winbar()
           end
         end
@@ -93,7 +101,7 @@ function M.dressing()
         vim.o.showtabline = 0
 
         if last_showtabline ~= 0 then
-          if era.widget.explorer.widget ~= nil and era.widget.explorer.widget:isvisible() then
+          if is_explorer_visible_in_current_tab() then
             era.widget.explorer.widget:render_winbar()
           end
 
