@@ -11,8 +11,13 @@ import { dirname, join } from "node:path";
 const targetSize = process.argv[2] || "144000";
 
 const patterns = [
+  // v2.2+ - variable definition pattern
+  { name: "v2.2+", regex: /var T_9=\d+/, replacement: `var T_9=${targetSize}` },
+  // v2.1.2+
   { name: "v2.1.2+", regex: /return tO9\}var tO9=\d+/, replacement: `return tO9}var tO9=${targetSize}` },
+  // v2.1+
   { name: "v2.1+", regex: /return JO9\}var JO9=\d+/, replacement: `return JO9}var JO9=${targetSize}` },
+  // v2.0
   { name: "v2.0", regex: /function NO\(A\)\{if\(A\.includes\("\[1m\]"\)\)return 1e6;return \d+\}/, replacement: `function NO(A){if(A.includes("[1m]"))return 1e6;return ${targetSize}}` },
 ];
 
