@@ -1,9 +1,13 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.notepad.state" ---@type string
 
+---@alias era.m.notepad.state.SourceEngine
+---| "json"
+---| "folder"
+
 ---@class era.m.notepad.state.ISourceConfig : era.m.notepad.state.INotepadSourceConfig
 ---@field public title                  string Human-readable source title
----@field public engine                 'json'|'folder' Source engine type
+---@field public engine                 era.m.notepad.state.SourceEngine Source engine type
 
 local S = era.m.notepad
 
@@ -250,6 +254,8 @@ function M.retrieve_source(name)
     local source
     if config.engine == "folder" then
       source = S.FolderSource.new(config)
+    elseif config.engine == "json" then
+      source = S.JsonSource.new(config)
     else
       source = S.JsonSource.new(config)
     end
@@ -260,7 +266,13 @@ function M.retrieve_source(name)
   local default_config = source_configs[1]
   local default_name = default_config.name
   if _source_cache[default_name] == nil then
-    _source_cache[default_name] = S.JsonSource.new(default_config)
+    if default_config.engine == "folder" then
+      _source_cache[default_name] = S.FolderSource.new(default_config)
+    elseif default_config.engine == "json" then
+      _source_cache[default_name] = S.JsonSource.new(default_config)
+    else
+      _source_cache[default_name] = S.JsonSource.new(default_config)
+    end
   end
   return _source_cache[default_name], default_config
 end

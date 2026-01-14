@@ -17,7 +17,7 @@ local M = {}
 function M.defaults()
   ---@type dot.context.module.data
   return {
-    notepad_source = "workspace",
+    notepad_source = "workspace:local",
     paste_image_filepath = "local/img/screenshot.png",
   }
 end
