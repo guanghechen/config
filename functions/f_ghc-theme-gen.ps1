@@ -4,6 +4,6 @@ function f_ghc-theme-gen {
   if (Test-Path -Path $script_path) {
     node "$script_path"
   } else {
-    Write-Host "Cannot find the script file: $script_path." -ForegroundColor Red
+    Write-Host "  Cannot find $script_path." -ForegroundColor Red
   }
 }

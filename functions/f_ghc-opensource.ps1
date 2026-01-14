@@ -7,7 +7,7 @@ function f_ghc-opensource {
   )
 
   if (-not ${env:ROOT_SOURCECODES}) {
-    Write-Error "Error: ROOT_SOURCECODES is not set"
+    Write-Host "  ROOT_SOURCECODES is not set." -ForegroundColor Red
     return
   }
 
@@ -22,7 +22,7 @@ function f_ghc-opensource {
   }
 
   if (-not $repoPath) {
-    Write-Output "Usage: ghc-opensource [--github] <author/reponame>"
+    Write-Host "  Usage: ghc-opensource [--github] <author/reponame>" -ForegroundColor Yellow
     return
   }
 
@@ -30,7 +30,7 @@ function f_ghc-opensource {
     "--github" {
       $parts = $repoPath -split "/"
       if ($parts.Count -ne 2) {
-        Write-Error "Error: Invalid format. Expected <author/reponame>"
+        Write-Host "  Invalid format. Expected <author/reponame>." -ForegroundColor Red
         return
       }
 

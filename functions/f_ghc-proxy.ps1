@@ -19,7 +19,7 @@ function f_ghc-proxy {
     npm config set proxy $proxy
     npm config set https-proxy $proxy
 
-    Write-Output "Proxy enabled: $proxy"
+    Write-Host "  Proxy enabled: $proxy" -ForegroundColor Green
 
   } elseif ($action -eq "off") {
     [System.Environment]::SetEnvironmentVariable("HTTP_PROXY", $null, [System.EnvironmentVariableTarget]::User)
@@ -31,7 +31,7 @@ function f_ghc-proxy {
     npm config delete proxy
     npm config delete https-proxy
 
-    Write-Output "Proxy disabled."
+    Write-Host "  Proxy disabled." -ForegroundColor Yellow
 
   } else {
     $currentHttpProxy = [System.Environment]::GetEnvironmentVariable("HTTP_PROXY", [System.EnvironmentVariableTarget]::User)

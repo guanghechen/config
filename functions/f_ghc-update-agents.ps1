@@ -12,7 +12,7 @@ function f_ghc-update-agents {
     Write-Host "  Installing $agent..." -ForegroundColor Cyan
     npm install -g $agent | Out-Null
     $pkg_ver = (npm list -g $agent --depth=0 2>$null | Select-String $agent) -replace '.*@', ''
-    Write-Host "  $agent installed: v$pkg_ver`n" -ForegroundColor Green
+    Write-Host "  $agent installed: v$pkg_ver`n" -ForegroundColor Green
   }
 
   Write-Host "  Patching Claude Code..." -ForegroundColor Cyan

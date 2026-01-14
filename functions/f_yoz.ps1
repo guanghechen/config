@@ -25,18 +25,18 @@ function f_yoz {
     $targetFile = if ($InputObject) { $InputObject } else { $filepath }
 
     if (-not $targetFile) {
-      Write-Host "Usage: yoz <filepath> [-force] or echo <filepath> | yoz [-force]"
+      Write-Host "  Usage: yoz <filepath> [-force] or echo <filepath> | yoz [-force]" -ForegroundColor Yellow
       return 1
     }
 
     if (-not $env:YOZ_SERVER_PORT) {
-      Write-Host "Error: YOZ_SERVER_PORT not set"
+      Write-Host "  YOZ_SERVER_PORT not set." -ForegroundColor Red
       return 1
     }
 
     $resolvedPath = Resolve-Path $targetFile -ErrorAction SilentlyContinue
     if (-not $resolvedPath) {
-      Write-Host "Error: File not found: $targetFile"
+      Write-Host "  File not found: $targetFile" -ForegroundColor Red
       return 1
     }
 

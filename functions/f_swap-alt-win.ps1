@@ -21,10 +21,10 @@ function f_swap-alt-win {
       0x00,0x00,0x00,0x00
     )
     Set-ItemProperty -Path $regPath -Name $regName -Value $scancode
-    Write-Host "Alt/Win key swap enabled (both left and right). Please restart system to take effect." -ForegroundColor Green
+    Write-Host "  Alt/Win key swap enabled (both left and right). Please restart system to take effect." -ForegroundColor Green
   }
   elseif ($Mode -eq "off") {
     Remove-ItemProperty -Path $regPath -Name $regName -ErrorAction SilentlyContinue
-    Write-Host "Default key mapping restored. Please restart system to take effect." -ForegroundColor Yellow
+    Write-Host "  Default key mapping restored. Please restart system to take effect." -ForegroundColor Yellow
   }
 }

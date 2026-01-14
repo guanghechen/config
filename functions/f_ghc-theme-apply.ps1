@@ -9,6 +9,6 @@ function f_ghc-theme-apply {
     }
     node $script_path $first_arg
   } else {
-    Write-Host "Cannot find the script file: $script_path." -ForegroundColor Red
+    Write-Host "  Cannot find $script_path." -ForegroundColor Red
   }
 }

@@ -9,7 +9,7 @@ function __ghc_update_sync_worktrees__ {
   )
 
   if (-not (Test-Path -Path $RepoRoot)) {
-    Write-Host ("   [{0}] mkdir -p {1}" -f $RepoName, $RepoRoot) -ForegroundColor Blue
+    Write-Host ("  [{0}] mkdir -p {1}" -f $RepoName, $RepoRoot) -ForegroundColor Cyan
     New-Item -ItemType Directory -Path $RepoRoot -Force | Out-Null
     Write-Host
   }
@@ -19,12 +19,12 @@ function __ghc_update_sync_worktrees__ {
     $gitPath = Join-Path $RepoMain ".git"
 
     if (Test-Path $gitPath) {
-      Write-Host "   [$RepoName] fetching and merging origin/$mainBranch" -ForegroundColor Blue
+      Write-Host "  [$RepoName] fetching and merging origin/$mainBranch" -ForegroundColor Cyan
       git -C "$RepoMain" fetch origin
       git -C "$RepoMain" merge "origin/$mainBranch" --ff-only
       Write-Host
     } else {
-      Write-Host "   [$RepoName] cloning $RepoUrl (branch: $mainBranch)" -ForegroundColor Blue
+      Write-Host "  [$RepoName] cloning $RepoUrl (branch: $mainBranch)" -ForegroundColor Cyan
       git -C "$RepoRoot" clone $RepoUrl --branch=$mainBranch "$RepoMain"
       Write-Host
     }
@@ -54,11 +54,11 @@ function __ghc_update_sync_worktrees__ {
     }
 
     if (Test-Path -Path $repoPath) {
-      Write-Host "   [$RepoName] syncing $branch" -ForegroundColor Blue
+      Write-Host "  [$RepoName] syncing $branch" -ForegroundColor Cyan
       git -C "$repoPath" merge "origin/$branch" --ff-only
       Write-Host
     } elseif ($isRequired) {
-      Write-Host "   [$RepoName] add new worktree of $branch" -ForegroundColor Blue
+      Write-Host "  [$RepoName] add new worktree of $branch" -ForegroundColor Cyan
       git -C "$RepoMain" worktree add "$repoPath" $branch
       Write-Host
     }
@@ -109,11 +109,11 @@ function f_ghc-update {
     "yoz"
   )
 
-  Write-Host "  [$configMain] syncing..." -ForegroundColor Green
+  Write-Host "  [$configMain] syncing..." -ForegroundColor Cyan
   __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "main" -Branches @($configMainBranch)
   __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "required" -Branches $configRequiredBranches
   __ghc_update_sync_worktrees__ -RepoRoot $configRoot -RepoMain $configMain -RepoUrl $configUrl -RepoName "config" -Scope "optional" -Branches $configOptionalBranches
-  Write-Host "  [config] done." -ForegroundColor Cyan
+  Write-Host "  [config] done." -ForegroundColor Green
   Write-Host
 
   #----------------------------------------------------------------------------------------------#
@@ -126,9 +126,9 @@ function f_ghc-update {
   $wikiRequiredBranches = @("translator", "wiki-note")
   $wikiOptionalBranches = @()
 
-  Write-Host "  [$wikiMain] syncing..." -ForegroundColor Green
+  Write-Host "  [$wikiMain] syncing..." -ForegroundColor Cyan
   __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "main" -Branches @($wikiMainBranch)
   __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "required" -Branches $wikiRequiredBranches
   __ghc_update_sync_worktrees__ -RepoRoot $wikiRoot -RepoMain $wikiMain -RepoUrl $wikiUrl -RepoName "wiki" -Scope "optional" -Branches $wikiOptionalBranches
-  Write-Host "  [wiki] done." -ForegroundColor Cyan
+  Write-Host "  [wiki] done." -ForegroundColor Green
 }
