@@ -3,10 +3,10 @@ function ghc-patch-claude --description "Patch Claude Code with custom modificat
 
     # Check if claude is installed
     if not command -q claude
-        echo "❌ Claude Code not installed"
+        printf "\e[91m  Claude Code not installed\e[0m\n"
         return 1
     end
 
-    echo "cd ~/.config/claude/script/ && bun src/patch/index.ts"
+    printf "\e[96m  cd ~/.config/claude/script/ && bun src/patch/index.ts\e[0m\n"
     fish -c "cd ~/.config/claude/script/ && bun src/patch/index.ts"
 end

@@ -3,6 +3,6 @@ function ghc-theme-gen
   if test -f "$script_path"
     node "$script_path"
   else
-    echo "Cannot find $script_path."
+    printf "\e[91m  Cannot find %s.\e[0m\n" "$script_path"
   end
 end

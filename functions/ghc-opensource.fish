@@ -1,11 +1,11 @@
 function ghc-opensource --description 'Clone or pull an opensource repository'
     if test (count $argv) -eq 0
-        echo "Usage: ghc-opensource [--github] <author/reponame>"
+        printf "\e[93m  Usage: ghc-opensource [--github] <author/reponame>\e[0m\n"
         return 1
     end
 
     if not set -q ROOT_SOURCECODES
-        echo "Error: ROOT_SOURCECODES is not set"
+        printf "\e[91m  Error: ROOT_SOURCECODES is not set\e[0m\n"
         return 1
     end
 
@@ -21,7 +21,7 @@ function ghc-opensource --description 'Clone or pull an opensource repository'
     end
 
     if test -z "$repo_path"
-        echo "Usage: ghc-opensource [--github] <author/reponame>"
+        printf "\e[93m  Usage: ghc-opensource [--github] <author/reponame>\e[0m\n"
         return 1
     end
 
@@ -29,7 +29,7 @@ function ghc-opensource --description 'Clone or pull an opensource repository'
         case --github
             set -l parts (string split '/' $repo_path)
             if test (count $parts) -ne 2
-                echo "Error: Invalid format. Expected <author/reponame>"
+                printf "\e[91m  Error: Invalid format. Expected <author/reponame>\e[0m\n"
                 return 1
             end
 

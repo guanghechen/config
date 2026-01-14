@@ -6,6 +6,6 @@ function ghc-theme-apply
 
     node "$script_path" "$first_arg"
   else
-    echo "Cannot find $script_path."
+    printf "\e[91m  Cannot find %s.\e[0m\n" "$script_path"
   end
 end

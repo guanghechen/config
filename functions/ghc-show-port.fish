@@ -1,6 +1,6 @@
 function ghc-show-port
     if test (count $argv) -eq 0
-        echo "Usage: ghc-show-port <port>"
+        printf "\e[93m  Usage: ghc-show-port <port>\e[0m\n"
         return 1
     end
 
@@ -8,7 +8,7 @@ function ghc-show-port
 
     # Validate port number
     if not string match -qr '^\d+$' $port
-        echo "Error: Port must be a number"
+        printf "\e[91m  Error: Port must be a number\e[0m\n"
         return 1
     end
 
@@ -19,7 +19,7 @@ function ghc-show-port
     set lsof_lines (lsof -i :$port -n -P 2>/dev/null | string split \n)
 
     if test (count $lsof_lines) -le 1
-        echo "No processes found listening on port $port"
+        printf "\e[93m  No processes found listening on port %s\e[0m\n" $port
         return 0
     end
 

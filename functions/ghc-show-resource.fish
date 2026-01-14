@@ -1,6 +1,6 @@
 function ghc-show-resource
     if test (count $argv) -eq 0
-        echo "Usage: ghc-show-resource <process_name>"
+        printf "\e[93m  Usage: ghc-show-resource <process_name>\e[0m\n"
         return 1
     end
 
@@ -9,6 +9,11 @@ function ghc-show-resource
     # Collect all data first
     set pids (pgrep $proc_name)
     set all_data
+
+    if not set -q pids[1]
+        printf "\e[93m  No processes found for %s\e[0m\n" $proc_name
+        return 0
+    end
 
     for pid in $pids
         set threads (ps -M -p $pid | wc -l | string trim)

@@ -10,7 +10,7 @@ function ghc-update-agents --description "Update AI coding agents globally"
         printf "\e[96m  Installing %s...\e[0m\n" $agent
         npm install -g $agent >/dev/null
         set -l pkg_ver (npm list -g $agent --depth=0 2>/dev/null | grep $agent | sed 's/.*@//')
-        printf "\e[92m  %s installed: v%s\e[0m\n\n" $agent $pkg_ver
+        printf "\e[92m  %s installed: v%s\e[0m\n\n" $agent $pkg_ver
     end
 
     printf "\e[96m  Patching Claude Code...\e[0m\n"

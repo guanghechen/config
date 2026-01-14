@@ -7,61 +7,32 @@ function ghc-neovim-nightly
     set -l nvim_processes (eval $ps_cmd | grep nvim | grep -v grep)
 
     if test -n "$nvim_processes"
-        set_color yellow
-        echo "⚠️  Neovim processes are currently running:"
-        set_color normal
-        echo ""
-
+        printf "\e[93m  Neovim processes are currently running:\e[0m\n\n"
         echo "$nvim_processes"
-
-        echo ""
-        set_color red
-        echo "Please close all Neovim instances or kill the processes before continuing."
-        set_color normal
-        set_color cyan
+        printf "\n\e[91m  Please close all Neovim instances or kill the processes before continuing.\e[0m\n"
         set -l pids (echo "$nvim_processes" | awk '{print $2}' | string join ' ')
-        echo "You can kill them with: kill $pids"
-        set_color normal
+        printf "\e[96m  You can kill them with: kill %s\e[0m\n" "$pids"
         return 1
     end
 
     if not set -q NEOVIM_HOME
-        set_color red
-        echo "❌ Error: NEOVIM_HOME environment variable is not set"
-        set_color normal
+        printf "\e[91m  Error: NEOVIM_HOME environment variable is not set\e[0m\n"
         return 1
     end
 
-    set_color blue --bold
-    echo "📦 Building Neovim nightly..."
-    set_color normal
-    echo ""
+    printf "\e[94m  Building Neovim nightly...\e[0m\n\n"
 
-    set_color cyan
-    echo "→ Fetching tags and checking out nightly branch..."
-    set_color normal
+    printf "\e[96m  Fetching tags and checking out nightly branch...\e[0m\n"
     git fetch origin --tags --force && git checkout nightly; or return 1
 
-    echo ""
-    set_color cyan
-    echo "→ Building with CMake (RelWithDebInfo)..."
-    set_color normal
+    printf "\n\e[96m  Building with CMake (RelWithDebInfo)...\e[0m\n"
     make CMAKE_BUILD_TYPE=RelWithDebInfo CMAKE_INSTALL_PREFIX="$NEOVIM_HOME"; or return 1
 
-    echo ""
-    set_color cyan
-    echo "→ Removing old installation..."
-    set_color normal
+    printf "\n\e[96m  Removing old installation...\e[0m\n"
     rm -rf "$NEOVIM_HOME"; or return 1
 
-    echo ""
-    set_color cyan
-    echo "→ Installing to $NEOVIM_HOME..."
-    set_color normal
+    printf "\n\e[96m  Installing to %s...\e[0m\n" "$NEOVIM_HOME"
     make install; or return 1
 
-    echo ""
-    set_color green --bold
-    echo "✅ Neovim nightly installed successfully!"
-    set_color normal
+    printf "\n\e[92m  Neovim nightly installed successfully!\e[0m\n"
 end

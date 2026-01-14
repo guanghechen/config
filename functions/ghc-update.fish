@@ -43,11 +43,11 @@ function ghc-update
         yazi \
         yoz
 
-    printf "\e[92m  [$repomain] syncing...\e[0m\n"
+    printf "\e[96m  [$repomain] syncing...\e[0m\n"
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame main $main_branch
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
-    printf "\e[96m  [$reponame] done.\e[0m\n\n"
+    printf "\e[92m  [$reponame] done.\e[0m\n\n"
     #----------------------------------------------------------------------------------------------#
 
     set reporoot "$HOME/wiki"
@@ -59,17 +59,17 @@ function ghc-update
     set required_branches translator wiki-note
     set optional_branches
 
-    printf "\e[92m  [$repomain] syncing...\e[0m\n"
+    printf "\e[96m  [$repomain] syncing...\e[0m\n"
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame main $main_branch
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame required $required_branches
     __sync_git_worktrees $reporoot $repomain $repo_url $reponame optional $optional_branches
-    printf "\e[96m  [$reponame] done.\e[0m\n"
+    printf "\e[92m  [$reponame] done.\e[0m\n"
     #----------------------------------------------------------------------------------------------#
 
     set sync_scripts $f_fish_additional_ghc_update
     for sync_script in $sync_scripts
         if test -f $sync_script
-            printf "\e[92m  Running $sync_script...\e[0m\n"
+            printf "\e[96m  Running $sync_script...\e[0m\n"
             source $sync_script
         end
     end
