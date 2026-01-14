@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node --input-type=module -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-tool-use.mjs'))\""
+            "command": "bun $XDG_CONFIG_HOME/claude/script/src/hook/pre-tool-use.ts"
           }
         ]
       },
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node --input-type=module -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git-push.mjs'))\""
+            "command": "bun $XDG_CONFIG_HOME/claude/script/src/hook/pre-bash-git-push.ts"
           }
         ]
       }
@@ -33,7 +33,7 @@
   "includeCoAuthoredBy": false,
   "statusLine": {
     "type": "command",
-    "command": "node --input-type=module -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/statusline.mjs'))\"",
+    "command": "bun $XDG_CONFIG_HOME/claude/script/src/statusline.ts",
     "padding": 0
   },
   "enabledPlugins": {
