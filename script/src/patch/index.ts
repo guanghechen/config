@@ -2,8 +2,9 @@
 
 import { spawn } from "node:child_process"
 import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
-const __dirname = dirname(new URL(import.meta.url).pathname)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const contextWindowSize = process.argv[2]
 
 const patches = [
@@ -16,7 +17,8 @@ for (const { name, file, args } of patches) {
   console.log(`Running: ${name}`)
   console.log("=".repeat(50))
 
+  const script = join(__dirname, file)
   await new Promise<void>((resolve) => {
-    spawn("bun", [join(__dirname, file), ...args], { stdio: "inherit" }).on("close", resolve)
+    spawn(process.execPath, [script, ...args], { stdio: "inherit" }).on("close", resolve)
   })
 }
