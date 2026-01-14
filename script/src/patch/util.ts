@@ -20,3 +20,12 @@ export function getCliPath(): string | null {
     return null
   }
 }
+
+export function getCliVersion(): string | null {
+  try {
+    const output = execSync("claude --version", { encoding: "utf-8" }).trim()
+    return output.match(/^(\d+\.\d+\.\d+)/)?.[1] ?? null
+  } catch {
+    return null
+  }
+}

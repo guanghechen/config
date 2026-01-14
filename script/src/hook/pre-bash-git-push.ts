@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { readFileSync } from "node:fs"
-import { outputHook } from "../util/hook-output"
+import { outputHook } from "./util"
 
 const GIT_SENSITIVE_COMMANDS = [
   { pattern: /\bgit\s+(?:-C\s+\S+\s+)?push\b/, name: "git push" },

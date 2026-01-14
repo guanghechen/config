@@ -7,8 +7,8 @@ const __dirname = dirname(new URL(import.meta.url).pathname)
 const contextWindowSize = process.argv[2]
 
 const patches = [
-  { name: "context-window", file: "context-window.ts", args: contextWindowSize ? [contextWindowSize] : [] },
-  { name: "image-paste", file: "image-paste.ts", args: [] },
+  { name: "context-window", file: "patch-context-window.ts", args: contextWindowSize ? [contextWindowSize] : [] },
+  { name: "image-paste", file: "patch-image-paste.ts", args: [] },
 ]
 
 for (const { name, file, args } of patches) {

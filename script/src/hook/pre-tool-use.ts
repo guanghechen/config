@@ -2,7 +2,7 @@
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { outputHook } from "../util/hook-output"
+import { outputHook } from "./util"
 
 const SENSITIVE_PATTERNS: RegExp[] = [
   /\.http_request$/,
