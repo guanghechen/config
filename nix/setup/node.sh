@@ -3,9 +3,9 @@
 source $HOME/.config/guanghechen/nix/setup/path.sh
 
 if fnm list | grep -q "v$PREFER_NODE_VERSION"; then
-  printf "\n\e[93m  [setup node] node@$PREFER_NODE_VERSION is already installed. (skipped)\e[0m\n"
+  printf "\n\e[93m   [setup node] node@%s is already installed. (skipped)\e[0m\n" "$PREFER_NODE_VERSION"
 else
-  printf "\n\e[94m   [setup node] installing node@$REFER_NODE_VERSION...\e[0m\n"
+  printf "\n\e[94m   [setup node] installing node@%s...\e[0m\n" "$PREFER_NODE_VERSION"
   fnm install "$PREFER_NODE_VERSION"
 fi
 
@@ -15,8 +15,14 @@ fnm default "$PREFER_NODE_VERSION"
 printf "\n\e[94m   [setup node] installing npm bun pm2 yarn prettier\e[0m\n"
 npm install -g npm bun pm2 yarn prettier
 
-printf "\n\e[94m   [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot\e[0m\n"
-npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot
+for pkg in @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot; do
+  if npm list -g "$pkg" &>/dev/null; then
+    printf "\n\e[93m   [setup node] %s is already installed. (skipped)\e[0m\n" "$pkg"
+  else
+    printf "\n\e[94m   [setup node] installing %s...\e[0m\n" "$pkg"
+    npm install -g "$pkg"
+  fi
+done
 fish -c "ghc-patch-claude" # make patches for claude code
 
 ## Setup ora

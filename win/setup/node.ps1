@@ -11,8 +11,14 @@ fnm default $env:PREFER_NODE_VERSION
 Write-Host "  [setup node] installing npm bun pm2 yarn prettier" -ForegroundColor Blue
 npm install -g npm bun pm2 yarn prettier
 
-Write-Host "  [setup node] installing @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot" -ForegroundColor Blue
-npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot
+foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/codex", "@github/copilot")) {
+  if (npm list -g $pkg 2>$null) {
+    Write-Host "  [setup node] $pkg is already installed. (skipped)" -ForegroundColor Yellow
+  } else {
+    Write-Host "  [setup node] installing $pkg..." -ForegroundColor Blue
+    npm install -g $pkg
+  }
+}
 pwsh -Command "ghc-patch-claude" # make patches for claude code
 
 # Setup ora
