@@ -1,6 +1,7 @@
 cache/
 debug/
 file-history/
+node_modules/
 paste-cache/
 plan/
 plans/
