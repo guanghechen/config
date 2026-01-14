@@ -27,3 +27,8 @@ export const GEMINI_CONFIG_DIR = process.env.GEMINI_CONFIG_DIR || path.join(USER
 export const F_WINDOWS_TERMINAL_SETTINGS = existsOrNull(process.env.f_windows_terminal_settings)
 export const F_VSCODE_KEYBINDINGS = existsOrNull(process.env.f_vscode_keybindings)
 export const platform = detectPlatform()
+
+export const green = (s: string) => `\x1b[32m${s}\x1b[0m`
+export const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`
+export const red = (s: string) => `\x1b[31m${s}\x1b[0m`
+export const dim = (s: string) => `\x1b[2m${s}\x1b[0m`

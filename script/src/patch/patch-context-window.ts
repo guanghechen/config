@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { applyPatches } from "./apply"
 import type { IPatch } from "./types"
+import { applyPatches, replaceAll } from "./util"
 
 const targetSize = process.argv[2] || "144000"
 
@@ -11,13 +11,7 @@ const patches: IPatch[] = [
     version: "2.1.7",
     platform: ["wsl", "win", "osx", "nix"],
     search: /var GCB=\d+/,
-    replace: (content, matches) => {
-      let result = content
-      for (const m of matches.toReversed()) {
-        result = result.slice(0, m.offset_start) + `var GCB=${targetSize}` + result.slice(m.offset_end)
-      }
-      return result
-    },
+    replace: (content, matches) => replaceAll(content, matches, () => `var GCB=${targetSize}`),
     verify: (text) => text.includes(`var GCB=${targetSize}`),
   },
   {
@@ -25,13 +19,7 @@ const patches: IPatch[] = [
     version: "2.1.7",
     platform: ["wsl", "win", "osx", "nix"],
     search: /var VT9=\d+/,
-    replace: (content, matches) => {
-      let result = content
-      for (const m of matches.toReversed()) {
-        result = result.slice(0, m.offset_start) + `var VT9=${targetSize}` + result.slice(m.offset_end)
-      }
-      return result
-    },
+    replace: (content, matches) => replaceAll(content, matches, () => `var VT9=${targetSize}`),
     verify: (text) => text.includes(`var VT9=${targetSize}`),
   },
 ]
