@@ -15,11 +15,8 @@ function ghc-theme-apply { __lazy_load__ 'ghc-theme-apply' @args }
 function ghc-theme-gen { __lazy_load__ 'ghc-theme-gen' @args }
 function ghc-theme-toggle { __lazy_load__ 'ghc-theme-toggle' @args }
 function ghc-update { __lazy_load__ 'ghc-update' @args }
+function ghc-update-agents { __lazy_load__ 'ghc-update-agents' @args }
 function ghc-upgrade { __lazy_load__ 'ghc-upgrade' @args }
 function swap-alt-win { __lazy_load__ 'swap-alt-win' @args }
 function yoz { __lazy_load__ 'yoz' @args }
 
-## Simple functions
-function ghc-update-agents {
-  npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot
-}
