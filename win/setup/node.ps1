@@ -19,7 +19,6 @@ foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/c
     npm install -g $pkg
   }
 }
-pwsh -Command "ghc-patch-claude" # make patches for claude code
 
 # Setup ora
 $ora_repopath = Join-Path "$env:XDG_CONFIG_HOME" "ora"

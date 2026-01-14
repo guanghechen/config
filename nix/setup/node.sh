@@ -23,7 +23,6 @@ for pkg in @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/co
     npm install -g "$pkg"
   fi
 done
-fish -c "ghc-patch-claude" # make patches for claude code
 
 ## Setup ora
 if [ -d "$HOME/.config/ora" ]; then
