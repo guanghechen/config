@@ -91,7 +91,6 @@ alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 abbr -a ghc-clock 'tty-clock -DSbcnrs -C5'
 abbr -a ghc-ports 'netstat -tulanp'
 abbr -a ghc-today 'cal -C3'
-abbr -a ghc-update-agents 'npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot'
 
 ## Run python server with poetry
 # alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
