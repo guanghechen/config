@@ -33,12 +33,25 @@ function __ghc_update_sync_worktrees__ {
   }
 
   $isRequired = $Scope -eq "required"
-  foreach ($branch in $Branches) {
-    if ([string]::IsNullOrWhiteSpace($branch)) {
+  foreach ($branchSpec in $Branches) {
+    if ([string]::IsNullOrWhiteSpace($branchSpec)) {
       continue
     }
 
-    $repoPath = Join-Path $RepoRoot $branch
+    # Parse branch spec: "branch" or "branch:target_dir" (e.g., "gemini:~/.gemini")
+    $branchParts = $branchSpec -split ':', 2
+    $branch = $branchParts[0]
+    $targetDir = if ($branchParts.Length -gt 1) { $branchParts[1] } else { $null }
+
+    if ($targetDir) {
+      if ($targetDir -match '^[/~]') {
+        $repoPath = $targetDir -replace '^~', $HOME
+      } else {
+        $repoPath = Join-Path $RepoRoot $targetDir
+      }
+    } else {
+      $repoPath = Join-Path $RepoRoot $branch
+    }
 
     if (Test-Path -Path $repoPath) {
       Write-Host "   [$RepoName] syncing $branch" -ForegroundColor Blue
@@ -72,6 +85,7 @@ function f_ghc-update {
     "fzf",
     "gh",
     "ghostty",
+    "gemini:~/.gemini",
     "git-delta",
     "helix",
     "kitty",
