@@ -7,23 +7,6 @@ function ghc-patch-claude --description "Patch Claude Code with custom modificat
         return 1
     end
 
-    # All platforms: limit-128k
-    set -l scripts limit-128k.mjs
-
-    # WSL only: image-paste
-    if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
-        set -a scripts image-paste.mjs
-    end
-
-    # Run each patch script
-    for script in $scripts
-        set -l script_path $script_dir/$script
-        if not test -f $script_path
-            echo "⚠ Script not found: $script"
-            continue
-        end
-        echo "→ Running $script"
-        node $script_path
-        echo
-    end
+    echo "cd ~/.config/claude/script/ && bun src/patch/index.ts"
+    fish -c "cd ~/.config/claude/script/ && bun src/patch/index.ts"
 end
