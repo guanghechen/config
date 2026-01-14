@@ -38,8 +38,8 @@ const patches: IPatch[] = [
   {
     // Original: zzA=$Q()==="windows"?{displayText:`${pH1}+v`,check:(A,Q)=>Q.meta&&(A==="v"||A==="V")}
     // Changed:  zzA=$Q()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&(A==="v"||A==="V")}
-    // This makes Windows use Ctrl+V instead of Alt+V for image paste
-    name: "win-image-paste-shortcut",
+    // This changes the display text from "alt+v" to "ctrl+v" on Windows
+    name: "win-image-paste-display",
     version: "2.1.7",
     platform: ["win"],
     search: /(\w+)=\$Q\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/,
@@ -53,6 +53,25 @@ const patches: IPatch[] = [
       return result
     },
     verify: (text) => text.includes('$Q()==="windows"?{displayText:"ctrl+v",check:'),
+  },
+  {
+    // Original: IH8=$Q()==="windows"?"alt+v":"ctrl+v"
+    // Changed:  IH8=$Q()==="windows"?"ctrl+v":"ctrl+v"
+    // This changes the actual keybinding from "alt+v" to "ctrl+v" on Windows
+    name: "win-image-paste-keybinding",
+    version: "2.1.7",
+    platform: ["win"],
+    search: /(\w+)=\$Q\(\)==="windows"\?"alt\+v":"ctrl\+v"/,
+    replace: (content, matches) => {
+      let result = content
+      for (const m of matches.toReversed()) {
+        const [varName] = m.matched_groups
+        const replacement = `${varName}=$Q()==="windows"?"ctrl+v":"ctrl+v"`
+        result = result.slice(0, m.offset_start) + replacement + result.slice(m.offset_end)
+      }
+      return result
+    },
+    verify: (text) => text.includes('$Q()==="windows"?"ctrl+v":"ctrl+v"'),
   },
 ]
 
