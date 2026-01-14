@@ -1,19 +1,45 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import * as env from "../env"
 import { getCliPath, getCliVersion } from "./util"
-import type { IApplyOptions, IPatch } from "./types"
+import type { IApplyOptions, IMatch, IPatch } from "./types"
 
-function applyPatch(content: string, patch: IPatch): string | null {
-  if (content.includes(patch.replace)) return null
+function findMatches(content: string, search: string | RegExp): IMatch[] {
+  const matches: IMatch[] = []
 
-  if (typeof patch.search === "string") {
-    if (!content.includes(patch.search)) return null
-    return content.split(patch.search).join(patch.replace)
+  if (typeof search === "string") {
+    let index = 0
+    while ((index = content.indexOf(search, index)) !== -1) {
+      matches.push({
+        matched_text: search,
+        matched_groups: [],
+        offset_start: index,
+        offset_end: index + search.length,
+      })
+      index += search.length
+    }
+  } else {
+    const regex = new RegExp(search.source, search.flags.replace("g", "") + "g")
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(content)) !== null) {
+      matches.push({
+        matched_text: match[0],
+        matched_groups: match.slice(1),
+        offset_start: match.index,
+        offset_end: match.index + match[0].length,
+      })
+    }
   }
 
-  const regex = new RegExp(patch.search.source, patch.search.flags.replace("g", "") + "g")
-  if (!regex.test(content)) return null
-  return content.replace(regex, patch.replace)
+  return matches
+}
+
+function applyPatch(content: string, patch: IPatch): string | null {
+  if (patch.verify(content)) return null
+
+  const matches = findMatches(content, patch.search)
+  if (matches.length === 0) return null
+
+  return patch.replace(content, matches)
 }
 
 export function applyPatches(options: IApplyOptions): void {
@@ -35,9 +61,9 @@ export function applyPatches(options: IApplyOptions): void {
   let patchedCount = 0
 
   for (const patch of applicablePatches) {
-    const label = patch.version ? `${patch.name}@${patch.version}` : patch.name
+    const label = `${patch.name}@${patch.version}`
 
-    if (patch.version && patch.version !== cliVersion) {
+    if (patch.version !== cliVersion) {
       if (!stopOnFirst) console.log(`[${label}] Version mismatch (current: ${cliVersion}), skipping`)
       continue
     }
@@ -45,7 +71,7 @@ export function applyPatches(options: IApplyOptions): void {
     const result = applyPatch(content, patch)
 
     if (result === null) {
-      if (content.includes(patch.replace)) {
+      if (patch.verify(content)) {
         console.log(`[${label}] Already patched`)
         if (stopOnFirst) process.exit(0)
       } else if (!stopOnFirst) {
@@ -63,10 +89,10 @@ export function applyPatches(options: IApplyOptions): void {
 
   if (patchedCount === 0) {
     if (stopOnFirst) {
-      const versionMatched = applicablePatches.some((p) => !p.version || p.version === cliVersion)
+      const versionMatched = applicablePatches.some((p) => p.version === cliVersion)
       console.error(versionMatched ? "Pattern not found" : `No patch available for version ${cliVersion}`)
       console.error("Supported versions:")
-      applicablePatches.forEach((p) => console.error(`  - ${p.version || "*"}`))
+      applicablePatches.forEach((p) => console.error(`  - ${p.version}`))
       process.exit(1)
     }
     console.log("\nNothing to patch")
@@ -76,9 +102,7 @@ export function applyPatches(options: IApplyOptions): void {
   writeFileSync(cliPath, content)
 
   const verifyContent = readFileSync(cliPath, "utf-8")
-  const failed = applicablePatches.filter(
-    (p) => (!p.version || p.version === cliVersion) && !verifyContent.includes(p.replace),
-  )
+  const failed = applicablePatches.filter((p) => p.version === cliVersion && !p.verify(verifyContent))
 
   if (failed.length === 0) {
     console.log(`\nPatched ${patchedCount} location(s) successfully`)
