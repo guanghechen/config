@@ -13,7 +13,7 @@ local source_configs = {
     name = "workspace:local",
     title = "Local (workspace)",
     engine = "folder",
-    filepath = dot.path.locate_workspace_config(".neovim/local/notepad.json"),
+    filepath = dot.path.locate_workspace_config(".neovim/notepad/local"),
     default_item_name = function()
       return "Note"
     end,
@@ -22,7 +22,7 @@ local source_configs = {
     name = "workspace:notes",
     title = "Notes (workspace)",
     engine = "folder",
-    filepath = dot.path.locate_workspace_config(".neovim/notes"),
+    filepath = dot.path.locate_workspace_config(".neovim/notepad/notes"),
     default_item_name = function()
       return "Note"
     end,
@@ -31,7 +31,7 @@ local source_configs = {
     name = "workspace:todos",
     title = "Todos (workspace)",
     engine = "folder",
-    filepath = dot.path.locate_workspace_config(".neovim/todos"),
+    filepath = dot.path.locate_workspace_config(".neovim/notepad/todos"),
     default_item_name = function()
       return tostring(os.date("%Y-%m-%d"))
     end,
