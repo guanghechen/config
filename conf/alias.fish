@@ -85,12 +85,13 @@ alias tmux-use-fake-clipboard="tmux set-environment ghc_use_fake_clipboard /opt/
 alias watch-fake-clipboard="nohup bash $HOME/.config/tmux/script/fake-clipboard.sh /opt/me/data/clipboard/fake.txt &!"
 
 ### misc
-alias ghc-clock='tty-clock -DSbcnrs -C5'
-alias ghc-ports='netstat -tulanp'
 alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
-alias today='cal -C3'
+abbr -a ghc-clock 'tty-clock -DSbcnrs -C5'
+abbr -a ghc-ports 'netstat -tulanp'
+abbr -a ghc-today 'cal -C3'
+abbr -a ghc-update-agents 'npm install -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot'
 
 ## Run python server with poetry
 # alias pydemo-server='PYTHONPATH="$PWD/app:$PYTHONPATH" poetry run uvicorn <server_entry> --host localhost --port 9528'
