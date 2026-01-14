@@ -1,4 +1,4 @@
-Write-Host "  [setup winget] preparing..." -ForegroundColor Blue
+Write-Host "`n  [setup winget] preparing..." -ForegroundColor Cyan
 
 
 # winget install -e --source winget --id Git.Git
@@ -31,4 +31,4 @@ winget install -e --source winget --id ajeetdsouza.zoxide
 # winget install -e --source winget --id LGUG2Z.komorebi
 # winget install -e --source winget --id AmN.yasb
 
-Write-Host "  [setup winget] done." -ForegroundColor Cyan
+Write-Host "  [setup winget] done." -ForegroundColor Green

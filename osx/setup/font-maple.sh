@@ -16,13 +16,13 @@ for arg in "$@"; do
 done
 
 if [ "$FORCE" = true ] && [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
-  printf "\n\e[94m  [setup font (Maple)] Force removing existing Maple fonts...\e[0m\n"
+  printf "\e[96m  [setup font (Maple)] force removing existing Maple fonts...\e[0m\n"
   rm -rf "$FONT_LOCAL_DIR"/MapleMono*
   sudo rm -rf "$FONT_COMMON_DIR"/MapleMono*
 fi
 
 if [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
-  printf "\n\e[94m  [setup font (Maple)] Maple is already installed.\e[0m\n"
+  printf "\e[93m  [setup font (Maple)] Maple is already installed. (skipped)\e[0m\n"
 else
   # Create the font download folder and ensure it to be clean.
   mkdir -p ~/download/fonts/Maple
@@ -35,10 +35,10 @@ else
 
   cd ~/download/fonts/Maple
 
-  printf "\n\e[94m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
+  printf "\e[96m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
   wget https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip
 
-  printf "\n\e[94m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
+  printf "\e[96m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
   unzip MapleMono-NF-CN-unhinted.zip
   rm -f MapleMono-NF-CN-unhinted.zip
   sudo cp ~/download/fonts/Maple/* "$FONT_COMMON_DIR/"

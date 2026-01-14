@@ -16,13 +16,13 @@ for arg in "$@"; do
 done
 
 if [ "$FORCE" = true ] && [ -f "$FONT_COMMON_DIR/RobotoMonoNerdFont-Bold.ttf" ]; then
-  printf "\n\e[94m  [setup font (RobotoMono)] Force removing existing RobotoMono fonts...\e[0m\n"
+  printf "\e[96m  [setup font (RobotoMono)] force removing existing RobotoMono fonts...\e[0m\n"
   rm -rf "$FONT_LOCAL_DIR"/RobotoMonoNerdFont*
   sudo rm -rf "$FONT_COMMON_DIR"/RobotoMonoNerdFont*
 fi
 
 if [ -f "$FONT_COMMON_DIR/RobotoMonoNerdFont-Bold.ttf" ]; then
-  printf "\n\e[94m  [setup font (RobotoMono)] RobotoMono is already installed.\e[0m\n"
+  printf "\e[93m  [setup font (RobotoMono)] RobotoMono is already installed. (skipped)\e[0m\n"
 else
   mkdir -p ~/download/fonts/RobotoMono
   rm -rf ~/download/fonts/RobotoMono
@@ -32,10 +32,10 @@ else
   rm -rf "$FONT_LOCAL_DIR/RobotoMonoNerdFont*"
   sudo rm -rf "$FONT_COMMON_DIR/RobotoMonoNerdFont*"
 
-  printf "\n\e[94m  [setup font (RobotoMono)] downloading RobotoMono fonts...\e[0m\n"
+  printf "\e[96m  [setup font (RobotoMono)] downloading RobotoMono fonts...\e[0m\n"
   wget https://github.com/guanghechen/mirror/releases/download/font/RobotoMono.zip
 
-  printf "\n\e[94m  [setup font (RobotoMono)] installing RobotoMono fonts...\e[0m\n"
+  printf "\e[96m  [setup font (RobotoMono)] installing RobotoMono fonts...\e[0m\n"
   unzip RobotoMono.zip
   rm -f RobotoMono.zip
   sudo cp ~/download/fonts/RobotoMono/* "$FONT_COMMON_DIR/"

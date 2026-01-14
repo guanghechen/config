@@ -1,4 +1,4 @@
-Write-Host "  [setup cargo] preparing..." -ForegroundColor Blue
+Write-Host "`n  [setup cargo] preparing..." -ForegroundColor Cyan
 
 cargo install tree-sitter-cli
 
@@ -11,4 +11,4 @@ cargo install tree-sitter-cli
 # cargo install --locked yazi-fm yazi-cli
 # cargo install --locked zoxide
 
-Write-Host "  [setup cargo] done." -ForegroundColor Cyan
+Write-Host "  [setup cargo] done." -ForegroundColor Green

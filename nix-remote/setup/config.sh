@@ -46,33 +46,31 @@ clone_or_update_config_repo() {
   for branch in "${repo_required_branches[@]}"; do
     local repopath="$reporoot/$branch"
     if [ -e "$repopath/.git" ]; then
-      printf "\e[94m  [setup config] merging origin/$branch into $repopath\e[0m\n"
+      printf "\e[96m  [setup config] merging origin/%s into %s\e[0m\n" "$branch" "$repopath"
       git -C "$repopath" merge origin/$branch --ff-only
     else
-      printf "\e[94m  [setup config] add new worktree of $branch into $repopath\e[0m\n"
+      printf "\e[96m  [setup config] add new worktree of %s into %s\e[0m\n" "$branch" "$repopath"
       git -C "$repomain" worktree add "$repopath" $branch
     fi
-    printf "\n"
   done
 
   for branch in "${repo_optional_branches[@]}"; do
     local repopath="$reporoot/$branch"
     if [ -e "$repopath/.git" ]; then
-      printf "\e[94m  [setup config] merging origin/$branch into $repopath\e[0m\n"
+      printf "\e[96m  [setup config] merging origin/%s into %s\e[0m\n" "$branch" "$repopath"
       git -C "$repopath" merge origin/$branch --ff-only
-      printf "\n"
     fi
   done
 }
 
-printf "\n\e[94m  [setup config] cloning configs...\e[0m\n"
+printf "\e[96m  [setup config] cloning configs...\e[0m\n"
 clone_or_update_config_repo
 
 ## copy ~/.gitconfig
 if [ -f "$HOME/.gitconfig" ]; then
-  printf "\n\e[93m  [setup config] ~/.gitconfig is already exist. (skipped).\e[0m\n"
+  printf "\e[93m  [setup config] ~/.gitconfig already exists. (skipped).\e[0m\n"
 else
-  printf "\n\e[94m  [setup config] setting up ~/.gitconfig...\e[0m\n"
+  printf "\e[96m  [setup config] setting up ~/.gitconfig...\e[0m\n"
   cp -f ~/.config/guanghechen/config/.gitconfig "$HOME/.gitconfig"
 fi
 
@@ -80,6 +78,6 @@ fi
 if [ -f "$HOME/.inputrc" ]; then
   backup_file="$HOME/.inputrc.$(date +%Y%m%d).bak"
   mv "$HOME/.inputrc" "$backup_file"
-  printf "\e[93m  [backup] ~/.inputrc -> $backup_file\e[0m\n"
+  printf "\e[93m  [backup] ~/.inputrc -> %s\e[0m\n" "$backup_file"
 fi
 cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
