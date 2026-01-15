@@ -42,6 +42,32 @@ function M.exec_async(args, opts, callback)
   end
 end
 
+---Execute git command asynchronously (async/await version).
+---Returns a Future that resolves with { lines, code }.
+---@param args                          string[]
+---@param opts                          { cwd: string|nil }|nil
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future
+function M.exec(args, opts, token)
+  local future = stl.c.Future.new({ token = token })
+
+  if token and token:is_cancelled() then
+    return future -- Already cancelled
+  end
+
+  local cancel_fn = M.exec_async(args, opts, function(lines, code)
+    future:__resolve__({ lines = lines, code = code }) ---@diagnostic disable-line: invisible
+  end)
+
+  if token then
+    token:on_cancel(function()
+      cancel_fn()
+    end)
+  end
+
+  return future
+end
+
 ---Execute git command synchronously (for user-triggered actions where blocking is acceptable)
 ---@param args                          string[]
 ---@param opts                          { cwd: string|nil }|nil

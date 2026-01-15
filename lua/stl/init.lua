@@ -2,12 +2,14 @@
 local c__mods = {
   BatchDisposable = "stl.c.batch_disposable",
   BatchHandler = "stl.c.batch_handler",
+  CancellationToken = "stl.c.cancellation_token",
   CircularQueue = "stl.c.circular_queue",
   CircularStack = "stl.c.circular_stack",
   Dirtier = "stl.c.dirtier",
   Disposable = "stl.c.disposable",
   Filetree = "stl.c.filetree",
   Frecency = "stl.c.frecency",
+  Future = "stl.c.future",
   History = "stl.c.history",
   InputHistory = "stl.c.input_history",
   Observable = "stl.c.observable",
@@ -25,12 +27,14 @@ local c__mods = {
 ---@field public __mods                 stl.c.__mods
 ---@field public BatchDisposable        stl.c.BatchDisposable
 ---@field public BatchHandler           stl.c.BatchHandler
+---@field public CancellationToken      stl.c.CancellationToken
 ---@field public CircularQueue          stl.c.CircularQueue
 ---@field public CircularStack          stl.c.CircularStack
 ---@field public Dirtier                stl.c.Dirtier
 ---@field public Disposable             stl.c.Disposable
 ---@field public Filetree               stl.c.Filetree
 ---@field public Frecency               stl.c.Frecency
+---@field public Future                 stl.c.Future
 ---@field public History                stl.c.History
 ---@field public InputHistory           stl.c.InputHistory
 ---@field public Observable             stl.c.Observable

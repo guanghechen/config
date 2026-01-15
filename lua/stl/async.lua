@@ -97,6 +97,104 @@ end
 M.scheduler = M.wrap(vim.schedule)
 
 ----------------------------------------------------------------------------------------------------
+-- Future utilities
+----------------------------------------------------------------------------------------------------
+
+---Await all futures in parallel and return their results.
+---All futures must complete successfully, or the first error is propagated.
+---@async
+---@param futures                       stl.c.Future[]
+---@return any[]
+function M.await_all(futures)
+  local results = {} ---@type any[]
+  for i, future in ipairs(futures) do
+    results[i] = future:await()
+  end
+  return results
+end
+
+---Await any future and return the first result with its index.
+---@async
+---@param futures                       stl.c.Future[]
+---@return any result                   Result from first completed future
+---@return integer index                Index of completed future
+function M.await_any(futures)
+  return M.await(function(callback)
+    local resolved = false
+    for i, future in ipairs(futures) do
+      future:finally(function(ok, result)
+        if resolved then
+          return
+        end
+        resolved = true
+        if ok then
+          callback(nil, result, i)
+        else
+          callback(result)
+        end
+      end)
+    end
+  end)
+end
+
+---Create a Future from a callback-style function that returns a cancel_fn.
+---The returned function creates a new Future each time it's called.
+---@param argc                          integer
+---@param func                          function
+---@return fun(...): stl.c.Future
+function M.to_future(argc, func)
+  return function(...)
+    local future, resolver = stl.c.Future.new_with_resolver()
+    local args = { ... }
+    local nargs = select("#", ...)
+
+    args[argc] = function(...)
+      resolver({ ... })
+    end
+    nargs = math.max(nargs, argc)
+
+    local cancel_fn = func(unpack(args, 1, nargs))
+    if cancel_fn then
+      -- Store cancel_fn for potential cleanup
+      rawset(future, "_external_cancel", cancel_fn)
+    end
+
+    return future
+  end
+end
+
+---Create a Future from a callback-style function with CancellationToken support.
+---@param argc                          integer
+---@param func                          function
+---@param token                         ?stl.c.CancellationToken
+---@return fun(...): stl.c.Future
+function M.to_future_cancellable(argc, func, token)
+  return function(...)
+    local future, resolver = stl.c.Future.new_with_resolver({ token = token })
+    if token and token:is_cancelled() then
+      return future -- Already cancelled
+    end
+
+    local args = { ... }
+    local nargs = select("#", ...)
+
+    args[argc] = function(...)
+      resolver({ ... })
+    end
+    nargs = math.max(nargs, argc)
+
+    local cancel_fn = func(unpack(args, 1, nargs))
+    if cancel_fn and token then
+      token:on_cancel(function()
+        cancel_fn()
+      end)
+    end
+
+    return future
+  end
+end
+
+----------------------------------------------------------------------------------------------------
 
 local TARGET_MIN_FPS = 120
 local TARGET_FRAME_TIME_NS = 10 ^ 9 / TARGET_MIN_FPS
