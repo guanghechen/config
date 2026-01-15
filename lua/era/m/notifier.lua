@@ -257,6 +257,41 @@ function M.history()
 end
 
 ---@return nil
+function M.copy_history()
+  local tasks = M.history() ---@type era.t.INotifierTask[]
+  if #tasks == 0 then
+    vim.api.nvim_echo({ { "No notifications in history.", "WarningMsg" } }, false, {})
+    return
+  end
+
+  local lines = {} ---@type string[]
+  for _, task in ipairs(tasks) do
+    local icon = stl.icon.loglevel[task.level] or " " ---@type string
+    local time = os.date("%H:%M:%S", task.timestamp) --[[@as string]]
+    local level = string.format("%-5s", task.level) ---@type string
+    local times_str = task.times > 1 and string.format(" (x%d)", task.times) or "" ---@type string
+    local title = task.title .. times_str ---@type string
+
+    local header_line = string.format(" %s %s  %s  %s", icon, time, level, title) ---@type string
+    lines[#lines + 1] = header_line
+
+    for _, content_line in ipairs(task.lines) do
+      lines[#lines + 1] = "     " .. content_line
+    end
+
+    lines[#lines + 1] = ""
+  end
+
+  if #lines > 0 and lines[#lines] == "" then
+    lines[#lines] = nil
+  end
+
+  local content = table.concat(lines, "\n") ---@type string
+  stl.nvim.fn.copy(content)
+  vim.api.nvim_echo({ { "Notifications copied to clipboard.", "Normal" } }, false, {})
+end
+
+---@return nil
 function M.pause()
   dot.state.status.notification_paused:next(true)
 end

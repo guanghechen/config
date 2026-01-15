@@ -643,6 +643,7 @@ M.definitions.toggle = {
 ---@class dot.command.definitions.ux
 M.definitions.ux = {
   color_picker = D.new("Fuxcolorpicker", "ux: color picker"),
+  copy_notifications = D.new("Fuxcopynotifications", "ux: copy notifications"),
   dismiss_notifications = D.new("Fuxdismissnotifications", "ux: dismiss notifications"),
   reload_theme = D.new("Fuxreloadtheme", "ux: reload theme", "?"),
   resume_last_widget = D.new("Fuxresume", "ux: resume last widget"),

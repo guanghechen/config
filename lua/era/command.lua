@@ -1427,6 +1427,12 @@ command
     end,
   })
   .implement({
+    uuid = K.ux.copy_notifications.uuid,
+    action = function()
+      era.m.notifier.copy_history()
+    end,
+  })
+  .implement({
     uuid = K.ux.dismiss_notifications.uuid,
     action = function()
       era.m.notifier.dismiss_all()
