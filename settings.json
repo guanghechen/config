@@ -1,6 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "alwaysThinkingEnabled": true,
   "cleanupPeriodDays": 20,
+  "includeCoAuthoredBy": false,
+  "env": {
+    "DISABLE_AUTOUPDATER": "1",
+    "DISABLE_BUG_COMMAND": "1",
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
+    "DISABLE_TELEMETRY": "1"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -23,25 +32,16 @@
       }
     ]
   },
-  "env": {
-    "DISABLE_AUTOUPDATER": "1",
-    "DISABLE_BUG_COMMAND": "1",
-    "DISABLE_ERROR_REPORTING": "1",
-    "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
-    "DISABLE_TELEMETRY": "1"
-  },
-  "includeCoAuthoredBy": false,
   "statusLine": {
     "type": "command",
     "command": "bun -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/src/statusline.ts').href)\"",
     "padding": 0
   },
   "enabledPlugins": {
-    "example-skills@anthropic-agent-skills": true,
-    "lua-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "lua-lsp@claude-plugins-official": false,
+    "rust-analyzer-lsp@claude-plugins-official": false,
+    "ralph-loop@claude-plugins-official": true
   },
-  "alwaysThinkingEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754640140229
   }
