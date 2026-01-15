@@ -1,4 +1,4 @@
-function f_swap-alt-win {
+function swap-alt-win {
   param(
     [Parameter(Mandatory = $true)]
     [ValidateSet("on", "off")]

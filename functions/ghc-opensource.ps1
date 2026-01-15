@@ -1,4 +1,4 @@
-function f_ghc-opensource {
+function ghc-opensource {
   param (
     [Parameter(Position = 0)]
     [string]$Arg1,

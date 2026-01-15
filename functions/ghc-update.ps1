@@ -66,7 +66,7 @@ function __ghc_update_sync_worktrees__ {
 }
 
 # Update config repositories.
-function f_ghc-update {
+function ghc-update {
   $configRoot = "$env:XDG_CONFIG_HOME"
   $configMain = Join-Path $configRoot "guanghechen"
   $configUrl = "https://github.com/guanghechen/config.git"

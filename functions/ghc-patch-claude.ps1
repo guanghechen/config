@@ -1,5 +1,5 @@
 # Patch Claude Code with custom modifications
-function f_ghc-patch-claude {
+function ghc-patch-claude {
   if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     Write-Host "  Claude Code not installed" -ForegroundColor Red
     return

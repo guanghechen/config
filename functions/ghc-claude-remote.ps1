@@ -1,4 +1,4 @@
-function f_ghc-claude-remote {
+function ghc-claude-remote {
   Remove-Item Env:ANTHROPIC_BASE_URL -ErrorAction SilentlyContinue
   Remove-Item Env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
   Remove-Item Env:ANTHROPIC_MODEL -ErrorAction SilentlyContinue

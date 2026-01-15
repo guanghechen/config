@@ -1,4 +1,4 @@
-function f_yoz {
+function yoz {
   <#
   .SYNOPSIS
   Preview file with yoz

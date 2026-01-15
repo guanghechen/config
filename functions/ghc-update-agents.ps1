@@ -1,5 +1,5 @@
 # Update AI coding agents globally
-function f_ghc-update-agents {
+function ghc-update-agents {
   [CmdletBinding()]
   param(
     [switch] $SkipInstallation
