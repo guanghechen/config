@@ -467,3 +467,7 @@ When modifying `rust/yoz/src/`:
 - Comprehensive git integration (blame, hunk navigation, staging)
 - Color picker with multiple format support
 - Custom lightweight plugin loader with lazy loading
+
+## Debug
+
+- `:messages` is not available in this codebase; use `:Fuxcopynotifications` to copy notification history to clipboard
