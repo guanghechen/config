@@ -287,7 +287,7 @@ end
 
 ---@return nil
 function M.setup_lsp()
-  if not vim.g.vscode and M.context.flight.ai:snapshot() then
+  if not vim.g.vscode and M.context.flight.ai_copilot:snapshot() then
     vim.lsp.enable("copilot")
   end
 

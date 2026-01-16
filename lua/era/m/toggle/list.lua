@@ -30,7 +30,7 @@ local group_flags = {
 
   ---flight
   flight = {
-    ai = dot.context.flight.ai,
+    ai_copilot = dot.context.flight.ai_copilot,
     ai_nes = dot.context.flight.ai_nes,
     autoformat = dot.context.flight.autoformat,
     autoload = dot.context.flight.autoload,

@@ -289,7 +289,7 @@ function M.watch_changes()
   ---@type stl.c.Observable[]
   local select_states = {
     M.bookmark.pinned,
-    M.flight.ai,
+    M.flight.ai_copilot,
     M.flight.autoformat,
     M.flight.autoload,
     M.flight.autosave,

@@ -10,8 +10,8 @@ local conds = {
     return false
   end,
   ---@return boolean
-  ai = function()
-    return not vim.g.vscode and dot.context.flight.ai:snapshot()
+  ai_copilot = function()
+    return not vim.g.vscode and dot.context.flight.ai_copilot:snapshot()
   end,
   ---@return boolean
   cmp = function()

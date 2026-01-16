@@ -32,7 +32,7 @@ end
 
 ---@type string
 local fn_show_message = dot.G.register_anonymous_fn(function()
-  local enabled = dot.context.flight.ai:snapshot() ---@type boolean
+  local enabled = dot.context.flight.ai_copilot:snapshot() ---@type boolean
   local status = "NIL" ---@type unknown
 
   -- Check native Copilot LSP status
@@ -61,10 +61,10 @@ function M.status(position)
     name = "copilot:status",
     atomic = true,
     condition = function()
-      return dot.context.flight.ai:snapshot()
+      return dot.context.flight.ai_copilot:snapshot()
     end,
     render = function()
-      local enabled = dot.context.flight.ai:snapshot() ---@type boolean
+      local enabled = dot.context.flight.ai_copilot:snapshot() ---@type boolean
       if not enabled then
         local text = stl.icon.app.Copilot .. " Copilot" ---@type string
         local hl_text = btn(text, fn_show_message)
