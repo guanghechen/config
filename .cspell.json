@@ -6,7 +6,9 @@
     "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": ["~/.config/cspell/cspell.json"],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -218,6 +220,7 @@
     "Ftogglevirtcolumn",
     "Ftogglewraplocal",
     "Fuxcolorpicker",
+    "Fuxcopynotifications",
     "Fuxdismissnotifications",
     "Fuxreloadtheme",
     "Fuxresume",
@@ -256,6 +259,7 @@
     "augroups",
     "autocmd",
     "autocmds",
+    "autocommands",
     "autofocus",
     "autoindent",
     "autojump",
@@ -382,6 +386,7 @@
     "dirinfo",
     "diritem",
     "dirpaths",
+    "dirtiers",
     "disambiguations",
     "dockerls",
     "doctest",
@@ -1033,4 +1038,3 @@
     "zindex"
   ]
 }
-
