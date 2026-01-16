@@ -1,6 +1,5 @@
 ---@class dot.context.flight.data
 ---@field public ai_copilot             boolean
----@field public ai_nes                 boolean
 ---@field public autoformat             boolean
 ---@field public autoload               boolean
 ---@field public autosave               boolean
@@ -23,7 +22,6 @@
 
 ---@class dot.context.flight.state
 ---@field public ai_copilot             stl.c.Observable
----@field public ai_nes                 stl.c.Observable
 ---@field public autoformat             stl.c.Observable
 ---@field public autoload               stl.c.Observable
 ---@field public autosave               stl.c.Observable
@@ -60,7 +58,6 @@ function M.defaults()
   ---@type dot.context.flight.data
   return {
     ai_copilot = false, -- copilot is too heavy, let's disable it by default
-    ai_nes = false,
     autoformat = is_git_repo,
     autoload = false,
     autosave = is_git_repo,
@@ -90,9 +87,6 @@ function M.normalize(data)
   if type(data) == "table" then
     if type(data.ai_copilot) == "boolean" then
       resolved.ai_copilot = data.ai_copilot
-    end
-    if type(data.ai_nes) == "boolean" then
-      resolved.ai_nes = data.ai_nes
     end
     if type(data.autoformat) == "boolean" then
       resolved.autoformat = data.autoformat
@@ -156,7 +150,6 @@ function M.dump()
   ---@type dot.context.flight.data
   return {
     ai_copilot = M.ai_copilot:snapshot(),
-    ai_nes = M.ai_nes:snapshot(),
     autoformat = M.autoformat:snapshot(),
     autoload = M.autoload:snapshot(),
     autosave = M.autosave:snapshot(),
@@ -185,7 +178,6 @@ function M.load(raw_data)
   local data = M.normalize(raw_data) ---@type dot.context.flight.data
 
   M.ai_copilot:next(data.ai_copilot)
-  M.ai_nes:next(data.ai_nes)
   M.autoformat:next(data.autoformat)
   M.autoload:next(data.autoload)
   M.autosave:next(data.autosave)
@@ -211,7 +203,6 @@ end
 
 local _defaults = M.defaults() ---@type dot.context.flight.data
 M.ai_copilot = stl.c.Observable.from_value(_defaults.ai_copilot)
-M.ai_nes = stl.c.Observable.from_value(_defaults.ai_nes)
 M.autoformat = stl.c.Observable.from_value(_defaults.autoformat)
 M.autoload = stl.c.Observable.from_value(_defaults.autoload)
 M.autosave = stl.c.Observable.from_value(_defaults.autosave)
