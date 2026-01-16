@@ -56,13 +56,10 @@ function M.defaults()
   local workspace = dot.path.workspace() ---@type string
   local is_home_config_dir = workspace == stl.env.HOME_NVIM_CONFIG ---@type boolean
   local is_git_repo = dot.path.is_git_repo() ---@type boolean
-  local is_thirdparty = dot.path.is_repo_thirdparty() ---@type boolean
-  local is_playground = dot.path.is_repo_playground() ---@type boolean
-  local is_personal_public = dot.path.is_repo_personal_public() ---@type boolean
 
   ---@type dot.context.flight.data
   return {
-    ai_copilot = is_thirdparty or is_playground or is_personal_public,
+    ai_copilot = false, -- copilot is too heavy, let's disable it by default
     ai_nes = false,
     autoformat = is_git_repo,
     autoload = false,
