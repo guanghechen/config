@@ -26,10 +26,11 @@ yoz → stl → dot → era → ark/vendor
 
 ### Global Variables
 
-Three global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
+Four global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 - `_G.yoz` → `require("yoz")` - Rust-powered helpers
 - `_G.stl` → `require("stl")` - Standard library
 - `_G.dot` → `require("dot")` - Core framework
+- `_G.era` → `require("era")` - Business layer
 
 ### Core Module Structure
 
@@ -41,15 +42,15 @@ Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
 
 | Module         | Description                                                           |
 |:---------------|:----------------------------------------------------------------------|
-| `yoz.dict`     | Dictionary search for English word completion                          |
-| `yoz.find`     | File finding (fd-like)                                                 |
-| `yoz.fn`       | Utility functions (uuid, md5)                                          |
-| `yoz.fs`       | File system operations (collect_files, readdir, move, get_filesize)    |
-| `yoz.path`     | Path handling (normalize, join, relative, resolve, split, basename)    |
-| `yoz.replace`  | Text replacement with regex support and preview                        |
-| `yoz.search`   | Content search (ripgrep-like, search_in_files, search_in_lines)        |
-| `yoz.string`   | String utilities (calc_linewidths, count_lines, parse_lines)           |
-| `yoz.uri`      | URI handling (encode/decode, filepath conversion)                      |
+| `yoz.dict`     | Dictionary search for English word completion                         |
+| `yoz.find`     | File finding (fd-like)                                                |
+| `yoz.fn`       | Utility functions (uuid, md5)                                         |
+| `yoz.fs`       | File system operations (collect_files, readdir, move, get_filesize)   |
+| `yoz.path`     | Path handling (normalize, join, relative, resolve, split, basename)   |
+| `yoz.replace`  | Text replacement with regex support and preview                       |
+| `yoz.search`   | Content search (ripgrep-like, search_in_files, search_in_lines)       |
+| `yoz.string`   | String utilities (calc_linewidths, count_lines, parse_lines)          |
+| `yoz.uri`      | URI handling (encode/decode, filepath conversion)                     |
 
 Type definitions: `lua/__types__/yoz/`
 
@@ -59,38 +60,52 @@ Standard library with environment detection and dictionary data.
 
 **Key Modules:**
 
-| Module             | Description                                                          |
-|:-------------------|:---------------------------------------------------------------------|
-| `stl.env`          | Environment detection (OS, terminal, paths, IS_MAC/WIN/WSL/NIX)      |
-| `stl.fn`           | Utility functions (boolean, identity, noop, equals_*, navigate_*, observe) |
-| `stl.reporter`     | Notification system (debug/info/warn/error with structured options)  |
-| `stl.fileicon`     | File icon definitions                                                 |
-| `stl.filetype`     | Filetype constants and detection utilities                           |
-| `stl.icon`         | Icon definitions (UI, diagnostics, LSP, DAP, Git)                    |
-| `stl.json`         | JSON utilities with comment stripping                                 |
-| `stl.fs`           | File system utilities (read_json, write_json, watch_file)            |
+| Module         | Description                                                      |
+|:---------------|:-----------------------------------------------------------------|
+| `stl.anim`     | Animation utilities                                              |
+| `stl.async`    | Coroutine-based async/await utilities                            |
+| `stl.box`      | Box drawing utilities                                            |
+| `stl.debug`    | Debug utilities                                                  |
+| `stl.env`      | Environment detection (OS, terminal, paths, IS_MAC/WIN/WSL/NIX)  |
+| `stl.fileicon` | File icon definitions                                            |
+| `stl.filetype` | Filetype constants and detection utilities                       |
+| `stl.fn`       | Utility functions (boolean, identity, noop, equals_*, observe)   |
+| `stl.fs`       | File system utilities (read_json, write_json, watch_file)        |
+| `stl.hot`      | Hot reload utilities                                             |
+| `stl.icon`     | Icon definitions (UI, diagnostics, LSP, DAP, Git)                |
+| `stl.json`     | JSON utilities with comment stripping                            |
+| `stl.reporter` | Notification system (debug/info/warn/error with structured opts) |
+| `stl.shell`    | Shell command execution utilities                                |
+| `stl.stdout`   | Stdout utilities                                                 |
+| `stl.string`   | String manipulation utilities                                    |
+| `stl.table`    | Table manipulation utilities                                     |
+| `stl.timer`    | Timer utilities                                                  |
+| `stl.tmux`     | Tmux integration utilities                                       |
+| `stl.winhint`  | Window hint display utilities                                    |
 
 **Data Structures (`stl.c.*`):**
 
-| Class              | Description                                                          |
-|:-------------------|:---------------------------------------------------------------------|
-| `Observable`       | Reactive value container with subscription support                   |
-| `Subscriber`       | Observer for Observable changes                                       |
-| `Subscribers`      | Collection of subscribers                                             |
-| `History`          | Navigation history with capacity limit                               |
-| `Frecency`         | Frequency + recency based ranking                                    |
-| `Scheduler`        | Throttle/debounce task scheduling                                    |
-| `Ticker`           | Counter with subscription support                                     |
-| `Disposable`       | Resource cleanup abstraction                                          |
-| `BatchDisposable`  | Batch disposal of multiple resources                                  |
-| `BatchHandler`     | Batch operation handler with error collection                        |
-| `Dirtier`          | Dirty state tracking                                                  |
-| `CircularQueue`    | Fixed-size circular queue                                             |
-| `CircularStack`    | Fixed-size circular stack                                             |
-| `Tree`             | Generic tree structure                                                |
-| `Filetree`         | File tree with lazy loading                                           |
-| `Theme`            | Theme management with highlight compilation                          |
-| `Proc`             | Process management                                                    |
+| Class             | Description                                              |
+|:------------------|:---------------------------------------------------------|
+| `BatchDisposable` | Batch disposal of multiple resources                     |
+| `BatchHandler`    | Batch operation handler with error collection            |
+| `CircularQueue`   | Fixed-size circular queue                                |
+| `CircularStack`   | Fixed-size circular stack                                |
+| `Dirtier`         | Dirty state tracking                                     |
+| `Disposable`      | Resource cleanup abstraction                             |
+| `Filetree`        | File tree with lazy loading                              |
+| `Frecency`        | Frequency + recency based ranking                        |
+| `History`         | Navigation history with capacity limit                   |
+| `InputHistory`    | Input field history management                           |
+| `Observable`      | Reactive value container with subscription support       |
+| `Proc`            | Process management                                       |
+| `Scheduler`       | Throttle/debounce task scheduling                        |
+| `Subscriber`      | Observer for Observable changes                          |
+| `Subscribers`     | Collection of subscribers                                |
+| `Theme`           | Theme management with highlight compilation              |
+| `Ticker`          | Counter with subscription support                        |
+| `Tree`            | Generic tree structure                                   |
+| `TreeRetriever`   | Tree node retrieval helper                               |
 
 #### `lua/dot/` - Core Framework Layer
 
@@ -102,7 +117,7 @@ Persistent configuration with Observable-based state management:
 |:------------|:---------------------------------------------------------------------------------|
 | `editor/`   | `behavior`, `theme` - Editor-wide settings                                       |
 | `session/`  | `tab` - Session-level settings                                                   |
-| `workspace/`| `bookmark`, `colorpicker`, `explorer`, `flight`, `frecency`, `lsp`, `module`, `option`, `plugin`, `search_buffer`, `search_file`, `select` |
+| `workspace/`| `bookmark`, `colorpicker`, `explorer`, `flight`, `frecency`, `lsp`, `module`, `option`, `plugin`, `search_buffer`, `search_file`, `select`, `select_item` |
 
 **Command System (`dot.command`):**
 
@@ -129,9 +144,9 @@ dot.command.execute("Fbufclose")
 | `dot.tab`     | Tab utilities (resolve_type, get_bufnrs)                             |
 | `dot.path`    | Path utilities (workspace, cwd, locate_* helpers)                    |
 | `dot.var`     | Constants (namespaces, signs, themes, togglers, zindex)              |
-| `dot.session` | Session save/restore                                                  |
-| `dot.lsp`     | LSP utilities                                                         |
-| `dot.notifier`| Custom notification system                                            |
+| `dot.session` | Session save/restore                                                 |
+| `dot.lsp`     | LSP utilities                                                        |
+| `dot.notifier`| Custom notification system                                           |
 
 **Theme System (`dot.theme.*`):**
 
@@ -154,47 +169,100 @@ dot.command.execute("Fbufclose")
 
 **Modules (`era/m/`):**
 
-| Module        | Description                                                    |
-|:--------------|:---------------------------------------------------------------|
-| `ai/`         | AI integration (config, prompt, types)                         |
-| `clipboard/`  | Cross-platform clipboard (mac, win, wsl)                       |
-| `colorpicker/`| Color picker UI with format conversion                         |
-| `explorer/`   | File explorer (node, view, types)                              |
-| `git/`        | Git integration (state, buffer, repo, types)                   |
-| `lsp/`        | LSP utilities (types, symbol path finding)                     |
-| `nvimbar/`    | Status/tab/window bar components                               |
-| `era/m/wk/`   | Key binding manager (WhichKey)                                 |
-| `picker/`     | Picker UI (finder, preview, composer)                          |
-| `plugin/`     | Custom plugin loader (loader, state, view, types)              |
-| `searcher/`   | Search and replace UI (finder, preview, composer)              |
-| `term/`       | Terminal management                                            |
-| `winsep/`     | Window separator styling                                       |
+Directory modules (with submodules):
+
+| Module         | Description                                            |
+|:---------------|:-------------------------------------------------------|
+| `acp/`         | AI code panel                                          |
+| `ai/`          | AI integration (config, prompt, types)                 |
+| `clipboard/`   | Cross-platform clipboard (mac, win, wsl)               |
+| `colorpicker/` | Color picker UI with format conversion                 |
+| `explorer/`    | File explorer (node, view, types)                      |
+| `git/`         | Git integration (state, buffer, repo, types)           |
+| `im/`          | Input method management                                |
+| `image/`       | Image display utilities                                |
+| `lsp/`         | LSP utilities (types, symbol path finding)             |
+| `minimap/`     | Minimap scrollbar                                      |
+| `notepad/`     | Notepad widget                                         |
+| `nvimbar/`     | Status/tab/window bar components                       |
+| `picker/`      | Picker UI (finder, preview, composer)                  |
+| `plugin/`      | Custom plugin loader (loader, state, view, types)      |
+| `searcher/`    | Search and replace UI (finder, preview, composer)      |
+| `select/`      | Selection UI                                           |
+| `term/`        | Terminal management                                    |
+| `toggle/`      | Feature toggle management                              |
+| `ui_attach/`   | UI attach handlers                                     |
+| `winsep/`      | Window separator styling                               |
+| `wk/`          | Key binding manager (WhichKey)                         |
+
+Single-file modules:
+
+| Module            | Description                                        |
+|:------------------|:---------------------------------------------------|
+| `commentstring`   | Comment string detection                           |
+| `copy`            | Copy utilities                                     |
+| `dim`             | Window dimming                                     |
+| `foldtext`        | Custom fold text                                   |
+| `illuminate`      | Symbol highlighting under cursor                   |
+| `input`           | Input UI component                                 |
+| `inspect`         | Value inspection                                   |
+| `lint`            | Linting integration                                |
+| `maximize`        | Window maximize                                    |
+| `notifier`        | Notification display                               |
+| `python_venv`     | Python virtual environment detection               |
+| `scroll`          | Smooth scrolling                                   |
+| `splitline`       | Split line styling                                 |
+| `statuscolumn`    | Custom status column                               |
+| `statusline`      | Custom status line                                 |
+| `tabline`         | Custom tab line                                    |
+| `trailspace`      | Trailing whitespace highlighting                   |
+| `virtcolumn`      | Virtual column display                             |
+| `winline`         | Custom window line                                 |
+| `winpicker`       | Window picker UI                                   |
 
 **Functions (`era/fn/`):**
 
-| Function               | Description                                           |
-|:-----------------------|:------------------------------------------------------|
-| `find-buffers`         | Find open buffers                                     |
-| `find-files`           | Find files in workspace                               |
-| `find-diagnostics`     | Find diagnostics                                      |
-| `find-lsp-symbols`     | Find LSP symbols                                      |
-| `search-in-files`      | Search and replace in files                           |
-| `search-in-buffer`     | Search in current buffer                              |
-| `pick_win`             | Window picker                                         |
-| `rename`               | File/symbol rename                                    |
-| `run_code`             | Code runner                                           |
+Standalone functions for common operations. Key functions include:
+
+| Function                    | Description                                  |
+|:----------------------------|:---------------------------------------------|
+| `find-buffers`              | Find open buffers                            |
+| `find-diagnostics`          | Find diagnostics                             |
+| `find-explorer`             | Find in explorer                             |
+| `find-files`                | Find files in workspace                      |
+| `find-git`                  | Find git changes                             |
+| `find-highlights`           | Find highlight groups                        |
+| `find-keymaps`              | Find keymaps                                 |
+| `find-lsp-symbols`          | Find LSP symbols                             |
+| `find-notifications`        | Find notifications                           |
+| `find-pinned-files`         | Find pinned files                            |
+| `find-vim-options`          | Find vim options                             |
+| `paste-image`               | Paste image from clipboard                   |
+| `paste-image-as-base64`     | Paste image as base64                        |
+| `pick-win`                  | Window picker                                |
+| `refresh-all`               | Refresh all LSP clients                      |
+| `rename`                    | File/symbol rename                           |
+| `run-code`                  | Code runner                                  |
+| `run-code-as-neovim-command`| Run code as Neovim command                   |
+| `search-in-buffer`          | Search in current buffer                     |
+| `search-in-files`           | Search and replace in files                  |
+| `select-copy-filepath`      | Copy filepath with format selection          |
+| `select-encoding`           | Select file encoding                         |
 
 **Views (`era/view/`):**
 
-| View         | Description                                                     |
-|:-------------|:----------------------------------------------------------------|
-| `act`        | Action board                                                    |
-| `keysheet`   | Keymap reference                                                |
-| `plainfile`  | Plain file renderer                                             |
-| `printer`    | Generic text printer                                            |
-| `setting`    | Settings UI                                                     |
-| `textarea`   | Text area component                                             |
-| `tree`       | Tree view renderer                                              |
+| View            | Description                                      |
+|:----------------|:-------------------------------------------------|
+| `act`           | Action board                                     |
+| `fileinfo`      | File information display                         |
+| `filetree`      | File tree view                                   |
+| `keysheet`      | Keymap reference                                 |
+| `notifications` | Notification history view                        |
+| `plainfile`     | Plain file renderer                              |
+| `printer`       | Generic text printer                             |
+| `setting`       | Settings UI                                      |
+| `textarea`      | Text area component                              |
+| `tree`          | Tree view renderer                               |
 
 **Plugin Configs (`era/plugin/`):**
 
@@ -207,17 +275,17 @@ Loaded before stl/dot, sets up global variables, patches, and workspace.
 | File             | Description                                           |
 |:-----------------|:------------------------------------------------------|
 | `bootstrap.lua`  | Main bootstrap (sets _G.yoz, _G.stl, _G.dot)          |
-| `autocmd.lua`    | Early autocommands                                     |
-| `keymap.lua`     | Early keymaps                                          |
-| `option.lua`     | Early options                                          |
+| `autocmd.lua`    | Early autocommands                                    |
+| `keymap.lua`     | Early keymaps                                         |
+| `option.lua`     | Early options                                         |
 
 **Vendor Entry Points (`ark/vendor/`):**
 
 | Vendor      | Description                                                          |
 |:------------|:---------------------------------------------------------------------|
-| `neovim/`   | Standard Neovim setup                                                 |
-| `neovide/`  | Neovide GUI setup                                                     |
-| `vscode/`   | VSCode extension setup                                                |
+| `neovim/`   | Standard Neovim setup                                                |
+| `neovide/`  | Neovide GUI setup                                                    |
+| `vscode/`   | VSCode extension setup                                               |
 
 ### Module Access Patterns
 
@@ -442,32 +510,3 @@ Within each category, sort alphabetically.
 When modifying `rust/yoz/src/`:
 - Follow existing mlua patterns for serialization/deserialization
 - Keep Lua-facing APIs synchronized with Lua call sites
-- Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
-
-## Supporting Directories
-
-| Directory      | Description                                           |
-|:---------------|:------------------------------------------------------|
-| `ftplugin/`    | Filetype-specific settings                            |
-| `lsp/`         | 21 language server configurations                     |
-| `queries/`     | TreeSitter queries                                    |
-| `rust/yoz/`    | Rust source code                                      |
-| `doc/`         | Documentation and issue tracking                      |
-| `lua/__types__/`| Type definitions for LSP                             |
-
-## Key Features
-
-- Rust-powered search, replace, and file operations for performance
-- Multi-environment support: Neovim, Neovide, VSCode
-- Automatic session management for git repositories
-- Custom UI components: status line, tab line, window line, picker, searcher
-- AI integration module with multiple providers
-- Custom file explorer widget
-- Notepad widget for scratch notes
-- Comprehensive git integration (blame, hunk navigation, staging)
-- Color picker with multiple format support
-- Custom lightweight plugin loader with lazy loading
-
-## Debug
-
-- `:messages` is not available in this codebase; use `:Fuxcopynotifications` to copy notification history to clipboard
