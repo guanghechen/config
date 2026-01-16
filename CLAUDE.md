@@ -335,8 +335,8 @@ vim.hl.range(bufnr, ns, hlgroup, start_pos, end_pos)
 **Column Alignment (column 40):**
 
 ```lua
----@param name                        string
----@param callback                    fun(result: boolean): nil
+---@param name                          string
+---@param callback                      fun(result: boolean): nil
 ---@return nil
 ```
 
@@ -370,9 +370,9 @@ local config = create_config({
 
 ```lua
 ---@class foo.bar.MyClass
----@field public name                 string
----@field public callback             fun(): nil
----@field protected _internal         integer
+---@field public name                   string
+---@field public callback               fun(): nil
+---@field protected _internal           integer
 ```
 
 **Adjacent Type Definitions (blank line between):**
