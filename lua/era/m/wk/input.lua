@@ -79,15 +79,28 @@ end
 -- Protected
 ----------------------------------------------------------------------------------------------------
 
----Check if a single-char key is safe to use as a trigger in normal mode.
----Only g, z (lowercase) and Z (uppercase) are considered safe.
+---Check if a single-char key is safe to use as a trigger.
+---For normal mode: g, z, Z, [, ] are safe (they are Vim's built-in prefix keys)
+---For operator-pending mode: only [, ] are safe (we don't have motions preset for g/z)
 ---@param key                            string
+---@param mode                           string
 ---@return boolean
-local function is_safe_single_key(key)
+local function is_safe_single_key(key, mode)
   if #key ~= 1 then
     return true
   end
-  -- Only g and z are safe for lowercase
+
+  -- In operator-pending mode, g and z are NOT safe because we don't have
+  -- motions preset (like gg, ge, zj, zk) defined. This would break dgg, dgj, etc.
+  if mode == "o" then
+    -- Only [ and ] are safe in operator-pending mode
+    if key == "[" or key == "]" then
+      return true
+    end
+    return false
+  end
+
+  -- In other modes (normal, visual), g and z are safe
   if key:match("^[a-z]$") and not key:match("^[gz]$") then
     return false
   end
@@ -117,8 +130,10 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key)
     return
   end
 
-  -- In normal mode, only allow safe single-char keys as triggers
-  if mode == "n" and not is_safe_single_key(tree_key) then
+  -- In normal/operator-pending mode, only allow safe single-char keys as triggers
+  -- g and z are safe in normal mode (Vim's built-in prefix keys)
+  -- but NOT safe in operator-pending mode (we don't have motions preset)
+  if (mode == "n" or mode == "o") and not is_safe_single_key(tree_key, mode) then
     return
   end
 
