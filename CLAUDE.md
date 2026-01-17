@@ -101,12 +101,17 @@ local config = create_config({
 ---@field protected _internal           integer
 ```
 
-**Optional Types (prefix `?` syntax):**
+**Optional Types:**
 
 ```lua
+-- @param and @field: use `?` prefix
 ---@param token                         ?stl.c.CancellationToken
 ---@field public value                  ?string
----@return ?integer
+
+-- @return, @type, and fun() return: use `|nil` suffix (LuaLS limitation)
+---@return integer|nil
+local x = nil ---@type string|nil
+---@alias MyCallback fun(x: string): boolean|nil
 ```
 
 ### Error Reporting
