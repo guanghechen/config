@@ -2,16 +2,24 @@
 ---| "diffview"
 ---| "normal"
 
----@class stl.nvim.tab.Types
-local Types = {
+---@class stl.nvim.tab.TypeEnumClass
+local TypeEnum = {
   DIFFVIEW = "diffview",
   NORMAL = "normal",
+}
+
+---@class stl.nvim.tab.TypeSetClass
+local TypeSet = {
+  ALL = { TypeEnum.NORMAL, TypeEnum.DIFFVIEW },
+  DIFFVIEW = { TypeEnum.DIFFVIEW },
+  NORMAL = { TypeEnum.NORMAL },
 }
 
 ---@class stl.nvim.tab
 local M = {}
 
-M.Types = vim.deepcopy(Types)
+M.TypeEnum = vim.deepcopy(TypeEnum)
+M.TypeSet = vim.deepcopy(TypeSet)
 
 ---@param tabnr                         integer
 ---@return boolean

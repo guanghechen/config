@@ -40,7 +40,7 @@ local function action_toggle()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = dot.tab.resolve_type(tabnr, false) ---@type stl.nvim.tab.TypeEnum
 
-  if tabtype == stl.nvim.tab.Types.DIFFVIEW then
+  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW then
     require("diffview").emit("toggle_files")
   else
     require("diffview").open()

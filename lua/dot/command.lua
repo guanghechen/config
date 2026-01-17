@@ -8,12 +8,12 @@ local __module_name__ = "dot.command" ---@type string
 
 ---@class dot.command.ICommand
 ---@field public uuid                   string
----@field public tabtype                stl.nvim.tab.TypeEnum|nil
+---@field public tabtypes               stl.nvim.tab.TypeEnum[]
 ---@field public action                 fun(args?: string): nil
 
 ---@class dot.command.IImplementation
 ---@field public uuid                   string
----@field public tabtype                ?stl.nvim.tab.TypeEnum
+---@field public tabtypes               stl.nvim.tab.TypeEnum[]
 ---@field public action                 fun(args?: string): nil
 
 local definition_map = {} ---@type table<string, dot.command.IRawDefinition>
@@ -35,7 +35,7 @@ function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local tabtype = dot.tab.resolve_type(tabnr, false) ---@type stl.nvim.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
-  local command = command_map[key] or command_map[uuid] ---@type dot.command.ICommand|nil
+  local command = command_map[key] ---@type dot.command.ICommand|nil
 
   if command == nil then
     if not silent then
@@ -43,7 +43,7 @@ function M.execute(uuid, args, silent)
         from = __module_name__,
         subject = "execute",
         message = "Cannot resolve the command by the given uuid",
-        details = { uuid = uuid, args = args },
+        details = { uuid = uuid, tabtype = tabtype, args = args },
       })
     end
     return
@@ -112,7 +112,7 @@ end
 ---@return dot.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtype = implementation.tabtype ---@type stl.nvim.tab.TypeEnum|nil
+  local tabtypes = implementation.tabtypes ---@type stl.nvim.tab.TypeEnum[]
   local action = implementation.action ---@type fun(args?: string): nil
   local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil
   if definition == nil then
@@ -120,29 +120,35 @@ function M.implement(implementation)
       from = __module_name__,
       subject = "implement",
       message = "Cannot find the definition by the given uuid.",
-      details = { uuid = uuid, tabtype = tabtype, action = action },
+      details = { uuid = uuid, tabtypes = tabtypes, action = action },
     })
     return M
   end
 
-  local key = tabtype == nil and uuid or (uuid .. ":" .. tabtype) ---@type string
-  if command_map[key] ~= nil then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "implement",
-      message = "The command has already been implemented.",
-      details = { key = key, uuid = uuid, tabtype = tabtype, action = action },
-    })
-    return M
+  for _, tabtype in ipairs(tabtypes) do
+    local key = uuid .. ":" .. tabtype ---@type string
+    if command_map[key] ~= nil then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "implement",
+        message = "The command has already been implemented.",
+        details = { key = key, uuid = uuid, tabtypes = tabtypes, action = action },
+      })
+      return M
+    end
   end
 
   ---@type dot.command.ICommand
   local command = {
     uuid = uuid,
-    tabtype = tabtype,
+    tabtypes = tabtypes,
     action = action,
   }
-  command_map[key] = command
+
+  for _, tabtype in ipairs(tabtypes) do
+    local key = uuid .. ":" .. tabtype ---@type string
+    command_map[key] = command
+  end
   return M
 end
 

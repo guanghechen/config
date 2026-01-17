@@ -124,8 +124,8 @@ Definition-implementation separation pattern:
 D.new("Fbufclose", "buf: close")
 
 -- Implement command (can be tab-type specific)
-M.implement({ uuid = "Fbufclose", action = function() ... end })
-M.implement({ uuid = "Fbufclose", tabtype = "terminal", action = function() ... end })
+M.implement({ uuid = "Fbufclose", tabtypes = stl.nvim.tab.TypeSet.ALL, action = function() ... end })
+M.implement({ uuid = "Fbufclose", tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW, action = function() ... end })
 
 -- Execute command
 dot.command.execute("Fbufclose")

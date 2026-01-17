@@ -16,24 +16,6 @@ local M = {}
 
 ----------------------------------------------------------------------------------------------------
 
----@param tabnr                         ?integer
----@return stl.nvim.tab.TypeEnum|nil
-function M.get_type(tabnr)
-  if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
-    return nil
-  end
-  return vim.t[tabnr].eve_type
-end
-
----@param tabnr                         integer
----@param tabtype                       ?stl.nvim.tab.TypeEnum
----@return nil
-function M.set_type(tabnr, tabtype)
-  vim.t[tabnr].eve_type = tabtype
-end
-
-----------------------------------------------------------------------------------------------------
-
 ---@param tabnr                         integer
 ---@return nil
 function M.focus_win_fixed(tabnr)
@@ -327,7 +309,7 @@ end
 ---@param force                         boolean
 ---@return stl.nvim.tab.TypeEnum
 function M.resolve_type(tabnr, force)
-  local tabtype = M.get_type(tabnr) ---@type stl.nvim.tab.TypeEnum|nil
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
   if tabtype ~= nil and not force then
     return tabtype
   end
@@ -339,13 +321,13 @@ function M.resolve_type(tabnr, force)
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     if filetype == stl.filetype.DIFFVIEW_FILES or filetype == stl.filetype.DIFFVIEW_FILE_HISTORY then
-      tabtype = stl.nvim.tab.Types.DIFFVIEW ---@type stl.nvim.tab.TypeEnum
+      tabtype = stl.nvim.tab.TypeEnum.DIFFVIEW ---@type stl.nvim.tab.TypeEnum
       break
     end
   end
 
-  tabtype = tabtype or stl.nvim.tab.Types.NORMAL ---@type stl.nvim.tab.TypeEnum
-  M.set_type(tabnr, tabtype)
+  tabtype = tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
+  vim.t[tabnr].tabtype = tabtype
   return tabtype
 end
 
