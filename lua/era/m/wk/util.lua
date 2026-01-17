@@ -74,7 +74,7 @@ function M.format_key(key)
 end
 
 ---Get current map mode
----@param mode                           string?
+---@param mode                           ?string
 ---@return string
 function M.get_mapmode(mode)
   mode = mode or vim.api.nvim_get_mode().mode

@@ -9,7 +9,7 @@ function M.reload(modname)
 end
 
 ---@param modname                       string
----@param starts_with_only              boolean?
+---@param starts_with_only              ?boolean
 ---@return string[]
 function M.reload_module(modname, starts_with_only)
   if starts_with_only == nil then
@@ -54,7 +54,7 @@ function M.unload(modname)
 end
 
 ---@param modname                       string
----@param starts_with_only              boolean?
+---@param starts_with_only              ?boolean
 ---@return string[]
 function M.unload_module(modname, starts_with_only)
   if starts_with_only == nil then

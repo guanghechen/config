@@ -4,20 +4,20 @@ local __module_name__ = "dot.win" ---@type string
 local vim_win = require("stl.nvim.win")
 
 ---@class dot.win.IFilepathHistoryItem
----@field public bufnr                  integer|nil
----@field public filepath               string|nil
+---@field public bufnr                  ?integer
+---@field public filepath               ?string
 
 ---@class dot.win.IWinline
 ---@field public bufnr                  integer
----@field public locate_cancel          (fun(): nil)|nil
----@field public locate_scheduler       stl.c.Scheduler|nil
----@field public lsp_symbols            dot.t.ILspSymbol[]|nil
+---@field public locate_token           ?stl.c.CancellationToken
+---@field public locate_scheduler       ?stl.c.Scheduler
+---@field public lsp_symbols            ?dot.t.ILspSymbol[]
 ---@field public nvimbar                era.m.nvimbar.Nvimbar
 
 ---@class dot.win.IMeta
----@field public history                stl.c.History|nil
----@field public winline                dot.win.IWinline|nil
----@field public wintype                stl.nvim.win.TypeEnum|nil
+---@field public history                ?stl.c.History
+---@field public winline                ?dot.win.IWinline
+---@field public wintype                ?stl.nvim.win.TypeEnum
 
 local wintype_attrs = {
   focusable = {
@@ -43,7 +43,7 @@ local wintype_attrs = {
 
 local meta_map = {} ---@type table<integer, dot.win.IMeta|nil>
 
----@param encoding                      string|nil
+---@param encoding                      ?string
 ---@return string
 local function normalize_encoding(encoding)
   if type(encoding) == "string" and encoding ~= "" then
@@ -55,7 +55,7 @@ end
 ---@param bufnr                         integer
 ---@param row                           integer
 ---@param byte_col                      integer
----@param encoding                      string|nil
+---@param encoding                      ?string
 ---@return integer
 local function byte_col_to_client_character(bufnr, row, byte_col, encoding)
   local normalized = normalize_encoding(encoding)
@@ -78,7 +78,7 @@ end
 
 ---@param bufnr                         integer
 ---@param position                      lsp.Position
----@param encoding                      string|nil
+---@param encoding                      ?string
 ---@return integer
 local function position_to_byte_col(bufnr, position, encoding)
   local normalized = normalize_encoding(encoding) ---@type string
@@ -95,7 +95,7 @@ local M = {}
 ----------------------------------------------------------------------------------------------------
 
 ---@param tabnr                         integer
----@param filetype                      string|nil
+---@param filetype                      ?string
 ---@return integer|nil
 function M.find_fixed_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -124,7 +124,7 @@ function M.find_floating_by_filetype(tabnr, filetype)
 end
 
 ---@param tabnr                         integer
----@param filetype                      string|nil
+---@param filetype                      ?string
 ---@return integer|nil
 function M.find_sourcefile_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
@@ -213,7 +213,7 @@ function M.is_swappable(winnr)
   return true
 end
 
----@param winnr                         integer|nil
+---@param winnr                         ?integer
 ---@return integer
 function M.resolve_zindex(winnr)
   winnr = winnr or vim.api.nvim_get_current_win() ---@type integer
@@ -229,19 +229,19 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param winnr_candidate               integer|nil
+---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
   return era.fn.pick_win(M.is_focusable, winnr_candidate, false)
 end
 
----@param winnr_candidate               integer|nil
+---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
   return era.fn.pick_win(M.is_projectable, winnr_candidate, false)
 end
 
----@param winnr_candidate               integer|nil
+---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and vim_win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
@@ -250,7 +250,7 @@ function M.pick_sourcefile(winnr_candidate)
   return era.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
 end
 
----@param winnr_candidate               integer|nil
+---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
   return era.fn.pick_win(M.is_swappable, winnr_candidate, false)
@@ -294,7 +294,7 @@ function M.fork(winnr_source, winnr_target)
   return meta_target
 end
 
----@param winnr                         integer|nil
+---@param winnr                         ?integer
 ---@param force                         boolean
 ---@return dot.win.IMeta|nil
 function M.resolve(winnr, force)
@@ -330,7 +330,7 @@ function M.resolve(winnr, force)
 end
 
 ---@param winnr                         integer
----@param wintype                       stl.nvim.win.TypeEnum|nil
+---@param wintype                       ?stl.nvim.win.TypeEnum
 ---@return nil
 function M.set_type(winnr, wintype)
   vim.w[winnr].eve_type = wintype
@@ -344,162 +344,165 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param winnr                         integer|nil
----@param callback                      fun(ok: boolean, symbols: dot.t.ILspSymbol[]|nil): nil
----@return fun(): nil
-function M.locate_symbols(winnr, callback)
-  local cancel_lsp = stl.fn.noop ---@type fun(): nil
-  local settled = false ---@type boolean
+---@param winnr                         ?integer
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { ok: boolean, symbols: ?dot.t.ILspSymbol[] }
+function M.locate_symbols(winnr, token)
+  return stl.c.Future.new(function(resolve)
+    local cancel_lsp = stl.fn.noop ---@type fun(): nil
+    local settled = false ---@type boolean
 
-  local function settle(ok, symbols)
-    if settled then
-      return
-    end
-    settled = true
-    cancel_lsp = stl.fn.noop
-    callback(ok, symbols)
-  end
-
-  local function cancel_request()
-    if settled then
-      return
-    end
-    pcall(cancel_lsp)
-    settle(false)
-  end
-
-  local function abort()
-    settle(false)
-    return cancel_request
-  end
-
-  if winnr == nil or not vim_win.is_valid(winnr) then
-    return abort()
-  end
-
-  ---! Make the request to the LSP server
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
-  if vim.b[bufnr][dot.var.N_WINLINE_DISABLED] or support_documentSymbol < 1 then
-    return abort()
-  end
-
-  local cmp = package.loaded["blink.cmp"]
-  if type(cmp) == "table" and type(cmp.is_visible) == "function" then
-    local ok, visible = pcall(cmp.is_visible)
-    if ok and visible then
-      return abort()
-    end
-  end
-
-  local textDocument = vim.lsp.util.make_text_document_params(bufnr) ---@type lsp.TextDocumentIdentifier
-
-  -- Handle the lsp request response.
-  ---@param err                         any|nil
-  ---@param symbols                     any[]
-  ---@param ctx                         lsp.HandlerContext|nil
-  ---@return nil
-  local function handler(err, symbols, ctx)
-    if settled then
-      return
-    end
-
-    if not vim.api.nvim_win_is_valid(winnr) then
-      settle(false)
-      return
-    end
-
-    if err then
-      if type(err) == "table" then
-        if err.message == "Content modified." then
-          settle(false)
-          return
-        end
-
-        if err.message == "trying to get AST for non-added document" then
-          if vim.api.nvim_buf_is_valid(bufnr) then
-            vim.b[bufnr][dot.var.N_WINLINE_DISABLED] = true
-          end
-          settle(false)
-          return
-        end
+    local function do_resolve(ok, symbols)
+      if settled then
+        return
       end
+      settled = true
+      cancel_lsp = stl.fn.noop
+      resolve({ ok = ok, symbols = symbols })
+    end
 
-      if dot.state.status.suppress_warning:snapshot() then
-        settle(false)
+    if token and token:is_cancelled() then
+      do_resolve(false, nil)
+      return
+    end
+
+    if winnr == nil or not vim_win.is_valid(winnr) then
+      do_resolve(false, nil)
+      return
+    end
+
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
+    if vim.b[bufnr][dot.var.N_WINLINE_DISABLED] or support_documentSymbol < 1 then
+      do_resolve(false, nil)
+      return
+    end
+
+    local cmp = package.loaded["blink.cmp"]
+    if type(cmp) == "table" and type(cmp.is_visible) == "function" then
+      local ok, visible = pcall(cmp.is_visible)
+      if ok and visible then
+        do_resolve(false, nil)
+        return
+      end
+    end
+
+    local textDocument = vim.lsp.util.make_text_document_params(bufnr) ---@type lsp.TextDocumentIdentifier
+
+    ---@param err                         ?any
+    ---@param symbols                     any[]
+    ---@param ctx                         ?lsp.HandlerContext
+    ---@return nil
+    local function handler(err, symbols, ctx)
+      if settled then
         return
       end
 
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "locate_symbols",
-        message = "Failed to request document symbols",
-        details = {
-          err = err,
-          result = symbols,
-          bufnr = bufnr,
-          winnr = winnr,
-          textDocument = textDocument,
-        },
-      })
-      settle(false)
+      if token and token:is_cancelled() then
+        return
+      end
+
+      if not vim.api.nvim_win_is_valid(winnr) then
+        do_resolve(false, nil)
+        return
+      end
+
+      if err then
+        if type(err) == "table" then
+          if err.message == "Content modified." then
+            do_resolve(false, nil)
+            return
+          end
+
+          if err.message == "trying to get AST for non-added document" then
+            if vim.api.nvim_buf_is_valid(bufnr) then
+              vim.b[bufnr][dot.var.N_WINLINE_DISABLED] = true
+            end
+            do_resolve(false, nil)
+            return
+          end
+        end
+
+        if dot.state.status.suppress_warning:snapshot() then
+          do_resolve(false, nil)
+          return
+        end
+
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "locate_symbols",
+          message = "Failed to request document symbols",
+          details = {
+            err = err,
+            result = symbols,
+            bufnr = bufnr,
+            winnr = winnr,
+            textDocument = textDocument,
+          },
+        })
+        do_resolve(false, nil)
+        return
+      end
+
+      local encoding ---@type string|nil
+      if ctx ~= nil and ctx.client_id ~= nil then
+        local client = vim.lsp.get_client_by_id(ctx.client_id) ---@type vim.lsp.Client|nil
+        if client ~= nil then
+          encoding = client.offset_encoding
+        end
+      end
+
+      local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
+      local cursor_line = cursor_row - 1 ---@type integer
+      local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
+      local cursor_pos = { line = cursor_line, character = cursor_character }
+      local symbol_path = era.m.lsp.fn.find_symbol_path(cursor_pos, symbols)
+      local lsp_symbols = {} ---@type dot.t.ILspSymbol[]
+
+      local k = 1 ---@type integer
+      if symbol_path then
+        for _, symbol in ipairs(symbol_path) do
+          local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
+          local name = symbol.name
+          local location = symbol.location
+          local range = symbol.range or (location and location.range) ---@type lsp.Range|nil
+          local pos = range and range.start or nil ---@type lsp.Position|nil
+          if pos ~= nil then
+            local byte_col = position_to_byte_col(bufnr, pos, encoding) ---@type integer
+            ---@type dot.t.ILspSymbol
+            local lsp_symbol = {
+              kind = kind,
+              name = name,
+              row = pos.line + 1,
+              col = byte_col + 1,
+            }
+
+            lsp_symbols[k] = lsp_symbol
+            k = k + 1
+          end
+        end
+      end
+      do_resolve(true, lsp_symbols)
+    end
+
+    local requests
+    requests, cancel_lsp =
+      vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
+    cancel_lsp = cancel_lsp or stl.fn.noop
+    if requests == nil or next(requests) == nil then
+      do_resolve(false, nil)
       return
     end
 
-    local encoding ---@type string|nil
-    if ctx ~= nil and ctx.client_id ~= nil then
-      local client = vim.lsp.get_client_by_id(ctx.client_id) ---@type vim.lsp.Client|nil
-      if client ~= nil then
-        encoding = client.offset_encoding
-      end
+    if token then
+      token:on_cancel(function()
+        pcall(cancel_lsp)
+      end)
     end
-
-    local cursor_row, cursor_col = unpack(vim.api.nvim_win_get_cursor(winnr)) ---@type integer, integer
-    local cursor_line = cursor_row - 1 ---@type integer
-    local cursor_character = byte_col_to_client_character(bufnr, cursor_line, cursor_col, encoding) ---@type integer
-    local cursor_pos = { line = cursor_line, character = cursor_character }
-    local symbol_path = era.m.lsp.fn.find_symbol_path(cursor_pos, symbols)
-    local lsp_symbols = {} ---@type dot.t.ILspSymbol[]
-
-    local k = 1 ---@type integer
-    if symbol_path then
-      for _, symbol in ipairs(symbol_path) do
-        local kind = vim.lsp.protocol.SymbolKind[symbol.kind]
-        local name = symbol.name
-        local location = symbol.location
-        local range = symbol.range or (location and location.range) ---@type lsp.Range|nil
-        local pos = range and range.start or nil ---@type lsp.Position|nil
-        if pos ~= nil then
-          local byte_col = position_to_byte_col(bufnr, pos, encoding) ---@type integer
-          ---@type dot.t.ILspSymbol
-          local lsp_symbol = {
-            kind = kind,
-            name = name,
-            row = pos.line + 1,
-            col = byte_col + 1,
-          }
-
-          lsp_symbols[k] = lsp_symbol
-          k = k + 1
-        end
-      end
-    end
-    settle(true, lsp_symbols)
-  end
-
-  ---! Make the request to the LSP server
-  local requests
-  requests, cancel_lsp =
-    vim.lsp.buf_request(bufnr, "textDocument/documentSymbol", { textDocument = textDocument }, handler)
-  cancel_lsp = cancel_lsp or stl.fn.noop
-  if requests == nil or next(requests) == nil then
-    return abort()
-  end
-
-  return cancel_request
+  end)
 end
 
----@param winnr_source                  integer|nil
+---@param winnr_source                  ?integer
 ---@param filepath                      string
 ---@param lnum                          ?integer
 ---@param col                           ?integer
@@ -527,7 +530,7 @@ function M.open_filepath(winnr_source, filepath, lnum, col)
   return true
 end
 
----@param winnr_source                  integer|nil
+---@param winnr_source                  ?integer
 ---@param filepaths                     string[]
 ---@param lnum                          ?integer
 ---@param col                           ?integer
@@ -578,7 +581,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param winnr                         integer|nil
+---@param winnr                         ?integer
 ---@return nil
 function M.on_close(winnr)
   if winnr == nil then
@@ -597,9 +600,9 @@ function M.on_close(winnr)
   end
 
   if meta.winline ~= nil then
-    if meta.winline.locate_cancel ~= nil then
-      pcall(meta.winline.locate_cancel)
-      meta.winline.locate_cancel = nil
+    if meta.winline.locate_token ~= nil then
+      meta.winline.locate_token:cancel()
+      meta.winline.locate_token = nil
     end
 
     if meta.winline.nvimbar ~= nil then

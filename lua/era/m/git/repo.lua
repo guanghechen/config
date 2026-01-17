@@ -1,5 +1,5 @@
 ---@class era.m.git.repo: era.m.git.Repo
----@field public new                   fun(toplevel: string, callback: fun(repo: era.m.git.Repo|nil))
+---@field public create                fun(toplevel: string, token: stl.c.CancellationToken|nil): stl.c.Future Resolves with ?era.m.git.Repo
 local M = {}
 M.__index = M
 
@@ -26,46 +26,58 @@ local function resolve_commondir(gitdir)
 end
 
 ---@param toplevel                   string
----@param callback                   fun(repo: era.m.git.Repo|nil)
-function M.new(toplevel, callback)
-  stl.git.info.get_toplevel_async(toplevel, function(gitdir, resolved_toplevel)
-    if not gitdir or not resolved_toplevel then
-      callback(nil)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with ?era.m.git.Repo
+function M.create(toplevel, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
       return
     end
 
-    stl.git.info.get_abbrev_head_async(resolved_toplevel, function(abbrev_head, detached)
-      local self = setmetatable({}, M)
-      self.abbrev_head = abbrev_head
-      self.commondir = resolve_commondir(gitdir)
-      self.detached = detached
-      self.gitdir = gitdir
-      self.toplevel = resolved_toplevel
+    stl.async.run(function()
+      local result = stl.git.info.get_toplevel(toplevel, token):await()
+      if not result or not result.gitdir or not result.toplevel then
+        resolve(nil)
+        return
+      end
 
-      callback(self)
+      local abbrev_result = stl.git.info.get_abbrev_head(result.toplevel, token):await()
+
+      local self = setmetatable({}, M)
+      self.abbrev_head = abbrev_result and abbrev_result.abbrev_head
+      self.commondir = resolve_commondir(result.gitdir)
+      self.detached = abbrev_result and abbrev_result.detached
+      self.gitdir = result.gitdir
+      self.toplevel = result.toplevel
+
+      resolve(self)
     end)
   end)
 end
 
 ---@param file                       string
----@param callback                   fun(ok: boolean)
-function M:add_intent_to_add(file, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with boolean
+function M:add_intent_to_add(file, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.act.add_intent_to_add_async(self.toplevel, relpath, callback)
+  return stl.git.act.add_intent_to_add(self.toplevel, relpath, token)
 end
 
 ---@param patch                      string
 ---@param reverse                    boolean|nil
----@param callback                   fun(ok: boolean, err: string|nil)
-function M:apply_patch(patch, reverse, callback)
-  stl.git.act.apply_patch_async(self.toplevel, patch, reverse, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with {ok: boolean, err: string|nil}
+function M:apply_patch(patch, reverse, token)
+  return stl.git.act.apply_patch(self.toplevel, patch, reverse, token)
 end
 
 ---@param file                       string
----@param callback                   fun(info: era.m.git.FileInfo|nil)
-function M:get_file_info(file, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with era.m.git.FileInfo|nil
+function M:get_file_info(file, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.info.get_file_info_async(self.toplevel, relpath, callback)
+  return stl.git.info.get_file_info(self.toplevel, relpath, token)
 end
 
 ---@param file                       string
@@ -75,63 +87,73 @@ function M:get_relpath(file)
 end
 
 ---@param object                     string
----@param callback                   fun(lines: string[]|nil)
-function M:get_show_text(object, callback)
-  stl.git.info.get_show_text_async(self.toplevel, object, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with string[]|nil
+function M:get_show_text(object, token)
+  return stl.git.info.get_show_text(self.toplevel, object, token)
 end
 
 ---@param file                       string
 ---@param lines                      string[]
----@param callback                   fun(hash: string|nil)
-function M:hash_object(file, lines, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with string|nil (hash)
+function M:hash_object(file, lines, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.act.hash_object_async(self.toplevel, relpath, lines, callback)
+  return stl.git.act.hash_object(self.toplevel, relpath, lines, token)
 end
 
----@param callback                   (fun(): nil)|nil
-function M:refresh_head(callback)
-  stl.git.info.get_abbrev_head_async(self.toplevel, function(abbrev_head, detached)
-    self.abbrev_head = abbrev_head
-    self.detached = detached
-    if callback then
-      callback()
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with nil
+function M:refresh_head(token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
     end
-  end)
-end
 
----@param file                       string
----@param callback                   fun(ok: boolean)
-function M:reset_file(file, callback)
-  local relpath = dot.path.relative(self.toplevel, file)
-  local args = { "git", "-C", self.toplevel, "checkout", "--", relpath }
-  vim.system(args, {}, function(obj)
-    vim.schedule(function()
-      callback(obj.code == 0)
+    stl.async.run(function()
+      local result = stl.git.info.get_abbrev_head(self.toplevel, token):await()
+      if result then
+        self.abbrev_head = result.abbrev_head
+        self.detached = result.detached
+      end
+      resolve(nil)
     end)
   end)
 end
 
 ---@param file                       string
----@param callback                   fun(ok: boolean)
-function M:stage_file(file, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with boolean
+function M:reset_file(file, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.act.stage_file_async(self.toplevel, relpath, callback)
+  return stl.git.act.reset_file(self.toplevel, relpath, token)
 end
 
 ---@param file                       string
----@param callback                   fun(ok: boolean)
-function M:unstage_file(file, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with boolean
+function M:stage_file(file, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.act.unstage_file_async(self.toplevel, relpath, callback)
+  return stl.git.act.stage_file(self.toplevel, relpath, token)
+end
+
+---@param file                       string
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with boolean
+function M:unstage_file(file, token)
+  local relpath = dot.path.relative(self.toplevel, file)
+  return stl.git.act.unstage_file(self.toplevel, relpath, token)
 end
 
 ---@param mode_bits                  string
 ---@param object_name                string
 ---@param file                       string
----@param callback                   fun(ok: boolean)
-function M:update_index(mode_bits, object_name, file, callback)
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with boolean
+function M:update_index(mode_bits, object_name, file, token)
   local relpath = dot.path.relative(self.toplevel, file)
-  stl.git.act.update_index_async(self.toplevel, mode_bits, object_name, relpath, callback)
+  return stl.git.act.update_index(self.toplevel, mode_bits, object_name, relpath, token)
 end
 
 return M

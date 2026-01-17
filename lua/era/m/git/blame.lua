@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.git.blame" ---@type string
+
 local NS_INLINE = "dot_module_git_inline_blame"
 local NS_BUFFER = "dot_module_git_buffer_blame"
 
@@ -7,11 +10,11 @@ local M = {}
 ---@type table<integer, table<integer, era.m.git.BlameInfo>>
 local cache = {}
 
----@type table<integer, stl.c.Proc|nil>
-local running_procs = {}
+---@type table<integer, stl.c.CancellationToken|nil>
+local running_tokens = {}
 
----@type table<integer, stl.c.Proc|nil>
-local running_buffer_procs = {}
+---@type table<integer, stl.c.CancellationToken|nil>
+local running_buffer_tokens = {}
 
 ---@param output                     string
 ---@return table<integer, era.m.git.BlameInfo>
@@ -244,37 +247,43 @@ local function inline_set_extmark(bufnr, lnum, info)
   })
 end
 
----@param bufnr                      integer
 ---@param file                       string
 ---@param cwd                        string
----@param callback                   fun(blame: table<integer, era.m.git.BlameInfo>|nil)
-local function run_blame(bufnr, file, cwd, callback)
-  if running_procs[bufnr] then
-    running_procs[bufnr]:kill()
-    running_procs[bufnr] = nil
-  end
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with table<integer, era.m.git.BlameInfo>|nil
+local function run_blame(_, file, cwd, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
+    end
 
-  local args = { "-C", cwd, "blame", "--porcelain", "--", file }
+    local args = { "-C", cwd, "blame", "--porcelain", "--", file }
 
-  local proc = stl.c.Proc.new({
-    cmd = "git",
-    args = args,
-    timeout = 30000,
-    on_exit = function(p, err)
-      if running_procs[bufnr] == p then
-        running_procs[bufnr] = nil
-      end
-      if err then
-        callback(nil)
-        return
-      end
-      local output = p:out()
-      local result = parse_blame_output(output)
-      callback(result)
-    end,
-  })
+    local proc = stl.c.Proc.new({
+      cmd = "git",
+      args = args,
+      timeout = 30000,
+      on_exit = function(p, err)
+        if token and token:is_cancelled() then
+          return
+        end
+        if err then
+          resolve(nil)
+          return
+        end
+        local output = p:out()
+        local result = parse_blame_output(output)
+        resolve(result)
+      end,
+    })
 
-  running_procs[bufnr] = proc
+    if token then
+      token:on_cancel(function()
+        proc:kill()
+      end)
+    end
+  end)
 end
 
 ---@param bufnr                      integer
@@ -324,33 +333,42 @@ local function inline_update(bufnr)
   end
   inline_running[bufnr] = true
 
+  if running_tokens[bufnr] then
+    running_tokens[bufnr]:cancel()
+  end
+  local token = stl.c.CancellationToken.new()
+  running_tokens[bufnr] = token
+
   local file = buf_cache.file ---@type string
   local cwd = buf_cache.repo.toplevel ---@type string
 
-  run_blame(bufnr, file, cwd, function(blame)
-    vim.schedule(function()
-      inline_running[bufnr] = nil
+  run_blame(bufnr, file, cwd, token):finally(function(resolved, blame)
+    running_tokens[bufnr] = nil
+    inline_running[bufnr] = nil
 
-      if not vim.api.nvim_buf_is_valid(bufnr) then
-        return
-      end
+    if not resolved then
+      return
+    end
 
-      if blame then
-        cache[bufnr] = blame
-      end
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
 
-      if not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
-        return
-      end
+    if blame then
+      cache[bufnr] = blame
+    end
 
-      local current_lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-      if blame and blame[current_lnum] then
-        local info = blame[current_lnum] ---@type era.m.git.BlameInfo
-        local current_tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
-        inline_cache[bufnr] = { changedtick = current_tick, lnum = current_lnum, info = info }
-        inline_set_extmark(bufnr, current_lnum, info)
-      end
-    end)
+    if not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
+      return
+    end
+
+    local current_lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+    if blame and blame[current_lnum] then
+      local info = blame[current_lnum] ---@type era.m.git.BlameInfo
+      local current_tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
+      inline_cache[bufnr] = { changedtick = current_tick, lnum = current_lnum, info = info }
+      inline_set_extmark(bufnr, current_lnum, info)
+    end
   end)
 end
 
@@ -411,9 +429,9 @@ local function inline_setup_autocmds()
       inline_reset(bufnr)
       inline_cancel_timer(bufnr)
       inline_cache[bufnr] = nil
-      if running_procs[bufnr] then
-        running_procs[bufnr]:kill()
-        running_procs[bufnr] = nil
+      if running_tokens[bufnr] then
+        running_tokens[bufnr]:cancel()
+        running_tokens[bufnr] = nil
       end
     end,
   })
@@ -434,9 +452,9 @@ local function inline_setup_autocmds()
       inline_close_timer(bufnr)
       inline_cache[bufnr] = nil
       cache[bufnr] = nil
-      if running_procs[bufnr] then
-        running_procs[bufnr]:kill()
-        running_procs[bufnr] = nil
+      if running_tokens[bufnr] then
+        running_tokens[bufnr]:cancel()
+        running_tokens[bufnr] = nil
       end
     end,
   })
@@ -584,54 +602,39 @@ function M.buffer_show(bufnr)
   buffer_blame_enabled[bufnr] = true
   buffer_blame_loading[bufnr] = true
 
-  if running_buffer_procs[bufnr] then
-    running_buffer_procs[bufnr]:kill()
-    running_buffer_procs[bufnr] = nil
+  if running_buffer_tokens[bufnr] then
+    running_buffer_tokens[bufnr]:cancel()
   end
+  local token = stl.c.CancellationToken.new()
+  running_buffer_tokens[bufnr] = token
 
   local file = buf_cache.file ---@type string
   local cwd = buf_cache.repo.toplevel ---@type string
 
-  local args = { "-C", cwd, "blame", "--porcelain", "--", file } ---@type string[]
+  run_blame(bufnr, file, cwd, token):finally(function(resolved, blame)
+    running_buffer_tokens[bufnr] = nil
+    buffer_blame_loading[bufnr] = nil
 
-  local proc = stl.c.Proc.new({
-    cmd = "git",
-    args = args,
-    timeout = 60000,
-    on_exit = function(p, err)
-      if running_buffer_procs[bufnr] == p then
-        running_buffer_procs[bufnr] = nil
-      end
+    if not resolved then
+      return
+    end
 
-      vim.schedule(function()
-        buffer_blame_loading[bufnr] = nil
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      return
+    end
 
-        if not vim.api.nvim_buf_is_valid(bufnr) then
-          return
-        end
+    if not buffer_blame_enabled[bufnr] then
+      return
+    end
 
-        if not buffer_blame_enabled[bufnr] then
-          return
-        end
-
-        if err then
-          return
-        end
-
-        local output = p:out() ---@type string
-        local blame = parse_blame_output(output) ---@type table<integer, era.m.git.BlameInfo>
-        if blame then
-          cache[bufnr] = blame
-          local winnr = vim.fn.bufwinid(bufnr) ---@type integer
-          local lnum = winnr ~= -1 and vim.api.nvim_win_get_cursor(winnr)[1] or nil ---@type integer|nil
-          buffer_current_lnum[bufnr] = lnum
-          buffer_render(bufnr, blame, lnum)
-        end
-      end)
-    end,
-  })
-
-  running_buffer_procs[bufnr] = proc
+    if blame then
+      cache[bufnr] = blame
+      local winnr = vim.fn.bufwinid(bufnr) ---@type integer
+      local lnum = winnr ~= -1 and vim.api.nvim_win_get_cursor(winnr)[1] or nil ---@type integer|nil
+      buffer_current_lnum[bufnr] = lnum
+      buffer_render(bufnr, blame, lnum)
+    end
+  end)
 end
 
 ---@param bufnr                      integer|nil

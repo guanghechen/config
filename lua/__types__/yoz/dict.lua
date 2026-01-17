@@ -10,10 +10,10 @@ local dict = {}
 
 ---@class yoz.dict.ISearchOptions
 ---@field public keyword                string
----@field public language               string|nil
----@field public match_mode             'prefix'|'substring'|nil
----@field public include_compounds      boolean|nil
----@field public max_items              integer|nil
+---@field public language               ?string
+---@field public match_mode             ?'prefix'|'substring'
+---@field public include_compounds      ?boolean
+---@field public max_items              ?integer
 
 ---@param options                       yoz.dict.ISearchOptions|string
 ---@return yoz.dict.ISearchResult[]

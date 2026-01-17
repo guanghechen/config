@@ -16,7 +16,7 @@ local M = {}
 
 ----------------------------------------------------------------------------------------------------
 
----@param filepath                      string|nil
+---@param filepath                      ?string
 ---@return integer|nil
 function M.loadfile(filepath)
   if filepath == nil or #filepath < 1 then
@@ -85,7 +85,7 @@ function M.pick_filepath(cwd, existed_paths)
   return nil
 end
 
----@param bufnr                         integer|nil
+---@param bufnr                         ?integer
 ---@param force                         boolean
 ---@return dot.buf.IMeta|nil
 function M.resolve(bufnr, force)
@@ -140,7 +140,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----@param bufnr                         integer|nil
+---@param bufnr                         ?integer
 ---@return nil
 function M.on_close(bufnr)
   if bufnr == nil then

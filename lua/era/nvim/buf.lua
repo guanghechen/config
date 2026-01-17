@@ -41,7 +41,7 @@ function M.close()
     return
   end
 
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer|nil
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local history = meta.history ---@type stl.c.History|nil
   if history == nil then
     stl.nvim.buf.close(bufnr)
@@ -50,7 +50,7 @@ function M.close()
 
   local bufnr_target = nil ---@type integer|nil
 
-  local item_present = history:present() ---@type dot.win.IFilepathHistoryItem|nil
+  local item_present, _ = history:present() ---@type dot.win.IFilepathHistoryItem|nil, integer
   if
     item_present ~= nil
     and item_present.bufnr ~= nil
@@ -209,7 +209,7 @@ function M.focus(bufid)
   M.open(bufs[bufid_next].bufnr)
 end
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.focus_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -236,7 +236,7 @@ function M.focus_left(step)
   M.open(bufs[bufid_next].bufnr)
 end
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.focus_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -344,7 +344,7 @@ end
 -- save
 ----------------------------------------------------------------------------------------------------
 
----@param args                          string|nil
+---@param args                          ?string
 ---@return nil
 function M.save(args)
   local noformat = args == "noformat" ---@type boolean
@@ -479,7 +479,7 @@ end
 -- swap
 ----------------------------------------------------------------------------------------------------
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.swap_left(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -520,7 +520,7 @@ function M.swap_left(step)
   dot.state.status.dirtier_tabline:mark_dirty()
 end
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.swap_right(step)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer

@@ -8,7 +8,7 @@ setmetatable(M, { __index = gfn })
 M.noop = stl.fn.noop
 
 ---@param fn                            fun(...): nil
----@param fn_name                       string|nil
+---@param fn_name                       ?string
 ---@return string
 ---@return fun(): nil
 function M.register_anonymous_fn(fn, fn_name)

@@ -86,7 +86,7 @@ function M.measure(width, height, restriction)
   return { row = row, col = col, width = width, height = height }
 end
 
----@param border                        string|table|nil
+---@param border                        ?string|table
 ---@return integer left
 ---@return integer right
 ---@return integer top
@@ -163,13 +163,13 @@ function M.resolve_border_extents(border)
 end
 
 ---@class stl.box.FitEditorOpts
----@field public cols                   integer|nil
----@field public rows                   integer|nil
+---@field public cols                   ?integer
+---@field public rows                   ?integer
 
 ---@param width                         integer
 ---@param height                        integer
----@param border                        string|table|nil
----@param opts                          stl.box.FitEditorOpts|nil
+---@param border                        ?string|table
+---@param opts                          ?stl.box.FitEditorOpts
 ---@return integer
 ---@return integer
 function M.fit_editor(width, height, border, opts)

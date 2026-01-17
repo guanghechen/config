@@ -16,7 +16,7 @@ local M = {}
 
 ----------------------------------------------------------------------------------------------------
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return stl.nvim.tab.TypeEnum|nil
 function M.get_type(tabnr)
   if tabnr == nil or tabnr < 1 or not vim.api.nvim_tabpage_is_valid(tabnr) then
@@ -26,7 +26,7 @@ function M.get_type(tabnr)
 end
 
 ---@param tabnr                         integer
----@param tabtype                       stl.nvim.tab.TypeEnum|nil
+---@param tabtype                       ?stl.nvim.tab.TypeEnum
 ---@return nil
 function M.set_type(tabnr, tabtype)
   vim.t[tabnr].eve_type = tabtype
@@ -61,7 +61,7 @@ function M.focus_win_sourcefile(tabnr)
   end
 end
 
----@param bufnrs                        integer[]|nil
+---@param bufnrs                        ?integer[]
 ---@return integer[]
 function M.retrieve_unreferenced_bufnrs(bufnrs)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
@@ -85,7 +85,7 @@ function M.retrieve_unreferenced_bufnrs(bufnrs)
   return bufnrs_unreferenced
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return dot.tab.IBufItem|nil
 ---@return integer|nil
 function M.retrieve_buf_sourcefile(tabnr)
@@ -107,7 +107,7 @@ function M.retrieve_buf_sourcefile(tabnr)
   end
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return integer|nil
 function M.retrieve_bufnr_sourcefile(tabnr)
   local winnr_sourcefile = M.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
@@ -117,21 +117,21 @@ function M.retrieve_bufnr_sourcefile(tabnr)
   return vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return integer|nil
 function M.retrieve_winnr_fixed(tabnr)
   local meta = M.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   return meta ~= nil and meta.winnr_fixed:snapshot() or nil ---@type integer|nil
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return integer|nil
 function M.retrieve_winnr_float(tabnr)
   local meta = M.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   return meta ~= nil and meta.winnr_float:snapshot() or nil ---@type integer|nil
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return integer|nil
 function M.retrieve_winnr_sourcefile(tabnr)
   if tabnr == nil then
@@ -167,7 +167,7 @@ end
 
 ---@param tabnr                         integer
 ---@param bufnr                         integer
----@param pinned                        boolean|nil
+---@param pinned                        ?boolean
 ---@return dot.tab.IMeta|nil
 function M.add_buf(tabnr, bufnr, pinned)
   if bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
@@ -268,7 +268,7 @@ function M.refresh_bufs(bufs)
   end
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@param force                         boolean
 ---@return dot.tab.IMeta|nil
 function M.resolve(tabnr, force)
@@ -422,7 +422,7 @@ function M.on_bufs_close(tabnr, bufnrs)
   end
 end
 
----@param tabnr                         integer|nil
+---@param tabnr                         ?integer
 ---@return nil
 function M.on_close(tabnr)
   if tabnr == nil then

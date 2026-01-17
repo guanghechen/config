@@ -33,12 +33,11 @@ function M.get_history()
   return M._history
 end
 
----@param on_progress                   fun(): nil
----@param on_done                       fun(): nil
----@return nil
-function M.install(on_progress, on_done)
+---@param on_progress                   ?fun(): nil
+---@return stl.c.Future                 Resolves with nil when install completes
+function M.install(on_progress)
   if M._running then
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   M._running = true
@@ -56,22 +55,20 @@ function M.install(on_progress, on_done)
 
   if #to_install == 0 then
     M._running = false
-    on_done()
-    return
+    return stl.c.Future.resolve(nil)
   end
 
-  M.__install_plugins__(to_install, on_progress, function()
+  return M.__install_plugins__(to_install, on_progress):map(function()
     M._running = false
-    on_done()
+    return nil
   end)
 end
 
----@param on_progress                   fun(): nil
----@param on_done                       fun(): nil
----@return nil
-function M.update(on_progress, on_done)
+---@param on_progress                   ?fun(): nil
+---@return stl.c.Future                 Resolves with nil when update completes
+function M.update(on_progress)
   if M._running then
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   M._running = true
@@ -80,17 +77,16 @@ function M.update(on_progress, on_done)
   local specs = State.specs ---@type era.m.plugin.IPluginSpec[]
   State.load_lock()
 
-  M.__update_plugins__(specs, on_progress, function()
+  return M.__update_plugins__(specs, on_progress):map(function()
     M._running = false
-    on_done()
+    return nil
   end)
 end
 
----@param on_done                       fun(): nil
----@return nil
-function M.clean(on_done)
+---@return stl.c.Future Resolves with nil when clean completes
+function M.clean()
   if M._running then
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   M._running = true
@@ -100,8 +96,7 @@ function M.clean(on_done)
 
   if #to_clean == 0 then
     M._running = false
-    on_done()
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   for _, name in ipairs(to_clean) do
@@ -129,39 +124,36 @@ function M.clean(on_done)
   State.remove_orphan_lock_entries()
 
   M._running = false
-  on_done()
+  return stl.c.Future.resolve(nil)
 end
 
 ---@param name                          string
----@param on_progress                   fun(): nil
----@param on_done                       fun(): nil
----@return nil
-function M.build(name, on_progress, on_done)
+---@param on_progress                   ?fun(): nil
+---@return stl.c.Future                 Resolves with nil when build completes
+function M.build(name, on_progress)
   if M._running then
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   local Loader = require("era.m.plugin.loader")
   local plugin_state = Loader.get(name) ---@type era.m.plugin.IPluginState|nil
   if not plugin_state then
     stl.reporter.warn({
-      from = "era.m.plugin.action",
+      from = __module_name__,
       subject = "build",
       message = "Plugin not found: " .. name,
     })
-    on_done()
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   local spec = plugin_state.spec ---@type era.m.plugin.IPluginSpec
   if not spec.build then
     stl.reporter.info({
-      from = "era.m.plugin.action",
+      from = __module_name__,
       subject = "build",
       message = "No build step for: " .. name,
     })
-    on_done()
-    return
+    return stl.c.Future.resolve(nil)
   end
 
   M._running = true
@@ -177,65 +169,32 @@ function M.build(name, on_progress, on_done)
     to_commit = nil,
   }
   M._tasks[name] = task
-  on_progress()
+  if on_progress then
+    on_progress()
+  end
 
   local path = dot.path.join(State.options.root, name) ---@type string
-  M.__run_build__(spec, path, task, on_progress, function(ok, err)
-    if ok then
+  return M.__run_build__(spec, path, task, on_progress):map(function(result)
+    if result and result.ok then
       task.status = "done"
       task.step = nil
       task.message = "Build complete"
     else
       task.status = "error"
       task.step = nil
-      task.message = "Build failed: " .. (err or "unknown error")
+      task.message = "Build failed: " .. (result and result.err or "unknown error")
     end
 
     M.__save_to_history__()
     M._running = false
-    on_progress()
-    on_done()
+    if on_progress then
+      on_progress()
+    end
+    return nil
   end)
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@param tasks                         fun(callback: fun(): nil)[]
----@param on_all_done                   fun(): nil
----@return nil
-function M.__throttle_execute__(tasks, on_all_done)
-  local total = #tasks ---@type integer
-  if total == 0 then
-    on_all_done()
-    return
-  end
-
-  local running = 0 ---@type integer
-  local completed = 0 ---@type integer
-  local next_index = 1 ---@type integer
-
-  ---@return nil
-  local function run_next()
-    while running < CONCURRENCY and next_index <= total do
-      local index = next_index ---@type integer
-      next_index = next_index + 1
-      running = running + 1
-
-      tasks[index](function()
-        running = running - 1
-        completed = completed + 1
-
-        if completed == total then
-          on_all_done()
-        else
-          run_next()
-        end
-      end)
-    end
-  end
-
-  run_next()
-end
 
 ---@param dir                           string
 ---@return boolean
@@ -243,7 +202,7 @@ function M.__rm_recursive__(dir)
   local ok, err = pcall(vim.fn.delete, dir, "rf")
   if not ok then
     stl.reporter.error({
-      from = "era.m.plugin.action",
+      from = __module_name__,
       subject = "__rm_recursive__",
       message = "Failed to delete directory: " .. dir,
       details = { error = tostring(err) },
@@ -256,47 +215,221 @@ end
 ---@param path                          string
 ---@param from_commit                   string
 ---@param to_commit                     string
----@param callback                      fun(commits: era.m.plugin.ICommitInfo[]): nil
----@return nil
-function M.__fetch_commits__(path, from_commit, to_commit, callback)
-  local args = {
-    "log",
-    "--pretty=format:%h %s (%cr)",
-    "--abbrev-commit",
-    "--decorate",
-    "--date=short",
-    "--color=never",
-    "--no-show-signature",
-    from_commit .. ".." .. to_commit,
-  }
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with era.m.plugin.ICommitInfo[]
+function M.__fetch_commits__(path, from_commit, to_commit, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({})
+      return
+    end
 
-  vim.system({ "git", unpack(args) }, { cwd = path, text = true }, function(result)
-    vim.schedule(function()
-      local commits = {} ---@type era.m.plugin.ICommitInfo[]
-      if result.code == 0 and result.stdout then
-        local output = vim.trim(result.stdout) ---@type string
-        if output ~= "" then
-          for _, line in ipairs(vim.split(output, "\n")) do
-            local hash, msg, time = line:match("^(%w+) (.*) (%(.*%))$")
-            if hash and msg then
-              commits[#commits + 1] = {
-                hash = hash,
-                message = vim.trim(msg),
-                time = time,
-              }
+    local args = {
+      "log",
+      "--pretty=format:%h %s (%cr)",
+      "--abbrev-commit",
+      "--decorate",
+      "--date=short",
+      "--color=never",
+      "--no-show-signature",
+      from_commit .. ".." .. to_commit,
+    }
+
+    vim.system({ "git", unpack(args) }, { cwd = path, text = true }, function(result)
+      if token and token:is_cancelled() then
+        vim.schedule(function()
+          resolve({})
+        end)
+        return
+      end
+      vim.schedule(function()
+        local commits = {} ---@type era.m.plugin.ICommitInfo[]
+        if result.code == 0 and result.stdout then
+          local output = vim.trim(result.stdout) ---@type string
+          if output ~= "" then
+            for _, line in ipairs(vim.split(output, "\n")) do
+              local hash, msg, time = line:match("^(%w+) (.*) (%(.*%))$")
+              if hash and msg then
+                commits[#commits + 1] = {
+                  hash = hash,
+                  message = vim.trim(msg),
+                  time = time,
+                }
+              end
             end
           end
         end
-      end
-      callback(commits)
+        resolve(commits)
+      end)
     end)
   end)
 end
 
----@param name                          string
----@param callback                      fun(task: era.m.plugin.ITaskState): nil
----@return boolean
-function M.__run_task__(name, callback)
+---@param spec                          era.m.plugin.IPluginSpec
+---@param path                          string
+---@param task                          ?era.m.plugin.ITaskState
+---@param on_output                     ?fun(): nil
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { ok: boolean, err: ?string }
+function M.__run_build__(spec, path, task, on_output, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ ok = false, err = "Cancelled" })
+      return
+    end
+
+    local build = spec.build
+    if not build then
+      resolve({ ok = true, err = nil })
+      return
+    end
+
+    if type(build) == "function" then
+      local ok, err = pcall(build)
+      if ok then
+        resolve({ ok = true, err = nil })
+      else
+        resolve({ ok = false, err = tostring(err) })
+      end
+      return
+    end
+
+    if type(build) == "string" then
+      ---@cast build string
+      if build:sub(1, 1) == ":" then
+        local cmd_str = build:sub(2) ---@type string
+        local ok, err = pcall(vim.cmd --[[@as fun(cmd: string)]], cmd_str)
+        if ok then
+          resolve({ ok = true, err = nil })
+        else
+          resolve({ ok = false, err = tostring(err) })
+        end
+        return
+      end
+
+      local output_lines = {} ---@type string[]
+      local MAX_OUTPUT_LINES = 8 ---@type integer
+
+      ---@param err ?string
+      ---@param data ?string
+      local function on_data(err, data)
+        if err or not data or not task then
+          return
+        end
+        for line in data:gmatch("[^\r\n]+") do
+          output_lines[#output_lines + 1] = line
+          if #output_lines > MAX_OUTPUT_LINES then
+            table.remove(output_lines, 1)
+          end
+        end
+        task.output = output_lines
+        if on_output then
+          vim.schedule(on_output)
+        end
+      end
+
+      vim.system(stl.shell.get_shell_args(build), {
+        cwd = path,
+        text = true,
+        stdout = on_data,
+        stderr = on_data,
+      }, function(result)
+        if token and token:is_cancelled() then
+          vim.schedule(function()
+            resolve({ ok = false, err = "Cancelled" })
+          end)
+          return
+        end
+        vim.schedule(function()
+          if result.code == 0 then
+            resolve({ ok = true, err = nil })
+          else
+            resolve({ ok = false, err = result.stderr or "Build command failed" })
+          end
+        end)
+      end)
+      return
+    end
+
+    resolve({ ok = true, err = nil })
+  end)
+end
+
+---@return nil
+function M.__save_to_history__()
+  for name, task in pairs(M._tasks) do
+    M._history[name] = vim.deepcopy(task)
+  end
+end
+
+---@param path                          string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { ok: boolean, err: ?string }
+function M.__git_fetch__(path, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ ok = false, err = "Cancelled" })
+      return
+    end
+
+    vim.system(
+      { "git", "fetch", "--tags", "--force", "--recurse-submodules" },
+      { cwd = path, text = true },
+      function(result)
+        if token and token:is_cancelled() then
+          vim.schedule(function()
+            resolve({ ok = false, err = "Cancelled" })
+          end)
+          return
+        end
+        vim.schedule(function()
+          if result.code == 0 then
+            resolve({ ok = true, err = nil })
+          else
+            resolve({ ok = false, err = result.stderr or "Fetch failed" })
+          end
+        end)
+      end
+    )
+  end)
+end
+
+---@param path                          string
+---@param target                        string
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { ok: boolean, err: ?string }
+function M.__git_checkout__(path, target, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ ok = false, err = "Cancelled" })
+      return
+    end
+
+    vim.system({ "git", "checkout", target }, { cwd = path, text = true }, function(result)
+      if token and token:is_cancelled() then
+        vim.schedule(function()
+          resolve({ ok = false, err = "Cancelled" })
+        end)
+        return
+      end
+      vim.schedule(function()
+        if result.code == 0 then
+          resolve({ ok = true, err = nil })
+        else
+          resolve({ ok = false, err = result.stderr or "Checkout failed" })
+        end
+      end)
+    end)
+  end)
+end
+
+---@async
+---@param spec                          era.m.plugin.IPluginSpec
+---@param new_lock                      table<string, era.m.plugin.ILockEntry>
+---@param on_progress                   ?fun(): nil
+---@return nil
+function M.__install_single_plugin__(spec, new_lock, on_progress)
+  local name = spec.name ---@type string
   ---@type era.m.plugin.ITaskState
   local task = {
     name = name,
@@ -308,421 +441,361 @@ function M.__run_task__(name, callback)
   }
   M._tasks[name] = task
 
-  callback(task)
-  return true
-end
+  local path = dot.path.join(State.options.root, name) ---@type string
+  local url = spec.url or ("https://github.com/" .. name) ---@type string
 
----@param spec                          era.m.plugin.IPluginSpec
----@param path                          string
----@param task                          era.m.plugin.ITaskState|nil
----@param on_output                     (fun(): nil)|nil
----@param callback                      fun(ok: boolean, err: string|nil): nil
----@return nil
-function M.__run_build__(spec, path, task, on_output, callback)
-  local build = spec.build
-  if not build then
-    callback(true, nil)
-    return
+  task.step = "cloning"
+  task.message = "Cloning..."
+  if on_progress then
+    on_progress()
   end
 
-  if type(build) == "function" then
-    local ok, err = pcall(build)
-    if ok then
-      callback(true, nil)
-    else
-      callback(false, tostring(err))
+  local clone_result = stl.git.act.clone(url, path, spec.branch):await()
+  if not clone_result or not clone_result.ok then
+    task.status = "error"
+    task.step = nil
+    task.message = "Clone failed: " .. (clone_result and clone_result.stderr or "unknown error")
+    if on_progress then
+      on_progress()
     end
     return
   end
 
-  if type(build) == "string" then
-    if build:sub(1, 1) == ":" then
-      local ok, err = pcall(vim.cmd, build:sub(2))
-      if ok then
-        callback(true, nil)
-      else
-        callback(false, tostring(err))
+  local info = stl.git.info.info(path)
+  if not info or not info.commit then
+    task.status = "error"
+    task.step = nil
+    task.message = "Failed to get commit info"
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
+
+  local branch = info.branch or spec.branch or "main" ---@type string
+  task.to_commit = info.commit:sub(1, 7)
+  new_lock[name] = { branch = branch, commit = info.commit }
+
+  if spec.build then
+    task.step = "building"
+    task.message = "Building..."
+    if on_progress then
+      on_progress()
+    end
+
+    local build_result = M.__run_build__(spec, path, task, on_progress):await()
+    if not build_result or not build_result.ok then
+      task.status = "error"
+      task.step = nil
+      task.message = "Build failed: " .. (build_result and build_result.err or "unknown error")
+      if on_progress then
+        on_progress()
+      end
+      return
+    end
+  end
+
+  task.status = "done"
+  task.step = nil
+  task.message = "Installed"
+
+  local commits = M.__fetch_commits__(path, info.commit .. "~10", info.commit):await()
+  task.commits = commits
+  if on_progress then
+    on_progress()
+  end
+end
+
+---@param specs                         era.m.plugin.IPluginSpec[]
+---@param on_progress                   ?fun(): nil
+---@return stl.c.Future
+function M.__install_plugins__(specs, on_progress)
+  local total = #specs ---@type integer
+
+  if total == 0 then
+    return stl.c.Future.resolve(nil)
+  end
+
+  State.load_lock()
+
+  ---@type table<string, era.m.plugin.ILockEntry>
+  local new_lock = vim.tbl_extend("keep", {}, State.lock)
+
+  ---@type stl.c.Future[]
+  local futures = {}
+
+  for _, spec in ipairs(specs) do
+    local future = stl.async.run(function()
+      M.__install_single_plugin__(spec, new_lock, on_progress)
+    end)
+    futures[#futures + 1] = future
+  end
+
+  return M.__throttle_futures__(futures):map(function()
+    State.update_lock(new_lock)
+    M.__save_to_history__()
+    return nil
+  end)
+end
+
+---@async
+---@param spec                          era.m.plugin.IPluginSpec
+---@param new_lock                      table<string, era.m.plugin.ILockEntry>
+---@param on_progress                   ?fun(): nil
+---@return nil
+function M.__update_single_plugin__(spec, new_lock, on_progress)
+  local name = spec.name ---@type string
+  ---@type era.m.plugin.ITaskState
+  local task = {
+    name = name,
+    status = "running",
+    step = nil,
+    message = "",
+    from_commit = nil,
+    to_commit = nil,
+  }
+  M._tasks[name] = task
+
+  local path = dot.path.join(State.options.root, name) ---@type string
+
+  if not yoz.path.is_exist(path) then
+    -- Plugin not installed, trigger installation
+    local url = spec.url or ("https://github.com/" .. name) ---@type string
+    task.step = "cloning"
+    task.message = "Cloning..."
+    if on_progress then
+      on_progress()
+    end
+
+    local clone_result = stl.git.act.clone(url, path, spec.branch):await()
+    if not clone_result or not clone_result.ok then
+      task.status = "error"
+      task.step = nil
+      task.message = "Clone failed: " .. (clone_result and clone_result.stderr or "unknown error")
+      if on_progress then
+        on_progress()
       end
       return
     end
 
-    local output_lines = {} ---@type string[]
-    local MAX_OUTPUT_LINES = 8 ---@type integer
+    local info = stl.git.info.info(path)
+    if not info or not info.commit then
+      task.status = "error"
+      task.step = nil
+      task.message = "Failed to get commit info"
+      if on_progress then
+        on_progress()
+      end
+      return
+    end
 
-    ---@param err string|nil
-    ---@param data string|nil
-    local function on_data(err, data)
-      if err or not data or not task then
-        return
+    local branch = info.branch or spec.branch or "main" ---@type string
+    task.to_commit = info.commit:sub(1, 7)
+    new_lock[name] = { branch = branch, commit = info.commit }
+
+    if spec.build then
+      task.step = "building"
+      task.message = "Building..."
+      if on_progress then
+        on_progress()
       end
-      for line in data:gmatch("[^\r\n]+") do
-        output_lines[#output_lines + 1] = line
-        if #output_lines > MAX_OUTPUT_LINES then
-          table.remove(output_lines, 1)
+
+      local build_result = M.__run_build__(spec, path, task, on_progress):await()
+      if not build_result or not build_result.ok then
+        task.status = "error"
+        task.step = nil
+        task.message = "Build failed: " .. (build_result and build_result.err or "unknown error")
+        if on_progress then
+          on_progress()
         end
-      end
-      task.output = output_lines
-      if on_output then
-        vim.schedule(on_output)
+        return
       end
     end
 
-    vim.system(stl.shell.get_shell_args(build), {
-      cwd = path,
-      text = true,
-      stdout = on_data,
-      stderr = on_data,
-    }, function(result)
-      vim.schedule(function()
-        if result.code == 0 then
-          callback(true, nil)
-        else
-          callback(false, result.stderr or "Build command failed")
-        end
-      end)
-    end)
+    task.status = "done"
+    task.step = nil
+    task.message = "Installed"
+
+    local commits = M.__fetch_commits__(path, info.commit .. "~10", info.commit):await()
+    task.commits = commits
+    if on_progress then
+      on_progress()
+    end
     return
   end
 
-  callback(true, nil)
-end
+  local info = stl.git.info.info(path)
+  if not info then
+    task.status = "error"
+    task.step = nil
+    task.message = "Not a git repo"
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
 
----@return nil
-function M.__save_to_history__()
-  for name, task in pairs(M._tasks) do
-    M._history[name] = vim.deepcopy(task)
+  task.from_commit = info.commit and info.commit:sub(1, 7) or nil
+  task.step = "fetching"
+  task.message = "Fetching..."
+  if on_progress then
+    on_progress()
+  end
+
+  local fetch_result = M.__git_fetch__(path):await()
+  if not fetch_result or not fetch_result.ok then
+    task.status = "error"
+    task.step = nil
+    task.message = fetch_result and fetch_result.err or "Fetch failed"
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
+
+  local branch = spec.branch or stl.git.info.get_branch(path) or "main" ---@type string
+  local target_commit = stl.git.info.get_commit(path, branch, true)
+
+  if not target_commit then
+    task.status = "error"
+    task.step = nil
+    task.message = "No target commit"
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
+
+  task.to_commit = target_commit:sub(1, 7)
+
+  if info.commit and stl.git.info.eq(info, { commit = target_commit }) then
+    task.status = "done"
+    task.step = nil
+    task.message = "Already up to date"
+    new_lock[name] = { branch = branch, commit = target_commit }
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
+
+  task.step = "checkout"
+  task.message = "Checking out..."
+  if on_progress then
+    on_progress()
+  end
+
+  local checkout_result = M.__git_checkout__(path, target_commit):await()
+  if not checkout_result or not checkout_result.ok then
+    task.status = "error"
+    task.step = nil
+    task.message = checkout_result and checkout_result.err or "Checkout failed"
+    if on_progress then
+      on_progress()
+    end
+    return
+  end
+
+  new_lock[name] = { branch = branch, commit = target_commit }
+
+  if spec.build then
+    task.step = "building"
+    task.message = "Building..."
+    if on_progress then
+      on_progress()
+    end
+
+    local build_result = M.__run_build__(spec, path, task, on_progress):await()
+    if not build_result or not build_result.ok then
+      task.status = "error"
+      task.step = nil
+      task.message = "Build failed: " .. (build_result and build_result.err or "unknown error")
+      if on_progress then
+        on_progress()
+      end
+      return
+    end
+  end
+
+  task.status = "done"
+  task.step = nil
+  task.message = "Updated"
+
+  if info.commit then
+    local commits = M.__fetch_commits__(path, info.commit, target_commit):await()
+    task.commits = commits
+  end
+  if on_progress then
+    on_progress()
   end
 end
 
 ---@param specs                         era.m.plugin.IPluginSpec[]
----@param on_progress                   fun(): nil
----@param on_done                       fun(): nil
----@return nil
-function M.__install_plugins__(specs, on_progress, on_done)
+---@param on_progress                   ?fun(): nil
+---@return stl.c.Future
+function M.__update_plugins__(specs, on_progress)
   local total = #specs ---@type integer
 
   if total == 0 then
-    on_done()
-    return
+    return stl.c.Future.resolve(nil)
   end
 
-  -- Load existing lock to preserve entries
   State.load_lock()
 
   ---@type table<string, era.m.plugin.ILockEntry>
   local new_lock = vim.tbl_extend("keep", {}, State.lock)
 
-  ---@type fun(callback: fun(): nil)[]
-  local tasks = {}
+  ---@type stl.c.Future[]
+  local futures = {}
 
   for _, spec in ipairs(specs) do
-    tasks[#tasks + 1] = function(task_done)
-      M.__run_task__(spec.name, function(task)
-        local path = dot.path.join(State.options.root, spec.name) ---@type string
-        local url = spec.url or ("https://github.com/" .. spec.name) ---@type string
-
-        task.step = "cloning"
-        task.message = "Cloning..."
-        on_progress()
-
-        stl.git.act.clone(url, path, spec.branch, function(ok, _, stderr)
-          if not ok then
-            task.status = "error"
-            task.step = nil
-            task.message = "Clone failed: " .. (stderr or "unknown error")
-            on_progress()
-            task_done()
-            return
-          end
-
-          local info = stl.git.info.info(path)
-          if not info or not info.commit then
-            task.status = "error"
-            task.step = nil
-            task.message = "Failed to get commit info"
-            on_progress()
-            task_done()
-            return
-          end
-
-          local branch = info.branch or spec.branch or "main" ---@type string
-          task.to_commit = info.commit:sub(1, 7)
-          new_lock[spec.name] = { branch = branch, commit = info.commit }
-
-          if spec.build then
-            task.step = "building"
-            task.message = "Building..."
-            on_progress()
-
-            M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
-              if not build_ok then
-                task.status = "error"
-                task.step = nil
-                task.message = "Build failed: " .. (build_err or "unknown error")
-                on_progress()
-                task_done()
-                return
-              end
-
-              task.status = "done"
-              task.step = nil
-              task.message = "Installed"
-
-              M.__fetch_commits__(path, info.commit .. "~10", info.commit, function(commits)
-                task.commits = commits
-                on_progress()
-                task_done()
-              end)
-            end)
-          else
-            task.status = "done"
-            task.step = nil
-            task.message = "Installed"
-
-            M.__fetch_commits__(path, info.commit .. "~10", info.commit, function(commits)
-              task.commits = commits
-              on_progress()
-              task_done()
-            end)
-          end
-        end)
-      end)
-    end
+    local future = stl.async.run(function()
+      M.__update_single_plugin__(spec, new_lock, on_progress)
+    end)
+    futures[#futures + 1] = future
   end
 
-  M.__throttle_execute__(tasks, function()
+  return M.__throttle_futures__(futures):map(function()
     State.update_lock(new_lock)
     M.__save_to_history__()
-    on_done()
+    return nil
   end)
 end
 
----@param specs                         era.m.plugin.IPluginSpec[]
----@param on_progress                   fun(): nil
----@param on_done                       fun(): nil
----@return nil
-function M.__update_plugins__(specs, on_progress, on_done)
-  local total = #specs ---@type integer
-
+---Run futures with concurrency limit.
+---@param futures                       stl.c.Future[]
+---@return stl.c.Future
+function M.__throttle_futures__(futures)
+  local total = #futures ---@type integer
   if total == 0 then
-    on_done()
-    return
+    return stl.c.Future.resolve({})
   end
 
-  -- Load existing lock to preserve entries
-  State.load_lock()
+  return stl.c.Future.new(function(resolve)
+    local running = 0 ---@type integer
+    local completed = 0 ---@type integer
+    local next_index = 1 ---@type integer
 
-  ---@type table<string, era.m.plugin.ILockEntry>
-  local new_lock = vim.tbl_extend("keep", {}, State.lock)
+    local function run_next()
+      while running < CONCURRENCY and next_index <= total do
+        local index = next_index ---@type integer
+        next_index = next_index + 1
+        running = running + 1
 
-  ---@type fun(callback: fun(): nil)[]
-  local tasks = {}
+        futures[index]:finally(function()
+          running = running - 1
+          completed = completed + 1
 
-  for _, spec in ipairs(specs) do
-    tasks[#tasks + 1] = function(task_done)
-      M.__run_task__(spec.name, function(task)
-        local path = dot.path.join(State.options.root, spec.name) ---@type string
-
-        if not yoz.path.is_exist(path) then
-          -- Plugin not installed, trigger installation
-          local url = spec.url or ("https://github.com/" .. spec.name) ---@type string
-          task.step = "cloning"
-          task.message = "Cloning..."
-          on_progress()
-
-          stl.git.act.clone(url, path, spec.branch, function(ok, _, stderr)
-            if not ok then
-              task.status = "error"
-              task.step = nil
-              task.message = "Clone failed: " .. (stderr or "unknown error")
-              on_progress()
-              task_done()
-              return
-            end
-
-            local info = stl.git.info.info(path)
-            if not info or not info.commit then
-              task.status = "error"
-              task.step = nil
-              task.message = "Failed to get commit info"
-              on_progress()
-              task_done()
-              return
-            end
-
-            local branch = info.branch or spec.branch or "main" ---@type string
-            task.to_commit = info.commit:sub(1, 7)
-            new_lock[spec.name] = { branch = branch, commit = info.commit }
-
-            if spec.build then
-              task.step = "building"
-              task.message = "Building..."
-              on_progress()
-
-              M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
-                if not build_ok then
-                  task.status = "error"
-                  task.step = nil
-                  task.message = "Build failed: " .. (build_err or "unknown error")
-                  on_progress()
-                  task_done()
-                  return
-                end
-
-                task.status = "done"
-                task.step = nil
-                task.message = "Installed"
-
-                M.__fetch_commits__(path, info.commit .. "~10", info.commit, function(commits)
-                  task.commits = commits
-                  on_progress()
-                  task_done()
-                end)
-              end)
-            else
-              task.status = "done"
-              task.step = nil
-              task.message = "Installed"
-
-              M.__fetch_commits__(path, info.commit .. "~10", info.commit, function(commits)
-                task.commits = commits
-                on_progress()
-                task_done()
-              end)
-            end
-          end)
-          return
-        end
-
-        local info = stl.git.info.info(path)
-        if not info then
-          task.status = "error"
-          task.step = nil
-          task.message = "Not a git repo"
-          on_progress()
-          task_done()
-          return
-        end
-
-        task.from_commit = info.commit and info.commit:sub(1, 7) or nil
-        task.step = "fetching"
-        task.message = "Fetching..."
-        on_progress()
-
-        vim.system(
-          { "git", "fetch", "--tags", "--force", "--recurse-submodules" },
-          { cwd = path, text = true },
-          function(fetch_result)
-            vim.schedule(function()
-              if fetch_result.code ~= 0 then
-                task.status = "error"
-                task.step = nil
-                task.message = "Fetch failed"
-                on_progress()
-                task_done()
-                return
-              end
-
-              local branch = spec.branch or stl.git.info.get_branch(path) or "main" ---@type string
-              local target_commit = stl.git.info.get_commit(path, branch, true)
-
-              if not target_commit then
-                task.status = "error"
-                task.step = nil
-                task.message = "No target commit"
-                on_progress()
-                task_done()
-                return
-              end
-
-              task.to_commit = target_commit:sub(1, 7)
-
-              if info.commit and stl.git.info.eq(info, { commit = target_commit }) then
-                task.status = "done"
-                task.step = nil
-                task.message = "Already up to date"
-                new_lock[spec.name] = { branch = branch, commit = target_commit }
-                on_progress()
-                task_done()
-                return
-              end
-
-              task.step = "checkout"
-              task.message = "Checking out..."
-              on_progress()
-
-              vim.system({ "git", "checkout", target_commit }, { cwd = path, text = true }, function(checkout_result)
-                vim.schedule(function()
-                  if checkout_result.code ~= 0 then
-                    task.status = "error"
-                    task.step = nil
-                    task.message = "Checkout failed"
-                    on_progress()
-                    task_done()
-                    return
-                  end
-
-                  new_lock[spec.name] = { branch = branch, commit = target_commit }
-
-                  if spec.build then
-                    task.step = "building"
-                    task.message = "Building..."
-                    on_progress()
-
-                    M.__run_build__(spec, path, task, on_progress, function(build_ok, build_err)
-                      if not build_ok then
-                        task.status = "error"
-                        task.step = nil
-                        task.message = "Build failed: " .. (build_err or "unknown error")
-                        on_progress()
-                        task_done()
-                        return
-                      end
-
-                      task.status = "done"
-                      task.step = nil
-                      task.message = "Updated"
-
-                      if info.commit then
-                        M.__fetch_commits__(path, info.commit, target_commit, function(commits)
-                          task.commits = commits
-                          on_progress()
-                          task_done()
-                        end)
-                      else
-                        on_progress()
-                        task_done()
-                      end
-                    end)
-                  else
-                    task.status = "done"
-                    task.step = nil
-                    task.message = "Updated"
-
-                    if info.commit then
-                      M.__fetch_commits__(path, info.commit, target_commit, function(commits)
-                        task.commits = commits
-                        on_progress()
-                        task_done()
-                      end)
-                    else
-                      on_progress()
-                      task_done()
-                    end
-                  end
-                end)
-              end)
-            end)
+          if completed == total then
+            resolve({})
+          else
+            run_next()
           end
-        )
-      end)
+        end)
+      end
     end
-  end
 
-  M.__throttle_execute__(tasks, function()
-    State.update_lock(new_lock)
-    M.__save_to_history__()
-    on_done()
+    run_next()
   end)
 end
 

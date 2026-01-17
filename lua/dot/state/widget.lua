@@ -13,7 +13,7 @@ M.history = stl.c.History.new({
 
 ---@return nil
 function M.backward()
-  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil, integer|nil
+  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil, integer
   if present == nil or present_index <= 1 then
     return
   end
@@ -32,7 +32,7 @@ end
 
 ---@return nil
 function M.forward()
-  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil, integer|nil
+  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil, integer
   if present == nil or present_index >= M.history:size() then
     return
   end
@@ -104,7 +104,7 @@ end
 ---@return dot.t.IWidget|nil
 ---@return integer|nil
 function M.get_widget_current()
-  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil
+  local present, present_index = M.history:present() ---@type dot.t.IWidget|nil, integer
   if present ~= nil and not present:isdisposed() then
     return present, present_index
   end
@@ -148,8 +148,10 @@ function M.push(widget)
 
   if not equals(present, widget) then
     if M.history:size() == M.history:capacity() then
-      local bottom_widget = M.history:bottom() ---@type dot.t.IWidget
-      bottom_widget:hide()
+      local bottom_widget = M.history:bottom() ---@type dot.t.IWidget|nil
+      if bottom_widget ~= nil then
+        bottom_widget:hide()
+      end
     end
     M.history:push(widget)
     -- present:hide()
@@ -167,7 +169,7 @@ end
 
 ---@return dot.t.IWidget|nil
 function M.resume()
-  local present, present_index = M.get_widget_current() ---@type dot.t.IWidget|nil
+  local present, present_index = M.get_widget_current() ---@type dot.t.IWidget|nil, integer|nil
   if present ~= nil then
     if present:isfocused() then
       present:hide()

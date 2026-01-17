@@ -1,12 +1,12 @@
-local S = stl.git
-
 ---@class stl.git.IGitInfo
----@field public branch                 string|nil
----@field public commit                 string|nil
+---@field public branch                 ?string
+---@field public commit                 ?string
 
 ---@class stl.git.info
 local M = {}
 
+----------------------------------------------------------------------------------------------------
+-- Private (file reading helpers)
 ----------------------------------------------------------------------------------------------------
 
 ---@param path                          string
@@ -33,8 +33,9 @@ local function read_first_line(path)
   return line
 end
 
+
 ----------------------------------------------------------------------------------------------------
--- Sync methods (file reading)
+-- Public (sync methods - file reading)
 ----------------------------------------------------------------------------------------------------
 
 ---Read HEAD reference
@@ -95,7 +96,7 @@ end
 ---Get commit for specific branch
 ---@param repo                          string
 ---@param branch                        string
----@param origin                        boolean|nil
+---@param origin                        ?boolean
 ---@return string|nil
 function M.get_commit(repo, branch, origin)
   if origin then
@@ -152,155 +153,209 @@ function M.eq(a, b)
 end
 
 ----------------------------------------------------------------------------------------------------
--- Async methods (git command execution)
+-- Public (async methods - Future version)
 ----------------------------------------------------------------------------------------------------
 
 ---@param cwd                           string
----@param callback                      fun(abbrev_head: string, detached: boolean): nil
----@return fun(): nil                   cancel_fn
-function M.get_abbrev_head_async(cwd, callback)
-  local cancelled = false
-  local proc = nil
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { abbrev_head: string, detached: boolean }
+function M.get_abbrev_head(cwd, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ abbrev_head = "", detached = false })
+      return
+    end
 
-  proc = vim.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }, { text = true }, function(obj)
-    if not cancelled then
+    local proc ---@type vim.SystemObj|nil
+    proc = vim.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }, { text = true }, function(obj)
       vim.schedule(function()
-        if cancelled then
+        if token and token:is_cancelled() then
           return
         end
 
         if obj.code ~= 0 then
-          callback("", false)
+          resolve({ abbrev_head = "", detached = false })
           return
         end
 
         local head = vim.trim(obj.stdout or "")
         if head == "HEAD" then
           proc = vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj2)
-            if not cancelled then
-              vim.schedule(function()
-                if cancelled then
-                  return
-                end
-                if obj2.code == 0 then
-                  callback(vim.trim(obj2.stdout or ""), true)
-                else
-                  callback("", true)
-                end
-              end)
-            end
+            vim.schedule(function()
+              if token and token:is_cancelled() then
+                return
+              end
+              if obj2.code == 0 then
+                resolve({ abbrev_head = vim.trim(obj2.stdout or ""), detached = true })
+              else
+                resolve({ abbrev_head = "", detached = true })
+              end
+            end)
           end)
         else
-          callback(head, false)
+          resolve({ abbrev_head = head, detached = false })
+        end
+      end)
+    end)
+
+    if token then
+      token:on_cancel(function()
+        if proc then
+          proc:kill(9)
         end
       end)
     end
   end)
-
-  return function()
-    cancelled = true
-    if proc then
-      proc:kill(9)
-    end
-  end
 end
 
 ---@param cwd                           string
 ---@param relpath                       string
----@param callback                      fun(info: stl.git.IFileInfo|nil): nil
----@return fun(): nil                   cancel_fn
-function M.get_file_info_async(cwd, relpath, callback)
-  return S.exec.exec_async({ "ls-files", "--stage", "--", relpath }, { cwd = cwd }, function(lines, code)
-    ---@type stl.git.IFileInfo
-    local info = {
-      has_conflicts = false,
-      mode_bits = nil,
-      object_name = nil,
-      relpath = relpath,
-    }
-
-    if code == 0 then
-      for _, line in ipairs(lines) do
-        local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
-        if mode and object and stage then
-          if stage == "0" then
-            info.mode_bits = mode
-            info.object_name = object
-          else
-            info.has_conflicts = true
-          end
-        end
-      end
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with ?stl.git.IFileInfo
+function M.get_file_info(cwd, relpath, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
     end
 
-    if not info.object_name and not info.has_conflicts then
-      callback(nil)
-    else
-      callback(info)
+    local proc = vim.system({ "git", "-C", cwd, "ls-files", "--stage", "--", relpath }, { text = true }, function(obj)
+      vim.schedule(function()
+        if token and token:is_cancelled() then
+          return
+        end
+
+        ---@type stl.git.IFileInfo
+        local info = {
+          has_conflicts = false,
+          mode_bits = nil,
+          object_name = nil,
+          relpath = relpath,
+        }
+
+        if obj.code == 0 then
+          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
+          for _, line in ipairs(lines) do
+            local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
+            if mode and object and stage then
+              if stage == "0" then
+                info.mode_bits = mode
+                info.object_name = object
+              else
+                info.has_conflicts = true
+              end
+            end
+          end
+        end
+
+        if not info.object_name and not info.has_conflicts then
+          resolve(nil)
+        else
+          resolve(info)
+        end
+      end)
+    end)
+
+    if token then
+      token:on_cancel(function()
+        proc:kill(9)
+      end)
     end
   end)
 end
 
 ---@param cwd                           string
 ---@param object                        string
----@param callback                      fun(lines: string[]|nil): nil
----@return fun(): nil                   cancel_fn
-function M.get_show_text_async(cwd, object, callback)
-  local cancelled = false
-  local proc = nil
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with ?string[]
+function M.get_show_text(cwd, object, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
+    end
 
-  proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = true }, function(obj)
-    if not cancelled then
+    local proc ---@type vim.SystemObj|nil
+    proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = true }, function(obj)
       vim.schedule(function()
-        if cancelled then
+        if token and token:is_cancelled() then
           return
         end
 
         if obj.code == 0 then
           local lines = vim.split(obj.stdout or "", "\n", { plain = true })
           -- Keep trailing empty string to preserve no_nl_at_eof information
-          callback(lines)
+          resolve(lines)
         else
           proc = vim.system({ "git", "-C", cwd, "show", object }, { text = true }, function(obj2)
-            if not cancelled then
-              vim.schedule(function()
-                if cancelled then
-                  return
-                end
-                if obj2.code == 0 then
-                  local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
-                  callback(lines)
-                else
-                  callback(nil)
-                end
-              end)
-            end
+            vim.schedule(function()
+              if token and token:is_cancelled() then
+                return
+              end
+              if obj2.code == 0 then
+                local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
+                resolve(lines)
+              else
+                resolve(nil)
+              end
+            end)
           end)
+        end
+      end)
+    end)
+
+    if token then
+      token:on_cancel(function()
+        if proc then
+          proc:kill(9)
         end
       end)
     end
   end)
-
-  return function()
-    cancelled = true
-    if proc then
-      proc:kill(9)
-    end
-  end
 end
 
 ---@param cwd                           string
----@param callback                      fun(gitdir: string|nil, toplevel: string|nil): nil
----@return fun(): nil                   cancel_fn
-function M.get_toplevel_async(cwd, callback)
-  return S.exec.exec_async({ "rev-parse", "--show-toplevel", "--absolute-git-dir" }, { cwd = cwd }, function(lines, code)
-    if code ~= 0 or #lines < 2 then
-      callback(nil, nil)
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { gitdir: ?string, toplevel: ?string }
+function M.get_toplevel(cwd, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ gitdir = nil, toplevel = nil })
       return
     end
-    local toplevel = yoz.path.normalize(lines[1], true, stl.env.PATH_SEP)
-    local gitdir = yoz.path.normalize(lines[2], true, stl.env.PATH_SEP)
-    callback(gitdir, toplevel)
+
+    local proc = vim.system(
+      { "git", "-C", cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir" },
+      { text = true },
+      function(obj)
+        vim.schedule(function()
+          if token and token:is_cancelled() then
+            return
+          end
+
+          if obj.code ~= 0 then
+            resolve({ gitdir = nil, toplevel = nil })
+            return
+          end
+
+          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
+          if #lines < 2 then
+            resolve({ gitdir = nil, toplevel = nil })
+            return
+          end
+
+          local toplevel = yoz.path.normalize(lines[1], true, stl.env.PATH_SEP)
+          local gitdir = yoz.path.normalize(lines[2], true, stl.env.PATH_SEP)
+          resolve({ gitdir = gitdir, toplevel = toplevel })
+        end)
+      end
+    )
+
+    if token then
+      token:on_cancel(function()
+        proc:kill(9)
+      end)
+    end
   end)
 end
 

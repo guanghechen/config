@@ -74,7 +74,7 @@
 ---@field public tree                   era.m.explorer.Tree
 ---@field public root                   era.m.explorer.Node
 ---@field public root_uri               string
----@field public resource_manager       era.m.explorer.resource.IManager|nil
+---@field public resource_manager       ?era.m.explorer.resource.IManager
 ---@field public diag_counts            table<string, era.m.explorer.view.IDiagCounts>
 ---@field public foldempty              boolean
 ---@field public only_selected          boolean

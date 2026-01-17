@@ -177,7 +177,8 @@ local diff_worker_fn = nil
 ---@param old_lines                     string[]
 ---@param new_lines                     string[]
 ---@param callback                      fun(hunks: era.m.git.Hunk[]): nil
-function M.run_diff_async(old_lines, new_lines, callback)
+---@return fun(): nil                   cancel_fn (注意：vim.uv.new_work 不可取消)
+local function __run_diff_async__(old_lines, new_lines, callback)
   local old_has_trailing_nl = #old_lines > 0 and old_lines[#old_lines] == "" ---@type boolean
   local new_has_trailing_nl = #new_lines > 0 and new_lines[#new_lines] == "" ---@type boolean
 
@@ -265,6 +266,24 @@ function M.run_diff_async(old_lines, new_lines, callback)
     -- Fallback to sync if worker creation fails
     callback(M.run_diff(old_lines, new_lines))
   end
+
+  return function() end
+end
+
+---@param old_lines                     string[]
+---@param new_lines                     string[]
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with era.m.git.Hunk[]
+function M.run_diff_future(old_lines, new_lines, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({})
+      return
+    end
+    __run_diff_async__(old_lines, new_lines, function(hunks)
+      resolve(hunks)
+    end)
+  end)
 end
 
 ----------------------------------------------------------------------------------------------------

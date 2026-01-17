@@ -66,7 +66,7 @@ end
 ---Find node by key sequence
 ---@param tree_tbl                      table<string, era.m.wk.INode>
 ---@param keys                          string
----@return era.m.wk.INode?
+---@return era.m.wk.INode|nil
 function M.find(tree_tbl, keys)
   if not keys or keys == "" then
     return nil

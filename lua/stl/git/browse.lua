@@ -48,29 +48,29 @@ local URL_PATTERNS = {
 
 ---@class stl.git.browse.IBuildFieldsOpts
 ---@field public cwd                    string
----@field public file                   string|nil
----@field public branch                 string|nil
----@field public commit                 string|nil
----@field public line_start             integer|nil
----@field public line_end               integer|nil
----@field public scope                  string|nil
+---@field public file                   ?string
+---@field public branch                 ?string
+---@field public commit                 ?string
+---@field public line_start             ?integer
+---@field public line_end               ?integer
+---@field public scope                  ?string
 
 ---@class stl.git.browse.IFields
 ---@field public cwd                    string
 ---@field public scope                  string
----@field public branch                 string|nil
----@field public commit                 string|nil
----@field public file                   string|nil
+---@field public branch                 ?string
+---@field public commit                 ?string
+---@field public file                   ?string
 ---@field public line_start             integer
 ---@field public line_end               integer
 
 ---@class stl.git.browse.IOpenOpts
 ---@field public cwd                    string
----@field public branch                 string|nil
----@field public commit                 string|nil
----@field public line_start             integer|nil
----@field public line_end               integer|nil
----@field public what                   string|nil
+---@field public branch                 ?string
+---@field public commit                 ?string
+---@field public line_start             ?integer
+---@field public line_end               ?integer
+---@field public what                   ?string
 
 ---@class stl.git.browse.IRemote
 ---@field public name                   string
@@ -203,7 +203,7 @@ function M.get_remotes(fields)
   return remotes
 end
 
----@param remote                        stl.git.browse.IRemote|nil
+---@param remote                        ?stl.git.browse.IRemote
 ---@return nil
 function M.open_remote(remote)
   if remote and remote.url then

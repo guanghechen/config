@@ -1,3 +1,4 @@
+---@diagnostic disable: invisible
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "stl.c.scheduler" ---@type string
 
@@ -24,6 +25,7 @@ local __module_name__ = "stl.c.scheduler" ---@type string
 ---@field public delay                  integer
 ---@field public timeout                integer
 ---@field public silent                 ?fun(): boolean
+---@field public token                  ?stl.c.CancellationToken
 
 ---@class stl.c.Scheduler
 ---@field public fullname               string
@@ -43,8 +45,10 @@ local __module_name__ = "stl.c.scheduler" ---@type string
 ---@field protected _silent             fun(): boolean
 ---@field protected _task               stl.c.scheduler.ITask
 ---
----@field protected _context            unknown|nil
+---@field protected _context            ?unknown
 ---@field protected _value              stl.c.Observable
+---@field protected _token              ?stl.c.CancellationToken
+---@field protected _token_sub          ?stl.c.IUnsubscribable
 local M = {}
 M.__index = M
 
@@ -86,6 +90,16 @@ function M.new(props)
 
   self._context = nil
   self._value = value
+  self._token = props.token or nil
+  self._token_sub = nil
+
+  -- Subscribe to token cancellation
+  if self._token then
+    self._token_sub = self._token:on_cancel(function()
+      self:cancel()
+    end)
+  end
+
   return self
 end
 
@@ -110,6 +124,12 @@ function M:dispose()
   end
   self._disposed = true
 
+  -- Unsubscribe from token
+  if self._token_sub then
+    self._token_sub:unsubscribe()
+    self._token_sub = nil
+  end
+
   self._timer_task:stop()
   self._timer_task:close()
   self._timer_timeout:stop()
@@ -128,6 +148,7 @@ function M:dispose()
 
   self._context = nil
   self._value = nil
+  self._token = nil
 end
 
 ---@return boolean
@@ -165,6 +186,46 @@ end
 function M:snapshot()
   self:__health__()
   return self._value:snapshot()
+end
+
+---Schedule and return a Future that resolves when the task completes.
+---@param opts                          ?stl.c.scheduler.IScheduleOpts
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future
+function M:schedule_future(opts, token)
+  self:__health__()
+
+  local future = stl.c.Future.new({ token = token or self._token })
+  if token and token:is_cancelled() then
+    return future
+  end
+
+  -- Store original callback context
+  local original_task = self._task
+  local tick_at_schedule = self._tick_pending + 1
+
+  -- Wrap task to capture result for this specific schedule call
+  self._task = function(scheduler, context, callback)
+    local result = original_task(scheduler, context, function(ok, res)
+      callback(ok, res)
+      -- Only resolve if this is the tick we scheduled
+      if scheduler._tick_settled >= tick_at_schedule and not future:is_done() then
+        if ok then
+          future:__resolve__(res) ---@diagnostic disable-line: invisible
+        else
+          future:__reject__(res or "Task failed") ---@diagnostic disable-line: invisible
+        end
+      end
+    end)
+    return result
+  end
+
+  self:schedule(opts)
+
+  -- Restore original task after scheduling
+  self._task = original_task
+
+  return future
 end
 
 ----------------------------------------------------------------------------------------------------

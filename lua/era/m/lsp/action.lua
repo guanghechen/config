@@ -9,19 +9,19 @@ local api = vim.api
 ---@field public mode                   string
 ---@field public lnum                   integer
 ---@field public cursor                 { row: integer, col: integer }
----@field public selection              { start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }|nil
+---@field public selection              ?{ start: { line: integer, character: integer }, ["end"]: { line: integer, character: integer } }
 ---@field public opts                   table
 ---@field public context                table
 
 ---@class dot.t.ILspActionProviderAction
 ---@field public title                  string
----@field public kind                   string|nil
+---@field public kind                   ?string
 ---@field public execute                fun(ctx: dot.t.ILspActionProviderContext): nil
----@field public source                 string|nil
+---@field public source                 ?string
 
 ---@class dot.t.ILspActionProviderSpec
----@field public id                     string|nil
----@field public source                 string|nil
+---@field public id                     ?string
+---@field public source                 ?string
 ---@field public handler                fun(ctx: dot.t.ILspActionProviderContext): dot.t.ILspActionProviderAction|dot.t.ILspActionProviderAction[]|nil
 
 ---@type dot.t.ILspActionProviderSpec[]
@@ -185,7 +185,7 @@ local function collect_provider_actions(ctx)
   return actions
 end
 
----@param opts                          table|nil
+---@param opts                          ?table
 ---@param context                       table
 ---@param bufnr                         integer
 ---@param winnr                         integer
@@ -218,7 +218,7 @@ end
 ---@class era.m.lsp.action
 local M = {}
 
----@param opts                          table|nil
+---@param opts                          ?table
 ---@return nil
 function M.code_action(opts)
   opts = opts or {}
@@ -386,6 +386,7 @@ function M.code_action(opts)
     }, on_user_choice)
   end
 
+  ---@param results table
   local function process_results(results)
     ---@param action                    lsp.Command|lsp.CodeAction
     ---@param client_id                 integer
@@ -455,11 +456,24 @@ function M.code_action(opts)
     finish_with_actions(actions)
   end
 
-  if next(clients) then
-    vim.lsp.buf_request_all(bufnr, "textDocument/codeAction", build_params, process_results)
-  else
-    process_results({})
+  ---@return stl.c.Future Resolves with table (LSP results)
+  local function request_code_actions()
+    return stl.c.Future.new(function(resolve)
+      if next(clients) then
+        vim.lsp.buf_request_all(bufnr, "textDocument/codeAction", build_params, function(results)
+          resolve(results)
+        end)
+      else
+        resolve({})
+      end
+    end)
   end
+
+  request_code_actions():finally(function(resolved, results)
+    if resolved and results then
+      process_results(results)
+    end
+  end)
 end
 
 return M

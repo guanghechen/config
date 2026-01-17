@@ -7,8 +7,8 @@ local diff = require("era.m.git.diff")
 local passed = 0
 local failed = 0
 
----@param name string
----@param fn fun()
+---@param name                          string
+---@param fn                            fun()
 local function test(name, fn)
   local ok, err = pcall(fn)
   if ok then
@@ -21,9 +21,9 @@ local function test(name, fn)
   end
 end
 
----@param expected any
----@param actual any
----@param msg string|nil
+---@param expected                      any
+---@param actual                        any
+---@param msg                           ?string
 local function assert_eq(expected, actual, msg)
   if expected ~= actual then
     error(string.format("%s: expected %s, got %s", msg or "assertion failed", tostring(expected), tostring(actual)))
@@ -139,14 +139,15 @@ test("denoise_hunks: multiple merges in chain", function()
 end)
 
 ----------------------------------------------------------------------------------------------------
--- run_diff_async tests
+-- run_diff_future tests
 ----------------------------------------------------------------------------------------------------
 
-test("run_diff_async: basic functionality", function()
+test("run_diff_future: basic functionality", function()
   local done = false
   local result_hunks = nil
 
-  diff.run_diff_async({ "old", "" }, { "new", "" }, function(hunks)
+  diff.run_diff_future({ "old", "" }, { "new", "" }):finally(function(ok, hunks)
+    assert_eq(true, ok, "future resolved")
     result_hunks = hunks
     done = true
   end)
@@ -156,15 +157,18 @@ test("run_diff_async: basic functionality", function()
   end)
 
   assert_eq(true, done, "callback called")
+  assert_true(result_hunks ~= nil, "result should not be nil")
+  ---@cast result_hunks era.m.git.Hunk[]
   assert_eq(1, #result_hunks, "hunk count")
   assert_eq("change", result_hunks[1].type, "hunk type")
 end)
 
-test("run_diff_async: empty files", function()
+test("run_diff_future: empty files", function()
   local done = false
   local result_hunks = nil
 
-  diff.run_diff_async({}, {}, function(hunks)
+  diff.run_diff_future({}, {}):finally(function(ok, hunks)
+    assert_eq(true, ok, "future resolved")
     result_hunks = hunks
     done = true
   end)
@@ -177,7 +181,7 @@ test("run_diff_async: empty files", function()
   assert_eq(0, #result_hunks, "hunk count")
 end)
 
-test("run_diff_async: applies denoise", function()
+test("run_diff_future: applies denoise", function()
   local done = false
   local result_hunks = nil
 
@@ -185,7 +189,8 @@ test("run_diff_async: applies denoise", function()
   local old = { "line1", "line2", "line3", "line4", "" }
   local new = { "modified1", "line2", "line3", "modified4", "" }
 
-  diff.run_diff_async(old, new, function(hunks)
+  diff.run_diff_future(old, new):finally(function(ok, hunks)
+    assert_eq(true, ok, "future resolved")
     result_hunks = hunks
     done = true
   end)
@@ -198,11 +203,12 @@ test("run_diff_async: applies denoise", function()
   assert_eq(1, #result_hunks, "merged hunk count")
 end)
 
-test("run_diff_async: content with special characters", function()
+test("run_diff_future: content with special characters", function()
   local done = false
   local result_hunks = nil
 
-  diff.run_diff_async({ "a|b;c\td", "" }, { "x|y;z\tw", "" }, function(hunks)
+  diff.run_diff_future({ "a|b;c\td", "" }, { "x|y;z\tw", "" }):finally(function(ok, hunks)
+    assert_eq(true, ok, "future resolved")
     result_hunks = hunks
     done = true
   end)
@@ -212,6 +218,8 @@ test("run_diff_async: content with special characters", function()
   end)
 
   assert_eq(true, done, "callback called")
+  assert_true(result_hunks ~= nil, "result should not be nil")
+  ---@cast result_hunks era.m.git.Hunk[]
   assert_eq(1, #result_hunks, "hunk count")
   assert_eq("x|y;z\tw", result_hunks[1].added.lines[1], "content preserved")
 end)

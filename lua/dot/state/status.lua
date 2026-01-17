@@ -147,7 +147,7 @@ function M.get_winnr_command()
   end
 end
 
----@param winnr                         integer|nil
+---@param winnr                         ?integer
 ---@return nil
 function M.set_winnr_command(winnr)
   if winnr == nil then

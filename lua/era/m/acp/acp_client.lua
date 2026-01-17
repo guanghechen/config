@@ -269,21 +269,22 @@ function M.new(config)
   return client
 end
 
----@param callback                         fun(err: era.m.acp.acp_client.Error|nil): nil
----@return nil
-function M:connect(callback)
-  callback = callback or function() end
+---@return stl.c.Future                    Resolves with { err: era.m.acp.acp_client.Error|nil }
+function M:connect()
+  return stl.c.Future.new(function(resolve)
+    if self.state ~= "disconnected" then
+      resolve({ err = nil })
+      return
+    end
 
-  if self.state ~= "disconnected" then
-    callback(nil)
-    return
-  end
+    self.transport:start(vim.schedule_wrap(function(message)
+      self:__handle_message__(message)
+    end))
 
-  self.transport:start(vim.schedule_wrap(function(message)
-    self:__handle_message__(message)
-  end))
-
-  self:__initialize__(callback)
+    self:__initialize__(function(err)
+      resolve({ err = err })
+    end)
+  end)
 end
 
 ---@return nil
@@ -294,88 +295,89 @@ end
 
 ---@param cwd                              string
 ---@param mcp_servers                      ?table[]
----@param callback                         fun(session_id: string|nil, err: era.m.acp.acp_client.Error|nil): nil
----@return nil
-function M:create_session(cwd, mcp_servers, callback)
-  callback = callback or function() end
-
-  self:__send_request__("session/new", {
-    cwd = cwd,
-    mcpServers = mcp_servers or {},
-  }, function(result, err)
-    if err then
-      vim.schedule(function()
-        stl.reporter.error({
-          group = "acp",
-          from = __module_name__,
-          subject = "create_session",
-          message = "Failed to create session",
-          details = { error = err.message },
-        })
-      end)
-      callback(nil, err)
-      return
-    end
-    if not result then
-      local error = self:__create_error__(M.ERROR_CODES.PROTOCOL_ERROR, "Missing result")
-      callback(nil, error)
-      return
-    end
-    callback(result.sessionId, nil)
+---@return stl.c.Future                    Resolves with { session_id: string|nil, err: era.m.acp.acp_client.Error|nil }
+function M:create_session(cwd, mcp_servers)
+  return stl.c.Future.new(function(resolve)
+    self:__send_request__("session/new", {
+      cwd = cwd,
+      mcpServers = mcp_servers or {},
+    }, function(result, err)
+      if err then
+        vim.schedule(function()
+          stl.reporter.error({
+            group = "acp",
+            from = __module_name__,
+            subject = "create_session",
+            message = "Failed to create session",
+            details = { error = err.message },
+          })
+        end)
+        resolve({ session_id = nil, err = err })
+        return
+      end
+      if not result then
+        local error = self:__create_error__(M.ERROR_CODES.PROTOCOL_ERROR, "Missing result")
+        resolve({ session_id = nil, err = error })
+        return
+      end
+      resolve({ session_id = result.sessionId, err = nil })
+    end)
   end)
 end
 
 ---@param session_id                       string
 ---@param cwd                              string
 ---@param mcp_servers                      ?table[]
----@param callback                         fun(session_id: string|nil, err: era.m.acp.acp_client.Error|nil): nil
----@return nil
-function M:load_session(session_id, cwd, mcp_servers, callback)
-  callback = callback or function() end
-
-  if not self.agent_capabilities or not self.agent_capabilities.loadSession then
-    local error = self:__create_error__(M.ERROR_CODES.METHOD_NOT_FOUND, "Agent does not support session loading")
-    callback(nil, error)
-    return
-  end
-
-  self:__send_request__("session/load", {
-    sessionId = session_id,
-    cwd = cwd,
-    mcpServers = mcp_servers or {},
-  }, function(result, err)
-    if err then
-      vim.schedule(function()
-        stl.reporter.error({
-          group = "acp",
-          from = __module_name__,
-          subject = "load_session",
-          message = "Failed to load session",
-          details = { error = err.message },
-        })
-      end)
-      callback(nil, err)
+---@return stl.c.Future                    Resolves with { session_id: string|nil, err: era.m.acp.acp_client.Error|nil }
+function M:load_session(session_id, cwd, mcp_servers)
+  return stl.c.Future.new(function(resolve)
+    if not self.agent_capabilities or not self.agent_capabilities.loadSession then
+      local error = self:__create_error__(M.ERROR_CODES.METHOD_NOT_FOUND, "Agent does not support session loading")
+      resolve({ session_id = nil, err = error })
       return
     end
-    if not result then
-      local error = self:__create_error__(M.ERROR_CODES.PROTOCOL_ERROR, "Missing result")
-      callback(nil, error)
-      return
-    end
-    callback(result.sessionId, nil)
+
+    self:__send_request__("session/load", {
+      sessionId = session_id,
+      cwd = cwd,
+      mcpServers = mcp_servers or {},
+    }, function(result, err)
+      if err then
+        vim.schedule(function()
+          stl.reporter.error({
+            group = "acp",
+            from = __module_name__,
+            subject = "load_session",
+            message = "Failed to load session",
+            details = { error = err.message },
+          })
+        end)
+        resolve({ session_id = nil, err = err })
+        return
+      end
+      if not result then
+        local error = self:__create_error__(M.ERROR_CODES.PROTOCOL_ERROR, "Missing result")
+        resolve({ session_id = nil, err = error })
+        return
+      end
+      resolve({ session_id = result.sessionId, err = nil })
+    end)
   end)
 end
 
 ---@param session_id                       string
 ---@param prompt                           table[]
----@param callback                         fun(result: table|nil, err: era.m.acp.acp_client.Error|nil): nil
----@return nil
-function M:send_prompt(session_id, prompt, callback)
-  local params = {
-    sessionId = session_id,
-    prompt = prompt,
-  }
-  self:__send_request__("session/prompt", params, callback)
+---@return stl.c.Future                    Resolves with { result: table|nil, err: era.m.acp.acp_client.Error|nil }
+function M:send_prompt(session_id, prompt)
+  return stl.c.Future.new(function(resolve)
+    local params = {
+      sessionId = session_id,
+      prompt = prompt,
+    }
+    self:__send_request__("session/prompt", params, function(result, err)
+      resolve({ result = result, err = err })
+    end)
+  end)
 end
 
 ---@param session_id                       string

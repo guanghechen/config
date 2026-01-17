@@ -8,7 +8,7 @@ local __module_name__ = "lsp.clangd" ---@type string
 
 -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader
 ---@param bufnr                         integer
----@param client                        vim.lsp.Client|nil
+---@param client                        ?vim.lsp.Client
 ---@return nil
 local function switch_source_header(bufnr, client)
   local method_name = "textDocument/switchSourceHeader"
@@ -40,7 +40,7 @@ local function switch_source_header(bufnr, client)
 end
 
 ---@param bufnr                         integer
----@param client                        vim.lsp.Client|nil
+---@param client                        ?vim.lsp.Client
 ---@return nil
 local function symbol_info(bufnr, client)
   local method_name = "textDocument/symbolInfo"
@@ -53,8 +53,8 @@ local function symbol_info(bufnr, client)
     })
     return
   end
-  local win = vim.api.nvim_get_current_win()
-  local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local params = vim.lsp.util.make_position_params(winnr, client.offset_encoding)
   ---@diagnostic disable-next-line:param-type-mismatch
   client:request(method_name, params, function(err, res)
     if err or #res == 0 then

@@ -20,15 +20,15 @@ local WATCH_IGNORE_PATTERNS = {
 
 ---@class era.m.explorer.resource.file.IProps
 ---@field public name                   string
----@field public show_hidden            boolean|nil
----@field public on_change              fun()|nil
+---@field public show_hidden            ?boolean
+---@field public on_change              ?fun()
 
 ---@class era.m.explorer.resource.FileManager : era.m.explorer.resource.IManager
 ---@field public name                   string
 ---@field public fullname               string
----@field protected _debounce_timer     uv.uv_timer_t|nil
+---@field protected _debounce_timer     ?uv.uv_timer_t
 ---@field protected _disposed           boolean
----@field protected _on_change          fun()|nil
+---@field protected _on_change          ?fun()
 ---@field protected _pending_change     boolean
 ---@field protected _show_hidden        boolean
 ---@field protected _watches            table<string, uv.uv_fs_event_t>

@@ -19,7 +19,7 @@ local function is_within_range(cursor, range)
 end
 
 ---@param cursor                        era.m.lsp.ISymbolPos
----@param symbols                       any[]|nil
+---@param symbols                       ?any[]
 ---@return any[]|nil
 function M.find_symbol_path(cursor, symbols)
   if symbols == nil then

@@ -97,10 +97,13 @@ local function refresh_branch()
     return
   end
 
-  stl.git.info.get_abbrev_head_async(r.toplevel, function(abbrev_head)
-    r.abbrev_head = abbrev_head
-    era.m.git.state.o_branch:next(abbrev_head)
-    era.m.git.state.refresh_user_info()
+  stl.async.run(function()
+    local result = stl.git.info.get_abbrev_head(r.toplevel):await()
+    if result then
+      r.abbrev_head = result.abbrev_head
+      era.m.git.state.o_branch:next(result.abbrev_head)
+      era.m.git.state.refresh_user_info()
+    end
   end)
 end
 
@@ -133,10 +136,10 @@ local function trigger_gitdir_refresh()
       if do_head then
         era.m.git.buffer.invalidate_compare_text_all()
         era.m.git.state.clear_ignored_cache()
-        era.m.git.state.refresh_async(true)
+        era.m.git.state.refresh(true)
       elseif do_status then
         era.m.git.buffer.mark_dirty_all()
-        era.m.git.state.refresh_async(false)
+        era.m.git.state.refresh(false)
       end
     end)
   )
@@ -162,7 +165,7 @@ local function trigger_index_refresh()
       pending_index_change = false
 
       era.m.git.buffer.invalidate_index_all()
-      era.m.git.state.refresh_async(false)
+      era.m.git.state.refresh(false)
     end)
   )
 end
@@ -222,7 +225,7 @@ local function stop_watcher()
 end
 
 ---@param gitdir                     string
----@param commondir                  string|nil
+---@param commondir                  ?string
 local function start_watcher(gitdir, commondir)
   if current_gitdir == gitdir and current_commondir == commondir then
     return
@@ -274,12 +277,13 @@ local function init_watcher()
   end
 
   local workspace = dot.path.workspace() ---@type string
-  era.m.git.repo.new(workspace, function(r)
+  stl.async.run(function()
+    local r = era.m.git.repo.create(workspace):await()
     if r then
       era.m.git.state.o_branch:next(r.abbrev_head)
       era.m.git.state.refresh_user_info()
       M.update(r.gitdir, r.commondir)
-      era.m.git.state.refresh_async()
+      era.m.git.state.refresh(false):await()
     end
   end)
 end
@@ -303,8 +307,8 @@ function M.setup()
   vim.schedule(init_watcher)
 end
 
----@param gitdir                     string|nil
----@param commondir                  string|nil
+---@param gitdir                     ?string
+---@param commondir                  ?string
 ---@return nil
 function M.update(gitdir, commondir)
   if gitdir then

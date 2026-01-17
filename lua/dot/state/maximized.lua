@@ -10,11 +10,11 @@
 ---@field public augroup                integer
 
 ---@class dot.state.maximized.IContext
----@field public original_float         dot.state.maximized.IOriginalFloatWindow|nil
----@field public original_normal        dot.state.maximized.IOriginalNormalWindow|nil
+---@field public original_float         ?dot.state.maximized.IOriginalFloatWindow
+---@field public original_normal        ?dot.state.maximized.IOriginalNormalWindow
 
 ---@class dot.state.maximized.ResolveResizeOpts
----@field public winblend               integer|nil
+---@field public winblend               ?integer
 
 ---@class dot.state.maximized.ResolveResizeResult
 ---@field public cfg                    vim.api.keyset.win_config
@@ -98,7 +98,7 @@ end
 
 ---@param winnr                         integer
 ---@param desired_cfg                   vim.api.keyset.win_config
----@param opts                          dot.state.maximized.ResolveResizeOpts|nil
+---@param opts                          ?dot.state.maximized.ResolveResizeOpts
 ---@return dot.state.maximized.ResolveResizeResult
 function M.resolve_resize_config(winnr, desired_cfg, opts)
   local winblend = opts and opts.winblend or nil ---@type integer|nil

@@ -67,7 +67,7 @@ function M.focus(tabid)
   __go__(tabnr_next)
 end
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.focus_left(step)
   step = math.max(1, step or vim.v.count1 or 1)
@@ -79,7 +79,7 @@ function M.focus_left(step)
   __go__(tabnr_next)
 end
 
----@param step                          integer|nil
+---@param step                          ?integer
 ---@return nil
 function M.focus_right(step)
   step = math.max(1, step or vim.v.count1 or 1)

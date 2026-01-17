@@ -9,9 +9,9 @@ local __module_name__ = "stl.c.tree_retriever" ---@type string
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer
 ---@field protected _linecount          integer
----@field protected _childline          integer[]|nil
+---@field protected _childline          ?integer[]
 ---@field protected _lnum2uuid          string[]
----@field protected _uuid2lnum          table<string, integer>|nil
+---@field protected _uuid2lnum          ?table<string, integer>
 local M = {}
 M.__index = M
 

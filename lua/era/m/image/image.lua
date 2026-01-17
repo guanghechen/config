@@ -150,22 +150,23 @@ end
 ---@return string
 function M:__convert__()
   local convert = require("era.m.image.convert")
-  self.convert = convert.convert({
-    src = self.src,
-    on_done = function(c)
-      if c:error() then
-        vim.schedule(function()
-          for _, p in pairs(self.placements) do
-            p:error()
-          end
-        end)
-      else
-        vim.schedule(function()
-          self:__on_ready__()
-        end)
-      end
-    end,
-  })
+  self.convert = convert.convert({ src = self.src })
+  self.convert:future():finally(function(resolved, c)
+    if not resolved then
+      return
+    end
+    if c:error() then
+      vim.schedule(function()
+        for _, p in pairs(self.placements) do
+          p:error()
+        end
+      end)
+    else
+      vim.schedule(function()
+        self:__on_ready__()
+      end)
+    end
+  end)
   return self.convert.file
 end
 

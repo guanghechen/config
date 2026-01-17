@@ -2,16 +2,16 @@ local SINGLE_COMMENT = 1
 local MULTI_COMMENT = 2
 
 ---@param str                           string
----@param from                          integer?
----@param to                            integer?
+---@param from                          ?integer
+---@param to                            ?integer
 ---@return string
 local function slice(str, from, to)
   return str:sub(from or 1, to or #str)
 end
 
 ---@param str                           string
----@param from                          integer?
----@param to                            integer?
+---@param from                          ?integer
+---@param to                            ?integer
 ---@return string
 local function strip_with_whitespace(str, from, to)
   local result = slice(str, from, to):gsub("%S", " ")
@@ -38,7 +38,7 @@ local M = {}
 ---@return string
 function M.strip_comments(json_string)
   local inside_string = false
-  local inside_comment = nil ---@type integer?
+  local inside_comment = nil ---@type integer|nil
   local offset = 1
   local result = ""
   local skip = false
@@ -102,7 +102,7 @@ function M.strip_comments(json_string)
 end
 
 ---@param json_string                   string
----@param opts                          table?
+---@param opts                          ?table
 ---@return any
 function M.decode(json_string, opts)
   local stripped = M.strip_comments(json_string)

@@ -9,7 +9,7 @@ local M = {}
 ---@type table<string, {bufnr: integer, mode: string, trigger_key: string, tree_key: string}>
 M.triggers = {}
 
----@type uv.uv_timer_t?
+---@type uv.uv_timer_t|nil
 M.delay_timer = nil
 
 ---@type integer Recursion counter for detecting infinite loops
@@ -158,7 +158,7 @@ function M.__cancel_delay__()
 end
 
 ---Execute keymap or feed keys
----@param node                           era.m.wk.INode?
+---@param node                           ?era.m.wk.INode
 ---@param keys                           string
 function M.__execute__(node, keys)
   local bufnr = S.state.bufnr

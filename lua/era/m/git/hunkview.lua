@@ -362,8 +362,8 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
         local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
         local range = { effective_start, effective_vend }
-        era.m.git.hunk.unstage(range, function(ok, err)
-          if ok then
+        era.m.git.hunk.unstage(range):finally(function(ok, result)
+          if ok and result.ok then
             stl.reporter.info({
               from = __module_name__,
               subject = "Git Hunk",
@@ -373,7 +373,7 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
             stl.reporter.error({
               from = __module_name__,
               subject = "Git Hunk",
-              message = err or "Failed to unstage hunk",
+              message = (result and result.err) or "Failed to unstage hunk",
             })
           end
         end)
@@ -390,8 +390,8 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
         local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
         local range = { effective_start, effective_vend }
-        era.m.git.hunk.stage(range, function(ok, err)
-          if ok then
+        era.m.git.hunk.stage(range):finally(function(ok, result)
+          if ok and result.ok then
             stl.reporter.info({
               from = __module_name__,
               subject = "Git Hunk",
@@ -401,7 +401,7 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
             stl.reporter.error({
               from = __module_name__,
               subject = "Git Hunk",
-              message = err or "Failed to stage hunk",
+              message = (result and result.err) or "Failed to stage hunk",
             })
           end
         end)

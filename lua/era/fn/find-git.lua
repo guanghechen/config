@@ -16,30 +16,27 @@ local o_flag_viewtype = dot.context.select.find_git.flag_viewtype
 local git_filepaths_dirty = true
 local picker ---@type era.m.picker.FiletreeComposer
 
+---@async
 ---@param force                         boolean
----@param callback                      fun()|nil
 ---@return nil
-local function refresh(force, callback)
+local function refresh(force)
   if not force and not git_filepaths_dirty then
-    if callback then
-      callback()
-    end
     return
   end
 
-  era.m.git.state.status_async("HEAD", function(status)
-    local workspace = dot.path.workspace()
-    local filepaths = {} ---@type string[]
-    for filepath in pairs(status) do
-      filepaths[#filepaths + 1] = filepath
-    end
+  local status = era.m.git.state.status("HEAD"):await()
+  if status == nil then
+    return
+  end
 
-    picker:reset_filepaths(workspace, filepaths, false)
-    git_filepaths_dirty = false
-    if callback then
-      callback()
-    end
-  end)
+  local workspace = dot.path.workspace()
+  local filepaths = {} ---@type string[]
+  for filepath in pairs(status) do
+    filepaths[#filepaths + 1] = filepath
+  end
+
+  picker:reset_filepaths(workspace, filepaths, false)
+  git_filepaths_dirty = false
 end
 
 picker = era.m.picker.FiletreeComposer.new({
@@ -66,11 +63,14 @@ picker = era.m.picker.FiletreeComposer.new({
     git_filepaths_dirty = true
   end,
   on_focused = function()
-    refresh(false, nil)
+    stl.async.run(function()
+      refresh(false)
+    end)
   end,
   on_refresh = function()
-    era.m.git.state.refresh_async(true, function()
-      refresh(true, nil)
+    stl.async.run(function()
+      era.m.git.state.refresh(true):await()
+      refresh(true)
     end)
   end,
 })
@@ -91,7 +91,8 @@ local function find_git()
     return
   end
 
-  refresh(false, function()
+  stl.async.run(function()
+    refresh(false)
     picker:focus()
   end)
 end

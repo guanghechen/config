@@ -188,7 +188,7 @@ function M.get_link_definitions(bufnr)
         return
       end
       for _, match in query:iter_matches(tstree:root(), bufnr) do
-        local label, dest ---@type string?, string?
+        local label, dest ---@type string|nil, string|nil
         for id, nodes in pairs(match) do
           nodes = type(nodes) == "userdata" and { nodes } or nodes
           local name = query.captures[id]

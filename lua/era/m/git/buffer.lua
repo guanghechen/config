@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.git.buffer" ---@type string
+
 local THROTTLE_MS = 200 ---@type integer
 
 ---@class era.m.git.buffer
@@ -20,7 +23,7 @@ local repo = nil
 ---@class era.m.git.buffer.IUpdateLock
 ---@field public running              boolean
 ---@field public scheduled            boolean
----@field public pending_callback     (fun(): nil)|nil
+---@field public pending_resolvers    (fun(result: nil): nil)[]
 
 ---@type table<integer, era.m.git.buffer.IUpdateLock>
 local update_locks = {}
@@ -32,7 +35,7 @@ local function get_update_lock(bufnr)
     update_locks[bufnr] = {
       running = false,
       scheduled = false,
-      pending_callback = nil,
+      pending_resolvers = {},
     }
   end
   return update_locks[bufnr]
@@ -54,9 +57,9 @@ local function is_buf_visible(bufnr)
 end
 
 ---@class era.m.git.buffer.IBatchInvalidateOpts
----@field public clear_compare_text     boolean|nil
----@field public clear_compare_text_index boolean|nil
----@field public clear_object_name      boolean|nil
+---@field public clear_compare_text     ?boolean
+---@field public clear_compare_text_index ?boolean
+---@field public clear_object_name      ?boolean
 ---@field public delay_interval         integer
 
 ---@param opts                          era.m.git.buffer.IBatchInvalidateOpts
@@ -108,186 +111,202 @@ local function get_buf_lines(bufnr)
 end
 
 ---@param buf_cache                  era.m.git.buffer.ICache
----@param callback                   (fun(): nil)|nil
-local function update_hunks(buf_cache, callback)
-  local bufnr = buf_cache.bufnr ---@type integer
+---@return stl.c.Future              Resolves with nil when done
+local function update_hunks(buf_cache)
+  return stl.c.Future.new(function(resolve)
+    local bufnr = buf_cache.bufnr ---@type integer
 
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    if callback then
-      callback()
-    end
-    return
-  end
-
-  local lock = get_update_lock(bufnr)
-
-  -- If already scheduled, just update the callback
-  if lock.scheduled then
-    lock.pending_callback = callback
-    return
-  end
-
-  -- If running, schedule for later execution
-  if lock.running then
-    lock.scheduled = true
-    lock.pending_callback = callback
-    return
-  end
-
-  local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
-  if tick == buf_cache.changedtick and not buf_cache.force_next_update then
-    if callback then
-      callback()
-    end
-    return
-  end
-
-  lock.running = true
-  buf_cache.changedtick = tick
-  local should_force_update = buf_cache.force_next_update ---@type boolean
-  buf_cache.force_next_update = false
-
-  local old_hunks = buf_cache.hunks ---@type era.m.git.Hunk[]|nil
-  local old_hunks_staged = buf_cache.hunks_staged ---@type era.m.git.Hunk[]|nil
-
-  local buf_lines = get_buf_lines(bufnr) ---@type string[]
-  local toplevel = buf_cache.repo.toplevel ---@type string
-  local relpath = buf_cache.relpath ---@type string
-
-  local function finish()
-    if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
-      lock.running = false
-      lock.scheduled = false
-      lock.pending_callback = nil
-      if callback then
-        callback()
-      end
+    if not vim.api.nvim_buf_is_valid(bufnr) then
+      resolve(nil)
       return
     end
 
-    buf_cache.untracked = buf_cache.object_name == nil and #(buf_cache.compare_text or {}) == 0
+    local lock = get_update_lock(bufnr)
 
-    local compare_text_index = buf_cache.compare_text_index or {}
-    local compare_text_head = buf_cache.compare_text or {}
+    -- If already scheduled or running, add resolver to pending list
+    if lock.scheduled or lock.running then
+      table.insert(lock.pending_resolvers, resolve)
+      lock.scheduled = true
+      return
+    end
 
-    local function on_diff_complete()
+    local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
+    if tick == buf_cache.changedtick and not buf_cache.force_next_update then
+      resolve(nil)
+      return
+    end
+
+    lock.running = true
+    buf_cache.changedtick = tick
+    local should_force_update = buf_cache.force_next_update ---@type boolean
+    buf_cache.force_next_update = false
+
+    local old_hunks = buf_cache.hunks ---@type era.m.git.Hunk[]|nil
+    local old_hunks_staged = buf_cache.hunks_staged ---@type era.m.git.Hunk[]|nil
+
+    local buf_lines = get_buf_lines(bufnr) ---@type string[]
+    local toplevel = buf_cache.repo.toplevel ---@type string
+    local relpath = buf_cache.relpath ---@type string
+
+    local function finish()
       if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
         lock.running = false
         lock.scheduled = false
-        lock.pending_callback = nil
-        if callback then
-          callback()
+        -- Resolve all pending resolvers
+        for _, pending_resolve in ipairs(lock.pending_resolvers) do
+          pending_resolve(nil)
         end
+        lock.pending_resolvers = {}
+        resolve(nil)
         return
       end
 
-      era.m.git.hunk.set(bufnr, buf_cache.hunks)
+      buf_cache.untracked = buf_cache.object_name == nil and #(buf_cache.compare_text or {}) == 0
 
-      local hunks_changed = era.m.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
-      local hunks_staged_changed = era.m.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
+      local compare_text_index = buf_cache.compare_text_index or {}
+      local compare_text_head = buf_cache.compare_text or {}
 
-      if should_force_update or hunks_changed or hunks_staged_changed then
-        era.m.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
-          untracked = buf_cache.untracked,
-          force = should_force_update,
-        })
-        M.ticker:tick()
-      end
-
-      buf_cache.dirty = false
-
-      -- Complete current update
-      lock.running = false
-      if callback then
-        callback()
-      end
-
-      -- Check if there's a scheduled update waiting
-      if lock.scheduled then
-        lock.scheduled = false
-        local pending_cb = lock.pending_callback
-        lock.pending_callback = nil
-        -- Use vim.schedule to avoid deep recursion
-        vim.schedule(function()
-          local current_cache = cache[bufnr]
-          if current_cache and current_cache.attached then
-            update_hunks(current_cache, pending_cb)
-          elseif pending_cb then
-            pending_cb()
+      local function on_diff_complete()
+        if not vim.api.nvim_buf_is_valid(bufnr) or not cache[bufnr] then
+          lock.running = false
+          lock.scheduled = false
+          -- Resolve all pending resolvers
+          for _, pending_resolve in ipairs(lock.pending_resolvers) do
+            pending_resolve(nil)
           end
-        end)
+          lock.pending_resolvers = {}
+          resolve(nil)
+          return
+        end
+
+        era.m.git.hunk.set(bufnr, buf_cache.hunks)
+
+        local hunks_changed = era.m.git.hunk.compare_heads(buf_cache.hunks, old_hunks) ---@type boolean
+        local hunks_staged_changed = era.m.git.hunk.compare_heads(buf_cache.hunks_staged, old_hunks_staged) ---@type boolean
+
+        if should_force_update or hunks_changed or hunks_staged_changed then
+          era.m.git.sign.update(bufnr, buf_cache.hunks, buf_cache.hunks_staged, {
+            untracked = buf_cache.untracked,
+            force = should_force_update,
+          })
+          M.ticker:tick()
+        end
+
+        buf_cache.dirty = false
+
+        -- Complete current update
+        lock.running = false
+        resolve(nil)
+
+        -- Check if there's a scheduled update waiting
+        if lock.scheduled then
+          lock.scheduled = false
+          -- Capture pending resolvers before clearing
+          local pending = lock.pending_resolvers
+          lock.pending_resolvers = {}
+          -- Use vim.schedule to avoid deep recursion
+          vim.schedule(function()
+            local current_cache = cache[bufnr]
+            if current_cache and current_cache.attached then
+              -- Chain pending resolvers to the new update
+              update_hunks(current_cache):finally(function()
+                for _, pending_resolve in ipairs(pending) do
+                  pending_resolve(nil)
+                end
+              end)
+            else
+              -- No more updates, resolve all pending
+              for _, pending_resolve in ipairs(pending) do
+                pending_resolve(nil)
+              end
+            end
+          end)
+        end
       end
-    end
 
-    -- Compute unstaged hunks (Index vs Buffer)
-    era.m.git.diff.run_diff_async(compare_text_index, buf_lines, function(hunks)
-      buf_cache.hunks = hunks
-
-      if compare_text_index == compare_text_head then
-        buf_cache.hunks_staged = nil
-        on_diff_complete()
-      else
-        -- Compute staged hunks (HEAD vs Buffer, then filter)
-        era.m.git.diff.run_diff_async(compare_text_head, buf_lines, function(hunks_head)
-          buf_cache.hunks_staged = era.m.git.diff.filter_common(hunks_head, buf_cache.hunks)
+      -- Compute unstaged hunks (Index vs Buffer)
+      era.m.git.diff.run_diff_future(compare_text_index, buf_lines):finally(function(ok, hunks)
+        if not ok then
           on_diff_complete()
-        end)
-      end
-    end)
-  end
+          return
+        end
+        buf_cache.hunks = hunks
 
-  local need_head = not buf_cache.compare_text ---@type boolean
-  local need_index = not buf_cache.compare_text_index ---@type boolean
-  local object_name = buf_cache.object_name ---@type string|nil
-
-  if not need_head and not need_index then
-    finish()
-    return
-  end
-
-  if need_index and not object_name then
-    need_index = false
-  end
-
-  local pending = 0 ---@type integer
-  if need_head then
-    pending = pending + 1
-  end
-  if need_index then
-    pending = pending + 1
-  end
-
-  if pending == 0 then
-    if not buf_cache.compare_text_index then
-      buf_cache.compare_text_index = buf_cache.compare_text or {}
+        if compare_text_index == compare_text_head then
+          buf_cache.hunks_staged = nil
+          on_diff_complete()
+        else
+          -- Compute staged hunks (HEAD vs Buffer, then filter)
+          era.m.git.diff.run_diff_future(compare_text_head, buf_lines):finally(function(ok_head, hunks_head)
+            if ok_head then
+              buf_cache.hunks_staged = era.m.git.diff.filter_common(hunks_head, buf_cache.hunks)
+            end
+            on_diff_complete()
+          end)
+        end
+      end)
     end
-    finish()
-    return
-  end
 
-  local function maybe_finish()
-    pending = pending - 1
-    if pending == 0 then
+    local need_head = not buf_cache.compare_text ---@type boolean
+    local need_index = not buf_cache.compare_text_index ---@type boolean
+    local object_name = buf_cache.object_name ---@type string|nil
+
+    if not need_head and not need_index then
+      finish()
+      return
+    end
+
+    if need_index and not object_name then
+      need_index = false
+    end
+
+    if not need_head and not need_index then
       if not buf_cache.compare_text_index then
         buf_cache.compare_text_index = buf_cache.compare_text or {}
       end
       finish()
+      return
     end
-  end
 
-  if need_head then
-    stl.git.info.get_show_text_async(toplevel, "HEAD:" .. relpath, function(lines)
-      buf_cache.compare_text = lines or {}
-      maybe_finish()
-    end)
-  end
+    ---@type stl.c.Future[]
+    local futures = {}
+    local head_future_idx = nil ---@type integer|nil
+    local index_future_idx = nil ---@type integer|nil
 
-  if need_index then
-    stl.git.info.get_show_text_async(toplevel, object_name --[[@as string]], function(lines)
-      buf_cache.compare_text_index = lines or buf_cache.compare_text
-      maybe_finish()
+    if need_head then
+      head_future_idx = #futures + 1
+      futures[head_future_idx] = stl.git.info.get_show_text(toplevel, "HEAD:" .. relpath)
+    end
+
+    if need_index then
+      index_future_idx = #futures + 1
+      futures[index_future_idx] = stl.git.info.get_show_text(toplevel, object_name --[[@as string]])
+    end
+
+    stl.c.Future.all(futures):finally(function(resolved, results)
+      if not resolved or not results then
+        if not buf_cache.compare_text_index then
+          buf_cache.compare_text_index = buf_cache.compare_text or {}
+        end
+        finish()
+        return
+      end
+
+      if head_future_idx then
+        buf_cache.compare_text = results[head_future_idx] or {}
+      end
+
+      if index_future_idx then
+        buf_cache.compare_text_index = results[index_future_idx] or buf_cache.compare_text
+      end
+
+      if not buf_cache.compare_text_index then
+        buf_cache.compare_text_index = buf_cache.compare_text or {}
+      end
+
+      finish()
     end)
-  end
+  end)
 end
 
 ---@param bufnr                      integer
@@ -416,12 +435,14 @@ function M.attach(bufnr, opts)
       return
     end
 
-    stl.git.info.get_file_info_async(r.toplevel, relpath, function(file_info)
+    stl.git.info.get_file_info(r.toplevel, relpath):finally(function(resolved, file_info)
       if not cache[bufnr] then
         return
       end
-      buf_cache.mode_bits = file_info and file_info.mode_bits
-      buf_cache.object_name = file_info and file_info.object_name
+      if resolved then
+        buf_cache.mode_bits = file_info and file_info.mode_bits
+        buf_cache.object_name = file_info and file_info.object_name
+      end
       update_hunks(buf_cache)
     end)
   end
@@ -432,8 +453,8 @@ function M.attach(bufnr, opts)
   end
 
   local toplevel = dot.path.workspace() ---@type string
-  era.m.git.repo.new(toplevel, function(r)
-    if r then
+  era.m.git.repo.create(toplevel):finally(function(resolved, r)
+    if resolved and r then
       repo = r
       era.m.git.state.o_branch:next(r.abbrev_head)
       era.m.git.watcher.update(r.gitdir, r.commondir)
@@ -541,43 +562,47 @@ function M.mark_dirty_all()
 end
 
 ---@param bufnr                      integer
----@param invalidate_compare_text    boolean|nil
----@param callback                   (fun(): nil)|nil
-function M.refresh(bufnr, invalidate_compare_text, callback)
-  local buf_cache = cache[bufnr]
-  if not buf_cache then
-    if callback then
-      callback()
+---@param invalidate_compare_text    ?boolean
+---@return stl.c.Future              Resolves with nil when done
+function M.refresh(bufnr, invalidate_compare_text)
+  return stl.c.Future.new(function(resolve)
+    local buf_cache = cache[bufnr]
+    if not buf_cache then
+      resolve(nil)
+      return
     end
-    return
-  end
 
-  if invalidate_compare_text then
-    stl.git.info.get_file_info_async(buf_cache.repo.toplevel, buf_cache.relpath, function(file_info)
-      if not cache[bufnr] then
-        if callback then
-          callback()
+    if invalidate_compare_text then
+      stl.git.info.get_file_info(buf_cache.repo.toplevel, buf_cache.relpath):finally(function(resolved, file_info)
+        if not cache[bufnr] then
+          resolve(nil)
+          return
         end
-        return
-      end
 
-      local new_object_name = file_info and file_info.object_name
-      local old_object_name = buf_cache.object_name
+        if resolved then
+          local new_object_name = file_info and file_info.object_name
+          local old_object_name = buf_cache.object_name
 
-      if new_object_name ~= old_object_name then
-        buf_cache.compare_text_index = nil
-      end
+          if new_object_name ~= old_object_name then
+            buf_cache.compare_text_index = nil
+          end
 
-      buf_cache.mode_bits = file_info and file_info.mode_bits
-      buf_cache.object_name = new_object_name
+          buf_cache.mode_bits = file_info and file_info.mode_bits
+          buf_cache.object_name = new_object_name
+        end
+
+        buf_cache.force_next_update = true
+        update_hunks(buf_cache):finally(function()
+          resolve(nil)
+        end)
+      end)
+    else
       buf_cache.force_next_update = true
-
-      update_hunks(buf_cache, callback)
-    end)
-  else
-    buf_cache.force_next_update = true
-    update_hunks(buf_cache, callback)
-  end
+      update_hunks(buf_cache):finally(function()
+        resolve(nil)
+      end)
+    end
+  end)
 end
 
 ---@param bufnr                      integer
@@ -594,7 +619,7 @@ function M.reset_buffer(bufnr)
 end
 
 ---@param bufnr                      integer
----@param range                      { [1]: integer, [2]: integer }|nil
+---@param range                      ?{ [1]: integer, [2]: integer }
 ---@return boolean
 ---@return string|nil
 function M.reset_hunk(bufnr, range)
@@ -630,92 +655,82 @@ function M.reset_hunk(bufnr, range)
 end
 
 ---@param bufnr                      integer
----@param callback                   fun(ok: boolean)|nil
-function M.stage_buffer(bufnr, callback)
-  local buf_cache = cache[bufnr]
-  if not buf_cache then
-    if callback then
-      callback(false)
+---@return stl.c.Future              Resolves with boolean (success)
+function M.stage_buffer(bufnr)
+  return stl.c.Future.new(function(resolve)
+    local buf_cache = cache[bufnr]
+    if not buf_cache then
+      resolve(false)
+      return
     end
-    return
-  end
 
-  local relpath = buf_cache.relpath
-  stl.git.act.stage_file_async(buf_cache.repo.toplevel, relpath, function(ok)
-    if callback then
-      callback(ok)
-    end
+    local relpath = buf_cache.relpath
+    stl.git.act.stage_file(buf_cache.repo.toplevel, relpath):finally(function(resolved, ok)
+      resolve(resolved and ok == true)
+    end)
   end)
 end
 
 ---@param bufnr                      integer
----@param range                      { [1]: integer, [2]: integer }|nil
----@param callback                   fun(ok: boolean, err: string|nil)|nil
-function M.stage_hunk(bufnr, range, callback)
-  local buf_cache = cache[bufnr]
-  if not buf_cache then
-    if callback then
-      callback(false, "Buffer not attached")
+---@param range                      ?{ [1]: integer, [2]: integer }
+---@return stl.c.Future              Resolves with { ok: boolean, err: ?string }
+function M.stage_hunk(bufnr, range)
+  return stl.c.Future.new(function(resolve)
+    local buf_cache = cache[bufnr]
+    if not buf_cache then
+      resolve({ ok = false, err = "Buffer not attached" })
+      return
     end
-    return
-  end
 
-  local hunks ---@type era.m.git.Hunk[]
-  if range then
-    hunks = era.m.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
-  else
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    local hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
-    hunks = hunk and { hunk } or {}
-  end
-
-  if #hunks == 0 then
-    if callback then
-      callback(false, "No hunk at cursor")
+    local hunks ---@type era.m.git.Hunk[]
+    if range then
+      hunks = era.m.git.hunk.create_partials(buf_cache.hunks, range[1], range[2])
+    else
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+      local hunk = era.m.git.hunk.find(lnum, buf_cache.hunks)
+      hunks = hunk and { hunk } or {}
     end
-    return
-  end
 
-  local toplevel = buf_cache.repo.toplevel
-  local relpath = buf_cache.relpath
-  local mode_bits = buf_cache.mode_bits
+    if #hunks == 0 then
+      resolve({ ok = false, err = "No hunk at cursor" })
+      return
+    end
 
-  local function do_stage()
-    local patch = era.m.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)
-    stl.git.act.apply_patch_async(toplevel, patch, false, function(ok, err)
-      if ok then
-        M.refresh(bufnr, true, function()
-          if callback then
-            callback(true, nil)
-          end
-        end)
-      else
-        if callback then
-          callback(false, err)
+    local toplevel = buf_cache.repo.toplevel
+    local relpath = buf_cache.relpath
+    local mode_bits = buf_cache.mode_bits
+
+    local function do_stage()
+      local patch = era.m.git.hunk.create_patch_multi(relpath, hunks, mode_bits, false)
+      stl.git.act.apply_patch(toplevel, patch, false):finally(function(resolved, result)
+        if resolved and result and result.ok then
+          M.refresh(bufnr, true):finally(function()
+            resolve({ ok = true, err = nil })
+          end)
+        else
+          resolve({ ok = false, err = result and result.err or "apply_patch failed" })
         end
-      end
-    end)
-  end
+      end)
+    end
 
-  if not buf_cache.object_name then
-    stl.git.act.add_intent_to_add_async(toplevel, relpath, function()
-      stl.git.info.get_file_info_async(toplevel, relpath, function(file_info)
+    if not buf_cache.object_name then
+      stl.async.run(function()
+        stl.git.act.add_intent_to_add(toplevel, relpath):await()
+        local file_info = stl.git.info.get_file_info(toplevel, relpath):await()
         buf_cache.mode_bits = file_info and file_info.mode_bits
         buf_cache.object_name = file_info and file_info.object_name
         mode_bits = buf_cache.mode_bits
         if not buf_cache.object_name or not buf_cache.mode_bits then
-          if callback then
-            callback(false, "Failed to read index entry for new file")
-          end
+          resolve({ ok = false, err = "Failed to read index entry for new file" })
           return
         end
         do_stage()
       end)
-    end)
-  else
-    do_stage()
-  end
+    else
+      do_stage()
+    end
+  end)
 end
 
 --- Apply inverted hunks to restore index content to HEAD state.
@@ -783,115 +798,99 @@ local function apply_inverted_hunks(index_lines, head_lines, hunks)
 end
 
 ---@param bufnr                      integer
----@param range                      { [1]: integer, [2]: integer }|nil
----@param callback                   fun(ok: boolean, err: string|nil)|nil
-function M.unstage_hunk(bufnr, range, callback)
-  local buf_cache = cache[bufnr]
-  if not buf_cache then
-    if callback then
-      callback(false, "Buffer not attached")
-    end
-    return
-  end
-
-  local hunks_staged = buf_cache.hunks_staged
-  if not hunks_staged or #hunks_staged == 0 then
-    if callback then
-      callback(false, "No staged hunks")
-    end
-    return
-  end
-
-  local head_lines = buf_cache.compare_text
-  local index_lines = buf_cache.compare_text_index
-  if not head_lines or not index_lines then
-    if callback then
-      callback(false, "Missing compare text")
-    end
-    return
-  end
-
-  -- hunks_staged is from filter_common(diff(HEAD, Buffer), diff(Index, Buffer))
-  -- Its coordinates are in Buffer line numbers, but apply_inverted_hunks needs
-  -- hunks with Index coordinates. Compute diff(HEAD, Index) for correct coordinates.
-  local hunks_head_to_index = era.m.git.diff.run_diff(head_lines, index_lines)
-
-  if #hunks_head_to_index == 0 then
-    if callback then
-      callback(false, "No staged changes found")
-    end
-    return
-  end
-
-  -- User selects hunks based on Buffer line numbers (from hunks_staged).
-  -- We need to find the corresponding hunks in hunks_head_to_index.
-  -- Since both represent the same staged changes, we match by hunk index.
-  local selected_indices = {} ---@type table<integer, boolean>
-
-  if range then
-    local top, bot = range[1], range[2] ---@type integer, integer
-    for i, hunk in ipairs(hunks_staged) do
-      local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
-      local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
-      if not (effective_vend < top or effective_start > bot) then
-        selected_indices[i] = true
-      end
-    end
-  else
-    local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    local _, idx = era.m.git.hunk.find(lnum, hunks_staged)
-    if idx then
-      selected_indices[idx] = true
-    end
-  end
-
-  if not next(selected_indices) then
-    if callback then
-      callback(false, "No staged hunk at cursor")
-    end
-    return
-  end
-
-  -- Select corresponding hunks from hunks_head_to_index
-  local selected_hunks = {} ---@type era.m.git.Hunk[]
-  for i, hunk in ipairs(hunks_head_to_index) do
-    if selected_indices[i] then
-      selected_hunks[#selected_hunks + 1] = hunk
-    end
-  end
-
-  if #selected_hunks == 0 then
-    if callback then
-      callback(false, "Failed to map staged hunks")
-    end
-    return
-  end
-
-  local new_index_lines = apply_inverted_hunks(index_lines, head_lines, selected_hunks)
-  local toplevel = buf_cache.repo.toplevel
-  local relpath = buf_cache.relpath
-  local mode_bits = buf_cache.mode_bits or "100644"
-
-  stl.git.act.hash_object_async(toplevel, relpath, new_index_lines, function(hash)
-    if not hash then
-      if callback then
-        callback(false, "Failed to hash object")
-      end
+---@param range                      ?{ [1]: integer, [2]: integer }
+---@return stl.c.Future              Resolves with { ok: boolean, err: ?string }
+function M.unstage_hunk(bufnr, range)
+  return stl.c.Future.new(function(resolve)
+    local buf_cache = cache[bufnr]
+    if not buf_cache then
+      resolve({ ok = false, err = "Buffer not attached" })
       return
     end
 
-    stl.git.act.update_index_async(toplevel, mode_bits, hash, relpath, function(ok)
+    local hunks_staged = buf_cache.hunks_staged
+    if not hunks_staged or #hunks_staged == 0 then
+      resolve({ ok = false, err = "No staged hunks" })
+      return
+    end
+
+    local head_lines = buf_cache.compare_text
+    local index_lines = buf_cache.compare_text_index
+    if not head_lines or not index_lines then
+      resolve({ ok = false, err = "Missing compare text" })
+      return
+    end
+
+    -- hunks_staged is from filter_common(diff(HEAD, Buffer), diff(Index, Buffer))
+    -- Its coordinates are in Buffer line numbers, but apply_inverted_hunks needs
+    -- hunks with Index coordinates. Compute diff(HEAD, Index) for correct coordinates.
+    local hunks_head_to_index = era.m.git.diff.run_diff(head_lines, index_lines)
+
+    if #hunks_head_to_index == 0 then
+      resolve({ ok = false, err = "No staged changes found" })
+      return
+    end
+
+    -- User selects hunks based on Buffer line numbers (from hunks_staged).
+    -- We need to find the corresponding hunks in hunks_head_to_index.
+    -- Since both represent the same staged changes, we match by hunk index.
+    local selected_indices = {} ---@type table<integer, boolean>
+
+    if range then
+      local top, bot = range[1], range[2] ---@type integer, integer
+      for i, hunk in ipairs(hunks_staged) do
+        local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
+        local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
+        if not (effective_vend < top or effective_start > bot) then
+          selected_indices[i] = true
+        end
+      end
+    else
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+      local _, idx = era.m.git.hunk.find(lnum, hunks_staged)
+      if idx then
+        selected_indices[idx] = true
+      end
+    end
+
+    if not next(selected_indices) then
+      resolve({ ok = false, err = "No staged hunk at cursor" })
+      return
+    end
+
+    -- Select corresponding hunks from hunks_head_to_index
+    local selected_hunks = {} ---@type era.m.git.Hunk[]
+    for i, hunk in ipairs(hunks_head_to_index) do
+      if selected_indices[i] then
+        selected_hunks[#selected_hunks + 1] = hunk
+      end
+    end
+
+    if #selected_hunks == 0 then
+      resolve({ ok = false, err = "Failed to map staged hunks" })
+      return
+    end
+
+    local new_index_lines = apply_inverted_hunks(index_lines, head_lines, selected_hunks)
+    local toplevel = buf_cache.repo.toplevel
+    local relpath = buf_cache.relpath
+    local mode_bits = buf_cache.mode_bits or "100644"
+
+    stl.async.run(function()
+      local hash = stl.git.act.hash_object(toplevel, relpath, new_index_lines):await()
+      if not hash then
+        resolve({ ok = false, err = "Failed to hash object" })
+        return
+      end
+
+      local ok = stl.git.act.update_index(toplevel, mode_bits, hash, relpath):await()
       if ok then
-        M.refresh(bufnr, true, function()
-          if callback then
-            callback(true, nil)
-          end
+        M.refresh(bufnr, true):finally(function()
+          resolve({ ok = true, err = nil })
         end)
       else
-        if callback then
-          callback(false, "Failed to update index")
-        end
+        resolve({ ok = false, err = "Failed to update index" })
       end
     end)
   end)

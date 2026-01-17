@@ -43,13 +43,13 @@ end
 
 ---Add mappings
 ---@param mappings                       era.m.wk.IMapping | era.m.wk.IMapping[]
----@param opts                           era.m.wk.IAddOpts?
+---@param opts                           ?era.m.wk.IAddOpts
 function M.add(mappings, opts)
   M.state.add(mappings, opts)
 end
 
 ---Show which-key manually
----@param opts                           era.m.wk.IShowOpts?
+---@param opts                           ?era.m.wk.IShowOpts
 function M.show(opts)
   if not M.state.ready then
     return

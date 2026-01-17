@@ -56,7 +56,7 @@ end
 
 ---@async
 ---@param argc                        integer|function
----@param func                        function|nil
+---@param func                        ?function
 ---@param ...                         any
 ---@return any ...
 function M.await(argc, func, ...)
@@ -76,7 +76,7 @@ end
 
 ---Creates an async function with a callback style function.
 ---@param argc                        integer|function The number of arguments of func. Must be included.
----@param func                        function|nil A callback style function to be converted. The last argument must be the callback.
+---@param func                        ?function A callback style function to be converted. The last argument must be the callback.
 ---@return async fun(...): any
 ---@overload fun(func: function): async fun()
 function M.wrap(argc, func)
@@ -137,12 +137,108 @@ function M.await_any(futures)
   end)
 end
 
+---Convert a callback-style async function to a Future-returning function.
+---The async function must have signature: (args..., callback) -> cancel_fn|nil
+---The returned function has signature: (args..., token?) -> Future
+---
+---Example:
+---  -- For a callback-style function: some_async_fn(arg1, arg2, callback) -> cancel_fn
+---  local some_fn = stl.async.futurify(some_async_fn)
+---  local future = some_fn(arg1, arg2, token)
+---
+---@generic T
+---@param async_fn                       fun(...: any, callback: fun(result: T)): (fun())|nil
+---@return fun(...: any, token: stl.c.CancellationToken|nil): stl.c.Future
+function M.futurify(async_fn)
+  return function(...) ---@return stl.c.Future
+    local args = { ... }
+    local nargs = select("#", ...)
+
+    -- Detect if the last argument is a CancellationToken
+    local token = args[nargs] ---@type stl.c.CancellationToken|nil
+    if token and type(token) == "table" and type(token.is_cancelled) == "function" then
+      nargs = nargs - 1
+    else
+      token = nil
+    end
+
+    local future = stl.c.Future.new({ token = token })
+    if token and token:is_cancelled() then
+      return future
+    end
+
+    -- Insert callback at the end
+    args[nargs + 1] = function(result)
+      future:__resolve__(result) ---@diagnostic disable-line: invisible
+    end
+
+    ---@diagnostic disable-next-line: need-check-nil
+    local cancel_fn = async_fn(unpack(args, 1, nargs + 1)) ---@type (fun())|nil
+    if cancel_fn ~= nil and token then
+      token:on_cancel(cancel_fn)
+    end
+
+    return future
+  end
+end
+
+---Convert a callback-style async function with multiple callback arguments to a Future.
+---The callback receives multiple values which are packed into a table.
+---
+---Example:
+---  -- For: some_async_fn(cwd, callback) where callback(result1, result2)
+---  local some_fn = stl.async.futurify_multi(2, some_async_fn)
+---  local future = some_fn(cwd, token)
+---  -- future resolves with { result1, result2 }
+---
+---@param callback_argc                   integer Number of arguments the callback receives
+---@param async_fn                        function
+---@return fun(...: any, token: stl.c.CancellationToken|nil): stl.c.Future
+function M.futurify_multi(callback_argc, async_fn)
+  return function(...) ---@return stl.c.Future
+    local args = { ... }
+    local nargs = select("#", ...)
+
+    -- Detect if the last argument is a CancellationToken
+    local token = args[nargs] ---@type stl.c.CancellationToken|nil
+    if token and type(token) == "table" and type(token.is_cancelled) == "function" then
+      nargs = nargs - 1
+    else
+      token = nil
+    end
+
+    local future = stl.c.Future.new({ token = token })
+    if token and token:is_cancelled() then
+      return future
+    end
+
+    -- Insert callback at the end that packs multiple args
+    args[nargs + 1] = function(...)
+      local result = { ... }
+      -- Truncate to expected argc to avoid trailing nils
+      for i = callback_argc + 1, #result do
+        result[i] = nil
+      end
+      future:__resolve__(result) ---@diagnostic disable-line: invisible
+    end
+
+    local cancel_fn = async_fn(unpack(args, 1, nargs + 1))
+    if cancel_fn and token then
+      token:on_cancel(cancel_fn)
+    end
+
+    return future
+  end
+end
+
 ---Create a Future from a callback-style function that returns a cancel_fn.
 ---The returned function creates a new Future each time it's called.
+---@deprecated Use futurify() or futurify_multi() instead
 ---@param argc                          integer
 ---@param func                          function
 ---@return fun(...): stl.c.Future
 function M.to_future(argc, func)
+  ---@return stl.c.Future
   return function(...)
     local future, resolver = stl.c.Future.new_with_resolver()
     local args = { ... }
@@ -169,6 +265,7 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@return fun(...): stl.c.Future
 function M.to_future_cancellable(argc, func, token)
+  ---@return stl.c.Future
   return function(...)
     local future, resolver = stl.c.Future.new_with_resolver({ token = token })
     if token and token:is_cancelled() then
@@ -228,7 +325,7 @@ function M.ipairs(a)
   ---@async
   ---@param i                         integer
   ---@return integer|nil
-  ---@return any|nil
+  ---@return any
   local function iter(_, i)
     start_time = M.event_control(start_time)
     i = i + 1
@@ -266,7 +363,7 @@ end
 ---@async
 ---@generic T
 ---@param a                           T[]
----@param threshold                   integer|nil
+---@param threshold                   ?integer
 ---@return fun(): integer, T
 ---@return any
 ---@return integer

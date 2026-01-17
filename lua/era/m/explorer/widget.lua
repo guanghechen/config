@@ -35,17 +35,17 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
 ---@field public fullname               string
 ---@field protected _action             era.m.explorer.Action
 ---@field protected _augroup            integer
----@field protected _bufnr              integer|nil
+---@field protected _bufnr              ?integer
 ---@field protected _disposed           boolean
 ---@field protected _flags              era.m.explorer.widget.IFlagItem[]
 ---@field protected _is_focused         boolean
 ---@field protected _keymaps            stl.t.IKeymap[]
 ---@field protected _nvimbar            era.m.nvimbar.Nvimbar
----@field protected _on_disposed        fun(): nil|nil
+---@field protected _on_disposed        ?fun(): nil
 ---@field protected _o_width            stl.c.Observable
----@field protected _prev_cursor_lnum   integer|nil
+---@field protected _prev_cursor_lnum   ?integer
 ---@field protected _unregister_fns     (fun(): nil)[]
----@field protected _render_result      era.m.explorer.view.IRenderResult|nil
+---@field protected _render_result      ?era.m.explorer.view.IRenderResult
 ---@field protected _resource_manager   era.m.explorer.resource.FileManager
 ---@field protected _subscriptions      stl.c.IUnsubscribable[]
 ---@field protected _tab_wins           table<integer, integer>
@@ -314,7 +314,7 @@ function M:resize()
   end
 end
 
----@param uri                           string|nil
+---@param uri                           ?string
 ---@return nil
 function M:reveal(uri)
   if uri == nil then

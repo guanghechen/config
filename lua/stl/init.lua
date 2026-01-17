@@ -80,8 +80,8 @@ local dict = setmetatable({ __mods = dict__mods }, {
 
 ---@class stl.git.IFileInfo
 ---@field public has_conflicts          boolean
----@field public mode_bits              string|nil
----@field public object_name            string|nil
+---@field public mode_bits              ?string
+---@field public object_name            ?string
 ---@field public relpath                string
 
 ---@class stl.git.__mods

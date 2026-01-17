@@ -11,8 +11,8 @@ local title = "LSP Symbols" ---@type string
 ---@field public col                    integer
 ---@field public end_lnum               integer
 ---@field public end_col                integer
----@field public selection_lnum         integer?
----@field public selection_col          integer?
+---@field public selection_lnum         ?integer
+---@field public selection_col          ?integer
 
 local filepath_sourcefile = nil ---@type string|nil
 local plainfile = era.view.Plainfile.new({ name = name }) ---@type era.view.Plainfile
@@ -183,7 +183,7 @@ end
 
 ---@param bufnr                         integer
 ---@param position                      lsp.Position
----@param encoding                      string?
+---@param encoding                      ?string
 ---@return integer
 local function lsp_position_to_col(bufnr, position, encoding)
   local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, bufnr, position, encoding)
@@ -364,7 +364,7 @@ local function fetch_symbols(tree, callback)
   end
 
   ---@param symbol                      table
-  ---@return lsp.Range?, lsp.Range?
+  ---@return lsp.Range|nil, lsp.Range|nil
   local function resolve_ranges(symbol)
     local sel = symbol.selectionRange
     local whole = symbol.range
@@ -378,7 +378,7 @@ local function fetch_symbols(tree, callback)
 
   ---@param symbol                      table
   ---@param parent_uuid                 string
-  ---@param encoding                    string?
+  ---@param encoding                    ?string
   local function handle_document_symbol(symbol, parent_uuid, encoding)
     local sel_range, whole_range = resolve_ranges(symbol)
     local sel_start = sel_range and sel_range.start
@@ -426,7 +426,7 @@ local function fetch_symbols(tree, callback)
 
   ---@param symbol                      table
   ---@param parent_uuid                 string
-  ---@param encoding                    string?
+  ---@param encoding                    ?string
   local function handle_symbol_information(symbol, parent_uuid, encoding)
     local sel_range, whole_range = resolve_ranges(symbol)
     local range = whole_range or sel_range

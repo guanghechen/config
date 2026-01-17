@@ -1,71 +1,51 @@
 ---@class stl.git.exec
 local M = {}
 
----Execute git command asynchronously
----@param args                          string[]
----@param opts                          { cwd: string|nil }|nil
----@param callback                      fun(lines: string[], code: integer): nil
----@return fun(): nil                   cancel_fn
-function M.exec_async(args, opts, callback)
-  local cmd = { "git" }
-  if opts and opts.cwd then
-    cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = opts.cwd
-  end
-  for _, arg in ipairs(args) do
-    cmd[#cmd + 1] = arg
-  end
-
-  local cancelled = false ---@type boolean
-  local proc = vim.system(cmd, { text = true }, function(obj)
-    if not cancelled then
-      vim.schedule(function()
-        if not cancelled then
-          local lines = {}
-          if obj.code == 0 and obj.stdout then
-            lines = vim.split(obj.stdout, "\n", { plain = true })
-            if lines[#lines] == "" then
-              lines[#lines] = nil
-            end
-          end
-          callback(lines, obj.code)
-        end
-      end)
-    end
-  end)
-
-  return function()
-    cancelled = true
-    if proc then
-      proc:kill(9)
-    end
-  end
-end
-
 ---Execute git command asynchronously (async/await version).
 ---Returns a Future that resolves with { lines, code }.
 ---@param args                          string[]
 ---@param opts                          { cwd: string|nil }|nil
----@param token                         ?stl.c.CancellationToken
+---@param token                         stl.c.CancellationToken|nil
 ---@return stl.c.Future
 function M.exec(args, opts, token)
-  local future = stl.c.Future.new({ token = token })
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ lines = {}, code = -1 })
+      return
+    end
 
-  if token and token:is_cancelled() then
-    return future -- Already cancelled
-  end
+    local cmd = { "git" }
+    if opts and opts.cwd then
+      cmd[#cmd + 1] = "-C"
+      cmd[#cmd + 1] = opts.cwd
+    end
+    for _, arg in ipairs(args) do
+      cmd[#cmd + 1] = arg
+    end
 
-  local cancel_fn = M.exec_async(args, opts, function(lines, code)
-    future:__resolve__({ lines = lines, code = code }) ---@diagnostic disable-line: invisible
-  end)
+    local proc = vim.system(cmd, { text = true }, function(obj)
+      vim.schedule(function()
+        if token and token:is_cancelled() then
+          return
+        end
 
-  if token then
-    token:on_cancel(function()
-      cancel_fn()
+        local lines = {}
+        if obj.code == 0 and obj.stdout then
+          lines = vim.split(obj.stdout, "\n", { plain = true })
+          if lines[#lines] == "" then
+            lines[#lines] = nil
+          end
+        end
+        resolve({ lines = lines, code = obj.code })
+      end)
     end)
-  end
 
-  return future
+    if token then
+      token:on_cancel(function()
+        proc:kill(9)
+      end)
+    end
+  end)
 end
 
 ---Execute git command synchronously (for user-triggered actions where blocking is acceptable)

@@ -42,114 +42,126 @@ local picker = era.m.picker.FiletreeComposer.new({
 ---@param method                        string
 ---@param buf_flagname                  string
 ---@param additional_params             table<string, any>
----@param callback                      fun(ok: boolean, items: era.m.lsp.reference.IItem[]|nil): nil
+---@param token                         ?stl.c.CancellationToken
+---@return stl.c.Future                 Resolves with { ok: boolean, items: ?era.m.lsp.reference.IItem[] }
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(method, buf_flagname, additional_params, callback)
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
-  if winnr_sourcefile == nil then
-    callback(false)
-    return
-  end
+local function fetch_data(method, buf_flagname, additional_params, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ ok = false, items = nil })
+      return
+    end
 
-  local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
-  if not vim.b[bufnr_sourcefile][buf_flagname] then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "fetch_data",
-      message = "Not support method.",
-      details = { bufnr = bufnr_sourcefile, method = method, context = additional_params },
-    })
-    callback(false)
-    return
-  end
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+    if winnr_sourcefile == nil then
+      resolve({ ok = false, items = nil })
+      return
+    end
 
-  local params =
-    vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
+    local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
+    if not vim.b[bufnr_sourcefile][buf_flagname] then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "fetch_data",
+        message = "Not support method.",
+        details = { bufnr = bufnr_sourcefile, method = method, context = additional_params },
+      })
+      resolve({ ok = false, items = nil })
+      return
+    end
 
-  vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
-    local errors = {} ---@type string[]
-    local items = {} ---@type era.m.lsp.reference.IItem[]
+    local params =
+      vim.tbl_extend("force", vim.lsp.util.make_position_params(winnr_sourcefile, "utf-8"), additional_params)
 
-    local uri_cur = params.textDocument.uri ---@type string
-    local line_cur = params.position.line ---@type integer
-    for client_id, result_or_error in pairs(results_per_client) do
-      local error, result = result_or_error.err, result_or_error.result
-      if error then
-        local details = "Failed to executing '" .. method .. "' (" .. client_id .. "): " .. error.message
-        table.insert(errors, details)
-      else
-        if result ~= nil then
-          local locations = {} ---@type lsp.Location[]
-          if vim.islist(result) then
-            for _, location in ipairs(result) do
+    vim.lsp.buf_request_all(bufnr_sourcefile, method, params, function(results_per_client)
+      if token and token:is_cancelled() then
+        return
+      end
+
+      local errors = {} ---@type string[]
+      local items = {} ---@type era.m.lsp.reference.IItem[]
+
+      local uri_cur = params.textDocument.uri ---@type string
+      local line_cur = params.position.line ---@type integer
+      for client_id, result_or_error in pairs(results_per_client) do
+        local error, result = result_or_error.err, result_or_error.result
+        if error then
+          local details = "Failed to executing '" .. method .. "' (" .. client_id .. "): " .. error.message
+          table.insert(errors, details)
+        else
+          if result ~= nil then
+            local locations = {} ---@type lsp.Location[]
+            if vim.islist(result) then
+              for _, location in ipairs(result) do
+                local uri = location.targetUri or location.uri
+                local range = location.targetRange or location.range
+                if uri ~= uri_cur or range.start.line ~= line_cur then
+                  locations[#locations + 1] = location
+                end
+              end
+            else
+              local location = result
               local uri = location.targetUri or location.uri
               local range = location.targetRange or location.range
               if uri ~= uri_cur or range.start.line ~= line_cur then
                 locations[#locations + 1] = location
               end
             end
-          else
-            local location = result
-            local uri = location.targetUri or location.uri
-            local range = location.targetRange or location.range
-            if uri ~= uri_cur or range.start.line ~= line_cur then
-              locations[#locations + 1] = location
-            end
-          end
 
-          for _, location in ipairs(locations) do
-            ---@diagnostic disable-next-line: undefined-field
-            local uri = location.targetUri or location.uri
-            ---@diagnostic disable-next-line: undefined-field
-            local range = location.targetRange or location.range
-            if uri ~= nil and range ~= nil then
-              local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
-              local lnum = range.start.line + 1 ---@type integer
-              local col = range.start.character ---@type integer
-              local last_item = items[#items] ---@type era.m.lsp.reference.IItem|nil
-              if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
-                local lnum_end = range["end"].line + 1 ---@type integer
+            for _, location in ipairs(locations) do
+              ---@diagnostic disable-next-line: undefined-field
+              local uri = location.targetUri or location.uri
+              ---@diagnostic disable-next-line: undefined-field
+              local range = location.targetRange or location.range
+              if uri ~= nil and range ~= nil then
+                local filepath = dot.path.normalize(vim.uri_to_fname(uri)) ---@type string
+                local lnum = range.start.line + 1 ---@type integer
+                local col = range.start.character ---@type integer
+                local last_item = items[#items] ---@type era.m.lsp.reference.IItem|nil
+                if last_item == nil or last_item.filepath ~= filepath or last_item.lnum ~= lnum then
+                  local lnum_end = range["end"].line + 1 ---@type integer
 
-                ---@type era.m.lsp.reference.IItem
-                local item = {
-                  filepath = filepath,
-                  lnum = lnum,
-                  col = col,
-                  col_end = lnum == lnum_end and range["end"].character or -1,
-                }
-                items[#items + 1] = item
+                  ---@type era.m.lsp.reference.IItem
+                  local item = {
+                    filepath = filepath,
+                    lnum = lnum,
+                    col = col,
+                    col_end = lnum == lnum_end and range["end"].character or -1,
+                  }
+                  items[#items + 1] = item
+                end
               end
             end
           end
         end
       end
-    end
 
-    if #errors > 0 then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "fetch_data",
-        message = "Encountered errors.",
-        details = { bufnr = bufnr_sourcefile, method = method, params = params, errors = errors },
-      })
-      callback(false)
-      return
-    end
+      if #errors > 0 then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "fetch_data",
+          message = "Encountered errors.",
+          details = { bufnr = bufnr_sourcefile, method = method, params = params, errors = errors },
+        })
+        resolve({ ok = false, items = nil })
+        return
+      end
 
-    if #items <= 0 then
-      callback(true, {})
-      return
-    end
+      if #items <= 0 then
+        resolve({ ok = true, items = {} })
+        return
+      end
 
-    if #items == 1 then
-      local item = items[1] ---@type era.m.lsp.reference.IItem
-      dot.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
-      callback(true, { item })
-      return
-    end
+      if #items == 1 then
+        local item = items[1] ---@type era.m.lsp.reference.IItem
+        dot.win.open_filepath(winnr_sourcefile, item.filepath, item.lnum, item.col)
+        resolve({ ok = true, items = { item } })
+        return
+      end
 
-    callback(true, items)
+      resolve({ ok = true, items = items })
+    end)
   end)
 end
 
@@ -159,10 +171,12 @@ end
 ---@param additional_params             table<string, any>
 ---@return nil
 local function focus(title, method, buf_flagname, additional_params)
-  fetch_data(method, buf_flagname, additional_params, function(ok, items)
-    if not ok or items == nil then
+  fetch_data(method, buf_flagname, additional_params):finally(function(resolved, result)
+    if not resolved or not result or not result.ok or result.items == nil then
       return
     end
+
+    local items = result.items ---@type era.m.lsp.reference.IItem[]
 
     if #items <= 0 then
       stl.reporter.info({

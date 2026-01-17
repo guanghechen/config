@@ -39,7 +39,7 @@ end
 ---@param bufnr                         integer
 ---@param tree                          era.m.explorer.Tree
 ---@param root                          era.m.explorer.Node
----@param options                       era.m.explorer.view.IRenderOptions|nil
+---@param options                       ?era.m.explorer.view.IRenderOptions
 ---@return era.m.explorer.view.IRenderResult
 function M:render(bufnr, tree, root, options)
   options = options or {} ---@type era.m.explorer.view.IRenderOptions
@@ -277,7 +277,7 @@ end
 ---@param bufnr                         integer
 ---@param render_result                 era.m.explorer.view.IRenderResult
 ---@param lnum                          integer
----@param cursorline_hlgroup            string|nil
+---@param cursorline_hlgroup            ?string
 ---@return nil
 function M:update_virt_text(bufnr, render_result, lnum, cursorline_hlgroup)
   if lnum < 1 or lnum > #render_result.lines then
@@ -665,7 +665,7 @@ end
 ---@param node                          era.m.explorer.Node
 ---@param indent                        string
 ---@param lnum                          integer
----@param display_name                  string|nil
+---@param display_name                  ?string
 ---@param is_expanded                   boolean
 ---@param is_selected                   boolean
 ---@return string

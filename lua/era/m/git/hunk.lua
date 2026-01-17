@@ -602,23 +602,23 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@param range                         { [1]: integer, [2]: integer }|nil
----@param callback                      fun(ok: boolean, err: string|nil)|nil
-function M.stage(range, callback)
+---@return stl.c.Future                 Resolves with { ok: boolean, err: string|nil }
+function M.stage(range)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  era.m.git.buffer.stage_hunk(bufnr, range, callback)
+  return era.m.git.buffer.stage_hunk(bufnr, range)
 end
 
 ---@param range                         { [1]: integer, [2]: integer }|nil
----@param callback                      fun(ok: boolean, err: string|nil)|nil
-function M.unstage(range, callback)
+---@return stl.c.Future                 Resolves with { ok: boolean, err: string|nil }
+function M.unstage(range)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  era.m.git.buffer.unstage_hunk(bufnr, range, callback)
+  return era.m.git.buffer.unstage_hunk(bufnr, range)
 end
 
 ---@param range                         { [1]: integer, [2]: integer }|nil
@@ -632,24 +632,23 @@ function M.reset(range)
   return era.m.git.buffer.reset_hunk(bufnr, range)
 end
 
----@param callback                      fun(ok: boolean)|nil
-function M.stage_buffer(callback)
+---@return stl.c.Future                 Resolves with boolean (success)
+function M.stage_buffer()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  era.m.git.buffer.stage_buffer(bufnr, function(ok)
-    if ok then
-      era.m.git.buffer.refresh(bufnr, nil, function()
-        if callback then
-          callback(ok)
-        end
-      end)
-    else
-      if callback then
-        callback(ok)
+
+  return stl.c.Future.new(function(resolve)
+    era.m.git.buffer.stage_buffer(bufnr):finally(function(resolved, ok)
+      if resolved and ok then
+        era.m.git.buffer.refresh(bufnr):finally(function()
+          resolve(true)
+        end)
+      else
+        resolve(false)
       end
-    end
+    end)
   end)
 end
 

@@ -1,6 +1,6 @@
 ---@class stl.t.IDebugCmdParams
 ---@field public cmd                    string|string[]
----@field public level                  ?integer|nil
+---@field public level                  ?integer
 ---@field public title                  ?string
 ---@field public args                   ?string[]
 ---@field public cwd                    ?string
@@ -14,14 +14,14 @@
 local M = {}
 setmetatable(M, {
   ---@param title                       string|unknown
-  ---@param message                     unknown|nil
+  ---@param message                     ?unknown
   ---@return nil
   __call = function(self, title, message)
     self.log(title, message)
   end,
 })
 
----@param message                       unknown|nil
+---@param message                       ?unknown
 ---@return string
 local function format_message(message)
   if message == nil then
@@ -44,7 +44,7 @@ local function format_message(message)
 end
 
 ---@param title                         string|unknown
----@param message                       unknown|nil
+---@param message                       ?unknown
 function M.log(title, message)
   local text_title, text_content = "", "" ---@type string, string
   if type(title) == "string" then
@@ -66,7 +66,7 @@ function M.log(title, message)
 end
 
 ---@param title                         string|unknown
----@param message                       unknown|nil
+---@param message                       ?unknown
 function M.log_silent(title, message)
   local text_title, text_content = "", "" ---@type string, string
   if type(title) == "string" then
@@ -88,7 +88,7 @@ function M.log_silent(title, message)
 end
 
 ---@param title                         string|unknown
----@param message                       unknown|nil
+---@param message                       ?unknown
 ---@param filepath                      string
 function M.log_to_file(title, message, filepath)
   local text_title, text_content = "", "" ---@type string, string

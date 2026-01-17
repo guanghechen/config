@@ -475,6 +475,7 @@
     "fout",
     "frecency",
     "fsearchbuffer",
+    "futurify",
     "ftermcreate",
     "ftermdestroy",
     "ftermfocus1",

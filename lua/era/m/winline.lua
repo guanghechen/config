@@ -50,7 +50,7 @@ local function resolve_nvimbar(winnr)
     })
 
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_cancel = nil } ---@type dot.win.IWinline
+    winline = winline or { bufnr = bufnr, nvimbar = nvimbar, locate_token = nil } ---@type dot.win.IWinline
 
     winline.nvimbar = nvimbar
     meta.winline = winline
@@ -78,20 +78,28 @@ local function resolve_nvimbar(winnr)
         silent = silent,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-          if winline.locate_cancel ~= nil then
-            pcall(winline.locate_cancel)
-            winline.locate_cancel = nil
+          if winline.locate_token ~= nil then
+            winline.locate_token:cancel()
+            winline.locate_token = nil
           end
 
-          winline.locate_cancel = dot.win.locate_symbols(winnr, function(ok, symbols)
-            winline.locate_cancel = nil
+          local token = stl.c.CancellationToken.new()
+          winline.locate_token = token
 
-            if not ok or not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
+          dot.win.locate_symbols(winnr, token):finally(function(resolved, result)
+            winline.locate_token = nil
+
+            if not resolved or not result or not result.ok then
               callback(false)
               return
             end
 
-            winline.lsp_symbols = symbols
+            if not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
+              callback(false)
+              return
+            end
+
+            winline.lsp_symbols = result.symbols
             vim.schedule(function()
               if not winline.nvimbar:isdisposed() then
                 winline.nvimbar:render()
@@ -110,7 +118,7 @@ local function resolve_nvimbar(winnr)
   return nil
 end
 
----@param winnr                         integer|nil
+---@param winnr                         ?integer
 ---@return nil
 local function render(winnr)
   if winnr == nil or not stl.nvim.win.is_valid(winnr) then

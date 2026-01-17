@@ -6,12 +6,12 @@ local Widget = require("era.m.plugin.widget")
 
 ---@class era.m.plugin.View : dot.t.IWidget
 ---@field public name                   string
----@field public bufnr                  integer|nil
----@field public winnr                  integer|nil
+---@field public bufnr                  ?integer
+---@field public winnr                  ?integer
 ---@field public win_opts               vim.api.keyset.win_config
 ---@field public state                  era.m.plugin.IViewState
 ---@field public widget                 era.m.plugin.Widget
----@field protected _augroup            integer|nil
+---@field protected _augroup            ?integer
 ---@field protected _disposed           boolean
 local M = {}
 M.__index = M
@@ -24,7 +24,7 @@ function M.visible()
   return _instance ~= nil and _instance:isvisible()
 end
 
----@param mode                          era.m.plugin.ViewModeEnum|nil
+---@param mode                          ?era.m.plugin.ViewModeEnum
 ---@return nil
 function M.show(mode)
   if _instance ~= nil and not _instance._disposed then
@@ -276,7 +276,7 @@ function M:__setup_keymaps__()
             if self:isvisible() then
               self.widget:update()
             end
-          end, function()
+          end):finally(function()
             if self:isvisible() then
               self.widget:update()
             end
@@ -307,7 +307,7 @@ function M:__setup_keymaps__()
             if self:isvisible() then
               self.widget:update()
             end
-          end, function()
+          end):finally(function()
             if self:isvisible() then
               self.widget:update()
             end
@@ -325,7 +325,7 @@ function M:__setup_keymaps__()
         self.state.mode = "clean"
         self.widget:update()
         if not Action.is_running() then
-          Action.clean(function()
+          Action.clean():finally(function()
             if self:isvisible() then
               self.widget:update()
             end
@@ -355,7 +355,7 @@ function M:__setup_keymaps__()
           if self:isvisible() then
             self.widget:update()
           end
-        end, function()
+        end):finally(function()
           if self:isvisible() then
             self.widget:update()
           end

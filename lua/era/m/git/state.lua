@@ -65,21 +65,21 @@ local pending_refresh = false
 local pending_force = false
 
 ---@type (fun(): nil)[]
-local queued_callbacks = {}
+local queued_refresh_callbacks = {}
 
 ---@type stl.timer.IDisposableCallable
 local refresh_throttled
 
-local function run_queued_callbacks()
-  local callbacks = queued_callbacks
-  queued_callbacks = {}
+local function run_queued_refresh_callbacks()
+  local callbacks = queued_refresh_callbacks
+  queued_refresh_callbacks = {}
   for _, callback in ipairs(callbacks) do
     callback()
   end
 end
 
----@type (fun(): nil)|nil
-local current_collect_cancel = nil
+---@type stl.c.CancellationToken|nil
+local current_collect_token = nil
 
 local function do_refresh()
   if refreshing then
@@ -96,16 +96,18 @@ local function do_refresh()
     initialized = false
   end
 
-  if current_collect_cancel then
-    current_collect_cancel()
-    current_collect_cancel = nil
+  if current_collect_token then
+    current_collect_token:cancel()
+    current_collect_token = nil
   end
 
-  current_collect_cancel = era.m.git.status.collect_async({ base = "HEAD" }, function(status_table)
-    current_collect_cancel = nil
+  current_collect_token = stl.c.CancellationToken.new()
 
-    if type(status_table) == "table" then
-      local aggregated = era.m.git.status.aggregate(status_table)
+  era.m.git.status.collect({ base = "HEAD" }, current_collect_token):finally(function(resolved, result)
+    current_collect_token = nil
+
+    if resolved and result and type(result.status_map) == "table" then
+      local aggregated = era.m.git.status.aggregate(result.status_map)
 
       aggregated_cache.dir_cache = {}
       aggregated_cache.file_display = aggregated.file_display
@@ -123,7 +125,7 @@ local function do_refresh()
     end
 
     refreshing = false
-    run_queued_callbacks()
+    run_queued_refresh_callbacks()
 
     if pending_refresh then
       refresh_throttled()
@@ -214,13 +216,14 @@ function M.last_refreshed_at()
 end
 
 ---@param filepaths                  string[]
----@param callback                   (fun(): nil)|nil
-function M.preload_ignored(filepaths, callback)
+---@param callback                   ?(fun(): nil)
+---@return fun(): nil                cancel_fn
+local function __preload_ignored__(filepaths, callback)
   if not dot.path.is_git_repo() then
     if callback then
       callback()
     end
-    return
+    return stl.fn.noop
   end
 
   local uncached = {} ---@type string[]
@@ -237,7 +240,7 @@ function M.preload_ignored(filepaths, callback)
     if callback then
       callback()
     end
-    return
+    return stl.fn.noop
   end
 
   if ignored_count + #uncached > IGNORED_CACHE_CAPACITY then
@@ -248,8 +251,15 @@ function M.preload_ignored(filepaths, callback)
   local input = table.concat(uncached, "\n")
   local workspace = dot.path.workspace() ---@type string
 
-  vim.system({ "git", "-C", workspace, "check-ignore", "--stdin" }, { stdin = input, text = true }, function(obj)
+  local cancelled = false
+  local proc = vim.system({ "git", "-C", workspace, "check-ignore", "--stdin" }, { stdin = input, text = true }, function(obj)
+    if cancelled then
+      return
+    end
     vim.schedule(function()
+      if cancelled then
+        return
+      end
       local ignored_set = {} ---@type table<string, boolean>
       if obj.code == 0 or obj.code == 1 then
         local stdout = obj.stdout or ""
@@ -258,7 +268,7 @@ function M.preload_ignored(filepaths, callback)
         end
       elseif obj.code ~= 128 then
         stl.reporter.warn({
-          from = "era.m.git.state",
+          from = __module_name__,
           subject = "preload_ignored",
           message = "git check-ignore failed",
           details = { code = obj.code, stderr = obj.stderr },
@@ -275,13 +285,38 @@ function M.preload_ignored(filepaths, callback)
       end
     end)
   end)
+
+  return function()
+    cancelled = true
+    if proc then
+      proc:kill(9)
+    end
+  end
 end
 
----@param force                      boolean|nil
----@param callback                   (fun(): nil)|nil
-function M.refresh_async(force, callback)
+---@param filepaths                  string[]
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with nil when preload completes
+function M.preload_ignored(filepaths, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
+    end
+    local cancel_fn = __preload_ignored__(filepaths, function()
+      resolve(nil)
+    end)
+    if token then
+      token:on_cancel(cancel_fn)
+    end
+  end)
+end
+
+---@param force                      ?boolean
+---@param callback                   ?(fun(): nil)
+local function __refresh__(force, callback)
   if callback then
-    queued_callbacks[#queued_callbacks + 1] = callback
+    queued_refresh_callbacks[#queued_refresh_callbacks + 1] = callback
   end
 
   if force then
@@ -291,20 +326,47 @@ function M.refresh_async(force, callback)
   refresh_throttled()
 end
 
----@param base                       string|nil
----@param callback                   fun(result: table<string, string>): nil
----@return fun(): nil                cancel_fn
-function M.status_async(base, callback)
-  return era.m.git.status.collect_async({ base = base }, function(status_table_result)
-    local result = {}
-    if type(status_table_result) == "table" then
-      for filepath, entry in pairs(status_table_result) do
-        if type(filepath) == "string" and type(entry) == "table" then
-          result[filepath] = entry.display or ""
+---Refresh git status (Future variant).
+---Note: This operation uses internal throttling. The token only prevents waiting
+---for resolution if cancelled before the call; it does not cancel the underlying
+---throttled refresh operation which may be shared by multiple callers.
+---@param force                      ?boolean
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with nil when refresh completes
+function M.refresh(force, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve(nil)
+      return
+    end
+    __refresh__(force, function()
+      resolve(nil)
+    end)
+  end)
+end
+
+---@param base                       ?string
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with table<string, string>
+function M.status(base, token)
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({})
+      return
+    end
+
+    stl.async.run(function()
+      local collect_result = era.m.git.status.collect({ base = base }, token):await()
+      local result = {} ---@type table<string, string>
+      if collect_result and type(collect_result.status_map) == "table" then
+        for filepath, entry in pairs(collect_result.status_map) do
+          if type(filepath) == "string" and type(entry) == "table" then
+            result[filepath] = entry.display or ""
+          end
         end
       end
-    end
-    callback(result)
+      resolve(result)
+    end)
   end)
 end
 
@@ -319,14 +381,14 @@ function M.refresh_user_info()
   end
 
   local workspace = dot.path.workspace() ---@type string
-  stl.git.exec.exec_async({ "config", "user.name" }, { cwd = workspace }, function(lines)
-    if #lines > 0 then
-      user_name = lines[1]
+  stl.git.exec.exec({ "config", "user.name" }, { cwd = workspace }):finally(function(resolved, result)
+    if resolved and result and result.lines and #result.lines > 0 then
+      user_name = result.lines[1]
     end
   end)
-  stl.git.exec.exec_async({ "config", "user.email" }, { cwd = workspace }, function(lines)
-    if #lines > 0 then
-      user_email = lines[1]
+  stl.git.exec.exec({ "config", "user.email" }, { cwd = workspace }):finally(function(resolved, result)
+    if resolved and result and result.lines and #result.lines > 0 then
+      user_email = result.lines[1]
     end
   end)
 end

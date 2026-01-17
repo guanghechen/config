@@ -52,7 +52,7 @@ local config = {
 ---@field public file                    ?fun(convert: era.m.image.Convert, meta: era.m.image.meta): string
 ---@field public depends                 ?string[]
 ---@field public on_done                 ?fun(step: era.m.image.step)
----@field public on_error                ?fun(step: era.m.image.step): boolean?
+---@field public on_error                ?fun(step: era.m.image.step): boolean|nil
 ---@field public pipe                    ?boolean
 
 ---@type table<string, era.m.image.cmd>
@@ -241,6 +241,7 @@ end
 ---@field public aborted                 ?boolean
 ---@field protected _done                ?boolean
 ---@field protected _err                 ?string
+---@field protected _future              stl.c.Future
 ---@field protected _step                integer
 ---@field protected _tpl_data            table<string, string>
 local Convert = {}
@@ -248,7 +249,6 @@ Convert.__index = Convert
 
 ---@class era.m.image.convert.Opts
 ---@field public src                     string
----@field public on_done                 ?fun(convert: era.m.image.Convert)
 
 ---@param opts                           era.m.image.convert.Opts
 ---@return era.m.image.Convert
@@ -267,6 +267,7 @@ function Convert.new(opts)
   self.opts = opts
   self.src = opts.src
   self._step = 0
+  self._future = stl.c.Future.new()
   local base = vim.fn.fnamemodify(opts.src, ":t:r")
   self.prefix = vim.fn.sha256(self.opts.src .. self.page):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
   self.meta = { src = opts.src }
@@ -299,6 +300,11 @@ end
 ---@return string|nil
 function Convert:error()
   return self._err
+end
+
+---@return stl.c.Future Resolves with self (era.m.image.Convert)
+function Convert:future()
+  return self._future
 end
 
 ---@param ft                             string
@@ -464,9 +470,7 @@ function Convert:__on_done__()
       message = self._err,
     })
   end
-  if self.opts.on_done then
-    self.opts.on_done(self)
-  end
+  self._future:__resolve__(self) ---@diagnostic disable-line: invisible
 end
 
 ---@return nil

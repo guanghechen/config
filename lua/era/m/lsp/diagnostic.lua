@@ -232,7 +232,7 @@ function M.get_by_filepath(filepath)
 end
 
 ---@param filepath                       string
----@param severity                       vim.diagnostic.Severity|nil
+---@param severity                       ?vim.diagnostic.Severity
 ---@return boolean
 function M.has_diagnostics(filepath, severity)
   local data = M.get_by_filepath(filepath) ---@type era.m.lsp.diagnostic.IBufferDiagnostics

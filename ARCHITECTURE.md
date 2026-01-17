@@ -79,27 +79,29 @@ Standard library with environment detection and dictionary data.
 
 **Data Structures (`stl.c.*`):**
 
-| Class             | Description                                              |
-|:------------------|:---------------------------------------------------------|
-| `BatchDisposable` | Batch disposal of multiple resources                     |
-| `BatchHandler`    | Batch operation handler with error collection            |
-| `CircularQueue`   | Fixed-size circular queue                                |
-| `CircularStack`   | Fixed-size circular stack                                |
-| `Dirtier`         | Dirty state tracking                                     |
-| `Disposable`      | Resource cleanup abstraction                             |
-| `Filetree`        | File tree with lazy loading                              |
-| `Frecency`        | Frequency + recency based ranking                        |
-| `History`         | Navigation history with capacity limit                   |
-| `InputHistory`    | Input field history management                           |
-| `Observable`      | Reactive value container with subscription support       |
-| `Proc`            | Process management                                       |
-| `Scheduler`       | Throttle/debounce task scheduling                        |
-| `Subscriber`      | Observer for Observable changes                          |
-| `Subscribers`     | Collection of subscribers                                |
-| `Theme`           | Theme management with highlight compilation              |
-| `Ticker`          | Counter with subscription support                        |
-| `Tree`            | Generic tree structure                                   |
-| `TreeRetriever`   | Tree node retrieval helper                               |
+| Class               | Description                                              |
+|:--------------------|:---------------------------------------------------------|
+| `BatchDisposable`   | Batch disposal of multiple resources                     |
+| `BatchHandler`      | Batch operation handler with error collection            |
+| `CancellationToken` | Cooperative cancellation with callback support           |
+| `CircularQueue`     | Fixed-size circular queue                                |
+| `CircularStack`     | Fixed-size circular stack                                |
+| `Dirtier`           | Dirty state tracking                                     |
+| `Disposable`        | Resource cleanup abstraction                             |
+| `Filetree`          | File tree with lazy loading                              |
+| `Frecency`          | Frequency + recency based ranking                        |
+| `Future`            | Promise-like async result with cancellation support      |
+| `History`           | Navigation history with capacity limit                   |
+| `InputHistory`      | Input field history management                           |
+| `Observable`        | Reactive value container with subscription support       |
+| `Proc`              | Process management                                       |
+| `Scheduler`         | Throttle/debounce task scheduling                        |
+| `Subscriber`        | Observer for Observable changes                          |
+| `Subscribers`       | Collection of subscribers                                |
+| `Theme`             | Theme management with highlight compilation              |
+| `Ticker`            | Counter with subscription support                        |
+| `Tree`              | Generic tree structure                                   |
+| `TreeRetriever`     | Tree node retrieval helper                               |
 
 ### `lua/dot/` - Core Framework Layer
 
@@ -363,3 +365,100 @@ Custom lightweight plugin loader (`era/m/plugin/loader.lua`):
 - Comprehensive git integration (blame, hunk navigation, staging)
 - Color picker with multiple format support
 - Custom lightweight plugin loader with lazy loading
+
+## Async Patterns
+
+### Future and CancellationToken
+
+The codebase uses `stl.c.Future` and `stl.c.CancellationToken` for async operations with cancellation support.
+
+**Future States:**
+
+| State       | Description                                      |
+|:------------|:-------------------------------------------------|
+| `pending`   | Operation in progress                            |
+| `resolved`  | Completed successfully with result               |
+| `rejected`  | Failed with error                                |
+| `cancelled` | Cancelled via CancellationToken                  |
+
+**Creating Futures:**
+
+```lua
+-- From callback-style function
+local future = stl.c.Future.new({ token = token })
+local cancel_fn = some_async_fn(function(result)
+  future:__resolve__(result)
+end)
+if token then
+  token:on_cancel(cancel_fn)
+end
+
+-- Using factory functions
+local future = stl.c.Future.resolve(value)     -- Already resolved
+local future = stl.c.Future.reject(error_msg)  -- Already rejected
+
+-- With resolver function
+local future, resolver = stl.c.Future.new_with_resolver({ token = token })
+some_operation():finally(function(ok, result)
+  resolver(result)
+end)
+```
+
+**Consuming Futures:**
+
+```lua
+-- In async context
+local result = future:await()
+
+-- With callback
+future:finally(function(ok, result)
+  if ok then
+    -- Handle success
+  else
+    -- Handle error/cancellation
+  end
+end)
+
+-- Check state
+if future:is_done() then ... end
+if future:is_resolved() then ... end
+if future:is_cancelled() then ... end
+```
+
+**CancellationToken Usage:**
+
+```lua
+-- Create token
+local token = stl.c.CancellationToken.new()
+
+-- Register cancel callback
+local unsub = token:on_cancel(function()
+  cleanup()
+end)
+
+-- Cancel operation
+token:cancel()
+
+-- Check in async functions
+token:throw_if_cancelled()
+```
+
+**Async Utilities (`stl.async`):**
+
+```lua
+-- Run async function
+stl.async.run(function()
+  local result = some_future:await()
+end)
+
+-- Await multiple futures
+local results = stl.async.await_all(futures)
+
+-- Convert callback function to Future
+local to_future = stl.async.to_future(arg_index, callback_fn)
+local future = to_future(arg1, arg2)
+
+-- With cancellation support
+local to_future = stl.async.to_future_cancellable(arg_index, callback_fn, token)
+```
+

@@ -21,10 +21,10 @@
 
 ---@class era.m.wk.IIcon
 ---@field public icon                   string
----@field public color                  era.m.wk.Color?
----@field public hl                     string?
----@field public cat                    string?
----@field public name                   string?
+---@field public color                  ?era.m.wk.Color
+---@field public hl                     ?string
+---@field public cat                    ?string
+---@field public name                   ?string
 
 ---@class era.m.wk.IMapping
 ---@field public [1]                    string                                                                  -- lhs (key sequence)
@@ -33,6 +33,7 @@
 ---@field public mode                   (string|era.m.wk.Mode[])?                                               -- modes this mapping applies to
 ---@field public group                  string?                                                                 -- group name for prefix keys
 ---@field public icon                   era.m.wk.IIcon?                                                         -- icon configuration
+---@field public nowait                 boolean?                                                                -- execute immediately without waiting for timeoutlen
 ---@field public proxy                  string?                                                                 -- proxy prefix (e.g., "<c-w>" for "<leader>w")
 ---@field public expand                 (fun(): era.m.wk.IMapping[])?                                           -- function to expand dynamic mappings
 

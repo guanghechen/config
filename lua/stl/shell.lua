@@ -7,7 +7,7 @@ local __module_name__ = "stl.shell" ---@type string
 local M = {}
 
 if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
-  ---@param cmd                         ?string|nil
+  ---@param cmd                         ?string
   ---@return string
   function M.format_command(cmd)
     local shell = vim.env.SHELL or vim.o.shell ---@type string
@@ -24,7 +24,7 @@ if stl.env.IS_MAC or stl.env.IS_NIX or stl.env.IS_WSL then
     return { "sh", "-c", cmd }
   end
 elseif stl.env.IS_WIN then
-  ---@param cmd                         ?string|nil
+  ---@param cmd                         ?string
   ---@return string
   function M.format_command(cmd)
     local shell = vim.env.SHELL or vim.o.shell ---@type string

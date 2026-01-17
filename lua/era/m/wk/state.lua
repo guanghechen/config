@@ -62,9 +62,9 @@ local M = {
   mode = "n",
   ---@type integer
   bufnr = 0,
-  ---@type integer?
+  ---@type integer|nil
   winnr = nil,
-  ---@type integer?
+  ---@type integer|nil
   popup_bufnr = nil,
   ---@type number
   started_at = 0,
@@ -176,7 +176,7 @@ end
 
 ---Add mappings (public API)
 ---@param mappings                       era.m.wk.IMapping | era.m.wk.IMapping[]
----@param opts                           era.m.wk.IAddOpts?
+---@param opts                           ?era.m.wk.IAddOpts
 function M.add(mappings, opts)
   if not M.ready then
     vim.schedule(function()
@@ -202,7 +202,7 @@ end
 
 ---Add a single spec (handles mode inheritance)
 ---@param spec                           era.m.wk.IMapping
----@param opts                           era.m.wk.IAddOpts?
+---@param opts                           ?era.m.wk.IAddOpts
 function M.__add_spec__(spec, opts)
   if spec.mode then
     ---@diagnostic disable-next-line: param-type-mismatch
@@ -236,7 +236,7 @@ end
 
 ---Get node at path
 ---@param keys                           string
----@return era.m.wk.INode?
+---@return era.m.wk.INode|nil
 function M.get_node(keys)
   local tree_tbl = M.get_tree()
   if not tree_tbl then
@@ -317,7 +317,7 @@ end
 ---Add mapping to specific buffer
 ---@param bufnr                          integer
 ---@param mapping                        era.m.wk.IMapping
----@param opts                           era.m.wk.IAddOpts?
+---@param opts                           ?era.m.wk.IAddOpts
 function M.__add_mapping__(bufnr, mapping, opts)
   opts = opts or {}
   local modes = mapping.mode or opts.mode or { "n" }
@@ -339,7 +339,7 @@ end
 
 ---Add mapping to all existing buffers
 ---@param mapping                        era.m.wk.IMapping
----@param opts                           era.m.wk.IAddOpts?
+---@param opts                           ?era.m.wk.IAddOpts
 function M.__add_to_all_bufs__(mapping, opts)
   for bufnr, _ in pairs(M.buf_trees) do
     M.__add_mapping__(bufnr, mapping, opts)

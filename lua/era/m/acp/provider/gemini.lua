@@ -56,14 +56,14 @@ function M:send(opts)
 
     local prompt = { self._client:create_text_content(user_content) }
 
-    self._client:send_prompt(self._session_id, prompt, function(_, err)
+    self._client:send_prompt(self._session_id, prompt):finally(function(ok, result)
       if cancelled then
         return
       end
 
-      if err then
+      if not ok or result.err then
         vim.schedule(function()
-          opts.on_error(err.message or "ACP prompt failed")
+          opts.on_error((result.err and result.err.message) or "ACP prompt failed")
         end)
         return
       end
@@ -132,23 +132,23 @@ function M:__ensure_client__(cwd, opts, callback)
     -- Try to load existing session if available
     local session = opts.session
     if session and session.last_session_id then
-      self._client:load_session(session.last_session_id, cwd, nil, function(session_id, err)
-        if not err and session_id then
-          self._session_id = session_id
+      self._client:load_session(session.last_session_id, cwd, nil):finally(function(ok, result)
+        if ok and not result.err and result.session_id then
+          self._session_id = result.session_id
           callback(true)
           return
         end
         -- If load failed, fall back to creating new session
-        self._client:create_session(cwd, nil, function(new_session_id, create_err)
-          if create_err or not new_session_id then
+        self._client:create_session(cwd, nil):finally(function(create_ok, create_result)
+          if not create_ok or create_result.err or not create_result.session_id then
             vim.schedule(function()
-              opts.on_error("Failed to create ACP session: " .. (create_err and create_err.message or "unknown"))
+              opts.on_error("Failed to create ACP session: " .. ((create_result.err and create_result.err.message) or "unknown"))
             end)
             callback(false)
             return
           end
-          self._session_id = new_session_id
-          session.last_session_id = new_session_id
+          self._session_id = create_result.session_id
+          session.last_session_id = create_result.session_id
           callback(true)
         end)
       end)
@@ -156,17 +156,17 @@ function M:__ensure_client__(cwd, opts, callback)
     end
 
     -- No existing session to load, create new one
-    self._client:create_session(cwd, nil, function(session_id, err)
-      if err or not session_id then
+    self._client:create_session(cwd, nil):finally(function(ok, result)
+      if not ok or result.err or not result.session_id then
         vim.schedule(function()
-          opts.on_error("Failed to create ACP session: " .. (err and err.message or "unknown"))
+          opts.on_error("Failed to create ACP session: " .. ((result.err and result.err.message) or "unknown"))
         end)
         callback(false)
         return
       end
-      self._session_id = session_id
+      self._session_id = result.session_id
       if session then
-        session.last_session_id = session_id
+        session.last_session_id = result.session_id
       end
       callback(true)
     end)
@@ -209,10 +209,10 @@ function M:__ensure_client__(cwd, opts, callback)
   self._client = S.acp_client.new(client_config)
   self._current_tool_calls = {}
 
-  self._client:connect(function(err)
-    if err then
+  self._client:connect():finally(function(ok, result)
+    if not ok or result.err then
       vim.schedule(function()
-        opts.on_error("Failed to connect ACP client: " .. err.message)
+        opts.on_error("Failed to connect ACP client: " .. ((result.err and result.err.message) or "unknown"))
       end)
       callback(false)
       return
@@ -221,23 +221,23 @@ function M:__ensure_client__(cwd, opts, callback)
     -- Try to load existing session if available
     local session = opts.session
     if session and session.last_session_id then
-      self._client:load_session(session.last_session_id, cwd, nil, function(session_id, load_err)
-        if not load_err and session_id then
-          self._session_id = session_id
+      self._client:load_session(session.last_session_id, cwd, nil):finally(function(load_ok, load_result)
+        if load_ok and not load_result.err and load_result.session_id then
+          self._session_id = load_result.session_id
           callback(true)
           return
         end
         -- If load failed, fall back to creating new session
-        self._client:create_session(cwd, nil, function(new_session_id, create_err)
-          if create_err or not new_session_id then
+        self._client:create_session(cwd, nil):finally(function(create_ok, create_result)
+          if not create_ok or create_result.err or not create_result.session_id then
             vim.schedule(function()
-              opts.on_error("Failed to create ACP session: " .. (create_err and create_err.message or "unknown"))
+              opts.on_error("Failed to create ACP session: " .. ((create_result.err and create_result.err.message) or "unknown"))
             end)
             callback(false)
             return
           end
-          self._session_id = new_session_id
-          session.last_session_id = new_session_id
+          self._session_id = create_result.session_id
+          session.last_session_id = create_result.session_id
           callback(true)
         end)
       end)
@@ -245,17 +245,17 @@ function M:__ensure_client__(cwd, opts, callback)
     end
 
     -- No existing session to load, create new one
-    self._client:create_session(cwd, nil, function(session_id, session_err)
-      if session_err or not session_id then
+    self._client:create_session(cwd, nil):finally(function(create_ok, create_result)
+      if not create_ok or create_result.err or not create_result.session_id then
         vim.schedule(function()
-          opts.on_error("Failed to create ACP session: " .. (session_err and session_err.message or "unknown"))
+          opts.on_error("Failed to create ACP session: " .. ((create_result.err and create_result.err.message) or "unknown"))
         end)
         callback(false)
         return
       end
-      self._session_id = session_id
+      self._session_id = create_result.session_id
       if session then
-        session.last_session_id = session_id
+        session.last_session_id = create_result.session_id
       end
       callback(true)
     end)

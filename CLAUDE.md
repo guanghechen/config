@@ -101,6 +101,14 @@ local config = create_config({
 ---@field protected _internal           integer
 ```
 
+**Optional Types (prefix `?` syntax):**
+
+```lua
+---@param token                         ?stl.c.CancellationToken
+---@field public value                  ?string
+---@return ?integer
+```
+
 ### Error Reporting
 
 ```lua

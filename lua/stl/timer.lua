@@ -27,7 +27,7 @@ local function create_guard(timer)
   return guard
 end
 
----@param timer                         uv.uv_timer_t|nil
+---@param timer                         ?uv.uv_timer_t
 ---@return nil
 function M.clear_timer(timer)
   if timer ~= nil and not timer:is_closing() then

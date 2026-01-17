@@ -1334,7 +1334,7 @@ command
   .implement({
     uuid = K.toggle.minimap_local.uuid,
     action = function()
-      era.m.minimap.toggle_local()
+      era.m.minimap.toggle_local(vim.api.nvim_get_current_win())
     end,
   })
   .implement({

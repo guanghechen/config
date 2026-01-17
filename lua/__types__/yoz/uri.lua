@@ -7,7 +7,7 @@ local M = {}
 ---@class yoz.uri.UriParts
 ---@field public protocol               string
 ---@field public path                   string
----@field public hash                   string|nil
+---@field public hash                   ?string
 
 ---@param uri                           string
 ---@return string|nil
@@ -15,7 +15,7 @@ function M.basename(uri) end
 
 ---@param protocol                      string
 ---@param path                          string
----@param hash                          string|nil
+---@param hash                          ?string
 ---@return string
 function M.build(protocol, path, hash) end
 
@@ -78,7 +78,7 @@ function M.relative(from_uri, to_uri) end
 function M.split(path) end
 
 ---@param uri                           string
----@param keep_trailing_slash           boolean|nil
+---@param keep_trailing_slash           ?boolean
 ---@return string|nil
 function M.to_filepath(uri, keep_trailing_slash) end
 

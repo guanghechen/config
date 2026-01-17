@@ -18,13 +18,13 @@ local config = {
 }
 
 ---@class era.m.dim.IScope
----@field public buf                    integer
+---@field public bufnr                  integer
 ---@field public from                   integer
 ---@field public to                     integer
 
 ---@class era.m.dim.IListener
 ---@field public scopes                 table<integer, era.m.dim.IScope>
----@field public scopes_anim            table<integer, { from: integer, to: integer, buf: integer }>
+---@field public scopes_anim            table<integer, { from: integer, to: integer, bufnr: integer }>
 ---@field public timer                  uv.uv_timer_t|nil
 
 local ns = vim.api.nvim_create_namespace(__module_name__)
@@ -68,7 +68,7 @@ local function get_scope(winnr)
   end
 
   if scope and scope.body then
-    return { buf = bufnr, from = scope.body.top, to = scope.body.bottom }
+    return { bufnr = bufnr, from = scope.body.top, to = scope.body.bottom }
   end
   return nil
 end
@@ -124,7 +124,7 @@ local function check_scope(winnr)
   end
 
   local prev = listener.scopes[winnr]
-  if prev and prev.from == scope.from and prev.to == scope.to and prev.buf == scope.buf then
+  if prev and prev.from == scope.from and prev.to == scope.to and prev.bufnr == scope.bufnr then
     return
   end
 
@@ -136,10 +136,10 @@ local function check_scope(winnr)
   end
 
   local anim = listener.scopes_anim[winnr]
-  if not anim or anim.buf ~= scope.buf then
+  if not anim or anim.bufnr ~= scope.bufnr then
     local top = vim.fn.line("w0", winnr)
     local bot = vim.fn.line("w$", winnr)
-    anim = { from = top, to = bot, buf = scope.buf }
+    anim = { from = top, to = bot, bufnr = scope.bufnr }
     listener.scopes_anim[winnr] = anim
   end
 

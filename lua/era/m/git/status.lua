@@ -122,8 +122,8 @@ local function ensure_status_bit(code)
   return bitflag
 end
 
----@param status                     string|nil
----@param other                      string|nil
+---@param status                     ?string
+---@param other                      ?string
 ---@return string|nil
 function M.merge_priority_status(status, other)
   if status == nil or status == "" then
@@ -164,7 +164,7 @@ function M.combine_stage(existing, incoming)
 end
 
 ---@param stage_state                era.m.git.StageState
----@param codes                      table<string, boolean>|nil
+---@param codes                      ?table<string, boolean>
 ---@return table<string, boolean>
 function M.collect_entry_categories(stage_state, codes)
   local categories = {} ---@type table<string, boolean>
@@ -194,8 +194,8 @@ function M.collect_entry_categories(stage_state, codes)
   return categories
 end
 
----@param bits                       integer|nil
----@param codes                      table<string, boolean>|nil
+---@param bits                       ?integer
+---@param codes                      ?table<string, boolean>
 ---@return string
 local function collect_display_from_bits(bits, codes)
   local chars = {} ---@type string[]
@@ -236,7 +236,7 @@ local function collect_display_from_bits(bits, codes)
   return table.concat(chars)
 end
 
----@param codes                      table<string, boolean>|nil
+---@param codes                      ?table<string, boolean>
 ---@return string
 function M.codes_to_display(codes)
   if type(codes) ~= "table" then
@@ -322,7 +322,7 @@ end
 
 ---@param entry                      era.m.git.StatusEntry
 ---@param stage_key                  "staged"|"unstaged"
----@param status                     string|nil
+---@param status                     ?string
 local function apply_status_code(entry, stage_key, status)
   if type(status) ~= "string" or #status < 1 then
     return
@@ -397,61 +397,44 @@ local function finalize_entry(entry)
   entry.categories = M.collect_entry_categories(entry.stage, entry.codes)
 end
 
----@param opts                       era.m.git.status.ICollectOpts|nil
----@param callback                   fun(status_map: table<string, era.m.git.StatusEntry>, status_groups: table<string, table<string, boolean>>): nil
----@return fun(): nil                cancel_fn
-function M.collect_async(opts, callback)
+---@param opts                       ?era.m.git.status.ICollectOpts
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with { status_map: table, status_groups: table }
+function M.collect(opts, token)
   local workspace = dot.path.workspace()
   if not dot.path.is_git_repo() then
-    callback({}, create_status_groups())
-    return function() end
+    return stl.c.Future.resolve({ status_map = {}, status_groups = create_status_groups() })
   end
 
   local base = (opts and opts.base) or "HEAD"
   local include_untracked = opts == nil or opts.include_untracked ~= false
 
-  local status_map = {} ---@type table<string, era.m.git.StatusEntry>
-  local status_groups = create_status_groups()
+  return stl.c.Future.new(function(resolve)
+    if token and token:is_cancelled() then
+      resolve({ status_map = {}, status_groups = create_status_groups() })
+      return
+    end
 
-  local pending = include_untracked and 3 or 2 ---@type integer
-  local cancelled = false ---@type boolean
-  local cancel_fns = {} ---@type (fun(): nil)[]
+    stl.async.run(function()
+      local status_map = {} ---@type table<string, era.m.git.StatusEntry>
+      local status_groups = create_status_groups()
 
-  local function finalize_all()
-    if not cancelled then
-      for _, entry in pairs(status_map) do
-        finalize_entry(entry)
-        local categories = entry.categories
-        if type(categories) == "table" then
-          for category, enabled in pairs(categories) do
-            if enabled then
-              local bucket = status_groups[category]
-              if bucket == nil then
-                bucket = {}
-                status_groups[category] = bucket
-              end
-              bucket[entry.path] = true
-            end
-          end
-        end
+      ---@type stl.c.Future[]
+      local futures = {
+        stl.git.exec.exec({ "diff", "--staged", "--name-status", base, "--" }, { cwd = workspace }, token),
+        stl.git.exec.exec({ "diff", "--name-status" }, { cwd = workspace }, token),
+      }
+
+      if include_untracked then
+        futures[3] = stl.git.exec.exec({ "ls-files", "--exclude-standard", "--others" }, { cwd = workspace }, token)
       end
-      callback(status_map, status_groups)
-    end
-  end
 
-  local function maybe_finalize()
-    pending = pending - 1
-    if pending == 0 then
-      finalize_all()
-    end
-  end
+      local results = stl.c.Future.all(futures):await()
 
-  local cancel_fn1 = stl.git.exec.exec_async(
-    { "diff", "--staged", "--name-status", base, "--" },
-    { cwd = workspace },
-    function(lines, code)
-      if not cancelled and code == 0 then
-        for _, line in ipairs(lines) do
+      -- Process staged changes (diff --staged)
+      local staged_result = results[1] ---@type { lines: string[], code: integer }|nil
+      if staged_result and staged_result.lines then
+        for _, line in ipairs(staged_result.lines) do
           local status, relative = parse_name_status_line(line)
           if status ~= nil and relative ~= nil then
             local absolute = dot.path.normalize(dot.path.join(workspace, relative))
@@ -460,33 +443,25 @@ function M.collect_async(opts, callback)
           end
         end
       end
-      maybe_finalize()
-    end
-  )
-  cancel_fns[#cancel_fns + 1] = cancel_fn1
 
-  local cancel_fn2 = stl.git.exec.exec_async({ "diff", "--name-status" }, { cwd = workspace }, function(lines, code)
-    if not cancelled and code == 0 then
-      for _, line in ipairs(lines) do
-        local status, relative = parse_name_status_line(line)
-        if status ~= nil and relative ~= nil then
-          local absolute = dot.path.normalize(dot.path.join(workspace, relative))
-          local entry = ensure_entry(status_map, absolute, relative)
-          apply_status_code(entry, "unstaged", status)
+      -- Process unstaged changes (diff)
+      local unstaged_result = results[2] ---@type { lines: string[], code: integer }|nil
+      if unstaged_result and unstaged_result.lines then
+        for _, line in ipairs(unstaged_result.lines) do
+          local status, relative = parse_name_status_line(line)
+          if status ~= nil and relative ~= nil then
+            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+            local entry = ensure_entry(status_map, absolute, relative)
+            apply_status_code(entry, "unstaged", status)
+          end
         end
       end
-    end
-    maybe_finalize()
-  end)
-  cancel_fns[#cancel_fns + 1] = cancel_fn2
 
-  if include_untracked then
-    local cancel_fn3 = stl.git.exec.exec_async(
-      { "ls-files", "--exclude-standard", "--others" },
-      { cwd = workspace },
-      function(lines, code)
-        if not cancelled and code == 0 then
-          for _, line in ipairs(lines) do
+      -- Process untracked files (ls-files)
+      if include_untracked then
+        local untracked_result = results[3] ---@type { lines: string[], code: integer }|nil
+        if untracked_result and untracked_result.lines then
+          for _, line in ipairs(untracked_result.lines) do
             if type(line) == "string" and #line > 0 then
               local relative = line:gsub('^"', ""):gsub('"$', "")
               relative = stl.string.octal_to_utf8(relative)
@@ -503,25 +478,36 @@ function M.collect_async(opts, callback)
             end
           end
         end
-        maybe_finalize()
       end
-    )
-    cancel_fns[#cancel_fns + 1] = cancel_fn3
-  end
 
-  return function()
-    cancelled = true
-    for _, cancel_fn in ipairs(cancel_fns) do
-      cancel_fn()
-    end
-  end
+      -- Finalize all entries
+      for _, entry in pairs(status_map) do
+        finalize_entry(entry)
+        local categories = entry.categories
+        if type(categories) == "table" then
+          for category, enabled in pairs(categories) do
+            if enabled then
+              local bucket = status_groups[category]
+              if bucket == nil then
+                bucket = {}
+                status_groups[category] = bucket
+              end
+              bucket[entry.path] = true
+            end
+          end
+        end
+      end
+
+      resolve({ status_map = status_map, status_groups = status_groups })
+    end)
+  end)
 end
 
 ---@param stage_state                era.m.git.StageState
----@param codes                      table<string, boolean>|nil
----@param summary                    string|nil
----@param display                    string|nil
----@param categories                 table<string, boolean>|nil
+---@param codes                      ?table<string, boolean>
+---@param summary                    ?string
+---@param display                    ?string
+---@param categories                 ?table<string, boolean>
 ---@return string|nil
 function M.resolve_highlight(stage_state, codes, summary, display, categories)
   local resolved = categories ---@type table<string, boolean>|nil
@@ -571,7 +557,7 @@ function M.resolve_highlight(stage_state, codes, summary, display, categories)
 end
 
 ---@param filepath                   string
----@param filetype                   "file"|"directory"|nil
+---@param filetype                   ?"file"|"directory"
 ---@return string|nil
 ---@return string|nil
 function M.resolve(filepath, filetype)
@@ -606,7 +592,7 @@ function M.resolve(filepath, filetype)
 end
 
 ---@param filepath                   string
----@param filetype                   "file"|"directory"|nil
+---@param filetype                   ?"file"|"directory"
 ---@param offset                     integer
 ---@param highlights                 stl.t.IHighlightInline[]
 ---@return string
