@@ -114,7 +114,7 @@ function M.history_show(task)
 
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.BOARD)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.BOARD
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })

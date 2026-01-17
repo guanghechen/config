@@ -528,7 +528,7 @@ function M:__create_win_as_needed__(termmeta)
   if winnr == nil or not vim.api.nvim_win_is_valid(winnr) then
     local bufnr_mask = create_mask_buf_as_needed() ---@type integer
     winnr = vim.api.nvim_open_win(bufnr_mask, true, wincfg)
-    dot.win.set_type(winnr, stl.nvim.win.Types.TERMINAL)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.TERMINAL
     vim.api.nvim_win_set_buf(winnr, bufnr)
 
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })

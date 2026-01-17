@@ -535,7 +535,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_RESULT)
+  vim.w[winnr].wintype = stl.nvim.win.TypeEnum.PICKER_RESULT
 
   local lnum_total = self.lnum_total:snapshot() ---@type integer
   vim.api.nvim_set_option_value("cursorline", lnum_total > 0, { win = winnr, scope = "local" })

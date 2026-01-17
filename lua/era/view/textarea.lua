@@ -242,7 +242,7 @@ function M:open(params)
     })
     self._winnr = winnr
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.TEXTAREA)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.TEXTAREA
     vim.api.nvim_win_set_cursor(winnr, { text_cursor_row, text_cursor_col })
   end
 

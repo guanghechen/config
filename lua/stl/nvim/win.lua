@@ -17,8 +17,8 @@
 ---| "ux:winpicker"
 ---| "ux:winsep"
 
----@class stl.nvim.win.Types
-local Types = {
+---@class stl.nvim.win.TypeEnumClass
+local TypeEnum = {
   -- stylua: ignore start
   BOARD             = "ux:board",
   CMDLINE           = "ux:cmdline",
@@ -43,7 +43,7 @@ local Types = {
 ---@class stl.nvim.win
 local M = {}
 
-M.Types = vim.deepcopy(Types)
+M.TypeEnum = vim.deepcopy(TypeEnum)
 
 ---@param winnr                         ?integer
 ---@return nil

@@ -163,7 +163,7 @@ end
 ---@return nil
 function M.mark_sourcefile()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  dot.win.set_type(winnr, nil)
+  vim.w[winnr].wintype = nil
 
   vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })

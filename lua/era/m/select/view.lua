@@ -161,7 +161,7 @@ function M.open(props)
     zindex = zindex,
   }) ---@type integer
 
-  dot.win.set_type(winnr, stl.nvim.win.Types.SELECT)
+  vim.w[winnr].wintype = stl.nvim.win.TypeEnum.SELECT
   vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
   vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })

@@ -524,7 +524,7 @@ function M:__create_win_as_needed__()
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", EXPLORER_WIN_HIGHLIGHT, { win = winnr, scope = "local" })
 
-  dot.win.set_type(winnr, stl.nvim.win.Types.EXPLORER)
+  vim.w[winnr].wintype = stl.nvim.win.TypeEnum.EXPLORER
 
   self:__update_winbar__(tabnr)
 

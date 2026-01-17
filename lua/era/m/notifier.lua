@@ -509,7 +509,7 @@ function M.__create_win_as_needed__(win)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg) ---@type integer
     win.winnr = winnr
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.NOTIFY)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.NOTIFY
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("conceallevel", 0, { win = winnr, scope = "local" })
@@ -738,8 +738,8 @@ vim.api.nvim_create_autocmd("WinEnter", {
   group = stl.nvim.fn.augroup("era.notifier_on_WinEnter"),
   callback = function()
     local winnr = vim.api.nvim_get_current_win() ---@type integer
-    local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
-    if meta ~= nil and meta.wintype == stl.nvim.win.Types.NOTIFY then
+    local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+    if wintype == stl.nvim.win.TypeEnum.NOTIFY then
       for _, win in ipairs(__WINS__) do
         if win.winnr == winnr then
           win.tick = win.tick + 1

@@ -1,8 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "dot.win" ---@type string
 
-local vim_win = require("stl.nvim.win")
-
 ---@class dot.win.IFilepathHistoryItem
 ---@field public bufnr                  ?integer
 ---@field public filepath               ?string
@@ -17,24 +15,23 @@ local vim_win = require("stl.nvim.win")
 ---@class dot.win.IMeta
 ---@field public history                ?stl.c.History
 ---@field public winline                ?dot.win.IWinline
----@field public wintype                ?stl.nvim.win.TypeEnum
 
 local wintype_attrs = {
   focusable = {
-    [vim_win.Types.BOARD] = true,
-    [vim_win.Types.EXPLORER] = true,
-    [vim_win.Types.INPUT] = true,
-    [vim_win.Types.NOTIFY] = true,
-    [vim_win.Types.PICKER_FINDER] = true,
-    [vim_win.Types.PICKER_PREVIEW] = true,
-    [vim_win.Types.PICKER_RESULT] = true,
-    [vim_win.Types.POPUPMENU] = true,
-    [vim_win.Types.SEARCHER_FINDER] = true,
-    [vim_win.Types.SEARCHER_PREVIEW] = true,
-    [vim_win.Types.SEARCHER_RESULT] = true,
-    [vim_win.Types.SELECT] = true,
-    [vim_win.Types.TERMINAL] = true,
-    [vim_win.Types.TEXTAREA] = true,
+    [stl.nvim.win.TypeEnum.BOARD] = true,
+    [stl.nvim.win.TypeEnum.EXPLORER] = true,
+    [stl.nvim.win.TypeEnum.INPUT] = true,
+    [stl.nvim.win.TypeEnum.NOTIFY] = true,
+    [stl.nvim.win.TypeEnum.PICKER_FINDER] = true,
+    [stl.nvim.win.TypeEnum.PICKER_PREVIEW] = true,
+    [stl.nvim.win.TypeEnum.PICKER_RESULT] = true,
+    [stl.nvim.win.TypeEnum.POPUPMENU] = true,
+    [stl.nvim.win.TypeEnum.SEARCHER_FINDER] = true,
+    [stl.nvim.win.TypeEnum.SEARCHER_PREVIEW] = true,
+    [stl.nvim.win.TypeEnum.SEARCHER_RESULT] = true,
+    [stl.nvim.win.TypeEnum.SELECT] = true,
+    [stl.nvim.win.TypeEnum.TERMINAL] = true,
+    [stl.nvim.win.TypeEnum.TEXTAREA] = true,
   },
   projectable = {},
   sourcefile = {},
@@ -102,7 +99,7 @@ function M.find_fixed_by_filetype(tabnr, filetype)
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     local c_filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-    if filetype == c_filetype and vim_win.is_fixed(winnr) then
+    if filetype == c_filetype and stl.nvim.win.is_fixed(winnr) then
       return winnr
     end
   end
@@ -116,7 +113,7 @@ function M.find_floating_by_filetype(tabnr, filetype)
   local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in pairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype and vim_win.is_float(winnr) then
+    if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype and stl.nvim.win.is_float(winnr) then
       return winnr
     end
   end
@@ -143,13 +140,13 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_focusable(winnr)
-  local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  if meta == nil then
+  if not stl.nvim.win.is_valid(winnr) then
     return false
   end
 
-  if meta.wintype ~= nil then
-    return wintype_attrs.focusable[meta.wintype] == true
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype ~= nil then
+    return wintype_attrs.focusable[wintype] == true
   end
 
   local config = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
@@ -159,16 +156,16 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_projectable(winnr)
-  local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  if meta == nil then
+  if not stl.nvim.win.is_valid(winnr) then
     return false
   end
 
-  if meta.wintype ~= nil then
-    return wintype_attrs.projectable[meta.wintype] == true
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype ~= nil then
+    return wintype_attrs.projectable[wintype] == true
   end
 
-  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or vim_win.is_float(winnr) then
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or stl.nvim.win.is_float(winnr) then
     return false
   end
 
@@ -178,16 +175,16 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_sourcefile(winnr)
-  local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  if meta == nil then
+  if not stl.nvim.win.is_valid(winnr) then
     return false
   end
 
-  if meta.wintype ~= nil then
-    return wintype_attrs.sourcefile[meta.wintype] == true
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype ~= nil then
+    return wintype_attrs.sourcefile[wintype] == true
   end
 
-  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or vim_win.is_float(winnr) then
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) or stl.nvim.win.is_float(winnr) then
     return false
   end
 
@@ -197,16 +194,16 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_swappable(winnr)
-  local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  if meta == nil then
+  if not stl.nvim.win.is_valid(winnr) then
     return false
   end
 
-  if meta.wintype ~= nil then
-    return wintype_attrs.swappable[meta.wintype] == true
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype ~= nil then
+    return wintype_attrs.swappable[wintype] == true
   end
 
-  if vim_win.is_float(winnr) then
+  if stl.nvim.win.is_float(winnr) then
     return false
   end
 
@@ -219,9 +216,8 @@ function M.resolve_zindex(winnr)
   winnr = winnr or vim.api.nvim_get_current_win() ---@type integer
   local wincfg = vim.api.nvim_win_get_config(winnr) ---@type vim.api.keyset.win_config
   local base_zindex = wincfg.zindex or 50 ---@type integer
-  local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-  local wintype = meta and meta.wintype or nil ---@type stl.nvim.win.TypeEnum|nil
-  if wintype == vim_win.Types.CMDLINE or wintype == vim_win.Types.NOTIFY then
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype == stl.nvim.win.TypeEnum.CMDLINE or wintype == stl.nvim.win.TypeEnum.NOTIFY then
     return base_zindex - 1
   end
   return base_zindex + 1
@@ -244,7 +240,7 @@ end
 ---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_sourcefile(winnr_candidate)
-  if winnr_candidate ~= nil and vim_win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
+  if winnr_candidate ~= nil and stl.nvim.win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
   return era.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
@@ -279,8 +275,9 @@ function M.fork(winnr_source, winnr_target)
   local meta_target = meta_map[winnr_target] or {} ---@type dot.win.IMeta
   meta_map[winnr_target] = meta_target
 
-  if meta_source.wintype ~= nil then
-    M.set_type(winnr_target, meta_source.wintype)
+  local wintype_source = vim.w[winnr_source].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype_source ~= nil then
+    vim.w[winnr_target].wintype = wintype_source
   end
 
   if meta_source.history ~= nil then
@@ -310,8 +307,8 @@ function M.resolve(winnr, force)
   meta = meta or {} ---@type dot.win.IMeta
   meta_map[winnr] = meta
 
-  meta.wintype = vim.w[winnr].eve_type ---@type stl.nvim.win.TypeEnum|nil
-  if meta.wintype ~= nil or vim_win.is_float(winnr) then
+  local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+  if wintype ~= nil or stl.nvim.win.is_float(winnr) then
     return meta
   end
 
@@ -327,19 +324,6 @@ function M.resolve(winnr, force)
     })
   end
   return meta
-end
-
----@param winnr                         integer
----@param wintype                       ?stl.nvim.win.TypeEnum
----@return nil
-function M.set_type(winnr, wintype)
-  vim.w[winnr].eve_type = wintype
-  vim.schedule(function()
-    local meta = M.resolve(winnr, false) ---@type dot.win.IMeta|nil
-    if meta ~= nil then
-      meta.wintype = wintype
-    end
-  end)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -366,7 +350,7 @@ function M.locate_symbols(winnr, token)
       return
     end
 
-    if winnr == nil or not vim_win.is_valid(winnr) then
+    if winnr == nil or not stl.nvim.win.is_valid(winnr) then
       do_resolve(false, nil)
       return
     end

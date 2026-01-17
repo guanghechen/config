@@ -241,7 +241,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  dot.win.set_type(winnr, stl.nvim.win.Types.PICKER_PREVIEW)
+  vim.w[winnr].wintype = stl.nvim.win.TypeEnum.PICKER_PREVIEW
   vim.api.nvim_set_option_value(
     "listchars",
     string.format(

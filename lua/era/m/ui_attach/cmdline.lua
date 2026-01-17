@@ -250,7 +250,7 @@ function M._show(state)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.CMDLINE
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
@@ -385,7 +385,7 @@ function M._render_block(block)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     block.winnr = winnr
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.CMDLINE
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
@@ -552,7 +552,7 @@ function M._show_confirm(state, msg_show_task)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    dot.win.set_type(winnr, stl.nvim.win.Types.CMDLINE)
+    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.CMDLINE
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
