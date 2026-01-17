@@ -81,6 +81,52 @@ Each prompt has a `render(ctx)` function that returns:
 **Preview Highlighting:**
 - Header lines (up to `header_end`) are highlighted with `f_us_ai_prompt_header`
 
+#### Variable Substitution
+
+Prompts support a simple variable substitution system for dynamic content.
+
+**Variable Naming:**
+- Pattern: `__[A-Z_]+__` (e.g., `__FILE_PATH__`, `__SELECTION_TEXT__`)
+
+**Variable Assignment:**
+- Must be on its own line
+- Syntax: `<VAR_NAME>=<value>` or `<VAR_NAME>="<value with spaces>"`
+- Examples:
+  ```
+  __FILE_PATH__=src/main.lua
+  __SELECTION_TEXT__="function hello() end"
+  ```
+
+**Variable Reference:**
+- Syntax: `${<VAR_NAME>}` (e.g., `${__FILE_PATH__}`, `${__SELECTION_TEXT__}`)
+- If the variable is not defined, the reference is kept as-is (no substitution)
+
+**Rendering Behavior:**
+1. Parse and collect all variable assignments
+2. Remove assignment lines from output
+3. Replace all `${__VAR__}` references with their values
+4. Trim leading/trailing whitespace from the final result
+
+#### Slash Command Transformation
+
+Different AI agents have different slash command formats. When sending prompts, slash commands are automatically transformed based on the target agent:
+
+| Agent    | Format                          | Example                         |
+|:---------|:--------------------------------|:--------------------------------|
+| claude   | `/command` (unchanged)          | `/commit` → `/commit`           |
+| copilot  | `/command` (unchanged)          | `/fix` → `/fix`                 |
+| gemini   | `/command` (unchanged)          | `/chat` → `/chat`               |
+| opencode | `/command` (unchanged)          | `/init` → `/init`               |
+| codex    | `/prompts:command`              | `/commit` → `/prompts:commit`   |
+
+**Builtin Commands:**
+
+Each agent has builtin slash commands that are never transformed (preserved as-is). For example, codex's `/help`, `/model`, `/clear` remain unchanged even though other commands would be transformed to `/prompts:*` format.
+
+**Slash Command Detection:**
+- Must be preceded by whitespace, newline, or at start of string
+- Must NOT be followed by `/` (to avoid matching paths like `/usr/local/bin`)
+
 ### 4. Notifications
 
 - Success/failure feedback for all message sends

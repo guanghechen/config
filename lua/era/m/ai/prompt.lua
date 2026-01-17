@@ -2,8 +2,8 @@
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public cwd                    string
----@field public filepath               string|nil
----@field public filetype               string|nil
+---@field public filepath               ?string
+---@field public filetype               ?string
 ---@field public selection_range        ?{ start_lnum: integer, start_col: integer, end_lnum: integer, end_col: integer }
 
 ---@class era.m.ai.prompt
@@ -277,109 +277,121 @@ local function get_diagnostics_all_lines(ctx)
 end
 
 ----------------------------------------------------------------------------------------------------
---- Prompts
+--- Variable Providers
 ----------------------------------------------------------------------------------------------------
 
----@type era.m.ai.IPrompt[]
-M.list = {
-  {
-    name = "diagnostics",
-    submit = true,
-    render = function(ctx)
-      local file_line, file_text = get_file_line(ctx)
-      local diag_lines, diag_text = get_diagnostics_lines(ctx)
-      if not file_line or not diag_lines then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Fix the diagnostics in ", "m_ai_prompt_header" } }, file_line)
-      table.insert(lines[#lines], { ":", "m_ai_prompt_header" })
-      vim.list_extend(lines, diag_lines)
-      return { text = "Fix the diagnostics in " .. file_text .. ":\n" .. diag_text, lines = lines }
-    end,
-  },
-  {
-    name = "diagnostics_all",
-    submit = true,
-    render = function(ctx)
-      local diag_lines, diag_text = get_diagnostics_all_lines(ctx)
-      if not diag_lines then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = { { "Fix these diagnostics:", "m_ai_prompt_header" } }
-      vim.list_extend(lines, diag_lines)
-      return { text = "Fix these diagnostics:\n" .. diag_text, lines = lines }
-    end,
-  },
-  {
-    name = "fix",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Fix this code: ", "m_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Fix this code: " .. target_text, lines = lines }
-    end,
-  },
-  {
-    name = "optimize",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Optimize this code: ", "m_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Optimize this code: " .. target_text, lines = lines }
-    end,
-  },
-  {
-    name = "refactor",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Refactor this code: ", "m_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Refactor this code: " .. target_text, lines = lines }
-    end,
-  },
-  {
-    name = "review",
-    submit = true,
-    render = function(ctx)
-      local target_line, target_text = get_target_line(ctx)
-      if not target_line then
-        return nil
-      end
-      local lines = {} ---@type era.m.ai.IText
-      lines[#lines + 1] = vim.list_extend({ { "Review this code: ", "m_ai_prompt_header" } }, target_line)
-      local content_lines = get_selection_content(ctx)
-      if content_lines then
-        vim.list_extend(lines, content_lines)
-      end
-      return { text = "Review this code: " .. target_text, lines = lines }
-    end,
-  },
+---@alias era.m.ai.prompt.IVarProvider fun(ctx: era.m.ai.prompt.ICtx): string|nil, era.m.ai.IText|nil
+
+---@type table<string, era.m.ai.prompt.IVarProvider>
+local VAR_PROVIDERS = {
+  __FILE__ = function(ctx)
+    local _, text = get_file_line(ctx)
+    return text, nil
+  end,
+  __TARGET__ = function(ctx)
+    local line, text = get_target_line(ctx)
+    return text, line and { line } or nil
+  end,
+  __CONTENT__ = function(ctx)
+    local lines, text = get_selection_content(ctx)
+    return text, lines
+  end,
+  __DIAGNOSTICS__ = function(ctx)
+    local lines, text = get_diagnostics_lines(ctx)
+    return text, lines
+  end,
+  __DIAGNOSTICS_ALL__ = function(ctx)
+    local lines, text = get_diagnostics_all_lines(ctx)
+    return text, lines
+  end,
 }
+
+---Build template context from prompt context.
+---@param ctx                           era.m.ai.prompt.ICtx
+---@return stl.prompt.ITemplateCtx
+local function build_template_ctx(ctx)
+  local _, diagnostics_text = get_diagnostics_lines(ctx)
+  local _, diagnostics_all_text = get_diagnostics_all_lines(ctx)
+  return {
+    has_selection = ctx.selection_range ~= nil,
+    has_file = ctx.filepath ~= nil,
+    has_diagnostics = diagnostics_text ~= nil,
+    has_diagnostics_all = diagnostics_all_text ~= nil,
+  }
+end
+
+----------------------------------------------------------------------------------------------------
+--- Prompt Rendering
+----------------------------------------------------------------------------------------------------
+
+---Build the prompt list from templates.
+---@return era.m.ai.IPrompt[]
+function M.build_list()
+  local list = {} ---@type era.m.ai.IPrompt[]
+
+  for _, template in ipairs(stl.prompt.templates) do
+    list[#list + 1] = {
+      name = template.name,
+      submit = template.submit,
+      render = function(ctx)
+        return M.render_template(template, ctx)
+      end,
+    }
+  end
+
+  return list
+end
+
+---Render a template with context.
+---@param template                      stl.prompt.ITemplate
+---@param ctx                           era.m.ai.prompt.ICtx
+---@return era.m.ai.IPromptRenderResult|nil
+function M.render_template(template, ctx)
+  -- Check conditional first
+  if template.conditional then
+    local template_ctx = build_template_ctx(ctx)
+    if not template.conditional(template_ctx) then
+      return nil
+    end
+  end
+
+  local vars = {} ---@type table<string, string>
+
+  -- Collect all variables used in the template
+  for var_name in template.template:gmatch("%${(__[A-Z_]+__)}") do
+    if not vars[var_name] then
+      local provider = VAR_PROVIDERS[var_name]
+      if provider then
+        local text, _ = provider(ctx)
+        if text == nil then
+          return nil -- Required variable not available
+        end
+        vars[var_name] = text
+      end
+    end
+  end
+
+  -- Substitute variables directly in template
+  local text = template.template:gsub("%${(__[A-Z_]+__)}", function(var_name)
+    local value = vars[var_name]
+    if value then
+      return value
+    end
+    return "${" .. var_name .. "}"
+  end)
+
+  text = vim.trim(text)
+
+  -- Build highlighted lines for preview
+  local lines = {} ---@type era.m.ai.IText
+  for output_line in vim.gsplit(text, "\n", { plain = true }) do
+    lines[#lines + 1] = { { output_line, nil } }
+  end
+
+  return { text = text, lines = lines }
+end
+
+---@type era.m.ai.IPrompt[]
+M.list = M.build_list()
 
 return M

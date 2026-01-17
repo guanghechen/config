@@ -173,6 +173,7 @@ local __mods = {
   fn = "stl.fn",
   fs = "stl.fs",
   hot = "stl.hot",
+  prompt = "stl.prompt",
   icon = "stl.icon",
   json = "stl.json",
   reporter = "stl.reporter",
@@ -208,6 +209,7 @@ local __mods = {
 ---@field public hot                    stl.hot
 ---@field public icon                   stl.icon
 ---@field public json                   stl.json
+---@field public prompt                 stl.prompt
 ---@field public reporter               stl.reporter
 ---@field public shell                  stl.shell
 ---@field public stdout                 stl.stdout

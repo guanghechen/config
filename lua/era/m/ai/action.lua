@@ -467,7 +467,9 @@ function M.__send_to_sources__(sources, text, submit)
 
   for _, source in ipairs(sources) do
     local agent_label = S.config.agent_labels[source.agent] or source.agent
-    local ok = M.send_to_source(source, text, submit)
+    -- Render text for this specific agent (variable substitution + slash command transform)
+    local rendered = stl.prompt.render(text, source.agent)
+    local ok = M.send_to_source(source, rendered, submit)
     if ok then
       succeeded[#succeeded + 1] = agent_label
     else
