@@ -4,8 +4,12 @@ local M = {}
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
 local position = "f_tl" ---@type stl.e.NvimbarPositionEnum
 
-local tabline ---@type era.m.nvimbar.Nvimbar
-tabline = era.m.nvimbar.Nvimbar.new({
+----------------------------------------------------------------------------------------------------
+-- Default nvimbar
+----------------------------------------------------------------------------------------------------
+
+local normal_tabline ---@type era.m.nvimbar.Nvimbar
+normal_tabline = era.m.nvimbar.Nvimbar.new({
   name = "tabline",
   comp_sep = "",
   comp_sep_hlname = position .. "_bg",
@@ -20,11 +24,11 @@ tabline = era.m.nvimbar.Nvimbar.new({
   end,
   is_active = stl.fn.falsy,
   on_fulfilled = function()
-    vim.o.tabline = tabline:snapshot()
+    if vim.t.tabtype == nil or vim.t.tabtype == stl.nvim.tab.TypeEnum.NORMAL then
+      vim.o.tabline = normal_tabline:snapshot()
+    end
   end,
 })
-
-tabline
   :place("left", era.m.nvimbar.component.explorer.tabline(position), 95)
   :place(
     "left",
@@ -56,6 +60,47 @@ tabline
 --
 -- :place("right", era.m.nvimbar.component.cwd.cwd(position), 100)
 
+----------------------------------------------------------------------------------------------------
+-- Nvimbar registry
+----------------------------------------------------------------------------------------------------
+
+---@type table<stl.nvim.tab.TypeEnum, era.m.nvimbar.Nvimbar|fun(): era.m.nvimbar.Nvimbar>
+local tabline_nvimbar_map = {
+  [stl.nvim.tab.TypeEnum.NORMAL] = normal_tabline,
+}
+
+---Register a nvimbar factory for a specific tabtype (idempotent).
+---The factory is called lazily on first render.
+---@param tabtype                        stl.nvim.tab.TypeEnum
+---@param factory                        fun(): era.m.nvimbar.Nvimbar
+---@return nil
+function M.register(tabtype, factory)
+  if tabline_nvimbar_map[tabtype] then
+    return
+  end
+  tabline_nvimbar_map[tabtype] = factory
+end
+
+---Resolve nvimbar for a specific tabtype (lazily creates from factory).
+---@param tabtype                        stl.nvim.tab.TypeEnum
+---@return era.m.nvimbar.Nvimbar
+local function resolve_nvimbar(tabtype)
+  local entry = tabline_nvimbar_map[tabtype]
+  if entry == nil then
+    return normal_tabline
+  end
+  if type(entry) == "function" then
+    local nvimbar = entry() ---@type era.m.nvimbar.Nvimbar
+    tabline_nvimbar_map[tabtype] = nvimbar
+    return nvimbar
+  end
+  return entry
+end
+
+----------------------------------------------------------------------------------------------------
+-- Helpers
+----------------------------------------------------------------------------------------------------
+
 ---@return boolean
 local function should_show_tabline()
   local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
@@ -81,6 +126,10 @@ local function is_explorer_visible_in_current_tab()
   return era.widget.explorer.widget:has_win_in_tab()
 end
 
+----------------------------------------------------------------------------------------------------
+-- Dressing
+----------------------------------------------------------------------------------------------------
+
 ---@return nil
 function M.dressing()
   local last_showtabline = 0 ---@type integer
@@ -96,7 +145,11 @@ function M.dressing()
         end
 
         last_showtabline = 2
-        tabline:render()
+
+        -- Get nvimbar for current tabtype and render
+        local tabtype = vim.t.tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
+        local nvimbar = resolve_nvimbar(tabtype)
+        nvimbar:render()
       else
         vim.o.showtabline = 0
 
