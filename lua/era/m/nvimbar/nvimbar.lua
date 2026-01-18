@@ -144,13 +144,11 @@ function M.new(props)
 
       callback(true, result)
 
-      --- Trigger rerender need called after the callback executed,
-      --- so we can get the latest value from the :snapshot()
-      if last_result ~= result then
-        vim.schedule(function()
-          on_fulfilled(result)
-        end)
-      end
+      --- Always trigger on_fulfilled to update vim.o.tabline/statusline,
+      --- because they are global and may have been modified by another nvimbar.
+      vim.schedule(function()
+        on_fulfilled(result)
+      end)
     end,
   })
 
