@@ -250,6 +250,38 @@ end
 
 ---@param position                      stl.e.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
+function M.tabtype(position)
+  local hln_text = "mf_b_bg0" ---@type string
+  local hln_sep = "ms_b_bg2" ---@type string
+
+  local last_tabtype = "" ---@type string
+
+  ---@type era.m.nvimbar.IRawComponent
+  local component = {
+    name = "nvim:tabtype",
+    atomic = true,
+    tight = false,
+    will_change = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local tabtype = vim.t[tabnr].tabtype or "nil" ---@type string
+      local changed = last_tabtype ~= tabtype ---@type boolean
+      last_tabtype = tabtype
+      return changed
+    end,
+    render = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local tabtype = vim.t[tabnr].tabtype or "nil" ---@type string
+      local content = "󰓩 " ..tabtype ---@type string
+      local text = stl.icon.symbols.sep_left .. content .. stl.icon.symbols.sep_right ---@type string
+      local hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) .. txt(stl.icon.symbols.sep_right, hln_sep)  ---@type string
+      return text, hl_text, true
+    end,
+  }
+  return component
+end
+
+---@param position                      stl.e.NvimbarPositionEnum
+---@return era.m.nvimbar.IRawComponent
 function M.tabs(position)
   local hln_toggle = position .. "_nvim_tab_toggle" ---@type string
   local hln_tab_item = position .. "_nvim_tab_item" ---@type string
