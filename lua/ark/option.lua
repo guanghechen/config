@@ -97,7 +97,7 @@ vim.o.syntax = "off"
 -- Scrolling ---------------------------------------------------------------------------------------
 
 vim.o.scrolloff = 4
-vim.o.sidescrolloff = 8
+vim.o.sidescrolloff = 1
 vim.o.smoothscroll = true
 
 -- Folding -----------------------------------------------------------------------------------------
