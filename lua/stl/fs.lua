@@ -155,13 +155,6 @@ function M.copy_directory(dirpath_source, dirpath_target, force)
   return success
 end
 
----@param filepath                      string
----@return nil
-function M.edit_file(filepath)
-  vim.cmd("noswapfile tabnew " .. filepath)
-  vim.api.nvim_set_option_value("backupcopy", "yes", { buf = 0 })
-end
-
 ---@param params                        stl.t.IReadFileParams
 ---@return string|nil
 function M.read_file(params)

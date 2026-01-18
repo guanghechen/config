@@ -832,6 +832,9 @@ function M:open_tab()
 
   local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
+
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
 end
 
 ---@return nil
