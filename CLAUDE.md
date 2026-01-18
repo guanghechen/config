@@ -155,6 +155,19 @@ local __module_name__ = "era.m.colorpicker.mode" ---@type string
 
 Within each category, sort alphabetically.
 
+### Keymap Definition
+
+Always use `stl.t.IKeymap[]` list to define keybindings, bindable via `stl.nvim.fn.bindkeys`. Do not create helper functions to wrap `IKeymap` creation unless there is a very compelling reason.
+
+```lua
+---@type stl.t.IKeymap[]
+local keymaps = {
+  { modes = { "n" }, key = "<CR>", desc = "Select", callback = function() select() end },
+  { modes = { "n" }, key = "q", desc = "Close", callback = function() close() end },
+}
+stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+```
+
 ### Rust Integration
 
 When modifying `rust/yoz/src/`:
