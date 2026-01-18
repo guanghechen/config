@@ -366,6 +366,117 @@ Custom lightweight plugin loader (`era/m/plugin/loader.lua`):
 - Color picker with multiple format support
 - Custom lightweight plugin loader with lazy loading
 
+## Data Flow
+
+### Startup Flow
+
+```
+init.lua
+    │
+    ▼
+ark/bootstrap.lua
+    │
+    ├── Set _G.yoz = require("yoz")
+    ├── Set _G.stl = require("stl")
+    ├── Apply patches (table.unpack, table.clear)
+    ├── Setup shell and clipboard
+    ├── Setup workspace (auto cd to git root)
+    ├── Load ark/option, ark/keymap, ark/autocmd
+    ├── Set _G.dot = require("dot")
+    └── Set _G.era = require("era")
+    │
+    ▼
+ark/vendor/{neovim,neovide,vscode}/init.lua
+    │
+    ├── Load dot autocmds
+    ├── dot.setup_context() (restore persistent state)
+    ├── Load vendor-specific options and keymaps
+    ├── Load dressing (notifier, ui_attach)
+    ├── Load commands
+    ├── Load git module (if in git repo)
+    ├── Load plugins
+    ├── Restore session (if autosave enabled)
+    │
+    └── vim.schedule:
+        ├── Load UI components (statusline, tabline, winline, etc.)
+        ├── Setup breakpoints, diagnostics, LSP
+        └── dot.context.watch_changes()
+```
+
+### State Persistence Flow
+
+```
+User Action (e.g., change theme)
+    │
+    ▼
+Observable.next()
+    │
+    ▼
+Subscriber callbacks
+    │
+    ├── UI updates (statusline, tabline redraw)
+    │
+    └── Ticker.tick()
+            │
+            ▼
+        Scheduler (throttled, 256ms delay)
+            │
+            ▼
+        dot.context.save()
+            │
+            ├── editor storage (theme, behavior)
+            ├── session storage (tab state)
+            └── workspace storage (bookmarks, LSP, etc.)
+```
+
+### Plugin Loading Flow
+
+```
+era.m.plugin.loader.setup(specs)
+    │
+    ▼
+__register_plugins__()
+    │
+    └── Create plugin states, map modules to plugins
+    │
+    ▼
+__install_package_loader__()
+    │
+    └── Insert custom loader in package.loaders
+        (auto-loads plugin on require)
+    │
+    ▼
+__load_plugins__()
+    │
+    └── For each spec:
+        │
+        ├── If lazy: __setup_lazy_loading__()
+        │       │
+        │       ├── event triggers (VeryLazy, BufRead, etc.)
+        │       ├── cmd triggers (user commands)
+        │       ├── ft triggers (FileType autocmd)
+        │       └── keys triggers (keymap handlers)
+        │
+        └── If not lazy: __load_plugin__() immediately
+    │
+    ▼
+__schedule_very_lazy__()
+    │
+    └── Fire User VeryLazy after UIEnter
+```
+
+**Plugin Load Sequence (`__load_plugin__`):**
+
+```
+1. Check cond() and enabled
+2. Load dependencies recursively
+3. Add to runtimepath
+4. Source plugin/ directory (*.lua, *.vim)
+5. Add after/ directory to runtimepath
+6. Call config(spec, opts) or main.setup(opts)
+7. Fire User PluginLoad autocmd
+```
+
 ## Async Patterns
 
 ### Future and CancellationToken
