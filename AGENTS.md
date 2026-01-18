@@ -178,3 +178,4 @@ When modifying `rust/yoz/src/`:
 ## Debug
 
 - `:messages` is not available; use `:Fuxcopynotifications` to copy notification history to clipboard
+- To collect LSP diagnostics in headless mode, follow the instructions in `spec/debug/lsp.md`
