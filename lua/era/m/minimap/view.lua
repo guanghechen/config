@@ -107,12 +107,12 @@ end
 ---@return integer
 local create_bar = util.noautocmd(function(cfg)
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.bo[bufnr].modifiable = false
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].swapfile = false
-  vim.bo[bufnr].bufhidden = "wipe"
-  vim.bo[bufnr].buflisted = false
-  vim.bo[bufnr].undolevels = -1
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr })
+  vim.api.nvim_set_option_value("undolevels", -1, { buf = bufnr })
 
   cfg.noautocmd = true
   local winnr = vim.api.nvim_open_win(bufnr, false, cfg)
@@ -211,9 +211,9 @@ local function render_scrollbar(winnr, bar_winnr, force)
     for i = 1, winheight do
       lines[i] = " "
     end
-    vim.bo[bufnr].modifiable = true
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-    vim.bo[bufnr].modifiable = false
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
     force = true
   end
 
@@ -260,10 +260,10 @@ end
 local function can_attach(winnr)
   local bufnr = vim.api.nvim_win_get_buf(winnr)
 
-  if vim.tbl_contains(EXCLUDED_FILETYPES, vim.bo[bufnr].filetype) then
+  if vim.tbl_contains(EXCLUDED_FILETYPES, vim.api.nvim_get_option_value("filetype", { buf = bufnr })) then
     return false
   end
-  if vim.wo[winnr].winfixbuf then
+  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr }) then
     return false
   end
   if is_terminal(winnr) then

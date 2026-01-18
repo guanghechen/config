@@ -35,7 +35,7 @@ end
 ---@return integer
 function M.get_winheight(winid)
   local winheight = vim.api.nvim_win_get_height(winid)
-  if vim.wo[winid].winbar ~= "" then
+  if vim.api.nvim_get_option_value("winbar", { win = winid }) ~= "" then
     winheight = winheight - 1
   end
   return winheight
