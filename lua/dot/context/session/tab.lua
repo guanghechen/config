@@ -63,8 +63,8 @@ function M.dump()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
     local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
-    if meta ~= nil then
-      local tabtype = meta.tabtype ---@type stl.nvim.tab.TypeEnum
+    local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+    if meta ~= nil and tabtype ~= nil then
       local bufs = {} ---@type dot.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type dot.context.tab.meta.data
       for _, buf in ipairs(meta.bufs) do
@@ -95,6 +95,11 @@ function M.load(raw_data)
 
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for tabid, tab_data in ipairs(data.list) do
+    -- Skip non-normal tabs (e.g., diffview tabs are not restored on startup)
+    if tab_data.tabtype ~= stl.nvim.tab.TypeEnum.NORMAL then
+      goto continue
+    end
+
     local tabnr = tabnrs[tabid] ---@type integer|nil
     if tabnr == nil then
       goto continue
