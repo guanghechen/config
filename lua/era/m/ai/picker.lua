@@ -335,6 +335,25 @@ function M.show_attach(params)
     end
   end
 
+  ---@return nil
+  local function do_toggle_tmux()
+    if not picker or not on_toggle then
+      return
+    end
+    local lnum = picker.result.lnum_current:snapshot()
+    local item = picker:retrieve(lnum)
+    if item then
+      ---@cast item era.m.ai.picker.IItem
+      local select_item = item.data ---@type era.m.ai.ISelectItem
+      if select_item.source and select_item.source.type == "tmux" then
+        on_toggle(select_item)
+        local new_items = S.action.collect_items()
+        local new_picker_items = build_attach_picker_items(new_items)
+        picker:reset_data({ items = new_picker_items, uuid_current = item.uuid })
+      end
+    end
+  end
+
   picker = era.m.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
@@ -348,6 +367,7 @@ function M.show_attach(params)
     keymaps_common = on_toggle and {
       { modes = { "i", "n", "x" }, key = "<C-l>", callback = do_toggle, desc = "Toggle attach/detach" },
       { modes = { "i", "n", "x" }, key = "<C-h>", callback = do_toggle, desc = "Toggle attach/detach" },
+      { modes = { "i", "n", "x" }, key = "<Tab>", callback = do_toggle_tmux, desc = "Toggle attach/detach (tmux only)" },
     } or nil,
     keymaps_result = on_toggle and {
       { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle attach/detach" },

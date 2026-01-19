@@ -27,24 +27,32 @@ function M.status(position)
         return "", "", false
       end
 
-      local agent_counts = {} ---@type table<string, integer>
+      local pane_ids = {} ---@type integer[]
+      local agent_names = {} ---@type string[]
       for _, source in ipairs(attached) do
-        local label = era.m.ai.config.agent_labels[source.agent] or source.agent
-        agent_counts[label] = (agent_counts[label] or 0) + 1
-      end
-
-      local names = {} ---@type string[]
-      for label, cnt in pairs(agent_counts) do
-        if cnt > 1 then
-          names[#names + 1] = string.format("%s(%d)", label, cnt)
+        if source.type == "tmux" and source.tmux_pane then
+          local num = tonumber(source.tmux_pane.pane_id:match("%%(%d+)"))
+          if num then
+            pane_ids[#pane_ids + 1] = num
+          end
         else
-          names[#names + 1] = label
+          agent_names[#agent_names + 1] = era.m.ai.config.agent_labels[source.agent] or source.agent
         end
       end
-      table.sort(names)
+      table.sort(pane_ids)
+      table.sort(agent_names)
+
+      local parts = {} ---@type string[]
+      if #pane_ids > 0 then
+        local ids_str = table.concat(pane_ids, "|")
+        parts[#parts + 1] = #pane_ids > 1 and string.format("%%(%s)", ids_str) or string.format("%%%d", pane_ids[1])
+      end
+      for _, name in ipairs(agent_names) do
+        parts[#parts + 1] = name
+      end
 
       local icon = stl.icon.status.attached ---@type string
-      local agents_text = table.concat(names, ",")
+      local agents_text = table.concat(parts, ",")
       local text = string.format("%s %s", icon, agents_text)
 
       local hln_icon = position .. "_ai_status_icon" ---@type string
