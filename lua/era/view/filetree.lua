@@ -406,4 +406,165 @@ function M.apply_to_buffer(bufnr, result, start_line, ns)
   end
 end
 
+----------------------------------------------------------------------------------------------------
+-- File list extraction (in-order traversal)
+----------------------------------------------------------------------------------------------------
+
+---Collect files in tree traversal order (directories first, then files, alphabetically)
+---@param node                          era.view.filetree.ITreeNode
+---@param result                        era.view.filetree.IFileItem[]
+local function collect_files_inorder(node, result)
+  for _, child in ipairs(node.children) do
+    if child.nodetype == "directory" then
+      collect_files_inorder(child, result)
+    else
+      result[#result + 1] = {
+        filepath = child.filepath,
+        data = child.data,
+      }
+    end
+  end
+end
+
+---Get files sorted in tree traversal order (same order as tree view rendering)
+---@param items                         era.view.filetree.IFileItem[]
+---@return era.view.filetree.IFileItem[]
+function M.get_sorted_files(items)
+  local tree = M.build_tree(items)
+  M.sort_tree(tree)
+
+  local result = {} ---@type era.view.filetree.IFileItem[]
+  collect_files_inorder(tree, result)
+  return result
+end
+
+----------------------------------------------------------------------------------------------------
+-- Tree navigation
+----------------------------------------------------------------------------------------------------
+
+---Get tree depth level of a line by counting tree structure characters.
+---Tree structure patterns (each represents one depth level):
+---  "├─" = branch with siblings (3 bytes + 3 bytes = 6 bytes)
+---  "╰─" = last child branch (3 bytes + 3 bytes = 6 bytes)
+---  "│ " = vertical line continuation (3 bytes + 1 byte space = 4 bytes)
+---  "  " = empty indent (2 bytes, used after ╰─ for child continuation)
+---@param line                          string
+---@param base_indent_len               integer                             bytes of base indent before tree structure
+---@return integer                      depth (0 if no tree structure found)
+function M.get_tree_depth(line, base_indent_len)
+  local depth = 0 ---@type integer
+  local i = base_indent_len + 1
+  local len = #line
+
+  while i <= len do
+    -- Try to match 6-byte patterns first: "├─" or "╰─"
+    local c6 = line:sub(i, i + 5)
+    if c6 == INDENT_BRANCH or c6 == INDENT_LAST then
+      depth = depth + 1
+      i = i + 6
+    else
+      -- Try to match 4-byte pattern: "│ " (vertical line + space)
+      local c4 = line:sub(i, i + 3)
+      if c4 == INDENT_PIPE then
+        depth = depth + 1
+        i = i + 4
+      elseif line:sub(i, i + 1) == INDENT_SPACE then
+        -- Two spaces indicate continuation indent (after ╰─)
+        depth = depth + 1
+        i = i + 2
+      else
+        -- Reached non-tree content (actual text starts here)
+        break
+      end
+    end
+  end
+
+  return depth
+end
+
+---Go to parent node in tree (line with smaller depth).
+---@param base_indent_len               integer                             bytes of base indent before tree structure
+function M.goto_parent_node(base_indent_len)
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local lnum_cur = cursor[1] ---@type integer
+  local line_cur = vim.fn.getline(lnum_cur) ---@type string
+  local depth_cur = M.get_tree_depth(line_cur, base_indent_len) ---@type integer
+
+  if depth_cur <= 0 then
+    return
+  end
+
+  -- Search upward for a line with smaller depth
+  for lnum = lnum_cur - 1, 1, -1 do
+    local line = vim.fn.getline(lnum) ---@type string
+    local depth = M.get_tree_depth(line, base_indent_len) ---@type integer
+    if depth < depth_cur then
+      -- Position cursor at the start of the content (after tree structure)
+      local content_start = line:find("[^ │├╰─]") or 1
+      vim.api.nvim_win_set_cursor(0, { lnum, content_start - 1 })
+      return
+    end
+  end
+end
+
+---Go to last direct child node or last sibling if on a leaf node.
+---@param base_indent_len               integer                             bytes of base indent before tree structure
+function M.goto_last_child_or_sibling(base_indent_len)
+  local N = vim.api.nvim_buf_line_count(0) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local lnum_cur = cursor[1] ---@type integer
+  local line_cur = vim.fn.getline(lnum_cur) ---@type string
+  local depth_cur = M.get_tree_depth(line_cur, base_indent_len) ---@type integer
+
+  -- First, check if we have children (next line has greater depth)
+  local next_lnum = lnum_cur + 1
+  if next_lnum <= N then
+    local next_line = vim.fn.getline(next_lnum) ---@type string
+    local next_depth = M.get_tree_depth(next_line, base_indent_len) ---@type integer
+    if next_depth > depth_cur then
+      -- We have children, find the last DIRECT child (depth = depth_cur + 1)
+      local child_depth = depth_cur + 1
+      local last_child_lnum = next_lnum
+      for lnum = next_lnum + 1, N, 1 do
+        local line = vim.fn.getline(lnum) ---@type string
+        local depth = M.get_tree_depth(line, base_indent_len) ---@type integer
+        if depth <= depth_cur then
+          -- Reached parent level or end, stop
+          break
+        elseif depth == child_depth then
+          -- Found another direct child at the same level
+          last_child_lnum = lnum
+        end
+        -- depth > child_depth means we're inside a subtree of a child, keep searching
+      end
+      local last_child_line = vim.fn.getline(last_child_lnum) ---@type string
+      local content_start = last_child_line:find("[^ │├╰─]") or 1
+      vim.api.nvim_win_set_cursor(0, { last_child_lnum, content_start - 1 })
+      return
+    end
+  end
+
+  -- No children (leaf node), find last sibling
+  -- Siblings have the same depth and share the same parent
+  local last_sibling_lnum = lnum_cur
+  for lnum = lnum_cur + 1, N, 1 do
+    local line = vim.fn.getline(lnum) ---@type string
+    local depth = M.get_tree_depth(line, base_indent_len) ---@type integer
+    if depth < depth_cur then
+      -- Reached parent level or end, stop
+      break
+    elseif depth == depth_cur then
+      -- Found a sibling
+      last_sibling_lnum = lnum
+    end
+    -- depth > depth_cur means we're inside a subtree of a sibling, keep searching
+  end
+
+  if last_sibling_lnum ~= lnum_cur then
+    local last_sibling_line = vim.fn.getline(last_sibling_lnum) ---@type string
+    local content_start = last_sibling_line:find("[^ │├╰─]") or 1
+    vim.api.nvim_win_set_cursor(0, { last_sibling_lnum, content_start - 1 })
+  end
+end
+
 return M
