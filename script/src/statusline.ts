@@ -7,7 +7,7 @@ import path from "node:path"
 interface IStatuslineData {
   cwd?: string
   model?: { display_name?: string }
-  cost?: { total_cost_usd?: number }
+  cost?: { total_cost_usd?: number; total_duration_ms?: number }
   context_window?: {
     context_window_size?: number
     current_usage?: {
@@ -227,6 +227,25 @@ function renderStyle(data: IStatuslineData): string {
   return `${ANSI.gray}󰉼 ${data.output_style?.name || "default"}${ANSI.reset}`
 }
 
+function formatDuration(ms: number): string {
+  const sec = Math.floor(ms / 1000)
+  const d = Math.floor(sec / 86400)
+  const h = Math.floor((sec % 86400) / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = sec % 60
+
+  if (d > 0) return `${d}d ${h}h ${m}m`
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
+
+function renderDuration(data: IStatuslineData): string {
+  const ms = data.cost?.total_duration_ms
+  if (!ms) return ""
+  return `${ANSI.gray}󱎫 ${formatDuration(ms)}${ANSI.reset}`
+}
+
 function renderTime(): string {
   const now = new Date()
   const pad = (n: number) => n.toString().padStart(2, "0")
@@ -245,6 +264,7 @@ function render(data: IStatuslineData): string {
     renderContext(data),
     renderCost(data),
     renderStyle(data),
+    renderDuration(data),
     renderTime(),
   ].filter(Boolean)
 
