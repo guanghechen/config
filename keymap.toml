@@ -192,6 +192,16 @@ bindings = [
   { key = "Key7",       mods = "Command",                   chars = "\u0001\u0037" },       # <Ctrl-a>7
   { key = "Key8",       mods = "Command",                   chars = "\u0001\u0038" },       # <Ctrl-a>8
   { key = "Key9",       mods = "Command",                   chars = "\u0001\u0039" },       # <Ctrl-a>9
+  { key = ")",          mods = "Command|Shift",             chars = "\u0001\u0029" },       # <Ctrl-a>)
+  { key = "!",          mods = "Command|Shift",             chars = "\u0001\u0021" },       # <Ctrl-a>!
+  { key = "@",          mods = "Command|Shift",             chars = "\u0001\u0040" },       # <Ctrl-a>@
+  { key = "#",          mods = "Command|Shift",             chars = "\u0001\u0023" },       # <Ctrl-a>#
+  { key = "$",          mods = "Command|Shift",             chars = "\u0001\u0024" },       # <Ctrl-a>$
+  { key = "%",          mods = "Command|Shift",             chars = "\u0001\u0025" },       # <Ctrl-a>%
+  { key = "^",          mods = "Command|Shift",             chars = "\u0001\u005e" },       # <Ctrl-a>^
+  { key = "&",          mods = "Command|Shift",             chars = "\u0001\u0026" },       # <Ctrl-a>&
+  { key = "*",          mods = "Command|Shift",             chars = "\u0001\u002a" },       # <Ctrl-a>*
+  { key = "(",          mods = "Command|Shift",             chars = "\u0001\u0028" },       # <Ctrl-a>(
   { key = "Key0",       mods = "Command|Control",           chars = "\u0001\u001b[48;5u" }, # <Ctrl-a><Ctrl-0>
   { key = "Key1",       mods = "Command|Control",           chars = "\u0001\u001b[49;5u" }, # <Ctrl-a><Ctrl-1>
   { key = "Key2",       mods = "Command|Control",           chars = "\u0001\u001b[50;5u" }, # <Ctrl-a><Ctrl-2>
