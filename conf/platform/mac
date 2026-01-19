@@ -1,0 +1,30 @@
+# =============================================================================
+# Platform-specific Configuration (macOS)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# External Programs
+# -----------------------------------------------------------------------------
+browser "open '%u'"
+# browser "open -a 'Safari' '%u'"
+# browser "open -a 'Google Chrome' '%u'"
+# browser "open -a 'Firefox' '%u'"
+
+# Media player for podcasts
+player "open -a 'IINA' '%u'"
+# player "mpv '%u'"
+
+# -----------------------------------------------------------------------------
+# Macros
+# -----------------------------------------------------------------------------
+# Open in IINA (for video feeds)
+macro y set browser "open -a 'IINA' '%u'" ; open-in-browser ; set browser "open '%u'"
+
+# Open in mpv
+macro m set browser "mpv '%u'" ; open-in-browser ; set browser "open '%u'"
+
+# Copy link to clipboard
+macro c set browser "printf '%s' '%u' | pbcopy" ; open-in-browser ; set browser "open '%u'"
+
+# Open in default browser without marking as read
+macro b open-in-browser

@@ -1,0 +1,27 @@
+# =============================================================================
+# Platform-specific Configuration (WSL)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# External Programs
+# -----------------------------------------------------------------------------
+browser "wslview '%u'"
+# browser "explorer.exe '%u'"
+
+# Media player for podcasts
+player "mpv '%u'"
+
+# -----------------------------------------------------------------------------
+# Macros
+# -----------------------------------------------------------------------------
+# Open in mpv (for video feeds)
+macro y set browser "mpv '%u'" ; open-in-browser ; set browser "wslview '%u'"
+
+# Open in VLC
+macro m set browser "vlc '%u'" ; open-in-browser ; set browser "wslview '%u'"
+
+# Copy link to clipboard (clip.exe for Windows clipboard)
+macro c set browser "printf '%s' '%u' | clip.exe" ; open-in-browser ; set browser "wslview '%u'"
+
+# Open in default browser without marking as read
+macro b open-in-browser
