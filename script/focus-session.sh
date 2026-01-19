@@ -9,8 +9,11 @@ function _ghc_tmux_focus_session_ {
     sessions=$(tmux list-sessions -F '#{session_name}' | grep '^_popup@')
   elif [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
     sessions=$(tmux list-sessions -F '#{session_name}' | grep -E '^(claude|codex|gemini)-[0-9a-f]+$')
+  elif [[ "${current_session_name}" =~ ^G([0-9]+)- ]]; then
+    local group_prefix="G${BASH_REMATCH[1]}-"
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep "^${group_prefix}")
   else
-    sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9a-f]+$')
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9a-f]+$' | grep -v -E '^G[0-9]+-')
   fi
 
   # Find the index of the current session in the list of sessions
