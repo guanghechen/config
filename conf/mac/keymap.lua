@@ -196,6 +196,28 @@ function M.setup(config)
     })
   end
 
+  -- Shift+Digit keys (Cmd+Shift+N -> Ctrl+A symbol)
+  local shift_digit_symbols = {
+    { key = ")", symbol = ")" },
+    { key = "!", symbol = "!" },
+    { key = "@", symbol = "@" },
+    { key = "#", symbol = "#" },
+    { key = "$", symbol = "$" },
+    { key = "%", symbol = "%" },
+    { key = "^", symbol = "^" },
+    { key = "&", symbol = "&" },
+    { key = "*", symbol = "*" },
+    { key = "(", symbol = "(" },
+  }
+
+  for _, entry in ipairs(shift_digit_symbols) do
+    table.insert(keys, {
+      key = entry.key,
+      mods = "CMD|SHIFT",
+      action = act.SendString("\x01" .. entry.symbol),
+    })
+  end
+
   -- Letter keys (Cmd+Letter -> Ctrl+A letter)
   for _, key in ipairs(letters) do
     table.insert(keys, {
