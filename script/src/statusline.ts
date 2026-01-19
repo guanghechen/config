@@ -227,6 +227,15 @@ function renderStyle(data: IStatuslineData): string {
   return `${ANSI.gray}󰉼 ${data.output_style?.name || "default"}${ANSI.reset}`
 }
 
+function renderTime(): string {
+  const now = new Date()
+  const pad = (n: number) => n.toString().padStart(2, "0")
+  const hh = pad(now.getHours())
+  const mi = pad(now.getMinutes())
+  const ss = pad(now.getSeconds())
+  return `${ANSI.gray}󰥔 ${hh}:${mi}:${ss}${ANSI.reset}`
+}
+
 function render(data: IStatuslineData): string {
   const cwd = path.normalize(data.cwd || process.cwd())
   const parts = [
@@ -236,6 +245,7 @@ function render(data: IStatuslineData): string {
     renderContext(data),
     renderCost(data),
     renderStyle(data),
+    renderTime(),
   ].filter(Boolean)
 
   const sep = `${ANSI.gray}│${ANSI.reset}`
