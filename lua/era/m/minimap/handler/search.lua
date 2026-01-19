@@ -14,7 +14,7 @@ local M = {
   name = "search",
 }
 
----@type table<integer, userdata>
+---@type table<integer, uv.uv_timer_t>
 local search_timers = {}
 
 ---@type table<integer, integer>

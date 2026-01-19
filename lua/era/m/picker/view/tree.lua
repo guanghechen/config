@@ -282,9 +282,10 @@ function M:match(params)
     ---@cast o                          stl.c.ITreeNode
 
     for _ = o.depth - 1, 1, -1 do
-      o = tree:retrieve(o.parent)
       ---@cast o                        stl.c.ITreeNode
+      o = tree:retrieve(o.parent)
 
+      ---@cast o                        stl.c.ITreeNode
       local s = statemap[o.uuid]
       if s.tick_matched == tick_matched then
         break

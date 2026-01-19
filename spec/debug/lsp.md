@@ -6,15 +6,70 @@
 
 ## Usage
 
-```bash
-nvim --headless -c "luafile ~/.config/nvim/init-lsp-check.lua"
+> **重要**: `OUTPUT_FILE` 是必填参数，未指定时脚本会报错退出。
+>
+> 推荐输出路径: `local/debug/lsp/{YYYYMMDD-HHmmss}.json`（相对于 nvim config 目录）
 
-# 带参数
+### 全量扫描
+
+```bash
+# 基本用法（在 nvim config 目录下运行）
+nvim --headless \
+  -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+  -c "luafile ./init-debug-lsp.lua"
+
+# 指定目标目录
 nvim --headless \
   -c "lua TARGET_DIR='~/my-project'" \
-  -c "lua OUTPUT_FILE='/tmp/my-diagnostics.json'" \
-  -c "luafile ~/.config/nvim/init-lsp-check.lua"
+  -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+  -c "luafile ./init-debug-lsp.lua"
 ```
+
+### 指定文件扫描（快速模式）
+
+当已知需要检查的文件列表时，使用 `FILE_PATHS` 参数可以跳过全量扫描，大幅提升分析速度：
+
+```bash
+# 指定单个文件
+nvim --headless \
+  -c "lua FILE_PATHS={'lua/era/m/minimap/handler/search.lua'}" \
+  -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+  -c "luafile ./init-debug-lsp.lua"
+
+# 指定多个文件
+nvim --headless \
+  -c "lua FILE_PATHS={'lua/era/m/minimap/handler/search.lua', 'lua/era/m/nvimbar/nvimbar.lua'}" \
+  -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+  -c "luafile ./init-debug-lsp.lua"
+```
+
+> **Agent 工作流建议**:
+>
+> 1. 首次运行：全量扫描收集所有 diagnostics
+> 2. 修复问题后：仅对修改过的文件进行快速检查（使用 `FILE_PATHS`）
+> 3. 确认无新问题后：最后再全量扫描一次确保完整性
+
+> **多套 Neovim 配置**:
+>
+> 用户有多套 Neovim 配置，`luafile` 必须指向**当前调试的 repo** 下的 `init-debug-lsp.lua`。
+>
+> ```bash
+> # ✅ 使用相对路径（在目标 repo 目录下运行）
+> cd ~/.config/nvim-dev
+> nvim --headless \
+>   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+>   -c "luafile ./init-debug-lsp.lua"
+>
+> # ✅ 或使用绝对路径明确指定
+> nvim --headless \
+>   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+>   -c "luafile ~/.config/nvim-dev/init-debug-lsp.lua"
+>
+> # ❌ 禁止硬编码路径
+> nvim --headless \
+>   -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+>   -c "luafile ~/.config/nvim/init-debug-lsp.lua"
+> ```
 
 ---
 
@@ -37,8 +92,10 @@ nvim --headless \
 ---@class LspCollectorConfig
 ---@field target_dir string 要扫描的目录
 ---@field output_file string JSON 输出路径
+---@field file_paths string[]|nil 指定要扫描的文件列表（优先于 file_patterns）
 ---@field file_patterns string[] 要扫描的文件 glob 模式
 ---@field exclude_patterns string[] 要排除的路径模式（Lua pattern）
+---@field min_severity number 最低 severity 级别（1=ERROR, 2=WARN, 3=INFO, 4=HINT）
 ---@field timeout_ms number 最大等待时间（毫秒）
 ---@field poll_interval_ms number 轮询间隔（毫秒）
 ---@field stable_count_required number 连续多少次"稳定"才认为完成
@@ -68,17 +125,19 @@ nvim --headless \
 
 ### Default Values
 
-| 配置项                    | 默认值                                     | 说明                               |
-| ------------------------- | ------------------------------------------ | ---------------------------------- |
-| `target_dir`              | `vim.fn.getcwd()`                          | 当前工作目录                       |
-| `output_file`             | `/tmp/nvim-diagnostics.json`               | JSON 输出路径                      |
-| `file_patterns`           | `{ "**/*.lua" }`                           | 扫描所有 Lua 文件                  |
-| `exclude_patterns`        | `{ "/lazy/", "/pack/", "%.spec%.lua$" }`   | 排除插件目录和测试文件             |
-| `timeout_ms`              | `600000` (10 分钟)                         | 最大等待时间                       |
-| `poll_interval_ms`        | `15000` (15 秒)                            | 轮询检查间隔                       |
-| `stable_count_required`   | `3`                                        | 连续稳定次数阈值                   |
-| `min_wait_after_open_ms`  | `3000` (3 秒)                              | 打开文件后的最小等待时间           |
-| `min_analysis_time_ms`    | `120000` (2 分钟)                          | LSP 分析的最小等待时间             |
+| 配置项                   | 默认值                                     | 说明                                     |
+| ------------------------ | ------------------------------------------ | ---------------------------------------- |
+| `target_dir`             | `vim.fn.getcwd()`                          | 当前工作目录                             |
+| `output_file`            | **必填**                                   | JSON 输出路径，未指定时报错退出          |
+| `file_paths`             | `nil`                                      | 指定文件列表，优先于 file_patterns       |
+| `file_patterns`          | `{ "**/*.lua" }`                           | 扫描所有 Lua 文件                        |
+| `exclude_patterns`       | `{ "/lazy/", "/pack/", "%.spec%.lua$" }`   | 排除插件目录和测试文件                   |
+| `min_severity`           | `HINT`                                     | 最低 severity（包含所有级别）            |
+| `timeout_ms`             | `600000` (10 分钟)                         | 最大等待时间                             |
+| `poll_interval_ms`       | `15000` (15 秒)                            | 轮询检查间隔                             |
+| `stable_count_required`  | `3`                                        | 连续稳定次数阈值                         |
+| `min_wait_after_open_ms` | `3000` (3 秒)                              | 打开文件后的最小等待时间                 |
+| `min_analysis_time_ms`   | `120000` (2 分钟)                          | LSP 分析的最小等待时间                   |
 
 ---
 
@@ -93,6 +152,7 @@ nvim --headless \
     "total_files": 42,
     "failed_files": [],
     "total_diagnostics": 5,
+    "min_severity": "HINT",
     "elapsed_ms": 165000,
     "timestamp": "2024-01-15T10:30:00Z"
   },
@@ -115,23 +175,23 @@ nvim --headless \
 ### Stdout (Human Readable)
 
 ```
-[init-lsp-check] Target: /home/user/.config/nvim
-[init-lsp-check] Output: /tmp/nvim-diagnostics.json
-[init-lsp-check] Found 457 files (skipped 5)
-[init-lsp-check] Opened 457/457 files
-[init-lsp-check] [15s] Waiting for LSP to attach... (attached=100/457, expected=457)
-[init-lsp-check] [30s] LSP busy (attached=457/457), diagnostics=0
-[init-lsp-check] [120s] LSP busy (attached=457/457), diagnostics=5
-[init-lsp-check] [135s] LSP idle (attached=457/457), diagnostics=5, stable=1/3
-[init-lsp-check] [150s] LSP idle (attached=457/457), diagnostics=5, stable=2/3
-[init-lsp-check] [165s] LSP idle (attached=457/457), diagnostics=5, stable=3/3
-[init-lsp-check] LSP analysis complete!
+[init-debug-lsp] Target: /home/user/.config/nvim
+[init-debug-lsp] Output: local/debug/lsp/20240115-103000.json
+[init-debug-lsp] Found 457 files (skipped 5)
+[init-debug-lsp] Opened 457/457 files
+[init-debug-lsp] [15s] Waiting for LSP to attach... (attached=100/457, expected=457)
+[init-debug-lsp] [30s] [5%] LSP busy (attached=457/457), diagnostics=0
+[init-debug-lsp] [120s] [20%] LSP busy (attached=457/457), diagnostics=5
+[init-debug-lsp] [135s] [22%] LSP idle (attached=457/457), diagnostics=5, stable=1/3
+[init-debug-lsp] [150s] [25%] LSP idle (attached=457/457), diagnostics=5, stable=2/3
+[init-debug-lsp] [165s] [27%] LSP idle (attached=457/457), diagnostics=5, stable=3/3
+[init-debug-lsp] LSP analysis complete!
 
 === Found 5 diagnostics ===
 /home/user/.config/nvim/lua/config/lsp.lua:25:10: [ERROR] Undefined global `vim`.
 ...
 
-JSON output: /tmp/nvim-diagnostics.json
+JSON output: local/debug/lsp/20240115-103000.json
 ```
 
 ---
@@ -265,6 +325,17 @@ JSON output: /tmp/nvim-diagnostics.json
 
 ---
 
+## Exit Codes
+
+| 退出码 | 含义                                     |
+| ------ | ---------------------------------------- |
+| 0      | 成功完成，无 diagnostics                 |
+| 1      | 成功完成，存在 diagnostics（需要修复）   |
+
+> **Agent 提示**: 可通过 `$?` 判断是否需要进一步修复，`exit 0` 表示代码已无问题。
+
+---
+
 ## Integration with Claude Code
 
 ### Workflow
@@ -272,7 +343,7 @@ JSON output: /tmp/nvim-diagnostics.json
 ```
 ┌─────────────────────────────────────────────────────┐
 │  1. Claude Code 运行 headless nvim 收集诊断         │
-│  2. 读取 /tmp/nvim-diagnostics.json                 │
+│  2. 读取 local/debug/lsp/*.json                     │
 │  3. 解析并逐个修复 diagnostics                      │
 │  4. 重新运行诊断，验证修复                          │
 │  5. 循环直到 diagnostics 为空                       │
@@ -281,7 +352,7 @@ JSON output: /tmp/nvim-diagnostics.json
 
 ### Agent Wait Time Guidelines
 
-**重要**: 当 Agent 调用 `init-lsp-check.lua` 后，需要等待 LSP 分析完成。以下是建议的等待策略：
+**重要**: 当 Agent 调用 `init-debug-lsp.lua` 后，需要等待 LSP 分析完成。以下是建议的等待策略：
 
 | 配置项                      | 默认值       | Agent 建议等待时间        |
 | --------------------------- | ------------ | ------------------------- |
@@ -298,15 +369,18 @@ JSON output: /tmp/nvim-diagnostics.json
 **Agent 实现建议**:
 ```bash
 # 启动 headless nvim (在 tmux pane 中运行)
+# 注意：使用当前调试的 repo 下的 init-debug-lsp.lua
+cd "$NVIM_CONFIG_DIR"  # 如 ~/.config/nvim 或 ~/.config/nvim-dev
 nvim --headless \
   -c "lua TARGET_DIR='$TARGET_DIR'" \
-  -c "luafile ~/.config/nvim/init-lsp-check.lua"
+  -c "lua OUTPUT_FILE='local/debug/lsp/$(date +%Y%m%d-%H%M%S).json'" \
+  -c "luafile ./init-debug-lsp.lua"
 
 # 等待至少 3 分钟让 LSP 完成分析
 sleep 180
 
 # 读取结果
-cat /tmp/nvim-diagnostics.json
+cat local/debug/lsp/*.json | jq .  # 或读取最新的文件
 ```
 
 ---

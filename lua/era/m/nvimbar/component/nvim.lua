@@ -250,6 +250,7 @@ end
 
 ---@param position                      stl.e.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
+---@diagnostic disable-next-line: unused-local
 function M.tabtype(position)
   local hln_text = "mf_b_bg0" ---@type string
   local hln_sep = "ms_b_bg2" ---@type string
@@ -271,9 +272,14 @@ function M.tabtype(position)
     render = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       local tabtype = vim.t[tabnr].tabtype or "nil" ---@type string
-      local content = "󰓩 " ..tabtype ---@type string
+      local content = "󰓩 " .. tabtype ---@type string
+
       local text = stl.icon.symbols.sep_left .. content .. stl.icon.symbols.sep_right ---@type string
-      local hl_text = txt(stl.icon.symbols.sep_left, hln_sep) .. txt(content, hln_text) .. txt(stl.icon.symbols.sep_right, hln_sep)  ---@type string
+
+      ---@type string
+      local hl_text = txt(stl.icon.symbols.sep_left, hln_sep)
+        .. txt(content, hln_text)
+        .. txt(stl.icon.symbols.sep_right, hln_sep)
       return text, hl_text, true
     end,
   }

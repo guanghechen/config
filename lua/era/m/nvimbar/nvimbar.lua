@@ -34,7 +34,7 @@ local __module_name__ = "era.m.nvimbar" ---@type string
 ---@field public get_max_width          fun(): integer
 ---@field public get_preset_context     ?era.m.nvimbar.IGetNvimbarPresetContext
 ---@field public is_active              fun(context: era.m.nvimbar.INvimbarContext): boolean
----@field public on_fulfilled           ?fun(result: string): nil
+---@field public on_fulfilled           ?fun(result: string, last_result: string|nil): nil
 ---@field public validate               ?fun(): string|nil
 
 ---@class era.m.nvimbar.Nvimbar
@@ -113,7 +113,7 @@ function M.new(props)
     end
 
   local isactive = props.is_active ---@type fun(context: era.m.nvimbar.INvimbarContext): boolean
-  local on_fulfilled = props.on_fulfilled or stl.fn.noop ---@type fun(result: string): nil
+  local on_fulfilled = props.on_fulfilled or stl.fn.noop ---@type fun(result: string, last_result: string|nil): nil
   local validate = props.validate or stl.fn.noop ---@type fun(): string|nil
 
   local self = setmetatable({}, M)
@@ -147,7 +147,7 @@ function M.new(props)
       --- Always trigger on_fulfilled to update vim.o.tabline/statusline,
       --- because they are global and may have been modified by another nvimbar.
       vim.schedule(function()
-        on_fulfilled(result)
+        on_fulfilled(result, last_result)
       end)
     end,
   })
