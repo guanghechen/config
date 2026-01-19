@@ -1,4 +1,7 @@
 {
+  "ignorePaths": [
+    "config/theme/app/newsboat.hbs"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -21,6 +24,7 @@
     "miniforge",
     "msvc",
     "msys",
+    "newsboat",
     "nord",
     "nord0",
     "nvchad",

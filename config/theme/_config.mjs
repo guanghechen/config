@@ -148,6 +148,15 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
   },
   {
+    name: 'newsboat',
+    home: path.join(XDG_CONFIG_HOME, 'newsboat'),
+    themes: 'theme/',
+    extname: '',
+    local: 'local/theme',
+    active: app => is_directory(app.home),
+    render: (_, template, scheme) => render_template(template, scheme),
+  },
+  {
     name: 'nvim',
     home: path.join(XDG_CONFIG_HOME, 'nvim'),
     themes: 'lua/dot/theme/scheme/',
