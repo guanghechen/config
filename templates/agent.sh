@@ -3,9 +3,13 @@
 
 SESSION="G1-agent"
 
-# If session exists, attach to it
+# If session exists, switch or attach to it
 if tmux has-session -t "$SESSION" 2>/dev/null; then
-  tmux attach-session -t "$SESSION"
+  if [[ -n "$TMUX" ]]; then
+    tmux switch-client -t "$SESSION"
+  else
+    tmux attach-session -t "$SESSION"
+  fi
   exit 0
 fi
 
