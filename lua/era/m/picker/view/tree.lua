@@ -282,8 +282,11 @@ function M:match(params)
     ---@cast o                          stl.c.ITreeNode
 
     for _ = o.depth - 1, 1, -1 do
-      ---@cast o                        stl.c.ITreeNode
-      o = tree:retrieve(o.parent)
+      local parent = tree:retrieve(o.parent)
+      if not parent then
+        break
+      end
+      o = parent
 
       ---@cast o                        stl.c.ITreeNode
       local s = statemap[o.uuid]
