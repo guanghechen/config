@@ -26,6 +26,7 @@ function ghc-update
         lazygit \
         lsd \
         neovide \
+        newsboat \
         nvim \
         nvim-lazy \
         nvim-nvchad \
