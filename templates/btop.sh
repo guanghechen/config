@@ -1,7 +1,7 @@
 #!/bin/bash
 # btop monitoring session layout
 
-SESSION="btop"
+SESSION="G1-btop"
 BTOP_DIR="$HOME/.config/btop"
 
 # If session exists, attach to it

@@ -1,7 +1,7 @@
 #!/bin/bash
 # AI agent coding session layout
 
-SESSION="agent"
+SESSION="G1-agent"
 
 # If session exists, attach to it
 if tmux has-session -t "$SESSION" 2>/dev/null; then
