@@ -1,0 +1,50 @@
+# vsc-dark-modern
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color252        default
+color listnormal_unread   color151      default
+color listfocus           color231        color236
+color listfocus_unread    color151      color236
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color151       color236
+color info                color153       color236
+color hint-key            color217       color236          bold
+color hint-keys-delimiter color245        color236
+color hint-separator      default                           color236
+color hint-description    default                           color236
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color66        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color153       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color79       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color153       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color79       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color66        default

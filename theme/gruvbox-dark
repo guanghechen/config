@@ -1,0 +1,50 @@
+# gruvbox-dark
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color223        default
+color listnormal_unread   color142      default
+color listfocus           color223        color59
+color listfocus_unread    color142      color59
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color142       color59
+color info                color108       color59
+color hint-key            color175       color59          bold
+color hint-keys-delimiter color144        color59
+color hint-separator      default                           color59
+color hint-description    default                           color59
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color138        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color108       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color71       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color108       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color71       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color138        default

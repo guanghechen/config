@@ -1,0 +1,50 @@
+# catppuccin-latte
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color60        default
+color listnormal_unread   color70      default
+color listfocus           color59        color145
+color listfocus_unread    color70      color145
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color70       color145
+color info                color27       color145
+color hint-key            color176       color145          bold
+color hint-keys-delimiter color102        color145
+color hint-separator      default                           color145
+color hint-description    default                           color145
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color103        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color27       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color30       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color27       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color30       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color103        default

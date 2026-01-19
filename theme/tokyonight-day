@@ -1,0 +1,50 @@
+# tokyonight-day
+
+# =============================================================================
+# Newsboat Color Theme (Catppuccin Style)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Main Interface Elements
+# -----------------------------------------------------------------------------
+color background          default        default
+color article             default        default
+
+# -----------------------------------------------------------------------------
+# List Colors
+# -----------------------------------------------------------------------------
+color listnormal          color61        default
+color listnormal_unread   color59      default
+color listfocus           color61        color146
+color listfocus_unread    color59      color146
+
+# -----------------------------------------------------------------------------
+# Title & Info Bar
+# -----------------------------------------------------------------------------
+color title               color59       color146
+color info                color30       color146
+color hint-key            color99       color146          bold
+color hint-keys-delimiter color24        color146
+color hint-separator      default                           color146
+color hint-description    default                           color146
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+color end-of-text-marker  color23        default
+
+# -----------------------------------------------------------------------------
+# Article Content Highlights
+# -----------------------------------------------------------------------------
+# Metadata lines (Feed, Title, Author, Link, Date)
+highlight article "^(Feed|Title|Author|Link|Date): .+" color30       default bold
+highlight article "^(Feed|Title|Author|Link|Date):"    color24       default bold
+
+# URLs
+highlight article "https?://[^ ]+"                     color30       default
+
+# Reference numbers [1], [2], etc.
+highlight article "\\[[0-9]+\\]"                       color24       default bold
+
+# Media indicators
+highlight article "\\((link|image|video)\\)"           color23        default
