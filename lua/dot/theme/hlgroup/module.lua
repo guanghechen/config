@@ -298,6 +298,52 @@ function M.default_gen_hlgroup_map(context)
     m_fvo_type = { fg = u.orange },
     m_fvo_value = { fg = u.fg3 },
 
+    ---module/diffview (panel common)
+    m_dv_cursorline = { bg = u.bg3 },
+    m_dv_eob = { fg = bg, bg = bg },
+    m_dv_normal = { fg = u.fg1, bg = bg },
+    m_dv_winbar = { fg = u.fg2, bg = u.bg1, bold = true },
+    m_dv_winbar_dim = { fg = u.fg4, bg = u.bg1 },
+    m_dv_winbar_flag_aqua = { fg = u.bg0, bg = u.brightAqua },
+    m_dv_winbar_flag_blue = { fg = u.bg0, bg = u.brightBlue },
+    m_dv_winbar_flag_dim = { fg = u.fg3, bg = u.bg2 },
+    m_dv_winbar_flag_green = { fg = u.bg0, bg = u.brightGreen },
+    m_dv_winbar_flag_purple = { fg = u.bg0, bg = u.brightPurple },
+    m_dv_winbar_flag_red = { fg = u.bg0, bg = u.brightRed },
+    m_dv_winsep = { fg = u.bg3, bg = bg },
+
+    ---module/diffview (diff highlights for sbs view)
+    m_dv_add = { bg = u.diffAdd or cs.mix(bg, u.aqua, 30) },
+    m_dv_add_dim = { bg = u.diffAdd or cs.mix(bg, u.aqua, 30) },
+    m_dv_add_inline = { bg = u.diffAddInline or cs.mix(bg, u.brightGreen, 60) },
+    m_dv_del = { bg = u.diffDel or cs.mix(bg, u.red, 30) },
+    m_dv_del_dim = { bg = u.diffDel or cs.mix(bg, u.red, 30) },
+    m_dv_del_inline = { bg = u.diffDelInline or cs.mix(bg, u.brightRed, 60) },
+
+    ---module/diffview (filetree)
+    m_dv_ft_deletions = { fg = u.red },
+    m_dv_ft_dirname = { fg = u.brightBlue },
+    m_dv_ft_filename = { fg = u.fg2 },
+    m_dv_ft_header = { fg = u.purple, bold = true },
+    m_dv_ft_insertions = { fg = u.green },
+    m_dv_ft_separator = { fg = u.bg4 },
+    m_dv_ft_status_add = { fg = u.brightGreen },
+    m_dv_ft_status_delete = { fg = u.brightRed },
+    m_dv_ft_status_modify = { fg = u.brightYellow },
+    m_dv_ft_status_rename = { fg = u.brightBlue },
+
+    ---module/diffview (commits)
+    m_dv_cm_author = { fg = u.purple },
+    m_dv_cm_current = { bg = u.bg3 },
+    m_dv_cm_date = { fg = u.fg4 },
+    m_dv_cm_files = { fg = u.aqua },
+    m_dv_cm_hash = { fg = u.brightBlue },
+    m_dv_cm_message = { fg = u.fg1 },
+    m_dv_cm_sep = { fg = u.bg4 },
+
+    ---module/diffview (sign)
+    m_dv_sign_present = { fg = u.pink, bg = u.none, bold = true },
+
     ---module/wk
     m_wk_desc = { fg = u.fg3 },
     m_wk_group = { fg = u.blue },

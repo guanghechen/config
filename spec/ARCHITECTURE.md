@@ -137,7 +137,7 @@ dot.command.execute("Fbufclose")
 |:--------------|:---------------------------------------------------------------------|
 | `dot.buf`     | Buffer utilities (loadfile, resolve metadata, pick_filepath)         |
 | `dot.win`     | Window utilities (is_sourcefile, pick_sourcefile, locate_symbols)    |
-| `dot.tab`     | Tab utilities (resolve_type, get_bufnrs)                             |
+| `dot.tab`     | Tab utilities (resolve metadata, get_bufnrs)                         |
 | `dot.path`    | Path utilities (workspace, cwd, locate_* helpers)                    |
 | `dot.var`     | Constants (namespaces, signs, themes, togglers, zindex)              |
 | `dot.session` | Session save/restore                                                 |

@@ -15,6 +15,7 @@ local __module_name__ = "dot.command" ---@type string
 ---@field public uuid                   string
 ---@field public tabtypes               stl.nvim.tab.TypeEnum[]
 ---@field public action                 fun(args?: string): nil
+---@field public override               ?boolean
 
 local definition_map = {} ---@type table<string, dot.command.IRawDefinition>
 local command_map = {} ---@type table<string, dot.command.ICommand>
@@ -33,7 +34,7 @@ local M = {
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = dot.tab.resolve_type(tabnr, false) ---@type stl.nvim.tab.TypeEnum
+  local tabtype = vim.t[tabnr].tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] ---@type dot.command.ICommand|nil
 
@@ -114,6 +115,7 @@ function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
   local tabtypes = implementation.tabtypes ---@type stl.nvim.tab.TypeEnum[]
   local action = implementation.action ---@type fun(args?: string): nil
+  local override = implementation.override ---@type boolean|nil
   local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil
   if definition == nil then
     stl.reporter.warn({
@@ -125,15 +127,22 @@ function M.implement(implementation)
     return M
   end
 
-  for _, tabtype in ipairs(tabtypes) do
-    local key = uuid .. ":" .. tabtype ---@type string
-    if command_map[key] ~= nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = "implement",
-        message = "The command has already been implemented.",
-        details = { key = key, uuid = uuid, tabtypes = tabtypes, action = action },
-      })
+  if not override then
+    local has_existing = false ---@type boolean
+    for _, tabtype in ipairs(tabtypes) do
+      local key = uuid .. ":" .. tabtype ---@type string
+      if command_map[key] ~= nil then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "implement",
+          message = string.format("The command has already been implemented on %s.", tabtype),
+          details = { key = key, uuid = uuid, tabtypes = tabtypes, action = action },
+        })
+        has_existing = true
+      end
+    end
+
+    if has_existing then
       return M
     end
   end
@@ -376,6 +385,17 @@ M.definitions.diagnostic = {
   to_md = D.new("Fdiagnostictomd", "diagnostic: export to markdown"),
 }
 
+---@class dot.command.definitions.diffview
+M.definitions.diffview = {
+  close = D.new("Fdiffviewclose", "diffview: close"),
+  open_commits = D.new("Fdiffviewopencommits", "diffview: open commits"),
+  open_file_history = D.new("Fdiffviewopenfilehistory", "diffview: open file-history"),
+  open_workspace = D.new("Fdiffviewopenworkspace", "diffview: open workspace"),
+  refresh = D.new("Fdiffviewrefresh", "diffview: refresh"),
+  toggle_commits = D.new("Fdiffviewtogglecommits", "diffview: toggle commits"),
+  toggle_files = D.new("Fdiffviewtogglefiles", "diffview: toggle files"),
+}
+
 ---@class dot.command.definitions.explorer
 M.definitions.explorer = {
   focus = D.new("Fexplorerfocus", "explorer: focus"),
@@ -416,9 +436,6 @@ M.definitions.git = {
   browse = D.new("Fgitbrowse", "git: browse"),
   browse_permalink = D.new("Fgitbrowsepermalink", "git: browse (permalink)"),
   browse_repo = D.new("Fgitbrowserepo", "git: browse (repo)"),
-  diffview = D.new("Fgitdiffview", "git: diffview"),
-  history = D.new("Fgithistory", "git: history (commits)"),
-  history_file = D.new("Fgithistoryfile", "git: history (file)"),
   hunk_goto_prev = D.new("Fgithunkgotoprev", "git: goto prev hunk"),
   hunk_goto_next = D.new("Fgithunkgotonext", "git: goto next hunk"),
   hunk_goto_prev_all = D.new("Fgithunkgotoprevall", "git: goto prev hunk (all)"),

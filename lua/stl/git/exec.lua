@@ -48,6 +48,34 @@ function M.exec(args, opts, token)
   end)
 end
 
+---Execute git command asynchronously with callback (for simple fire-and-forget operations).
+---@param args                          string[]
+---@param opts                          { cwd: string|nil }|nil
+---@param callback                      fun(lines: string[], code: integer): nil
+function M.exec_async(args, opts, callback)
+  local cmd = { "git" }
+  if opts and opts.cwd then
+    cmd[#cmd + 1] = "-C"
+    cmd[#cmd + 1] = opts.cwd
+  end
+  for _, arg in ipairs(args) do
+    cmd[#cmd + 1] = arg
+  end
+
+  vim.system(cmd, { text = true }, function(obj)
+    vim.schedule(function()
+      local lines = {}
+      if obj.code == 0 and obj.stdout then
+        lines = vim.split(obj.stdout, "\n", { plain = true })
+        if lines[#lines] == "" then
+          lines[#lines] = nil
+        end
+      end
+      callback(lines, obj.code)
+    end)
+  end)
+end
+
 ---Execute git command synchronously (for user-triggered actions where blocking is acceptable)
 ---@param args                          string[]
 ---@param opts                          { cwd: string|nil }|nil

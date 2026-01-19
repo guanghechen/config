@@ -105,6 +105,9 @@ function M.load(raw_data)
       goto continue
     end
 
+    -- Restore tabtype from session data
+    vim.t[tabnr].tabtype = tab_data.tabtype
+
     local meta = dot.tab.resolve(tabnr, true) ---@type dot.tab.IMeta|nil
     if meta == nil then
       goto continue

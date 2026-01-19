@@ -490,6 +490,60 @@ command
     end,
   })
 
+--[diffview] ---------------------------------------------------------------------------------------
+command
+  .implement({
+    uuid = K.diffview.close.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    action = function()
+      era.m.diffview.fn.close()
+    end,
+  })
+  .implement({
+    uuid = K.diffview.open_commits.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    action = function()
+      era.m.diffview.fn.open_commits()
+    end,
+  })
+  .implement({
+    uuid = K.diffview.open_file_history.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    action = function()
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      era.m.diffview.fn.open_file_history({ filepath = filepath })
+    end,
+  })
+  .implement({
+    uuid = K.diffview.open_workspace.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    action = function()
+      era.m.diffview.fn.open_workspace()
+    end,
+  })
+  .implement({
+    uuid = K.diffview.refresh.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    action = function()
+      era.m.diffview.fn.refresh()
+    end,
+  })
+  .implement({
+    uuid = K.diffview.toggle_commits.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW,
+    action = function()
+      era.m.diffview.fn.toggle_commits()
+    end,
+  })
+  .implement({
+    uuid = K.diffview.toggle_files.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW,
+    action = function()
+      era.m.diffview.fn.toggle_files()
+    end,
+  })
+
 --[explorer] ---------------------------------------------------------------------------------------
 command
   .implement({
@@ -539,6 +593,20 @@ command
     tabtypes = stl.nvim.tab.TypeSet.NORMAL,
     action = function()
       era.widget.explorer.toggle()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.toggle.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW_WORKSPACE,
+    action = function()
+      era.m.diffview.fn.toggle_files()
+    end,
+  })
+  .implement({
+    uuid = K.explorer.toggle.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW_COMMITS,
+    action = function()
+      era.m.diffview.fn.toggle_commits()
     end,
   })
 
@@ -1159,13 +1227,21 @@ command
   })
 
 --[refresh] ----------------------------------------------------------------------------------------
-command.implement({
-  uuid = K.refresh.all.uuid,
-  tabtypes = stl.nvim.tab.TypeSet.NORMAL,
-  action = function()
-    era.fn.refresh_all()
-  end,
-})
+command
+  .implement({
+    uuid = K.refresh.all.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW,
+    action = function()
+      era.m.diffview.fn.refresh()
+    end,
+  })
+  .implement({
+    uuid = K.refresh.all.uuid,
+    tabtypes = stl.nvim.tab.TypeSet.NORMAL,
+    action = function()
+      era.fn.refresh_all()
+    end,
+  })
 
 --[search] files------------------------------------------------------------------------------------
 command
@@ -1526,7 +1602,11 @@ command
     uuid = K.toggle.minimap_local.uuid,
     tabtypes = stl.nvim.tab.TypeSet.ALL,
     action = function()
-      era.m.minimap.toggle_local(vim.api.nvim_get_current_win())
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+      local winnr = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+      if winnr ~= nil then
+        era.m.minimap.toggle_local(winnr)
+      end
     end,
   })
   .implement({
@@ -1879,45 +1959,3 @@ command
       require("era.plugin.nvim-treesitter").swap_prev_parameter()
     end,
   })
-
---[explorer] plugin: diffview ----------------------------------------------------------------------
-command.implement({
-  uuid = K.explorer.toggle.uuid,
-  tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW,
-  action = function()
-    require("era.plugin.diffview").toggle()
-  end,
-})
-
---[git] plugin: diffview ---------------------------------------------------------------------------
-command
-  .implement({
-    uuid = K.git.diffview.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
-    action = function()
-      require("era.plugin.diffview").diffview()
-    end,
-  })
-  .implement({
-    uuid = K.git.history.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
-    action = function()
-      require("era.plugin.diffview").history()
-    end,
-  })
-  .implement({
-    uuid = K.git.history_file.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
-    action = function()
-      require("era.plugin.diffview").history_file()
-    end,
-  })
-
---[refresh] plugin: diffview -----------------------------------------------------------------------
-command.implement({
-  uuid = K.refresh.all.uuid,
-  tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW,
-  action = function()
-    require("era.plugin.diffview").refresh()
-  end,
-})

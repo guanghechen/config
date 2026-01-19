@@ -288,6 +288,49 @@ function M.gen_hlgroup_map(context)
     m_fvo_type = { fg = u.orange },
     m_fvo_value = { fg = u.fg3 },
 
+    ---module/diffview (panel common)
+    m_dv_cursorline = { bg = u.bg3 },
+    m_dv_eob = { fg = bg, bg = bg },
+    m_dv_normal = { fg = c.text, bg = bg },
+    m_dv_winbar = { fg = c.text, bg = c.tab_inactiveBackground, bold = true },
+    m_dv_winbar_dim = { fg = c.textMuted, bg = c.tab_inactiveBackground },
+    m_dv_winbar_flag_aqua = { fg = u.bg0, bg = u.brightAqua },
+    m_dv_winbar_flag_blue = { fg = u.bg0, bg = u.brightBlue },
+    m_dv_winbar_flag_dim = { fg = c.textMuted, bg = c.widget_border },
+    m_dv_winbar_flag_green = { fg = u.bg0, bg = u.brightGreen },
+    m_dv_winbar_flag_purple = { fg = u.bg0, bg = u.brightPurple },
+    m_dv_winbar_flag_red = { fg = u.bg0, bg = c.brightRed },
+    m_dv_winsep = { fg = c.widget_border, bg = bg },
+
+    ---module/diffview (diff highlights for sbs view)
+    m_dv_add = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 30) },
+    m_dv_add_dim = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 30) },
+    m_dv_add_inline = { bg = cs.mix(c.editor_background, c.editorGutter_addedBackground, 60) },
+    m_dv_del = { bg = cs.mix(c.editor_background, c.editorGutter_deletedBackground, 30) },
+    m_dv_del_dim = { bg = cs.mix(c.editor_background, c.editorGutter_deletedBackground, 30) },
+    m_dv_del_inline = { bg = cs.mix(c.editor_background, c.editorGutter_deletedBackground, 60) },
+
+    ---module/diffview (filetree)
+    m_dv_ft_deletions = { fg = c.accentRed },
+    m_dv_ft_dirname = { fg = u.brightBlue },
+    m_dv_ft_filename = { fg = c.text },
+    m_dv_ft_header = { fg = c.accentPurple, bold = true },
+    m_dv_ft_insertions = { fg = c.accentGreen },
+    m_dv_ft_separator = { fg = c.widget_border },
+    m_dv_ft_status_add = { fg = u.brightGreen },
+    m_dv_ft_status_delete = { fg = u.brightRed },
+    m_dv_ft_status_modify = { fg = u.brightYellow },
+    m_dv_ft_status_rename = { fg = u.brightBlue },
+
+    ---module/diffview (commits)
+    m_dv_cm_author = { fg = c.accentPurple },
+    m_dv_cm_current = { bg = u.bg3 },
+    m_dv_cm_date = { fg = c.textMuted },
+    m_dv_cm_files = { fg = c.accentAqua },
+    m_dv_cm_hash = { fg = u.brightBlue },
+    m_dv_cm_message = { fg = c.text },
+    m_dv_cm_sep = { fg = c.widget_border },
+
     ---module/wk
     m_wk_desc = { fg = c.text },
     m_wk_group = { fg = c.accentPurple, italic = true },

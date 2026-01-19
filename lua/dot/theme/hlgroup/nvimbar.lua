@@ -186,6 +186,8 @@ function M.gen_hlgroup_map(context)
     nvim_tab_item = { fg = c.fg1, bg = "bg_bar" },
     nvim_tab_item_cur = { fg = c.red, bg = bg_bufc },
     nvim_tab_toggle = { fg = c.bg1, bg = c.green },
+    nvim_tabtype_sep = { link = "ms_b_bg2" },
+    nvim_tabtype_text = { link = "mf_b_bg0" },
 
     ---! explorer
     explorer_detached = { fg = c.red, bg = "bg_bar" },
@@ -220,7 +222,15 @@ function M.gen_hlgroup_map(context)
 
     ---! sidebar
     sidebar_blank = { fg = c.fg1, bg = "bg_bar" },
+    sidebar_dim = { fg = c.fg3, bg = "bg_bar" },
     sidebar_split = { fg = c.bg4, bg = "bg_bar" },
+    sidebar_pink = { fg = c.pink, bg = "bg_bar" },
+
+    ---! flag (for diffview tabline)
+    flag_off = { fg = c.fg3, bg = c.bg2 },
+    flag_on = { fg = c.bg0, bg = c.brightBlue },
+    flag_viewtype = { fg = c.bg0, bg = c.brightPurple },
+    flag_layout = { fg = c.bg0, bg = c.pink },
 
     ---! notepad
     notepad_button = { fg = c.fg3, bg = "bg_bar" },

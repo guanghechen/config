@@ -249,12 +249,13 @@ function M.pos(position)
 end
 
 ---@param position                      stl.e.NvimbarPositionEnum
+---@param icon                          ?string
 ---@return era.m.nvimbar.IRawComponent
----@diagnostic disable-next-line: unused-local
-function M.tabtype(position)
-  local hln_text = "mf_b_bg0" ---@type string
-  local hln_sep = "ms_b_bg2" ---@type string
+function M.tabtype(position, icon)
+  local hln_text = position .. "_nvim_tabtype_text" ---@type string
+  local hln_sep = position .. "_nvim_tabtype_sep" ---@type string
 
+  icon = icon or "󰓩 " ---@type string
   local last_tabtype = "" ---@type string
 
   ---@type era.m.nvimbar.IRawComponent
@@ -264,16 +265,21 @@ function M.tabtype(position)
     tight = false,
     will_change = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tabtype = vim.t[tabnr].tabtype or "nil" ---@type string
+      local tabtype = vim.t[tabnr].tabtype or "" ---@type string
       local changed = last_tabtype ~= tabtype ---@type boolean
       last_tabtype = tabtype
       return changed
     end,
     render = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tabtype = vim.t[tabnr].tabtype or "nil" ---@type string
-      local content = "󰓩 " .. tabtype ---@type string
+      local tabtype = vim.t[tabnr].tabtype ---@type string|nil
 
+      -- Don't render for normal tabs (tabtype is nil or "normal")
+      if tabtype == nil or tabtype == stl.nvim.tab.TypeEnum.NORMAL then
+        return "", "", true
+      end
+
+      local content = icon .. tabtype ---@type string
       local text = stl.icon.symbols.sep_left .. content .. stl.icon.symbols.sep_right ---@type string
 
       ---@type string

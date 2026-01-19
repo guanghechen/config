@@ -14,6 +14,7 @@ local __mods = {
 
   bookmark = "dot.context.workspace.bookmark",
   colorpicker = "dot.context.workspace.colorpicker",
+  diffview = "dot.context.workspace.diffview",
   explorer = "dot.context.workspace.explorer",
   flight = "dot.context.workspace.flight",
   frecency = "dot.context.workspace.frecency",
@@ -44,6 +45,7 @@ local __mods = {
 ---
 ---@field public bookmark               dot.context.bookmark.data
 ---@field public colorpicker            dot.context.colorpicker.data
+---@field public diffview               dot.context.diffview.data
 ---@field public explorer               dot.context.explorer.data
 ---@field public flight                 dot.context.flight.data
 ---@field public frecency               dot.context.frecency.data
@@ -76,6 +78,7 @@ local __mods = {
 ---
 ---@field public bookmark               dot.context.bookmark
 ---@field public colorpicker            dot.context.colorpicker
+---@field public diffview               dot.context.diffview
 ---@field public explorer               dot.context.explorer
 ---@field public flight                 dot.context.flight
 ---@field public frecency               dot.context.frecency
@@ -110,6 +113,7 @@ function M.dump()
 
     bookmark = M.bookmark.dump(),
     colorpicker = M.colorpicker.dump(),
+    diffview = M.diffview.dump(),
     explorer = M.explorer.dump(),
     flight = M.flight.dump(),
     frecency = M.frecency.dump(),
@@ -146,6 +150,7 @@ function M.load(storage, initialize)
     ) or {}
     M.bookmark.load(data_workspace.bookmark)
     M.colorpicker.load(data_workspace.colorpicker)
+    M.diffview.load(data_workspace.diffview)
     M.explorer.load(data_workspace.explorer)
     M.flight.load(data_workspace.flight)
     M.frecency.load(data_workspace.frecency)
@@ -195,6 +200,7 @@ function M.save(storage)
     local data = {
       bookmark = M.bookmark.dump(),
       colorpicker = M.colorpicker.dump(),
+      diffview = M.diffview.dump(),
       explorer = M.explorer.dump(),
       flight = M.flight.dump(),
       frecency = M.frecency.dump(),

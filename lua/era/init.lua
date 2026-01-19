@@ -80,6 +80,7 @@ local __m__mods = {
   colorpicker = "era.m.colorpicker",
   commentstring = "era.m.commentstring",
   copy = "era.m.copy",
+  diffview = "era.m.diffview",
   dim = "era.m.dim",
   explorer = "era.m.explorer",
   foldtext = "era.m.foldtext",
@@ -125,6 +126,7 @@ local __m__mods = {
 ---@field public colorpicker            era.m.colorpicker
 ---@field public commentstring          era.m.commentstring
 ---@field public copy                   era.m.copy
+---@field public diffview               era.m.diffview
 ---@field public dim                    era.m.dim
 ---@field public explorer               era.m.explorer
 ---@field public foldtext               era.m.foldtext

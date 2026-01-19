@@ -214,6 +214,10 @@ M.sign = {
   GROUP_CHOICES_CURRENT                 = "f7a1b2c3-d4e5-6789-abcd-ef0123456789",
   NR_CHOICES_CURRENT                    = 3050,
 
+  ---! diffview commits
+  DIFFVIEW_COMMITS_PRESENT              = "DiffviewCommitsPresent",
+  GROUP_DIFFVIEW_COMMITS                = "a1b2c3d4-e5f6-7890-abcd-diffvcommits",
+
   ---! dap
   DAP_BREAKPOINT                        = "DapBreakpoint",
   DAP_BREAKPOINT_CONDITION              = "DapBreakpointCondition",
@@ -241,6 +245,8 @@ sd(M.sign.SEARCHER_RESULT_SELECTED,         { text = stl.icon.ui.Selected,      
 sd(M.sign.SEARCHER_RESULT_SELECTED_CURRENT, { text = stl.icon.ui.SelectedCurrent,      texthl = "m_pk_sign_line_selected_current" })
 
 sd(M.sign.CHOICES_CURRENT,                  { text = stl.icon.ui.ArrowPresent,         texthl = "m_ch_sign_current"               })
+
+sd(M.sign.DIFFVIEW_COMMITS_PRESENT,         { text = stl.icon.ui.ArrowPresent,         texthl = "m_dv_sign_present"               })
 
 sd(M.sign.DAP_BREAKPOINT,                   { text = stl.icon.dap.Breakpoint,          texthl = "DapBreakpoint",                  linehl = "DapBreakpointLine",          numhl = "DapBreakpointNum",          })
 sd(M.sign.DAP_BREAKPOINT_CONDITION,         { text = stl.icon.dap.BreakpointCondition, texthl = "DapBreakpointCondition",         linehl = "DapBreakpointConditionLine", numhl = "DapBreakpointConditionNum", })

@@ -6,26 +6,31 @@
 
 ```lua
 ---@alias stl.nvim.tab.TypeEnum
----| "diffview"
+---| "diffview_commits"
+---| "diffview_workspace"
 ---| "normal"
 ```
 
-| Type       | 描述             |
-|:-----------|:-----------------|
-| `normal`   | 普通编辑 tab     |
-| `diffview` | Git diff 视图    |
+| Type                 | 描述                                                      |
+|:---------------------|:----------------------------------------------------------|
+| `normal`             | 普通编辑 tab                                              |
+| `diffview_workspace` | Git Diff 视图（staged/unstaged）                          |
+| `diffview_commits`   | Git Log 视图（支持 path_filter 实现单文件/目录历史过滤）  |
 
 ## TypeEnum 与 TypeSet
 
 ```lua
 -- 具体类型枚举
-stl.nvim.tab.TypeEnum.NORMAL    -- "normal"
-stl.nvim.tab.TypeEnum.DIFFVIEW  -- "diffview"
+stl.nvim.tab.TypeEnum.NORMAL               -- "normal"
+stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
+stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
 
 -- 类型集合（便捷常量，均为数组）
-stl.nvim.tab.TypeSet.ALL        -- { "normal", "diffview" }
-stl.nvim.tab.TypeSet.NORMAL     -- { "normal" }
-stl.nvim.tab.TypeSet.DIFFVIEW   -- { "diffview" }
+stl.nvim.tab.TypeSet.ALL                   -- 所有类型
+stl.nvim.tab.TypeSet.NORMAL                -- { "normal" }
+stl.nvim.tab.TypeSet.DIFFVIEW              -- 所有 diffview 类型
+stl.nvim.tab.TypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
+stl.nvim.tab.TypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
 ```
 
 ## Command 实现规范
@@ -51,7 +56,10 @@ command.implement({
 tabtypes = stl.nvim.tab.TypeSet.NORMAL
 
 -- 多类型
-tabtypes = { stl.nvim.tab.TypeEnum.NORMAL, stl.nvim.tab.TypeEnum.DIFFVIEW }
+tabtypes = { stl.nvim.tab.TypeEnum.NORMAL, stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE }
+
+-- 所有 diffview 类型
+tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW
 
 -- 全局通用
 tabtypes = stl.nvim.tab.TypeSet.ALL
@@ -63,13 +71,49 @@ tabtypes = stl.nvim.tab.TypeSet.ALL
 
 ## Tabline 渲染
 
-根据 `tabtype` 渲染不同内容：
+### 注册模式
 
-| tabtype    | 显示内容                   |
-|:-----------|:---------------------------|
-| `normal`   | buffer 列表 + tab 指示器   |
-| `diffview` | Diffview 专用标题          |
-| 其他       | fallback 到 `normal` 渲染  |
+`era.m.tabline` 提供注册 API，允许各模块为特定 `tabtype` 注册自定义 nvimbar：
+
+```lua
+---@param tabtype stl.nvim.tab.TypeEnum
+---@param nvimbar era.m.nvimbar.Nvimbar
+---@return boolean success
+era.m.tabline.register(tabtype, nvimbar)
+```
+
+特点：
+
+- 每个 tabtype 只能注册一次，重复注册返回 false
+- 未注册的 tabtype 使用默认 nvimbar（normal 类型）
+- 保持单向依赖：调用方依赖 tabline，而非反向
+
+### 渲染流程
+
+1. 获取当前 tab 的 `tabtype`
+2. 从 `tabline_nvimbar_map` 查找已注册的 nvimbar
+3. 若未找到，使用默认 nvimbar
+4. 调用 `nvimbar:render()` 渲染
+
+### 注册示例
+
+```lua
+-- 在 diffview 模块中注册
+local nvimbar = era.m.nvimbar.Nvimbar.new({
+  name = "tabline_diffview_workspace",
+  -- ... 配置
+})
+era.m.tabline.register(stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
+```
+
+### 各 tabtype 的 tabline 内容
+
+| tabtype              | 显示内容                                          |
+|:---------------------|:--------------------------------------------------|
+| `normal`             | buffer 列表 + tab 指示器                          |
+| `diffview_workspace` | Diffview 专用标题                                 |
+| `diffview_commits`   | Diffview 专用标题（带 path_filter 时显示文件名）  |
+| 其他                 | fallback 到 normal 渲染                           |
 
 ## 设计原则
 

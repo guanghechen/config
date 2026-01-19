@@ -286,7 +286,7 @@ function M.resolve(tabnr, force)
     end
   end
 
-  local tabtype = M.resolve_type(tabnr, force) ---@type stl.nvim.tab.TypeEnum
+  local tabtype = vim.t[tabnr].tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local winnr_fixed = stl.c.Observable.from_value(stl.nvim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable
@@ -303,32 +303,6 @@ function M.resolve(tabnr, force)
   }
   meta_map[tabnr] = meta
   return meta
-end
-
----@param tabnr                         integer
----@param force                         boolean
----@return stl.nvim.tab.TypeEnum
-function M.resolve_type(tabnr, force)
-  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
-  if tabtype ~= nil and not force then
-    return tabtype
-  end
-
-  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
-
-  ---! Check if the diffview tab
-  for _, winnr in ipairs(winnrs) do
-    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-    if filetype == stl.filetype.DIFFVIEW_FILES or filetype == stl.filetype.DIFFVIEW_FILE_HISTORY then
-      tabtype = stl.nvim.tab.TypeEnum.DIFFVIEW ---@type stl.nvim.tab.TypeEnum
-      break
-    end
-  end
-
-  tabtype = tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
-  vim.t[tabnr].tabtype = tabtype
-  return tabtype
 end
 
 ---@param tabnr                         integer

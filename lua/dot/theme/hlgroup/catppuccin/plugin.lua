@@ -69,12 +69,6 @@ function M.gen_hlgroup_map(context)
     BlinkCmpSignatureHelpBorder = { fg = c.overlay1, bg = cmp_panel_bg },
     BlinkCmpSource = { fg = c.overlay2, bg = c.none },
 
-    ---! diffview.nvim
-    DiffviewFilePanelDeletions = { fg = c.red, bold = true },
-    DiffviewFilePanelFileName = { fg = c.text, bold = true },
-    DiffviewFilePanelInsertions = { fg = c.green, bold = true },
-    DiffviewStatusModified = { fg = c.yellow, bold = true },
-
     ---! flash.nvim
     FlashBackdrop = { fg = c.overlay0 },
     FlashCurrent = { fg = c.base, bg = c.peach, bold = true },

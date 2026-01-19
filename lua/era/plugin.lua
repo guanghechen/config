@@ -41,7 +41,6 @@ local raw_specs = {
   { name = "blink.indent",                main = "blink.indent",                  cond = conds.not_vscode         },
   { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode         },
   { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode         },
-  { name = "diffview.nvim",               main = "diffview",                      cond = conds.not_vscode         },
   { name = "flash.nvim",                  main = "flash",                         cond = conds.not_vscode         },
   { name = "friendly-snippets",                                                   cond = conds.not_vscode         },
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                },
