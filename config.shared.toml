@@ -34,12 +34,12 @@ hide_gpt-5.1-codex-max_migration_prompt = true
 notifications = ["agent-turn-complete", "approval-requested"]
 
 [profiles.github-copilot]
-model = "gpt-5.1-codex-max"
+model = "gpt-5.2-codex"
 model_reasoning_effort = "high"
 model_provider = "github-copilot"
 
 [profiles.azure]
-model = "gpt-5-codex"
+model = "gpt-5.1-codex-max"
 model_reasoning_effort = "high"
 model_provider = "azure"
 
