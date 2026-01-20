@@ -4,11 +4,6 @@
 
 `era.m.minimap` 是一个基于 satellite.nvim 架构的 scrollbar/minimap 模块，在窗口右侧显示一个浮动的滚动条，用于展示文档概览和快速导航。
 
-## 参考实现
-
-- 源码：`satellite.nvim` by lewis6991
-- 路径：`/Users/wanchenfang/sourcecodes/github/lewis6991/satellite.nvim`
-
 ## 架构
 
 ```
@@ -49,13 +44,13 @@ init.lua (模块入口) ← autocmd.lua (事件监听)
 
 ### 与现有模块的集成
 
-| 依赖模块                          | 用途                                     |
-|:----------------------------------|:-----------------------------------------|
-| `era.m.git.buffer`                | 获取 buffer 的 hunk 信息                 |
-| `era.m.git.hunk`                  | 订阅 hunk 变化、计算 sign                |
-| `dot.context.workspace.plugin`    | minimap 启用 flag                        |
-| `dot.theme.hlgroup`               | highlight group 定义                     |
-| `dot.command`                     | 命令注册                                 |
+| 依赖模块                       | 用途                     |
+|:-------------------------------|:-------------------------|
+| `era.m.git.buffer`             | 获取 buffer 的 hunk 信息 |
+| `era.m.git.hunk`               | 订阅 hunk 变化、计算 sign |
+| `dot.context.workspace.plugin` | minimap 启用 flag        |
+| `dot.theme.hlgroup`            | highlight group 定义     |
+| `dot.command`                  | 命令注册                 |
 
 ## 核心概念
 
@@ -154,13 +149,13 @@ local SYMBOLS = {
 
 ## 命令
 
-| 命令              | 功能                                     |
-|:------------------|:-----------------------------------------|
-| `Fminimapattach`  | Attach minimap 到当前窗口                |
-| `Fminimapdetach`  | Detach 当前窗口的 minimap                |
-| `Fminimapenable`  | 全局启用 minimap（设置 context flag）    |
-| `Fminimapdisable` | 全局禁用 minimap（设置 context flag）    |
-| `Fminimaptoggle`  | 切换全局 minimap 状态                    |
+| 命令              | 功能                                  |
+|:------------------|:--------------------------------------|
+| `Fminimapattach`  | Attach minimap 到当前窗口             |
+| `Fminimapdetach`  | Detach 当前窗口的 minimap             |
+| `Fminimapenable`  | 全局启用 minimap（设置 context flag） |
+| `Fminimapdisable` | 全局禁用 minimap（设置 context flag） |
+| `Fminimaptoggle`  | 切换全局 minimap 状态                 |
 
 **注意**：minimap 不会自动 attach 任何窗口，需要通过命令或 autocmd 手动触发。
 
@@ -267,20 +262,6 @@ M.render(bufnr, winnr)    -- 调用所有 handler 渲染
 -- 核心函数
 M.handle_leftmouse()      -- 处理左键点击
 M.set_topline(winnr, lnum)  -- 滚动到指定行
-```
-
-### async.lua
-
-```lua
--- 职责
--- 1. 协程包装，支持异步操作
--- 2. 防止大文件下的卡顿（120 FPS 时间控制）
-
--- 核心函数
-M.run(fn, ...)            -- 在协程中运行函数
-M.scheduler()             -- yield 给 scheduler
-M.ipairs(array)           -- 异步迭代（自动 yield）
-M.event_control(start)    -- 时间控制
 ```
 
 ### handlers/cursor.lua
@@ -520,39 +501,38 @@ end
 
 5. 实现 `handlers.lua` - Handler 框架
 6. 实现 `handlers/cursor.lua` - 光标 handler
-7. 实现 `async.lua` - 异步框架
-8. 实现 `handlers/search.lua` - 搜索 handler
-9. 实现 `handlers/diagnostic.lua` - 诊断 handler
+7. 实现 `handlers/search.lua` - 搜索 handler（使用 `stl.async`）
+8. 实现 `handlers/diagnostic.lua` - 诊断 handler
 
 ### Phase 3: Git 集成
 
-10. 实现 `handlers/git.lua` - Git handler（集成 era/m/git/）
+9. 实现 `handlers/git.lua` - Git handler（集成 era/m/git/）
 
 ### Phase 4: 其他 Handler
 
-11. 实现 `handlers/marks.lua` - 标记 handler
-12. 实现 `handlers/quickfix.lua` - Quickfix handler
+10. 实现 `handlers/marks.lua` - 标记 handler
+11. 实现 `handlers/quickfix.lua` - Quickfix handler
 
 ### Phase 5: 鼠标交互
 
-13. 实现 `mouse.lua` - 鼠标交互
+12. 实现 `mouse.lua` - 鼠标交互
 
 ### Phase 6: Fold 支持
 
-14. 扩展 `util.lua` - 添加 fold 处理
+13. 扩展 `util.lua` - 添加 fold 处理
 
 ### Phase 7: 入口与集成
 
-15. 实现 `init.lua` - 模块入口、命令注册
-16. 在 `dot.context.workspace.plugin` 中添加 minimap flag
-17. 在 `dot/theme/hlgroup/module.lua` 中添加 highlight groups
-18. 在各主题 `module.lua` 中添加主题特定 highlight
+14. 实现 `init.lua` - 模块入口、命令注册
+15. 在 `dot.context.workspace.plugin` 中添加 minimap flag
+16. 在 `dot/theme/hlgroup/module.lua` 中添加 highlight groups
+17. 在各主题 `module.lua` 中添加主题特定 highlight
 
 ### Phase 8: 测试与优化
 
-19. 全面测试所有功能
-20. 性能优化（缓存、节流）
-21. 边界情况处理
+18. 全面测试所有功能
+19. 性能优化（缓存、节流）
+20. 边界情况处理
 
 ## 性能考量
 
@@ -564,14 +544,14 @@ end
 
 ## 与 satellite.nvim 的差异
 
-| 差异点                 | satellite.nvim           | era.m.minimap                  |
-|:-----------------------|:-------------------------|:-------------------------------|
-| Git handler            | 基于 gitsigns.nvim       | 基于 era/m/git/                |
-| 自动 attach            | 支持                     | 不支持，需手动触发             |
-| 显示模式               | overlap + sign column    | 仅 overlay                     |
-| 配置系统               | 独立配置                 | 集成 context 系统              |
-| Highlight              | Satellite* 前缀          | m_mm_* 前缀                    |
-| 命令前缀               | Satellite*               | Fminimap*                      |
+| 差异点           | satellite.nvim         | era.m.minimap              |
+|:-----------------|:-----------------------|:---------------------------|
+| Git handler      | 基于 gitsigns.nvim     | 基于 era/m/git/            |
+| 自动 attach      | 支持                   | 不支持，需手动触发         |
+| 显示模式         | overlap + sign column  | 仅 overlay                 |
+| 配置系统         | 独立配置               | 集成 context 系统          |
+| Highlight        | Satellite* 前缀        | m_mm_* 前缀                |
+| 命令前缀         | Satellite*             | Fminimap*                  |
 
 ## 已知限制
 
@@ -591,4 +571,4 @@ The following are intentional design choices:
 
 - **Git handler using era/m/git/**: Instead of depending on gitsigns.nvim, we use the existing git module for consistency and to avoid external dependencies.
 
-- **Async framework from satellite.nvim**: The async.lua coroutine wrapper is well-designed for preventing frame drops. We adopt it rather than reinventing with Scheduler unless profiling shows issues.
+- **Async framework from stl.async**: The async coroutine wrapper is well-designed for preventing frame drops. We use the standard library implementation rather than reinventing.

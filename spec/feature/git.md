@@ -1,5 +1,3 @@
-@lua/dot/module/git/
-
 # Git 模块
 
 这是一个轻量级的 Git 集成模块，用于替代 gitsigns.nvim，提供 Git 状态追踪、Hunk 管理、Sign 显示和 Blame 功能。
@@ -148,14 +146,14 @@ my-worktree/
 
 #### 事件触发矩阵
 
-| Git 操作 | gitdir 变化 | index 变化 | commondir 变化 | 刷新动作 |
-|:---------|:------------|:-----------|:---------------|:---------|
-| `git add` | - | ✓ index | - | `invalidate_index_all` |
-| `git reset <file>` | - | ✓ index | - | `invalidate_index_all` |
-| `git commit` (本地) | ✓ HEAD | ✓ index | - | `invalidate_compare_text_all` |
-| `git commit` (外部 worktree) | - | ✓ index | ✓ refs/ | `invalidate_compare_text_all` |
-| `git checkout` | ✓ HEAD | ✓ index | - | `invalidate_compare_text_all` |
-| `git pull/fetch` | ✓ FETCH_HEAD | - | - | `mark_dirty_all` + status 刷新 |
+| Git 操作                     | gitdir 变化 | index 变化 | commondir 变化 | 刷新动作                    |
+|:-----------------------------|:------------|:-----------|:---------------|:----------------------------|
+| `git add`                    | -           | ✓ index    | -              | `invalidate_index_all`      |
+| `git reset <file>`           | -           | ✓ index    | -              | `invalidate_index_all`      |
+| `git commit` (本地)          | ✓ HEAD      | ✓ index    | -              | `invalidate_compare_text_all` |
+| `git commit` (外部 worktree) | -           | ✓ index    | ✓ refs/        | `invalidate_compare_text_all` |
+| `git checkout`               | ✓ HEAD      | ✓ index    | -              | `invalidate_compare_text_all` |
+| `git pull/fetch`             | ✓ FETCH_HEAD | -          | -              | `mark_dirty_all` + status 刷新 |
 
 #### Debounce 策略
 
@@ -166,10 +164,10 @@ my-worktree/
 
 **重要发现**：libuv 的 `fs_event` 监听单个文件 vs 监听目录时行为不同：
 
-| 监听方式                            | `git add` | `git reset`/`git unstage` |
-|:------------------------------------|:----------|:--------------------------|
-| 文件级 (`fs_event` on `index`)      | ✓ 触发    | ✗ 可能丢失                |
-| 目录级 (`fs_event` on `gitdir/`)    | ✓ 触发    | ✓ 触发                    |
+| 监听方式                          | `git add` | `git reset`/`git unstage` |
+|:----------------------------------|:----------|:--------------------------|
+| 文件级 (`fs_event` on `index`)    | ✓ 触发    | ✗ 可能丢失                |
+| 目录级 (`fs_event` on `gitdir/`)  | ✓ 触发    | ✓ 触发                    |
 
 原因：Git 不同操作使用不同的写入策略：
 - `git add`：直接写入 index 文件
@@ -228,14 +226,15 @@ signs_staged:  -- 已暂存变更的 sign（优先级 9，仅在无未暂存 sig
 ```
 
 Sign 类型：
-| 类型         | 符号 | 含义                       |
-|:-------------|:-----|:---------------------------|
-| add          | ┃    | 新增行                     |
-| change       | ┃    | 修改行                     |
-| delete       | ▁    | 删除行（在下一行显示）     |
-| topdelete    | ▔    | 文件开头的删除             |
-| changedelete | ~    | 修改且有删除               |
-| untracked    | ┆    | 未追踪文件的新增行         |
+
+| 类型         | 符号 | 含义                   |
+|:-------------|:-----|:-----------------------|
+| add          | ┃    | 新增行                 |
+| change       | ┃    | 修改行                 |
+| delete       | ▁    | 删除行（在下一行显示） |
+| topdelete    | ▔    | 文件开头的删除         |
+| changedelete | ~    | 修改且有删除           |
+| untracked    | ┆    | 未追踪文件的新增行     |
 
 ## Hunk 操作
 
@@ -312,17 +311,18 @@ M.reset_buffer()             -- Reset 整个文件
 解析 `git diff --name-status` 和 `git ls-files` 输出：
 
 状态码映射：
-| 码   | 含义       | 优先级 |
-|:-----|:-----------|:-------|
-| U    | 冲突       | 1      |
-| ?    | 未追踪     | 2      |
-| M    | 修改       | 4      |
-| D    | 删除       | 8      |
-| A    | 新增       | 16     |
-| R    | 重命名     | 32     |
-| C    | 复制       | 64     |
-| T    | 类型变更   | 128    |
-| !    | 忽略       | 256    |
+
+| 码 | 含义     | 优先级 |
+|:---|:---------|:-------|
+| U  | 冲突     | 1      |
+| ?  | 未追踪   | 2      |
+| M  | 修改     | 4      |
+| D  | 删除     | 8      |
+| A  | 新增     | 16     |
+| R  | 重命名   | 32     |
+| C  | 复制     | 64     |
+| T  | 类型变更 | 128    |
+| !  | 忽略     | 256    |
 
 Stage 状态：
 - `staged`: 仅有已暂存变更

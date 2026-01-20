@@ -107,23 +107,23 @@ require("era.m.plugin").setup(specs)
 
 ### Commands
 
-| Command            | Description                      |
-|:-------------------|:---------------------------------|
-| `:Plugin`          | Open plugin window (Home view)   |
-| `:Plugin home`     | Open Home view                   |
-| `:Plugin profile`  | Open Profile view                |
-| `:Plugin update`   | Open Update view                 |
-| `:Plugin clean`    | Open Clean view                  |
+| Command           | Description                    |
+|:------------------|:-------------------------------|
+| `:Plugin`         | Open plugin window (Home view) |
+| `:Plugin home`    | Open Home view                 |
+| `:Plugin profile` | Open Profile view              |
+| `:Plugin update`  | Open Update view               |
+| `:Plugin clean`   | Open Clean view                |
 
 ### Keymaps (in plugin window)
 
-| Key   | Description                              |
-|:------|:-----------------------------------------|
-| `H`   | Switch to Home view                      |
-| `P`   | Switch to Profile view                   |
-| `U`   | Switch to Update view and start update   |
-| `X`   | Switch to Clean view and start clean     |
-| `q`   | Close window                             |
+| Key | Description                            |
+|:----|:---------------------------------------|
+| `H` | Switch to Home view                    |
+| `P` | Switch to Profile view                 |
+| `U` | Switch to Update view and start update |
+| `X` | Switch to Clean view and start clean   |
+| `q` | Close window                           |
 
 ## Views
 
@@ -151,25 +151,25 @@ Removes plugin directories that are not in the current specs.
 
 All highlight groups use the `m_pl_` prefix:
 
-| Group              | Description             |
-|:-------------------|:------------------------|
-| `m_pl_h1`          | Active tab header       |
-| `m_pl_h2`          | Section header          |
-| `m_pl_button`      | Inactive tab header     |
-| `m_pl_bold`        | Bold text               |
-| `m_pl_comment`     | Muted/comment text      |
-| `m_pl_loaded`      | Loaded plugin icon      |
-| `m_pl_not_loaded`  | Not loaded plugin icon  |
-| `m_pl_running`     | Running task icon       |
-| `m_pl_error`       | Error status            |
-| `m_pl_time`        | Load time               |
-| `m_pl_event`       | Event trigger           |
-| `m_pl_cmd`         | Command trigger         |
-| `m_pl_ft`          | Filetype trigger        |
-| `m_pl_key`         | Key trigger             |
-| `m_pl_dep`         | Dependency              |
-| `m_pl_commit_from` | Old commit hash         |
-| `m_pl_commit_to`   | New commit hash         |
+| Group             | Description            |
+|:------------------|:-----------------------|
+| `m_pl_h1`         | Active tab header      |
+| `m_pl_h2`         | Section header         |
+| `m_pl_button`     | Inactive tab header    |
+| `m_pl_bold`       | Bold text              |
+| `m_pl_comment`    | Muted/comment text     |
+| `m_pl_loaded`     | Loaded plugin icon     |
+| `m_pl_not_loaded` | Not loaded plugin icon |
+| `m_pl_running`    | Running task icon      |
+| `m_pl_error`      | Error status           |
+| `m_pl_time`       | Load time              |
+| `m_pl_event`      | Event trigger          |
+| `m_pl_cmd`        | Command trigger        |
+| `m_pl_ft`         | Filetype trigger       |
+| `m_pl_key`        | Key trigger            |
+| `m_pl_dep`        | Dependency             |
+| `m_pl_commit_from` | Old commit hash        |
+| `m_pl_commit_to`  | New commit hash        |
 
 ## Lock File Format
 

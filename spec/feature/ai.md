@@ -111,13 +111,13 @@ Prompts support a simple variable substitution system for dynamic content.
 
 Different AI agents have different slash command formats. When sending prompts, slash commands are automatically transformed based on the target agent:
 
-| Agent    | Format                          | Example                         |
-|:---------|:--------------------------------|:--------------------------------|
-| claude   | `/command` (unchanged)          | `/commit` → `/commit`           |
-| copilot  | `/command` (unchanged)          | `/fix` → `/fix`                 |
-| gemini   | `/command` (unchanged)          | `/chat` → `/chat`               |
-| opencode | `/command` (unchanged)          | `/init` → `/init`               |
-| codex    | `/prompts:command`              | `/commit` → `/prompts:commit`   |
+| Agent    | Format                 | Example                       |
+|:---------|:-----------------------|:------------------------------|
+| claude   | `/command` (unchanged) | `/commit` → `/commit`         |
+| copilot  | `/command` (unchanged) | `/fix` → `/fix`               |
+| gemini   | `/command` (unchanged) | `/chat` → `/chat`             |
+| opencode | `/command` (unchanged) | `/init` → `/init`             |
+| codex    | `/prompts:command`     | `/commit` → `/prompts:commit` |
 
 **Builtin Commands:**
 
@@ -144,7 +144,6 @@ lua/era/m/ai/
 
 ## Commands
 
-Registered in `lua/fml/command.lua`:
 - `ai.attach_agent`: Open attach picker
 - `ai.detach_agent`: Detach agent (direct detach if only one attached, otherwise show picker)
 - `ai.submit_buffer`: Send current split block content and submit

@@ -1,7 +1,8 @@
-Since I'm very family with the typescript, so I will use typescript to represent the data types I wished shaped as.
+# Search Result Types
 
-First, let's consider what's the result we deliver to the lua, I believe the result should be like:
+Since I'm very familiar with TypeScript, I will use TypeScript to represent the data types I wish to have.
 
+First, let's consider what's the result we deliver to Lua. I believe the result should be like:
 
 ```typescript
 export interface ITextMatch {
@@ -21,7 +22,7 @@ export interface ITextMatch {
   // e.g., if the text is `hello\nworld\n`, and we matched `llo\nworld`, then the `s` should be `hello↲world`, not `hello↲world↲`.
   // trailing line-ending glyphs should be omitted even when the match captures them,
   // so `llo\nworld\n` becomes `hello↲world`.
-  readonly s: string 
+  readonly s: string
   readonly sx: number // the leftest matched pos offset of the leftest pos of the s.
   readonly sy: number // the rightest matched pos offset of the rightest pos of the s.
 }
@@ -34,7 +35,7 @@ export interface IFileMatch {
 // This result is for the search_in_files* api.
 export interface ISearchFileResult {
   readonly items: IFileMatch[]
-  readonly elapsed_time: number (ms)
+  readonly elapsed_time: number // milliseconds
 }
 
 export interface ISearchInLinesMatchPoint {
@@ -50,8 +51,8 @@ export interface ISearchInLinesLineMatch {
 
 // This result is for the search_in_lines* / search_in_text api.
 export interface ISearchTextResult {
-  readonly matches: ITextMatch[] 
+  readonly matches: ITextMatch[]
   readonly lines: ISearchInLinesLineMatch[]
-  readonly elapsed_time: number (ms)
+  readonly elapsed_time: number // milliseconds
 }
 ```

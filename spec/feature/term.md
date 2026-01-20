@@ -1,3 +1,5 @@
+# Terminal Feature
+
 Implement a Terminal widget experience that mirrors the ergonomics of the Notepad widget while remaining tailored to running shell jobs.
 
 ## Terminal Behavior
