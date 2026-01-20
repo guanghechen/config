@@ -4,6 +4,39 @@ import type { IPatch } from "./types"
 import { applyPatches, replaceAll } from "./util"
 
 const patches: IPatch[] = [
+  // 2.1.12 - Linux/WSL patches
+  {
+    name: "checkImage-grep-pattern",
+    version: "2.1.12",
+    platform: ["wsl", "nix"],
+    search: /grep -E "image\/\(png\|jpeg\|jpg\|gif\|webp\)"/,
+    replace: (content, matches) => replaceAll(content, matches, () => 'grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+    verify: (text) => text.includes('grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+  },
+  {
+    name: "wl-paste-bmp-conversion",
+    version: "2.1.12",
+    platform: ["wsl", "nix"],
+    search: "wl-paste --type image/png >",
+    replace: (content, matches) =>
+      replaceAll(content, matches, () => "wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >"),
+    verify: (text) => text.includes("wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >"),
+  },
+  {
+    // Original: EFA=d0()==="windows"?{displayText:`${$L0}+v`,check:(A,Q)=>Q.meta&&(A==="v"||A==="V")}
+    // Changed:  EFA=d0()==="windows"?{displayText:"ctrl+v",check:(A,Q)=>Q.ctrl&&(A==="v"||A==="V")}
+    name: "win-image-paste-shortcut",
+    version: "2.1.12",
+    platform: ["win"],
+    search: /(\w+)=d0\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName, arg1, arg2] = m.matched_groups
+        return `${varName}=d0()==="windows"?{displayText:"ctrl+v",check:(${arg1},${arg2})=>${arg2}.ctrl&&`
+      }),
+    verify: (text) => text.includes('d0()==="windows"?{displayText:"ctrl+v",check:'),
+  },
+  // 2.1.7 - Linux/WSL patches
   {
     name: "checkImage-grep-pattern",
     version: "2.1.7",
