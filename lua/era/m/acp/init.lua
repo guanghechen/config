@@ -9,6 +9,7 @@ local __mods = {
   provider = "era.m.acp.provider",
   session = "era.m.acp.session",
   sidebar = "era.m.acp.sidebar",
+  tabline = "era.m.acp.tabline",
   widget = "era.m.acp.widget",
 }
 
@@ -23,6 +24,7 @@ local __mods = {
 ---@field public provider               era.m.acp.provider
 ---@field public session                era.m.acp.Session
 ---@field public sidebar                era.m.acp.Sidebar
+---@field public tabline                era.m.acp.tabline
 ---@field public widget                 era.m.acp.Widget
 local M = setmetatable({
   __mods = __mods,
@@ -55,6 +57,8 @@ function M.open(opts)
     _widget:focus()
     return _widget
   end
+
+  M.tabline.register()
 
   local provider_name = opts.provider or M.config.default_provider ---@type era.m.acp.ProviderName
   local session = M.session.new({

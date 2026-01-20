@@ -5,21 +5,21 @@ local K = dot.command.definitions ---@type dot.command.definitions
 command
   .implement({
     uuid = K.acp.cancel.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    tabtypes = stl.nvim.tab.TypeSet.ACP,
     action = function()
       era.m.acp.cancel()
     end,
   })
   .implement({
     uuid = K.acp.clear.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    tabtypes = stl.nvim.tab.TypeSet.ACP,
     action = function()
       era.m.acp.clear()
     end,
   })
   .implement({
     uuid = K.acp.close.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    tabtypes = stl.nvim.tab.TypeSet.ACP,
     action = function()
       era.m.acp.close()
     end,
@@ -48,14 +48,14 @@ command
   })
   .implement({
     uuid = K.acp.select_provider.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    tabtypes = stl.nvim.tab.TypeSet.ACP,
     action = function()
       era.m.acp.select_provider()
     end,
   })
   .implement({
     uuid = K.acp.submit.uuid,
-    tabtypes = stl.nvim.tab.TypeSet.ALL,
+    tabtypes = stl.nvim.tab.TypeSet.ACP,
     action = function(args)
       local content = args ~= "" and args or nil
       era.m.acp.submit(content)

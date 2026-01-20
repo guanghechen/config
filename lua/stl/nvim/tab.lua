@@ -1,10 +1,12 @@
 ---@alias stl.nvim.tab.TypeEnum
+---| "acp"
 ---| "diffview_commits"
 ---| "diffview_workspace"
 ---| "normal"
 
 ---@class stl.nvim.tab.TypeEnumClass
 local TypeEnum = {
+  ACP = "acp",
   DIFFVIEW_COMMITS = "diffview_commits",
   DIFFVIEW_WORKSPACE = "diffview_workspace",
   NORMAL = "normal",
@@ -12,8 +14,10 @@ local TypeEnum = {
 
 ---@class stl.nvim.tab.TypeSetClass
 local TypeSet = {
+  ACP = { TypeEnum.ACP },
   ALL = {
     TypeEnum.NORMAL,
+    TypeEnum.ACP,
     TypeEnum.DIFFVIEW_COMMITS,
     TypeEnum.DIFFVIEW_WORKSPACE,
   },
