@@ -5,7 +5,6 @@ $functionsRoot = Join-Path $pwshRoot "functions"
 $lazyFunctions = @(
     'ghc-claude-remote'
     'ghc-opensource'
-    'ghc-patch-claude'
     'ghc-proxy'
     'ghc-theme-apply'
     'ghc-theme-gen'

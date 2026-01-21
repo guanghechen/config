@@ -25,42 +25,52 @@ function ghc-update-agents {
     Write-Host "  Skipping agent installation as requested`n" -ForegroundColor Yellow
   }
 
-  Write-Host "  Patching Claude Code..." -ForegroundColor Cyan
-  ghc-patch-claude
-
-  $xdgConfigHome = if ($env:XDG_CONFIG_HOME) {
-    $env:XDG_CONFIG_HOME
-  } elseif ($env:USERPROFILE) {
-    Join-Path $env:USERPROFILE ".config"
-  } else {
-    Join-Path $HOME ".config"
-  }
-  $claudeSettingsDir = Join-Path $xdgConfigHome "claude"
-  $claudeSettingsFile = Join-Path $claudeSettingsDir "settings.json"
-  if (Test-Path $claudeSettingsFile) {
+  if (Get-Command claude -ErrorAction SilentlyContinue) {
+    Write-Host "  Patching Claude Code..." -ForegroundColor Cyan
+    $scriptDir = Join-Path $env:XDG_CONFIG_HOME "claude/script"
+    Write-Host "  cd $scriptDir && bun src/patch/index.ts" -ForegroundColor Cyan
+    Push-Location $scriptDir
     try {
-      $settingsJson = Get-Content $claudeSettingsFile -Raw | ConvertFrom-Json
-    }
-    catch {
-      $settingsJson = $null
+      bun src/patch/index.ts
+    } finally {
+      Pop-Location
     }
 
-    $enabledPlugins = @()
-    if ($settingsJson -and $settingsJson.enabledPlugins) {
-      foreach ($entry in $settingsJson.enabledPlugins.PSObject.Properties) {
-        if ($entry.Value -eq $true) {
-          $enabledPlugins += $entry.Name
+    $xdgConfigHome = if ($env:XDG_CONFIG_HOME) {
+      $env:XDG_CONFIG_HOME
+    } elseif ($env:USERPROFILE) {
+      Join-Path $env:USERPROFILE ".config"
+    } else {
+      Join-Path $HOME ".config"
+    }
+    $claudeSettingsDir = Join-Path $xdgConfigHome "claude"
+    $claudeSettingsFile = Join-Path $claudeSettingsDir "settings.json"
+    if (Test-Path $claudeSettingsFile) {
+      try {
+        $settingsJson = Get-Content $claudeSettingsFile -Raw | ConvertFrom-Json
+      }
+      catch {
+        $settingsJson = $null
+      }
+
+      claude plugin marketplace update
+      $enabledPlugins = @()
+      if ($settingsJson -and $settingsJson.enabledPlugins) {
+        foreach ($entry in $settingsJson.enabledPlugins.PSObject.Properties) {
+          if ($entry.Value -eq $true) {
+            $enabledPlugins += $entry.Name
+          }
         }
       }
-    }
 
-    if ($enabledPlugins.Count -gt 0) {
-      Write-Host "  Syncing Claude Code plugins..." -ForegroundColor Cyan
-      foreach ($plugin in $enabledPlugins) {
-        Write-Host "  Installing $plugin..." -ForegroundColor DarkGray
-        claude plugin install $plugin --scope user | Out-Null
+      if ($enabledPlugins.Count -gt 0) {
+        Write-Host "  Syncing Claude Code plugins..." -ForegroundColor Cyan
+        foreach ($plugin in $enabledPlugins) {
+          Write-Host "  Installing $plugin..." -ForegroundColor DarkGray
+          claude plugin install $plugin --scope user | Out-Null
+        }
+        Write-Host ("  Synced {0} plugin(s)`n" -f $enabledPlugins.Count) -ForegroundColor Green
       }
-      Write-Host ("  Synced {0} plugin(s)`n" -f $enabledPlugins.Count) -ForegroundColor Green
     }
   }
 }
