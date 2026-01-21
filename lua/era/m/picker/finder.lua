@@ -200,7 +200,7 @@ function M:create_win(winopts, dimension)
   winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
   self._winnr = winnr
 
-  vim.w[winnr].wintype = stl.nvim.win.TypeEnum.PICKER_FINDER
+  vim.w[winnr].wintype = stl.e.WinTypeEnum.PICKER_FINDER
   vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("relativenumber", false, { win = winnr, scope = "local" })

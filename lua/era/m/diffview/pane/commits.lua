@@ -409,7 +409,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 ---@class era.m.diffview.pane.commits.IRenderOpts
----@field public tabtype                stl.nvim.tab.TypeEnum|nil
+---@field public tabtype                stl.e.TabTypeEnum|nil
 ---@field public target_file            string|nil
 ---@field public viewtype               stl.m.diffview.PanelViewTypeEnum|nil
 ---@field public foldempty              boolean|nil

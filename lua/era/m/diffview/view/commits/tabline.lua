@@ -363,7 +363,7 @@ function M.create_tabline()
   return function()
     local position = M.position
     local nvimbar ---@type era.m.nvimbar.Nvimbar
-    local tabtype = stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS
+    local tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
 
     nvimbar = era.m.nvimbar.Nvimbar.new({
       name = "tabline_diffview_commits",
@@ -402,7 +402,7 @@ end
 ---Register nvimbar for DIFFVIEW_COMMITS tabtype (idempotent)
 ---@return nil
 function M.register()
-  era.m.tabline.register(stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS, M.create_tabline())
+  era.m.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_COMMITS, M.create_tabline())
 end
 
 return M

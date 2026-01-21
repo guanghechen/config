@@ -73,7 +73,7 @@ function M.create_tabline()
       end,
       is_active = stl.fn.falsy,
       on_fulfilled = function()
-        if vim.t.tabtype == stl.nvim.tab.TypeEnum.ACP then
+        if vim.t.tabtype == stl.e.TabTypeEnum.ACP then
           vim.o.tabline = nvimbar:snapshot()
         end
       end,
@@ -94,7 +94,7 @@ end
 ---Register nvimbar for ACP tabtype (idempotent)
 ---@return nil
 function M.register()
-  era.m.tabline.register(stl.nvim.tab.TypeEnum.ACP, M.create_tabline())
+  era.m.tabline.register(stl.e.TabTypeEnum.ACP, M.create_tabline())
 end
 
 return M

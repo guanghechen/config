@@ -7,7 +7,7 @@
 ---@field public winnr_fixed            stl.c.Observable
 ---@field public winnr_float            stl.c.Observable
 ---@field public winnr_sourcefile       stl.c.Observable
----@field public tabtype                stl.nvim.tab.TypeEnum
+---@field public tabtype                stl.e.TabTypeEnum
 
 local meta_map = {} ---@type table<integer, dot.tab.IMeta>
 
@@ -286,7 +286,7 @@ function M.resolve(tabnr, force)
     end
   end
 
-  local tabtype = vim.t[tabnr].tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
+  local tabtype = vim.t[tabnr].tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   local winnr_fixed = stl.c.Observable.from_value(stl.nvim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable

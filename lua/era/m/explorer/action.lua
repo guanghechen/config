@@ -834,7 +834,7 @@ function M:open_tab()
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
 end
 
 ---@return nil

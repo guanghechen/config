@@ -209,6 +209,7 @@ local __mods = {
 ---@class stl
 ---@field public __mods                 stl.__mods
 ---@field public c                      stl.c
+---@field public e                      stl.e
 ---@field public color                  stl.external.color
 ---@field public easing                 stl.external.easing
 ---
@@ -242,6 +243,7 @@ local __mods = {
 local M = setmetatable({
   __mods = __mods,
   c = c,
+  e = require("stl.e"),
   dict = dict,
   git = git,
   lang = lang,

@@ -227,7 +227,7 @@ function M.close()
   local tabnr = vim.api.nvim_get_current_tabpage()
   local tabtype = vim.t[tabnr].tabtype
 
-  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
     local workspace_action = require("era.m.diffview.view.workspace.action")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
@@ -237,7 +237,7 @@ function M.close()
     if st and lyt then
       workspace_action.close({ layout = lyt, state = st })
     end
-  elseif tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS then
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_action = require("era.m.diffview.view.commits.action")
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
@@ -255,7 +255,7 @@ function M.refresh()
   local tabnr = vim.api.nvim_get_current_tabpage()
   local tabtype = vim.t[tabnr].tabtype
 
-  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
     local workspace_action = require("era.m.diffview.view.workspace.action")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
@@ -267,7 +267,7 @@ function M.refresh()
         workspace_action.refresh({ layout = lyt, state = st })
       end)
     end
-  elseif tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS then
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_action = require("era.m.diffview.view.commits.action")
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
@@ -358,7 +358,7 @@ function M.get_help_keymaps()
   local tabnr = vim.api.nvim_get_current_tabpage()
   local tabtype = vim.t[tabnr].tabtype
 
-  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
     local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
@@ -368,7 +368,7 @@ function M.get_help_keymaps()
     if st and lyt then
       return workspace_keymap.get_help_keymaps({ layout = lyt, state = st })
     end
-  elseif tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS then
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_keymap = require("era.m.diffview.view.commits.keymap")
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")

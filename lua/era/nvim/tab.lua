@@ -102,7 +102,7 @@ function M.new()
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = 0 })
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
   dot.tab.resolve(tabnr, false)
   return tabnr
 end
@@ -116,7 +116,7 @@ function M.new_with_buf()
   vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = 0 })
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)

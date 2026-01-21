@@ -2,7 +2,7 @@
 local __module_name__ = "era.m.diffview.types" ---@type string
 
 ----------------------------------------------------------------------------------------------------
--- Diffview tabtypes (defined in stl.nvim.tab.TypeEnum)
+-- Diffview tabtypes (defined in stl.e.TabTypeEnum)
 ----------------------------------------------------------------------------------------------------
 -- diffview_workspace     - Git Diff view (staged/unstaged)
 -- diffview_commits       - Git Log view (supports optional path filter for file history)

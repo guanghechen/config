@@ -256,7 +256,7 @@ function M.tabtype(position, icon)
   local hln_sep = position .. "_nvim_tabtype_sep" ---@type string
 
   icon = icon or "󰓩 " ---@type string
-  local last_tabtype = nil ---@type stl.nvim.tab.TypeEnum|nil
+  local last_tabtype = nil ---@type stl.e.TabTypeEnum|nil
 
   ---@type era.m.nvimbar.IRawComponent
   local component = {
@@ -265,17 +265,17 @@ function M.tabtype(position, icon)
     tight = false,
     will_change = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+      local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
       local changed = last_tabtype ~= tabtype ---@type boolean
       last_tabtype = tabtype
       return changed
     end,
     render = function()
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-      local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+      local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
       -- Don't render for normal tabs (tabtype is nil or "normal")
-      if tabtype == nil or tabtype == stl.nvim.tab.TypeEnum.NORMAL then
+      if tabtype == nil or tabtype == stl.e.TabTypeEnum.NORMAL then
         return "", "", true
       end
 

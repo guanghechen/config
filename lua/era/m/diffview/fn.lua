@@ -76,9 +76,9 @@ end
 ---Toggle commits panel visibility (for commits view)
 function M.toggle_commits()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
-  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
 
@@ -102,9 +102,9 @@ end
 ---Toggle files panel visibility (changes for workspace, filetree for commits)
 function M.toggle_files()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
 
-  if tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE then
+  if tabtype == stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE then
     local workspace_state = require("era.m.diffview.view.workspace.state")
     local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -121,7 +121,7 @@ function M.toggle_files()
         vim.api.nvim_set_current_win(lyt.changes_winnr)
       end
     end
-  elseif tabtype == stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS then
+  elseif tabtype == stl.e.TabTypeEnum.DIFFVIEW_COMMITS then
     local commits_state = require("era.m.diffview.view.commits.state")
     local commits_view = require("era.m.diffview.view.commits.view")
 

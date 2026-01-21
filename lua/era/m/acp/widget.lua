@@ -215,7 +215,7 @@ function M:__create_tab__()
 
   vim.cmd("tabnew")
   self._tabnr = vim.api.nvim_get_current_tabpage()
-  vim.t[self._tabnr].tabtype = stl.nvim.tab.TypeEnum.ACP
+  vim.t[self._tabnr].tabtype = stl.e.TabTypeEnum.ACP
 
   output_winnr = vim.api.nvim_get_current_win()
 

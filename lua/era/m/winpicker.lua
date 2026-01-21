@@ -85,7 +85,7 @@ function M:show(winnr)
     winnr_hint = vim.api.nvim_open_win(bufnr_hint, false, wincfg_hint) ---@type integer
     self.winnr_hint = winnr_hint
 
-    vim.w[winnr_hint].wintype = stl.nvim.win.TypeEnum.WINPICKER
+    vim.w[winnr_hint].wintype = stl.e.WinTypeEnum.WINPICKER
     vim.w[winnr_hint][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("number", false, { win = winnr_hint, scope = "local" })

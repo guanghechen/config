@@ -5,7 +5,7 @@
 通过 `vim.t[tabnr].tabtype` 维护每个 tab 的类型。
 
 ```lua
----@alias stl.nvim.tab.TypeEnum
+---@alias stl.e.TabTypeEnum
 ---| "acp"
 ---| "diffview_commits"
 ---| "diffview_workspace"
@@ -23,18 +23,18 @@
 
 ```lua
 -- 具体类型枚举
-stl.nvim.tab.TypeEnum.NORMAL               -- "normal"
-stl.nvim.tab.TypeEnum.ACP                  -- "acp"
-stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
-stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
+stl.e.TabTypeEnum.NORMAL               -- "normal"
+stl.e.TabTypeEnum.ACP                  -- "acp"
+stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
+stl.e.TabTypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
 
 -- 类型集合（便捷常量，均为数组）
-stl.nvim.tab.TypeSet.ALL                   -- 所有类型
-stl.nvim.tab.TypeSet.NORMAL                -- { "normal" }
-stl.nvim.tab.TypeSet.ACP                   -- { "acp" }
-stl.nvim.tab.TypeSet.DIFFVIEW              -- 所有 diffview 类型
-stl.nvim.tab.TypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
-stl.nvim.tab.TypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
+stl.e.TabTypeSet.ALL                   -- 所有类型
+stl.e.TabTypeSet.NORMAL                -- { "normal" }
+stl.e.TabTypeSet.ACP                   -- { "acp" }
+stl.e.TabTypeSet.DIFFVIEW              -- 所有 diffview 类型
+stl.e.TabTypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
+stl.e.TabTypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
 ```
 
 ## Command 实现规范
@@ -46,7 +46,7 @@ stl.nvim.tab.TypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
 ```lua
 command.implement({
   uuid = K.foo.uuid,
-  tabtypes = stl.nvim.tab.TypeSet.NORMAL,  -- 必填，数组形式
+  tabtypes = stl.e.TabTypeSet.NORMAL,  -- 必填，数组形式
   action = function() end,
 })
 ```
@@ -57,16 +57,16 @@ command.implement({
 
 ```lua
 -- 单一类型（推荐使用 TypeSet）
-tabtypes = stl.nvim.tab.TypeSet.NORMAL
+tabtypes = stl.e.TabTypeSet.NORMAL
 
 -- 多类型
-tabtypes = { stl.nvim.tab.TypeEnum.NORMAL, stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE }
+tabtypes = { stl.e.TabTypeEnum.NORMAL, stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE }
 
 -- 所有 diffview 类型
-tabtypes = stl.nvim.tab.TypeSet.DIFFVIEW
+tabtypes = stl.e.TabTypeSet.DIFFVIEW
 
 -- 全局通用
-tabtypes = stl.nvim.tab.TypeSet.ALL
+tabtypes = stl.e.TabTypeSet.ALL
 ```
 
 ### 执行匹配规则
@@ -80,7 +80,7 @@ tabtypes = stl.nvim.tab.TypeSet.ALL
 `era.m.tabline` 提供注册 API，允许各模块为特定 `tabtype` 注册自定义 nvimbar：
 
 ```lua
----@param tabtype stl.nvim.tab.TypeEnum
+---@param tabtype stl.e.TabTypeEnum
 ---@param nvimbar era.m.nvimbar.Nvimbar
 ---@return boolean success
 era.m.tabline.register(tabtype, nvimbar)
@@ -107,7 +107,7 @@ local nvimbar = era.m.nvimbar.Nvimbar.new({
   name = "tabline_diffview_workspace",
   -- ... 配置
 })
-era.m.tabline.register(stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
+era.m.tabline.register(stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
 ```
 
 ### 各 tabtype 的 tabline 内容

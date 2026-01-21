@@ -49,7 +49,7 @@ function M.create_layout(layout_type)
   -- Create new tab at the end
   vim.cmd("$tabnew")
   local tabnr = vim.api.nvim_get_current_tabpage()
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.DIFFVIEW_COMMITS
 
   local lyt = {
     tabnr = tabnr,

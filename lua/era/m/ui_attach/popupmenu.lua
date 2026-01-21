@@ -132,7 +132,7 @@ function M._show(state)
     winnr = vim.api.nvim_open_win(bufnr, false, wincfg)
     state.winnr = winnr
 
-    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.POPUPMENU
+    vim.w[winnr].wintype = stl.e.WinTypeEnum.POPUPMENU
     vim.w[winnr][dot.var.N_WINLINE_DISABLED] = true
 
     vim.api.nvim_set_option_value("cursorline", false, { win = winnr, scope = "local" })

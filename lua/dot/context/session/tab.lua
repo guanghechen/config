@@ -3,7 +3,7 @@
 ---@field public pinned                 boolean
 
 ---@class dot.context.tab.meta.data
----@field public tabtype                stl.nvim.tab.TypeEnum
+---@field public tabtype                stl.e.TabTypeEnum
 ---@field public bufs                   dot.context.tab.buf.data[]
 
 ---@class dot.context.tab.data
@@ -63,7 +63,7 @@ function M.dump()
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for _, tabnr in ipairs(tabnrs) do
     local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
-    local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+    local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
     if meta ~= nil and tabtype ~= nil then
       local bufs = {} ---@type dot.context.tab.buf.data[]
       local meta_data = { tabtype = tabtype, bufs = bufs } ---@type dot.context.tab.meta.data
@@ -96,7 +96,7 @@ function M.load(raw_data)
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for tabid, tab_data in ipairs(data.list) do
     -- Skip non-normal tabs (e.g., diffview, acp tabs are transient and not restored)
-    if tab_data.tabtype ~= stl.nvim.tab.TypeEnum.NORMAL then
+    if tab_data.tabtype ~= stl.e.TabTypeEnum.NORMAL then
       goto continue
     end
 

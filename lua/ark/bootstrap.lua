@@ -164,7 +164,7 @@ function M.setup()
 
   -- Mark initial tab as normal
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
 
   M.setup_patches()
   M.setup_shell()

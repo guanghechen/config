@@ -1096,7 +1096,7 @@ function M:ensure_win()
   if winnr == nil then
     winnr = vim.api.nvim_open_win(bufnr, true, config)
     self._winnr = winnr
-    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.TEXTAREA
+    vim.w[winnr].wintype = stl.e.WinTypeEnum.TEXTAREA
   else
     vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
     local resize = dot.state.maximized.resolve_resize_config(winnr, config, { winblend = winblend })

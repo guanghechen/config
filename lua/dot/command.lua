@@ -8,12 +8,12 @@ local __module_name__ = "dot.command" ---@type string
 
 ---@class dot.command.ICommand
 ---@field public uuid                   string
----@field public tabtypes               stl.nvim.tab.TypeEnum[]
+---@field public tabtypes               stl.e.TabTypeEnum[]
 ---@field public action                 fun(args?: string): nil
 
 ---@class dot.command.IImplementation
 ---@field public uuid                   string
----@field public tabtypes               stl.nvim.tab.TypeEnum[]
+---@field public tabtypes               stl.e.TabTypeEnum[]
 ---@field public action                 fun(args?: string): nil
 ---@field public override               ?boolean
 
@@ -34,7 +34,7 @@ local M = {
 ---@return nil
 function M.execute(uuid, args, silent)
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = vim.t[tabnr].tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
+  local tabtype = vim.t[tabnr].tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
   local key = uuid .. ":" .. tabtype ---@type string
   local command = command_map[key] ---@type dot.command.ICommand|nil
 
@@ -113,7 +113,7 @@ end
 ---@return dot.command
 function M.implement(implementation)
   local uuid = implementation.uuid ---@type string
-  local tabtypes = implementation.tabtypes ---@type stl.nvim.tab.TypeEnum[]
+  local tabtypes = implementation.tabtypes ---@type stl.e.TabTypeEnum[]
   local action = implementation.action ---@type fun(args?: string): nil
   local override = implementation.override ---@type boolean|nil
   local definition = definition_map[uuid] ---@type dot.command.IRawDefinition|nil

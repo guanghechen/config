@@ -24,7 +24,7 @@ normal_tabline = era.m.nvimbar.Nvimbar.new({
   end,
   is_active = stl.fn.falsy,
   on_fulfilled = function()
-    if vim.t.tabtype == nil or vim.t.tabtype == stl.nvim.tab.TypeEnum.NORMAL then
+    if vim.t.tabtype == nil or vim.t.tabtype == stl.e.TabTypeEnum.NORMAL then
       vim.o.tabline = normal_tabline:snapshot()
     end
   end,
@@ -64,14 +64,14 @@ normal_tabline = era.m.nvimbar.Nvimbar.new({
 -- Nvimbar registry
 ----------------------------------------------------------------------------------------------------
 
----@type table<stl.nvim.tab.TypeEnum, era.m.nvimbar.Nvimbar|fun(): era.m.nvimbar.Nvimbar>
+---@type table<stl.e.TabTypeEnum, era.m.nvimbar.Nvimbar|fun(): era.m.nvimbar.Nvimbar>
 local tabline_nvimbar_map = {
-  [stl.nvim.tab.TypeEnum.NORMAL] = normal_tabline,
+  [stl.e.TabTypeEnum.NORMAL] = normal_tabline,
 }
 
 ---Register a nvimbar factory for a specific tabtype (idempotent).
 ---The factory is called lazily on first render.
----@param tabtype                        stl.nvim.tab.TypeEnum
+---@param tabtype                        stl.e.TabTypeEnum
 ---@param factory                        fun(): era.m.nvimbar.Nvimbar
 ---@return nil
 function M.register(tabtype, factory)
@@ -82,7 +82,7 @@ function M.register(tabtype, factory)
 end
 
 ---Resolve nvimbar for a specific tabtype (lazily creates from factory).
----@param tabtype                        stl.nvim.tab.TypeEnum
+---@param tabtype                        stl.e.TabTypeEnum
 ---@return era.m.nvimbar.Nvimbar
 local function resolve_nvimbar(tabtype)
   local entry = tabline_nvimbar_map[tabtype]
@@ -114,8 +114,8 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
-  if tabtype ~= nil and tabtype ~= stl.nvim.tab.TypeEnum.NORMAL then
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.e.TabTypeEnum|nil
+  if tabtype ~= nil and tabtype ~= stl.e.TabTypeEnum.NORMAL then
     return true
   end
 
@@ -152,7 +152,7 @@ function M.dressing()
         last_showtabline = 2
 
         -- Get nvimbar for current tabtype and render
-        local tabtype = vim.t.tabtype or stl.nvim.tab.TypeEnum.NORMAL ---@type stl.nvim.tab.TypeEnum
+        local tabtype = vim.t.tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
         local nvimbar = resolve_nvimbar(tabtype)
         nvimbar:render()
       else

@@ -974,7 +974,7 @@ function M.goto_file(ctx)
   for _, tabnr in ipairs(vim.api.nvim_list_tabpages()) do
     if tabnr ~= current_tabnr then
       local tabtype = vim.t[tabnr].tabtype
-      if not tabtype or tabtype == stl.nvim.tab.TypeEnum.NORMAL then
+      if not tabtype or tabtype == stl.e.TabTypeEnum.NORMAL then
         target_tabnr = tabnr
         break
       end
@@ -989,7 +989,7 @@ function M.goto_file(ctx)
     -- No suitable tab exists, create new tab
     vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-    vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+    vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
   end
 end
 
@@ -1014,7 +1014,7 @@ function M.goto_file_tab(ctx)
   -- Create new tab with file
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  vim.t[tabnr].tabtype = stl.nvim.tab.TypeEnum.NORMAL
+  vim.t[tabnr].tabtype = stl.e.TabTypeEnum.NORMAL
 end
 
 ----------------------------------------------------------------------------------------------------

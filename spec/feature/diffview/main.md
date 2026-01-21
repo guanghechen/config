@@ -18,11 +18,11 @@
 每种视图对应独立的 tabtype，便于精细化控制命令和 UI 行为：
 
 ```lua
-stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE     -- "diffview_workspace"
-stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS       -- "diffview_commits"
+stl.e.TabTypeEnum.DIFFVIEW_WORKSPACE     -- "diffview_workspace"
+stl.e.TabTypeEnum.DIFFVIEW_COMMITS       -- "diffview_commits"
 
 -- 便捷集合
-stl.nvim.tab.TypeSet.DIFFVIEW  -- 包含所有两种 diffview 类型
+stl.e.TabTypeSet.DIFFVIEW  -- 包含所有两种 diffview 类型
 ```
 
 ## 模块结构

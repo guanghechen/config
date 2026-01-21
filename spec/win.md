@@ -5,7 +5,7 @@
 通过 `vim.w[winnr].wintype` 维护每个 window 的类型。
 
 ```lua
----@alias stl.nvim.win.TypeEnum
+---@alias stl.e.WinTypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
 ---| "ux:explorer"
@@ -48,23 +48,23 @@
 ## TypeEnum
 
 ```lua
-stl.nvim.win.TypeEnum.BOARD             -- "ux:board"
-stl.nvim.win.TypeEnum.CMDLINE           -- "ux:cmdline"
-stl.nvim.win.TypeEnum.EXPLORER          -- "ux:explorer"
-stl.nvim.win.TypeEnum.INPUT             -- "ux:input"
-stl.nvim.win.TypeEnum.NOTIFY            -- "ux:notify"
-stl.nvim.win.TypeEnum.PICKER_FINDER     -- "ux:picker-finder"
-stl.nvim.win.TypeEnum.PICKER_PREVIEW    -- "ux:picker-preview"
-stl.nvim.win.TypeEnum.PICKER_RESULT     -- "ux:picker-result"
-stl.nvim.win.TypeEnum.POPUPMENU         -- "ux:popupmenu"
-stl.nvim.win.TypeEnum.SEARCHER_FINDER   -- "ux:searcher-finder"
-stl.nvim.win.TypeEnum.SEARCHER_PREVIEW  -- "ux:searcher-preview"
-stl.nvim.win.TypeEnum.SEARCHER_RESULT   -- "ux:searcher-result"
-stl.nvim.win.TypeEnum.SELECT            -- "ux:select"
-stl.nvim.win.TypeEnum.TERMINAL          -- "ux:terminal"
-stl.nvim.win.TypeEnum.TEXTAREA          -- "ux:textarea"
-stl.nvim.win.TypeEnum.WINPICKER         -- "ux:winpicker"
-stl.nvim.win.TypeEnum.WINSEP            -- "ux:winsep"
+stl.e.WinTypeEnum.BOARD             -- "ux:board"
+stl.e.WinTypeEnum.CMDLINE           -- "ux:cmdline"
+stl.e.WinTypeEnum.EXPLORER          -- "ux:explorer"
+stl.e.WinTypeEnum.INPUT             -- "ux:input"
+stl.e.WinTypeEnum.NOTIFY            -- "ux:notify"
+stl.e.WinTypeEnum.PICKER_FINDER     -- "ux:picker-finder"
+stl.e.WinTypeEnum.PICKER_PREVIEW    -- "ux:picker-preview"
+stl.e.WinTypeEnum.PICKER_RESULT     -- "ux:picker-result"
+stl.e.WinTypeEnum.POPUPMENU         -- "ux:popupmenu"
+stl.e.WinTypeEnum.SEARCHER_FINDER   -- "ux:searcher-finder"
+stl.e.WinTypeEnum.SEARCHER_PREVIEW  -- "ux:searcher-preview"
+stl.e.WinTypeEnum.SEARCHER_RESULT   -- "ux:searcher-result"
+stl.e.WinTypeEnum.SELECT            -- "ux:select"
+stl.e.WinTypeEnum.TERMINAL          -- "ux:terminal"
+stl.e.WinTypeEnum.TEXTAREA          -- "ux:textarea"
+stl.e.WinTypeEnum.WINPICKER         -- "ux:winpicker"
+stl.e.WinTypeEnum.WINSEP            -- "ux:winsep"
 ```
 
 ## 使用方式
@@ -72,13 +72,13 @@ stl.nvim.win.TypeEnum.WINSEP            -- "ux:winsep"
 ### 设置 window type
 
 ```lua
-vim.w[winnr].wintype = stl.nvim.win.TypeEnum.PICKER_FINDER
+vim.w[winnr].wintype = stl.e.WinTypeEnum.PICKER_FINDER
 ```
 
 ### 读取 window type
 
 ```lua
-local wintype = vim.w[winnr].wintype ---@type stl.nvim.win.TypeEnum|nil
+local wintype = vim.w[winnr].wintype ---@type stl.e.WinTypeEnum|nil
 ```
 
 ## Window 属性集合

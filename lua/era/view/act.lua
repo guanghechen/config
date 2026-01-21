@@ -305,7 +305,7 @@ function M:__create_wins__()
   })
   self._input_winnr = input_winnr
 
-  vim.w[input_winnr].wintype = stl.nvim.win.TypeEnum.BOARD
+  vim.w[input_winnr].wintype = stl.e.WinTypeEnum.BOARD
   vim.api.nvim_set_option_value("cursorline", false, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", false, { win = input_winnr, scope = "local" })
   vim.api.nvim_set_option_value("relativenumber", false, { win = input_winnr, scope = "local" })
@@ -331,7 +331,7 @@ function M:__create_wins__()
   })
   self._preview_winnr = preview_winnr
 
-  vim.w[preview_winnr].wintype = stl.nvim.win.TypeEnum.BOARD
+  vim.w[preview_winnr].wintype = stl.e.WinTypeEnum.BOARD
   vim.api.nvim_set_option_value("cursorline", false, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("number", false, { win = preview_winnr, scope = "local" })
   vim.api.nvim_set_option_value("relativenumber", false, { win = preview_winnr, scope = "local" })

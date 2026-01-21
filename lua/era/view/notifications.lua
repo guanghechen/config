@@ -148,7 +148,7 @@ function M:__create_win__()
     })
     self._winnr = winnr
 
-    vim.w[winnr].wintype = stl.nvim.win.TypeEnum.BOARD
+    vim.w[winnr].wintype = stl.e.WinTypeEnum.BOARD
     vim.api.nvim_set_option_value("cursorline", true, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("list", false, { win = winnr, scope = "local" })
     vim.api.nvim_set_option_value("number", true, { win = winnr, scope = "local" })
