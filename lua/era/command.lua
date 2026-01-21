@@ -243,7 +243,7 @@ command
 --[buf] new-----------------------------------------------------------------------------------------
 command.implement({
   uuid = K.buf.new.uuid,
-  tabtypes = stl.e.TabTypeSet.ALL,
+  tabtypes = stl.e.TabTypeSet.NORMAL,
   action = function()
     era.nvim.buf.new()
   end,
@@ -279,14 +279,14 @@ command
 command
   .implement({
     uuid = K.buf.swap_left.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.buf.swap_left()
     end,
   })
   .implement({
     uuid = K.buf.swap_right.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.buf.swap_right()
     end,
@@ -1755,14 +1755,14 @@ command.implement({
 command
   .implement({
     uuid = K.win.close.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.close()
     end,
   })
   .implement({
     uuid = K.win.close_others.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.close_others()
     end,
@@ -1864,7 +1864,7 @@ command
   })
   .implement({
     uuid = K.win.swap.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.picker_swap()
     end,
@@ -1905,28 +1905,28 @@ command
 command
   .implement({
     uuid = K.win.split_above.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.split_above()
     end,
   })
   .implement({
     uuid = K.win.split_right.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.split_right()
     end,
   })
   .implement({
     uuid = K.win.split_below.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.split_below()
     end,
   })
   .implement({
     uuid = K.win.split_left.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
+    tabtypes = stl.e.TabTypeSet.NORMAL,
     action = function()
       era.nvim.win.split_left()
     end,
