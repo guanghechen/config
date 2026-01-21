@@ -274,8 +274,10 @@ function M.setup(config)
   local special_chars = {
     { key = ",", mods = "CMD", seq = "\x01\x2c" },
     { key = ".", mods = "CMD", seq = "\x01\x2e" },
+    { key = "/", mods = "CMD", seq = "\x01\x2f" },
     { key = "<", mods = "CMD|SHIFT", seq = "\x01\x3c" },
     { key = ">", mods = "CMD|SHIFT", seq = "\x01\x3e" },
+    { key = "?", mods = "CMD|SHIFT", seq = "\x01\x3f" },
     { key = "[", mods = "CMD", seq = "\x01\x5b" },
     { key = "]", mods = "CMD", seq = "\x01\x5d" },
     { key = "{", mods = "CMD|SHIFT", seq = "\x01\x7b" },
