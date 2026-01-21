@@ -366,7 +366,7 @@ function M.setup(config)
 
   -- Tab title
   table.insert(keys, {
-    key = "F2",
+    key = "/",
     mods = "CMD|CTRL",
     action = act.PromptInputLine({
       description = "Enter new name for tab",
