@@ -186,7 +186,7 @@ function M.gen_hlgroup_map(context)
     nvim_tab_item = { fg = c.fg1, bg = "bg_bar" },
     nvim_tab_item_cur = { fg = c.red, bg = bg_bufc },
     nvim_tab_toggle = { fg = c.bg1, bg = c.green },
-    nvim_tabtype_sep = { link = "ms_b_bg2" },
+    nvim_tabtype_sep = { link = "ms_b_none" },
     nvim_tabtype_text = { link = "mf_b_bg0" },
 
     ---! explorer
