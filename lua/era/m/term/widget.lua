@@ -195,17 +195,17 @@ local function create_default_keymaps(termmeta)
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-n>",
-    desc = dot.command.definitions.term.rename.desc,
+    desc = dot.command.definitions.term.create.desc,
     callback = function()
-      dot.command.definitions.term.rename:execute()
+      dot.command.definitions.term.create:execute()
     end,
   }
   keymaps[#keymaps + 1] = {
     modes = { "i", "n", "t", "x" },
     key = "<C-/>",
-    desc = dot.command.definitions.term.create.desc,
+    desc = dot.command.definitions.term.rename.desc,
     callback = function()
-      dot.command.definitions.term.create:execute()
+      dot.command.definitions.term.rename:execute()
     end,
   }
   keymaps[#keymaps + 1] = {

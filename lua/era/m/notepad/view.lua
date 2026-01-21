@@ -47,9 +47,9 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "x" },
     key = "<C-n>",
-    desc = K.notepad.rename.desc,
+    desc = K.notepad.create.desc,
     callback = function()
-      K.notepad.rename:execute()
+      K.notepad.create:execute()
     end,
   },
   {
@@ -71,9 +71,9 @@ local NOTEPAD_KEYMAPS = {
   {
     modes = { "i", "n", "x" },
     key = "<C-/>",
-    desc = K.notepad.create.desc,
+    desc = K.notepad.rename.desc,
     callback = function()
-      K.notepad.create:execute()
+      K.notepad.rename:execute()
     end,
   },
   {

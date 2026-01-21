@@ -35,8 +35,8 @@ The current implementation assumes a single persistence backend (the active work
 - Backs the view with an unlisted, hidden, nofile buffer (`bufhidden = "hide"`, `filetype = "markdown"`, `modifiable = true`, `swapfile = false`). Markdown rendering plugins are explicitly disabled for the buffer.
 - Registers a broad keymap surface:
   - `<C-s>`, `<C-a>s`, `<D-s>`, `<M-s>` → save/flush
-  - `<C-n>` rename (consistent in insert/normal/visual modes)
-  - `<C-/>` create note
+  - `<C-n>` create note (consistent in insert/normal/visual modes)
+  - `<C-/>` rename
   - `<C-d>` / `<leader>dd` destroy
   - `<C-,>` / `<C-.>` focus previous/next
   - `<C-S-,>` / `<C-S-.>` swap left/right
