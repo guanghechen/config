@@ -49,10 +49,10 @@ end
 -- Tab utilities
 ----------------------------------------------------------------------------------------------------
 
----@type table<string, boolean>
+---@type table<stl.nvim.tab.TypeEnum, boolean>
 local DIFFVIEW_TABTYPES = {
-  diffview_workspace = true,
-  diffview_commits = true,
+  [stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE] = true,
+  [stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS] = true,
 }
 
 ---Check if tab is a diffview tab
@@ -60,7 +60,7 @@ local DIFFVIEW_TABTYPES = {
 ---@return boolean
 function M.is_diffview_tab(tabnr)
   tabnr = tabnr or vim.api.nvim_get_current_tabpage()
-  local tabtype = vim.t[tabnr].tabtype ---@type string|nil
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
   return tabtype ~= nil and DIFFVIEW_TABTYPES[tabtype] == true
 end
 

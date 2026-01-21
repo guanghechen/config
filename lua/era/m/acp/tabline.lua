@@ -58,7 +58,6 @@ function M.create_tabline()
   return function()
     local position = M.position
     local nvimbar ---@type era.m.nvimbar.Nvimbar
-    local tabtype = stl.nvim.tab.TypeEnum.ACP
 
     nvimbar = era.m.nvimbar.Nvimbar.new({
       name = "tabline_acp",
@@ -74,7 +73,7 @@ function M.create_tabline()
       end,
       is_active = stl.fn.falsy,
       on_fulfilled = function()
-        if vim.t.tabtype == tabtype then
+        if vim.t.tabtype == stl.nvim.tab.TypeEnum.ACP then
           vim.o.tabline = nvimbar:snapshot()
         end
       end,

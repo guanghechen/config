@@ -95,7 +95,7 @@ function M.load(raw_data)
 
   local tabnrs = vim.api.nvim_list_tabpages() ---@type integer[]
   for tabid, tab_data in ipairs(data.list) do
-    -- Skip non-normal tabs (e.g., diffview tabs are not restored on startup)
+    -- Skip non-normal tabs (e.g., diffview, acp tabs are transient and not restored)
     if tab_data.tabtype ~= stl.nvim.tab.TypeEnum.NORMAL then
       goto continue
     end

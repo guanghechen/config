@@ -6,6 +6,7 @@
 
 ```lua
 ---@alias stl.nvim.tab.TypeEnum
+---| "acp"
 ---| "diffview_commits"
 ---| "diffview_workspace"
 ---| "normal"
@@ -14,6 +15,7 @@
 | Type                 | 描述                                                      |
 |:---------------------|:----------------------------------------------------------|
 | `normal`             | 普通编辑 tab                                              |
+| `acp`                | ACP (Anthropic Claude Panel) 交互界面                     |
 | `diffview_workspace` | Git Diff 视图（staged/unstaged）                          |
 | `diffview_commits`   | Git Log 视图（支持 path_filter 实现单文件/目录历史过滤）  |
 
@@ -22,12 +24,14 @@
 ```lua
 -- 具体类型枚举
 stl.nvim.tab.TypeEnum.NORMAL               -- "normal"
+stl.nvim.tab.TypeEnum.ACP                  -- "acp"
 stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE   -- "diffview_workspace"
 stl.nvim.tab.TypeEnum.DIFFVIEW_COMMITS     -- "diffview_commits"
 
 -- 类型集合（便捷常量，均为数组）
 stl.nvim.tab.TypeSet.ALL                   -- 所有类型
 stl.nvim.tab.TypeSet.NORMAL                -- { "normal" }
+stl.nvim.tab.TypeSet.ACP                   -- { "acp" }
 stl.nvim.tab.TypeSet.DIFFVIEW              -- 所有 diffview 类型
 stl.nvim.tab.TypeSet.DIFFVIEW_WORKSPACE    -- { "diffview_workspace" }
 stl.nvim.tab.TypeSet.DIFFVIEW_COMMITS      -- { "diffview_commits" }
@@ -111,6 +115,7 @@ era.m.tabline.register(stl.nvim.tab.TypeEnum.DIFFVIEW_WORKSPACE, nvimbar)
 | tabtype              | 显示内容                                          |
 |:---------------------|:--------------------------------------------------|
 | `normal`             | buffer 列表 + tab 指示器                          |
+| `acp`                | ACP 专用标题（会话信息）                          |
 | `diffview_workspace` | Diffview 专用标题                                 |
 | `diffview_commits`   | Diffview 专用标题（带 path_filter 时显示文件名）  |
 | 其他                 | fallback 到 normal 渲染                           |

@@ -114,6 +114,11 @@ local function should_show_tabline()
   end
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local tabtype = vim.t[tabnr].tabtype ---@type stl.nvim.tab.TypeEnum|nil
+  if tabtype ~= nil and tabtype ~= stl.nvim.tab.TypeEnum.NORMAL then
+    return true
+  end
+
   local meta = dot.tab.resolve(tabnr, false) ---@type dot.tab.IMeta|nil
   return meta == nil or #meta.bufs > 1
 end
