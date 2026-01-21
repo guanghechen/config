@@ -37,7 +37,7 @@ local WIN_HIGHLIGHT = table.concat({
 ---@class era.view.Textarea : era.view.ITextarea
 ---@field protected _bufnr              integer|nil
 ---@field protected _winnr              integer|nil
----@field protected position            stl.e.BoxPosition
+---@field protected position            stl.t.BoxPositionEnum
 ---@field protected width               number
 ---@field protected height              number
 ---@field protected max_width           number|nil
@@ -52,7 +52,7 @@ local M = {}
 M.__index = M
 
 ---@class era.view.textarea.IProps
----@field public position               stl.e.BoxPosition
+---@field public position               stl.t.BoxPositionEnum
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -72,7 +72,7 @@ M.__index = M
 function M.new(props)
   local self = setmetatable({}, M)
 
-  local position = props.position ---@type stl.e.BoxPosition
+  local position = props.position ---@type stl.t.BoxPositionEnum
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil

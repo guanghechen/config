@@ -22,7 +22,7 @@ M.__index = M
 setmetatable(M, era.view.Textarea)
 
 ---@class era.view.setting.IProps
----@field public position               stl.e.BoxPosition
+---@field public position               stl.t.BoxPositionEnum
 ---@field public width                  ?number
 ---@field public height                 ?number
 ---@field public title                  ?string
@@ -39,7 +39,7 @@ setmetatable(M, era.view.Textarea)
 ---@param props                         era.view.setting.IProps
 ---@return era.view.Setting
 function M.new(props)
-  local position = props.position ---@type stl.e.BoxPosition
+  local position = props.position ---@type stl.t.BoxPositionEnum
   local width = props.width ---@type number|nil
   local height = props.height ---@type number|nil
   local max_width = props.max_width ---@type number|nil

@@ -2,7 +2,7 @@
 local M = {}
 
 local dirtier = dot.state.status.dirtier_tabline ---@type stl.c.Dirtier
-local position = "f_tl" ---@type stl.e.NvimbarPositionEnum
+local position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 
 ----------------------------------------------------------------------------------------------------
 -- Default nvimbar

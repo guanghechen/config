@@ -4,7 +4,7 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.nvimbar.component.picker
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@param flags                         era.m.picker.result.IFlagItem[]
 ---@param flags_start_index             integer
 ---@return era.m.nvimbar.IRawComponent
@@ -38,7 +38,7 @@ function M.result_flags(position, flags, flags_start_index)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@param result_lnum                   stl.c.Observable
 ---@param result_total                  stl.c.Observable
 ---@return era.m.nvimbar.IRawComponent

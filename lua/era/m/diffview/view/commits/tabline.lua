@@ -13,7 +13,7 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.diffview.view.commits.tabline
 local M = {}
 
-M.position = "f_tl" ---@type stl.e.NvimbarPositionEnum
+M.position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 
 ----------------------------------------------------------------------------------------------------
 -- Constants (hoisted for performance)

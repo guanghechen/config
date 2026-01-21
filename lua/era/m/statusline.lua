@@ -2,7 +2,7 @@
 local M = {}
 
 local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
-local position = "f_sl" ---@type stl.e.NvimbarPositionEnum
+local position = "f_sl" ---@type stl.t.NvimbarPositionEnum
 
 local statusline ---@type era.m.nvimbar.Nvimbar
 statusline = era.m.nvimbar.Nvimbar.new({

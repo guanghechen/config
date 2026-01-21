@@ -28,7 +28,7 @@ end) or ""
 ---@class era.m.nvimbar.component.file
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.encoding(position)
   local hln_text = position .. "_file_encoding_text" ---@type string
@@ -57,7 +57,7 @@ function M.encoding(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.format(position)
   local hln_text = position .. "_file_format_text" ---@type string
@@ -88,7 +88,7 @@ function M.format(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.indent(position)
   local hln_text = position .. "_file_indent_text" ---@type string
@@ -111,7 +111,7 @@ function M.indent(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.name(position)
   local hln_text = position .. "_file_name_text" ---@type string
@@ -146,7 +146,7 @@ function M.name(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.path(position)
   local hln_text = position .. "_file_path_text" ---@type string
@@ -192,7 +192,7 @@ function M.path(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.readonly(position)
   local hln_readonly = position .. "_file_readonly" ---@type string
@@ -213,7 +213,7 @@ function M.readonly(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.size(position)
   local hln_text = position .. "_file_size_text" ---@type string
@@ -253,7 +253,7 @@ function M.size(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.status(position)
   local hln_text = position .. "_file_status_text" ---@type string
@@ -292,7 +292,7 @@ function M.status(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.type(position)
   local hln_text = position .. "_file_type_text" ---@type string

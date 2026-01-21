@@ -5,7 +5,7 @@
 ---@field public height                 integer
 
 ---@class stl.box.IRestriction
----@field public position               stl.e.BoxPosition
+---@field public position               stl.t.BoxPositionEnum
 ---@field public rows                   integer
 ---@field public cols                   integer
 ---@field public row                    ?number
@@ -64,7 +64,7 @@ function M.measure(width, height, restriction)
     return { row = row, col = col, width = width, height = height }
   end
 
-  local position = restriction.position ---@type stl.e.BoxPosition
+  local position = restriction.position ---@type stl.t.BoxPositionEnum
   if position == "cursor" then
     if restriction.cursor_row ~= nil and restriction.cursor_col ~= nil then
       local row = restriction.cursor_row + 1 ---@type integer

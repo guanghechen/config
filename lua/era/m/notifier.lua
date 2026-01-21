@@ -149,7 +149,7 @@ setmetatable(M, {
   __call = function(_, msg, level0, opts)
     opts = opts or {}
 
-    local level = M.resolve_level(level0) ---@type stl.e.LogLevelEnum
+    local level = M.resolve_level(level0) ---@type stl.t.LogLevelEnum
     local group = type(opts.group) == "string" and opts.group or nil ---@type string|nil
     local title = opts.title or M.resolve_title(level) ---@type string
     local content = msg ---@type string
@@ -303,12 +303,12 @@ function M.resume()
 end
 
 ---@param level                         number
----@return stl.e.LogLevelEnum
+---@return stl.t.LogLevelEnum
 function M.resolve_level(level)
   return LevelMap[level] or "INFO"
 end
 
----@param level                         stl.e.LogLevelEnum
+---@param level                         stl.t.LogLevelEnum
 ---@return string
 function M.resolve_title(level)
   return LevelTitleMap[level]
@@ -347,7 +347,7 @@ function M.notify(params)
   }
 
   local notification_paused = dot.state.status.notification_paused:snapshot() ---@type boolean
-  local notification_level = dot.state.status.notification_level:snapshot() ---@type stl.e.LogLevelEnum
+  local notification_level = dot.state.status.notification_level:snapshot() ---@type stl.t.LogLevelEnum
   local notification_priority = Levels[notification_level] ---@type integer
   local priority = Levels[level] ---@type integer
 

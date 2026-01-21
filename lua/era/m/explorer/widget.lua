@@ -440,7 +440,7 @@ end
 function M:__create_nvimbar__()
   local c = require("era.m.nvimbar").component
   local Nvimbar = require("era.m.nvimbar").Nvimbar
-  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
   local flags = self:__get_flags__() ---@type era.m.explorer.widget.IFlagItem[]
   ---@type era.m.nvimbar.component.explorer.IFlagItem[]

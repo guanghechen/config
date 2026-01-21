@@ -1085,7 +1085,7 @@ end
 ---@param flags                         era.m.searcher.result.IFlagItem[]
 ---@return era.m.nvimbar.Nvimbar
 function M:__create_nvimbar__(o_match_index, o_match_total, flags)
-  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
   return Nvimbar.new({
     name = string.format("%s#winbar", __module_name__),

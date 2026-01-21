@@ -3,7 +3,7 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.nvimbar.component.cwd
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.cwd(position)
   local hln_text = position .. "_cwd_text" ---@type string

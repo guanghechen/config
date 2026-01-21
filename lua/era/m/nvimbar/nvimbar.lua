@@ -16,7 +16,7 @@ local __module_name__ = "era.m.nvimbar" ---@type string
 ---@field public fileicon               string
 ---@field public fileicon_hl            string
 ---@field public filetype               string
----@field public mode                   stl.e.VimModeName
+---@field public mode                   stl.t.VimModeNameEnum
 ---@field public mode_name              string
 ---@field public git_branch             string|nil
 

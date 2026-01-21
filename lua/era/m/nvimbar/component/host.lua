@@ -3,7 +3,7 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.nvimbar.component.host
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.username(position)
   local hln_text = position .. "_host_username_text" ---@type string

@@ -260,7 +260,7 @@ function M.gen_hlgroup_map(context)
     termc_sep_right = { link = "ms_b_none" },
   }
 
-  local positions = { "f_sl", "f_tl", "f_wl" } ---@type stl.e.NvimbarPositionEnum[]
+  local positions = { "f_sl", "f_tl", "f_wl" } ---@type stl.t.NvimbarPositionEnum[]
 
   ---@class dot.theme.hlgroup.nvimbar : table<string, stl.t.theme.IHlgroup>
   ---@field public f_sl_bg              { bg: string, sp?: string }

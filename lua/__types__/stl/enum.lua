@@ -1,22 +1,22 @@
 ---@meta
 
----@alias stl.e.BoxPosition
+---@alias stl.t.BoxPositionEnum
 ---| "cursor"
 ---| "center"
 
----@alias stl.e.LogLevelEnum
+---@alias stl.t.LogLevelEnum
 ---| "TRACE"
 ---| "DEBUG"
 ---| "INFO"
 ---| "WARN"
 ---| "ERROR"
 
----@alias stl.e.NvimbarPositionEnum
+---@alias stl.t.NvimbarPositionEnum
 ---| "f_sl"
 ---| "f_tl"
 ---| "f_wl"
 
----@alias stl.e.VimMode
+---@alias stl.t.VimModeEnum
 ---| "c"
 ---| "i"
 ---| "n"
@@ -28,7 +28,7 @@
 ---| "V"
 ---| "x"
 
----@alias stl.e.VimModeName
+---@alias stl.t.VimModeNameEnum
 ---| "normal"
 ---| "visual"
 ---| "insert"

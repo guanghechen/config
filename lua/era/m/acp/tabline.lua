@@ -7,7 +7,7 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.acp.tabline
 local M = {}
 
-M.position = "f_tl" ---@type stl.e.NvimbarPositionEnum
+M.position = "f_tl" ---@type stl.t.NvimbarPositionEnum
 
 ----------------------------------------------------------------------------------------------------
 -- Components

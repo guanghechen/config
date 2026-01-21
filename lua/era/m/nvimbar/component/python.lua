@@ -35,7 +35,7 @@ end, false)
 ---@class era.m.nvimbar.component.python
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.env(position)
   local hln_text = position .. "_python_env_text" ---@type string

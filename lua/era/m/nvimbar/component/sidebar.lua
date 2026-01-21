@@ -18,7 +18,7 @@ end
 ---@class era.m.nvimbar.component.sidebar
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@param filetype                      string
 ---@param get_title                     fun(context: era.m.nvimbar.INvimbarContext): string
 ---@return era.m.nvimbar.IRawComponent

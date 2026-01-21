@@ -28,7 +28,7 @@ function M.dressing()
 
   local augroup = stl.nvim.fn.augroup("era.im_auto_toggle")
   stl.timer.delay(function()
-    local previous_mode = "n" ---@type stl.e.VimMode
+    local previous_mode = "n" ---@type stl.t.VimModeEnum
     local previous_input_method = nil ---@type era.m.im.InputMethod|nil
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
       group = augroup,
@@ -37,7 +37,7 @@ function M.dressing()
           return
         end
 
-        local current_mode = vim.fn.mode() ---@type stl.e.VimMode
+        local current_mode = vim.fn.mode() ---@type stl.t.VimModeEnum
         if current_mode ~= previous_mode then
           if previous_mode == "i" then
             previous_input_method = M.get_input_method()

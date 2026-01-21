@@ -2,7 +2,7 @@
 local M = {}
 
 local txt = stl.nvim.fn.txt
-local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
+local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
 ---@return boolean
 local function silent()

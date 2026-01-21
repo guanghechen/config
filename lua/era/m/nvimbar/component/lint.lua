@@ -77,7 +77,7 @@ local M = {}
 M.disabled_linters = disabled_linters
 M.is_linter_enabled = is_linter_enabled
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.status(position)
   local hln_icon_active = position .. "_lint_icon_active" ---@type string

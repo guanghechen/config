@@ -69,7 +69,7 @@ local termline = Nvimbar.new({
   end,
 })
 
-local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
+local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 termline:place("left", c.term.items(position), 95):place("left", c.term.add_button(position), 100)
 
 stl.fn.observe({ era.m.term.state.o_termuuid }, function()

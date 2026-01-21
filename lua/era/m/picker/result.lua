@@ -117,7 +117,7 @@ function M.new(props)
     end
   end
 
-  local position = "f_wl" ---@type stl.e.NvimbarPositionEnum
+  local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
   local c = era.m.nvimbar.component
   local Nvimbar = era.m.nvimbar.Nvimbar

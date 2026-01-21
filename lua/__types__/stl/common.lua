@@ -36,7 +36,7 @@
 
 ---@class stl.t.IKeymap : stl.t.IKeymapOverridable
 ---@field public disabled               boolean|nil
----@field public modes                  stl.e.VimMode[]
+---@field public modes                  stl.t.VimModeEnum[]
 ---@field public key                    string
 ---@field public aliases                string[]|nil
 ---@field public desc                   string|nil

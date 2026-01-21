@@ -67,7 +67,7 @@ end)
 
 ---@return                              string[]
 ---@return                              era.m.nvimbar.component.lsp.ILspIcon[]
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 local function get_lsp_clients(position)
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
   if not stl.nvim.buf.is_valid(bufnr) then
@@ -126,7 +126,7 @@ end) or ""
 ---@class era.m.nvimbar.component.lsp
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.client(position)
   local hln_text = position .. "_lsp_client_text" ---@type string
@@ -171,7 +171,7 @@ function M.client(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.diagnostics(position)
   local hln_diagnostics_error = position .. "_lsp_diagnostics_error" ---@type string
@@ -212,7 +212,7 @@ function M.diagnostics(position)
   return component
 end
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.symbols(position)
   local hln_lsp_icon = position .. "_lsp_symbol_icon" ---@type string

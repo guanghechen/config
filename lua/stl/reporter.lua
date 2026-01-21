@@ -21,7 +21,7 @@ local Levels = {
 ---@class stl.reporter
 local M = {}
 
----@param level                         stl.e.LogLevelEnum|integer
+---@param level                         stl.t.LogLevelEnum|integer
 ---@param options                       stl.reporter.IOptions
 ---@return nil
 function M.log(level, options)

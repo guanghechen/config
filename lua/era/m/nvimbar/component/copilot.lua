@@ -53,7 +53,7 @@ end)
 ---@class era.m.nvimbar.component.copilot
 local M = {}
 
----@param position                      stl.e.NvimbarPositionEnum
+---@param position                      stl.t.NvimbarPositionEnum
 ---@return era.m.nvimbar.IRawComponent
 function M.status(position)
   ---@type era.m.nvimbar.IRawComponent
