@@ -29,9 +29,9 @@ sleep 1
 
 # Enter claude in each window
 tmux send-keys -t "$SESSION:translator" "claude --permission-mode=plan" Enter
-tmux send-keys -t "$SESSION:wiki-note" "claude --permission-mode=plan" Enter
-tmux send-keys -t "$SESSION:wiki" "claude --permission-mode=plan" Enter
+tmux send-keys -t "$SESSION:note" "claude --permission-mode=plan" Enter
 tmux send-keys -t "$SESSION:term" "claude --permission-mode=plan" Enter
+tmux send-keys -t "$SESSION:wiki" "claude --dangerously-skip-permissions" Enter
 
 # Select first window and attach or switch
 tmux select-window -t "$SESSION:translator"
