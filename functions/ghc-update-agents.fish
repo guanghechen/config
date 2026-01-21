@@ -1,5 +1,5 @@
 function ghc-update-agents --description "Update AI coding agents globally"
-    argparse 'skip-installation' -- $argv
+    argparse skip-installation -- $argv
     or return 1
 
     set -l agents \
@@ -20,20 +20,26 @@ function ghc-update-agents --description "Update AI coding agents globally"
         printf "\e[93m  Skipping agent installation as requested\e[0m\n\n"
     end
 
-    printf "\e[96m  Patching Claude Code...\e[0m\n"
-    ghc-patch-claude
+    # Check if claude is installed
+    if command -q claude
+        printf "\e[96m  Patching Claude Code...\e[0m\n"
+        set -l script_dir ~/.config/claude/script
+        printf "\e[96m  cd ~/.config/claude/script/ && bun src/patch/index.ts\e[0m\n"
+        fish -c "cd ~/.config/claude/script/ && bun src/patch/index.ts"
 
-    # Sync Claude Code plugins from settings.json
-    set -l claude_settings_file "$HOME/.config/claude/settings.json"
-    if test -f $claude_settings_file
-        set -l plugins (jq -r '.enabledPlugins // {} | to_entries | map(select(.value == true)) | .[].key' $claude_settings_file 2>/dev/null)
-        if test (count $plugins) -gt 0
-            printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
-            for plugin in $plugins
-                printf "\e[90m  Installing %s...\e[0m\n" $plugin
-                claude plugin install $plugin --scope user 2>/dev/null
+        # Sync Claude Code plugins from settings.json
+        set -l claude_settings_file "$HOME/.config/claude/settings.json"
+        if test -f $claude_settings_file
+            set -l plugins (jq -r '.enabledPlugins // {} | to_entries | map(select(.value == true)) | .[].key' $claude_settings_file 2>/dev/null)
+            if test (count $plugins) -gt 0
+                printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
+                claude plugin marketplace update
+                for plugin in $plugins
+                    printf "\e[90m  Installing %s...\e[0m\n" $plugin
+                    claude plugin install $plugin --scope user 2>/dev/null
+                end
+                printf "\e[92m  Synced %d plugin(s)\e[0m\n\n" (count $plugins)
             end
-            printf "\e[92m  Synced %d plugin(s)\e[0m\n\n" (count $plugins)
         end
     end
 end
