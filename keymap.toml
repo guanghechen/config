@@ -314,6 +314,7 @@ bindings = [
   { key = "Insert",     mods = "Shift",                     action = "Paste"                    },
   { key = "F11",        mods = "Command|Control",           action = "ToggleFullscreen"         },
   { key = "F12",        mods = "Command|Control",           action = "ToggleSimpleFullscreen"   },
+  { key = "W",          mods = "Command|Control",           action = "Quit"                     },
   { key = "N",          mods = "Command|Control|Shift",     action = "CreateNewWindow"          },
   { key = "V",          mods = "Command|Control|Shift",     action = "ToggleViMode"             },
   { key = "W",          mods = "Command|Control|Shift",     action = "Quit"                     },
