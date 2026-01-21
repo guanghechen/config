@@ -4,10 +4,24 @@ local M = {}
 local txt = stl.nvim.fn.txt
 local position = "f_wl" ---@type stl.t.NvimbarPositionEnum
 
+---@param winnr                         integer
 ---@return boolean
-local function silent()
-  local devmode = dot.context.flight.devmode:snapshot() ---@type boolean
-  return not devmode
+local function silent(winnr)
+  if not stl.nvim.win.is_valid(winnr) then
+    return false
+  end
+
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local clients = vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/documentSymbol" })
+
+  -- Silence timeout if any client has not yet responded to documentSymbol
+  for _, client in ipairs(clients) do
+    if not dot.state.status.lsp_symbol_ready[client.id] then
+      return true
+    end
+  end
+
+  return false
 end
 
 ---@param winnr                         integer
@@ -23,7 +37,9 @@ local function resolve_nvimbar(winnr)
       comp_sep_hlname = "f_wl_bg",
       comp_sep_hlname_active = "f_wl_bg",
       delay = 128,
-      silent = silent,
+      silent = function()
+        return silent(winnr)
+      end,
       get_max_width = function()
         if vim.api.nvim_win_is_valid(winnr) then
           local width = vim.api.nvim_win_get_width(winnr) ---@type integer
@@ -75,7 +91,9 @@ local function resolve_nvimbar(winnr)
         delay = 128,
         timeout = 10000,
         value = stl.c.Observable.from_value(false),
-        silent = silent,
+        silent = function()
+          return silent(winnr)
+        end,
         task = function(_, _, callback)
           local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
           if winline.locate_token ~= nil then

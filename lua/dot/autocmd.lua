@@ -260,11 +260,21 @@ vim.api.nvim_create_autocmd("WinResized", {
 vim.api.nvim_create_autocmd("LspDetach", {
   group = stl.nvim.fn.augroup("bootstrap_on_LspDetach"),
   callback = function(args)
-    local client_id = args.data.client_id
-    local client = vim.lsp.get_client_by_id(client_id)
+    local client_id = args.data and args.data.client_id or nil
+    local client = client_id and vim.lsp.get_client_by_id(client_id) or nil
     local bufnr = args.buf
     if client ~= nil then
       era.m.lsp.event.on_detach(client, bufnr)
+    end
+
+    -- Clear symbol ready status only if client has no more attached buffers
+    if client_id then
+      vim.schedule(function()
+        local c = vim.lsp.get_client_by_id(client_id)
+        if c == nil or vim.tbl_isempty(c.attached_buffers) then
+          dot.state.status.lsp_symbol_ready[client_id] = nil
+        end
+      end)
     end
   end,
 })

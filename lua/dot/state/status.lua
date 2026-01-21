@@ -4,6 +4,7 @@
 ---@field public msg_lsp                string
 ---@field public msg_mode               string
 ---
+---@field public lsp_symbol_ready       table<integer, boolean>
 ---@field public notification_paused    boolean
 ---@field public notification_level     string
 ---@field public searching              boolean
@@ -30,6 +31,7 @@
 ---@field public msg_mode               stl.c.Observable
 ---
 ---@field public copilots               table<integer, string>
+---@field public lsp_symbol_ready       table<integer, boolean>
 ---@field public notification_paused    stl.c.Observable
 ---@field public notification_level     stl.c.Observable
 ---@field public searching              stl.c.Observable
@@ -54,6 +56,7 @@ local M = {
   msg_mode = stl.c.Observable.from_value(""),
 
   copilots = {}, -- Plain object for copilot status per client
+  lsp_symbol_ready = {}, -- LSP clients that have responded (success or error) to documentSymbol
   notification_paused = stl.c.Observable.from_value(false),
   notification_level = stl.c.Observable.from_value("TRACE"),
   searching = stl.c.Observable.from_value(false),
@@ -98,6 +101,7 @@ function M.dump()
     msg_command = M.msg_command:snapshot(),
     msg_lsp = M.msg_lsp:snapshot(),
     msg_mode = M.msg_mode:snapshot(),
+    lsp_symbol_ready = M.lsp_symbol_ready,
     notification_paused = M.notification_paused:snapshot(),
     notification_level = M.notification_level:snapshot(),
     searching = M.searching:snapshot(),
@@ -127,6 +131,11 @@ function M.reset()
   -- Reset copilot status (plain object)
   for k in pairs(M.copilots) do
     M.copilots[k] = nil
+  end
+
+  -- Reset LSP symbol ready status (plain object)
+  for k in pairs(M.lsp_symbol_ready) do
+    M.lsp_symbol_ready[k] = nil
   end
 
   M.notification_paused:next(false)

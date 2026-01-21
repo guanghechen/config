@@ -378,6 +378,12 @@ function M.locate_symbols(winnr, token)
     ---@param ctx                         ?lsp.HandlerContext
     ---@return nil
     local function handler(err, symbols, ctx)
+      -- Mark client as ready when it responds (success or error)
+      -- Must happen before settled check so all responding clients get marked
+      if ctx ~= nil and ctx.client_id ~= nil then
+        dot.state.status.lsp_symbol_ready[ctx.client_id] = true
+      end
+
       if settled then
         return
       end
@@ -466,6 +472,7 @@ function M.locate_symbols(winnr, token)
           end
         end
       end
+
       do_resolve(true, lsp_symbols)
     end
 
