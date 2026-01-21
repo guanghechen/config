@@ -25,6 +25,8 @@ tmux new-window -t "$SESSION" -n "wiki" -c "$HOME/wiki/wiki"
 # Window 4: term
 tmux new-window -t "$SESSION" -n "term" -c "$HOME/wiki/wiki"
 
+sleep 1
+
 # Enter claude in each window
 tmux send-keys -t "$SESSION:translator" "claude --permission-mode=plan" Enter
 tmux send-keys -t "$SESSION:wiki-note" "claude --permission-mode=plan" Enter
