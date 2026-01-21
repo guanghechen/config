@@ -45,6 +45,25 @@ function M:set_winnr(winnr)
     vim.api.nvim_win_close(self._winnr, true)
   end
   self._winnr = winnr
+
+  local bufnr = self._bufnr ---@type integer
+  if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+    return
+  end
+
+  vim.api.nvim_win_call(winnr, function()
+    -- Trigger FileType autocmd only once per buffer
+    if not vim.b[bufnr].acp_filetype_done then
+      vim.b[bufnr].acp_filetype_done = true
+      vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+    end
+
+    -- Trigger render-markdown (safe to call multiple times)
+    local ok, rm_api = pcall(require, "render-markdown.api")
+    if ok then
+      rm_api.render({ buf = bufnr, win = winnr })
+    end
+  end)
 end
 
 ---@return nil
@@ -54,12 +73,12 @@ function M:create_buf()
   end
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_OUTPUT, { buf = self._bufnr })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
   vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
-  vim.api.nvim_set_option_value("syntax", "markdown", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_OUTPUT, { buf = self._bufnr })
+  vim.treesitter.start(self._bufnr, "markdown")
 end
 
 ---@return nil
@@ -282,16 +301,28 @@ function M:append_tool_call(tool_call)
     end
 
     local top_line = indent .. "╭" .. string.rep("─", max_width + 2) .. "╮"
-    local header_line = indent .. "│ " .. header_text .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text)) .. " │"
+    local header_line = indent
+      .. "│ "
+      .. header_text
+      .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text))
+      .. " │"
     local body_lines = {} ---@type string[]
     for _, line in ipairs(args_preview) do
-      body_lines[#body_lines + 1] = indent .. "│ " .. line .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line)) .. " │"
+      body_lines[#body_lines + 1] = indent
+        .. "│ "
+        .. line
+        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line))
+        .. " │"
     end
 
     -- Add diff button line
     if has_diff then
       local diff_button = "󰒉 [View Diff]"
-      body_lines[#body_lines + 1] = indent .. "│ " .. diff_button .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button)) .. " │"
+      body_lines[#body_lines + 1] = indent
+        .. "│ "
+        .. diff_button
+        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button))
+        .. " │"
     end
 
     local bottom_line = indent .. "╰" .. string.rep("─", max_width + 2) .. "╯"
@@ -347,9 +378,27 @@ function M:append_tool_call(tool_call)
     local header_inner_start = indent_len + #"│ "
     local header_inner_end = header_len - #" │"
 
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_header", { header_idx, header_inner_start }, { header_idx, header_inner_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_icon", { header_idx, indent_len + icon_start }, { header_idx, indent_len + icon_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_name", { header_idx, indent_len + name_start }, { header_idx, math.min(indent_len + name_end, header_len) })
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_header",
+      { header_idx, header_inner_start },
+      { header_idx, header_inner_end }
+    )
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_icon",
+      { header_idx, indent_len + icon_start },
+      { header_idx, indent_len + icon_end }
+    )
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_name",
+      { header_idx, indent_len + name_start },
+      { header_idx, math.min(indent_len + name_end, header_len) }
+    )
 
     -- Highlight diff button
     if has_diff then
@@ -798,7 +847,13 @@ function M:update_tool_expanded(tool_id, expanded)
   end
 
   -- Clear extmarks in the range
-  local extmarks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, { line_range.start, 0 }, { line_range["end"], -1 }, {})
+  local extmarks = vim.api.nvim_buf_get_extmarks(
+    bufnr,
+    self._ns,
+    { line_range.start, 0 },
+    { line_range["end"], -1 },
+    {}
+  )
   for _, extmark in ipairs(extmarks) do
     vim.api.nvim_buf_del_extmark(bufnr, self._ns, extmark[1])
   end
@@ -869,15 +924,27 @@ function M:update_tool_expanded(tool_id, expanded)
     end
 
     local top_line = indent .. "╭" .. string.rep("─", max_width + 2) .. "╮"
-    local header_line = indent .. "│ " .. header_text .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text)) .. " │"
+    local header_line = indent
+      .. "│ "
+      .. header_text
+      .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text))
+      .. " │"
     local body_lines = {} ---@type string[]
     for _, line in ipairs(args_preview) do
-      body_lines[#body_lines + 1] = indent .. "│ " .. line .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line)) .. " │"
+      body_lines[#body_lines + 1] = indent
+        .. "│ "
+        .. line
+        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line))
+        .. " │"
     end
 
     if has_diff then
       local diff_button = "󰒉 [View Diff]"
-      body_lines[#body_lines + 1] = indent .. "│ " .. diff_button .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button)) .. " │"
+      body_lines[#body_lines + 1] = indent
+        .. "│ "
+        .. diff_button
+        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button))
+        .. " │"
     end
 
     local bottom_line = indent .. "╰" .. string.rep("─", max_width + 2) .. "╯"
@@ -926,9 +993,27 @@ function M:update_tool_expanded(tool_id, expanded)
     local header_inner_start = indent_len + #"│ "
     local header_inner_end = header_len - #" │"
 
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_header", { header_idx, header_inner_start }, { header_idx, header_inner_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_icon", { header_idx, indent_len + icon_start }, { header_idx, indent_len + icon_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_name", { header_idx, indent_len + name_start }, { header_idx, math.min(indent_len + name_end, header_len) })
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_header",
+      { header_idx, header_inner_start },
+      { header_idx, header_inner_end }
+    )
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_icon",
+      { header_idx, indent_len + icon_start },
+      { header_idx, indent_len + icon_end }
+    )
+    vim.hl.range(
+      bufnr,
+      self._ns,
+      "f_acp_tool_name",
+      { header_idx, indent_len + name_start },
+      { header_idx, math.min(indent_len + name_end, header_len) }
+    )
 
     -- Highlight diff button
     if has_diff then

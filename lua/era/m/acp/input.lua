@@ -43,6 +43,19 @@ function M:set_winnr(winnr)
     vim.api.nvim_win_close(self._winnr, true)
   end
   self._winnr = winnr
+
+  local bufnr = self._bufnr ---@type integer
+  if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+    return
+  end
+
+  vim.api.nvim_win_call(winnr, function()
+    -- Trigger FileType autocmd only once per buffer
+    if not vim.b[bufnr].acp_filetype_done then
+      vim.b[bufnr].acp_filetype_done = true
+      vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+    end
+  end)
 end
 
 ---@return nil
@@ -52,11 +65,11 @@ function M:create_buf()
   end
 
   self._bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_INPUT, { buf = self._bufnr })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
   vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
-  vim.api.nvim_set_option_value("syntax", "markdown", { buf = self._bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_INPUT, { buf = self._bufnr })
+  vim.treesitter.start(self._bufnr, "markdown")
 
   self:__setup_keymaps__()
 end
