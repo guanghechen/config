@@ -32,30 +32,12 @@ local source_configs = {
     end,
   },
   {
-    name = "workspace:todos",
-    title = "Todos (workspace)",
-    engine = "folder",
-    filepath = dot.path.locate_workspace_config(".neovim/notepad/todos"),
-    default_item_name = function()
-      return tostring(os.date("%Y-%m-%d"))
-    end,
-  },
-  {
     name = "shared:notes",
     title = "Notes (shared)",
-    engine = "json",
-    filepath = dot.path.locate_shared_filepath("notepad/notes.json"),
+    engine = "folder",
+    filepath = dot.path.locate_shared_filepath("notepad/notes"),
     default_item_name = function()
       return "Note"
-    end,
-  },
-  {
-    name = "shared:todos",
-    title = "Todos (shared)",
-    engine = "folder",
-    filepath = dot.path.locate_shared_filepath("notepad/todos"),
-    default_item_name = function()
-      return tostring(os.date("%Y-%m-%d"))
     end,
   },
 }
