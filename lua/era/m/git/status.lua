@@ -536,7 +536,7 @@ function M.resolve_highlight(stage_state, codes, summary, display, categories)
     return GIT_STATUS_HIGHLIGHT.A
   end
   if resolved.untracked then
-    return GIT_STATUS_HIGHLIGHT.A
+    return GIT_STATUS_HIGHLIGHT["?"]
   end
   if resolved.ignored then
     return GIT_STATUS_HIGHLIGHT["!"]
@@ -624,7 +624,7 @@ function M.calc_info(filepath, filetype, offset, highlights)
     local char = display:sub(index, index)
     local hlname ---@type string
     if char == "U" and is_untracked then
-      hlname = GIT_STATUS_HIGHLIGHT.A
+      hlname = GIT_STATUS_HIGHLIGHT["?"]
     else
       hlname = GIT_STATUS_HIGHLIGHT[char] or DEFAULT_GIT_STATUS_HL
     end

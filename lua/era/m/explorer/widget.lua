@@ -74,6 +74,7 @@ function M.new(props)
         return
       end
       self._tree:mark_all_dirty() ---@diagnostic disable-line: invisible
+      era.m.git.state.refresh(false)
       if self:isvisible() then
         self:__refresh__() ---@diagnostic disable-line: invisible
       end
@@ -1498,7 +1499,7 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_flag_viewtype
 
-  local sub_git_staged = era.m.git.state.o_staged_files:subscribe(
+  local sub_git_refreshed = era.m.git.state.o_refreshed:subscribe(
     stl.c.Subscriber.new({
       on_next = function()
         if self:isvisible() then
@@ -1508,19 +1509,7 @@ function M:__setup_subscriptions__()
     }),
     false
   )
-  self._subscriptions[#self._subscriptions + 1] = sub_git_staged
-
-  local sub_git_unstaged = era.m.git.state.o_unstaged_files:subscribe(
-    stl.c.Subscriber.new({
-      on_next = function()
-        if self:isvisible() then
-          self:__render__()
-        end
-      end,
-    }),
-    false
-  )
-  self._subscriptions[#self._subscriptions + 1] = sub_git_unstaged
+  self._subscriptions[#self._subscriptions + 1] = sub_git_refreshed
 
   local sub_diagnostic = era.m.lsp.diagnostic.subscribe_all(stl.c.Subscriber.new({
     on_next = function()

@@ -7,6 +7,9 @@ local M = {}
 ---@type stl.c.Observable<string>
 M.o_branch = stl.c.Observable.from_value("")
 
+---@type stl.c.Observable<integer>
+M.o_refreshed = stl.c.Observable.from_value(0)
+
 ---@type stl.c.Observable<string[]>
 M.o_staged_files = stl.c.Observable.from_value({})
 
@@ -120,6 +123,7 @@ local function do_refresh()
       initialized = true
       last_refresh = vim.uv.now()
 
+      M.o_refreshed:next(last_refresh)
       M.o_staged_files:next(aggregated.staged_files)
       M.o_unstaged_files:next(aggregated.unstaged_files)
     end
