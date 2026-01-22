@@ -48,7 +48,7 @@ command
   })
   .implement({
     uuid = K.acp.select_provider.uuid,
-    tabtypes = stl.e.TabTypeSet.ACP,
+    tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
       era.m.acp.select_provider()
     end,
