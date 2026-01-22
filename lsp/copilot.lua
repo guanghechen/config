@@ -154,7 +154,7 @@ return {
     },
   },
   filetypes = {
-    "acp-input",
+    "acp-chatbox",
     "c",
     "cpp",
     "go",

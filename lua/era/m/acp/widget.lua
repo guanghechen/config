@@ -3,6 +3,9 @@ local __module_name__ = "era.m.acp.widget" ---@type string
 
 local S = era.m.acp
 
+local btn = stl.nvim.fn.btn
+local txt = stl.nvim.fn.txt
+
 local SPINNER_FRAMES = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 
 ---@class era.m.acp.widget.IProps
@@ -25,10 +28,12 @@ local SPINNER_FRAMES = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧",
 ---@field protected _assistant_text     string
 ---@field protected _spinner_timer      ?uv.uv_timer_t
 ---@field protected _spinner_idx        integer
+---@field protected _winbar_timer       ?uv.uv_timer_t
+---@field protected _elapsed_ns         integer
+---@field protected _run_started_at     ?integer
+---@field protected _is_generating      boolean
 ---@field protected _generating_sub     ?stl.c.IUnsubscribable
----@field protected _base_title         string
 ---@field protected _agent_label        string
----@field protected _banner_shown       boolean
 ---@field protected _autocmd_group      ?integer
 ---@field private __send_message__      fun(self: era.m.acp.Widget, content: string, attachments: era.m.acp.IContentBlock[]): nil
 local M = {}
@@ -43,6 +48,56 @@ local PROVIDER_ICONS = {
   gemini = "󰊭",
   opencode = "󰘦",
 }
+
+local MODEL_CHOICES = {
+  claude = { "claude-sonnet-4", "claude-opus-4", "claude-haiku-3.5" },
+  codex = { "gpt-4.1", "gpt-4.1-mini", "gpt-4o" },
+  gemini = { "gemini-2.5-pro", "gemini-2.5-flash" },
+  opencode = { "configurable" },
+}
+
+---@type string
+local fn_select_provider = dot.G.register_anonymous_fn(function()
+  era.m.acp.select_provider()
+end) or ""
+
+---@type string
+local fn_select_model = dot.G.register_anonymous_fn(function()
+  local widget = era.m.acp.get_widget()
+  if widget == nil or widget:isdisposed() then
+    return
+  end
+
+  local provider = widget.session.provider
+  local options = MODEL_CHOICES[provider] or {}
+  if #options == 0 then
+    return
+  end
+
+  local items = {} ---@type { label: string, value: string }[]
+  for _, name in ipairs(options) do
+    items[#items + 1] = { label = name, value = name }
+  end
+
+  vim.ui.select(items, {
+    prompt = "Select ACP Model",
+    format_item = function(item)
+      return item.label
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+
+    local config = S.config.provider_configs[provider]
+    if config then
+      config.model = choice.value
+    end
+
+    ---@diagnostic disable-next-line: invisible
+    widget:__update_winbars__()
+  end)
+end) or ""
 
 ---@param props                         era.m.acp.widget.IProps
 ---@return era.m.acp.Widget
@@ -61,11 +116,15 @@ function M.new(props)
   self._assistant_text = ""
   self._spinner_timer = nil
   self._spinner_idx = 1
+  self._winbar_timer = nil
+  self._elapsed_ns = 0
+  self._run_started_at = nil
+  self._is_generating = false
   self._generating_sub = nil
-  self._base_title = ""
   self._agent_label = ""
-  self._banner_shown = false
   self._autocmd_group = nil
+
+  S.session_bridge.attach(self.session)
 
   self.output = S.output.new({
     session = props.session,
@@ -119,6 +178,8 @@ function M:dispose()
   end
 
   self:__stop_spinner__()
+  self:__stop_winbar_timer__()
+  self:__stop_run_timer__()
   if self._generating_sub then
     self._generating_sub:unsubscribe()
     self._generating_sub = nil
@@ -129,6 +190,8 @@ function M:dispose()
     self._autocmd_group = nil
   end
 
+  S.session_bridge.detach(self.session)
+
   self.session:dispose()
   self.input:dispose()
   self.output:dispose()
@@ -137,6 +200,9 @@ function M:dispose()
   if self._tabnr and vim.api.nvim_tabpage_is_valid(self._tabnr) then
     local tabnr = self._tabnr ---@type integer
     self._tabnr = nil
+    if vim.t[tabnr].acp_widget == self then
+      vim.t[tabnr].acp_widget = nil
+    end
     if self._prev_tabnr and vim.api.nvim_tabpage_is_valid(self._prev_tabnr) then
       vim.api.nvim_set_current_tabpage(self._prev_tabnr)
     end
@@ -169,6 +235,7 @@ function M:focus()
 
   self._visible = true
   dot.state.widget.push(self)
+  self:__start_winbar_timer__()
 end
 
 ---@return nil
@@ -178,6 +245,7 @@ function M:hide()
   end
 
   self._visible = false
+  self:__stop_winbar_timer__()
 
   if self._prev_tabnr and vim.api.nvim_tabpage_is_valid(self._prev_tabnr) then
     vim.api.nvim_set_current_tabpage(self._prev_tabnr)
@@ -216,6 +284,7 @@ function M:__create_tab__()
   vim.cmd("tabnew")
   self._tabnr = vim.api.nvim_get_current_tabpage()
   vim.t[self._tabnr].tabtype = stl.e.TabTypeEnum.ACP
+  vim.t[self._tabnr].acp_widget = self
 
   output_winnr = vim.api.nvim_get_current_win()
 
@@ -254,11 +323,8 @@ function M:__create_tab__()
   end
   self.input:set_winnr(input_winnr)
 
-  local provider_icon = PROVIDER_ICONS[self.session.provider] or "󰚩"
   local config = S.config.provider_configs[self.session.provider]
   self._agent_label = config and config.label or self.session.provider:gsub("^%l", string.upper)
-  self._base_title = string.format("%s %s", provider_icon, self._agent_label)
-
   self:__setup_output_win__(output_winnr)
   self:__setup_input_win__(input_winnr)
   self:__setup_sidebar_win__(sidebar_winnr)
@@ -267,7 +333,6 @@ function M:__create_tab__()
 
   self:__setup_widget_keymaps__()
   self:__setup_generating_subscription__()
-  self:__show_banner_once__()
 
   self.sidebar:subscribe_to_changes()
   self.sidebar:refresh()
@@ -307,7 +372,10 @@ function M:__setup_input_win__(winnr)
   vim.api.nvim_set_option_value("foldcolumn", "0", { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixheight", true, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_input_normal", { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value("winhighlight", "Normal:f_acp_input_normal,WinBar:f_acp_input_normal,WinBarNC:f_acp_input_normal", {
+    win = winnr,
+    scope = "local",
+  })
 end
 
 ---@protected
@@ -329,26 +397,61 @@ end
 
 ---@protected
 ---@param winnr                         integer|nil
----@param focused                       boolean
+---@param _focused                      boolean
 ---@return nil
-function M:__update_input_winbar__(winnr, focused)
+---@diagnostic disable-next-line: unused-local
+function M:__update_input_winbar__(winnr, _focused)
   if not winnr or not vim.api.nvim_win_is_valid(winnr) then
     return
   end
 
-  local sep_l = stl.icon.symbols.sep_left
-  local sep_r = stl.icon.symbols.sep_right
-  local title = self._base_title
+  local config = S.config.provider_configs[self.session.provider]
 
-  local hl_title = focused and "mf_b_bg0" or "f_acp_input_title"
-  local hl_sep = focused and "ms_bg0" or "f_acp_input_title_sep"
+  local agent = self._agent_label ~= "" and self._agent_label or (config and config.label) or self.session.provider
+  local model = (config and config.model) or "-"
+  local cost = nil
 
-  local winbar = "%="
-    .. "%#" .. hl_sep .. "#" .. sep_l
-    .. "%#" .. hl_title .. "#" .. title
-    .. "%#" .. hl_sep .. "#" .. sep_r
-    .. "%="
-  vim.api.nvim_set_option_value("winbar", winbar, { win = winnr, scope = "local" })
+  if not self._is_generating and self._run_started_at then
+    self:__stop_run_timer__()
+  end
+
+  local elapsed_ns = self._elapsed_ns
+  if self._run_started_at then
+    elapsed_ns = elapsed_ns + (vim.uv.hrtime() - self._run_started_at)
+  end
+  local elapsed_sec = math.max(0, math.floor(elapsed_ns / 1000000000))
+  local hours = math.floor(elapsed_sec / 3600)
+  local minutes = math.floor((elapsed_sec % 3600) / 60)
+  local seconds = elapsed_sec % 60
+  local elapsed = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+  local function piece(text, icon, hl, callback)
+    local body = txt(icon, hl) .. txt(" " .. text, hl)
+    if callback and callback ~= "" then
+      body = btn(body, callback)
+    end
+    return body
+  end
+
+  local label_hl = "f_acp_winbar_label"
+  local value_hl = "f_acp_winbar_value"
+  local value_dim_hl = "f_acp_winbar_value_dim"
+  local sep_hl = "f_acp_winbar_sep"
+  local sep = txt(" ┃ ", sep_hl)
+
+  local agent_icon = PROVIDER_ICONS[self.session.provider] or stl.icon.ui.Character
+  local model_icon = stl.icon.ui.Package
+
+  local center = piece("chatbox", stl.icon.ui.Comment, label_hl)
+    .. sep .. piece(agent, agent_icon, value_hl, fn_select_provider)
+    .. sep .. piece(model, model_icon, value_hl, fn_select_model)
+
+  if cost then
+    center = center .. sep .. piece(cost, stl.icon.ui.Perf, value_dim_hl)
+  end
+
+  local right = piece(elapsed, stl.icon.ui.History, value_hl)
+  vim.api.nvim_set_option_value("winbar", "%=" .. center .. "%=" .. right, { win = winnr, scope = "local" })
 end
 
 ---@protected
@@ -358,6 +461,54 @@ function M:__update_winbars__()
   local input_winnr = self.input:winnr()
   local input_focused = current_win == input_winnr
   self:__update_input_winbar__(input_winnr, input_focused)
+end
+
+---@protected
+---@return nil
+function M:__start_winbar_timer__()
+  if self._winbar_timer then
+    return
+  end
+
+  self._winbar_timer = vim.uv.new_timer()
+  self._winbar_timer:start(0, 1000, vim.schedule_wrap(function()
+    if self._disposed or not self._visible then
+      return
+    end
+    if self._tabnr and vim.api.nvim_get_current_tabpage() ~= self._tabnr then
+      return
+    end
+    self:__update_winbars__()
+  end))
+end
+
+---@protected
+---@return nil
+function M:__stop_winbar_timer__()
+  if self._winbar_timer then
+    self._winbar_timer:stop()
+    self._winbar_timer:close()
+    self._winbar_timer = nil
+  end
+end
+
+---@protected
+---@return nil
+function M:__start_run_timer__()
+  if self._run_started_at then
+    return
+  end
+  self._run_started_at = vim.uv.hrtime()
+end
+
+---@protected
+---@return nil
+function M:__stop_run_timer__()
+  if not self._run_started_at then
+    return
+  end
+  self._elapsed_ns = self._elapsed_ns + (vim.uv.hrtime() - self._run_started_at)
+  self._run_started_at = nil
 end
 
 ---@protected
@@ -499,6 +650,7 @@ function M:__send_message__(content, attachments)
     session = session,
     cwd = session.cwd,
     messages = session.messages,
+    system_prompt = S.config.system_prompt,
     abort = session.abort,
     on_chunk = function(chunk)
       self:__handle_chunk__(chunk)
@@ -553,6 +705,7 @@ function M:__handle_done__()
   -- Stop spinner synchronously first, then update observable
   -- (Observable notification is async via vim.schedule)
   self:__stop_spinner__()
+  self:__stop_run_timer__()
   session.generating:next(false)
 
   self._cancel_request = nil
@@ -566,6 +719,7 @@ function M:__handle_error__(err)
   -- Stop spinner synchronously first, then update observable
   -- (Observable notification is async via vim.schedule)
   self:__stop_spinner__()
+  self:__stop_run_timer__()
   self.session.generating:next(false)
 
   self._cancel_request = nil
@@ -582,10 +736,13 @@ function M:__setup_generating_subscription__()
 
   self._generating_sub = self.session.generating:subscribe(stl.c.Subscriber.new({
     on_next = function(generating)
+      self._is_generating = generating and true or false
       if generating then
         self:__start_spinner__()
+        self:__start_run_timer__()
       else
         self:__stop_spinner__()
+        self:__stop_run_timer__()
       end
     end,
   }), true)
@@ -615,20 +772,6 @@ function M:__stop_spinner__()
     self._spinner_timer = nil
   end
   self.output:update_assistant_spinner(nil)
-end
-
----@protected
----@return nil
-function M:__show_banner_once__()
-  if self._banner_shown then
-    return
-  end
-  self._banner_shown = true
-
-  local config = S.config.provider_configs[self.session.provider]
-  if config then
-    self.output:show_banner(config, self.session.cwd)
-  end
 end
 
 ---@protected

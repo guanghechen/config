@@ -1,8 +1,8 @@
 ---@class stl.filetype
 local M = {}
 
-M.ACP_INPUT = "acp-input"
-M.ACP_OUTPUT = "acp-output"
+M.ACP_CHATBOX = "acp-chatbox"
+M.ACP_MAIN = "acp-main"
 M.AI_TERMINAL = "ai_terminal"
 M.BIGFILE = "bigfile"
 M.BOARD = "board"
@@ -179,8 +179,8 @@ local filetypes = {
     -- stylua: ignore end
   },
   markdown = {
-    [M.ACP_INPUT] = true,
-    [M.ACP_OUTPUT] = true,
+    [M.ACP_CHATBOX] = true,
+    [M.ACP_MAIN] = true,
     [M.IMAGE_VIEWER] = true,
     [M.NOTEPAD] = true,
     ["markdown"] = true,

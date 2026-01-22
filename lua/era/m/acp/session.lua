@@ -16,8 +16,12 @@
 ---@field public cwd                    string
 ---@field public provider               era.m.acp.ProviderName
 ---@field public messages               era.m.acp.IMessage[]
+---@field public title                  string
+---@field public created_at             integer
+---@field public updated_at             integer
 ---@field public abort                  stl.c.Observable
 ---@field public generating             stl.c.Observable
+---@field public changed                stl.c.Observable
 ---@field public plan                   stl.c.Observable
 ---@field public context_files          stl.c.Observable
 ---@field public auto_approve_all       boolean
@@ -37,8 +41,12 @@ function M.new(opts)
   self.cwd = opts.cwd
   self.provider = opts.provider
   self.messages = {}
+  self.title = "untitled"
+  self.created_at = os.time()
+  self.updated_at = self.created_at
   self.abort = stl.c.Observable.from_value(false)
   self.generating = stl.c.Observable.from_value(false)
+  self.changed = stl.c.Observable.from_value(nil)
   self.plan = stl.c.Observable.from_value(nil)
   self.context_files = stl.c.Observable.from_value({})
   self.auto_approve_all = false
@@ -64,6 +72,7 @@ function M:dispose()
   self:cancel()
   self.abort:dispose()
   self.generating:dispose()
+  self.changed:dispose()
   self.plan:dispose()
   self.context_files:dispose()
   self.messages = {}
@@ -83,6 +92,7 @@ function M:add_user_message(content)
     timestamp = os.time(),
   }
   self.messages[#self.messages + 1] = msg
+  self.changed:next({ kind = "user_message", id = msg.id })
   return msg
 end
 
@@ -105,6 +115,7 @@ function M:add_assistant_message(content, tool_calls)
     timestamp = os.time(),
   }
   self.messages[#self.messages + 1] = msg
+  self.changed:next({ kind = "assistant_message", id = msg.id })
   return msg
 end
 
@@ -187,6 +198,7 @@ function M:clear()
   self.plan:next(nil)
   self.context_files:next({})
   self.auto_approve_all = false
+  self.changed:next({ kind = "clear" })
 end
 
 ---@param plan                          era.m.acp.IPlan
@@ -239,6 +251,7 @@ function M:set_tool_result(tool_id, result)
     tool_call.error = result.error
     tool_call.status = result.is_error and "error" or "completed"
   end
+  self.changed:next({ kind = "tool_result", id = tool_id })
 end
 
 ---@return era.m.acp.session.ISessionSerializedData

@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.acp.output" ---@type string
+
 ---@class era.m.acp.output.IOutputOpts
 ---@field public session                era.m.acp.Session
 
@@ -77,7 +80,7 @@ function M:create_buf()
   vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
-  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_OUTPUT, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_MAIN, { buf = self._bufnr })
   vim.treesitter.start(self._bufnr, "markdown")
 end
 
@@ -97,37 +100,52 @@ end
 ---@param agent_label                   ?string
 ---@return nil
 function M:append_message(msg, agent_label)
-  local header ---@type string
-  if msg.role == "user" then
-    header = "## 󰀄 You"
-  else
-    header = "## 󱚥 " .. (agent_label or "Assistant")
+  local render = era.m.acp.render
+  local role = msg.role == "user" and "user" or "assistant"
+  local label = role == "user" and "You" or (agent_label or "Assistant")
+
+  local header_line, header_hls = render.build_role_header({
+    role = role,
+    label = label,
+  })
+
+  local header_line_idx = nil ---@type integer|nil
+
+  local function append_lines_with_header(lines)
+    local start_line = self:__append_lines_with_highlights__(lines, { [2] = header_hls })
+    if header_line_idx == nil and start_line ~= nil and lines[2] == header_line then
+      header_line_idx = start_line + 1
+    end
   end
 
   -- Handle content blocks or plain string
   if type(msg.content) == "table" then
     local content_blocks = msg.content --[[@as era.m.acp.IContentBlock[] ]]
-    local lines = { header, "" }
+    local lines = { "", header_line, "" }
     for _, block in ipairs(content_blocks) do
       if block.type == "text" then
         lines[#lines + 1] = block.text
       elseif block.type == "image" then
-        self:__append_lines__(lines)
+        append_lines_with_header(lines)
         lines = {}
         self:append_image(block)
       elseif block.type == "audio" then
         lines[#lines + 1] = string.format("[Audio: %s, %d bytes]", block.mime_type, #block.data)
       elseif block.type == "resource" then
-        self:__append_lines__(lines)
+        append_lines_with_header(lines)
         lines = {}
         self:append_resource(block)
       end
     end
     lines[#lines + 1] = ""
-    self:__append_lines__(lines)
+    append_lines_with_header(lines)
   else
-    local content = header .. "\n\n" .. msg.content .. "\n\n"
-    self:__append_lines__(vim.split(content, "\n", { plain = true }))
+    local lines = { "", header_line, "", msg.content, "" }
+    append_lines_with_header(lines)
+  end
+
+  if header_line_idx ~= nil and msg.timestamp then
+    self:__add_timestamp__(header_line_idx, msg.timestamp)
   end
 end
 
@@ -141,9 +159,10 @@ function M:append_image(image_content)
 
   local data_len = #image_content.data
   local uri_info = image_content.uri and (" " .. image_content.uri) or ""
+  local icon = stl.icon.ui.Emoji
   local lines = {
-    string.format("  🖼️  Image: %s%s", image_content.mime_type, uri_info),
-    string.format("  Data: %d bytes (base64)", data_len),
+    string.format("%s Image: %s%s", icon, image_content.mime_type, uri_info),
+    string.format("Data: %d bytes (base64)", data_len),
     "",
   }
 
@@ -152,7 +171,6 @@ function M:append_image(image_content)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  -- Highlight image info
   vim.hl.range(bufnr, self._ns, "f_acp_image", { start_line, 0 }, { start_line, #lines[1] })
 
   self:__scroll_to_bottom__()
@@ -167,14 +185,15 @@ function M:append_resource(resource_content)
   end
 
   local res = resource_content.resource
+  local icon = stl.icon.ui.Location
   local lines = {
-    string.format("  🔗 Resource: %s", res.uri),
+    string.format("%s Resource: %s", icon, res.uri),
   }
   if res.text then
-    lines[#lines + 1] = string.format("  Text: %s", res.text:sub(1, 100))
+    lines[#lines + 1] = string.format("Text: %s", res.text:sub(1, 100))
   end
   if res.mime_type then
-    lines[#lines + 1] = string.format("  Type: %s", res.mime_type)
+    lines[#lines + 1] = string.format("Type: %s", res.mime_type)
   end
   lines[#lines + 1] = ""
 
@@ -183,7 +202,6 @@ function M:append_resource(resource_content)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  -- Highlight resource info
   vim.hl.range(bufnr, self._ns, "f_acp_resource", { start_line, 0 }, { start_line, #lines[1] })
 
   self:__scroll_to_bottom__()
@@ -217,8 +235,6 @@ end
 ---@param text                          string
 ---@return nil
 function M:append_thinking(text)
-  -- For now, just append thinking as regular text
-  -- Could be styled differently in the future
   self:append_text(text)
 end
 
@@ -230,192 +246,58 @@ function M:append_tool_call(tool_call)
     return
   end
 
+  local render = era.m.acp.render
   local is_expanded = self.session:is_tool_expanded(tool_call.id)
   local icon = self:__get_tool_icon__(tool_call.name)
   local args_preview = self:__format_tool_args__(tool_call.arguments, tool_call.name)
-
-  -- Detect edit tools and extract diff info
   local has_diff = self:__extract_diff_info__(tool_call)
 
-  local indent = "  "
-  local indent_len = #indent
+  local card_lines, card_hls = render.build_tool_card({
+    icon = icon,
+    name = tool_call.name,
+    args_preview = args_preview,
+    expanded = is_expanded,
+    has_diff = has_diff,
+  })
 
-  if not is_expanded then
-    -- Collapsed: single line display
-    local header_text = string.format("%s %s", icon, tool_call.name)
-    local args_text = args_preview[1] or ""
-
-    local content = string.format("%s ─ %s", header_text, args_text)
-    local max_width = vim.fn.strdisplaywidth(content)
-    local padding = string.rep("─", math.max(2, 50 - max_width))
-
-    local line = indent .. "╭─ " .. content .. " ─" .. padding .. "╮"
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    local start_line = vim.api.nvim_buf_line_count(bufnr)
-    local is_empty = start_line == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
-
-    if is_empty then
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "", line })
-      start_line = 1
-    else
-      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "", line })
-      start_line = start_line + 1
-    end
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    -- Store line range
-    self._tool_line_ranges[tool_call.id] = { start = start_line, ["end"] = start_line }
-
-    -- Highlight collapsed tool box
-    local line_len = #line
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { start_line, 0 }, { start_line, line_len })
-
-    -- Highlight icon and name
-    local icon_start = indent_len + #"╭─ "
-    local icon_end = icon_start + #icon
-    local name_start = icon_end + 1
-    local name_end = name_start + #tool_call.name
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_icon", { start_line, icon_start }, { start_line, icon_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_name", { start_line, name_start }, { start_line, name_end })
-
-    -- Add virtual text hint
-    vim.api.nvim_buf_set_extmark(bufnr, self._ns, start_line, 0, {
-      virt_text = { { " [e: Expand]", "f_acp_tool_hint" } },
-      virt_text_pos = "eol",
-      hl_mode = "combine",
-    })
-  else
-    -- Expanded: full display
-    local header_text = string.format("%s %s", icon, tool_call.name)
-
-    local max_width = vim.fn.strdisplaywidth(header_text)
-    for _, line in ipairs(args_preview) do
-      max_width = math.max(max_width, vim.fn.strdisplaywidth(line))
-    end
-
-    -- Add "View Diff" button if has diff
-    if has_diff then
-      local diff_button = "󰒉 [View Diff]"
-      max_width = math.max(max_width, vim.fn.strdisplaywidth(diff_button))
-    end
-
-    local top_line = indent .. "╭" .. string.rep("─", max_width + 2) .. "╮"
-    local header_line = indent
-      .. "│ "
-      .. header_text
-      .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text))
-      .. " │"
-    local body_lines = {} ---@type string[]
-    for _, line in ipairs(args_preview) do
-      body_lines[#body_lines + 1] = indent
-        .. "│ "
-        .. line
-        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line))
-        .. " │"
-    end
-
-    -- Add diff button line
-    if has_diff then
-      local diff_button = "󰒉 [View Diff]"
-      body_lines[#body_lines + 1] = indent
-        .. "│ "
-        .. diff_button
-        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button))
-        .. " │"
-    end
-
-    local bottom_line = indent .. "╰" .. string.rep("─", max_width + 2) .. "╯"
-
-    local lines = { "", top_line, header_line }
-    for _, line in ipairs(body_lines) do
-      lines[#lines + 1] = line
-    end
-    lines[#lines + 1] = bottom_line
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    local start_line = vim.api.nvim_buf_line_count(bufnr)
-    local is_empty = start_line == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
-
-    if is_empty then
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-      start_line = 0
-    else
-      vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-    end
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    local top_idx = start_line + 1
-    local header_idx = start_line + 2
-    local footer_idx = start_line + (#lines - 1)
-
-    -- Store line range
-    self._tool_line_ranges[tool_call.id] = { start = top_idx, ["end"] = footer_idx }
-
-    -- Highlight borders (top and bottom)
-    local top_len = #lines[2]
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { top_idx, 0 }, { top_idx, top_len })
-    local footer_len = #lines[#lines]
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { footer_idx, 0 }, { footer_idx, footer_len })
-
-    -- Highlight side borders for header + body
-    for i = 3, #lines - 1 do
-      local line_idx = start_line + (i - 1)
-      local line = lines[i]
-      local left_end = vim.str_byteindex(line, "utf-8", 1)
-      local right_start = vim.str_byteindex(line, "utf-8", vim.str_utfindex(line, "utf-8") - 1)
-      vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { line_idx, 0 }, { line_idx, left_end })
-      vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { line_idx, right_start }, { line_idx, #line })
-    end
-
-    -- Highlight icon and name within header
-    local icon_start = #"│ "
-    local icon_end = icon_start + #icon
-    local name_start = icon_end + 1
-    local name_end = name_start + #tool_call.name
-    local header_len = #lines[3]
-
-    local header_inner_start = indent_len + #"│ "
-    local header_inner_end = header_len - #" │"
-
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_header",
-      { header_idx, header_inner_start },
-      { header_idx, header_inner_end }
-    )
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_icon",
-      { header_idx, indent_len + icon_start },
-      { header_idx, indent_len + icon_end }
-    )
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_name",
-      { header_idx, indent_len + name_start },
-      { header_idx, math.min(indent_len + name_end, header_len) }
-    )
-
-    -- Highlight diff button
-    if has_diff then
-      local diff_line_idx = start_line + #lines - 2
-      local diff_button = "󰒉 [View Diff]"
-      local diff_start = indent_len + #"│ "
-      local diff_end = diff_start + #diff_button
-      vim.hl.range(bufnr, self._ns, "f_acp_diff_button", { diff_line_idx, diff_start }, { diff_line_idx, diff_end })
-    end
-
-    -- Add virtual text hint
-    vim.api.nvim_buf_set_extmark(bufnr, self._ns, top_idx, 0, {
-      virt_text = { { " [e: Collapse]", "f_acp_tool_hint" } },
-      virt_text_pos = "eol",
-      hl_mode = "combine",
-    })
+  -- Add empty line before card
+  local lines = { "" }
+  for _, line in ipairs(card_lines) do
+    lines[#lines + 1] = line
   end
+
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  local start_line = vim.api.nvim_buf_line_count(bufnr)
+  local is_empty = start_line == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
+
+  if is_empty then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    start_line = 0
+  else
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+  end
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+
+  -- Apply highlights
+  local first_card_line = start_line + 1
+  for rel_idx, hls in pairs(card_hls) do
+    local line_idx = first_card_line + rel_idx - 1
+    for _, hl in ipairs(hls) do
+      vim.hl.range(bufnr, self._ns, hl.hl, { line_idx, hl.col_start }, { line_idx, hl.col_end })
+    end
+  end
+
+  -- Store line range
+  local last_card_line = first_card_line + #card_lines - 1
+  self._tool_line_ranges[tool_call.id] = { start = first_card_line, ["end"] = last_card_line }
+
+  -- Add virtual text hint
+  local hint_text = is_expanded and " [e: Collapse]" or " [e: Expand]"
+  vim.api.nvim_buf_set_extmark(bufnr, self._ns, first_card_line, 0, {
+    virt_text = { { hint_text, "f_acp_tool_hint" } },
+    virt_text_pos = "eol",
+    hl_mode = "combine",
+  })
 
   self:__scroll_to_bottom__()
 end
@@ -430,40 +312,38 @@ function M:append_tool_result(tool_call_id, result, is_error)
     return
   end
 
-  local icon = is_error and "" or ""
+  local render = era.m.acp.render
+  local icon = is_error and render.icon_error or render.icon_success
   local label = is_error and "Error" or "Done"
   local hl = is_error and "f_acp_tool_error" or "f_acp_tool_success"
 
-  -- Check if tool is expanded
   local is_expanded = self.session:is_tool_expanded(tool_call_id)
   local truncated = result
 
   if not is_expanded then
-    -- Truncate result for collapsed view
     local result_lines = vim.split(result, "\n", { plain = true })
     if #result_lines > 3 then
       truncated = table.concat(vim.list_slice(result_lines, 1, 3), " ")
-      truncated = truncated .. string.format(" ... (%d lines truncated)", #result_lines - 3)
+      truncated = truncated .. string.format(" … (%d lines)", #result_lines - 3)
     else
       truncated = result:gsub("\n", " ")
     end
 
     local max_len = 200
     if #truncated > max_len then
-      truncated = truncated:sub(1, max_len) .. "..."
+      truncated = truncated:sub(1, max_len) .. "…"
     end
     truncated = truncated:gsub("%s+", " ")
   else
-    -- Show full result for expanded view
     local max_len = 500
     if #result > max_len then
-      truncated = result:sub(1, max_len) .. "..."
+      truncated = result:sub(1, max_len) .. "…"
     end
     truncated = truncated:gsub("\n", " "):gsub("%s+", " ")
   end
 
   local lines = {
-    string.format("  %s %s: %s", icon, label, truncated),
+    string.format("%s %s: %s", icon, label, truncated),
     "",
   }
 
@@ -472,7 +352,6 @@ function M:append_tool_result(tool_call_id, result, is_error)
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  -- Highlight result line
   local result_line_len = #lines[1]
   vim.hl.range(bufnr, self._ns, hl, { start_line, 0 }, { start_line, result_line_len })
 
@@ -488,23 +367,27 @@ function M:append_assistant_header(agent_label)
   end
 
   self._assistant_label = agent_label
-  local header = "## 󱚥 " .. agent_label
-  local lines = { header, "", "" }
+  local render = era.m.acp.render
 
-  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  local header_line, header_hls = render.build_role_header({
+    role = "assistant",
+    label = agent_label,
+  })
+
+  local lines = { "", header_line, "", "" }
+  local header_rel_idx = 2
+
   local line_count = vim.api.nvim_buf_line_count(bufnr)
-  local is_empty = line_count == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
-
-  if is_empty then
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-    self._assistant_header_line = 0
-  else
-    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
-    self._assistant_header_line = line_count
+  local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)[1] or ""
+  if last_line == "" then
+    table.remove(lines, 1)
+    header_rel_idx = 1
   end
 
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-  self:__scroll_to_bottom__()
+  local start_line = self:__append_lines_with_highlights__(lines, { [header_rel_idx] = header_hls })
+  if start_line ~= nil then
+    self._assistant_header_line = start_line + header_rel_idx - 1
+  end
 end
 
 ---@param spinner_frame                 ?string
@@ -517,15 +400,23 @@ function M:update_assistant_spinner(spinner_frame)
   end
 
   local label = self._assistant_label or "Assistant"
-  local header ---@type string
-  if spinner_frame then
-    header = "## 󱚥 " .. label .. " " .. spinner_frame
-  else
-    header = "## 󱚥 " .. label
-  end
+  local render = era.m.acp.render
+
+  local header, header_hls = render.build_role_header({
+    role = "assistant",
+    label = label,
+    spinner = spinner_frame,
+  })
 
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, header_line, header_line + 1, false, { header })
+
+  -- Clear old highlights and apply new ones
+  vim.api.nvim_buf_clear_namespace(bufnr, self._ns, header_line, header_line + 1)
+  for _, hl in ipairs(header_hls) do
+    vim.hl.range(bufnr, self._ns, hl.hl, { header_line, hl.col_start }, { header_line, hl.col_end })
+  end
+
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 end
 
@@ -563,6 +454,8 @@ function M:show_banner(config, cwd)
     return
   end
 
+  local render = era.m.acp.render
+
   local rows = {
     { key = "󰳐 Model", value = config.model },
     { key = "󰉋 Path", value = cwd },
@@ -573,11 +466,9 @@ function M:show_banner(config, cwd)
     key_width = math.max(key_width, vim.fn.strdisplaywidth(row.key))
   end
 
-  local lines = {
-    "",
-  }
+  local lines = { "" }
 
-  local label_line = string.format("  %s", config.label)
+  local label_line = "  " .. config.label
   lines[#lines + 1] = label_line
   lines[#lines + 1] = ""
 
@@ -590,7 +481,7 @@ function M:show_banner(config, cwd)
   end
 
   lines[#lines + 1] = ""
-  lines[#lines + 1] = "  " .. string.rep("─", math.max(max_line_width - 2, 0))
+  lines[#lines + 1] = "  " .. render.build_separator(math.max(max_line_width - 2, 0), "solid")
   lines[#lines + 1] = ""
 
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
@@ -655,6 +546,61 @@ function M:__append_lines__(lines)
 end
 
 ---@protected
+---@param lines                         string[]
+---@param highlights                    table<integer, { hl: string, col_start: integer, col_end: integer }[]>
+---@return integer|nil
+function M:__append_lines_with_highlights__(lines, highlights)
+  local bufnr = self._bufnr
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  local is_empty = line_count == 1 and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] == ""
+
+  local start_line ---@type integer
+  if is_empty then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    start_line = 0
+  else
+    vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, lines)
+    start_line = line_count
+  end
+
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+
+  -- Apply highlights
+  for rel_idx, hls in pairs(highlights) do
+    local line_idx = start_line + rel_idx - 1
+    for _, hl in ipairs(hls) do
+      vim.hl.range(bufnr, self._ns, hl.hl, { line_idx, hl.col_start }, { line_idx, hl.col_end })
+    end
+  end
+
+  self:__scroll_to_bottom__()
+  return start_line
+end
+
+---@protected
+---@param line_idx                      integer
+---@param timestamp                     integer
+---@return nil
+function M:__add_timestamp__(line_idx, timestamp)
+  local bufnr = self._bufnr
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local text = os.date("%Y-%m-%d %H:%M:%S", timestamp)
+  vim.api.nvim_buf_set_extmark(bufnr, self._ns, line_idx, 0, {
+    virt_text = { { text, "f_acp_timestamp" } },
+    virt_text_pos = "right_align",
+    hl_mode = "combine",
+  })
+end
+
+---@protected
 ---@return nil
 function M:__scroll_to_bottom__()
   if self._winnr ~= nil and vim.api.nvim_win_is_valid(self._winnr) then
@@ -664,17 +610,17 @@ function M:__scroll_to_bottom__()
 end
 
 local TOOL_ICON_RULES = {
-  { "view", "" },
-  { "read", "󰈙" },
-  { "edit", "󰙏" },
-  { "write", "󰙏" },
-  { "create", "󰐖" },
-  { "bash", "" },
-  { "grep", "󰍉" },
-  { "glob", "󰈞" },
-  { "ls", "󰉋" },
-  { "search", "󰍉" },
-  { "replace", "󰛔" },
+  { "view", stl.icon.ui.Newspaper },
+  { "read", stl.icon.ui.Newspaper },
+  { "edit", stl.icon.ui.Edit },
+  { "write", stl.icon.ui.Pencil },
+  { "create", stl.icon.ui.NewFile },
+  { "bash", stl.icon.ui.Terminal },
+  { "grep", stl.icon.ui.Search },
+  { "glob", stl.icon.ui.Search },
+  { "ls", stl.icon.filetype.Folder },
+  { "search", stl.icon.ui.Search },
+  { "replace", stl.icon.ui.Edit },
 }
 
 local TOOL_ICON_FALLBACK = "󰊕" ---@type string
@@ -701,7 +647,6 @@ function M:__format_tool_args__(args, tool_name)
   local lines = {} ---@type string[]
   local lower_name = tool_name:lower()
 
-  -- Special formatting for common tools
   if lower_name:find("view") or lower_name:find("read") then
     if args.file_path or args.path then
       lines[#lines + 1] = args.file_path or args.path
@@ -713,7 +658,7 @@ function M:__format_tool_args__(args, tool_name)
     if args.old_string then
       local preview = args.old_string:gsub("\n", "↵"):sub(1, 40)
       if #args.old_string > 40 then
-        preview = preview .. "..."
+        preview = preview .. "…"
       end
       lines[#lines + 1] = "old: " .. preview
     end
@@ -721,7 +666,7 @@ function M:__format_tool_args__(args, tool_name)
     if args.command then
       local cmd = args.command:gsub("\n", " "):sub(1, 50)
       if #args.command > 50 then
-        cmd = cmd .. "..."
+        cmd = cmd .. "…"
       end
       lines[#lines + 1] = string.format("$ %s", cmd)
     end
@@ -741,12 +686,11 @@ function M:__format_tool_args__(args, tool_name)
       lines[#lines + 1] = args.file_path or args.path
     end
   else
-    -- Generic formatting: show key-value pairs
     for key, value in pairs(args) do
       local val_str = type(value) == "string" and value or vim.json.encode(value)
       val_str = val_str:gsub("\n", "↵"):sub(1, 40)
       if #tostring(value) > 40 then
-        val_str = val_str .. "..."
+        val_str = val_str .. "…"
       end
       lines[#lines + 1] = string.format("%s: %s", key, val_str)
       if #lines >= 3 then
@@ -769,7 +713,6 @@ function M:__extract_diff_info__(tool_call)
   local args = tool_call.arguments or {}
   local lower_name = tool_call.name:lower()
 
-  -- Check if it's an edit tool
   local is_edit_tool = lower_name:find("edit") or lower_name:find("write") or lower_name:find("str_replace")
 
   if not is_edit_tool then
@@ -781,7 +724,6 @@ function M:__extract_diff_info__(tool_call)
     return false
   end
 
-  -- For edit/str_replace tools
   if args.old_string and args.new_string then
     self._tool_diffs[tool_call.id] = {
       old_text = args.old_string,
@@ -791,9 +733,7 @@ function M:__extract_diff_info__(tool_call)
     return true
   end
 
-  -- For write tools with content
   if args.content then
-    -- Try to read old file content
     local old_text = ""
     local file = io.open(filepath, "r")
     if file then
@@ -821,7 +761,6 @@ function M:update_tool_expanded(tool_id, expanded)
     return
   end
 
-  -- Find the tool call
   local tool_call = nil ---@type era.m.acp.IToolCall|nil
   for _, msg in ipairs(self.session.messages) do
     if msg.tool_calls then
@@ -861,176 +800,42 @@ function M:update_tool_expanded(tool_id, expanded)
   -- Delete old lines
   vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range["end"] + 1, false, {})
-  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  -- Re-render the tool call
+  -- Build new card
+  local render = era.m.acp.render
   local icon = self:__get_tool_icon__(tool_call.name)
   local args_preview = self:__format_tool_args__(tool_call.arguments, tool_call.name)
   local has_diff = self._tool_diffs[tool_id] ~= nil
 
-  local indent = "  "
-  local indent_len = #indent
+  local card_lines, card_hls = render.build_tool_card({
+    icon = icon,
+    name = tool_call.name,
+    args_preview = args_preview,
+    expanded = expanded,
+    has_diff = has_diff,
+  })
 
-  if not expanded then
-    -- Collapsed: single line display
-    local header_text = string.format("%s %s", icon, tool_call.name)
-    local args_text = args_preview[1] or ""
+  vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range.start, false, card_lines)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-    local content = string.format("%s ─ %s", header_text, args_text)
-    local max_width = vim.fn.strdisplaywidth(content)
-    local padding = string.rep("─", math.max(2, 50 - max_width))
-
-    local line = indent .. "╭─ " .. content .. " ─" .. padding .. "╮"
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range.start, false, { line })
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    local start_line = line_range.start
-
-    -- Update line range
-    self._tool_line_ranges[tool_id] = { start = start_line, ["end"] = start_line }
-
-    -- Highlight collapsed tool box
-    local line_len = #line
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { start_line, 0 }, { start_line, line_len })
-
-    -- Highlight icon and name
-    local icon_start = indent_len + #"╭─ "
-    local icon_end = icon_start + #icon
-    local name_start = icon_end + 1
-    local name_end = name_start + #tool_call.name
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_icon", { start_line, icon_start }, { start_line, icon_end })
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_name", { start_line, name_start }, { start_line, name_end })
-
-    -- Add virtual text hint
-    vim.api.nvim_buf_set_extmark(bufnr, self._ns, start_line, 0, {
-      virt_text = { { " [e: Expand]", "f_acp_tool_hint" } },
-      virt_text_pos = "eol",
-      hl_mode = "combine",
-    })
-  else
-    -- Expanded: full display
-    local header_text = string.format("%s %s", icon, tool_call.name)
-
-    local max_width = vim.fn.strdisplaywidth(header_text)
-    for _, line in ipairs(args_preview) do
-      max_width = math.max(max_width, vim.fn.strdisplaywidth(line))
+  -- Apply highlights
+  for rel_idx, hls in pairs(card_hls) do
+    local line_idx = line_range.start + rel_idx - 1
+    for _, hl in ipairs(hls) do
+      vim.hl.range(bufnr, self._ns, hl.hl, { line_idx, hl.col_start }, { line_idx, hl.col_end })
     end
-
-    if has_diff then
-      local diff_button = "󰒉 [View Diff]"
-      max_width = math.max(max_width, vim.fn.strdisplaywidth(diff_button))
-    end
-
-    local top_line = indent .. "╭" .. string.rep("─", max_width + 2) .. "╮"
-    local header_line = indent
-      .. "│ "
-      .. header_text
-      .. string.rep(" ", max_width - vim.fn.strdisplaywidth(header_text))
-      .. " │"
-    local body_lines = {} ---@type string[]
-    for _, line in ipairs(args_preview) do
-      body_lines[#body_lines + 1] = indent
-        .. "│ "
-        .. line
-        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(line))
-        .. " │"
-    end
-
-    if has_diff then
-      local diff_button = "󰒉 [View Diff]"
-      body_lines[#body_lines + 1] = indent
-        .. "│ "
-        .. diff_button
-        .. string.rep(" ", max_width - vim.fn.strdisplaywidth(diff_button))
-        .. " │"
-    end
-
-    local bottom_line = indent .. "╰" .. string.rep("─", max_width + 2) .. "╯"
-
-    local lines = { top_line, header_line }
-    for _, line in ipairs(body_lines) do
-      lines[#lines + 1] = line
-    end
-    lines[#lines + 1] = bottom_line
-
-    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
-    vim.api.nvim_buf_set_lines(bufnr, line_range.start, line_range.start, false, lines)
-    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
-
-    local start_line = line_range.start
-    local top_idx = start_line
-    local header_idx = start_line + 1
-    local footer_idx = start_line + (#lines - 1)
-
-    -- Update line range
-    self._tool_line_ranges[tool_id] = { start = top_idx, ["end"] = footer_idx }
-
-    -- Highlight borders
-    local top_len = #lines[1]
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { top_idx, 0 }, { top_idx, top_len })
-    local footer_len = #lines[#lines]
-    vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { footer_idx, 0 }, { footer_idx, footer_len })
-
-    -- Highlight side borders
-    for i = 2, #lines - 1 do
-      local line_idx = start_line + (i - 1)
-      local line = lines[i]
-      local left_end = vim.str_byteindex(line, "utf-8", 1)
-      local right_start = vim.str_byteindex(line, "utf-8", vim.str_utfindex(line, "utf-8") - 1)
-      vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { line_idx, 0 }, { line_idx, left_end })
-      vim.hl.range(bufnr, self._ns, "f_acp_tool_border", { line_idx, right_start }, { line_idx, #line })
-    end
-
-    -- Highlight icon and name
-    local icon_start = #"│ "
-    local icon_end = icon_start + #icon
-    local name_start = icon_end + 1
-    local name_end = name_start + #tool_call.name
-    local header_len = #lines[2]
-
-    local header_inner_start = indent_len + #"│ "
-    local header_inner_end = header_len - #" │"
-
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_header",
-      { header_idx, header_inner_start },
-      { header_idx, header_inner_end }
-    )
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_icon",
-      { header_idx, indent_len + icon_start },
-      { header_idx, indent_len + icon_end }
-    )
-    vim.hl.range(
-      bufnr,
-      self._ns,
-      "f_acp_tool_name",
-      { header_idx, indent_len + name_start },
-      { header_idx, math.min(indent_len + name_end, header_len) }
-    )
-
-    -- Highlight diff button
-    if has_diff then
-      local diff_line_idx = start_line + #lines - 2
-      local diff_button = "󰒉 [View Diff]"
-      local diff_start = indent_len + #"│ "
-      local diff_end = diff_start + #diff_button
-      vim.hl.range(bufnr, self._ns, "f_acp_diff_button", { diff_line_idx, diff_start }, { diff_line_idx, diff_end })
-    end
-
-    -- Add virtual text hint
-    vim.api.nvim_buf_set_extmark(bufnr, self._ns, top_idx, 0, {
-      virt_text = { { " [e: Collapse]", "f_acp_tool_hint" } },
-      virt_text_pos = "eol",
-      hl_mode = "combine",
-    })
   end
+
+  -- Update line range
+  self._tool_line_ranges[tool_id] = { start = line_range.start, ["end"] = line_range.start + #card_lines - 1 }
+
+  -- Add virtual text hint
+  local hint_text = expanded and " [e: Collapse]" or " [e: Expand]"
+  vim.api.nvim_buf_set_extmark(bufnr, self._ns, line_range.start, 0, {
+    virt_text = { { hint_text, "f_acp_tool_hint" } },
+    virt_text_pos = "eol",
+    hl_mode = "combine",
+  })
 end
 
 return M

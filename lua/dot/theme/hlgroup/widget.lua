@@ -29,22 +29,52 @@ function M.default_gen_hlgroup_map(context)
     f_acp_border = { fg = u.purple, bg = u.bg0 },
     f_acp_title = { fg = u.fg1, bg = u.bg2, bold = true },
     f_acp_title_sep = { fg = u.bg2, bg = u.bg0 },
+    f_acp_hint = { fg = u.fg4, bg = u.bg0 },
+
+    -- Input panel
+    f_acp_input_normal = { fg = u.fg1, bg = u.bg1 },
     f_acp_input_title = { fg = u.fg1, bg = u.bg2, bold = true },
     f_acp_input_title_sep = { fg = u.bg2, bg = u.bg0 },
-    f_acp_input_normal = { fg = u.fg1, bg = u.bg1 },
-    f_acp_hint = { fg = u.fg4, bg = u.bg0 },
+    f_acp_input_border = { fg = u.purple },
+    f_acp_input_border_active = { fg = u.brightPurple, bold = true },
+
+    -- Banner
     f_acp_banner_label = { fg = u.purple, bold = true },
     f_acp_banner_key = { fg = u.fg4 },
     f_acp_banner_value = { fg = u.fg2 },
     f_acp_banner_sep = { fg = u.bg3 },
+
+    -- Role headers (user/assistant badges)
+    f_acp_role_user_badge = { fg = u.bg0, bg = u.blue, bold = true },
+    f_acp_role_user_label = { fg = u.blue, bold = true },
+    f_acp_role_assistant_badge = { fg = u.bg0, bg = u.purple, bold = true },
+    f_acp_role_assistant_label = { fg = u.purple, bold = true },
+    f_acp_role_system_badge = { fg = u.bg0, bg = u.orange, bold = true },
+    f_acp_role_system_label = { fg = u.orange, bold = true },
+    f_acp_spinner = { fg = u.aqua, bold = true },
+
+    -- Tool cards
     f_acp_tool_border = { fg = u.bg4 },
+    f_acp_tool_border_active = { fg = u.aqua },
     f_acp_tool_icon = { fg = u.blue },
     f_acp_tool_name = { fg = u.aqua, bold = true },
     f_acp_tool_header = { fg = u.fg1, bg = u.bg2 },
+    f_acp_tool_header_bg = { bg = u.bg2 },
+    f_acp_tool_args = { fg = u.fg3 },
     f_acp_tool_success = { fg = u.green },
     f_acp_tool_error = { fg = u.red },
+    f_acp_tool_pending = { fg = u.yellow },
+    f_acp_tool_hint = { fg = u.fg4, italic = true },
+    f_acp_tool_truncated = { fg = u.fg4, italic = true },
+    f_acp_diff_button = { fg = u.aqua, bold = true, underline = true },
+
+    -- Content types
     f_acp_image = { fg = u.orange, bold = true },
     f_acp_resource = { fg = u.aqua, bold = true },
+
+    -- Sidebar sections
+    f_acp_section_icon = { fg = u.purple },
+    f_acp_section_title = { fg = u.purple, bold = true },
     f_acp_plan_pending = { fg = u.fg3 },
     f_acp_plan_in_progress = { fg = u.blue, bold = true },
     f_acp_plan_completed = { fg = u.green },
@@ -52,9 +82,21 @@ function M.default_gen_hlgroup_map(context)
     f_acp_plan_medium = { fg = u.yellow },
     f_acp_plan_low = { fg = u.fg4 },
     f_acp_context_file = { fg = u.aqua },
-    f_acp_diff_button = { fg = u.aqua, bold = true },
-    f_acp_tool_hint = { fg = u.fg4, italic = true },
-    f_acp_tool_truncated = { fg = u.fg4, italic = true },
+
+    -- Status indicators
+    f_acp_status_idle = { fg = u.fg4 },
+    f_acp_status_generating = { fg = u.aqua, bold = true },
+    f_acp_status_success = { fg = u.green, bold = true },
+    f_acp_status_error = { fg = u.red, bold = true },
+
+    -- Timestamp
+    f_acp_timestamp = { fg = u.fg4 },
+
+    -- Winbar pieces
+    f_acp_winbar_label = { fg = u.purple, bold = true },
+    f_acp_winbar_value = { fg = u.fg1 },
+    f_acp_winbar_value_dim = { fg = u.fg3 },
+    f_acp_winbar_sep = { fg = u.fg4 },
 
     ---acp diff
     f_acp_diff_add = { fg = u.fg1, bg = cs.mix(u.bg0, u.green, 20) },

@@ -26,6 +26,92 @@ function M.new(config)
   return self
 end
 
+---@param block                         era.m.acp.IContentBlock
+---@return string
+local function normalize_block(block)
+  if type(block) ~= "table" then
+    return ""
+  end
+
+  if block.type == "text" then
+    return type(block.text) == "string" and block.text or ""
+  end
+
+  if block.type == "image" then
+    local uri = block.uri and (" " .. block.uri) or ""
+    local bytes = type(block.data) == "string" and #block.data or 0
+    return string.format("[Image: %s%s, %d bytes]", block.mime_type or "unknown", uri, bytes)
+  end
+
+  if block.type == "audio" then
+    local bytes = type(block.data) == "string" and #block.data or 0
+    return string.format("[Audio: %s, %d bytes]", block.mime_type or "unknown", bytes)
+  end
+
+  if block.type == "resource" then
+    local res = block.resource or {}
+    local text = type(res.text) == "string" and res.text or ""
+    if #text > 120 then
+      text = text:sub(1, 120) .. "..."
+    end
+    if text ~= "" then
+      return string.format("[Resource: %s %s]", res.uri or "unknown", text)
+    end
+    return string.format("[Resource: %s]", res.uri or "unknown")
+  end
+
+  return ""
+end
+
+---@param content                       string|era.m.acp.IContentBlock[]
+---@return string
+local function normalize_content(content)
+  if type(content) == "string" then
+    return content
+  end
+  if type(content) ~= "table" then
+    return ""
+  end
+
+  local parts = {} ---@type string[]
+  for _, block in ipairs(content) do
+    local text = normalize_block(block)
+    if text ~= "" then
+      parts[#parts + 1] = text
+    end
+  end
+  return table.concat(parts, "\n")
+end
+
+---@param messages                      era.m.acp.IMessage[]
+---@param system_prompt                 ?string
+---@return string
+---@return boolean
+local function build_prompt(messages, system_prompt)
+  local lines = {} ---@type string[]
+  local has_user = false
+
+  if type(system_prompt) == "string" and system_prompt ~= "" then
+    lines[#lines + 1] = "System:"
+    lines[#lines + 1] = system_prompt
+  end
+
+  for _, msg in ipairs(messages) do
+    local content = normalize_content(msg.content)
+    if content ~= "" then
+      local role = msg.role
+      local label = role == "assistant" and "Assistant" or role == "system" and "System" or "User"
+      if role == "user" then
+        has_user = true
+      end
+      lines[#lines + 1] = label .. ":"
+      lines[#lines + 1] = content
+    end
+  end
+
+  return table.concat(lines, "\n"), has_user
+end
+
 ---@param opts                          era.m.acp.IRequestOpts
 ---@return fun(): nil                   cancel
 function M:send(opts)
@@ -33,16 +119,9 @@ function M:send(opts)
   local cwd = opts.cwd or vim.uv.cwd() or "."
   local cancelled = false
 
-  local user_content = nil
-  for i = #opts.messages, 1, -1 do
-    local msg = opts.messages[i]
-    if msg.role == "user" then
-      user_content = msg.content
-      break
-    end
-  end
+  local prompt, has_user = build_prompt(opts.messages, opts.system_prompt)
 
-  if not user_content then
+  if not has_user or prompt == "" then
     vim.schedule(function()
       opts.on_error("No user message to send")
     end)
@@ -77,7 +156,7 @@ function M:send(opts)
     "--verbose",
     "--include-partial-messages",
     "--dangerously-skip-permissions",
-    user_content,
+    prompt,
   }
 
   -- Don't specify env - inherit all environment variables from parent process

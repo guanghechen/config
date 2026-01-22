@@ -68,7 +68,7 @@ function M:create_buf()
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = self._bufnr })
   vim.api.nvim_set_option_value("bufhidden", "hide", { buf = self._bufnr })
   vim.api.nvim_set_option_value("swapfile", false, { buf = self._bufnr })
-  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_INPUT, { buf = self._bufnr })
+  vim.api.nvim_set_option_value("filetype", stl.filetype.ACP_CHATBOX, { buf = self._bufnr })
   vim.treesitter.start(self._bufnr, "markdown")
 
   self:__setup_keymaps__()

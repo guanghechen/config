@@ -96,8 +96,8 @@ vim.filetype.add({
   },
 })
 
-vim.treesitter.language.register("markdown", "acp-input")
-vim.treesitter.language.register("markdown", "acp-output")
+vim.treesitter.language.register("markdown", "acp-chatbox")
+vim.treesitter.language.register("markdown", "acp-main")
 vim.treesitter.language.register("markdown", "notepad")
 
 --- Go to last loc when opening a buffer

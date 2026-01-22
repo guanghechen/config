@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.acp.sidebar" ---@type string
+
 local SIDEBAR_WIDTH = 40
 
 local STATUS_ICONS = {
@@ -136,35 +139,61 @@ function M:refresh()
     return
   end
 
+  local render = era.m.acp.render
   local plan = self.session.plan and self.session.plan:snapshot() or nil ---@type era.m.acp.IPlan|nil
   local context_files = self.session.context_files and self.session.context_files:snapshot() or {}
 
   local lines = {} ---@type string[]
+  local highlights = {} ---@type table<integer, { hl: string, col_start: integer, col_end: integer }[]>
 
-  -- Plan section
-  local plan_header = self._plan_expanded and "󰅀 Plan" or "󰅂 Plan"
+  -- Plan section header
+  local plan_icon = self._plan_expanded and render.icon_collapse or render.icon_expand
+  local plan_header = plan_icon .. " Plan"
   lines[#lines + 1] = plan_header
-  lines[#lines + 1] = string.rep("─", SIDEBAR_WIDTH - 2)
+  highlights[#lines] = {
+    { hl = "f_acp_section_icon", col_start = 0, col_end = #plan_icon },
+    { hl = "f_acp_section_title", col_start = #plan_icon + 1, col_end = #plan_header },
+  }
+
+  -- Plan separator
+  lines[#lines + 1] = render.build_separator(SIDEBAR_WIDTH - 2, "solid")
+  highlights[#lines] = { { hl = "f_acp_banner_sep", col_start = 0, col_end = #lines[#lines] } }
 
   if self._plan_expanded then
     if plan and plan.entries and #plan.entries > 0 then
       for _, entry in ipairs(plan.entries) do
         local status_icon = STATUS_ICONS[entry.status] or "○"
         local priority_icon = PRIORITY_ICONS[entry.priority] or ""
-        local line = string.format("%s %s %s", status_icon, entry.content, priority_icon)
+        local line = string.format("  %s %s %s", status_icon, entry.content, priority_icon)
         lines[#lines + 1] = line
+
+        local status_hl = "f_acp_plan_" .. entry.status
+        local priority_hl = "f_acp_plan_" .. entry.priority
+        highlights[#lines] = {
+          { hl = status_hl, col_start = 2, col_end = 2 + #status_icon },
+          { hl = priority_hl, col_start = #line - #priority_icon, col_end = #line },
+        }
       end
     else
       lines[#lines + 1] = "  No plan items"
+      highlights[#lines] = { { hl = "f_acp_hint", col_start = 0, col_end = #lines[#lines] } }
     end
   end
 
   lines[#lines + 1] = ""
 
-  -- Context section
-  local context_header = self._context_expanded and "󰅀 Context" or "󰅂 Context"
+  -- Context section header
+  local context_icon = self._context_expanded and render.icon_collapse or render.icon_expand
+  local context_header = context_icon .. " Context"
   lines[#lines + 1] = context_header
-  lines[#lines + 1] = string.rep("─", SIDEBAR_WIDTH - 2)
+  highlights[#lines] = {
+    { hl = "f_acp_section_icon", col_start = 0, col_end = #context_icon },
+    { hl = "f_acp_section_title", col_start = #context_icon + 1, col_end = #context_header },
+  }
+
+  -- Context separator
+  lines[#lines + 1] = render.build_separator(SIDEBAR_WIDTH - 2, "solid")
+  highlights[#lines] = { { hl = "f_acp_banner_sep", col_start = 0, col_end = #lines[#lines] } }
 
   if self._context_expanded then
     if #context_files > 0 then
@@ -172,9 +201,11 @@ function M:refresh()
         local filename = vim.fn.fnamemodify(file.path, ":t")
         local line = string.format("  󰈔 %s", filename)
         lines[#lines + 1] = line
+        highlights[#lines] = { { hl = "f_acp_context_file", col_start = 0, col_end = #line } }
       end
     else
       lines[#lines + 1] = "  No context files"
+      highlights[#lines] = { { hl = "f_acp_hint", col_start = 0, col_end = #lines[#lines] } }
     end
   end
 
@@ -182,7 +213,13 @@ function M:refresh()
   vim.api.nvim_buf_set_lines(self._bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self._bufnr })
 
-  self:__apply_highlights__(lines, plan, context_files)
+  -- Apply highlights
+  vim.api.nvim_buf_clear_namespace(self._bufnr, self._ns, 0, -1)
+  for line_idx, hls in pairs(highlights) do
+    for _, hl in ipairs(hls) do
+      vim.hl.range(self._bufnr, self._ns, hl.hl, { line_idx - 1, hl.col_start }, { line_idx - 1, hl.col_end })
+    end
+  end
 end
 
 ---@return nil
@@ -205,82 +242,6 @@ function M:subscribe_to_changes()
 end
 
 ----------------------------------------------------------------------------------------------------
-
----@protected
----@param lines                         string[]
----@param plan                          era.m.acp.IPlan|nil
----@param context_files                 era.m.acp.IContextFile[]
----@return nil
-function M:__apply_highlights__(lines, plan, context_files)
-  if not self._bufnr or not vim.api.nvim_buf_is_valid(self._bufnr) then
-    return
-  end
-
-  vim.api.nvim_buf_clear_namespace(self._bufnr, self._ns, 0, -1)
-
-  local line_idx = 0
-
-  -- Plan header
-  local line_len = #(lines[line_idx + 1] or "")
-  vim.hl.range(self._bufnr, self._ns, "f_acp_banner_label", { line_idx, 0 }, { line_idx, line_len })
-  line_idx = line_idx + 1
-
-  -- Plan separator
-  line_len = #(lines[line_idx + 1] or "")
-  vim.hl.range(self._bufnr, self._ns, "f_acp_banner_sep", { line_idx, 0 }, { line_idx, line_len })
-  line_idx = line_idx + 1
-
-  -- Plan entries
-  if self._plan_expanded then
-    if plan and plan.entries and #plan.entries > 0 then
-      for _, entry in ipairs(plan.entries) do
-        local status_hl = "f_acp_plan_" .. entry.status
-        local priority_hl = "f_acp_plan_" .. entry.priority
-
-        -- Highlight status icon (first 2 chars including space)
-        vim.hl.range(self._bufnr, self._ns, status_hl, { line_idx, 0 }, { line_idx, 2 })
-
-        -- Highlight priority icon (last few chars)
-        line_len = #(lines[line_idx + 1] or "")
-        vim.hl.range(self._bufnr, self._ns, priority_hl, { line_idx, line_len - 2 }, { line_idx, line_len })
-
-        line_idx = line_idx + 1
-      end
-    else
-      line_len = #(lines[line_idx + 1] or "")
-      vim.hl.range(self._bufnr, self._ns, "f_acp_hint", { line_idx, 0 }, { line_idx, line_len })
-      line_idx = line_idx + 1
-    end
-  end
-
-  -- Empty line
-  line_idx = line_idx + 1
-
-  -- Context header
-  line_len = #(lines[line_idx + 1] or "")
-  vim.hl.range(self._bufnr, self._ns, "f_acp_banner_label", { line_idx, 0 }, { line_idx, line_len })
-  line_idx = line_idx + 1
-
-  -- Context separator
-  line_len = #(lines[line_idx + 1] or "")
-  vim.hl.range(self._bufnr, self._ns, "f_acp_banner_sep", { line_idx, 0 }, { line_idx, line_len })
-  line_idx = line_idx + 1
-
-  -- Context entries
-  if self._context_expanded then
-    if #context_files > 0 then
-      for _ = 1, #context_files do
-        line_len = #(lines[line_idx + 1] or "")
-        vim.hl.range(self._bufnr, self._ns, "f_acp_context_file", { line_idx, 0 }, { line_idx, line_len })
-        line_idx = line_idx + 1
-      end
-    else
-      line_len = #(lines[line_idx + 1] or "")
-      vim.hl.range(self._bufnr, self._ns, "f_acp_hint", { line_idx, 0 }, { line_idx, line_len })
-      line_idx = line_idx + 1
-    end
-  end
-end
 
 ---@protected
 ---@return nil
