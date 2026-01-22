@@ -162,7 +162,7 @@ function M.create()
   local source, config = S.state.retrieve_source(source_name)
 
   local prefix = config.default_item_name() ---@type string
-  local name_default = string.format("%s %d", prefix, math.max(1, widget:size() + 1)) ---@type string
+  local name_default = string.format("%s-%d", prefix, math.max(1, widget:size() + 1)) ---@type string
   vim.ui.input({
     prompt = "Enter notepad name (create or navigate):",
     default = name_default,
