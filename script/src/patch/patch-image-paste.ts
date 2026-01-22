@@ -48,7 +48,28 @@ const patches: IPatch[] = [
       replaceAll(content, matches, () => 'wrappedOnInput:(C,L)=>{if(L.ctrl&&(C==="v"||C==="V")&&B){F();return}if(X.current)I.current=!0'),
     verify: (text) => text.includes('wrappedOnInput:(C,L)=>{if(L.ctrl&&(C==="v"||C==="V")&&B){F();return}'),
   },
-  // 2.1.7 - Linux/WSL patches
+  // 2.1.14 - Linux/WSL patches
+  {
+    name: "checkImage-grep-pattern",
+    version: "2.1.14",
+    platform: ["wsl", "nix"],
+    search: 'grep -E "image/(png|jpeg|jpg|gif|webp)"',
+    replace: (content, matches) => replaceAll(content, matches, () => 'grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+    verify: (text) => text.includes('grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+  },
+  {
+    name: "wl-paste-bmp-conversion",
+    version: "2.1.14",
+    platform: ["wsl", "nix"],
+    search: /wl-paste --type image\/png > "\$\{(\w+)\}"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- > "\${${varName}}"`
+      }),
+    verify: (text) => text.includes("wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >"),
+  },
+  // 2.1.7 - Linux/WSL patches (legacy)
   {
     name: "checkImage-grep-pattern",
     version: "2.1.7",
