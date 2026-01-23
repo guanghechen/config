@@ -1,9 +1,12 @@
+-- Yozvim: minimal Neovim integration
+-- Only enables plugins that are also enabled in VSCode
+
 pcall(require, "ark.vendor.local.autocmd")
 
 dot.setup_context()
 
-require("ark.vendor.vscode.option")
-require("ark.vendor.vscode.keymap")
+require("ark.vendor.yozvim.option")
+require("ark.vendor.yozvim.keymap")
 pcall(require, "ark.vendor.local.option")
 pcall(require, "ark.vendor.local.keymap")
 

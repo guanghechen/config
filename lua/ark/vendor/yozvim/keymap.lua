@@ -1,0 +1,2 @@
+-- Yozvim: minimal keymap configuration
+-- Only essential keymaps for basic editing

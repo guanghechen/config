@@ -11,53 +11,61 @@ local conds = {
   end,
   ---@return boolean
   ai_copilot = function()
-    return not vim.g.vscode and dot.context.flight.ai_copilot:snapshot()
+    return not vim.g.vscode and not vim.g.yozvim and dot.context.flight.ai_copilot:snapshot()
   end,
   ---@return boolean
   cmp = function()
-    return not vim.g.vscode
+    return not vim.g.vscode and not vim.g.yozvim
   end,
   ---@return boolean
   dap = function()
-    return not vim.g.vscode
+    return not vim.g.vscode and not vim.g.yozvim
   end,
   ---@return boolean
   lsp = function()
-    return not vim.g.vscode
+    return not vim.g.vscode and not vim.g.yozvim
   end,
   ---@return boolean
   not_vscode = function()
     return not vim.g.vscode
   end,
+  ---@return boolean
+  not_yozvim = function()
+    return not vim.g.yozvim
+  end,
+  ---@return boolean
+  not_vscode_or_yozvim = function()
+    return not vim.g.vscode and not vim.g.yozvim
+  end,
   treesitter_context = function()
-    return not vim.g.vscode and dot.context.plugin.treesitter_context:snapshot()
+    return not vim.g.vscode and not vim.g.yozvim and dot.context.plugin.treesitter_context:snapshot()
   end,
 }
 
 ---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
-  { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                },
-  { name = "blink.indent",                main = "blink.indent",                  cond = conds.not_vscode         },
-  { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode         },
-  { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode         },
-  { name = "flash.nvim",                  main = "flash",                         cond = conds.not_vscode         },
-  { name = "friendly-snippets",                                                   cond = conds.not_vscode         },
-  { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                },
-  { name = "mini.ai",                     main = "mini.ai",                       cond = conds.not_vscode         },
-  { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode         },
-  { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode         },
-  { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common             },
-  { name = "mini.surround",               main = "mini.surround",                 cond = conds.common             },
-  { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                },
-  { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                },
-  { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                },
-  { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                },
-  { name = "nvim-nio",                    main = "nio",                           cond = conds.not_vscode         },
-  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode         },
-  { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context },
-  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.not_vscode         },
-  { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode         },
+  { name = "blink.cmp",                   main = "blink.cmp",                     cond = conds.cmp                    },
+  { name = "blink.indent",                main = "blink.indent",                  cond = conds.not_vscode_or_yozvim   },
+  { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.not_vscode_or_yozvim   },
+  { name = "conform.nvim",                main = "conform",                       cond = conds.not_vscode_or_yozvim   },
+  { name = "flash.nvim",                  main = "flash",                         cond = conds.not_vscode_or_yozvim   },
+  { name = "friendly-snippets",                                                   cond = conds.not_vscode_or_yozvim   },
+  { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                    },
+  { name = "mini.ai",                     main = "mini.ai",                       cond = conds.not_vscode_or_yozvim   },
+  { name = "mini.hipatterns",             main = "mini.hipatterns",               cond = conds.not_vscode_or_yozvim   },
+  { name = "mini.indentscope",            main = "mini.indentscope",              cond = conds.not_vscode_or_yozvim   },
+  { name = "mini.splitjoin",              main = "mini.splitjoin",                cond = conds.common                 },
+  { name = "mini.surround",               main = "mini.surround",                 cond = conds.common                 },
+  { name = "nvim-dap",                    main = "dap",                           cond = conds.dap                    },
+  { name = "nvim-dap-ui",                 main = "dapui",                         cond = conds.dap                    },
+  { name = "nvim-dap-virtual-text",       main = "nvim-dap-virtual-text",         cond = conds.dap                    },
+  { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
+  { name = "nvim-nio",                    main = "nio",                           cond = conds.not_vscode_or_yozvim   },
+  { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.not_vscode_or_yozvim   },
+  { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
+  { name = "nvim-treesitter-textobjects", main = "nvim-treesitter-textobjects",   cond = conds.not_vscode_or_yozvim   },
+  { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.not_vscode_or_yozvim   },
   -- stylua: ignore end
 }
 
