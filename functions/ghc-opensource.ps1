@@ -11,6 +11,11 @@ function ghc-opensource {
     return
   }
 
+  if (-not (Test-Path ${env:ROOT_SOURCECODES})) {
+    Write-Host "  ROOT_SOURCECODES path does not exist: ${env:ROOT_SOURCECODES}" -ForegroundColor Red
+    return
+  }
+
   $platform = "--github"
   $repoPath = $null
 
@@ -49,7 +54,7 @@ function ghc-opensource {
       if (-not (Test-Path $parentDir)) {
         New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
       }
-      git -C $parentDir clone "https://github.com/${author}/${reponame}.git"
+      git clone "https://github.com/${author}/${reponame}.git" $targetDir
       if ($LASTEXITCODE -ne 0) { return }
       Set-Location $targetDir
     }
