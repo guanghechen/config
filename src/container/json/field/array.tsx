@@ -1,6 +1,7 @@
 import React from 'react'
-import { ChevronDownIcon, ChevronRightIcon } from '@/common/component/icon/material'
+import { ChevronDownIcon, ChevronRightIcon, ViewStreamIcon } from '@/common/component/icon/material'
 import { classes } from '../constant'
+import { EventStreamContent, isSSEEventStream } from '../container/EventStreamContent'
 import { JsonField } from '../Field'
 import { JsonFieldCopyButton } from '../FieldCopyButton'
 import { JsonFieldKey } from '../FieldKey'
@@ -15,6 +16,7 @@ interface IProps {
 
 interface IState {
   readonly tick: number
+  readonly streamMode: boolean
 }
 
 export class JsonFieldArray extends React.Component<IProps, IState> {
@@ -28,7 +30,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
     super(props)
 
     const { depth, forceCollapseTick } = props
-    const state: IState = { tick: 0 }
+    const state: IState = { tick: 0, streamMode: false }
 
     this.state = state
     this.collapsed = forceCollapseTick > 0 ? forceCollapseTick % 2 === 0 : depth > 2
@@ -38,7 +40,9 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
   public override render(): React.ReactElement {
     const { collapsed, onCollapse, onExpand } = this
     const { name, value, depth } = this.props
+    const { streamMode } = this.state
     const indentStyle: React.CSSProperties = { paddingLeft: `${depth * 1.5}rem` }
+    const isSSE = isSSEEventStream(value)
 
     if (value.length === 0) {
       return (
@@ -46,6 +50,41 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
           <div className={classes.container.line} style={indentStyle}>
             <JsonFieldKey name={name} />
             <span className="font-medium text-gray-700 dark:text-gray-300">&#91;</span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#93;</span>
+          </div>
+        </div>
+      )
+    }
+
+    if (streamMode && isSSE) {
+      return (
+        <div>
+          <div className={classes.container.line} style={indentStyle}>
+            <span className="align-middle">
+              <ChevronDownIcon className="mr-1 inline-block h-6 w-4 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
+            </span>
+            <JsonFieldKey name={name} />
+            <span className="font-medium text-gray-700 dark:text-gray-300">&#91;</span>
+            <span className="px-1 text-sm italic text-gray-400 dark:text-gray-500">
+              {value.length} {value.length === 1 ? 'item' : 'items'}
+            </span>
+            <span className="font-medium text-gray-700 dark:text-gray-300">&nbsp;</span>
+            <button
+              onClick={this.toggleStreamMode}
+              className="ml-1 rounded p-1 transition-colors bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-200 dark:hover:bg-cyan-800/60"
+              aria-label="Toggle stream view"
+              title="Switch to normal view"
+            >
+              <ViewStreamIcon className="h-4 w-4" />
+            </button>
+            <JsonFieldCopyButton value={value} />
+          </div>
+          <EventStreamContent value={value} depth={depth + 1} />
+          <div
+            className="flex cursor-pointer items-center rounded transition hover:bg-gray-200 dark:hover:bg-gray-700"
+            style={indentStyle}
+            onClick={this.toggleStreamMode}
+          >
             <span className="font-medium text-gray-700 dark:text-gray-300">&#93;</span>
           </div>
         </div>
@@ -65,6 +104,16 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
               {value.length} {value.length === 1 ? 'item' : 'items'}
             </span>
             <span className="font-medium text-gray-700 dark:text-gray-300">&#93;</span>
+            {isSSE && (
+              <button
+                onClick={this.toggleStreamMode}
+                className="ml-1 rounded p-1 transition-colors text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 invisible group-hover:visible"
+                aria-label="Toggle stream view"
+                title="View as event stream"
+              >
+                <ViewStreamIcon className="h-4 w-4" />
+              </button>
+            )}
             <JsonFieldCopyButton value={value} />
           </div>
         </div>
@@ -83,6 +132,16 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
             {value.length} {value.length === 1 ? 'item' : 'items'}
           </span>
           <span className="font-medium text-gray-700 dark:text-gray-300">&nbsp;</span>
+          {isSSE && (
+            <button
+              onClick={this.toggleStreamMode}
+              className="rounded p-1 transition-colors text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 invisible group-hover:visible"
+              aria-label="Toggle stream view"
+              title="View as event stream"
+            >
+              <ViewStreamIcon className="h-4 w-4" />
+            </button>
+          )}
           <JsonFieldCopyButton value={value} />
         </div>
         {this.renderArrayItems()}
@@ -113,6 +172,7 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
 
     return (
       state.tick !== nextState.tick ||
+      state.streamMode !== nextState.streamMode ||
       props.name !== nextProps.name ||
       props.value !== nextProps.value ||
       props.depth !== nextProps.depth
@@ -145,6 +205,11 @@ export class JsonFieldArray extends React.Component<IProps, IState> {
     }
 
     this.setState({ tick: state.tick + 1 })
+  }
+
+  protected toggleStreamMode: React.MouseEventHandler = (evt: React.MouseEvent): void => {
+    evt.stopPropagation()
+    this.setState(prevState => ({ streamMode: !prevState.streamMode }))
   }
 
   protected renderArrayItems(): React.ReactNode[] {
