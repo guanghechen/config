@@ -525,8 +525,11 @@ function M.__install_plugins__(specs, on_progress)
   local futures = {}
 
   for _, spec in ipairs(specs) do
-    local future = stl.async.run(function()
-      M.__install_single_plugin__(spec, new_lock, on_progress)
+    local future = stl.c.Future.new(function(resolve)
+      stl.async.run(function()
+        M.__install_single_plugin__(spec, new_lock, on_progress)
+        resolve(nil)
+      end)
     end)
     futures[#futures + 1] = future
   end
@@ -749,8 +752,11 @@ function M.__update_plugins__(specs, on_progress)
   local futures = {}
 
   for _, spec in ipairs(specs) do
-    local future = stl.async.run(function()
-      M.__update_single_plugin__(spec, new_lock, on_progress)
+    local future = stl.c.Future.new(function(resolve)
+      stl.async.run(function()
+        M.__update_single_plugin__(spec, new_lock, on_progress)
+        resolve(nil)
+      end)
     end)
     futures[#futures + 1] = future
   end
