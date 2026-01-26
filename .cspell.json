@@ -6,7 +6,9 @@
     "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": ["~/.config/cspell/cspell.json"],
+  "import": [
+    "~/.config/cspell/cspell.json"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -485,7 +487,6 @@
     "fout",
     "frecency",
     "fsearchbuffer",
-    "futurify",
     "ftermcreate",
     "ftermdestroy",
     "ftermfocus1",
@@ -505,6 +506,7 @@
     "ftermtoggle",
     "ftplugin",
     "ftplugins",
+    "futurify",
     "fzfrc",
     "getbufvar",
     "getchar",
@@ -805,6 +807,7 @@
     "repopath",
     "reposcope",
     "rg",
+    "rightbelow",
     "ripgreprc",
     "roboto",
     "rofile",
@@ -846,11 +849,11 @@
     "shellredir",
     "shellxquote",
     "shfmt",
-    "shortstat",
     "shiftjis",
     "shiftround",
     "shiftwidth",
     "shortmess",
+    "shortstat",
     "showcmd",
     "showmode",
     "showtabline",
@@ -899,6 +902,7 @@
     "superroot",
     "superrooturi",
     "supscript",
+    "svelteserver",
     "swapfile",
     "symbolname",
     "sysname",
@@ -1003,7 +1007,6 @@
     "vuels",
     "wezterm",
     "whichkey",
-    "rightbelow",
     "wildmode",
     "winbar",
     "winblend",
@@ -1055,4 +1058,3 @@
     "zindex"
   ]
 }
-
