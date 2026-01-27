@@ -35,10 +35,6 @@ function ghc-update-agents --description "Update AI coding agents globally"
                 printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
                 claude plugin marketplace update
                 for plugin in $plugins
-                    if test "$plugin" = "ralph-loop@claude-plugins-official"; and test "$GHC_ENV_PLATFORM" = win
-                        printf "\e[93m  Skipping %s on Windows\e[0m\n" $plugin
-                        continue
-                    end
                     printf "\e[90m  Installing %s...\e[0m\n" $plugin
                     claude plugin install $plugin --scope user 2>/dev/null
                 end
