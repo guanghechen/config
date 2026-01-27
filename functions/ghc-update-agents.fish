@@ -2,11 +2,6 @@ function ghc-update-agents --description "Update AI coding agents globally"
     argparse skip-installation -- $argv
     or return 1
 
-    set -l is_windows 0
-    if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
-        set is_windows 1
-    end
-
     set -l agents \
         @anthropic-ai/claude-code \
         @google/gemini-cli \
@@ -40,7 +35,7 @@ function ghc-update-agents --description "Update AI coding agents globally"
                 printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
                 claude plugin marketplace update
                 for plugin in $plugins
-                    if test "$plugin" = "ralph-loop@claude-plugins-official"; and test $is_windows -eq 1
+                    if test "$plugin" = "ralph-loop@claude-plugins-official"; and test "$GHC_ENV_PLATFORM" = win
                         printf "\e[93m  Skipping %s on Windows\e[0m\n" $plugin
                         continue
                     end

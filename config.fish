@@ -11,6 +11,15 @@ set -gx LANG en_US.UTF-8
 set -gx TZ Asia/Shanghai
 set -gx no_proxy "localhost,127.0.0.1,::1"
 
+set -gx GHC_ENV_PLATFORM nix
+if test (uname) = Darwin
+    set -gx GHC_ENV_PLATFORM osx
+else if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
+    set -gx GHC_ENV_PLATFORM wsl
+else
+    set -gx GHC_ENV_PLATFORM nix
+end
+
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
 set -gx LS_COLORS "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
@@ -56,9 +65,9 @@ if test -f "$HOME/.config/fish/local/env.fish"
 end
 
 ## platform specific
-if test (uname) = Darwin
+if test "$GHC_ENV_PLATFORM" = osx
     source ~/.config/fish/conf/platform/mac/config.fish
-else if test -r /proc/version; and grep -qEi "(Microsoft|WSL)" /proc/version
+else if test "$GHC_ENV_PLATFORM" = wsl
     source ~/.config/fish/conf/platform/wsl/config.fish
 else
     source ~/.config/fish/conf/platform/nix/config.fish

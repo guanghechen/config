@@ -3,7 +3,7 @@ function ghc-upgrade
         bash $HOME/.config/guanghechen/nix-remote/setup.sh
         return
     else
-        if test (uname) = Darwin
+        if test "$GHC_ENV_PLATFORM" = osx
             bash $HOME/.config/guanghechen/osx/setup.sh
         else
             bash $HOME/.config/guanghechen/nix/setup.sh

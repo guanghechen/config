@@ -1,6 +1,6 @@
 function ghc-neovim-nightly
     set -l ps_cmd "ps aux"
-    if test (uname) = Linux
+    if test "$GHC_ENV_PLATFORM" = nix; or test "$GHC_ENV_PLATFORM" = wsl
         set ps_cmd "ps -aux"
     end
 
