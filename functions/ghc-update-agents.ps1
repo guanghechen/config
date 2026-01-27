@@ -54,10 +54,13 @@ function ghc-update-agents {
       }
 
       claude plugin marketplace update
+      $excludedPlugins = @(
+        "ralph-loop@claude-plugins-official"
+      )
       $enabledPlugins = @()
       if ($settingsJson -and $settingsJson.enabledPlugins) {
         foreach ($entry in $settingsJson.enabledPlugins.PSObject.Properties) {
-          if ($entry.Value -eq $true) {
+          if ($entry.Value -eq $true -and $entry.Name -notin $excludedPlugins) {
             $enabledPlugins += $entry.Name
           }
         }
