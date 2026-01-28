@@ -14,6 +14,7 @@ telemetry/
 todos/
 
 .claude.json*
+.claude*.json*
 *.local.json
 history.jsonl
 stats-cache.json
