@@ -9,6 +9,7 @@ plugins/
 projects/
 shell-snapshots/
 statsig/
+tasks/
 telemetry/
 todos/
 
