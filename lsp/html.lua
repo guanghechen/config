@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/html.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/ff18d1256877361113edc2970a2c367043d6414c/lsp/html.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#html
 
 ---@param params                        lsp.InitializeParams
@@ -29,7 +29,7 @@ end
 return {
   capabilities = era.m.lsp.event.get_capabilities(),
   cmd = { "vscode-html-language-server", "--stdio" },
-  filetypes = { "html", "templ" },
+  filetypes = { "html" },
   flags = {
     debounce_text_changes = 500,
     exit_timeout = 200,

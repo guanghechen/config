@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/78174f395e705de97d1329c18394831737d9a4b4/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/b7c48a7111534b66bee077da8035ac7208a294ff/lsp/vtsls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
 
 local __module_name__ = "lsp.vtsls" ---@type string
@@ -17,7 +17,7 @@ local CONFIG_FILENAMES = {
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
-  local is_deno = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" }) ~= nil ---@type boolean
+  local is_deno = vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) ~= nil ---@type boolean
   if is_deno then
     return
   end

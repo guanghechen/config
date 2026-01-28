@@ -1,6 +1,6 @@
 local __module_name__ = "lsp.eslint" ---@type string
 
--- https://github.com/neovim/nvim-lspconfig/blob/78174f395e705de97d1329c18394831737d9a4b4/lsp/eslint.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/37bce6c546bd0d674dc1b59f2d9a4dda90e8929d/lsp/eslint.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
@@ -105,6 +105,11 @@ end
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
+  -- exclude deno
+  if vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) then
+    return
+  end
+
   local filename = vim.api.nvim_buf_get_name(bufnr) ---@type string
   local rootdir = era.m.lsp.fn.locate_lsp_root(filename, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
@@ -179,7 +184,7 @@ return {
     -- nodePath configures the directory in which the eslint server should start its node_modules resolution.
     -- This path is relative to the workspace folder (root dir) of the server instance.
     nodePath = "",
-    workingDirectory = { mode = "location" },
+    workingDirectory = { mode = "auto" },
     codeAction = {
       disableRuleComment = {
         enable = true,

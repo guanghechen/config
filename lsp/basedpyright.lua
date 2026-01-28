@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/f4dee350521da3b95fffdfdb94f7a1b5cdb88d79/lsp/basedpyright.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/a1d25809c5f732756cbc06a995e1426b956cdad9/lsp/basedpyright.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#basedpyright
 
 local Methods = vim.lsp.protocol.Methods
@@ -73,20 +73,23 @@ return {
   cmd = { "basedpyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {
+    "pyrightconfig.json",
     "pyproject.toml",
     "setup.py",
     "setup.cfg",
     "requirements.txt",
     "Pipfile",
-    "pyrightconfig.json",
     ".git",
   },
   settings = {
     basedpyright = {
       analysis = {
         autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
         diagnosticMode = "openFilesOnly",
+        -- https://docs.basedpyright.com/latest/configuration/language-server-settings/
+        -- Explicitly setting `basedpyright.analysis.useLibraryCodeForTypes` is **discouraged** by the official docs.
+        -- Because it will override per-project configurations like `pyproject.toml`.
+        -- If left unset, its default value is `true`, and it can be correctly overridden by project config files.
       },
     },
   },

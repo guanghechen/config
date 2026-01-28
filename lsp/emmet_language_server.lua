@@ -1,3 +1,4 @@
+-- https://github.com/neovim/nvim-lspconfig/blob/ff18d1256877361113edc2970a2c367043d6414c/lsp/emmet_language_server.lua
 -- https://github.com/olrtg/emmet-language-server
 
 ---@param params                        lsp.InitializeParams
@@ -33,10 +34,10 @@ return {
     "css",
     "eruby",
     "html",
+    "htmlangular",
     "htmldjango",
     "javascriptreact",
     "less",
-    "pug",
     "sass",
     "scss",
     "svelte",

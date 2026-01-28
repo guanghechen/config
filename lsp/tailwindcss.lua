@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/tailwindcss.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/82af15ba583c8e1ba1e5f718ec3e287b89265a0c/lsp/tailwindcss.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#tailwindcss
 
 ---@type string[]
@@ -94,9 +94,14 @@ end
 
 local lspBinPath = detectLspServer()
 
+local capabilities = era.m.lsp.event.get_capabilities()
+capabilities.workspace = capabilities.workspace or {}
+capabilities.workspace.didChangeWatchedFiles = capabilities.workspace.didChangeWatchedFiles or {}
+capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+
 ---@type vim.lsp.Config
 return {
-  capabilities = era.m.lsp.event.get_capabilities(),
+  capabilities = capabilities,
   cmd = lspBinPath and { lspBinPath, "--stdio" } or nil,
   filetypes = filetypes,
   filetypes_exclude = { "markdown" },

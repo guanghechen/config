@@ -1,3 +1,4 @@
+-- https://github.com/neovim/nvim-lspconfig/blob/2bf52f747b8633d38b671d0e9b968ec0a3133bcb/lsp/svelte.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#svelte
 
 ---@type string[]
@@ -15,6 +16,10 @@ local CONFIG_FILENAMES = {
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
   local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  -- Svelte LSP only supports file:// schema. https://github.com/sveltejs/language-tools/issues/2777
+  if vim.uv.fs_stat(filepath) == nil then
+    return
+  end
   local rootdir = era.m.lsp.fn.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
   on_dir(rootdir)
 end
@@ -30,6 +35,26 @@ end
 ---@return nil
 local function on_attach(client, bufnr)
   era.m.lsp.event.on_attach(client, bufnr)
+
+  -- Workaround to trigger reloading JS/TS files
+  -- See https://github.com/sveltejs/language-tools/issues/2008
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    pattern = { "*.js", "*.ts" },
+    group = vim.api.nvim_create_augroup("lspconfig.svelte", {}),
+    callback = function(ctx)
+      -- internal API to sync changes that have not yet been saved to the file system
+      ---@diagnostic disable-next-line: param-type-mismatch
+      client:notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
+    end,
+  })
+
+  vim.api.nvim_buf_create_user_command(bufnr, "LspMigrateToSvelte5", function()
+    client:exec_cmd({
+      title = "Migrate Component to Svelte 5 Syntax",
+      command = "migrate_to_svelte_5",
+      arguments = { vim.uri_from_bufnr(bufnr) },
+    })
+  end, { desc = "Migrate Component to Svelte 5 Syntax" })
 end
 
 ---@param client                        vim.lsp.Client

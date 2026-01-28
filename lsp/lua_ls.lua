@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/lua_ls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/34229c6e021f8d2b9c947222ccd03605040b81b5/lsp/lua_ls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#lua_ls
 
 ---@param params                        lsp.InitializeParams
@@ -32,11 +32,14 @@ return {
   filetypes = { "lua" },
   log_level = vim.lsp.protocol.MessageType.Warning,
   root_markers = {
+    ".emmyrc.json",
     ".luarc.json",
     ".luarc.jsonc",
     ".luacheckrc",
     ".stylua.toml",
     "stylua.toml",
+    "selene.toml",
+    "selene.yml",
     ".git",
   },
   settings = {

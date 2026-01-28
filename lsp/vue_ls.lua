@@ -1,3 +1,4 @@
+-- https://github.com/neovim/nvim-lspconfig/blob/aaa807fb2ea8d3caf41c153a174c6b7e472a8428/lsp/vue_ls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vue_ls
 
 ---@type string[]
@@ -44,6 +45,49 @@ end
 ---@param config                        any
 local function on_init(client, config)
   era.m.lsp.event.on_init(client, config)
+
+  local retries = 0
+
+  ---@param _                           lsp.ResponseError|nil
+  ---@param result                      any
+  ---@param context                     lsp.HandlerContext
+  local function typescriptHandler(_, result, context)
+    local ts_client = vim.lsp.get_clients({ bufnr = context.bufnr, name = "vtsls" })[1]
+
+    if not ts_client then
+      -- there can sometimes be a short delay until `vtsls` is attached so we retry for a few times until it is ready
+      if retries <= 10 then
+        retries = retries + 1
+        vim.defer_fn(function()
+          typescriptHandler(_, result, context)
+        end, 100)
+      else
+        stl.reporter.error({
+          from = "lsp.vue_ls",
+          subject = "typescriptHandler",
+          message = "Could not find `vtsls` lsp client required by `vue_ls`.",
+        })
+      end
+      return
+    end
+
+    local param = unpack(result)
+    local id, command, payload = unpack(param)
+    ts_client:exec_cmd({
+      title = "vue_request_forward",
+      command = "typescript.tsserverRequest",
+      arguments = {
+        command,
+        payload,
+      },
+    }, { bufnr = context.bufnr }, function(_, r)
+      local response_data = { { id, r and r.body } }
+      ---@diagnostic disable-next-line: param-type-mismatch
+      client:notify("tsserver/response", response_data)
+    end)
+  end
+
+  client.handlers["tsserver/request"] = typescriptHandler
 end
 
 ---@type vim.lsp.Config

@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/f4dee350521da3b95fffdfdb94f7a1b5cdb88d79/lsp/pyright.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/2bf52f747b8633d38b671d0e9b968ec0a3133bcb/lsp/pyright.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#pyright
 
 local Methods = vim.lsp.protocol.Methods
@@ -71,12 +71,12 @@ return {
   cmd = { "pyright-langserver", "--stdio" },
   filetypes = { "python" },
   root_markers = {
+    "pyrightconfig.json",
     "pyproject.toml",
     "setup.py",
     "setup.cfg",
     "requirements.txt",
     "Pipfile",
-    "pyrightconfig.json",
     ".git",
   },
   settings = {
