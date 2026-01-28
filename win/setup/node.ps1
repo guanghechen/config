@@ -8,9 +8,19 @@ if (fnm list | Select-String -Quiet "v$env:PREFER_NODE_VERSION") {
 fnm use $env:PREFER_NODE_VERSION
 fnm default $env:PREFER_NODE_VERSION
 
-Write-Host "  [setup node] installing npm bun pm2 yarn prettier" -ForegroundColor Cyan
-npm install -g npm bun pm2 yarn prettier
+Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
+npm install -g npm pm2 yarn prettier
 
+## Setup bun
+if (Get-Command bun -ErrorAction SilentlyContinue) {
+  Write-Host "  [setup node] bun is already installed, upgrading..." -ForegroundColor Cyan
+  bun upgrade
+} else {
+  Write-Host "  [setup node] installing bun..." -ForegroundColor Cyan
+  irm bun.sh/install.ps1 | iex
+}
+
+## Setup agents
 foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/codex", "@github/copilot")) {
   if (npm list -g $pkg 2>$null) {
     Write-Host "  [setup node] $pkg is already installed. (skipped)" -ForegroundColor Yellow
