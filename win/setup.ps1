@@ -57,6 +57,13 @@ setx GEMINI_CONFIG_DIR                "$env:GEMINI_CONFIG_DIR"
 
 ####################################################################################################
 
+## Conditional Environment ##########################################################################
+if (Test-Path "$env:APP_HOME_GIT\bin\bash.exe") {
+  $env:CLAUDE_CODE_GIT_BASH_PATH = "$env:APP_HOME_GIT\bin\bash.exe"
+  setx CLAUDE_CODE_GIT_BASH_PATH "$env:CLAUDE_CODE_GIT_BASH_PATH"
+}
+####################################################################################################
+
 
 # Define the local path and repositories
 $reporoot = "$env:XDG_CONFIG_HOME"
