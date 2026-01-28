@@ -6,12 +6,19 @@
     "lua/stl/fileicon.lua",
     "rust/yoz/src/dict/en.rs"
   ],
-  "import": [
-    "~/.config/cspell/cspell.json"
-  ],
+  "import": ["~/.config/cspell/cspell.json"],
   "language": "en",
   "version": "0.2",
   "words": [
+    "Facpcancel",
+    "Facpclear",
+    "Facpclose",
+    "Facpfocus",
+    "Facpnew",
+    "Facpopen",
+    "Facpselectprovider",
+    "Facpsubmit",
+    "Facptoggle",
     "Faiattachagent",
     "Faidetachagent",
     "Faiedit",
@@ -23,6 +30,7 @@
     "Faisendto",
     "Faisubmitbuffer",
     "Faisubmitselection",
+    "Faisubmitto",
     "Fbufclose",
     "Fbufcloseothers",
     "Fbufclosetoleftest",
@@ -141,6 +149,13 @@
     "Flspselectpythonvenv",
     "Flspshowcodeaction",
     "Flspshowcodeactionsource",
+    "Fminimapdisable",
+    "Fminimapdisablelocal",
+    "Fminimapenable",
+    "Fminimapenablelocal",
+    "Fminimaprefresh",
+    "Fminimaptoggle",
+    "Fminimaptogglelocal",
     "Fnotapadinsertsplitline",
     "Fnotepadappendcontent",
     "Fnotepadchangeengine",
@@ -214,6 +229,8 @@
     "Ftogglemarkdown",
     "Ftogglemarkdownlocal",
     "Ftogglemaximize",
+    "Ftoggleminimap",
+    "Ftoggleminimaplocal",
     "Ftogglenumberlocal",
     "Ftogglerelativenumber",
     "Ftogglerelativenumberlocal",
@@ -231,6 +248,7 @@
     "Fuxdismissnotifications",
     "Fuxreloadtheme",
     "Fuxresume",
+    "Fviewnotifications",
     "Fwinclose",
     "Fwincloseothers",
     "Fwinfocus",
@@ -1058,3 +1076,4 @@
     "zindex"
   ]
 }
+
