@@ -64,7 +64,7 @@ printf "\e[92m  [setup node] done.\e[0m\n"
 
 ## Setup nvim
 printf "\n\e[96m  [setup nvim] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/nvim.sh
+source ~/.config/guanghechen/nix/setup/app/nvim.sh
 printf "\e[92m  [setup nvim] done.\e[0m\n"
 
 ## Setup tmux
