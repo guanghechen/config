@@ -39,7 +39,7 @@ printf "\e[92m  [setup bun] done.\e[0m\n"
 
 ## Setup fish
 printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/fish.sh
+source ~/.config/guanghechen/nix/setup/app/fish.sh
 printf "\e[92m  [setup fish] done.\e[0m\n"
 
 ## Setup newsboat
