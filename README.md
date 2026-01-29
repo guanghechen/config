@@ -108,5 +108,9 @@
   ```
 
 * treesitter
-  
-  Don't forget to install the tree-sitter-cli which the nvim-treesitter depend on. see nix/setup/lsp/cargo.sh
+
+  Don't forget to install the tree-sitter-cli which the nvim-treesitter depend on.
+
+  ```bash
+  cargo install tree-sitter-cli
+  ```
