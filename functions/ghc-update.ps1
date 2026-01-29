@@ -89,6 +89,7 @@ function ghc-update {
     "git-delta",
     "helix",
     "kitty",
+    "kit-pm",
     "komorebi",
     "lazygit",
     "lsd",
