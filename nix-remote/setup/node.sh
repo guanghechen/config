@@ -14,15 +14,3 @@ fnm default "$PREFER_NODE_VERSION"
 
 printf "\e[96m  [setup node] installing npm pm2 yarn prettier\e[0m\n"
 npm install -g npm pm2 yarn prettier
-
-## Setup ora
-if [ -d "$HOME/.config/ora" ]; then
-  printf "\e[96m  [setup node] setup ora...\e[0m\n"
-  fish -c "cd $HOME/.config/ora && pnpm install"
-fi
-
-## Setup yoz
-if [ -d "$HOME/.config/yoz" ]; then
-  printf "\e[96m  [setup node] setup yoz...\e[0m\n"
-  fish -c "cd $HOME/.config/yoz && pnpm install"
-fi

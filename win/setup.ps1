@@ -95,7 +95,15 @@ Set-Location -Path $repomain
 . .\win\setup\app\node.ps1
 
 Set-Location -Path $repomain
+. .\win\setup\app\pnpm.ps1
+
+Set-Location -Path $repomain
 . .\win\setup\miniforge.ps1
+
+####################################################################################################
+
+Set-Location -Path $repomain
+. .\win\setup\app\nvim.ps1
 
 Set-Location -Path $repomain
 . .\win\setup\theme.ps1

@@ -12,7 +12,7 @@ brew update
 
 ### Install node
 printf "\e[96m  [setup homebrew] installing fnm...\e[0m\n"
-brew install fnm pnpm
+brew install fnm
 
 ### Install python
 printf "\e[96m  [setup homebrew] installing uv...\e[0m\n"

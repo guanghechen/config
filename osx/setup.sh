@@ -62,6 +62,11 @@ printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/app/node.sh
 printf "\e[92m  [setup node] done.\e[0m\n"
 
+## Setup pnpm
+printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/app/pnpm.sh
+printf "\e[92m  [setup pnpm] done.\e[0m\n"
+
 ## Setup nvim
 printf "\n\e[96m  [setup nvim] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/app/nvim.sh
