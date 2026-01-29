@@ -80,27 +80,27 @@ Set-Location -Path $repomain
 . .\win\setup\winget.ps1
 
 Set-Location -Path $repomain
-. .\win\setup\cargo.ps1
-
-Set-Location -Path $repomain
 . .\win\setup\config.ps1
 
 Set-Location -Path $repomain
-. .\win\setup\app\bun.ps1
+. .\win\setup\env\cargo.ps1
+
+Set-Location -Path $repomain
+. .\win\setup\env\miniforge.ps1
+
+Set-Location -Path $repomain
+. .\win\setup\env\bun.ps1
+
+Set-Location -Path $repomain
+. .\win\setup\env\node.ps1
+
+Set-Location -Path $repomain
+. .\win\setup\env\pnpm.ps1
+
+####################################################################################################
 
 Set-Location -Path $repomain
 . .\win\setup\app\newsboat.ps1
-
-Set-Location -Path $repomain
-. .\win\setup\app\node.ps1
-
-Set-Location -Path $repomain
-. .\win\setup\app\pnpm.ps1
-
-Set-Location -Path $repomain
-. .\win\setup\miniforge.ps1
-
-####################################################################################################
 
 Set-Location -Path $repomain
 . .\win\setup\app\nvim.ps1
