@@ -22,12 +22,6 @@ brew install uv
 printf "\e[96m  [setup homebrew] installing nvim...\e[0m\n"
 brew install nvim fd git-delta lazygit ripgrep
 
-### Install tmux
-brew install tmux
-# printf "\n\e[94m  [setup homebrew] installing tmux...\e[0m\n"
-# brew install $HOME/.config/guanghechen/config/app/homebrew/tmux.rb
-# brew pin tmux
-
 ### Install yazi
 printf "\e[96m  [setup homebrew] installing yazi...\e[0m\n"
 brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jstkdng/programs/ueberzugpp

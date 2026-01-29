@@ -69,7 +69,7 @@ printf "\e[92m  [setup nvim] done.\e[0m\n"
 
 ## Setup tmux
 printf "\n\e[96m  [setup tmux] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/tmux.sh
+source ~/.config/guanghechen/nix/setup/app/tmux.sh
 printf "\e[92m  [setup tmux] done.\e[0m\n"
 
 ## Setup themes
