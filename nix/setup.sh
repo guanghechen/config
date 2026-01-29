@@ -42,6 +42,11 @@ printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/fish.sh
 printf "\e[92m  [setup fish] done.\e[0m\n"
 
+## Setup newsboat
+printf "\n\e[96m  [setup newsboat] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/app/newsboat.sh
+printf "\e[92m  [setup newsboat] done.\e[0m\n"
+
 ## Setup node
 printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/node.sh

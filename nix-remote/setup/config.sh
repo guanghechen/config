@@ -83,28 +83,3 @@ if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [backup] ~/.inputrc -> %s\e[0m\n" "$backup_file"
 fi
 cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
-
-## setup newsboat platform symlink
-if [ -d "$HOME/.config/newsboat" ]; then
-  newsboat_config_dir="$HOME/.config/newsboat"
-  newsboat_platform_link="$newsboat_config_dir/local/platform"
-  newsboat_platform_dir="$newsboat_config_dir/conf/platform"
-
-  # Detect platform
-  if [ "$(uname)" = "Darwin" ]; then
-    platform="mac"
-  elif [ -r /proc/version ] && grep -qEi "(Microsoft|WSL)" /proc/version; then
-    platform="wsl"
-  else
-    platform="nix"
-  fi
-
-  # Create local dir if not exists
-  mkdir -p "$newsboat_config_dir/local"
-
-  # Create/update symlink
-  if [ -e "$newsboat_platform_dir/$platform" ]; then
-    printf "\e[96m  [setup config] setting up newsboat platform symlink (%s)...\e[0m\n" "$platform"
-    ln -sf "$newsboat_platform_dir/$platform" "$newsboat_platform_link"
-  fi
-fi

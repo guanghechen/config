@@ -89,6 +89,9 @@ Set-Location -Path $repomain
 . .\win\setup\app\bun.ps1
 
 Set-Location -Path $repomain
+. .\win\setup\app\newsboat.ps1
+
+Set-Location -Path $repomain
 . .\win\setup\node.ps1
 
 Set-Location -Path $repomain
