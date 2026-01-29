@@ -9,18 +9,18 @@ printf "\e[92m  [setup config] done.\e[0m\n"
 
 ## Setup rust envrionment
 printf "\n\e[96m  [setup rust] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/rust.sh
+source ~/.config/guanghechen/nix/setup/app/rust.sh
 printf "\e[92m  [setup rust] done.\e[0m\n"
 
 ## Setup python encironment
 printf "\n\e[96m  [setup miniforge] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/miniforge.sh
+source ~/.config/guanghechen/nix/setup/app/miniforge.sh
 printf "\e[92m  [setup miniforge] done.\e[0m\n"
 
 ## Install apps
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
   printf "\n\e[96m  [setup homebrew] preparing...\e[0m\n"
-  source ~/.config/guanghechen/nix/setup/homebrew.sh
+  source ~/.config/guanghechen/nix/setup/app/homebrew.sh
   printf "\e[92m  [setup homebrew] done.\e[0m\n"
 fi
 
