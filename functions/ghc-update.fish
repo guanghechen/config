@@ -22,6 +22,7 @@ function ghc-update
         gemini:~/.gemini \
         helix \
         kitty \
+        kit-pm \
         komorebi \
         lazygit \
         lsd \
