@@ -59,7 +59,7 @@ printf "\e[92m  [setup newsboat] done.\e[0m\n"
 
 ## Setup node
 printf "\n\e[96m  [setup node] preparing...\e[0m\n"
-source ~/.config/guanghechen/nix/setup/node.sh
+source ~/.config/guanghechen/nix/setup/app/node.sh
 printf "\e[92m  [setup node] done.\e[0m\n"
 
 ## Setup nvim

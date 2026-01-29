@@ -92,7 +92,7 @@ Set-Location -Path $repomain
 . .\win\setup\app\newsboat.ps1
 
 Set-Location -Path $repomain
-. .\win\setup\node.ps1
+. .\win\setup\app\node.ps1
 
 Set-Location -Path $repomain
 . .\win\setup\miniforge.ps1
