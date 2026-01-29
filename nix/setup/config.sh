@@ -12,6 +12,7 @@ clone_or_update_config_repo() {
     "fzf"
     "gh"
     "git-delta"
+    "kit-pm"
     "lazygit"
     "lsd"
     "nvim"

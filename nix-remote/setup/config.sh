@@ -27,6 +27,7 @@ clone_or_update_config_repo() {
     "ghostty"
     "helix"
     "kitty"
+    "kit-pm"
     "komorebi"
     "neovide"
     "newsboat"

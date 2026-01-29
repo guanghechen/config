@@ -26,6 +26,7 @@ $repo_optional_branches = @(
   "ghostty",
   "helix",
   "kitty",
+  "kit-pm",
   "komorebi",
   "neovide",
   "newsboat",
