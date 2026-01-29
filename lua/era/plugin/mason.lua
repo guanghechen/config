@@ -31,6 +31,7 @@ local function get_mason_ensure_installed()
     "yaml-language-server", -- yamlls
 
     -- dap --
+    "debugpy",
     "js-debug-adapter",
 
     -- lint --
