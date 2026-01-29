@@ -42,6 +42,11 @@ if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
   printf "\e[92m  [setup homebrew] done.\e[0m\n"
 fi
 
+## Setup bun
+printf "\n\e[96m  [setup bun] preparing...\e[0m\n"
+source ~/.config/guanghechen/nix/setup/app/bun.sh
+printf "\e[92m  [setup bun] done.\e[0m\n"
+
 ## Setup fish
 printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
 source ~/.config/guanghechen/nix/setup/fish.sh

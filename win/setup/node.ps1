@@ -11,15 +11,6 @@ fnm default $env:PREFER_NODE_VERSION
 Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
 npm install -g npm pm2 yarn prettier
 
-## Setup bun
-if (Get-Command bun -ErrorAction SilentlyContinue) {
-  Write-Host "  [setup node] bun is already installed, upgrading..." -ForegroundColor Cyan
-  bun upgrade
-} else {
-  Write-Host "  [setup node] installing bun..." -ForegroundColor Cyan
-  irm bun.sh/install.ps1 | iex
-}
-
 ## Setup agents
 foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/codex", "@github/copilot")) {
   if (npm list -g $pkg 2>$null) {

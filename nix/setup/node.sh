@@ -15,15 +15,6 @@ fnm default "$PREFER_NODE_VERSION"
 printf "\e[96m  [setup node] installing npm pm2 yarn prettier\e[0m\n"
 npm install -g npm pm2 yarn prettier
 
-## Setup bun
-if command -v bun &>/dev/null; then
-  printf "\e[96m  [setup node] bun is already installed, upgrading...\e[0m\n"
-  bun upgrade
-else
-  printf "\e[96m  [setup node] installing bun...\e[0m\n"
-  curl -fsSL https://bun.sh/install | bash
-fi
-
 ## Setup agents
 for pkg in @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot; do
   if npm list -g "$pkg" &>/dev/null; then
