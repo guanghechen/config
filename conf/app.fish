@@ -1,3 +1,9 @@
+### bun
+if test -d "$HOME/.bun"
+    set -gx BUN_INSTALL "$HOME/.bun"
+    fish_add_path --prepend "$BUN_INSTALL/bin"
+end
+
 ### cargo
 if test -f "$HOME/.cargo/bin/cargo"
     fish_add_path --prepend "$HOME/.cargo/bin/"
