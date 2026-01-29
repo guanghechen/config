@@ -65,9 +65,6 @@ clone_or_update_config_repo() {
   done
 }
 
-printf "\e[96m  [setup config] cloning configs...\e[0m\n"
-clone_or_update_config_repo
-
 ## copy ~/.gitconfig
 if [ -f "$HOME/.gitconfig" ]; then
   printf "\e[93m  [setup config] ~/.gitconfig already exists. (skipped).\e[0m\n"
@@ -78,8 +75,12 @@ fi
 
 ## copy ~/.inputrc
 if [ -f "$HOME/.inputrc" ]; then
-  backup_file="$HOME/.inputrc.$(date +%Y%m%d).bak"
-  mv "$HOME/.inputrc" "$backup_file"
-  printf "\e[93m  [backup] ~/.inputrc -> %s\e[0m\n" "$backup_file"
+  printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"
+else
+  printf "\e[96m  [setup config] setting up ~/.inputrc...\e[0m\n"
+  cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
 fi
-cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
+
+## sync configs
+printf "\e[96m  [setup config] cloning configs...\e[0m\n"
+clone_or_update_config_repo
