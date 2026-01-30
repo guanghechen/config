@@ -1,0 +1,84 @@
+# {{name}}
+
+[bell]
+color = "{{unified.orange}}"
+
+[colors]
+draw_bold_text_with_bright_colors = false
+transparent_background_colors = true
+
+[colors.cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{catppuccin?.rosewater || unified.pink}}"
+
+[colors.vi_mode_cursor]
+text              = "{{unified.bg0}}"
+cursor            = "{{catppuccin?.lavender || unified.fg0}}"
+
+[colors.search.matches]
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.fg2}}"
+
+[colors.search.focused_match]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.green}}"
+
+[colors.hints.start]
+foreground        = "{{unified.bg0}}"
+background        = "{{unified.yellow}}"
+
+[colors.hints.end]
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.fg2}}"
+
+[colors.selection]
+text              = "{{unified.bg0}}"
+background        = "{{catppuccin?.rosewater || unified.pink}}"
+
+[colors.footer_bar]
+foreground        = "{{unified.bg0}}"
+background        = "{{catppuccin?.subtext0 || unified.bg2}}"
+
+[colors.primary]
+background        = "{{unified.bg0}}"
+foreground        = "{{catppuccin?.text || unified.fg1}}"
+dim_foreground    = "{{catppuccin?.overlay1 || unified.fg4}}"
+bright_foreground = "{{catppuccin?.text || unified.fg1}}"
+
+[colors.normal]
+black             = "{{catppuccin?.surface1 || unified.bg0}}"
+red               = "{{unified.red}}"
+green             = "{{unified.green}}"
+yellow            = "{{unified.yellow}}"
+blue              = "{{unified.blue}}"
+magenta           = "{{unified.purple}}"
+cyan              = "{{unified.aqua}}"
+white             = "{{catppuccin?.subtext1 || unified.fg4}}"
+
+[colors.bright]
+black             = "{{catppuccin?.surface2 || unified.grey}}"
+red               = "{{unified.brightRed}}"
+green             = "{{unified.brightGreen}}"
+yellow            = "{{unified.brightYellow}}"
+blue              = "{{unified.brightBlue}}"
+magenta           = "{{unified.brightPurple}}"
+cyan              = "{{unified.brightAqua}}"
+white             = "{{catppuccin?.subtext0 || unified.fg2}}"
+
+[colors.dim]
+black             = "{{catppuccin?.surface1 || unified.bg0}}"
+red               = "{{unified.red}}"
+green             = "{{unified.green}}"
+yellow            = "{{unified.yellow}}"
+blue              = "{{unified.blue}}"
+magenta           = "{{unified.purple}}"
+cyan              = "{{unified.aqua}}"
+white             = "{{catppuccin?.subtext1 || unified.fg4}}"
+
+[[colors.indexed_colors]]
+index = 16
+color = "{{catppuccin?.peach || unified.orange}}"
+
+[[colors.indexed_colors]]
+index = 17
+color = "{{catppuccin?.rosewater || unified.pink}}"

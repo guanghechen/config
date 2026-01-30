@@ -1,0 +1,32 @@
+# {{name}}
+
+--cycle
+--highlight-line
+--multi
+--smart-case
+--padding=0
+--margin=0
+--border=rounded
+--layout=reverse
+--info=right
+--info-command='echo "$FZF_POS/$FZF_MATCH_COUNT/$FZF_TOTAL_COUNT"'
+--pointer=""
+--marker="▎"
+--scrollbar="┃"
+
+--color="fg+:{{unified.fg1}},bg+:{{unified.bg2}},hl+:{{unified.pink}}"
+--color="fg:{{unified.fg3}},bg:{{unified.bg0}},hl:{{unified.yellow}}"
+--color="gutter:{{unified.bg0}},pointer:{{unified.pink}},spinner:{{unified.blue}}"
+--color="info:{{unified.brightBlue}},prompt:{{unified.brightGreen}},marker:{{unified.pink}},query:{{unified.fg1}}"
+--preview='bat --line-range=:500 --style=snip --theme={{name}} --number --color=always {} || cat -n {}'
+
+--bind 'ctrl-a:toggle-all'
+--bind 'ctrl-s:toggle-sort'
+--bind 'ctrl-p:toggle-preview'
+--bind 'ctrl-l:clear-query'
+--bind 'ctrl-b:preview-half-page-up'
+--bind 'ctrl-f:preview-half-page-down'
+--bind 'ctrl-o:execute(nvim {+} < /dev/tty)'
+{{IS_MAC && "--bind 'ctrl-y:execute-silent(echo {+} | pbcopy)+bell'" || ""}}
+{{IS_WIN && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}
+{{IS_WSL && "--bind 'ctrl-y:execute-silent(echo {+} | clip.exe)+bell'" || ""}}
