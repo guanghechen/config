@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 fish_path="$HOME_HOMEBREW/bin/fish"
 if [[ 

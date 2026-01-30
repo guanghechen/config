@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 FONT_COMMON_DIR="/Library/Fonts"
 FONT_LOCAL_DIR="$HOME/Library/Fonts"
@@ -27,7 +29,7 @@ else
   mkdir -p ~/download/fonts/RobotoMono
   rm -rf ~/download/fonts/RobotoMono
   mkdir -p ~/download/fonts/RobotoMono
-  cd ~/download/fonts/RobotoMono
+  cd "$HOME/download/fonts/RobotoMono" || return 1
 
   rm -rf "$FONT_LOCAL_DIR/RobotoMonoNerdFont*"
   sudo rm -rf "$FONT_COMMON_DIR/RobotoMonoNerdFont*"

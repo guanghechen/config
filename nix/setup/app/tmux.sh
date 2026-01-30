@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 prefer_tmux_version="${PREFER_TMUX_VERSION:-stable}"
 if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
@@ -14,7 +16,7 @@ if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
   fi
 
   sudo apt install bison libevent-dev libncurses5-dev libncursesw5-dev
-  cd "$root_tmux"
+  cd "$root_tmux" || return 1
   sh autogen.sh
   ./configure
   make

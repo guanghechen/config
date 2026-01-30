@@ -49,10 +49,10 @@ clone_or_update_config_repo() {
     local repopath="$reporoot/$branch"
     if [ -e "$repopath/.git" ]; then
       printf "\e[96m  [setup config] merging origin/%s into %s\e[0m\n" "$branch" "$repopath"
-      git -C "$repopath" merge origin/$branch --ff-only
+      git -C "$repopath" merge "origin/$branch" --ff-only
     else
       printf "\e[96m  [setup config] add new worktree of %s into %s\e[0m\n" "$branch" "$repopath"
-      git -C "$repomain" worktree add "$repopath" $branch
+      git -C "$repomain" worktree add "$repopath" "$branch"
     fi
   done
 
@@ -60,7 +60,7 @@ clone_or_update_config_repo() {
     local repopath="$reporoot/$branch"
     if [ -e "$repopath/.git" ]; then
       printf "\e[96m  [setup config] merging origin/%s into %s\e[0m\n" "$branch" "$repopath"
-      git -C "$repopath" merge origin/$branch --ff-only
+      git -C "$repopath" merge "origin/$branch" --ff-only
     fi
   done
 }
@@ -70,7 +70,7 @@ if [ -f "$HOME/.gitconfig" ]; then
   printf "\e[93m  [setup config] ~/.gitconfig already exists. (skipped).\e[0m\n"
 else
   printf "\e[96m  [setup config] setting up ~/.gitconfig...\e[0m\n"
-  cp -f ~/.config/guanghechen/config/.gitconfig "$HOME/.gitconfig"
+  cp -f "$HOME/.config/guanghechen/config/.gitconfig" "$HOME/.gitconfig"
 fi
 
 ## copy ~/.inputrc
@@ -78,7 +78,7 @@ if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"
 else
   printf "\e[96m  [setup config] setting up ~/.inputrc...\e[0m\n"
-  cp ~/.config/guanghechen/nix/config/.inputrc $HOME/.inputrc
+  cp "$HOME/.config/guanghechen/nix/config/.inputrc" "$HOME/.inputrc"
 fi
 
 ## sync configs

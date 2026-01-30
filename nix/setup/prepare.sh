@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
 ## Preparation
 sudo apt update
@@ -23,7 +24,8 @@ else
   git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
 fi
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 ## Fix locale issues
 sudo locale-gen en_US.UTF-8

@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 FONT_COMMON_DIR="/Library/Fonts"
 FONT_LOCAL_DIR="$HOME/Library/Fonts"
@@ -33,7 +35,7 @@ else
   rm -rf "$FONT_LOCAL_DIR/Maple*"
   sudo rm -rf "$FONT_COMMON_DIR/Maple*"
 
-  cd ~/download/fonts/Maple
+  cd "$HOME/download/fonts/Maple" || return 1
 
   printf "\e[96m  [setup font (Maple)] downloading MapleMono-NF-CN fonts...\e[0m\n"
   wget https://github.com/guanghechen/mirror/releases/download/font/MapleMono-NF-CN-unhinted.zip

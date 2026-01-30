@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC1091
 
-source $HOME/.config/guanghechen/nix/setup/path.sh
+# shellcheck source=nix/setup/path.sh
+source "$HOME/.config/guanghechen/nix/setup/path.sh"
 
 ## Set environment variables
 printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"
@@ -16,23 +18,24 @@ else
   ## Mkdirs
   mkdir -p ~/.app/
   mkdir -p ~/download/app/
-  cd ~/download/app/
+  cd "$HOME/download/app/" || return 1
 
   ## Download and install the miniforge3
   if [ -f "${miniforge_setup_sh}" ]; then
-    printf "\e[93m  [setup miniforge] $miniforge_setup_sh already exists. (skipped download)\e[0m\n"
+    printf "\e[93m  [setup miniforge] %s already exists. (skipped download)\e[0m\n" "$miniforge_setup_sh"
   else
     printf "\e[96m  [setup miniforge] downloading...\e[0m\n"
     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/${miniforge_setup_sh}"
   fi
 
   printf "\e[96m  [setup miniforge] installing...\e[0m\n"
-  printf "\n\nyes\n$HOME_MINIFORGE\nyes\n" | bash "${miniforge_setup_sh}" # should install at ~/.app/miniforge3
+  printf "\n\nyes\n%s\nyes\n" "$HOME_MINIFORGE" | bash "${miniforge_setup_sh}" # should install at ~/.app/miniforge3
 fi
 export PATH=$HOME_MINIFORGE/bin:$PATH
 
 ### Setup conda
 printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
+# shellcheck source=/dev/null
 source "$HOME_MINIFORGE/etc/profile.d/conda.sh"
 conda config --set auto_activate_base false
 
@@ -47,8 +50,8 @@ fi
 
 ### Setup ipython
 ipython_config_path="$HOME/.ipython/profile_default/ipython_config.py"
-if [ -f $ipython_config_path ]; then
-  printf "\e[93m  [setup miniforge] $ipython_config_path already exists. (skipped).\e[0m\n"
+if [ -f "$ipython_config_path" ]; then
+  printf "\e[93m  [setup miniforge] %s already exists. (skipped).\e[0m\n" "$ipython_config_path"
 else
   printf "\e[96m  [setup miniforge] setting up ipython...\e[0m\n"
   ipython profile create
