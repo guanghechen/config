@@ -65,14 +65,6 @@ clone_or_update_config_repo() {
   done
 }
 
-## copy ~/.gitconfig
-if [ -f "$HOME/.gitconfig" ]; then
-  printf "\e[93m  [setup config] ~/.gitconfig already exists. (skipped).\e[0m\n"
-else
-  printf "\e[96m  [setup config] setting up ~/.gitconfig...\e[0m\n"
-  cp -f "$HOME/.config/guanghechen/config/.gitconfig" "$HOME/.gitconfig"
-fi
-
 ## copy ~/.inputrc
 if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"
