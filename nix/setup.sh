@@ -4,10 +4,35 @@
 GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
 export GHC_CONFIG_ROOT
 
-# shellcheck source=nix/setup/prepare.sh
-source "$GHC_CONFIG_ROOT/nix/setup/prepare.sh"
+## Preparation
+printf "\n\e[95m ===== [prepare] =====\e[0m\n"
+sudo apt update
+sudo apt dist-upgrade -y
+sudo apt remove -y tmux
+sudo apt install -y curl git locales wget
+sudo apt install -y build-essential libvips-dev unixodbc
+sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim
+sudo apt install -y wl-clipboard
+sudo apt autoremove
+sudo apt autoclean
+printf "\e[92m  [preparation] done.\e[0m\n"
+
+## Download core configurations
+repomain="$GHC_CONFIG_ROOT"
+if [ -e "$repomain/.git" ]; then
+  git -C "$repomain" fetch origin
+  git -C "$repomain" merge origin/guanghechen --ff-only
+else
+  mkdir -p "$repomain"
+  git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
+fi
+
+## Fix locale issues
+sudo locale-gen en_US.UTF-8
+sudo update-locale LANG=en_US.UTF-8
 
 ## Bootstrap
+printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
 # shellcheck source=nix/setup/bot/config.sh
@@ -35,6 +60,7 @@ source "$GHC_CONFIG_ROOT/nix/setup/bot/fish.sh"
 printf "\e[92m  [setup fish] done.\e[0m\n"
 
 ## Setup envs
+printf "\n\e[95m ===== [setup env] =====\e[0m\n"
 ### Setup rust environment
 printf "\n\e[96m  [setup rust] preparing...\e[0m\n"
 # shellcheck source=nix/setup/env/rust.sh
@@ -66,6 +92,7 @@ source "$GHC_CONFIG_ROOT/nix/setup/env/pnpm.sh"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
 
 ## Setup apps
+printf "\n\e[95m ===== [setup app] =====\e[0m\n"
 ### Setup newsboat
 printf "\n\e[96m  [setup newsboat] preparing...\e[0m\n"
 # shellcheck source=nix/setup/app/newsboat.sh
