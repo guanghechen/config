@@ -19,3 +19,6 @@ export const XDG_CONFIG_NODE_THEME_SCHEME_DIR = path.join(XDG_CONFIG_NODE_THEME_
 export const XDG_CONFIG_NODE_THEMES = fs
   .readdirSync(XDG_CONFIG_NODE_THEME_SCHEME_DIR)
   .map(p => p.replace(/\.json$/, ''))
+
+export const F_VSCODE_KEYBINDINGS = process.env.f_vscode_keybindings
+export const F_WINDOWS_TERMINAL_SETTINGS = process.env.f_windows_terminal_settings
