@@ -37,7 +37,7 @@
     ```wsl
     # edit /etc/wsl.conf
 
-    # see the win/config/wsl.conf
+    # see the win/conf/wsl.conf
     ```
   
   - Bootstrap
