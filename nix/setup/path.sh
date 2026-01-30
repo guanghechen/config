@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+export GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+
 export PREFER_NODE_VERSION=25
 export PREFER_PYTHON_ENV=lemon
 

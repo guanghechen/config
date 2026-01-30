@@ -1,8 +1,11 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
+GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+export GHC_CONFIG_ROOT
+
 # shellcheck source=nix/setup/path.sh
-source "$HOME/.config/guanghechen/nix/setup/path.sh"
+source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 if command -v pnpm &>/dev/null; then
   printf "\e[96m  [setup pnpm] pnpm is already installed, upgrading...\e[0m\n"

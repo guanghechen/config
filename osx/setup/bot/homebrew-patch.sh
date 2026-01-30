@@ -1,8 +1,11 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
+GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+export GHC_CONFIG_ROOT
+
 # shellcheck source=nix/setup/path.sh
-source "$HOME/.config/guanghechen/nix/setup/path.sh"
+source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 ### Install git
 brew tap microsoft/git

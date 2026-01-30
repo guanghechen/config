@@ -1,11 +1,14 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
+GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+export GHC_CONFIG_ROOT
+
 # shellcheck source=nix/setup/path.sh
-source "$HOME/.config/guanghechen/nix/setup/path.sh"
+source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 # printf "\n\e[94m  [setup config] gen themes...\e[0m\n"
-# fish -c "node ~/.config/guanghechen/config/theme/gen_themes.mjs"
+# fish -c "node \"$GHC_CONFIG_ROOT/config/theme/gen_themes.mjs\""
 
 printf "\e[96m  [setup config] reload theme...\e[0m\n"
-fish -c "node ~/.config/guanghechen/config/theme/apply_theme.mjs"
+fish -c "node \"$GHC_CONFIG_ROOT/config/theme/apply_theme.mjs\""

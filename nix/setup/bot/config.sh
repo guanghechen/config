@@ -1,8 +1,11 @@
 #! /usr/bin/env bash
 
+GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+export GHC_CONFIG_ROOT
+
 clone_or_update_config_repo() {
   local reporoot="$HOME/.config"
-  local repomain="$reporoot/guanghechen"
+  local repomain="$GHC_CONFIG_ROOT"
   local repo_required_branches=(
     "bat"
     "btop"
@@ -70,7 +73,7 @@ if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"
 else
   printf "\e[96m  [setup config] setting up ~/.inputrc...\e[0m\n"
-  cp "$HOME/.config/guanghechen/nix/conf/.inputrc" "$HOME/.inputrc"
+  cp "$GHC_CONFIG_ROOT/nix/conf/.inputrc" "$HOME/.inputrc"
 fi
 
 ## sync configs

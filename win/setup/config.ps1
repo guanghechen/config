@@ -1,7 +1,10 @@
 Write-Host "`n  [setup config] preparing..." -ForegroundColor Cyan
 
+if (-not $env:GHC_CONFIG_ROOT) {
+  $env:GHC_CONFIG_ROOT = Join-Path $env:XDG_CONFIG_HOME "guanghechen"
+}
 $reporoot = "$env:XDG_CONFIG_HOME"
-$repomain = Join-Path $reporoot guanghechen
+$repomain = $env:GHC_CONFIG_ROOT
 $repo_required_branches = @(
   "bat",
   "conda",
@@ -44,7 +47,7 @@ $repo_optional_branches = @(
 )
 
 foreach ($branch in $repo_required_branches) {
-  $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
+  $repopath = Join-Path $reporoot $branch
   if (Test-Path -Path $repopath) {
     Write-Host "  [setup config] merging origin/$branch into $repopath..." -ForegroundColor Cyan
     $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
@@ -56,7 +59,7 @@ foreach ($branch in $repo_required_branches) {
 }
 
 foreach ($branch in $repo_optional_branches) {
-  $repopath = Join-Path $env:XDG_CONFIG_HOME $branch
+  $repopath = Join-Path $reporoot $branch
   if (Test-Path -Path $repopath) {
     Write-Host "  [setup config] merging origin/$branch into $repopath..." -ForegroundColor Cyan
     $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
@@ -80,7 +83,7 @@ if (Test-Path $cargo_config_path) {
   Write-Host "  [setup config] cargo config already exists. (skipped)" -ForegroundColor Yellow
 } else {
   Write-Host "  [setup config] copying cargo.toml..." -ForegroundColor Cyan
-  $source = Join-Path $reporoot "guanghechen\config\cargo.toml"
+  $source = Join-Path $env:GHC_CONFIG_ROOT "config\cargo.toml"
   $target = $cargo_config_path
   Copy-Item -Path $source -Destination $target -Force
 }

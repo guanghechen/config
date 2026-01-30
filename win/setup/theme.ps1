@@ -1,4 +1,7 @@
 if (fnm list | Select-String -Quiet "v20") {
   Write-Host "`n  [setup config] reload theme..." -ForegroundColor Cyan
-  node "$env:XDG_CONFIG_HOME\guanghechen\config\theme\apply_theme.mjs"
+  if (-not $env:GHC_CONFIG_ROOT) {
+    $env:GHC_CONFIG_ROOT = Join-Path $env:XDG_CONFIG_HOME "guanghechen"
+  }
+  node "$env:GHC_CONFIG_ROOT\config\theme\apply_theme.mjs"
 }

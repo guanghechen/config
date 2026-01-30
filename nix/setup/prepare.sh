@@ -1,6 +1,9 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
+GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
+export GHC_CONFIG_ROOT
+
 ## Preparation
 sudo apt update
 sudo apt dist-upgrade -y
@@ -15,7 +18,7 @@ printf "\e[92m  [preparation] done.\e[0m\n"
 
 ## Download core configurations
 reporoot="$HOME/.config"
-repomain="$reporoot/guanghechen"
+repomain="$GHC_CONFIG_ROOT"
 if [ -e "$repomain/.git" ]; then
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only
@@ -25,7 +28,7 @@ else
 fi
 
 # shellcheck source=nix/setup/path.sh
-source "$HOME/.config/guanghechen/nix/setup/path.sh"
+source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 ## Fix locale issues
 sudo locale-gen en_US.UTF-8
