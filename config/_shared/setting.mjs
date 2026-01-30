@@ -17,6 +17,12 @@ function isValidEdition(value) {
   return typeof value === "string" && VALID_EDITIONS.has(value);
 }
 
+function normalizeTheme(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 function resolveEditionFromPlatform() {
   const fallbackEdition = platform === "wsl" ? "nix" : platform;
   return isValidEdition(fallbackEdition) ? fallbackEdition : "nix";
@@ -28,6 +34,14 @@ function extractEditionFromArgs(args) {
   const withValue = args.find((arg) => arg.startsWith("--sync-edition="));
   if (!withValue) return null;
   return withValue.slice("--sync-edition=".length);
+}
+
+function extractThemeFromArgs(args) {
+  const flagIndex = args.findIndex((arg) => arg === "--sync-theme");
+  if (flagIndex !== -1 && args[flagIndex + 1]) return args[flagIndex + 1];
+  const withValue = args.find((arg) => arg.startsWith("--sync-theme="));
+  if (!withValue) return null;
+  return withValue.slice("--sync-theme=".length);
 }
 
 /**
@@ -88,10 +102,24 @@ export const settings = {
   },
 };
 
-export async function syncEdition(edition) {
+async function syncSettings({ edition, theme }) {
   const data = await settings.load();
-  data.edition = isValidEdition(edition) ? edition : resolveEditionFromPlatform();
+  if (edition !== null && edition !== undefined) {
+    data.edition = isValidEdition(edition) ? edition : resolveEditionFromPlatform();
+  }
+  if (theme !== null && theme !== undefined) {
+    const resolvedTheme = normalizeTheme(theme);
+    if (resolvedTheme) data.theme = resolvedTheme;
+  }
   await settings.save(data);
+}
+
+export async function syncEdition(edition) {
+  await syncSettings({ edition });
+}
+
+export async function syncTheme(theme) {
+  await syncSettings({ theme });
 }
 
 const selfPath = fileURLToPath(import.meta.url);
@@ -99,11 +127,16 @@ const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.re
 if (isDirectRun) {
   const args = process.argv.slice(2);
   const edition = extractEditionFromArgs(args);
-  if (edition !== null) {
-    await syncEdition(edition);
+  const theme = extractThemeFromArgs(args);
+  if (edition !== null || theme !== null) {
+    await syncSettings({ edition, theme });
   }
   if (args.includes("--print-edition")) {
     const data = await settings.load();
     process.stdout.write(`${data.edition}\n`);
+  }
+  if (args.includes("--print-theme")) {
+    const data = await settings.load();
+    process.stdout.write(`${data.theme}\n`);
   }
 }
