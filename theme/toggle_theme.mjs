@@ -1,9 +1,12 @@
 import { XDG_CONFIG_NODE_THEMES } from '../env/path.mjs'
 import { settings } from '../env/setting.mjs'
+import { Reporter } from '../util/reporter.mjs'
 import { apps } from './_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
+
+const reporter = new Reporter('toggle_theme')
 
 if (process.argv[1] === import.meta.filename) {
   await handle()
@@ -13,7 +16,7 @@ async function handle() {
   const data = await settings.load()
   let theme = process.argv[2]?.toLowerCase() || data.theme
   if (!XDG_CONFIG_NODE_THEMES.includes(theme)) {
-    console.error('\x1b[31m[toggle_theme]\x1b[0m Cannot find the given theme:', theme)
+    reporter.error('Cannot find the given theme:', theme)
     return
   }
 
@@ -34,7 +37,7 @@ async function handle() {
   )
 
   if (errors.length > 0) {
-    console.error('\x1b[31m[toggle_theme]\x1b[0m Errors encountered:', errors)
+    reporter.error('Errors encountered:', errors)
   } else {
     data.theme = theme
     await settings.save(data)

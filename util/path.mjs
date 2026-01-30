@@ -1,4 +1,7 @@
 import fs from 'node:fs'
+import { Reporter } from './reporter.mjs'
+
+const reporter = new Reporter('path')
 
 /**
  * @param {string|null|undefined} filepath
@@ -22,7 +25,7 @@ export async function touch(filepath) {
       const now = new Date()
       fs.utimesSync(filepath, now, now)
     } catch (error) {
-      console.error('\x1b[31m[touch]\x1b[0m Error touching file:', { filepath, error })
+      reporter.error('Error touching file:', { filepath, error })
     }
   }
 }

@@ -3,9 +3,12 @@ import path from 'node:path'
 import { PLATFORM } from '../env/platform.mjs'
 import { GEMINI_CONFIG_DIR, XDG_CONFIG_HOME } from '../env/path.mjs'
 import { is_directory, is_file, touch } from '../util/path.mjs'
+import { Reporter } from '../util/reporter.mjs'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
+
+const reporter = new Reporter('theme')
 
 /** @type {IAppConfig[]} */
 export const apps = [
@@ -38,10 +41,7 @@ export const apps = [
     },
     after_gen: async () => {
       const result = await safe_exec('bat', ['cache', '--build'], { silent: true })
-      if (!result)
-        console.error(
-          '\x1b[31m[bat]\x1b[0m Failed to rebuild cache. cmd: \x1b[33mbat cache --build\x1b[0m',
-        )
+      if (!result) reporter.error('Failed to rebuild cache. cmd: bat cache --build')
     },
   },
   {
@@ -58,10 +58,7 @@ export const apps = [
         const is_btop_exist = await command_exists('btop')
         if (is_btop_exist) {
           const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
-          if (!result)
-            console.error(
-              '\x1b[31m[btop]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 btop\x1b[0m',
-            )
+          if (!result) reporter.error('Failed to send reload signal. cmd: pkill -USR2 btop')
         }
       }
     },
@@ -102,10 +99,7 @@ export const apps = [
         const is_ghostty_exist = await command_exists('ghostty')
         if (is_ghostty_exist) {
           const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
-          if (!result)
-            console.error(
-              '\x1b[31m[ghostty]\x1b[0m Failed to send reload signal. cmd: \x1b[33mpkill -USR2 ghostty\x1b[0m',
-            )
+          if (!result) reporter.error('Failed to send reload signal. cmd: pkill -USR2 ghostty')
         }
       }
     },

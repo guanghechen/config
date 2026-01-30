@@ -1,5 +1,8 @@
+import { Reporter } from '../util/reporter.mjs'
 import { apps } from './_config.mjs'
 import { gen_themes_per_app } from './_util.mjs'
+
+const reporter = new Reporter('gen_themes')
 
 if (process.argv[1] === import.meta.filename) {
   const tasks = apps.map(app => gen_themes_per_app(app))
@@ -10,6 +13,6 @@ if (process.argv[1] === import.meta.filename) {
   )
 
   if (errors.length > 0) {
-    console.error('\x1b[31m[gen_themes]\x1b[0m Errors encountered:', errors)
+    reporter.error('Errors encountered:', errors)
   }
 }

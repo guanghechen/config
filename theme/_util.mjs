@@ -10,9 +10,12 @@ import {
 } from '../env/path.mjs'
 import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '../env/platform.mjs'
 import { hex2ansi256 } from '../util/color.mjs'
+import { Reporter } from '../util/reporter.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
+
+const reporter = new Reporter('theme')
 
 /**
  * @param {string} theme
@@ -144,7 +147,7 @@ export async function safe_exec(cmd, args, options) {
     return { stdout }
   } catch (error) {
     if (!silent) {
-      console.error('\x1b[31m[safe_exec]\x1b[0m Failed to run command.', { cmd, args, error })
+      reporter.error('Failed to run command.', { cmd, args, error })
     }
   }
 }
@@ -159,7 +162,7 @@ export async function command_exists(cmd) {
     const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`], { silent: true })
     return !!result?.stdout
   } catch (error) {
-    console.error('\x1b[31m[command_exists]\x1b[0m Failed to check command.', { cmd, error })
+    reporter.error('Failed to check command.', { cmd, error })
     return false
   }
 }
@@ -171,7 +174,7 @@ export async function command_exists(cmd) {
 export async function load_theme_scheme(theme) {
   const filepath = path.join(XDG_CONFIG_NODE_THEME_SCHEME_DIR, `${theme}.json`)
   if (!existsSync(filepath)) {
-    console.error('\x1b[31m[load_theme_scheme]\x1b[0m Unknown theme.', { theme })
+    reporter.error('Unknown theme.', { theme })
     return
   }
   const content = await fs.readFile(filepath, 'utf8')
@@ -190,11 +193,7 @@ export async function load_theme_scheme(theme) {
     )
     return JSON.parse(resolvedContent)
   } catch (error) {
-    console.error('\x1b[31m[load_theme_scheme]\x1b[0m Bad scheme, not a valid json.', {
-      theme,
-      filepath,
-      content,
-    })
+    reporter.error('Bad scheme, not a valid json.', { theme, filepath, content })
     return
   }
 }
@@ -209,7 +208,7 @@ export async function apply_theme_per_app(app, scheme) {
   if (app.local) {
     const template_filepath = path.join(XDG_CONFIG_NODE_THEME_APP_DIR, `${app.name}.hbs`)
     if (!existsSync(template_filepath)) {
-      console.error('\x1b[31m[apply_theme_per_app]\x1b[0m Cannot find the template.', { app })
+      reporter.error('Cannot find the template.', { app: app.name })
       return
     }
     const template = await fs.readFile(template_filepath, 'utf8')
@@ -232,7 +231,7 @@ export async function gen_themes_per_app(app) {
 
   const template_filepath = path.join(XDG_CONFIG_NODE_THEME_APP_DIR, `${app.name}.hbs`)
   if (!existsSync(template_filepath)) {
-    console.error('\x1b[31m[gen_themes_per_app]\x1b[0m Cannot find the template.', { app })
+    reporter.error('Cannot find the template.', { app: app.name })
     return
   }
   const template = await fs.readFile(template_filepath, 'utf8')

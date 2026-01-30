@@ -4,6 +4,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { XDG_CONFIG_NODE_SETTING } from './path.mjs'
 import { PLATFORM } from './platform.mjs'
+import { Reporter } from '../util/reporter.mjs'
+
+const reporter = new Reporter('settings')
 
 /**
  * @typedef {'nix' | 'nix-remote' | 'osx' | 'win'} IEdition
@@ -58,7 +61,7 @@ class Settings {
       const content = await fs.readFile(this.#filepath, 'utf8')
       return this.#normalize(JSON.parse(content))
     } catch {
-      console.error('\x1b[31m[Settings.load]\x1b[0m Failed to load', this.#filepath)
+      reporter.error('Failed to load', this.#filepath)
       return this.#defaults()
     }
   }
