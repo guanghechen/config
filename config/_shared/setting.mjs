@@ -97,8 +97,13 @@ export async function syncEdition(edition) {
 const selfPath = fileURLToPath(import.meta.url);
 const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(selfPath);
 if (isDirectRun) {
-  const edition = extractEditionFromArgs(process.argv.slice(2));
+  const args = process.argv.slice(2);
+  const edition = extractEditionFromArgs(args);
   if (edition !== null) {
     await syncEdition(edition);
+  }
+  if (args.includes("--print-edition")) {
+    const data = await settings.load();
+    process.stdout.write(`${data.edition}\n`);
   }
 }
