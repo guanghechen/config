@@ -15,11 +15,15 @@ if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
     git clone https://github.com/tmux/tmux "$root_tmux"
   fi
 
-  sudo apt install bison libevent-dev libncurses5-dev libncursesw5-dev
-  cd "$root_tmux" || return 1
-  sh autogen.sh
-  ./configure
-  make
+  if [ "$(uname -s)" = "Linux" ]; then
+    sudo apt install bison libevent-dev libncurses5-dev libncursesw5-dev
+    cd "$root_tmux" || return 1
+    sh autogen.sh
+    ./configure
+    make
+  else
+    printf "\e[93m  [setup tmux] manual build is only for Linux/WSL. (skipped)\e[0m\n"
+  fi
 elif [ "$prefer_tmux_version" = "nightly" ] && command -v brew &>/dev/null; then
   printf "\e[96m  [setup tmux] installing nightly tmux...\e[0m\n"
   brew install --HEAD tmux
