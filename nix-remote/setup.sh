@@ -39,12 +39,6 @@ printf "\n\e[96m  [setup config] preparing...\e[0m\n"
 source "$GHC_CONFIG_ROOT/nix-remote/setup/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
 
-### Setup font
-printf "\n\e[96m  [setup font] preparing...\e[0m\n"
-# shellcheck source=nix/setup/bot/font-maple.sh
-source "$GHC_CONFIG_ROOT/nix/setup/bot/font-maple.sh"
-printf "\e[92m  [setup font] done.\e[0m\n"
-
 ### Setup homebrew
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
   printf "\n\e[96m  [setup homebrew] preparing...\e[0m\n"
@@ -78,12 +72,6 @@ printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 # shellcheck source=nix-remote/setup/env/node.sh
 source "$GHC_CONFIG_ROOT/nix-remote/setup/env/node.sh"
 printf "\e[92m  [setup node] done.\e[0m\n"
-
-### Setup pnpm
-printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
-# shellcheck source=nix/setup/env/pnpm.sh
-source "$GHC_CONFIG_ROOT/nix/setup/env/pnpm.sh"
-printf "\e[92m  [setup pnpm] done.\e[0m\n"
 
 ## Setup apps
 
