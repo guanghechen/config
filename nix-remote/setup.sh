@@ -92,3 +92,8 @@ printf "\n\e[96m  [setup theme] preparing...\e[0m\n"
 # shellcheck source=nix/setup/theme.sh
 source "$GHC_CONFIG_ROOT/nix/setup/theme.sh"
 printf "\e[92m  [setup theme] done.\e[0m\n"
+
+printf "\n\e[95m ===== [setup settings] =====\e[0m\n"
+printf "\n\e[96m  [setup settings] preparing...\e[0m\n"
+node "$GHC_CONFIG_ROOT/config/_shared/setting.mjs" --sync-edition=nix-remote
+printf "\e[92m  [setup settings] done.\e[0m\n"

@@ -1,21 +1,42 @@
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { XDG_CONFIG_HOME } from "./env.mjs";
+import { fileURLToPath } from "node:url";
+import { XDG_CONFIG_HOME, platform } from "./env.mjs";
 
 /**
- * @typedef {Object} Settings
+ * @typedef {Object} ISettings
  * @property {string} theme - The theme name
+ * @property {string} edition - The edition name
  */
 
 const filepath = path.resolve(XDG_CONFIG_HOME, "guanghechen/.setting.json");
+const VALID_EDITIONS = new Set(["nix", "nix-remote", "osx", "win"]);
+
+function isValidEdition(value) {
+  return typeof value === "string" && VALID_EDITIONS.has(value);
+}
+
+function resolveEditionFromPlatform() {
+  const fallbackEdition = platform === "wsl" ? "nix" : platform;
+  return isValidEdition(fallbackEdition) ? fallbackEdition : "nix";
+}
+
+function extractEditionFromArgs(args) {
+  const flagIndex = args.findIndex((arg) => arg === "--sync-edition");
+  if (flagIndex !== -1 && args[flagIndex + 1]) return args[flagIndex + 1];
+  const withValue = args.find((arg) => arg.startsWith("--sync-edition="));
+  if (!withValue) return null;
+  return withValue.slice("--sync-edition=".length);
+}
 
 /**
  * Get default settings
- * @returns {Settings} Default settings object
+ * @returns {ISettings} Default settings object
  */
 function defaults() {
   return {
+    edition: resolveEditionFromPlatform(),
     theme: "gruvbox-dark",
   };
 }
@@ -23,11 +44,14 @@ function defaults() {
 /**
  * Normalize settings data
  * @param {unknown} data - The input data to normalize
- * @returns {Settings} Normalized settings object
+ * @returns {ISettings} Normalized settings object
  */
 function normalize(data) {
   const resolved = defaults();
   if (!data || typeof data !== "object") return resolved;
+  if (typeof data.edition === "string" && isValidEdition(data.edition)) {
+    resolved.edition = data.edition;
+  }
   if (typeof data.theme === "string") resolved.theme = data.theme;
   return resolved;
 }
@@ -35,7 +59,7 @@ function normalize(data) {
 export const settings = {
   /**
    * Load settings from config file
-   * @returns {Promise<Settings>} The loaded settings
+   * @returns {Promise<ISettings>} The loaded settings
    */
   async load() {
     if (!existsSync(filepath)) {
@@ -63,3 +87,18 @@ export const settings = {
     await fs.writeFile(filepath, content, "utf8");
   },
 };
+
+export async function syncEdition(edition) {
+  const data = await settings.load();
+  data.edition = isValidEdition(edition) ? edition : resolveEditionFromPlatform();
+  await settings.save(data);
+}
+
+const selfPath = fileURLToPath(import.meta.url);
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(selfPath);
+if (isDirectRun) {
+  const edition = extractEditionFromArgs(process.argv.slice(2));
+  if (edition !== null) {
+    await syncEdition(edition);
+  }
+}
