@@ -8,7 +8,7 @@ export GHC_CONFIG_ROOT
 printf "\n\e[95m ===== [prepare] =====\e[0m\n"
 sudo apt update
 sudo apt dist-upgrade -y
-sudo apt remove -y tmux
+# sudo apt remove -y tmux
 sudo apt install -y curl git locales wget
 sudo apt install -y build-essential libvips-dev unixodbc
 sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim
@@ -86,12 +86,6 @@ source "$GHC_CONFIG_ROOT/nix/setup/env/pnpm.sh"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
 
 ## Setup apps
-printf "\n\e[95m ===== [setup app] =====\e[0m\n"
-### Setup newsboat
-printf "\n\e[96m  [setup newsboat] preparing...\e[0m\n"
-# shellcheck source=nix/setup/app/newsboat.sh
-source "$GHC_CONFIG_ROOT/nix/setup/app/newsboat.sh"
-printf "\e[92m  [setup newsboat] done.\e[0m\n"
 
 ### Setup nvim
 printf "\n\e[96m  [setup nvim] preparing...\e[0m\n"
