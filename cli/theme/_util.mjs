@@ -1,10 +1,8 @@
-import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Reporter } from '@guanghechen/stl/reporter'
 import {
-  XDG_CONFIG_HOME_NODE,
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
@@ -92,87 +90,6 @@ export async function render_template(template, scheme) {
       return result
     })
   return content
-}
-
-/**
- * @param {string} cmd
- * @param {string[]} args
- * @param {{ env?: Record<string, string>, silent?: boolean }} [options]
- * @return {Promise<{ stdout: string } | undefined>}
- */
-/**
- * @param {string} cmd
- * @param {string[]} args
- * @param {{ env?: Record<string, string>, silent?: boolean }} [options]
- * @return {Promise<{ stdout: string } | undefined>}
- */
-export async function safe_exec(cmd, args, options) {
-  const { env: extendedEnv, silent = false } = options ?? {}
-  const encoding = 'utf8'
-
-  try {
-    const stdout = await new Promise((resolve, reject) => {
-      let stdoutData = ''
-      let stderrData = ''
-      let terminated = false
-
-      const onResolved = () => {
-        if (!terminated) {
-          terminated = true
-          resolve(stdoutData.trimEnd())
-        }
-      }
-
-      /** @param {unknown} [error] */
-      const onRejected = error => {
-        if (!terminated) {
-          terminated = true
-          reject(error || new Error((stderrData || stdoutData).trimEnd()))
-        }
-      }
-
-      try {
-        const child = spawn(cmd, args, {
-          cwd: XDG_CONFIG_HOME_NODE,
-          env: { ...process.env, ...extendedEnv },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        })
-        child.stdout?.on('data', (/** @type {Buffer} */ data) => {
-          stdoutData += data.toString(encoding)
-        })
-        child.stderr?.on('data', (/** @type {Buffer} */ data) => {
-          stderrData += data.toString(encoding)
-        })
-        child.on('close', (/** @type {number | null} */ code) => {
-          if (code === 0) onResolved()
-          else onRejected()
-        })
-      } catch (error) {
-        onRejected(error)
-      }
-    })
-
-    return { stdout: /** @type {string} */ (stdout) }
-  } catch (error) {
-    if (!silent) {
-      reporter.error('Failed to run command.', { cmd, args, error })
-    }
-  }
-}
-
-/**
- * @param {string} cmd
- * @return {Promise<boolean>}
- */
-export async function command_exists(cmd) {
-  if (IS_WIN) return false
-  try {
-    const result = await safe_exec('/bin/bash', ['-c', `command -v ${cmd}`], { silent: true })
-    return !!result?.stdout
-  } catch (error) {
-    reporter.error('Failed to check command.', { cmd, error })
-    return false
-  }
 }
 
 /**

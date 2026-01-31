@@ -7,8 +7,9 @@ import {
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
 } from '#env/path'
 import { PLATFORM } from '#env/platform'
+import { command_exists, exec } from '#util/command'
 import { is_directory, is_file, touch } from '#util/path'
-import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
+import { gen_full_theme_name, render_template } from './_util.mjs'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
 
@@ -44,8 +45,11 @@ export const apps = [
       await fs.writeFile(main_config_filepath, content, 'utf8')
     },
     after_gen: async () => {
-      const result = await safe_exec('bat', ['cache', '--build'], { silent: true })
-      if (!result) reporter.error('Failed to rebuild cache. cmd: bat cache --build')
+      try {
+        await exec({ reporter, cmd: 'bat', args: ['cache', '--build'], silent: true })
+      } catch {
+        reporter.error('Failed to rebuild cache. cmd: bat cache --build')
+      }
     },
   },
   {
@@ -59,10 +63,13 @@ export const apps = [
     after_apply: async () => {
       // Send SIGUSR2 to btop to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
-        const is_btop_exist = await command_exists('btop')
+        const is_btop_exist = await command_exists(reporter, 'btop')
         if (is_btop_exist) {
-          const result = await safe_exec('pkill', ['-USR2', 'btop'], { silent: true })
-          if (!result) reporter.error('Failed to send reload signal. cmd: pkill -USR2 btop')
+          try {
+            await exec({ reporter, cmd: 'pkill', args: ['-USR2', 'btop'], silent: true })
+          } catch {
+            reporter.error('Failed to send reload signal. cmd: pkill -USR2 btop')
+          }
         }
       }
     },
@@ -100,10 +107,13 @@ export const apps = [
     after_apply: async () => {
       // Send SIGUSR2 to ghostty to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
-        const is_ghostty_exist = await command_exists('ghostty')
+        const is_ghostty_exist = await command_exists(reporter, 'ghostty')
         if (is_ghostty_exist) {
-          const result = await safe_exec('pkill', ['-USR2', 'ghostty'], { silent: true })
-          if (!result) reporter.error('Failed to send reload signal. cmd: pkill -USR2 ghostty')
+          try {
+            await exec({ reporter, cmd: 'pkill', args: ['-USR2', 'ghostty'], silent: true })
+          } catch {
+            reporter.error('Failed to send reload signal. cmd: pkill -USR2 ghostty')
+          }
         }
       }
     },
@@ -166,12 +176,20 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
-      await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
-        env: {
-          NVIM_APPNAME: app.name,
-          GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
-        },
-      })
+      try {
+        await exec({
+          reporter,
+          cmd: 'nvim',
+          args: ['--headless', '-u', theme_config_filepath, '+q'],
+          env: {
+            NVIM_APPNAME: app.name,
+            GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+          },
+          silent: true,
+        })
+      } catch {
+        reporter.error('Failed to apply nvim theme.')
+      }
     },
   },
   {
@@ -184,12 +202,20 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
-      await safe_exec('nvim', ['--headless', '-u', theme_config_filepath, '+q'], {
-        env: {
-          NVIM_APPNAME: app.name,
-          GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
-        },
-      })
+      try {
+        await exec({
+          reporter,
+          cmd: 'nvim',
+          args: ['--headless', '-u', theme_config_filepath, '+q'],
+          env: {
+            NVIM_APPNAME: app.name,
+            GHC_THEME: gen_full_theme_name(scheme.theme, scheme.variant),
+          },
+          silent: true,
+        })
+      } catch {
+        reporter.error('Failed to apply nvim-nvchad theme.')
+      }
     },
   },
   {
@@ -212,7 +238,11 @@ export const apps = [
     after_apply: async app => {
       if (process.env.TMUX) {
         const script_filepath = path.join(app.home, 'script/load-theme.sh')
-        await safe_exec('/bin/bash', [script_filepath])
+        try {
+          await exec({ reporter, cmd: '/bin/bash', args: [script_filepath], silent: true })
+        } catch {
+          reporter.error('Failed to load tmux theme.')
+        }
       }
     },
   },
