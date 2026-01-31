@@ -27,7 +27,7 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       const main_config_filepath = path.join(app.home, 'alacritty.toml')
-      await touch(main_config_filepath)
+      await touch(main_config_filepath, reporter)
     },
   },
   {
@@ -93,7 +93,7 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       const main_config_filepath = path.join(app.home, 'settings.json')
-      await touch(main_config_filepath)
+      await touch(main_config_filepath, reporter)
     },
   },
   {

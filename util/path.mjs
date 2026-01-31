@@ -1,7 +1,4 @@
 import fs from 'node:fs'
-import { Reporter } from '@guanghechen/stl/reporter'
-
-const reporter = new Reporter({ prefix: 'path' })
 
 /**
  * @param {string|null|undefined} filepath
@@ -19,8 +16,11 @@ export function is_file(filepath) {
   return !!filepath && fs.existsSync(filepath) && fs.statSync(filepath).isFile()
 }
 
-/** @param {string} filepath */
-export async function touch(filepath) {
+/**
+ * @param {string} filepath
+ * @param {import('@guanghechen/stl/reporter').Reporter} reporter
+ */
+export async function touch(filepath, reporter) {
   if (fs.existsSync(filepath)) {
     try {
       const now = new Date()
