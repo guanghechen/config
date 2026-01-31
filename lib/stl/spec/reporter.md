@@ -5,9 +5,9 @@ A minimal, level-based logging utility with colored output and breadcrumb prefix
 ## Design Goals
 
 1. **Simplicity** - Four log levels only (debug, info, warn, error)
-2. **Zero Dependencies** - Pure JavaScript, no external packages
+2. **Zero Dependencies** - Pure JavaScript, browser/node compatible
 3. **Decoupled** - No implicit `process.argv` access, explicit props required
-4. **Breadcrumb Prefix** - Hierarchical context via `.attach()` / `.detach()`
+4. **Breadcrumb Prefix** - Hierarchical context via `.attach()` returning detach callback
 5. **Lazy Evaluation** - Function arguments for deferred computation
 6. **Testable** - Built-in mock mode for capturing logs
 7. **Portable** - Injectable output for browser/custom environments
@@ -31,7 +31,7 @@ interface IReporterFlight {
 }
 
 interface IReporterProps {
-  prefix?: string           // Initial prefix, cannot contain ':' (e.g., 'app')
+  prefix?: string           // Initial prefix, cannot contain ':'
   level?: IReporterLevel    // Minimum log level (default: 'info')
   flight?: IReporterFlight  // Output control
   output?: IReporterOutput  // Custom output function (default: console)
@@ -53,27 +53,26 @@ interface IReporterEntry {
 new Reporter(props?: IReporterProps)
 ```
 
-| Option         | Type              | Default         | Description                      |
-| -------------- | ----------------- | --------------- | -------------------------------- |
-| `prefix`       | `string`          | `undefined`     | Initial prefix, cannot contain `:` |
-| `level`        | `IReporterLevel`  | `'info'`        | Minimum log level to output      |
-| `flight.date`  | `boolean`         | `true`          | Include ISO timestamp            |
-| `flight.color` | `boolean`         | `true`          | Use ANSI color codes             |
-| `output`       | `IReporterOutput` | (console)       | Custom output function           |
+| Option         | Type              | Default     | Description                        |
+| -------------- | ----------------- | ----------- | ---------------------------------- |
+| `prefix`       | `string`          | `undefined` | Initial prefix, cannot contain `:` |
+| `level`        | `IReporterLevel`  | `'info'`    | Minimum log level to output        |
+| `flight.date`  | `boolean`         | `true`      | Include ISO timestamp              |
+| `flight.color` | `boolean`         | `true`      | Use ANSI color codes               |
+| `output`       | `IReporterOutput` | (console)   | Custom output function             |
 
 ### Methods
 
-| Method                 | Returns            | Description                                                     |
-| ---------------------- | ------------------ | --------------------------------------------------------------- |
-| `.attach(prefix)`      | `this`             | Push prefix to breadcrumb stack (cannot contain `:`)            |
-| `.detach()`            | `this`             | Pop prefix from stack (initial prefix is protected)             |
-| `.mock()`              | `this`             | Enable mock mode (capture instead of print)                     |
-| `.collect()`           | `IReporterEntry[]` | Disable mock mode, return captured logs                         |
-| `.log(level, ...args)` | `void`             | Core logging method (invalid level falls back to default)       |
-| `.debug(...args)`      | `this`             | Log at debug level (`console.debug`)                            |
-| `.info(...args)`       | `this`             | Log at info level (`console.log`)                               |
-| `.warn(...args)`       | `this`             | Log at warn level (`console.warn`)                              |
-| `.error(...args)`      | `this`             | Log at error level (`console.error`)                            |
+| Method                 | Returns            | Description                                               |
+| ---------------------- | ------------------ | --------------------------------------------------------- |
+| `.attach(prefix)`      | `() => void`       | Push prefix, return detach callback (cannot contain `:`)  |
+| `.mock()`              | `this`             | Enable mock mode (capture instead of print)               |
+| `.collect()`           | `IReporterEntry[]` | Disable mock mode, return captured logs                   |
+| `.log(level, ...args)` | `void`             | Core logging method (invalid level falls back to default) |
+| `.debug(...args)`      | `this`             | Log at debug level (`console.debug`)                      |
+| `.info(...args)`       | `this`             | Log at info level (`console.log`)                         |
+| `.warn(...args)`       | `this`             | Log at warn level (`console.warn`)                        |
+| `.error(...args)`      | `this`             | Log at error level (`console.error`)                      |
 
 ### Exports
 
@@ -98,13 +97,13 @@ Messages are output only if level >= threshold.
 [timestamp?] [prefixes|level] message...
 ```
 
-| Segment   | Color       | Description                       |
-| --------- | ----------- | --------------------------------- |
-| timestamp | Gray (dim)  | ISO 8601 format                   |
-| `[` `]`   | Gray (dim)  | Brackets                          |
-| prefix    | Level color | Each prefix segment               |
-| `:`       | Gray (dim)  | Separator between prefixes        |
-| message   | Default     | Log content (no color applied)    |
+| Segment   | Color       | Description                    |
+| --------- | ----------- | ------------------------------ |
+| timestamp | Gray (dim)  | ISO 8601 format                |
+| `[` `]`   | Gray (dim)  | Brackets                       |
+| prefix    | Level color | Each prefix segment            |
+| `:`       | Gray (dim)  | Separator between prefixes     |
+| message   | Default     | Log content (no color applied) |
 
 Example with `flight.color: true`:
 
@@ -133,36 +132,59 @@ reporter.error('failed:', err)
 
 ### Breadcrumb Prefix
 
+The `.attach()` method returns a detach callback that restores prefix state:
+
 ```javascript
 const reporter = new Reporter({ prefix: 'app' })
 
-reporter.info('Starting')             // [app] Starting
+reporter.info('Starting')                 // [app] Starting
 
-reporter.attach('theme')
-reporter.info('Loading')              // [app:theme] Loading
+const detach1 = reporter.attach('theme')
+reporter.info('Loading')                  // [app:theme] Loading
 
-reporter.attach('apply')
-reporter.info('Applying')             // [app:theme:apply] Applying
+const detach2 = reporter.attach('apply')
+reporter.info('Applying')                 // [app:theme:apply] Applying
 
-reporter.detach()
-reporter.info('Done')                 // [app:theme] Done
+detach2()
+reporter.info('Applied')                  // [app:theme] Applied
+
+detach1()
+reporter.info('Done')                     // [app] Done
 ```
 
 Without prefix, falls back to level name: `[info]`, `[warn]`, `[error]`.
 
-### Context Pattern
+### Why Detach Callback Instead of `.detach()` Method?
 
-Pass reporter through context, use `.attach()` / `.detach()` for scope:
+The detach callback design ensures robustness when inner code fails:
 
 ```javascript
-const ctx = { reporter: new Reporter({ prefix: 'app' }) }
+// Problem with .detach() method:
+reporter.attach('a')
+reporter.attach('b')
+reporter.attach('c')  // Inner code throws, detach never called
+// Outer .detach() only pops one prefix - state is corrupted
 
-async function initTheme(ctx) {
-  ctx.reporter.attach('theme')
+// Solution with detach callback:
+const detach = reporter.attach('a')
+reporter.attach('b')
+reporter.attach('c')  // Even if inner code fails to detach
+detach()              // Restores directly to before 'a', skipping all inner prefixes
+```
+
+The callback captures prefix length at attach time. If any outer detach is called, all inner prefixes are automatically discarded.
+
+### Error-Safe Context Pattern
+
+```javascript
+async function processItem(ctx, item) {
+  const detach = ctx.reporter.attach('item')
   try {
-    ctx.reporter.info('Loading config')
+    ctx.reporter.info('Processing:', item.id)
+    await riskyOperation(item)  // May throw
+    ctx.reporter.info('Done')
   } finally {
-    ctx.reporter.detach()
+    detach()  // Always restores correctly, regardless of inner attach calls
   }
 }
 ```
@@ -219,9 +241,9 @@ const reporter = new Reporter({ prefix: 'test', level: 'debug' })
 reporter.mock()
 
 reporter.info('Starting')
-reporter.attach('sub')
+const detach = reporter.attach('sub')
 reporter.warn('Warning!')
-reporter.detach()
+detach()
 
 const logs = reporter.collect()
 

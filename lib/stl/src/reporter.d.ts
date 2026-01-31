@@ -50,17 +50,10 @@ export class Reporter {
   /**
    * Push prefix to breadcrumb stack.
    * @param prefix - Prefix to append (cannot contain ':')
-   * @returns this for chaining
+   * @returns Detach function that restores prefix state to before this attach
    * @throws Error if prefix contains ':'
    */
-  attach(prefix: string): this
-
-  /**
-   * Pop prefix from breadcrumb stack.
-   * Initial prefix (from constructor) is protected and cannot be removed.
-   * @returns this for chaining
-   */
-  detach(): this
+  attach(prefix: string): () => void
 
   /**
    * Enable mock mode. Logs are captured instead of printed.
