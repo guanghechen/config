@@ -1,7 +1,7 @@
 import fs from 'node:fs'
-import { Reporter } from './reporter.mjs'
+import { Reporter } from '@guanghechen/stl/reporter'
 
-const reporter = new Reporter('path')
+const reporter = new Reporter({ prefix: 'path' })
 
 /**
  * @param {string|null|undefined} filepath

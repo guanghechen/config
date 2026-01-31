@@ -1,0 +1,15 @@
+{
+  "name": "@guanghechen/node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal Node.js utilities and CLI tools (ESM, zero dependencies)",
+  "scripts": {
+    "test": "node --test **/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage **/*.test.mjs"
+  },
+  "dependencies": {
+    "@guanghechen/stl": "file:lib/stl"
+  },
+  "devDependencies": {}
+}

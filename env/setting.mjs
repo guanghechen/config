@@ -2,11 +2,11 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { Reporter } from '@guanghechen/stl/reporter'
 import { XDG_CONFIG_NODE_SETTING } from './path.mjs'
 import { PLATFORM } from './platform.mjs'
-import { Reporter } from '../util/reporter.mjs'
 
-const reporter = new Reporter('settings')
+const reporter = new Reporter({ prefix: 'settings' })
 
 /**
  * @typedef {'nix' | 'nix-remote' | 'osx' | 'win'} IEdition
