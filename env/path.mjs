@@ -14,6 +14,7 @@ export const GEMINI_CONFIG_DIR = path.join(HOME_USER, '.gemini')
 
 export const XDG_CONFIG_NODE_SETTING = path.join(XDG_CONFIG_HOME_NODE, '.setting.json')
 export const XDG_CONFIG_NODE_ASSET_DIR = path.join(XDG_CONFIG_HOME_NODE, 'asset')
+export const XDG_CONFIG_NODE_ASSET_APP_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'app')
 export const XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'wallpaper')
 export const XDG_CONFIG_NODE_ASSET_THEME_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'theme')
 export const XDG_CONFIG_NODE_ASSET_THEME_APP_DIR = path.join(XDG_CONFIG_NODE_ASSET_THEME_DIR, 'app')

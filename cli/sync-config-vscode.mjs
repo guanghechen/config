@@ -1,10 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import url from 'node:url'
-import { F_VSCODE_KEYBINDINGS } from '../../../../env/path.mjs'
-import { PLATFORM } from '../../../../env/platform.mjs'
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '../env/path.mjs'
+import { PLATFORM } from '../env/platform.mjs'
 
 const ranks = {
   cmd: 10,
@@ -49,7 +46,7 @@ const ranks = {
   f24: 1.801,
 }
 
-export function formatKey(key) {
+function formatKey(key) {
   return key
     .split(/\s+/g)
     .filter(x => !!x)
@@ -66,7 +63,7 @@ export function formatKey(key) {
     .join(' ')
 }
 
-export function sortKeybindings(keybindings) {
+function sortKeybindings(keybindings) {
   return keybindings
     .map(x => {
       const { key, command, when, title, ...rest } = x
@@ -95,10 +92,15 @@ export function sortKeybindings(keybindings) {
     })
 }
 
-export function resolve() {
+/**
+ * @param {string} targetKeybindingsPath - Path to the VSCode keybindings.json file
+ */
+export function handleSyncConfigVscode(targetKeybindingsPath) {
+  if (!targetKeybindingsPath || !fs.existsSync(path.dirname(targetKeybindingsPath))) return
+
   const encoding = 'utf8'
   const middle = PLATFORM === 'wsl' ? 'win' : PLATFORM
-  const CONFIG_DIR = path.join(__dirname, middle)
+  const CONFIG_DIR = path.join(XDG_CONFIG_NODE_ASSET_APP_DIR, 'vscode/keybinding', middle)
   if (!fs.existsSync(CONFIG_DIR)) return
 
   const fp_rebind = path.join(CONFIG_DIR, 'rebind.json')
@@ -132,9 +134,9 @@ export function resolve() {
   fs.writeFileSync(fp_customize, content_customize, encoding)
   fs.writeFileSync(fp_unbind, content_unbind, encoding)
   fs.writeFileSync(fp_keybindings, content_all, encoding)
-  if (F_VSCODE_KEYBINDINGS) {
-    fs.writeFileSync(F_VSCODE_KEYBINDINGS, content_all, encoding)
-  }
+  fs.writeFileSync(targetKeybindingsPath, content_all, encoding)
 }
 
-resolve()
+if (process.argv[1] === import.meta.filename) {
+  handleSyncConfigVscode(F_VSCODE_KEYBINDINGS)
+}
