@@ -46,6 +46,11 @@ interface ICommanderOptionConfig {
   env?: string  // Environment variable name (e.g., 'PORT')
 }
 
+/** Constructor props */
+interface ICommanderProps {
+  reporter?: unknown  // Reporter instance for logging
+}
+
 /** Diagnostic entry */
 interface ICommanderDiagnostic {
   type: 'warn' | 'error'
@@ -77,14 +82,15 @@ type ICommanderActionHandler = (params: ICommanderExecuteParams) => Promise<void
 ### Constructor
 
 ```javascript
-new Command(name: string)
+new Command(name: string, reporter: Reporter)
 ```
 
 ### Properties
 
-| Property     | Type     | Description  |
-| ------------ | -------- | ------------ |
-| `get name()` | `string` | Command name |
+| Property         | Type       | Description       |
+| ---------------- | ---------- | ----------------- |
+| `get name()`     | `string`   | Command name      |
+| `get reporter()` | `Reporter` | Reporter instance |
 
 ### Methods
 

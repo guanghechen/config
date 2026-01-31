@@ -66,11 +66,15 @@ export class Command {
   /** Command name */
   readonly name: string
 
+  /** Reporter instance */
+  readonly reporter: import('./reporter.d.ts').Reporter
+
   /**
    * Create a new Command instance.
    * @param name - Command name
+   * @param reporter - Reporter instance for logging
    */
-  constructor(name: string)
+  constructor(name: string, reporter: import('./reporter.d.ts').Reporter)
 
   /**
    * Set the action handler.

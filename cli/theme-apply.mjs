@@ -50,7 +50,7 @@ export async function handleThemeApply(theme) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-apply')
+  const cmd = new Command('theme-apply', reporter)
     .description('Apply a theme to all configured applications.')
     .argument('[theme]', 'Theme name to apply')
     .example('theme-apply')

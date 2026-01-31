@@ -32,7 +32,7 @@ export async function handleThemeGen() {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-gen')
+  const cmd = new Command('theme-gen', reporter)
     .description('Generate theme files for all configured applications.')
     .example('theme-gen')
     .example('theme-gen --silent')

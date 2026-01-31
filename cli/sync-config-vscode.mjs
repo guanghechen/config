@@ -173,7 +173,7 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('sync-config-vscode')
+  const cmd = new Command('sync-config-vscode', reporter)
     .description('Sync VSCode keybindings configuration.')
     .argument('[target-path]', 'Target keybindings.json path')
     .example('sync-config-vscode')

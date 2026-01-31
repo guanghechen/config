@@ -28,7 +28,9 @@ export function hex2ansi256(hex) {
  * @return {string} the rgb color
  */
 export function hex2rgb(hex) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
+  const match = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
+  if (!match) return 'rgb(0, 0, 0)'
+  const [, r, g, b] = match
   const rr = Number.parseInt(r, 16)
   const gg = Number.parseInt(g, 16)
   const bb = Number.parseInt(b, 16)
@@ -41,7 +43,9 @@ export function hex2rgb(hex) {
  * @return {string} the rgb color
  */
 export function hex2rgba(hex, alpha) {
-  const [_, r, g, b] = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
+  const match = /^#(\w\w)(\w\w)(\w\w)$/.exec(hex)
+  if (!match) return `rgba(0, 0, 0, ${alpha})`
+  const [, r, g, b] = match
   const rr = Number.parseInt(r, 16)
   const gg = Number.parseInt(g, 16)
   const bb = Number.parseInt(b, 16)

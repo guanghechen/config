@@ -57,7 +57,7 @@ export async function handleThemeToggle(theme) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-toggle')
+  const cmd = new Command('theme-toggle', reporter)
     .description('Toggle theme between light and dark variants.')
     .argument('[theme]', 'Theme name to toggle')
     .example('theme-toggle')
