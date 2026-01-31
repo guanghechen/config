@@ -10,7 +10,7 @@ import { PLATFORM } from '#env/platform'
 import { is_directory, is_file, touch } from '#util/path'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
-/** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
+/** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
 
 const reporter = new Reporter({ prefix: 'theme' })
 

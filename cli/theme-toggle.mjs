@@ -11,7 +11,7 @@ import { settings } from '#env/setting'
 import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './theme/_util.mjs'
 
-/** @typedef {import("./theme/_types.mjs").IThemeScheme} IThemeScheme */
+/** @typedef {import("./theme/types.d.ts").IThemeScheme} IThemeScheme */
 
 const reporter = new Reporter({ prefix: 'theme-toggle' })
 

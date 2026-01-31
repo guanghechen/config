@@ -12,8 +12,8 @@ import {
 import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
 import { hex2ansi256 } from '#util/color'
 
-/** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
-/** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
+/** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
+/** @typedef {import("./types.d.ts").IThemeScheme} IThemeScheme */
 
 const reporter = new Reporter({ prefix: 'theme' })
 
