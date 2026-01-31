@@ -70,10 +70,10 @@ new Reporter(props?: IReporterProps)
 | `.mock()`              | `this`             | Enable mock mode (capture instead of print)                     |
 | `.collect()`           | `IReporterEntry[]` | Disable mock mode, return captured logs                         |
 | `.log(level, ...args)` | `void`             | Core logging method (invalid level falls back to default)       |
-| `.debug(...args)`      | `void`             | Log at debug level (`console.debug`)                            |
-| `.info(...args)`       | `void`             | Log at info level (`console.log`)                               |
-| `.warn(...args)`       | `void`             | Log at warn level (`console.warn`)                              |
-| `.error(...args)`      | `void`             | Log at error level (`console.error`)                            |
+| `.debug(...args)`      | `this`             | Log at debug level (`console.debug`)                            |
+| `.info(...args)`       | `this`             | Log at info level (`console.log`)                               |
+| `.warn(...args)`       | `this`             | Log at warn level (`console.warn`)                              |
+| `.error(...args)`      | `this`             | Log at error level (`console.error`)                            |
 
 ### Exports
 

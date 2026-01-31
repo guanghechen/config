@@ -85,24 +85,28 @@ export class Reporter {
   /**
    * Log at debug level (console.debug).
    * @param args - Arguments to log (functions are called lazily)
+   * @returns this for chaining
    */
-  debug(...args: unknown[]): void
+  debug(...args: unknown[]): this
 
   /**
    * Log at info level (console.log).
    * @param args - Arguments to log (functions are called lazily)
+   * @returns this for chaining
    */
-  info(...args: unknown[]): void
+  info(...args: unknown[]): this
 
   /**
    * Log at warn level (console.warn).
    * @param args - Arguments to log (functions are called lazily)
+   * @returns this for chaining
    */
-  warn(...args: unknown[]): void
+  warn(...args: unknown[]): this
 
   /**
    * Log at error level (console.error).
    * @param args - Arguments to log (functions are called lazily)
+   * @returns this for chaining
    */
-  error(...args: unknown[]): void
+  error(...args: unknown[]): this
 }

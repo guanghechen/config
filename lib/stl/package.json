@@ -7,6 +7,10 @@
       "types": "./src/commander.d.ts",
       "import": "./src/commander.mjs"
     },
+    "./env": {
+      "types": "./src/env.d.ts",
+      "import": "./src/env.mjs"
+    },
     "./reporter": {
       "types": "./src/reporter.d.ts",
       "import": "./src/reporter.mjs"
@@ -14,6 +18,7 @@
   },
   "imports": {
     "#commander": "./src/commander.mjs",
+    "#env": "./src/env.mjs",
     "#reporter": "./src/reporter.mjs"
   },
   "files": [
