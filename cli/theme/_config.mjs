@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { Reporter } from '@guanghechen/stl/reporter'
 import { PLATFORM } from '../../env/platform.mjs'
 import {
   GEMINI_CONFIG_DIR,
@@ -7,12 +8,11 @@ import {
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
 } from '../../env/path.mjs'
 import { is_directory, is_file, touch } from '../../util/path.mjs'
-import { Reporter } from '../../util/reporter.mjs'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 
-const reporter = new Reporter('theme')
+const reporter = new Reporter({ prefix: 'theme' })
 
 /** @type {IAppConfig[]} */
 export const apps = [
@@ -126,6 +126,7 @@ export const apps = [
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
+      if (!app.local) return
       const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')
 
@@ -224,6 +225,7 @@ export const apps = [
     active: app => is_directory(app.home),
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
+      if (!app.local) return
       const backgroundImagePath = scheme.darken
         ? path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.jpg')
         : path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg')
@@ -274,17 +276,18 @@ export const apps = [
       : XDG_CONFIG_HOME,
     themes: null,
     extname: '.json',
-    local: process.env.f_windows_terminal_settings,
+    local: process.env.f_windows_terminal_settings ?? null,
     active: app => is_file(app.local),
     render: async (app, template, scheme) => {
+      if (!app.local) return ''
       const raw_content = await fs.readFile(app.local, 'utf8')
       const settings = JSON.parse(raw_content)
 
       const raw_color_scheme = await render_template(template, scheme)
       const color_scheme = JSON.parse(raw_color_scheme)
       if (Array.isArray(settings.schemes)) {
-        if (settings.schemes.some(s => s.name === color_scheme.name)) {
-          settings.schemes = settings.schemes.map(s =>
+        if (settings.schemes.some((/** @type {{ name: string }} */ s) => s.name === color_scheme.name)) {
+          settings.schemes = settings.schemes.map((/** @type {{ name: string }} */ s) =>
             s.name === color_scheme.name ? color_scheme : s,
           )
         } else {

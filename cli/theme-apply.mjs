@@ -1,19 +1,29 @@
+#!/usr/bin/env node
+
+/**
+ * Apply a theme to all configured applications.
+ */
+
+import { Command } from '@guanghechen/stl/commander'
+import { Reporter } from '@guanghechen/stl/reporter'
 import { XDG_CONFIG_NODE_ASSET_THEMES } from '../env/path.mjs'
 import { settings } from '../env/setting.mjs'
-import { Reporter } from '../util/reporter.mjs'
 import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './theme/_util.mjs'
 
-/** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
+/** @typedef {import("./theme/_types.mjs").IThemeScheme} IThemeScheme */
 
-const reporter = new Reporter('theme-apply')
+const reporter = new Reporter({ prefix: 'theme-apply' })
 
 /**
+ * @param {string} [theme] - Theme name to apply
  * @return {Promise<void>}
  */
-export async function handleThemeApply() {
+export async function handleThemeApply(theme) {
   const data = await settings.load()
-  const theme = process.argv[2]?.toLowerCase() || data.theme
+  theme = theme?.toLowerCase() || data.theme
+  reporter.info('Applying theme:', theme)
+
   if (!XDG_CONFIG_NODE_ASSET_THEMES.includes(theme)) {
     reporter.error('Cannot find the given theme:', theme)
     return
@@ -26,8 +36,8 @@ export async function handleThemeApply() {
   const tasks = apps.map(app => apply_theme_per_app(app, scheme))
   const errors = await Promise.allSettled(tasks).then(results =>
     results
-      .filter(result => result.status === 'rejected')
-      .map(result => result.reason || result.message || result.stack || result),
+      .filter(/** @type {(r: PromiseSettledResult<unknown>) => r is PromiseRejectedResult} */ (result => result.status === 'rejected'))
+      .map(result => result.reason),
   )
 
   if (errors.length > 0) {
@@ -35,9 +45,20 @@ export async function handleThemeApply() {
   } else {
     data.theme = theme
     await settings.save(data)
+    reporter.info('Theme applied successfully')
   }
 }
 
 if (process.argv[1] === import.meta.filename) {
-  await handleThemeApply()
+  const cmd = new Command('theme-apply')
+    .description('Apply a theme to all configured applications.')
+    .argument('[theme]', 'Theme name to apply')
+    .example('theme-apply')
+    .example('theme-apply tokyonight-night')
+    .example('theme-apply catppuccin-mocha --silent')
+    .action(async ({ args }) => {
+      await handleThemeApply(/** @type {string | undefined} */ (args.theme))
+    })
+
+  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
 }

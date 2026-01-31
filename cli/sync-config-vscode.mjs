@@ -1,8 +1,31 @@
+#!/usr/bin/env node
+
+/**
+ * Sync VSCode keybindings configuration.
+ */
+
 import fs from 'node:fs'
 import path from 'node:path'
+import { Command } from '@guanghechen/stl/commander'
+import { Reporter } from '@guanghechen/stl/reporter'
 import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '../env/path.mjs'
 import { PLATFORM } from '../env/platform.mjs'
 
+const reporter = new Reporter({ prefix: 'sync-config-vscode' })
+
+/**
+ * @typedef {Object} IVscodeKeybinding
+ * @property {string} key - Key combination (e.g., "ctrl+f1", "cmd+shift+p")
+ * @property {string} command - Command identifier to invoke
+ * @property {string} [when] - When clause context condition
+ * @property {string} [mac] - macOS-specific key override
+ * @property {string} [title] - Optional title for the keybinding
+ * @property {*} [args] - Optional arguments passed to the command
+ */
+
+/** @typedef {Record<string, number>} IKeyRanks */
+
+/** @type {IKeyRanks} */
 const ranks = {
   cmd: 10,
   command: 10,
@@ -46,6 +69,10 @@ const ranks = {
   f24: 1.801,
 }
 
+/**
+ * @param {string} key
+ * @returns {string}
+ */
 function formatKey(key) {
   return key
     .split(/\s+/g)
@@ -63,6 +90,10 @@ function formatKey(key) {
     .join(' ')
 }
 
+/**
+ * @param {IVscodeKeybinding[]} keybindings
+ * @returns {IVscodeKeybinding[]}
+ */
 function sortKeybindings(keybindings) {
   return keybindings
     .map(x => {
@@ -97,6 +128,8 @@ function sortKeybindings(keybindings) {
  */
 export function handleSyncConfigVscode(targetKeybindingsPath) {
   if (!targetKeybindingsPath || !fs.existsSync(path.dirname(targetKeybindingsPath))) return
+
+  reporter.info('Syncing VSCode keybindings to:', targetKeybindingsPath)
 
   const encoding = 'utf8'
   const middle = PLATFORM === 'wsl' ? 'win' : PLATFORM
@@ -135,8 +168,22 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
   fs.writeFileSync(fp_unbind, content_unbind, encoding)
   fs.writeFileSync(fp_keybindings, content_all, encoding)
   fs.writeFileSync(targetKeybindingsPath, content_all, encoding)
+
+  reporter.info('VSCode keybindings synced successfully')
 }
 
 if (process.argv[1] === import.meta.filename) {
-  handleSyncConfigVscode(F_VSCODE_KEYBINDINGS)
+  const cmd = new Command('sync-config-vscode')
+    .description('Sync VSCode keybindings configuration.')
+    .argument('[target-path]', 'Target keybindings.json path')
+    .example('sync-config-vscode')
+    .example('sync-config-vscode ~/Library/Application\\ Support/Code/User/keybindings.json')
+    .action(async ({ args }) => {
+      const targetPath = /** @type {string | undefined} */ (args['target-path']) || F_VSCODE_KEYBINDINGS
+      if (targetPath) {
+        handleSyncConfigVscode(targetPath)
+      }
+    })
+
+  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
 }

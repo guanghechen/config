@@ -531,6 +531,7 @@
  * @property {string}                   variant
  * @property {string}                   opposite
  * @property {boolean}                  darken
+ * @property {string}                   [uuid]
  * @property {IThemePalette}            palette
  */
 
@@ -540,11 +541,11 @@
  * @property {string}                       home
  * @property {string|null}                  themes
  * @property {string}                       extname
- * @property {string|null}                  local
+ * @property {string|null}                  [local]
  * @property {(app: IAppConfig) => boolean} active
  * @property {(app: IAppConfig, template: string, scheme: IThemeScheme) => Promise<string>} render
- * @property {?((app: IAppConfig, scheme: IThemeScheme) => Promise<void>)} after_apply
- * @property {?((app: IAppConfig) => Promise<void>)} after_gen
+ * @property {((app: IAppConfig, scheme: IThemeScheme) => Promise<void>)} [after_apply]
+ * @property {((app: IAppConfig) => Promise<void>)} [after_gen]
  */
 
 export {}

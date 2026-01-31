@@ -2,20 +2,20 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { Reporter } from '@guanghechen/stl/reporter'
 import {
   XDG_CONFIG_HOME_NODE,
-  XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
+  XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '../../env/path.mjs'
 import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '../../env/platform.mjs'
 import { hex2ansi256 } from '../../util/color.mjs'
-import { Reporter } from '../../util/reporter.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
 
-const reporter = new Reporter('theme')
+const reporter = new Reporter({ prefix: 'theme' })
 
 /**
  * @param {string} theme
@@ -47,6 +47,7 @@ export async function render_template(template, scheme) {
   const tokyonight = scheme.palette.tokyonight
   const vsc = scheme.palette.vsc
   const unified = scheme.palette.unified
+  /** @type {Record<string, unknown>} */
   const palette = { catppuccin, gruvbox, nord, onehalf, rosepine, tokyonight, vsc, unified }
   const schemes = Object.keys(palette)
 
@@ -99,6 +100,12 @@ export async function render_template(template, scheme) {
  * @param {{ env?: Record<string, string>, silent?: boolean }} [options]
  * @return {Promise<{ stdout: string } | undefined>}
  */
+/**
+ * @param {string} cmd
+ * @param {string[]} args
+ * @param {{ env?: Record<string, string>, silent?: boolean }} [options]
+ * @return {Promise<{ stdout: string } | undefined>}
+ */
 export async function safe_exec(cmd, args, options) {
   const { env: extendedEnv, silent = false } = options ?? {}
   const encoding = 'utf8'
@@ -116,6 +123,7 @@ export async function safe_exec(cmd, args, options) {
         }
       }
 
+      /** @param {unknown} [error] */
       const onRejected = error => {
         if (!terminated) {
           terminated = true
@@ -125,17 +133,17 @@ export async function safe_exec(cmd, args, options) {
 
       try {
         const child = spawn(cmd, args, {
-          XDG_CONFIG_HOME_NODE,
+          cwd: XDG_CONFIG_HOME_NODE,
           env: { ...process.env, ...extendedEnv },
           stdio: ['ignore', 'pipe', 'pipe'],
         })
-        child.stdout?.on('data', data => {
+        child.stdout?.on('data', (/** @type {Buffer} */ data) => {
           stdoutData += data.toString(encoding)
         })
-        child.stderr?.on('data', data => {
+        child.stderr?.on('data', (/** @type {Buffer} */ data) => {
           stderrData += data.toString(encoding)
         })
-        child.on('close', code => {
+        child.on('close', (/** @type {number | null} */ code) => {
           if (code === 0) onResolved()
           else onRejected()
         })
@@ -144,7 +152,7 @@ export async function safe_exec(cmd, args, options) {
       }
     })
 
-    return { stdout }
+    return { stdout: /** @type {string} */ (stdout) }
   } catch (error) {
     if (!silent) {
       reporter.error('Failed to run command.', { cmd, args, error })
@@ -181,6 +189,7 @@ export async function load_theme_scheme(theme) {
   try {
     const scheme = JSON.parse(content)
 
+    /** @type {Record<string, string>} */
     let data = {}
     for (const key of Object.keys(scheme.palette)) {
       if (key !== 'unified') {

@@ -1,16 +1,29 @@
+#!/usr/bin/env node
+
+/**
+ * Toggle theme between light and dark variants.
+ */
+
+import { Command } from '@guanghechen/stl/commander'
+import { Reporter } from '@guanghechen/stl/reporter'
 import { XDG_CONFIG_NODE_ASSET_THEMES } from '../env/path.mjs'
 import { settings } from '../env/setting.mjs'
-import { Reporter } from '../util/reporter.mjs'
 import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './theme/_util.mjs'
 
-/** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
+/** @typedef {import("./theme/_types.mjs").IThemeScheme} IThemeScheme */
 
-const reporter = new Reporter('theme-toggle')
+const reporter = new Reporter({ prefix: 'theme-toggle' })
 
-export async function handleThemeToggle() {
+/**
+ * @param {string} [theme] - Theme name to toggle
+ * @return {Promise<void>}
+ */
+export async function handleThemeToggle(theme) {
   const data = await settings.load()
-  let theme = process.argv[2]?.toLowerCase() || data.theme
+  theme = theme?.toLowerCase() || data.theme
+  reporter.info('Toggling theme from:', theme)
+
   if (!XDG_CONFIG_NODE_ASSET_THEMES.includes(theme)) {
     reporter.error('Cannot find the given theme:', theme)
     return
@@ -22,14 +35,16 @@ export async function handleThemeToggle() {
 
   if (scheme.opposite) {
     theme = `${scheme.theme}-${scheme.opposite}`
+    reporter.info('Switching to opposite theme:', theme)
     scheme = await load_theme_scheme(theme)
+    if (!scheme) return
   }
 
   const tasks = apps.map(app => apply_theme_per_app(app, scheme))
   const errors = await Promise.allSettled(tasks).then(results =>
     results
-      .filter(result => result.status === 'rejected')
-      .map(result => result.reason || result.message || result.stack || result),
+      .filter(/** @type {(r: PromiseSettledResult<unknown>) => r is PromiseRejectedResult} */ (result => result.status === 'rejected'))
+      .map(result => result.reason),
   )
 
   if (errors.length > 0) {
@@ -37,9 +52,19 @@ export async function handleThemeToggle() {
   } else {
     data.theme = theme
     await settings.save(data)
+    reporter.info('Theme toggled successfully')
   }
 }
 
 if (process.argv[1] === import.meta.filename) {
-  await handleThemeToggle()
+  const cmd = new Command('theme-toggle')
+    .description('Toggle theme between light and dark variants.')
+    .argument('[theme]', 'Theme name to toggle')
+    .example('theme-toggle')
+    .example('theme-toggle tokyonight-night')
+    .action(async ({ args }) => {
+      await handleThemeToggle(/** @type {string | undefined} */ (args.theme))
+    })
+
+  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
 }
