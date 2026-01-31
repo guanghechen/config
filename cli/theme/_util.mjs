@@ -4,13 +4,13 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
   XDG_CONFIG_HOME_NODE,
-  XDG_CONFIG_NODE_THEME_SCHEME_DIR,
-  XDG_CONFIG_NODE_THEME_APP_DIR,
-  XDG_CONFIG_NODE_THEMES,
-} from '../env/path.mjs'
-import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '../env/platform.mjs'
-import { hex2ansi256 } from '../util/color.mjs'
-import { Reporter } from '../util/reporter.mjs'
+  XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
+  XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
+  XDG_CONFIG_NODE_ASSET_THEMES,
+} from '../../env/path.mjs'
+import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '../../env/platform.mjs'
+import { hex2ansi256 } from '../../util/color.mjs'
+import { Reporter } from '../../util/reporter.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */
@@ -172,7 +172,7 @@ export async function command_exists(cmd) {
  * @return {Promise<IThemeScheme|undefined>}
  */
 export async function load_theme_scheme(theme) {
-  const filepath = path.join(XDG_CONFIG_NODE_THEME_SCHEME_DIR, `${theme}.json`)
+  const filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR, `${theme}.json`)
   if (!existsSync(filepath)) {
     reporter.error('Unknown theme.', { theme })
     return
@@ -206,7 +206,7 @@ export async function load_theme_scheme(theme) {
 export async function apply_theme_per_app(app, scheme) {
   if (!app.active(app)) return
   if (app.local) {
-    const template_filepath = path.join(XDG_CONFIG_NODE_THEME_APP_DIR, `${app.name}.hbs`)
+    const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
     if (!existsSync(template_filepath)) {
       reporter.error('Cannot find the template.', { app: app.name })
       return
@@ -229,14 +229,14 @@ export async function apply_theme_per_app(app, scheme) {
 export async function gen_themes_per_app(app) {
   if (!app.active(app)) return
 
-  const template_filepath = path.join(XDG_CONFIG_NODE_THEME_APP_DIR, `${app.name}.hbs`)
+  const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
   if (!existsSync(template_filepath)) {
     reporter.error('Cannot find the template.', { app: app.name })
     return
   }
   const template = await fs.readFile(template_filepath, 'utf8')
 
-  const tasks_gen_theme = XDG_CONFIG_NODE_THEMES.map(theme => gen_theme(theme))
+  const tasks_gen_theme = XDG_CONFIG_NODE_ASSET_THEMES.map(theme => gen_theme(theme))
   await Promise.allSettled(tasks_gen_theme)
   await app.after_gen?.(app)
 

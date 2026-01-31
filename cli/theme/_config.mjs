@@ -1,9 +1,13 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { PLATFORM } from '../env/platform.mjs'
-import { GEMINI_CONFIG_DIR, XDG_CONFIG_HOME } from '../env/path.mjs'
-import { is_directory, is_file, touch } from '../util/path.mjs'
-import { Reporter } from '../util/reporter.mjs'
+import { PLATFORM } from '../../env/platform.mjs'
+import {
+  GEMINI_CONFIG_DIR,
+  XDG_CONFIG_HOME,
+  XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
+} from '../../env/path.mjs'
+import { is_directory, is_file, touch } from '../../util/path.mjs'
+import { Reporter } from '../../util/reporter.mjs'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
@@ -126,8 +130,8 @@ export const apps = [
       let content = await fs.readFile(theme_filepath, 'utf8')
 
       const backgroundImagePath = scheme.darken
-        ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-        : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+        ? path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.jpg')
+        : path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg')
 
       content += '\n\n' + `background_image ${backgroundImagePath}\n`
       await fs.writeFile(theme_filepath, content, 'utf8')
@@ -221,8 +225,8 @@ export const apps = [
     render: (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const backgroundImagePath = scheme.darken
-        ? path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Flowerlit-Prayers.jpg')
-        : path.resolve(XDG_CONFIG_HOME, 'guanghechen/config/wallpaper/Barrett-Girl.jpg')
+        ? path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Flowerlit-Prayers.jpg')
+        : path.join(XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR, 'Barrett-Girl.jpg')
 
       const theme_filepath = path.join(app.home, app.local)
       let content = await fs.readFile(theme_filepath, 'utf8')

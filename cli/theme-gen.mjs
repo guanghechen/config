@@ -1,10 +1,13 @@
 import { Reporter } from '../util/reporter.mjs'
-import { apps } from './_config.mjs'
-import { gen_themes_per_app } from './_util.mjs'
+import { apps } from './theme/_config.mjs'
+import { gen_themes_per_app } from './theme/_util.mjs'
 
-const reporter = new Reporter('gen_themes')
+const reporter = new Reporter('theme-gen')
 
-if (process.argv[1] === import.meta.filename) {
+/**
+ * @return {Promise<void>}
+ */
+export async function handleThemeGen() {
   const tasks = apps.map(app => gen_themes_per_app(app))
   const errors = await Promise.allSettled(tasks).then(results =>
     results
@@ -15,4 +18,8 @@ if (process.argv[1] === import.meta.filename) {
   if (errors.length > 0) {
     reporter.error('Errors encountered:', errors)
   }
+}
+
+if (process.argv[1] === import.meta.filename) {
+  await handleThemeGen()
 }

@@ -13,11 +13,16 @@ export const CODEX_CONFIG_DIR = path.join(XDG_CONFIG_HOME, 'codex')
 export const GEMINI_CONFIG_DIR = path.join(HOME_USER, '.gemini')
 
 export const XDG_CONFIG_NODE_SETTING = path.join(XDG_CONFIG_HOME_NODE, '.setting.json')
-export const XDG_CONFIG_NODE_THEME_ROOT = path.join(XDG_CONFIG_HOME_NODE, 'theme')
-export const XDG_CONFIG_NODE_THEME_APP_DIR = path.join(XDG_CONFIG_NODE_THEME_ROOT, 'app')
-export const XDG_CONFIG_NODE_THEME_SCHEME_DIR = path.join(XDG_CONFIG_NODE_THEME_ROOT, 'scheme')
-export const XDG_CONFIG_NODE_THEMES = fs
-  .readdirSync(XDG_CONFIG_NODE_THEME_SCHEME_DIR)
+export const XDG_CONFIG_NODE_ASSET_DIR = path.join(XDG_CONFIG_HOME_NODE, 'asset')
+export const XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'wallpaper')
+export const XDG_CONFIG_NODE_ASSET_THEME_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'theme')
+export const XDG_CONFIG_NODE_ASSET_THEME_APP_DIR = path.join(XDG_CONFIG_NODE_ASSET_THEME_DIR, 'app')
+export const XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR = path.join(
+  XDG_CONFIG_NODE_ASSET_THEME_DIR,
+  'scheme',
+)
+export const XDG_CONFIG_NODE_ASSET_THEMES = fs
+  .readdirSync(XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR)
   .map(p => p.replace(/\.json$/, ''))
 
 export const F_VSCODE_KEYBINDINGS = process.env.f_vscode_keybindings
