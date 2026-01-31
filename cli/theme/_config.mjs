@@ -1,13 +1,13 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { Reporter } from '@guanghechen/stl/reporter'
-import { PLATFORM } from '../../env/platform.mjs'
 import {
   GEMINI_CONFIG_DIR,
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
-} from '../../env/path.mjs'
-import { is_directory, is_file, touch } from '../../util/path.mjs'
+} from '#env/path'
+import { PLATFORM } from '#env/platform'
+import { is_directory, is_file, touch } from '#util/path'
 import { command_exists, gen_full_theme_name, render_template, safe_exec } from './_util.mjs'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */

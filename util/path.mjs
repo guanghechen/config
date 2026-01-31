@@ -19,6 +19,7 @@ export function is_file(filepath) {
   return !!filepath && fs.existsSync(filepath) && fs.statSync(filepath).isFile()
 }
 
+/** @param {string} filepath */
 export async function touch(filepath) {
   if (fs.existsSync(filepath)) {
     try {

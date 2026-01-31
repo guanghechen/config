@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Personal Node.js utilities and CLI tools (ESM, zero dependencies)",
+  "imports": {
+    "#env/*": "./env/*.mjs",
+    "#cli/*": "./cli/*.mjs",
+    "#util/*": "./util/*.mjs"
+  },
   "scripts": {
     "test": "node --test **/*.test.mjs",
     "test:coverage": "node --test --experimental-test-coverage **/*.test.mjs"

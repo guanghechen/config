@@ -25,6 +25,7 @@ class Settings {
   /** @type {string} */
   #filepath
 
+  /** @param {string} filepath */
   constructor(filepath) {
     this.#filepath = filepath
   }
@@ -33,7 +34,7 @@ class Settings {
   #defaults() {
     const fallback = PLATFORM === 'wsl' ? 'nix' : PLATFORM
     return {
-      edition: VALID_EDITIONS.has(fallback) ? fallback : 'nix',
+      edition: VALID_EDITIONS.has(/** @type {IEdition} */ (fallback)) ? /** @type {IEdition} */ (fallback) : 'nix',
       theme: 'gruvbox-dark',
     }
   }
@@ -45,11 +46,12 @@ class Settings {
   #normalize(data) {
     const result = this.#defaults()
     if (!data || typeof data !== 'object') return result
-    if (typeof data.edition === 'string' && VALID_EDITIONS.has(data.edition)) {
-      result.edition = data.edition
+    const obj = /** @type {Record<string, unknown>} */ (data)
+    if (typeof obj.edition === 'string' && VALID_EDITIONS.has(/** @type {IEdition} */ (obj.edition))) {
+      result.edition = /** @type {IEdition} */ (obj.edition)
     }
-    if (typeof data.theme === 'string' && data.theme.trim()) {
-      result.theme = data.theme.trim()
+    if (typeof obj.theme === 'string' && obj.theme.trim()) {
+      result.theme = obj.theme.trim()
     }
     return result
   }
@@ -96,14 +98,15 @@ const selfPath = fileURLToPath(import.meta.url)
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(selfPath)) {
   const args = process.argv.slice(2)
 
+  /** @param {string} flag */
   const getArg = flag => {
     const i = args.indexOf(flag)
     if (i !== -1 && args[i + 1]) return args[i + 1]
     const match = args.find(a => a.startsWith(`${flag}=`))
-    return match ? match.slice(flag.length + 1) : null
+    return match ? match.slice(flag.length + 1) : undefined
   }
 
-  const edition = getArg('--sync-edition')
+  const edition = /** @type {IEdition | undefined} */ (getArg('--sync-edition'))
   const theme = getArg('--sync-theme')
 
   if (edition || theme) await settings.save({ edition, theme })

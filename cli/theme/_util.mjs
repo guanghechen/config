@@ -8,9 +8,9 @@ import {
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
-} from '../../env/path.mjs'
-import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '../../env/platform.mjs'
-import { hex2ansi256 } from '../../util/color.mjs'
+} from '#env/path'
+import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
+import { hex2ansi256 } from '#util/color'
 
 /** @typedef {import("./_types.mjs").IAppConfig} IAppConfig */
 /** @typedef {import("./_types.mjs").IThemeScheme} IThemeScheme */

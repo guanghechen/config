@@ -6,8 +6,8 @@
 
 import { Command } from '@guanghechen/stl/commander'
 import { Reporter } from '@guanghechen/stl/reporter'
-import { XDG_CONFIG_NODE_ASSET_THEMES } from '../env/path.mjs'
-import { settings } from '../env/setting.mjs'
+import { XDG_CONFIG_NODE_ASSET_THEMES } from '#env/path'
+import { settings } from '#env/setting'
 import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './theme/_util.mjs'
 
