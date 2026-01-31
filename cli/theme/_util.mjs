@@ -7,7 +7,7 @@ import {
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '#env/path'
-import { IS_MAC, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
+import { IS_OSX, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
 import { hex2ansi256 } from '#util/color'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
@@ -56,7 +56,7 @@ export async function render_template(template, scheme) {
     .replace(/\{{2}([^\n]+?)\}{2}/g, (_, expression) => {
       const fn = new Function(
         'name',
-        'IS_MAC',
+        'IS_OSX',
         'IS_WIN',
         'IS_NIX',
         'IS_WSL',
@@ -73,7 +73,7 @@ export async function render_template(template, scheme) {
       )
       const result = fn(
         name,
-        IS_MAC,
+        IS_OSX,
         IS_WIN,
         IS_NIX,
         IS_WSL,
