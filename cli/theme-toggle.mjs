@@ -4,23 +4,25 @@
  * Toggle theme between light and dark variants.
  */
 
+import { XDG_CONFIG_NODE_ASSET_THEMES, XDG_CONFIG_NODE_SETTING } from '#env/path'
+import { Setting } from '#setting'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
-import { XDG_CONFIG_NODE_ASSET_THEMES } from '#env/path'
-import { settings } from '#env/setting'
+
 import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, load_theme_scheme } from './theme/_util.mjs'
 
 /** @typedef {import("./theme/types.d.ts").IThemeScheme} IThemeScheme */
 
 const reporter = new Reporter({ prefix: 'theme-toggle' })
+const setting = new Setting({ filepath: XDG_CONFIG_NODE_SETTING, reporter })
 
 /**
  * @param {string} [theme] - Theme name to toggle
  * @return {Promise<void>}
  */
 export async function handleThemeToggle(theme) {
-  const data = await settings.load()
+  const data = await setting.load()
   theme = theme?.toLowerCase() || data.theme
   reporter.info('Toggling theme from:', theme)
 
@@ -51,7 +53,7 @@ export async function handleThemeToggle(theme) {
     reporter.error('Errors encountered:', errors)
   } else {
     data.theme = theme
-    await settings.save(data)
+    await setting.save(data)
     reporter.info('Theme toggled successfully')
   }
 }

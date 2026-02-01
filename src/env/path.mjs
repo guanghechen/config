@@ -4,7 +4,8 @@ import url from 'node:url'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-export const XDG_CONFIG_HOME_NODE = path.dirname(__dirname)
+// __dirname = src/env/, go up twice to get project root
+export const XDG_CONFIG_HOME_NODE = path.dirname(path.dirname(__dirname))
 export const XDG_CONFIG_HOME = path.dirname(XDG_CONFIG_HOME_NODE)
 export const HOME = path.dirname(XDG_CONFIG_HOME)
 

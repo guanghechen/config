@@ -1,13 +1,14 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { Reporter } from '#stl/reporter'
+
 import {
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '#env/path'
-import { IS_OSX, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
+import { IS_NIX, IS_OSX, IS_WIN, IS_WSL } from '#env/platform'
+import { Reporter } from '#stl/reporter'
 import { hex2ansi256 } from '#util/color'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */

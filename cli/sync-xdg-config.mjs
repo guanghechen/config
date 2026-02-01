@@ -5,17 +5,19 @@
  */
 
 import fs from 'node:fs'
-import { Command } from '#stl/commander'
-import { Reporter } from '#stl/reporter'
+
 import {
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_REPO_CONFIG,
   XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG,
+  XDG_CONFIG_NODE_SETTING,
 } from '#env/path'
-import { settings } from '#env/setting'
+import { Setting } from '#setting'
+import { Command } from '#stl/commander'
+import { Reporter } from '#stl/reporter'
 import { sync_repo } from '#util/git'
 
-/** @typedef {import('#env/setting').IEdition} IEdition */
+/** @typedef {import('#setting').IEdition} IEdition */
 /** @typedef {import('#util/git').IGitWorktreeConfig} IGitWorktreeConfig */
 
 /**
@@ -35,6 +37,7 @@ import { sync_repo } from '#util/git'
  */
 
 const reporter = new Reporter({ prefix: 'sync-xdg-config' })
+const setting = new Setting({ filepath: XDG_CONFIG_NODE_SETTING, reporter })
 
 /**
  * Expand environment variables in string.
@@ -136,7 +139,7 @@ if (process.argv[1] === import.meta.filename) {
     .example('sync-xdg-config --edition osx')
     .action(async ({ opts }) => {
       const editionArg = /** @type {IEdition | undefined} */ (opts.edition)
-      const data = await settings.load()
+      const data = await setting.load()
       const edition = editionArg ?? data.edition
       reporter.info(`Using edition: ${edition}`)
       await handleSyncXdgConfig(edition)

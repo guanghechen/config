@@ -8,6 +8,7 @@
     "#env/*": "./src/env/*.mjs",
     "#util/*": "./src/util/*.mjs",
     "#stl/*": "./src/stl/src/*.mjs",
+    "#setting": "./src/setting.mjs",
     "#cli/*": "./cli/*.mjs"
   },
   "scripts": {

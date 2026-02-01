@@ -6,10 +6,11 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { Command } from '#stl/commander'
-import { Reporter } from '#stl/reporter'
+
 import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env/path'
 import { PLATFORM } from '#env/platform'
+import { Command } from '#stl/commander'
+import { Reporter } from '#stl/reporter'
 
 const reporter = new Reporter({ prefix: 'sync-config-vscode' })
 
