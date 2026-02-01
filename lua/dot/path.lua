@@ -205,7 +205,7 @@ end
 ---@param filename                      string
 ---@return string
 function M.locate_config_shared_filepath(filename)
-  return M.join(HOME_CONFIG_SHARED, "_shared/config/" .. filename)
+  return M.join(HOME_CONFIG_SHARED, "asset/conf/" .. filename)
 end
 
 ---@param filename                      string
