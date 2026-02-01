@@ -8,8 +8,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from '@guanghechen/stl/commander'
 import { Reporter } from '@guanghechen/stl/reporter'
-import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env/path'
-import { PLATFORM } from '#env/platform'
+import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#src/env/path'
+import { PLATFORM } from '#src/env/platform'
 
 const reporter = new Reporter({ prefix: 'sync-config-vscode' })
 

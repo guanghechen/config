@@ -5,10 +5,10 @@ import {
   GEMINI_CONFIG_DIR,
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
-} from '#env/path'
-import { PLATFORM } from '#env/platform'
-import { command_exists, exec } from '#util/command'
-import { is_directory, is_file, touch } from '#util/path'
+} from '#src/env/path'
+import { PLATFORM } from '#src/env/platform'
+import { command_exists, exec } from '#src/util/command'
+import { is_directory, is_file, touch } from '#src/util/path'
 import { gen_full_theme_name, render_template } from './_util.mjs'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */

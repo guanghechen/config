@@ -6,7 +6,7 @@
 
 import { Command } from '@guanghechen/stl/commander'
 import { Reporter } from '@guanghechen/stl/reporter'
-import { convert_gitmoji } from '#util/gitmoji'
+import { convert_gitmoji } from '#src/util/gitmoji'
 
 const reporter = new Reporter({ prefix: 'gitmoji' })
 

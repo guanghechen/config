@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { exec } from '#util/command'
-import { is_directory } from '#util/path'
+import { exec } from '#src/util/command'
+import { is_directory } from '#src/util/path'
 
 /**
  * @typedef {Object} IGitWorktreeConfig

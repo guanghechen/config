@@ -5,16 +5,16 @@
   "type": "module",
   "description": "Personal Node.js utilities and CLI tools (ESM, zero dependencies)",
   "imports": {
-    "#env/*": "./env/*.mjs",
-    "#cli/*": "./cli/*.mjs",
-    "#util/*": "./util/*.mjs"
+    "#src/env/*": "./src/env/*.mjs",
+    "#src/util/*": "./src/util/*.mjs",
+    "#cli/*": "./cli/*.mjs"
   },
   "scripts": {
     "test": "node --test **/*.test.mjs",
     "test:coverage": "node --test --experimental-test-coverage **/*.test.mjs"
   },
   "dependencies": {
-    "@guanghechen/stl": "file:lib/stl"
+    "@guanghechen/stl": "file:src/stl"
   },
   "devDependencies": {}
 }

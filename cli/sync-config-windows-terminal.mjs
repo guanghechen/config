@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { Command } from '@guanghechen/stl/commander'
 import { Reporter } from '@guanghechen/stl/reporter'
-import { F_WINDOWS_TERMINAL_SETTINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env/path'
+import { F_WINDOWS_TERMINAL_SETTINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#src/env/path'
 
 const reporter = new Reporter({ prefix: 'sync-config-windows-terminal' })
 

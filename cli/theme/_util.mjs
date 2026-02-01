@@ -6,9 +6,9 @@ import {
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
-} from '#env/path'
-import { IS_OSX, IS_NIX, IS_WIN, IS_WSL } from '#env/platform'
-import { hex2ansi256 } from '#util/color'
+} from '#src/env/path'
+import { IS_OSX, IS_NIX, IS_WIN, IS_WSL } from '#src/env/platform'
+import { hex2ansi256 } from '#src/util/color'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
 /** @typedef {import("./types.d.ts").IThemeScheme} IThemeScheme */
