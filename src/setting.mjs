@@ -148,13 +148,38 @@ export class Setting {
   }
 
   /**
-   * Get edition for a specific app.
-   * @param {'tmux' | 'nvim'} app
-   * @returns {Promise<IAppEdition>}
+   * @template {keyof ISettingData} K
+   * @param {K} key
+   * @returns {Promise<ISettingData[K]>}
    */
-  async getAppEdition(app) {
+  async get(key) {
     const data = await this.load()
-    return data[`${app}_edition`]
+    return data[key]
+  }
+
+  /**
+   * @template {keyof ISettingData} K
+   * @param {K} key
+   * @param {ISettingData[K]} value
+   * @returns {Promise<boolean>}
+   */
+  async set(key, value) {
+    switch (key) {
+      case 'edition':
+        if (!VALID_EDITIONS.has(/** @type {IEdition} */ (value))) return false
+        break
+      case 'theme':
+        if (typeof value !== 'string' || !value.trim()) return false
+        break
+      case 'tmux_edition':
+      case 'nvim_edition':
+        if (!VALID_APP_EDITIONS.has(/** @type {IAppEdition} */ (value))) return false
+        break
+      default:
+        return false
+    }
+    await this.save({ [key]: value })
+    return true
   }
 }
 
