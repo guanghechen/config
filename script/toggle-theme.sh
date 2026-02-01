@@ -1,3 +1,3 @@
 #! /usr/bin/env bash
 
-node "$HOME/.config/guanghechen/config/theme/toggle_theme.mjs"
+node "$HOME/.config/guanghechen/cli/theme-toggle.mjs"
