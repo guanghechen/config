@@ -11,7 +11,7 @@ import {
   XDG_CONFIG_NODE_ASSET_REPO_CONFIG,
   XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG,
   XDG_CONFIG_NODE_SETTING,
-} from '#env/path'
+} from '#env'
 import { Setting } from '#setting'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'

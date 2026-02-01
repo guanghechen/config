@@ -4,7 +4,7 @@
  * Apply a theme to all configured applications.
  */
 
-import { XDG_CONFIG_NODE_ASSET_THEMES, XDG_CONFIG_NODE_SETTING } from '#env/path'
+import { XDG_CONFIG_NODE_ASSET_THEMES, XDG_CONFIG_NODE_SETTING } from '#env'
 import { Setting } from '#setting'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'

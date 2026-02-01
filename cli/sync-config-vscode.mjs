@@ -7,8 +7,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { F_VSCODE_KEYBINDINGS, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env/path'
-import { PLATFORM } from '#env/platform'
+import { F_VSCODE_KEYBINDINGS, PLATFORM, XDG_CONFIG_NODE_ASSET_APP_DIR } from '#env'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
 

@@ -3,10 +3,10 @@ import path from 'node:path'
 
 import {
   GEMINI_CONFIG_DIR,
+  PLATFORM,
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
-} from '#env/path'
-import { PLATFORM } from '#env/platform'
+} from '#env'
 import { Reporter } from '#stl/reporter'
 import { command_exists, exec } from '#util/command'
 import { is_directory, is_file, touch } from '#util/path'

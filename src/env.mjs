@@ -1,11 +1,37 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import url from 'node:url'
 
+// =============================================================================
+// Platform
+// =============================================================================
+
+/**
+ * Current platform identifier.
+ * @type {'wsl' | 'win' | 'osx' | 'nix' | 'unknown'}
+ */
+export const PLATFORM = (() => {
+  if (os.release().toLowerCase().includes('microsoft')) return 'wsl'
+  if (os.platform() === 'win32') return 'win'
+  if (os.platform() === 'darwin') return 'osx'
+  if (os.platform() === 'linux') return 'nix'
+  return 'unknown'
+})()
+
+export const IS_NIX = PLATFORM === 'nix'
+export const IS_OSX = PLATFORM === 'osx'
+export const IS_WIN = PLATFORM === 'win'
+export const IS_WSL = PLATFORM === 'wsl'
+
+// =============================================================================
+// Path
+// =============================================================================
+
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-// __dirname = src/env/, go up twice to get project root
-export const XDG_CONFIG_HOME_NODE = path.dirname(path.dirname(__dirname))
+// __dirname = src/, go up once to get project root
+export const XDG_CONFIG_HOME_NODE = path.dirname(__dirname)
 export const XDG_CONFIG_HOME = path.dirname(XDG_CONFIG_HOME_NODE)
 export const HOME = path.dirname(XDG_CONFIG_HOME)
 

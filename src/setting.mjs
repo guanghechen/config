@@ -3,8 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { XDG_CONFIG_NODE_SETTING } from '#env/path'
-import { PLATFORM } from '#env/platform'
+import { PLATFORM, XDG_CONFIG_NODE_SETTING } from '#env'
 import { Reporter } from '#stl/reporter'
 
 /**

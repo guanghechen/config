@@ -3,11 +3,14 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import {
+  IS_NIX,
+  IS_OSX,
+  IS_WIN,
+  IS_WSL,
   XDG_CONFIG_NODE_ASSET_THEME_APP_DIR,
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
-} from '#env/path'
-import { IS_NIX, IS_OSX, IS_WIN, IS_WSL } from '#env/platform'
+} from '#env'
 import { Reporter } from '#stl/reporter'
 import { hex2ansi256 } from '#util/color'
 
