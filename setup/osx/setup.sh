@@ -118,5 +118,5 @@ printf "\e[92m  [setup theme] done.\e[0m\n"
 
 printf "\n\e[95m ===== [setup settings] =====\e[0m\n"
 printf "\n\e[96m  [setup settings] preparing...\e[0m\n"
-node "$GHC_CONFIG_ROOT/config/_shared/setting.mjs" --sync-edition=osx
+node "$GHC_CONFIG_ROOT/src/setting.mjs" --set-edition=osx
 printf "\e[92m  [setup settings] done.\e[0m\n"

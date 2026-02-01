@@ -9,4 +9,4 @@ source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 ## Setup windows terminal
 printf "\e[96m  [setup windows-terminal] set windows terminal...\e[0m\n"
-fish -c "node \"$GHC_CONFIG_ROOT/config/app/windows-terminal/index.mjs\""
+fish -c "node \"$GHC_CONFIG_ROOT/cli/sync-config-windows-terminal.mjs\""

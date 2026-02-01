@@ -8,7 +8,7 @@ export GHC_CONFIG_ROOT
 source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
 
 # printf "\n\e[94m  [setup config] gen themes...\e[0m\n"
-# fish -c "node \"$GHC_CONFIG_ROOT/config/theme/gen_themes.mjs\""
+# fish -c "node \"$GHC_CONFIG_ROOT/cli/theme-gen.mjs\""
 
 printf "\e[96m  [setup config] reload theme...\e[0m\n"
-fish -c "node \"$GHC_CONFIG_ROOT/config/theme/apply_theme.mjs\""
+fish -c "node \"$GHC_CONFIG_ROOT/cli/theme-apply.mjs\""

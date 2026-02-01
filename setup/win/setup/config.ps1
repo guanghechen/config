@@ -83,7 +83,7 @@ if (Test-Path $cargo_config_path) {
   Write-Host "  [setup config] cargo config already exists. (skipped)" -ForegroundColor Yellow
 } else {
   Write-Host "  [setup config] copying cargo.toml..." -ForegroundColor Cyan
-  $source = Join-Path $env:GHC_CONFIG_ROOT "config\cargo.toml"
+  $source = Join-Path $env:GHC_CONFIG_ROOT "asset\conf\cargo.toml"
   $target = $cargo_config_path
   Copy-Item -Path $source -Destination $target -Force
 }
