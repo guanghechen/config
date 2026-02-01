@@ -1,0 +1,19 @@
+{
+  "name": "@guanghechen/node",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal Node.js utilities and CLI tools (ESM, zero dependencies)",
+  "imports": {
+    "#env": "./src/env.mjs",
+    "#util/*": "./src/util/*.mjs",
+    "#stl/*": "./src/stl/src/*.mjs",
+    "#setting": "./src/setting.mjs",
+    "#cli/*": "./cli/*.mjs"
+  },
+  "scripts": {
+    "test": "node --test **/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage **/*.test.mjs"
+  },
+  "devDependencies": {}
+}

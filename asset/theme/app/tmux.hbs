@@ -1,0 +1,120 @@
+# {{name}}
+
+set -g @GHC_SL_BG                       "default"
+set -g @GHC_PSL_BG                      "default"
+
+## Cmdline
+set -g @GHC_SL_BG_CMDLINE               "{{unified.brightAqua}}"
+set -g @GHC_SL_FG_CMDLINE               "{{unified.bg1}}"
+set -g prompt-cursor-colour             "{{catppuccin?.rosewater || unified.orange}}"
+
+## Message
+set -g @GHC_SL_BG_MESSAGE               "{{unified.bg2}}"
+set -g @GHC_SL_FG_MESSAGE               "{{unified.fg1}}"
+
+## Copy Mode
+set -g @GHC_SL_BG_COPY_MODE             "{{unified.bg3}}"
+set -g @GHC_SL_FG_COPY_MODE             "{{unified.fg1}}"
+set -g @GHC_SL_BG_COPY_MODE_MATCH       "{{unified.yellow}}"
+set -g @GHC_SL_FG_COPY_MODE_MATCH       "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_CUR_MATCH   "{{unified.orange}}"
+set -g @GHC_SL_FG_COPY_MODE_CUR_MATCH   "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_MARK        "{{unified.brightPurple}}"
+set -g @GHC_SL_FG_COPY_MODE_MARK        "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_POS         "{{unified.yellow}}"
+set -g @GHC_SL_FG_COPY_MODE_POS         "{{unified.bg0}}"
+set -g @GHC_SL_BG_COPY_MODE_SEL         "{{unified.aqua}}"
+set -g @GHC_SL_FG_COPY_MODE_SEL         "{{unified.bg0}}"
+
+## Pane
+set -g @GHC_PANE_BG                     "{{unified.bg1}}"
+set -g @GHC_PANE_BG_ACTIVE              "{{unified.bg0}}"
+
+set -g @GHC_PSL_FG_BORDER               "{{unified.bg4}}"
+set -g @GHC_PSL_FG_BORDER_CUR           "{{unified.pink}}"
+
+set -g @GHC_PSL_BG_SYM                  "default"
+set -g @GHC_PSL_FG_SYM                  "{{unified.fg4}}"
+set -g @GHC_PSL_BG_TXT                  "default"
+set -g @GHC_PSL_FG_TXT                  "{{unified.fg4}}"
+
+set -g @GHC_PSL_BG_SYM_ACTIVE           "default"
+set -g @GHC_PSL_FG_SYM_ACTIVE           "{{unified.pink}}"
+set -g @GHC_PSL_BG_TXT_ACTIVE           "default"
+set -g @GHC_PSL_FG_TXT_ACTIVE           "{{unified.fg3}}"
+
+set -g @GHC_PSL_BG_COPY_MODE            "default"
+set -g @GHC_PSL_FG_COPY_MODE            "{{unified.brightYellow}}"
+
+set -g @GHC_PSL_FG_PANE_ID              "{{unified.brightAqua}}"
+set -g @GHC_PSL_FG_PANE_INDEX           "{{unified.brightOrange}}"
+
+## Statusbar
+
+set -g @GHC_SL_FG_BORDER                "{{unified.bg4}}"
+set -g @GHC_SL_FG_BORDER_CUR            "{{unified.pink}}"
+
+set -g @GHC_SL_BG_SYM                   "default"
+set -g @GHC_SL_FG_SYM                   "{{unified.pink}}"
+set -g @GHC_SL_BG_TXT                   "default"
+set -g @GHC_SL_FG_TXT                   "{{unified.fg3}}"
+
+set -g @GHC_SL_BG_OS_SYM                "{{unified.bg0}}"
+set -g @GHC_SL_FG_OS_SYM                "{{unified.pink}}"
+
+set -g @GHC_SL_BG_PREFIX                "default"
+set -g @GHC_SL_FG_PREFIX                "{{unified.brightBlue}}"
+set -g @GHC_SL_BG_ALERT                 "{{unified.brightRed}}"
+set -g @GHC_SL_FG_ALERT                 "{{unified.bg1}}"
+
+set -g @GHC_SL_FG_PILL_TXT              "{{unified.fg1}}"
+set -g @GHC_SL_FG_PILL_ICON             "{{unified.bg0}}"
+set -g @GHC_SL_BG_PILL_DURATION         "{{unified.brightBlue}}"
+set -g @GHC_SL_BG_PILL_DATE             "{{unified.brightBlue}}"
+set -g @GHC_SL_BG_PILL_TIME             "{{unified.brightBlue}}"
+set -g @GHC_SL_BG_PILL_SESSION          "{{unified.brightOrange}}"
+set -g @GHC_SL_BG_PILL_USER             "{{unified.brightOrange}}"
+set -g @GHC_SL_BG_PILL_HOST             "{{unified.brightOrange}}"
+set -g @GHC_SL_BG_PILL_ZOOM             "{{unified.yellow}}"
+
+set -g @GHC_SL_BG_PRIMARY_SEP           "{{unified.bg2}}"
+set -g @GHC_SL_FG_PRIMARY_SEP           "{{unified.pink}}"
+set -g @GHC_SL_BG_PRIMARY_SYM           "{{unified.pink}}"
+set -g @GHC_SL_FG_PRIMARY_SYM           "{{unified.bg1}}"
+set -g @GHC_SL_BG_PRIMARY_TXT           "{{unified.pink}}"
+set -g @GHC_SL_FG_PRIMARY_TXT           "{{unified.bg1}}"
+set -g @GHC_SL_BG_SECONDARY_SEP         "default"
+set -g @GHC_SL_FG_SECONDARY_SEP         "{{unified.bg2}}"
+set -g @GHC_SL_BG_SECONDARY_SYM         "{{unified.bg2}}"
+set -g @GHC_SL_FG_SECONDARY_SYM         "{{unified.pink}}"
+set -g @GHC_SL_BG_SECONDARY_TXT         "{{unified.bg2}}"
+set -g @GHC_SL_FG_SECONDARY_TXT         "{{unified.pink}}"
+
+set -g @GHC_SL_BG_WIN_NAME              "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_NAME              "{{unified.fg3}}"
+set -g @GHC_SL_BG_WIN_NUM               "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_NUM               "{{unified.fg3}}"
+set -g @GHC_SL_BG_WIN_ICON_BELL         "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_ICON_BELL         "{{unified.brightRed}}"
+set -g @GHC_SL_BG_WIN_ICON_LAST         "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_ICON_LAST         "{{unified.orange}}"
+set -g @GHC_SL_BG_WIN_ICON_ZOOM         "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_ICON_ZOOM         "{{unified.brightBlue}}"
+
+set -g @GHC_SL_BG_WIN_ACTIVE_NAME       "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NAME       "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_NUM        "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_NUM        "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_BELL  "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_BELL  "{{unified.bg0}}"
+set -g @GHC_SL_BG_WIN_ACTIVE_ICON_ZOOM  "{{unified.pink}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_ZOOM  "{{unified.bg0}}"
+
+set -g @GHC_SL_BG_WIN_LAST_NAME         "{{unified.bg2}}"
+set -g @GHC_SL_FG_WIN_LAST_NAME         "{{unified.orange}}"
+set -g @GHC_SL_BG_WIN_LAST_NUM          "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_LAST_NUM          "{{unified.orange}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_BELL    "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_BELL    "{{unified.orange}}"
+set -g @GHC_SL_BG_WIN_LAST_ICON_ZOOM    "{{unified.bg3}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_ZOOM    "{{unified.orange}}"

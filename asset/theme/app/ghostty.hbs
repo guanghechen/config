@@ -1,0 +1,44 @@
+# {{name}}
+
+# ANSI Colors
+# Dark themes: palette 0 = surface1, palette 7 = subtext0
+# Light theme: palette 0 = subtext1, palette 7 = surface2
+palette =  0={{catppuccin?.surface1 || vsc?.base || unified.bg0}}
+palette =  1={{unified.red}}
+palette =  2={{unified.green}}
+palette =  3={{unified.yellow}}
+palette =  4={{unified.blue}}
+palette =  5={{catppuccin?.pink || unified.purple}}
+palette =  6={{catppuccin?.teal || unified.aqua}}
+palette =  7={{catppuccin?.subtext0 || vsc?.foreground || unified.fg2}}
+
+# Bright colors
+# Dark themes: palette 8 = surface2, palette 15 = subtext1
+# Light theme: palette 8 = subtext0, palette 15 = surface1
+palette =  8={{catppuccin?.surface2 || vsc?.textMuted || unified.grey}}
+palette =  9={{unified.brightRed}}
+palette = 10={{unified.brightGreen}}
+palette = 11={{unified.brightYellow}}
+palette = 12={{unified.brightBlue}}
+palette = 13={{catppuccin?.pink || unified.brightPurple}}
+palette = 14={{catppuccin?.teal || unified.brightAqua}}
+palette = 15={{catppuccin?.subtext1 || vsc?.text || unified.fg1}}
+
+# Primary colors
+background = {{unified.bg0}}
+foreground = {{catppuccin?.text || vsc?.terminal_foreground || unified.fg0}}
+
+# Cursor colors
+cursor-color = {{catppuccin?.pink || unified.pink || vsc?.terminalCursor_foreground}}
+cursor-text = {{catppuccin?.crust || vsc?.activityBar_background || unified.bg1}}
+
+# Selection colors
+selection-background = {{catppuccin?.surface1 || vsc?.terminal_inactiveSelectionBackground || unified.bg3}}
+selection-foreground = {{catppuccin?.text || vsc?.terminal_foreground || unified.fg0}}
+
+# Split divider color
+split-divider-color = {{catppuccin?.surface0 || vsc?.panel_border || unified.bg2}}
+
+# Unfocused split fill color
+unfocused-split-fill = {{catppuccin?.mantle || vsc?.surface || unified.bg1}}
+

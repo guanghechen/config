@@ -1,0 +1,63 @@
+# https://github.com/dandavison/delta/blob/main/themes.gitconfig
+# {{name}}
+
+[delta]
+{{darken ? "dark                          = true" : "light                         = true"}}
+syntax-theme                  = {{name}}
+
+side-by-side                  = true
+navigate                      = true
+paging                        = never
+tabs                          = 2
+relative-paths                = true
+wrap-max-lines                = 2
+width                         = -0
+line-buffer-size              = 64
+line-fill-method              = ansi
+max-line-distance             = 0.5
+word-diff-regex               = "[a-zA-Z_][a-zA-Z0-9_]*|[0-9]+|."
+inline-hint-style             = "{{unified.blue}}"
+
+####################################################################################################
+
+file-style                    = "{{unified.fg1}}" bold
+file-decoration-style         = ul
+
+hunk-header-style             = line-number syntax
+hunk-header-decoration-style  = ul
+hunk-header-line-number-style = "{{unified.fg2}}"
+
+line-numbers                  = true
+line-numbers-left-style       = normal normal
+line-numbers-right-style      = normal normal
+line-numbers-zero-style       = normal normal
+line-numbers-minus-style      = "{{unified.red}}" normal bold
+line-numbers-plus-style       = "{{unified.green}}" normal bold
+
+zero-style                    = syntax normal
+minus-style                   = syntax "{{unified.diffDel}}"
+plus-style                    = syntax "{{unified.diffAdd}}"
+minus-non-emph-style          = syntax "{{unified.diffDel}}"
+plus-non-emph-style           = syntax "{{unified.diffAdd}}"
+minus-emph-style              = syntax "{{unified.diffDelInline}}" bold
+plus-emph-style               = syntax "{{unified.diffAddInline}}" bold
+
+plus-empty-line-marker-style  = "{{unified.diffAdd}}" "{{unified.diffAdd}}"
+minus-empty-line-marker-style = "{{unified.diffDel}}" "{{unified.diffDel}}"
+
+####################################################################################################
+
+commit-style                  = "{{unified.yellow}}" bold
+commit-decoration-style       = none
+
+blame-palette                 = "{{unified.bg0}}" "{{unified.bg1}}" "{{unified.bg2}}"
+blame-format                  = "{author:<12} {commit:<8} {timestamp:<10}"
+blame-code-style              = syntax
+blame-separator-style         = "{{unified.fg2}}" dim
+
+hyperlinks                    = true
+hyperlinks-file-link-format   = file://{path}:{line}
+
+merge-conflict-begin-symbol   = ⟵
+merge-conflict-end-symbol     = ⟶
+

@@ -1,4 +1,6 @@
 local/
-
 .setting.json
 
+!/lib/
+/asset/setting.json
+/asset/repo.local.json

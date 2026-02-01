@@ -1,0 +1,47 @@
+# {{name}}
+
+gui:
+  authorColors:
+    '*': '{{unified.fg2}}'
+    guanghechen: '{{vsc?.textLink_foreground || unified.blue}}'
+  branchColorPatterns:
+    "^(main|master)$": '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+    "^(user/[^/]+/)?chore": '{{unified.fg4}}'
+    "^(user/[^/]+/)?feat": '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    "^(user/[^/]+/)?feature": '{{vsc?.editorGutter_addedBackground || unified.green}}'
+    "^(user/[^/]+/)?fix": '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+    "^(user/[^/]+/)?refactor": '{{unified.orange}}'
+    "^(user/[^/]+/)?release": '{{vsc?.editorGutter_modifiedBackground || unified.blue}}'
+  theme:
+    activeBorderColor:
+      - '{{vsc?.tokenControlFlowSpecialKeywords || unified.purple}}'
+      - bold
+    cherryPickedCommitBgColor:
+      - '{{unified.aqua}}'
+    cherryPickedCommitFgColor:
+      - '{{unified.bg0}}'
+    defaultFgColor:
+      - '{{unified.fg2}}'
+    inactiveBorderColor:
+      - '{{unified.fg4}}'
+    inactiveViewSelectedLineBgColor:
+      - '{{unified.bg2}}'
+    markedBaseCommitBgColor:
+      - '{{unified.yellow}}'
+    markedBaseCommitFgColor:
+      - '{{unified.bg0}}'
+    optionsTextColor:
+      - '{{vsc?.tokenFunctionDeclarations || unified.orange}}'
+    searchingActiveBorderColor:
+      - '{{vsc?.focusBorder || unified.aqua}}'
+      - bold
+    selectedLineBgColor:
+      - '{{unified.bg3}}'
+    unstagedChangesColor:
+      - '{{vsc?.editorGutter_deletedBackground || unified.red}}'
+
+git:
+  pagers:
+    - colorArg: always
+      pager: delta --paging=never --{{darken ? 'dark' : 'light'}}
+

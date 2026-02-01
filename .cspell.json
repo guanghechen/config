@@ -18,6 +18,7 @@
     "gitmoji",
     "gruvbox",
     "guanghechen",
+    "komorebi",
     "lazygit",
     "lintfix",
     "macchiato",
@@ -37,14 +38,18 @@
     "pwsh",
     "rosepine",
     "rustup",
+    "skhd",
     "stylua",
     "syntect",
     "titlebar",
     "tokyonight",
+    "tsuki",
     "usermod",
     "wezterm",
     "winget",
     "wulala",
+    "yabai",
+    "yasb",
     "yazi"
   ]
 }
