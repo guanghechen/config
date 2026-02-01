@@ -1,5 +1,5 @@
 function ghc-theme-gen
-  set script_path "$HOME/.config/guanghechen/config/theme/gen_themes.mjs"
+  set script_path "$HOME/.config/guanghechen/cli/theme-gen.mjs"
   if test -f "$script_path"
     node "$script_path"
   else

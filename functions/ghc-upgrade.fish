@@ -9,7 +9,7 @@ function ghc-upgrade
 
     set -l edition ""
     if type -q node
-        set edition (node "$config_root/config/_shared/setting.mjs" --print-edition 2>/dev/null | string trim)
+        set edition (node "$config_root/src/setting.mjs" --print-edition 2>/dev/null | string trim)
     end
 
     if test -z "$edition"
@@ -24,12 +24,12 @@ function ghc-upgrade
 
     switch $edition
         case nix-remote
-            bash "$config_root/nix-remote/setup.sh"
+            bash "$config_root/setup/nix-remote/setup.sh"
         case osx
-            bash "$config_root/osx/setup.sh"
+            bash "$config_root/setup/osx/setup.sh"
         case win
-            pwsh -File "$config_root/win/setup.ps1"
+            pwsh -File "$config_root/setup/win/setup.ps1"
         case '*'
-            bash "$config_root/nix/setup.sh"
+            bash "$config_root/setup/nix/setup.sh"
     end
 end
