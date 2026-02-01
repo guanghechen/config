@@ -39,8 +39,8 @@ export const CLAUDE_CONFIG_DIR = path.join(XDG_CONFIG_HOME, 'claude')
 export const CODEX_CONFIG_DIR = path.join(XDG_CONFIG_HOME, 'codex')
 export const GEMINI_CONFIG_DIR = path.join(HOME, '.gemini')
 
-export const XDG_CONFIG_NODE_SETTING = path.join(XDG_CONFIG_HOME_NODE, '.setting.json')
 export const XDG_CONFIG_NODE_ASSET_DIR = path.join(XDG_CONFIG_HOME_NODE, 'asset')
+export const XDG_CONFIG_NODE_SETTING = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'setting.json')
 export const XDG_CONFIG_NODE_ASSET_APP_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'app')
 export const XDG_CONFIG_NODE_ASSET_REPO_CONFIG = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'repo.json')
 export const XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG = path.join(
