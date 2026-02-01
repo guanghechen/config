@@ -1,6 +1,6 @@
 # Generate themes.
 function ghc-theme-gen {
-  $script_path = "$env:XDG_CONFIG_HOME\guanghechen\config\theme\gen_themes.mjs"
+  $script_path = "$env:XDG_CONFIG_HOME\guanghechen\cli\theme-gen.mjs"
   if (Test-Path -Path $script_path) {
     node "$script_path"
   } else {
