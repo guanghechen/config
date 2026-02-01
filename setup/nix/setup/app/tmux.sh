@@ -4,8 +4,8 @@
 GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
 export GHC_CONFIG_ROOT
 
-# shellcheck source=nix/setup/path.sh
-source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
+# shellcheck source=setup/nix/setup/path.sh
+source "$GHC_CONFIG_ROOT/setup/nix/setup/path.sh"
 
 prefer_tmux_version="${PREFER_TMUX_VERSION:-stable}"
 if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then

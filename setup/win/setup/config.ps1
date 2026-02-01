@@ -75,7 +75,7 @@ Copy-Item -Path $source -Destination $PROFILE -Force
 # Setup nvim
 Write-Host "  [setup config] setup nvim..." -ForegroundColor Cyan
 Set-Location -Path $repomain
-. .\win\setup\app\nvim.ps1
+. .\setup\win\setup\app\nvim.ps1
 
 # Setup rust
 $cargo_config_path = Join-Path "$env:USERPROFILE" ".cargo\config.toml"

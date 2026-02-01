@@ -5,7 +5,7 @@
   - Build the docker image.
 
     ```bash
-    docker build -t guanghechen/nix-remote:latest -f ~/.config/guanghechen/nix-remote/Dockerfile ~/.config/guanghechen/nix-remote
+    docker build -t guanghechen/nix-remote:latest -f ~/.config/guanghechen/setup/nix-remote/Dockerfile ~/.config/guanghechen/nix-remote
     ```
 
   - Run the docker container.
@@ -17,13 +17,13 @@
   - Run the bootstrap scripts.
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix-remote/setup.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.sh)"
     ```
 
     Or
 
     ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix-remote/setup.sh)
+    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.sh)
     ```
 
   - Run the container with fish.

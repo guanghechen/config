@@ -11,8 +11,8 @@ if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/b
 else
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 fi
-# shellcheck source=nix/setup/path.sh
-source "$GHC_CONFIG_ROOT/nix/setup/path.sh"
+# shellcheck source=setup/nix/setup/path.sh
+source "$GHC_CONFIG_ROOT/setup/nix/setup/path.sh"
 brew update
 
 ### Install node

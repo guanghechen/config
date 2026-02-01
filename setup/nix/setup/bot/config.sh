@@ -73,7 +73,7 @@ if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"
 else
   printf "\e[96m  [setup config] setting up ~/.inputrc...\e[0m\n"
-  cp "$GHC_CONFIG_ROOT/nix/conf/.inputrc" "$HOME/.inputrc"
+  cp "$GHC_CONFIG_ROOT/asset/conf/.inputrc" "$HOME/.inputrc"
 fi
 
 ## sync configs

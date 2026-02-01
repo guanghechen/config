@@ -14,13 +14,13 @@
   - Run the bootstrap scripts.
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)"
     ```
 
     Or
 
     ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)
+    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)
     ```
 
   - Run the container with fish.
@@ -48,7 +48,7 @@
   - Build the docker image.
 
     ```bash
-    docker build -t guanghechen/nix:latest -f ~/.config/guanghechen/nix/Dockerfile ~/.config/guanghechen/nix
+    docker build -t guanghechen/nix:latest -f ~/.config/guanghechen/setup/nix/Dockerfile ~/.config/guanghechen/nix
     ```
 
   - Run the docker container.
@@ -60,13 +60,13 @@
   - Run the bootstrap scripts.
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)"
     ```
 
     Or
 
     ```bash
-    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/nix/setup.sh)
+    source <(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)
     ```
 
   - Run the container with fish.
