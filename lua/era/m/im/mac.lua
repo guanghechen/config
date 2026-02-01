@@ -7,7 +7,7 @@ local __module_name__ = "era.m.im.mac" ---@type string
 local M = {}
 
 local app_home = dot.path.locate_app_config_home("guanghechen")
-local script_path = dot.path.join(app_home, "bin/im-select/osx/im-select")
+local script_path = dot.path.join(app_home, "cli/im-select/osx/im-select")
 
 ---@return era.m.im.InputMethod|nil
 function M.get_input_method()

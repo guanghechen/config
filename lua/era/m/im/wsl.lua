@@ -7,9 +7,9 @@ local M = {}
 local app_home = dot.path.locate_app_config_home("guanghechen")
 local script_path = dot.path.join(
   app_home,
-  (stl.env.IS_X64 and "bin/im-select/win/x64/im-select.exe")
-    or (stl.env.IS_X86 and "bin/im-select/win/x86/im-select.exe")
-    or "bin/im-select/win/x64/im-select.exe"
+  (stl.env.IS_X64 and "cli/im-select/win/x64/im-select.exe")
+    or (stl.env.IS_X86 and "cli/im-select/win/x86/im-select.exe")
+    or "cli/im-select/win/x64/im-select.exe"
 )
 
 ---@return era.m.im.InputMethod|nil
