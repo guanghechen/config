@@ -98,7 +98,7 @@ local function apply_theme(theme)
   end
 
   local app_home = dot.path.locate_app_config_home("guanghechen")
-  local script_path = dot.path.join(app_home, "config/theme/apply_theme.mjs")
+  local script_path = dot.path.join(app_home, "cli/theme-apply.mjs")
   local ok, err = pcall(function()
     local result = vim.fn.system({ "node", script_path, theme })
     if vim.v.shell_error ~= 0 then
