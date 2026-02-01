@@ -26,7 +26,7 @@ export const apps = [
     extname: '.toml',
     local: 'local/theme.toml',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       const main_config_filepath = path.join(app.home, 'alacritty.toml')
       await touch(main_config_filepath, reporter)
@@ -38,7 +38,7 @@ export const apps = [
     themes: 'themes/',
     extname: '.tmTheme',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const main_config_filepath = path.join(app.home, 'config')
       const content = [
@@ -61,7 +61,7 @@ export const apps = [
     extname: '.theme',
     local: 'themes/local.theme',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async () => {
       // Send SIGUSR2 to btop to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
@@ -83,7 +83,7 @@ export const apps = [
     extname: '.fzfrc',
     local: 'fzf.fzfrc',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'gemini',
@@ -92,7 +92,7 @@ export const apps = [
     extname: '.json',
     local: 'local/theme.json',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       const main_config_filepath = path.join(app.home, 'settings.json')
       await touch(main_config_filepath, reporter)
@@ -105,7 +105,7 @@ export const apps = [
     extname: '',
     local: 'local/theme.conf',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async () => {
       // Send SIGUSR2 to ghostty to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
@@ -127,7 +127,7 @@ export const apps = [
     extname: '.conf',
     local: 'config.conf',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'kitty',
@@ -136,7 +136,7 @@ export const apps = [
     extname: '.conf',
     local: 'local/theme.conf',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       if (!app.local) return
       const theme_filepath = path.join(app.home, app.local)
@@ -157,7 +157,7 @@ export const apps = [
     extname: '.yml',
     local: 'local/theme.yml',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'newsboat',
@@ -166,7 +166,7 @@ export const apps = [
     extname: '',
     local: 'local/theme',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'nvim',
@@ -175,7 +175,7 @@ export const apps = [
     extname: '.lua',
     local: null,
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       try {
@@ -201,7 +201,7 @@ export const apps = [
     extname: '.lua',
     local: null,
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       try {
@@ -227,7 +227,7 @@ export const apps = [
     extname: '.json',
     local: 'themes/local.json',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'tmux',
@@ -236,7 +236,7 @@ export const apps = [
     extname: '.tmux.conf',
     local: 'local/theme.tmux.conf',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async app => {
       if (process.env.TMUX) {
         const script_filepath = path.join(app.home, 'script/load-theme.sh')
@@ -255,7 +255,7 @@ export const apps = [
     extname: '.lua',
     local: 'local/theme.lua',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
     after_apply: async (app, scheme) => {
       if (!app.local) return
       const backgroundImagePath = scheme.darken
@@ -367,6 +367,6 @@ export const apps = [
     extname: '.toml',
     local: 'theme.toml',
     active: app => is_directory(app.home),
-    render: (_, template, scheme) => render_template(template, scheme),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
 ]
