@@ -2,7 +2,7 @@
 
 return {
   name = "blink.cmp",
-  build = "cargo build --release",
+  build = "cargo +nightly-2025-09-30 build --release", -- See https://github.com/saghen/frizbee/issues/53#issuecomment-3823112232
   event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
     "friendly-snippets",

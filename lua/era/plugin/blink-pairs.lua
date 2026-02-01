@@ -3,7 +3,7 @@
 return {
   name = "blink.pairs",
   event = "VeryLazy",
-  build = "cargo build --release",
+  build = "cargo +nightly-2025-09-30 build --release", -- See https://github.com/saghen/frizbee/issues/53#issuecomment-3823112232
   opts = {
     mappings = {
       enabled = true,
