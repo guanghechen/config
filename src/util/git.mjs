@@ -1,6 +1,6 @@
 import path from 'node:path'
-import { exec } from '#src/util/command'
-import { is_directory } from '#src/util/path'
+import { exec } from '#util/command'
+import { is_directory } from '#util/path'
 
 /**
  * @typedef {Object} IGitWorktreeConfig
@@ -14,7 +14,7 @@ import { is_directory } from '#src/util/path'
  */
 
 /**
- * @typedef {import('@guanghechen/stl/reporter').Reporter} Reporter
+ * @typedef {import('#stl/reporter').Reporter} Reporter
  */
 
 /**

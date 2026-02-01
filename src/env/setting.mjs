@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Reporter } from '@guanghechen/stl/reporter'
+import { Reporter } from '#stl/reporter'
 import { XDG_CONFIG_NODE_SETTING } from './path.mjs'
 import { PLATFORM } from './platform.mjs'
 

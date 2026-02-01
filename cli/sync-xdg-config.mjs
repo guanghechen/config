@@ -5,18 +5,18 @@
  */
 
 import fs from 'node:fs'
-import { Command } from '@guanghechen/stl/commander'
-import { Reporter } from '@guanghechen/stl/reporter'
+import { Command } from '#stl/commander'
+import { Reporter } from '#stl/reporter'
 import {
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_REPO_CONFIG,
   XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG,
-} from '#src/env/path'
-import { settings } from '#src/env/setting'
-import { sync_repo } from '#src/util/git'
+} from '#env/path'
+import { settings } from '#env/setting'
+import { sync_repo } from '#util/git'
 
-/** @typedef {import('#src/env/setting').IEdition} IEdition */
-/** @typedef {import('#src/util/git').IGitWorktreeConfig} IGitWorktreeConfig */
+/** @typedef {import('#env/setting').IEdition} IEdition */
+/** @typedef {import('#util/git').IGitWorktreeConfig} IGitWorktreeConfig */
 
 /**
  * @typedef {Object} IRepoDefinition

@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 
-/** @import { Reporter } from '@guanghechen/stl/reporter' */
+/** @import { Reporter } from '#stl/reporter' */
 
 /**
  * @typedef {Object} IExecParams

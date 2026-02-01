@@ -4,9 +4,9 @@
  * Convert gitmoji shortcodes to emoji characters from stdin.
  */
 
-import { Command } from '@guanghechen/stl/commander'
-import { Reporter } from '@guanghechen/stl/reporter'
-import { convert_gitmoji } from '#src/util/gitmoji'
+import { Command } from '#stl/commander'
+import { Reporter } from '#stl/reporter'
+import { convert_gitmoji } from '#util/gitmoji'
 
 const reporter = new Reporter({ prefix: 'gitmoji' })
 

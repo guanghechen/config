@@ -18,7 +18,7 @@ export function is_file(filepath) {
 
 /**
  * @param {string} filepath
- * @param {import('@guanghechen/stl/reporter').Reporter} reporter
+ * @param {import('#stl/reporter').Reporter} reporter
  */
 export async function touch(filepath, reporter) {
   if (fs.existsSync(filepath)) {
