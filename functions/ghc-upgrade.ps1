@@ -8,7 +8,7 @@ function ghc-upgrade {
   $edition = ""
   if (Get-Command node -ErrorAction SilentlyContinue) {
     try {
-      $edition = (node "$configRoot\config\_shared\setting.mjs" --print-edition 2>$null).Trim()
+      $edition = (node "$configRoot\src\setting.mjs" --print-edition 2>$null).Trim()
     } catch {
       $edition = ""
     }
@@ -19,10 +19,10 @@ function ghc-upgrade {
   }
 
   switch ($edition) {
-    "nix" { bash "$configRoot/nix/setup.sh"; break }
-    "nix-remote" { bash "$configRoot/nix-remote/setup.sh"; break }
-    "osx" { bash "$configRoot/osx/setup.sh"; break }
-    "win" { pwsh "$configRoot\win\setup.ps1"; break }
-    default { pwsh "$configRoot\win\setup.ps1"; break }
+    "nix" { bash "$configRoot/setup/nix/setup.sh"; break }
+    "nix-remote" { bash "$configRoot/setup/nix-remote/setup.sh"; break }
+    "osx" { bash "$configRoot/setup/osx/setup.sh"; break }
+    "win" { pwsh "$configRoot\setup\win\setup.ps1"; break }
+    default { pwsh "$configRoot\setup\win\setup.ps1"; break }
   }
 }
