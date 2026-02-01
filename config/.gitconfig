@@ -2,9 +2,9 @@
   amend = commit --amend --no-edit
   current = rev-parse --abbrev-ref HEAD
   filelog = log -p --follow --
-  last = !bash -c 'git log -1 HEAD | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
-  loga = !bash -c 'git log --color --graph --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %Creset%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
-  logi = !bash -c 'git log --color --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %C(brightwhite)%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/bin/gitmoji.mjs\"' -
+  last = !bash -c 'git log -1 HEAD | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
+  loga = !bash -c 'git log --color --graph --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %Creset%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
+  logi = !bash -c 'git log --color --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %C(brightwhite)%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
   recent = branch --sort=-committerdate --format='%(committerdate:relative)%09%(refname:short)'
   unstage = reset HEAD --
   who = blame -w -C -C -C
