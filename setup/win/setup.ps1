@@ -77,36 +77,36 @@ if (Test-Path $repomain) {
 }
 
 Set-Location -Path $repomain
-. .\setup\win\setup\winget.ps1
+. .\setup\win\winget.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\config.ps1
+. .\setup\win\config.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\env\cargo.ps1
+. .\setup\win\env\cargo.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\env\miniforge.ps1
+. .\setup\win\env\miniforge.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\env\bun.ps1
+. .\setup\win\env\bun.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\env\node.ps1
+. .\setup\win\env\node.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\env\pnpm.ps1
+. .\setup\win\env\pnpm.ps1
 
 ####################################################################################################
 
 Set-Location -Path $repomain
-. .\setup\win\setup\app\newsboat.ps1
+. .\setup\win\app\newsboat.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\app\nvim.ps1
+. .\setup\win\app\nvim.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\setup\theme.ps1
+. .\setup\win\theme.ps1
 
 Write-Host "`n ===== [setup settings] =====" -ForegroundColor Magenta
 Write-Host "`n  [setup settings] preparing..." -ForegroundColor Cyan

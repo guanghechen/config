@@ -2,8 +2,8 @@
 # shellcheck disable=SC1091
 
 
-# shellcheck source=setup/nix/setup/path.sh
-source "$HOME/.config/guanghechen/setup/nix/setup/path.sh"
+# shellcheck source=setup/nix/path.sh
+source "$HOME/.config/guanghechen/setup/nix/path.sh"
 
 if command -v rustc &>/dev/null; then
   printf "\e[93m  [setup rust] rust is already installed. (skipped)\e[0m\n"
