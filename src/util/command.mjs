@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { IS_WIN } from '#env'
 
 /** @import { Reporter } from '#stl/reporter' */
 
@@ -49,7 +50,12 @@ export async function exec(params) {
         resolve(result)
       } else {
         if (!silent) {
-          reporter.error('Command failed.', { cmd, args, code, stderr: result.stderr || result.stdout })
+          reporter.error('Command failed.', {
+            cmd,
+            args,
+            code,
+            stderr: result.stderr || result.stdout,
+          })
         }
         const error = new Error(`Command failed with code ${code}: ${cmd}`)
         Object.assign(error, result)
@@ -110,8 +116,8 @@ export async function command_exists(reporter, cmd) {
   try {
     const result = await exec({
       reporter,
-      cmd: '/bin/sh',
-      args: ['-c', `command -v ${cmd}`],
+      cmd: IS_WIN ? 'where.exe' : 'which',
+      args: [cmd],
       silent: true,
     })
     return !!result.stdout
