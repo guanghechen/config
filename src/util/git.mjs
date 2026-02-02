@@ -35,12 +35,14 @@ export function parse_branch(branch) {
  * Resolve repository path from target.
  * @param {string} root
  * @param {string} target
+ * @param {Record<string, string | undefined>} env
  * @returns {string}
  */
-export function resolve_repo_path(root, target) {
-  if (target.startsWith('/')) return target
-  if (target.startsWith('~')) return target.replace(/^~/, process.env.HOME ?? '')
-  return path.join(root, target)
+export function resolve_repo_path(root, target, env) {
+  const expanded = target.replace(/\$\{(\w+)\}/g, (match, name) => env[name] ?? match)
+  if (expanded.startsWith('/')) return expanded
+  if (expanded.startsWith('~')) return expanded.replace(/^~/, env.HOME ?? '')
+  return path.join(root, expanded)
 }
 
 /**
@@ -82,13 +84,14 @@ export async function sync_main_branch(reporter, config) {
  * @param {IGitWorktreeConfig} config
  * @param {string[]} branches
  * @param {boolean} required
+ * @param {Record<string, string | undefined>} env
  */
-export async function sync_worktrees(reporter, config, branches, required) {
+export async function sync_worktrees(reporter, config, branches, required, env) {
   const { root, main, name } = config
 
   for (const branch of branches) {
     const { name: branchName, target } = parse_branch(branch)
-    const repoPath = target ? resolve_repo_path(root, target) : path.join(root, branchName)
+    const repoPath = target ? resolve_repo_path(root, target, env) : path.join(root, branchName)
 
     if (is_directory(repoPath)) {
       reporter.info(`[${name}] syncing ${branchName}`)
@@ -122,13 +125,14 @@ export async function sync_worktrees(reporter, config, branches, required) {
  * Sync a git repository with its worktrees.
  * @param {Reporter} reporter
  * @param {IGitWorktreeConfig} config
+ * @param {Record<string, string | undefined>} env
  */
-export async function sync_repo(reporter, config) {
+export async function sync_repo(reporter, config, env) {
   reporter.info(`[${config.main}] syncing...`)
 
   await sync_main_branch(reporter, config)
-  await sync_worktrees(reporter, config, config.requiredBranches, true)
-  await sync_worktrees(reporter, config, config.optionalBranches, false)
+  await sync_worktrees(reporter, config, config.requiredBranches, true, env)
+  await sync_worktrees(reporter, config, config.optionalBranches, false, env)
 
   reporter.info(`[${config.name}] done.`)
 }

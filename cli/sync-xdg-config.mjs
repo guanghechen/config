@@ -122,12 +122,13 @@ function toGitWorktreeConfig(def, edition) {
 
 /**
  * @param {IEdition} edition
+ * @param {Record<string, string | undefined>} env
  */
-export async function handleSyncXdgConfig(edition) {
+export async function handleSyncXdgConfig(edition, env) {
   const definitions = loadRepoDefinitions()
   for (const def of definitions) {
     const config = toGitWorktreeConfig(def, edition)
-    await sync_repo(reporter, config)
+    await sync_repo(reporter, config, env)
   }
 }
 
@@ -137,12 +138,12 @@ if (process.argv[1] === import.meta.filename) {
     .option('--edition <edition>', 'Override edition (nix, nix-remote, osx, win)')
     .example('sync-xdg-config')
     .example('sync-xdg-config --edition osx')
-    .action(async ({ opts }) => {
+    .action(async ({ opts, envs }) => {
       const editionArg = /** @type {IEdition | undefined} */ (opts.edition)
       const data = await setting.load()
       const edition = editionArg ?? data.edition
       reporter.info(`Using edition: ${edition}`)
-      await handleSyncXdgConfig(edition)
+      await handleSyncXdgConfig(edition, envs)
     })
 
   await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
