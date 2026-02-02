@@ -37,7 +37,8 @@
     ```wsl
     # edit /etc/wsl.conf
 
-    # see the setup/win/conf/wsl.conf
+    # see the asset/conf/wsl.conf
+    # example: sudo cp ~/.config/guanghechen/asset/conf/wsl.conf /etc/wsl.conf
     ```
   
   - Bootstrap
