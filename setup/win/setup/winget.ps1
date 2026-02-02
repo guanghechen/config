@@ -27,6 +27,7 @@ winget install -e --source winget --id Starship.Starship
 winget install -e --source winget --id sxyazi.yazi
 winget install -e --source winget --id ajeetdsouza.zoxide
 
+winget install -e --source winget --id Cloudflare.cloudflared
 # winget install -e --source winget --id LGUG2Z.komorebi
 # winget install -e --source winget --id AmN.yasb
 
