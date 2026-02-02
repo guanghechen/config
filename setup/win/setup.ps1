@@ -14,9 +14,6 @@ $env:YAZI_CONFIG_HOME     = "$env:XDG_CONFIG_HOME\yazi"
 $env:YAZI_FILE_ONE        = "$env:APP_HOME_GIT\usr\bin\file.exe"
 $env:PREFER_NODE_VERSION  = 25
 $env:PREFER_PYTHON_ENV    = "lemon"
-if (-not $env:GHC_CONFIG_ROOT) {
-  $env:GHC_CONFIG_ROOT = Join-Path $env:XDG_CONFIG_HOME "guanghechen"
-}
 
 setx APP_HOME_MINIFORGE   "$env:APP_HOME_MINIFORGE"
 setx APP_HOME_GIT         "$env:APP_HOME_GIT"
@@ -34,7 +31,6 @@ setx YAZI_CONFIG_HOME     "$env:YAZI_CONFIG_HOME"
 setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
 setx PREFER_NODE_VERSION  $env:PREFER_NODE_VERSION
 setx PREFER_PYTHON_ENV    "$env:PREFER_PYTHON_ENV"
-setx GHC_CONFIG_ROOT      "$env:GHC_CONFIG_ROOT"
 
 ## Agent Environment ###############################################################################
 $env:ANTHROPIC_BASE_URL               = "$GHC_ANTHROPIC_BASE_URL"
@@ -71,7 +67,7 @@ if (Test-Path "$env:APP_HOME_GIT\bin\bash.exe") {
 
 # Define the local path and repositories
 $reporoot = "$env:XDG_CONFIG_HOME"
-$repomain = $env:GHC_CONFIG_ROOT
+$repomain = Join-Path $env:USERPROFILE ".config\guanghechen"
 if (Test-Path $repomain) {
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only

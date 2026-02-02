@@ -1,8 +1,6 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
-GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
-export GHC_CONFIG_ROOT
 
 if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/brew" ]; then
   printf "\e[96m  [setup homebrew] installing homebrew...\e[0m\n"
@@ -12,7 +10,7 @@ else
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 fi
 # shellcheck source=setup/nix/setup/path.sh
-source "$GHC_CONFIG_ROOT/setup/nix/setup/path.sh"
+source "$HOME/.config/guanghechen/setup/nix/setup/path.sh"
 brew update
 
 ### Install node

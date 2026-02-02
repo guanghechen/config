@@ -1,11 +1,9 @@
 #! /usr/bin/env bash
 # shellcheck disable=SC1091
 
-GHC_CONFIG_ROOT="${GHC_CONFIG_ROOT:-$HOME/.config/guanghechen}"
-export GHC_CONFIG_ROOT
 
 # shellcheck source=setup/nix/setup/path.sh
-source "$GHC_CONFIG_ROOT/setup/nix/setup/path.sh"
+source "$HOME/.config/guanghechen/setup/nix/setup/path.sh"
 
 ## Set environment variables
 printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"
