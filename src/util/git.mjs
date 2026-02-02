@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import { exec } from '#util/command'
@@ -55,7 +56,7 @@ export async function sync_main_branch(reporter, config) {
 
   if (!is_directory(root)) {
     reporter.info(`[${name}] mkdir -p ${root}`)
-    await exec({ reporter, cmd: 'mkdir', args: ['-p', root], silent: true })
+    fs.mkdirSync(root, { recursive: true })
   }
 
   if (is_directory(path.join(main, '.git'))) {
