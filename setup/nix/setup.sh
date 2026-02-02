@@ -35,6 +35,7 @@ sudo update-locale LANG=en_US.UTF-8
 printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
+node "$GHC_CONFIG_ROOT/cli/setting.mjs" --set-edition nix
 # shellcheck source=setup/nix/setup/bot/config.sh
 source "$GHC_CONFIG_ROOT/setup/nix/setup/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
@@ -131,5 +132,4 @@ printf "\e[92m  [setup theme] done.\e[0m\n"
 
 printf "\n\e[95m ===== [setup settings] =====\e[0m\n"
 printf "\n\e[96m  [setup settings] preparing...\e[0m\n"
-node "$GHC_CONFIG_ROOT/src/setting.mjs" --set-edition=nix
 printf "\e[92m  [setup settings] done.\e[0m\n"

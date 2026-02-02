@@ -114,5 +114,4 @@ Set-Location -Path $repomain
 
 Write-Host "`n ===== [setup settings] =====" -ForegroundColor Magenta
 Write-Host "`n  [setup settings] preparing..." -ForegroundColor Cyan
-node "$env:GHC_CONFIG_ROOT\src\setting.mjs" --set-edition=win
 Write-Host "  [setup settings] done." -ForegroundColor Green

@@ -3,69 +3,10 @@ Write-Host "`n  [setup config] preparing..." -ForegroundColor Cyan
 if (-not $env:GHC_CONFIG_ROOT) {
   $env:GHC_CONFIG_ROOT = Join-Path $env:XDG_CONFIG_HOME "guanghechen"
 }
-$reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = $env:GHC_CONFIG_ROOT
-$repo_required_branches = @(
-  "bat",
-  "conda",
-  "cspell",
-  "gh",
-  "git-delta",
-  "fzf",
-  "lazygit",
-  "lsd",
-  "nvim",
-  "pwsh",
-  "ripgrep",
-  "yazi"
-)
-$repo_optional_branches = @(
-  "alacritty",
-  "alacritty-windows",
-  "btop",
-  "claude",
-  "codex",
-  "fish",
-  "ghostty",
-  "helix",
-  "kitty",
-  "kit-pm",
-  "komorebi",
-  "neovide",
-  "newsboat",
-  "nvim-lazy",
-  "nvim-nvchad",
-  "opencode",
-  "ora",
-  "pm2",
-  "skhd",
-  "tsuki",
-  "wezterm",
-  "yabai",
-  "yasb",
-  "yoz"
-)
-
-foreach ($branch in $repo_required_branches) {
-  $repopath = Join-Path $reporoot $branch
-  if (Test-Path -Path $repopath) {
-    Write-Host "  [setup config] merging origin/$branch into $repopath..." -ForegroundColor Cyan
-    $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
-  } else {
-    Write-Host "  [setup config] add new worktree of $branch into $repopath..." -ForegroundColor Cyan
-    $cmd = "git -C '$repomain' worktree add '$repopath' $branch"
-  }
-  Invoke-Expression $cmd
-}
-
-foreach ($branch in $repo_optional_branches) {
-  $repopath = Join-Path $reporoot $branch
-  if (Test-Path -Path $repopath) {
-    Write-Host "  [setup config] merging origin/$branch into $repopath..." -ForegroundColor Cyan
-    $cmd = "git -C '$repopath' merge origin/$branch --ff-only"
-    Invoke-Expression $cmd
-  }
-}
+Write-Host "  [setup config] syncing configs..." -ForegroundColor Cyan
+node "$env:GHC_CONFIG_ROOT\cli\setting.mjs" --set-edition win
+node "$env:GHC_CONFIG_ROOT\cli\sync-xdg-config.mjs"
 
 # Define the source and destination paths
 Write-Host "  [setup config] copying pwsh profile.ps1..." -ForegroundColor Cyan
