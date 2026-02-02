@@ -31,6 +31,7 @@ function M.add(tree_tbl, mapping)
         icon = nil,
         is_group = false,
         rhs = nil,
+        action = nil,
         nowait = nil,
         proxy = nil,
         expand = nil,
@@ -45,15 +46,23 @@ function M.add(tree_tbl, mapping)
         node.is_group = true
         node.desc = mapping.group
       else
-        node.rhs = rhs
-        node.desc = mapping.desc or (type(rhs) == "string" and rhs) or ""
+        -- Distinguish between action (function from wk spec) and rhs (string for feedkeys)
+        if type(rhs) == "function" then
+          node.action = rhs
+          node.desc = mapping.desc or ""
+        elseif type(rhs) == "string" then
+          node.rhs = rhs
+          node.desc = mapping.desc or rhs
+        else
+          node.desc = mapping.desc or ""
+        end
       end
       node.icon = mapping.icon or node.icon
       node.nowait = mapping.nowait or node.nowait
       node.proxy = mapping.proxy or node.proxy
       node.expand = mapping.expand or node.expand
     else
-      if not node.is_group and not node.rhs then
+      if not node.is_group and not node.rhs and not node.action then
         node.is_group = true
         node.desc = node.desc ~= "" and node.desc or key
       end
@@ -109,10 +118,11 @@ function M.get_children(tree_tbl, keys, mode)
           result[rel] = {
             key = rel,
             lhs = keys .. rel,
-            desc = km.desc or km.rhs or km.lhs or "",
+            desc = km.desc or (type(km.rhs) == "string" and km.rhs) or km.lhs or "",
             icon = nil,
             is_group = false,
-            rhs = km.callback or km.rhs,
+            rhs = nil, -- don't save callback, use feedkeys
+            action = nil,
             proxy = nil,
             expand = nil,
             children = {},

@@ -182,13 +182,14 @@ function M.__execute__(node, keys)
   S.state.suspend(bufnr, mode)
   M.stop()
 
-  if node and node.rhs then
-    if type(node.rhs) == "function" then
-      node.rhs()
-    else
-      M.__feed__(node.rhs --[[@as string]])
-    end
+  if node and node.action then
+    -- wk spec defined action: call directly
+    node.action()
+  elseif node and node.rhs then
+    -- wk spec defined rhs string: feedkeys
+    M.__feed__(node.rhs)
   else
+    -- Neovim keymap or unknown: feedkeys with context (count, register)
     M.__feed_with_context__(keys, mode)
   end
 
@@ -280,11 +281,11 @@ function M.__loop__(prefix)
   local node = S.state.get_node(new_prefix)
   if node then
     local has_children = node.is_group or next(node.children) ~= nil
-    local has_action = node.rhs ~= nil
-    local is_nowait = node.nowait or (timedout and has_action)
+    local has_explicit_action = node.action ~= nil or node.rhs ~= nil
+    local is_nowait = node.nowait or (timedout and has_explicit_action)
 
-    -- If nowait is set or timed out with action, execute immediately
-    if is_nowait and has_action then
+    -- If nowait is set or timed out with explicit action, execute immediately
+    if is_nowait and has_explicit_action then
       M.__execute__(node, new_prefix)
       return
     elseif has_children then

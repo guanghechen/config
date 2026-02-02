@@ -66,7 +66,8 @@
 ---@field public desc                   string                          -- description
 ---@field public icon                   era.m.wk.IIcon?                 -- icon configuration
 ---@field public is_group               boolean                         -- whether this is a group
----@field public rhs                    (string|fun(): nil)?            -- right hand side (if not a group)
+---@field public rhs                    string?                         -- right hand side string (for feedkeys)
+---@field public action                 fun()?                          -- wk spec defined action (direct call)
 ---@field public nowait                 boolean?                        -- execute immediately without waiting for timeoutlen
 ---@field public proxy                  string?                         -- proxy prefix
 ---@field public expand                 (fun(): era.m.wk.IMapping[])?   -- expand function

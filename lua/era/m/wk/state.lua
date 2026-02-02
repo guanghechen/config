@@ -415,10 +415,12 @@ function M.__load_keymaps__(bufnr, mode)
   local function load_keymaps(keymaps)
     for _, km in ipairs(keymaps) do
       if M.__is_valid_keymap__(km) then
+        -- For Neovim keymaps, don't save callback/rhs - we'll use feedkeys for execution
+        -- Only save description for display purposes
         S.tree.add(tree_tbl, {
           S.util.normalize_lhs(km.lhs),
-          km.callback or km.rhs,
-          desc = km.desc or km.rhs or km.lhs,
+          nil, -- no rhs/action - will use feedkeys
+          desc = km.desc or (type(km.rhs) == "string" and km.rhs) or km.lhs,
           nowait = km.nowait == 1,
         })
       end
