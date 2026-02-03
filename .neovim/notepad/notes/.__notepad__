@@ -1,12 +1,17 @@
 {
-  "activated_item_uuid": "90ec9cae-2a83-45cc-9437-1afcaa41b6ac",
+  "activated_item_uuid": "2daaf2f8-cd4e-4dfa-9790-1832a6d9ed7b",
   "items": [
     {
       "name": "sync-agents",
       "uuid": "90ec9cae-2a83-45cc-9437-1afcaa41b6ac"
+    },
+    {
+      "name": "patch",
+      "uuid": "2daaf2f8-cd4e-4dfa-9790-1832a6d9ed7b"
     }
   ],
   "orders": [
-    "90ec9cae-2a83-45cc-9437-1afcaa41b6ac"
+    "90ec9cae-2a83-45cc-9437-1afcaa41b6ac",
+    "2daaf2f8-cd4e-4dfa-9790-1832a6d9ed7b"
   ]
 }
