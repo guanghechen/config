@@ -6,6 +6,15 @@ import { applyPatches, replaceAll } from "./util"
 const targetSize = process.argv[2] || "144000"
 
 const patches: IPatch[] = [
+  // 2.1.29 - QEq is the actual context window variable used in mM() function
+  {
+    name: "context-window-QEq",
+    version: "2.1.29",
+    platform: ["wsl", "win", "osx", "nix"],
+    search: /var QEq=\d+/,
+    replace: (content, matches) => replaceAll(content, matches, () => `var QEq=${targetSize}`),
+    verify: (text) => text.includes(`var QEq=${targetSize}`),
+  },
   // 2.1.20
   {
     name: "context-window-EiK",

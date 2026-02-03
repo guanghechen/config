@@ -20,6 +20,55 @@ import type { IPatch } from "./types"
 import { applyPatches, replaceAll } from "./util"
 
 const patches: IPatch[] = [
+  // 2.1.29 - Windows patches
+  {
+    // Original: UP1=cA()==="windows"?{displayText:`${IRA}+v`,check:(A,q)=>q.meta&&(A==="v"||A==="V")}
+    // Changed:  UP1=cA()==="windows"?{displayText:"ctrl+v",check:(A,q)=>q.ctrl&&(A==="v"||A==="V")}
+    name: "win-image-paste-shortcut",
+    version: "2.1.29",
+    platform: ["win"],
+    search: /(\w+)=cA\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName, arg1, arg2] = m.matched_groups
+        return `${varName}=cA()==="windows"?{displayText:"ctrl+v",check:(${arg1},${arg2})=>${arg2}.ctrl&&`
+      }),
+    verify: (text) => text.includes('cA()==="windows"?{displayText:"ctrl+v",check:'),
+  },
+  {
+    // Windows doesn't support bracketed paste mode, so we need to check for image paste
+    // when Ctrl+V is pressed (detected as input with ctrl flag).
+    // Original: wrappedOnInput:(G,Z)=>{if(O.current)$.current=!0
+    // Changed:  wrappedOnInput:(G,Z)=>{if(Z.ctrl&&(G==="v"||G==="V")&&K){j();return}if(O.current)$.current=!0
+    name: "win-image-paste-ctrl-v",
+    version: "2.1.29",
+    platform: ["win"],
+    search: "wrappedOnInput:(G,Z)=>{if(O.current)$.current=!0",
+    replace: (content, matches) =>
+      replaceAll(content, matches, () => 'wrappedOnInput:(G,Z)=>{if(Z.ctrl&&(G==="v"||G==="V")&&K){j();return}if(O.current)$.current=!0'),
+    verify: (text) => text.includes('wrappedOnInput:(G,Z)=>{if(Z.ctrl&&(G==="v"||G==="V")&&K){j();return}'),
+  },
+  // 2.1.29 - Linux/WSL patches
+  {
+    name: "checkImage-grep-pattern",
+    version: "2.1.29",
+    platform: ["wsl", "nix"],
+    search: 'grep -E "image/(png|jpeg|jpg|gif|webp)"',
+    replace: (content, matches) => replaceAll(content, matches, () => 'grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+    verify: (text) => text.includes('grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+  },
+  {
+    name: "wl-paste-bmp-conversion",
+    version: "2.1.29",
+    platform: ["wsl", "nix"],
+    search: /wl-paste --type image\/png > "\$\{(\w+)\}"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- > "\${${varName}}"`
+      }),
+    verify: (text) => text.includes("wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >"),
+  },
   // 2.1.20 - Windows patches
   {
     // Original: njA=s6()==="windows"?{displayText:`${ku6}+v`,check:(A,K)=>K.meta&&(A==="v"||A==="V")}
