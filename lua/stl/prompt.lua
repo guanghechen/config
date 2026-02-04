@@ -176,6 +176,7 @@ local M = {}
 ---@field public template               string
 ---@field public submit                 boolean
 ---@field public conditional            ?fun(ctx: stl.prompt.ITemplateCtx): boolean
+---@field public args                   ?table<string, string> Variable name to default value mapping, prompts user at runtime
 
 ---@class stl.prompt.ITemplateCtx
 ---@field public has_selection          boolean
@@ -188,15 +189,14 @@ M.templates = {
   {
     name = "review-design",
     submit = true,
-    template = [[__TMUX_PANE_INDEX__=3
-
-若你对当前设计仍有困惑或担忧，请与 tmux pane #${__TMUX_PANE_INDEX__} 中运行的 agent 进行讨论。
+    args = { __TMUX_PANE__ = "#3" },
+    template = [[若你对当前设计仍有困惑或担忧，请与 tmux pane ${__TMUX_PANE__} 中运行的 agent 进行讨论。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
 
 ## 执行步骤
 
-1. **整理处境**：梳理当前"处境"，以清晰友好的表述发送给 pane #${__TMUX_PANE_INDEX__} 的 agent，请求其：
+1. **整理处境**：梳理当前"处境"，以清晰友好的表述发送给 pane ${__TMUX_PANE__} 的 agent，请求其：
    - 提供建议与反馈
    - 查漏补缺：检查是否有考虑欠缺的地方
    - 审视现有设计是否存在缺陷或隐患
@@ -217,15 +217,14 @@ M.templates = {
   {
     name = "review-changes",
     submit = true,
-    template = [[__TMUX_PANE_INDEX__=3
-
-请与 tmux pane #${__TMUX_PANE_INDEX__} 中运行的 agent 协作，对当前改动进行 code review。
+    args = { __TMUX_PANE__ = "#3" },
+    template = [[请与 tmux pane ${__TMUX_PANE__} 中运行的 agent 协作，对当前改动进行 code review。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
 
 ## 执行步骤
 
-1. **发起 Review**：梳理当前"处境"与改动内容，以清晰友好的表述发送给 pane #${__TMUX_PANE_INDEX__} 的 agent，请求其：
+1. **发起 Review**：梳理当前"处境"与改动内容，以清晰友好的表述发送给 pane ${__TMUX_PANE__} 的 agent，请求其：
    - 审查代码改动，提出有价值的 review comments
    - 查漏补缺：检查是否有考虑欠缺的地方
    - 指出潜在问题、设计缺陷或隐患
@@ -253,17 +252,16 @@ M.templates = {
   {
     name = "review-diagnostics-neovim",
     submit = true,
-    template = [[__TMUX_PANE_INDEX__=3
-
-请修复所有 LSP diagnostic issues，直到没有任何需要修复的诊断信息。
+    args = { __TMUX_PANE__ = "#3" },
+    template = [[请修复所有 LSP diagnostic issues，直到没有任何需要修复的诊断信息。
 
 ## 前置准备
 
-仔细阅读 `@spec/debug/lsp.md` 中的引导，理解如何获取 LSP 诊断信息。你可以使用 tmux pane #${__TMUX_PANE_INDEX__} 来执行相关操作。
+仔细阅读 `@spec/debug/lsp.md` 中的引导，理解如何获取 LSP 诊断信息。你可以使用 tmux pane ${__TMUX_PANE__} 来执行相关操作。
 
 ## 执行步骤
 
-1. **获取诊断**：通过 pane #${__TMUX_PANE_INDEX__} 获取当前所有 LSP diagnostics
+1. **获取诊断**：通过 pane ${__TMUX_PANE__} 获取当前所有 LSP diagnostics
 2. **分析问题**：逐一分析每条诊断信息，理解其含义与修复方式
 3. **修复问题**：
    - 对于明确的问题：立即修复

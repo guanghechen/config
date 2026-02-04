@@ -333,6 +333,7 @@ function M.build_list()
     list[#list + 1] = {
       name = template.name,
       submit = template.submit,
+      args = template.args,
       render = function(ctx)
         return M.render_template(template, ctx)
       end,

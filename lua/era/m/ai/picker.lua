@@ -9,6 +9,19 @@ local S = era.m.ai
 ---@class era.m.ai.picker
 local M = {}
 
+---@type table<string, string>
+M._args_cache = (function()
+  local cache = {}
+  for _, t in ipairs(stl.prompt.templates) do
+    if t.args then
+      for name, default in pairs(t.args) do
+        cache[name] = default
+      end
+    end
+  end
+  return cache
+end)()
+
 ----------------------------------------------------------------------------------------------------
 --- Picker utilities
 ----------------------------------------------------------------------------------------------------
@@ -693,6 +706,7 @@ function M.show_prompt(on_select)
   local picker_items = {} ---@type era.m.ai.picker.IItem[]
   local itemmap = {} ---@type table<string, era.m.ai.IPrompt>
   local result_map = {} ---@type table<string, era.m.ai.IPromptRenderResult>
+  local args_tag_map = {} ---@type table<string, string>
 
   for index, prompt in ipairs(S.prompt.list) do
     local result = prompt.render(ctx)
@@ -700,6 +714,21 @@ function M.show_prompt(on_select)
       local uuid = tostring(index)
       itemmap[uuid] = prompt
       result_map[uuid] = result
+
+      -- Build args tag for display (e.g., "#3")
+      local args_tag = ""
+      if prompt.args then
+        local values = {} ---@type string[]
+        for name in pairs(prompt.args) do
+          values[#values + 1] = M._args_cache[name]
+        end
+        if #values > 0 then
+          table.sort(values)
+          args_tag = table.concat(values, " ")
+        end
+      end
+      args_tag_map[uuid] = args_tag
+
       picker_items[#picker_items + 1] = {
         uuid = uuid,
         text = prompt.name,
@@ -714,18 +743,125 @@ function M.show_prompt(on_select)
   local search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive = create_picker_flags()
   local picker_height = math.min(#picker_items + 3, math.floor(vim.o.lines * 0.6))
 
-  ---@type era.m.picker.ListComposer
-  local picker = era.m.picker.ListComposer.new({
+  ---@type era.m.picker.ListComposer|nil
+  local picker = nil
+
+  ---Rebuild args_tag_map with updated cache values.
+  local function rebuild_args_tags()
+    for uuid, prompt in pairs(itemmap) do
+      if prompt.args then
+        local values = {} ---@type string[]
+        for name in pairs(prompt.args) do
+          values[#values + 1] = M._args_cache[name]
+        end
+        table.sort(values)
+        args_tag_map[uuid] = #values > 0 and table.concat(values, " ") or ""
+      end
+    end
+  end
+
+  ---Edit args for current prompt.
+  local function edit_current_args()
+    if not picker then
+      return
+    end
+    local lnum = picker.result.lnum_current:snapshot()
+    local item = picker:retrieve(lnum)
+    if not item then
+      return
+    end
+    local prompt = item.data ---@type era.m.ai.IPrompt
+    if not prompt.args or not next(prompt.args) then
+      return
+    end
+
+    local names = vim.tbl_keys(prompt.args)
+    table.sort(names)
+
+    local function show_arg_picker()
+      local items = {} ---@type string[]
+      for _, name in ipairs(names) do
+        local display = name:gsub("^_+", ""):gsub("_+$", "")
+        items[#items + 1] = display .. " = " .. M._args_cache[name]
+      end
+
+      vim.ui.select(items, { prompt = "Edit arg (Esc to close):" }, function(_, idx)
+        if not idx then
+          rebuild_args_tags()
+          picker:reset_data({ items = picker_items, uuid_current = item.uuid })
+          return
+        end
+        local name = names[idx]
+        local display = name:gsub("^_+", ""):gsub("_+$", "")
+        vim.ui.input({ prompt = display .. ": ", default = M._args_cache[name] }, function(input)
+          if input then
+            M._args_cache[name] = input
+          end
+          rebuild_args_tags()
+          picker:reset_data({ items = picker_items, uuid_current = item.uuid })
+        end)
+      end)
+    end
+
+    show_arg_picker()
+  end
+
+  local nsnr_args_tag = vim.api.nvim_create_namespace("era.m.ai.picker.args_tag")
+
+  picker = era.m.picker.ListComposer.new({
     name = __module_name__,
     permanent = false,
     title = " Select prompt ",
     height = picker_height,
     width = 40,
-    preview_width = 80,
     search_pattern = search_pattern,
     flag_fuzzy = flag_fuzzy,
     flag_regex = flag_regex,
     flag_case_sensitive = flag_case_sensitive,
+    keymaps_result = {
+      { modes = { "n" }, key = "oe", callback = edit_current_args, desc = "Edit args" },
+    },
+    render_result = function(composer, bufnr, local_itemmap, matches)
+      local lines = {} ---@type string[]
+      local uuids = {} ---@type string[]
+
+      for _, match in ipairs(matches) do
+        local item = local_itemmap[match.uuid] ---@type era.m.picker.composer.list.IItem
+        lines[#lines + 1] = item.text
+        uuids[#uuids + 1] = item.uuid
+      end
+
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+      local nsnr_matches = dot.var.nsnr.picker_matches ---@type integer
+      vim.api.nvim_buf_clear_namespace(bufnr, nsnr_args_tag, 0, -1)
+
+      for lnum, match in ipairs(matches) do
+        local row = lnum - 1 ---@type integer
+
+        if match.matches then
+          for _, m in ipairs(match.matches) do
+            vim.hl.range(bufnr, nsnr_matches, "m_pk_matches", { row, m.l }, { row, m.r }, { priority = 30 })
+          end
+        end
+
+        -- Add right-aligned args tag overlay
+        local tag = args_tag_map[match.uuid]
+        if tag and #tag > 0 then
+          vim.api.nvim_buf_set_extmark(bufnr, nsnr_args_tag, row, 0, {
+            virt_text = {
+              { stl.icon.symbols.sep_left, "m_ai_args_tag_sep" },
+              { tag, "m_ai_args_tag" },
+              { stl.icon.symbols.sep_right, "m_ai_args_tag_sep" },
+            },
+            virt_text_pos = "right_align",
+            priority = 50,
+          })
+        end
+      end
+
+      return { uuids = uuids }
+    end,
     render_preview = function(composer, bufnr, _)
       local lnum = composer.result.lnum_current:snapshot()
       local item = composer:retrieve(lnum)
@@ -737,42 +873,8 @@ function M.show_prompt(on_select)
         return { cursorline = false, number = false, title = "", wrap = true }
       end
 
-      local text_lines = {} ---@type string[]
-      local row_mapping = {} ---@type { rich_idx: integer, subline_idx: integer }[]
-      for rich_idx, rich_line in ipairs(result.lines) do
-        local parts = {} ---@type string[]
-        for _, chunk in ipairs(rich_line) do
-          parts[#parts + 1] = chunk[1]
-        end
-        local line = table.concat(parts)
-        local sublines = vim.split(line, "\n", { plain = true })
-        for subline_idx, subline in ipairs(sublines) do
-          text_lines[#text_lines + 1] = subline
-          row_mapping[#text_lines] = { rich_idx = rich_idx, subline_idx = subline_idx }
-        end
-      end
+      local text_lines = vim.split(result.text, "\n", { plain = true })
       vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, text_lines)
-
-      vim.api.nvim_buf_clear_namespace(bufnr, dot.var.nsnr.ai_prompt_preview, 0, -1)
-      for row, mapping in ipairs(row_mapping) do
-        if mapping.subline_idx == 1 then
-          local rich_line = result.lines[mapping.rich_idx]
-          local col = 0
-          for _, chunk in ipairs(rich_line) do
-            local text = chunk[1]
-            local first_newline = text:find("\n")
-            local text_len = first_newline and (first_newline - 1) or #text
-            local hlname = chunk[2]
-            if hlname and text_len > 0 then
-              vim.hl.range(bufnr, dot.var.nsnr.ai_prompt_preview, hlname, { row - 1, col }, { row - 1, col + text_len })
-            end
-            if first_newline then
-              break
-            end
-            col = col + text_len
-          end
-        end
-      end
 
       return { cursorline = false, number = true, title = " " .. prompt.name .. " ", wrap = true }
     end,
@@ -782,13 +884,34 @@ function M.show_prompt(on_select)
     on_confirm = function(composer, item)
       restore_window(winnr)
       composer:close()
-      if item ~= nil then
-        ---@cast item era.m.ai.picker.IItem
-        local result = result_map[item.uuid]
-        if result then
-          on_select(item.data, result)
-        end
+      if item == nil then
+        return
       end
+      ---@cast item era.m.ai.picker.IItem
+      local prompt = item.data ---@type era.m.ai.IPrompt
+      local result = result_map[item.uuid]
+      if not result then
+        return
+      end
+
+      if not prompt.args or not next(prompt.args) then
+        on_select(prompt, result)
+        return
+      end
+
+      -- Substitute args using cached values
+      local text = result.text
+      for name in pairs(prompt.args) do
+        local pattern = "%${" .. vim.pesc(name) .. "}"
+        text = text:gsub(pattern, function()
+          return M._args_cache[name]
+        end)
+      end
+      local new_lines = {} ---@type era.m.ai.IText
+      for line in vim.gsplit(text, "\n", { plain = true }) do
+        new_lines[#new_lines + 1] = { { line, nil } }
+      end
+      on_select(prompt, { text = text, lines = new_lines })
     end,
     on_disposed = function()
       dispose_picker_flags({ search_pattern, flag_fuzzy, flag_regex, flag_case_sensitive })

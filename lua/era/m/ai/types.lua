@@ -35,6 +35,7 @@
 ---@class era.m.ai.IPrompt
 ---@field public name                   string
 ---@field public submit                 boolean If true, submit the content directly rather than only send.
+---@field public args                   ?table<string, string> Variable name to default value mapping, prompts user at runtime.
 ---@field public render                 fun(ctx: era.m.ai.prompt.ICtx): era.m.ai.IPromptRenderResult|nil Returns nil if prompt is not available.
 
 ---@class era.m.ai.ISelectItem

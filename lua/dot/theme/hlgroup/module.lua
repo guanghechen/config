@@ -25,6 +25,8 @@ function M.default_gen_hlgroup_map(context)
 
   return {
     ---module/ai
+    m_ai_args_tag = { fg = u.bg0, bg = u.aqua },
+    m_ai_args_tag_sep = { fg = u.aqua, bg = u.none },
     m_ai_attached = { fg = u.pink, bold = true },
     m_ai_loc_col = { fg = u.aqua },
     m_ai_loc_delim = { fg = u.fg4 },
