@@ -186,6 +186,110 @@ local M = {}
 ---@type stl.prompt.ITemplate[]
 M.templates = {
   {
+    name = "review-design",
+    submit = true,
+    template = [[__TMUX_PANE_INDEX__=3
+
+若你对当前设计仍有困惑或担忧，请与 tmux pane #${__TMUX_PANE_INDEX__} 中运行的 agent 进行讨论。
+
+为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
+
+## 执行步骤
+
+1. **整理处境**：梳理当前"处境"，以清晰友好的表述发送给 pane #${__TMUX_PANE_INDEX__} 的 agent，请求其：
+   - 提供建议与反馈
+   - 查漏补缺：检查是否有考虑欠缺的地方
+   - 审视现有设计是否存在缺陷或隐患
+2. **分析回复**：收到对方回复后，综合分析并更新"处境"与计划
+3. **迭代协商**：重复上述步骤，直至满足以下任一条件：
+   - 双方达成共识，整理出明确的计划与待关注事项
+   - 遇到无法确定的问题，需要我介入解答
+   - 对方持续重复或未能提供有价值的内容（可提前退出）
+4. **输出总结**：达成共识后，整理讨论结果并向我汇报，标注需要我关注的要点
+
+## 注意事项
+
+1. **输入延迟**：agent TUI 存在 debounce，发送内容后等待约 1 秒发送一次 `C-m`，再等待约 3 秒发送第二次 `C-m` 以确保触发
+2. **保持耐心**：此过程耗时较长，这是预期内的，请从容应对
+3. **批判性倾听**：对方的建议仅代表一种观点，不必全盘接受，但也应审慎考量——既不盲从，也不轻视
+4. **精准提问**：这是双向对话，每次提问应有针对性，避免重复冗余]],
+  },
+  {
+    name = "review-changes",
+    submit = true,
+    template = [[__TMUX_PANE_INDEX__=3
+
+请与 tmux pane #${__TMUX_PANE_INDEX__} 中运行的 agent 协作，对当前改动进行 code review。
+
+为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
+
+## 执行步骤
+
+1. **发起 Review**：梳理当前"处境"与改动内容，以清晰友好的表述发送给 pane #${__TMUX_PANE_INDEX__} 的 agent，请求其：
+   - 审查代码改动，提出有价值的 review comments
+   - 查漏补缺：检查是否有考虑欠缺的地方
+   - 指出潜在问题、设计缺陷或隐患
+2. **处理反馈**：收到 review comments 后：
+   - 对于合理的问题：立即修复
+   - 对于存疑的建议：与对方讨论，明确是否需要处理
+3. **迭代审查**：修复完成后，再次请求 review，重复上述步骤，直至满足以下任一条件：
+   - 对方无更多意见，review 通过
+   - 双方达成共识，将剩余问题记录为 plan/todo 后续处理
+   - 遇到无法确定的问题，需要我介入决策
+   - 对方持续重复或未能提供有价值的内容（可提前退出）
+4. **输出总结**：向我汇报最终结论，必须包含：
+   - Review 结果概述
+   - 已修复的问题清单
+   - Plan/Todo 清单（如有后续待办事项）
+   - Workaround 说明（如有临时方案或权宜之计）
+
+## 注意事项
+
+1. **输入延迟**：agent TUI 存在 debounce，发送内容后等待约 1 秒发送一次 `C-m`，再等待约 3 秒发送第二次 `C-m` 以确保触发
+2. **保持耐心**：此过程耗时较长，这是预期内的，请从容应对
+3. **批判性倾听**：对方的建议仅代表一种观点，不必全盘接受，但也应审慎考量——既不盲从，也不轻视
+4. **精准沟通**：这是双向对话，每次交流应有针对性，避免重复冗余]],
+  },
+  {
+    name = "review-diagnostics-neovim",
+    submit = true,
+    template = [[__TMUX_PANE_INDEX__=3
+
+请修复所有 LSP diagnostic issues，直到没有任何需要修复的诊断信息。
+
+## 前置准备
+
+仔细阅读 `@spec/debug/lsp.md` 中的引导，理解如何获取 LSP 诊断信息。你可以使用 tmux pane #${__TMUX_PANE_INDEX__} 来执行相关操作。
+
+## 执行步骤
+
+1. **获取诊断**：通过 pane #${__TMUX_PANE_INDEX__} 获取当前所有 LSP diagnostics
+2. **分析问题**：逐一分析每条诊断信息，理解其含义与修复方式
+3. **修复问题**：
+   - 对于明确的问题：立即修复
+   - 对于不确定的问题：记录下来，稍后讨论
+4. **迭代检查**：修复完成后，重新获取诊断，重复上述步骤，直至满足以下任一条件：
+   - 无任何 diagnostics，全部修复完成
+   - 遇到无法确定的问题，需要我介入决策
+5. **输出总结**：向我汇报最终结论，必须包含：
+   - 已修复的问题清单
+   - 未修复的问题及原因（如有）
+   - Workaround 说明（如有临时方案或权宜之计）
+
+## 注意事项
+
+1. **输入延迟**：agent TUI 存在 debounce，发送内容后等待约 1 秒发送一次 `C-m`，再等待约 3 秒发送第二次 `C-m` 以确保触发
+2. **保持耐心**：此过程可能需要多轮迭代，请从容应对
+3. **谨慎修复**：确保修复不会引入新问题或改变原有逻辑]],
+    conditional = function()
+      local cwd = dot.path.cwd()
+      local config_home = vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")
+      local nvim_config = config_home .. "/nvim"
+      local nvchad_config = config_home .. "/nvim-nvchad"
+      return cwd == nvim_config or cwd == nvchad_config
+    end,
+  },
+  {
     name = "diagnostics",
     submit = true,
     template = "Fix the diagnostics in ${__FILE__}:\n${__DIAGNOSTICS__}",
