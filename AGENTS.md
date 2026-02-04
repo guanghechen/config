@@ -11,7 +11,7 @@
 
 1. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`, `local/env.*`).
 2. **CRITICAL**: Never run git write commands (`add/reset/stash/checkout/restore/commit/push`) unless **explicitly instructed**.
-3. **ALWAYS**: Install packages only when instructed.
+3. **ALWAYS**: Never install packages (especially global CLI tools) unless **explicitly instructed** — risk of supply-chain attacks.
 
 ## Coding
 
@@ -23,9 +23,9 @@
 4. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
 5. **ALWAYS**: Early return; avoid nested conditions.
 6. **ALWAYS**: Error handling by function type:
-   - Internal: Propagate errors to caller (unless designed to suppress).
-   - Exposed business logic: Validate boundaries and handle or wrap errors.
-   - Exposed pure functions: Propagate errors transparently.
+   - Internal (private): Propagate errors to caller (unless designed to suppress).
+   - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
+   - Exposed pure (no side effects): Propagate errors transparently.
 
 ## Tools
 
