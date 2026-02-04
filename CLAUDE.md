@@ -32,4 +32,13 @@
 
 1. Prefer `fd` over `find`, `rg` over `grep`.
 2. Fork existing code for new features; avoid rewriting unless modification is simple.
-3. Use `tmux capture-pane -ep -t %{pane_id}` to view a tmux pane's current buffer with ANSI colors.
+
+## Tmux
+
+**ALWAYS** apply these rules when running inside tmux (`$TMUX` is set) or user mentions tmux/pane references (`%N`, `#N`).
+
+1. Pane reference conventions:
+   - `%N` (e.g., `%3`) - Global pane id: `-t %3`
+   - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
+2. `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`)
+3. `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`)
