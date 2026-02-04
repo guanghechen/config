@@ -1,5 +1,4 @@
-local SPLITLINE_LEGACY = string.rep("-", 100) ---@type string
-local SPLITLINE_PATTERN = "^%-+%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d%-+$" ---@type string
+local SPLITLINE_PATTERN = "^%-%-%-+.-%-%-%-+$" ---@type string
 local SPLITLINE_TOTAL_LEN = 100 ---@type integer
 
 local SPLITLINE_FILETYPES = {
@@ -23,7 +22,7 @@ end
 ---@param line                         string
 ---@return boolean
 function M.is_splitline(line)
-  return line == SPLITLINE_LEGACY or line:match(SPLITLINE_PATTERN) ~= nil
+  return line:match(SPLITLINE_PATTERN) ~= nil
 end
 
 ---@return nil

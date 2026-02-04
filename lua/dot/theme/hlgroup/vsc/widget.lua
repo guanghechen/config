@@ -305,6 +305,7 @@ function M.gen_hlgroup_map(context)
     f_md_code_header = { fg = c.textPreformat_foreground, bg = c.textCodeBlock_background },
     f_md_code_inline = { fg = c.tokenMarkupInlineRaw, bg = c.textPreformat_background },
     f_md_dash = { fg = c.tokenConstantCharacterEscape },
+    f_md_titled_separator = { fg = c.tokenControlFlowSpecialKeywords, bold = true },
     f_md_heading_h1 = { fg = c.tokenControlFlowSpecialKeywords, bold = true },
     f_md_heading_h1_bg = { bg = cs.mix(c.base, c.tokenControlFlowSpecialKeywords, 20) },
     f_md_heading_h2 = { fg = c.tokenTypesDeclarationAndReferences, bold = true },

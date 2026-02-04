@@ -15,6 +15,15 @@ local css_filetypes = {
 }
 
 ---@type table<string, true>
+local md_filetypes = {
+  ["acp-chatbox"] = true,
+  ["acp-main"] = true,
+  ["image-viewer"] = true,
+  ["markdown"] = true,
+  ["notepad"] = true,
+}
+
+---@type table<string, true>
 local tailwind_filetypes = {
   ["astro"] = true,
   ["css"] = true,
@@ -244,6 +253,16 @@ return {
               virt_text_pos = "inline",
             }
           end,
+        },
+
+        -- Markdown titled separator: ---Title---
+        md_titled_separator = {
+          pattern = function()
+            if md_filetypes[vim.api.nvim_get_option_value("filetype", { buf = 0 })] then
+              return "^%-%-%-()[^%-\n].+[^%-]()%-%-%-$"
+            end
+          end,
+          group = "f_md_titled_separator",
         },
       },
     })

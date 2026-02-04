@@ -316,6 +316,7 @@ function M.default_gen_hlgroup_map(context)
     f_md_code_header = { fg = u.purple, bg = u.bg2 },
     f_md_code_inline = { fg = u.orange, bg = u.bg4 },
     f_md_dash = { fg = u.orange },
+    f_md_titled_separator = { fg = u.purple, bold = true },
     f_md_heading_h1 = { fg = u.purple, bold = true },
     f_md_heading_h1_bg = { bg = cs.mix(u.bg0, u.purple, 15) },
     f_md_heading_h2 = { fg = u.aqua, bold = true },
