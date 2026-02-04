@@ -9,15 +9,15 @@
 
 ## Security
 
-1. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`, `local/env.*`).
-2. **CRITICAL**: Never run git write commands (`add/reset/stash/checkout/restore/commit/push`) unless **explicitly instructed**.
-3. **ALWAYS**: Never install packages (especially global CLI tools) unless **explicitly instructed** — risk of supply-chain attacks.
+1. **CRITICAL**: Never access secrets (`.ssh/`, `.env*`, `local/env.*`, `*credentials*`, `*.http_request`, `*.http_response`).
+2. **CRITICAL**: Never run git write commands (`add/rm/clean/commit/checkout/restore/reset/stash/push`) unless **explicitly instructed**.
+3. **ALWAYS**: Confirm with user before installing packages (especially global CLI tools). List packages to be installed — risk of supply-chain attacks.
 
 ## Coding
 
 > **ALWAYS** follow simple design, modularity, single responsibility. Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
 
-1. Clean code, no unnecessary comments, no premature abstraction.
+1. Prefer self-documenting code over comments. Comment "WHY", not "WHAT". No premature abstraction.
 2. Choose the simplest effective solution; high cohesion, low coupling.
 3. Organize code: imports → constants → types → public API → private impl → entry point.
 4. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
@@ -38,4 +38,3 @@
    - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
 2. `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`)
 3. `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`)
-
