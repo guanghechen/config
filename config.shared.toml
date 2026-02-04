@@ -1,9 +1,7 @@
 profile = "github-copilot"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
-
-[features]
-web_search_request = false
+web_search = "disabled"
 
 [sandbox_workspace_write]
 network_access = true

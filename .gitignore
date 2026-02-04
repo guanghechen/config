@@ -3,6 +3,7 @@ sessions/
 skills/
 tmp/
 
+.personality_migration
 config.toml
 history.jsonl
 version.json
