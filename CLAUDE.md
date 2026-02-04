@@ -1,7 +1,9 @@
 # Supreme Principles
 
-> **Non-negotiable.** Violation of these principles is unacceptable.
-> Respond in Chinese (简体中文); keep technical terms in English.
+> **Non-negotiable.** Violation of these principles is unacceptable. 
+
+1. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
+2. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
 
 ## Security
 
@@ -19,10 +21,7 @@
 4. **CRITICAL**: `I`-prefixed naming for types/interfaces (e.g., `IChatMessage`, `IUser`).
 5. **CRITICAL**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
 
-## Hint
-
-1. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
-2. **RECOMMENDED**: Use `coder` subagent for non-trivial coding tasks.
+## Tools
 
 ### Tmux
 
