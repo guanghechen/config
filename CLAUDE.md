@@ -18,14 +18,11 @@
 **ALWAYS** follow simple design, modularity, single responsibility. Do exactly what is asked — no more, no less.
 
 1. Install packages only when instructed.
-2. `I`-prefixed naming for types/interfaces (e.g., `IChatMessage`, `IUser`).
-3. Clean code, no unnecessary comments, no premature caching.
-4. Work until completion; discuss when stuck on complex decisions.
-5. **RECOMMENDED**: Use `coder` subagent for non-trivial coding tasks.
-
-## Documentation
-
-1. Align Markdown tables (CJK = 2 units, ASCII = 1).
+2. Clean code, no unnecessary comments, no premature caching.
+3. Work until completion; discuss when stuck on complex decisions.
+4. **CRITICAL**: `I`-prefixed naming for types/interfaces (e.g., `IChatMessage`, `IUser`).
+5. **CRITICAL**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
+6. **RECOMMENDED**: Use `coder` subagent for non-trivial coding tasks.
 
 ## Tools
 
