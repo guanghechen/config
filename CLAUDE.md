@@ -11,21 +11,21 @@
 
 1. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`, `local/env.*`).
 2. **CRITICAL**: Never run git write commands (`add/reset/stash/checkout/restore/commit/push`) unless **explicitly instructed**.
-3. **ALWAYS**: Install packages only when instructed.
+3. **ALWAYS**: Never install packages (especially global CLI tools) unless **explicitly instructed** — risk of supply-chain attacks.
 
 ## Coding
 
-> **ALWAYS** follow simple design, modularity, single responsibility. Edit exactly what is asked — no more, no less.
+> **ALWAYS** follow simple design, modularity, single responsibility. Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
 
 1. Clean code, no unnecessary comments, no premature abstraction.
 2. Choose the simplest effective solution; high cohesion, low coupling.
 3. Organize code: imports → constants → types → public API → private impl → entry point.
-4. **ALWAYS**: `I`-prefixed naming for types/interfaces (e.g., `IChatMessage`, `IUser`).
+4. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
 5. **ALWAYS**: Early return; avoid nested conditions.
 6. **ALWAYS**: Error handling by function type:
-   - Internal: let exceptions bubble up (unless designed to suppress)
-   - Exposed business logic: boundary validation + error catching
-   - Exposed pure functions: let exceptions bubble up
+   - Internal (private): Propagate errors to caller (unless designed to suppress).
+   - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
+   - Exposed pure (no side effects): Propagate errors transparently.
 
 ## Tools
 
@@ -38,3 +38,4 @@
    - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
 2. `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`)
 3. `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`)
+
