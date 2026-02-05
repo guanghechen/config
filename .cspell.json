@@ -1,7 +1,5 @@
 {
-  "ignorePaths": [
-    "config/theme/app/newsboat.hbs"
-  ],
+  "ignorePaths": ["config/theme/app/newsboat.hbs"],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -33,12 +31,15 @@
     "nvim_appname",
     "onehalf",
     "opencode",
+    "opensource",
     "pacman",
     "pkill",
     "pwsh",
+    "reponame",
     "rosepine",
     "rustup",
     "skhd",
+    "sourcecodes",
     "stylua",
     "syntect",
     "titlebar",
