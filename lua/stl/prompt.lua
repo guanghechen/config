@@ -187,6 +187,22 @@ local M = {}
 ---@type stl.prompt.ITemplate[]
 M.templates = {
   {
+    name = "diagnostics",
+    submit = true,
+    template = "Fix the diagnostics in ${__FILE__}:\n${__DIAGNOSTICS__}",
+    conditional = function(ctx)
+      return ctx.has_file and ctx.has_diagnostics
+    end,
+  },
+  {
+    name = "diagnostics_all",
+    submit = true,
+    template = "Fix these diagnostics:\n${__DIAGNOSTICS_ALL__}",
+    conditional = function(ctx)
+      return ctx.has_diagnostics_all
+    end,
+  },
+  {
     name = "review-design",
     submit = true,
     args = { __TMUX_PANE__ = "#3" },
@@ -285,22 +301,6 @@ M.templates = {
       local nvim_config = config_home .. "/nvim"
       local nvchad_config = config_home .. "/nvim-nvchad"
       return cwd == nvim_config or cwd == nvchad_config
-    end,
-  },
-  {
-    name = "diagnostics",
-    submit = true,
-    template = "Fix the diagnostics in ${__FILE__}:\n${__DIAGNOSTICS__}",
-    conditional = function(ctx)
-      return ctx.has_file and ctx.has_diagnostics
-    end,
-  },
-  {
-    name = "diagnostics_all",
-    submit = true,
-    template = "Fix these diagnostics:\n${__DIAGNOSTICS_ALL__}",
-    conditional = function(ctx)
-      return ctx.has_diagnostics_all
     end,
   },
   {
