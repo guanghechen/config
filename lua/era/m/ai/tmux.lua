@@ -296,7 +296,7 @@ end
 ---@param pane_id                       string
 ---@return boolean
 function M.send_enter(pane_id)
-  return exec({ "tmux", "send-keys", "-t", pane_id, "Enter" }) ~= nil
+  return exec({ "tmux", "send-keys", "-t", pane_id, "C-m" }) ~= nil
 end
 
 return M
