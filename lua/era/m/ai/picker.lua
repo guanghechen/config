@@ -9,46 +9,68 @@ local S = era.m.ai
 ---@class era.m.ai.picker
 local M = {}
 
----@param value                        stl.prompt.ArgValue
+----------------------------------------------------------------------------------------------------
+--- Args cache
+----------------------------------------------------------------------------------------------------
+
+---@type table<string, string>
+local args_resolved = {}
+
+---@type table<string, string>
+M._args_user = {}
+
+---Resolve arg if not already set or resolved.
+---@param name                         string
+---@param def                          stl.prompt.ArgValue
 ---@return string
-local function resolve_arg_value(value)
-  if type(value) == "function" then
-    return value()
+local function resolve_arg(name, def)
+  if M._args_user[name] then
+    return M._args_user[name]
   end
-  return value
+  if not args_resolved[name] then
+    args_resolved[name] = type(def) == "function" and def() or def
+  end
+  return args_resolved[name]
 end
 
----@type table<string, stl.prompt.ArgValue>
-M._args_default = (function()
-  local defaults = {}
-  for _, t in ipairs(stl.prompt.templates) do
-    if t.args then
-      for name, default in pairs(t.args) do
-        defaults[name] = default
-      end
+---@param name                         string
+---@param value                        string
+local function set_arg(name, value)
+  if value ~= "" then
+    M._args_user[name] = value
+    args_resolved[name] = nil
+  else
+    M._args_user[name] = nil
+  end
+end
+
+---@param name                         string
+---@param args                         table<string, stl.prompt.ArgValue>
+---@return string
+local function get_arg(name, args)
+  return M._args_user[name] or args_resolved[name] or (args[name] and resolve_arg(name, args[name])) or ""
+end
+
+---@param prompt                       era.m.ai.IPrompt
+---@return string
+local function build_args_tag(prompt)
+  if not prompt.args then
+    return ""
+  end
+  local win = prompt.args.__TMUX_WINDOW_ID__ and get_arg("__TMUX_WINDOW_ID__", prompt.args) or ""
+  local pane = prompt.args.__TMUX_PANE_INDEX__ and get_arg("__TMUX_PANE_INDEX__", prompt.args) or ""
+  if win ~= "" or pane ~= "" then
+    return win .. pane
+  end
+  local vals = {} ---@type string[]
+  for name in pairs(prompt.args) do
+    local v = get_arg(name, prompt.args)
+    if v ~= "" then
+      vals[#vals + 1] = v
     end
   end
-  return defaults
-end)()
-
----User-modified values only. Not populated until user edits an arg.
----@type table<string, string>
-M._args_cache = {}
-
----Get arg value: user-modified cache takes priority, otherwise resolve from default.
----Function defaults are re-evaluated each time (not cached unless user modifies).
----@param name                         string
----@return string
-local function get_arg_value(name)
-  local cached = M._args_cache[name]
-  if cached ~= nil then
-    return cached
-  end
-  local default = M._args_default[name]
-  if default then
-    return resolve_arg_value(default)
-  end
-  return ""
+  table.sort(vals)
+  return table.concat(vals, " ")
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -70,6 +92,7 @@ local function dispose_picker_flags(flags)
     flag:dispose()
   end
 end
+
 
 ---@param winnr                         integer
 ---@return nil
@@ -731,7 +754,6 @@ end
 ---@return nil
 function M.show_prompt(on_select)
   local ctx = S.prompt.get_ctx()
-
   local picker_items = {} ---@type era.m.ai.picker.IItem[]
   local itemmap = {} ---@type table<string, era.m.ai.IPrompt>
   local result_map = {} ---@type table<string, era.m.ai.IPromptRenderResult>
@@ -743,21 +765,7 @@ function M.show_prompt(on_select)
       local uuid = tostring(index)
       itemmap[uuid] = prompt
       result_map[uuid] = result
-
-      -- Build args tag for display (e.g., "#3")
-      local args_tag = ""
-      if prompt.args then
-        local values = {} ---@type string[]
-        for name in pairs(prompt.args) do
-          values[#values + 1] = get_arg_value(name)
-        end
-        if #values > 0 then
-          table.sort(values)
-          args_tag = table.concat(values, " ")
-        end
-      end
-      args_tag_map[uuid] = args_tag
-
+      args_tag_map[uuid] = build_args_tag(prompt)
       picker_items[#picker_items + 1] = {
         uuid = uuid,
         text = prompt.name,
@@ -775,21 +783,12 @@ function M.show_prompt(on_select)
   ---@type era.m.picker.ListComposer|nil
   local picker = nil
 
-  ---Rebuild args_tag_map with updated cache values.
   local function rebuild_args_tags()
     for uuid, prompt in pairs(itemmap) do
-      if prompt.args then
-        local values = {} ---@type string[]
-        for name in pairs(prompt.args) do
-          values[#values + 1] = get_arg_value(name)
-        end
-        table.sort(values)
-        args_tag_map[uuid] = #values > 0 and table.concat(values, " ") or ""
-      end
+      args_tag_map[uuid] = build_args_tag(prompt)
     end
   end
 
-  ---Edit args for current prompt.
   local function edit_current_args()
     if not picker then
       return
@@ -811,7 +810,7 @@ function M.show_prompt(on_select)
       local items = {} ---@type string[]
       for _, name in ipairs(names) do
         local display = name:gsub("^_+", ""):gsub("_+$", "")
-        items[#items + 1] = display .. " = " .. get_arg_value(name)
+        items[#items + 1] = display .. " = " .. get_arg(name, prompt.args)
       end
 
       vim.ui.select(items, { prompt = "Edit arg (Esc to close):" }, function(_, idx)
@@ -822,9 +821,9 @@ function M.show_prompt(on_select)
         end
         local name = names[idx]
         local display = name:gsub("^_+", ""):gsub("_+$", "")
-        vim.ui.input({ prompt = display .. ": ", default = get_arg_value(name) }, function(input)
-          if input then
-            M._args_cache[name] = input
+        vim.ui.input({ prompt = display .. ": ", default = get_arg(name, prompt.args) }, function(input)
+          if input ~= nil then
+            set_arg(name, input)
           end
           rebuild_args_tags()
           picker:reset_data({ items = picker_items, uuid_current = item.uuid })
@@ -850,7 +849,7 @@ function M.show_prompt(on_select)
     keymaps_result = {
       { modes = { "n" }, key = "oe", callback = edit_current_args, desc = "Edit args" },
     },
-    render_result = function(composer, bufnr, local_itemmap, matches)
+    render_result = function(_, bufnr, local_itemmap, matches)
       local lines = {} ---@type string[]
       local uuids = {} ---@type string[]
 
@@ -866,7 +865,7 @@ function M.show_prompt(on_select)
       vim.api.nvim_buf_clear_namespace(bufnr, nsnr_args_tag, 0, -1)
 
       for lnum, match in ipairs(matches) do
-        local row = lnum - 1 ---@type integer
+        local row = lnum - 1
 
         if match.matches then
           for _, m in ipairs(match.matches) do
@@ -874,7 +873,6 @@ function M.show_prompt(on_select)
           end
         end
 
-        -- Add right-aligned args tag overlay
         local tag = args_tag_map[match.uuid]
         if tag and #tag > 0 then
           vim.api.nvim_buf_set_extmark(bufnr, nsnr_args_tag, row, 0, {
@@ -928,12 +926,12 @@ function M.show_prompt(on_select)
         return
       end
 
-      -- Substitute args using cached values
+      -- Substitute args
       local text = result.text
       for name in pairs(prompt.args) do
         local pattern = "%${" .. vim.pesc(name) .. "}"
         text = text:gsub(pattern, function()
-          return get_arg_value(name)
+          return get_arg(name, prompt.args)
         end)
       end
       local new_lines = {} ---@type era.m.ai.IText

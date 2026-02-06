@@ -146,23 +146,25 @@ end
 
 ---@type table<stl.prompt.AgentEnum, fun(cmd: string): string>
 local SLASH_TRANSFORMERS = {
-  claude = function(cmd)
-    return cmd
-  end,
   codex = function(cmd)
-    -- /command -> /prompts:command
     return "/prompts:" .. cmd:sub(2)
   end,
-  copilot = function(cmd)
-    return cmd
-  end,
-  gemini = function(cmd)
-    return cmd
-  end,
-  opencode = function(cmd)
-    return cmd
-  end,
 }
+
+---Get current tmux window id (e.g., "@1").
+---@return string
+local function get_tmux_window_id()
+  if not stl.env.IS_TMUX then
+    return ""
+  end
+  local handle = io.popen("tmux display-message -p '#{window_id}'")
+  if handle then
+    local result = handle:read("*a"):gsub("%s+$", "")
+    handle:close()
+    return result
+  end
+  return ""
+end
 
 ---@class stl.prompt
 local M = {}
@@ -207,7 +209,7 @@ M.templates = {
   {
     name = "review-design",
     submit = true,
-    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
+    args = { __TMUX_WINDOW_ID__ = get_tmux_window_id, __TMUX_PANE_INDEX__ = "#3" },
     template = [[若你对当前设计仍有困惑或担忧，请与 tmux pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 中运行的 agent 进行讨论。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
@@ -238,7 +240,7 @@ M.templates = {
   {
     name = "review-changes",
     submit = true,
-    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
+    args = { __TMUX_WINDOW_ID__ = get_tmux_window_id, __TMUX_PANE_INDEX__ = "#3" },
     template = [[请与 tmux pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 中运行的 agent 协作，对当前改动进行 code review。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
@@ -276,7 +278,7 @@ M.templates = {
   {
     name = "review-diagnostics-neovim",
     submit = true,
-    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
+    args = { __TMUX_WINDOW_ID__ = get_tmux_window_id, __TMUX_PANE_INDEX__ = "#3" },
     template = [[请修复所有 LSP diagnostic issues，直到没有任何需要修复的诊断信息。
 
 ## 前置准备
@@ -416,9 +418,6 @@ end
 ---Render text for a specific agent.
 ---
 ---Performs variable substitution and transforms slash commands based on agent.
----- claude/copilot/gemini/opencode: `/command` (unchanged)
----- codex: `/command` -> `/prompts:command`
----
 ---Builtin commands for each agent are preserved (not transformed).
 ---
 ---@param text                          string
