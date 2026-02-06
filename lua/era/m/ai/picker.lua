@@ -9,18 +9,47 @@ local S = era.m.ai
 ---@class era.m.ai.picker
 local M = {}
 
----@type table<string, string>
-M._args_cache = (function()
-  local cache = {}
+---@param value                        stl.prompt.ArgValue
+---@return string
+local function resolve_arg_value(value)
+  if type(value) == "function" then
+    return value()
+  end
+  return value
+end
+
+---@type table<string, stl.prompt.ArgValue>
+M._args_default = (function()
+  local defaults = {}
   for _, t in ipairs(stl.prompt.templates) do
     if t.args then
       for name, default in pairs(t.args) do
-        cache[name] = default
+        defaults[name] = default
       end
     end
   end
-  return cache
+  return defaults
 end)()
+
+---User-modified values only. Not populated until user edits an arg.
+---@type table<string, string>
+M._args_cache = {}
+
+---Get arg value: user-modified cache takes priority, otherwise resolve from default.
+---Function defaults are re-evaluated each time (not cached unless user modifies).
+---@param name                         string
+---@return string
+local function get_arg_value(name)
+  local cached = M._args_cache[name]
+  if cached ~= nil then
+    return cached
+  end
+  local default = M._args_default[name]
+  if default then
+    return resolve_arg_value(default)
+  end
+  return ""
+end
 
 ----------------------------------------------------------------------------------------------------
 --- Picker utilities
@@ -720,7 +749,7 @@ function M.show_prompt(on_select)
       if prompt.args then
         local values = {} ---@type string[]
         for name in pairs(prompt.args) do
-          values[#values + 1] = M._args_cache[name]
+          values[#values + 1] = get_arg_value(name)
         end
         if #values > 0 then
           table.sort(values)
@@ -752,7 +781,7 @@ function M.show_prompt(on_select)
       if prompt.args then
         local values = {} ---@type string[]
         for name in pairs(prompt.args) do
-          values[#values + 1] = M._args_cache[name]
+          values[#values + 1] = get_arg_value(name)
         end
         table.sort(values)
         args_tag_map[uuid] = #values > 0 and table.concat(values, " ") or ""
@@ -782,7 +811,7 @@ function M.show_prompt(on_select)
       local items = {} ---@type string[]
       for _, name in ipairs(names) do
         local display = name:gsub("^_+", ""):gsub("_+$", "")
-        items[#items + 1] = display .. " = " .. M._args_cache[name]
+        items[#items + 1] = display .. " = " .. get_arg_value(name)
       end
 
       vim.ui.select(items, { prompt = "Edit arg (Esc to close):" }, function(_, idx)
@@ -793,7 +822,7 @@ function M.show_prompt(on_select)
         end
         local name = names[idx]
         local display = name:gsub("^_+", ""):gsub("_+$", "")
-        vim.ui.input({ prompt = display .. ": ", default = M._args_cache[name] }, function(input)
+        vim.ui.input({ prompt = display .. ": ", default = get_arg_value(name) }, function(input)
           if input then
             M._args_cache[name] = input
           end
@@ -904,7 +933,7 @@ function M.show_prompt(on_select)
       for name in pairs(prompt.args) do
         local pattern = "%${" .. vim.pesc(name) .. "}"
         text = text:gsub(pattern, function()
-          return M._args_cache[name]
+          return get_arg_value(name)
         end)
       end
       local new_lines = {} ---@type era.m.ai.IText

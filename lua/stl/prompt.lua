@@ -171,12 +171,14 @@ local M = {}
 -- Prompt Templates
 ----------------------------------------------------------------------------------------------------
 
+---@alias stl.prompt.ArgValue string|fun(): string
+
 ---@class stl.prompt.ITemplate
 ---@field public name                   string
 ---@field public template               string
 ---@field public submit                 boolean
 ---@field public conditional            ?fun(ctx: stl.prompt.ITemplateCtx): boolean
----@field public args                   ?table<string, string> Variable name to default value mapping, prompts user at runtime
+---@field public args                   ?table<string, stl.prompt.ArgValue> Variable name to default value (or fn returning value), prompts user at runtime
 
 ---@class stl.prompt.ITemplateCtx
 ---@field public has_selection          boolean
@@ -205,14 +207,14 @@ M.templates = {
   {
     name = "review-design",
     submit = true,
-    args = { __TMUX_PANE__ = "#3" },
-    template = [[若你对当前设计仍有困惑或担忧，请与 tmux pane ${__TMUX_PANE__} 中运行的 agent 进行讨论。
+    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
+    template = [[若你对当前设计仍有困惑或担忧，请与 tmux pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 中运行的 agent 进行讨论。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
 
 ## 执行步骤
 
-1. **整理处境**：梳理当前"处境"，以清晰友好的表述发送给 pane ${__TMUX_PANE__} 的 agent，请求其：
+1. **整理处境**：梳理当前"处境"，以清晰友好的表述发送给 pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 的 agent，请求其：
    - 提供建议与反馈
    - 查漏补缺：检查是否有考虑欠缺的地方
    - 审视现有设计是否存在缺陷或隐患
@@ -229,18 +231,21 @@ M.templates = {
 2. **保持耐心**：此过程耗时较长，这是预期内的，请从容应对
 3. **批判性倾听**：对方的建议仅代表一种观点，不必全盘接受，但也应审慎考量——既不盲从，也不轻视
 4. **精准提问**：这是双向对话，每次提问应有针对性，避免重复冗余]],
+    conditional = function()
+      return stl.env.IS_TMUX
+    end,
   },
   {
     name = "review-changes",
     submit = true,
-    args = { __TMUX_PANE__ = "#3" },
-    template = [[请与 tmux pane ${__TMUX_PANE__} 中运行的 agent 协作，对当前改动进行 code review。
+    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
+    template = [[请与 tmux pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 中运行的 agent 协作，对当前改动进行 code review。
 
 为便于沟通，我们定义**"处境"**一词，表示以下要素的集合：背景故事、核心目标、关注指标、已确认的设计、待讨论的设计、潜在风险与困境、当前思路。
 
 ## 执行步骤
 
-1. **发起 Review**：梳理当前"处境"与改动内容，以清晰友好的表述发送给 pane ${__TMUX_PANE__} 的 agent，请求其：
+1. **发起 Review**：梳理当前"处境"与改动内容，以清晰友好的表述发送给 pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 的 agent，请求其：
    - 审查代码改动，提出有价值的 review comments
    - 查漏补缺：检查是否有考虑欠缺的地方
    - 指出潜在问题、设计缺陷或隐患
@@ -264,20 +269,23 @@ M.templates = {
 2. **保持耐心**：此过程耗时较长，这是预期内的，请从容应对
 3. **批判性倾听**：对方的建议仅代表一种观点，不必全盘接受，但也应审慎考量——既不盲从，也不轻视
 4. **精准沟通**：这是双向对话，每次交流应有针对性，避免重复冗余]],
+    conditional = function()
+      return stl.env.IS_TMUX
+    end,
   },
   {
     name = "review-diagnostics-neovim",
     submit = true,
-    args = { __TMUX_PANE__ = "#3" },
+    args = { __TMUX_WINDOW_ID__ = "", __TMUX_PANE_INDEX__ = "#3" },
     template = [[请修复所有 LSP diagnostic issues，直到没有任何需要修复的诊断信息。
 
 ## 前置准备
 
-仔细阅读 `@spec/debug/lsp.md` 中的引导，理解如何获取 LSP 诊断信息。你可以使用 tmux pane ${__TMUX_PANE__} 来执行相关操作。
+仔细阅读 `@spec/debug/lsp.md` 中的引导，理解如何获取 LSP 诊断信息。你可以使用 tmux pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 来执行相关操作。
 
 ## 执行步骤
 
-1. **获取诊断**：通过 pane ${__TMUX_PANE__} 获取当前所有 LSP diagnostics
+1. **获取诊断**：通过 pane ${__TMUX_WINDOW_ID__}${__TMUX_PANE_INDEX__} 获取当前所有 LSP diagnostics
 2. **分析问题**：逐一分析每条诊断信息，理解其含义与修复方式
 3. **修复问题**：
    - 对于明确的问题：立即修复
@@ -296,6 +304,9 @@ M.templates = {
 2. **保持耐心**：此过程可能需要多轮迭代，请从容应对
 3. **谨慎修复**：确保修复不会引入新问题或改变原有逻辑]],
     conditional = function()
+      if not stl.env.IS_TMUX then
+        return false
+      end
       local cwd = dot.path.cwd()
       local config_home = vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")
       local nvim_config = config_home .. "/nvim"
