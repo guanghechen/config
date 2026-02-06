@@ -71,6 +71,7 @@ local ICONS_DIRECTORY = {
   snippets                = { glyph = "󱁽", hl = "MiniIconsYellow" },
   syntax                  = { glyph = "󱁽", hl = "MiniIconsGreen"  },
   tmp                     = { glyph = "󰪺", hl = "MiniIconsYellow" },
+  __test__                = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   test                    = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   tests                   = { glyph = "󱞊", hl = "MiniIconsBlue"   },
   tutor                   = { glyph = "󱁽", hl = "MiniIconsGreen"  },
@@ -168,6 +169,14 @@ local ICONS_EXTENSION = {
   xltx                    = { glyph = "󱎏", hl = "MiniIconsGreen"  },
   ["code-snippets"]       = "json",
   excalidraw              = { glyph = "󰽽", hl = "MiniIconsPurple" },
+
+  -- Test
+  ["spec.js"]             = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["spec.mjs"]            = { glyph = "󰙨", hl = "MiniIconsYellow" },
+  ["spec.ts"]             = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["spec.mts"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+  ["spec.tsx"]            = { glyph = "󰙨", hl = "MiniIconsBlue"   },
+
   unknown                 = { glyph = "󰈔", hl = "MiniIconsGrey"   },
 }
 -- stylua: ignore end
@@ -1381,6 +1390,29 @@ function M.get_file_icon(filepath, filetype)
   end
 
   if item == nil then
+    local spec_key ---@type string|nil
+    if filename:sub(-8) == ".spec.js" then
+      spec_key = "spec.js"
+    elseif filename:sub(-9) == ".spec.mjs" then
+      spec_key = "spec.mjs"
+    elseif filename:sub(-8) == ".spec.ts" then
+      spec_key = "spec.ts"
+    elseif filename:sub(-9) == ".spec.mts" then
+      spec_key = "spec.mts"
+    elseif filename:sub(-9) == ".spec.tsx" then
+      spec_key = "spec.tsx"
+    end
+
+    if spec_key ~= nil then
+      local spec_item = ICONS_EXTENSION[spec_key]
+      if type(spec_item) == "string" then
+        spec_item = ICONS_FILETYPE[spec_item]
+      end
+      if spec_item ~= nil then
+        return spec_item.glyph, spec_item.hl, false
+      end
+    end
+
     filetype = filetype or stl.filetype.detect(filename) ---@type string|nil
     if filetype ~= nil then
       local glyph, hl, is_default = M.get_filetype_icon(filetype)
