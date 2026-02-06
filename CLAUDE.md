@@ -39,3 +39,5 @@
    - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
 2. `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 3. `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
+4. Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
+
