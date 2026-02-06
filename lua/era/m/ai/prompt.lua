@@ -333,7 +333,7 @@ function M.build_list()
     list[#list + 1] = {
       name = template.name,
       submit = template.submit,
-      args = template.args,
+      args = template.args, ---@diagnostic disable-line: assign-type-mismatch
       render = function(ctx)
         return M.render_template(template, ctx)
       end,

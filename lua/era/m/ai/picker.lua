@@ -28,7 +28,7 @@ local function resolve_arg(name, def)
     return M._args_user[name]
   end
   if not args_resolved[name] then
-    args_resolved[name] = type(def) == "function" and def() or def
+    args_resolved[name] = type(def) == "function" and def() or def --[[@as string]]
   end
   return args_resolved[name]
 end
@@ -794,7 +794,7 @@ function M.show_prompt(on_select)
       return
     end
     local lnum = picker.result.lnum_current:snapshot()
-    local item = picker:retrieve(lnum)
+    local item = picker:retrieve(lnum) --[[@as era.m.ai.picker.IItem|nil]]
     if not item then
       return
     end
@@ -803,7 +803,7 @@ function M.show_prompt(on_select)
       return
     end
 
-    local names = vim.tbl_keys(prompt.args)
+    local names = vim.tbl_keys(prompt.args) ---@type string[]
     table.sort(names)
 
     local function show_arg_picker()
