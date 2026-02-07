@@ -20,6 +20,7 @@ import { Reporter } from '#stl/reporter'
  * @property {IEdition} edition - Global edition
  * @property {IAppEdition} tmux_edition - Tmux edition
  * @property {IAppEdition} nvim_edition - Neovim edition
+ * @property {number} node_edition - Preferred Node.js major version
  */
 
 /**
@@ -33,6 +34,8 @@ const VALID_EDITIONS = new Set(['nix', 'nix-remote', 'osx', 'win'])
 
 /** @type {Set<IAppEdition>} */
 const VALID_APP_EDITIONS = new Set(['latest', 'nightly', 'manual'])
+
+const DEFAULT_NODE_VERSION = 24
 
 export class Setting {
   /** @type {string} */
@@ -54,6 +57,7 @@ export class Setting {
       theme: 'vsc-dark-modern',
       tmux_edition: 'latest',
       nvim_edition: 'latest',
+      node_edition: DEFAULT_NODE_VERSION,
     }
     switch (PLATFORM) {
       case 'osx':
@@ -108,6 +112,9 @@ export class Setting {
     ) {
       result.nvim_edition = /** @type {IAppEdition} */ (obj.nvim_edition)
     }
+    if (typeof obj.node_edition === 'number' && obj.node_edition > 0) {
+      result.node_edition = obj.node_edition
+    }
 
     return result
   }
@@ -143,6 +150,9 @@ export class Setting {
     if (patch.nvim_edition !== undefined && VALID_APP_EDITIONS.has(patch.nvim_edition)) {
       data.nvim_edition = patch.nvim_edition
     }
+    if (patch.node_edition !== undefined && patch.node_edition > 0) {
+      data.node_edition = patch.node_edition
+    }
 
     await fs.writeFile(this.#filepath, JSON.stringify(data, null, 2) + '\n', 'utf8')
   }
@@ -174,6 +184,9 @@ export class Setting {
       case 'tmux_edition':
       case 'nvim_edition':
         if (!VALID_APP_EDITIONS.has(/** @type {IAppEdition} */ (value))) return false
+        break
+      case 'node_edition':
+        if (typeof value !== 'number' || value <= 0) return false
         break
       default:
         return false
