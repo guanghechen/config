@@ -5,9 +5,10 @@ set -U fish_user_paths
 
 ## Setup bootstrap envs
 set -gx XDG_CONFIG_HOME "$HOME/.config"
+set -gx LANG en_US.UTF-8
 set -gx LC_CTYPE en_US.UTF-8
 set -gx LC_ALL en_US.UTF-8
-set -gx LANG en_US.UTF-8
+set -gx LESSCHARSET utf-8
 set -gx TZ Asia/Shanghai
 set -gx no_proxy "localhost,127.0.0.1,::1"
 
