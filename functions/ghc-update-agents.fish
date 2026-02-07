@@ -23,9 +23,7 @@ function ghc-update-agents --description "Update AI coding agents globally"
     # Check if claude is installed
     if command -q claude
         printf "\e[96m  Patching Claude Code...\e[0m\n"
-        set -l script_dir ~/.config/claude/script
-        printf "\e[96m  cd ~/.config/claude/script/ && bun src/patch/index.ts\e[0m\n"
-        fish -c "cd ~/.config/claude/script/ && bun src/patch/index.ts"
+        node ~/.config/guanghechen/cli/patch-agents.mjs --agent claude
 
         # Sync Claude Code plugins from settings.json
         set -l claude_settings_file "$HOME/.config/claude/settings.json"
