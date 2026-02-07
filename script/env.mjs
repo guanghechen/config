@@ -3,15 +3,13 @@ import os from "node:os"
 import path from "node:path"
 import url from "node:url"
 
-export type IPlatform = "wsl" | "win" | "osx" | "nix" | "unknown"
-
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-function existsOrNull(envVar: string | undefined): string | null {
+function existsOrNull(envVar) {
   return envVar && existsSync(envVar) ? envVar : null
 }
 
-function detectPlatform(): IPlatform {
+function detectPlatform() {
   if (os.release().toLowerCase().includes("microsoft")) return "wsl"
   if (os.platform() === "win32") return "win"
   if (os.platform() === "darwin") return "osx"
@@ -20,7 +18,7 @@ function detectPlatform(): IPlatform {
 }
 
 export const XDG_CONFIG_HOME =
-  process.env.XDG_CONFIG_HOME || path.normalize(path.join(__dirname, "../../"))
+  process.env.XDG_CONFIG_HOME || path.normalize(path.join(__dirname, "../"))
 export const USER_HOME =
   process.env.HOME || process.env.USERPROFILE || path.dirname(XDG_CONFIG_HOME)
 export const GEMINI_CONFIG_DIR = process.env.GEMINI_CONFIG_DIR || path.join(USER_HOME, ".gemini")
@@ -28,7 +26,7 @@ export const F_WINDOWS_TERMINAL_SETTINGS = existsOrNull(process.env.f_windows_te
 export const F_VSCODE_KEYBINDINGS = existsOrNull(process.env.f_vscode_keybindings)
 export const platform = detectPlatform()
 
-export const green = (s: string) => `\x1b[32m${s}\x1b[0m`
-export const yellow = (s: string) => `\x1b[33m${s}\x1b[0m`
-export const red = (s: string) => `\x1b[31m${s}\x1b[0m`
-export const dim = (s: string) => `\x1b[2m${s}\x1b[0m`
+export const green = (s) => `\x1b[32m${s}\x1b[0m`
+export const yellow = (s) => `\x1b[33m${s}\x1b[0m`
+export const red = (s) => `\x1b[31m${s}\x1b[0m`
+export const dim = (s) => `\x1b[2m${s}\x1b[0m`

@@ -1,36 +1,8 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { execSync } from "node:child_process"
 import { readFileSync, existsSync } from "node:fs"
 import path from "node:path"
-
-interface IStatuslineData {
-  cwd?: string
-  model?: { display_name?: string }
-  cost?: { total_cost_usd?: number; total_duration_ms?: number }
-  context_window?: {
-    context_window_size?: number
-    current_usage?: {
-      input_tokens?: number
-      cache_creation_input_tokens?: number
-      cache_read_input_tokens?: number
-    }
-  }
-  output_style?: { name?: string }
-}
-
-interface IFileStats {
-  conflicts: number
-  untracked: number
-  stagedM: number
-  stagedA: number
-  stagedD: number
-  stagedR: number
-  unstagedM: number
-  unstagedA: number
-  unstagedD: number
-  unstagedR: number
-}
 
 const ANSI = {
   reset: "\x1b[0m",
@@ -42,13 +14,13 @@ const ANSI = {
   blue: "\x1b[94m",
   magenta: "\x1b[95m",
   cyan: "\x1b[96m",
-} as const
+}
 
-function execGit(cwd: string, cmd: string): string {
+function execGit(cwd, cmd) {
   return execSync(cmd, { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim()
 }
 
-function abbreviatePath(cwd: string): string {
+function abbreviatePath(cwd) {
   const home = process.env.HOME || process.env.USERPROFILE
   let display = cwd
   if (home && display.startsWith(home)) {
@@ -64,8 +36,8 @@ function abbreviatePath(cwd: string): string {
   return [...abbreviated, parts.at(-1)].join(path.sep)
 }
 
-function parseGitFiles(lines: string[]): IFileStats {
-  const stats: IFileStats = {
+function parseGitFiles(lines) {
+  const stats = {
     conflicts: 0,
     untracked: 0,
     stagedM: 0,
@@ -98,14 +70,8 @@ function parseGitFiles(lines: string[]): IFileStats {
   return stats
 }
 
-function buildIndicators(
-  conflict: string,
-  ahead: number,
-  behind: number,
-  stash: number,
-  stats: IFileStats,
-): string {
-  const ind: string[] = []
+function buildIndicators(conflict, ahead, behind, stash, stats) {
+  const ind = []
   const { redBold, blue, magenta, green, yellow, gray, reset } = ANSI
 
   if (conflict) ind.push(`${redBold}${conflict}${reset}`)
@@ -126,7 +92,7 @@ function buildIndicators(
   return ind.length ? ` ${ind.join("")}` : ""
 }
 
-function getConflictState(cwd: string): string {
+function getConflictState(cwd) {
   try {
     const gitDir = execGit(cwd, "git rev-parse --git-dir")
     const dir = path.isAbsolute(gitDir) ? gitDir : path.join(cwd, gitDir)
@@ -143,7 +109,7 @@ function getConflictState(cwd: string): string {
   return ""
 }
 
-function getStashCount(cwd: string): number {
+function getStashCount(cwd) {
   try {
     return execGit(cwd, "git stash list").split("\n").filter(Boolean).length
   } catch {
@@ -151,11 +117,11 @@ function getStashCount(cwd: string): number {
   }
 }
 
-function renderPath(cwd: string): string {
+function renderPath(cwd) {
   return `${ANSI.blue}󱃪 ${abbreviatePath(cwd)}${ANSI.reset}`
 }
 
-function renderGit(cwd: string): string {
+function renderGit(cwd) {
   try {
     const status = execGit(cwd, "git status -sb")
     const lines = status.split("\n")
@@ -194,16 +160,16 @@ function renderGit(cwd: string): string {
   }
 }
 
-function renderModel(data: IStatuslineData): string {
+function renderModel(data) {
   return `${ANSI.cyan}󰘦 ${data.model?.display_name || "Unknown"}${ANSI.reset}`
 }
 
-function renderCost(data: IStatuslineData): string {
+function renderCost(data) {
   const usd = data.cost?.total_cost_usd || 0
   return `${ANSI.yellow}$${usd.toFixed(4)}${ANSI.reset}`
 }
 
-function renderContext(data: IStatuslineData): string {
+function renderContext(data) {
   const ctx = data.context_window
   if (!ctx?.context_window_size) return ""
 
@@ -216,18 +182,18 @@ function renderContext(data: IStatuslineData): string {
     : 0
 
   const pct = Math.round((used / total) * 100)
-  let color: string = ANSI.green
+  let color = ANSI.green
   if (pct >= 80) color = ANSI.red
   else if (pct >= 50) color = ANSI.yellow
 
   return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k (${pct}%)${ANSI.reset}`
 }
 
-function renderStyle(data: IStatuslineData): string {
+function renderStyle(data) {
   return `${ANSI.gray}󰉼 ${data.output_style?.name || "default"}${ANSI.reset}`
 }
 
-function formatDuration(ms: number): string {
+function formatDuration(ms) {
   const sec = Math.floor(ms / 1000)
   const d = Math.floor(sec / 86400)
   const h = Math.floor((sec % 86400) / 3600)
@@ -240,22 +206,22 @@ function formatDuration(ms: number): string {
   return `${s}s`
 }
 
-function renderDuration(data: IStatuslineData): string {
+function renderDuration(data) {
   const ms = data.cost?.total_duration_ms
   if (!ms) return ""
   return `${ANSI.gray}󱎫 ${formatDuration(ms)}${ANSI.reset}`
 }
 
-function renderTime(): string {
+function renderTime() {
   const now = new Date()
-  const pad = (n: number) => n.toString().padStart(2, "0")
+  const pad = (n) => n.toString().padStart(2, "0")
   const hh = pad(now.getHours())
   const mi = pad(now.getMinutes())
   const ss = pad(now.getSeconds())
   return `${ANSI.gray}󰥔 ${hh}:${mi}:${ss}${ANSI.reset}`
 }
 
-function render(data: IStatuslineData): string {
+function render(data) {
   const cwd = path.normalize(data.cwd || process.cwd())
   const parts = [
     renderPath(cwd),
@@ -274,7 +240,7 @@ function render(data: IStatuslineData): string {
 
 try {
   const input = readFileSync(0, "utf-8")
-  const data: IStatuslineData = JSON.parse(input)
+  const data = JSON.parse(input)
   process.stdout.write(render(data))
 } catch {
   process.stdout.write("[Claude Code]")

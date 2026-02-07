@@ -1,18 +1,14 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { readFileSync } from "node:fs"
-import { outputHook } from "./util"
+import { outputHook } from "./util.mjs"
 
 const GIT_SENSITIVE_COMMANDS = [
   { pattern: /\bgit\s+(?:-C\s+\S+\s+)?push\b/, name: "git push" },
   { pattern: /\bgit\s+(?:-C\s+\S+\s+)?commit\b/, name: "git commit" },
 ]
 
-interface IBashInput {
-  tool_input?: { command?: string }
-}
-
-const input: IBashInput = JSON.parse(readFileSync(0, "utf-8"))
+const input = JSON.parse(readFileSync(0, "utf-8"))
 const command = input.tool_input?.command || ""
 
 for (const { pattern, name } of GIT_SENSITIVE_COMMANDS) {

@@ -1,10 +1,4 @@
-export type IPermissionDecision = "allow" | "deny" | "ask"
-
-export function outputHook(
-  eventName: string,
-  decision: IPermissionDecision,
-  reason?: string,
-): void {
+export function outputHook(eventName, decision, reason) {
   console.log(
     JSON.stringify({
       hookSpecificOutput: {

@@ -1,35 +1,30 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { outputHook } from "./util"
+import { outputHook } from "./util.mjs"
 
-const SENSITIVE_PATTERNS: RegExp[] = [
+const SENSITIVE_PATTERNS = [
   /\.http_request$/,
   /\.http_response$/,
   /^\.env\.local$/,
   /^\.git-credentials$/,
 ]
 
-const SENSITIVE_PATHS: RegExp[] = [
+const SENSITIVE_PATHS = [
   /(?:^|[\\/])\.ssh[\\/]/,
   /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
   /(?:^|[\\/])local[\\/]env\.[^/\\]+$/,
 ]
 
-function isSensitiveFile(filepath: string): boolean {
+function isSensitiveFile(filepath) {
   const base = path.basename(filepath)
   return (
     SENSITIVE_PATTERNS.some((p) => p.test(base)) || SENSITIVE_PATHS.some((p) => p.test(filepath))
   )
 }
 
-interface IToolInput {
-  tool_name: string
-  tool_input?: { file_path?: string; notebook_path?: string }
-}
-
-function extractFilePath(input: IToolInput): string | undefined {
+function extractFilePath(input) {
   switch (input.tool_name) {
     case "Read":
     case "Write":
@@ -40,7 +35,7 @@ function extractFilePath(input: IToolInput): string | undefined {
   }
 }
 
-const input: IToolInput = JSON.parse(readFileSync(0, "utf-8"))
+const input = JSON.parse(readFileSync(0, "utf-8"))
 const fp = extractFilePath(input)
 
 if (fp && isSensitiveFile(fp)) {
