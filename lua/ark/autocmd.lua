@@ -22,6 +22,7 @@ vim.filetype.add({
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
+    [".prettierrc"] = "yaml",
     log = "text",
     skhdrc = "conf",
     vimrc = "vim",
