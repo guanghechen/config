@@ -24,15 +24,40 @@ Before starting, verify:
 
 1. Run `git status` to ensure working directory is clean (no uncommitted changes)
 2. Check for existing `.changeset/*.md` files (excluding README.md) to see if changesets exist
-3. If no changesets exist, inform the user and stop
 
-### 2. Analyze Changesets
+### 2. Detect Packages to Release
+
+If no changeset files exist, automatically detect packages that need release:
+
+1. **Find unreleased commits**: For each package in the monorepo:
+   - Get the latest git tag matching `<package-name>@*` pattern
+   - Check if there are commits affecting that package since the tag
+   - If no tag exists, check if package has ever been published to npm
+2. **Analyze changes**: For each package with unreleased commits:
+   - Read commit messages to determine bump type:
+     - `feat` / `:sparkles:` → minor
+     - `fix` / `:bug:` → patch
+     - breaking change marker (exclamation mark in conventional commit) / `:boom:` → major
+     - Default to patch if unclear
+   - Generate a summary of changes from commit messages
+3. **Create changeset file**: Write `.changeset/<random-name>.md` with:
+   ```markdown
+   ---
+   "<package-name>": <bump-type>
+   ---
+
+   <summary of changes>
+   ```
+4. **Commit the changeset**: Stage and commit with message `:bookmark: chore: add changeset for <package>@<bump-type>`
+5. If no packages need release, inform the user and stop
+
+### 3. Analyze Changesets
 
 1. Read all changeset files in `.changeset/` directory
 2. Summarize which packages will be released and their bump types (major/minor/patch)
 3. Show this summary to the user
 
-### 3. Version Bump
+### 4. Version Bump
 
 Send command to the tmux pane:
 
@@ -40,7 +65,7 @@ Send command to the tmux pane:
 pnpm changeset version
 ```
 
-Wait for user interaction and completion. Record the packages and versions from the output for later use (commit message and git tags).
+Wait for completion. Record the packages and versions from the output for later use (commit message and git tags).
 
 If it fails due to missing GITHUB_TOKEN, offer alternatives:
 
@@ -48,23 +73,22 @@ If it fails due to missing GITHUB_TOKEN, offer alternatives:
 - Manually update version and CHANGELOG (show what changes would be made)
 - Change changelog config to use `@changesets/changelog-git` instead
 
-### 4. Review Changes
+### 5. Review Changes
 
 After version bump:
 
-1. Run `git status` and `git diff` to show what changed
-2. Show the updated CHANGELOG entries
+1. Run `git status` and `git diff --stat` to show what changed
+2. Show the updated CHANGELOG entries briefly
 3. Ask user to confirm before committing
 
-### 5. Commit Version Bump
+### 6. Commit Version Bump
 
 If user confirms:
 
 1. Stage all changed files (package.json, CHANGELOG.md, deleted changeset files)
 2. Commit with message format: `:bookmark: release: @foo/a@1.0.0, @foo/b@1.3.2` (list all released packages)
-3. Push to remote
 
-### 6. Publish
+### 7. Publish
 
 Send command to the tmux pane:
 
@@ -74,14 +98,14 @@ pnpm changeset publish
 
 Wait for user to complete OTP verification if needed (timeout: 1 minute for OTP).
 
-### 7. Create Git Tags
+### 8. Create Git Tags & Push
 
 After successful publish:
 
-1. Create git tag for each newly published package (from step 3): `<package>@<version>`
-2. Push tags to remote: `git push --tags`
+1. Create git tag for each newly published package (from step 4): `<package-name>@<version>`
+2. Push commits and tags to remote: `git push && git push --tags`
 
-### 8. Summary
+### 9. Summary
 
 Report final status:
 
@@ -95,7 +119,7 @@ Report final status:
 - Use `tmux capture-pane -ep -t <pane_ref>` to check command output
 - After sending commands that need user interaction, use `sleep 2 && tmux send-keys -t <pane_ref> C-m C-m` to trigger
 - If any step fails, stop and report the error to the user
-- Do not proceed to publish if version bump or commit fails
+- Do not proceed to publish if version bump fails or commit fails
 
 ## Timeouts
 
