@@ -83,4 +83,4 @@ complete -c kit-pm -n '__fish_seen_subcommand_from completion' -l fish -d 'Gener
 complete -c kit-pm -n '__fish_seen_subcommand_from completion' -l no-fish -d 'Generate Fish completion script'
 complete -c kit-pm -n '__fish_seen_subcommand_from completion' -l pwsh -d 'Generate PowerShell completion script'
 complete -c kit-pm -n '__fish_seen_subcommand_from completion' -l no-pwsh -d 'Generate PowerShell completion script'
-
+complete -c kit-pm -n '__fish_seen_subcommand_from completion' -s w -l write -d 'Write to file (default path if no value given)'
