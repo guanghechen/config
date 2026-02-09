@@ -130,7 +130,7 @@ if (process.argv[1] === import.meta.filename) {
       await handleThemeApply(/** @type {string | undefined} */ (args.theme))
     })
 
-  const genCmd = new Command({ name: 'gen', description: 'Generate theme files for all configured applications.' })
+  const genCmd = new Command({ name: 'generate', description: 'Generate theme files for all configured applications.' })
     .action(handleThemeGen)
 
   const toggleCmd = new Command({ name: 'toggle', description: 'Toggle theme between light and dark variants.' })
@@ -141,6 +141,7 @@ if (process.argv[1] === import.meta.filename) {
 
   const cmd = new Command({ name: 'theme', description: 'Theme management CLI.', helpSubcommand: true })
     .subcommand('apply', applyCmd)
+    .subcommand('generate', genCmd)
     .subcommand('gen', genCmd)
     .subcommand('toggle', toggleCmd)
 
