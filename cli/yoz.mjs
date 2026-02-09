@@ -156,7 +156,7 @@ if (process.argv[1] === import.meta.filename) {
       await handleAuth()
     })
 
-  const cmd = new Command({ name: 'yoz', description: 'Preview file with yoz server.' })
+  const cmd = new Command({ name: 'yoz', description: 'Preview file with yoz server.', helpSubcommand: true })
     .argument({ name: 'filepath', kind: 'optional', description: 'File path to preview' })
     .option({ long: 'force', type: 'boolean', description: 'Force refresh' })
     .subcommand('auth', authCmd)

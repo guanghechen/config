@@ -88,7 +88,7 @@ printf "\e[92m  [setup tmux] done.\e[0m\n"
 
 ## Setup themes
 printf "\n\e[96m  [setup theme] preparing...\e[0m\n"
-node "$HOME/.config/guanghechen/cli/theme-apply.mjs"
+node "$HOME/.config/guanghechen/cli/theme.mjs" apply
 printf "\e[92m  [setup theme] done.\e[0m\n"
 
 printf "\n\e[95m ===== [setup settings] =====\e[0m\n"

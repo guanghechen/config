@@ -441,23 +441,23 @@ try {
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
 
-const reporter = new Reporter({ prefix: 'theme-apply' })
+const reporter = new Reporter({ prefix: 'mycli' })
 
 const cli = new Command({
-  name: 'theme-apply',
-  description: 'Apply a theme to all configured applications.',
+  name: 'mycli',
+  description: 'My CLI tool.',
   version: '1.0.0'
 })
-  .argument({ name: 'theme', kind: 'optional', description: 'Theme name to apply' })
+  .argument({ name: 'file', kind: 'optional', description: 'File to process' })
   .option({ long: 'port', short: 'p', type: 'number', default: 3000, env: 'PORT', description: 'Port number' })
-  .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force apply without confirmation' })
+  .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force operation' })
   .action(async ({ ctx, args, opts }) => {
     // ctx.cmd: Command instance
     // ctx.reporter: IReporter
-    // args.theme: string | undefined
+    // args.file: string | undefined
     // opts.port: number
     // opts.force: boolean
-    await handleThemeApply(args.theme)
+    await handleFile(args.file)
   })
 
 // Option 1: All-in-one
@@ -471,16 +471,16 @@ await cli.execute({ ctx: cli, args, opts })
 ## Help Output
 
 ```
-Apply a theme to all configured applications.
+My CLI tool.
 
-Usage: theme-apply [options] [theme]
+Usage: mycli [options] [file]
 
 Arguments:
-  theme                   Theme name to apply
+  file                    File to process
 
 Options:
   --help                  Display this help message
   --version               Display version number
   -p, --port <n>          Port number (env: PORT) (default: 3000)
-  -f, --force             Force apply without confirmation
+  -f, --force             Force operation
 ```
