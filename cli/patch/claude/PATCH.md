@@ -78,6 +78,9 @@ rg 'var \w+=128000' /path/to/cli.js
 # Image Paste (Windows) - 搜索 windows 平台判断 + meta+v 快捷键
 rg '==="windows"\?\{displayText:' /path/to/cli.js
 
+# Image Paste (Windows) - 搜索 wrappedOnInput handler
+rg 'wrappedOnInput:\(\w+,\w+\)=>\{if\(\w+\.current\)' /path/to/cli.js
+
 # Image Paste (WSL/Linux) - 搜索 wl-paste 命令
 rg 'wl-paste --type image/png' /path/to/cli.js
 ```
@@ -97,7 +100,17 @@ rg 'wl-paste --type image/png' /path/to/cli.js
 }
 ```
 
-**重要**：patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
+**重要**：
+
+1. patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
+
+2. **Windows 平台需要两个 patch**（缺一不可）：
+   - `win-image-paste-shortcut`: 将快捷键从 `meta+v` 改为 `ctrl+v`
+   - `win-image-paste-ctrl-v`: 在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑（因为 Windows Terminal 不支持 bracketed paste mode）
+
+3. WSL/Linux 平台需要两个 patch：
+   - `checkImage-grep-pattern`: 添加 BMP 格式支持
+   - `wl-paste-bmp-conversion`: 添加 BMP 到 PNG 转换
 
 ### Step 5: 测试
 
@@ -106,3 +119,8 @@ node index.mjs
 ```
 
 确认输出显示 `Patched` 而非 `Pattern not found`。
+
+**Windows 测试 checklist**：
+- [ ] `win-image-paste-shortcut` 显示 `Patched`
+- [ ] `win-image-paste-ctrl-v` 显示 `Patched`
+- [ ] 在 Claude Code 中按 Ctrl+V 能粘贴剪贴板中的图片

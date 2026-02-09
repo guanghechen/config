@@ -26,6 +26,22 @@ import { applyPatches, replaceAll } from './util.mjs'
 const patches = [
   // 2.1.37 - Windows patches
   {
+    // Fix keyboard shortcut binding: Windows uses "alt+v" but should use "ctrl+v"
+    // Original: gT5=oA()==="windows"?"alt+v":"ctrl+v"
+    // Changed:  gT5=oA()==="windows"?"ctrl+v":"ctrl+v"
+    name: 'win-image-paste-keybinding',
+    version: '2.1.37',
+    platform: ['win'],
+    search: /(\w+)=oA\(\)==="windows"\?"alt\+v":"ctrl\+v"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `${varName}=oA()==="windows"?"ctrl+v":"ctrl+v"`
+      }),
+    verify: (text) => text.includes('oA()==="windows"?"ctrl+v":"ctrl+v"'),
+  },
+  {
+    // Fix displayText and check function for image paste hint
     // Original: qP1=oA()==="windows"?{displayText:`${XSA}+v`,check:(A,q)=>q.meta&&(A==="v"||A==="V")}
     // Changed:  qP1=oA()==="windows"?{displayText:"ctrl+v",check:(A,q)=>q.ctrl&&(A==="v"||A==="V")}
     name: 'win-image-paste-shortcut',
