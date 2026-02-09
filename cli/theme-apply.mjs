@@ -52,15 +52,11 @@ export async function handleThemeApply(theme) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-apply', reporter)
-    .description('Apply a theme to all configured applications.')
-    .argument('[theme]', 'Theme name to apply')
-    .example('theme-apply')
-    .example('theme-apply tokyonight-night')
-    .example('theme-apply catppuccin-mocha --silent')
+  const cmd = new Command({ name: 'theme-apply', description: 'Apply a theme to all configured applications.' })
+    .argument({ name: 'theme', kind: 'optional', description: 'Theme name to apply' })
     .action(async ({ args }) => {
       await handleThemeApply(/** @type {string | undefined} */ (args.theme))
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

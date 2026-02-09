@@ -173,11 +173,8 @@ export function handleSyncConfigVscode(targetKeybindingsPath) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('sync-config-vscode', reporter)
-    .description('Sync VSCode keybindings configuration.')
-    .argument('[target-path]', 'Target keybindings.json path')
-    .example('sync-config-vscode')
-    .example('sync-config-vscode ~/Library/Application\\ Support/Code/User/keybindings.json')
+  const cmd = new Command({ name: 'sync-config-vscode', description: 'Sync VSCode keybindings configuration.' })
+    .argument({ name: 'target-path', kind: 'optional', description: 'Target keybindings.json path' })
     .action(async ({ args }) => {
       const targetPath = /** @type {string | undefined} */ (args['target-path']) || F_VSCODE_KEYBINDINGS
       if (targetPath) {
@@ -185,5 +182,5 @@ if (process.argv[1] === import.meta.filename) {
       }
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

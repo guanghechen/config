@@ -4,153 +4,270 @@
  * @module @guanghechen/stl/commander
  */
 
-/** Option value types */
-export type ICommanderOptionValue = boolean | string | number | string[] | number[]
+// ============================================================
+// Reporter Interface
+// ============================================================
 
-/** Argument value types */
-export type ICommanderArgumentValue = string | string[] | undefined
+/** Reporter interface for logging */
+export interface IReporter {
+  debug(message: string, ...args: unknown[]): void
+  info(message: string, ...args: unknown[]): void
+  warn(message: string, ...args: unknown[]): void
+  error(message: string, ...args: unknown[]): void
+}
+
+// ============================================================
+// Option Types
+// ============================================================
 
 /** Supported option types */
-export type ICommanderOptionType = 'boolean' | 'string' | 'number' | 'string[]' | 'number[]'
+export type IOptionType = 'boolean' | 'string' | 'number' | 'string[]' | 'number[]'
 
-/** Log level types */
-export type ICommanderLogLevel = 'debug' | 'info' | 'warn' | 'error'
+/** Option value types */
+export type IOptionValue = boolean | string | number | string[] | number[]
 
-/** Option configuration */
-export interface ICommanderOptionConfig {
-  /** Option type (inferred from flags if not specified) */
-  type?: ICommanderOptionType
+/** Option definition (object configuration) */
+export interface IOption<T extends IOptionType = IOptionType> {
+  /** Long option name without -- prefix (e.g., 'config', 'dry-run') */
+  long: string
+  /** Short option name without - prefix (e.g., 'c', 'n'). Optional. */
+  short?: string
+  /** Option type */
+  type: T
+  /** Option description */
+  description?: string
   /** Default value */
-  default?: ICommanderOptionValue
-  /** Environment variable name */
+  default?: T extends 'boolean'
+    ? boolean
+    : T extends 'string'
+      ? string
+      : T extends 'number'
+        ? number
+        : T extends 'string[]'
+          ? string[]
+          : T extends 'number[]'
+            ? number[]
+            : never
+  /** Environment variable name to read value from */
   env?: string
 }
 
-/** Diagnostic message from parsing */
-export interface ICommanderDiagnostic {
-  /** Diagnostic severity */
-  type: 'warn' | 'error'
-  /** Diagnostic message */
-  message: string
+// ============================================================
+// Argument Types
+// ============================================================
+
+/** Argument kind */
+export type IArgumentKind = 'required' | 'optional' | 'variadic'
+
+/** Argument value types */
+export type IArgumentValue = string | string[] | undefined
+
+/** Argument definition (object configuration) */
+export interface IArgument {
+  /** Argument name */
+  name: string
+  /** Argument kind */
+  kind: IArgumentKind
+  /** Argument description */
+  description?: string
+  /** Default value (only for optional arguments) */
+  default?: string
 }
 
-/** Result of parsing argv */
-export interface ICommanderParseResult {
-  /** Parsed positional arguments */
-  args: Record<string, ICommanderArgumentValue>
-  /** Parsed options */
-  opts: Record<string, ICommanderOptionValue>
-  /** Environment variables passed to parse */
-  envs: Record<string, string>
-  /** Parsing diagnostics */
-  diagnostics: ICommanderDiagnostic[]
+// ============================================================
+// Command Configuration
+// ============================================================
+
+/** Command configuration */
+export interface ICommandConfig {
+  /** Command name */
+  name: string
+  /** Command description */
+  description?: string
+  /** Command version (enables --version option) */
+  version?: string
+  /** Enable help subcommand (default: false) */
+  helpSubcommand?: boolean
 }
 
-/** Parameters passed to action handler */
-export interface ICommanderExecuteParams {
+// ============================================================
+// Subcommand Types
+// ============================================================
+
+/** Subcommand entry */
+export interface ISubcommandEntry {
+  /** Subcommand name */
+  name: string
+  /** Subcommand instance */
+  command: Command
+}
+
+// ============================================================
+// Action Types
+// ============================================================
+
+/** Action parameters */
+export interface IActionParams {
   /** Command context */
   ctx: Command
-  /** Parsed positional arguments */
-  args: Record<string, ICommanderArgumentValue>
   /** Parsed options */
-  opts: Record<string, ICommanderOptionValue>
-  /** Environment variables */
-  envs: Record<string, string>
+  opts: Record<string, IOptionValue>
+  /** Parsed positional arguments */
+  args: Record<string, IArgumentValue>
 }
 
 /** Action handler function */
-export type ICommanderActionHandler = (params: ICommanderExecuteParams) => Promise<void>
+export type IAction = (params: IActionParams) => Promise<void>
+
+// ============================================================
+// Run Parameters
+// ============================================================
+
+/** Run parameters */
+export interface IRunParams {
+  /** Command line arguments */
+  argv: string[]
+  /** Environment variables */
+  envs: Record<string, string | undefined>
+  /** Optional reporter (uses DefaultReporter if not provided) */
+  reporter?: IReporter
+}
+
+// ============================================================
+// Parse Result
+// ============================================================
+
+/** Result of parsing argv */
+export interface IParseResult {
+  /** Parsed positional arguments */
+  args: Record<string, IArgumentValue>
+  /** Parsed options */
+  opts: Record<string, IOptionValue>
+  /** Remaining arguments after subcommand routing */
+  remaining: string[]
+  /** Matched subcommand name (if any) */
+  subcommand?: string
+}
+
+// ============================================================
+// Error Types
+// ============================================================
+
+/** Commander error kinds */
+export type ICommanderErrorKind =
+  | 'unknown_option'
+  | 'missing_option_value'
+  | 'invalid_option_value'
+  | 'missing_argument'
+  | 'unknown_subcommand'
+  | 'validation_error'
+
+/** Commander error class */
+export class CommanderError extends Error {
+  /** Error kind */
+  readonly kind: ICommanderErrorKind
+  /** Command path (e.g., 'cli subcmd') */
+  readonly commandPath: string
+
+  constructor(kind: ICommanderErrorKind, message: string, commandPath: string)
+
+  /** Format error message with hint */
+  format(): string
+}
+
+// ============================================================
+// Default Reporter
+// ============================================================
+
+/** Default reporter implementation */
+export class DefaultReporter implements IReporter {
+  debug(message: string, ...args: unknown[]): void
+  info(message: string, ...args: unknown[]): void
+  warn(message: string, ...args: unknown[]): void
+  error(message: string, ...args: unknown[]): void
+}
+
+// ============================================================
+// Command Class
+// ============================================================
 
 /** CLI command builder */
 export class Command {
   /** Command name */
   readonly name: string
-
-  /** Reporter instance */
-  readonly reporter: import('./reporter.d.ts').Reporter
+  /** Command description */
+  readonly description: string | undefined
+  /** Command version */
+  readonly version: string | undefined
+  /** Defined options (excluding builtins) */
+  readonly options: ReadonlyArray<IOption>
+  /** Defined arguments */
+  readonly arguments: ReadonlyArray<IArgument>
 
   /**
    * Create a new Command instance.
-   * @param name - Command name
-   * @param reporter - Reporter instance for logging
+   * @param config - Command configuration
    */
-  constructor(name: string, reporter: import('./reporter.d.ts').Reporter)
+  constructor(config: ICommandConfig)
 
-  /**
-   * Set the action handler.
-   * @param handler - Action handler function
-   * @returns this for chaining
-   */
-  action(handler: ICommanderActionHandler): this
-
-  /**
-   * Add a positional argument.
-   * @param spec - Argument spec (e.g., '<file>', '[file]', '<...files>')
-   * @param description - Argument description
-   * @returns this for chaining
-   */
-  argument(spec: string, description?: string): this
-
-  /**
-   * Set command description.
-   * @param text - Description text
-   * @returns this for chaining
-   */
-  description(text: string): this
-
-  /**
-   * Add a usage example.
-   * @param text - Example text
-   * @returns this for chaining
-   */
-  example(text: string): this
-
-  /**
-   * Execute the action handler.
-   * @param params - Execute parameters
-   */
-  execute(params: ICommanderExecuteParams): Promise<void>
+  // ============================================================
+  // Definition Methods
+  // ============================================================
 
   /**
    * Add an option.
-   * @param flags - Option flags (e.g., '-f, --force', '--name <name>')
-   * @param description - Option description
-   * @param config - Option configuration
+   * @param opt - Option configuration
    * @returns this for chaining
    */
-  option(flags: string, description?: string, config?: ICommanderOptionConfig): this
+  option<T extends IOptionType>(opt: IOption<T>): this
 
   /**
-   * Parse argv and envs, return parse result with diagnostics.
+   * Add a positional argument.
+   * @param arg - Argument configuration
+   * @returns this for chaining
+   */
+  argument(arg: IArgument): this
+
+  /**
+   * Set the action handler.
+   * @param fn - Action handler function
+   * @returns this for chaining
+   */
+  action(fn: IAction): this
+
+  // ============================================================
+  // Assembly Methods
+  // ============================================================
+
+  /**
+   * Register a subcommand.
+   * @param name - Subcommand name
+   * @param cmd - Subcommand instance
+   * @returns this for chaining
+   */
+  subcommand(name: string, cmd: Command): this
+
+  // ============================================================
+  // Execution Methods
+  // ============================================================
+
+  /**
+   * Parse argv and execute action. Sets process.exitCode = 1 on error.
+   * @param params - Run parameters
+   */
+  run(params: IRunParams): Promise<void>
+
+  /**
+   * Parse argv without executing action.
    * @param argv - Command line arguments
-   * @param envs - Environment variables
    * @returns Parse result
+   * @throws {CommanderError} on parsing errors
    */
-  parse(argv: string[], envs: Record<string, string>): ICommanderParseResult
+  parse(argv: string[]): IParseResult
 
   /**
-   * Parse + execute. Sets process.exitCode = 1 on error.
-   * @param argv - Command line arguments
-   * @param envs - Environment variables
+   * Generate help text.
+   * @returns Formatted help text
    */
-  run(argv: string[], envs: Record<string, string>): Promise<void>
-
-  /**
-   * Print help message.
-   */
-  showHelp(): void
-
-  /**
-   * Enable/disable strict mode.
-   * @param enabled - Whether to enable strict mode (default: true)
-   * @returns this for chaining
-   */
-  strict(enabled?: boolean): this
-
-  /**
-   * Set command version (adds --version option).
-   * @param ver - Version string
-   * @returns this for chaining
-   */
-  version(ver: string): this
+  formatHelp(): string
 }

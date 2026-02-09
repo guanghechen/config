@@ -65,16 +65,12 @@ export async function handlePatchAgents(opts) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('patch-agents', reporter)
-    .description('Patch AI coding agents to customize behavior.')
-    .option('--agent <agent>', 'Agent to patch (claude)', { default: 'claude' })
-    .option('--context-window <size>', 'Context window size for the agent')
-    .example('patch-agents')
-    .example('patch-agents --context-window 200000')
-    .example('patch-agents --agent claude')
+  const cmd = new Command({ name: 'patch-agents', description: 'Patch AI coding agents to customize behavior.' })
+    .option({ long: 'agent', type: 'string', default: 'claude', description: 'Agent to patch (claude)' })
+    .option({ long: 'context-window', type: 'string', description: 'Context window size for the agent' })
     .action(async ({ opts }) => {
       await handlePatchAgents(/** @type {IPatchAgentsOptions} */ (opts))
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

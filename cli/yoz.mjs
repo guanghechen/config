@@ -133,7 +133,6 @@ async function handleFileSwitch(filepath, force) {
 /**
  * @typedef {Object} IYozOptions
  * @property {boolean} [force]
- * @property {boolean} [auth]
  */
 
 /**
@@ -142,14 +141,8 @@ async function handleFileSwitch(filepath, force) {
  * @returns {Promise<void>}
  */
 export async function handleYoz(opts, filepath) {
-  // Support both `yoz auth` and `yoz --auth`
-  if (opts.auth || filepath === 'auth') {
-    await handleAuth()
-    return
-  }
-
   if (!filepath) {
-    reporter.error('Usage: yoz <filepath> [--force] or yoz auth')
+    reporter.error('Usage: yoz <filepath> [--force]')
     process.exitCode = 1
     return
   }
@@ -158,14 +151,15 @@ export async function handleYoz(opts, filepath) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('yoz', reporter)
-    .description('Preview file with yoz server.')
-    .argument('[filepath]', 'File path to preview')
-    .option('--force', 'Force refresh')
-    .option('--auth', 'Copy YOZ_AUTH_TOKEN to clipboard')
-    .example('yoz ./README.md')
-    .example('yoz ./README.md --force')
-    .example('yoz auth')
+  const authCmd = new Command({ name: 'auth', description: 'Copy YOZ_AUTH_TOKEN to clipboard.' })
+    .action(async () => {
+      await handleAuth()
+    })
+
+  const cmd = new Command({ name: 'yoz', description: 'Preview file with yoz server.' })
+    .argument({ name: 'filepath', kind: 'optional', description: 'File path to preview' })
+    .option({ long: 'force', type: 'boolean', description: 'Force refresh' })
+    .subcommand('auth', authCmd)
     .action(async ({ args, opts }) => {
       await handleYoz(
         /** @type {IYozOptions} */ (opts),
@@ -173,5 +167,5 @@ if (process.argv[1] === import.meta.filename) {
       )
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

@@ -11,10 +11,7 @@ import { convert_gitmoji } from '#util/gitmoji'
 const reporter = new Reporter({ prefix: 'gitmoji' })
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('gitmoji', reporter)
-    .description('Convert gitmoji shortcodes to emoji characters from stdin.')
-    .example('echo ":sparkles: feat: add feature" | gitmoji')
-    .example('git log --oneline | gitmoji')
+  const cmd = new Command({ name: 'gitmoji', description: 'Convert gitmoji shortcodes to emoji characters from stdin.' })
     .action(async () => {
       const chunks = []
       for await (const chunk of process.stdin) {
@@ -25,5 +22,5 @@ if (process.argv[1] === import.meta.filename) {
       process.stdout.write(output)
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

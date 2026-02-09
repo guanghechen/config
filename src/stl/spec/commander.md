@@ -1,16 +1,18 @@
 # stl/commander.mjs - Modern CLI Builder
 
-A minimal, type-safe command-line interface builder with fluent API.
+A minimal, type-safe command-line interface builder with fluent API. Supports subcommands, option
+parsing, and built-in help/version handling.
 
 ## Design Goals
 
-1. **Simplicity** - Single command only, no subcommands
+1. **Simplicity** - Clean, object-based configuration API
 2. **Type Safety** - Full JSDoc types for IDE support
 3. **Modern API** - Fluent builder pattern with method chaining
 4. **Zero Dependencies** - Pure Node.js implementation
 5. **Decoupled** - No implicit `process.argv`/`process.env` access, explicit input required
-6. **Option Value Priority** - `config.default` < `envs[config.env]` < `argv`
-7. **Option Override Semantics**
+6. **Subcommand Support** - Nested command hierarchies
+7. **Option Value Priority** - `config.default` < `argv`
+8. **Option Override Semantics**
    - Array options (`string[]`, `number[]`): Multiple occurrences accumulate; type mismatch on any element triggers error
    - Scalar options: Later occurrence overrides earlier; only the final value is type-checked
 
@@ -18,7 +20,7 @@ A minimal, type-safe command-line interface builder with fluent API.
 
 The following features are intentionally NOT supported to keep simplicity:
 
-- **Subcommands** - Use separate Command instances instead
+- **Shell Completion** - Use `@guanghechen/commander` for completion support
 - **Mutually exclusive options** - Handle in action handler
 - **Option dependencies** - Handle in action handler
 - **Custom type coercion** - Only built-in types supported; complex transforms in action handler
@@ -27,54 +29,133 @@ The following features are intentionally NOT supported to keep simplicity:
 ## Types
 
 ```typescript
-/** Option value */
-type ICommanderOptionValue = boolean | string | number | string[] | number[]
-
-/** Argument value */
-type ICommanderArgumentValue = string | string[] | undefined
-
-/** Option type literal */
-type ICommanderOptionType = 'boolean' | 'string' | 'number' | 'string[]' | 'number[]'
-
-/** Log level */
-type ICommanderLogLevel = 'debug' | 'info' | 'warn' | 'error'
-
-/** Option configuration */
-interface ICommanderOptionConfig {
-  type?: ICommanderOptionType
-  default?: ICommanderOptionValue
-  env?: string  // Environment variable name (e.g., 'PORT')
+/** Reporter interface for logging */
+interface IReporter {
+  debug(message: string, ...args: unknown[]): void
+  info(message: string, ...args: unknown[]): void
+  warn(message: string, ...args: unknown[]): void
+  error(message: string, ...args: unknown[]): void
 }
 
-/** Constructor props */
-interface ICommanderProps {
-  reporter?: unknown  // Reporter instance for logging
+/** Supported option value types */
+type IOptionType = 'boolean' | 'string' | 'number' | 'string[]' | 'number[]'
+
+/** Option definition */
+interface IOption<T = unknown> {
+  /** Long option (e.g., 'verbose' for --verbose), also used as merge key */
+  long: string
+  /** Short option (single character, e.g., 'v' for -v) */
+  short?: string
+  /** Value type, defaults to 'string' */
+  type?: IOptionType
+  /** Description for help text */
+  description?: string
+  /** Default value when not provided */
+  default?: T
+  /** Environment variable name to read value from */
+  env?: string
 }
 
-/** Diagnostic entry */
-interface ICommanderDiagnostic {
-  type: 'warn' | 'error'
-  message: string
+/** Argument kind */
+type IArgumentKind = 'required' | 'optional' | 'variadic'
+
+/** Positional argument definition */
+interface IArgument {
+  /** Argument name */
+  name: string
+  /** Argument description */
+  description?: string
+  /** Argument kind: required / optional / variadic */
+  kind: IArgumentKind
+  /** Default value for optional arguments */
+  default?: string
 }
 
-/** Parse result */
-interface ICommanderParseResult {
-  args: Record<string, ICommanderArgumentValue>
-  opts: Record<string, ICommanderOptionValue>
-  envs: Record<string, string>
-  diagnostics: ICommanderDiagnostic[]
+/** Command configuration */
+interface ICommandConfig {
+  /** Command name */
+  name: string
+  /** Command description */
+  description?: string
+  /** Version (adds --version option) */
+  version?: string
+  /** Enable built-in "help" subcommand (default: false) */
+  helpSubcommand?: boolean
 }
 
-/** Execute parameters (also used by action handler) */
-interface ICommanderExecuteParams {
-  ctx: Command
-  args: Record<string, ICommanderArgumentValue>
-  opts: Record<string, ICommanderOptionValue>
-  envs: Record<string, string>
+/** Command interface (readonly view) */
+interface ICommand {
+  readonly name: string
+  readonly description: string | undefined
+  readonly version: string | undefined
+  readonly options: IOption[]
+  readonly arguments: IArgument[]
 }
 
-/** Action handler */
-type ICommanderActionHandler = (params: ICommanderExecuteParams) => Promise<void>
+/** Execution context */
+interface ICommandContext {
+  /** Current command instance */
+  cmd: ICommand
+  /** Environment variables passed in */
+  envs: Record<string, string | undefined>
+  /** Reporter instance */
+  reporter: IReporter
+  /** Original argv */
+  argv: string[]
+}
+
+/** Action parameters */
+interface IActionParams {
+  /** Execution context */
+  ctx: ICommandContext
+  /** Parsed options (keyed by long option name) */
+  opts: Record<string, unknown>
+  /** Parsed positional arguments */
+  args: Record<string, string | string[] | undefined>
+}
+
+/** Action handler function */
+type IAction = (params: IActionParams) => void | Promise<void>
+
+/** run() method parameters */
+interface IRunParams {
+  /** Command line arguments (usually process.argv.slice(2)) */
+  argv: string[]
+  /** Environment variables (usually process.env) */
+  envs: Record<string, string | undefined>
+  /** Optional reporter for logging (defaults to console reporter) */
+  reporter?: IReporter
+}
+
+/** parse() method result */
+interface IParseResult {
+  /** Parsed options */
+  opts: Record<string, unknown>
+  /** Parsed positional arguments */
+  args: Record<string, string | string[] | undefined>
+}
+
+/** Error kinds for command parsing */
+type ICommanderErrorKind =
+  | 'UnknownOption'
+  | 'MissingValue'
+  | 'InvalidType'
+  | 'UnsupportedShortSyntax'
+  | 'OptionConflict'
+  | 'MissingRequired'
+  | 'InvalidChoice'
+  | 'InvalidBooleanValue'
+  | 'MissingRequiredArgument'
+  | 'ConfigurationError'
+
+/** Commander error with structured information */
+class CommanderError extends Error {
+  readonly kind: ICommanderErrorKind
+  readonly commandPath: string
+  constructor(kind: ICommanderErrorKind, message: string, commandPath: string)
+  /** Format error with help hint */
+  format(): string
+}
 ```
 
 ## API
@@ -82,43 +163,49 @@ type ICommanderActionHandler = (params: ICommanderExecuteParams) => Promise<void
 ### Constructor
 
 ```javascript
-new Command(name: string, reporter: Reporter)
+new Command(config: ICommandConfig)
 ```
 
 ### Properties
 
-| Property         | Type       | Description       |
-| ---------------- | ---------- | ----------------- |
-| `get name()`     | `string`   | Command name      |
-| `get reporter()` | `Reporter` | Reporter instance |
+| Property          | Type                  | Description         |
+| :---------------- | :-------------------- | :------------------ |
+| `get name()`      | `string`              | Command name        |
+| `get description` | `string \| undefined` | Command description |
+| `get version()`   | `string \| undefined` | Command version     |
+| `get options()`   | `IOption[]`           | Defined options     |
+| `get arguments()` | `IArgument[]`         | Defined arguments   |
 
 ### Methods
 
-| Method                                                                   | Description                                        |
-| ------------------------------------------------------------------------ | -------------------------------------------------- |
-| `.action(handler: ICommanderActionHandler)`                              | Set action handler                                 |
-| `.argument(spec: string, desc?: string)`                                 | Add positional argument                            |
-| `.description(text: string)`                                             | Set command description                            |
-| `.example(text: string)`                                                 | Add usage example                                  |
-| `.execute(params: ICommanderExecuteParams)`                              | Execute action handler                             |
-| `.option(flags: string, desc?: string, config?: ICommanderOptionConfig)` | Add option                                         |
-| `.parse(argv: string[], envs: Record<string, string>)`                   | Parse and validate, return `ICommanderParseResult` |
-| `.run(argv: string[], envs: Record<string, string>)`                     | Parse + execute (exit `1` on error)                |
-| `.showHelp()`                                                            | Print help message                                 |
-| `.strict(enabled?: boolean)`                                             | Enable/disable strict mode (default: `true`)       |
-| `.version(ver: string)`                                                  | Set version (adds `--version`)                     |
+| Method                              | Description                         |
+| :---------------------------------- | :---------------------------------- |
+| `.option(opt: IOption)`             | Add option (object configuration)   |
+| `.argument(arg: IArgument)`         | Add positional argument             |
+| `.action(fn: IAction)`              | Set action handler                  |
+| `.subcommand(name: string, cmd)`    | Register subcommand                 |
+| `.run(params: IRunParams)`          | Parse and execute                   |
+| `.parse(argv: string[])`            | Parse argv, return `IParseResult`   |
+| `.formatHelp()`                     | Generate help text                  |
 
 ## Arguments
 
-### Spec Syntax
+### Argument Configuration
 
-| Spec             | Meaning                       | Result Type           | Example                         |
-| ---------------- | ----------------------------- | --------------------- | ------------------------------- |
-| `<name>`         | Required argument             | `string`              | `cli foo` → `'foo'`             |
-| `[name]`         | Optional argument             | `string \| undefined` | `cli` → `undefined`             |
-| `[name=default]` | Optional with default         | `string`              | `cli` → `'default'`             |
-| `<...names>`     | Required variadic (1+ values) | `string[]`            | `cli a b c` → `['a', 'b', 'c']` |
-| `[...names]`     | Optional variadic (0+ values) | `string[]`            | `cli` → `[]`                    |
+| Property      | Type            | Description                   |
+| :------------ | :-------------- | :---------------------------- |
+| `name`        | `string`        | Argument name (used as key)   |
+| `kind`        | `IArgumentKind` | required / optional / variadic |
+| `description` | `string?`       | Help text description         |
+| `default`     | `string?`       | Default value (optional only) |
+
+### Kind Types
+
+| Kind         | Result Type           | Example                         |
+| :----------- | :-------------------- | :------------------------------ |
+| `required`   | `string`              | `cli foo` -> `'foo'`            |
+| `optional`   | `string \| undefined` | `cli` -> `undefined`            |
+| `variadic`   | `string[]`            | `cli a b c` -> `['a', 'b', 'c']`|
 
 ### Constraints
 
@@ -129,55 +216,66 @@ new Command(name: string, reporter: Reporter)
 
 ```javascript
 // Single required argument
-.argument('<file>', 'File to process')
+.argument({ name: 'file', kind: 'required', description: 'File to process' })
 
 // Multiple arguments
-.argument('<source>', 'Source file')
-.argument('<dest>', 'Destination file')
+.argument({ name: 'source', kind: 'required', description: 'Source file' })
+.argument({ name: 'dest', kind: 'required', description: 'Destination file' })
 
 // Optional argument with default
-.argument('[format=json]', 'Output format')
+.argument({ name: 'format', kind: 'optional', description: 'Output format', default: 'json' })
 
 // Variadic arguments (must be last)
-.argument('<dest>', 'Destination directory')
-.argument('[...files]', 'Files to copy')
+.argument({ name: 'dest', kind: 'required', description: 'Destination directory' })
+.argument({ name: 'files', kind: 'variadic', description: 'Files to copy' })
 ```
 
 ## Options
 
-### Flag Syntax
+### Option Configuration
 
-| Flags                     | Type Config            | Result Type | Example                                 |
-| ------------------------- | ---------------------- | ----------- | --------------------------------------- |
-| `-f, --force`             | (none)                 | `boolean`   | `--force` → `true`                      |
-| `-c, --config <path>`     | (none)                 | `string`    | `--config a --config b` → `'b'`         |
-| `-p, --port <n>`          | `{ type: 'number' }`   | `number`    | `--port 3000 --port 8080` → `8080`      |
-| `-i, --include <...dirs>` | `{ type: 'string[]' }` | `string[]`  | `--include a --include b` → `['a','b']` |
-| `-P, --ports <...ports>`  | `{ type: 'number[]' }` | `number[]`  | `--ports 80 --ports 443` → `[80, 443]`  |
+| Property      | Type           | Description                             |
+| :------------ | :------------- | :-------------------------------------- |
+| `long`        | `string`       | Long option name (required, merge key)  |
+| `short`       | `string?`      | Single character short option           |
+| `type`        | `IOptionType?` | Value type (default: 'boolean')         |
+| `description` | `string?`      | Help text description                   |
+| `default`     | `T?`           | Default value when not provided         |
+| `env`         | `string?`      | Environment variable name               |
+
+### Type Examples
+
+| Configuration                                         | Result Type | Example                               |
+| :---------------------------------------------------- | :---------- | :------------------------------------ |
+| `{ long: 'force', type: 'boolean' }`                  | `boolean`   | `--force` -> `true`                   |
+| `{ long: 'config', type: 'string' }`                  | `string`    | `--config a --config b` -> `'b'`      |
+| `{ long: 'port', type: 'number' }`                    | `number`    | `--port 3000 --port 8080` -> `8080`   |
+| `{ long: 'include', type: 'string[]' }`               | `string[]`  | `--include a --include b` -> `['a','b']`|
+| `{ long: 'ports', type: 'number[]' }`                 | `number[]`  | `--ports 80 --ports 443` -> `[80, 443]` |
 
 ### Examples
 
 ```javascript
 // Boolean flag
-.option('-f, --force', 'Force operation')
+.option({ long: 'force', short: 'f', type: 'boolean', description: 'Force operation' })
 
-// String value (default type)
-.option('-c, --config <path>', 'Config file path')
+// String value
+.option({ long: 'config', short: 'c', type: 'string', description: 'Config file path' })
 
 // String with default
-.option('-c, --config <path>', 'Config file path', { default: './config.json' })
+.option({ long: 'config', short: 'c', type: 'string', default: './config.json', description: 'Config file path' })
 
 // Number value
-.option('-p, --port <n>', 'Port number', { type: 'number', default: 3000 })
+.option({ long: 'port', short: 'p', type: 'number', default: 3000, description: 'Port number' })
 
 // Number with environment variable
-.option('-p, --port <n>', 'Port number', { type: 'number', env: 'PORT' })
+.option({ long: 'port', short: 'p', type: 'number', env: 'PORT', description: 'Port number' })
 
 // String array (multiple values)
-.option('-i, --include <...dirs>', 'Directories to include', { type: 'string[]' })
+.option({ long: 'include', short: 'i', type: 'string[]', description: 'Directories to include' })
 
 // Number array (multiple values)
-.option('-P, --ports <...ports>', 'Ports to listen', { type: 'number[]' })
+.option({ long: 'ports', short: 'P', type: 'number[]', description: 'Ports to listen' })
 ```
 
 ### Value Priority
@@ -191,7 +289,7 @@ config.default  <  envs[config.env]  <  argv
 Example:
 
 ```javascript
-.option('-p, --port <n>', 'Port number', { type: 'number', default: 3000, env: 'PORT' })
+.option({ long: 'port', short: 'p', type: 'number', default: 3000, env: 'PORT', description: 'Port number' })
 ```
 
 ```bash
@@ -216,10 +314,10 @@ cli --config=foo.json      # equals syntax
 
 ### Key Conversion
 
-Long flags are converted to camelCase:
+Long flags are converted to camelCase for the `opts` object:
 
 | Flag          | Key        |
-| ------------- | ---------- |
+| :------------ | :--------- |
 | `--silent`    | `silent`   |
 | `--log-level` | `logLevel` |
 | `--no-color`  | `color`    |
@@ -268,75 +366,106 @@ cli -- -f file.txt                # => args: ['-f', 'file.txt']
 
 ### Built-in Options
 
-| Flag                  | Key        | Default | Description                           |
-| --------------------- | ---------- | ------- | ------------------------------------- |
-| `--help`              | `help`     | `false` | Display help message                  |
-| `--version`           | `version`  | `false` | Display version (if `.version()`)     |
-| `--log-level <level>` | `logLevel` | `info`  | Set log level (debug/info/warn/error) |
-| `--silent`            | `silent`   | `false` | Suppress output (sets logLevel=error) |
+| Flag        | Description                       |
+| :---------- | :-------------------------------- |
+| `--help`    | Display help message              |
+| `--version` | Display version (if configured)   |
 
-## Validation
+## Subcommands
 
-### Strict Mode
-
-By default, strict mode is enabled. Unknown options trigger an error:
-
-```bash
-cli --unknown-option        # => error: Unknown option '--unknown-option'
-```
-
-Disable with `.strict(false)`:
+### Registration
 
 ```javascript
-new Command('cli')
-  .strict(false)
-  .option('-f, --force', 'Force operation')
+const root = new Command({ name: 'git', description: 'A simple git-like CLI' })
+
+const clone = new Command({ name: 'clone', description: 'Clone a repository' })
+  .argument({ name: 'url', kind: 'required', description: 'Repository URL' })
+  .option({ long: 'depth', type: 'number', description: 'Shallow clone depth' })
+  .action(({ args, opts }) => {
+    console.log(`Cloning ${args.url} with depth ${opts.depth ?? 'full'}`)
+  })
+
+root.subcommand('clone', clone)
 ```
 
-### Diagnostic Checks
+### Help Subcommand
 
-The `.parse()` method performs validation and returns diagnostics:
+Enable built-in help subcommand for subcommand help:
 
-| Check                     | Type    | Example Message                           |
-| ------------------------- | ------- | ----------------------------------------- |
-| Missing required argument | `error` | `Missing required argument '<file>'`      |
-| Missing required variadic | `error` | `Missing required argument '<...files>'`  |
-| Unknown option (strict)   | `error` | `Unknown option '--foo'`                  |
-| Type mismatch             | `error` | `Invalid value 'abc' for option '--port'` |
-| Invalid log level         | `error` | `Invalid log level 'verbose'`             |
+```javascript
+const root = new Command({
+  name: 'mycli',
+  description: 'My CLI',
+  helpSubcommand: true  // Enables: mycli help <subcommand>
+})
+```
+
+## Error Handling
+
+### CommanderError
+
+When parsing fails, a `CommanderError` is thrown with structured information:
+
+```javascript
+try {
+  await cli.run({ argv, envs, reporter })
+} catch (err) {
+  if (err instanceof CommanderError) {
+    console.error(err.format())
+    // Error: Unknown option '--unknown'
+    // Run "mycli --help" for usage.
+    process.exit(1)
+  }
+  throw err
+}
+```
+
+### Error Kinds
+
+| Kind                       | Example Message                               |
+| :------------------------- | :-------------------------------------------- |
+| `UnknownOption`            | `Unknown option '--foo'`                      |
+| `MissingValue`             | `Option '--config' requires a value`          |
+| `InvalidType`              | `Invalid value 'abc' for option '--port'`     |
+| `UnsupportedShortSyntax`   | `Sticky short option syntax not supported`    |
+| `OptionConflict`           | `Option '--verbose' conflicts with existing`  |
+| `MissingRequired`          | `Missing required option '--config'`          |
+| `InvalidChoice`            | `Invalid choice 'xml' for option '--format'`  |
+| `InvalidBooleanValue`      | `Invalid boolean value for '--force'`         |
+| `MissingRequiredArgument`  | `Missing required argument 'file'`            |
+| `ConfigurationError`       | `Variadic argument must be last`              |
 
 ## Usage Example
 
 ```javascript
-import { Command } from '../stl/commander.mjs'
+import { Command } from '#stl/commander'
+import { Reporter } from '#stl/reporter'
 
-const cli = new Command('theme-apply')
-  .description('Apply a theme to all configured applications.')
-  .version('1.0.0')
-  .argument('[theme]', 'Theme name to apply')
-  .option('-p, --port <n>', 'Port number', { type: 'number', default: 3000, env: 'PORT' })
-  .option('-f, --force', 'Force apply without confirmation')
-  .example('theme-apply tokyonight-night')
-  .example('theme-apply --silent catppuccin-mocha')
-  .action(async ({ ctx, args, opts, envs }) => {
-    // ctx: Command instance (ctx.name, ctx.showHelp(), etc.)
+const reporter = new Reporter({ prefix: 'theme-apply' })
+
+const cli = new Command({
+  name: 'theme-apply',
+  description: 'Apply a theme to all configured applications.',
+  version: '1.0.0'
+})
+  .argument({ name: 'theme', kind: 'optional', description: 'Theme name to apply' })
+  .option({ long: 'port', short: 'p', type: 'number', default: 3000, env: 'PORT', description: 'Port number' })
+  .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force apply without confirmation' })
+  .action(async ({ ctx, args, opts }) => {
+    // ctx.cmd: Command instance
+    // ctx.reporter: IReporter
     // args.theme: string | undefined
     // opts.port: number
     // opts.force: boolean
-    // envs: Record<string, string>
     await handleThemeApply(args.theme)
   })
 
 // Option 1: All-in-one
-await cli.run(process.argv.slice(2), process.env)
+await cli.run({ argv: process.argv.slice(2), envs: process.env, reporter })
 
 // Option 2: Step by step
-const { args, opts, envs, diagnostics } = cli.parse(process.argv.slice(2), process.env)
-if (diagnostics.length > 0) {
-  for (const d of diagnostics) console.error(`[${d.type}] ${d.message}`)
-  process.exit(1)
-}
-await cli.execute({ ctx: cli, args, opts, envs })
+const { args, opts } = cli.parse(process.argv.slice(2))
+await cli.execute({ ctx: cli, args, opts })
 ```
 
 ## Help Output
@@ -352,12 +481,6 @@ Arguments:
 Options:
   --help                  Display this help message
   --version               Display version number
-  --log-level <level>     Set log level (debug|info|warn|error) (default: info)
-  --silent                Suppress all output except errors
   -p, --port <n>          Port number (env: PORT) (default: 3000)
   -f, --force             Force apply without confirmation
-
-Examples:
-  $ theme-apply tokyonight-night
-  $ theme-apply --silent catppuccin-mocha
 ```

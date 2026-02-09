@@ -62,23 +62,19 @@ export async function handleSetting(opts) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('setting', reporter)
-    .description('Get or set setting values.')
-    .option('--set-edition <edition>', 'Set edition (nix, nix-remote, osx, win)')
-    .option('--set-theme <theme>', 'Set theme name')
-    .option('--set-tmux-edition <edition>', 'Set tmux edition (latest, nightly, manual)')
-    .option('--set-nvim-edition <edition>', 'Set nvim edition (latest, nightly, manual)')
-    .option('--set-node-edition <edition>', 'Set preferred Node.js major version')
-    .option('--print-edition', 'Print edition')
-    .option('--print-theme', 'Print theme')
-    .option('--print-node-edition', 'Print node edition')
-    .option('--print', 'Print all settings')
-    .example('setting --print')
-    .example('setting --set-edition nix')
-    .example('setting --set-node-edition 24')
+  const cmd = new Command({ name: 'setting', description: 'Get or set setting values.' })
+    .option({ long: 'set-edition', type: 'string', description: 'Set edition (nix, nix-remote, osx, win)' })
+    .option({ long: 'set-theme', type: 'string', description: 'Set theme name' })
+    .option({ long: 'set-tmux-edition', type: 'string', description: 'Set tmux edition (latest, nightly, manual)' })
+    .option({ long: 'set-nvim-edition', type: 'string', description: 'Set nvim edition (latest, nightly, manual)' })
+    .option({ long: 'set-node-edition', type: 'string', description: 'Set preferred Node.js major version' })
+    .option({ long: 'print-edition', type: 'boolean', description: 'Print edition' })
+    .option({ long: 'print-theme', type: 'boolean', description: 'Print theme' })
+    .option({ long: 'print-node-edition', type: 'boolean', description: 'Print node edition' })
+    .option({ long: 'print', type: 'boolean', description: 'Print all settings' })
     .action(async ({ opts }) => {
       await handleSetting(opts)
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

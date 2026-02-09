@@ -115,19 +115,16 @@ export async function handleOpensource(opts, repoPath, envs) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('opensource', reporter)
-    .description('Clone or pull an opensource repository.')
-    .argument('<repoPath>', 'Repository path in format <author/reponame>')
-    .option('--platform <platform>', 'Platform to use (github)', { default: 'github' })
-    .example('opensource neovim/neovim')
-    .example('opensource --platform github facebook/react')
-    .action(async ({ args, opts, envs }) => {
+  const cmd = new Command({ name: 'opensource', description: 'Clone or pull an opensource repository.' })
+    .argument({ name: 'repoPath', kind: 'required', description: 'Repository path in format <author/reponame>' })
+    .option({ long: 'platform', type: 'string', default: 'github', description: 'Platform to use (github)' })
+    .action(async ({ args, opts }) => {
       await handleOpensource(
         /** @type {IOpensourceOptions} */ (opts),
         /** @type {string | undefined} */ (args.repoPath),
-        envs,
+        /** @type {Record<string, string>} */ (process.env),
       )
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

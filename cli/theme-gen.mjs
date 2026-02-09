@@ -33,11 +33,8 @@ export async function handleThemeGen() {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-gen', reporter)
-    .description('Generate theme files for all configured applications.')
-    .example('theme-gen')
-    .example('theme-gen --silent')
+  const cmd = new Command({ name: 'theme-gen', description: 'Generate theme files for all configured applications.' })
     .action(handleThemeGen)
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

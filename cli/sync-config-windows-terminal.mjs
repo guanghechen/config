@@ -45,11 +45,8 @@ export function handleSyncConfigWindowsTerminal(targetSettingsPath) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('sync-config-windows-terminal', reporter)
-    .description('Sync Windows Terminal settings configuration.')
-    .argument('[target-path]', 'Target settings.json path')
-    .example('sync-config-windows-terminal')
-    .example('sync-config-windows-terminal /mnt/c/Users/.../settings.json')
+  const cmd = new Command({ name: 'sync-config-windows-terminal', description: 'Sync Windows Terminal settings configuration.' })
+    .argument({ name: 'target-path', kind: 'optional', description: 'Target settings.json path' })
     .action(async ({ args }) => {
       const targetPath =
         /** @type {string | undefined} */ (args['target-path']) || F_WINDOWS_TERMINAL_SETTINGS
@@ -58,5 +55,5 @@ if (process.argv[1] === import.meta.filename) {
       }
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

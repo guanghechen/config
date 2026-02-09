@@ -4,31 +4,31 @@
  * @module @guanghechen/stl/commander
  */
 
-/** @import { ICommanderOptionValue, ICommanderArgumentValue, ICommanderOptionType, ICommanderLogLevel, ICommanderOptionConfig, ICommanderDiagnostic, ICommanderParseResult, ICommanderExecuteParams, ICommanderActionHandler } from './commander.d.ts' */
-/** @import { Reporter } from './reporter.d.ts' */
+/** @import { IReporter, IOptionType, IOptionValue, IOption, IArgumentKind, IArgumentValue, IArgument, ICommandConfig, ISubcommandEntry, IActionParams, IAction, IRunParams, IParseResult, ICommanderErrorKind } from './commander.d.ts' */
 
-/**
- * @typedef {Object} IOptionDef
- * @property {string} short
- * @property {string} long
- * @property {string} description
- * @property {string} valueName
- * @property {ICommanderOptionType} type
- * @property {ICommanderOptionValue} [defaultValue]
- * @property {string} [env]
- * @property {boolean} isBuiltin
- */
+// ============================================================
+// Constants
+// ============================================================
 
-/**
- * @typedef {Object} IArgumentDef
- * @property {string} name
- * @property {string} description
- * @property {boolean} required
- * @property {boolean} variadic
- * @property {string} [defaultValue]
- */
+/** @type {IOption<'boolean'>} */
+const BUILTIN_HELP_OPTION = {
+  long: 'help',
+  short: 'h',
+  type: 'boolean',
+  description: 'Show help information',
+}
 
-const LOG_LEVELS = /** @type {const} */ (['debug', 'info', 'warn', 'error'])
+/** @type {IOption<'boolean'>} */
+const BUILTIN_VERSION_OPTION = {
+  long: 'version',
+  short: 'V',
+  type: 'boolean',
+  description: 'Show version number',
+}
+
+// ============================================================
+// Utilities
+// ============================================================
 
 /**
  * Convert kebab-case to camelCase.
@@ -49,206 +49,293 @@ function isValidNumber(value) {
   return !Number.isNaN(n) && Number.isFinite(n)
 }
 
-export class Command {
-  // ============================================================
-  // Private Fields (alphabetical)
-  // ============================================================
+// ============================================================
+// DefaultReporter
+// ============================================================
 
-  /** @type {IArgumentDef[]} */
-  #arguments = []
+export class DefaultReporter {
+  /**
+   * @param {string} message
+   * @param {...unknown} args
+   */
+  debug(message, ...args) {
+    console.debug(message, ...args)
+  }
+
+  /**
+   * @param {string} message
+   * @param {...unknown} args
+   */
+  info(message, ...args) {
+    console.info(message, ...args)
+  }
+
+  /**
+   * @param {string} message
+   * @param {...unknown} args
+   */
+  warn(message, ...args) {
+    console.warn(message, ...args)
+  }
+
+  /**
+   * @param {string} message
+   * @param {...unknown} args
+   */
+  error(message, ...args) {
+    console.error(message, ...args)
+  }
+}
+
+// ============================================================
+// CommanderError
+// ============================================================
+
+export class CommanderError extends Error {
+  /** @type {ICommanderErrorKind} */
+  kind
 
   /** @type {string} */
-  #desc = ''
+  commandPath
 
-  /** @type {string[]} */
-  #examples = []
+  /**
+   * @param {ICommanderErrorKind} kind
+   * @param {string} message
+   * @param {string} commandPath
+   */
+  constructor(kind, message, commandPath) {
+    super(message)
+    this.name = 'CommanderError'
+    this.kind = kind
+    this.commandPath = commandPath
+  }
 
-  /** @type {ICommanderActionHandler | null} */
-  #handler = null
+  /**
+   * Format error message with hint.
+   * @returns {string}
+   */
+  format() {
+    return `Error: ${this.message}\nRun "${this.commandPath} --help" for usage.`
+  }
+}
+
+// ============================================================
+// Command
+// ============================================================
+
+export class Command {
+  // ============================================================
+  // Private Fields
+  // ============================================================
 
   /** @type {string} */
   #name
 
-  /** @type {IOptionDef[]} */
-  #options = []
+  /** @type {string | undefined} */
+  #description
 
-  /** @type {Reporter} */
-  #reporter
+  /** @type {string | undefined} */
+  #version
 
   /** @type {boolean} */
-  #strictMode = true
+  #helpSubcommandEnabled
 
-  /** @type {string} */
-  #ver = ''
+  /** @type {IOption[]} */
+  #options = []
+
+  /** @type {IArgument[]} */
+  #arguments = []
+
+  /** @type {ISubcommandEntry[]} */
+  #subcommands = []
+
+  /** @type {IAction | null} */
+  #action = null
 
   // ============================================================
   // Constructor
   // ============================================================
 
   /**
-   * @param {string} name
-   * @param {Reporter} reporter
+   * @param {ICommandConfig} config
    */
-  constructor(name, reporter) {
-    this.#name = name
-    this.#reporter = reporter
-    this.#addBuiltinOptions()
+  constructor(config) {
+    this.#name = config.name
+    this.#description = config.description
+    this.#version = config.version
+    this.#helpSubcommandEnabled = config.helpSubcommand ?? false
   }
 
   // ============================================================
-  // Public Properties (alphabetical)
+  // Public Properties
   // ============================================================
 
   get name() {
     return this.#name
   }
 
-  /** @returns {Reporter} */
-  get reporter() {
-    return this.#reporter
+  get description() {
+    return this.#description
+  }
+
+  get version() {
+    return this.#version
+  }
+
+  /** @returns {ReadonlyArray<IOption>} */
+  get options() {
+    return this.#options
+  }
+
+  /** @returns {ReadonlyArray<IArgument>} */
+  get arguments() {
+    return this.#arguments
   }
 
   // ============================================================
-  // Public Methods (alphabetical)
+  // Definition Methods
   // ============================================================
 
   /**
-   * Set the action handler.
-   * @param {ICommanderActionHandler} handler
+   * Add an option.
+   * @template {IOptionType} T
+   * @param {IOption<T>} opt
    * @returns {this}
    */
-  action(handler) {
-    this.#handler = handler
+  option(opt) {
+    this.#validateOptionConfig(opt)
+    this.#checkOptionUniqueness(opt)
+    this.#options.push(opt)
     return this
   }
 
   /**
    * Add a positional argument.
-   * @param {string} spec
-   * @param {string} [description='']
+   * @param {IArgument} arg
    * @returns {this}
    */
-  argument(spec, description = '') {
-    const match = spec.match(/^([<\[])(\.\.\.)?([\w-]+)(?:=([^\]>]+))?([>\]])$/)
-    if (!match) {
-      throw new Error(`Invalid argument spec: ${spec}`)
-    }
-
-    const [, open, dots, name, defaultValue, close] = match
-    const required = open === '<' && close === '>'
-    const variadic = !!dots
-
-    if (variadic && this.#arguments.some(a => a.variadic)) {
-      throw new Error('Only one variadic argument is allowed')
-    }
-
-    this.#arguments.push({ name, description, required, variadic, defaultValue })
+  argument(arg) {
+    this.#validateArgumentConfig(arg)
+    this.#arguments.push(arg)
     return this
   }
 
   /**
-   * Set command description.
-   * @param {string} text
+   * Set the action handler.
+   * @param {IAction} fn
    * @returns {this}
    */
-  description(text) {
-    this.#desc = text
+  action(fn) {
+    this.#action = fn
     return this
   }
 
+  // ============================================================
+  // Assembly Methods
+  // ============================================================
+
   /**
-   * Add a usage example.
-   * @param {string} text
+   * Register a subcommand.
+   * @param {string} name
+   * @param {Command} cmd
    * @returns {this}
    */
-  example(text) {
-    this.#examples.push(text)
+  subcommand(name, cmd) {
+    this.#subcommands.push({ name, command: cmd })
     return this
   }
 
+  // ============================================================
+  // Execution Methods
+  // ============================================================
+
   /**
-   * Execute the action handler.
-   * @param {ICommanderExecuteParams} params
+   * Parse argv and execute action. Sets process.exitCode = 1 on error.
+   * @param {IRunParams} params
    * @returns {Promise<void>}
    */
-  async execute(params) {
-    if (this.#handler) {
-      await this.#handler(params)
+  async run(params) {
+    const { argv, envs, reporter = new DefaultReporter() } = params
+    const commandPath = this.#getCommandPath([])
+
+    try {
+      // Handle help subcommand (e.g., `cli help <subcommand>`)
+      if (this.#helpSubcommandEnabled && argv[0] === 'help') {
+        const result = this.#processHelpSubcommand(argv.slice(1), reporter)
+        if (result) return
+      }
+
+      // Route to subcommand if matched (BEFORE checking --help on parent)
+      // This ensures `cli sub --help` shows subcommand help, not parent help
+      const routeResult = this.#route(argv, envs, reporter)
+      if (routeResult.handled) return
+
+      // Check for help flag (only if not routed to subcommand)
+      if (this.#hasHelpFlag(argv)) {
+        reporter.info(this.formatHelp())
+        return
+      }
+
+      // Check for version flag
+      if (this.#version && this.#hasVersionFlag(argv)) {
+        reporter.info(this.#version)
+        return
+      }
+
+      // Parse arguments
+      const { args, opts } = this.parse(routeResult.remainingArgv)
+
+      // Apply environment variables
+      this.#applyEnvValues(opts, envs)
+
+      // Validate required arguments
+      this.#validateArguments(args, commandPath)
+
+      // Execute action
+      if (this.#action) {
+        await this.#action({ ctx: this, opts, args })
+      }
+    } catch (err) {
+      if (err instanceof CommanderError) {
+        reporter.error(err.format())
+      } else {
+        reporter.error(`Error: ${err instanceof Error ? err.message : String(err)}`)
+      }
+      process.exitCode = 1
     }
   }
 
   /**
-   * Add an option.
-   * @param {string} flags
-   * @param {string} [description='']
-   * @param {ICommanderOptionConfig} [config={}]
-   * @returns {this}
-   */
-  option(flags, description = '', config = {}) {
-    const def = this.#parseOptionFlags(flags, description, config)
-    this.#options.push(def)
-    return this
-  }
-
-  /**
-   * Parse argv and envs, return parse result with diagnostics.
+   * Parse argv without executing action.
    * @param {string[]} argv
-   * @param {Record<string, string>} envs
-   * @returns {ICommanderParseResult}
+   * @returns {IParseResult}
    */
-  parse(argv, envs) {
-    /** @type {ICommanderDiagnostic[]} */
-    const diagnostics = []
-    /** @type {Record<string, ICommanderOptionValue>} */
+  parse(argv) {
+    const normalizedArgv = this.#normalizeArgv(argv)
+    const commandPath = this.#getCommandPath([])
+
+    /** @type {Record<string, IOptionValue>} */
     const opts = {}
     /** @type {string[]} */
     const positionals = []
-    /** @type {string[]} */
-    const unknownOptions = []
 
-    // Build lookup maps
-    /** @type {Map<string, IOptionDef>} */
-    const shortMap = new Map()
-    /** @type {Map<string, IOptionDef>} */
-    const longMap = new Map()
-    /** @type {Map<string, IOptionDef>} */
-    const negatedMap = new Map()
+    // Build option maps
+    const { shortMap, longMap, negatedMap } = this.#buildOptionMaps()
 
-    for (const opt of this.#options) {
-      if (opt.short) shortMap.set(opt.short, opt)
-      if (opt.long) longMap.set(opt.long, opt)
-      // Negatable: boolean options support --no-xxx
-      if (opt.type === 'boolean' && opt.long && !opt.long.startsWith('--no-')) {
-        const negated = opt.long.replace(/^--/, '--no-')
-        negatedMap.set(negated, opt)
-      }
-    }
-
-    // Initialize defaults from config.default, then envs[config.env]
-    for (const opt of this.#options) {
-      const key = this.#optionKey(opt.long)
-
-      // config.default
-      if (opt.defaultValue !== undefined) {
-        opts[key] = opt.defaultValue
+    // Initialize defaults
+    for (const opt of this.#getMergedOptions()) {
+      const key = toCamelCase(opt.long)
+      if (opt.default !== undefined) {
+        opts[key] = opt.default
       } else if (opt.type === 'string[]' || opt.type === 'number[]') {
         opts[key] = []
-      }
-
-      // envs[config.env] overrides default
-      if (opt.env && envs[opt.env] !== undefined) {
-        const envValue = envs[opt.env]
-        const coerced = this.#coerceValue(envValue, opt.type, opt.long, diagnostics)
-        if (coerced !== undefined) {
-          opts[key] = coerced
-        }
       }
     }
 
     // Parse argv
     let terminated = false
-    for (let i = 0; i < argv.length; i++) {
-      const arg = argv[i]
+    for (let i = 0; i < normalizedArgv.length; i++) {
+      const arg = normalizedArgv[i]
 
       if (terminated) {
         positionals.push(arg)
@@ -261,268 +348,106 @@ export class Command {
       }
 
       if (arg.startsWith('--')) {
-        // Long option
-        const eqIdx = arg.indexOf('=')
-        const flag = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg
-        const eqValue = eqIdx !== -1 ? arg.slice(eqIdx + 1) : undefined
-
-        // Check negated first
-        const negatedOpt = negatedMap.get(flag)
-        if (negatedOpt) {
-          const key = this.#optionKey(negatedOpt.long)
-          opts[key] = false
-          continue
-        }
-
-        const opt = longMap.get(flag)
-        if (!opt) {
-          unknownOptions.push(flag)
-          continue
-        }
-
-        this.#handleOptionValue(opt, opts, argv, i, eqValue, diagnostics)
-        if (opt.type !== 'boolean' && eqValue === undefined && argv[i + 1] && !argv[i + 1].startsWith('-')) {
-          i++
-        }
+        i = this.#parseLongOption(arg, normalizedArgv, i, opts, longMap, negatedMap, commandPath)
       } else if (arg.startsWith('-') && arg.length > 1) {
-        // Short option(s)
-        const chars = arg.slice(1)
-
-        // Check if it's a known short option directly
-        const directOpt = shortMap.get(arg)
-        if (directOpt) {
-          this.#handleOptionValue(directOpt, opts, argv, i, undefined, diagnostics)
-          if (directOpt.type !== 'boolean' && argv[i + 1] && !argv[i + 1].startsWith('-')) {
-            i++
-          }
-          continue
-        }
-
-        // Handle combined short options: -abc
-        for (let j = 0; j < chars.length; j++) {
-          const shortFlag = `-${chars[j]}`
-          const opt = shortMap.get(shortFlag)
-
-          if (!opt) {
-            unknownOptions.push(shortFlag)
-            continue
-          }
-
-          const isLast = j === chars.length - 1
-          if (opt.type === 'boolean') {
-            const key = this.#optionKey(opt.long)
-            opts[key] = true
-          } else if (isLast) {
-            // Last char can take a value
-            this.#handleOptionValue(opt, opts, argv, i, undefined, diagnostics)
-            if (argv[i + 1] && !argv[i + 1].startsWith('-')) {
-              i++
-            }
-          } else {
-            // Non-boolean in middle of combination - error
-            diagnostics.push({
-              type: 'error',
-              message: `Option '${shortFlag}' requires a value`,
-            })
-          }
-        }
+        i = this.#parseShortOption(arg, normalizedArgv, i, opts, shortMap, commandPath)
       } else {
+        // Check for subcommand
+        const subEntry = this.#subcommands.find(s => s.name === arg)
+        if (subEntry) {
+          return {
+            args: {},
+            opts,
+            remaining: normalizedArgv.slice(i + 1),
+            subcommand: arg,
+          }
+        }
         positionals.push(arg)
       }
     }
 
-    // Strict mode: unknown options
-    if (this.#strictMode) {
-      for (const flag of unknownOptions) {
-        diagnostics.push({ type: 'error', message: `Unknown option '${flag}'` })
-      }
-    }
-
-    // Handle --silent: override logLevel
-    if (opts.silent === true) {
-      opts.logLevel = 'error'
-    }
-
-    // Validate --log-level
-    if (typeof opts.logLevel === 'string' && !LOG_LEVELS.includes(/** @type {ICommanderLogLevel} */ (opts.logLevel))) {
-      diagnostics.push({ type: 'error', message: `Invalid log level '${opts.logLevel}'` })
-    }
-
     // Map positionals to arguments
-    /** @type {Record<string, ICommanderArgumentValue>} */
+    /** @type {Record<string, IArgumentValue>} */
     const args = {}
     let posIdx = 0
     for (const argDef of this.#arguments) {
-      if (argDef.variadic) {
-        const remaining = positionals.slice(posIdx)
-        if (argDef.required && remaining.length === 0) {
-          diagnostics.push({ type: 'error', message: `Missing required argument '<...${argDef.name}>'` })
-        }
-        args[argDef.name] = remaining
+      if (argDef.kind === 'variadic') {
+        args[argDef.name] = positionals.slice(posIdx)
         posIdx = positionals.length
       } else {
         const value = positionals[posIdx]
-        if (argDef.required && value === undefined) {
-          diagnostics.push({ type: 'error', message: `Missing required argument '<${argDef.name}>'` })
-        }
-        args[argDef.name] = value ?? argDef.defaultValue
+        args[argDef.name] = value ?? argDef.default
         posIdx++
       }
     }
 
-    return { args, opts, envs, diagnostics }
+    return { args, opts, remaining: [] }
   }
 
   /**
-   * Parse + execute. Exit with code 1 on error.
-   * @param {string[]} argv
-   * @param {Record<string, string>} envs
-   * @returns {Promise<void>}
-   */
-  async run(argv, envs) {
-    const { args, opts, diagnostics } = this.parse(argv, envs)
-
-    // Handle --help
-    if (opts.help === true) {
-      this.showHelp()
-      return
-    }
-
-    // Handle --version
-    if (opts.version === true && this.#ver) {
-      this.#reporter.info(this.#ver)
-      return
-    }
-
-    // Check for errors
-    const errors = diagnostics.filter(d => d.type === 'error')
-    if (errors.length > 0) {
-      for (const e of errors) {
-        this.#reporter.error(`Error: ${e.message}`)
-      }
-      this.#reporter.error(`Run '${this.#name} --help' for usage.`)
-      process.exitCode = 1
-      return
-    }
-
-    await this.execute({ ctx: this, args, opts, envs })
-  }
-
-  /**
-   * Print help message.
-   */
-  showHelp() {
-    this.#reporter.info(this.#buildHelpText())
-  }
-
-  /**
-   * Enable/disable strict mode.
-   * @param {boolean} [enabled=true]
-   * @returns {this}
-   */
-  strict(enabled = true) {
-    this.#strictMode = enabled
-    return this
-  }
-
-  /**
-   * Set command version (adds --version option).
-   * @param {string} ver
-   * @returns {this}
-   */
-  version(ver) {
-    this.#ver = ver
-    if (!this.#options.some(o => o.long === '--version')) {
-      this.#options.splice(1, 0, {
-        short: '',
-        long: '--version',
-        description: 'Display version number',
-        valueName: '',
-        type: 'boolean',
-        defaultValue: false,
-        isBuiltin: true,
-      })
-    }
-    return this
-  }
-
-  // ============================================================
-  // Private Methods (alphabetical)
-  // ============================================================
-
-  #addBuiltinOptions() {
-    this.#options.push({
-      short: '',
-      long: '--help',
-      description: 'Display this help message',
-      valueName: '',
-      type: 'boolean',
-      defaultValue: false,
-      isBuiltin: true,
-    })
-    this.#options.push({
-      short: '',
-      long: '--log-level',
-      description: 'Set log level (debug|info|warn|error)',
-      valueName: '<level>',
-      type: 'string',
-      defaultValue: 'info',
-      isBuiltin: true,
-    })
-    this.#options.push({
-      short: '',
-      long: '--silent',
-      description: 'Suppress all output except errors',
-      valueName: '',
-      type: 'boolean',
-      defaultValue: false,
-      isBuiltin: true,
-    })
-  }
-
-  /**
+   * Generate help text.
    * @returns {string}
    */
-  #buildHelpText() {
+  formatHelp() {
     const lines = []
 
-    if (this.#desc) {
-      lines.push(this.#desc, '')
+    if (this.#description) {
+      lines.push(this.#description, '')
     }
 
     // Usage line
-    const usageParts = [this.#name, '[options]']
+    const usageParts = [this.#name]
+
+    if (this.#subcommands.length > 0) {
+      usageParts.push('[command]')
+    }
+
+    usageParts.push('[options]')
+
     for (const arg of this.#arguments) {
-      if (arg.variadic) {
-        usageParts.push(arg.required ? `<...${arg.name}>` : `[...${arg.name}]`)
+      if (arg.kind === 'variadic') {
+        usageParts.push(`[...${arg.name}]`)
+      } else if (arg.kind === 'required') {
+        usageParts.push(`<${arg.name}>`)
       } else {
-        usageParts.push(arg.required ? `<${arg.name}>` : `[${arg.name}]`)
+        usageParts.push(`[${arg.name}]`)
       }
     }
     lines.push(`Usage: ${usageParts.join(' ')}`, '')
 
+    // Subcommands
+    if (this.#subcommands.length > 0) {
+      lines.push('Commands:')
+      const maxLen = Math.max(...this.#subcommands.map(s => s.name.length))
+      for (const sub of this.#subcommands) {
+        const desc = sub.command.description || ''
+        lines.push(`  ${sub.name.padEnd(maxLen + 2)}${desc}`)
+      }
+      lines.push('')
+    }
+
     // Arguments
     if (this.#arguments.length > 0) {
       lines.push('Arguments:')
-      const maxLen = Math.max(...this.#arguments.map(a => a.name.length + (a.variadic ? 3 : 0)))
+      const maxLen = Math.max(...this.#arguments.map(a => a.name.length + (a.kind === 'variadic' ? 3 : 0)))
       for (const arg of this.#arguments) {
-        const name = arg.variadic ? `...${arg.name}` : arg.name
-        const defaultStr = arg.defaultValue !== undefined ? ` (default: ${arg.defaultValue})` : ''
-        lines.push(`  ${name.padEnd(maxLen + 2)}${arg.description}${defaultStr}`)
+        const name = arg.kind === 'variadic' ? `...${arg.name}` : arg.name
+        const defaultStr = arg.default !== undefined ? ` (default: ${arg.default})` : ''
+        lines.push(`  ${name.padEnd(maxLen + 2)}${arg.description || ''}${defaultStr}`)
       }
       lines.push('')
     }
 
     // Options
     lines.push('Options:')
-    const builtinOpts = this.#options.filter(o => o.isBuiltin)
-    const userOpts = this.#options.filter(o => !o.isBuiltin)
-    const allOpts = [...builtinOpts, ...userOpts]
+    const allOpts = this.#getMergedOptions()
 
     const flagStrs = allOpts.map(o => {
       const parts = []
-      if (o.short) parts.push(o.short)
-      if (o.long) parts.push(o.long + (o.valueName ? ` ${o.valueName}` : ''))
+      if (o.short) parts.push(`-${o.short}`)
+      const longPart =
+        o.type === 'boolean' ? `--${o.long}` : `--${o.long} <${o.type.replace('[]', '')}>`
+      parts.push(longPart)
       return parts.join(', ')
     })
     const maxFlagLen = Math.max(...flagStrs.map(s => s.length))
@@ -531,34 +456,205 @@ export class Command {
       const opt = allOpts[i]
       const suffixes = []
       if (opt.env) suffixes.push(`env: ${opt.env}`)
-      if (opt.defaultValue !== undefined && opt.defaultValue !== false) {
-        suffixes.push(`default: ${opt.defaultValue}`)
+      if (opt.default !== undefined && opt.default !== false) {
+        suffixes.push(`default: ${opt.default}`)
       }
       const suffix = suffixes.length > 0 ? ` (${suffixes.join(') (')})` : ''
-      lines.push(`  ${flagStrs[i].padEnd(maxFlagLen + 2)}${opt.description}${suffix}`)
+      lines.push(`  ${flagStrs[i].padEnd(maxFlagLen + 2)}${opt.description || ''}${suffix}`)
     }
     lines.push('')
-
-    // Examples
-    if (this.#examples.length > 0) {
-      lines.push('Examples:')
-      for (const ex of this.#examples) {
-        lines.push(`  $ ${ex}`)
-      }
-      lines.push('')
-    }
 
     return lines.join('\n')
   }
 
+  // ============================================================
+  // Private Methods - Routing
+  // ============================================================
+
   /**
-   * @param {string} value
-   * @param {ICommanderOptionType} type
-   * @param {string} optLong
-   * @param {ICommanderDiagnostic[]} diagnostics
-   * @returns {ICommanderOptionValue | undefined}
+   * Process help subcommand.
+   * @param {string[]} argv
+   * @param {IReporter} reporter
+   * @returns {boolean} - Whether help was handled
    */
-  #coerceValue(value, type, optLong, diagnostics) {
+  #processHelpSubcommand(argv, reporter) {
+    if (argv.length === 0) {
+      reporter.info(this.formatHelp())
+      return true
+    }
+
+    const subName = argv[0]
+    const subEntry = this.#subcommands.find(s => s.name === subName)
+    if (subEntry) {
+      reporter.info(subEntry.command.formatHelp())
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Route to subcommand if matched.
+   * @param {string[]} argv
+   * @param {Record<string, string | undefined>} envs
+   * @param {IReporter} reporter
+   * @returns {{ handled: boolean, remainingArgv: string[] }}
+   */
+  #route(argv, envs, reporter) {
+    if (argv.length === 0 || this.#subcommands.length === 0) {
+      return { handled: false, remainingArgv: argv }
+    }
+
+    const firstArg = argv[0]
+
+    // Check if it's an option (starts with -)
+    if (firstArg.startsWith('-')) {
+      return { handled: false, remainingArgv: argv }
+    }
+
+    const subEntry = this.#subcommands.find(s => s.name === firstArg)
+    if (subEntry) {
+      subEntry.command.run({ argv: argv.slice(1), envs, reporter })
+      return { handled: true, remainingArgv: [] }
+    }
+
+    return { handled: false, remainingArgv: argv }
+  }
+
+  // ============================================================
+  // Private Methods - Option Parsing
+  // ============================================================
+
+  /**
+   * Parse a long option.
+   * @param {string} arg
+   * @param {string[]} argv
+   * @param {number} idx
+   * @param {Record<string, IOptionValue>} opts
+   * @param {Map<string, IOption>} longMap
+   * @param {Map<string, IOption>} negatedMap
+   * @param {string} commandPath
+   * @returns {number}
+   */
+  #parseLongOption(arg, argv, idx, opts, longMap, negatedMap, commandPath) {
+    const eqIdx = arg.indexOf('=')
+    const flag = eqIdx !== -1 ? arg.slice(2, eqIdx) : arg.slice(2)
+    const eqValue = eqIdx !== -1 ? arg.slice(eqIdx + 1) : undefined
+
+    // Check negated first (--no-xxx)
+    if (flag.startsWith('no-')) {
+      const baseName = flag.slice(3)
+      const negatedOpt = negatedMap.get(baseName)
+      if (negatedOpt) {
+        const key = toCamelCase(negatedOpt.long)
+        opts[key] = false
+        return idx
+      }
+    }
+
+    const opt = longMap.get(flag)
+    if (!opt) {
+      // Check if it's a builtin option
+      if (this.#isBuiltinOption(flag)) {
+        return idx
+      }
+      throw new CommanderError('unknown_option', `Unknown option '--${flag}'`, commandPath)
+    }
+
+    return this.#applyValue(opt, opts, argv, idx, eqValue, commandPath)
+  }
+
+  /**
+   * Parse a short option.
+   * @param {string} arg
+   * @param {string[]} argv
+   * @param {number} idx
+   * @param {Record<string, IOptionValue>} opts
+   * @param {Map<string, IOption>} shortMap
+   * @param {string} commandPath
+   * @returns {number}
+   */
+  #parseShortOption(arg, argv, idx, opts, shortMap, commandPath) {
+    const chars = arg.slice(1)
+
+    // Handle combined short options: -abc
+    for (let j = 0; j < chars.length; j++) {
+      const shortChar = chars[j]
+      const opt = shortMap.get(shortChar)
+
+      if (!opt) {
+        // Check if it's a builtin option
+        if (this.#isBuiltinOption(shortChar, true)) {
+          continue
+        }
+        throw new CommanderError('unknown_option', `Unknown option '-${shortChar}'`, commandPath)
+      }
+
+      const isLast = j === chars.length - 1
+      if (opt.type === 'boolean') {
+        const key = toCamelCase(opt.long)
+        opts[key] = true
+      } else if (isLast) {
+        idx = this.#applyValue(opt, opts, argv, idx, undefined, commandPath)
+      } else {
+        throw new CommanderError(
+          'missing_option_value',
+          `Option '-${shortChar}' requires a value`,
+          commandPath,
+        )
+      }
+    }
+
+    return idx
+  }
+
+  /**
+   * Apply a value to an option.
+   * @param {IOption} opt
+   * @param {Record<string, IOptionValue>} opts
+   * @param {string[]} argv
+   * @param {number} idx
+   * @param {string | undefined} eqValue
+   * @param {string} commandPath
+   * @returns {number}
+   */
+  #applyValue(opt, opts, argv, idx, eqValue, commandPath) {
+    const key = toCamelCase(opt.long)
+
+    if (opt.type === 'boolean') {
+      opts[key] = true
+      return idx
+    }
+
+    const rawValue = eqValue ?? argv[idx + 1]
+    if (rawValue === undefined || (eqValue === undefined && rawValue.startsWith('-'))) {
+      throw new CommanderError(
+        'missing_option_value',
+        `Option '--${opt.long}' requires a value`,
+        commandPath,
+      )
+    }
+
+    const coerced = this.#coerceValue(rawValue, opt.type, opt.long, commandPath)
+
+    if (opt.type === 'string[]' || opt.type === 'number[]') {
+      /** @type {Array<string | number>} */ (opts[key]).push(/** @type {string | number} */ (coerced))
+    } else {
+      opts[key] = coerced
+    }
+
+    return eqValue === undefined ? idx + 1 : idx
+  }
+
+  /**
+   * Coerce a string value to the appropriate type.
+   * @param {string} value
+   * @param {IOptionType} type
+   * @param {string} optLong
+   * @param {string} commandPath
+   * @returns {IOptionValue}
+   */
+  #coerceValue(value, type, optLong, commandPath) {
     switch (type) {
       case 'boolean':
         return value === 'true' || value === '1'
@@ -566,109 +662,213 @@ export class Command {
         return value
       case 'number':
         if (!isValidNumber(value)) {
-          diagnostics.push({ type: 'error', message: `Invalid value '${value}' for option '${optLong}'` })
-          return undefined
+          throw new CommanderError(
+            'invalid_option_value',
+            `Invalid value '${value}' for option '--${optLong}'`,
+            commandPath,
+          )
         }
         return Number(value)
       case 'string[]':
         return value
       case 'number[]':
         if (!isValidNumber(value)) {
-          diagnostics.push({ type: 'error', message: `Invalid value '${value}' for option '${optLong}'` })
-          return undefined
+          throw new CommanderError(
+            'invalid_option_value',
+            `Invalid value '${value}' for option '--${optLong}'`,
+            commandPath,
+          )
         }
         return Number(value)
     }
   }
 
+  // ============================================================
+  // Private Methods - Option Merging
+  // ============================================================
+
   /**
-   * @param {IOptionDef} opt
-   * @param {Record<string, ICommanderOptionValue>} opts
-   * @param {string[]} argv
-   * @param {number} idx
-   * @param {string | undefined} eqValue
-   * @param {ICommanderDiagnostic[]} diagnostics
+   * Get merged options (user options + builtins).
+   * @returns {IOption[]}
    */
-  #handleOptionValue(opt, opts, argv, idx, eqValue, diagnostics) {
-    const key = this.#optionKey(opt.long)
-
-    if (opt.type === 'boolean') {
-      opts[key] = true
-      return
+  #getMergedOptions() {
+    const builtins = [BUILTIN_HELP_OPTION]
+    if (this.#version) {
+      builtins.push(BUILTIN_VERSION_OPTION)
     }
+    return [...builtins, ...this.#options]
+  }
 
-    const rawValue = eqValue ?? argv[idx + 1]
-    if (rawValue === undefined || (eqValue === undefined && rawValue.startsWith('-'))) {
-      diagnostics.push({ type: 'error', message: `Option '${opt.long}' requires a value` })
-      return
+  // ============================================================
+  // Private Methods - Validation
+  // ============================================================
+
+  /**
+   * Validate option configuration.
+   * @param {IOption} opt
+   */
+  #validateOptionConfig(opt) {
+    if (!opt.long) {
+      throw new Error('Option must have a long name')
     }
-
-    const coerced = this.#coerceValue(rawValue, opt.type, opt.long, diagnostics)
-    if (coerced === undefined) return
-
-    if (opt.type === 'string[]' || opt.type === 'number[]') {
-      // Array: accumulate (array is always initialized to [] in parse)
-      /** @type {Array<string | number>} */ (opts[key]).push(/** @type {string | number} */ (coerced))
-    } else {
-      // Scalar: override
-      opts[key] = coerced
+    if (!opt.type) {
+      throw new Error(`Option '--${opt.long}' must have a type`)
     }
   }
 
   /**
-   * @param {string} long
-   * @returns {string}
+   * Check option uniqueness.
+   * @param {IOption} opt
    */
-  #optionKey(long) {
-    return toCamelCase(long.replace(/^--(?:no-)?/, ''))
+  #checkOptionUniqueness(opt) {
+    const existing = this.#options.find(o => o.long === opt.long || (o.short && o.short === opt.short))
+    if (existing) {
+      throw new Error(`Duplicate option: --${opt.long}`)
+    }
   }
 
   /**
-   * @param {string} flags
-   * @param {string} description
-   * @param {ICommanderOptionConfig} config
-   * @returns {IOptionDef}
+   * Validate argument configuration.
+   * @param {IArgument} arg
    */
-  #parseOptionFlags(flags, description, config) {
-    let short = ''
-    let long = ''
-    let valueName = ''
+  #validateArgumentConfig(arg) {
+    if (!arg.name) {
+      throw new Error('Argument must have a name')
+    }
+    if (!arg.kind) {
+      throw new Error(`Argument '${arg.name}' must have a kind`)
+    }
 
-    const parts = flags.split(/,\s*/)
-    for (const part of parts) {
-      const trimmed = part.trim()
-      if (trimmed.startsWith('--')) {
-        const spaceIdx = trimmed.indexOf(' ')
-        if (spaceIdx !== -1) {
-          long = trimmed.slice(0, spaceIdx)
-          valueName = trimmed.slice(spaceIdx + 1).trim()
-        } else {
-          long = trimmed
+    // Variadic must be last
+    if (arg.kind === 'variadic' && this.#arguments.some(a => a.kind === 'variadic')) {
+      throw new Error('Only one variadic argument is allowed')
+    }
+
+    // Optional cannot come before required
+    if (arg.kind === 'required' && this.#arguments.some(a => a.kind === 'optional')) {
+      throw new Error('Required arguments cannot come after optional arguments')
+    }
+  }
+
+  /**
+   * Validate required arguments are present.
+   * @param {Record<string, IArgumentValue>} args
+   * @param {string} commandPath
+   */
+  #validateArguments(args, commandPath) {
+    for (const argDef of this.#arguments) {
+      if (argDef.kind === 'required') {
+        const value = args[argDef.name]
+        if (value === undefined) {
+          throw new CommanderError(
+            'missing_argument',
+            `Missing required argument '<${argDef.name}>'`,
+            commandPath,
+          )
         }
-      } else if (trimmed.startsWith('-')) {
-        short = trimmed.split(/\s/)[0]
+      } else if (argDef.kind === 'variadic') {
+        const value = args[argDef.name]
+        if (Array.isArray(value) && value.length === 0 && argDef.default === undefined) {
+          // Variadic with no values is OK unless explicitly required in some other way
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // Private Methods - Utilities
+  // ============================================================
+
+  /**
+   * Check if an option is a builtin.
+   * @param {string} flag
+   * @param {boolean} [isShort=false]
+   * @returns {boolean}
+   */
+  #isBuiltinOption(flag, isShort = false) {
+    if (isShort) {
+      return flag === 'h' || flag === 'V'
+    }
+    return flag === 'help' || flag === 'version'
+  }
+
+  /**
+   * Build option lookup maps.
+   * @returns {{ shortMap: Map<string, IOption>, longMap: Map<string, IOption>, negatedMap: Map<string, IOption> }}
+   */
+  #buildOptionMaps() {
+    /** @type {Map<string, IOption>} */
+    const shortMap = new Map()
+    /** @type {Map<string, IOption>} */
+    const longMap = new Map()
+    /** @type {Map<string, IOption>} */
+    const negatedMap = new Map()
+
+    for (const opt of this.#getMergedOptions()) {
+      if (opt.short) shortMap.set(opt.short, opt)
+      if (opt.long) longMap.set(opt.long, opt)
+      if (opt.type === 'boolean' && opt.long) {
+        negatedMap.set(opt.long, opt)
       }
     }
 
-    const isBoolean = !valueName
+    return { shortMap, longMap, negatedMap }
+  }
 
-    /** @type {ICommanderOptionType} */
-    let type = 'string'
-    if (config.type) {
-      type = config.type
-    } else if (isBoolean) {
-      type = 'boolean'
-    }
+  /**
+   * Check if argv contains --help or -h.
+   * @param {string[]} argv
+   * @returns {boolean}
+   */
+  #hasHelpFlag(argv) {
+    return argv.includes('--help') || argv.includes('-h')
+  }
 
-    return {
-      short,
-      long,
-      description,
-      valueName,
-      type,
-      defaultValue: config.default,
-      env: config.env,
-      isBuiltin: false,
+  /**
+   * Check if argv contains --version or -V.
+   * @param {string[]} argv
+   * @returns {boolean}
+   */
+  #hasVersionFlag(argv) {
+    return argv.includes('--version') || argv.includes('-V')
+  }
+
+  /**
+   * Normalize argv (expand --opt=value to separate args).
+   * @param {string[]} argv
+   * @returns {string[]}
+   */
+  #normalizeArgv(argv) {
+    return argv
+  }
+
+  /**
+   * Get command path for error messages.
+   * @param {string[]} parents
+   * @returns {string}
+   */
+  #getCommandPath(parents) {
+    return [...parents, this.#name].join(' ')
+  }
+
+  /**
+   * Apply environment variable values.
+   * @param {Record<string, IOptionValue>} opts
+   * @param {Record<string, string | undefined>} envs
+   */
+  #applyEnvValues(opts, envs) {
+    const commandPath = this.#getCommandPath([])
+    for (const opt of this.#options) {
+      if (opt.env && envs[opt.env] !== undefined) {
+        const key = toCamelCase(opt.long)
+        // Only apply if not already set from argv
+        if (opts[key] === undefined || opts[key] === opt.default) {
+          const envValue = envs[opt.env]
+          if (envValue !== undefined) {
+            opts[key] = this.#coerceValue(envValue, opt.type, opt.long, commandPath)
+          }
+        }
+      }
     }
   }
 }

@@ -59,14 +59,11 @@ export async function handleThemeToggle(theme) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('theme-toggle', reporter)
-    .description('Toggle theme between light and dark variants.')
-    .argument('[theme]', 'Theme name to toggle')
-    .example('theme-toggle')
-    .example('theme-toggle tokyonight-night')
+  const cmd = new Command({ name: 'theme-toggle', description: 'Toggle theme between light and dark variants.' })
+    .argument({ name: 'theme', kind: 'optional', description: 'Theme name to toggle' })
     .action(async ({ args }) => {
       await handleThemeToggle(/** @type {string | undefined} */ (args.theme))
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }

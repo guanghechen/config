@@ -133,18 +133,15 @@ export async function handleSyncXdgConfig(edition, env) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command('sync-xdg-config', reporter)
-    .description('Sync XDG config repositories using git worktrees.')
-    .option('--edition <edition>', 'Override edition (nix, nix-remote, osx, win)')
-    .example('sync-xdg-config')
-    .example('sync-xdg-config --edition osx')
-    .action(async ({ opts, envs }) => {
+  const cmd = new Command({ name: 'sync-xdg-config', description: 'Sync XDG config repositories using git worktrees.' })
+    .option({ long: 'edition', type: 'string', description: 'Override edition (nix, nix-remote, osx, win)' })
+    .action(async ({ opts }) => {
       const editionArg = /** @type {IEdition | undefined} */ (opts.edition)
       const data = await setting.load()
       const edition = editionArg ?? data.edition
       reporter.info(`Using edition: ${edition}`)
-      await handleSyncXdgConfig(edition, envs)
+      await handleSyncXdgConfig(edition, /** @type {Record<string, string>} */ (process.env))
     })
 
-  await cmd.run(process.argv.slice(2), /** @type {Record<string, string>} */ (process.env))
+  await cmd.run({ argv: process.argv.slice(2), envs: /** @type {Record<string, string>} */ (process.env), reporter })
 }
