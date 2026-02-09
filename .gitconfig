@@ -1,0 +1,129 @@
+[alias]
+  amend = commit --amend --no-edit
+  current = rev-parse --abbrev-ref HEAD
+  filelog = log -p --follow --
+  last = !bash -c 'git log -1 HEAD | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
+  loga = !bash -c 'git log --color --graph --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %Creset%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
+  logi = !bash -c 'git log --color --abbrev-commit --decorate --date=relative --format=format:\"%C(brightmagenta)%h%C(reset) %C(bold brightblue)%an%C(reset) %C(brightwhite)%s%C(reset) %C(white)(%cr)%C(reset) %C(brightyellow)%d%C(reset)\" \"$@\" | node \"${XDG_CONFIG_HOME:-$HOME/.config}/guanghechen/cli/gitmoji.mjs\"' -
+  recent = branch --sort=-committerdate --format='%(committerdate:relative)%09%(refname:short)'
+  unstage = reset HEAD --
+  who = blame -w -C -C -C
+
+[branch]
+  sort = -committerdate
+
+[core]
+  editor = nvim
+  eol = lf
+  autocrlf = false
+  safecrlf = true
+  fileMode = true
+  longpaths = true
+  # pager = delta
+  quotepath = false
+  excludesfile = ~/.config/git/ignore
+
+[color]
+  ui = true
+
+[commit]
+  verbose = true
+
+[credential]
+  # Remain empty by design, don't set helper here.
+
+[diff]
+  # algorithm = patience
+  algorithm = histogram
+  colorMoved = default
+  mnemonicprefix = true
+  renames = copies
+
+[fetch]
+  prune = true
+  prunetags = true
+
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  process = git-lfs filter-process
+  required = true
+  smudge = git-lfs smudge -- %f
+
+[gui]
+  encoding = utf-8
+
+[help]
+  autocorrect = 20  # auto correct typos
+
+[https]
+  postBuffer = 524288000
+
+[http]
+  postBuffer = 524288000
+
+[init]
+  defaultBranch = main
+
+[interactive]
+  diffFilter = delta --color-only
+
+[i18n]
+  commitencoding = utf-8
+  logOutputEncoding = utf-8
+
+[i18n "commit"]
+  encoding = utf-8
+
+[log]
+  date = iso
+
+[merge]
+  conflictstyle= zdiff3
+
+[pull]
+  rebase = false
+
+[push]
+  autoSetupRemote = true
+  default = current
+  followTags = true
+
+[rebase]
+  autostash = true
+  updateRefs = true
+
+[status]
+  submoduleSummary = true
+  showUntrackedFiles = all
+
+[tag]
+  sort = version:refname
+
+[transfer]
+  fsckobjects = true
+
+####################################################################################################
+
+[include]
+  path = ~/.config/git-delta/config.conf
+
+[includeIf "gitdir:~/.config/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/.local/share/nvim/lazy/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/.local/share/nvim-nvchad/lazy/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/playground/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/wiki/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/guanghechen/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/ws/github/yozora/"]
+  path = ~/.config/git/yozora/.gitconfig
