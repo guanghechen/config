@@ -24,6 +24,42 @@ import { applyPatches, replaceAll } from './util.mjs'
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.37 - Windows patches
+  {
+    // Original: qP1=oA()==="windows"?{displayText:`${XSA}+v`,check:(A,q)=>q.meta&&(A==="v"||A==="V")}
+    // Changed:  qP1=oA()==="windows"?{displayText:"ctrl+v",check:(A,q)=>q.ctrl&&(A==="v"||A==="V")}
+    name: 'win-image-paste-shortcut',
+    version: '2.1.37',
+    platform: ['win'],
+    search: /(\w+)=oA\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName, arg1, arg2] = m.matched_groups
+        return `${varName}=oA()==="windows"?{displayText:"ctrl+v",check:(${arg1},${arg2})=>${arg2}.ctrl&&`
+      }),
+    verify: (text) => text.includes('oA()==="windows"?{displayText:"ctrl+v",check:'),
+  },
+  // 2.1.37 - Linux/WSL patches
+  {
+    name: 'checkImage-grep-pattern',
+    version: '2.1.37',
+    platform: ['wsl', 'nix'],
+    search: 'grep -E "image/(png|jpeg|jpg|gif|webp)"',
+    replace: (content, matches) => replaceAll(content, matches, () => 'grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+    verify: (text) => text.includes('grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"'),
+  },
+  {
+    name: 'wl-paste-bmp-conversion',
+    version: '2.1.37',
+    platform: ['wsl', 'nix'],
+    search: /wl-paste --type image\/png > "\$\{(\w+)\}"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- > "\${${varName}}"`
+      }),
+    verify: (text) => text.includes('wl-paste --type image/png 2>/dev/null || wl-paste --type image/bmp | magick bmp:- png:- >'),
+  },
   // 2.1.29 - Windows patches
   {
     // Original: UP1=cA()==="windows"?{displayText:`${IRA}+v`,check:(A,q)=>q.meta&&(A==="v"||A==="V")}

@@ -10,6 +10,19 @@ const targetSize = process.argv[2] || '144000'
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.37 - Context window is now $Iq=200000 (200K by default)
+  // The new version uses dynamic context based on model:
+  //   - opus-4-6: 1,000,000 tokens
+  //   - default: 200,000 tokens
+  // Since 200K > 144K, patching may not be necessary unless you want a smaller window
+  {
+    name: 'context-window-$Iq',
+    version: '2.1.37',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /var \$Iq=\d+/,
+    replace: (content, matches) => replaceAll(content, matches, () => `var $Iq=${targetSize}`),
+    verify: (text) => text.includes(`var $Iq=${targetSize}`),
+  },
   // 2.1.29 - QEq is the actual context window variable used in mM() function
   {
     name: 'context-window-QEq',

@@ -97,6 +97,8 @@ rg 'wl-paste --type image/png' /path/to/cli.js
 }
 ```
 
+**重要**：patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
+
 ### Step 5: 测试
 
 ```bash
