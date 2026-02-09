@@ -142,13 +142,14 @@ async function handleFileSwitch(filepath, force) {
  * @returns {Promise<void>}
  */
 export async function handleYoz(opts, filepath) {
-  if (opts.auth) {
+  // Support both `yoz auth` and `yoz --auth`
+  if (opts.auth || filepath === 'auth') {
     await handleAuth()
     return
   }
 
   if (!filepath) {
-    reporter.error('Usage: yoz <filepath> [--force] or yoz --auth')
+    reporter.error('Usage: yoz <filepath> [--force] or yoz auth')
     process.exitCode = 1
     return
   }
@@ -164,7 +165,7 @@ if (process.argv[1] === import.meta.filename) {
     .option('--auth', 'Copy YOZ_AUTH_TOKEN to clipboard')
     .example('yoz ./README.md')
     .example('yoz ./README.md --force')
-    .example('yoz --auth')
+    .example('yoz auth')
     .action(async ({ args, opts }) => {
       await handleYoz(
         /** @type {IYozOptions} */ (opts),
