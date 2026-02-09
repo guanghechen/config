@@ -45,8 +45,8 @@ export function resolve_repo_path(root, target, env) {
     if (name === 'HOME') return home
     return env[name] ?? match
   })
-  if (expanded.startsWith('/')) return expanded
   if (expanded.startsWith('~')) return expanded.replace(/^~/, home)
+  if (path.isAbsolute(expanded)) return expanded
   return path.join(root, expanded)
 }
 
