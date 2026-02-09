@@ -40,9 +40,13 @@ export function parse_branch(branch) {
  * @returns {string}
  */
 export function resolve_repo_path(root, target, env) {
-  const expanded = target.replace(/\$\{(\w+)\}/g, (match, name) => env[name] ?? match)
+  const home = env.HOME ?? env.USERPROFILE ?? ''
+  const expanded = target.replace(/\$\{(\w+)\}/g, (match, name) => {
+    if (name === 'HOME') return home
+    return env[name] ?? match
+  })
   if (expanded.startsWith('/')) return expanded
-  if (expanded.startsWith('~')) return expanded.replace(/^~/, env.HOME ?? '')
+  if (expanded.startsWith('~')) return expanded.replace(/^~/, home)
   return path.join(root, expanded)
 }
 
