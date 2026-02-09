@@ -103,8 +103,8 @@ export async function sync_worktrees(reporter, config, branches, required, env) 
           args: ['-C', repoPath, 'merge', `origin/${branchName}`, '--ff-only'],
           silent: true,
         })
-      } catch {
-        reporter.error(`[${name}] failed to sync ${branchName}`)
+      } catch (err) {
+        reporter.error(`[${name}] failed to sync ${branchName}`, err.stderr || err.message)
       }
     } else if (required) {
       reporter.info(`[${name}] add new worktree of ${branchName}`)
@@ -115,8 +115,8 @@ export async function sync_worktrees(reporter, config, branches, required, env) 
           args: ['-C', main, 'worktree', 'add', repoPath, branchName],
           silent: true,
         })
-      } catch {
-        reporter.error(`[${name}] failed to add worktree ${branchName}`)
+      } catch (err) {
+        reporter.error(`[${name}] failed to add worktree ${branchName}`, err.stderr || err.message)
       }
     }
   }
