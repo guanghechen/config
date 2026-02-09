@@ -1,0 +1,12 @@
+.DS_Store
+.env.local
+
+*.http_request
+*.http_response
+*.local
+*.swp
+*.tsbuildinfo
+
+.code-analyzer/
+local/
+node_modules/
