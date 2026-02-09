@@ -18,4 +18,4 @@ printf "\e[96m  [setup node] installing npm pm2 yarn prettier\e[0m\n"
 npm install -g npm pm2 yarn prettier
 
 printf "\e[96m  [setup node] installing kit\e[0m\n"
-npm install -g @guanghechen/kit @guanghechen/kit-copilot @guanghechen/kit-file @guanghechen/kit-pm
+npm install -g @guanghechen/kit @guanghechen/kit-copilot @guanghechen/kit-copy @guanghechen/kit-file @guanghechen/kit-paste @guanghechen/kit-pm
