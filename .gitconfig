@@ -110,6 +110,12 @@
 [includeIf "gitdir:~/.config/"]
   path = ~/.config/git/guanghechen/.gitconfig
 
+[includeIf "gitdir:~/.gemini/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
+[includeIf "gitdir:~/.guanghechen/"]
+  path = ~/.config/git/guanghechen/.gitconfig
+
 [includeIf "gitdir:~/.local/share/nvim/lazy/"]
   path = ~/.config/git/guanghechen/.gitconfig
 
