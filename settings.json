@@ -40,8 +40,8 @@
   "enabledPlugins": {
     "lua-lsp@claude-plugins-official": false,
     "rust-analyzer-lsp@claude-plugins-official": false,
-    "ralph-loop@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "ralph-loop@claude-plugins-official": false,
+    "context7@claude-plugins-official": false
   },
   "alwaysThinkingEnabled": true,
   "feedbackSurveyState": {
