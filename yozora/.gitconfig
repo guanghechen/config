@@ -1,0 +1,6 @@
+[user]
+  name = guanghechen
+  email = me.guanghechen@gmail.com
+
+[credential]
+  helper = store --file ~/.config/git/yozora/.git-credentials
