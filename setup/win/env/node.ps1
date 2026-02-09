@@ -11,8 +11,8 @@ fnm default $env:PREFER_NODE_VERSION
 Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
 npm install -g npm pm2 yarn prettier
 
-Write-Host "  [setup node] installing kit" -ForegroundColor Cyan
-npm install -g @guanghechen/kit @guanghechen/kit-copilot @guanghechen/kit-copy @guanghechen/kit-file @guanghechen/kit-paste @guanghechen/kit-pm
+Write-Host "  [setup node] installing @guanghechen/kit" -ForegroundColor Cyan
+npm install -g @guanghechen/kit
 
 ## Setup agents
 foreach ($pkg in @("@anthropic-ai/claude-code", "@google/gemini-cli", "@openai/codex", "@github/copilot")) {

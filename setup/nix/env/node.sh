@@ -17,8 +17,8 @@ fnm default "$PREFER_NODE_VERSION"
 printf "\e[96m  [setup node] installing npm pm2 yarn prettier\e[0m\n"
 npm install -g npm pm2 yarn prettier
 
-printf "\e[96m  [setup node] installing kit\e[0m\n"
-npm install -g @guanghechen/kit @guanghechen/kit-copilot @guanghechen/kit-copy @guanghechen/kit-file @guanghechen/kit-paste @guanghechen/kit-pm
+printf "\e[96m  [setup node] installing @guanghechen/kit\e[0m\n"
+npm install -g @guanghechen/kit
 
 ## Setup agents
 for pkg in @anthropic-ai/claude-code @google/gemini-cli @openai/codex @github/copilot; do
