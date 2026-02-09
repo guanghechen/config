@@ -11,13 +11,11 @@ import {
   XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR,
   XDG_CONFIG_NODE_ASSET_THEMES,
 } from '#env'
-import { Reporter } from '#stl/reporter'
 import { hex2ansi256 } from '#util/color'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
+/** @typedef {import("./types.d.ts").IReporter} IReporter */
 /** @typedef {import("./types.d.ts").IThemeScheme} IThemeScheme */
-
-const reporter = new Reporter({ prefix: 'theme' })
 
 /**
  * @param {string} theme
@@ -97,10 +95,11 @@ export async function render_template(template, scheme) {
 }
 
 /**
+ * @param {IReporter} reporter
  * @param {string} theme
  * @return {Promise<IThemeScheme|undefined>}
  */
-export async function load_theme_scheme(theme) {
+export async function load_theme_scheme(reporter, theme) {
   const filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_SCHEME_DIR, `${theme}.json`)
   if (!existsSync(filepath)) {
     reporter.error('Unknown theme.', { theme })
@@ -129,11 +128,12 @@ export async function load_theme_scheme(theme) {
 }
 
 /**
+ * @param {IReporter} reporter
  * @param {IAppConfig} app
  * @param {IThemeScheme} scheme
  * @return {Promise<void>}
  */
-export async function apply_theme_per_app(app, scheme) {
+export async function apply_theme_per_app(reporter, app, scheme) {
   if (!app.active(app)) return
   if (app.local) {
     const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
@@ -149,14 +149,15 @@ export async function apply_theme_per_app(app, scheme) {
     await fs.writeFile(theme_filepath, content, 'utf8')
   }
 
-  await app.after_apply?.(app, scheme)
+  await app.after_apply?.(app, scheme, reporter)
 }
 
 /**
+ * @param {IReporter} reporter
  * @param {IAppConfig} app
  * @return {Promise<void>}
  */
-export async function gen_themes_per_app(app) {
+export async function gen_themes_per_app(reporter, app) {
   if (!app.active(app)) return
 
   const template_filepath = path.join(XDG_CONFIG_NODE_ASSET_THEME_APP_DIR, `${app.name}.hbs`)
@@ -168,7 +169,7 @@ export async function gen_themes_per_app(app) {
 
   const tasks_gen_theme = XDG_CONFIG_NODE_ASSET_THEMES.map(theme => gen_theme(theme))
   await Promise.allSettled(tasks_gen_theme)
-  await app.after_gen?.(app)
+  await app.after_gen?.(app, reporter)
 
   /**
    * @param {string} theme
@@ -176,7 +177,7 @@ export async function gen_themes_per_app(app) {
    */
   async function gen_theme(theme) {
     /** @type {IThemeScheme|undefined} */
-    const scheme = await load_theme_scheme(theme)
+    const scheme = await load_theme_scheme(reporter, theme)
     if (!scheme) return
 
     const content = await app.render(app, template, scheme)

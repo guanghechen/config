@@ -7,15 +7,13 @@ import {
   XDG_CONFIG_HOME,
   XDG_CONFIG_NODE_ASSET_WALLPAPER_DIR,
 } from '#env'
-import { Reporter } from '#stl/reporter'
 import { command_exists, exec } from '#util/command'
 import { is_directory, is_file, touch } from '#util/path'
 
 import { gen_full_theme_name, render_template } from './_util.mjs'
 
 /** @typedef {import("./types.d.ts").IAppConfig} IAppConfig */
-
-const reporter = new Reporter({ prefix: 'theme' })
+/** @typedef {import("./types.d.ts").IReporter} IReporter */
 
 /** @type {IAppConfig[]} */
 export const apps = [
@@ -27,7 +25,7 @@ export const apps = [
     local: 'local/theme.toml',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async app => {
+    after_apply: async (app, _scheme, reporter) => {
       const main_config_filepath = path.join(app.home, 'alacritty.toml')
       await touch(main_config_filepath, reporter)
     },
@@ -46,7 +44,7 @@ export const apps = [
       ].join('\n')
       await fs.writeFile(main_config_filepath, content, 'utf8')
     },
-    after_gen: async () => {
+    after_gen: async (_app, reporter) => {
       try {
         await exec({ reporter, cmd: 'bat', args: ['cache', '--build'], silent: true })
       } catch {
@@ -62,7 +60,7 @@ export const apps = [
     local: 'themes/local.theme',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async () => {
+    after_apply: async (_app, _scheme, reporter) => {
       // Send SIGUSR2 to btop to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
         const is_btop_exist = await command_exists(reporter, 'btop')
@@ -93,7 +91,7 @@ export const apps = [
     local: 'local/theme.json',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async app => {
+    after_apply: async (app, _scheme, reporter) => {
       const main_config_filepath = path.join(app.home, 'settings.json')
       await touch(main_config_filepath, reporter)
     },
@@ -106,7 +104,7 @@ export const apps = [
     local: 'local/theme.conf',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async () => {
+    after_apply: async (_app, _scheme, reporter) => {
       // Send SIGUSR2 to ghostty to trigger hot reload (Unix only, Windows doesn't support SIGUSR2)
       if (PLATFORM !== 'win') {
         const is_ghostty_exist = await command_exists(reporter, 'ghostty')
@@ -176,7 +174,7 @@ export const apps = [
     local: null,
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, scheme) => {
+    after_apply: async (app, scheme, reporter) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       try {
         await exec({
@@ -202,7 +200,7 @@ export const apps = [
     local: null,
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async (app, scheme) => {
+    after_apply: async (app, scheme, reporter) => {
       const theme_config_filepath = path.join(app.home, 'init-theme.lua')
       try {
         await exec({
@@ -237,7 +235,7 @@ export const apps = [
     local: 'local/theme.tmux.conf',
     active: app => is_directory(app.home),
     render: async (_, template, scheme) => render_template(template, scheme),
-    after_apply: async app => {
+    after_apply: async (app, _scheme, reporter) => {
       if (process.env.TMUX) {
         const script_filepath = path.join(app.home, 'script/load-theme.sh')
         try {

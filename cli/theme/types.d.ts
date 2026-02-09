@@ -525,6 +525,13 @@ export interface IThemeScheme {
   palette: IThemePalette
 }
 
+export interface IReporter {
+  debug(message: string, ...args: unknown[]): void
+  info(message: string, ...args: unknown[]): void
+  warn(message: string, ...args: unknown[]): void
+  error(message: string, ...args: unknown[]): void
+}
+
 export interface IAppConfig {
   name: string
   home: string
@@ -533,6 +540,6 @@ export interface IAppConfig {
   local?: string | null
   active: (app: IAppConfig) => boolean
   render: (app: IAppConfig, template: string, scheme: IThemeScheme) => Promise<string>
-  after_apply?: (app: IAppConfig, scheme: IThemeScheme) => Promise<void>
-  after_gen?: (app: IAppConfig) => Promise<void>
+  after_apply?: (app: IAppConfig, scheme: IThemeScheme, reporter: IReporter) => Promise<void>
+  after_gen?: (app: IAppConfig, reporter: IReporter) => Promise<void>
 }
