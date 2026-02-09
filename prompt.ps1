@@ -14,6 +14,9 @@ function prompt {
         foreach ($line in $gitStatus) {
           if ($line.StartsWith("# branch.head ")) {
             $gitBranch = $line.Substring(14)
+            if ($gitBranch -eq "(detached)") {
+              $gitBranch = git -C $currentDir rev-parse --short HEAD 2>$null
+            }
           }
           elseif ($line.StartsWith("# branch.ab ")) {
             if ($line -match '\+(\d+) \-(\d+)') {
