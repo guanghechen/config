@@ -3,7 +3,7 @@
 #   $
 
 format = """$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
-  [\\$](white) """
+  ${custom.shell_icon} """
 
 [username]
 format = "[$user]($style)"
@@ -13,6 +13,12 @@ show_always = true
 
 [custom.separator]
 format = "[@](white)"
+when = true
+shell = ["powershell", "-NoProfile", "-Command"]
+
+[custom.shell_icon]
+command = "Write-Output ''"
+format = "[$output](cyan)"
 when = true
 shell = ["powershell", "-NoProfile", "-Command"]
 
