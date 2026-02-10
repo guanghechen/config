@@ -1,0 +1,4 @@
+# SC2207: Prefer mapfile or read -a to split command output
+# Disabled because COMPREPLY=($(compgen ...)) is the standard idiom for bash completion.
+# compgen output is safe for word splitting as completion candidates don't contain spaces.
+disable=SC2207
