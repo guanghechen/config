@@ -4,7 +4,6 @@
 
   https://learn.microsoft.com/en-us/windows/apps/design/globalizing/use-utf8-code-page
 
-
   > GDI doesn't currently support setting the ActiveCodePage property per process. Instead,
   > GDI defaults to the active system codepage. To configure your app to render UTF-8 text
   > via GDI, go to Windows Settings > Time & language > Language & region > Administrative
@@ -20,7 +19,6 @@
       - Install [Visual Studio C++ Build tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 
         Need to install the Development C++ toolchain
-
 
       --- or use `stable-x86_64-pc-windows-gnu` ---
 

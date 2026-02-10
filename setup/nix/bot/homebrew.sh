@@ -1,6 +1,4 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC1091
-
 
 if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/brew" ]; then
   printf "\e[96m  [setup homebrew] installing homebrew...\e[0m\n"
@@ -9,7 +7,6 @@ if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/b
 else
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 fi
-# shellcheck source=setup/nix/bot/env.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 brew update
 

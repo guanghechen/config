@@ -60,7 +60,6 @@ if (Test-Path "$env:APP_HOME_GIT\bin\bash.exe") {
 }
 ####################################################################################################
 
-
 # Define the local path and repositories
 $reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = Join-Path $env:USERPROFILE ".config\guanghechen"

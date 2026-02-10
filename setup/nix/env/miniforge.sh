@@ -1,8 +1,5 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC1091
 
-
-# shellcheck source=setup/nix/bot/env.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 
 ## Set environment variables
@@ -36,7 +33,6 @@ export PATH=$HOME_MINIFORGE/bin:$PATH
 
 ### Setup conda
 printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
-# shellcheck source=/dev/null
 source "$HOME_MINIFORGE/etc/profile.d/conda.sh"
 conda config --set auto_activate_base false
 

@@ -1,6 +1,4 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC1091
-
 
 ## Preparation
 printf "\n\e[95m ===== [prepare] =====\e[0m\n"
@@ -29,7 +27,6 @@ fi
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8
 
-# shellcheck source=env/setting.sh
 source "$HOME/.config/guanghechen/env/setting.sh"
 
 ## Bootstrap
@@ -37,21 +34,18 @@ printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
 
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
-# shellcheck source=setup/nix-remote/bot/config.sh
 source "$HOME/.config/guanghechen/setup/nix-remote/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
 
 ### Setup homebrew
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
   printf "\n\e[96m  [setup homebrew] preparing...\e[0m\n"
-  # shellcheck source=setup/nix/bot/homebrew.sh
   source "$HOME/.config/guanghechen/setup/nix/bot/homebrew.sh"
   printf "\e[92m  [setup homebrew] done.\e[0m\n"
 fi
 
 ### Setup fish
 printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
-# shellcheck source=setup/nix/bot/fish.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/fish.sh"
 printf "\e[92m  [setup fish] done.\e[0m\n"
 
@@ -59,19 +53,16 @@ printf "\e[92m  [setup fish] done.\e[0m\n"
 printf "\n\e[95m ===== [setup env] =====\e[0m\n"
 ### Setup rust environment
 printf "\n\e[96m  [setup rust] preparing...\e[0m\n"
-# shellcheck source=setup/nix/env/rust.sh
 source "$HOME/.config/guanghechen/setup/nix/env/rust.sh"
 printf "\e[92m  [setup rust] done.\e[0m\n"
 
 ### Setup python environment
 printf "\n\e[96m  [setup miniforge] preparing...\e[0m\n"
-# shellcheck source=setup/nix/env/miniforge.sh
 source "$HOME/.config/guanghechen/setup/nix/env/miniforge.sh"
 printf "\e[92m  [setup miniforge] done.\e[0m\n"
 
 ### Setup node
 printf "\n\e[96m  [setup node] preparing...\e[0m\n"
-# shellcheck source=setup/nix-remote/env/node.sh
 source "$HOME/.config/guanghechen/setup/nix-remote/env/node.sh"
 printf "\e[92m  [setup node] done.\e[0m\n"
 
@@ -82,13 +73,11 @@ node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
 
 ### Setup nvim
 printf "\n\e[96m  [setup nvim] preparing...\e[0m\n"
-# shellcheck source=setup/nix/app/nvim.sh
 source "$HOME/.config/guanghechen/setup/nix/app/nvim.sh"
 printf "\e[92m  [setup nvim] done.\e[0m\n"
 
 ### Setup tmux
 printf "\n\e[96m  [setup tmux] preparing...\e[0m\n"
-# shellcheck source=setup/nix/app/tmux.sh
 source "$HOME/.config/guanghechen/setup/nix/app/tmux.sh"
 printf "\e[92m  [setup tmux] done.\e[0m\n"
 

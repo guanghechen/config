@@ -10,7 +10,6 @@
     podman run -it --name dotfiles --hostname dotfiles $(podman build -q local/pm)
     ```
 
-
   - Run the bootstrap scripts.
 
     ```bash
@@ -81,5 +80,4 @@
     docker container stop dotfiles
     docker rm dotfiles
     ```
-
 

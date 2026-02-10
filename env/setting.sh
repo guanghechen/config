@@ -9,5 +9,4 @@ export GHC_EDITION=nix
 export GHC_THEME=vsc-dark-modern
 
 # Source local overrides if exists
-# shellcheck source=/dev/null
 [ -f "${BASH_SOURCE[0]%.sh}.local.sh" ] && source "${BASH_SOURCE[0]%.sh}.local.sh"

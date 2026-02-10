@@ -1,7 +1,5 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC1091
 
-# shellcheck source=setup/nix/bot/env.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 
 if fnm list | grep -q "v$GHC_APP_EDITION_NODE"; then

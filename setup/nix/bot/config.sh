@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
 
-
 ## copy ~/.inputrc
 if [ -f "$HOME/.inputrc" ]; then
   printf "\e[93m  [setup config] ~/.inputrc already exists. (skipped).\e[0m\n"

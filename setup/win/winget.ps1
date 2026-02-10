@@ -1,6 +1,5 @@
 Write-Host "`n  [setup winget] preparing..." -ForegroundColor Cyan
 
-
 # winget install -e --source winget --id Git.Git
 winget install -e --source winget --id Microsoft.WindowsTerminal.Preview
 # winget install -e --source winget --id wez.wezterm
