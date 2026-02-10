@@ -19,6 +19,7 @@ Macos = ""
 NixOS = ""
 Windows = ""
 Linux = ""
+Ubuntu = ""
 Unknown = ""
 
 [username]
