@@ -9,6 +9,7 @@
       "branches": [
         "alacritty",
         "alacritty-windows",
+        "bash",
         "bat",
         "btop",
         "claude",
@@ -51,6 +52,7 @@
       "editions": {
         "nix": [
           "alacritty",
+          "bash",
           "bat",
           "btop",
           "claude",
@@ -84,6 +86,7 @@
           "yoz"
         ],
         "nix-remote": [
+          "bash",
           "bat",
           "btop",
           "claude",
@@ -111,6 +114,7 @@
         ],
         "osx": [
           "alacritty",
+          "bash",
           "bat",
           "btop",
           "claude",
