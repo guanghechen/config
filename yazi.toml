@@ -1,7 +1,25 @@
 # Starship - Yazi
 # user@host ~/path ( main|+1•?) 12:34:56
 
-format = "$username${custom.separator}$hostname$directory$git_branch${custom.git_dirty_sep}$git_status${custom.git_clean}${custom.git_suffix} $time"
+format = "$character$os$username${custom.separator}$hostname$directory$git_branch${custom.git_dirty_sep}$git_status${custom.git_clean}${custom.git_suffix} $time"
+
+[character]
+format = "$symbol "
+success_symbol = "[\\[I\\]](bold green)"
+error_symbol = "[\\[I\\]](bold red)"
+vimcmd_symbol = "[\\[N\\]](bold cyan)"
+
+[os]
+format = "[$symbol]($style) "
+style = "cyan"
+disabled = false
+
+[os.symbols]
+Macos = ""
+NixOS = ""
+Windows = ""
+Linux = ""
+Unknown = ""
 
 [username]
 format = "[$user]($style)"
@@ -41,8 +59,8 @@ modified = "[󰧞${count}](yellow)"
 untracked = "[?${count}](bright-black)"
 stashed = "[⚑${count}](cyan)"
 conflicted = "[=${count}](red)"
-ahead = "[↑${count}](green)"
-behind = "[↓${count}](red)"
+ahead = "[⇡${count}](green)"
+behind = "[⇣${count}](red)"
 diverged = "[⇡${ahead_count}](green)[⇣${behind_count}](red)"
 renamed = "[➜${count}](blue)"
 deleted = "[✘${count}](red)"
