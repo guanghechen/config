@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { parse, stringify } from './env.mjs'
+import { parse, stringify, stringifyFish, stringifyPs1 } from './env.mjs'
 
 describe('env', () => {
   // ====================
@@ -194,6 +194,35 @@ describe('env', () => {
 
     it('returns empty string for empty object', () => {
       assert.equal(stringify({}), '')
+    })
+  })
+
+  describe('stringifyFish', () => {
+    it('uses single quotes', () => {
+      const result = stringifyFish({ NAME: 'test' })
+      assert.equal(result, "set -gx NAME 'test'\n")
+    })
+
+    it('escapes single quotes', () => {
+      const result = stringifyFish({ NAME: "a'b" })
+      assert.equal(result, "set -gx NAME 'a\\'b'\n")
+    })
+
+    it('normalizes newlines', () => {
+      const result = stringifyFish({ NAME: 'a\nb' })
+      assert.equal(result, "set -gx NAME 'a\\nb'\n")
+    })
+  })
+
+  describe('stringifyPs1', () => {
+    it('uses single quotes', () => {
+      const result = stringifyPs1({ NAME: 'test' })
+      assert.equal(result, "$env:NAME = 'test'\n")
+    })
+
+    it('escapes single quotes', () => {
+      const result = stringifyPs1({ NAME: "a'b" })
+      assert.equal(result, "$env:NAME = 'a''b'\n")
     })
   })
 })

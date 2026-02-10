@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-export PREFER_NODE_VERSION="${PREFER_NODE_VERSION:-$(node "$HOME/.config/guanghechen/cli/setting.mjs" --print-node-edition 2>/dev/null || echo 24)}"
-export PREFER_PYTHON_ENV=lemon
+# shellcheck source=/dev/null
+source "$HOME/.config/guanghechen/env/setting.sh"
 
 ### Homebrew
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then

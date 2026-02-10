@@ -2,8 +2,8 @@
 # shellcheck disable=SC1091
 
 
-# shellcheck source=setup/nix/path.sh
-source "$HOME/.config/guanghechen/setup/nix/path.sh"
+# shellcheck source=setup/nix/bot/env.sh
+source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 
 if command -v bun &>/dev/null; then
   printf "\e[96m  [setup bun] bun is already installed, upgrading...\e[0m\n"

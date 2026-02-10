@@ -14,6 +14,8 @@ export type IEnvRecord = Record<string, IEnvPrimitive>
 export interface IStringifyEnvOptions {
   /** Keys to exclude from output */
   exclude?: string[]
+  /** Prefix each line with 'export ' for bash sourcing */
+  exportPrefix?: boolean
 }
 
 /**
@@ -34,3 +36,21 @@ export function parse(content: string, env?: IEnvRecord | null): IEnvRecord
  * @returns .env format string
  */
 export function stringify(env: IEnvRecord, options?: IStringifyEnvOptions): string
+
+/**
+ * Convert environment record to fish shell format string.
+ * Uses `set -gx KEY value` syntax.
+ * @param env - Environment record to stringify
+ * @param options - Stringify options
+ * @returns fish shell format string
+ */
+export function stringifyFish(env: IEnvRecord, options?: IStringifyEnvOptions): string
+
+/**
+ * Convert environment record to PowerShell format string.
+ * Uses `$env:KEY = value` syntax.
+ * @param env - Environment record to stringify
+ * @param options - Stringify options
+ * @returns PowerShell format string
+ */
+export function stringifyPs1(env: IEnvRecord, options?: IStringifyEnvOptions): string

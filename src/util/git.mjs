@@ -16,7 +16,7 @@ import { is_directory } from '#util/path'
  */
 
 /**
- * @typedef {import('#stl/reporter').Reporter} Reporter
+ * @typedef {import('#stl/reporter').IReporter} IReporter
  */
 
 /**
@@ -52,7 +52,7 @@ export function resolve_repo_path(root, target, env) {
 
 /**
  * Sync main branch of a git repository.
- * @param {Reporter} reporter
+ * @param {IReporter} reporter
  * @param {IGitWorktreeConfig} config
  */
 export async function sync_main_branch(reporter, config) {
@@ -85,7 +85,7 @@ export async function sync_main_branch(reporter, config) {
 
 /**
  * Sync git worktrees for branches.
- * @param {Reporter} reporter
+ * @param {IReporter} reporter
  * @param {IGitWorktreeConfig} config
  * @param {string[]} branches
  * @param {boolean} required
@@ -128,7 +128,7 @@ export async function sync_worktrees(reporter, config, branches, required, env) 
 
 /**
  * Sync a git repository with its worktrees.
- * @param {Reporter} reporter
+ * @param {IReporter} reporter
  * @param {IGitWorktreeConfig} config
  * @param {Record<string, string | undefined>} env
  */

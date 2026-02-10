@@ -4,7 +4,7 @@
  * Theme management CLI with subcommands: apply, gen, toggle.
  */
 
-import { XDG_CONFIG_NODE_ASSET_THEMES, XDG_CONFIG_NODE_SETTING } from '#env'
+import { XDG_CONFIG_NODE_ASSET_THEMES } from '#env'
 import { Setting } from '#setting'
 import { Command } from '#stl/commander'
 import { Reporter } from '#stl/reporter'
@@ -13,7 +13,7 @@ import { apps } from './theme/_config.mjs'
 import { apply_theme_per_app, gen_themes_per_app, load_theme_scheme } from './theme/_util.mjs'
 
 /** @typedef {import("./theme/types.d.ts").IThemeScheme} IThemeScheme */
-/** @typedef {import('#stl/reporter').IReporter} IReporter */
+/** @typedef {import("./theme/types.d.ts").IReporter} IReporter */
 
 /** Silent reporter that suppresses all output */
 const silentReporter = {
@@ -34,7 +34,7 @@ const silentReporter = {
  * @return {Promise<void>}
  */
 async function handleThemeApply(reporter, theme) {
-  const setting = new Setting({ filepath: XDG_CONFIG_NODE_SETTING, reporter })
+  const setting = new Setting({ reporter })
   const data = await setting.load()
   theme = theme?.toLowerCase() || data.theme
   reporter.info('Applying theme:', theme)
@@ -93,7 +93,7 @@ async function handleThemeGen(reporter) {
  * @return {Promise<void>}
  */
 async function handleThemeToggle(reporter, theme) {
-  const setting = new Setting({ filepath: XDG_CONFIG_NODE_SETTING, reporter })
+  const setting = new Setting({ reporter })
   const data = await setting.load()
   theme = theme?.toLowerCase() || data.theme
   reporter.info('Toggling theme from:', theme)

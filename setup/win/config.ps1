@@ -3,6 +3,8 @@ Write-Host "`n  [setup config] preparing..." -ForegroundColor Cyan
 $repomain = Join-Path $env:USERPROFILE ".config\guanghechen"
 Write-Host "  [setup config] syncing configs..." -ForegroundColor Cyan
 node "$repomain\cli\setting.mjs" --set-edition win
+# Source the generated setting.ps1
+. "$repomain\env\setting.ps1"
 node "$repomain\cli\sync-xdg-config.mjs"
 
 # Define the source and destination paths

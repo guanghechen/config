@@ -525,12 +525,7 @@ export interface IThemeScheme {
   palette: IThemePalette
 }
 
-export interface IReporter {
-  debug(message: string, ...args: unknown[]): void
-  info(message: string, ...args: unknown[]): void
-  warn(message: string, ...args: unknown[]): void
-  error(message: string, ...args: unknown[]): void
-}
+export type { IReporter } from '../../src/stl/src/reporter.d.ts'
 
 export interface IAppConfig {
   name: string

@@ -13,13 +13,12 @@ else
   git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
 fi
 
-# shellcheck source=setup/nix/path.sh
-source "$HOME/.config/guanghechen/setup/nix/path.sh"
+# shellcheck source=env/setting.sh
+source "$HOME/.config/guanghechen/env/setting.sh"
 
 ## Bootstrap
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
 # shellcheck source=setup/nix/bot/config.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
@@ -77,6 +76,9 @@ printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
 # shellcheck source=setup/nix/env/pnpm.sh
 source "$HOME/.config/guanghechen/setup/nix/env/pnpm.sh"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
+
+### Generate local settings
+node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
 
 ## Setup apps
 ### Setup newsboat

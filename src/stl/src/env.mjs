@@ -92,6 +92,37 @@ function stringifyValue(value) {
 }
 
 /**
+ * Normalize value for shell environments to keep single-line output.
+ * @param {IEnvPrimitive} value
+ * @returns {string}
+ */
+function normalizeShellValue(value) {
+  if (value === null || value === undefined) return ''
+  const raw = String(value)
+  return raw.replace(/\r/g, '\\r').replace(/\n/g, '\\n')
+}
+
+/**
+ * Stringify value for fish shell using single quotes.
+ * @param {IEnvPrimitive} value
+ * @returns {string}
+ */
+function stringifyFishValue(value) {
+  const raw = normalizeShellValue(value)
+  return `'${raw.replace(/'/g, "\\'")}'`
+}
+
+/**
+ * Stringify value for PowerShell using single quotes.
+ * @param {IEnvPrimitive} value
+ * @returns {string}
+ */
+function stringifyPs1Value(value) {
+  const raw = normalizeShellValue(value)
+  return `'${raw.replace(/'/g, "''")}'`
+}
+
+/**
  * Convert environment record to .env format string.
  * @param {IEnvRecord} env
  * @param {IStringifyEnvOptions} [options]
@@ -99,11 +130,46 @@ function stringifyValue(value) {
  */
 export function stringify(env, options) {
   const excludeSet = new Set(options?.exclude ?? [])
+  const prefix = options?.exportPrefix ? 'export ' : ''
   /** @type {string[]} */
   const lines = []
   for (const [key, value] of Object.entries(env)) {
     if (excludeSet.has(key)) continue
-    lines.push(`${key}=${stringifyValue(value)}`)
+    lines.push(`${prefix}${key}=${stringifyValue(value)}`)
+  }
+  return lines.length > 0 ? `${lines.join('\n')}\n` : ''
+}
+
+/**
+ * Convert environment record to fish shell format string.
+ * @param {IEnvRecord} env
+ * @param {IStringifyEnvOptions} [options]
+ * @returns {string}
+ */
+export function stringifyFish(env, options) {
+  const excludeSet = new Set(options?.exclude ?? [])
+  /** @type {string[]} */
+  const lines = []
+  for (const [key, value] of Object.entries(env)) {
+    if (excludeSet.has(key)) continue
+    lines.push(`set -gx ${key} ${stringifyFishValue(value)}`)
+  }
+  return lines.length > 0 ? `${lines.join('\n')}\n` : ''
+}
+
+/**
+ * Convert environment record to PowerShell format string.
+ * @param {IEnvRecord} env
+ * @param {IStringifyEnvOptions} [options]
+ * @returns {string}
+ */
+export function stringifyPs1(env, options) {
+  const excludeSet = new Set(options?.exclude ?? [])
+  /** @type {string[]} */
+  const lines = []
+  for (const [key, value] of Object.entries(env)) {
+    if (excludeSet.has(key)) continue
+    lines.push(`$env:${key} = ${stringifyPs1Value(value)}`)
   }
   return lines.length > 0 ? `${lines.join('\n')}\n` : ''
 }

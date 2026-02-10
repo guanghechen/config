@@ -4,17 +4,9 @@
  * @module @guanghechen/stl/commander
  */
 
-// ============================================================
-// Reporter Interface
-// ============================================================
+import type { IReporter } from './reporter.d.ts'
 
-/** Reporter interface for logging */
-export interface IReporter {
-  debug(message: string, ...args: unknown[]): void
-  info(message: string, ...args: unknown[]): void
-  warn(message: string, ...args: unknown[]): void
-  error(message: string, ...args: unknown[]): void
-}
+export type { IReporter }
 
 // ============================================================
 // Option Types

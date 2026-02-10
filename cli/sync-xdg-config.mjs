@@ -8,9 +8,8 @@ import fs from 'node:fs'
 
 import {
   XDG_CONFIG_HOME,
-  XDG_CONFIG_NODE_ASSET_REPO_CONFIG,
-  XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG,
-  XDG_CONFIG_NODE_SETTING,
+  XDG_CONFIG_NODE_REPO_CONFIG,
+  XDG_CONFIG_NODE_REPO_LOCAL_CONFIG,
 } from '#env'
 import { Setting } from '#setting'
 import { Command } from '#stl/commander'
@@ -37,7 +36,7 @@ import { sync_repo } from '#util/git'
  */
 
 const reporter = new Reporter({ prefix: 'sync-xdg-config' })
-const setting = new Setting({ filepath: XDG_CONFIG_NODE_SETTING, reporter })
+const setting = new Setting({ reporter })
 
 /**
  * Expand environment variables in string.
@@ -60,13 +59,13 @@ function loadRepoDefinitions() {
   /** @type {IRepoConfig} */
   let config = { repos: [] }
 
-  if (fs.existsSync(XDG_CONFIG_NODE_ASSET_REPO_CONFIG)) {
-    const content = fs.readFileSync(XDG_CONFIG_NODE_ASSET_REPO_CONFIG, 'utf8')
+  if (fs.existsSync(XDG_CONFIG_NODE_REPO_CONFIG)) {
+    const content = fs.readFileSync(XDG_CONFIG_NODE_REPO_CONFIG, 'utf8')
     config = JSON.parse(content)
   }
 
-  if (fs.existsSync(XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG)) {
-    const localContent = fs.readFileSync(XDG_CONFIG_NODE_ASSET_REPO_LOCAL_CONFIG, 'utf8')
+  if (fs.existsSync(XDG_CONFIG_NODE_REPO_LOCAL_CONFIG)) {
+    const localContent = fs.readFileSync(XDG_CONFIG_NODE_REPO_LOCAL_CONFIG, 'utf8')
     /** @type {IRepoConfig} */
     const localConfig = JSON.parse(localContent)
 

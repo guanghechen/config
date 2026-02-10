@@ -31,9 +31,11 @@ sudo update-locale LANG=en_US.UTF-8
 
 ## Bootstrap
 printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
+# shellcheck source=env/setting.sh
+source "$HOME/.config/guanghechen/env/setting.sh"
+
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix
 # shellcheck source=setup/nix/bot/config.sh
 source "$HOME/.config/guanghechen/setup/nix/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
@@ -89,6 +91,9 @@ printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
 # shellcheck source=setup/nix/env/pnpm.sh
 source "$HOME/.config/guanghechen/setup/nix/env/pnpm.sh"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
+
+### Generate local settings
+node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix
 
 ## Setup apps
 printf "\n\e[95m ===== [setup app] =====\e[0m\n"

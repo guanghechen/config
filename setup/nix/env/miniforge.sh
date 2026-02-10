@@ -2,8 +2,8 @@
 # shellcheck disable=SC1091
 
 
-# shellcheck source=setup/nix/path.sh
-source "$HOME/.config/guanghechen/setup/nix/path.sh"
+# shellcheck source=setup/nix/bot/env.sh
+source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 
 ## Set environment variables
 printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"

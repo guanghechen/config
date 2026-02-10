@@ -29,11 +29,14 @@ fi
 sudo locale-gen en_US.UTF-8
 sudo update-locale LANG=en_US.UTF-8
 
+# shellcheck source=env/setting.sh
+source "$HOME/.config/guanghechen/env/setting.sh"
+
 ## Bootstrap
 printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
+
 ### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
 # shellcheck source=setup/nix-remote/bot/config.sh
 source "$HOME/.config/guanghechen/setup/nix-remote/bot/config.sh"
 printf "\e[92m  [setup config] done.\e[0m\n"
@@ -71,6 +74,9 @@ printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 # shellcheck source=setup/nix-remote/env/node.sh
 source "$HOME/.config/guanghechen/setup/nix-remote/env/node.sh"
 printf "\e[92m  [setup node] done.\e[0m\n"
+
+### Generate local settings
+node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
 
 ## Setup apps
 

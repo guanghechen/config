@@ -1,11 +1,11 @@
 import { spawn } from 'node:child_process'
 import { IS_WIN } from '#env'
 
-/** @import { Reporter } from '#stl/reporter' */
+/** @import { IReporter } from '#stl/reporter' */
 
 /**
  * @typedef {Object} IExecParams
- * @property {Reporter} reporter
+ * @property {IReporter} reporter
  * @property {string} cmd
  * @property {string[]} [args]
  * @property {string} [cwd]
@@ -108,7 +108,7 @@ export async function exec(params) {
 /**
  * Check if a command exists in PATH.
  *
- * @param {Reporter} reporter
+ * @param {IReporter} reporter
  * @param {string} cmd
  * @return {Promise<boolean>}
  */

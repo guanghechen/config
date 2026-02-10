@@ -1,6 +1,8 @@
-local/
+/env/setting.local.sh
+/env/setting.local.fish
+/env/setting.local.ps1
+
+*.local.json
 .setting.json
 
-!/lib/
-/asset/setting.json
-/asset/repo.local.json
+local/

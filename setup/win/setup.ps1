@@ -12,10 +12,6 @@ $env:PYTHONIOENCODING     = "utf8"
 $env:PYTHONUTF8           = 1
 $env:YAZI_CONFIG_HOME     = "$env:XDG_CONFIG_HOME\yazi"
 $env:YAZI_FILE_ONE        = "$env:APP_HOME_GIT\usr\bin\file.exe"
-$env:PREFER_NODE_VERSION  = if ($env:PREFER_NODE_VERSION) { $env:PREFER_NODE_VERSION } else {
-  try { node "$env:XDG_CONFIG_HOME\guanghechen\cli\setting.mjs" --print-node-edition 2>$null } catch { 24 }
-}
-$env:PREFER_PYTHON_ENV    = "lemon"
 
 setx APP_HOME_MINIFORGE   "$env:APP_HOME_MINIFORGE"
 setx APP_HOME_GIT         "$env:APP_HOME_GIT"
@@ -31,8 +27,6 @@ setx PYTHONIOENCODING     "$env:PYTHONIOENCODING"
 setx PYTHONUTF8           $env:PYTHONUTF8
 setx YAZI_CONFIG_HOME     "$env:YAZI_CONFIG_HOME"
 setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
-setx PREFER_NODE_VERSION  $env:PREFER_NODE_VERSION
-setx PREFER_PYTHON_ENV    "$env:PREFER_PYTHON_ENV"
 
 ## Agent Environment ###############################################################################
 $env:ANTHROPIC_BASE_URL               = "$GHC_ANTHROPIC_BASE_URL"
@@ -78,6 +72,9 @@ if (Test-Path $repomain) {
   git -C "$reporoot" clone https://github.com/guanghechen/config.git --branch=guanghechen $repomain
 }
 
+# Load default settings (checked in)
+. "$repomain\env\setting.ps1"
+
 Set-Location -Path $repomain
 . .\setup\win\winget.ps1
 
@@ -98,6 +95,9 @@ Set-Location -Path $repomain
 
 Set-Location -Path $repomain
 . .\setup\win\env\pnpm.ps1
+
+### Generate local settings
+node "$repomain\cli\setting.mjs" --set-edition win
 
 ####################################################################################################
 

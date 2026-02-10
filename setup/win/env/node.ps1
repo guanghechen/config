@@ -1,12 +1,12 @@
-if (fnm list | Select-String -Quiet "v$env:PREFER_NODE_VERSION") {
-  Write-Host "`n  [setup node] node@$env:PREFER_NODE_VERSION is already installed. (skipped)" -ForegroundColor Yellow
+if (fnm list | Select-String -Quiet "v$env:GHC_APP_EDITION_NODE") {
+  Write-Host "`n  [setup node] node@$env:GHC_APP_EDITION_NODE is already installed. (skipped)" -ForegroundColor Yellow
 } else {
-  Write-Host "`n  [setup node] installing node@$env:PREFER_NODE_VERSION..." -ForegroundColor Cyan
-  fnm install $env:PREFER_NODE_VERSION
+  Write-Host "`n  [setup node] installing node@$env:GHC_APP_EDITION_NODE..." -ForegroundColor Cyan
+  fnm install $env:GHC_APP_EDITION_NODE
 }
 
-fnm use $env:PREFER_NODE_VERSION
-fnm default $env:PREFER_NODE_VERSION
+fnm use $env:GHC_APP_EDITION_NODE
+fnm default $env:GHC_APP_EDITION_NODE
 
 Write-Host "  [setup node] installing npm pm2 yarn prettier" -ForegroundColor Cyan
 npm install -g npm pm2 yarn prettier

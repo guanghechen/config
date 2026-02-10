@@ -38,6 +38,14 @@ export interface IReporterEntry {
   date: Date
 }
 
+/** Reporter interface for type checking */
+export interface IReporter {
+  debug(...args: unknown[]): void
+  info(...args: unknown[]): void
+  warn(...args: unknown[]): void
+  error(...args: unknown[]): void
+}
+
 /** Colored console logger with breadcrumb prefix support */
 export class Reporter {
   /**

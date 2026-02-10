@@ -27,6 +27,8 @@ type IEnvRecord = Record<string, IEnvPrimitive>
 interface IStringifyEnvOptions {
   /** Keys to exclude from output */
   exclude?: string[]
+  /** Add 'export ' prefix to each line (bash only) */
+  exportPrefix?: boolean
 }
 ```
 
@@ -34,17 +36,21 @@ interface IStringifyEnvOptions {
 
 ### Functions
 
-| Function                   | Returns      | Description                    |
-| -------------------------- | ------------ | ------------------------------ |
-| `parse(content, env?)`     | `IEnvRecord` | Parse .env content into object |
-| `stringify(env, options?)` | `string`     | Convert object to .env format  |
+| Function                       | Returns      | Description                          |
+| ------------------------------ | ------------ | ------------------------------------ |
+| `parse(content, env?)`         | `IEnvRecord` | Parse .env content into object       |
+| `stringify(env, options?)`     | `string`     | Convert object to .env format (bash) |
+| `stringifyFish(env, options?)` | `string`     | Convert object to fish shell format  |
+| `stringifyPs1(env, options?)`  | `string`     | Convert object to PowerShell format  |
 
 ### Exports
 
-| Export      | Type       | Description                     |
-| ----------- | ---------- | ------------------------------- |
-| `parse`     | `function` | Parse .env content string       |
-| `stringify` | `function` | Stringify object to .env format |
+| Export         | Type       | Description                      |
+| -------------- | ---------- | -------------------------------- |
+| `parse`        | `function` | Parse .env content string        |
+| `stringify`    | `function` | Stringify object to .env format  |
+| `stringifyFish`| `function` | Stringify object to fish format  |
+| `stringifyPs1` | `function` | Stringify object to ps1 format   |
 
 ## Format
 
@@ -143,6 +149,36 @@ const content = stringify(env)
 
 // With exclusions
 const filtered = stringify(env, { exclude: ['SECRET'] })
+```
+
+### Shell-Specific Output
+
+```javascript
+import { stringify, stringifyFish, stringifyPs1 } from '@guanghechen/stl/env'
+
+const env = { NAME: 'myapp', PORT: 3000 }
+
+// Bash (with export prefix)
+stringify(env, { exportPrefix: true })
+// export NAME=myapp
+// export PORT=3000
+
+// Fish shell (single quotes, \' escape)
+stringifyFish(env)
+// set -gx NAME 'myapp'
+// set -gx PORT '3000'
+
+// PowerShell (single quotes, '' escape)
+stringifyPs1(env)
+// $env:NAME = 'myapp'
+// $env:PORT = '3000'
+```
+
+**Shell Format Notes:**
+
+- `stringifyFish` and `stringifyPs1` always use single quotes to prevent variable expansion
+- Single quotes within values: fish uses `\'`, PowerShell uses `''`
+- Newlines/carriage returns are normalized to `\n`/`\r` (literal backslash + letter)
 ```
 
 ### Merge with Existing

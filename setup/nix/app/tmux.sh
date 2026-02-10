@@ -2,8 +2,8 @@
 # shellcheck disable=SC1091
 
 
-# shellcheck source=setup/nix/path.sh
-source "$HOME/.config/guanghechen/setup/nix/path.sh"
+# shellcheck source=setup/nix/bot/env.sh
+source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
 
 prefer_tmux_version="${PREFER_TMUX_VERSION:-stable}"
 if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then
