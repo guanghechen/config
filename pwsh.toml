@@ -1,0 +1,62 @@
+# Starship - PowerShell
+# user@host ~/path ( main|+1•?) 12:34:56 (conda)
+#   $
+
+format = """$username$custom$hostname$directory$git_branch$git_status $time$conda
+  [\\$](white) """
+
+[username]
+format = "[$user]($style)"
+style_user = "bold bright-purple"
+style_root = "bold bright-red"
+show_always = true
+
+[custom.separator]
+command = "if ($env:USERNAME -eq 'Administrator') { '#' } else { '@' }"
+format = "[$output](white)"
+when = true
+shell = ["pwsh", "-NoProfile", "-Command"]
+
+[hostname]
+format = "[$hostname]($style) "
+style = "bold bright-cyan"
+ssh_only = false
+detect_env_vars = []
+
+[directory]
+format = "[$path]($style)[$read_only]($read_only_style)"
+style = "bold bright-blue"
+read_only = " 󰌾"
+read_only_style = "bright-red"
+truncation_length = 5
+truncate_to_repo = false
+
+[git_branch]
+format = " [\\(](white)[ $branch]($style)"
+style = "bold bright-purple"
+symbol = ""
+
+[git_status]
+format = '([|$ahead_behind$staged$modified$untracked$stashed](bright-blue)[\)](white))'
+staged = "[+${count}](bright-blue)"
+modified = "•"
+untracked = "?"
+stashed = "[⚑${count}](bright-blue)"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+renamed = "»"
+deleted = "✗"
+
+[time]
+format = "[$time]($style)"
+style = "bright-black"
+time_format = "%H:%M:%S"
+disabled = false
+
+[conda]
+format = " [\\($environment\\)]($style)"
+style = "green"
+symbol = ""
+ignore_base = true
