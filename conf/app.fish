@@ -1,3 +1,9 @@
+### starship (prompt)
+set -gx STARSHIP_CONFIG "$HOME/.config/starship/fish.toml"
+if type -q starship
+    starship init fish | source
+end
+
 ### bun
 if test -d "$HOME/.bun"
     set -gx BUN_INSTALL "$HOME/.bun"
