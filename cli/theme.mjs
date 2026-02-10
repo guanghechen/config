@@ -158,7 +158,7 @@ if (process.argv[1] === import.meta.filename) {
       await handleThemeToggle(reporter, /** @type {string | undefined} */ (args.theme))
     })
 
-  const cmd = new Command({ name: 'theme', description: 'Theme management CLI.', helpSubcommand: true })
+  const cmd = new Command({ name: 'theme', description: 'Theme management CLI.', help: true })
     .option({ long: 'silent', short: 's', type: 'boolean', description: 'Suppress all output' })
     .subcommand('apply', applyCmd)
     .subcommand('generate', genCmd)

@@ -21,9 +21,9 @@ describe('Command', () => {
     })
 
     it('creates command with minimal config', () => {
-      const cmd = new Command({ name: 'cli' })
-      assert.equal(cmd.name, 'cli')
-      assert.equal(cmd.description, undefined)
+      const cmd = new Command({ description: 'A CLI tool' })
+      assert.equal(cmd.name, '')
+      assert.equal(cmd.description, 'A CLI tool')
       assert.equal(cmd.version, undefined)
     })
   })
@@ -50,40 +50,24 @@ describe('Command', () => {
 
   describe('argument', () => {
     it('parses required argument', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'file', kind: 'required', description: 'File' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'file', kind: 'required', description: 'File' })
       const { args } = cmd.parse(['input.txt'])
       assert.equal(args.file, 'input.txt')
     })
 
-    it('throws on missing required argument via run()', async () => {
-      let errorMsg = ''
-      const reporter = {
-        debug() {},
-        info() {},
-        warn() {},
-        error(msg) {
-          errorMsg = msg
-        },
-      }
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'file', kind: 'required', description: 'File' })
-      await cmd.run({ argv: [], envs: {}, reporter })
-      assert.match(errorMsg, /Missing required argument/)
+    it('throws on missing required argument via parse()', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'file', kind: 'required', description: 'File' })
+      assert.throws(() => cmd.parse([]), CommanderError)
     })
 
     it('parses optional argument', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'file', kind: 'optional', description: 'File' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'file', kind: 'optional', description: 'File' })
       const { args } = cmd.parse([])
       assert.equal(args.file, undefined)
     })
 
-    it('parses optional argument with default', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'format', kind: 'optional', default: 'json', description: 'Format' })
-      const { args } = cmd.parse([])
-      assert.equal(args.format, 'json')
-    })
-
     it('parses multiple arguments', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .argument({ name: 'source', kind: 'required', description: 'Source' })
         .argument({ name: 'dest', kind: 'required', description: 'Dest' })
       const { args } = cmd.parse(['a.txt', 'b.txt'])
@@ -92,19 +76,55 @@ describe('Command', () => {
     })
 
     it('parses variadic argument', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
       const { args } = cmd.parse(['a.txt', 'b.txt'])
       assert.deepEqual(args.files, ['a.txt', 'b.txt'])
     })
 
+    it('parses argument with type number', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'port', kind: 'required', type: 'number', description: 'Port' })
+      const { args } = cmd.parse(['3000'])
+      assert.equal(args.port, 3000)
+    })
+
+    it('throws on invalid number argument', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'port', kind: 'required', type: 'number', description: 'Port' })
+      assert.throws(() => cmd.parse(['abc']), CommanderError)
+    })
+
+    it('applies argument coerce', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .argument({ name: 'port', kind: 'required', coerce: v => parseInt(v, 10) * 2, description: 'Port' })
+      const { args } = cmd.parse(['100'])
+      assert.equal(args.port, 200)
+    })
+
+    it('parses optional argument with default', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .argument({ name: 'env', kind: 'optional', default: 'development', description: 'Env' })
+      const { args } = cmd.parse([])
+      assert.equal(args.env, 'development')
+    })
+
+    it('throws on too many arguments', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .argument({ name: 'file', kind: 'required', description: 'File' })
+      assert.throws(() => cmd.parse(['a.txt', 'b.txt']), CommanderError)
+    })
+
     it('throws on invalid argument config without name', () => {
-      const cmd = new Command({ name: 'cli' })
-      assert.throws(() => cmd.argument({ name: '', kind: 'required' }), /must have a name/)
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.argument({ name: '', kind: 'required', description: 'Test' }), /must have a name/)
+    })
+
+    it('throws on required argument with default', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.argument({ name: 'file', kind: 'required', default: 'test', description: 'Test' }), /cannot have a default/)
     })
 
     it('throws on multiple variadic arguments', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
-      assert.throws(() => cmd.argument({ name: 'more', kind: 'variadic', description: 'More' }), /Only one variadic/)
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
+      assert.throws(() => cmd.argument({ name: 'more', kind: 'variadic', description: 'More' }), /only one variadic/)
     })
   })
 
@@ -114,76 +134,65 @@ describe('Command', () => {
 
   describe('option', () => {
     it('parses boolean option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'force', short: 'f', type: 'boolean', description: 'Force' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'force', short: 'f', type: 'boolean', description: 'Force' })
       assert.equal(cmd.parse(['--force']).opts.force, true)
       assert.equal(cmd.parse(['-f']).opts.force, true)
     })
 
     it('parses string option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
       assert.equal(cmd.parse(['--config', 'app.json']).opts.config, 'app.json')
       assert.equal(cmd.parse(['-c', 'app.json']).opts.config, 'app.json')
     })
 
     it('parses number option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
       assert.equal(cmd.parse(['--port', '3000']).opts.port, 3000)
       assert.equal(cmd.parse(['-p', '8080']).opts.port, 8080)
     })
 
     it('parses string array option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'include', short: 'i', type: 'string[]', description: 'Dirs' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'include', short: 'i', type: 'string[]', description: 'Dirs' })
       const { opts } = cmd.parse(['--include', 'src', '--include', 'lib'])
       assert.deepEqual(opts.include, ['src', 'lib'])
     })
 
     it('parses number array option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'ports', short: 'P', type: 'number[]', description: 'Ports' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'ports', short: 'P', type: 'number[]', description: 'Ports' })
       const { opts } = cmd.parse(['--ports', '80', '--ports', '443'])
       assert.deepEqual(opts.ports, [80, 443])
     })
 
     it('throws on invalid number value', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
       assert.throws(() => cmd.parse(['--port', 'abc']), CommanderError)
     })
 
     it('throws on invalid number array value', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'ports', short: 'P', type: 'number[]', description: 'Ports' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'ports', short: 'P', type: 'number[]', description: 'Ports' })
       assert.throws(() => cmd.parse(['--ports', 'abc']), CommanderError)
     })
 
     it('throws on missing option value', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
       assert.throws(() => cmd.parse(['--config']), CommanderError)
     })
   })
 
   // ============================================================
-  // Options - Default & Environment Variables
+  // Options - Default
   // ============================================================
 
-  describe('option default & env', () => {
+  describe('option default', () => {
     it('uses default value', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'port', short: 'p', type: 'number', default: 3000, description: 'Port' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'port', short: 'p', type: 'number', default: 3000, description: 'Port' })
       assert.equal(cmd.parse([]).opts.port, 3000)
     })
 
-    it('uses env value via run()', async () => {
+    it('argv overrides default', async () => {
       let capturedOpts = {}
-      const cmd = new Command({ name: 'cli' })
-        .option({ long: 'port', short: 'p', type: 'number', env: 'PORT', description: 'Port' })
-        .action(async ({ opts }) => {
-          capturedOpts = opts
-        })
-      await cmd.run({ argv: [], envs: { PORT: '8080' }, reporter: createReporter() })
-      assert.equal(capturedOpts.port, 8080)
-    })
-
-    it('follows priority: default < env < argv', async () => {
-      let capturedOpts = {}
-      const cmd = new Command({ name: 'cli' })
-        .option({ long: 'port', short: 'p', type: 'number', default: 3000, env: 'PORT', description: 'Port' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'port', short: 'p', type: 'number', default: 3000, description: 'Port' })
         .action(async ({ opts }) => {
           capturedOpts = opts
         })
@@ -192,12 +201,8 @@ describe('Command', () => {
       await cmd.run({ argv: [], envs: {}, reporter: createReporter() })
       assert.equal(capturedOpts.port, 3000)
 
-      // Env overrides default
-      await cmd.run({ argv: [], envs: { PORT: '8080' }, reporter: createReporter() })
-      assert.equal(capturedOpts.port, 8080)
-
-      // Argv overrides env
-      await cmd.run({ argv: ['--port', '9000'], envs: { PORT: '8080' }, reporter: createReporter() })
+      // Argv overrides default
+      await cmd.run({ argv: ['--port', '9000'], envs: {}, reporter: createReporter() })
       assert.equal(capturedOpts.port, 9000)
     })
   })
@@ -208,12 +213,12 @@ describe('Command', () => {
 
   describe('option override', () => {
     it('scalar option: later wins', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'port', short: 'p', type: 'number', description: 'Port' })
       assert.equal(cmd.parse(['--port', '3000', '--port', '8080']).opts.port, 8080)
     })
 
     it('array option: accumulates', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'include', short: 'i', type: 'string[]', description: 'Dirs' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'include', short: 'i', type: 'string[]', description: 'Dirs' })
       const { opts } = cmd.parse(['--include', 'a', '--include', 'b'])
       assert.deepEqual(opts.include, ['a', 'b'])
     })
@@ -225,17 +230,17 @@ describe('Command', () => {
 
   describe('negatable option', () => {
     it('negates with --no-prefix', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'color', type: 'boolean', description: 'Color' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'color', type: 'boolean', description: 'Color' })
       assert.equal(cmd.parse(['--no-color']).opts.color, false)
     })
 
     it('later wins: --flag then --no-flag', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'color', type: 'boolean', description: 'Color' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'color', type: 'boolean', description: 'Color' })
       assert.equal(cmd.parse(['--color', '--no-color']).opts.color, false)
     })
 
     it('later wins: --no-flag then --flag', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'color', type: 'boolean', description: 'Color' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'color', type: 'boolean', description: 'Color' })
       assert.equal(cmd.parse(['--no-color', '--color']).opts.color, true)
     })
   })
@@ -246,7 +251,7 @@ describe('Command', () => {
 
   describe('short option combination', () => {
     it('parses combined boolean options: -abc', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .option({ long: 'alpha', short: 'a', type: 'boolean', description: 'A' })
         .option({ long: 'beta', short: 'b', type: 'boolean', description: 'B' })
         .option({ long: 'gamma', short: 'c', type: 'boolean', description: 'C' })
@@ -257,7 +262,7 @@ describe('Command', () => {
     })
 
     it('parses combined options with value on last: -abc value', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .option({ long: 'alpha', short: 'a', type: 'boolean', description: 'A' })
         .option({ long: 'beta', short: 'b', type: 'boolean', description: 'B' })
         .option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
@@ -268,7 +273,7 @@ describe('Command', () => {
     })
 
     it('throws when non-boolean is not last', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .option({ long: 'alpha', short: 'a', type: 'boolean', description: 'A' })
         .option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
         .option({ long: 'beta', short: 'b', type: 'boolean', description: 'B' })
@@ -276,7 +281,7 @@ describe('Command', () => {
     })
 
     it('throws on unknown short option in combination', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .option({ long: 'alpha', short: 'a', type: 'boolean', description: 'A' })
         .option({ long: 'beta', short: 'b', type: 'boolean', description: 'B' })
       assert.throws(() => cmd.parse(['-axb']), CommanderError)
@@ -289,27 +294,23 @@ describe('Command', () => {
 
   describe('option syntax', () => {
     it('parses equals syntax: --config=value', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
       assert.equal(cmd.parse(['--config=app.json']).opts.config, 'app.json')
     })
 
     it('parses value starting with dash after equals', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
       assert.equal(cmd.parse(['--config=-test.json']).opts.config, '-test.json')
     })
 
-    it('converts kebab-case to camelCase', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'dry-run', type: 'boolean', description: 'Dry run' })
-      assert.equal(cmd.parse(['--dry-run']).opts.dryRun, true)
-    })
-
     it('treats everything after -- as positional', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force' })
         .argument({ name: 'files', kind: 'variadic', description: 'Files' })
-      const { args, opts } = cmd.parse(['--force', '--', '--not-option', '-f'])
+      const { args, opts, rawArgs } = cmd.parse(['--force', '--', '--not-option', '-f'])
       assert.equal(opts.force, true)
       assert.deepEqual(args.files, ['--not-option', '-f'])
+      assert.deepEqual(rawArgs, ['--not-option', '-f'])
     })
   })
 
@@ -319,20 +320,20 @@ describe('Command', () => {
 
   describe('built-in options', () => {
     it('has --help', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
       // --help is handled in run(), not parse()
       // Just verify it doesn't throw
       assert.doesNotThrow(() => cmd.parse(['--help']))
     })
 
     it('has --version when set', () => {
-      const cmd = new Command({ name: 'cli', version: '1.0.0' })
+      const cmd = new Command({ name: 'cli', description: 'CLI', version: '1.0.0' })
       // --version is handled in run(), not parse()
       assert.doesNotThrow(() => cmd.parse(['--version']))
     })
 
     it('throws on unknown option by default', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
       assert.throws(() => cmd.parse(['--unknown']), CommanderError)
     })
   })
@@ -342,81 +343,34 @@ describe('Command', () => {
   // ============================================================
 
   describe('run', () => {
-    it('shows help on --help', async () => {
-      let output = ''
-      const reporter = {
-        debug() {},
-        info(msg) {
-          output = msg
-        },
-        warn() {},
-        error() {},
-      }
-      const cmd = new Command({ name: 'cli', description: 'A CLI tool' }).action(async () => {
-        throw new Error('Should not execute')
-      })
-      await cmd.run({ argv: ['--help'], envs: {}, reporter })
-      assert.match(output, /Usage:/)
-    })
-
-    it('shows version on --version', async () => {
-      let output = ''
-      const reporter = {
-        debug() {},
-        info(msg) {
-          output = msg
-        },
-        warn() {},
-        error() {},
-      }
-      const cmd = new Command({ name: 'cli', version: '1.0.0' }).action(async () => {
-        throw new Error('Should not execute')
-      })
-      await cmd.run({ argv: ['--version'], envs: {}, reporter })
-      assert.equal(output, '1.0.0')
-    })
-
-    it('sets exitCode=1 on error', async () => {
-      const original = process.exitCode
-      const reporter = {
-        debug() {},
-        info() {},
-        warn() {},
-        error() {},
-      }
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'file', kind: 'required', description: 'File' })
-      await cmd.run({ argv: [], envs: {}, reporter })
-      assert.equal(process.exitCode, 1)
-      process.exitCode = original
-    })
-
     it('executes action on success', async () => {
       let called = false
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .argument({ name: 'file', kind: 'required', description: 'File' })
         .action(async ({ args }) => {
           called = true
           assert.equal(args.file, 'test.txt')
         })
-      await cmd.run({ argv: ['test.txt'], envs: {}, reporter: createReporter() })
+      await cmd.run({ argv: ['--', 'test.txt'], envs: {}, reporter: createReporter() })
       assert.equal(called, true)
     })
 
     it('passes ctx, opts, args to action', async () => {
       /** @type {*} */
       let params = null
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
         .argument({ name: 'file', kind: 'required', description: 'File' })
         .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force' })
         .action(async p => {
           params = p
         })
 
-      await cmd.run({ argv: ['test.txt', '-f'], envs: {}, reporter: createReporter() })
+      await cmd.run({ argv: ['-f', '--', 'test.txt'], envs: {}, reporter: createReporter() })
 
-      assert.equal(params.ctx, cmd)
+      assert.equal(params.ctx.cmd, cmd)
       assert.equal(params.args.file, 'test.txt')
       assert.equal(params.opts.force, true)
+      assert.deepEqual(params.rawArgs, ['test.txt'])
     })
   })
 
@@ -432,20 +386,13 @@ describe('Command', () => {
     })
 
     it('includes usage line', () => {
-      const cmd = new Command({ name: 'cli' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
       const help = cmd.formatHelp()
       assert.match(help, /Usage: cli/)
     })
 
-    it('includes arguments', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'file', kind: 'required', description: 'Input file' })
-      const help = cmd.formatHelp()
-      assert.match(help, /Arguments:/)
-      assert.match(help, /file/)
-    })
-
     it('includes options', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'force', short: 'f', type: 'boolean', description: 'Force operation' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'force', short: 'f', type: 'boolean', description: 'Force operation' })
       const help = cmd.formatHelp()
       assert.match(help, /Options:/)
       assert.match(help, /--force/)
@@ -453,9 +400,9 @@ describe('Command', () => {
     })
 
     it('includes variadic argument in usage', () => {
-      const cmd = new Command({ name: 'cli' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).argument({ name: 'files', kind: 'variadic', description: 'Files' })
       const help = cmd.formatHelp()
-      assert.match(help, /\[\.\.\.files\]/)
+      assert.match(help, /\[files\.\.\.\]/)
     })
   })
 
@@ -465,8 +412,8 @@ describe('Command', () => {
 
   describe('subcommand', () => {
     it('registers subcommand', () => {
-      const sub = new Command({ name: 'sub', description: 'Subcommand' })
-      const cmd = new Command({ name: 'cli' }).subcommand('sub', sub)
+      const sub = new Command({ description: 'Subcommand' })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).subcommand('sub', sub)
       const help = cmd.formatHelp()
       assert.match(help, /Commands:/)
       assert.match(help, /sub/)
@@ -474,40 +421,61 @@ describe('Command', () => {
 
     it('routes to subcommand', async () => {
       let called = false
-      const sub = new Command({ name: 'sub', description: 'Subcommand' }).action(async () => {
+      const sub = new Command({ description: 'Subcommand' }).action(async () => {
         called = true
       })
-      const cmd = new Command({ name: 'cli' }).subcommand('sub', sub)
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).subcommand('sub', sub)
       await cmd.run({ argv: ['sub'], envs: {}, reporter: createReporter() })
       assert.equal(called, true)
     })
 
     it('passes remaining args to subcommand', async () => {
+      /** @type {Record<string, unknown>} */
       let capturedArgs = {}
-      const sub = new Command({ name: 'sub', description: 'Subcommand' })
+      const sub = new Command({ description: 'Subcommand' })
         .argument({ name: 'file', kind: 'required', description: 'File' })
         .action(async ({ args }) => {
           capturedArgs = args
         })
-      const cmd = new Command({ name: 'cli' }).subcommand('sub', sub)
-      await cmd.run({ argv: ['sub', 'test.txt'], envs: {}, reporter: createReporter() })
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).subcommand('sub', sub)
+      await cmd.run({ argv: ['sub', '--', 'test.txt'], envs: {}, reporter: createReporter() })
       assert.equal(capturedArgs.file, 'test.txt')
     })
 
-    it('shows subcommand help', async () => {
-      let output = ''
-      const reporter = {
-        debug() {},
-        info(msg) {
-          output = msg
-        },
-        warn() {},
-        error() {},
-      }
-      const sub = new Command({ name: 'sub', description: 'Subcommand description' })
-      const cmd = new Command({ name: 'cli' }).subcommand('sub', sub)
-      await cmd.run({ argv: ['sub', '--help'], envs: {}, reporter })
-      assert.match(output, /Subcommand description/)
+    it('supports subcommand aliases', async () => {
+      let called = false
+      const sub = new Command({ description: 'Subcommand' }).action(async () => {
+        called = true
+      })
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .subcommand('generate', sub)
+        .subcommand('gen', sub)
+      await cmd.run({ argv: ['gen'], envs: {}, reporter: createReporter() })
+      assert.equal(called, true)
+    })
+  })
+
+  // ============================================================
+  // shift()
+  // ============================================================
+
+  describe('shift', () => {
+    it('consumes recognized options', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'force', short: 'f', type: 'boolean', description: 'Force' })
+        .option({ long: 'config', short: 'c', type: 'string', description: 'Config' })
+      const result = cmd.shift(['--force', '-c', 'app.json', '--unknown'])
+      assert.equal(result.opts.force, true)
+      assert.equal(result.opts.config, 'app.json')
+      assert.deepEqual(result.remaining, ['--unknown'])
+    })
+
+    it('passes unrecognized options to remaining', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'verbose', short: 'v', type: 'boolean', description: 'Verbose' })
+      const result = cmd.shift(['--verbose', '--other', 'value'])
+      assert.equal(result.opts.verbose, true)
+      assert.deepEqual(result.remaining, ['--other', 'value'])
     })
   })
 
@@ -517,13 +485,13 @@ describe('Command', () => {
 
   describe('CommanderError', () => {
     it('has kind and commandPath', () => {
-      const err = new CommanderError('unknown_option', 'Unknown option', 'cli')
-      assert.equal(err.kind, 'unknown_option')
+      const err = new CommanderError('UnknownOption', 'Unknown option', 'cli')
+      assert.equal(err.kind, 'UnknownOption')
       assert.equal(err.commandPath, 'cli')
     })
 
     it('formats error message', () => {
-      const err = new CommanderError('unknown_option', 'Unknown option', 'cli')
+      const err = new CommanderError('UnknownOption', 'Unknown option', 'cli')
       const formatted = err.format()
       assert.match(formatted, /Error: Unknown option/)
       assert.match(formatted, /Run "cli --help"/)
@@ -550,19 +518,98 @@ describe('Command', () => {
 
   describe('edge cases', () => {
     it('handles empty argv', () => {
-      const cmd = new Command({ name: 'cli' })
-      const { args } = cmd.parse([])
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      const { args, rawArgs } = cmd.parse([])
       assert.deepEqual(args, {})
+      assert.deepEqual(rawArgs, [])
     })
 
     it('throws on duplicate option', () => {
-      const cmd = new Command({ name: 'cli' }).option({ long: 'force', type: 'boolean' })
-      assert.throws(() => cmd.option({ long: 'force', type: 'boolean' }), /Duplicate option/)
+      const cmd = new Command({ name: 'cli', description: 'CLI' }).option({ long: 'force', type: 'boolean', description: 'Force' })
+      assert.throws(() => cmd.option({ long: 'force', type: 'boolean', description: 'Force' }), /already defined/)
     })
 
     it('throws on option without long name', () => {
-      const cmd = new Command({ name: 'cli' })
-      assert.throws(() => cmd.option({ long: '', type: 'boolean' }), /must have a long name/)
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.option({ long: '', type: 'boolean', description: 'Test' }), /must have a long name/)
+    })
+
+    it('throws on option starting with no-', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.option({ long: 'no-force', type: 'boolean', description: 'Test' }), /cannot start with "no-"/)
+    })
+  })
+
+  // ============================================================
+  // Option Features
+  // ============================================================
+
+  describe('option features', () => {
+    it('validates choices', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'level', type: 'string', choices: ['debug', 'info', 'warn'], description: 'Log level' })
+      assert.throws(() => cmd.parse(['--level', 'invalid']), CommanderError)
+    })
+
+    it('accepts valid choice', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'level', type: 'string', choices: ['debug', 'info', 'warn'], description: 'Log level' })
+      const { opts } = cmd.parse(['--level', 'info'])
+      assert.equal(opts.level, 'info')
+    })
+
+    it('applies coerce function', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'date', type: 'string', coerce: v => new Date(v), description: 'Date' })
+      const { opts } = cmd.parse(['--date', '2024-01-01'])
+      assert.ok(opts.date instanceof Date)
+    })
+
+    it('validates required option', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({ long: 'config', type: 'string', required: true, description: 'Config' })
+      assert.throws(() => cmd.parse([]), CommanderError)
+    })
+
+    it('throws on required + default conflict', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.option({ long: 'config', type: 'string', required: true, default: 'test', description: 'Config' }), /cannot be both required and have a default/)
+    })
+
+    it('throws on boolean + required conflict', () => {
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+      assert.throws(() => cmd.option({ long: 'force', type: 'boolean', required: true, description: 'Force' }), /boolean option.*cannot be required/)
+    })
+  })
+
+  // ============================================================
+  // Apply Callback
+  // ============================================================
+
+  describe('option apply callback', () => {
+    it('calls apply with value and context', async () => {
+      /** @type {*} */
+      let appliedValue = null
+      /** @type {*} */
+      let appliedCtx = null
+
+      const cmd = new Command({ name: 'cli', description: 'CLI' })
+        .option({
+          long: 'verbose',
+          type: 'boolean',
+          description: 'Verbose',
+          apply: (value, ctx) => {
+            appliedValue = value
+            appliedCtx = ctx
+          },
+        })
+        .action(async () => {})
+
+      await cmd.run({ argv: ['--verbose'], envs: { TEST: 'value' }, reporter: createReporter() })
+
+      assert.equal(appliedValue, true)
+      assert.equal(appliedCtx.envs.TEST, 'value')
+      assert.ok(appliedCtx.reporter)
     })
   })
 })

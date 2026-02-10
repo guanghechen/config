@@ -23,33 +23,43 @@ export interface IReporter {
 /** Supported option types */
 export type IOptionType = 'boolean' | 'string' | 'number' | 'string[]' | 'number[]'
 
-/** Option value types */
-export type IOptionValue = boolean | string | number | string[] | number[]
+/** Execution context */
+export interface ICommandContext {
+  /** Current command node */
+  cmd: ICommand
+  /** Environment variables passed in */
+  envs: Record<string, string | undefined>
+  /** Reporter instance */
+  reporter: IReporter
+  /** Original argv */
+  argv: string[]
+}
 
-/** Option definition (object configuration) */
-export interface IOption<T extends IOptionType = IOptionType> {
-  /** Long option name without -- prefix (e.g., 'config', 'dry-run') */
+/**
+ * Option definition.
+ * @template T - The type of the option value
+ */
+export interface IOption<T = unknown> {
+  /** Long option (e.g., 'verbose' for --verbose), also used as merge key */
   long: string
-  /** Short option name without - prefix (e.g., 'c', 'n'). Optional. */
+  /** Short option (single character, e.g., 'v' for -v) */
   short?: string
-  /** Option type */
-  type: T
-  /** Option description */
-  description?: string
-  /** Default value */
-  default?: T extends 'boolean'
-    ? boolean
-    : T extends 'string'
-      ? string
-      : T extends 'number'
-        ? number
-        : T extends 'string[]'
-          ? string[]
-          : T extends 'number[]'
-            ? number[]
-            : never
-  /** Environment variable name to read value from */
-  env?: string
+  /** Value type, defaults to 'string' */
+  type?: IOptionType
+  /** Description for help text */
+  description: string
+  /** Whether this option is required (cannot be used with default or boolean type) */
+  required?: boolean
+  /** Default value when not provided */
+  default?: T
+  /** Allowed values for validation and completion */
+  choices?: T extends Array<infer U> ? U[] : T[]
+  /** Single value transformation (ignored when resolver is present) */
+  coerce?: (rawValue: string) => T extends Array<infer U> ? U : T
+  /** Custom resolver that fully replaces builtin parsing (ignores type/coerce) */
+  resolver?: (argv: string[]) => { value: T; remaining: string[] }
+  /** Callback after parsing, applies value to context */
+  apply?: (value: T, ctx: ICommandContext) => void
 }
 
 // ============================================================
@@ -59,19 +69,26 @@ export interface IOption<T extends IOptionType = IOptionType> {
 /** Argument kind */
 export type IArgumentKind = 'required' | 'optional' | 'variadic'
 
-/** Argument value types */
-export type IArgumentValue = string | string[] | undefined
+/** Argument value type */
+export type IArgumentType = 'string' | 'number'
 
-/** Argument definition (object configuration) */
-export interface IArgument {
+/**
+ * Positional argument definition.
+ * @template T - The type of the argument value
+ */
+export interface IArgument<T = unknown> {
   /** Argument name */
   name: string
-  /** Argument kind */
-  kind: IArgumentKind
   /** Argument description */
-  description?: string
-  /** Default value (only for optional arguments) */
-  default?: string
+  description: string
+  /** Argument kind: required / optional / variadic */
+  kind: IArgumentKind
+  /** Value type, defaults to 'string' */
+  type?: IArgumentType
+  /** Default value when not provided (only effective for optional arguments) */
+  default?: T
+  /** Custom value transformation (takes precedence over type conversion) */
+  coerce?: (rawValue: string) => T
 }
 
 // ============================================================
@@ -80,26 +97,41 @@ export interface IArgument {
 
 /** Command configuration */
 export interface ICommandConfig {
-  /** Command name */
-  name: string
+  /** Command name (only effective for root command) */
+  name?: string
   /** Command description */
-  description?: string
-  /** Command version (enables --version option) */
+  description: string
+  /** Version (only effective for root command) */
   version?: string
-  /** Enable help subcommand (default: false) */
-  helpSubcommand?: boolean
+  /** Enable built-in "help" subcommand (only effective when command has subcommands) */
+  help?: boolean
+}
+
+// ============================================================
+// Forward Declaration
+// ============================================================
+
+/** Forward declaration for Command class */
+export interface ICommand {
+  readonly name: string
+  readonly description: string
+  readonly version: string | undefined
+  readonly options: IOption[]
+  readonly arguments: IArgument[]
 }
 
 // ============================================================
 // Subcommand Types
 // ============================================================
 
-/** Subcommand entry */
+/** Subcommand registration entry */
 export interface ISubcommandEntry {
   /** Subcommand name */
   name: string
+  /** Alias names */
+  aliases: string[]
   /** Subcommand instance */
-  command: Command
+  command: ICommand
 }
 
 // ============================================================
@@ -108,28 +140,30 @@ export interface ISubcommandEntry {
 
 /** Action parameters */
 export interface IActionParams {
-  /** Command context */
-  ctx: Command
+  /** Execution context */
+  ctx: ICommandContext
   /** Parsed options */
-  opts: Record<string, IOptionValue>
-  /** Parsed positional arguments */
-  args: Record<string, IArgumentValue>
+  opts: Record<string, unknown>
+  /** Parsed positional arguments (keyed by argument name) */
+  args: Record<string, unknown>
+  /** Raw positional argument strings (before type conversion) */
+  rawArgs: string[]
 }
 
 /** Action handler function */
-export type IAction = (params: IActionParams) => Promise<void>
+export type IAction = (params: IActionParams) => void | Promise<void>
 
 // ============================================================
 // Run Parameters
 // ============================================================
 
-/** Run parameters */
+/** run() method parameters */
 export interface IRunParams {
-  /** Command line arguments */
+  /** Command line arguments (usually process.argv.slice(2)) */
   argv: string[]
-  /** Environment variables */
+  /** Environment variables (usually process.env) */
   envs: Record<string, string | undefined>
-  /** Optional reporter (uses DefaultReporter if not provided) */
+  /** Optional reporter for logging (defaults to console reporter) */
   reporter?: IReporter
 }
 
@@ -137,32 +171,44 @@ export interface IRunParams {
 // Parse Result
 // ============================================================
 
-/** Result of parsing argv */
+/** parse() method result */
 export interface IParseResult {
-  /** Parsed positional arguments */
-  args: Record<string, IArgumentValue>
   /** Parsed options */
-  opts: Record<string, IOptionValue>
-  /** Remaining arguments after subcommand routing */
+  opts: Record<string, unknown>
+  /** Parsed positional arguments (keyed by argument name) */
+  args: Record<string, unknown>
+  /** Raw positional argument strings (before type conversion) */
+  rawArgs: string[]
+}
+
+/** shift() method result */
+export interface IShiftResult {
+  /** Options consumed by this command */
+  opts: Record<string, unknown>
+  /** Tokens not consumed, to be passed to parent */
   remaining: string[]
-  /** Matched subcommand name (if any) */
-  subcommand?: string
 }
 
 // ============================================================
 // Error Types
 // ============================================================
 
-/** Commander error kinds */
+/** Error kinds for command parsing */
 export type ICommanderErrorKind =
-  | 'unknown_option'
-  | 'missing_option_value'
-  | 'invalid_option_value'
-  | 'missing_argument'
-  | 'unknown_subcommand'
-  | 'validation_error'
+  | 'UnknownOption'
+  | 'UnexpectedArgument'
+  | 'MissingValue'
+  | 'InvalidType'
+  | 'UnsupportedShortSyntax'
+  | 'OptionConflict'
+  | 'MissingRequired'
+  | 'InvalidChoice'
+  | 'InvalidBooleanValue'
+  | 'MissingRequiredArgument'
+  | 'TooManyArguments'
+  | 'ConfigurationError'
 
-/** Commander error class */
+/** Commander error with structured information */
 export class CommanderError extends Error {
   /** Error kind */
   readonly kind: ICommanderErrorKind
@@ -171,7 +217,7 @@ export class CommanderError extends Error {
 
   constructor(kind: ICommanderErrorKind, message: string, commandPath: string)
 
-  /** Format error message with hint */
+  /** Format error with help hint */
   format(): string
 }
 
@@ -192,17 +238,17 @@ export class DefaultReporter implements IReporter {
 // ============================================================
 
 /** CLI command builder */
-export class Command {
+export class Command implements ICommand {
   /** Command name */
   readonly name: string
   /** Command description */
-  readonly description: string | undefined
+  readonly description: string
   /** Command version */
   readonly version: string | undefined
   /** Defined options (excluding builtins) */
-  readonly options: ReadonlyArray<IOption>
+  readonly options: IOption[]
   /** Defined arguments */
-  readonly arguments: ReadonlyArray<IArgument>
+  readonly arguments: IArgument[]
 
   /**
    * Create a new Command instance.
@@ -219,7 +265,7 @@ export class Command {
    * @param opt - Option configuration
    * @returns this for chaining
    */
-  option<T extends IOptionType>(opt: IOption<T>): this
+  option(opt: IOption): this
 
   /**
    * Add a positional argument.
@@ -241,6 +287,7 @@ export class Command {
 
   /**
    * Register a subcommand.
+   * When the same command is registered multiple times, subsequent names become aliases.
    * @param name - Subcommand name
    * @param cmd - Subcommand instance
    * @returns this for chaining
@@ -252,7 +299,7 @@ export class Command {
   // ============================================================
 
   /**
-   * Parse argv and execute action. Sets process.exitCode = 1 on error.
+   * Parse argv and execute action.
    * @param params - Run parameters
    */
   run(params: IRunParams): Promise<void>
@@ -264,6 +311,14 @@ export class Command {
    * @throws {CommanderError} on parsing errors
    */
   parse(argv: string[]): IParseResult
+
+  /**
+   * Shift options from tokens that this command recognizes.
+   * Unrecognized tokens are returned in `remaining` for parent commands.
+   * @param tokens - Option tokens to process
+   * @returns Shift result with consumed options and remaining tokens
+   */
+  shift(tokens: string[]): IShiftResult
 
   /**
    * Generate help text.
