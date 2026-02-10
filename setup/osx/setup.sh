@@ -11,19 +11,8 @@ else
   git clone https://github.com/guanghechen/config.git --branch=guanghechen "$repomain"
 fi
 
-source "$HOME/.config/guanghechen/env/setting.sh"
-
 ## Bootstrap
-### Setup configs
-printf "\n\e[96m  [setup config] preparing...\e[0m\n"
-source "$HOME/.config/guanghechen/setup/nix/bot/config.sh"
-printf "\e[92m  [setup config] done.\e[0m\n"
-
-### Setup font
-printf "\n\e[96m  [setup font] preparing...\e[0m\n"
-source "$HOME/.config/guanghechen/setup/osx/bot/font-maple.sh"
-# source "$HOME/.config/guanghechen/setup/osx/bot/font-roboto.sh"
-printf "\e[92m  [setup font] done.\e[0m\n"
+source "$HOME/.config/guanghechen/env/setting.sh"
 
 ### Setup homebrew
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
@@ -32,11 +21,6 @@ if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
   source "$HOME/.config/guanghechen/setup/osx/bot/homebrew-patch.sh"
   printf "\e[92m  [setup homebrew] done.\e[0m\n"
 fi
-
-### Setup fish
-printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
-source "$HOME/.config/guanghechen/setup/nix/bot/fish.sh"
-printf "\e[92m  [setup fish] done.\e[0m\n"
 
 ## Setup envs
 ### Setup rust environment
@@ -54,6 +38,11 @@ printf "\n\e[96m  [setup bun] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/env/bun.sh"
 printf "\e[92m  [setup bun] done.\e[0m\n"
 
+### Setup fish
+printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
+source "$HOME/.config/guanghechen/setup/nix/bot/fish.sh"
+printf "\e[92m  [setup fish] done.\e[0m\n"
+
 ### Setup node
 printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/env/node.sh"
@@ -63,6 +52,11 @@ printf "\e[92m  [setup node] done.\e[0m\n"
 printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/env/pnpm.sh"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
+
+### Setup configs
+printf "\n\e[96m  [setup config] preparing...\e[0m\n"
+source "$HOME/.config/guanghechen/setup/nix/bot/config.sh"
+printf "\e[92m  [setup config] done.\e[0m\n"
 
 ### Generate local settings
 node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
@@ -92,6 +86,12 @@ printf "\e[92m  [setup vscode] done.\e[0m\n"
 printf "\n\e[96m  [setup windows-terminal] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/app/windows-terminal.sh"
 printf "\e[92m  [setup windows-terminal] done.\e[0m\n"
+
+## Setup font
+printf "\n\e[96m  [setup font] preparing...\e[0m\n"
+source "$HOME/.config/guanghechen/setup/osx/bot/font-maple.sh"
+# source "$HOME/.config/guanghechen/setup/osx/bot/font-roboto.sh"
+printf "\e[92m  [setup font] done.\e[0m\n"
 
 ## Setup themes
 printf "\n\e[96m  [setup theme] preparing...\e[0m\n"

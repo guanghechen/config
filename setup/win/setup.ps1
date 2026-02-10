@@ -78,9 +78,6 @@ Set-Location -Path $repomain
 . .\setup\win\winget.ps1
 
 Set-Location -Path $repomain
-. .\setup\win\config.ps1
-
-Set-Location -Path $repomain
 . .\setup\win\env\cargo.ps1
 
 Set-Location -Path $repomain
@@ -94,6 +91,9 @@ Set-Location -Path $repomain
 
 Set-Location -Path $repomain
 . .\setup\win\env\pnpm.ps1
+
+Set-Location -Path $repomain
+. .\setup\win\config.ps1
 
 ### Generate local settings
 node "$repomain\cli\setting.mjs" --set-edition win
