@@ -32,12 +32,12 @@ truncation_length = 5
 truncate_to_repo = false
 
 [git_branch]
-format = " [\\(](white)[$branch]($style)"
+format = " [$branch]($style)"
 style = "bold bright-purple"
 symbol = ""
 
 [git_status]
-format = "[|](white)$ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed[\\)](white)"
+format = " $ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed"
 staged = "[+${count}](bright-blue)"
 modified = "[󰧞${count}](yellow)"
 untracked = "[?${count}](bright-black)"
