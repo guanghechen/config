@@ -1,7 +1,7 @@
 # Starship - Yazi
 # user@host ~/path ( main|+1•?) 12:34:56
 
-format = "$character$os$username${custom.separator}$hostname$directory$git_branch${custom.git_dirty_sep}$git_status${custom.git_clean}${custom.git_suffix} $time"
+format = "$character$os$username${custom.separator}$hostname$directory$git_branch$git_status $time"
 
 [character]
 format = "$symbol "
@@ -54,7 +54,7 @@ style = "bold bright-purple"
 symbol = ""
 
 [git_status]
-format = '$ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed'
+format = "[|](white)$ahead_behind$staged$modified$untracked$conflicted$renamed$deleted$stashed[\\)](white)"
 staged = "[+${count}](bright-blue)"
 modified = "[󰧞${count}](yellow)"
 untracked = "[?${count}](bright-black)"
@@ -65,24 +65,6 @@ behind = "[⇣${count}](red)"
 diverged = "[⇡${ahead_count}](green)[⇣${behind_count}](red)"
 renamed = "[➜${count}](blue)"
 deleted = "[✘${count}](red)"
-
-[custom.git_dirty_sep]
-command = "true"
-when = 'git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git status --porcelain -b | { IFS= read -r first || exit 1; case "$first" in *ahead*|*behind*|*diverged*) exit 0;; esac; IFS= read -r _ && exit 0; exit 1; }'
-format = "[|](white)"
-shell = ["sh"]
-
-[custom.git_clean]
-command = "true"
-when = 'git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git diff --quiet && test -z "$(git ls-files --others --exclude-standard)"'
-format = "[|](white)[](bright-green)"
-shell = ["sh"]
-
-[custom.git_suffix]
-command = "true"
-when = "git rev-parse --is-inside-work-tree >/dev/null 2>&1"
-format = "[\\)](white)"
-shell = ["sh"]
 
 [time]
 format = "[$time]($style)"
