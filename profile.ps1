@@ -18,6 +18,8 @@ if (Test-Path $localEnvPath) {
 
 . "$env:XDG_CONFIG_HOME\pwsh\env.ps1"
 . "$env:XDG_CONFIG_HOME\pwsh\app.ps1"
-. "$env:XDG_CONFIG_HOME\pwsh\prompt.ps1"
+# Starship prompt
+$env:STARSHIP_CONFIG = "$env:XDG_CONFIG_HOME\starship\pwsh.toml"
+Invoke-Expression (&starship init powershell)
 ## Setup fnm
 fnm env --use-on-cd --shell power-shell | Out-String | Invoke-Expression
