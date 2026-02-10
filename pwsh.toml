@@ -12,8 +12,7 @@ style_root = "bold bright-red"
 show_always = true
 
 [custom.separator]
-command = "Write-Output '@'"
-format = "[$output](white)"
+format = "[@](white)"
 when = true
 shell = ["powershell", "-NoProfile", "-Command"]
 
