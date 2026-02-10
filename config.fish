@@ -93,5 +93,3 @@ source ~/.config/fish/conf/app.fish
 source ~/.config/fish/conf/theme.fish
 source ~/.config/fish/conf/alias.fish
 source ~/.config/fish/conf/keymap.fish
-
-complete -c ghc-theme-apply -a "catppuccin-latte catppuccin-mocha gruvbox-dark gruvbox-light nord onehalf-dark onehalf-light rose-pine-main rosepine-moon rosepine-dawn vsc-dark-modern vsc-light-modern"
