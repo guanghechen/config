@@ -1,9 +1,7 @@
-# Starship - PowerShell
-# user@host ~/path ( main|+1•?) 12:34:56 (conda)
-#   $
+# Starship - Yazi
+# user@host ~/path ( main|+1•?) 12:34:56
 
-format = """$username$custom$hostname$directory$git_branch$git_status $time$conda
-  [\\$](white) """
+format = "$username$custom$hostname$directory$git_branch$git_status $time"
 
 [username]
 format = "[$user]($style)"
@@ -12,10 +10,10 @@ style_root = "bold bright-red"
 show_always = true
 
 [custom.separator]
-command = "if ($env:USERNAME -eq 'Administrator') { '#' } else { '@' }"
+command = "if [ $(id -u) -eq 0 ]; then echo '#'; else echo '@'; fi"
 format = "[$output](white)"
 when = true
-shell = ["pwsh", "-NoProfile", "-Command"]
+shell = ["sh"]
 
 [hostname]
 format = "[$hostname]($style) "
@@ -55,9 +53,3 @@ format = "[$time]($style)"
 style = "bright-black"
 time_format = "%H:%M:%S"
 disabled = false
-
-[conda]
-format = " [\\($environment\\)]($style)"
-style = "green"
-symbol = ""
-ignore_base = true
