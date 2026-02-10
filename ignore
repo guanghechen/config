@@ -8,5 +8,6 @@
 *.tsbuildinfo
 
 .code-analyzer/
+.playwright-mcp/
 local/
 node_modules/
