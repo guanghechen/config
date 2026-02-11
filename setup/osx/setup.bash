@@ -1,7 +1,6 @@
 #! /usr/bin/env bash
 
 ## Download core configurations
-reporoot="$HOME/.config"
 repomain="$HOME/.config/guanghechen"
 if [ -e "$repomain/.git" ]; then
   git -C "$repomain" fetch origin
@@ -12,7 +11,7 @@ else
 fi
 
 ## Bootstrap
-source "$HOME/.config/guanghechen/env/setting.bash"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ### Setup homebrew
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then

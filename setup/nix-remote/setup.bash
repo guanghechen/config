@@ -29,7 +29,7 @@ sudo update-locale LANG=en_US.UTF-8
 
 ## Bootstrap
 printf "\n\e[95m ===== [bootstrap] =====\e[0m\n"
-source "$HOME/.config/guanghechen/env/setting.bash"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ### Setup homebrew
 if [ -z "$HOME_HOMEBREW" ] || [ -w "$HOME_HOMEBREW/var/homebrew/locks" ]; then
