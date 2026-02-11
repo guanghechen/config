@@ -13,11 +13,11 @@ fi
 if command -v pnpm &>/dev/null; then
   if [ -d "$HOME/.config/ora" ]; then
     printf "\e[96m  [setup pnpm] setup ora...\e[0m\n"
-    fish -c "cd $HOME/.config/ora && pnpm install"
+    (cd "$HOME/.config/ora" && pnpm install)
   fi
 
   if [ -d "$HOME/.config/yoz" ]; then
     printf "\e[96m  [setup pnpm] setup yoz...\e[0m\n"
-    fish -c "cd $HOME/.config/yoz && pnpm install"
+    (cd "$HOME/.config/yoz" && pnpm install)
   fi
 fi
