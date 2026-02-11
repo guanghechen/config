@@ -9,47 +9,6 @@
 3. **模块化** - 按职责拆分文件，便于维护
 4. **平台适配** - 支持 macOS / WSL / Linux 平台差异
 
-## 目录结构
-
-```
-~/.config/bash/
-├── profile.bash            # Login shell（环境变量、PATH）
-├── bashrc.bash             # Interactive shell（alias、prompt、keymap）
-│
-├── conf/                 # 模块化配置（由 bashrc.bash 显式 source）
-│   ├── app.bash            # 应用初始化（starship、zoxide、fnm 等）
-│   ├── alias.bash          # 别名定义
-│   └── keymap.bash         # readline 键绑定
-│
-├── functions/            # 函数库（每个函数一个文件）
-│   └── *.bash
-│
-├── completions/          # 自定义补全脚本
-│   └── *.bash
-│
-├── platform/             # 平台特定配置
-│   ├── osx/
-│   │   ├── profile.bash    # 平台特定环境变量
-│   │   └── bashrc.bash     # 平台特定 alias/函数
-│   ├── wsl/
-│   │   ├── profile.bash
-│   │   ├── bashrc.bash
-│   │   └── fn/           # WSL 专用函数
-│   │       └── *.bash
-│   └── nix/
-│       ├── profile.bash
-│       └── bashrc.bash
-│
-├── local/                # 本地配置（git-ignored）
-│   └── env.bash            # 敏感环境变量（API keys 等）
-│
-├── samples/              # 配置模板
-│   └── env.bash            # local/env.bash 的示例
-│
-└── doc/                  # 文档
-    └── arch.md           # 本文件
-```
-
 ## 引导配置
 
 ### `~/.bash_profile`
@@ -174,28 +133,28 @@ fi
 
 ## 与 Fish 配置的对应关系
 
-| Fish                           | Bash                       | 说明                      |
-|--------------------------------|----------------------------|---------------------------|
+| Fish                           | Bash                           | 说明                      |
+|--------------------------------|--------------------------------|---------------------------|
 | `config.fish`                  | `profile.bash` + `bashrc.bash` | 主入口（Bash 按职责拆分） |
-| `conf/app.fish`                | `conf/app.bash`              | 应用初始化（含 starship） |
-| `conf/alias.fish`              | `conf/alias.bash`            | 别名定义                  |
-| `conf/keymap.fish`             | `conf/keymap.bash`           | 键绑定                    |
-| `functions/*.fish`             | `functions/*.bash`           | 自定义函数                |
-| `completions/*.fish`           | `completions/*.bash`         | 自定义补全                |
-| `conf/platform/{osx,wsl,nix}/` | `platform/{osx,wsl,nix}/`  | 平台特定配置（拆分为 profile.bash + bashrc.bash） |
-| `local/env.fish`               | `local/env.bash`             | 本地敏感配置              |
-| `samples/env.fish`             | `samples/env.bash`           | 配置模板                  |
+| `conf/app.fish`                | `conf/app.bash`                | 应用初始化（含 starship） |
+| `conf/alias.fish`              | `conf/alias.bash`              | 别名定义                  |
+| `conf/keymap.fish`             | `conf/keymap.bash`             | 键绑定                    |
+| `functions/*.fish`             | `functions/*.bash`             | 自定义函数                |
+| `completions/*.fish`           | `completions/*.bash`           | 自定义补全                |
+| `conf/platform/{osx,wsl,nix}/` | `platform/{osx,wsl,nix}/`      | 平台特定配置（拆分为 profile.bash + bashrc.bash） |
+| `local/env.fish`               | `local/env.bash`               | 本地敏感配置              |
+| `samples/env.fish`             | `samples/env.bash`             | 配置模板                  |
 
 ## 与 Fish 的关键差异
 
-| 功能             | Fish                    | Bash                             |
-|------------------|-------------------------|----------------------------------|
-| 函数 autoload    | 原生支持                | 不支持，需启动时 source          |
-| Abbreviations    | `abbr` 命令             | 用 `alias` 替代                  |
-| 键绑定           | `bind` 命令             | `bind` 命令或 `~/.inputrc`       |
+| 功能             | Fish                    | Bash                                     |
+|------------------|-------------------------|------------------------------------------|
+| 函数 autoload    | 原生支持                | 不支持，需启动时 source                  |
+| Abbreviations    | `abbr` 命令             | 用 `alias` 替代                          |
+| 键绑定           | `bind` 命令             | `bind` 命令或 `~/.inputrc`               |
 | Prompt           | starship                | starship（~/.config/starship/bash.toml） |
-| Universal vars   | `set -U`                | 用 `local/env.bash` 替代           |
-| Event handlers   | `--on-event`            | 用 `trap` 或 `PROMPT_COMMAND`    |
+| Universal vars   | `set -U`                | 用 `local/env.bash` 替代                 |
+| Event handlers   | `--on-event`            | 用 `trap` 或 `PROMPT_COMMAND`            |
 
 ## 文件命名规范
 
