@@ -1,35 +1,43 @@
 # Supreme Principles
 
-> **Non-negotiable.** Violation of these principles is unacceptable.
+> **Constitutional rules.** `CRITICAL` and `ALWAYS` rules take highest precedence — project-level CLAUDE.md MUST NOT override. Other rules are recommendations and may be adapted per context.
 
-## User Profile
+1. **CRITICAL**: For complex tasks, multiple options, or any concerns — discuss first, align on direction before doing the work.
+2. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
+3. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
+4. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
 
-1. **Git Expert** - Never modify staging area or branches autonomously (`git add/reset/stash/checkout/restore/commit`).
-2. **Code Perfectionist** - Produce elegant, minimal code. Follow guidelines strictly.
-3. **Language** - Respond in Chinese (简体中文); keep technical terms/jargon in their original language (usually English).
+## Security
 
-## Critical Rules
-
-1. **CRITICAL**: Never read git-ignored files unless path explicitly given.
-2. **CRITICAL**: Never access secrets (`.env*`, `*credentials*`, `.ssh/`, `*.http_request`, `*.http_response`, `local/env.*`).
+1. **CRITICAL**: Never access secrets (`.ssh/`, `.env*`, `local/env.*`, `*credentials*`, `*.http_request`, `*.http_response`).
+2. **CRITICAL**: Never run git write commands (`add/rm/clean/commit/checkout/restore/reset/stash/push`) unless **explicitly instructed**.
+3. **ALWAYS**: Confirm with user before installing packages (especially global CLI tools). List packages to be installed — risk of supply-chain attacks.
 
 ## Coding
 
-1. **ALWAYS**: Install packages only when instructed.
-2. **ALWAYS**: `I`-prefixed naming for types/interfaces (e.g., `IChatMessage`, `IUser`).
-3. **ALWAYS**: Clean code, no unnecessary comments, no premature caching.
-4. **ALWAYS**: Work until completion; discuss when stuck on complex decisions.
-5. **ALWAYS**: Architecture - DAG dependencies, single responsibility, consistent module structure, minimal public API, simplicity first.
-6. **ALWAYS**: Trailing newline required; validate only at system boundaries.
-7. **RECOMMENDED**: Use `@coder` subagent for non-trivial coding tasks (features, refactoring, bug fixes).
+> **ALWAYS** follow simple design, modularity, single responsibility. Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
 
-## Documentation
+1. Prefer self-documenting code over comments. Comment "WHY", not "WHAT". No premature abstraction.
+2. Choose the simplest effective solution; high cohesion, low coupling.
+3. Organize code: imports → constants → types → public API → private impl → entry point.
+4. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
+5. **ALWAYS**: Early return; avoid nested conditions.
+6. **ALWAYS**: Error handling by function type:
+   - Internal (private): Propagate errors to caller (unless designed to suppress).
+   - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
+   - Exposed pure (no side effects): Propagate errors transparently.
 
-1. **ALWAYS**: Align Markdown tables (CJK = 2 units, ASCII = 1).
-2. **ALWAYS**: Include a single trailing newline at end of file.
+## Environment
 
-## Tools
+### Tmux
 
-1. Prefer `fd` over `find`, `rg` over `grep`.
-2. Fork existing code for new features; avoid rewriting unless modification is simple.
-3. Use `tmux capture-pane -ep -t %{pane_id}` to view a tmux pane's current buffer with ANSI colors.
+> Apply when user mentions tmux or pane references (`%N`, `#N`, `@M#N`).
+
+1. **CRITICAL**: Pane reference conventions:
+   - `%N` (e.g., `%3`) - Global pane id: `-t %3`
+   - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
+   - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
+2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
+3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
+4. **CRITICAL**: Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
+
