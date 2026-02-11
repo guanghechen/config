@@ -24,12 +24,12 @@ function ghc-upgrade
 
     switch $edition
         case nix-remote
-            bash "$config_root/setup/nix-remote/setup.sh"
+            bash "$config_root/setup/nix-remote/setup.bash"
         case osx
-            bash "$config_root/setup/osx/setup.sh"
+            bash "$config_root/setup/osx/setup.bash"
         case win
             pwsh -File "$config_root/setup/win/setup.ps1"
         case '*'
-            bash "$config_root/setup/nix/setup.sh"
+            bash "$config_root/setup/nix/setup.bash"
     end
 end
