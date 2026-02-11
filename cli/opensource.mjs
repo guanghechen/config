@@ -115,7 +115,7 @@ export async function handleOpensource(opts, repoPath, envs) {
 }
 
 if (process.argv[1] === import.meta.filename) {
-  const cmd = new Command({ name: 'opensource', description: 'Clone or pull an opensource repository.' })
+  const cmd = new Command({ name: 'opensource', description: 'Clone or pull an opensource repository.', help: true })
     .argument({ name: 'repoPath', kind: 'required', description: 'Repository path in format <author/reponame>' })
     .option({ long: 'platform', type: 'string', default: 'github', description: 'Platform to use (github)' })
     .action(async ({ args, opts }) => {

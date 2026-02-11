@@ -117,6 +117,12 @@ export class Command {
   /** @type {boolean} */
   #helpSubcommandEnabled
 
+  /** @type {IReporter | undefined} */
+  #reporter
+
+  /** @type {Command | undefined} */
+  #parent
+
   /** @type {IOption[]} */
   #options = []
 
@@ -141,6 +147,7 @@ export class Command {
     this.#description = config.description
     this.#version = config.version
     this.#helpSubcommandEnabled = config.help ?? false
+    this.#reporter = config.reporter
   }
 
   // ============================================================
@@ -157,6 +164,11 @@ export class Command {
 
   get version() {
     return this.#version
+  }
+
+  /** @returns {Command | undefined} */
+  get parent() {
+    return this.#parent
   }
 
   /** @returns {IOption[]} */
@@ -226,6 +238,14 @@ export class Command {
       )
     }
 
+    if (cmd.#parent && cmd.#parent !== this) {
+      throw new CommanderError(
+        'ConfigurationError',
+        `command "${cmd.#name}" already has a parent`,
+        this.#getCommandPath(),
+      )
+    }
+
     // Check if cmd is already registered
     const existing = this.#subcommands.find(e => e.command === cmd)
     if (existing) {
@@ -234,6 +254,7 @@ export class Command {
     } else {
       // New registration
       cmd.#name = name
+      cmd.#parent = this
       this.#subcommands.push({ name, aliases: [], command: cmd })
     }
     return this
@@ -258,12 +279,16 @@ export class Command {
       // 1. Route: determine command chain
       const { chain, remaining } = this.#routeChain(processedArgv)
       const leafCommand = chain[chain.length - 1]
+      const rootCommand = chain[0]
+      const includeRootVersion = chain.length === 1
+
+      this.#validateMergedShortOptions(chain, includeRootVersion)
 
       // 2. Split options and arguments at '--'
       const { optionTokens, restArgs } = this.#splitAtDoubleDash(remaining)
 
       // 3. Check for built-in --help / --version BEFORE parsing
-      const leafOptions = leafCommand.#getMergedOptions()
+      const leafOptions = leafCommand.#getMergedOptions(leafCommand === rootCommand)
       const hasUserHelp = leafCommand.#options.some(o => o.long === 'help')
       const hasUserVersion = leafCommand.#options.some(o => o.long === 'version')
 
@@ -272,20 +297,22 @@ export class Command {
         return
       }
 
-      if (!hasUserVersion && leafCommand.#hasVersionFlag(optionTokens, leafOptions)) {
-        console.log(leafCommand.version ?? 'unknown')
-        return
+      if (!hasUserVersion && leafCommand === rootCommand) {
+        if (leafCommand.#hasVersionFlag(optionTokens, leafOptions)) {
+          console.log(leafCommand.version ?? 'unknown')
+          return
+        }
       }
 
       // 4. Shift: bottom-up option consumption
-      const optsMap = this.#shiftChain(chain, optionTokens)
+      const { optsMap, positionalArgs } = this.#shiftChain(chain, optionTokens, includeRootVersion)
 
       // 5. Build context
       /** @type {ICommandContext} */
       const ctx = {
         cmd: leafCommand,
         envs,
-        reporter: reporter ?? new DefaultReporter(),
+        reporter: reporter ?? this.#reporter ?? new DefaultReporter(),
         argv,
       }
 
@@ -295,8 +322,9 @@ export class Command {
       // 7. Merge options (root → leaf, later overwrites earlier)
       const mergedOpts = this.#mergeOpts(chain, optsMap)
 
-      // 8. Parse arguments
-      const { args, rawArgs } = leafCommand.#parseArguments(restArgs)
+      // 8. Parse arguments (combine positional args from before '--' with args after '--')
+      const allArgs = [...positionalArgs, ...restArgs]
+      const { args, rawArgs } = leafCommand.#parseArguments(allArgs)
 
       // 9. Execute action
       /** @type {IActionParams} */
@@ -338,100 +366,27 @@ export class Command {
    * @returns {IParseResult}
    */
   parse(argv) {
-    const allOptions = this.#getMergedOptions()
-    /** @type {Record<string, unknown>} */
-    const opts = {}
-    /** @type {string[]} */
-    const rawArgs = []
+    const processedArgv = this.#processHelpSubcommand(argv)
+    const { chain, remaining } = this.#routeChain(processedArgv)
+    const leafCommand = chain[chain.length - 1]
+    const includeRootVersion = chain.length === 1
 
-    // Initialize defaults
-    for (const opt of allOptions) {
-      if (opt.default !== undefined) {
-        opts[opt.long] = opt.default
-      } else if (opt.type === 'boolean') {
-        opts[opt.long] = false
-      } else if (opt.type === 'string[]' || opt.type === 'number[]') {
-        opts[opt.long] = []
-      }
-    }
+    this.#validateMergedShortOptions(chain, includeRootVersion)
 
-    // Process resolver options first
-    let remaining = [...argv]
-    const resolverOptions = allOptions.filter(o => o.resolver)
-    for (const opt of resolverOptions) {
-      const result = opt.resolver(remaining)
-      opts[opt.long] = result.value
-      remaining = result.remaining
-    }
+    // Split options and arguments at '--'
+    const { optionTokens, restArgs } = this.#splitAtDoubleDash(remaining)
 
-    // Build option maps (excluding resolver options which are already processed)
-    const { optionByLong, optionByShort, booleanOptions } = this.#buildOptionMaps(allOptions, true)
+    // Shift: bottom-up option consumption
+    const { optsMap, positionalArgs } = this.#shiftChain(chain, optionTokens, includeRootVersion)
 
-    // Normalize --no-* to --*=false
-    remaining = this.#normalizeArgv(remaining, booleanOptions)
+    // Merge options (root → leaf, later overwrites earlier)
+    const mergedOpts = this.#mergeOpts(chain, optsMap)
 
-    // Parse remaining argv
-    let i = 0
-    while (i < remaining.length) {
-      const token = remaining[i]
+    // Parse arguments (combine positional args from before '--' with args after '--')
+    const allArgs = [...positionalArgs, ...restArgs]
+    const { args, rawArgs } = leafCommand.#parseArguments(allArgs)
 
-      // End-of-options marker
-      if (token === '--') {
-        rawArgs.push(...remaining.slice(i + 1))
-        break
-      }
-
-      // Long option
-      if (token.startsWith('--')) {
-        i = this.#parseLongOption(remaining, i, optionByLong, opts)
-        continue
-      }
-
-      // Short option
-      if (token.startsWith('-') && token.length > 1) {
-        i = this.#parseShortOption(remaining, i, optionByShort, opts)
-        continue
-      }
-
-      // Positional argument
-      rawArgs.push(token)
-      i += 1
-    }
-
-    // Validate required options
-    for (const opt of allOptions) {
-      if (opt.required && opts[opt.long] === undefined) {
-        throw new CommanderError(
-          'MissingRequired',
-          `missing required option "--${opt.long}" for command "${this.#getCommandPath()}"`,
-          this.#getCommandPath(),
-        )
-      }
-    }
-
-    // Validate choices
-    for (const opt of allOptions) {
-      if (opt.choices && opts[opt.long] !== undefined) {
-        const value = opts[opt.long]
-        const values = Array.isArray(value) ? value : [value]
-        /** @type {ReadonlyArray<unknown>} */
-        const choices = opt.choices
-        for (const v of values) {
-          if (!choices.includes(v)) {
-            throw new CommanderError(
-              'InvalidChoice',
-              `invalid value "${v}" for option "--${opt.long}". Allowed: ${opt.choices.join(', ')}`,
-              this.#getCommandPath(),
-            )
-          }
-        }
-      }
-    }
-
-    // Parse arguments with type conversion
-    const { args } = this.#parseArguments(rawArgs)
-
-    return { opts, args, rawArgs }
+    return { opts: mergedOpts, args, rawArgs }
   }
 
   /**
@@ -449,10 +404,11 @@ export class Command {
    * Options in the shadowed set are excluded from processing.
    * @param {string[]} tokens
    * @param {Set<string>} shadowed
+   * @param {boolean} [includeVersion]
    * @returns {IShiftResult}
    */
-  #shiftWithShadowed(tokens, shadowed) {
-    const allDirectOptions = this.#getMergedOptions()
+  #shiftWithShadowed(tokens, shadowed, includeVersion = !this.#parent) {
+    const allDirectOptions = this.#getMergedOptions(includeVersion)
     // Filter out shadowed options (already handled by child commands)
     const directOptions = allDirectOptions.filter(o => !shadowed.has(o.long))
     /** @type {Record<string, unknown>} */
@@ -611,11 +567,11 @@ export class Command {
 
         optLines.push({ sig, desc })
 
-        // Add --no-{long} for boolean options (reuse original description per spec)
+        // Add --no-{long} for boolean options
         if (effectiveType === 'boolean') {
           optLines.push({
             sig: `    --no-${opt.long}`,
-            desc: opt.description,
+            desc: `Negate --${opt.long}`,
           })
         }
       }
@@ -668,12 +624,12 @@ export class Command {
    * @returns {string[]}
    */
   #processHelpSubcommand(argv) {
-    // Only process if help subcommand is enabled AND we have subcommands
-    if (!this.#helpSubcommandEnabled || this.#subcommands.length === 0) return argv
+    // Only process if help subcommand is enabled
+    if (!this.#helpSubcommandEnabled) return argv
     if (argv.length < 1 || argv[0] !== 'help') return argv
 
     // "help" alone -> show current command's help
-    if (argv.length === 1) {
+    if (argv.length === 1 || this.#subcommands.length === 0) {
       return ['--help']
     }
 
@@ -740,15 +696,17 @@ export class Command {
 
   /**
    * Shift options bottom-up through the command chain.
-   * Returns a map of command → parsed options.
+   * Returns a map of command → parsed options, plus any remaining positional arguments.
    * @param {Command[]} chain
    * @param {string[]} tokens
-   * @returns {Map<Command, Record<string, unknown>>}
+   * @param {boolean} includeRootVersion
+   * @returns {{ optsMap: Map<Command, Record<string, unknown>>; positionalArgs: string[] }}
    */
-  #shiftChain(chain, tokens) {
+  #shiftChain(chain, tokens, includeRootVersion) {
     /** @type {Map<Command, Record<string, unknown>>} */
     const optsMap = new Map()
     let remaining = [...tokens]
+    const rootCommand = chain[0]
 
     // Build shadowed set: options defined by child commands
     // Child options shadow parent options with the same name
@@ -758,7 +716,8 @@ export class Command {
     // Process from leaf to root
     for (let i = chain.length - 1; i >= 0; i--) {
       const cmd = chain[i]
-      const result = cmd.#shiftWithShadowed(remaining, shadowed)
+      const includeVersion = cmd === rootCommand && includeRootVersion
+      const result = cmd.#shiftWithShadowed(remaining, shadowed, includeVersion)
       optsMap.set(cmd, result.opts)
       remaining = result.remaining
 
@@ -768,27 +727,30 @@ export class Command {
       }
     }
 
-    // Any remaining tokens are errors
-    if (remaining.length > 0) {
-      const leafCommand = chain[chain.length - 1]
-      const firstToken = remaining[0]
-
-      if (firstToken.startsWith('-')) {
+    // Remaining tokens: unknown options are errors, non-options are positional args
+    /** @type {string[]} */
+    const positionalArgs = []
+    for (const token of remaining) {
+      if (token.startsWith('-')) {
+        const leafCommand = chain[chain.length - 1]
+        if (!token.startsWith('--') && token.length > 2) {
+          const flag = token[1]
+          throw new CommanderError(
+            'UnknownOption',
+            `unknown option "-${flag}" for command "${leafCommand.#getCommandPath()}"`,
+            leafCommand.#getCommandPath(),
+          )
+        }
         throw new CommanderError(
           'UnknownOption',
-          `unknown option "${firstToken}" for command "${leafCommand.#getCommandPath()}"`,
-          leafCommand.#getCommandPath(),
-        )
-      } else {
-        throw new CommanderError(
-          'UnexpectedArgument',
-          `unexpected argument "${firstToken}". Positional arguments must come after "--"`,
+          `unknown option "${token}" for command "${leafCommand.#getCommandPath()}"`,
           leafCommand.#getCommandPath(),
         )
       }
+      positionalArgs.push(token)
     }
 
-    return optsMap
+    return { optsMap, positionalArgs }
   }
 
   /**
@@ -1023,9 +985,10 @@ export class Command {
 
   /**
    * Get merged options (this command's options + builtins).
+   * @param {boolean} [includeVersion]
    * @returns {IOption[]}
    */
-  #getMergedOptions() {
+  #getMergedOptions(includeVersion = !this.#parent) {
     // No parent inheritance - just return this command's options with builtins
     /** @type {Map<string, IOption>} */
     const optionMap = new Map()
@@ -1037,7 +1000,7 @@ export class Command {
     if (!hasUserHelp) {
       optionMap.set('help', BUILTIN_HELP_OPTION)
     }
-    if (!hasUserVersion) {
+    if (!hasUserVersion && includeVersion) {
       optionMap.set('version', BUILTIN_VERSION_OPTION)
     }
 
@@ -1047,6 +1010,39 @@ export class Command {
     }
 
     return Array.from(optionMap.values())
+  }
+
+  /**
+   * Validate merged short options for conflicts across command chain.
+   * @param {Command[]} chain
+   * @param {boolean} includeRootVersion
+   */
+  #validateMergedShortOptions(chain, includeRootVersion) {
+    /** @type {Map<string, IOption>} */
+    const mergedByLong = new Map()
+    const rootCommand = chain[0]
+
+    for (const cmd of chain) {
+      const includeVersion = cmd === rootCommand && includeRootVersion
+      for (const opt of cmd.#getMergedOptions(includeVersion)) {
+        mergedByLong.set(opt.long, opt)
+      }
+    }
+
+    /** @type {Map<string, string>} */
+    const shortMap = new Map()
+    for (const opt of mergedByLong.values()) {
+      if (!opt.short) continue
+      const existingLong = shortMap.get(opt.short)
+      if (existingLong && existingLong !== opt.long) {
+        throw new CommanderError(
+          'OptionConflict',
+          `short option "-${opt.short}" conflicts with "--${existingLong}"`,
+          this.#getCommandPath(),
+        )
+      }
+      shortMap.set(opt.short, opt.long)
+    }
   }
 
   // ============================================================
@@ -1446,7 +1442,17 @@ export class Command {
    * @returns {string}
    */
   #getCommandPath() {
-    return this.#name
+    /** @type {string[]} */
+    const parts = []
+    /** @type {Command | undefined} */
+    let current = this
+    while (current) {
+      if (current.#name) {
+        parts.unshift(current.#name)
+      }
+      current = current.#parent
+    }
+    return parts.join(' ') || this.#name
   }
 
   /**

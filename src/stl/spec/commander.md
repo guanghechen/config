@@ -107,8 +107,10 @@ interface ICommandConfig {
   description: string
   /** Version (adds --version option, only effective for root command) */
   version?: string
-  /** Enable built-in "help" subcommand (only effective when command has subcommands) */
+  /** Enable built-in "help" subcommand */
   help?: boolean
+  /** Optional reporter for logging (defaults to console reporter) */
+  reporter?: IReporter
 }
 
 /** Command interface (readonly view) */
@@ -116,6 +118,7 @@ interface ICommand {
   readonly name: string
   readonly description: string
   readonly version: string | undefined
+  readonly parent: ICommand | undefined
   readonly options: IOption[]
   readonly arguments: IArgument[]
 }
@@ -176,7 +179,6 @@ interface IShiftResult {
 /** Error kinds for command parsing */
 type ICommanderErrorKind =
   | 'UnknownOption'
-  | 'UnexpectedArgument'
   | 'MissingValue'
   | 'InvalidType'
   | 'UnsupportedShortSyntax'
@@ -213,6 +215,7 @@ new Command(config: ICommandConfig)
 | `get name()`      | `string`              | Command name        |
 | `get description` | `string`              | Command description |
 | `get version()`   | `string \| undefined` | Command version     |
+| `get parent()`    | `Command \| undefined`| Parent command      |
 | `get options()`   | `IOption[]`           | Defined options     |
 | `get arguments()` | `IArgument[]`         | Defined arguments   |
 
@@ -244,18 +247,33 @@ new Command(config: ICommandConfig)
 
 ### Kind Types
 
-| Kind         | Result Type           | Example                                      |
-| :----------- | :-------------------- | :------------------------------------------- |
-| `required`   | `string \| number`    | `cli -- foo` -> `args.file = 'foo'`          |
-| `optional`   | `T \| undefined`      | `cli` -> `args.file = undefined`             |
-| `variadic`   | `T[]`                 | `cli -- a b c` -> `args.files = ['a','b','c']`|
+| Kind         | Result Type           | Example                                       |
+| :----------- | :-------------------- | :-------------------------------------------- |
+| `required`   | `string \| number`    | `cli foo` -> `args.file = 'foo'`              |
+| `optional`   | `T \| undefined`      | `cli` -> `args.file = undefined`              |
+| `variadic`   | `T[]`                 | `cli a b c` -> `args.files = ['a','b','c']`   |
 
 ### Constraints
 
 - Required arguments must come before optional arguments
 - Variadic argument can only appear once and must be last
 - Required arguments cannot have a default value
-- Positional arguments must come after `--` separator
+
+### Positional Arguments with Options
+
+Positional arguments can be mixed with options in any order:
+
+```bash
+cli foo --force           # args: ['foo'], force: true
+cli --force foo           # args: ['foo'], force: true
+cli foo --force bar       # args: ['foo', 'bar'], force: true
+```
+
+The `--` separator can still be used to pass arguments that look like options:
+
+```bash
+cli -- --not-an-option    # args: ['--not-an-option']
+```
 
 ### Examples
 
@@ -399,7 +417,7 @@ cli -a -b -c foo.json       # equivalent
 
 ### Option Terminator (`--`)
 
-The double-dash `--` signals the end of options. Everything after is treated as positional arguments:
+The double-dash `--` signals the end of options. Everything after is treated as positional arguments and won't be parsed as options:
 
 ```bash
 cli --force -- --not-an-option    # => force: true, args: ['--not-an-option']
@@ -444,15 +462,19 @@ root.subcommand('gen', genCmd)  // 'gen' becomes an alias for 'generate'
 
 ### Help Subcommand
 
-Enable built-in help subcommand for subcommand help:
+Enable built-in help subcommand:
 
 ```javascript
 const root = new Command({
   name: 'mycli',
   description: 'My CLI',
-  help: true  // Enables: mycli help <subcommand>
+  help: true  // Enables: mycli help [subcommand]
 })
 ```
+
+Behavior:
+- `mycli help` - Shows help for root command
+- `mycli help <subcommand>` - Shows help for subcommand (when subcommands exist)
 
 ## Option Shifting (Bottom-up)
 
@@ -500,7 +522,6 @@ try {
 | Kind                       | Example Message                               |
 | :------------------------- | :-------------------------------------------- |
 | `UnknownOption`            | `Unknown option '--foo'`                      |
-| `UnexpectedArgument`       | `Unexpected argument 'foo'. Positional arguments must come after "--"` |
 | `MissingValue`             | `Option '--config' requires a value`          |
 | `InvalidType`              | `Invalid value 'abc' for option '--port'`     |
 | `UnsupportedShortSyntax`   | `Sticky short option syntax not supported`    |
@@ -549,10 +570,10 @@ Usage: mycli [options] [file]
 
 Options:
   -h, --help              Show help information
-      --no-help           Show help information
+      --no-help           Negate --help
   -V, --version           Show version number
-      --no-version        Show version number
+      --no-version        Negate --version
   -p, --port <value>      Port number (default: 3000)
   -f, --force             Force operation
-      --no-force          Force operation
+      --no-force          Negate --force
 ```
