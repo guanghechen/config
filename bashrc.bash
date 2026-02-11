@@ -30,6 +30,13 @@ for f in "$BASH_CONFIG_DIR"/functions/*.bash; do
     [[ -r "$f" ]] && source "$f"
 done
 
+# System bash-completion (before custom completions)
+if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    source /usr/share/bash-completion/bash_completion
+elif [[ -f /etc/bash_completion ]]; then
+    source /etc/bash_completion
+fi
+
 # Completions
 for f in "$BASH_CONFIG_DIR"/completions/*.bash; do
     [[ -r "$f" ]] && source "$f"
