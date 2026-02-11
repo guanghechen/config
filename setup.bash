@@ -7,8 +7,8 @@ set -euo pipefail
 BASH_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/bash"
 
 # Marker comments for idempotent insertion
-MARKER_PROFILE="# >>> bash-config >>>"
-MARKER_BASHRC="# >>> bash-config >>>"
+MARKER_START="# >>> bash-config >>>"
+MARKER_END="# <<< bash-config <<<"
 
 # Content to insert
 read -r -d '' BASH_PROFILE_CONTENT << 'EOF' || true
@@ -29,37 +29,50 @@ export __BASHRC_LOADED=1
 # <<< bash-config <<<
 EOF
 
-# Inject content into file if marker not present
+# Extract existing block between markers
+extract_block() {
+    local file="$1"
+    sed -n "/$MARKER_START/,/$MARKER_END/p" "$file" 2>/dev/null || true
+}
+
+# Remove existing block between markers
+remove_block() {
+    local file="$1"
+    local tmp="${file}.tmp.$$"
+    sed "/$MARKER_START/,/$MARKER_END/d" "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
+# Inject or update config block
 inject_config() {
     local file="$1"
-    local marker="$2"
-    local content="$3"
-    local prepend="${4:-false}"
+    local content="$2"
 
-    if [[ -f "$file" ]] && grep -qF "$marker" "$file"; then
-        echo "[skip] $file already configured"
-        return
-    fi
-
-    if [[ "$prepend" == "true" ]]; then
-        if [[ -f "$file" ]]; then
-            local existing
-            existing=$(cat "$file")
-            printf '%s\n\n%s\n' "$content" "$existing" > "$file"
-        else
-            printf '%s\n' "$content" > "$file"
+    if [[ -f "$file" ]]; then
+        local existing
+        existing=$(extract_block "$file")
+        if [[ "$existing" == "$content" ]]; then
+            echo "[skip] $file already up-to-date"
+            return
         fi
+        if [[ -n "$existing" ]]; then
+            remove_block "$file"
+            echo "[update] $file block replaced"
+        fi
+        # Prepend to existing content
+        local rest
+        rest=$(cat "$file")
+        printf '%s\n\n%s\n' "$content" "$rest" > "$file"
     else
-        printf '\n%s\n' "$content" >> "$file"
+        printf '%s\n' "$content" > "$file"
     fi
     echo "[done] $file configured"
 }
 
 # Setup ~/.bash_profile
-inject_config "$HOME/.bash_profile" "$MARKER_PROFILE" "$BASH_PROFILE_CONTENT" true
+inject_config "$HOME/.bash_profile" "$BASH_PROFILE_CONTENT"
 
 # Setup ~/.bashrc
-inject_config "$HOME/.bashrc" "$MARKER_BASHRC" "$BASHRC_CONTENT" true
+inject_config "$HOME/.bashrc" "$BASHRC_CONTENT"
 
 # Setup local/env.bash
 LOCAL_ENV="$BASH_CONFIG_DIR/local/env.bash"
