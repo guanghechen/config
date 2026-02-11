@@ -31,7 +31,7 @@ alias mkdir='mkdir -pv'
 alias mv='mv -i'
 alias ports='netstat -tulanp'
 alias rm='rm -i -I'
-alias sss='source "$HOME/.config/bash/bashrc.sh"'
+alias sss='source "$HOME/.config/bash/bashrc.bash"'
 alias tls='tree --dirsfirst -aCF'
 alias vdir='vdir --color=auto'
 
