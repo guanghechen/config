@@ -27,16 +27,17 @@
    - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
    - Exposed pure (no side effects): Propagate errors transparently.
 
-## Tools
+## Environment
 
 ### Tmux
 
 > Apply when user mentions tmux or pane references (`%N`, `#N`, `@M#N`).
 
-1. Pane reference conventions:
+1. **CRITICAL**: Pane reference conventions:
    - `%N` (e.g., `%3`) - Global pane id: `-t %3`
    - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
    - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
-2. `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-3. `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-4. Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
+2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
+3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
+4. **CRITICAL**: Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
+
