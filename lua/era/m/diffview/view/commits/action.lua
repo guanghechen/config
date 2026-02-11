@@ -52,6 +52,19 @@ local function update_lnum_present(ctx, hash)
   end
 end
 
+---Find actual commit object in state by hash (line_map commit may be a copy due to vim.b serialization)
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param hash                           string
+---@return era.m.diffview.ICommit|nil
+local function find_commit_in_state(ctx, hash)
+  for _, c in ipairs(ctx.state:get_commits()) do
+    if c.hash == hash then
+      return c
+    end
+  end
+  return nil
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Selection actions
 ----------------------------------------------------------------------------------------------------
@@ -60,31 +73,15 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 function M.set_active_commit(ctx)
   local item = get_item_at_cursor()
-  if not item then
+  if not item or not item.commit then
     return
   end
 
-  -- Get the commit (either from commit item or file item's parent commit)
-  local commit = item.commit
-  if not commit then
-    return
-  end
-
-  -- Find actual commit object in state
-  local commits = ctx.state:get_commits()
-  local actual_commit = nil ---@type era.m.diffview.ICommit|nil
-  for _, c in ipairs(commits) do
-    if c.hash == commit.hash then
-      actual_commit = c
-      break
-    end
-  end
-
+  local actual_commit = find_commit_in_state(ctx, item.commit.hash)
   if not actual_commit then
     return
   end
 
-  -- Set as current commit
   ctx.state:set_current_commit(actual_commit)
   update_lnum_present(ctx, actual_commit.hash)
   dot.state.status.dirtier_tabline:mark_dirty()
@@ -95,19 +92,17 @@ function M.set_active_commit(ctx)
     stl.async.run(function()
       commits_view.open_entry(ctx, actual_commit, item.entry)
     end)
-  else
-    -- If on commit, load files if needed for layout 5, otherwise just clear sbs
-    if ctx.layout.layout_type == 5 then
-      if not actual_commit.files then
-        stl.async.run(function()
-          M.__load_commit_files_and_render_filetree__(ctx, actual_commit)
-        end)
-      else
-        commits_view.render_filetree(ctx)
-      end
+  elseif ctx.layout.layout_type == 5 then
+    -- Layout 5: load files if needed and render filetree
+    if not actual_commit.files then
+      stl.async.run(function()
+        M.__load_commit_files_and_render_filetree__(ctx, actual_commit)
+      end)
     else
-      commits_view.clear_sbs(ctx)
+      commits_view.render_filetree(ctx)
     end
+  else
+    commits_view.clear_sbs(ctx)
   end
 end
 
@@ -120,6 +115,13 @@ function M.select(ctx)
   end
 
   if item.type == "commit" and item.commit then
+    -- In file history mode (path_filter set), directly open target file diff
+    local path_filter = ctx.state:get_path_filter()
+    if path_filter then
+      M.__open_target_file_diff__(ctx, item.commit, path_filter)
+      return
+    end
+
     -- In layout 5 (commits_filetree), selecting a commit updates filetree
     if ctx.layout.layout_type == 5 then
       M.__select_commit_for_filetree__(ctx, item.commit)
@@ -1093,21 +1095,11 @@ end
 ---@param commit                         era.m.diffview.ICommit
 ---@param token                          ?stl.c.CancellationToken
 function M.__expand_commit__(ctx, commit, token)
-  -- Find the actual commit object in state (line_map commit may be a copy due to vim.b serialization)
-  local commits = ctx.state:get_commits()
-  local actual_commit = nil ---@type era.m.diffview.ICommit|nil
-  for _, c in ipairs(commits) do
-    if c.hash == commit.hash then
-      actual_commit = c
-      break
-    end
-  end
-
+  local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
     return
   end
 
-  -- Check if files already loaded
   if actual_commit.files then
     stl.async.scheduler()
     ctx.state:toggle_commit_expanded(actual_commit.hash)
@@ -1115,9 +1107,7 @@ function M.__expand_commit__(ctx, commit, token)
     return
   end
 
-  -- Load files for this commit
   local files = data.fetch_commit_files(actual_commit.hash, token)
-
   stl.async.scheduler()
   actual_commit.files = files
   ctx.state:toggle_commit_expanded(actual_commit.hash)
@@ -1130,30 +1120,18 @@ end
 ---@param commit                         era.m.diffview.ICommit
 ---@param token                          ?stl.c.CancellationToken
 function M.__load_commit_files_and_render_filetree__(ctx, commit, token)
-  -- Find the actual commit object in state
-  local commits = ctx.state:get_commits()
-  local actual_commit = nil ---@type era.m.diffview.ICommit|nil
-  for _, c in ipairs(commits) do
-    if c.hash == commit.hash then
-      actual_commit = c
-      break
-    end
-  end
-
+  local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
     return
   end
 
-  -- Check if files already loaded
   if actual_commit.files then
     stl.async.scheduler()
     commits_view.render_filetree(ctx)
     return
   end
 
-  -- Load files for this commit
   local files = data.fetch_commit_files(actual_commit.hash, token)
-
   if token and token:is_cancelled() then
     return
   end
@@ -1163,30 +1141,62 @@ function M.__load_commit_files_and_render_filetree__(ctx, commit, token)
   commits_view.render_filetree(ctx)
 end
 
----Select commit and render filetree (for layout 5)
+---Open target file diff directly (for file history mode)
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@param commit                         era.m.diffview.ICommit
-function M.__select_commit_for_filetree__(ctx, commit)
-  -- Find the actual commit object in state (line_map commit may be a copy)
-  local commits = ctx.state:get_commits()
-  local actual_commit = nil ---@type era.m.diffview.ICommit|nil
-  for _, c in ipairs(commits) do
-    if c.hash == commit.hash then
-      actual_commit = c
-      break
-    end
-  end
-
+---@param path_filter                    string
+function M.__open_target_file_diff__(ctx, commit, path_filter)
+  local actual_commit = find_commit_in_state(ctx, commit.hash)
   if not actual_commit then
     return
   end
 
-  -- Set as current commit
   ctx.state:set_current_commit(actual_commit)
   update_lnum_present(ctx, actual_commit.hash)
   dot.state.status.dirtier_tabline:mark_dirty()
 
-  -- Load files if needed and render filetree
+  stl.async.run(function()
+    if not actual_commit.files then
+      actual_commit.files = data.fetch_commit_files(actual_commit.hash)
+    end
+    stl.async.scheduler()
+
+    -- Find target file entry
+    local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
+    for _, entry in ipairs(actual_commit.files or {}) do
+      if entry.filepath == path_filter then
+        target_entry = entry
+        break
+      end
+    end
+
+    if not target_entry then
+      stl.reporter.warn({
+        from = __module_name__,
+        subject = "__open_target_file_diff__",
+        message = string.format("File not found in commit: %s", path_filter),
+      })
+      return
+    end
+
+    ctx.state:set_current_entry(target_entry)
+    commits_view.open_entry(ctx, actual_commit, target_entry)
+  end)
+end
+
+---Select commit and render filetree (for layout 5)
+---@param ctx                            era.m.diffview.view.commits.IContext
+---@param commit                         era.m.diffview.ICommit
+function M.__select_commit_for_filetree__(ctx, commit)
+  local actual_commit = find_commit_in_state(ctx, commit.hash)
+  if not actual_commit then
+    return
+  end
+
+  ctx.state:set_current_commit(actual_commit)
+  update_lnum_present(ctx, actual_commit.hash)
+  dot.state.status.dirtier_tabline:mark_dirty()
+
   if not actual_commit.files then
     stl.async.run(function()
       M.__load_commit_files_and_render_filetree__(ctx, actual_commit)
