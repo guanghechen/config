@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/env/setting.sh"
+source "$HOME/.config/guanghechen/env/setting.bash"
 
 ### Homebrew
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then

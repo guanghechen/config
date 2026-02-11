@@ -9,5 +9,5 @@ set -gx GHC_EDITION 'nix'
 set -gx GHC_THEME 'vsc-dark-modern'
 
 # Source local overrides if exists
-set -l local_file (string replace '.fish' '.local.fish' (status filename))
-test -f $local_file && source $local_file
+set -l _ghc_env_dir (dirname (status filename))
+test -f "$_ghc_env_dir/setting.local.fish" && source "$_ghc_env_dir/setting.local.fish"

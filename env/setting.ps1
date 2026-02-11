@@ -7,5 +7,7 @@ $env:GHC_EDITION = 'nix'
 $env:GHC_THEME = 'vsc-dark-modern'
 
 # Source local overrides if exists
-$localFile = $MyInvocation.MyCommand.Path -replace '\.ps1$', '.local.ps1'
-if (Test-Path $localFile) { . $localFile }
+$_ghcEnvDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$_ghcLocalFile = Join-Path $_ghcEnvDir 'setting.local.ps1'
+if (Test-Path $_ghcLocalFile) { . $_ghcLocalFile }
+Remove-Variable _ghcEnvDir, _ghcLocalFile -ErrorAction SilentlyContinue

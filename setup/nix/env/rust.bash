@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 if command -v rustc &>/dev/null; then
   printf "\e[93m  [setup rust] rust is already installed. (skipped)\e[0m\n"

@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
-FONT_DIR="/usr/share/fonts/Maple"
+FONT_COMMON_DIR="/Library/Fonts"
+FONT_LOCAL_DIR="$HOME/Library/Fonts"
 FORCE=false
 
 for arg in "$@"; do
@@ -14,17 +15,23 @@ for arg in "$@"; do
   esac
 done
 
-if [ "$FORCE" = true ] && [ -d "$FONT_DIR" ]; then
+if [ "$FORCE" = true ] && [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
   printf "\e[96m  [setup font (Maple)] force removing existing Maple fonts...\e[0m\n"
-  sudo rm -rf "$FONT_DIR"
+  rm -rf "$FONT_LOCAL_DIR"/MapleMono*
+  sudo rm -rf "$FONT_COMMON_DIR"/MapleMono*
 fi
 
-if [ -d "$FONT_DIR" ]; then
+if [ -f "$FONT_COMMON_DIR/MapleMono-NF-CN-Bold.ttf" ]; then
   printf "\e[93m  [setup font (Maple)] Maple is already installed. (skipped)\e[0m\n"
 else
+  # Create the font download folder and ensure it to be clean.
   mkdir -p ~/download/fonts/Maple
   rm -rf ~/download/fonts/Maple
   mkdir -p ~/download/fonts/Maple
+
+  # Remove the existed Maple fonts
+  rm -rf "$FONT_LOCAL_DIR/Maple*"
+  sudo rm -rf "$FONT_COMMON_DIR/Maple*"
 
   cd "$HOME/download/fonts/Maple" || return 1
 
@@ -34,6 +41,6 @@ else
   printf "\e[96m  [setup font (Maple)] installing MapleMono fonts...\e[0m\n"
   unzip MapleMono-NF-CN-unhinted.zip
   rm -f MapleMono-NF-CN-unhinted.zip
-  sudo cp -r ~/download/fonts/Maple "$FONT_DIR/"
-  sudo fc-cache -f -v
+  sudo cp ~/download/fonts/Maple/* "$FONT_COMMON_DIR/"
+  sudo atsutil databases -remove
 fi

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 fish -c "\
   cd \"$HOME/.config/nvim\"\

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 ## Set environment variables
 printf "\e[96m  [setup miniforge] set environment variables...\e[0m\n"

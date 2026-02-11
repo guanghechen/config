@@ -41,7 +41,7 @@ export const GEMINI_CONFIG_DIR = path.join(HOME, '.gemini')
 
 export const XDG_CONFIG_NODE_ASSET_DIR = path.join(XDG_CONFIG_HOME_NODE, 'asset')
 export const XDG_CONFIG_NODE_ENV_DIR = path.join(XDG_CONFIG_HOME_NODE, 'env')
-export const XDG_CONFIG_NODE_SETTING_LOCAL = path.join(XDG_CONFIG_NODE_ENV_DIR, 'setting.local.sh')
+export const XDG_CONFIG_NODE_SETTING_LOCAL = path.join(XDG_CONFIG_NODE_ENV_DIR, 'setting.local.bash')
 export const XDG_CONFIG_NODE_SETTING_LOCAL_FISH = path.join(XDG_CONFIG_NODE_ENV_DIR, 'setting.local.fish')
 export const XDG_CONFIG_NODE_SETTING_LOCAL_PS1 = path.join(XDG_CONFIG_NODE_ENV_DIR, 'setting.local.ps1')
 export const XDG_CONFIG_NODE_ASSET_APP_DIR = path.join(XDG_CONFIG_NODE_ASSET_DIR, 'app')

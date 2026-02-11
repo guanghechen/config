@@ -24,7 +24,7 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 ├── env/                      # Environment configs (generated)
 │   ├── env.mjs               # Path constants and platform detection
 │   ├── setting.mjs           # Setting class
-│   ├── setting.sh            # Settings for Bash (export KEY=value)
+│   ├── setting.bash           # Settings for Bash (export KEY=value)
 │   ├── setting.fish          # Settings for Fish (set -gx KEY value)
 │   ├── setting.ps1           # Settings for PowerShell ($env:KEY = value)
 │   └── repo.json             # Repository definitions
@@ -32,7 +32,7 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 │   ├── nix/                  # Linux/WSL setup
 │   │   ├── app/              # App installation scripts
 │   │   ├── bot/              # Bootstrap scripts
-│   │   │   └── env.sh        # PATH and environment bootstrap
+│   │   │   └── env.bash        # PATH and environment bootstrap
 │   │   └── env/              # Environment setup (node, rust, etc.)
 │   ├── nix-remote/           # Remote Linux setup
 │   ├── osx/                  # macOS setup
@@ -77,13 +77,13 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 ┌─────────────────────────────────────────────────────────────┐
 │                    env/                                     │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐         │
-│  │ setting.sh   │ │setting.fish  │ │ setting.ps1  │         │
+│  │ setting.bash │ │setting.fish  │ │ setting.ps1  │         │
 │  │ (bash)       │ │ (fish)       │ │ (pwsh)       │         │
 │  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘         │
 └─────────┼────────────────┼────────────────┼─────────────────┘
           │                │                │
           ▼                ▼                ▼
-   setup/nix/*.sh    config/fish/*    setup/win/*.ps1
+   setup/nix/*.bash    config/fish/*    setup/win/*.ps1
    (source directly)
 ```
 
@@ -123,7 +123,7 @@ node cli/setting.mjs --print-python-env
 
 **Bash/Zsh:**
 ```bash
-source "$HOME/.config/guanghechen/env/setting.sh"
+source "$HOME/.config/guanghechen/env/setting.bash"
 echo $GHC_THEME
 ```
 
@@ -208,42 +208,42 @@ red = "{{red}}"
 ### Bootstrap Flow (Linux/WSL)
 
 ```
-setup/nix/setup.sh
+setup/nix/setup.bash
     │
     ├── apt update & install packages
     │
     ├── git clone/pull this repo
     │
-    ├── source env/setting.sh (defaults, checked in)
+    ├── source env/setting.bash (defaults, checked in)
     │
-    ├── bot/config.sh (symlinks, profile)
-    ├── bot/font-maple.sh (font installation)
-    ├── bot/homebrew.sh (linuxbrew)
-    ├── bot/fish.sh (fish shell)
+    ├── bot/config.bash (symlinks, profile)
+    ├── bot/font-maple.bash (font installation)
+    ├── bot/homebrew.bash (linuxbrew)
+    ├── bot/fish.bash (fish shell)
     │
-    ├── env/rust.sh (rustup)
-    ├── env/miniforge.sh (conda)
-    ├── env/bun.sh
-    ├── env/node.sh (fnm + node)
-    ├── env/pnpm.sh
+    ├── env/rust.bash (rustup)
+    ├── env/miniforge.bash (conda)
+    ├── env/bun.bash
+    ├── env/node.bash (fnm + node)
+    ├── env/pnpm.bash
     │
     ├── node cli/setting.mjs --set-edition nix
-    │   └── generates env/setting.local.{sh,fish,ps1}
+    │   └── generates env/setting.local.{bash,fish,ps1}
     │
-    ├── app/newsboat.sh
-    ├── app/nvim.sh
-    ├── app/tmux.sh
-    ├── app/vscode.sh
+    ├── app/newsboat.bash
+    ├── app/nvim.bash
+    ├── app/tmux.bash
+    ├── app/vscode.bash
     │
     └── node cli/theme.mjs apply
 ```
 
-### Environment Bootstrap (setup/nix/bot/env.sh)
+### Environment Bootstrap (setup/nix/bot/env.bash)
 
-The `setup/nix/bot/env.sh` script is sourced by most setup scripts to ensure PATH and environment variables are properly configured:
+The `setup/nix/bot/env.bash` script is sourced by most setup scripts to ensure PATH and environment variables are properly configured:
 
 ```bash
-source "$HOME/.config/guanghechen/env/setting.sh"
+source "$HOME/.config/guanghechen/env/setting.bash"
 
 # Homebrew
 export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew

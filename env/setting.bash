@@ -9,4 +9,6 @@ export GHC_EDITION=nix
 export GHC_THEME=vsc-dark-modern
 
 # Source local overrides if exists
-[ -f "${BASH_SOURCE[0]%.sh}.local.sh" ] && source "${BASH_SOURCE[0]%.sh}.local.sh"
+_ghc_env_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -f "$_ghc_env_dir/setting.local.bash" ] && source "$_ghc_env_dir/setting.local.bash"
+unset _ghc_env_dir

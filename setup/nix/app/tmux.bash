@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 prefer_tmux_version="${PREFER_TMUX_VERSION:-stable}"
 if [ "$prefer_tmux_version" = "manual" ] && [ -n "$ROOT_SOURCECODES" ]; then

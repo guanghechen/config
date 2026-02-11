@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 
 if fnm list | grep -q "v$GHC_APP_EDITION_NODE"; then
   printf "\e[93m  [setup node] node@%s is already installed. (skipped)\e[0m\n" "$GHC_APP_EDITION_NODE"

@@ -7,7 +7,7 @@ if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/b
 else
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 fi
-source "$HOME/.config/guanghechen/setup/nix/bot/env.sh"
+source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 brew update
 
 ### Install node

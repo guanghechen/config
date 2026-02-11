@@ -3,19 +3,19 @@
 * Nix: [Nix Setup](./setup/nix/README.md)
 
   ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)"
   ```
 
 * Nix* (remote): [Nix-Remote Setup](./setup/nix-remote/README.md)
 
   ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix-remote/setup.bash)"
   ```
 
 * Macos:
 
   ```bash
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/osx/setup.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/osx/setup.bash)"
   ```
 
 * Windows: [Windows Setup](./setup/win/README.md)
@@ -44,7 +44,7 @@
   - Bootstrap
 
     ```bash
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/guanghechen/config/refs/heads/guanghechen/setup/nix/setup.bash)"
     ```
 
 ## APP
