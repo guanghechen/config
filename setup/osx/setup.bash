@@ -53,13 +53,14 @@ printf "\n\e[96m  [setup pnpm] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/env/pnpm.bash"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
 
-### Setup configs
+## Setup configs
+### Setup local settings
+node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
+
+### Setup xdg configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/bot/config.bash"
 printf "\e[92m  [setup config] done.\e[0m\n"
-
-### Generate local settings
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
 
 ## Setup apps
 ### Setup newsboat

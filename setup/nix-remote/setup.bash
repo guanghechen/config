@@ -55,13 +55,14 @@ printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix-remote/env/node.bash"
 printf "\e[92m  [setup node] done.\e[0m\n"
 
-### Setup configs
+## Setup configs
+### Setup local settings
+node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
+
+### Setup xdg configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix-remote/bot/config.bash"
 printf "\e[92m  [setup config] done.\e[0m\n"
-
-### Generate local settings
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
 
 ### Setup bash
 printf "\n\e[96m  [setup bash] preparing...\e[0m\n"
