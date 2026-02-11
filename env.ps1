@@ -8,7 +8,7 @@ $env:GHC_GEMINI_AUTH_TOKEN            = "${env:GHC_COPILOT_AUTH_TOKEN}"
 ## Agent Environment ###############################################################################
 $env:ANTHROPIC_BASE_URL               = "${env:GHC_ANTHROPIC_BASE_URL}"
 $env:ANTHROPIC_AUTH_TOKEN             = "${env:GHC_ANTHROPIC_AUTH_TOKEN}"
-$env:ANTHROPIC_MODEL                  = "claude-opus-4.5"
+$env:ANTHROPIC_MODEL                  = "claude-opus-4.6"
 $env:ANTHROPIC_SMALL_FAST_MODEL       = "claude-sonnet-4.5"
 $env:CLAUDE_CONFIG_DIR                = "${env:XDG_CONFIG_HOME}\claude"
 
