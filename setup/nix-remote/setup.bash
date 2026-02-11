@@ -50,11 +50,6 @@ printf "\n\e[96m  [setup miniforge] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/env/miniforge.bash"
 printf "\e[92m  [setup miniforge] done.\e[0m\n"
 
-### Setup fish
-printf "\n\e[96m  [setup fish] preparing...\e[0m\n"
-source "$HOME/.config/guanghechen/setup/nix/bot/fish.bash"
-printf "\e[92m  [setup fish] done.\e[0m\n"
-
 ### Setup node
 printf "\n\e[96m  [setup node] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix-remote/env/node.bash"
@@ -67,6 +62,11 @@ printf "\e[92m  [setup config] done.\e[0m\n"
 
 ### Generate local settings
 node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition nix-remote
+
+### Setup bash
+printf "\n\e[96m  [setup bash] preparing...\e[0m\n"
+source "$HOME/.config/bash/setup.bash"
+printf "\e[92m  [setup bash] done.\e[0m\n"
 
 ## Setup apps
 
