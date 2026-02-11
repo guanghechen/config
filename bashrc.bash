@@ -16,21 +16,21 @@ if [[ -z "${GHC_ENV_PLATFORM:-}" ]]; then
 fi
 
 # Config modules
-source "$BASH_CONFIG_DIR/conf/app.sh"
-source "$BASH_CONFIG_DIR/conf/alias.sh"
-source "$BASH_CONFIG_DIR/conf/keymap.sh"
+source "$BASH_CONFIG_DIR/conf/app.bash"
+source "$BASH_CONFIG_DIR/conf/alias.bash"
+source "$BASH_CONFIG_DIR/conf/keymap.bash"
 
 # Platform-specific interactive config
-if [[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.sh" ]]; then
-    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.sh"
+if [[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.bash" ]]; then
+    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.bash"
 fi
 
 # Functions
-for f in "$BASH_CONFIG_DIR"/functions/*.sh; do
+for f in "$BASH_CONFIG_DIR"/functions/*.bash; do
     [[ -r "$f" ]] && source "$f"
 done
 
 # Completions
-for f in "$BASH_CONFIG_DIR"/completions/*.sh; do
+for f in "$BASH_CONFIG_DIR"/completions/*.bash; do
     [[ -r "$f" ]] && source "$f"
 done

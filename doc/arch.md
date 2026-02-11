@@ -13,38 +13,38 @@
 
 ```
 ~/.config/bash/
-├── profile.sh            # Login shell（环境变量、PATH）
-├── bashrc.sh             # Interactive shell（alias、prompt、keymap）
+├── profile.bash            # Login shell（环境变量、PATH）
+├── bashrc.bash             # Interactive shell（alias、prompt、keymap）
 │
-├── conf/                 # 模块化配置（由 bashrc.sh 显式 source）
-│   ├── app.sh            # 应用初始化（starship、zoxide、fnm 等）
-│   ├── alias.sh          # 别名定义
-│   └── keymap.sh         # readline 键绑定
+├── conf/                 # 模块化配置（由 bashrc.bash 显式 source）
+│   ├── app.bash            # 应用初始化（starship、zoxide、fnm 等）
+│   ├── alias.bash          # 别名定义
+│   └── keymap.bash         # readline 键绑定
 │
 ├── functions/            # 函数库（每个函数一个文件）
-│   └── *.sh
+│   └── *.bash
 │
 ├── completions/          # 自定义补全脚本
-│   └── *.sh
+│   └── *.bash
 │
 ├── platform/             # 平台特定配置
 │   ├── osx/
-│   │   ├── profile.sh    # 平台特定环境变量
-│   │   └── bashrc.sh     # 平台特定 alias/函数
+│   │   ├── profile.bash    # 平台特定环境变量
+│   │   └── bashrc.bash     # 平台特定 alias/函数
 │   ├── wsl/
-│   │   ├── profile.sh
-│   │   ├── bashrc.sh
+│   │   ├── profile.bash
+│   │   ├── bashrc.bash
 │   │   └── fn/           # WSL 专用函数
-│   │       └── *.sh
+│   │       └── *.bash
 │   └── nix/
-│       ├── profile.sh
-│       └── bashrc.sh
+│       ├── profile.bash
+│       └── bashrc.bash
 │
 ├── local/                # 本地配置（git-ignored）
-│   └── env.sh            # 敏感环境变量（API keys 等）
+│   └── env.bash            # 敏感环境变量（API keys 等）
 │
 ├── samples/              # 配置模板
-│   └── env.sh            # local/env.sh 的示例
+│   └── env.bash            # local/env.bash 的示例
 │
 └── doc/                  # 文档
     └── arch.md           # 本文件
@@ -56,7 +56,7 @@
 
 ```bash
 # Login Shell 入口
-[[ -f ~/.config/bash/profile.sh ]] && source ~/.config/bash/profile.sh
+[[ -f ~/.config/bash/profile.bash ]] && source ~/.config/bash/profile.bash
 
 # 确保 login shell 也加载交互配置
 [[ -f ~/.bashrc ]] && source ~/.bashrc
@@ -69,12 +69,12 @@
 [[ $- != *i* ]] && return
 
 # Interactive Shell 入口
-[[ -f ~/.config/bash/bashrc.sh ]] && source ~/.config/bash/bashrc.sh
+[[ -f ~/.config/bash/bashrc.bash ]] && source ~/.config/bash/bashrc.bash
 ```
 
 ## 核心文件
 
-### `profile.sh` - Login Shell
+### `profile.bash` - Login Shell
 
 设置**可继承的环境变量**，只在 Login shell 执行一次：
 
@@ -83,9 +83,9 @@
 - PATH 设置（Homebrew、~/.local/bin、~/.cargo/bin）
 - EDITOR、VISUAL
 - 应用环境变量（FZF_DEFAULT_COMMAND 等）
-- 敏感环境变量（source `local/env.sh`）
+- 敏感环境变量（source `local/env.bash`）
 - Agent 环境变量（ANTHROPIC_*、GEMINI_* 等）
-- 平台特定环境变量（source `platform/*/profile.sh`）
+- 平台特定环境变量（source `platform/*/profile.bash`）
 
 ```bash
 BASH_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/bash"
@@ -112,14 +112,14 @@ export FZF_DEFAULT_COMMAND="fd --hidden --follow --type=f"
 export FZF_DEFAULT_OPTS_FILE="$HOME/.config/fzf/fzf.fzfrc"
 
 # 加载本地敏感环境变量
-[[ -f "$BASH_CONFIG_DIR/local/env.sh" ]] && source "$BASH_CONFIG_DIR/local/env.sh"
+[[ -f "$BASH_CONFIG_DIR/local/env.bash" ]] && source "$BASH_CONFIG_DIR/local/env.bash"
 
 # 加载平台特定环境变量
-[[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.sh" ]] && \
-    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.sh"
+[[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.bash" ]] && \
+    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.bash"
 ```
 
-### `bashrc.sh` - Interactive Shell
+### `bashrc.bash` - Interactive Shell
 
 每次打开终端都执行，负责**不可继承的配置**：
 
@@ -142,26 +142,26 @@ if [[ -z "${GHC_ENV_PLATFORM:-}" ]]; then
 fi
 
 # 加载配置模块
-source "$BASH_CONFIG_DIR/conf/app.sh"
-source "$BASH_CONFIG_DIR/conf/alias.sh"
-source "$BASH_CONFIG_DIR/conf/keymap.sh"
+source "$BASH_CONFIG_DIR/conf/app.bash"
+source "$BASH_CONFIG_DIR/conf/alias.bash"
+source "$BASH_CONFIG_DIR/conf/keymap.bash"
 
 # 加载平台特定 alias/函数
-[[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.sh" ]] && \
-    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.sh"
+[[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.bash" ]] && \
+    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.bash"
 
 # 加载函数库
-for f in "$BASH_CONFIG_DIR"/functions/*.sh; do
+for f in "$BASH_CONFIG_DIR"/functions/*.bash; do
     [[ -r "$f" ]] && source "$f"
 done
 
 # 加载补全
-for f in "$BASH_CONFIG_DIR"/completions/*.sh; do
+for f in "$BASH_CONFIG_DIR"/completions/*.bash; do
     [[ -r "$f" ]] && source "$f"
 done
 ```
 
-### `conf/app.sh` - 应用初始化
+### `conf/app.bash` - 应用初始化
 
 建议对 starship 做简单 guard，未安装时保持默认提示符：
 
@@ -176,15 +176,15 @@ fi
 
 | Fish                           | Bash                       | 说明                      |
 |--------------------------------|----------------------------|---------------------------|
-| `config.fish`                  | `profile.sh` + `bashrc.sh` | 主入口（Bash 按职责拆分） |
-| `conf/app.fish`                | `conf/app.sh`              | 应用初始化（含 starship） |
-| `conf/alias.fish`              | `conf/alias.sh`            | 别名定义                  |
-| `conf/keymap.fish`             | `conf/keymap.sh`           | 键绑定                    |
-| `functions/*.fish`             | `functions/*.sh`           | 自定义函数                |
-| `completions/*.fish`           | `completions/*.sh`         | 自定义补全                |
-| `conf/platform/{osx,wsl,nix}/` | `platform/{osx,wsl,nix}/`  | 平台特定配置（拆分为 profile.sh + bashrc.sh） |
-| `local/env.fish`               | `local/env.sh`             | 本地敏感配置              |
-| `samples/env.fish`             | `samples/env.sh`           | 配置模板                  |
+| `config.fish`                  | `profile.bash` + `bashrc.bash` | 主入口（Bash 按职责拆分） |
+| `conf/app.fish`                | `conf/app.bash`              | 应用初始化（含 starship） |
+| `conf/alias.fish`              | `conf/alias.bash`            | 别名定义                  |
+| `conf/keymap.fish`             | `conf/keymap.bash`           | 键绑定                    |
+| `functions/*.fish`             | `functions/*.bash`           | 自定义函数                |
+| `completions/*.fish`           | `completions/*.bash`         | 自定义补全                |
+| `conf/platform/{osx,wsl,nix}/` | `platform/{osx,wsl,nix}/`  | 平台特定配置（拆分为 profile.bash + bashrc.bash） |
+| `local/env.fish`               | `local/env.bash`             | 本地敏感配置              |
+| `samples/env.fish`             | `samples/env.bash`           | 配置模板                  |
 
 ## 与 Fish 的关键差异
 
@@ -194,15 +194,15 @@ fi
 | Abbreviations    | `abbr` 命令             | 用 `alias` 替代                  |
 | 键绑定           | `bind` 命令             | `bind` 命令或 `~/.inputrc`       |
 | Prompt           | starship                | starship（~/.config/starship/bash.toml） |
-| Universal vars   | `set -U`                | 用 `local/env.sh` 替代           |
+| Universal vars   | `set -U`                | 用 `local/env.bash` 替代           |
 | Event handlers   | `--on-event`            | 用 `trap` 或 `PROMPT_COMMAND`    |
 
 ## 文件命名规范
 
-- 核心入口：`profile.sh`（Login）、`bashrc.sh`（Interactive）
-- conf 文件：`name.sh`（由 bashrc.sh 显式控制加载顺序）
-- 函数文件：与函数同名，如 `ghc-proxy.sh` 定义 `ghc-proxy()`
-- 平台配置：`platform/{osx,wsl,nix}/profile.sh` + `platform/{osx,wsl,nix}/bashrc.sh`
+- 核心入口：`profile.bash`（Login）、`bashrc.bash`（Interactive）
+- conf 文件：`name.bash`（由 bashrc.bash 显式控制加载顺序）
+- 函数文件：与函数同名，如 `ghc-proxy.bash` 定义 `ghc-proxy()`
+- 平台配置：`platform/{osx,wsl,nix}/profile.bash` + `platform/{osx,wsl,nix}/bashrc.bash`
 
 ## Git 忽略规则
 

@@ -14,7 +14,7 @@
 export __BASH_PROFILE_LOADED=1
 
 # 加载 Login Shell 配置
-[[ -f ~/.config/bash/profile.sh ]] && source ~/.config/bash/profile.sh
+[[ -f ~/.config/bash/profile.bash ]] && source ~/.config/bash/profile.bash
 
 # 确保 login shell 也加载交互配置
 [[ -f ~/.bashrc ]] && source ~/.bashrc
@@ -33,7 +33,7 @@ export __BASH_PROFILE_LOADED=1
 export __BASHRC_LOADED=1
 
 # 加载 Interactive Shell 配置
-[[ -f ~/.config/bash/bashrc.sh ]] && source ~/.config/bash/bashrc.sh
+[[ -f ~/.config/bash/bashrc.bash ]] && source ~/.config/bash/bashrc.bash
 ```
 
 ## 重复加载检测
@@ -81,7 +81,7 @@ export __BASH_PROFILE_LOADED=1
 
 ```bash
 # 方式 1：使用 alias（推荐）
-sss  # 已定义为 source ~/.config/bash/bashrc.sh
+sss  # 已定义为 source ~/.config/bash/bashrc.bash
 
 # 方式 2：清除标记后重新加载
 unset __BASH_PROFILE_LOADED __BASHRC_LOADED
@@ -92,18 +92,18 @@ source ~/.bash_profile
 
 ## 本地敏感配置
 
-敏感数据（API keys、tokens）存放在 `local/env.sh`，该目录已被 `.gitignore` 忽略。
+敏感数据（API keys、tokens）存放在 `local/env.bash`，该目录已被 `.gitignore` 忽略。
 
 ### 创建本地配置
 
 ```bash
-cp ~/.config/bash/samples/env.sh ~/.config/bash/local/env.sh
+cp ~/.config/bash/samples/env.bash ~/.config/bash/local/env.bash
 ```
 
-### 编辑 `local/env.sh`
+### 编辑 `local/env.bash`
 
 ```bash
-# ~/.config/bash/local/env.sh
+# ~/.config/bash/local/env.bash
 
 # Agent API 配置
 export GHC_ANTHROPIC_BASE_URL="https://your-api-endpoint"

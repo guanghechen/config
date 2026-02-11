@@ -82,8 +82,8 @@ export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-$HOME/.cache/pycache}"
 export PYTHONUTF8="${PYTHONUTF8:-1}"
 
 # Local sensitive env
-if [[ -f "$BASH_CONFIG_DIR/local/env.sh" ]]; then
-    source "$BASH_CONFIG_DIR/local/env.sh"
+if [[ -f "$BASH_CONFIG_DIR/local/env.bash" ]]; then
+    source "$BASH_CONFIG_DIR/local/env.bash"
 fi
 
 # Agent env
@@ -101,6 +101,6 @@ export GEMINI_MODEL="${GEMINI_MODEL:-gemini-3-pro-preview}"
 export GEMINI_CONFIG_DIR="$HOME/.gemini"
 
 # Platform-specific env
-if [[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.sh" ]]; then
-    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.sh"
+if [[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.bash" ]]; then
+    source "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/profile.bash"
 fi
