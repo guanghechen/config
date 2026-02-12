@@ -14,7 +14,7 @@ MARKER_END="# <<< bash-config <<<"
 read -r -d '' BASH_PROFILE_CONTENT << 'EOF' || true
 # >>> bash-config >>>
 [[ -n "$__BASH_PROFILE_LOADED" ]] && return
-export __BASH_PROFILE_LOADED=1
+__BASH_PROFILE_LOADED=1
 [[ -f ~/.config/bash/profile.bash ]] && source ~/.config/bash/profile.bash
 [[ -f ~/.bashrc ]] && source ~/.bashrc
 # <<< bash-config <<<
@@ -24,7 +24,7 @@ read -r -d '' BASHRC_CONTENT << 'EOF' || true
 # >>> bash-config >>>
 [[ $- != *i* ]] && return
 [[ -n "$__BASHRC_LOADED" ]] && return
-export __BASHRC_LOADED=1
+__BASHRC_LOADED=1
 [[ -f ~/.config/bash/bashrc.bash ]] && source ~/.config/bash/bashrc.bash
 # <<< bash-config <<<
 EOF
