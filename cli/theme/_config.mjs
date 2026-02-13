@@ -77,7 +77,7 @@ export const apps = [
   {
     name: 'fzf',
     home: path.join(XDG_CONFIG_HOME, 'fzf'),
-    themes: 'themes/',
+    themes: null,
     extname: '.fzfrc',
     local: 'fzf.fzfrc',
     active: app => is_directory(app.home),
@@ -316,7 +316,9 @@ export const apps = [
       const raw_color_scheme = await render_template(template, scheme)
       const color_scheme = JSON.parse(raw_color_scheme)
       if (Array.isArray(settings.schemes)) {
-        if (settings.schemes.some((/** @type {{ name: string }} */ s) => s.name === color_scheme.name)) {
+        if (
+          settings.schemes.some((/** @type {{ name: string }} */ s) => s.name === color_scheme.name)
+        ) {
           settings.schemes = settings.schemes.map((/** @type {{ name: string }} */ s) =>
             s.name === color_scheme.name ? color_scheme : s,
           )
