@@ -5,11 +5,11 @@
   "type": "module",
   "description": "Personal Node.js utilities and CLI tools (ESM, zero dependencies)",
   "imports": {
-    "#env": "./env/env.mjs",
+    "#env": "./src/env.mjs",
     "#chalk": "./src/chalk.mjs",
     "#util/*": "./src/util/*.mjs",
     "#stl/*": "./src/stl/src/*.mjs",
-    "#setting": "./env/setting.mjs",
+    "#setting": "./src/setting.mjs",
     "#cli/*": "./cli/*.mjs",
     "#cli/patch/*": "./cli/patch/*/*.mjs"
   },

@@ -266,8 +266,8 @@ The project uses Node.js subpath imports defined in `package.json`:
 ```json
 {
   "imports": {
-    "#env": "./env/env.mjs",
-    "#setting": "./env/setting.mjs",
+    "#env": "./src/env.mjs",
+    "#setting": "./src/setting.mjs",
     "#stl/*": "./src/stl/src/*.mjs"
   }
 }

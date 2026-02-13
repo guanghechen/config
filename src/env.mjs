@@ -30,7 +30,7 @@ export const IS_WSL = PLATFORM === 'wsl'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-// __dirname = env/, go up once to get project root
+// __dirname = src/, go up once to get project root
 export const XDG_CONFIG_HOME_NODE = path.dirname(__dirname)
 export const XDG_CONFIG_HOME = path.dirname(XDG_CONFIG_HOME_NODE)
 export const HOME = path.dirname(XDG_CONFIG_HOME)
