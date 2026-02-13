@@ -2,7 +2,7 @@
 
 > **Constitutional rules.** `CRITICAL` and `ALWAYS` rules take highest precedence — project-level CLAUDE.md MUST NOT override. Other rules are recommendations and may be adapted per context.
 
-1. **CRITICAL**: For complex tasks, multiple options, or any concerns — discuss first, align on direction before doing the work.
+1. **CRITICAL**: When in doubt on key decisions, ASK. Significant uncertainty about requirements or trade-offs between approaches — pause and discuss. Minor details can be judged autonomously.
 2. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
 3. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
 4. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
