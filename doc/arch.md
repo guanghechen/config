@@ -25,7 +25,6 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 │   ├── env.mjs               # Path constants and platform detection
 │   ├── setting.mjs           # Setting class
 │   ├── setting.bash           # Settings for Bash (export KEY=value)
-│   ├── setting.fish          # Settings for Fish (set -gx KEY value)
 │   ├── setting.ps1           # Settings for PowerShell ($env:KEY = value)
 │   └── repo.json             # Repository definitions
 ├── setup/                    # Platform-specific setup scripts
@@ -49,56 +48,54 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 ### Data Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     cli/setting.mjs                         │
-│                    (CLI entry point)                        │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     env/setting.mjs                         │
-│                    (Setting class)                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
-│  │   load()    │  │   save()    │  │  get/set()  │          │
-│  │  parse env  │  │ write 3 fmt │  │             │          │
-│  └─────────────┘  └─────────────┘  └─────────────┘          │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   src/stl/src/env.mjs                       │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────┐          │
-│  │ parse()  │  │ stringify()  │  │stringifyFish()│          │
-│  │          │  │ (bash)       │  │stringifyPs1() │          │
-│  └──────────┘  └──────────────┘  └───────────────┘          │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    env/                                     │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐         │
-│  │ setting.bash │ │setting.fish  │ │ setting.ps1  │         │
-│  │ (bash)       │ │ (fish)       │ │ (pwsh)       │         │
-│  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘         │
-└─────────┼────────────────┼────────────────┼─────────────────┘
-          │                │                │
-          ▼                ▼                ▼
-   setup/nix/*.bash    config/fish/*    setup/win/*.ps1
-   (source directly)
+┌───────────────────────────────────────────────────────┐
+│                   cli/setting.mjs                     │
+│                  (CLI entry point)                    │
+└─────────────────────────┬─────────────────────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────┐
+│                   src/setting.mjs                     │
+│                   (Setting class)                     │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐      │
+│  │   load()    │ │   save()    │ │  get/set()  │      │
+│  │  parse env  │ │ write 2 fmt │ │             │      │
+│  └─────────────┘ └─────────────┘ └─────────────┘      │
+└─────────────────────────┬─────────────────────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────┐
+│                 src/stl/src/env.mjs                   │
+│  ┌────────────┐ ┌──────────────┐ ┌──────────────┐     │
+│  │  parse()   │ │ stringify()  │ │stringifyPs1()│     │
+│  └────────────┘ └──────────────┘ └──────────────┘     │
+└─────────────────────────┬─────────────────────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────┐
+│                        env/                           │
+│      ┌──────────────┐         ┌──────────────┐        │
+│      │ setting.bash │         │ setting.ps1  │        │
+│      │    (bash)    │         │    (pwsh)    │        │
+│      └──────┬───────┘         └───────┬──────┘        │
+└─────────────┼─────────────────────────┼───────────────┘
+              │                         │
+              ▼                         ▼
+       setup/nix/*.bash          setup/win/*.ps1
 ```
 
 ### Environment Variables
 
 All environment variables follow the naming convention `GHC_*` (guanghechen):
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `GHC_EDITION` | `nix` \| `nix-remote` \| `osx` \| `win` | Platform edition |
-| `GHC_THEME` | string | Current theme name |
-| `GHC_APP_EDITION_NODE` | number | Preferred Node.js major version |
-| `GHC_APP_EDITION_NVIM` | `latest` \| `nightly` \| `manual` | Neovim edition |
-| `GHC_APP_EDITION_TMUX` | `latest` \| `nightly` \| `manual` | Tmux edition |
-| `GHC_APP_PYTHON_ENV` | string | Python conda environment name |
+| Variable               | Type                                     | Description               |
+|------------------------|------------------------------------------|---------------------------|
+| `GHC_EDITION`          | `nix` \| `nix-remote` \| `osx` \| `win`  | Platform edition          |
+| `GHC_THEME`            | string                                   | Current theme name        |
+| `GHC_APP_EDITION_NODE` | number                                   | Preferred Node.js version |
+| `GHC_APP_EDITION_NVIM` | `latest` \| `nightly` \| `manual`        | Neovim edition            |
+| `GHC_APP_EDITION_TMUX` | `latest` \| `nightly` \| `manual`        | Tmux edition              |
+| `GHC_APP_PYTHON_ENV`   | string                                   | Python conda env name     |
 
 ### CLI Usage
 
@@ -127,12 +124,6 @@ source "$HOME/.config/guanghechen/env/setting.bash"
 echo $GHC_THEME
 ```
 
-**Fish:**
-```fish
-source "$HOME/.config/guanghechen/env/setting.fish"
-echo $GHC_THEME
-```
-
 **PowerShell:**
 ```powershell
 . "$env:XDG_CONFIG_HOME\guanghechen\env\setting.ps1"
@@ -144,31 +135,31 @@ echo $env:GHC_THEME
 ### Data Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     cli/theme.mjs                           │
-│                    (CLI entry point)                        │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     src/theme.mjs                           │
-│  ┌─────────────┐  ┌─────────────┐                           │
-│  │   apply()   │  │  generate() │                           │
-│  └─────────────┘  └─────────────┘                           │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-        ┌─────────────┼─────────────┐
-        ▼             ▼             ▼
-┌───────────┐  ┌───────────┐  ┌───────────┐
-│  scheme/  │  │   app/    │  │ template  │
-│  *.json   │  │  *.hbs    │  │  render   │
-└───────────┘  └───────────┘  └───────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Generated config files                         │
-│  (alacritty, ghostty, tmux, nvim, vscode, etc.)             │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│                    cli/theme.mjs                      │
+│                  (CLI entry point)                    │
+└─────────────────────────┬─────────────────────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────┐
+│                    src/theme.mjs                      │
+│        ┌─────────────┐   ┌─────────────┐              │
+│        │   apply()   │   │  generate() │              │
+│        └─────────────┘   └─────────────┘              │
+└─────────────────────────┬─────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        ▼                 ▼                 ▼
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+│   scheme/   │   │    app/     │   │  template   │
+│   *.json    │   │   *.hbs     │   │   render    │
+└─────────────┘   └─────────────┘   └─────────────┘
+                          │
+                          ▼
+┌───────────────────────────────────────────────────────┐
+│                Generated config files                 │
+│    (alacritty, ghostty, tmux, nvim, vscode, etc.)     │
+└───────────────────────────────────────────────────────┘
 ```
 
 ### Theme Templates
@@ -228,7 +219,7 @@ setup/nix/setup.bash
     ├── env/pnpm.bash
     │
     ├── node cli/setting.mjs --set-edition nix
-    │   └── generates env/setting.local.{bash,fish,ps1}
+    │   └── generates env/setting.local.{bash,ps1}
     │
     ├── app/newsboat.bash
     ├── app/nvim.bash
@@ -284,7 +275,7 @@ import { Reporter } from '#stl/reporter'
 
 ## Design Principles
 
-1. **Multi-shell support**: Generate configs for bash, fish, and PowerShell simultaneously
+1. **Multi-shell support**: Generate configs for bash and PowerShell simultaneously
 2. **Platform detection**: Auto-detect platform (nix, wsl, osx, win) and adjust defaults
 3. **Single source of truth**: CLI manages settings, shells only source generated files
 4. **No runtime Node.js dependency**: Shell scripts source static files, no `node` calls at startup

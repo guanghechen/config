@@ -1,5 +1,4 @@
 /env/setting.local.bash
-/env/setting.local.fish
 /env/setting.local.ps1
 
 *.local.json

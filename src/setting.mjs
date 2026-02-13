@@ -6,13 +6,11 @@ import { fileURLToPath } from 'node:url'
 import {
   PLATFORM,
   XDG_CONFIG_NODE_SETTING_LOCAL,
-  XDG_CONFIG_NODE_SETTING_LOCAL_FISH,
   XDG_CONFIG_NODE_SETTING_LOCAL_PS1,
 } from '#env'
 import {
   parse as parseEnv,
   stringify as stringifyEnv,
-  stringifyFish as stringifyEnvFish,
   stringifyPs1 as stringifyEnvPs1,
 } from '#stl/env'
 import { Reporter } from '#stl/reporter'
@@ -202,7 +200,6 @@ export class Setting {
 
     await Promise.all([
       fs.writeFile(XDG_CONFIG_NODE_SETTING_LOCAL, stringifyEnv(envData, { exportPrefix: true }), 'utf8'),
-      fs.writeFile(XDG_CONFIG_NODE_SETTING_LOCAL_FISH, stringifyEnvFish(envData), 'utf8'),
       fs.writeFile(XDG_CONFIG_NODE_SETTING_LOCAL_PS1, stringifyEnvPs1(envData), 'utf8'),
     ])
   }
