@@ -4,7 +4,7 @@
  * Get or set setting values.
  */
 
-/** @import { IEdition, IAppEdition, ISettingData } from '#setting' */
+/** @import { IAppEdition, ISettingData } from '#setting' */
 
 import { Setting } from '#setting'
 import { Command } from '#stl/commander'
@@ -15,13 +15,11 @@ const setting = new Setting({ reporter })
 
 /**
  * @typedef {Object} ISettingCliOptions
- * @property {string} [set-edition]
  * @property {string} [set-node-edition]
  * @property {string} [set-nvim-edition]
  * @property {string} [set-python-env]
  * @property {string} [set-theme]
  * @property {string} [set-tmux-edition]
- * @property {boolean} [print-edition]
  * @property {boolean} [print-node-edition]
  * @property {boolean} [print-python-env]
  * @property {boolean} [print-theme]
@@ -36,7 +34,6 @@ export async function handleSetting(opts) {
   /** @type {Partial<ISettingData>} */
   const patch = {}
 
-  if (typeof opts['set-edition'] === 'string') patch.edition = /** @type {IEdition} */ (opts['set-edition'])
   if (typeof opts['set-node-edition'] === 'string') patch.app_edition_node = parseInt(opts['set-node-edition'], 10)
   if (typeof opts['set-nvim-edition'] === 'string') patch.app_edition_nvim = /** @type {IAppEdition} */ (opts['set-nvim-edition'])
   if (typeof opts['set-python-env'] === 'string') patch.app_python_env = opts['set-python-env']
@@ -47,9 +44,8 @@ export async function handleSetting(opts) {
     await setting.save(patch)
   }
 
-  if (opts['print-edition'] || opts['print-node-edition'] || opts['print-python-env'] || opts['print-theme'] || opts.print) {
+  if (opts['print-node-edition'] || opts['print-python-env'] || opts['print-theme'] || opts.print) {
     const data = await setting.load()
-    if (opts['print-edition']) process.stdout.write(`${data.edition}\n`)
     if (opts['print-node-edition']) process.stdout.write(`${data.app_edition_node}\n`)
     if (opts['print-python-env']) process.stdout.write(`${data.app_python_env}\n`)
     if (opts['print-theme']) process.stdout.write(`${data.theme}\n`)
@@ -59,13 +55,11 @@ export async function handleSetting(opts) {
 
 if (process.argv[1] === import.meta.filename) {
   const cmd = new Command({ name: 'setting', description: 'Get or set setting values.' })
-    .option({ long: 'set-edition', type: 'string', description: 'Set edition (nix, nix-remote, osx, win)' })
     .option({ long: 'set-node-edition', type: 'string', description: 'Set preferred Node.js major version' })
     .option({ long: 'set-nvim-edition', type: 'string', description: 'Set nvim edition (latest, nightly, manual)' })
     .option({ long: 'set-python-env', type: 'string', description: 'Set python conda environment name' })
     .option({ long: 'set-theme', type: 'string', description: 'Set theme name' })
     .option({ long: 'set-tmux-edition', type: 'string', description: 'Set tmux edition (latest, nightly, manual)' })
-    .option({ long: 'print-edition', type: 'boolean', description: 'Print edition' })
     .option({ long: 'print-node-edition', type: 'boolean', description: 'Print node edition' })
     .option({ long: 'print-python-env', type: 'boolean', description: 'Print python env' })
     .option({ long: 'print-theme', type: 'boolean', description: 'Print theme' })
