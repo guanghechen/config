@@ -37,6 +37,7 @@ local ensure_filetypes = {
   "markdown",
   "md",
   "ninja",
+  "notepad",
   "py",
   "python",
   "query",

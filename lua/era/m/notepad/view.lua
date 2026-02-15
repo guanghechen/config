@@ -14,6 +14,7 @@ local NOTEPAD_WIN_HIGHLIGHT =
 local TEXT_CHANGED_EVENTS = { "TextChanged", "TextChangedI", "TextChangedP" }
 local DEFAULT_ITEM_NAME = dot.var.BUF_UNTITLED
 local BUFFER_VAR_NAME = "eve_notepad_uuid"
+local BUFFER_FILETYPE_DONE_VAR = "notepad_filetype_done"
 
 local K = dot.command.definitions
 
@@ -936,6 +937,36 @@ end
 
 ---@protected
 ---@param bufnr                         integer
+---@param winnr                         integer
+---@return nil
+function M:__ensure_markdown_features__(bufnr, winnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  if not vim.b[bufnr][BUFFER_FILETYPE_DONE_VAR] then
+    vim.b[bufnr][BUFFER_FILETYPE_DONE_VAR] = true
+    vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
+  end
+
+  if vim.treesitter == nil or vim.treesitter.start == nil then
+    return
+  end
+
+  pcall(vim.treesitter.start, bufnr, "markdown")
+
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+
+  local ok, rm_api = pcall(require, "render-markdown.api")
+  if ok then
+    rm_api.render({ buf = bufnr, win = winnr })
+  end
+end
+
+---@protected
+---@param bufnr                         integer
 ---@return nil
 function M:__attach_autocmds__(bufnr)
   self:__clear_buf_autocmds__()
@@ -1119,6 +1150,9 @@ function M:ensure_win()
       vim.api.nvim_set_option_value(key, value, { win = winnr, scope = "local" })
     end
   end
+
+  self:__ensure_markdown_features__(bufnr, winnr)
+
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
 
   if self._nvimbar ~= nil then
