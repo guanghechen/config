@@ -2,6 +2,7 @@
 
 ## Download core configurations
 repomain="$HOME/.config/guanghechen"
+repoworktree="$HOME/.config/kit-repo"
 if [ -e "$repomain/.git" ]; then
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only
@@ -53,10 +54,24 @@ source "$HOME/.config/guanghechen/setup/nix/env/pnpm.bash"
 printf "\e[92m  [setup pnpm] done.\e[0m\n"
 
 ## Setup configs
-### Setup local settings
-node "$HOME/.config/guanghechen/cli/setting.mjs" --set-edition osx
+### ensure kit-repo worktree
+if [ -e "$repoworktree/.git" ]; then
+  printf "\e[93m  [setup config] %s already exists. (skipped worktree).\e[0m\n" "$repoworktree"
+  git -C "$repoworktree" pull --ff-only origin kit-repo
+elif git -C "$repomain" show-ref --verify --quiet refs/heads/kit-repo; then
+  printf "\e[96m  [setup config] attaching existing branch kit-repo to %s...\e[0m\n" "$repoworktree"
+  git -C "$repomain" worktree add "$repoworktree" kit-repo
+else
+  printf "\e[96m  [setup config] creating worktree %s from origin/kit-repo...\e[0m\n" "$repoworktree"
+  git -C "$repomain" fetch origin
+  git -C "$repomain" worktree add --track -b kit-repo "$repoworktree" origin/kit-repo
+fi
 
-### Setup xdg configs
+### Setup local settings
+kit repo set config.edition "osx"
+kit repo sync
+
+### Setup configs
 printf "\n\e[96m  [setup config] preparing...\e[0m\n"
 source "$HOME/.config/guanghechen/setup/nix/bot/config.bash"
 printf "\e[92m  [setup config] done.\e[0m\n"

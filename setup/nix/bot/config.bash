@@ -7,7 +7,3 @@ else
   printf "\e[96m  [setup config] setting up ~/.inputrc...\e[0m\n"
   cp "$HOME/.config/guanghechen/asset/conf/.inputrc" "$HOME/.inputrc"
 fi
-
-## sync configs
-printf "\e[96m  [setup config] syncing configs...\e[0m\n"
-node "$HOME/.config/guanghechen/cli/sync-xdg-config.mjs"
