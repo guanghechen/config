@@ -56,7 +56,7 @@ node index.mjs 200000
 claude --version
 ```
 
-### Step 2: 定位 cli.js
+### Step 2: 定位可执行文件
 
 ```bash
 # Linux/macOS/WSL
@@ -67,22 +67,26 @@ where.exe claude
 # 然后查看 node_modules/@anthropic-ai/claude-code/cli.js
 ```
 
+> **Note**: 从 v2.1.50 起，Claude Code 使用 Bun SEA (Single Executable Application) 打包为 ELF 二进制。
+> patch 框架会自动检测文件格式，ELF 用 `latin1` 编码读写以保证二进制字节不变。
+
 ### Step 3: 搜索需要 patch 的变量名
 
 由于 minified 代码中变量名每版本都不同，需要通过特征模式定位：
 
 ```bash
-# Context Window - 搜索默认值 128000
-rg 'var \w+=128000' /path/to/cli.js
+# 对于 ELF 二进制文件，需要加 --text 参数
+# Context Window - 搜索默认值 200000
+rg --text 'var \w+=200000' /path/to/executable
 
-# Image Paste (Windows) - 搜索 windows 平台判断 + meta+v 快捷键
-rg '==="windows"\?\{displayText:' /path/to/cli.js
+# Image Paste (Windows) - 搜索 keybinding
+rg --text '==="windows"\?"alt\+v":"ctrl\+v"' /path/to/executable
 
-# Image Paste (Windows) - 搜索 wrappedOnInput handler
-rg 'wrappedOnInput:\(\w+,\w+\)=>\{if\(\w+\.current\)' /path/to/cli.js
+# Image Paste (Windows) - 搜索 displayText
+rg --text '==="windows"\?\{displayText:' /path/to/executable
 
 # Image Paste (WSL/Linux) - 搜索 wl-paste 命令
-rg 'wl-paste --type image/png' /path/to/cli.js
+rg --text 'wl-paste --type image/png' /path/to/executable
 ```
 
 ### Step 4: 添加新版本 patch
@@ -105,12 +109,13 @@ rg 'wl-paste --type image/png' /path/to/cli.js
 1. patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
 
 2. **Windows 平台需要两个 patch**（缺一不可）：
-   - `win-image-paste-shortcut`: 将快捷键从 `meta+v` 改为 `ctrl+v`
-   - `win-image-paste-ctrl-v`: 在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑（因为 Windows Terminal 不支持 bracketed paste mode）
+   - `win-image-paste-keybinding`: 将 keybinding 从 `alt+v` 改为 `ctrl+v`
+   - `win-image-paste-shortcut`: 将 displayText 和 check 中的 `meta` 改为 `ctrl`
+   - `win-image-paste-ctrl-v`（≤ 2.1.29）: 在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑
 
-3. WSL/Linux 平台需要两个 patch：
-   - `checkImage-grep-pattern`: 添加 BMP 格式支持
-   - `wl-paste-bmp-conversion`: 添加 BMP 到 PNG 转换
+3. WSL/Linux 平台 patch：
+   - `checkImage-grep-pattern`（< 2.1.50）: 添加 BMP 格式支持（2.1.50 已内置）
+   - `wl-paste-bmp-conversion`: 添加 BMP 到 PNG 转换（magick fallback）
 
 ### Step 5: 测试
 

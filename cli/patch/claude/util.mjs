@@ -1,5 +1,17 @@
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  closeSync,
+  existsSync,
+  openSync,
+  readFileSync,
+  readSync,
+  realpathSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { dirname, join } from 'node:path'
 import * as chalk from '#chalk'
 import { PLATFORM } from '#env'
@@ -48,6 +60,27 @@ export function getCliVersion() {
 // ─── Patch ───────────────────────────────────────────────────────────────────
 
 /**
+ * Detect file encoding for read/write.
+ * ELF binaries (Bun SEA) must use latin1 to preserve byte-level fidelity;
+ * plain JS files use utf-8.
+ *
+ * @param {string} filePath
+ * @returns {'latin1' | 'utf-8'}
+ */
+function detectEncoding(filePath) {
+  const header = Buffer.alloc(4)
+  const fd = openSync(filePath, 'r')
+  try {
+    readSync(fd, header, 0, 4, 0)
+  } finally {
+    closeSync(fd)
+  }
+  // ELF magic: 0x7f 'E' 'L' 'F'
+  if (header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46) return 'latin1'
+  return 'utf-8'
+}
+
+/**
  * @param {IApplyOptions} options
  * @returns {void}
  */
@@ -60,11 +93,13 @@ export function applyPatches(options) {
     process.exit(1)
   }
 
-  let content = readFileSync(cliPath, 'utf-8')
+  const encoding = detectEncoding(cliPath)
+  let content = readFileSync(cliPath, encoding)
   const cliVersion = getCliVersion()
 
   console.log(`File: ${cliPath}`)
-  console.log(`Version: ${cliVersion || 'unknown'}\n`)
+  console.log(`Version: ${cliVersion || 'unknown'}`)
+  console.log(`Encoding: ${encoding}\n`)
 
   const applicablePatches = patches.filter((p) => p.platform.includes(PLATFORM))
   let patchedCount = 0
@@ -107,9 +142,9 @@ export function applyPatches(options) {
     process.exit(0)
   }
 
-  writeFileSync(cliPath, content)
+  writePatched(cliPath, content, encoding)
 
-  const verifyContent = readFileSync(cliPath, 'utf-8')
+  const verifyContent = readFileSync(cliPath, encoding)
   const failed = applicablePatches.filter((p) => p.version === cliVersion && !p.verify(verifyContent))
 
   if (failed.length === 0) {
@@ -118,6 +153,31 @@ export function applyPatches(options) {
     console.error(`\n${chalk.red('Patch verification failed:')}`)
     failed.forEach((p) => console.error(`  - ${p.name}`))
     process.exit(1)
+  }
+}
+
+/**
+ * Write patched content to file.
+ * For ELF binaries on Linux, direct write fails with ETXTBSY when the binary
+ * is running. Work around by writing to a temp file, unlinking the original,
+ * then renaming the temp into place.
+ *
+ * @param {string} filePath
+ * @param {string} content
+ * @param {BufferEncoding} encoding
+ */
+function writePatched(filePath, content, encoding) {
+  try {
+    writeFileSync(filePath, content, encoding)
+  } catch (err) {
+    if (err?.code !== 'ETXTBSY') throw err
+
+    const tmpPath = filePath + '.patched'
+    const { mode } = statSync(filePath)
+    writeFileSync(tmpPath, content, encoding)
+    chmodSync(tmpPath, mode)
+    unlinkSync(filePath)
+    renameSync(tmpPath, filePath)
   }
 }
 

@@ -10,6 +10,30 @@ const targetSize = process.argv[2] || '144000'
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.50 - Context window variable (Bun SEA: aQB=200000, Node.js: uIq=200000)
+  {
+    name: 'context-window-200k',
+    version: '2.1.50',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /var (\w+)=200000,\w+=20000,\w+=32000,\w+=64000/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => m.matched_text.replace(/=200000/, `=${targetSize}`)),
+    verify: (text) => new RegExp(`var \\w+=${targetSize},\\w+=20000,\\w+=32000,\\w+=64000`).test(text),
+  },
+  // 2.1.50 - Opus-4-6 / Sonnet-4 use a separate 1M branch: `return 1e6;return <var>`
+  // Unify all models to use the same context window variable (same length replacement)
+  {
+    name: 'context-window-1e6',
+    version: '2.1.50',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /return 1e6;return (\w+)/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `return ${varName};return ${varName}`
+      }),
+    verify: (text) => !/return 1e6;return \w+/.test(text),
+  },
   // 2.1.39 - Context window variable is Bbq=200000
   {
     name: 'context-window-Bbq',

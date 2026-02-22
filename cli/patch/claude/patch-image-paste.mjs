@@ -24,6 +24,42 @@ import { applyPatches, replaceAll } from './util.mjs'
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.50 - Windows patches (Bun SEA binary)
+  // Note: Since 2.1.50, Claude Code ships as a Bun SEA (ELF binary).
+  // - grep pattern already includes bmp (built-in)
+  // - BMP→PNG conversion via native image processor (built-in)
+  // - wl-paste BMP fallback already in saveImage chain (built-in)
+  // Only Windows keybinding/shortcut patches are needed.
+  {
+    // Fix keyboard shortcut binding: Windows uses "alt+v" but should use "ctrl+v"
+    // Original: SP1=HL()==="windows"?"alt+v":"ctrl+v"
+    // Changed:  SP1=HL()==="windows"?"ctrl+v":"ctrl+v"
+    name: 'win-image-paste-keybinding',
+    version: '2.1.50',
+    platform: ['win'],
+    search: /(\w+)=HL\(\)==="windows"\?"alt\+v":"ctrl\+v"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `${varName}=HL()==="windows"?"ctrl+v":"ctrl+v"`
+      }),
+    verify: (text) => text.includes('HL()==="windows"?"ctrl+v":"ctrl+v"'),
+  },
+  {
+    // Fix displayText and check function for image paste hint
+    // Original: oFH=HL()==="windows"?{displayText:`${UU$}+v`,check:(H,$)=>$.meta&&(H==="v"||H==="V")}
+    // Changed:  oFH=HL()==="windows"?{displayText:"ctrl+v",check:(H,$)=>$.ctrl&&(H==="v"||H==="V")}
+    name: 'win-image-paste-shortcut',
+    version: '2.1.50',
+    platform: ['win'],
+    search: /(\w+)=HL\(\)==="windows"\?\{displayText:`\$\{\w+\}\+v`,check:\((\w+),(\w+)\)=>\3\.meta&&/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName, arg1, arg2] = m.matched_groups
+        return `${varName}=HL()==="windows"?{displayText:"ctrl+v",check:(${arg1},${arg2})=>${arg2}.ctrl&&`
+      }),
+    verify: (text) => text.includes('HL()==="windows"?{displayText:"ctrl+v",check:'),
+  },
   // 2.1.39 - Windows patches
   {
     // Fix keyboard shortcut binding: Windows uses "alt+v" but should use "ctrl+v"
