@@ -60,6 +60,60 @@ const patches = [
       }),
     verify: (text) => text.includes('HL()==="windows"?{displayText:"ctrl+v",check:'),
   },
+  // 2.1.50 - WSL patches
+  // In WSL, process.platform === "linux" so Claude uses xclip/wl-paste to access the
+  // WSLg Wayland clipboard. But images copied on the Windows side are not available there.
+  // These patches prepend a powershell.exe fallback so Windows clipboard is tried first.
+  {
+    // Prepend powershell.exe image detection before xclip/wl-paste in checkImage
+    name: 'wsl-image-paste-checkImage',
+    version: '2.1.50',
+    platform: ['wsl'],
+    search:
+      'xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)" || wl-paste -l 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
+    replace: (content, matches) =>
+      replaceAll(
+        content,
+        matches,
+        () =>
+          'powershell.exe -NoProfile -Command "if ((Get-Clipboard -Format Image) -eq \\$null) { exit 1 }" 2>/dev/null || xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)" || wl-paste -l 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
+      ),
+    verify: (text) =>
+      text.includes(
+        'powershell.exe -NoProfile -Command "if ((Get-Clipboard -Format Image) -eq \\$null) { exit 1 }" 2>/dev/null || xclip -selection clipboard -t TARGETS',
+      ),
+  },
+  {
+    // Prepend powershell.exe image save (PNG via stdout) before xclip/wl-paste in saveImage
+    name: 'wsl-image-paste-saveImage',
+    version: '2.1.50',
+    platform: ['wsl'],
+    search:
+      /xclip -selection clipboard -t image\/png -o > "\$\{(\w+)\}" 2>\/dev\/null \|\| wl-paste --type image\/png > "\$\{\1\}" 2>\/dev\/null \|\| xclip -selection clipboard -t image\/bmp -o > "\$\{\1\}" 2>\/dev\/null \|\| wl-paste --type image\/bmp > "\$\{\1\}"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        // PowerShell reads clipboard image, converts to PNG bytes, writes to stdout
+        const psCmd = [
+          "\\$img = Get-Clipboard -Format Image;",
+          "if (\\$img) {",
+          "  \\$ms = New-Object System.IO.MemoryStream;",
+          "  \\$img.Save(\\$ms, [System.Drawing.Imaging.ImageFormat]::Png);",
+          "  \\$bytes = \\$ms.ToArray();",
+          "  [Console]::OpenStandardOutput().Write(\\$bytes, 0, \\$bytes.Length)",
+          "}",
+        ].join(' ')
+        return (
+          `powershell.exe -NoProfile -Command '${psCmd}' > "\${${varName}}" 2>/dev/null || ` +
+          `xclip -selection clipboard -t image/png -o > "\${${varName}}" 2>/dev/null || ` +
+          `wl-paste --type image/png > "\${${varName}}" 2>/dev/null || ` +
+          `xclip -selection clipboard -t image/bmp -o > "\${${varName}}" 2>/dev/null || ` +
+          `wl-paste --type image/bmp > "\${${varName}}"`
+        )
+      }),
+    verify: (text) =>
+      text.includes("powershell.exe -NoProfile -Command '\\$img = Get-Clipboard -Format Image;"),
+  },
   // 2.1.39 - Windows patches
   {
     // Fix keyboard shortcut binding: Windows uses "alt+v" but should use "ctrl+v"
