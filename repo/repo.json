@@ -1,0 +1,209 @@
+{
+  "repos": [
+    {
+      "name": "config",
+      "worktree": {
+        "remote": "https://github.com/guanghechen/config.git",
+        "template": "${XDG_CONFIG_HOME}/${BRANCH}",
+        "main": "guanghechen"
+      },
+      "branches": [
+        {
+          "branch": "guanghechen",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "alacritty",
+          "editions": ["nix", "osx"]
+        },
+        {
+          "branch": "alacritty-windows",
+          "editions": ["win"]
+        },
+        {
+          "branch": "bash",
+          "editions": ["nix", "nix-remote", "osx"]
+        },
+        {
+          "branch": "bat",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "btop",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "claude",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "codex",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "conda",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "cspell",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "fish",
+          "editions": ["nix", "nix-remote", "osx"]
+        },
+        {
+          "branch": "fzf",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "gemini",
+          "location": "${HOME}/.gemini",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "gh",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "ghostty",
+          "editions": ["nix", "osx"]
+        },
+        {
+          "branch": "git-delta",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "helix",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "kit-copilot",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "kit-pm",
+          "editions": ["nix", "nix-remote", "osx"]
+        },
+        {
+          "branch": "kit-repo",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "kitty",
+          "editions": ["nix", "osx"]
+        },
+        {
+          "branch": "komorebi",
+          "editions": ["win"]
+        },
+        {
+          "branch": "lazygit",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "lsd",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "neovide",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "newsboat",
+          "editions": ["nix", "nix-remote", "osx"]
+        },
+        {
+          "branch": "nvim",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "nvim-lazy",
+          "editions": []
+        },
+        {
+          "branch": "nvim-nvchad",
+          "editions": ["nix", "osx"]
+        },
+        {
+          "branch": "opencode",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "ora",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "pm2",
+          "editions": []
+        },
+        {
+          "branch": "pwsh",
+          "editions": ["win"]
+        },
+        {
+          "branch": "ripgrep",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "skhd",
+          "editions": ["osx"]
+        },
+        {
+          "branch": "starship",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "tmux",
+          "editions": ["nix", "nix-remote", "osx"]
+        },
+        {
+          "branch": "tsuki",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "wezterm",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "yabai",
+          "editions": ["osx"]
+        },
+        {
+          "branch": "yasb",
+          "editions": ["win"]
+        },
+        {
+          "branch": "yazi",
+          "editions": ["nix", "nix-remote", "osx", "win"]
+        },
+        {
+          "branch": "yoz",
+          "editions": ["nix", "osx"]
+        }
+      ]
+    },
+    {
+      "name": "wiki",
+      "worktree": {
+        "remote": "https://github.com/guanghechen/wiki.git",
+        "template": "${HOME}/wiki/${BRANCH}",
+        "main": "wiki"
+      },
+      "branches": [
+        {
+          "branch": "wiki",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "translator",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "wiki-note",
+          "editions": ["nix", "osx", "win"]
+        }
+      ]
+    }
+  ]
+}

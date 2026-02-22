@@ -3,4 +3,8 @@
 /pm/state.json
 /pm/state.json*
 
+/repo/repo.*.json
+!repo/repo.pub.json
+/repo/setting.json
+
 /twitter/cookie.json
