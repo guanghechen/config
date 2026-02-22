@@ -78,15 +78,7 @@
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
         {
-          "branch": "kit-copilot",
-          "editions": ["nix", "nix-remote", "osx", "win"]
-        },
-        {
-          "branch": "kit-pm",
-          "editions": ["nix", "nix-remote", "osx"]
-        },
-        {
-          "branch": "kit-repo",
+          "branch": "kit",
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
         {
