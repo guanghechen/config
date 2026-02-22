@@ -25,8 +25,7 @@ This repository (`guanghechen/config`) manages personal configuration files and 
 │   ├── env.mjs               # Path constants and platform detection
 │   ├── setting.mjs           # Setting class
 │   ├── setting.bash           # Settings for Bash (export KEY=value)
-│   ├── setting.ps1           # Settings for PowerShell ($env:KEY = value)
-│   └── repo.json             # Repository definitions
+│   └── setting.ps1           # Settings for PowerShell ($env:KEY = value)
 ├── setup/                    # Platform-specific setup scripts
 │   ├── nix/                  # Linux/WSL setup
 │   │   ├── app/              # App installation scripts

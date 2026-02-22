@@ -15,7 +15,7 @@ printf "\e[92m  [preparation] done.\e[0m\n"
 
 ## Download core configurations
 repomain="$HOME/.config/guanghechen"
-repoworktree="$HOME/.config/kit-repo"
+repoworktree="$HOME/.config/kit"
 if [ -e "$repomain/.git" ]; then
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only
@@ -57,17 +57,17 @@ source "$HOME/.config/guanghechen/setup/nix-remote/env/node.bash"
 printf "\e[92m  [setup node] done.\e[0m\n"
 
 ## Setup configs
-### ensure kit-repo worktree
+### ensure kit worktree
 if [ -e "$repoworktree/.git" ]; then
   printf "\e[93m  [setup config] %s already exists. (skipped worktree).\e[0m\n" "$repoworktree"
-  git -C "$repoworktree" pull --ff-only origin kit-repo
-elif git -C "$repomain" show-ref --verify --quiet refs/heads/kit-repo; then
-  printf "\e[96m  [setup config] attaching existing branch kit-repo to %s...\e[0m\n" "$repoworktree"
-  git -C "$repomain" worktree add "$repoworktree" kit-repo
+  git -C "$repoworktree" pull --ff-only origin kit
+elif git -C "$repomain" show-ref --verify --quiet refs/heads/kit; then
+  printf "\e[96m  [setup config] attaching existing branch kit to %s...\e[0m\n" "$repoworktree"
+  git -C "$repomain" worktree add "$repoworktree" kit
 else
-  printf "\e[96m  [setup config] creating worktree %s from origin/kit-repo...\e[0m\n" "$repoworktree"
+  printf "\e[96m  [setup config] creating worktree %s from origin/kit...\e[0m\n" "$repoworktree"
   git -C "$repomain" fetch origin
-  git -C "$repomain" worktree add --track -b kit-repo "$repoworktree" origin/kit-repo
+  git -C "$repomain" worktree add --track -b kit "$repoworktree" origin/kit
 fi
 
 ### Setup local settings

@@ -63,7 +63,7 @@ if (Test-Path "$env:APP_HOME_GIT\bin\bash.exe") {
 # Define the local path and repositories
 $reporoot = "$env:XDG_CONFIG_HOME"
 $repomain = Join-Path $env:USERPROFILE ".config\guanghechen"
-$repoworktree = Join-Path $env:USERPROFILE ".config\kit-repo"
+$repoworktree = Join-Path $env:USERPROFILE ".config\kit"
 if (Test-Path $repomain) {
   git -C "$repomain" fetch origin
   git -C "$repomain" merge origin/guanghechen --ff-only
@@ -94,19 +94,19 @@ Set-Location -Path $repomain
 . .\setup\win\env\pnpm.ps1
 
 ## Setup configs
-### ensure kit-repo worktree
+### ensure kit worktree
 if (Test-Path "$repoworktree\.git") {
   Write-Host "  [setup config] $repoworktree already exists. (skipped worktree)" -ForegroundColor Yellow
-  git -C "$repoworktree" pull --ff-only origin kit-repo
+  git -C "$repoworktree" pull --ff-only origin kit
 } else {
-  git -C "$repomain" show-ref --verify --quiet refs/heads/kit-repo
+  git -C "$repomain" show-ref --verify --quiet refs/heads/kit
   if ($LASTEXITCODE -eq 0) {
-    Write-Host "  [setup config] attaching existing branch kit-repo to $repoworktree..." -ForegroundColor Cyan
-    git -C "$repomain" worktree add "$repoworktree" kit-repo
+    Write-Host "  [setup config] attaching existing branch kit to $repoworktree..." -ForegroundColor Cyan
+    git -C "$repomain" worktree add "$repoworktree" kit
   } else {
-    Write-Host "  [setup config] creating worktree $repoworktree from origin/kit-repo..." -ForegroundColor Cyan
+    Write-Host "  [setup config] creating worktree $repoworktree from origin/kit..." -ForegroundColor Cyan
     git -C "$repomain" fetch origin
-    git -C "$repomain" worktree add --track -b kit-repo "$repoworktree" origin/kit-repo
+    git -C "$repomain" worktree add --track -b kit "$repoworktree" origin/kit
   }
 }
 
