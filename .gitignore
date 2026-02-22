@@ -1,1 +1,6 @@
-twitter/cookie.json
+/pm/logs/
+/pm/lock/
+/pm/state.json
+/pm/state.json*
+
+/twitter/cookie.json
