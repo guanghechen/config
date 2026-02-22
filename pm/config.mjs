@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-const ROOT_CONFIG = path.resolve(import.meta.dirname, '..')
+const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.resolve(import.meta.dirname, '../..')
 const ROOT_SRC = process.env.ROOT_SOURCECODES
 
 const GHC_COPILOT_API_HOST = String(process.env.GHC_COPILOT_API_HOST) || '127.0.0.1'
@@ -16,7 +16,7 @@ if (fs.existsSync(LOCAL_CONFIG_FILEPATH)) {
 const repos = {
   copilot_api: path.normalize(path.resolve(ROOT_SRC, 'github/ericc-ch/copilot-api')),
   copilot_api_codex: path.normalize(path.resolve(ROOT_SRC, 'github/caozhiyuan/copilot-api')),
-  yoz: path.normalize(path.resolve(ROOT_CONFIG, 'yoz')),
+  yoz: path.normalize(path.resolve(XDG_CONFIG_HOME, 'yoz')),
 }
 
 const enabled = {
