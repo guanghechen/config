@@ -123,7 +123,10 @@
         },
         {
           "branch": "ora",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "nix-remote", "osx", "win"],
+          "on": {
+            "synced": "pnpm install"
+          }
         },
         {
           "branch": "pm2",
@@ -171,7 +174,10 @@
         },
         {
           "branch": "yoz",
-          "editions": ["nix", "osx"]
+          "editions": ["nix", "osx"],
+          "on": {
+            "synced": "pnpm install"
+          }
         }
       ]
     },
