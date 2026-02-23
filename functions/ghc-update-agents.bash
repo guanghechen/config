@@ -3,19 +3,26 @@
 
 ghc-update-agents() {
     local skip_installation=false
-    local OPTIND opt
-    while getopts "-:" opt; do
-        case $opt in
-            -)
-                case "${OPTARG}" in
-                    skip-installation) skip_installation=true ;;
-                    *) echo "Unknown option --${OPTARG}" >&2; return 1 ;;
-                esac
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --skip-installation)
+                skip_installation=true
                 ;;
-            *) return 1 ;;
+            --)
+                shift
+                break
+                ;;
+            -*)
+                echo "Unknown option $1" >&2
+                return 1
+                ;;
+            *)
+                echo "Unexpected argument: $1" >&2
+                return 1
+                ;;
         esac
+        shift
     done
-    shift $((OPTIND - 1))
 
     local agents=(
         "@anthropic-ai/claude-code"

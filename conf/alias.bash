@@ -87,6 +87,7 @@ alias watch-fake-clipboard='nohup bash $HOME/.config/tmux/script/fake-clipboard.
 
 ## misc
 alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
+alias ghc-update='kit repo sync'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
 alias ghc-clock='tty-clock -DSbcnrs -C5'
