@@ -7,8 +7,8 @@ ghc-upgrade() {
   [[ -n "$GHC_CONFIG_ROOT" ]] && config_root="$GHC_CONFIG_ROOT"
 
   local edition=""
-  if command -v node &>/dev/null; then
-    edition=$(node "$config_root/src/setting.mjs" --print-edition 2>/dev/null | tr -d '[:space:]')
+  if command -v kit &>/dev/null; then
+    edition=$(kit repo get config.edition 2>/dev/null | tr -d '[:space:]')
   fi
 
   if [[ -z "$edition" ]]; then
