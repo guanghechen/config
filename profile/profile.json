@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "agent:dev": {
+      "envs": {
+        "ANTHROPIC_BASE_URL": "http://localhost:4848/api/claude"
+      }
+    },
+    "agent:prod": {
+      "envs": {
+        "ANTHROPIC_BASE_URL": "http://localhost:4747/api/claude"
+      }
+    }
+  }
+}
