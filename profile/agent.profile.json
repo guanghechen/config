@@ -1,9 +1,11 @@
 {
   "name": "agent",
   "envs": {
-    "ANTHROPIC_BASE_URL": "http://localhost:${port}/api/claude"
+    "ANTHROPIC_BASE_URL": "http://${host}:${port}/api/claude",
+    "GOOGLE_GEMINI_BASE_URL": "http://${host}:${port}/api/gemini"
   },
   "vars": {
+    "host": "127.0.0.1",
     "port": 4747
   },
   "variants": {
