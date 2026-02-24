@@ -1,0 +1,27 @@
+{
+  "name": "agent",
+  "envs": {
+    "ANTHROPIC_BASE_URL": "http://localhost:${port}/api/claude"
+  },
+  "vars": {
+    "port": 4747
+  },
+  "variants": {
+    "dev": {
+      "envs": {
+        "NODE_ENV": "development"
+      },
+      "vars": {
+        "port": 4848
+      }
+    },
+    "prod": {
+      "envs": {
+        "NODE_ENV": "production"
+      },
+      "vars": {
+        "port": 4747
+      }
+    }
+  }
+}
