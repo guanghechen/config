@@ -65,6 +65,9 @@ If no changeset files exist, automatically detect packages that need release:
    <summary of changes>
    ```
 4. **Commit the changeset**: Stage and commit with message `:bookmark: chore: add changeset for <package>@<bump-type>`
+   - Ensure the changeset file already contains final bump type and summary before committing
+   - Do not create a follow-up `doc(changeset)` commit only to fill or adjust the same changeset content
+   - If the changeset commit is not pushed yet, use `git commit --amend` to keep changeset creation and content updates in one commit
 5. If no packages need release, inform the user and stop
 
 ### 4. Analyze Changesets
