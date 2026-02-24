@@ -1,6 +1,14 @@
 function __smart_tab
     if commandline --showing-suggestion
-        commandline -f forward-word
+        while commandline --showing-suggestion
+            commandline -f forward-single-char
+
+            set -l last_char (commandline --cut-at-cursor | string sub -s -1)
+            if test "$last_char" = " "
+                commandline -f backward-delete-char
+                break
+            end
+        end
         return
     end
     commandline -f complete
