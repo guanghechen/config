@@ -61,6 +61,27 @@ set -gx PYTHONIOENCODING utf8
 set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
 
+### preference
+set -x PREFER_NEOVIM_VERSION nightly
+set -x PREFER_TMUX_VERSION stable
+set -x ROOT_SOURCECODES "$HOME/sourcecodes"
+set -x ROOT_WORKSPACE "$HOME/ws"
+set -x YOZ_SERVER_PORT 7777
+
+### agents
+set -gx ANTHROPIC_BASE_URL 'http://127.0.0.1:4747/api/claude'
+set -gx GOOGLE_GEMINI_BASE_URL 'http://127.0.0.1:4747/api/gemini'
+
+set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
+set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
+set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
+
+set -gx ANTHROPIC_MODEL "claude-opus-4.6-fast"
+set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-sonnet-4.6"
+
+set -gx GEMINI_MODEL gemini-3-pro-preview
+
+### local
 if test -f "$HOME/.config/fish/local/env.fish"
     source "$HOME/.config/fish/local/env.fish"
 end
@@ -73,21 +94,6 @@ else if test "$GHC_ENV_PLATFORM" = wsl
 else
     source ~/.config/fish/conf/platform/nix/config.fish
 end
-
-## setup environments (for agent)
-set -gx ANTHROPIC_BASE_URL "$GHC_ANTHROPIC_BASE_URL"
-set -gx ANTHROPIC_AUTH_TOKEN "$GHC_ANTHROPIC_AUTH_TOKEN"
-set -gx ANTHROPIC_MODEL "claude-opus-4.6-fast"
-#set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-haiku-4.5"
-set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-sonnet-4.6"
-set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
-
-set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
-
-set -gx GOOGLE_GEMINI_BASE_URL "$GHC_GEMINI_BASE_URL"
-set -gx GEMINI_API_KEY "$GHC_GEMINI_AUTH_TOKEN"
-set -gx GEMINI_MODEL gemini-3-pro-preview
-set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 source ~/.config/fish/conf/app.fish
 source ~/.config/fish/conf/theme.fish
