@@ -1,5 +1,15 @@
+function __smart_tab
+    if commandline --showing-suggestion
+        commandline -f forward-word
+        return
+    end
+    commandline -f complete
+end
+
 bind -M insert \cy accept-autosuggestion
 bind -M default \cy accept-autosuggestion
+bind -M insert tab __smart_tab
+bind -M insert ctrl-i __smart_tab
 
 for mode in default insert
     bind --mode $mode \e\[70\;6u fzf-file # Ctrl+Shift+F
