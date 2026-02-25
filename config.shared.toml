@@ -73,6 +73,12 @@ model_provider = "azure"
 
 [tui]
 notifications = ["agent-turn-complete", "approval-requested"]
+status_line = [
+  "current-dir",
+  "git-branch",
+  "model-with-reasoning",
+  "context-remaining",
+]
 
 [notice]
 
