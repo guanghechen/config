@@ -98,9 +98,14 @@ local function apply_theme(theme)
   end
 
   local app_home = dot.path.locate_app_config_home("guanghechen")
-  local script_path = dot.path.join(app_home, "cli/theme-apply.mjs")
+  local script_path = dot.path.join(app_home, "cli/theme.mjs")
+  local source_theme = theme ---@type string
+  if scheme.opposite ~= nil then
+    source_theme = string.format("%s-%s", scheme.theme, scheme.opposite)
+  end
+
   local ok, err = pcall(function()
-    local result = vim.fn.system({ "node", script_path, theme })
+    local result = vim.fn.system({ "node", script_path, "toggle", source_theme, "--silent" })
     if vim.v.shell_error ~= 0 then
       error("Command failed with exit code " .. vim.v.shell_error .. ": " .. result)
     end
@@ -111,7 +116,13 @@ local function apply_theme(theme)
       from = __module_name__,
       subject = "apply_theme",
       message = "Failed to toggle theme.",
-      details = { theme = theme, app_home = app_home, script_path = script_path, error = err },
+      details = {
+        theme = theme,
+        source_theme = source_theme,
+        app_home = app_home,
+        script_path = script_path,
+        error = err,
+      },
     })
   end
 
