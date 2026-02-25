@@ -8,10 +8,6 @@ if ([string]::IsNullOrWhiteSpace($env:YOZ_SERVER_PORT)) { $env:YOZ_SERVER_PORT =
 $env:ANTHROPIC_BASE_URL = "http://127.0.0.1:4747/api/claude"
 $env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:4747/api/gemini"
 
-$env:CLAUDE_CONFIG_DIR = Join-Path $env:XDG_CONFIG_HOME "claude"
-$env:CODEX_HOME = Join-Path $env:XDG_CONFIG_HOME "codex"
-$env:GEMINI_CONFIG_DIR = Join-Path $homeDir ".gemini"
-
 $env:ANTHROPIC_MODEL = "claude-opus-4.6-fast"
 $env:ANTHROPIC_SMALL_FAST_MODEL = "claude-sonnet-4.6"
 $env:GEMINI_MODEL = "gemini-3-pro-preview"
