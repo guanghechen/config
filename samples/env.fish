@@ -1,7 +1,6 @@
 ## Local
 #
 # set -x d_wireshark_vsc_log ""
-# set -x f_fish_additional_ghc_update ""
 # set -x GHC_WINDOWS_USERNAME ""
 #
 # # lemon
