@@ -1,3 +1,4 @@
+developer_instructions = """
 # React Engineer Agent
 
 ## Guidelines
@@ -139,3 +140,4 @@ const theme = useStateValue(viewmodel.theme$)
 viewmodel.theme$.next(ThemeScheme.DARK)
 viewmodel.theme$.setState(prev => prev === ThemeScheme.LIGHT ? ThemeScheme.DARK : ThemeScheme.LIGHT)
 ```
+"""

@@ -5,8 +5,23 @@ web_search = "disabled"
 
 [features]
 multi_agent = true
-powershell_utf8 = true
 prevent_idle_sleep = true
+
+[agents.coder]
+description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
+config_file = "agents/coder.toml"
+
+[agents.react-engineer]
+description = "Frontend specialist for React + TypeScript + Tailwind tasks."
+config_file = "agents/react-engineer.toml"
+
+[agents.repair]
+description = "Iterative repair agent for bug fixing, optimization, and refactoring."
+config_file = "agents/repair.toml"
+
+[agents.code-simplifier]
+description = "Refines recently changed code for clarity and maintainability without changing behavior."
+config_file = "agents/code-simplifier.toml"
 
 [sandbox_workspace_write]
 network_access = true

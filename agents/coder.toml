@@ -1,3 +1,4 @@
+developer_instructions = """
 # Coder Agent
 
 ## Guidelines
@@ -35,3 +36,4 @@ Within each category: alphabetical order (case-sensitive), but keep semantically
 - Validate at system boundaries only
 - Fail fast with clear messages
 - Trust internal code; no defensive programming for impossible scenarios
+"""
