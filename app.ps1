@@ -18,8 +18,9 @@ function cx0 {
 }
 
 function cx1 {
-  codex --profile=azure --dangerously-bypass-approvals-and-sandbox @args
+  codex --profile=github-copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
+
 
 ## conda (lazy)
 function __conda_init__ {
@@ -31,18 +32,20 @@ function __conda_init__ {
     Remove-Item -Path Function:conda -ErrorAction SilentlyContinue
   }
 }
-function conda { __conda_init__; & conda @args }
-
-## gemini
-function ggg {
-  gemini --model='gemini-3-pro-preview' --yolo @args
+function conda {
+  __conda_init__
+  & conda @args
 }
 
+## gemini
 function gg0 {
-  $env:GOOGLE_CLOUD_PROJECT = ''
-  $env:GOOGLE_GEMINI_BASE_URL = $env:GHC_GEMINI_BASE_URL
-  $env:GEMINI_API_KEY = $env:GHC_GEMINI_AUTH_TOKEN
-  gemini --model='gemini-3-pro-preview' --yolo @args
+  $env:GOOGLE_CLOUD_PROJECT = ""
+  $env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:4747/api/gemini"
+  gemini --model="gemini-3-pro-preview" --yolo @args
+}
+
+function ggg {
+  gemini --model="gemini-3-pro-preview" --yolo @args
 }
 
 ## lazygit
@@ -71,5 +74,13 @@ function __zoxide_init__ {
     $env:__ZOXIDE_INITIALIZED = "1"
   }
 }
-function z { __zoxide_init__; & z @args }
-function zi { __zoxide_init__; & zi @args }
+
+function z {
+  __zoxide_init__
+  & z @args
+}
+
+function zi {
+  __zoxide_init__
+  & zi @args
+}

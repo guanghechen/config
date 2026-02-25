@@ -1,30 +1,29 @@
-## Common Environment ##############################################################################
-$env:GHC_ANTHROPIC_BASE_URL           = "http://${env:GHC_COPILOT_API_HOST}:${env:GHC_COPILOT_API_PORT}/api/claude"
-$env:GHC_ANTHROPIC_AUTH_TOKEN         = "${env:GHC_COPILOT_AUTH_TOKEN}"
-$env:GHC_CODEX_AUTH_TOKEN             = "${env:GHC_COPILOT_AUTH_TOKEN}"
-$env:GHC_GEMINI_BASE_URL              = "http://${env:GHC_COPILOT_API_HOST}:${env:GHC_COPILOT_API_PORT}/api/gemini"
-$env:GHC_GEMINI_AUTH_TOKEN            = "${env:GHC_COPILOT_AUTH_TOKEN}"
+## Preferences #####################################################################################
+if ([string]::IsNullOrWhiteSpace($env:ROOT_SOURCECODES)) { $env:ROOT_SOURCECODES = Join-Path $homeDir "sourcecodes" }
+if ([string]::IsNullOrWhiteSpace($env:ROOT_WORKSPACE)) { $env:ROOT_WORKSPACE = Join-Path $homeDir "ws" }
+if ([string]::IsNullOrWhiteSpace($env:YOZ_SERVER_PORT)) { $env:YOZ_SERVER_PORT = "7777" }
 
 ## Agent Environment ###############################################################################
-$env:ANTHROPIC_BASE_URL               = "${env:GHC_ANTHROPIC_BASE_URL}"
-$env:ANTHROPIC_AUTH_TOKEN             = "${env:GHC_ANTHROPIC_AUTH_TOKEN}"
-$env:ANTHROPIC_MODEL                  = "claude-opus-4.6"
-$env:ANTHROPIC_SMALL_FAST_MODEL       = "claude-sonnet-4.5"
-$env:CLAUDE_CONFIG_DIR                = "${env:XDG_CONFIG_HOME}\claude"
 
-$env:CODEX_HOME                       = "${env:XDG_CONFIG_HOME}\codex"
+$env:ANTHROPIC_BASE_URL = "http://127.0.0.1:4747/api/claude"
+$env:GOOGLE_GEMINI_BASE_URL = "http://127.0.0.1:4747/api/gemini"
 
-$env:GOOGLE_GEMINI_BASE_URL           = "${env:GHC_GEMINI_BASE_URL}"
-$env:GEMINI_API_KEY                   = "${env:GHC_GEMINI_AUTH_TOKEN}"
-$env:GEMINI_MODEL                     = "gemini-3-pro-preview"
-$env:GEMINI_CONFIG_DIR                = "${env:USERPROFILE}\.gemini"
+$env:CLAUDE_CONFIG_DIR = Join-Path $env:XDG_CONFIG_HOME "claude"
+$env:CODEX_HOME = Join-Path $env:XDG_CONFIG_HOME "codex"
+$env:GEMINI_CONFIG_DIR = Join-Path $homeDir ".gemini"
+
+$env:ANTHROPIC_MODEL = "claude-opus-4.6-fast"
+$env:ANTHROPIC_SMALL_FAST_MODEL = "claude-sonnet-4.6"
+$env:GEMINI_MODEL = "gemini-3-pro-preview"
 
 ## App Environment #################################################################################
 $env:f_windows_terminal_settings      = "${env:USERPROFILE}\AppData\Local\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"
 $env:f_vscode_keybindings             = "${env:USERPROFILE}\AppData\Roaming\Code\User\keybindings.json"
+$env:FZF_DEFAULT_COMMAND              = "fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f"
+$env:FZF_DEFAULT_OPTS_FILE            = "$env:XDG_CONFIG_HOME\fzf\fzf.fzfrc"
 
 ## PowerShell Modules ##############################################################################
-# Ensure custom modules directory exists and lives at the front of PSModulePath.
+
 $moduleRoot = Join-Path $env:XDG_CONFIG_HOME "pwsh/modules"
 if (-not (Test-Path $moduleRoot)) {
   New-Item -ItemType Directory -Path $moduleRoot -Force | Out-Null
@@ -32,7 +31,7 @@ if (-not (Test-Path $moduleRoot)) {
 
 $pathSeparator = [System.IO.Path]::PathSeparator
 $currentModulePaths = if ($env:PSModulePath) {
-  $env:PSModulePath -split [System.IO.Path]::PathSeparator
+  $env:PSModulePath -split [Regex]::Escape([string]$pathSeparator)
 } else {
   @()
 }

@@ -22,7 +22,7 @@ if (Test-Path $localEnvPath) {
 # Completions
 Get-ChildItem "$env:XDG_CONFIG_HOME\pwsh\completions\*.ps1" | ForEach-Object { . $_.FullName }
 
-# Starship prompt
+## setup starship
 $env:STARSHIP_CONFIG = "$env:XDG_CONFIG_HOME\starship\pwsh.toml"
 Invoke-Expression (&starship init powershell)
 
