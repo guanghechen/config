@@ -1,5 +1,10 @@
 # App initialization
 
+_prepend_path_once() {
+    local path_item="$1"
+    [[ -n "$path_item" && ":$PATH:" != *":$path_item:"* ]] && export PATH="$path_item:$PATH"
+}
+
 if command -v starship >/dev/null 2>&1; then
     export STARSHIP_CONFIG="$HOME/.config/starship/bash.toml"
     eval "$(starship init bash)"
@@ -8,12 +13,12 @@ fi
 if [[ -d "$HOME/.bun" ]]; then
     export BUN_INSTALL="$HOME/.bun"
     if [[ -x "$BUN_INSTALL/bin/bun" ]]; then
-        export PATH="$BUN_INSTALL/bin:$PATH"
+        _prepend_path_once "$BUN_INSTALL/bin"
     fi
 fi
 
 if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
-    export PATH="$HOME/.cargo/bin:$PATH"
+    _prepend_path_once "$HOME/.cargo/bin"
 fi
 
 if command -v fnm >/dev/null 2>&1; then
@@ -26,7 +31,7 @@ fi
 
 if [[ -z "${PREFER_TMUX_VERSION:-}" || "$PREFER_TMUX_VERSION" != "stable" ]]; then
     if [[ -x "$ROOT_SOURCECODES/github/tmux/tmux/tmux" ]]; then
-        export PATH="$ROOT_SOURCECODES/github/tmux/tmux:$PATH"
+        _prepend_path_once "$ROOT_SOURCECODES/github/tmux/tmux"
     fi
 fi
 

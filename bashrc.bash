@@ -27,8 +27,14 @@ if [[ -z "${__BASH_CONF_APP_LOADED:-}" ]]; then
     __BASH_CONF_APP_LOADED=1
     source "$BASH_CONFIG_DIR/conf/app.bash"
 fi
-source "$BASH_CONFIG_DIR/conf/alias.bash"
-source "$BASH_CONFIG_DIR/conf/keymap.bash"
+if [[ -z "${__BASH_CONF_ALIAS_LOADED:-}" ]]; then
+    __BASH_CONF_ALIAS_LOADED=1
+    source "$BASH_CONFIG_DIR/conf/alias.bash"
+fi
+if [[ -z "${__BASH_CONF_KEYMAP_LOADED:-}" ]]; then
+    __BASH_CONF_KEYMAP_LOADED=1
+    source "$BASH_CONFIG_DIR/conf/keymap.bash"
+fi
 
 # Platform-specific interactive config
 if [[ -f "$BASH_CONFIG_DIR/platform/$GHC_ENV_PLATFORM/bashrc.bash" ]]; then
