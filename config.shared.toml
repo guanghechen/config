@@ -3,6 +3,11 @@ approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "disabled"
 
+[features]
+multi_agent = true
+powershell_utf8 = true
+prevent_idle_sleep = true
+
 [sandbox_workspace_write]
 network_access = true
 
@@ -60,4 +65,3 @@ notifications = ["agent-turn-complete", "approval-requested"]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
 startup_timeout_ms = 20_000
-
