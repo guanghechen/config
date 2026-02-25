@@ -19,7 +19,7 @@
       "remote": "https://github.com/guanghechen/sora.git",
       "main": "main",
       "location": "${HOME}/ws/github/guanghechen/sora",
-      "editions": ["nix", "nix-remote", "osx", "win"]
+      "editions": ["nix", "osx"]
     },
     {
       "name": "yozora",
