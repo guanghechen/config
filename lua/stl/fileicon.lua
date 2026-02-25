@@ -92,6 +92,7 @@ local ICONS_EXTENSION = {
   ipynb                   = { glyph = "󰠮", hl = "MiniIconsOrange" },
   json                    = "json",
   md                      = "markdown",
+  ps1                     = "ps1",
   purs                    = "purescript",
   tf                      = "terraform",
 
@@ -224,6 +225,7 @@ local ICONS_FILE = {
   ["devcontainer.json"]   = { glyph = "", hl = "MiniIconsBlue"   },
   ["eslint.config.js"]    = { glyph = "󰱺", hl = "MiniIconsPurple" },
   ["eslint.config.mjs"]   = { glyph = "󰱺", hl = "MiniIconsPurple" },
+  ["env.ps1"]             = "ps1",
   ["funding.yml"]         = { glyph = "󰇁", hl = "MiniIconsGreen"  },
   ["init.lua"]            = { glyph = "", hl = "MiniIconsGreen"  },
   license                 = { glyph = "󰄤", hl = "MiniIconsCyan"   },
