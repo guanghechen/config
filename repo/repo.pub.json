@@ -8,6 +8,13 @@
       "editions": ["nix", "osx"]
     },
     {
+      "name": "mirror",
+      "remote": "https://github.com/guanghechen/mirror.git",
+      "main": "main",
+      "location": "${HOME}/ws/github/guanghechen/mirror",
+      "editions": ["nix", "osx"]
+    },
+    {
       "name": "react-kit",
       "remote": "https://github.com/guanghechen/react-kit.git",
       "main": "main",
