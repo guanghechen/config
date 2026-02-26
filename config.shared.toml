@@ -1,5 +1,6 @@
-profile = "github-copilot"
 approval_policy = "on-request"
+personality = "pragmatic"
+profile = "github-copilot"
 sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "disabled"
@@ -52,7 +53,7 @@ stream_idle_timeout_ms = 3000000
 
 [model_providers.azure]
 name = "azure-openai"
-# base_url =
+base_url = "https://*.azure.com/openai/v1"
 env_key = "AZURE_OPENAI_CODEX_API_KEY"
 wire_api = "responses"
 request_max_retries = 3
@@ -60,17 +61,17 @@ stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
 [profiles.github-copilot]
+model = "gpt-5.3-codex"
 model_provider = "github-copilot"
 model_reasoning_effort = "high"
-model = "gpt-5.3-codex"
 
 [profiles.github-copilot-dev]
+model = "gpt-5.3-codex"
 model_provider = "github-copilot-dev"
 model_reasoning_effort = "high"
-model = "gpt-5.3-codex"
 
 [profiles.azure]
-model = "gpt-5.1-codex-max"
+model = "gpt-5.3-codex"
 model_reasoning_effort = "high"
 model_provider = "azure"
 
