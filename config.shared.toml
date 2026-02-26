@@ -1,11 +1,14 @@
 profile = "github-copilot"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
+suppress_unstable_features_warning = true
 web_search = "disabled"
 
 [features]
 multi_agent = true
+powershell_utf8 = true
 prevent_idle_sleep = true
+voice_transcription = true
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
