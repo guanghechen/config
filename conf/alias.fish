@@ -41,7 +41,8 @@ abbr -a ccc 'claude --dangerously-skip-permissions'
 
 ### codex
 abbr -a cx0 'codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
-abbr -a cx1 'codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx1 'codex --profile=github-copilot-dev --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx2 'codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
 
 ### gemini
 abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
