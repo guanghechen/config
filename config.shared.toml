@@ -64,11 +64,15 @@ stream_idle_timeout_ms = 3000000
 model = "gpt-5.3-codex"
 model_provider = "github-copilot"
 model_reasoning_effort = "high"
+model_context_window = 272000
+model_auto_compact_token_limit = 244800
 
 [profiles.github-copilot-dev]
 model = "gpt-5.3-codex"
 model_provider = "github-copilot-dev"
 model_reasoning_effort = "high"
+model_context_window = 272000
+model_auto_compact_token_limit = 244800
 
 [profiles.azure]
 model = "gpt-5.3-codex"
