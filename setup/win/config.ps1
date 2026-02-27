@@ -7,6 +7,17 @@ Write-Host "  [setup config] copying pwsh profile.ps1..." -ForegroundColor Cy
 $source = "$env:XDG_CONFIG_HOME\pwsh\profile.ps1"
 Copy-Item -Path $source -Destination $PROFILE -Force
 
+# Setup git
+$gitconfig_path = Join-Path "$env:USERPROFILE" ".gitconfig"
+if (Test-Path $gitconfig_path) {
+  Write-Host "  [setup config] .gitconfig already exists. (skipped)" -ForegroundColor Yellow
+} else {
+  Write-Host "  [setup config] copying .gitconfig..." -ForegroundColor Cyan
+  $source = Join-Path $repomain "asset\conf\.gitconfig"
+  $target = $gitconfig_path
+  Copy-Item -Path $source -Destination $target -Force
+}
+
 # Setup nvim
 Write-Host "  [setup config] setup nvim..." -ForegroundColor Cyan
 Set-Location -Path $repomain
