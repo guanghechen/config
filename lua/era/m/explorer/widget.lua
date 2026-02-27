@@ -423,7 +423,7 @@ function M:__setup_buf_autocmds__(bufnr)
     end,
   })
 
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     group = self._augroup,
     buffer = bufnr,
     callback = function()
@@ -842,10 +842,18 @@ function M:__setup_keymaps__(bufnr)
   local action = self._action ---@type era.m.explorer.Action
   local widget_keymaps = dot.state.widget.get_keymaps(self) ---@type stl.t.IKeymap[]
 
+  ---@param default_key                 string
+  ---@param count_key                   string
+  ---@return nil
+  local function run_normal_with_count(default_key, count_key)
+    local key = vim.v.count == 0 and default_key or (vim.v.count1 .. count_key)
+    vim.cmd.normal({ key, bang = true })
+  end
+
   ---@type stl.t.IKeymap[]
   local keymaps = {
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<2-LeftMouse>",
       callback = function()
         action:open()
@@ -853,7 +861,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open/toggle (double-click)",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },
       callback = function()
@@ -863,7 +871,7 @@ function M:__setup_keymaps__(bufnr)
     },
     -- <C-*>
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<C-q>",
       callback = function()
         action:send_to_quickfix(self._tree:get_root_node())
@@ -871,7 +879,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: send selection to quickfix",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<C-t>",
       callback = function()
         action:open_tab()
@@ -879,7 +887,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open in tab",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<C-v>",
       callback = function()
         action:open_vsplit()
@@ -887,7 +895,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open in vsplit",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<C-x>",
       callback = function()
         action:open_split()
@@ -896,7 +904,7 @@ function M:__setup_keymaps__(bufnr)
     },
     -- Special keys
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<BS>",
       callback = function()
         action:go_parent()
@@ -904,7 +912,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to parent directory",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<CR>",
       callback = function()
         action:open()
@@ -912,7 +920,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open/toggle",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "<Tab>",
       callback = function()
         action:select_toggle()
@@ -921,7 +929,7 @@ function M:__setup_keymaps__(bufnr)
     },
     -- Symbols
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = ".",
       callback = function()
         action:set_root()
@@ -929,7 +937,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: set as root",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "?",
       callback = function()
         action:show_keysheet(self._keymaps)
@@ -937,7 +945,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: show keymap help",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "[d",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
@@ -947,7 +955,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to prev diagnostic file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "[e",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
@@ -957,7 +965,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to prev diagnostic error file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "[h",
       callback = function()
         self:__goto_git_changed__("prev")
@@ -965,7 +973,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to prev git changed file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "[i",
       callback = function()
         action:jump_parent()
@@ -973,7 +981,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: jump to parent line",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "[w",
       callback = function()
         self:__goto_matching_file__("prev", function(filepath)
@@ -983,7 +991,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to prev diagnostic warning file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "]d",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
@@ -993,7 +1001,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to next diagnostic file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "]e",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
@@ -1003,7 +1011,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to next diagnostic error file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "]h",
       callback = function()
         self:__goto_git_changed__("next")
@@ -1011,7 +1019,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to next git changed file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "]i",
       callback = function()
         action:jump_last_child()
@@ -1019,7 +1027,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: jump to last child",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "]w",
       callback = function()
         self:__goto_matching_file__("next", function(filepath)
@@ -1030,13 +1038,13 @@ function M:__setup_keymaps__(bufnr)
     },
     -- Uppercase letters
     {
-      modes = { "n", "i" },
+      modes = { "i", "n" },
       key = "I",
       callback = function() end,
       desc = "explorer: nop (block insert mode)",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "A",
       callback = function()
         action:create_directory()
@@ -1044,7 +1052,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: create directory",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "H",
       callback = function()
         self._tree.o_flag_hidden:next(not self._tree.o_flag_hidden:snapshot())
@@ -1052,7 +1060,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: toggle hidden files",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "J",
       callback = function()
         action:pick_win_split()
@@ -1060,7 +1068,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: pick window and split",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "L",
       callback = function()
         action:pick_win_vsplit()
@@ -1068,7 +1076,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: pick window and vsplit",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "O",
       callback = function()
         action:open_system_explorer()
@@ -1076,7 +1084,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open in system explorer",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "R",
       callback = function()
         self:refresh()
@@ -1084,7 +1092,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: refresh",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "W",
       callback = function()
         action:collapse_all()
@@ -1093,7 +1101,7 @@ function M:__setup_keymaps__(bufnr)
     },
     -- Lowercase letters
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "a",
       callback = function()
         action:create_file()
@@ -1101,7 +1109,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: create file",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "c",
       callback = function()
         action:copy_node()
@@ -1109,7 +1117,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: copy node",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "d",
       callback = function()
         action:delete()
@@ -1117,7 +1125,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: delete",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "gb",
       callback = function()
         action:go_prev()
@@ -1125,7 +1133,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to previous root",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "gc",
       callback = function()
         action:go_cwd()
@@ -1133,7 +1141,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to cwd",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "gw",
       callback = function()
         action:go_home()
@@ -1141,7 +1149,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: go to workspace root",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "h",
       callback = function()
         action:collapse_or_parent()
@@ -1149,13 +1157,13 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: collapse/go parent",
     },
     {
-      modes = { "n", "i" },
+      modes = { "i", "n" },
       key = "i",
       callback = function() end,
       desc = "explorer: nop (block insert mode)",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "l",
       callback = function()
         action:open()
@@ -1163,7 +1171,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open/toggle",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "mc",
       callback = function()
         action:toggle_select_mode("copy")
@@ -1171,7 +1179,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: toggle copy selection",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "md",
       callback = function()
         action:delete_selected()
@@ -1179,7 +1187,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: delete selected",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "mo",
       callback = function()
         action:open_selected()
@@ -1187,7 +1195,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open selected files",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "mp",
       callback = function()
         action:paste()
@@ -1195,7 +1203,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: paste",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "ms",
       callback = function()
         action:toggle_select_mode("select")
@@ -1203,7 +1211,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: toggle select mode",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "mx",
       callback = function()
         action:toggle_select_mode("cut")
@@ -1211,7 +1219,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: toggle cut selection",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "o",
       callback = function()
         action:open()
@@ -1219,7 +1227,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open/toggle",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "oa",
       callback = function()
         action:add_locations_to_ai()
@@ -1227,7 +1235,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: add locations to ai",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "oc",
       callback = function()
         action:copy_path()
@@ -1235,7 +1243,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: copy path",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "oe",
       callback = function()
         action:open_file_explorer()
@@ -1243,7 +1251,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open file explorer",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "of",
       callback = function()
         action:open_file_finder()
@@ -1251,7 +1259,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open file finder",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "oi",
       callback = function()
         action:show_file_info()
@@ -1259,7 +1267,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: show file info",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "oo",
       callback = function()
         action:open_system_explorer()
@@ -1267,7 +1275,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open in system explorer",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "os",
       callback = function()
         action:open_searcher()
@@ -1275,7 +1283,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: open searcher",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "p",
       callback = function()
         action:paste()
@@ -1283,7 +1291,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: paste",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "q",
       callback = function()
         self:hide()
@@ -1291,7 +1299,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: close",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "r",
       callback = function()
         action:rename()
@@ -1299,7 +1307,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: rename",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "w",
       callback = function()
         action:pick_win_open()
@@ -1307,7 +1315,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: pick window and open",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "x",
       callback = function()
         action:cut()
@@ -1315,7 +1323,7 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: cut",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "y",
       callback = function()
         action:toggle_select_mode("copy")
@@ -1323,12 +1331,45 @@ function M:__setup_keymaps__(bufnr)
       desc = "explorer: yank (copy)",
     },
     {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = "z",
       callback = function()
         action:toggle_recursive()
       end,
       desc = "explorer: toggle expand/collapse recursively",
+    },
+    -- Insert mode only
+    {
+      modes = { "i", "n" },
+      key = "j",
+      callback = function()
+        run_normal_with_count("gj", "j")
+      end,
+      desc = "explorer: move cursor down",
+    },
+    {
+      modes = { "i", "n" },
+      key = "k",
+      callback = function()
+        run_normal_with_count("gk", "k")
+      end,
+      desc = "explorer: move cursor up",
+    },
+    {
+      modes = { "i" },
+      key = "gg",
+      callback = function()
+        run_normal_with_count("gg", "gg")
+      end,
+      desc = "explorer: go to first line in insert mode",
+    },
+    {
+      modes = { "i" },
+      key = "G",
+      callback = function()
+        run_normal_with_count("G", "G")
+      end,
+      desc = "explorer: go to last line in insert mode",
     },
     -- Visual mode
     {
@@ -1416,7 +1457,7 @@ function M:__setup_keymaps__(bufnr)
   local flags = self:__get_flags__() ---@type era.m.explorer.widget.IFlagItem[]
   for i, flag in ipairs(flags) do
     keymaps[#keymaps + 1] = {
-      modes = { "n" },
+      modes = { "i", "n" },
       key = string.format("t%d", i),
       callback = flag.callback,
       desc = flag.desc,

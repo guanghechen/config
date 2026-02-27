@@ -2,812 +2,322 @@
 
 ## 概述
 
-`era.m.explorer` 是一个原生文件资源管理器模块，采用基于 URI 的抽象设计，支持未来扩展至多种资源类型。模块通过 tick 机制实现高效的状态管理，使节点的展开/折叠、选中、加载等状态判断与更新都能在 O(depth) 复杂度内完成。
+`era.m.explorer` 是当前 Neovim 配置中的文件浏览器实现。模块采用 URI 作为内部标识（主要是 `file://`），并由 `Tree + View + Widget + Action + FileManager` 组成。
 
-## 架构
+本文档以代码为唯一事实来源，目标是描述当前行为，而不是历史方案。
 
-```
+## 目录结构
+
+```text
 era.m.explorer/
-├── action.lua       # 动作逻辑（文件操作、导航等）
-├── node.lua         # 节点定义与状态查询
-├── tree.lua         # 树结构管理与操作
-├── state.lua        # 全局状态与 tick 管理
-├── view.lua         # 渲染逻辑
-├── widget.lua       # Widget 层封装
-├── types.lua        # 类型定义
+├── action.lua         # 交互动作（open/create/delete/copy/cut/paste/rename...）
+├── node.lua           # Node 结构与树关系/选中同步方法
+├── tree.lua           # 树维护、加载、刷新、插入/删除、选择/展开状态
+├── view.lua           # 渲染、diagnostic/git 预计算、右侧虚拟文本
+├── widget.lua         # 窗口生命周期、keymap、订阅、watch 同步
+├── types.lua          # 类型声明（SelectMode、IManager、View types）
 └── resource/
-    └── file.lua     # 文件系统资源实现
+    └── file.lua       # 本地文件系统 Manager（load/copy/move/remove/watch）
 ```
 
-### 依赖关系
+## 架构关系
 
-```
-types.lua (纯类型)
-    ↓
-node.lua (节点)
-    ↓
-state.lua (状态)
-    ↓
-tree.lua (树) ← resource/file.lua (资源管理器)
-    ↓
-view.lua (渲染)
-    ↓
-widget.lua (Widget) ← action.lua (动作)
+```text
+resource/file.lua  ->  tree.lua  ->  view.lua  ->  widget.lua
+                             ^             |
+                             |             v
+                          node.lua      action.lua
 ```
 
-## 核心概念
+说明：
 
-### URI 抽象
+- 当前实现没有 `state.lua`，也没有 tick 奇偶状态机。
+- 状态是直接挂在 `Node` 上的布尔字段。
+- transfer 主路径在 `Action` 内直接调用 `resource_manager`，默认不走 `Tree:apply_copy_paste()` / `Tree:apply_cut_paste()`。
 
-模块内部统一使用 URI 而非 filepath：
+## 核心数据模型
 
-- 文件：`file:///Users/foo/bar.txt`
-- 目录：`file:///Users/foo/bar/`（以 `/` 结尾）
-- superroot：`file:///`（文件系统根）
+### Node
 
-这种设计为未来支持其他资源类型（如远程文件、虚拟文件系统）预留了扩展空间。
+`Node` 是运行时树节点，核心字段：
 
-### Root vs Superroot
+- `uri: string`
+- `nodename: string`
+- `nodetype: "D" | "F"`
+- `parent: Node|nil`
+- `children: Node[]`
+- `chidxmap: table<string, integer|nil>`
+- `depth: integer`
+- `loaded: boolean`
+- `expanded: boolean`
+- `selected: boolean`
+- `has_selected: boolean`
 
-> **重要架构原则**：所有业务逻辑只关心 `_root` 子树，而非 `_superroot`。
+关键点：
 
-树结构包含两个特殊节点：
+- `selected` 表示节点本身是否选中。
+- `has_selected` 表示子树内是否存在选中节点，用于剪枝遍历。
 
-| 节点       | 描述                              | 用途                             |
-|:-----------|:----------------------------------|:---------------------------------|
-| `_superroot` | 文件系统的虚拟根（如 `file:///`） | 仅作为技术实现细节，用于 URI 解析 |
-| `_root`    | 用户当前查看的根目录              | **所有业务逻辑的起点**           |
+### Tree
 
-**关键设计决策**：
+`Tree` 负责树状态和资源操作桥接：
 
-1. **选中状态遍历**：`get_selected_nodes()` 等方法从 `_root` 开始遍历，而非 `_superroot`
-2. **状态收集**：只收集 `_root` 子树内的节点状态
-3. **操作限制**：不允许对 `_root` 本身执行 copy/move 操作
+- 根相关：`_superroot`（协议根），`_root`（当前工作根）
+- UI 状态：`o_root_uri`、`o_cursor_uri`
+- 选择模式：`select_mode = "select" | "copy" | "cut"`
+- 结构 tick：`ticks.structure`（仅用于结构变化缓存失效）
 
-**理由**：
-- 用户关心的是当前根目录下的内容，而非整个文件系统
-- 从 `_root` 遍历减少不必要的节点访问
-- 避免意外操作到 `_root` 之外的节点
+## Root 与 Superroot
 
-### Resource 抽象
+语义如下：
 
-`resource.IManager` 定义了资源操作的统一接口：
+| 节点          | 语义                          | 主要用途                          |
+|:--------------|:------------------------------|:----------------------------------|
+| `_superroot`  | 协议级虚拟根（如 `file:///`） | URI 物化与全局树骨架              |
+| `_root`       | 当前展示根目录                | 业务遍历起点（selection 等）      |
 
-```lua
----@class era.m.explorer.resource.IManager
----@field public compare      fun(left, right): integer
----@field public create       fun(self, uri): INode|nil
----@field public copy         fun(self, source_uri, target_uri): boolean
----@field public insert_if_missing fun(self, uri): boolean
----@field public load         fun(self, uri): INode[]
----@field public locate       fun(self, uri): INode|nil
----@field public move         fun(self, source_uri, target_uri): boolean
----@field public remove       fun(self, uri, on_removed): boolean
-```
+行为规则：
 
-`resource.FileManager` 是基于本地文件系统的实现。未来可实现其他 Manager（如 SFTP、WebDAV）而无需修改上层逻辑。
+- `Tree:get_selected_nodes*()` 从 `_root` 遍历，不跨出当前展示根。
+- `Tree:remove()` 禁止删除 `_superroot`。
+- `apply_copy_paste/apply_cut_paste` 禁止处理 `_root` 本身。
 
-## Tick 机制
+## 状态机制（当前实现）
 
-模块采用 tick（时间戳计数器）机制管理节点状态，这是设计的核心创新点。
+### 展开状态
 
-### 设计动机
+- 单节点展开：`node.expanded = true/false`
+- 递归展开：`node:set_expanded_recursive(expanded)`
 
-传统方案维护 `expanded_set`、`selected_list` 等集合存在以下问题：
-- 插入/删除节点时需同步更新多个集合
-- 子树递归操作需要遍历所有后代节点
-- 新节点状态继承逻辑复杂且易出错
+### 选中状态
 
-Tick 机制通过整数比较和奇偶判断解决这些问题，核心思想是：**最新的操作决定当前状态**。
+- 选中/取消选中会递归作用于整棵子树：`node:set_selected_recursive(selected)`
+- 祖先 `has_selected` 通过 `Node.sync_ancestors()` 增量同步
+- `Tree:toggle_selected()` 会先 `__load_subtree__`，保证目录子树可被递归标记
 
-### 数据结构
+### 状态不变量
 
-#### 全局状态 (State)
+- 不要直接写 `node.selected` 或 `node.has_selected`。
+- 选中态更新应通过 `set_selected_recursive()` + `sync_ancestors()` 维护一致性。
+- 若绕过上述路径手动改字段，`has_selected` 可能失真，导致选择遍历与 UI 标记不一致。
 
-```lua
----@class era.m.explorer.State
----@field public tick_expanded    integer  -- 全局展开计数器
----@field public tick_loaded      integer  -- 全局加载计数器
----@field public tick_selected    integer  -- 全局选中计数器
-```
+### 加载状态
 
-State 维护三个全局计数器，每次状态变更时递增以生成新的 tick 值。
+- `node.loaded` 表示目录子节点是否已装载
+- `Tree:mark_all_dirty()` 会递归把目录 `loaded=false`
+- `Tree:refresh(force)` 会按 `expanded` 路径增量重载
 
-#### 节点状态 (Node)
+### 结构 tick
 
-每个节点包含两层状态：
+- `ticks.structure` 在结构变更时递增（insert/remove/move/copy/refresh...）
+- `View:__precompute__()` 通过 `ticks.structure` 缓存 `filepaths` 预计算结果
 
-```lua
----@class era.m.explorer.node.IRootState
----@field public tick_expanded    integer  -- 子树级展开 tick
----@field public tick_selected    integer  -- 子树级选中 tick
+## Resource 抽象与 FileManager
 
----@class era.m.explorer.node.INodeState
----@field public tick_expanded    integer  -- 节点级展开 tick
----@field public tick_loaded      integer  -- 节点级加载 tick
-```
+`resource.IManager` 接口（当前实现）：
 
-| 状态层    | 缩写 | 作用域           | 用途                             |
-|:----------|:-----|:-----------------|:---------------------------------|
-| RootState | rs   | 当前节点及所有后代 | 递归展开/折叠、递归选中/取消选中 |
-| NodeState | ns   | 仅当前节点       | 单节点展开/折叠、懒加载标记      |
+- `compare(left, right)`
+- `create(uri)`
+- `copy(source_uri, target_uri)`
+- `insert_if_missing(uri)`
+- `load(uri)`
+- `locate(uri)`
+- `move(source_uri, target_uri)`
+- `remove(uri, on_removed)`
 
-### 核心规则
+`resource.file.lua` 的关键行为：
 
-#### 规则 1：奇偶语义
+- `load` 使用 `uv.fs_scandir`，目录优先 + 名称排序。
+- `copy` 目录递归复制，文件按 64KB chunk 流式复制。
+- `move` 会先确保目标父目录存在，再执行重命名，并触发 LSP rename 流程。
+- `remove` 支持 trash（按平台），失败时回退/报错。
+- 提供 fs watch（仅监控展开目录），带 debounce。
 
-| tick 奇偶     | expanded 语义 | selected 语义 |
-|:--------------|:--------------|:--------------|
-| 奇数 (1,3,5…) | 展开          | 选中          |
-| 偶数 (0,2,4…) | 折叠          | 未选中        |
+## 渲染层（View）
+
+渲染职责：
 
-#### 规则 2：最大值决定状态
+- tree 缩进与图标
+- `diagnostic` 聚合与高亮
+- git 状态显示
+- 右侧 sign（`selected/copy/cut`）
+- `only_selected` 过滤显示
+- 空目录折叠展示（fold empty dirs）
 
-判断节点状态时，取相关 tick 值的**最大值**，然后判断奇偶：
+说明：
 
-```
-状态 = (max_tick % 2 == 1) ? 激活 : 未激活
-```
+- 选中模式影响右侧 sign：
+  - `select` -> 普通选中标记
+  - `copy` -> copy 标记
+  - `cut` -> cut 标记
 
-这确保了**最新的操作总是生效**。
+## Widget 职责
 
-#### 规则 3：rs 与 ns 的职责划分
+`widget.lua` 负责：
 
-| 操作类型        | 修改字段                | 影响范围               |
-|:----------------|:------------------------|:-----------------------|
-| 单节点展开/折叠 | `node.ns.tick_expanded` | 仅影响当前节点         |
-| 递归展开/折叠   | `node.rs.tick_expanded` | 影响当前节点及所有后代 |
-| 选中/取消选中   | `node.rs.tick_selected` | 影响当前节点及所有后代 |
+- 窗口创建/隐藏/聚焦
+- `Action` 上下文注入
+- keymap 绑定
+- 光标状态同步（`CursorMoved` / `CursorMovedI` -> `o_cursor_uri` + cursorline）
+- context 订阅（`flag_hidden`、`flag_selected` 等）
+- 每次渲染后同步 watch 目录列表
 
-#### 规则 4：tick_loaded 的特殊性
+watch 规则：
 
-`tick_loaded` 不使用奇偶语义，而是**相等性判断**：
+- 仅同步当前“已展开目录”
+- 默认上限 `MAX_WATCHES = 50`
+- 全部 explorer 窗口关闭后暂停 watch
 
-```lua
-node:is_loaded(state.tick_loaded) = (node.ns.tick_loaded == state.tick_loaded)
-```
+## 交互设计（当前实现）
 
-当需要标记所有节点为"未加载"时，只需 `state.tick_loaded += 1`。
+本节只描述现在代码真实行为。
 
-### 状态查询算法
+### 选择模型
 
-#### is_expanded() 详解
+- 选择集合来自节点 `selected` 状态。
+- 模式来自 `tree.select_mode`：`select/copy/cut`。
+- `ms/mc/mx` 与 `y/x/c(有选中时)` 本质是“切模式 + 切当前节点选择态”。
 
-```lua
-function Node:is_expanded()
-  -- 1. 从自身的节点级 tick 开始
-  local max_tick = self.ns.tick_expanded
+核心状态机（简化）：
 
-  -- 2. 向上遍历到根，收集所有祖先的子树级 tick
-  local o = self
-  while o ~= nil do
-    max_tick = math.max(max_tick, o.rs.tick_expanded)
-    o = o.parent
-  end
+| 输入场景                               | 触发键              | 主要行为                                             | 结果状态                 |
+|:---------------------------------------|:--------------------|:-----------------------------------------------------|:-------------------------|
+| 无选中项，光标在任意节点               | `c`                 | 打开 `Copy to:`，直接执行单项 copy                   | 不进入选择模式流         |
+| 无选中项，光标在任意节点               | `x`                 | 打开 `Move to:`，直接执行单项 move                   | 不进入选择模式流         |
+| 有选中项，光标节点未选中               | `c` / `x`           | 先选中光标节点，再把 `select_mode` 设为 `copy/cut`   | 选择集合扩大 + 模式切换  |
+| 有选中项，光标节点已选中且已在目标模式 | `c` / `x`           | 取消光标节点选择                                     | 选择集合收缩，模式保持   |
+| 有选中项，光标节点已选中但不在目标模式 | `c` / `x`           | 保持选择，仅切换 `select_mode`                       | 模式切换                 |
+| 任意（normal）                         | `ms` / `mc` / `mx`  | 与上面同构：切换光标选择态，并切到 `select/copy/cut` | 选择态与模式联动         |
+| `select_mode != select` 且存在选中项   | `p` / `mp`          | 打开 Act，预览并确认 transfer                        | 执行批量 copy/move       |
+| `select_mode == select` 或无选中项     | `p` / `mp`          | 直接 warn                                            | 无操作                   |
 
-  -- 3. 最大值为奇数 = 展开
-  return max_tick % 2 == 1
-end
-```
+### `copy` / `cut`
 
-**算法解释**：
+#### `c`（`Action:copy_node()`）
 
-1. 节点自身的 `ns.tick_expanded` 表示对该节点的单独操作
-2. 祖先链上任意节点的 `rs.tick_expanded` 表示递归操作
-3. 取最大值确保最新操作生效
-4. 奇数表示最后一次操作是"展开"
+- 若当前已有选中项：
+  - 只切换光标节点选中态（按当前模式逻辑）
+  - 把 `select_mode` 设为 `copy`
+- 若没有选中项：
+  - 弹 `Copy to:` 输入框
+  - 输入值直接走 `yoz.uri.from_filepath(input)`（不先做 `cwd` resolve）
+  - 相对路径将按当前 Neovim 进程 `cwd` 解释
+  - 直接执行单文件/目录复制
 
-**示例**：
+#### `x`（`Action:cut()`）
 
-```
-State.tick_expanded = 5
+- 若当前已有选中项：
+  - 只切换光标节点选中态
+  - 把 `select_mode` 设为 `cut`
+- 若没有选中项：
+  - 弹 `Move to:` 输入框
+  - 输入值直接走 `yoz.uri.from_filepath(input)`（不先做 `cwd` resolve）
+  - 相对路径将按当前 Neovim 进程 `cwd` 解释
+  - 直接执行单文件/目录移动
 
-superroot (rs=0, ns=1)
-└── A/ (rs=0, ns=2)           ← is_expanded? max(2,0,0,1)=2, 偶数=折叠
-    └── B/ (rs=4, ns=2)       ← is_expanded? max(2,4,0,0,1)=4, 偶数=折叠
-        └── C/ (rs=4, ns=3)   ← is_expanded? max(3,4,4,0,0,1)=4, 偶数=折叠
-```
+### `paste`
 
-若对 B 执行递归展开（`B.rs.tick_expanded = 5`）：
+`p` / `mp` -> `Action:paste()`：
 
-```
-superroot (rs=0, ns=1)
-└── A/ (rs=0, ns=2)           ← max(2,0,0,1)=2, 偶数=折叠
-    └── B/ (rs=5, ns=2)       ← max(2,5,0,0,1)=5, 奇数=展开 ✓
-        └── C/ (rs=4, ns=3)   ← max(3,4,5,0,0,1)=5, 奇数=展开 ✓ (继承)
-```
+- 前置条件：`select_mode != select`
+- 目标初始目录：当前光标目录（光标是文件则取父目录）
+- 实际执行：打开 `Act` 交互框（不是无确认直接粘贴）
+  - move 预览：`from -> to`
+  - copy 预览：`from +> to`
+  - 支持输入绝对路径或相对 `cwd` 路径
 
-C 节点自动继承了 B 的展开状态，无需遍历修改。
+执行算法（`__transfer_selected__`）：
 
-#### is_selected() 详解
+1. 取 `selected_nodes_toplevel`
+2. 计算公共祖先目录 `common_ancestor`
+3. 对每个选中节点计算 `relative_path`
+4. 目标 = `target_dir + relative_path`
+5. 逐项执行 `resource_manager:move/copy`
+6. 成功后清空选择并 refresh
 
-```lua
-function Node:is_selected()
-  -- 选中状态仅由 rs.tick_selected 决定
-  local max_tick = 0
-  local o = self
-  while o ~= nil do
-    max_tick = math.max(max_tick, o.rs.tick_selected)
-    o = o.parent
-  end
-  return max_tick % 2 == 1
-end
-```
+额外说明（当前代码路径）：
 
-**注意**：选中状态没有节点级 tick，因为选中操作总是影响整个子树。
+- `move` 分支在 `resource_manager:move()` 成功后，还会调用 `tree:remove(source_uri)`。
 
-#### is_loaded() 详解
+路径示例：
 
-```lua
-function Node:is_loaded(tick_loaded)
-  return self.ns.tick_loaded == tick_loaded
-end
-```
+- `c` / `x` 直接输入：`tmp/a.txt` -> 按当前进程 `cwd` 解释。
+- `paste` Act 输入：`tmp` -> 会先做 `resolve(cwd, input)` 再执行。
 
-**规则**：
-- 当 `node.ns.tick_loaded == state.tick_loaded` 时，节点已加载
-- 调用 `state:advance_tick_loaded()` 后，所有节点立即变为"未加载"
+### `rename`
 
-### 状态更新操作
+`r` -> `Action:rename()`：
 
-#### 展开单个节点
+- 允许“单选中节点”或“当前光标节点”重命名
+- 若选中超过 1 个，直接 warn 并返回
+- 输入框默认值为“相对当前 root 的路径”
+- 底层通过 `resource_manager:move(old_uri, new_uri)` 实现
 
-```lua
-function tree:toggle_expanded(uri, recursive=false, force="expand")
-  local node = self:locate(uri)
+### `move_selected` / `copy_selected`
 
-  -- 获取下一个奇数 tick（保证展开语义）
-  local tick = state:next_tick_expanded_odd()  -- 若当前是奇数则不变，否则+1
+- `Action` 中存在 `move_selected()` / `copy_selected()`
+- 当前默认 keymap 未绑定这两个方法
+- 默认交互入口仍是：切换模式后 `p/mp`
 
-  -- 修改节点级 tick
-  node.ns.tick_expanded = tick
-end
-```
+## 与实现一致的 Keymap（文件操作相关）
 
-#### 折叠单个节点
+以下是 copy/cut/rename/move 相关主要按键：
 
-```lua
-function tree:toggle_expanded(uri, recursive=false, force="collapse")
-  local node = self:locate(uri)
+| 按键           | 动作                                 |
+|:---------------|:-------------------------------------|
+| `c`            | `copy_node`                          |
+| `x`            | `cut`                                |
+| `h`            | `collapse_or_parent`                 |
+| `j` / `k`      | tree 行导航（本地显式绑定）          |
+| `l`            | `open`                               |
+| `y` / `mc`     | 切到 `copy` 模式（并切选择态）       |
+| `mx`           | 切到 `cut` 模式（并切选择态）        |
+| `ms` / `<Tab>` | 切到 `select` 模式（并切选择态）     |
+| `p` / `mp`     | `paste`（打开 Act 执行 transfer）    |
+| `r`            | `rename`                             |
 
-  -- 获取下一个偶数 tick（保证折叠语义）
-  local tick = state:next_tick_expanded_even()  -- 若当前是偶数则不变，否则+1
+Insert mode 补充：
 
-  -- 修改节点级 tick
-  node.ns.tick_expanded = tick
-end
-```
+- 当前 explorer 默认 normal keybindings 统一使用 `modes = { "i", "n" }`。
+- 因此 normal 下的大多数快捷键在 insert 下可直接触发同样行为。
+- `j/k` 在 explorer 内有本地显式绑定，不依赖全局继承。
+- `j/k` 导航后由 `CursorMovedI` 统一同步 `o_cursor_uri` 与 cursorline。
+- `gg` / `G` 在 explorer 内有 insert-only 显式绑定，行为向 normal 对齐。
 
-#### 递归展开子树
+Visual mode：
 
-```lua
-function tree:toggle_expanded(uri, recursive=true, force="expand")
-  local node = self:locate(uri)
+| 按键                    | 动作                                  |
+|:------------------------|:--------------------------------------|
+| `c` / `mc` / `y` / `my` | 切到 `copy` 模式并批量切选择态        |
+| `x` / `mx`              | 切到 `cut` 模式并批量切选择态         |
+| `<Tab>` / `ms`          | 切到 `select` 模式并批量切选择态      |
 
-  local tick = state:next_tick_expanded_odd()
+## 重要实现备注
 
-  -- 修改子树级 tick，自动影响所有后代
-  node.rs.tick_expanded = tick
-end
-```
+1. `Tree:apply_copy_paste()` / `Tree:apply_cut_paste()` 已实现严格校验和树内重排，但当前 `Action` 主路径未调用它们。
+2. 当前 `Action` 的 transfer 使用 `resource_manager` 逐项处理，允许“部分成功”。
+3. fs watch 已支持，不再是“仅手动刷新”。
+4. `view` 使用 `ticks.structure` 做缓存失效，不使用历史 tick 奇偶状态机。
 
-#### 递归折叠子树
+## Known Pitfalls
 
-```lua
-function tree:toggle_expanded(uri, recursive=true, force="collapse")
-  local node = self:locate(uri)
+1. `move` 路径（包括 `paste` 的 move 分支）在 `resource_manager:move()` 成功后仍调用 `tree:remove(source_uri)`。
+2. source 在 move 后通常已不存在，`remove` 可能报错或出现误导性日志；维护时要优先核对此路径。
+3. `Tree:apply_copy_paste()` / `Tree:apply_cut_paste()` 与 `Action` 主路径并存，二者校验/错误语义不同，改动时不要混淆。
 
-  local tick = state:next_tick_expanded_even()
+## 已知限制（当前实现）
 
-  -- 修改子树级 tick
-  node.rs.tick_expanded = tick
-end
-```
-
-#### 选中节点
-
-```lua
-function tree:toggle_selected(uri, force="select")
-  local node = self:locate(uri)
-
-  local tick = state:next_tick_selected_odd()
-
-  -- 选中总是作用于子树
-  node.rs.tick_selected = tick
-end
-```
-
-#### 取消选中
-
-```lua
-function tree:toggle_selected(uri, force="unselect")
-  local node = self:locate(uri)
-
-  local tick = state:next_tick_selected_even()
-
-  node.rs.tick_selected = tick
-end
-```
-
-#### 全部取消选中
-
-```lua
-function tree:clear_selection()
-  -- 只需推进全局 tick 到偶数
-  state:next_tick_selected_even()
-end
-```
-
-由于所有节点的 `rs.tick_selected` 都小于新的偶数 tick，所有节点自动变为未选中。
-
-#### 标记所有节点未加载
-
-```lua
-function tree:mark_all_dirty()
-  state:advance_tick_loaded()  -- tick_loaded += 1
-end
-```
-
-### 节点创建与继承
-
-#### 创建普通子节点
-
-```lua
-function Node.new(parent, nodetype, nodename, tick_expanded_even)
-  local rs = {
-    tick_expanded = parent.rs.tick_expanded,  -- 继承父节点
-    tick_selected = parent.rs.tick_selected,  -- 继承父节点
-  }
-
-  local ns = {
-    tick_expanded = tick_expanded_even,       -- 偶数=初始折叠
-    tick_loaded = nodetype == "F" and 1 or 0, -- 文件默认已加载
-  }
-
-  return { ..., rs = rs, ns = ns }
-end
-```
-
-**继承规则**：
-- `rs` 完全继承父节点，确保新节点自动获得祖先的递归状态
-- `ns.tick_expanded` 设为偶数，新目录默认折叠
-- 文件节点 `ns.tick_loaded = 1`（无需加载子节点）
-
-#### 创建 superroot 节点
-
-```lua
-function Node.superroot(protocol, tick_expanded_odd)
-  local rs = {
-    tick_expanded = 0,  -- 无父节点，初始为 0
-    tick_selected = 0,
-  }
-
-  local ns = {
-    tick_expanded = tick_expanded_odd,  -- 奇数=初始展开
-    tick_loaded = 0,
-  }
-
-  return { ..., rs = rs, ns = ns }
-end
-```
-
-superroot 的 `ns.tick_expanded` 设为奇数，确保初始状态为展开。
-
-#### 节点移动时的处理
-
-```lua
-function tree:apply_cut_paste(target_uri)
-  local node = ...
-
-  -- 更新 rs 为新父节点的值，断开与原祖先的状态继承
-  node.rs.tick_expanded = new_parent.rs.tick_expanded
-  node.rs.tick_selected = new_parent.rs.tick_selected
-end
-```
-
-### 初始状态详解
-
-| 对象        | 字段          | 初始值                         | 理由                     |
-|:------------|:--------------|:-------------------------------|:-------------------------|
-| State       | tick_expanded | 1                              | 奇数，方便立即使用       |
-| State       | tick_loaded   | 1                              | 非零值作为有效标记       |
-| State       | tick_selected | 0                              | 偶数，所有节点初始未选中 |
-| superroot.rs | tick_expanded | 0                              | 无递归展开操作           |
-| superroot.rs | tick_selected | 0                              | 无选中操作               |
-| superroot.ns | tick_expanded | state:next_tick_expanded_odd() | 奇数，superroot 初始展开 |
-| superroot.ns | tick_loaded   | 0                              | 需要加载子节点           |
-| root.rs     | tick_expanded | 0（继承 superroot）            | 无递归展开操作           |
-| root.rs     | tick_selected | 0（继承 superroot）            | 无选中操作               |
-| root.ns     | tick_expanded | state:next_tick_expanded_odd() | 奇数，root 初始展开      |
-| root.ns     | tick_loaded   | 0                              | 需要加载子节点           |
-| 普通节点.rs | tick_expanded | 继承父节点                     | 保持递归状态一致         |
-| 普通节点.rs | tick_selected | 继承父节点                     | 保持选中状态一致         |
-| 普通节点.ns | tick_expanded | state:next_tick_expanded_even() | 偶数，普通节点初始折叠   |
-| 普通节点.ns | tick_loaded   | 0 或 1                         | 目录=0，文件=1           |
-
-### State 的 tick 管理方法
-
-```lua
--- 获取下一个奇数 tick（展开/选中）
-function State:next_tick_expanded_odd()
-  if self.tick_expanded % 2 == 0 then
-    self.tick_expanded = self.tick_expanded + 1
-  end
-  return self.tick_expanded
-end
-
--- 获取下一个偶数 tick（折叠/取消选中）
-function State:next_tick_expanded_even()
-  if self.tick_expanded % 2 == 1 then
-    self.tick_expanded = self.tick_expanded + 1
-  end
-  return self.tick_expanded
-end
-
--- 无条件递增（用于强制刷新）
-function State:advance_tick_expanded()
-  self.tick_expanded = self.tick_expanded + 1
-  return self.tick_expanded
-end
-```
-
-**设计要点**：
-- `next_tick_*_odd/even` 保证返回值奇偶性，可能不改变计数器
-- `advance_tick_*` 无条件递增，用于需要强制变更的场景
-
-### 场景示例
-
-#### 场景 1：折叠所有
-
-```lua
--- 初始状态：根目录及部分子目录展开
--- 目标：折叠根目录下所有内容
-
-function Action:collapse_all()
-  local root_uri = self._ctx.tree.o_root_uri:snapshot()
-
-  -- 1. 递归折叠（设置 rs 为偶数）
-  self._ctx.tree:toggle_expanded(root_uri, true, "collapse")
-
-  -- 2. 单独展开 root（设置 ns 为奇数）
-  self._ctx.tree:toggle_expanded(root_uri, false, "expand")
-end
-```
-
-执行后：
-- root 的 `ns.tick_expanded` 为奇数（展开）
-- root 的 `rs.tick_expanded` 为偶数（子树折叠）
-- 所有子节点继承了 root 的 `rs.tick_expanded`，自动折叠
-
-#### 场景 2：新建节点自动继承父节点状态
-
-```lua
--- 父节点 A 已展开并被选中
--- 在 A 下创建新节点 B
-
-local new_node = Node.new(parent_A, "D", "B", tick_expanded_even)
--- new_node.rs.tick_expanded = A.rs.tick_expanded
--- new_node.rs.tick_selected = A.rs.tick_selected
-```
-
-如果之前对 A 执行过递归选中，B 会自动成为选中状态。
-
-#### 场景 3：刷新整棵树
-
-```lua
-function tree:refresh(force)
-  if force then
-    state:advance_tick_loaded()  -- 所有节点立即变为"未加载"
-  end
-
-  -- 遍历展开的节点，重新加载内容
-  walk(root)
-end
-```
-
-### 复杂度分析
-
-| 操作               | 传统方案复杂度  | Tick 机制复杂度 |
-|:-------------------|:----------------|:----------------|
-| 查询节点是否展开   | O(1)            | O(depth)        |
-| 查询节点是否选中   | O(1)            | O(depth)        |
-| 单节点展开/折叠    | O(1)            | O(1)            |
-| 递归展开/折叠子树  | O(subtree_size) | O(1)            |
-| 全部取消选中       | O(n)            | O(1)            |
-| 标记所有节点未加载 | O(n)            | O(1)            |
-| 新建节点状态继承   | O(1) 但逻辑复杂 | O(1) 且简单     |
-
-**权衡**：状态查询从 O(1) 变为 O(depth)，但树的深度通常远小于节点总数，且递归操作和批量操作获得了显著优化。
-
-### 优势总结
-
-1. **O(1) 递归操作**：修改单个 `rs.tick_*` 即可影响整个子树
-2. **O(1) 全局重置**：`advance_tick_*` 一次调用使所有节点状态失效
-3. **自动状态继承**：新节点通过继承父节点的 `rs` 值自动获得正确状态
-4. **无需维护集合**：不存在 `expanded_set`、`selected_list` 等同步问题
-5. **移动节点简单**：更新 `rs` 为新父节点的值即可断开原状态继承
-6. **代码简洁**：状态判断和更新逻辑统一，易于理解和维护
-
-## 模块职责
-
-### action.lua
-
-动作逻辑模块，通过 Context 模式从 widget 中解耦：
-
-**Context 接口**：
-```lua
----@class era.m.explorer.action.IContext
----@field public widget              era.m.explorer.Widget
----@field public tree                era.m.explorer.Tree
----@field public resource_manager    era.m.explorer.resource.FileManager
----@field public fullname            string
----@field public get_cursor_uri      fun(): string|nil
----@field public get_parent_uri      fun(uri: string): string|nil
----@field public get_visual_nodes    fun(): era.m.explorer.Node[]
----@field public refresh             fun(skip_refresh?: boolean): nil
----@field public render              fun(): nil
----@field public sync_cursor_to_uri  fun(uri: string): nil
-```
-
-**核心方法**：
-- 文件操作：`create_file()`、`create_directory()`、`delete()`、`rename()`
-- 剪贴操作：`copy_node()`、`cut()`、`paste()`、`copy_selected()`、`move_selected()`
-- 导航操作：`go_parent()`、`go_cwd()`、`go_home()`、`go_prev()`
-- 打开操作：`open()`、`open_tab()`、`open_split()`、`open_vsplit()`
-- 窗口选择：`pick_win_open()`、`pick_win_split()`、`pick_win_vsplit()`
-- 选中操作：`select_toggle()`、`toggle_select_mode()`、`toggle_select_mode_visual()`
-- 展开操作：`collapse_all()`、`collapse_or_parent()`、`toggle_recursive()`
-- 跳转操作：`jump_parent()`、`jump_last_child()`
-- 外部集成：`add_locations_to_ai()`、`open_file_explorer()`、`open_file_finder()`、`open_searcher()`、`open_system_explorer()`
-- 信息显示：`show_keysheet()`、`show_file_info()`、`copy_path()`
-- 其他：`send_to_quickfix()`、`set_root()`、`open_selected()`、`delete_selected()`
-
-### node.lua
-
-节点数据结构与状态查询方法：
-
-- `Node.new(parent, nodetype, nodename, tick_expanded_even)`：创建子节点
-- `Node.superroot(protocol, tick_expanded_odd)`：创建超级根节点
-- `Node.clone(node, new_parent, tick_expanded_even)`：深拷贝节点
-- `Node.calc_uri(parent_uri, nodename, nodetype)`：计算 URI
-- `Node.collect_selected(root)`：收集选中节点
-- `node:is_expanded()`、`node:is_selected()`、`node:is_loaded(tick)`：状态查询
-- `node:set_expanded(tick, recursive)`、`node:set_selected(tick)`：状态设置
-- `node:is_ancestor_of(target)`、`node:is_descendant_of(root)`：层级关系判断
-
-### tree.lua
-
-树结构管理与高级操作：
-
-- `Tree.new(props)`：创建树实例
-- `tree:attach(uri)`：设置根目录
-- `tree:locate(uri)`：定位节点
-- `tree:insert(parenturi, resource)`：插入节点
-- `tree:remove(uri)`：删除节点
-- `tree:refresh(force)`：刷新树
-- `tree:toggle_expanded(uri, recursive, force)`：切换展开状态
-- `tree:toggle_selected(uri, force)`：切换选中状态
-- `tree:apply_cut_paste(target_uri)`：剪切粘贴
-- `tree:apply_copy_paste(target_uri)`：复制粘贴
-- `tree:clear_selection()`：清除选中
-
-### state.lua
-
-全局状态管理：
-
-- `State.new(props)`：创建状态实例
-- `state:next_tick_expanded_odd()`：获取下一个奇数 tick（展开）
-- `state:next_tick_expanded_even()`：获取下一个偶数 tick（折叠）
-- `state:advance_tick_expanded()`：递增 tick
-- `state:advance_tick_loaded()`：递增加载 tick（标记所有节点为脏）
-- `state:next_tick_selected_odd()`：获取下一个奇数 tick（选中）
-- `state:next_tick_selected_even()`：获取下一个偶数 tick（取消选中）
-
-可共享的 Observable：
-- `o_root_uri`：当前根 URI
-- `o_cursor_uri`：当前光标 URI
-- `o_flag_foldempty`：是否折叠空目录
-- `o_flag_hidden`：是否显示隐藏文件
-
-### view.lua
-
-渲染逻辑：
-
-- 树形缩进：`├─`、`╰─`、`│ `
-- 文件/目录图标（空目录展开时使用 `FolderEmptyOpen` 图标以区分状态）
-- Git 状态标记
-- 诊断信息聚合
-- 选中状态标记
-- 空目录折叠显示
-
-### widget.lua
-
-Widget 层封装，提供标准 Widget API 和快捷键绑定：
-
-**公共 API**：
-- `focus()`、`hide()`、`toggle()`、`show()`：窗口控制
-- `reveal(uri)`：展开并定位到指定 URI
-- `set_root(uri)`：设置根目录
-- `refresh()`：刷新视图
-- `get_bufnr()`、`get_winnr()`：获取缓冲区/窗口号
-- `get_cursor_uri()`：获取光标所在节点 URI
-- `get_tree()`：获取 Tree 实例
-- `get_render_result()`：获取渲染结果
-
-**内部方法**：
-- `__goto_git_changed__(direction)`：跳转到 git 变更文件
-- `__goto_matching_file__(direction, matcher)`：按条件跳转到匹配文件
-- `__goto_matching_file_or_dir__(direction, matcher)`：按条件跳转到匹配文件或目录
-- `__setup_keymaps__(bufnr)`：设置快捷键
-- `__setup_subscriptions__()`：设置状态订阅
-- `__render__()`：渲染树视图
-- `__refresh__(skip_refresh)`：刷新树数据
-- `__sync_cursor_to_uri__(uri)`：同步光标到 URI
-- `__update_winbar__()`：更新 Winbar
-- `__update_cursorline__()`：更新光标行高亮
-
-### Act UI
-
-`md`、`mx`、`mc` 操作使用 `era.board.Act` 组件，提供输入框与预览窗口的组合 UI。
-
-#### 路径显示规则
-
-- **输入框**：初始显示相对于 CWD 的公共祖先目录路径
-- **源路径**：相对于 CWD 的完整文件路径
-- **目标路径**：相对于 CWD 的目标完整路径
-
-#### 预览格式
-
-| 操作 | 格式                     | 说明       |
-|:-----|:-------------------------|:-----------|
-| md   | `<路径>`                 | 待删除文件 |
-| mx   | `<源路径> -> <目标路径>` | 移动预览   |
-| mc   | `<源路径> +> <目标路径>` | 复制预览   |
-
-#### 高亮规则
-
-预览中的"相对部分"（文件名相对于公共祖先目录的部分）使用粉色高亮（`f_pk_matches`）。
-
-示例：选中 `lua/dot/module/clipboard/mac.lua` 和 `lua/dot/module/clipboard/nix.lua`，输入目标目录 `lua/dot/haha` 后：
-
-```
-lua/dot/module/clipboard/mac.lua -> lua/dot/haha/mac.lua
-                         ^^^^^^^                 ^^^^^^^
-                         粉色高亮                 粉色高亮
-```
-
-Act UI 支持以下交互：
-- `<CR>` 或 `<Enter>`：确认操作
-- `<Esc>` 或 `q`：取消操作
-- 输入框内容变化时自动刷新预览
-
-## 快捷键
-
-快捷键按以下顺序排列：鼠标键 → `<M-*>` → `<D-*>` → `<C-a>*` → `<C-*>` → 特殊键 → 大写字母 → 小写字母 → 符号
-
-| 按键                         | 功能                                                         |
-|:-----------------------------|:-------------------------------------------------------------|
-| `<2-LeftMouse>`              | 双击打开文件或展开目录                                       |
-| `<M-r>` / `<D-r>` / `<C-a>r` | 重绘（仅刷新视图）                                           |
-| `<C-q>`                      | 发送选中项到 quickfix                                        |
-| `<C-t>`                      | 新标签打开                                                   |
-| `<C-v>`                      | vsplit 打开                                                  |
-| `<C-x>`                      | split 打开                                                   |
-| `<CR>` / `l` / `o`           | 打开文件或展开目录                                           |
-| `<Tab>`                      | 切换选中状态                                                 |
-| `<BS>`                       | 设置父目录为根                                               |
-| `.`                          | 设置当前目录为根                                             |
-| `[d`                         | 跳转到上一个有诊断的文件                                     |
-| `[e`                         | 跳转到上一个有错误诊断的文件                                 |
-| `[h`                         | 跳转到上一个 git 变更文件                                    |
-| `[i`                         | 跳转到父节点行                                               |
-| `[w`                         | 跳转到上一个有警告诊断的文件                                 |
-| `]d`                         | 跳转到下一个有诊断的文件                                     |
-| `]e`                         | 跳转到下一个有错误诊断的文件                                 |
-| `]h`                         | 跳转到下一个 git 变更文件                                    |
-| `]i`                         | 跳转到最后一个子节点行                                       |
-| `]w`                         | 跳转到下一个有警告诊断的文件                                 |
-| `A`                          | 创建目录                                                     |
-| `H`                          | 切换显示隐藏文件                                             |
-| `I`                          | 禁用（阻止进入插入模式）                                     |
-| `J`                          | 选择窗口并 split 打开                                        |
-| `L`                          | 选择窗口并 vsplit 打开                                       |
-| `O`                          | 在系统文件管理器中打开                                       |
-| `R`                          | 刷新                                                         |
-| `W`                          | 折叠所有                                                     |
-| `a`                          | 创建文件                                                     |
-| `c`                          | 有选中项时：标记为复制模式；无选中项时：输入目标路径直接复制 |
-| `d`                          | 删除                                                         |
-| `gb`                         | 设置上一个根目录为根                                         |
-| `gc`                         | 设置 cwd 为根                                                |
-| `gw`                         | 设置工作区为根                                               |
-| `h`                          | 折叠目录或跳转到父节点                                       |
-| `i`                          | 禁用（阻止进入插入模式）                                     |
-| `mc`                         | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制   |
-| `md`                         | 删除所有选中项（Act UI 预览待删除文件列表）                  |
-| `mo`                         | 打开所有选中的文件                                           |
-| `mp`                         | 粘贴（将选中项复制/移动到当前目录）                          |
-| `ms`                         | 切换普通选中：已选中且为选中模式时取消选中，否则标记为选中   |
-| `mx`                         | 切换剪切选中：已选中且为剪切模式时取消选中，否则标记为剪切   |
-| `o`                          | 打开文件或展开目录                                           |
-| `oa`                         | 将位置添加到 AI（复制到剪贴板并追加到 notepad）              |
-| `oc`                         | 复制路径到剪贴板                                             |
-| `oe`                         | 打开文件资源管理器（picker）                                 |
-| `of`                         | 打开文件查找器                                               |
-| `oi`                         | 显示文件详情                                                 |
-| `oo`                         | 在系统文件管理器中打开                                       |
-| `os`                         | 打开搜索器                                                   |
-| `p`                          | 粘贴（将选中项复制/移动到当前目录）                          |
-| `q`                          | 关闭                                                         |
-| `r`                          | 重命名                                                       |
-| `w`                          | 选择窗口并打开                                               |
-| `x`                          | 有选中项时：标记为剪切模式；无选中项时：输入目标路径直接移动 |
-| `y`                          | 切换复制选中：已选中且为复制模式时取消选中，否则标记为复制   |
-| `z`                          | 递归展开/折叠                                                |
-
-### Visual Mode 快捷键
-
-| 按键           | 功能                                                         |
-|:---------------|:-------------------------------------------------------------|
-| `<Tab>` / `ms` | 切换普通选中：全选中且为选中模式时取消选中，否则标记为选中   |
-| `c` / `mc`     | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制   |
-| `d`            | 删除选中项                                                   |
-| `oa`           | 将选中项添加到 AI                                            |
-| `x` / `mx`     | 切换剪切选中：全选中且为剪切模式时取消选中，否则标记为剪切   |
-| `y` / `my`     | 切换复制选中：全选中且为复制模式时取消选中，否则标记为复制   |
-
-## 扩展指南
-
-### 添加新的 Resource 类型
-
-1. 在 `resource/` 目录下创建新实现（如 `sftp.lua`）
-2. 实现 `era.m.explorer.resource.IManager` 接口
-3. 在创建 Tree 时传入新的 resource_manager
-
-```lua
-local SftpManager = require("era.m.explorer.resource.sftp")
-local tree = Tree.new({
-  name = "sftp-explorer",
-  protocol = "sftp://",
-  resource_manager = SftpManager.new({ host = "..." }),
-})
-```
-
-### 添加新的节点状态
-
-1. 在 `IRootState` 或 `INodeState` 中添加新的 tick 字段
-2. 在 `State` 中添加对应的 tick 管理方法
-3. 在 `Node` 中添加查询和设置方法
-
-## 性能考量
-
-1. **懒加载**：目录内容仅在展开时加载
-2. **增量刷新**：通过 tick 机制仅刷新脏节点
-3. **合并预计算**：Git ignore 预加载与诊断聚合合并为单次树遍历（`__precompute__`）
-4. **诊断缓存**：单次 `vim.diagnostic.get()` 调用后按 severity 聚合，避免重复查询
-5. **批量刷新**：创建嵌套目录/文件时，所有中间路径的 `toggle_expanded` 操作完成后才执行单次 `refresh()`
-6. **流式文件复制**：大文件采用 64KB 分块读写，避免一次性加载全部内容到内存
-7. **渲染分离**：`__render__` 方法独立于 `__refresh__`，状态变更后可直接渲染而无需重复 attach/refresh
-8. **空目录折叠**：减少渲染行数
-
-## 已知限制
-
-1. 暂不支持文件系统监听（需手动刷新）
-2. 暂不支持大目录分页加载
-3. 暂不支持多工作区根
+1. watch 仅覆盖展开目录，且有上限（50）。
+2. transfer（copy/move）是逐项执行，失败时可能出现部分完成。
+3. `move_selected` / `copy_selected` 无默认 keymap 入口。
+4. 文档中的交互为“当前行为”，不代表最终 UX 目标。
 
 ----------------------------------------------------------------------------------------------------
 
 ## Design Decisions
 
-The following are intentional design choices:
-
-- **Single action.lua file**: All action methods are kept in one file (~1365 lines). They share similar patterns and are highly related; splitting would increase import complexity without meaningful benefit.
-
-- **Keymaps in widget.lua**: All keymaps are defined inline in `__setup_keymaps__`. External configuration would add complexity; current approach keeps mappings co-located with their implementation.
-
-- **`get_common_ancestor_path` returns `/` for root**: When computing the common ancestor of selected nodes reaches the filesystem root, returning `"/"` is the expected fallback behavior.
-
-- **Short variable names `Ns`, `Nn` in tree.lua**: Used locally for URI length calculations. Short names are acceptable in tight scope and follow math/algorithm conventions.
-
-- **Separate `is_ancestor_of` method variants**: Four methods (`is_ancestor_of`, `is_ancestor_or_self`, `is_descendant_of`, `is_descendant_or_self`) are kept separate. Each has distinct boundary conditions; extracting common logic would add complexity without significant code reduction.
+- **Single `action.lua` file**：动作方法保持在一个文件中，便于共享上下文与复用局部流程。
+- **Keymaps in `widget.lua`**：keymap 与动作绑定同地维护，避免分散配置造成语义漂移。
+- **`get_common_ancestor_path()` fallback `"/"`**：公共祖先收敛到根时返回 `/`。
+- **`Ns` / `Nn` short names in URI parsing paths**：局部算法变量，作用域小且语义稳定。
+- **四个祖先/后代判定函数分开保留**：边界语义不同，避免过度抽象。
