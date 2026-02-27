@@ -1,15 +1,5 @@
--- https://github.com/neovim/nvim-lspconfig/blob/75dab156f58ed6ada4aa585e2b47986190f1baf1/lsp/denols.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/78596b61676d361a74ea3f3abbbf83d5fe6f5519/lsp/denols.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#denols
-
----@type string[]
-local NON_DENO_ROOT_FILES = {
-  "package.json",
-  "package-lock.json",
-  "yarn.lock",
-  "pnpm-lock.yaml",
-  "bun.lockb",
-  "bun.lock",
-}
 
 ---@param uri                           string
 ---@param res                           {result: string}|nil
@@ -78,17 +68,21 @@ end
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
-  local root_markers = { "deno.lock" }
+  local root_markers = {
+    { "deno.lock", "deno.json", "deno.jsonc" },
+    { ".git" },
+  }
 
-  -- exclude non-deno projects (npm, yarn, pnpm, bun)
-  local non_deno_path = vim.fs.root(bufnr, NON_DENO_ROOT_FILES)
+  local deno_root = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" })
+  local deno_lock_root = vim.fs.root(bufnr, { "deno.lock" })
   local project_root = vim.fs.root(bufnr, root_markers)
-  if non_deno_path and (not project_root or #non_deno_path >= #project_root) then
-    return
-  end
 
-  -- We fallback to the current working directory if no project root is found
-  on_dir(project_root or vim.fn.getcwd())
+  if
+    (deno_lock_root and (not project_root or #deno_lock_root > #project_root))
+    or (deno_root and (not project_root or #deno_root >= #project_root))
+  then
+    on_dir(project_root or deno_lock_root or deno_root)
+  end
 end
 
 ---@param params                        lsp.InitializeParams
@@ -138,12 +132,10 @@ return {
   filetypes = {
     "javascript",
     "javascriptreact",
-    "javascript.jsx",
     "typescript",
     "typescriptreact",
-    "typescript.tsx",
   },
-  root_markers = { "deno.lock" },
+  root_markers = { "deno.lock", "deno.json", "deno.jsonc", ".git" },
   settings = {
     deno = {
       enable = true,

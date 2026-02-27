@@ -1,6 +1,6 @@
 local __module_name__ = "lsp.clangd" ---@type string
 
--- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/clangd.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/cfc12beefe39cdcb77ff81fa49e71cc42cdf4fbc/lsp/clangd.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#clangd
 
 ---@class era.lsp.ClangdInitializeResult: lsp.InitializeResult
@@ -150,6 +150,10 @@ return {
     "configure.ac", -- AutoTools
     ".git",
   },
+  get_language_id = function(_, ftype)
+    local language_ids = { objc = "objective-c", objcpp = "objective-cpp", cuda = "cuda-cpp" }
+    return language_ids[ftype] or ftype
+  end,
   before_init = before_init,
   on_attach = on_attach,
   on_detach = on_detach,

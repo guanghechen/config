@@ -1,12 +1,17 @@
 {
-  "activated_item_uuid": "515d8263-9dc9-40e7-ae9a-c22f0937a0e3",
+  "activated_item_uuid": "4960f2f3-53a1-4c50-a05d-db329b2225b5",
   "items": [
+    {
+      "name": "lspconfig",
+      "uuid": "4960f2f3-53a1-4c50-a05d-db329b2225b5"
+    },
     {
       "name": "ralph",
       "uuid": "515d8263-9dc9-40e7-ae9a-c22f0937a0e3"
     }
   ],
   "orders": [
+    "4960f2f3-53a1-4c50-a05d-db329b2225b5",
     "515d8263-9dc9-40e7-ae9a-c22f0937a0e3"
   ]
 }

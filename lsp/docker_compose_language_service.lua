@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/1b590dc980178611b4d8f1f13daf7f23dc878294/lsp/docker_compose_language_service.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/030a72f0aa4d56f9e8ff67921e6e3ffd0e97bf07/lsp/docker_compose_language_service.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#docker_compose_language_service
 
 ---@param params                        lsp.InitializeParams

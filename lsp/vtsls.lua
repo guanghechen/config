@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/b7c48a7111534b66bee077da8035ac7208a294ff/lsp/vtsls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/78596b61676d361a74ea3f3abbbf83d5fe6f5519/lsp/vtsls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vtsls
 
 local __module_name__ = "lsp.vtsls" ---@type string
@@ -17,14 +17,20 @@ local CONFIG_FILENAMES = {
 ---@param bufnr                         integer
 ---@param on_dir                        fun(rootdir: string|nil)
 local function root_dir(bufnr, on_dir)
-  local is_deno = vim.fs.root(bufnr, { "deno.json", "deno.jsonc", "deno.lock" }) ~= nil ---@type boolean
-  if is_deno then
+  local deno_root = vim.fs.root(bufnr, { "deno.json", "deno.jsonc" })
+  local deno_lock_root = vim.fs.root(bufnr, { "deno.lock" })
+
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+  local project_root = era.m.lsp.fn.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
+
+  if deno_lock_root and (not project_root or #deno_lock_root > #project_root) then
+    return
+  end
+  if deno_root and (not project_root or #deno_root >= #project_root) then
     return
   end
 
-  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-  local rootdir = era.m.lsp.fn.locate_lsp_root(filepath, CONFIG_FILENAMES) ---@type string|nil
-  on_dir(rootdir)
+  on_dir(project_root)
 end
 
 ---@param params                        lsp.InitializeParams
@@ -224,10 +230,8 @@ return {
   filetypes = {
     "javascript",
     "javascriptreact",
-    "javascript.jsx",
     "typescript",
     "typescriptreact",
-    "typescript.tsx",
   },
   init_options = {
     hostInfo = "neovim",

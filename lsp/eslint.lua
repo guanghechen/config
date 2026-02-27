@@ -1,6 +1,6 @@
 local __module_name__ = "lsp.eslint" ---@type string
 
--- https://github.com/neovim/nvim-lspconfig/blob/37bce6c546bd0d674dc1b59f2d9a4dda90e8929d/lsp/eslint.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/78596b61676d361a74ea3f3abbbf83d5fe6f5519/lsp/eslint.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#eslint
 
 ---@type string[]
@@ -122,10 +122,8 @@ return {
   filetypes = {
     "javascript",
     "javascriptreact",
-    "javascript.jsx",
     "typescript",
     "typescriptreact",
-    "typescript.tsx",
     "vue",
     "svelte",
     "astro",

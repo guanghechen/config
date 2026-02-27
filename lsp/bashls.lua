@@ -1,4 +1,4 @@
--- https://github.com/neovim/nvim-lspconfig/blob/5b646bf2d04a8e93ecef23d38442546b079577d4/lsp/bashls.lua
+-- https://github.com/neovim/nvim-lspconfig/blob/5a49a97f9d3de5c39a2b18d583035285b3640cb0/lsp/bashls.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#bashls
 
 ---@param params                        lsp.InitializeParams
