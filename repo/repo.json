@@ -70,6 +70,10 @@
           "editions": ["nix", "osx"]
         },
         {
+          "branch": "git",
+          "editions": ["nix-remote"]
+        },
+        {
           "branch": "git-delta",
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
