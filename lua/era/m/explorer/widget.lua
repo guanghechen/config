@@ -842,14 +842,6 @@ function M:__setup_keymaps__(bufnr)
   local action = self._action ---@type era.m.explorer.Action
   local widget_keymaps = dot.state.widget.get_keymaps(self) ---@type stl.t.IKeymap[]
 
-  ---@param default_key                 string
-  ---@param count_key                   string
-  ---@return nil
-  local function run_normal_with_count(default_key, count_key)
-    local key = vim.v.count == 0 and default_key or (vim.v.count1 .. count_key)
-    vim.cmd.normal({ key, bang = true })
-  end
-
   ---@type stl.t.IKeymap[]
   local keymaps = {
     {
@@ -1338,28 +1330,32 @@ function M:__setup_keymaps__(bufnr)
       end,
       desc = "explorer: toggle expand/collapse recursively",
     },
-    -- Insert mode only
+    -- Cursor movement
     {
-      modes = { "i", "n" },
+      modes = { "i" },
       key = "j",
       callback = function()
-        run_normal_with_count("gj", "j")
+        local winnr = self:get_winnr() ---@type integer
+        stl.nvim.win.move_cursor_down(winnr)
       end,
       desc = "explorer: move cursor down",
     },
     {
-      modes = { "i", "n" },
+      modes = { "i" },
       key = "k",
       callback = function()
-        run_normal_with_count("gk", "k")
+        local winnr = self:get_winnr() ---@type integer
+        stl.nvim.win.move_cursor_up(winnr)
       end,
       desc = "explorer: move cursor up",
     },
+    -- Insert mode only
     {
       modes = { "i" },
       key = "gg",
       callback = function()
-        run_normal_with_count("gg", "gg")
+        local winnr = self:get_winnr() ---@type integer
+        stl.nvim.win.move_cursor_to(winnr)
       end,
       desc = "explorer: go to first line in insert mode",
     },
@@ -1367,7 +1363,8 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i" },
       key = "G",
       callback = function()
-        run_normal_with_count("G", "G")
+        local winnr = self:get_winnr() ---@type integer
+        stl.nvim.win.move_cursor_last_line(winnr)
       end,
       desc = "explorer: go to last line in insert mode",
     },
