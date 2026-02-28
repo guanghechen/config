@@ -24,6 +24,7 @@ end
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
 set -gx LS_COLORS "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
+set -gx HOMEBREW_NO_ANALYTICS 1
 if test -f /opt/homebrew/bin/brew
     set -gx HOMEBREW_PREFIX /opt/homebrew
     set -gx HOMEBREW_CELLAR /opt/homebrew/Cellar
