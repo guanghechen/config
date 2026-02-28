@@ -3,6 +3,7 @@
 source "$HOME/.config/guanghechen/env/setting.bash"
 
 ### Homebrew
+export HOMEBREW_NO_ANALYTICS=1
 if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
   export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew
 elif [ -e "/opt/homebrew/bin/brew" ]; then
