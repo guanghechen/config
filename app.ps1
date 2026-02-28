@@ -21,6 +21,10 @@ function cx1 {
   codex --profile=github-copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
+function cx2 {
+  codex --profile=azure --dangerously-bypass-approvals-and-sandbox @args
+}
+
 
 ## conda (lazy)
 function __conda_init__ {
