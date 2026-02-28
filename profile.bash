@@ -36,6 +36,7 @@ _add_path() {
 export CONDARC="$XDG_CONFIG_HOME/conda/condarc"
 export LS_COLORS="${LS_COLORS:-di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93}"
 
+export HOMEBREW_NO_ANALYTICS=1
 if [[ -x /opt/homebrew/bin/brew ]]; then
   export HOMEBREW_PREFIX="/opt/homebrew"
   export HOMEBREW_CELLAR="/opt/homebrew/Cellar"
