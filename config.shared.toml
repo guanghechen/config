@@ -1,6 +1,6 @@
 approval_policy = "on-request"
 personality = "pragmatic"
-profile = "github-copilot"
+profile = "copilot"
 sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "disabled"
@@ -33,8 +33,8 @@ network_access = true
 [shell_environment_policy]
 inherit = "all"
 
-[model_providers.github-copilot]
-name = "github-copilot"
+[model_providers.copilot]
+name = "copilot"
 base_url = "http://localhost:4747/api/codex"
 env_key = "OPENAI_CODEX_AUTH_TOKEN"
 wire_api = "responses"
@@ -42,8 +42,8 @@ request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
-[model_providers.github-copilot-dev]
-name = "github-copilot"
+[model_providers.copilot-dev]
+name = "copilot"
 base_url = "http://localhost:4747/api/codex"
 env_key = "OPENAI_CODEX_AUTH_TOKEN"
 wire_api = "responses"
@@ -69,16 +69,16 @@ request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
-[profiles.github-copilot]
+[profiles.copilot]
 model = "gpt-5.3-codex"
-model_provider = "github-copilot"
+model_provider = "copilot"
 model_reasoning_effort = "high"
 model_context_window = 272000
 model_auto_compact_token_limit = 244800
 
-[profiles.github-copilot-dev]
+[profiles.copilot-dev]
 model = "gpt-5.3-codex"
-model_provider = "github-copilot-dev"
+model_provider = "copilot-dev"
 model_reasoning_effort = "high"
 model_context_window = 272000
 model_auto_compact_token_limit = 244800
