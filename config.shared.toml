@@ -43,8 +43,8 @@ stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
 [model_providers.copilot-dev]
-name = "copilot"
-base_url = "http://localhost:4747/api/codex"
+name = "copilot-dev"
+base_url = "http://localhost:4848/api/codex"
 env_key = "OPENAI_CODEX_AUTH_TOKEN"
 wire_api = "responses"
 request_max_retries = 3
@@ -52,7 +52,7 @@ stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
 [model_providers.azure]
-name = "azure-openai"
+name = "azure"
 base_url = "https://*.azure.com/openai/v1"
 env_key = "AZURE_OPENAI_CODEX_API_KEY"
 wire_api = "responses"
@@ -61,7 +61,7 @@ stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
 [model_providers.azure2]
-name = "azure-openai"
+name = "azure2"
 base_url = "https://*.azure.com/openai/v1"
 env_key = "AZURE_OPENAI_CODEX_API_KEY2"
 wire_api = "responses"
