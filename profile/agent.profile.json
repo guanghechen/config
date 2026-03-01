@@ -2,7 +2,8 @@
   "name": "agent",
   "envs": {
     "ANTHROPIC_BASE_URL": "http://${host}:${port}/api/claude",
-    "GOOGLE_GEMINI_BASE_URL": "http://${host}:${port}/api/gemini"
+    "GOOGLE_GEMINI_BASE_URL": "http://${host}:${port}/api/gemini",
+    "KIT_COPILOT_OPENAI_VOICE_MODEL": "gpt-4o"
   },
   "vars": {
     "host": "127.0.0.1",
