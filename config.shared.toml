@@ -100,6 +100,7 @@ status_line = [
   "git-branch",
   "model-with-reasoning",
   "context-remaining",
+  "context-window-size",
 ]
 
 [notice]
