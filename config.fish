@@ -72,6 +72,7 @@ set -x YOZ_SERVER_PORT 7777
 ### agents
 set -gx ANTHROPIC_BASE_URL 'http://127.0.0.1:4747/api/claude'
 set -gx GOOGLE_GEMINI_BASE_URL 'http://127.0.0.1:4747/api/gemini'
+set -gx OPENAI_BASE_URL 'http://127.0.0.1:4747/api/openai'
 
 set -gx CLAUDE_CONFIG_DIR "$XDG_CONFIG_HOME/claude"
 set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
