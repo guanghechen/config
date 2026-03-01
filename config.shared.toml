@@ -60,6 +60,15 @@ request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
 
+[model_providers.azure2]
+name = "azure-openai"
+base_url = "https://*.azure.com/openai/v1"
+env_key = "AZURE_OPENAI_CODEX_API_KEY2"
+wire_api = "responses"
+request_max_retries = 3
+stream_max_retries = 0
+stream_idle_timeout_ms = 3000000
+
 [profiles.github-copilot]
 model = "gpt-5.3-codex"
 model_provider = "github-copilot"
@@ -78,6 +87,11 @@ model_auto_compact_token_limit = 244800
 model = "gpt-5.3-codex"
 model_reasoning_effort = "high"
 model_provider = "azure"
+
+[profiles.azure2]
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+model_provider = "azure2"
 
 [tui]
 notifications = ["agent-turn-complete", "approval-requested"]
