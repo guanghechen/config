@@ -14,15 +14,19 @@ function cc0 {
 
 ## codex
 function cx0 {
-  codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox @args
+  codex -p copilot --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cx1 {
-  codex --profile=github-copilot-dev --dangerously-bypass-approvals-and-sandbox @args
+  codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
 function cx2 {
-  codex --profile=azure --dangerously-bypass-approvals-and-sandbox @args
+  codex -p azure --dangerously-bypass-approvals-and-sandbox @args
+}
+
+function cx3 {
+  codex -p azure2 --dangerously-bypass-approvals-and-sandbox @args
 }
 
 

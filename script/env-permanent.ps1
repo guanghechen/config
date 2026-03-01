@@ -5,6 +5,7 @@ setx ANTHROPIC_SMALL_FAST_MODEL       "$env:ANTHROPIC_SMALL_FAST_MODEL"
 setx CLAUDE_CONFIG_DIR                "$env:CLAUDE_CONFIG_DIR"
 
 setx CODEX_HOME                       "$env:CODEX_HOME"
+setx OPENAI_BASE_URL                  "$env:OPENAI_BASE_URL"
 
 setx GOOGLE_GEMINI_BASE_URL           "$env:GOOGLE_GEMINI_BASE_URL"
 setx GEMINI_API_KEY                   "$env:GEMINI_API_KEY"
