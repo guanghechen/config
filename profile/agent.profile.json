@@ -3,6 +3,7 @@
   "envs": {
     "ANTHROPIC_BASE_URL": "http://${host}:${port}/api/claude",
     "GOOGLE_GEMINI_BASE_URL": "http://${host}:${port}/api/gemini",
+    "OPENAI_BASE_URL": "http://${host}:${port}/api/openai",
     "KIT_COPILOT_OPENAI_VOICE_MODEL": "gpt-4o"
   },
   "vars": {
