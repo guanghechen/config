@@ -4,8 +4,10 @@ history.jsonl
 state*.sqlite*
 version.json
 
+/skills/.system
+
 log/
 shell_snapshots/
 sessions/
-skills/
 tmp/
+
