@@ -10,6 +10,9 @@ rustflags = [
 "-C", "link-arg=dynamic_lookup",
 ]
 
-[target.x86_64-pc-windows-gnu]
-linker = "C:\\msys64\\mingw64\\bin\\gcc.exe"
-ar = "C:\\msys64\\mingw64\\bin\\ar.exe"
+# [target.x86_64-pc-windows-gnu]
+# linker = "C:\\msys64\\mingw64\\bin\\gcc.exe"
+# ar = "C:\\msys64\\mingw64\\bin\\ar.exe"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = []
