@@ -1,6 +1,6 @@
 Execute changeset version and publish workflow in a specified tmux pane (monorepo only).
 
-## Arguments
+## Arguments (Required)
 
 ``````text
 $ARGUMENTS
@@ -92,31 +92,31 @@ If it fails due to missing GITHUB_TOKEN, offer alternatives:
 - Manually update version and CHANGELOG (show what changes would be made)
 - Change changelog config to use `@changesets/changelog-git` instead
 
-### 6. Rebuild With Bumped Versions
+### 6. Review Changes
 
-After version bump, send command to the tmux pane:
+After version bump:
+
+1. Run `git status` and `git diff --stat` to show what changed
+2. Show the updated CHANGELOG entries briefly
+3. Ask user to confirm before committing
+
+### 7. Commit Version Bump
+
+If user confirms:
+
+1. Stage all changed files (package.json, CHANGELOG.md, deleted changeset files)
+2. Commit with message format: `:bookmark: release: @foo/a@1.0.0, @foo/b@1.3.2` (list all released packages)
+
+### 8. Rebuild With Bumped Versions
+
+After commit version bump, send command to the tmux pane:
 
 ```bash
 pnpm build:production
 ```
 
 This rebuild is mandatory to ensure version injection uses the newly bumped package versions.
-If this build fails, stop and report the error to the user. Do not proceed to commit or publish.
-
-### 7. Review Changes
-
-After version bump and rebuild:
-
-1. Run `git status` and `git diff --stat` to show what changed
-2. Show the updated CHANGELOG entries briefly
-3. Ask user to confirm before committing
-
-### 8. Commit Version Bump
-
-If user confirms:
-
-1. Stage all changed files (package.json, CHANGELOG.md, deleted changeset files)
-2. Commit with message format: `:bookmark: release: @foo/a@1.0.0, @foo/b@1.3.2` (list all released packages)
+If this build fails, stop and report the error to the user. Do not proceed to publish.
 
 ### 9. Publish
 
