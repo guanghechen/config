@@ -2,6 +2,7 @@
   "name": "agent",
   "envs": {
     "ANTHROPIC_BASE_URL": "http://${host}:${port}/api/claude",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000",
     "GOOGLE_GEMINI_BASE_URL": "http://${host}:${port}/api/gemini",
     "OPENAI_BASE_URL": "http://${host}:${port}/api/openai",
     "KIT_COPILOT_OPENAI_VOICE_MODEL": "gpt-4o"
