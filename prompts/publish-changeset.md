@@ -92,22 +92,33 @@ If it fails due to missing GITHUB_TOKEN, offer alternatives:
 - Manually update version and CHANGELOG (show what changes would be made)
 - Change changelog config to use `@changesets/changelog-git` instead
 
-### 6. Review Changes
+### 6. Rebuild With Bumped Versions
 
-After version bump:
+After version bump, send command to the tmux pane:
+
+```bash
+pnpm build:production
+```
+
+This rebuild is mandatory to ensure version injection uses the newly bumped package versions.
+If this build fails, stop and report the error to the user. Do not proceed to commit or publish.
+
+### 7. Review Changes
+
+After version bump and rebuild:
 
 1. Run `git status` and `git diff --stat` to show what changed
 2. Show the updated CHANGELOG entries briefly
 3. Ask user to confirm before committing
 
-### 7. Commit Version Bump
+### 8. Commit Version Bump
 
 If user confirms:
 
 1. Stage all changed files (package.json, CHANGELOG.md, deleted changeset files)
 2. Commit with message format: `:bookmark: release: @foo/a@1.0.0, @foo/b@1.3.2` (list all released packages)
 
-### 8. Publish
+### 9. Publish
 
 Send command to the tmux pane:
 
@@ -117,14 +128,14 @@ pnpm changeset publish
 
 Wait for user to complete OTP verification if needed (timeout: 1 minute for OTP).
 
-### 9. Create Git Tags & Push
+### 10. Create Git Tags & Push
 
 After successful publish:
 
 1. Create git tag for each newly published package (from step 5): `<package-name>@<version>`
 2. Push commits and tags to remote: `git push && git push --tags`
 
-### 10. Summary
+### 11. Summary
 
 Report final status:
 
@@ -138,7 +149,7 @@ Report final status:
 - Use `tmux capture-pane -ep -t <pane_ref>` to check command output
 - After sending commands that need user interaction, use `sleep 2 && tmux send-keys -t <pane_ref> C-m C-m` to trigger
 - If any step fails, stop and report the error to the user
-- Do not proceed to publish if version bump fails or commit fails
+- Do not proceed to publish if version bump, rebuild, or commit fails
 
 ## Timeouts
 
