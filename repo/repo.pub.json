@@ -1,4 +1,5 @@
 {
+  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/kit-repo@latest/lib/schema/repo.config.schema.json",
   "repos": [
     {
       "name": "asset",
