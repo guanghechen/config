@@ -80,6 +80,7 @@ set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 set -gx ANTHROPIC_MODEL "claude-opus-4.6-fast"
 set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-sonnet-4.6"
+set -gx CLAUDE_CODE_MAX_OUTPUT_TOKENS 64000
 
 set -gx GEMINI_MODEL gemini-3-pro-preview
 
