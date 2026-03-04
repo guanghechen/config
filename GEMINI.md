@@ -6,6 +6,8 @@
 2. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
 3. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
 4. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
+5. **ALWAYS**: For non-trivial proposals, give 2-3 concrete examples with brief contrasts and one recommendation.
+6. **ALWAYS**: When identifying issues, show concrete examples; if no minimal repro, state trigger, evidence, and impact.
 
 ## Security
 
