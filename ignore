@@ -8,6 +8,7 @@
 *.tsbuildinfo
 
 .code-analyzer/
+.playwright/
 .playwright-cli/
 .playwright-mcp/
 local/
