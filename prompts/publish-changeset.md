@@ -78,6 +78,8 @@ If no changeset files exist, automatically detect packages that need release:
 
 ### 5. Version Bump
 
+Before running `pnpm changeset version`, snapshot current package versions for all to-be-released packages (from step 4) as **old versions**.
+
 Send command to the tmux pane:
 
 ```bash
@@ -85,6 +87,10 @@ pnpm changeset version
 ```
 
 Wait for completion. Record the packages and versions from the output for later use (commit message and git tags).
+
+After completion, read updated package versions as **new versions** and store release transitions for step 6 review display.
+
+Do not display the release transition list to user in this step.
 
 If it fails due to missing GITHUB_TOKEN, offer alternatives:
 
@@ -97,8 +103,11 @@ If it fails due to missing GITHUB_TOKEN, offer alternatives:
 After version bump:
 
 1. Run `git status` and `git diff --stat` to show what changed
-2. Show the updated CHANGELOG entries briefly
-3. Ask user to confirm before committing
+2. Show release preview list to user (mandatory; this is the first and only confirmation-facing display) using exact line format:
+   - `<package> <old version> -> <new version>`
+   - One line per package, sorted by package name
+3. Show the updated CHANGELOG entries briefly
+4. Ask user to confirm before committing
 
 ### 7. Commit Version Bump
 
