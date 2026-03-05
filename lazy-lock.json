@@ -1,8 +1,8 @@
 {
-  "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "b650e976a927be6b46487a0a610b75af111376c5" },
+  "blink.cmp": { "branch": "nvim@blink.cmp", "commit": "1912be2ca1f7fc98ae5b2b12fad49525f3b366ec" },
   "blink.indent": { "branch": "nvim@blink.indent", "commit": "9c80820ca77218a8d28e70075d6f44a1609911fe" },
-  "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "97e672714e47a14ada29621456aa72231f706d95" },
-  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "e969e302bced7ffb9a0a0323629f31feb0ca35a6" },
+  "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "c7986efb702d995fa8d937c23a0bd03c9d3e92b3" },
+  "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "40dcec5555f960b0a04340d76eabdf4efe78599d" },
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "fcea7ff883235d9024dc41e638f164a450c14ca2" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "6cd7280adead7f586db6fccbd15d2cac7e2188b9" },
   "mason.nvim": { "branch": "nvim@mason.nvim", "commit": "44d1e90e1f66e077268191e3ee9d2ac97cc18e65" },
@@ -16,8 +16,8 @@
   "nvim-dap-virtual-text": { "branch": "nvim@nvim-dap-virtual-text", "commit": "fbdb48c2ed45f4a8293d0d483f7730d24467ccb6" },
   "nvim-lint": { "branch": "nvim@nvim-lint", "commit": "606b823a57b027502a9ae00978ebf4f5d5158098" },
   "nvim-nio": { "branch": "nvim@nvim-nio", "commit": "21f5324bfac14e22ba26553caf69ec76ae8a7662" },
-  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "b9171ede5de41b3f2dfa33fe33ebd585d795f928" },
+  "nvim-treesitter": { "branch": "nvim@nvim-treesitter", "commit": "544320a9cf5d6bf539ec1cc54d393064015670c4" },
   "nvim-treesitter-context": { "branch": "nvim@nvim-treesitter-context", "commit": "64dd4cf3f6fd0ab17622c5ce15c91fc539c3f24a" },
-  "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "a0e182ae21fda68c59d1f36c9ed45600aef50311" },
-  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "1c958131c083c8557ea499fdb08c88b8afb05c4e" }
+  "nvim-treesitter-textobjects": { "branch": "nvim@nvim-treesitter-textobjects", "commit": "0bc4ef0a34d80fd6e67b59bd71fcbb0ef9ef4756" },
+  "render-markdown.nvim": { "branch": "nvim@render-markdown.nvim", "commit": "bd482f9a4827c9422231a7db1439c5cff1e69ae0" }
 }
