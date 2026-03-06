@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import {
+  CODEX_CONFIG_DIR,
   GEMINI_CONFIG_DIR,
   PLATFORM,
   XDG_CONFIG_HOME,
@@ -51,6 +52,15 @@ export const apps = [
         reporter.error('Failed to rebuild cache. cmd: bat cache --build')
       }
     },
+  },
+  {
+    name: 'codex',
+    home: CODEX_CONFIG_DIR,
+    themes: 'themes/',
+    extname: '-ghc.tmTheme',
+    local: 'themes/local.tmTheme',
+    active: app => is_directory(app.home),
+    render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
     name: 'btop',
