@@ -5,6 +5,7 @@ state*.sqlite*
 version.json
 
 /skills/.system
+/themes/local.tmTheme
 
 log/
 shell_snapshots/

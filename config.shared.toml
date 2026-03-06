@@ -94,6 +94,7 @@ model_reasoning_effort = "high"
 model_provider = "azure2"
 
 [tui]
+theme = "local"
 notifications = ["agent-turn-complete", "approval-requested"]
 status_line = [
   "current-dir",
