@@ -1,5 +1,5 @@
 {
-  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/kit-repo@latest/lib/schema/repo.config.schema.json",
+  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/kit-repo@latest/lib/schema/repo.schema.json",
   "repos": [
     {
       "name": "asset",
