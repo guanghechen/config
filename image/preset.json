@@ -1,0 +1,19 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/commander@latest/lib/schema/preset.config.schema.json",
+  "version": 1,
+  "defaults": { "profile": "gen" },
+  "profiles": {
+    "gen": {
+      "envFile": ".env.local",
+      "envs": {},
+      "opts": {
+        "provider": "azure",
+        "model": "gpt-image-1-5"
+      },
+      "defaultVariant": "local",
+      "variants": {
+        "local": {}
+      }
+    }
+  }
+}
