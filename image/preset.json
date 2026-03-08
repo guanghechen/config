@@ -4,15 +4,15 @@
   "defaults": { "profile": "gen" },
   "profiles": {
     "gen": {
-      "envFile": ".env.local",
+      "envFile": "../.env.local",
       "envs": {},
       "opts": {
         "provider": "azure",
         "model": "gpt-image-1-5"
       },
-      "defaultVariant": "local",
+      "defaultVariant": "default",
       "variants": {
-        "local": {}
+        "default": {}
       }
     }
   }
