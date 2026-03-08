@@ -88,6 +88,11 @@ model = "gpt-5.3-codex"
 model_reasoning_effort = "high"
 model_provider = "azure"
 
+[profiles.azure-5-4]
+model = "gpt-5.4-pro"
+model_reasoning_effort = "high"
+model_provider = "azure"
+
 [profiles.azure2]
 model = "gpt-5.3-codex"
 model_reasoning_effort = "high"
