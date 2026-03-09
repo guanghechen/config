@@ -21,12 +21,20 @@ function cx1 {
   codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
-function cx2 {
+function cxa {
   codex -p azure --dangerously-bypass-approvals-and-sandbox @args
 }
 
-function cx3 {
+function cxa-5-4 {
+  codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox @args
+}
+
+function cxa2 {
   codex -p azure2 --dangerously-bypass-approvals-and-sandbox @args
+}
+
+function cxa2-5-4 {
+  codex -p azure2-5-4 --dangerously-bypass-approvals-and-sandbox @args
 }
 
 
