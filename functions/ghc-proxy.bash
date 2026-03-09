@@ -1,6 +1,9 @@
 # shellcheck shell=bash
 # ghc-proxy - Toggle or set proxy settings
 
+: "${ghc_vpn_host_ip:=127.0.0.1}"
+: "${ghc_vpn_host_port:=7890}"
+
 ghc-proxy() {
     local proxy="http://$ghc_vpn_host_ip:$ghc_vpn_host_port"
 

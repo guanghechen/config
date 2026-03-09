@@ -44,8 +44,7 @@ fi
 if [[ -x "$HOME/.app/miniforge3/bin/conda" ]]; then
     export CONDA_CHANGEPS1=false
     export CONDA_PROMPT_MODIFIER=""
-    __conda_setup="$($HOME/.app/miniforge3/bin/conda "shell.bash" "hook" 2>/dev/null)"
-    if [[ $? -eq 0 ]]; then
+    if __conda_setup="$("$HOME/.app/miniforge3/bin/conda" "shell.bash" "hook" 2>/dev/null)"; then
         eval "$__conda_setup"
     elif [[ -f "$HOME/.app/miniforge3/etc/profile.d/conda.sh" ]]; then
         source "$HOME/.app/miniforge3/etc/profile.d/conda.sh"

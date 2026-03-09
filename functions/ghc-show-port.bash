@@ -35,7 +35,7 @@ ghc-show-port() {
         [[ -z "$line" ]] && continue
 
         # Parse lsof output
-        read -r command pid user fd type device size node name <<< "$line"
+        read -r command pid user _ _ _ _ _ name <<< "$line"
 
         # Get additional process info
         local cpu_mem cmd_full cwd

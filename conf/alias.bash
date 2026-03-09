@@ -15,7 +15,9 @@ alias cd..='cd ../'
 alias cd...='cd ../../'
 alias cd....='cd ../../../'
 alias cd.....='cd ../../../../'
-alias gr="git remote -v | awk '{print \$2}' | head -1"
+gr() {
+  git remote -v | awk '{print $2}' | head -1
+}
 alias tf='touch "$(date +%Y%m%d_%H%M%S).log"'
 
 alias cp='cp -i'
@@ -53,15 +55,15 @@ alias gg0='GOOGLE_CLOUD_PROJECT= GOOGLE_GEMINI_BASE_URL="$GHC_GEMINI_BASE_URL" G
 
 ## fzf
 if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
-  alias fzf="$HOMEBREW_PREFIX/bin/fzf"
-  alias fvim="$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim"
+  alias fzf='"$HOMEBREW_PREFIX/bin/fzf"'
+  alias fvim='"$HOMEBREW_PREFIX/bin/fzf" --print0 | xargs -0 -o nvim'
 fi
 
 ## lazygit
 if [[ -f "$HOME/.config/lazygit/local/theme.yml" ]]; then
-  alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml\""
+  alias lg='lazygit -ucf "$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml"'
 else
-  alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml\""
+  alias lg='lazygit -ucf "$HOME/.config/lazygit/config.yml"'
 fi
 
 ## lst
@@ -69,19 +71,21 @@ alias lst='lsd --tree -I .git -I node_modules'
 
 ## nvim
 if [[ -n "${NEOVIM_HOME:-}" ]]; then
-  alias vim="$NEOVIM_HOME/bin/nvim"
-  alias vi="$NEOVIM_HOME/bin/nvim"
-  alias nvchad="NVIM_APPNAME=nvim-nvchad  $NEOVIM_HOME/bin/nvim"
-  alias nvlazy="NVIM_APPNAME=nvim-lazy    $NEOVIM_HOME/bin/nvim"
-  alias lazyvim="NVIM_APPNAME=nvim-lazy   $NEOVIM_HOME/bin/nvim"
+  alias vim='"$NEOVIM_HOME/bin/nvim"'
+  alias vi='"$NEOVIM_HOME/bin/nvim"'
+  alias nvchad='NVIM_APPNAME=nvim-nvchad  "$NEOVIM_HOME/bin/nvim"'
+  alias nvlazy='NVIM_APPNAME=nvim-lazy    "$NEOVIM_HOME/bin/nvim"'
+  alias lazyvim='NVIM_APPNAME=nvim-lazy   "$NEOVIM_HOME/bin/nvim"'
 fi
 
 ## tmux
 alias tnew='tmux new -s'           # Create a new tmux session
 alias tkill='tmux kill-session -t' # Kill a tmux session
-alias tkill-all="tmux list-sessions | awk -F: '{print \$1}' | xargs -I {} tmux kill-session -t {}"
-alias tbtop="bash $HOME/.config/tmux/templates/btop.sh"
-alias twiki="bash $HOME/.config/tmux/templates/wiki.sh"
+tkill-all() {
+  tmux list-sessions | awk -F: '{print $1}' | xargs -I {} tmux kill-session -t {}
+}
+alias tbtop='bash $HOME/.config/tmux/templates/btop.sh'
+alias twiki='bash $HOME/.config/tmux/templates/wiki.sh'
 alias tcap='tmux capture-pane -ep -t %'
 alias tdetach='tmux detach'           # Detach from the session
 alias tattach='tmux attach -t'        # Attach to a session
@@ -90,7 +94,7 @@ alias tmux-use-fake-clipboard='tmux set-environment ghc_use_fake_clipboard /opt/
 alias watch-fake-clipboard='nohup bash $HOME/.config/tmux/script/fake-clipboard.sh /opt/me/data/clipboard/fake.txt >/dev/null 2>&1 & disown'
 
 ## misc
-alias ghc-ora="node $HOME/.config/ora/cli/http.mjs"
+alias ghc-ora='node $HOME/.config/ora/cli/http.mjs'
 alias ghc-update='kit repo sync'
 alias reset-gpg-agent='gpgconf --kill gpg-agent'
 alias start-pfctl='sudo pfctl -ef /etc/pf.conf'
