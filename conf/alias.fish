@@ -40,11 +40,12 @@ alias vdir='vdir --color=auto'
 abbr -a ccc 'claude --dangerously-skip-permissions'
 
 ### codex
-abbr -a cx0 'codex -p copilot --dangerously-bypass-approvals-and-sandbox'
-abbr -a cx1 'codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
-abbr -a cxa 'codex -p azure --dangerously-bypass-approvals-and-sandbox'
-abbr -a cxa-5-4 'codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox'
-abbr -a cxa2 'codex -p azure2 --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx0       'codex -p copilot --dangerously-bypass-approvals-and-sandbox'
+abbr -a cx1       'codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
+abbr -a cxa       'codex -p azure --dangerously-bypass-approvals-and-sandbox'
+abbr -a cxa-5-4   'codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox'
+abbr -a cxa2      'codex -p azure2 --dangerously-bypass-approvals-and-sandbox'
+abbr -a cxa2-5-4  'codex -p azure2-5-4 --dangerously-bypass-approvals-and-sandbox'
 
 ### gemini
 abbr -a ggg 'gemini --model="gemini-3-pro-preview" --yolo'
