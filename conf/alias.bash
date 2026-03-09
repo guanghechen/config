@@ -40,8 +40,12 @@ alias ccc='claude --dangerously-skip-permissions'
 alias cc0='ANTHROPIC_API_KEY="" ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.6" ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.5" claude --dangerously-skip-permissions'
 
 ## codex
-alias cx0='codex --profile=github-copilot --dangerously-bypass-approvals-and-sandbox'
-alias cx1='codex --profile=azure --dangerously-bypass-approvals-and-sandbox'
+alias cx0='codex -p copilot --dangerously-bypass-approvals-and-sandbox'
+alias cx1='codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
+alias cxa='codex -p azure --dangerously-bypass-approvals-and-sandbox'
+alias cxa-5-4='codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox'
+alias cxa2='codex -p azure2 --dangerously-bypass-approvals-and-sandbox'
+alias cxa2-5-4='codex -p azure2-5-4 --dangerously-bypass-approvals-and-sandbox'
 
 ## gemini
 alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
@@ -49,15 +53,15 @@ alias gg0='GOOGLE_CLOUD_PROJECT= GOOGLE_GEMINI_BASE_URL="$GHC_GEMINI_BASE_URL" G
 
 ## fzf
 if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
-    alias fzf="$HOMEBREW_PREFIX/bin/fzf"
-    alias fvim="$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim"
+  alias fzf="$HOMEBREW_PREFIX/bin/fzf"
+  alias fvim="$HOMEBREW_PREFIX/bin/fzf --print0 | xargs -0 -o nvim"
 fi
 
 ## lazygit
 if [[ -f "$HOME/.config/lazygit/local/theme.yml" ]]; then
-    alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml\""
+  alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml,$HOME/.config/lazygit/local/theme.yml\""
 else
-    alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml\""
+  alias lg="lazygit -ucf \"$HOME/.config/lazygit/config.yml\""
 fi
 
 ## lst
@@ -65,22 +69,22 @@ alias lst='lsd --tree -I .git -I node_modules'
 
 ## nvim
 if [[ -n "${NEOVIM_HOME:-}" ]]; then
-    alias vim="$NEOVIM_HOME/bin/nvim"
-    alias vi="$NEOVIM_HOME/bin/nvim"
-    alias nvchad="NVIM_APPNAME=nvim-nvchad  $NEOVIM_HOME/bin/nvim"
-    alias nvlazy="NVIM_APPNAME=nvim-lazy    $NEOVIM_HOME/bin/nvim"
-    alias lazyvim="NVIM_APPNAME=nvim-lazy   $NEOVIM_HOME/bin/nvim"
+  alias vim="$NEOVIM_HOME/bin/nvim"
+  alias vi="$NEOVIM_HOME/bin/nvim"
+  alias nvchad="NVIM_APPNAME=nvim-nvchad  $NEOVIM_HOME/bin/nvim"
+  alias nvlazy="NVIM_APPNAME=nvim-lazy    $NEOVIM_HOME/bin/nvim"
+  alias lazyvim="NVIM_APPNAME=nvim-lazy   $NEOVIM_HOME/bin/nvim"
 fi
 
 ## tmux
-alias tnew='tmux new -s' # Create a new tmux session
+alias tnew='tmux new -s'           # Create a new tmux session
 alias tkill='tmux kill-session -t' # Kill a tmux session
 alias tkill-all="tmux list-sessions | awk -F: '{print \$1}' | xargs -I {} tmux kill-session -t {}"
 alias tbtop="bash $HOME/.config/tmux/templates/btop.sh"
 alias twiki="bash $HOME/.config/tmux/templates/wiki.sh"
 alias tcap='tmux capture-pane -ep -t %'
-alias tdetach='tmux detach' # Detach from the session
-alias tattach='tmux attach -t' # Attach to a session
+alias tdetach='tmux detach'           # Detach from the session
+alias tattach='tmux attach -t'        # Attach to a session
 alias tdetach-others='tmux detach -a' # Detach other clients from the session
 alias tmux-use-fake-clipboard='tmux set-environment ghc_use_fake_clipboard /opt/me/data/clipboard/fake.txt'
 alias watch-fake-clipboard='nohup bash $HOME/.config/tmux/script/fake-clipboard.sh /opt/me/data/clipboard/fake.txt >/dev/null 2>&1 & disown'
