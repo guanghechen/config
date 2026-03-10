@@ -19,6 +19,7 @@ cursor-opacity = 0.85
 
 # General
 confirm-close-surface = false
+clipboard-paste-protection = true
 copy-on-select = true
 link-url = true
 mouse-hide-while-typing = true
