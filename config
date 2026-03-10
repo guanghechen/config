@@ -24,7 +24,13 @@ copy-on-select = true
 link-url = true
 mouse-hide-while-typing = true
 scrollback-limit = 10000
-shell-integration-features = no-cursor
+shell-integration = detect
+shell-integration-features = no-cursor,title,ssh-env,ssh-terminfo,path
+window-inherit-working-directory = true
+tab-inherit-working-directory = true
+split-inherit-working-directory = true
+split-preserve-zoom = navigation
+cursor-click-to-move = true
 
 # macOS
 macos-option-as-alt = true
