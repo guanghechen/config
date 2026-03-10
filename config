@@ -31,10 +31,15 @@ macos-titlebar-style = hidden
 macos-window-shadow = true
 window-save-state = always
 
+# Quick terminal
+quick-terminal-position = top
+quick-terminal-size = 35%
+quick-terminal-autohide = true
+quick-terminal-screen = main
+
 # Window
 window-height = 1000
 window-padding-balance = true
 window-padding-x = 0
 window-padding-y = 0
 window-width = 1600
-
