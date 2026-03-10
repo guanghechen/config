@@ -1,0 +1,19 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/commander@latest/lib/schema/preset.schema.json",
+  "version": 1,
+  "defaults": { "profile": "transcribe" },
+  "profiles": {
+    "transcribe": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {
+        "provider": "aoai",
+        "model": "whisper"
+      },
+      "defaultVariant": "default",
+      "variants": {
+        "default": {}
+      }
+    }
+  }
+}

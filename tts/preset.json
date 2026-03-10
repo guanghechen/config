@@ -1,0 +1,21 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/commander@latest/lib/schema/preset.schema.json",
+  "version": 1,
+  "defaults": { "profile": "gen" },
+  "profiles": {
+    "gen": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {
+        "provider": "speech",
+        "model": "speech",
+        "format": "mp3",
+        "speed": 1
+      },
+      "defaultVariant": "default",
+      "variants": {
+        "default": {}
+      }
+    }
+  }
+}
