@@ -43,7 +43,8 @@ alias cc0='ANTHROPIC_API_KEY="" ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANT
 
 ## codex
 alias cx0='codex -p copilot --dangerously-bypass-approvals-and-sandbox'
-alias cx1='codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
+alias cx1='codex -p copilot-5-4 --dangerously-bypass-approvals-and-sandbox'
+alias cxd='codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox'
 alias cxa='codex -p azure --dangerously-bypass-approvals-and-sandbox'
 alias cxa-5-4='codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox'
 alias cxa2='codex -p azure2 --dangerously-bypass-approvals-and-sandbox'
