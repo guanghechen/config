@@ -17,7 +17,11 @@ function cx0 {
   codex -p copilot --dangerously-bypass-approvals-and-sandbox @args
 }
 
-function cx1 {
+function cx5-4 {
+  codex -p copilot-5-4 --dangerously-bypass-approvals-and-sandbox @args
+}
+
+function cxd {
   codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
 }
 
