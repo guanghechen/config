@@ -1,6 +1,7 @@
 .personality_migration
 config.toml
 history.jsonl
+logs_*.sqlite*
 state*.sqlite*
 version.json
 
