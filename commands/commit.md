@@ -15,7 +15,7 @@ $ARGUMENTS
 
 Arguments can contain scope, hints, or both. Parse them intelligently.
 
-**If no arguments are provided**, commit all staged/unstaged changes unless the large-change guardrail requires scope confirmation.
+**If no arguments are provided**, commit all staged/unstaged changes unless scope confirmation is required for high-risk paths.
 
 ## Workflow
 
@@ -35,7 +35,7 @@ Prefer executing git commands directly via tool calls. Only pause when blocked b
    - If any findings exist, stop and ask for confirmation before commit. Use this report format: `<file path> | <masked evidence> | <reason> | <suggested action>`.
 4. **Review commit history**: Run `git log --oneline -10` to understand the existing commit message style and conventions.
 5. **Determine commit scope**: Based on the arguments above, decide which files to include in this commit.
-6. **Apply large-change guardrail**: If no explicit commit scope is provided and the change set is large (for example, more than 20 files) or touches high-risk paths (for example, deployment/infrastructure/workflow/configuration files), pause and ask for scope confirmation before staging.
+6. **Apply high-risk path guardrail**: If no explicit commit scope is provided and the changes touch high-risk paths (for example, deployment/infrastructure/workflow/configuration files), pause and ask for scope confirmation before staging.
 7. **Decide whether to split commits**:
    - **DO NOT ask** if the changes are logically cohesive (single feature, single fix, single refactor, etc.)
    - **Only ask** if the changes are clearly unrelated (e.g., a bug fix mixed with an unrelated new feature)
@@ -114,6 +114,7 @@ This table includes both standard and optional repository-specific types.
 ## Notes
 
 - If there are no changes to commit, inform the user.
-- You may ask scope questions only in these cases: large-change guardrail trigger, or clearly unrelated changes that may need split commits.
+- You may ask scope questions only in these cases: high-risk path guardrail trigger, or clearly unrelated changes that may need split commits.
 - Confirmation to proceed with commit is required only when sensitive or unsuitable content is detected.
 - The preview step is informational and does not require extra confirmation by default.
+
