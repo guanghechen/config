@@ -276,6 +276,16 @@ function M:create_file()
       vim.schedule(function()
         ctx.render()
         ctx.sync_cursor_to_uri(new_uri)
+
+        if resource.nodetype == "F" then
+          local filepath = yoz.uri.to_filepath(resource.uri) or "" ---@type string
+          local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+          local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
+          if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+            vim.api.nvim_set_current_win(winnr_sourcefile)
+          end
+          dot.win.open_filepath(winnr_sourcefile, filepath)
+        end
       end)
     end
   end)
