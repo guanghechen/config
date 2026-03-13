@@ -28,6 +28,7 @@
    - Internal (private): Propagate errors to caller (unless designed to suppress).
    - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
    - Exposed pure (no side effects): Propagate errors transparently.
+7. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
 
 ## Environment
 
@@ -42,4 +43,3 @@
 2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 4. **CRITICAL**: Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
-
