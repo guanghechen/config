@@ -124,13 +124,18 @@ Render Layers (bottom -> top)
 ### 7.1 Document
 
 ```ts
-export interface IWhiteboardDocument {
+export interface IWhiteboardDocumentData {
   readonly id: string
   readonly kind: 'yoz.whiteboard'
   readonly schemaVersion: number
   readonly version: number
-  readonly graph: ICanvasGraph
+  readonly graph: ICanvasGraphData
   readonly meta: IWhiteboardDocumentMeta
+}
+
+export interface IWhiteboardDocument {
+  readonly data: IWhiteboardDocumentData
+  readonly graph: ICanvasGraph
 }
 
 export interface IWhiteboardDocumentMeta {
@@ -177,33 +182,57 @@ export const IdFactory: IIdFactory = {
 ### 7.2 ICanvasGraph
 
 ```ts
-export interface ICanvasGraph {
-  readonly schemaVersion: number
+export interface ICanvasGraphData {
   readonly viewport: ICanvasViewport
   readonly edgeOrder: ReadonlyArray<string>
-  readonly nodesById: Readonly<Record<string, ICanvasNode>>
-  readonly portsById: Readonly<Record<string, ICanvasPort>>
-  readonly edgesById: Readonly<Record<string, ICanvasEdge>>
+  readonly nodesById: Readonly<Record<string, ICanvasNodeData>>
+  readonly portsById: Readonly<Record<string, ICanvasPortData>>
+  readonly edgesById: Readonly<Record<string, ICanvasEdgeData>>
+}
+
+export interface ICanvasGraph {
+  readonly data: ICanvasGraphData
+  readonly index: ICanvasGraphIndex
+  readonly runtime: ICanvasGraphRuntimeState
+}
+
+export interface ICanvasGraphIndex {
   readonly edgeIdsByPortId: Readonly<Record<string, ReadonlyArray<string>>>
+  readonly edgeIdsByNodeId: Readonly<Record<string, ReadonlyArray<string>>>
+}
+
+export interface ICanvasGraphRuntimeState {
+  readonly selectedNodeIds: ReadonlyArray<string>
+  readonly selectedEdgeIds: ReadonlyArray<string>
 }
 ```
 
 ### 7.3 ICanvasNode
 
 ```ts
-export interface ICanvasNode {
+export interface ICanvasNodeData {
   readonly id: string
   readonly type: string
+  readonly nodeIndex: number
   readonly dimension: ICanvasNodeDimension
   readonly transform: ICanvasNodeTransform
   readonly zIndex: number
-  readonly locked: boolean
-  readonly hidden: boolean
+  readonly status: ICanvasNodeStatus
   readonly style: ICanvasNodeStyle
-  readonly data: Record<string, unknown>
+  readonly payload: Record<string, unknown>
   readonly portIds: ReadonlyArray<string>
   readonly createdAt: number
   readonly updatedAt: number
+}
+
+export interface ICanvasNode {
+  readonly data: ICanvasNodeData
+  readonly runtime: ICanvasNodeRuntimeState
+}
+
+export interface ICanvasNodeRuntimeState {
+  readonly selected: boolean
+  readonly hovered: boolean
 }
 
 export interface ICanvasNodeDimension {
@@ -217,6 +246,11 @@ export interface ICanvasNodeTransform {
   readonly rotation: number
   readonly scaleX: number
   readonly scaleY: number
+}
+
+export interface ICanvasNodeStatus {
+  readonly locked: boolean
+  readonly visibility: 'visible' | 'hidden'
 }
 
 export interface ICanvasNodeStyle {
@@ -236,40 +270,68 @@ export interface ICanvasNodeStyle {
 export type ICanvasPortDirection = 'input' | 'output' | 'bidirectional'
 export type ICanvasPortPlacement = 'top' | 'right' | 'bottom' | 'left' | 'custom'
 
-export interface ICanvasPort {
+export interface ICanvasPortData {
   readonly id: string
   readonly nodeId: string
   readonly name: string
   readonly direction: ICanvasPortDirection
   readonly placement: ICanvasPortPlacement
-  readonly offset: number
+  readonly offsetRatio?: number
+  readonly anchor?: ICanvasPortAnchor
   readonly maxConnections: number | null
   readonly accepts: ReadonlyArray<string>
   readonly emits: ReadonlyArray<string>
   readonly required?: boolean
-  readonly data?: Record<string, unknown>
+  readonly payload?: Record<string, unknown>
 }
 
-// 兼容旧术语，避免文档迁移期歧义。
-export type ICanvasNodePort = ICanvasPort
+export interface ICanvasPort {
+  readonly data: ICanvasPortData
+  readonly runtime: ICanvasPortRuntimeState
+}
+
+export interface ICanvasPortRuntimeState {
+  readonly connectionCount: number
+}
+
+export interface ICanvasPortAnchor {
+  readonly xRatio: number
+  readonly yRatio: number
+}
 ```
+
+Port 几何规则：
+
+- `placement` 为 `top/right/bottom/left` 时使用 `offsetRatio`，取值范围 `0 ~ 1`。
+- `placement` 为 `custom` 时使用 `anchor.xRatio/yRatio`，取值范围 `0 ~ 1`。
+- `offsetRatio` 与 `anchor` 不同时生效，运行时以 `placement` 决定读取哪一组参数。
 
 ### 7.5 ICanvasEdge
 
 ```ts
 export type ICanvasEdgeRouting = 'straight' | 'bezier' | 'orthogonal'
 
-export interface ICanvasEdge {
+export interface ICanvasEdgeData {
   readonly id: string
   readonly from: ICanvasEdgeEndpoint
   readonly to: ICanvasEdgeEndpoint
   readonly routing: ICanvasEdgeRouting
   readonly style: ICanvasEdgeStyle
   readonly label?: string
-  readonly data?: Record<string, unknown>
-  readonly validation?: IEdgeValidationResult
+  readonly payload?: Record<string, unknown>
   readonly createdAt: number
   readonly updatedAt: number
+}
+
+export interface ICanvasEdge {
+  readonly data: ICanvasEdgeData
+  readonly runtime: ICanvasEdgeRuntimeState
+}
+
+export interface ICanvasEdgeRuntimeState {
+  readonly selected: boolean
+  readonly hovered: boolean
+  readonly validation?: IEdgeValidationResult
 }
 
 export interface ICanvasEdgeEndpoint {
@@ -288,8 +350,15 @@ export interface ICanvasEdgeStyle {
 
 层级规则：
 
-- 节点层级权威字段为 `node.zIndex`，不再维护 `graph.nodeOrder`。
-- 渲染时按 `zIndex` 升序绘制；同 `zIndex` 时按 `createdAt` 升序、再按 `id` 字典序稳定排序。
+- 节点层级权威字段为 `nodeData.zIndex`，不再维护 `graph.nodeOrder`。
+- 渲染时按 `zIndex` 升序绘制；同 `zIndex` 时按 `nodeIndex` 升序稳定排序。
+- `nodeIndex` 全局唯一、单调递增、删除后不复用。
+
+持久化边界：
+
+- `.whiteboard` 文件仅落盘 `IWhiteboardDocumentData`。
+- `ICanvasGraph.index` 与 `ICanvas*RuntimeState` 全部为运行时派生数据，不落盘。
+- `validation` 仅在 `ICanvasEdgeRuntimeState` 中存在，不写入文件。
 
 ## 8. 强类型连接与友好反馈
 
@@ -299,6 +368,8 @@ export interface ICanvasEdgeStyle {
 - 类型校验：`from.emits` 与 `to.accepts` 必须有交集。
 - 容量校验：`maxConnections` 达上限则拒绝新连接。
 - 自环规则：默认禁止 `nodeId` 相同连接，节点可显式放开。
+- Port 几何校验：`offsetRatio` / `anchor` 必须符合 placement 规则且取值在 `0 ~ 1`。
+- Node 状态校验：`status.visibility` 仅允许 `visible` 或 `hidden`。
 
 ### 8.2 交互反馈状态
 
@@ -326,8 +397,8 @@ export interface IEdgeValidationResult {
 说明：
 
 - `error` 阻断连接创建。
-- `warn` 允许创建，但在 edge 上挂载 warning badge。
-- `warn` 不阻断保存；保存后仍保留 warning badge，直到校验结果变为 `ok`。
+- `warn` 允许创建，但在 edge runtime 上挂载 warning badge。
+- `warn` 不阻断保存；文档加载时会全量重算 validation，warning 会重新显示直到结果变为 `ok`。
 
 ## 9. Markdown 节点与 Floating Editor
 
@@ -411,11 +482,18 @@ src/feature/whiteboard/
   app/
     WhiteboardCompositionRoot.ts
   model/
-    IWhiteboardDocument.ts
-    ICanvasGraph.ts
-    ICanvasNode.ts
-    ICanvasPort.ts
-    ICanvasEdge.ts
+    data/
+      IWhiteboardDocumentData.ts
+      ICanvasGraphData.ts
+      ICanvasNodeData.ts
+      ICanvasPortData.ts
+      ICanvasEdgeData.ts
+    runtime/
+      IWhiteboardDocument.ts
+      ICanvasGraph.ts
+      ICanvasNode.ts
+      ICanvasPort.ts
+      ICanvasEdge.ts
     IValidation.ts
   store/
     SceneStore.ts
@@ -538,12 +616,12 @@ src/view/whiteboard/
 ## 12. 节点扩展 API
 
 ```ts
-export interface ICanvasNodeDefinition<TData extends Record<string, unknown>> {
+export interface ICanvasNodeDefinition<TPayload extends Record<string, unknown>> {
   readonly type: string
   readonly displayName: string
-  readonly createDefaultNode: () => ICanvasNode
-  readonly validateData: (data: unknown) => TData
-  readonly getPorts: (node: ICanvasNode) => ReadonlyArray<ICanvasPort>
+  readonly createDefaultNodeData: () => ICanvasNodeData
+  readonly validatePayload: (payload: unknown) => TPayload
+  readonly getPorts: (node: ICanvasNodeData) => ReadonlyArray<ICanvasPortData>
   readonly renderCanvas: (ctx: CanvasRenderingContext2D, node: ICanvasNode) => void
   readonly renderOverlay?: (node: ICanvasNode) => React.ReactNode
   readonly getInspectorSchema?: () => ReadonlyArray<IInspectorField>
@@ -567,7 +645,7 @@ export interface IInspectorField {
 
 ### 13.2 图片资源引用约定
 
-- 图片节点 `data.src` 仅使用外链，不内嵌二进制数据。
+- 图片节点 `payload.src` 仅使用外链，不内嵌二进制数据。
 - 支持两类地址：
   - 绝对 URL：`https://...` / `http://...`
   - 相对路径：`./assets/diagram.png`、`../images/a.png`
@@ -576,6 +654,8 @@ export interface IInspectorField {
 - 加载失败时节点进入 `warn` 状态并显示占位图。
 
 ### 13.3 示例
+
+以下 JSON 均为持久化结构（`IWhiteboardDocumentData` / `ICanvasNodeData`），不包含 runtime 字段。
 
 ```json
 {
@@ -590,7 +670,6 @@ export interface IInspectorField {
     "updatedAt": 1760001000000
   },
   "graph": {
-    "schemaVersion": 1,
     "viewport": {
       "zoom": 1,
       "offsetX": 0,
@@ -601,8 +680,7 @@ export interface IInspectorField {
     "edgeOrder": [],
     "nodesById": {},
     "portsById": {},
-    "edgesById": {},
-    "edgeIdsByPortId": {}
+    "edgesById": {}
   }
 }
 ```
@@ -613,6 +691,7 @@ export interface IInspectorField {
 {
   "id": "node-mP8vN2qR4xT1",
   "type": "image",
+  "nodeIndex": 42,
   "dimension": {
     "x": 240,
     "y": 120,
@@ -625,8 +704,10 @@ export interface IInspectorField {
     "scaleY": 1
   },
   "zIndex": 0,
-  "locked": false,
-  "hidden": false,
+  "status": {
+    "locked": false,
+    "visibility": "visible"
+  },
   "style": {
     "strokeColor": "#d1d5db",
     "fillColor": "#ffffff",
@@ -636,7 +717,7 @@ export interface IInspectorField {
     "opacity": 1,
     "cornerRadius": 8
   },
-  "data": {
+  "payload": {
     "src": "./assets/architecture.png",
     "fit": "cover"
   },

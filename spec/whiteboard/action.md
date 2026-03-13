@@ -49,6 +49,129 @@ Pointer/Keyboard
   -> Renderer invalidate layers
 ```
 
+### 4.1 Compute Event Queue
+
+```ts
+export type IComputeEventType =
+  | 'EDGE_DRAG_VALIDATE'
+  | 'NODE_GEOMETRY_CHANGED'
+  | 'PORT_CONFIG_CHANGED'
+  | 'NODE_STATUS_CHANGED'
+  | 'EDGE_CREATED_OR_REMOVED'
+  | 'REVALIDATE_SCOPE'
+  | 'REVALIDATE_ALL'
+  | 'REBUILD_GRAPH_INDEX'
+  | 'SYNC_RUNTIME_FLAGS'
+
+export type IComputePriority = 'realtime' | 'high' | 'normal' | 'idle'
+
+export interface IComputeEventFrom {
+  readonly source:
+    | 'tool'
+    | 'inspector'
+    | 'shortcut'
+    | 'command_bus'
+    | 'storage_recovery'
+    | 'importer'
+    | 'system'
+  readonly activeId?: string
+  readonly commandId?: string
+  readonly traceId: string
+}
+
+export interface IComputeEvent<TPayload = unknown> {
+  readonly id: string
+  readonly type: IComputeEventType
+  readonly priority: IComputePriority
+  readonly key: string
+  readonly payload: TPayload
+  readonly from: IComputeEventFrom
+  readonly createdAt: number
+}
+
+export type IComputeCoalesceStrategy =
+  | 'replace-latest'
+  | 'merge-set'
+  | 'drop-others-and-run-once'
+
+export interface IComputeEventSpec<TPayload = unknown> {
+  readonly key: (payload: TPayload, from: IComputeEventFrom) => string
+  readonly coalesce: IComputeCoalesceStrategy
+}
+
+export interface IComputeEventCatalog {
+  readonly EDGE_DRAG_VALIDATE: IComputeEventSpec<{
+    readonly fromNodeId: string
+    readonly fromPortId: string
+    readonly pointerCanvasX: number
+    readonly pointerCanvasY: number
+    readonly candidateToNodeId?: string
+    readonly candidateToPortId?: string
+  }>
+  readonly NODE_GEOMETRY_CHANGED: IComputeEventSpec<{
+    readonly nodeId: string
+    readonly dimension: ICanvasNodeDimension
+    readonly transform: ICanvasNodeTransform
+  }>
+  readonly PORT_CONFIG_CHANGED: IComputeEventSpec<{
+    readonly nodeId: string
+    readonly portId: string
+    readonly placement: ICanvasPortPlacement
+    readonly offsetRatio?: number
+    readonly anchor?: ICanvasPortAnchor
+    readonly accepts: ReadonlyArray<string>
+    readonly emits: ReadonlyArray<string>
+  }>
+  readonly NODE_STATUS_CHANGED: IComputeEventSpec<{
+    readonly nodeId: string
+    readonly status: ICanvasNodeStatus
+  }>
+  readonly EDGE_CREATED_OR_REMOVED: IComputeEventSpec<{
+    readonly edgeId: string
+    readonly operation: 'create' | 'remove'
+    readonly fromNodeId: string
+    readonly toNodeId: string
+  }>
+  readonly REVALIDATE_SCOPE: IComputeEventSpec<{
+    readonly nodeIds?: ReadonlyArray<string>
+    readonly edgeIds?: ReadonlyArray<string>
+    readonly portIds?: ReadonlyArray<string>
+    readonly reason: 'command' | 'queue-merge' | 'import'
+  }>
+  readonly REVALIDATE_ALL: IComputeEventSpec<{
+    readonly reason: 'load' | 'import' | 'recovery' | 'manual'
+  }>
+  readonly REBUILD_GRAPH_INDEX: IComputeEventSpec<{
+    readonly reason: 'load' | 'import' | 'integrity-check'
+  }>
+  readonly SYNC_RUNTIME_FLAGS: IComputeEventSpec<{
+    readonly nodeIds?: ReadonlyArray<string>
+    readonly edgeIds?: ReadonlyArray<string>
+    readonly reason: 'selection' | 'hover' | 'tool-switch'
+  }>
+}
+```
+
+队列策略：
+
+- `EDGE_DRAG_VALIDATE` 走 realtime 通道，拖拽期间每帧重算。
+- 其余事件进入优先级队列，按 `high -> normal -> idle` 出队。
+- 同 `key` 事件只保留最后一条（coalesce）。
+- 单帧使用固定预算处理队列（建议 `2~4ms`），避免阻塞渲染。
+- 批量变更结束时允许压入 `REBUILD_GRAPH_INDEX` + `REVALIDATE_ALL` 作为收敛事件。
+
+### 4.2 Key 与 Coalesce 约定（已确认）
+
+- `EDGE_DRAG_VALIDATE`：`key = EDGE_DRAG_VALIDATE:{from.activeId}`，`coalesce = replace-latest`。
+- `NODE_GEOMETRY_CHANGED`：`key = NODE_GEOMETRY_CHANGED:{nodeId}`，`coalesce = replace-latest`。
+- `PORT_CONFIG_CHANGED`：`key = PORT_CONFIG_CHANGED:{portId}`，`coalesce = replace-latest`。
+- `NODE_STATUS_CHANGED`：`key = NODE_STATUS_CHANGED:{nodeId}`，`coalesce = replace-latest`。
+- `EDGE_CREATED_OR_REMOVED`：`key = EDGE_CREATED_OR_REMOVED:{edgeId}`，`coalesce = replace-latest`。
+- `REVALIDATE_SCOPE`：`key = REVALIDATE_SCOPE`，`coalesce = merge-set`（并集 nodeIds/edgeIds/portIds）。
+- `REVALIDATE_ALL`：`key = REVALIDATE_ALL`，`coalesce = drop-others-and-run-once`。
+- `REBUILD_GRAPH_INDEX`：`key = REBUILD_GRAPH_INDEX`，`coalesce = drop-others-and-run-once`。
+- `SYNC_RUNTIME_FLAGS`：`key = SYNC_RUNTIME_FLAGS`，`coalesce = replace-latest`。
+
 ## 5. Command 分类
 
 - Node：`CreateNode` / `UpdateNode` / `DeleteNode` / `MoveNode` / `ResizeNode` / `RotateNode`。
@@ -77,7 +200,8 @@ Pointer/Keyboard
 - edge 创建时先做 validation，再产生命令。
 - `error`：阻断命令执行。
 - `warn`：命令可执行，但在 edge 上保留 warning 标记。
-- warning 不写入历史动作本身，而写入 edge 当前校验状态。
+- warning 不写入历史动作，也不写入持久化文档；仅存在于 runtime edge state。
+- 文档加载后必须执行全量 revalidate，恢复 warning 可视状态。
 
 ### 8.1 Validation Code（v1，直观命名）
 
@@ -87,13 +211,20 @@ export type IValidationCode =
   | 'CONNECT_TYPE_NOT_COMPATIBLE'
   | 'CONNECT_TARGET_PORT_FULL'
   | 'CONNECT_SELF_LOOP_NOT_ALLOWED'
+  | 'PORT_OFFSET_RATIO_OUT_OF_RANGE'
+  | 'PORT_OFFSET_RATIO_REQUIRED_FOR_EDGE_PLACEMENT'
+  | 'PORT_OFFSET_RATIO_NOT_ALLOWED_FOR_CUSTOM_PLACEMENT'
+  | 'PORT_ANCHOR_RATIO_OUT_OF_RANGE'
+  | 'PORT_ANCHOR_REQUIRED_FOR_CUSTOM_PLACEMENT'
+  | 'PORT_ANCHOR_NOT_ALLOWED_FOR_EDGE_PLACEMENT'
+  | 'NODE_STATUS_VISIBILITY_INVALID'
   | 'NODE_REQUIRED_PORT_UNCONNECTED'
   | 'IMAGE_SOURCE_UNREACHABLE'
 ```
 
 命名规则：
 
-- 前缀体现领域：`CONNECT` / `NODE` / `IMAGE`。
+- 前缀体现领域：`CONNECT` / `PORT` / `NODE` / `IMAGE`。
 - 谓语体现结果：`NOT_ALLOWED` / `NOT_COMPATIBLE` / `FULL` / `UNREACHABLE`。
 - 不使用内部实现术语，确保产品、前端、测试都能直读。
 
@@ -103,6 +234,13 @@ export type IValidationCode =
 - `CONNECT_TYPE_NOT_COMPATIBLE`：`error`
 - `CONNECT_TARGET_PORT_FULL`：`error`
 - `CONNECT_SELF_LOOP_NOT_ALLOWED`：`error`
+- `PORT_OFFSET_RATIO_OUT_OF_RANGE`：`error`
+- `PORT_OFFSET_RATIO_REQUIRED_FOR_EDGE_PLACEMENT`：`error`
+- `PORT_OFFSET_RATIO_NOT_ALLOWED_FOR_CUSTOM_PLACEMENT`：`error`
+- `PORT_ANCHOR_RATIO_OUT_OF_RANGE`：`error`
+- `PORT_ANCHOR_REQUIRED_FOR_CUSTOM_PLACEMENT`：`error`
+- `PORT_ANCHOR_NOT_ALLOWED_FOR_EDGE_PLACEMENT`：`error`
+- `NODE_STATUS_VISIBILITY_INVALID`：`error`
 - `NODE_REQUIRED_PORT_UNCONNECTED`：`warn`
 - `IMAGE_SOURCE_UNREACHABLE`：`warn`
 
@@ -111,6 +249,13 @@ export type IValidationCode =
 - `CONNECT_DIRECTION_NOT_ALLOWED` -> "连接方向不合法：请从 output 连接到 input"。
 - `CONNECT_TYPE_NOT_COMPATIBLE` -> "连接类型不匹配：源端口输出类型与目标端口输入类型不兼容"。
 - `CONNECT_TARGET_PORT_FULL` -> "目标端口连接数已达上限"。
+- `PORT_OFFSET_RATIO_OUT_OF_RANGE` -> "端口 offsetRatio 超出范围：应在 0~1 之间"。
+- `PORT_OFFSET_RATIO_REQUIRED_FOR_EDGE_PLACEMENT` -> "边缘端口缺少 offsetRatio：top/right/bottom/left 必须提供"。
+- `PORT_OFFSET_RATIO_NOT_ALLOWED_FOR_CUSTOM_PLACEMENT` -> "custom 端口不应提供 offsetRatio：请改用 anchor"。
+- `PORT_ANCHOR_RATIO_OUT_OF_RANGE` -> "端口 anchor 超出范围：xRatio/yRatio 应在 0~1 之间"。
+- `PORT_ANCHOR_REQUIRED_FOR_CUSTOM_PLACEMENT` -> "custom 端口缺少 anchor：请提供 xRatio/yRatio"。
+- `PORT_ANCHOR_NOT_ALLOWED_FOR_EDGE_PLACEMENT` -> "边缘端口不应提供 anchor：请改用 offsetRatio"。
+- `NODE_STATUS_VISIBILITY_INVALID` -> "节点 visibility 非法：仅允许 visible 或 hidden"。
 - `IMAGE_SOURCE_UNREACHABLE` -> "图片资源暂时不可访问，已保留引用"。
 
 ## 9. Tool 责任边界
@@ -134,3 +279,6 @@ export type IValidationCode =
 - `undo -> redo` 后文档快照与执行前一致。
 - validation 为 `error` 时不得产生新 edge。
 - validation 为 `warn` 时允许保存且 warning 持续可见。
+- 文档 reload 后会重跑 validation，warning 状态与当前规则一致。
+- `offsetRatio` / `anchor` 越界或互斥冲突时必须返回 `error`。
+- `status.visibility` 非法值必须返回 `error`。

@@ -16,6 +16,12 @@
 - Draft 解决“异常关闭丢失编辑中状态”。
 - File 解决“跨会话、可共享、可版本管理”。
 
+持久化边界：
+
+- 仅持久化 `IWhiteboardDocumentData`。
+- `ICanvasGraph.index`、`ICanvasNode/Port/Edge.runtime` 不写入存储。
+- edge validation 仅运行时计算，加载后重算。
+
 ### 2.1 Draft Key 策略（已确认）
 
 - 主键：`draft:{workspaceId}:{docId}`。
@@ -36,7 +42,7 @@
 - 触发：文档有可见变更。
 - 节流：`debounce 800ms`。
 - 目标：本地草稿存储。
-- 内容：完整 `IWhiteboardDocument` 快照 + `updatedAt`。
+- 内容：完整 `IWhiteboardDocumentData` 快照 + `updatedAt`。
 
 ### 3.2 File Autosave
 
@@ -67,7 +73,7 @@
 
 ## 6. 图片资源策略
 
-- 图片节点 `data.src` 只保存外链引用。
+- 图片节点 `payload.src` 只保存外链引用。
 - 支持 `http(s)` URL 和相对路径。
 - 相对路径解析基准：
   - 已保存文档：`.whiteboard` 文件所在目录。
@@ -81,7 +87,7 @@ export interface IWhiteboardDraftRecord {
   readonly workspaceId: string
   readonly filepath?: string
   readonly updatedAt: number
-  readonly snapshot: IWhiteboardDocument
+  readonly snapshot: IWhiteboardDocumentData
 }
 
 export interface IStorageStatus {

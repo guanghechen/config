@@ -112,7 +112,8 @@ src/view/whiteboard/           # 页面胶水层
 
 `model`
 
-- 定义 `IWhiteboardDocument`、`ICanvasGraph`、`ICanvasNode`、`ICanvasPort`、`ICanvasEdge`。
+- 定义持久化模型：`IWhiteboardDocumentData`、`ICanvasGraphData`、`ICanvasNodeData`、`ICanvasPortData`、`ICanvasEdgeData`。
+- 定义运行时模型：`IWhiteboardDocument`、`ICanvasGraph`、`ICanvasNode`、`ICanvasPort`、`ICanvasEdge`。
 
 `store`
 
@@ -125,6 +126,7 @@ src/view/whiteboard/           # 页面胶水层
 - `ToolController`：工具状态与输入分发。
 - `InteractionEngine`：DOM 事件转运行时事件。
 - `RenderScheduler`：按 layer 触发增量重绘。
+- `ComputeEventQueue`：队列化非实时计算，和渲染预算协同。
 
 `renderer`
 
@@ -154,6 +156,8 @@ src/view/whiteboard/           # 页面胶水层
 View Mount
   -> createWhiteboardRuntime()
   -> load document / recover draft
+  -> hydrate graph index/runtime state
+  -> full revalidate edges
   -> register built-in nodes/tools
   -> activate default tool
   -> start render scheduler
@@ -167,6 +171,7 @@ Pointer/Keyboard
   -> Action
   -> CommandBus
   -> SceneStore
+  -> ComputeEventQueue (realtime + priority lanes)
   -> HistoryStore
   -> RenderScheduler
   -> AutosaveService
@@ -189,6 +194,7 @@ Click markdown node
 - ID 统一使用 `prefix + nanoid`（如 `node-{nanoid}` / `port-{nanoid}`）。
 - zoom 统一范围：`0.1 ~ 30`。
 - warning 允许保存，但必须持续可视化。
+- validation 不落盘，文档加载后必须重算。
 - autosave 细则以 `storage.md` 为准。
 
 ## 8. 第一阶段落地（骨架）
