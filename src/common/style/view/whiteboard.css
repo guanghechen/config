@@ -1,6 +1,6 @@
 @layer components {
   .vl-root:where([data-scenario='whiteboard']) {
-    --v-vlt-height: 3rem;
+    --v-vlt-height: 2.5rem;
 
     box-sizing: border-box;
     position: relative;
@@ -41,7 +41,7 @@
       padding-left: 1rem;
       padding-right: 1rem;
 
-      @apply bg-gray-50 dark:bg-gray-800;
+      @apply bg-transparent dark:bg-transparent;
 
       .vlt-leftest,
       .vlt-rightest {

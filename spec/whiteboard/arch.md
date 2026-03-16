@@ -22,6 +22,7 @@
 - 可扩展：节点类型、工具类型可注册扩展。
 - 可测试：核心逻辑可脱离 React 独立测试。
 - 可迭代：先最小闭环，再扩展功能。
+- 可迁移：`feature/whiteboard` 可独立迁移到其他应用，`view` 仅做装配。
 
 ## 3. 代码分层与边界
 
@@ -52,6 +53,26 @@ src/view/whiteboard/           # 页面胶水层
 - `store` 不依赖 React。
 - `extensions/nodes/*` 仅通过 registry 接入，不直接改写 store 内部状态。
 
+单向调用拓扑（强约束）：
+
+```text
+src/view/whiteboard/*
+  -> src/feature/whiteboard/app/*
+  -> src/feature/whiteboard/runtime/*
+  -> src/feature/whiteboard/store/*
+  -> src/feature/whiteboard/model/*
+
+src/feature/whiteboard/runtime/*
+  -> src/feature/whiteboard/renderer/*
+  -> src/feature/whiteboard/services/*
+```
+
+说明：
+
+- 任一层不得反向依赖调用方。
+- `model/store` 不得导入 `ui/view`。
+- `view` 只做 props 绑定、生命周期装配与页面样式拼装。
+
 ## 4. 技术选型
 
 ### 4.1 状态管理
@@ -76,19 +97,36 @@ src/view/whiteboard/           # 页面胶水层
 
 方案对比：
 
-1. `Canvas2D + DOM Overlay`（推荐）
-- 优点：适配图形高频渲染与 Markdown 浮窗编辑。
-- 缺点：需要处理坐标同步与命中测试。
+1. `WebGL + DOM Overlay`（推荐）
+- 优点：高负载场景性能更稳，便于后续做 batching 与 shader 扩展。
+- 缺点：实现复杂度高于 Canvas2D。
 
-2. 全 DOM/SVG
-- 优点：开发直观。
-- 缺点：大规模节点性能压力明显。
+2. `Canvas2D + DOM Overlay`
+- 优点：工程成本低。
+- 缺点：首阶段上线后再迁移 WebGL 成本高。
 
-3. WebGL
-- 优点：极限性能高。
-- 缺点：工程复杂度高，不适合首期。
+3. 全 DOM/SVG
+- 优点：调试直观。
+- 缺点：图元规模上来后性能不稳定。
 
-推荐：`Canvas2D + DOM Overlay`。
+推荐：`WebGL + DOM Overlay`。
+
+Renderer contract（v1）：
+
+```ts
+export interface IWhiteboardRenderer {
+  prepare(scene: ICanvasGraph): void
+  render(frame: IRenderFrame): void
+  pick(point: ICanvasPoint): IPickResult | null
+  dispose(): void
+}
+```
+
+说明：
+
+- 图元绘制由 WebGL 承担。
+- Markdown editor、HUD、Inspector 走 DOM overlay。
+- pick 允许先走 CPU 索引，再按需补 WebGL 精细 picking。
 
 ### 4.3 持久化
 
@@ -168,6 +206,7 @@ View Mount
 ```text
 Pointer/Keyboard
   -> ToolController
+  -> runtime draft mutate (for live preview)
   -> Action
   -> CommandBus
   -> SceneStore
@@ -202,10 +241,17 @@ Click markdown node
 ### Phase A：核心闭环（已确认范围）
 
 - 建立 feature/view 两层目录与对外 API。
-- 打通：创建节点、移动节点、撤销重做。
-- 打通：`CanvasPort` + `CanvasEdge` 强类型连接。
-- 打通：markdown 节点 + 单实例 floating editor（最简 Monaco 集成）。
-- 接入 draft autosave 与 `beforeunload flush`。
+- 打通常规绘图工具：`select / hand / rectangle / ellipse / diamond / line / arrow / text / image`。
+- 打通节点交互：`create / move / resize / rotate / delete / duplicate / multi-select / lasso`。
+- 打通图连接：`CanvasPort + CanvasEdge` 强类型连接、实时 validation、warn/error 可视化。
+- 打通文档能力：`undo / redo / copy / paste / z-index 调整 / zoom & pan`。
+- 打通 markdown 节点：单实例 floating editor（最简 Monaco 集成）。
+- 接入持久化：draft autosave、file autosave、`beforeunload flush`、reload revalidate。
+
+验收口径：
+
+- 用户在 Phase A 应可完成与 Excalidraw 常规白板一致的单人编辑流程。
+- 运行时 warning 不落盘；重载文档后可根据当前规则恢复 warning 可视状态。
 
 ### Phase B：交互增强
 

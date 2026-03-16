@@ -184,9 +184,22 @@ export interface IComputeEventCatalog {
 ## 6. Transaction 规则
 
 - pointer down 时 `beginTransaction`。
-- pointer move 产生的连续 Move/Resize/Rotate 命令可 merge。
+- pointer move 只更新 runtime draft，不直接写入历史栈。
 - pointer up 时 `commitTransaction`。
 - `Esc` 或操作取消时 `rollbackTransaction`。
+
+### 6.1 Command 粒度（已确认）
+
+- 主策略：`pointerup commit`。
+- 拖拽期间只做实时预览（runtime draft + realtime queue），不产出历史记录。
+- 在 `pointerup` 时生成单条聚合 command（如 `MoveNodeCommand`），并作为一个 transaction 入栈。
+- `undo/redo` 的最小单位是一次完整交互，而非每帧坐标变化。
+
+示例：
+
+- `drag node 240 frames` -> history 仅新增 1 条 transaction。
+- `resize + rotate`（同一交互会话）-> 可聚合为 1 条 transaction。
+- `拖拽中取消（Esc）` -> 丢弃 runtime draft，不写 history。
 
 ## 7. 历史策略
 

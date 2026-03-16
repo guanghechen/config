@@ -47,7 +47,7 @@
 - Single source of truth：场景状态只在 `SceneStore`。
 - Command-first：所有写操作必须走 command，天然支持 undo/redo。
 - Action/Command 详细定义见 `spec/whiteboard/action.md`。
-- Rendering split：高频绘制走 canvas，富内容走 DOM overlay。
+- Rendering split：高频绘制走 WebGL，富内容走 DOM overlay。
 - Type-safe graph：edge 创建必须通过 port 规则校验。
 - Extension-first：节点、工具、inspector 都走 registry，避免硬编码分支。
 
@@ -110,12 +110,12 @@ WhiteboardApp
      -> Serializer
 
 Render Layers (bottom -> top)
-  1. PaperLayerCanvas
-  2. GridLayerCanvas
-  3. EdgeLayerCanvas
-  4. NodeLayerCanvas
+  1. PaperLayerWebGL
+  2. GridLayerWebGL
+  3. EdgeLayerWebGL
+  4. NodeLayerWebGL
   5. OverlayDomLayer
-  6. InteractionLayerCanvas
+  6. InteractionLayerWebGL
   7. HUDDomLayer
 ```
 

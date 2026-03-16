@@ -19,9 +19,11 @@
 ```text
 Input
   -> Tool
+  -> Runtime Draft
   -> Action
   -> Command
   -> SceneStore
-  -> Renderer
+  -> ComputeEventQueue
+  -> WebGL Renderer + DOM Overlay
   -> Storage
 ```
