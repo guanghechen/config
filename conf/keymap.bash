@@ -1,5 +1,9 @@
 # Readline key bindings
 
+# Align with fish keymap semantics as much as readline allows.
+bind -m vi-command '"\C-w": forward-word'
+bind -m vi-insert '"\C-w": forward-word'
+
 bind -x '"\e[70;6u": "fzf-file"' # Ctrl+Shift+F
 bind -x '"\e[76;6u": "fzf-git-log"' # Ctrl+Shift+L
 bind -x '"\e[71;6u": "fzf-git-status"' # Ctrl+Shift+G

@@ -20,6 +20,8 @@ gr() {
 }
 alias tf='touch "$(date +%Y%m%d_%H%M%S).log"'
 
+alias chown='chown --preserve-root'
+alias chgrp='chgrp --preserve-root'
 alias cp='cp -i'
 alias diff='colordiff'
 alias dir='dir --color=auto'
@@ -39,7 +41,6 @@ alias vdir='vdir --color=auto'
 
 ## claude code
 alias ccc='claude --dangerously-skip-permissions'
-alias cc0='ANTHROPIC_API_KEY="" ANTHROPIC_BASE_URL="$GHC_ANTHROPIC_BASE_URL" ANTHROPIC_AUTH_TOKEN="$GHC_ANTHROPIC_AUTH_TOKEN" ANTHROPIC_MODEL="claude-opus-4.6" ANTHROPIC_SMALL_FAST_MODEL="claude-sonnet-4.5" claude --dangerously-skip-permissions'
 
 ## codex
 alias cx0='codex -p copilot --dangerously-bypass-approvals-and-sandbox'
@@ -52,7 +53,6 @@ alias cxa2-5-4='codex -p azure2-5-4 --dangerously-bypass-approvals-and-sandbox'
 
 ## gemini
 alias ggg='gemini --model="gemini-3-pro-preview" --yolo'
-alias gg0='GOOGLE_CLOUD_PROJECT= GOOGLE_GEMINI_BASE_URL="$GHC_GEMINI_BASE_URL" GEMINI_API_KEY="$GHC_GEMINI_AUTH_TOKEN" gemini --model="gemini-3-pro-preview" --yolo'
 
 ## fzf
 if [[ -n "${HOMEBREW_PREFIX:-}" && -x "$HOMEBREW_PREFIX/bin/fzf" ]]; then
