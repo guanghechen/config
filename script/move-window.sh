@@ -8,13 +8,13 @@ function _ghc_tmux_move_window_ {
 
   local current_session_name
   local current_window_index
-  local current_session_window_count
+  local source_window
+  local target_window
   local created_target=0
-  local switched_client=0
 
   current_session_name=$(tmux display-message -p '#{session_name}')
   current_window_index=$(tmux display-message -p '#{window_index}')
-  current_session_window_count=$(tmux list-windows -t "${current_session_name}" | wc -l)
+  source_window="${current_session_name}:${current_window_index}"
 
   if [ "${current_session_name}" = "${target_session_name}" ]; then
     return 0
@@ -25,22 +25,18 @@ function _ghc_tmux_move_window_ {
     created_target=1
   fi
 
-  if [ "${current_session_window_count}" -eq 1 ]; then
-    tmux switch-client -t "${target_session_name}"
-    switched_client=1
-  fi
-
   if [ "${created_target}" -eq 1 ]; then
     local base_index
-    base_index=$(tmux show-options -gv base-index 2>/dev/null || echo 0)
-    tmux move-window -k -s "${current_session_name}:${current_window_index}" -t "${target_session_name}:${base_index}"
+    base_index=$(tmux display-message -p -t "${target_session_name}" '#{base-index}')
+    target_window="${target_session_name}:${base_index}"
+    tmux link-window -k -s "${source_window}" -t "${target_window}"
   else
-    tmux move-window -s "${current_session_name}:${current_window_index}" -t "${target_session_name}:"
+    target_window="${target_session_name}:"
+    tmux link-window -s "${source_window}" -t "${target_window}"
   fi
 
-  if [ "${switched_client}" -eq 0 ]; then
-    tmux switch-client -t "${target_session_name}"
-  fi
+  tmux switch-client -t "${target_session_name}"
+  tmux unlink-window -t "${source_window}"
 }
 
 _ghc_tmux_move_window_ "$1"
