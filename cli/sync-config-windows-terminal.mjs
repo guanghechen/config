@@ -14,6 +14,7 @@ import { Reporter } from '#stl/reporter'
 const reporter = new Reporter({ prefix: 'sync-config-windows-terminal' })
 
 const DEFAULT_BELL_STYLE = ['taskbar']
+const DEFAULT_SUPPRESS_APPLICATION_TITLE = false
 
 /**
  * Ensure bell notifications are always configured after sync.
@@ -35,6 +36,16 @@ function ensureBellStyle(settings) {
   }
 
   settings.profiles.defaults.bellStyle = [...DEFAULT_BELL_STYLE]
+  settings.profiles.defaults.suppressApplicationTitle = DEFAULT_SUPPRESS_APPLICATION_TITLE
+
+  if (Array.isArray(settings.profiles.list)) {
+    for (const profile of settings.profiles.list) {
+      if (!profile || typeof profile !== 'object') continue
+      if (profile.source === 'Microsoft.WSL') {
+        profile.suppressApplicationTitle = DEFAULT_SUPPRESS_APPLICATION_TITLE
+      }
+    }
+  }
 }
 
 /**
