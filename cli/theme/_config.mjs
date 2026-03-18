@@ -238,6 +238,15 @@ export const apps = [
     render: async (_, template, scheme) => render_template(template, scheme),
   },
   {
+    name: 'yui',
+    home: path.join(XDG_CONFIG_HOME, 'yui'),
+    themes: 'themes/',
+    extname: '.toml',
+    local: 'themes/local.toml',
+    active: _app => true,
+    render: async (_, template, scheme) => render_template(template, scheme),
+  },
+  {
     name: 'tmux',
     home: path.join(XDG_CONFIG_HOME, 'tmux'),
     themes: 'theme/',
