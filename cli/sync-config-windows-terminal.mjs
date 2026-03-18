@@ -13,6 +13,30 @@ import { Reporter } from '#stl/reporter'
 
 const reporter = new Reporter({ prefix: 'sync-config-windows-terminal' })
 
+const DEFAULT_BELL_STYLE = ['taskbar']
+
+/**
+ * Ensure bell notifications are always configured after sync.
+ * @param {Record<string, any>} settings
+ */
+function ensureBellStyle(settings) {
+  if (!settings || typeof settings !== 'object') return
+
+  if (!settings.profiles || typeof settings.profiles !== 'object' || Array.isArray(settings.profiles)) {
+    settings.profiles = {}
+  }
+
+  if (
+    !settings.profiles.defaults ||
+    typeof settings.profiles.defaults !== 'object' ||
+    Array.isArray(settings.profiles.defaults)
+  ) {
+    settings.profiles.defaults = {}
+  }
+
+  settings.profiles.defaults.bellStyle = [...DEFAULT_BELL_STYLE]
+}
+
 /**
  * @param {string} targetSettingsPath - Path to the Windows Terminal settings.json file
  */
@@ -37,6 +61,8 @@ export function handleSyncConfigWindowsTerminal(targetSettingsPath) {
   for (const [key, val] of Object.entries(customized)) {
     raw[key] = val
   }
+
+  ensureBellStyle(raw)
 
   const content = JSON.stringify(raw, null, 2) + '\n'
   fs.writeFileSync(targetSettingsPath, content, encoding)
