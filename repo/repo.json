@@ -183,6 +183,10 @@
           "on": {
             "synced": "pnpm install"
           }
+        },
+        {
+          "branch": "yui",
+          "editions": ["nix", "osx"]
         }
       ]
     },
