@@ -4,6 +4,21 @@ function _ghc_tmux_notify_ {
   tmux display-message "[move-window] $1"
 }
 
+function _ghc_tmux_renumber_session_ {
+  local session_name=$1
+
+  if ! tmux has-session -t "${session_name}" 2>/dev/null; then
+    return 0
+  fi
+
+  if ! tmux move-window -r -t "${session_name}:" 2>/dev/null; then
+    _ghc_tmux_notify_ "renumber-windows failed for session: ${session_name}"
+    return 1
+  fi
+
+  return 0
+}
+
 function _ghc_tmux_fallback_move_window_ {
   local source_window=$1
   local target_session_name=$2
@@ -66,6 +81,8 @@ function _ghc_tmux_move_window_ {
       return 1
     fi
 
+    _ghc_tmux_renumber_session_ "${current_session_name}" || true
+
     if ! tmux switch-client -t "${target_session_name}"; then
       _ghc_tmux_notify_ "window moved, but failed to switch client"
     fi
@@ -80,6 +97,8 @@ function _ghc_tmux_move_window_ {
     _ghc_tmux_notify_ "unlink-window failed, window may still exist in source session"
     return 1
   fi
+
+  _ghc_tmux_renumber_session_ "${current_session_name}" || true
 }
 
 _ghc_tmux_move_window_ "$1"
