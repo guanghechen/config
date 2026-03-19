@@ -76,9 +76,9 @@ export const apps = [
         const is_btop_exist = await command_exists(reporter, 'btop')
         if (is_btop_exist) {
           try {
-            await exec({ reporter, cmd: 'pkill', args: ['-USR2', 'btop'], silent: true })
+            await exec({ reporter, cmd: 'pkill', args: ['-USR2', '-x', 'btop'], silent: true })
           } catch {
-            reporter.error('Failed to send reload signal. cmd: pkill -USR2 btop')
+            reporter.error('Failed to send reload signal. cmd: pkill -USR2 -x btop')
           }
         }
       }
@@ -120,9 +120,9 @@ export const apps = [
         const is_ghostty_exist = await command_exists(reporter, 'ghostty')
         if (is_ghostty_exist) {
           try {
-            await exec({ reporter, cmd: 'pkill', args: ['-USR2', 'ghostty'], silent: true })
+            await exec({ reporter, cmd: 'pkill', args: ['-USR2', '-x', 'ghostty'], silent: true })
           } catch {
-            reporter.error('Failed to send reload signal. cmd: pkill -USR2 ghostty')
+            reporter.error('Failed to send reload signal. cmd: pkill -USR2 -x ghostty')
           }
         }
       }
@@ -245,6 +245,18 @@ export const apps = [
     local: 'themes/local.toml',
     active: _app => true,
     render: async (_, template, scheme) => render_template(template, scheme),
+    after_apply: async (_app, _scheme, reporter) => {
+      // Send SIGUSR2 to yui-tui to trigger config reload (Unix only, Windows doesn't support SIGUSR2)
+      if (PLATFORM !== 'win') {
+        // NOTE: Do not gate by `command_exists('yui-tui')`.
+        // yui-tui may be launched via cargo/target binary and not be discoverable in PATH.
+        try {
+          await exec({ reporter, cmd: 'pkill', args: ['-USR2', '-x', 'yui-tui'], silent: true })
+        } catch {
+          reporter.error('Failed to send reload signal. cmd: pkill -USR2 -x yui-tui')
+        }
+      }
+    },
   },
   {
     name: 'tmux',
