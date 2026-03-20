@@ -610,17 +610,568 @@ end
 
 local picker ---@type era.m.picker.ListComposer
 
----@return nil
-local function copy_current_filepath()
+---@return era.fn.find_explorer.IItem|nil
+---@return era.fn.find_explorer.IFileItem|nil
+local function retrieve_current_item()
   local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
   local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
   ---@cast item era.fn.find_explorer.IItem|nil
-
   if item == nil then
+    return nil, nil
+  end
+
+  local fileitem = item.data.fileitem ---@type era.fn.find_explorer.IFileItem|nil
+  if fileitem == nil then
+    return nil, nil
+  end
+
+  return item, fileitem
+end
+
+---@param value                         string
+---@return string|nil
+---@return string|nil
+local function validate_same_dir_name(value)
+  local name = vim.trim(value) ---@type string
+  if name == "" then
+    return nil, "Name cannot be empty"
+  end
+  if name == "." or name == ".." then
+    return nil, "Invalid name"
+  end
+  if name:find("[/\\]") ~= nil then
+    return nil, "Path separator is not allowed"
+  end
+  return name, nil
+end
+
+---@param value                         string
+---@return string|nil
+---@return boolean
+---@return string|nil
+local function parse_create_input(value)
+  local input = vim.trim(value) ---@type string
+  if input == "" then
+    return nil, false, "Name cannot be empty"
+  end
+  if input == "." or input == ".." then
+    return nil, false, "Invalid name"
+  end
+  if input:find("\\", 1, true) ~= nil then
+    return nil, false, "Path separator is not allowed"
+  end
+
+  local is_directory = false ---@type boolean
+  if input:sub(-1) == "/" then
+    is_directory = true
+    input = input:sub(1, -2)
+  end
+
+  local name, err = validate_same_dir_name(input)
+  if name == nil then
+    return nil, false, err
+  end
+
+  return name, is_directory, nil
+end
+
+---@param from_dir                      string
+---@param name                          string
+---@return string
+local function build_target_path(from_dir, name)
+  return yoz.path.join(from_dir, name, false, stl.env.PATH_SEP)
+end
+
+---@return integer
+local function resolve_prompt_row_near_cursor()
+  local lnum = vim.fn.line(".") ---@type integer
+  local lnum_top = vim.fn.line("w0") ---@type integer
+  local lnum_bottom = vim.fn.line("w$") ---@type integer
+  local lines_above = lnum - lnum_top ---@type integer
+  local lines_below = lnum_bottom - lnum ---@type integer
+
+  if lines_below <= 1 and lines_above > 0 then
+    return -1
+  end
+
+  return 1
+end
+
+---@param target_uuid                   string|nil
+---@param lnum_hint                     integer|nil
+---@return nil
+local function refresh_current_dir(target_uuid, lnum_hint)
+  local dirpath = dot.path.normalize(state_cwd:snapshot()) ---@type string
+  dir_datamap[dirpath] = nil
+
+  local data = fetch_data() ---@type era.m.picker.composer.list.IResetData
+  local has_target = false ---@type boolean
+
+  if target_uuid ~= nil then
+    for _, item in ipairs(data.items) do
+      if item.uuid == target_uuid then
+        has_target = true
+        break
+      end
+    end
+    if has_target then
+      data.uuid_current = target_uuid
+    end
+  end
+
+  picker:reset_data(data)
+
+  if not has_target and lnum_hint ~= nil and #data.items > 0 then
+    local lnum_next = math.max(1, math.min(lnum_hint, #data.items)) ---@type integer
+    picker.result:set_lnum_current(lnum_next)
+  end
+end
+
+---@return nil
+local function add_current_to_ai()
+  local _, fileitem = retrieve_current_item()
+  if fileitem == nil then
     return
   end
 
-  local filepath = item.data.fileitem.path ---@type string
+  era.fn.add_locations_to_ai({ { filepath = fileitem.path } })
+end
+
+---@return nil
+local function create_entry()
+  local item, fileitem = retrieve_current_item()
+
+  local parent_dir = dot.path.normalize(state_cwd:snapshot()) ---@type string
+  if item ~= nil and fileitem ~= nil then
+    if item.text == "../" then
+      parent_dir = dot.path.normalize(state_cwd:snapshot()) ---@type string
+    elseif fileitem.type == "directory" then
+      parent_dir = dot.path.normalize(fileitem.path) ---@type string
+    else
+      parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+    end
+  end
+
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_result = picker.result:get_winnr() ---@type integer|nil
+
+  ---@param input                       string|nil
+  ---@return nil
+  local function on_confirmed(input)
+    if input == nil then
+      return
+    end
+
+    local name, is_directory, parse_err = parse_create_input(input)
+    if parse_err ~= nil then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "create",
+        message = parse_err,
+      })
+      return
+    end
+    if name == nil then
+      return
+    end
+
+    local target = build_target_path(parent_dir, name) ---@type string
+    if yoz.path.is_exist(target) then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "create",
+        message = "Target already exists",
+        details = { target = target },
+      })
+      return
+    end
+
+    local success = false ---@type boolean
+    if is_directory then
+      stl.env.mkdirs(target, true)
+      success = yoz.path.is_exist_directory(target)
+    else
+      stl.env.mkdirs(target, false)
+      local ok = pcall(vim.fn.writefile, {}, target) ---@type boolean
+      success = ok and yoz.path.is_exist_file(target)
+    end
+
+    if not success then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "create",
+        message = "Failed to create target",
+        details = { target = target, is_directory = is_directory },
+      })
+      return
+    end
+
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "create",
+      message = string.format("Created: %s", target),
+    })
+    refresh_current_dir(target, nil)
+  end
+
+  ---@return nil
+  local function open_prompt()
+    local row = resolve_prompt_row_near_cursor() ---@type integer
+
+    vim.ui.input({
+      prompt = "Create: ",
+      relative = "cursor",
+      row = row,
+      col = 4,
+    }, function(input)
+      on_confirmed(input)
+
+      if winnr_current ~= vim.api.nvim_get_current_win() then
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(winnr_current) then
+            vim.api.nvim_set_current_win(winnr_current)
+          end
+        end)
+      end
+    end)
+  end
+
+  if winnr_result ~= nil and winnr_result > 0 and vim.api.nvim_win_is_valid(winnr_result) then
+    if winnr_current == winnr_result then
+      open_prompt()
+    else
+      vim.api.nvim_win_call(winnr_result, open_prompt)
+    end
+  else
+    on_confirmed(vim.fn.input("Create: "))
+  end
+end
+
+---@return nil
+local function delete_entry()
+  local item, fileitem = retrieve_current_item()
+  if item == nil or fileitem == nil then
+    return
+  end
+
+  if item.text == "../" then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "delete",
+      message = "Cannot delete parent entry ../",
+    })
+    return
+  end
+
+  local target = fileitem.path ---@type string
+  local is_directory = fileitem.type == "directory" ---@type boolean
+  local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_result = picker.result:get_winnr() ---@type integer|nil
+
+  ---@param input                       string|nil
+  ---@return nil
+  local function on_confirmed(input)
+    if input == nil then
+      return
+    end
+
+    local answer = vim.trim(input):lower() ---@type string
+    if answer ~= "y" and answer ~= "yes" then
+      return
+    end
+
+    local ok = false ---@type boolean
+    if is_directory then
+      ok = vim.fn.delete(target, "rf") == 0
+    else
+      ok = vim.fn.delete(target) == 0
+    end
+
+    if not ok then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "delete",
+        message = "Failed to delete target",
+        details = { target = target, is_directory = is_directory },
+      })
+      return
+    end
+
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "delete",
+      message = string.format("Deleted: %s", target),
+    })
+    refresh_current_dir(nil, lnum_current)
+  end
+
+  ---@return nil
+  local function open_prompt()
+    local row = resolve_prompt_row_near_cursor() ---@type integer
+
+    vim.ui.input({
+      inputtype = "confirmation",
+      prompt = string.format("Delete '%s'? ", item.text),
+      relative = "cursor",
+      row = row,
+      col = 4,
+    }, function(input)
+      on_confirmed(input)
+
+      if winnr_current ~= vim.api.nvim_get_current_win() then
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(winnr_current) then
+            vim.api.nvim_set_current_win(winnr_current)
+          end
+        end)
+      end
+    end)
+  end
+
+  if winnr_result ~= nil and winnr_result > 0 and vim.api.nvim_win_is_valid(winnr_result) then
+    if winnr_current == winnr_result then
+      open_prompt()
+    else
+      vim.api.nvim_win_call(winnr_result, open_prompt)
+    end
+  else
+    on_confirmed(vim.fn.input(string.format("Delete '%s'? ", item.text)))
+  end
+end
+
+---@param filename                      string
+---@param is_directory                  boolean
+---@return string
+local function suggest_copy_name(filename, is_directory)
+  if is_directory then
+    return filename .. "-copy"
+  end
+
+  local ext = yoz.path.extname(filename) ---@type string
+  if ext ~= "" and #filename > #ext then
+    local base = filename:sub(1, #filename - #ext) ---@type string
+    return base .. "-copy" .. ext
+  end
+
+  return filename .. "-copy"
+end
+
+---@return nil
+local function copy_entry_as()
+  local item, fileitem = retrieve_current_item()
+  if item == nil or fileitem == nil then
+    return
+  end
+
+  if item.text == "../" then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "copy_as",
+      message = "Cannot copy parent entry ../",
+    })
+    return
+  end
+
+  local source = fileitem.path ---@type string
+  local parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+  local is_directory = fileitem.type == "directory" ---@type boolean
+  local suggested_name = suggest_copy_name(fileitem.name, is_directory) ---@type string
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_result = picker.result:get_winnr() ---@type integer|nil
+
+  ---@param input                       string|nil
+  ---@return nil
+  local function on_confirmed(input)
+    if input == nil then
+      return
+    end
+
+    local new_name, err = validate_same_dir_name(input)
+    if new_name == nil then
+      if err ~= nil then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "copy_as",
+          message = err,
+        })
+      end
+      return
+    end
+
+    local target = build_target_path(parent_dir, new_name) ---@type string
+    if target == source then
+      return
+    end
+
+    if yoz.path.is_exist(target) then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "copy_as",
+        message = "Target already exists",
+        details = { target = target },
+      })
+      return
+    end
+
+    local ok = is_directory and stl.fs.copy_directory(source, target, true) or stl.fs.copy_file(source, target, true)
+    if not ok then
+      return
+    end
+
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "copy_as",
+      message = string.format("Copied to: %s", target),
+    })
+    refresh_current_dir(target, nil)
+  end
+
+  ---@return nil
+  local function open_prompt()
+    local row = resolve_prompt_row_near_cursor() ---@type integer
+
+    vim.ui.input({
+      prompt = "Copy as: ",
+      default = suggested_name,
+      relative = "cursor",
+      row = row,
+      col = 4,
+    }, function(input)
+      on_confirmed(input)
+
+      if winnr_current ~= vim.api.nvim_get_current_win() then
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(winnr_current) then
+            vim.api.nvim_set_current_win(winnr_current)
+          end
+        end)
+      end
+    end)
+  end
+
+  if winnr_result ~= nil and winnr_result > 0 and vim.api.nvim_win_is_valid(winnr_result) then
+    if winnr_current == winnr_result then
+      open_prompt()
+    else
+      vim.api.nvim_win_call(winnr_result, open_prompt)
+    end
+  else
+    on_confirmed(vim.fn.input("Copy as: ", suggested_name))
+  end
+end
+
+---@return nil
+local function rename_entry()
+  local item, fileitem = retrieve_current_item()
+  if item == nil or fileitem == nil then
+    return
+  end
+
+  if item.text == "../" then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "rename",
+      message = "Cannot rename parent entry ../",
+    })
+    return
+  end
+
+  local source = fileitem.path ---@type string
+  local parent_dir = dot.path.normalize(fileitem.dir) ---@type string
+  local is_directory = fileitem.type == "directory" ---@type boolean
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_result = picker.result:get_winnr() ---@type integer|nil
+
+  ---@param input                       string|nil
+  ---@return nil
+  local function on_confirmed(input)
+    if input == nil then
+      return
+    end
+
+    local new_name, err = validate_same_dir_name(input)
+    if new_name == nil then
+      if err ~= nil then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "rename",
+          message = err,
+        })
+      end
+      return
+    end
+
+    local target = build_target_path(parent_dir, new_name) ---@type string
+    if target == source then
+      return
+    end
+
+    if yoz.path.is_exist(target) then
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "rename",
+        message = "Target already exists",
+        details = { target = target },
+      })
+      return
+    end
+
+    local ok = era.fn.rename({ from = source, to = target, isdir = is_directory }) ---@type boolean
+    if not ok then
+      return
+    end
+
+    stl.reporter.info({
+      from = __module_name__,
+      subject = "rename",
+      message = string.format("Renamed to: %s", target),
+    })
+    refresh_current_dir(target, nil)
+  end
+
+  ---@return nil
+  local function open_prompt()
+    local row = resolve_prompt_row_near_cursor() ---@type integer
+
+    vim.ui.input({
+      prompt = "Rename to: ",
+      default = fileitem.name,
+      relative = "cursor",
+      row = row,
+      col = 4,
+    }, function(input)
+      on_confirmed(input)
+
+      if winnr_current ~= vim.api.nvim_get_current_win() then
+        vim.schedule(function()
+          if vim.api.nvim_win_is_valid(winnr_current) then
+            vim.api.nvim_set_current_win(winnr_current)
+          end
+        end)
+      end
+    end)
+  end
+
+  if winnr_result ~= nil and winnr_result > 0 and vim.api.nvim_win_is_valid(winnr_result) then
+    if winnr_current == winnr_result then
+      open_prompt()
+    else
+      vim.api.nvim_win_call(winnr_result, open_prompt)
+    end
+  else
+    on_confirmed(vim.fn.input("Rename to: ", fileitem.name))
+  end
+end
+
+---@return nil
+local function copy_current_filepath()
+  local _, fileitem = retrieve_current_item()
+  if fileitem == nil then
+    return
+  end
+
+  local filepath = fileitem.path ---@type string
   if #filepath < 1 then
     return
   end
@@ -675,17 +1226,15 @@ picker = era.m.picker.ListComposer.new({
   keymaps_finder = {
     {
       modes = { "n", "x" },
-      key = "oa",
+      key = "oA",
       desc = "filetree: add to ai",
-      callback = function()
-        local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
-        local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
-        ---@cast item                   era.fn.find_explorer.IItem|nil
-
-        if item ~= nil then
-          era.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
-        end
-      end,
+      callback = add_current_to_ai,
+    },
+    {
+      modes = { "n", "x" },
+      key = "oa",
+      desc = "filetree: create",
+      callback = create_entry,
     },
     {
       modes = { "n", "x" },
@@ -693,28 +1242,62 @@ picker = era.m.picker.ListComposer.new({
       desc = "filetree: copy filepath",
       callback = copy_current_filepath,
     },
+    {
+      modes = { "n", "x" },
+      key = "od",
+      desc = "filetree: delete",
+      callback = delete_entry,
+    },
+    {
+      modes = { "n", "x" },
+      key = "or",
+      desc = "filetree: rename",
+      callback = rename_entry,
+    },
+    {
+      modes = { "n", "x" },
+      key = "c",
+      desc = "filetree: copy as",
+      callback = copy_entry_as,
+    },
   },
 
   keymaps_result = {
     {
       modes = { "i", "n", "x" },
-      key = "oa",
+      key = "oA",
       desc = "filetree: add to ai",
-      callback = function()
-        local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
-        local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
-        ---@cast item                   era.fn.find_explorer.IItem|nil
-
-        if item ~= nil then
-          era.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
-        end
-      end,
+      callback = add_current_to_ai,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "oa",
+      desc = "filetree: create",
+      callback = create_entry,
     },
     {
       modes = { "i", "n", "x" },
       key = "oc",
       desc = "filetree: copy filepath",
       callback = copy_current_filepath,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "od",
+      desc = "filetree: delete",
+      callback = delete_entry,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "or",
+      desc = "filetree: rename",
+      callback = rename_entry,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "c",
+      desc = "filetree: copy as",
+      callback = copy_entry_as,
     },
   },
 

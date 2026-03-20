@@ -2,162 +2,288 @@
 
 ## 概述
 
-`find-explorer` 是一个基于 `era.m.picker.ListComposer` 的目录浏览与快速打开工具，入口实现位于 `lua/era/fn/find-explorer.lua`。
+`find-explorer` 是基于 `era.m.picker.ListComposer` 的目录浏览与快速打开工具，入口位于 `lua/era/fn/find-explorer.lua`。
 
-它的目标是：
+本设计定义 `find-explorer` 的最终交互契约，重点补齐文件动作能力：
 
-- 在当前目录上下文中快速筛选文件/目录。
-- 通过 preview 直接查看文本文件内容或目录清单。
-- 在不离开 picker 的情况下完成路径复制、切目录、打开文件。
+- `oa`: create（创建）
+- `od`: delete（删除）
+- `c`: copy as（同目录复制并改名）
+- `or`: rename（同目录重命名）
+- `oc`: copy path（路径复制菜单，保持不变）
+- `oA`: add to AI（原 `oa` 迁移）
 
-本文档描述当前代码行为，不描述历史方案或计划方案。
+## 目标与边界
+
+目标：
+
+- 在不离开 picker 的前提下完成常用文件操作。
+- 操作语义稳定、可预测，避免“轻按一个键就跨目录移动”。
+- 保持与现有 `explorer/filetree` 的动作命名风格一致（`oa/od/or/oc`）。
+
+非目标：
+
+- 不做批量 rename / 批量 copy。
+- 不在 `find-explorer` 内支持跨目录 move（交给 `explorer` 或后续单独动作）。
+- 不引入复杂事务回滚。
 
 ## 入口与触发
 
 - 命令入口：`Ffindexplorer`（可选参数：`filepath`）。
 - 函数入口：`era.fn.find_explorer(specified_filepath)`。
-- 默认快捷键：
-  - `<leader>fe` -> `K.find.explorer`
-  - `<leader><leader>` 在非 git repo 场景会回退到 `K.find.explorer`
+
+初始目录解析顺序保持不变：
+
+1. 参数是存在目录 -> 使用该目录。
+2. 参数是存在文件 -> 使用其父目录。
+3. 否则尝试当前 tab 的 sourcefile window。
+4. 最终 `reset_data + focus`。
 
 ## 核心状态
 
-`find-explorer` 在模块内维护以下状态：
+保留现有状态：
 
 - `state_cwd: Observable<string>`
-  - 当前浏览目录。
 - `search_pattern: Observable<string>`
-  - finder 输入内容。
 - `flag_fuzzy / flag_regex / flag_case_sensitive`
-  - 匹配行为开关。
 - `dir_datamap: table<string, IDirItem>`
-  - 目录级缓存（目录项列表 + 各字段显示宽度）。
 - `file_datamap: table<string, IFileItem>`
-  - 路径级缓存（用于渲染和 `../` 父目录条目）。
 
-## 数据获取与构建
+新增状态：无。
 
-### 目录读取
+设计原则：
 
-- 底层读取使用 `yoz.fs.readdir(dirpath)`。
-- 成功时会缓存：
-  - `raw_data.itself` -> 当前目录自身元信息（用于父目录条目跳转）。
-  - `raw_data.items` -> 当前目录下一层子项。
-- 失败时通过 `stl.reporter.error` 上报错误。
+- 动作执行采用“即时计算 + 强制刷新”模型，不新增全局状态机。
 
-### 列表数据构建
+## 键位契约
 
-`fetch_data()` 每次返回 `ListComposer` 需要的 `IResetData`：
+`finder/result` 统一动作键如下：
 
-- 第 1 项（可选）是 `../`，`uuid = parent_dirpath`。
-- 其余项来自当前目录子项：
-  - 目录显示为 `name/`
-  - 文件显示为 `name`
-- `uuid_current` 优先对齐当前 tab 的 sourcefile window 对应文件；找不到时回退到第 2 项。
+```text
+oA   add to AI
+oa   create
+oc   copy path menu
+od   delete
+or   rename
+c    copy as (same directory)
+```
 
-## 渲染设计
+说明：
 
-### Result 渲染
+- `oc` 保持现有菜单：`absolute / relative / filename`。
+- `oa` 从“add to AI”迁移为“create”。
+- `oA` 承接原“add to AI”。
+- `c` 为快速 copy as，优先在 `result` 窗口生效。
 
-`render_result` 最终调用 `render_file_list()`，每行由下列字段组成：
+## 动作语义
 
-- `icon`
-- `filename`
-- `perm`
-- `size`
-- `date`
+### `oa` Create
 
-行为细节：
+输入：`vim.ui.input("Create: ")`。
 
-- 列宽按当前目录所有项计算，保证对齐。
-- `filename` 会按结果窗口宽度做截断（`...`）。
-- match 高亮只渲染在可见文件名范围内，避免截断后高亮越界。
+规则：
 
-### Preview 渲染
+- 输入格式仅允许 `name` 或 `name/`。
+- `name` 不能为空，且不得包含 `/`、`\`，并且不能等于 `.` 或 `..`。
+- 输入为 `name/` -> 创建目录。
+- 输入为 `name` -> 创建文件。
+- 其他格式 -> 拒绝并报错。
 
-- 当前项为文本文件：
-  - 最多读取 `300` 行。
-  - 自动推断并设置 `filetype`。
-  - 显示行号与 `cursorline`。
-- 当前项为非文本文件：
-  - 显示 `Not a text file, cannot preview.`。
-- 当前项为目录：
-  - 渲染目录下一层内容的元信息清单。
-  - 非 Windows 额外显示 owner/group。
+父目录选择：
 
-## 交互行为
+- 当前项是目录 -> 在该目录下创建。
+- 当前项是文件 -> 在该文件所在目录创建。
+- 当前项为 `../` -> 在当前 `state_cwd` 创建。
+- 当前项不存在（例如空目录）-> 在当前 `state_cwd` 创建。
 
-### Confirm
+冲突策略：
 
-- 选中 `file`：
-  - 优先切回 sourcefile window。
-  - 关闭 picker。
-  - 调用 `dot.win.open_filepath()` 打开文件。
-- 选中 `directory`：
-  - 更新 `state_cwd` 进入目录，不关闭 picker。
+- 目标已存在 -> 报错并终止。
 
-### 导航
+成功后：
 
-- `<Backspace>`：进入父目录（`dirname(state_cwd)`）。
-- 订阅 `state_cwd`：目录变化时自动 `reset_data`。
+- 刷新当前目录。
+- 光标定位到新建项。
 
-### 功能键
+### `od` Delete
 
-- `oa`（finder/result）：将当前条目路径作为 location 添加到 AI。
-- `oc`（finder/result）：打开 copy 菜单，支持：
-  - `absolute`
-  - `relative`
-  - `filename`
+输入：`vim.ui.input(inputtype="confirmation")`。
 
-`oc` 设计细节：
+规则：
 
-- 复用 `era.fn.select_copy_filepath()`，弹窗位置固定为 `relative = "cursor", row = 1, col = 4`。
-- 若触发时焦点不在 result window，完成后会恢复原窗口焦点。
+- 当前项不存在 -> no-op。
+- `../` 不允许删除。
+- 文件：删除单文件。
+- 目录：递归删除目录。
+- 仅接受 `y` / `yes`（大小写不敏感）确认。
 
-## 初始目录解析规则
+成功后：
 
-`find_explorer(specified_filepath)` 的目录解析顺序：
+- 刷新当前目录。
+- 光标尽量停留在原行号邻近项。
 
-1. 若参数是存在的目录：直接使用该目录。
-2. 若参数是存在的文件：使用其父目录。
-3. 否则尝试当前 tab 的 sourcefile window：
-   - sourcefile 是目录 -> 使用该目录。
-   - sourcefile 是文件 -> 使用其父目录。
-4. 最终 `reset_data + focus`。
+### `c` Copy As（同目录）
 
-## 使用示例
+输入：`vim.ui.input("Copy as: ", default = suggested_name)`。
 
-### 示例 1：从当前文件所在目录启动
+`suggested_name` 规则：
 
-- 触发：`<leader>fe`
-- 结果：自动定位到当前 sourcefile 所在目录，并优先选中当前文件（若存在于列表中）。
+- 文件 `a.ts` -> `a-copy.ts`
+- 无扩展名文件 `LICENSE` -> `LICENSE-copy`
+- 目录 `foo/` -> `foo-copy`
 
-### 示例 2：在列表中切目录
+规则：
 
-- 触发：在 `src/` 上按 `<Enter>`
-- 结果：进入 `src/` 并刷新列表；按 `<Backspace>` 可返回父目录。
+- 当前项不存在 -> no-op。
+- `../` 不支持 copy。
+- 仅允许输入名称，不允许 `/` 或 `\`。
+- 目标路径始终为 `dirname(source) + new_name`。
+- 源是目录时，目标目录名需保留目录语义（内部实现按目录复制）。
 
-### 示例 3：复制路径
+冲突策略：
 
-- 触发：在任意条目按 `oc`
-- 结果：弹出 copy 选项；选择 `2` 可复制相对 `cwd` 的路径，选择 `3` 可仅复制文件名。
+- 目标已存在 -> 报错并终止（v1 不做 overwrite）。
 
-## 已知边界
+成功后：
 
-### 边界 1：缓存不会自动失效
+- 刷新当前目录。
+- 光标定位到复制后的新项。
 
-- 触发：目录内容在外部被修改，但未切换目录/未强制刷新。
-- 证据：`dir_datamap/file_datamap` 为进程内缓存，`fetch_diritem(dir, false)` 优先读缓存。
-- 影响：列表与 preview 可能短暂显示旧内容。
+### `or` Rename（同目录）
 
-### 边界 2：Result 仅展示单层目录
+输入：`vim.ui.input("Rename to: ", default = current_name)`。
 
-- 触发：当前目录包含多层子目录。
-- 证据：`fetch_data()` 只读取并渲染 `state_cwd` 的直接子项。
-- 影响：深层浏览依赖 Enter 逐层进入，不是 tree 展开式交互。
+规则：
 
-### 边界 3：workspace 标题文案与功能名不一致
+- 当前项不存在 -> no-op。
+- `../` 不支持 rename。
+- 仅允许输入名称，不允许 `/` 或 `\`。
+- 目标路径始终为 `dirname(source) + new_name`。
 
-- 触发：`state_cwd == workspace`。
-- 证据：`gen_title()` 返回 `Find files (workspace)`。
-- 影响：UI 文案与模块名 `Find Explorer` 不完全一致，但不影响行为。
+冲突策略：
+
+- 目标已存在 -> 报错并终止。
+
+成功后：
+
+- 刷新当前目录。
+- 光标定位到新名称项。
+
+### `oc` Copy Path Menu
+
+保持现有行为：
+
+- 菜单项：`absolute / relative / filename`。
+- 弹窗位置：`relative = "cursor", row = 1, col = 4`。
+- 若触发时焦点不在 result window，完成后恢复焦点。
+
+### `oA` Add To AI
+
+行为与原 `oa` 完全一致：
+
+- 取当前项路径并调用 `era.fn.add_locations_to_ai`。
+
+## 输入校验与安全约束
+
+统一校验函数（逻辑约束）：
+
+- 名称不得为空。
+- 对 `c/or`：名称不得包含路径分隔符（`/`、`\\`）。
+- 对 `oa`：输入必须满足 `name` 或 `name/`，其中 `name` 不得包含 `/`、`\\`，且不能等于 `.` 或 `..`。
+
+统一拒绝目标：
+
+- `../` 虚拟父项。
+
+## 刷新与缓存策略
+
+动作成功后执行统一刷新流程：
+
+1. 定位 `dirpath = state_cwd:snapshot()`。
+2. 清理目录缓存：`dir_datamap[dirpath] = nil`。
+3. 强制重读：`fetch_diritem(dirpath, true)`。
+4. `picker:reset_data(fetch_data())`。
+5. 若存在 `target_path`，尝试将 `lnum_current` 对齐到目标项。
+
+说明：
+
+- 不做全缓存清空，避免在大目录切换时引入额外抖动。
+
+## 错误处理与反馈
+
+统一策略：
+
+- 失败必须通过 `stl.reporter.error` 给出可读错误。
+- 成功可选 `stl.reporter.info`（create/delete/copy/rename 建议保留）。
+- 所有失败都不改变 `state_cwd`。
+
+错误示例：
+
+- `Invalid name: path separator is not allowed`
+- `Target already exists`
+- `Cannot delete parent entry ../`
+
+## 性能评估
+
+动作复杂度：
+
+- `create/rename/copy/delete` 的主耗时为文件系统 IO。
+- UI 刷新只重建当前目录单层列表，复杂度约 `O(n)`（`n` 为当前目录子项数）。
+
+风险点：
+
+- 超大目录下 `fetch_data + render_result` 仍可能卡顿。
+- 本设计不新增全目录扫描，因此不会比当前显著更差。
+
+## 关键决策对比
+
+### 决策 1：`c/or` 是否允许输入路径
+
+示例 A：仅允许名称（推荐）
+
+- 输入：`new.txt`
+- 结果：只在当前项所在目录操作。
+- 对比：语义稳定，不会误变成跨目录 move。
+
+示例 B：允许 `subdir/new.txt`
+
+- 输入：`archive/new.txt`
+- 结果：行为等同 move/copy to another dir。
+- 对比：灵活但风险高，和“同目录操作”目标冲突。
+
+推荐：采用示例 A。
+
+### 决策 2：冲突文件处理
+
+示例 A：直接报错（推荐）
+
+- 冲突即终止，提示 `Target already exists`。
+- 对比：实现简单，避免覆盖风险。
+
+示例 B：弹窗询问覆盖
+
+- 需要额外确认流与目录覆盖语义。
+- 对比：交互复杂，容易出现分支遗漏。
+
+推荐：v1 采用示例 A。
+
+### 决策 3：刷新策略
+
+示例 A：全量清空缓存
+
+- 实现简单，但每次动作都损失缓存收益。
+
+示例 B：只清理当前目录缓存（推荐）
+
+- 动作后只强刷 `state_cwd`，性能与一致性平衡更好。
+
+推荐：采用示例 B。
+
+## 实现前验收标准
+
+实现必须满足：
+
+- `oa/od/c/or/oc/oA` 在 finder/result 行为一致。
+- `c/or` 输入路径分隔符会被拒绝。
+- 删除/重命名/复制成功后，列表立即反映变更，且光标定位到目标项或邻近项。
+- `oc` 与 `oA` 现有能力无回归。
