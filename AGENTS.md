@@ -1,52 +1,53 @@
 # AGENTS.md
 
-This file provides guidance when working with code in this repository.
+This file defines the baseline guidance for contributors and coding agents.
 
-**Important**: This is a personal-use config. Only support latest Neovim version—no backward compatibility needed. No configurability required—hardcode values directly, avoid unnecessary abstraction.
+## Principles
 
-## Project Overview
+- Personal config only: target latest Neovim; no backward compatibility work.
+- Prefer direct, practical implementations; avoid unnecessary abstractions and optional config layers.
+- Keep changes scoped to the task; do not perform unrelated refactors.
 
-This is a deeply-customized Neovim configuration combining Lua and Rust. Rust-native helpers are exposed through the `yoz` module for fast search, replace, filesystem, and string utilities.
+## Dependency Boundaries
 
-## Architecture (Summary)
+Layer order must remain one-directional:
 
+```text
+yoz -> stl -> dot -> era -> ark/vendor
 ```
-yoz → stl → dot → era → ark/vendor
-```
 
-| Layer | Module   | Description                                                  |
-|:------|:---------|:-------------------------------------------------------------|
-| L0    | `yoz`    | Rust-native library, no Neovim dependency                    |
-| L1    | `stl`    | Standard library, may use `yoz` and `vim` globals            |
-| L2    | `dot`    | Core framework: configuration, context, theme, commands      |
-| L3    | `era`    | Business layer: actions, UI modules, plugin configs          |
-| L4    | `vendor` | Environment entry points: neovim/neovide/vscode              |
+- Lower layers must not depend on higher layers.
+- Global modules are initialized in `ark/bootstrap.lua`: `_G.yoz`, `_G.stl`, `_G.dot`, `_G.era`.
 
-**Global Variables** (set in `ark/bootstrap.lua`): `_G.yoz`, `_G.stl`, `_G.dot`, `_G.era`
+## Base Coding Rules
 
-For module details, data flow, or async patterns, refer to `spec/ARCHITECTURE.md`.
+- Naming: use `bufnr`/`winnr`/`tabnr`; arrays use `bufnrs`/`winnrs`/`tabnrs`.
+- Prefer `vim.api` over `vim.fn`.
+- For buffer/window options, use `nvim_set_option_value` / `nvim_get_option_value`.
+- Keep `__module_name__` in each module for structured reporting.
+- Keymaps should use `stl.t.IKeymap[]` and `stl.nvim.fn.bindkeys`.
 
-## Code Style (Summary)
+## Module Usage Guidance (`yoz` / `stl` / `dot`)
 
-- Naming: `bufnr`/`winnr`/`tabnr`, arrays use `bufnrs`/`winnrs`/`tabnrs`
-- Prefer `vim.api` over `vim.fn`
-- Use `nvim_set_option_value`/`nvim_get_option_value` for buffer/window options
-- Type annotations align to column 40
-- Optional params/fields use `?` prefix; return types use `|nil` suffix
-- Define `__module_name__` in each module for error reporting
-- Keymap: use `stl.t.IKeymap[]` + `stl.nvim.fn.bindkeys`
+- `yoz`: use for performance-sensitive helpers (path, fs, search, replace, uri).
+- `stl`: use shared runtime helpers (async, reporter, string/table/fs/tmux, core data structures).
+- `dot`: use framework-level APIs (context/state/path/win/tab/command/theme).
 
-**Don'ts:**
+Examples:
 
-- `vim.fn.bufnr()` / `vim.fn.winnr()` → use `vim.api` equivalents
-- `vim.bo` / `vim.wo` → use `nvim_set_option_value` / `nvim_get_option_value`
-- `vim.fs.normalize()` → use `dot.path.normalize()`
-- `nvim_buf_add_highlight()` → use `vim.hl.range()`
-- Magic `0` for current buf/win/tab → use explicit `nvim_get_current_*()` variables
+- Use `dot.path.normalize()` instead of `vim.fs.normalize()`.
+- Use `vim.hl.range()` instead of `nvim_buf_add_highlight()`.
+- Use `stl.reporter.{debug|info|warn|error}` for user-facing diagnostics.
 
-For detailed examples or style fixes, refer to `spec/CODESTYLE.md`.
+## Spec Structure
 
-## Debug
+- CRITICAL: `spec/design/` is the single source of truth for final design decisions. Stable design must live in `design/`.
+- CRITICAL: `spec/roadmap/` and `spec/plan/` do not carry final design. They describe phase goals and execution steps only.
+- ALWAYS: Unfinalized, review-pending, or experimental proposals go to `spec/draft/`. Move to `spec/design/` only after finalization.
+- ALWAYS: Prefer reference direction `roadmap/plan -> design` (and `-> draft` only when needed). Avoid reverse dependency `design -> roadmap/plan`.
 
-- `:messages` is not available; use `:Fuxcopynotifications` to copy notification history to clipboard
-- To collect LSP diagnostics in headless mode, follow the instructions in `spec/debug/lsp.md`
+## Detailed Docs
+
+- Architecture details: `spec/ARCHITECTURE.md`
+- Code style details: `spec/CODESTYLE.md`
+- LSP headless debug guide: `spec/debug/lsp.md`

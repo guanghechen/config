@@ -1,17 +1,18 @@
-# Code Style
+# CODESTYLE.md
 
-## Neovim Version
+## Version Policy
 
-- Only supports the latest Neovim version; no backward compatibility code needed
+- Only supports the latest Neovim version.
+- Do not add backward compatibility branches unless explicitly requested.
 
-## Variable Naming
+## Naming Conventions
 
-| Convention | Example                                           |
-|:-----------|:--------------------------------------------------|
-| Buffer nr  | `bufnr` (not `buf`)                               |
-| Window nr  | `winnr` (not `win`)                               |
-| Tab nr     | `tabnr` (not `tab`)                               |
-| Arrays     | `bufnrs`, `winnrs`, `tabnrs` (not `bufs`, `wins`) |
+| Convention | Example                                       |
+|:-----------|:----------------------------------------------|
+| Buffer nr  | `bufnr` (not `buf`)                           |
+| Window nr  | `winnr` (not `win`)                           |
+| Tab nr     | `tabnr` (not `tab`)                           |
+| Arrays     | `bufnrs`, `winnrs`, `tabnrs` (not `bufs`)     |
 
 ## API Preferences
 
@@ -19,30 +20,24 @@
 -- Prefer vim.api over vim.fn
 vim.api.nvim_get_current_buf()     -- not vim.fn.bufnr()
 vim.api.nvim_get_current_win()     -- not vim.fn.winnr()
-vim.api.nvim_buf_get_lines(...)    -- not vim.fn.getline()
 
 -- Prefer explicit variables over magic 0
 local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
 local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
 
--- Use vim.uv directly
-vim.uv.hrtime()
-
--- Buffer/window options: use nvim_set_option_value / nvim_get_option_value
+-- Buffer/window options
 vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
 vim.api.nvim_get_option_value("modifiable", { buf = bufnr })
 vim.api.nvim_set_option_value("number", false, { win = winnr, scope = "local" })
 
--- Use dot.path.normalize instead of vim.fs.normalize
-dot.path.normalize(filepath)
-
--- Use vim.hl.range instead of deprecated nvim_buf_add_highlight
-vim.hl.range(bufnr, ns, hlgroup, start_pos, end_pos)
+-- Path and highlight helpers
+dot.path.normalize(filepath)        -- not vim.fs.normalize(filepath)
+vim.hl.range(bufnr, ns, hlname, { row, col1 }, { row, col2 })
 ```
 
 ## Type Annotations
 
-**Column Alignment (column 40):**
+Column-aligned LuaLS annotations (column 40 style):
 
 ```lua
 ---@param name                          string
@@ -50,87 +45,37 @@ vim.hl.range(bufnr, ns, hlgroup, start_pos, end_pos)
 ---@return nil
 ```
 
-**Type on Same Line (single-line targets):**
+Optional type rules:
+
+- `---@param` / `---@field`: use `?` prefix
+- `---@return` / `---@type`: use `|nil` suffix
+
+Examples:
 
 ```lua
-local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-```
-
-**Type Above (multi-line targets):**
-
-```lua
----@type IConfig
-local config = create_config({
-  key = "value",
-})
-```
-
-**Class Fields (visibility required, column 40 alignment):**
-
-```lua
----@class foo.bar.MyClass
----@field public name                   string
----@field public callback               fun(): nil
----@field protected _internal           integer
-```
-
-**Optional Types:**
-
-```lua
--- @param and @field: use `?` prefix
 ---@param token                         ?stl.c.CancellationToken
----@field public value                  ?string
-
--- @return, @type, and fun() return: use `|nil` suffix (LuaLS limitation)
 ---@return integer|nil
-local x = nil ---@type string|nil
----@alias MyCallback fun(x: string): boolean|nil
+local value = nil ---@type string|nil
 ```
 
-## Error Reporting
+## Module Pattern
 
-```lua
-stl.reporter.error({
-  from = __module_name__,
-  subject = "Operation Name",
-  message = "Error message here",
-  details = { key = "value" },  -- Optional, displayed as JSON
-})
--- Same interface for stl.reporter.{error|warn|info|debug}
-```
-
-## Module Name Pattern
-
-Each module should define `__module_name__` for error reporting:
+Every module should define `__module_name__`:
 
 ```lua
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.colorpicker.mode" ---@type string
+local __module_name__ = "era.m.example" ---@type string
 ```
 
-## Protected Methods
+Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
 
-- Use `__method_name__` naming convention
-- Place at end of class, after 100-char separator
-- Order alphabetically
+## Keymap Style
 
-## Keymap Ordering
+- Define keymaps with `stl.t.IKeymap[]`.
+- Bind using `stl.nvim.fn.bindkeys`.
+- Avoid introducing wrapper helpers for keymap creation unless there is strong justification.
 
-1. Mouse keys (`<LeftMouse>`, `<2-LeftMouse>`, `<RightMouse>`)
-2. `<M-*>` (Meta/Alt)
-3. `<D-*>` (Command/Super)
-4. `<C-a>*` (Ctrl-a prefix)
-5. `<C-*>` (other Ctrl)
-6. Special keys (`<CR>`, `<Tab>`, `<BS>`, `<Esc>`)
-7. Uppercase letters (A-Z)
-8. Lowercase letters (a-z)
-9. Symbols and numbers
-
-Within each category, sort alphabetically.
-
-## Keymap Definition
-
-Always use `stl.t.IKeymap[]` list to define keybindings, bindable via `stl.nvim.fn.bindkeys`. Do not create helper functions to wrap `IKeymap` creation unless there is a very compelling reason.
+Example:
 
 ```lua
 ---@type stl.t.IKeymap[]
@@ -138,12 +83,17 @@ local keymaps = {
   { modes = { "n" }, key = "<CR>", desc = "Select", callback = function() select() end },
   { modes = { "n" }, key = "q", desc = "Close", callback = function() close() end },
 }
-stl.nvim.fn.bindkeys(keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+
+stl.nvim.fn.bindkeys(keymaps, {
+  bufnr = bufnr,
+  nowait = true,
+  noremap = true,
+  silent = true,
+})
 ```
 
-## Rust Integration
+## Rust (`rust/yoz`) Notes
 
-When modifying `rust/yoz/src/`:
-- Follow existing mlua patterns for serialization/deserialization
-- Keep Lua-facing APIs synchronized with Lua call sites
-- Prefix Rust unit test function names with `t_` (e.g., `fn t_parses_config()`)
+- Follow existing `mlua` serialization/deserialization patterns.
+- Keep Lua-facing APIs synchronized with Lua call sites.
+- Prefix Rust unit tests with `t_` (for example `fn t_parses_config()`).
