@@ -1,5 +1,5 @@
 ---@class era.m.explorer.Node : era.m.explorer.resource.INode
----@field public uri                    string
+---@field public filepath               string
 ---@field public nodename               string
 ---@field public nodetype               era.m.explorer.NodeTypeEnum
 ---@field public parent                 era.m.explorer.Node|nil
@@ -13,16 +13,22 @@
 local M = {}
 M.__index = M
 
----@param parent_uri                    string
+---@param parent_filepath               string
 ---@param nodename                      string
 ---@param nodetype                      era.m.explorer.NodeTypeEnum
 ---@return string
-function M.calc_uri(parent_uri, nodename, nodetype)
-  if nodetype == "D" then
-    return parent_uri .. nodename .. "/"
-  else
-    return parent_uri .. nodename
+function M.calc_filepath(parent_filepath, nodename, nodetype)
+  if parent_filepath == "" then
+    if nodetype == "D" then
+      return nodename == "" and "/" or (nodename .. "/")
+    end
+    return nodename
   end
+
+  if nodetype == "D" then
+    return parent_filepath .. nodename .. "/"
+  end
+  return parent_filepath .. nodename
 end
 
 ---@param node                          era.m.explorer.Node
@@ -31,7 +37,7 @@ end
 function M.clone(node, new_parent)
   ---@type era.m.explorer.Node
   local cloned = {
-    uri = M.calc_uri(new_parent.uri, node.nodename, node.nodetype),
+    filepath = M.calc_filepath(new_parent.filepath, node.nodename, node.nodetype),
     nodename = node.nodename,
     nodetype = node.nodetype,
     parent = new_parent,
@@ -110,7 +116,7 @@ end
 
 ---@param root                          era.m.explorer.Node
 ---@return string[]
-function M.collect_selected_uris(root)
+function M.collect_selected_filepaths(root)
   if not root.has_selected and not root.selected then
     return {}
   end
@@ -120,7 +126,7 @@ function M.collect_selected_uris(root)
   ---@param node                        era.m.explorer.Node
   local function traverse(node)
     if node.selected then
-      result[#result + 1] = node.uri
+      result[#result + 1] = node.filepath
     end
     if node.has_selected then
       for _, child in ipairs(node.children) do
@@ -140,7 +146,7 @@ end
 function M.new(parent, nodetype, nodename)
   ---@type era.m.explorer.Node
   local node = {
-    uri = nodetype == "D" and (parent.uri .. nodename .. "/") or (parent.uri .. nodename),
+    filepath = M.calc_filepath(parent.filepath, nodename, nodetype),
     nodename = nodename,
     nodetype = nodetype,
     parent = parent,
@@ -167,15 +173,12 @@ function M.refresh_depth(node, new_depth)
   end
 end
 
----@param protocol                      string
 ---@return era.m.explorer.Node
-function M.superroot(protocol)
-  local nodename = protocol or "file://" ---@type string
-
+function M.superroot()
   ---@type era.m.explorer.Node
   local node = {
-    uri = nodename .. "/",
-    nodename = nodename,
+    filepath = "",
+    nodename = "",
     nodetype = "D",
     parent = nil,
     children = {},
@@ -196,7 +199,7 @@ end
 ---@param node                          era.m.explorer.Node
 ---@return boolean
 function M:is_ancestor_of(node)
-  if self.uri == node.uri then
+  if self.filepath == node.filepath then
     return false
   end
 
@@ -207,7 +210,7 @@ function M:is_ancestor_of(node)
 
   local o = node.parent ---@type era.m.explorer.Node|nil
   while o ~= nil and o.depth >= depth do
-    if o.uri == self.uri then
+    if o.filepath == self.filepath then
       return true
     end
     o = o.parent
@@ -219,7 +222,7 @@ end
 ---@param node                          era.m.explorer.Node
 ---@return boolean
 function M:is_ancestor_or_self(node)
-  if self.uri == node.uri then
+  if self.filepath == node.filepath then
     return true
   end
 
@@ -230,7 +233,7 @@ function M:is_ancestor_or_self(node)
 
   local o = node.parent ---@type era.m.explorer.Node|nil
   while o ~= nil and o.depth >= depth do
-    if o.uri == self.uri then
+    if o.filepath == self.filepath then
       return true
     end
     o = o.parent
@@ -243,7 +246,7 @@ end
 ---@param root                          era.m.explorer.Node
 ---@return boolean
 function M:is_descendant_of(root)
-  if self.uri == root.uri then
+  if self.filepath == root.filepath then
     return false
   end
 
@@ -254,7 +257,7 @@ function M:is_descendant_of(root)
 
   local o = self.parent ---@type era.m.explorer.Node|nil
   while o ~= nil and o.depth >= depth do
-    if o.uri == root.uri then
+    if o.filepath == root.filepath then
       return true
     end
     o = o.parent
@@ -266,7 +269,7 @@ end
 ---@param root                          era.m.explorer.Node
 ---@return boolean
 function M:is_descendant_or_self(root)
-  if self.uri == root.uri then
+  if self.filepath == root.filepath then
     return true
   end
 
@@ -277,7 +280,7 @@ function M:is_descendant_or_self(root)
 
   local o = self.parent ---@type era.m.explorer.Node|nil
   while o ~= nil and o.depth >= depth do
-    if o.uri == root.uri then
+    if o.filepath == root.filepath then
       return true
     end
     o = o.parent
@@ -298,11 +301,7 @@ end
 ---@return nil
 function M:set_selected_recursive(selected)
   self.selected = selected
-  if selected then
-    self.has_selected = true
-  else
-    self.has_selected = false
-  end
+  self.has_selected = selected
   for _, child in ipairs(self.children) do
     child:set_selected_recursive(selected)
   end
@@ -323,7 +322,6 @@ function M.sync_ancestors(node)
 
   while p ~= nil do
     if is_selected then
-      -- Early exit: if parent already has_selected, all ancestors above must also have it
       if p.has_selected then
         break
       end
@@ -340,7 +338,6 @@ function M.sync_ancestors(node)
           break
         end
       end
-      -- Early exit: if state unchanged, ancestors above are also unchanged
       if p.has_selected == has_selected then
         break
       end

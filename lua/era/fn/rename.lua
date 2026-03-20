@@ -26,7 +26,7 @@ local function rename(params)
     return false
   end
 
-  era.m.lsp.event.on_rename(from, to, function()
+  local renamed = era.m.lsp.event.on_rename(from, to, function()
     local move_success, move_err = yoz.fs.move({
       old_path = from,
       new_path = to,
@@ -41,13 +41,14 @@ local function rename(params)
         message = string.format("Failed to rename %s from %s to %s", entity_type, from, to),
         details = move_err and { error = move_err.error } or nil,
       })
-      return
+      return false
     end
 
     era.m.lsp.event.rename_buf(from, to)
+    return true
   end)
 
-  return true
+  return renamed
 end
 
 return rename

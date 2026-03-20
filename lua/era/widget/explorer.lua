@@ -73,18 +73,17 @@ function M.reveal(filepath)
     end
   end
 
-  filepath = dot.path.normalize(filepath)
-  local uri = yoz.uri.from_filepath(filepath) ---@type string
+  filepath = dot.path.normalize(filepath, false, "/")
 
   local widget = M.get_widget() ---@type era.m.explorer.Widget
   local was_visible = widget:isvisible() ---@type boolean
   widget:focus()
   if not was_visible then
     vim.schedule(function()
-      widget:reveal(uri)
+      widget:reveal(filepath)
     end)
   else
-    widget:reveal(uri)
+    widget:reveal(filepath)
   end
 end
 
@@ -95,11 +94,11 @@ function M.set_root(root)
     root = dot.path.cwd()
   end
 
-  root = dot.path.normalize(root)
-  local uri = yoz.uri.from_filepath(root .. "/") ---@type string
+  root = dot.path.normalize(root, true, "/")
+  local filepath = root:sub(-1) == "/" and root or (root .. "/") ---@type string
 
   local widget = M.get_widget() ---@type era.m.explorer.Widget
-  widget:set_root(uri)
+  widget:set_root(filepath)
 end
 
 ---@return nil

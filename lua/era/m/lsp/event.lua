@@ -5,8 +5,8 @@ local M = {}
 
 ---@param from                          string
 ---@param to                            string
----@param rename                        ?fun(): nil
----@return nil
+---@param rename                        ?fun(): boolean|nil
+---@return boolean
 ---@see https://github.com/folke/snacks.nvim/blob/fe7cfe9800a182274d0f868a74b7263b8c0c020b/lua/snacks/rename.lua#L51
 function M.on_rename(from, to, rename)
   local changes = { files = { {
@@ -25,7 +25,10 @@ function M.on_rename(from, to, rename)
   end
 
   if rename then
-    rename()
+    local renamed = rename() ---@type boolean|nil
+    if renamed == false then
+      return false
+    end
   end
 
   for _, client in ipairs(clients) do
@@ -33,6 +36,8 @@ function M.on_rename(from, to, rename)
       client:notify("workspace/didRenameFiles", changes)
     end
   end
+
+  return true
 end
 
 ---@param from                          string

@@ -6,6 +6,20 @@ local __module_name__ = "era.m.explorer.action" ---@type string
 local M = {}
 M.__index = M
 
+---@param filepath                      string
+---@param keep_trailing_slash           boolean|nil
+---@return string
+local function normalize_filepath(filepath, keep_trailing_slash)
+  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
+end
+
+---@param filepath                      string
+---@return string
+local function to_os_filepath(filepath)
+  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
+  return dot.path.normalize(filepath, keep_trailing_slash, stl.env.PATH_SEP)
+end
+
 ---@param ctx                           era.m.explorer.action.IContext
 ---@return era.m.explorer.Action
 function M.new(ctx)
@@ -22,15 +36,15 @@ function M:add_locations_to_ai()
   local locations = {} ---@type dot.t.ILocation[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+      local filepath = to_os_filepath(node.filepath) ---@type string
       locations[#locations + 1] = { filepath = filepath }
     end
   else
-    local uri = ctx.get_cursor_uri() ---@type string|nil
-    if uri == nil then
+    local filepath = ctx.get_cursor_filepath() ---@type string|nil
+    if filepath == nil then
       return
     end
-    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+    local filepath = to_os_filepath(filepath) ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -47,7 +61,7 @@ function M:add_locations_to_ai_visual()
 
   local locations = {} ---@type dot.t.ILocation[]
   for _, node in ipairs(nodes) do
-    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+    local filepath = to_os_filepath(node.filepath) ---@type string
     locations[#locations + 1] = { filepath = filepath }
   end
 
@@ -57,35 +71,35 @@ end
 ---@return nil
 function M:collapse_all()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  ctx.tree:toggle_expanded(root_uri, true, "collapse")
-  ctx.tree:toggle_expanded(root_uri, false, "expand")
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  ctx.tree:toggle_expanded(root_filepath, true, "collapse")
+  ctx.tree:toggle_expanded(root_filepath, false, "expand")
   ctx.refresh()
 end
 
 ---@return nil
 function M:collapse_or_parent()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  if uri:sub(-1) == "/" then
-    local node = ctx.tree:locate(uri) ---@type era.m.explorer.Node|nil
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  if filepath:sub(-1) == "/" then
+    local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
     if node ~= nil and node.expanded then
-      ctx.tree:toggle_expanded(uri, false, "collapse")
+      ctx.tree:toggle_expanded(filepath, false, "collapse")
       ctx.refresh()
       return
     end
   end
 
-  local parent_uri = ctx.get_parent_uri(uri) ---@type string
-  if parent_uri ~= root_uri then
-    ctx.tree:toggle_expanded(parent_uri, false, "collapse")
-    ctx.tree.o_cursor_uri:next(parent_uri)
-    ctx.sync_cursor_to_uri(parent_uri)
+  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
+  if parent_filepath ~= root_filepath then
+    ctx.tree:toggle_expanded(parent_filepath, false, "collapse")
+    ctx.tree.o_cursor_filepath:next(parent_filepath)
+    ctx.sync_cursor_to_filepath(parent_filepath)
     ctx.refresh()
   end
 end
@@ -93,20 +107,20 @@ end
 ---@return nil
 function M:copy_node()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
   local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
   if #selected_nodes > 0 then
     local current_mode = ctx.tree.select_mode ---@type era.m.explorer.SelectModeEnum
-    local is_selected = ctx.tree:is_selected(uri) ---@type boolean
+    local is_selected = ctx.tree:is_selected(filepath) ---@type boolean
 
     if current_mode == "copy" and is_selected then
-      ctx.tree:toggle_selected(uri, "unselect")
+      ctx.tree:toggle_selected(filepath, "unselect")
     else
-      ctx.tree:toggle_selected(uri, "select")
+      ctx.tree:toggle_selected(filepath, "select")
     end
 
     ctx.tree.select_mode = "copy"
@@ -114,20 +128,20 @@ function M:copy_node()
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = normalize_filepath(filepath) ---@type string
 
   vim.ui.input({ prompt = "Copy to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = yoz.uri.from_filepath(input) ---@type string
-    local ok = ctx.resource_manager:copy(uri, target_uri) ---@type boolean
+    local target_filepath = normalize_filepath(input) ---@type string
+    local ok = ctx.resource_manager:copy(filepath, target_filepath) ---@type boolean
     if ok then
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.refresh(true)
-        ctx.sync_cursor_to_uri(target_uri)
+        ctx.sync_cursor_to_filepath(target_filepath)
       end)
     end
   end)
@@ -141,15 +155,15 @@ function M:copy_path()
   local filepaths = {} ---@type string[]
   if #selected_nodes > 0 then
     for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+      local filepath = normalize_filepath(node.filepath) ---@type string
       filepaths[#filepaths + 1] = filepath
     end
   else
-    local uri = ctx.get_cursor_uri() ---@type string|nil
-    if uri == nil then
+    local filepath = ctx.get_cursor_filepath() ---@type string|nil
+    if filepath == nil then
       return
     end
-    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+    local filepath = normalize_filepath(filepath) ---@type string
     filepaths[#filepaths + 1] = filepath
   end
 
@@ -174,7 +188,7 @@ function M:copy_visual()
   local current_mode = ctx.tree.select_mode ---@type era.m.explorer.SelectModeEnum
   if current_mode ~= "copy" then
     for _, node in ipairs(nodes) do
-      ctx.tree:toggle_selected(node.uri, "select")
+      ctx.tree:toggle_selected(node.filepath, "select")
     end
     ctx.tree.select_mode = "copy"
   else
@@ -188,11 +202,11 @@ function M:copy_visual()
 
     if has_unselected then
       for _, node in ipairs(nodes) do
-        ctx.tree:toggle_selected(node.uri, "select")
+        ctx.tree:toggle_selected(node.filepath, "select")
       end
     else
       for _, node in ipairs(nodes) do
-        ctx.tree:toggle_selected(node.uri, "unselect")
+        ctx.tree:toggle_selected(node.filepath, "unselect")
       end
     end
   end
@@ -202,40 +216,40 @@ end
 ---@return nil
 function M:create_directory()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local cursor_uri = ctx.get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
+  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if cursor_filepath == nil then
     return
   end
 
-  local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or ctx.get_parent_uri(cursor_uri) ---@type string
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
+  local parent_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  local relative_path = parent_filepath:sub(#root_filepath + 1) ---@type string
 
   vim.ui.input({ prompt = "Create directory: ", default = relative_path }, function(input)
     if input == nil or #vim.trim(input) == 0 then
       return
     end
 
-    local dirname = vim.trim(input) ---@type string
+    local dirname = normalize_filepath(vim.trim(input), false) ---@type string
     if dirname:sub(-1) ~= "/" then
       dirname = dirname .. "/"
     end
 
-    local new_uri = root_uri .. dirname ---@type string
-    local resource = ctx.resource_manager:create(new_uri) ---@type era.m.explorer.resource.INode|nil
+    local new_filepath = normalize_filepath(root_filepath .. dirname, true) ---@type string
+    local resource = ctx.resource_manager:create(new_filepath) ---@type era.m.explorer.resource.INode|nil
     if resource ~= nil then
-      local new_parent_uri = ctx.get_parent_uri(new_uri) ---@type string
-      ctx.tree:toggle_expanded(new_parent_uri, false, "expand")
+      local new_parent_filepath = ctx.get_parent_filepath(new_filepath) ---@type string
+      ctx.tree:toggle_expanded(new_parent_filepath, false, "expand")
       local parts = vim.split(dirname:sub(1, -2), "/", { plain = true }) ---@type string[]
-      local intermediate_uri = root_uri ---@type string
+      local intermediate_filepath = root_filepath ---@type string
       for _, part in ipairs(parts) do
-        intermediate_uri = intermediate_uri .. part .. "/"
-        ctx.tree:toggle_expanded(intermediate_uri, false, "expand")
+        intermediate_filepath = intermediate_filepath .. part .. "/"
+        ctx.tree:toggle_expanded(intermediate_filepath, false, "expand")
       end
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.render()
-        ctx.sync_cursor_to_uri(new_uri)
+        ctx.sync_cursor_to_filepath(new_filepath)
       end)
     end
   end)
@@ -244,41 +258,42 @@ end
 ---@return nil
 function M:create_file()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local cursor_uri = ctx.get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
+  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if cursor_filepath == nil then
     return
   end
 
-  local parent_uri = cursor_uri:sub(-1) == "/" and cursor_uri or ctx.get_parent_uri(cursor_uri) ---@type string
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  local relative_path = parent_uri:sub(#root_uri + 1) ---@type string
+  local parent_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  local relative_path = parent_filepath:sub(#root_filepath + 1) ---@type string
 
   vim.ui.input({ prompt = "Create file: ", default = relative_path }, function(input)
     if input == nil or #vim.trim(input) == 0 then
       return
     end
 
-    local filename = vim.trim(input) ---@type string
-    local new_uri = root_uri .. filename ---@type string
-    local resource = ctx.resource_manager:create(new_uri) ---@type era.m.explorer.resource.INode|nil
+    local filename = normalize_filepath(vim.trim(input), false) ---@type string
+    local is_directory = filename:sub(-1) == "/" ---@type boolean
+    local new_filepath = normalize_filepath(root_filepath .. filename, is_directory) ---@type string
+    local resource = ctx.resource_manager:create(new_filepath) ---@type era.m.explorer.resource.INode|nil
     if resource ~= nil then
-      local new_parent_uri = ctx.get_parent_uri(new_uri) ---@type string
-      ctx.tree:toggle_expanded(new_parent_uri, false, "expand")
+      local new_parent_filepath = ctx.get_parent_filepath(new_filepath) ---@type string
+      ctx.tree:toggle_expanded(new_parent_filepath, false, "expand")
       local parts = vim.split(filename, "/", { plain = true }) ---@type string[]
       if #parts > 1 then
-        local intermediate_uri = root_uri ---@type string
+        local intermediate_filepath = root_filepath ---@type string
         for i = 1, #parts - 1 do
-          intermediate_uri = intermediate_uri .. parts[i] .. "/"
-          ctx.tree:toggle_expanded(intermediate_uri, false, "expand")
+          intermediate_filepath = intermediate_filepath .. parts[i] .. "/"
+          ctx.tree:toggle_expanded(intermediate_filepath, false, "expand")
         end
       end
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.render()
-        ctx.sync_cursor_to_uri(new_uri)
+        ctx.sync_cursor_to_filepath(new_filepath)
 
         if resource.nodetype == "F" then
-          local filepath = yoz.uri.to_filepath(resource.uri) or "" ---@type string
+          local filepath = to_os_filepath(resource.filepath) ---@type string
           local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
           local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
           if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -294,20 +309,20 @@ end
 ---@return nil
 function M:cut()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
   local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
   if #selected_nodes > 0 then
     local current_mode = ctx.tree.select_mode ---@type era.m.explorer.SelectModeEnum
-    local is_selected = ctx.tree:is_selected(uri) ---@type boolean
+    local is_selected = ctx.tree:is_selected(filepath) ---@type boolean
 
     if current_mode == "cut" and is_selected then
-      ctx.tree:toggle_selected(uri, "unselect")
+      ctx.tree:toggle_selected(filepath, "unselect")
     else
-      ctx.tree:toggle_selected(uri, "select")
+      ctx.tree:toggle_selected(filepath, "select")
     end
 
     ctx.tree.select_mode = "cut"
@@ -315,21 +330,21 @@ function M:cut()
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = normalize_filepath(filepath) ---@type string
 
   vim.ui.input({ prompt = "Move to: ", default = filepath }, function(input)
     if input == nil or input == "" or input == filepath then
       return
     end
 
-    local target_uri = yoz.uri.from_filepath(input) ---@type string
-    local ok = ctx.resource_manager:move(uri, target_uri) ---@type boolean
+    local target_filepath = normalize_filepath(input) ---@type string
+    local ok = ctx.resource_manager:move(filepath, target_filepath) ---@type boolean
     if ok then
-      ctx.tree:remove(uri)
+      ctx.tree:remove(filepath)
       ctx.tree:refresh(true)
       vim.schedule(function()
         ctx.refresh(true)
-        ctx.sync_cursor_to_uri(target_uri)
+        ctx.sync_cursor_to_filepath(target_filepath)
       end)
     end
   end)
@@ -346,7 +361,7 @@ function M:cut_visual()
   local current_mode = ctx.tree.select_mode ---@type era.m.explorer.SelectModeEnum
   if current_mode ~= "cut" then
     for _, node in ipairs(nodes) do
-      ctx.tree:toggle_selected(node.uri, "select")
+      ctx.tree:toggle_selected(node.filepath, "select")
     end
     ctx.tree.select_mode = "cut"
   else
@@ -360,11 +375,11 @@ function M:cut_visual()
 
     if has_unselected then
       for _, node in ipairs(nodes) do
-        ctx.tree:toggle_selected(node.uri, "select")
+        ctx.tree:toggle_selected(node.filepath, "select")
       end
     else
       for _, node in ipairs(nodes) do
-        ctx.tree:toggle_selected(node.uri, "unselect")
+        ctx.tree:toggle_selected(node.filepath, "unselect")
       end
     end
   end
@@ -401,7 +416,7 @@ function M:delete()
 
       local deleted_count = 0 ---@type integer
       for _, node in ipairs(selected_nodes) do
-        local ok = ctx.tree:remove(node.uri) ---@type boolean
+        local ok = ctx.tree:remove(node.filepath) ---@type boolean
         if ok then
           deleted_count = deleted_count + 1
         end
@@ -423,18 +438,18 @@ function M:delete()
     return
   end
 
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
+  local is_directory = filepath:sub(-1) == "/" ---@type boolean
   local name ---@type string
   if is_directory then
-    local parts = vim.split(uri:sub(1, -2), "/") ---@type string[]
-    name = parts[#parts] or uri
+    local parts = vim.split(filepath:sub(1, -2), "/") ---@type string[]
+    name = parts[#parts] or filepath
   else
-    name = vim.fn.fnamemodify(uri, ":t")
+    name = vim.fn.fnamemodify(filepath, ":t")
   end
 
   local prompt = string.format("Delete '%s'?", name) ---@type string
@@ -448,7 +463,7 @@ function M:delete()
       return
     end
 
-    local ok = ctx.tree:remove(uri) ---@type boolean
+    local ok = ctx.tree:remove(filepath) ---@type boolean
     if ok then
       vim.schedule(function()
         ctx.refresh()
@@ -489,7 +504,7 @@ function M:delete_visual()
 
     local deleted_count = 0 ---@type integer
     for _, node in ipairs(nodes) do
-      local ok = ctx.tree:remove(node.uri) ---@type boolean
+      local ok = ctx.tree:remove(node.filepath) ---@type boolean
       if ok then
         deleted_count = deleted_count + 1
       end
@@ -527,7 +542,7 @@ function M:delete_selected()
   ---@type string[]
   local preview_lines = {}
   for _, node in ipairs(selected_nodes) do
-    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+    local filepath = normalize_filepath(node.filepath) ---@type string
     local relative_path = dot.path.relative(cwd, filepath) ---@type string
     preview_lines[#preview_lines + 1] = relative_path
   end
@@ -551,7 +566,7 @@ function M:delete_selected()
 
       local deleted_count = 0 ---@type integer
       for _, node in ipairs(selected_nodes) do
-        local ok = ctx.tree:remove(node.uri) ---@type boolean
+        local ok = ctx.tree:remove(node.filepath) ---@type boolean
         if ok then
           deleted_count = deleted_count + 1
         end
@@ -578,88 +593,88 @@ end
 function M:go_cwd()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
   local cwd = dot.path.cwd() ---@type string
-  local root_uri = yoz.uri.from_filepath(cwd .. "/") ---@type string
-  ctx.widget:set_root(root_uri)
+  local root_filepath = normalize_filepath(cwd .. "/") ---@type string
+  ctx.widget:set_root(root_filepath)
 end
 
 ---@return nil
 function M:go_home()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
   local workspace = dot.path.workspace() ---@type string
-  local root_uri = yoz.uri.from_filepath(workspace .. "/") ---@type string
-  ctx.widget:set_root(root_uri)
+  local root_filepath = normalize_filepath(workspace .. "/") ---@type string
+  ctx.widget:set_root(root_filepath)
 end
 
 ---@return nil
 function M:go_parent()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  local parent_uri = ctx.get_parent_uri(root_uri) ---@type string
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  local parent_filepath = ctx.get_parent_filepath(root_filepath) ---@type string
 
-  if parent_uri ~= root_uri then
-    ctx.widget:set_root(parent_uri)
+  if parent_filepath ~= root_filepath then
+    ctx.widget:set_root(parent_filepath)
   end
 end
 
 ---@return nil
 function M:go_prev()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local prev_root_uri = ctx.tree.prev_root_uri ---@type string|nil
-  if prev_root_uri == nil then
+  local prev_root_filepath = ctx.tree.prev_root_filepath ---@type string|nil
+  if prev_root_filepath == nil then
     return
   end
-  ctx.widget:set_root(prev_root_uri)
+  ctx.widget:set_root(prev_root_filepath)
 end
 
 ---@return nil
 function M:jump_last_child()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  if uri:sub(-1) ~= "/" then
+  if filepath:sub(-1) ~= "/" then
     return
   end
 
-  local node = ctx.tree:locate(uri) ---@type era.m.explorer.Node|nil
+  local node = ctx.tree:locate(filepath) ---@type era.m.explorer.Node|nil
   if node == nil or not node.expanded or #node.children == 0 then
     return
   end
 
   local last_child = node.children[#node.children] ---@type era.m.explorer.Node
-  local target_uri = last_child.uri ---@type string
-  ctx.tree.o_cursor_uri:next(target_uri)
-  ctx.sync_cursor_to_uri(target_uri)
+  local target_filepath = last_child.filepath ---@type string
+  ctx.tree.o_cursor_filepath:next(target_filepath)
+  ctx.sync_cursor_to_filepath(target_filepath)
 end
 
 ---@return nil
 function M:jump_parent()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local parent_uri = ctx.get_parent_uri(uri) ---@type string
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
+  local parent_filepath = ctx.get_parent_filepath(filepath) ---@type string
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
 
-  if parent_uri ~= uri and vim.startswith(parent_uri, root_uri) then
-    ctx.tree.o_cursor_uri:next(parent_uri)
-    ctx.sync_cursor_to_uri(parent_uri)
+  if parent_filepath ~= filepath and vim.startswith(parent_filepath, root_filepath) then
+    ctx.tree.o_cursor_filepath:next(parent_filepath)
+    ctx.sync_cursor_to_filepath(parent_filepath)
   end
 end
 
 ---@return nil
 function M:mark()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  ctx.tree:toggle_selected(uri, nil)
+  ctx.tree:toggle_selected(filepath, nil)
   ctx.tree.select_mode = "select"
   ctx.refresh()
 end
@@ -682,11 +697,11 @@ function M:mark_visual()
 
   if has_unselected then
     for _, node in ipairs(nodes) do
-      ctx.tree:toggle_selected(node.uri, "select")
+      ctx.tree:toggle_selected(node.filepath, "select")
     end
   else
     for _, node in ipairs(nodes) do
-      ctx.tree:toggle_selected(node.uri, "unselect")
+      ctx.tree:toggle_selected(node.filepath, "unselect")
     end
   end
   ctx.refresh()
@@ -695,16 +710,16 @@ end
 ---@return nil
 function M:open()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  if uri:sub(-1) == "/" then
-    ctx.tree:toggle_expanded(uri, false, nil)
+  if filepath:sub(-1) == "/" then
+    ctx.tree:toggle_expanded(filepath, false, nil)
     ctx.refresh()
   else
-    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+    local filepath = to_os_filepath(filepath) ---@type string
     local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
     local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
     if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
@@ -717,28 +732,28 @@ end
 ---@return nil
 function M:open_file_explorer()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   era.fn.find_explorer(filepath)
 end
 
 ---@return nil
 function M:open_file_finder()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
   local dirpath ---@type string
-  if uri:sub(-1) == "/" then
-    dirpath = yoz.uri.to_filepath(uri) or ""
+  if filepath:sub(-1) == "/" then
+    dirpath = to_os_filepath(filepath)
   else
-    dirpath = dot.path.dirname(yoz.uri.to_filepath(uri) or "")
+    dirpath = dot.path.dirname(to_os_filepath(filepath))
   end
 
   era.fn.find_files(dirpath, true)
@@ -747,12 +762,12 @@ end
 ---@return nil
 function M:open_searcher()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   era.fn.search_in_files(filepath)
 end
 
@@ -792,7 +807,7 @@ function M:open_selected()
   end
 
   for _, node in ipairs(file_nodes) do
-    local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+    local filepath = to_os_filepath(node.filepath) ---@type string
     dot.win.open_filepath(winnr_sourcefile, filepath)
   end
 
@@ -811,36 +826,36 @@ end
 ---@return nil
 function M:open_split()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   vim.cmd("split " .. vim.fn.fnameescape(filepath))
 end
 
 ---@return nil
 function M:open_system_explorer()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   vim.ui.open(filepath)
 end
 
 ---@return nil
 function M:open_tab()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   vim.cmd("tabnew " .. vim.fn.fnameescape(filepath))
 
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
@@ -850,12 +865,12 @@ end
 ---@return nil
 function M:open_vsplit()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   vim.cmd("vsplit " .. vim.fn.fnameescape(filepath))
 end
 
@@ -863,12 +878,12 @@ end
 ---@return nil
 function M:pick_win_open(winnr)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -882,12 +897,12 @@ end
 ---@return nil
 function M:pick_win_split(winnr)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -901,12 +916,12 @@ end
 ---@return nil
 function M:pick_win_vsplit(winnr)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil or uri:sub(-1) == "/" then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil or filepath:sub(-1) == "/" then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
   local picked_winnr = dot.win.pick_sourcefile(winnr) ---@type integer|nil
   if picked_winnr == nil then
     return
@@ -930,20 +945,20 @@ function M:rename()
     return
   end
 
-  local uri ---@type string|nil
+  local filepath ---@type string|nil
   if #selected_nodes == 1 then
-    uri = selected_nodes[1].uri
+    filepath = selected_nodes[1].filepath
   else
-    uri = ctx.get_cursor_uri()
+    filepath = ctx.get_cursor_filepath()
   end
 
-  if uri == nil then
+  if filepath == nil then
     return
   end
 
-  local root_uri = ctx.tree.o_root_uri:snapshot() ---@type string
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
-  local relative_path = uri:sub(#root_uri + 1) ---@type string
+  local root_filepath = ctx.tree.o_root_filepath:snapshot() ---@type string
+  local is_directory = filepath:sub(-1) == "/" ---@type boolean
+  local relative_path = filepath:sub(#root_filepath + 1) ---@type string
   if is_directory and relative_path:sub(-1) == "/" then
     relative_path = relative_path:sub(1, -2)
   end
@@ -953,14 +968,15 @@ function M:rename()
       return
     end
 
-    local new_relative_path = vim.trim(input) ---@type string
+    local new_relative_path = normalize_filepath(vim.trim(input), false) ---@type string
     if new_relative_path == relative_path then
       return
     end
 
-    local new_uri = root_uri .. new_relative_path .. (is_directory and "/" or "") ---@type string
+    local new_filepath = normalize_filepath(root_filepath .. new_relative_path .. (is_directory and "/" or ""), is_directory)
+      ---@type string
 
-    local ok = ctx.resource_manager:move(uri, new_uri) ---@type boolean
+    local ok = ctx.resource_manager:move(filepath, new_filepath) ---@type boolean
     if ok then
       if #selected_nodes == 1 then
         ctx.tree:clear_selection()
@@ -981,12 +997,12 @@ end
 ---@return nil
 function M:select_toggle()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  ctx.tree:toggle_selected(uri, nil)
+  ctx.tree:toggle_selected(filepath, nil)
   ctx.tree.select_mode = "select"
   ctx.refresh()
 end
@@ -998,11 +1014,11 @@ function M:send_to_quickfix(root)
   local selected_nodes = era.m.explorer.Node.collect_selected(root) ---@type era.m.explorer.Node[]
 
   if #selected_nodes == 0 then
-    local uri = ctx.get_cursor_uri() ---@type string|nil
-    if uri == nil then
+    local filepath = ctx.get_cursor_filepath() ---@type string|nil
+    if filepath == nil then
       return
     end
-    local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+    local filepath = to_os_filepath(filepath) ---@type string
     vim.fn.setqflist({}, "r", {
       title = "Explorer",
       items = { { filename = filepath, lnum = 1, col = 1 } },
@@ -1010,7 +1026,7 @@ function M:send_to_quickfix(root)
   else
     local items = {} ---@type table[]
     for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+      local filepath = to_os_filepath(node.filepath) ---@type string
       items[#items + 1] = { filename = filepath, lnum = 1, col = 1 }
     end
     vim.fn.setqflist({}, "r", {
@@ -1031,16 +1047,16 @@ end
 ---@return nil
 function M:set_root()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  if uri:sub(-1) ~= "/" then
-    uri = ctx.get_parent_uri(uri)
+  if filepath:sub(-1) ~= "/" then
+    filepath = ctx.get_parent_filepath(filepath)
   end
 
-  ctx.widget:set_root(uri)
+  ctx.widget:set_root(filepath)
 end
 
 ---@param keymaps                       stl.t.IKeymap[]
@@ -1056,12 +1072,12 @@ end
 ---@return nil
 function M:show_file_info()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+  local filepath = to_os_filepath(filepath) ---@type string
 
   local fileinfo = era.view.Fileinfo.new({ filepath = filepath })
   fileinfo:open()
@@ -1071,22 +1087,22 @@ end
 ---@return nil
 function M:toggle_select_mode(target_mode)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
   local current_mode = ctx.tree.select_mode ---@type era.m.explorer.SelectModeEnum
-  local is_selected = ctx.tree:is_selected(uri) ---@type boolean
+  local is_selected = ctx.tree:is_selected(filepath) ---@type boolean
 
   if is_selected then
     if current_mode == target_mode then
-      ctx.tree:toggle_selected(uri, "unselect")
+      ctx.tree:toggle_selected(filepath, "unselect")
     else
       ctx.tree.select_mode = target_mode
     end
   else
-    ctx.tree:toggle_selected(uri, "select")
+    ctx.tree:toggle_selected(filepath, "select")
     ctx.tree.select_mode = target_mode
   end
 
@@ -1115,14 +1131,14 @@ function M:toggle_select_mode_visual(target_mode)
   if all_selected then
     if current_mode == target_mode then
       for _, node in ipairs(nodes) do
-        ctx.tree:toggle_selected(node.uri, "unselect")
+        ctx.tree:toggle_selected(node.filepath, "unselect")
       end
     else
       ctx.tree.select_mode = target_mode
     end
   else
     for _, node in ipairs(nodes) do
-      ctx.tree:toggle_selected(node.uri, "select")
+      ctx.tree:toggle_selected(node.filepath, "select")
     end
     ctx.tree.select_mode = target_mode
   end
@@ -1133,16 +1149,16 @@ end
 ---@return nil
 function M:toggle_recursive()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local uri = ctx.get_cursor_uri() ---@type string|nil
-  if uri == nil then
+  local filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if filepath == nil then
     return
   end
 
-  if uri:sub(-1) ~= "/" then
+  if filepath:sub(-1) ~= "/" then
     return
   end
 
-  ctx.tree:toggle_expanded(uri, true, nil)
+  ctx.tree:toggle_expanded(filepath, true, nil)
   ctx.refresh()
 end
 
@@ -1179,13 +1195,13 @@ function M:paste()
     return
   end
 
-  local cursor_uri = ctx.get_cursor_uri() ---@type string|nil
-  if cursor_uri == nil then
+  local cursor_filepath = ctx.get_cursor_filepath() ---@type string|nil
+  if cursor_filepath == nil then
     return
   end
 
-  local target_dir_uri = cursor_uri:sub(-1) == "/" and cursor_uri or ctx.get_parent_uri(cursor_uri) ---@type string
-  local target_dir = yoz.uri.to_filepath(target_dir_uri) or "" ---@type string
+  local target_dir_filepath = cursor_filepath:sub(-1) == "/" and cursor_filepath or ctx.get_parent_filepath(cursor_filepath) ---@type string
+  local target_dir = normalize_filepath(target_dir_filepath) ---@type string
 
   local mode = select_mode == "cut" and "move" or "copy" ---@type era.m.explorer.action.TransferModeEnum
   self:__transfer_selected__(mode, target_dir)
@@ -1230,7 +1246,7 @@ function M:__transfer_selected__(mode, initial_target)
   local function calc_content_width()
     local max_width = 0 ---@type integer
     for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+      local filepath = normalize_filepath(node.filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local line_width = vim.fn.strdisplaywidth(from_relative) * 2 + 4 ---@type integer
       max_width = math.max(max_width, line_width)
@@ -1246,7 +1262,7 @@ function M:__transfer_selected__(mode, initial_target)
     local max_from_display_width = 0 ---@type integer
 
     for _, node in ipairs(selected_nodes) do
-      local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+      local filepath = normalize_filepath(node.filepath) ---@type string
       local relative_part = dot.path.relative(common_ancestor, filepath) ---@type string
       local from_relative = dot.path.relative(cwd, filepath) ---@type string
       local target_path = dot.path.join(target_dir, relative_part) ---@type string
@@ -1275,7 +1291,7 @@ function M:__transfer_selected__(mode, initial_target)
       if not yoz.path.is_absolute(target_dir) then
         target_dir = dot.path.resolve(cwd, target_dir)
       end
-      target_dir = dot.path.normalize(target_dir)
+      target_dir = normalize_filepath(target_dir, target_dir:sub(-1) == "/")
 
       local items, max_from_display_width = build_preview_items(target_dir)
 
@@ -1307,7 +1323,7 @@ function M:__transfer_selected__(mode, initial_target)
       if not yoz.path.is_absolute(target_dir) then
         target_dir = dot.path.resolve(cwd, target_dir)
       end
-      target_dir = dot.path.normalize(target_dir)
+      target_dir = normalize_filepath(target_dir, target_dir:sub(-1) == "/")
       if target_dir:sub(-1) ~= "/" then
         target_dir = target_dir .. "/"
       end
@@ -1316,24 +1332,24 @@ function M:__transfer_selected__(mode, initial_target)
       local failed_count = 0 ---@type integer
 
       for _, node in ipairs(selected_nodes) do
-        local filepath = yoz.uri.to_filepath(node.uri) or "" ---@type string
+        local filepath = normalize_filepath(node.filepath) ---@type string
 
         local relative_path = dot.path.relative(common_ancestor, filepath) ---@type string
         local target_path = dot.path.join(target_dir, relative_path) ---@type string
         local is_directory = node.nodetype == "D" ---@type boolean
-        local target_uri = yoz.uri.from_filepath(target_path) ---@type string
-        if is_directory and target_uri:sub(-1) ~= "/" then
-          target_uri = target_uri .. "/"
+        local target_filepath = normalize_filepath(target_path) ---@type string
+        if is_directory and target_filepath:sub(-1) ~= "/" then
+          target_filepath = target_filepath .. "/"
         end
 
         local ok ---@type boolean
         if is_move then
-          ok = ctx.resource_manager:move(node.uri, target_uri)
+          ok = ctx.resource_manager:move(node.filepath, target_filepath)
           if ok then
-            ctx.tree:remove(node.uri)
+            ctx.tree:remove(node.filepath)
           end
         else
-          ok = ctx.resource_manager:copy(node.uri, target_uri)
+          ok = ctx.resource_manager:copy(node.filepath, target_filepath)
         end
 
         if ok then

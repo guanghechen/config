@@ -32,25 +32,25 @@
 ---@field public tree                   era.m.explorer.Tree
 ---@field public resource_manager       era.m.explorer.resource.FileManager
 ---@field public fullname               string
----@field public get_cursor_uri         fun(): string|nil
----@field public get_parent_uri         fun(uri: string): string
+---@field public get_cursor_filepath         fun(): string|nil
+---@field public get_parent_filepath         fun(filepath: string): string
 ---@field public get_visual_nodes       fun(): era.m.explorer.Node[]
 ---@field public refresh                fun(skip_refresh: boolean|nil): nil
 ---@field public render                 fun(): nil
----@field public sync_cursor_to_uri     fun(uri: string): nil
+---@field public sync_cursor_to_filepath     fun(filepath: string): nil
 
 ---@class era.m.explorer.resource.IManager
 ---@field public compare                fun(left: era.m.explorer.resource.INode, right: era.m.explorer.resource.INode): integer
----@field public copy                   fun(self: era.m.explorer.resource.IManager, source_uri: string, target_uri: string): boolean
----@field public create                 fun(self: era.m.explorer.resource.IManager, uri: string): era.m.explorer.resource.INode|nil
----@field public insert_if_missing      fun(self: era.m.explorer.resource.IManager, uri: string): boolean
----@field public load                   fun(self: era.m.explorer.resource.IManager, uri: string): era.m.explorer.resource.INode[]
----@field public locate                 fun(self: era.m.explorer.resource.IManager, uri: string): era.m.explorer.resource.INode|nil
----@field public move                   fun(self: era.m.explorer.resource.IManager, source_uri: string, target_uri: string): boolean
----@field public remove                 fun(self: era.m.explorer.resource.IManager, uri: string, on_removed: fun(): nil): boolean
+---@field public copy                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): boolean
+---@field public create                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
+---@field public insert_if_missing      fun(self: era.m.explorer.resource.IManager, filepath: string): boolean
+---@field public load                   fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode[]
+---@field public locate                 fun(self: era.m.explorer.resource.IManager, filepath: string): era.m.explorer.resource.INode|nil
+---@field public move                   fun(self: era.m.explorer.resource.IManager, source_filepath: string, target_filepath: string): boolean
+---@field public remove                 fun(self: era.m.explorer.resource.IManager, filepath: string, on_removed: fun(): nil): boolean
 
 ---@class era.m.explorer.resource.INode
----@field public uri                    string
+---@field public filepath                    string
 ---@field public nodename               string
 ---@field public nodetype               era.m.explorer.NodeTypeEnum
 
@@ -73,7 +73,7 @@
 ---@class era.m.explorer.view.IRenderContext
 ---@field public tree                   era.m.explorer.Tree
 ---@field public root                   era.m.explorer.Node
----@field public root_uri               string
+---@field public root_filepath               string
 ---@field public resource_manager       ?era.m.explorer.resource.IManager
 ---@field public diag_counts            table<string, era.m.explorer.view.IDiagCounts>
 ---@field public foldempty              boolean
@@ -99,10 +99,10 @@
 ---@field public git_status_list        era.m.explorer.view.IGitStatusInfo[]
 ---@field public highlights             stl.t.IHighlight[]
 ---@field public lines                  string[]
----@field public lnum_to_uri            table<integer, string>
+---@field public lnum_to_filepath            table<integer, string>
 ---@field public sign_by_lnum           table<integer, era.m.explorer.view.ISignInfo>
 ---@field public sign_info_list         era.m.explorer.view.ISignInfo[]
----@field public uri_to_lnum            table<string, integer>
+---@field public filepath_to_lnum            table<string, integer>
 
 ---@class era.m.explorer.view.ISignInfo
 ---@field public lnum                   integer

@@ -46,13 +46,13 @@ function M:render(bufnr, tree, root, options)
 
   local diag_counts = {} ---@type table<string, era.m.explorer.view.IDiagCounts>
 
-  local root_uri = root.uri ---@type string
+  local root_filepath = root.filepath ---@type string
 
   ---@type era.m.explorer.view.IRenderContext
   local ctx = {
     tree = tree,
     root = root,
-    root_uri = root_uri,
+    root_filepath = root_filepath,
     resource_manager = options.resource_manager,
     foldempty = options.foldempty ~= false,
     only_selected = options.only_selected == true,
@@ -70,8 +70,8 @@ function M:render(bufnr, tree, root, options)
   local diagnostic_info_list = {} ---@type era.m.explorer.view.IDiagnosticInfo[]
   local git_status_list = {} ---@type era.m.explorer.view.IGitStatusInfo[]
   local sign_info_list = {} ---@type era.m.explorer.view.ISignInfo[]
-  local lnum_to_uri = {} ---@type table<integer, string>
-  local uri_to_lnum = {} ---@type table<string, integer>
+  local lnum_to_filepath = {} ---@type table<integer, string>
+  local filepath_to_lnum = {} ---@type table<string, integer>
   local lnum = 0 ---@type integer
   local indent_hln = self._indent_hln ---@type string
   local only_selected = ctx.only_selected ---@type boolean
@@ -109,8 +109,8 @@ function M:render(bufnr, tree, root, options)
       self:__render_node__(ctx, node, indent, current_lnum, display_name, is_expanded, is_selected)
 
     lines[current_lnum] = line
-    lnum_to_uri[current_lnum] = node.uri
-    uri_to_lnum[node.uri] = current_lnum
+    lnum_to_filepath[current_lnum] = node.filepath
+    filepath_to_lnum[node.filepath] = current_lnum
 
     if #indent > 0 then
       highlights[#highlights + 1] = {
@@ -266,8 +266,8 @@ function M:render(bufnr, tree, root, options)
     diagnostic_info_list = diagnostic_info_list,
     git_status_list = git_status_list,
     sign_info_list = sign_info_list,
-    lnum_to_uri = lnum_to_uri,
-    uri_to_lnum = uri_to_lnum,
+    lnum_to_filepath = lnum_to_filepath,
+    filepath_to_lnum = filepath_to_lnum,
     diag_by_lnum = diag_by_lnum,
     git_by_lnum = git_by_lnum,
     sign_by_lnum = sign_by_lnum,
@@ -371,7 +371,7 @@ end
 ---@param lnum                          integer
 ---@return era.m.explorer.view.IDiagnosticInfo|nil
 function M:__get_diagnostic_info__(ctx, node, lnum)
-  local counts = ctx.diag_counts[node.uri] ---@type era.m.explorer.view.IDiagCounts|nil
+  local counts = ctx.diag_counts[node.filepath] ---@type era.m.explorer.view.IDiagCounts|nil
   if counts == nil then
     return nil
   end
@@ -438,7 +438,7 @@ end
 ---@param lnum                          integer
 ---@return era.m.explorer.view.IGitStatusInfo|nil
 function M:__get_git_status_info__(node, lnum)
-  local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+  local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
   if filepath == "" then
     return nil
   end
@@ -516,7 +516,7 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
     return "m_ex_ignored"
   end
 
-  local counts = ctx.diag_counts[node.uri] ---@type era.m.explorer.view.IDiagCounts|nil
+  local counts = ctx.diag_counts[node.filepath] ---@type era.m.explorer.view.IDiagCounts|nil
   if counts ~= nil then
     if counts.error > 0 then
       return "f_lsp_diagnostic_error"
@@ -527,7 +527,7 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
   end
 
   if ctx.show_git_status then
-    local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+    local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
     if filepath ~= "" then
       local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
       local _, git_hl = era.m.git.status.resolve(filepath, filetype)
@@ -548,7 +548,7 @@ end
 ---@param node                          era.m.explorer.Node
 ---@return boolean
 function M:__is_ignored__(node)
-  local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+  local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
   if filepath == "" then
     return false
   end
@@ -576,7 +576,7 @@ function M:__precompute__(root, ctx)
 
     ---@param node                      era.m.explorer.Node
     local function collect_filepaths(node)
-      local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+      local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
       if filepath ~= "" then
         filepaths[#filepaths + 1] = filepath
       end
@@ -611,9 +611,9 @@ function M:__precompute__(root, ctx)
       local counts = { error = 0, warn = 0, hint = 0, info = 0 } ---@type era.m.explorer.view.IDiagCounts
 
       if node.nodetype == "F" then
-        local filepath = self:__uri_to_filepath__(node.uri) ---@type string
+        local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
         if filepath ~= "" then
-          local bufnr = loaded_bufnrs[filepath] ---@type integer|nil
+          local bufnr = stl.nvim.buf.lookup_bufnr(loaded_bufnrs, filepath) ---@type integer|nil
           if bufnr ~= nil then
             local cached = bufnr_counts[bufnr] ---@type era.m.explorer.view.IDiagCounts|nil
             if cached ~= nil then
@@ -638,7 +638,7 @@ function M:__precompute__(root, ctx)
         end
       end
 
-      diag_counts[node.uri] = counts
+      diag_counts[node.filepath] = counts
       return counts
     end
 
@@ -651,7 +651,7 @@ function M:__precompute__(root, ctx)
         root_counts.hint = root_counts.hint + child_counts.hint
         root_counts.info = root_counts.info + child_counts.info
       end
-      diag_counts[root.uri] = root_counts
+      diag_counts[root.filepath] = root_counts
     end
   end
 
@@ -722,10 +722,15 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
 end
 
 ---@protected
----@param uri                           string
+---@param filepath                           string
 ---@return string
-function M:__uri_to_filepath__(uri)
-  return yoz.uri.to_filepath(uri) or ""
+function M:__filepath_to_filepath__(filepath)
+  if type(filepath) ~= "string" then
+    return ""
+  end
+
+  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
+  return dot.path.normalize(filepath, keep_trailing_slash, "/")
 end
 
 return M

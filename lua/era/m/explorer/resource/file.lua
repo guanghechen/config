@@ -3,6 +3,7 @@ local __module_name__ = "era.m.explorer.resource.file" ---@type string
 
 local DEBOUNCE_MS = 150 ---@type integer
 local MAX_WATCHES = 50 ---@type integer
+local OS_SEP = stl.env.PATH_SEP ---@type string
 
 local WATCH_IGNORE_PATTERNS = {
   "^%.git$",
@@ -35,6 +36,20 @@ local WATCH_IGNORE_PATTERNS = {
 ---@field protected _watch_count        integer
 local M = {}
 M.__index = M
+
+---@param filepath                      string
+---@param keep_trailing_slash           boolean|nil
+---@return string
+local function normalize_filepath(filepath, keep_trailing_slash)
+  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
+end
+
+---@param filepath                      string
+---@return string
+local function to_os_filepath(filepath)
+  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
+  return dot.path.normalize(filepath, keep_trailing_slash, OS_SEP)
+end
 
 ---@param props                         era.m.explorer.resource.file.IProps
 ---@return era.m.explorer.resource.FileManager
@@ -96,7 +111,7 @@ function M:sync_watches(expanded_dirs)
       limit_reached = true
       break
     end
-    if dirpath:sub(-1) == "/" then
+    if dirpath:sub(-1) == "/" and dirpath ~= "/" and not dirpath:match("^[A-Za-z]:/$") then
       dirpath = dirpath:sub(1, -2)
     end
     wanted[dirpath] = true
@@ -152,17 +167,18 @@ function M.compare(left, right)
   return 0
 end
 
----@param uri                           string
+---@param filepath                           string
 ---@return era.m.explorer.resource.INode|nil
-function M:create(uri)
-  local filepath = self:__uri_to_filepath__(uri) ---@type string
+function M:create(filepath)
+  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return nil
   end
 
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
+  local os_filepath = to_os_filepath(filepath) ---@type string
+  local is_directory = filepath:sub(-1) == "/" ---@type boolean
   if is_directory then
-    local ok, err = pcall(vim.fn.mkdir, filepath, "p")
+    local ok, err = pcall(vim.fn.mkdir, os_filepath, "p")
     if not ok then
       stl.reporter.error({
         from = self.fullname,
@@ -173,21 +189,21 @@ function M:create(uri)
       return nil
     end
   else
-    local parent_dir = vim.fn.fnamemodify(filepath, ":h") ---@type string
-    if vim.fn.isdirectory(parent_dir) == 0 then
-      local ok, err = pcall(vim.fn.mkdir, parent_dir, "p")
+    local os_parent_dir = vim.fn.fnamemodify(os_filepath, ":h") ---@type string
+    if vim.fn.isdirectory(os_parent_dir) == 0 then
+      local ok, err = pcall(vim.fn.mkdir, os_parent_dir, "p")
       if not ok then
         stl.reporter.error({
           from = self.fullname,
           subject = "create",
-          message = string.format("Failed to create parent directory: %s", parent_dir),
+          message = string.format("Failed to create parent directory: %s", filepath),
           details = { error = err },
         })
         return nil
       end
     end
 
-    local ok, err = pcall(vim.fn.writefile, {}, filepath)
+    local ok, err = pcall(vim.fn.writefile, {}, os_filepath)
     if not ok then
       stl.reporter.error({
         from = self.fullname,
@@ -199,21 +215,24 @@ function M:create(uri)
     end
   end
 
-  return self:locate(uri)
+  return self:locate(filepath)
 end
 
----@param source_uri                    string
----@param target_uri                    string
+---@param source_filepath                    string
+---@param target_filepath                    string
 ---@return boolean
-function M:copy(source_uri, target_uri)
-  local source_path = self:__uri_to_filepath__(source_uri) ---@type string
-  local target_path = self:__uri_to_filepath__(target_uri) ---@type string
+function M:copy(source_filepath, target_filepath)
+  local source_path = self:__filepath_to_filepath__(source_filepath) ---@type string
+  local target_path = self:__filepath_to_filepath__(target_filepath) ---@type string
 
   if source_path == "" or target_path == "" then
     return false
   end
 
-  if vim.fn.filereadable(target_path) == 1 or vim.fn.isdirectory(target_path) == 1 then
+  local source_os_path = to_os_filepath(source_path) ---@type string
+  local target_os_path = to_os_filepath(target_path) ---@type string
+
+  if vim.fn.filereadable(target_os_path) == 1 or vim.fn.isdirectory(target_os_path) == 1 then
     stl.reporter.error({
       from = self.fullname,
       subject = "copy",
@@ -222,7 +241,7 @@ function M:copy(source_uri, target_uri)
     return false
   end
 
-  local target_parent = vim.fn.fnamemodify(target_path, ":h") ---@type string
+  local target_parent = vim.fn.fnamemodify(target_os_path, ":h") ---@type string
   if vim.fn.isdirectory(target_parent) == 0 then
     local ok, err = pcall(vim.fn.mkdir, target_parent, "p")
     if not ok then
@@ -236,32 +255,33 @@ function M:copy(source_uri, target_uri)
     end
   end
 
-  local source_stat = vim.uv.fs_stat(source_path)
+  local source_stat = vim.uv.fs_stat(source_os_path)
   if source_stat == nil then
     return false
   end
 
   if source_stat.type == "directory" then
-    return self:__copy_directory__(source_path, target_path)
+    return self:__copy_directory__(source_os_path, target_os_path)
   else
-    return self:__copy_file__(source_path, target_path)
+    return self:__copy_file__(source_os_path, target_os_path)
   end
 end
 
----@param uri                           string
+---@param filepath                           string
 ---@return boolean
-function M:insert_if_missing(uri)
-  local filepath = self:__uri_to_filepath__(uri) ---@type string
+function M:insert_if_missing(filepath)
+  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return false
   end
 
-  local is_directory = uri:sub(-1) == "/" ---@type boolean
+  local os_filepath = to_os_filepath(filepath) ---@type string
+  local is_directory = filepath:sub(-1) == "/" ---@type boolean
   if is_directory then
-    if vim.fn.isdirectory(filepath) == 1 then
+    if vim.fn.isdirectory(os_filepath) == 1 then
       return true
     end
-    local ok, err = pcall(vim.fn.mkdir, filepath, "p")
+    local ok, err = pcall(vim.fn.mkdir, os_filepath, "p")
     if not ok then
       stl.reporter.error({
         from = self.fullname,
@@ -273,11 +293,11 @@ function M:insert_if_missing(uri)
     end
     return true
   else
-    if vim.fn.filereadable(filepath) == 1 then
+    if vim.fn.filereadable(os_filepath) == 1 then
       return true
     end
 
-    local parent_dir = vim.fn.fnamemodify(filepath, ":h") ---@type string
+    local parent_dir = vim.fn.fnamemodify(os_filepath, ":h") ---@type string
     if vim.fn.isdirectory(parent_dir) == 0 then
       local ok, err = pcall(vim.fn.mkdir, parent_dir, "p")
       if not ok then
@@ -291,7 +311,7 @@ function M:insert_if_missing(uri)
       end
     end
 
-    local ok, err = pcall(vim.fn.writefile, {}, filepath)
+    local ok, err = pcall(vim.fn.writefile, {}, os_filepath)
     if not ok then
       stl.reporter.error({
         from = self.fullname,
@@ -305,20 +325,21 @@ function M:insert_if_missing(uri)
   end
 end
 
----@param uri                           string
+---@param filepath                           string
 ---@return era.m.explorer.resource.INode[]
-function M:load(uri)
-  local filepath = self:__uri_to_filepath__(uri) ---@type string
+function M:load(filepath)
+  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return {}
   end
 
-  local stat = vim.uv.fs_stat(filepath)
+  local os_filepath = to_os_filepath(filepath) ---@type string
+  local stat = vim.uv.fs_stat(os_filepath)
   if stat == nil or stat.type ~= "directory" then
     return {}
   end
 
-  local handle = vim.uv.fs_scandir(filepath) ---@type userdata|nil
+  local handle = vim.uv.fs_scandir(os_filepath) ---@type userdata|nil
   if handle == nil then
     return {}
   end
@@ -338,7 +359,7 @@ function M:load(uri)
 
       ---@type era.m.explorer.resource.INode
       local item = {
-        uri = uri .. name .. (is_directory and "/" or ""),
+        filepath = filepath .. name .. (is_directory and "/" or ""),
         nodetype = nodetype,
         nodename = name,
       }
@@ -353,47 +374,52 @@ function M:load(uri)
   return items
 end
 
----@param uri                           string
+---@param filepath                           string
 ---@return era.m.explorer.resource.INode|nil
-function M:locate(uri)
-  local filepath = self:__uri_to_filepath__(uri) ---@type string
+function M:locate(filepath)
+  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return nil
   end
 
-  local stat = vim.uv.fs_stat(filepath)
+  local os_filepath = to_os_filepath(filepath) ---@type string
+  local stat = vim.uv.fs_stat(os_filepath)
   if stat == nil then
     return nil
   end
 
   local is_directory = stat.type == "directory" ---@type boolean
   local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
-  local nodename = vim.fn.fnamemodify(filepath, ":t") ---@type string
+  local target = is_directory and filepath:sub(1, -2) or filepath ---@type string
+  local nodename = target:match("([^/]+)$") or "" ---@type string
 
-  if is_directory and uri:sub(-1) ~= "/" then
-    uri = uri .. "/"
+  if is_directory and filepath:sub(-1) ~= "/" then
+    filepath = filepath .. "/"
   end
 
   ---@type era.m.explorer.resource.INode
   return {
-    uri = uri,
+    filepath = filepath,
     nodetype = nodetype,
     nodename = nodename,
   }
 end
 
----@param source_uri                    string
----@param target_uri                    string
+---@param source_filepath                    string
+---@param target_filepath                    string
 ---@return boolean
-function M:move(source_uri, target_uri)
-  local source_path = self:__uri_to_filepath__(source_uri) ---@type string
-  local target_path = self:__uri_to_filepath__(target_uri) ---@type string
+function M:move(source_filepath, target_filepath)
+  local source_path = self:__filepath_to_filepath__(source_filepath) ---@type string
+  local target_path = self:__filepath_to_filepath__(target_filepath) ---@type string
 
   if source_path == "" or target_path == "" then
     return false
   end
 
-  if vim.fn.filereadable(target_path) == 1 or vim.fn.isdirectory(target_path) == 1 then
+  local source_os_path = to_os_filepath(source_path) ---@type string
+  local target_os_path = to_os_filepath(target_path) ---@type string
+
+  if vim.fn.filereadable(target_os_path) == 1 or vim.fn.isdirectory(target_os_path) == 1 then
     stl.reporter.error({
       from = self.fullname,
       subject = "move",
@@ -402,7 +428,7 @@ function M:move(source_uri, target_uri)
     return false
   end
 
-  local target_parent = vim.fn.fnamemodify(target_path, ":h") ---@type string
+  local target_parent = vim.fn.fnamemodify(target_os_path, ":h") ---@type string
   if vim.fn.isdirectory(target_parent) == 0 then
     local ok, err = pcall(vim.fn.mkdir, target_parent, "p")
     if not ok then
@@ -416,39 +442,43 @@ function M:move(source_uri, target_uri)
     end
   end
 
-  local move_ok = true ---@type boolean
-  era.m.lsp.event.on_rename(source_path, target_path, function()
-    local ok, err = pcall(vim.fn.rename, source_path, target_path)
-    if not ok then
+  local renamed = era.m.lsp.event.on_rename(source_os_path, target_os_path, function()
+    local ok, result = pcall(vim.fn.rename, source_os_path, target_os_path)
+    if not ok or result ~= 0 then
       stl.reporter.error({
         from = self.fullname,
         subject = "move",
         message = string.format("Failed to move: %s -> %s", source_path, target_path),
-        details = { error = err },
+        details = {
+          error = not ok and result or nil,
+          code = ok and result or nil,
+        },
       })
-      move_ok = false
+      return false
     end
+    return true
   end)
 
-  if not move_ok then
+  if not renamed then
     return false
   end
 
-  era.m.lsp.event.rename_buf(source_path, target_path)
+  era.m.lsp.event.rename_buf(source_os_path, target_os_path)
 
   return true
 end
 
----@param uri                           string
+---@param filepath                           string
 ---@param on_removed                    fun(): nil
 ---@return boolean
-function M:remove(uri, on_removed)
-  local filepath = self:__uri_to_filepath__(uri) ---@type string
+function M:remove(filepath, on_removed)
+  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
   if filepath == "" then
     return false
   end
 
-  local stat = vim.uv.fs_stat(filepath)
+  local os_filepath = to_os_filepath(filepath) ---@type string
+  local stat = vim.uv.fs_stat(os_filepath)
   if stat == nil then
     return false
   end
@@ -459,7 +489,7 @@ function M:remove(uri, on_removed)
 
   if use_trash then
     if stl.env.IS_MAC then
-      local result = vim.system({ "trash", "-F", filepath }, { text = true }):wait()
+      local result = vim.system({ "trash", "-F", os_filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
         stl.reporter.error({
@@ -470,7 +500,7 @@ function M:remove(uri, on_removed)
         })
       end
     elseif stl.env.IS_WSL then
-      local win_path = vim.fn.system({ "wslpath", "-w", filepath }):gsub("\n", "")
+      local win_path = vim.fn.system({ "wslpath", "-w", os_filepath }):gsub("\n", "")
       local ps_script ---@type string
       if is_directory then
         ps_script = string.format(
@@ -494,7 +524,7 @@ function M:remove(uri, on_removed)
         })
       end
     elseif stl.env.IS_NIX then
-      local result = vim.system({ "gio", "trash", filepath }, { text = true }):wait()
+      local result = vim.system({ "gio", "trash", os_filepath }, { text = true }):wait()
       ok = result.code == 0
       if not ok then
         stl.reporter.error({
@@ -509,12 +539,12 @@ function M:remove(uri, on_removed)
       if is_directory then
         ps_script = string.format(
           [[Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory('%s', 'OnlyErrorDialogs', 'SendToRecycleBin')]],
-          filepath:gsub("'", "''")
+          os_filepath:gsub("'", "''")
         )
       else
         ps_script = string.format(
           [[Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile('%s', 'OnlyErrorDialogs', 'SendToRecycleBin')]],
-          filepath:gsub("'", "''")
+          os_filepath:gsub("'", "''")
         )
       end
       local result = vim.system({ "powershell", "-NoProfile", "-Command", ps_script }, { text = true }):wait()
@@ -540,9 +570,9 @@ function M:remove(uri, on_removed)
   if not use_trash then
     local err ---@type any
     if is_directory then
-      ok, err = pcall(vim.fn.delete, filepath, "rf")
+      ok, err = pcall(vim.fn.delete, os_filepath, "rf")
     else
-      ok, err = pcall(vim.fn.delete, filepath)
+      ok, err = pcall(vim.fn.delete, os_filepath)
     end
     if not ok then
       stl.reporter.error({
@@ -585,14 +615,17 @@ function M:__copy_directory__(source_path, target_path)
     return true
   end
 
+  local source_prefix = source_path:sub(-1) == OS_SEP and source_path or (source_path .. OS_SEP) ---@type string
+  local target_prefix = target_path:sub(-1) == OS_SEP and target_path or (target_path .. OS_SEP) ---@type string
+
   while true do
     local name, ftype = vim.uv.fs_scandir_next(handle) ---@type string|nil, string|nil
     if name == nil then
       break
     end
 
-    local child_source = source_path .. "/" .. name ---@type string
-    local child_target = target_path .. "/" .. name ---@type string
+    local child_source = source_prefix .. name ---@type string
+    local child_target = target_prefix .. name ---@type string
 
     if ftype == "directory" then
       if not self:__copy_directory__(child_source, child_target) then
@@ -691,7 +724,8 @@ function M:__start_watch__(dirpath)
     return
   end
 
-  local ok, err = handle:start(dirpath, {}, function(watch_err, filename)
+  local os_dirpath = to_os_filepath(dirpath) ---@type string
+  local ok, err = handle:start(os_dirpath, {}, function(watch_err, filename)
     if watch_err then
       return
     end
@@ -789,10 +823,19 @@ function M:__trigger_change__()
 end
 
 ---@protected
----@param uri                           string
+---@param filepath                           string
 ---@return string
-function M:__uri_to_filepath__(uri)
-  return yoz.uri.to_filepath(uri) or ""
+function M:__filepath_to_filepath__(filepath)
+  if type(filepath) ~= "string" then
+    return ""
+  end
+
+  if #filepath == 0 then
+    return ""
+  end
+
+  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
+  return normalize_filepath(filepath, keep_trailing_slash)
 end
 
 return M

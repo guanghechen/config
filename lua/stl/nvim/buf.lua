@@ -30,7 +30,41 @@ local buftype_attrs = {
 }
 
 local filepath_to_bufnr = {} ---@type table<string, integer>
+local filepath_fallback_to_bufnr = {} ---@type table<string, integer>
 local bufnr_to_filepath = {} ---@type table<integer, string>
+
+---@param filepath                      string|nil
+---@return string
+local function normalize_bufpath(filepath)
+  if type(filepath) ~= "string" or filepath == "" then
+    return ""
+  end
+
+  -- Keep special URI-like buffer names (e.g. diffview://null) untouched.
+  if filepath:match("^[%w+.-]+://") then
+    return filepath
+  end
+
+  local last = filepath:sub(-1) ---@type string
+  local keep_trailing_slash = last == "/" or last == "\\" ---@type boolean
+  return dot.path.normalize(filepath, keep_trailing_slash, "/")
+end
+
+---@param filepath                      string
+---@return string|nil
+local function make_fallback_bufpath(filepath)
+  if not stl.env.IS_WIN then
+    return nil
+  end
+
+  -- Keep URI-like names untouched, fallback only applies to local filepaths.
+  if filepath:match("^[%w+.-]+://") then
+    return nil
+  end
+
+  local fallback = filepath:lower() ---@type string
+  return fallback ~= filepath and fallback or nil
+end
 
 ---@class stl.nvim.buf
 local M = {}
@@ -88,8 +122,9 @@ function M.filepath2bufnr()
 
   for _, bufnr in ipairs(bufnrs) do
     local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    if filepath ~= nil and #filepath > 0 then
-      result[filepath] = bufnr
+    local key = normalize_bufpath(filepath) ---@type string
+    if key ~= "" then
+      result[key] = bufnr
     end
   end
   return result
@@ -101,31 +136,77 @@ function M.get_loaded_bufnrs()
   for filepath, bufnr in pairs(filepath_to_bufnr) do
     if vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
       result[filepath] = bufnr
+      local fallback = make_fallback_bufpath(filepath) ---@type string|nil
+      if fallback ~= nil and result[fallback] == nil then
+        result[fallback] = bufnr
+      end
     end
   end
   return result
 end
 
+---@param filepath_to_bufnr_map         table<string, integer>
+---@param filepath                      string
+---@return integer|nil
+function M.lookup_bufnr(filepath_to_bufnr_map, filepath)
+  local key = normalize_bufpath(filepath) ---@type string
+  if key == "" then
+    return nil
+  end
+
+  local bufnr = filepath_to_bufnr_map[key] ---@type integer|nil
+  if bufnr ~= nil then
+    return bufnr
+  end
+
+  local fallback = make_fallback_bufpath(key) ---@type string|nil
+  if fallback ~= nil then
+    return filepath_to_bufnr_map[fallback]
+  end
+end
+
 ---@param filepath                      string
 ---@return integer|nil
 function M.locate_bufnr(filepath)
-  local bufnr = filepath_to_bufnr[filepath] ---@type integer|nil
+  local key = normalize_bufpath(filepath) ---@type string
+  if key == "" then
+    return nil
+  end
+
+  local bufnr = filepath_to_bufnr[key] ---@type integer|nil
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     return bufnr
   end
 
-  filepath_to_bufnr[filepath] = nil
+  filepath_to_bufnr[key] = nil
   if bufnr ~= nil then
     bufnr_to_filepath[bufnr] = nil
+  end
+
+  local fallback = make_fallback_bufpath(key) ---@type string|nil
+  if fallback ~= nil then
+    bufnr = filepath_fallback_to_bufnr[fallback]
+    if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
+      return bufnr
+    end
+    filepath_fallback_to_bufnr[fallback] = nil
+    if bufnr ~= nil then
+      bufnr_to_filepath[bufnr] = nil
+    end
   end
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
   for _, c_bufnr in ipairs(bufnrs) do
     if vim.api.nvim_buf_is_valid(c_bufnr) then
       local c_filepath = vim.api.nvim_buf_get_name(c_bufnr) ---@type string
-      if c_filepath == filepath then
-        filepath_to_bufnr[filepath] = c_bufnr
-        bufnr_to_filepath[c_bufnr] = filepath
+      local c_key = normalize_bufpath(c_filepath) ---@type string
+      local c_fallback = make_fallback_bufpath(c_key) ---@type string|nil
+      if c_key == key or (fallback ~= nil and c_fallback == fallback) then
+        filepath_to_bufnr[c_key] = c_bufnr
+        if c_fallback ~= nil then
+          filepath_fallback_to_bufnr[c_fallback] = c_bufnr
+        end
+        bufnr_to_filepath[c_bufnr] = c_key
         return c_bufnr
       end
     end
@@ -136,17 +217,26 @@ end
 ---@param filepath                      string
 ---@return nil
 function M.on_buf_open(bufnr, filepath)
-  if bufnr < 1 or filepath == "" then
+  local key = normalize_bufpath(filepath) ---@type string
+  if bufnr < 1 or key == "" then
     return
   end
 
   local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
-  if old_filepath ~= nil and old_filepath ~= filepath then
+  if old_filepath ~= nil and old_filepath ~= key then
     filepath_to_bufnr[old_filepath] = nil
+    local old_fallback = make_fallback_bufpath(old_filepath) ---@type string|nil
+    if old_fallback ~= nil then
+      filepath_fallback_to_bufnr[old_fallback] = nil
+    end
   end
 
-  filepath_to_bufnr[filepath] = bufnr
-  bufnr_to_filepath[bufnr] = filepath
+  filepath_to_bufnr[key] = bufnr
+  local fallback = make_fallback_bufpath(key) ---@type string|nil
+  if fallback ~= nil then
+    filepath_fallback_to_bufnr[fallback] = bufnr
+  end
+  bufnr_to_filepath[bufnr] = key
 end
 
 ---@param bufnr                         integer
@@ -155,6 +245,10 @@ function M.on_buf_close(bufnr)
   local old_filepath = bufnr_to_filepath[bufnr] ---@type string|nil
   if old_filepath ~= nil then
     filepath_to_bufnr[old_filepath] = nil
+    local old_fallback = make_fallback_bufpath(old_filepath) ---@type string|nil
+    if old_fallback ~= nil then
+      filepath_fallback_to_bufnr[old_fallback] = nil
+    end
     bufnr_to_filepath[bufnr] = nil
   end
 end

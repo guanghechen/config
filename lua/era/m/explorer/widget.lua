@@ -16,6 +16,23 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "WinSeparator:m_ex_border",
 }, ",")
 
+---@param filepath                      string
+---@param keep_trailing_slash           boolean|nil
+---@return string
+local function normalize_filepath(filepath, keep_trailing_slash)
+  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
+end
+
+---@param filepath                      string
+---@return string
+local function normalize_dirpath(filepath)
+  local normalized = normalize_filepath(filepath, true) ---@type string
+  if normalized:sub(-1) ~= "/" then
+    normalized = normalized .. "/"
+  end
+  return normalized
+end
+
 ---@class era.m.explorer.widget.IFlagItem
 ---@field public desc                   string
 ---@field public callback               fun(): nil
@@ -84,7 +101,6 @@ function M.new(props)
   ---@type era.m.explorer.Tree
   local tree = Tree.new({
     name = name,
-    protocol = "file://",
     initial_root = props.root,
     resource_manager = resource_manager,
     o_flag_foldempty = o_flag_foldempty,
@@ -118,11 +134,11 @@ function M.new(props)
     tree = tree,
     resource_manager = resource_manager,
     fullname = fullname,
-    get_cursor_uri = function()
-      return self:get_cursor_uri()
+    get_cursor_filepath = function()
+      return self:get_cursor_filepath()
     end,
-    get_parent_uri = function(uri)
-      return self:__get_parent_uri__(uri) ---@diagnostic disable-line: invisible
+    get_parent_filepath = function(filepath)
+      return self:__get_parent_filepath__(filepath) ---@diagnostic disable-line: invisible
     end,
     get_visual_nodes = function()
       return self:__get_visual_nodes__() ---@diagnostic disable-line: invisible
@@ -133,8 +149,8 @@ function M.new(props)
     render = function()
       self:__render__() ---@diagnostic disable-line: invisible
     end,
-    sync_cursor_to_uri = function(uri)
-      self:__sync_cursor_to_uri__(uri) ---@diagnostic disable-line: invisible
+    sync_cursor_to_filepath = function(filepath)
+      self:__sync_cursor_to_filepath__(filepath) ---@diagnostic disable-line: invisible
     end,
   }
   self._action = Action.new(action_ctx)
@@ -204,7 +220,7 @@ function M:get_bufnr()
 end
 
 ---@return string|nil
-function M:get_cursor_uri()
+function M:get_cursor_filepath()
   local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
   if render_result == nil then
     return nil
@@ -217,7 +233,7 @@ function M:get_cursor_uri()
 
   local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
   local lnum = cursor[1] ---@type integer
-  return render_result.lnum_to_uri[lnum]
+  return render_result.lnum_to_filepath[lnum]
 end
 
 ---@return era.m.explorer.view.IRenderResult|nil
@@ -315,42 +331,45 @@ function M:resize()
   end
 end
 
----@param uri                           ?string
+---@param filepath                           ?string
 ---@return nil
-function M:reveal(uri)
-  if uri == nil then
+function M:reveal(filepath)
+  if filepath == nil then
     return
   end
+  filepath = normalize_filepath(filepath, filepath:sub(-1) == "/")
 
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  if not vim.startswith(uri, root_uri) then
-    local parent_uri = self:__get_parent_uri__(uri) ---@type string
-    self:set_root(parent_uri)
-    root_uri = self._tree.o_root_uri:snapshot()
+  local root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
+  if not vim.startswith(filepath, root_filepath) then
+    local parent_filepath = self:__get_parent_filepath__(filepath) ---@type string
+    self:set_root(parent_filepath)
+    root_filepath = self._tree.o_root_filepath:snapshot()
   end
 
-  local target_dir = uri:sub(-1) == "/" and uri or self:__get_parent_uri__(uri) ---@type string
+  local target_dir = filepath:sub(-1) == "/" and filepath or self:__get_parent_filepath__(filepath) ---@type string
   self._tree:expand_path(target_dir)
 
   self._tree:refresh(false)
   self:__refresh__()
 
-  self._tree.o_cursor_uri:next(uri)
-  self:__sync_cursor_to_uri__(uri)
+  self._tree.o_cursor_filepath:next(filepath)
+  self:__sync_cursor_to_filepath__(filepath)
 end
 
----@param root_uri                      string
+---@param root_filepath                      string
 ---@return boolean
-function M:set_root(root_uri)
-  local current_root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  if root_uri == current_root_uri then
+function M:set_root(root_filepath)
+  root_filepath = normalize_dirpath(root_filepath)
+
+  local current_root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
+  if root_filepath == current_root_filepath then
     return true
   end
 
-  local ok = self._tree:attach(root_uri) ---@type boolean
+  local ok = self._tree:attach(root_filepath) ---@type boolean
   if ok then
-    self._tree.prev_root_uri = current_root_uri
-    self._tree.o_root_uri:next(root_uri)
+    self._tree.prev_root_filepath = current_root_filepath
+    self._tree.o_root_filepath:next(root_filepath)
     self:__refresh__()
   end
   return ok
@@ -427,9 +446,9 @@ function M:__setup_buf_autocmds__(bufnr)
     group = self._augroup,
     buffer = bufnr,
     callback = function()
-      local uri = self:get_cursor_uri() ---@type string|nil
-      if uri ~= nil then
-        self._tree.o_cursor_uri:next(uri)
+      local filepath = self:get_cursor_filepath() ---@type string|nil
+      if filepath ~= nil then
+        self._tree.o_cursor_filepath:next(filepath)
       end
       self:__update_cursorline__()
     end,
@@ -487,7 +506,7 @@ function M:__create_nvimbar__()
         vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
       end
     end,
-  }):place("left", c.explorer.winbar(self._tree.o_root_uri, position, nvimbar_flags, get_width), 100)
+  }):place("left", c.explorer.winbar(self._tree.o_root_filepath, position, nvimbar_flags, get_width), 100)
 
   return nvimbar
 end
@@ -576,16 +595,21 @@ function M:__get_flags__()
 end
 
 ---@protected
----@param uri                           string
+---@param filepath                           string
 ---@return string
-function M:__get_parent_uri__(uri)
-  if uri:sub(-1) == "/" then
-    uri = uri:sub(1, -2)
+function M:__get_parent_filepath__(filepath)
+  filepath = normalize_filepath(filepath, filepath:sub(-1) == "/")
+
+  if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
+    return filepath
   end
 
-  local parent = uri:match("(.*/)[^/]+$") ---@type string|nil
-  if parent == nil then
-    return uri
+  local trimmed = filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath ---@type string
+  local parent = dot.path.dirname(trimmed) ---@type string
+  parent = normalize_filepath(parent, true)
+
+  if parent:match("^[A-Za-z]:$") then
+    parent = parent .. "/"
   end
 
   return parent
@@ -608,9 +632,9 @@ function M:__get_visual_nodes__()
 
   local nodes = {} ---@type era.m.explorer.Node[]
   for lnum = start_lnum, end_lnum do
-    local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
-    if uri ~= nil then
-      local node = self._tree:locate(uri) ---@type era.m.explorer.Node|nil
+    local filepath = render_result.lnum_to_filepath[lnum] ---@type string|nil
+    if filepath ~= nil then
+      local node = self._tree:locate(filepath) ---@type era.m.explorer.Node|nil
       if node ~= nil then
         nodes[#nodes + 1] = node
       end
@@ -639,14 +663,16 @@ function M:__goto_git_changed__(direction)
 
   local changed_set = {} ---@type table<string, boolean>
   for _, filepath in ipairs(staged_files) do
-    changed_set[filepath] = true
+    local normalized = dot.path.normalize(filepath, filepath:sub(-1) == "/", "/") ---@type string
+    changed_set[normalized] = true
   end
   for _, filepath in ipairs(unstaged_files) do
-    changed_set[filepath] = true
+    local normalized = dot.path.normalize(filepath, filepath:sub(-1) == "/", "/") ---@type string
+    changed_set[normalized] = true
   end
 
   local found = self:__goto_matching_file_or_dir__(direction, function(filepath, is_dir)
-    local normalized = dot.path.normalize(filepath) ---@type string
+    local normalized = dot.path.normalize(filepath, false, "/") ---@type string
     if is_dir then
       for changed_path, _ in pairs(changed_set) do
         if vim.startswith(changed_path, normalized .. "/") then
@@ -707,11 +733,11 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
 
   local matching_lnums = {} ---@type integer[]
   for lnum = 1, total_lines do
-    local uri = render_result.lnum_to_uri[lnum] ---@type string|nil
-    if uri ~= nil then
-      local is_dir = uri:sub(-1) == "/" ---@type boolean
+    local filepath = render_result.lnum_to_filepath[lnum] ---@type string|nil
+    if filepath ~= nil then
+      local is_dir = filepath:sub(-1) == "/" ---@type boolean
       if include_dirs or not is_dir then
-        local filepath = yoz.uri.to_filepath(uri) or "" ---@type string
+        filepath = normalize_filepath(filepath, is_dir)
         if is_dir and #filepath > 1 then
           filepath = filepath:sub(1, -2)
         end
@@ -750,9 +776,9 @@ function M:__goto_matching_item__(direction, include_dirs, matcher)
   end
 
   if target_lnum ~= nil then
-    local target_uri = render_result.lnum_to_uri[target_lnum] ---@type string|nil
-    if target_uri ~= nil then
-      self._tree.o_cursor_uri:next(target_uri)
+    local target_filepath = render_result.lnum_to_filepath[target_lnum] ---@type string|nil
+    if target_filepath ~= nil then
+      self._tree.o_cursor_filepath:next(target_filepath)
       pcall(vim.api.nvim_win_set_cursor, winnr, { target_lnum, 0 })
       return true
     end
@@ -770,10 +796,10 @@ function M:__refresh__(skip_refresh)
     return
   end
 
-  local root_uri = self._tree.o_root_uri:snapshot() ---@type string
-  local current_root_uri = self._tree:get_root_uri() ---@type string
-  if root_uri ~= current_root_uri then
-    local ok = self._tree:attach(root_uri) ---@type boolean
+  local root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
+  local current_root_filepath = self._tree:get_root_filepath() ---@type string
+  if root_filepath ~= current_root_filepath then
+    local ok = self._tree:attach(root_filepath) ---@type boolean
     if not ok then
       return
     end
@@ -805,8 +831,8 @@ function M:__render__()
   })
   self._render_result = render_result
 
-  local cursor_uri = self._tree.o_cursor_uri:snapshot() ---@type string
-  self:__sync_cursor_to_uri__(cursor_uri)
+  local cursor_filepath = self._tree.o_cursor_filepath:snapshot() ---@type string
+  self:__sync_cursor_to_filepath__(cursor_filepath)
   self:__update_winbar__()
   self:__update_cursorline__()
   self:__sync_watches__(root_node)
@@ -821,10 +847,7 @@ function M:__sync_watches__(root_node)
   ---@param node                        era.m.explorer.Node
   local function walk(node)
     if node.nodetype == "D" and node.expanded then
-      local filepath = yoz.uri.to_filepath(node.uri) ---@type string|nil
-      if filepath then
-        expanded_dirs[#expanded_dirs + 1] = filepath
-      end
+      expanded_dirs[#expanded_dirs + 1] = node.filepath
       for _, child in ipairs(node.children) do
         walk(child)
       end
@@ -1474,7 +1497,7 @@ end
 function M:__setup_subscriptions__()
   local tree = self._tree ---@type era.m.explorer.Tree
 
-  local sub_root_uri = tree.o_root_uri:subscribe(
+  local sub_root_filepath = tree.o_root_filepath:subscribe(
     stl.c.Subscriber.new({
       on_next = function()
         self:__update_winbar__()
@@ -1483,7 +1506,7 @@ function M:__setup_subscriptions__()
     }),
     false
   )
-  self._subscriptions[#self._subscriptions + 1] = sub_root_uri
+  self._subscriptions[#self._subscriptions + 1] = sub_root_filepath
 
   local sub_show_hidden = tree.o_flag_hidden:subscribe(
     stl.c.Subscriber.new({
@@ -1560,9 +1583,9 @@ function M:__setup_subscriptions__()
 end
 
 ---@protected
----@param uri                           string
+---@param filepath                           string
 ---@return nil
-function M:__sync_cursor_to_uri__(uri)
+function M:__sync_cursor_to_filepath__(filepath)
   local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
   if render_result == nil then
     return
@@ -1573,7 +1596,7 @@ function M:__sync_cursor_to_uri__(uri)
     return
   end
 
-  local lnum = render_result.uri_to_lnum[uri] ---@type integer|nil
+  local lnum = render_result.filepath_to_lnum[filepath] ---@type integer|nil
   if lnum ~= nil then
     pcall(vim.api.nvim_win_set_cursor, winnr, { lnum, 0 })
   end
