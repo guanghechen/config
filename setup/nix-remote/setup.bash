@@ -4,8 +4,8 @@
 printf "\n\e[95m ===== [prepare] =====\e[0m\n"
 sudo apt update
 sudo apt dist-upgrade -y
-# sudo apt remove -y tmux
-sudo apt install -y curl git locales wget
+sudo apt remove -y tmux
+sudo apt install -y curl git locales traceroute wget
 sudo apt install -y bash-completion build-essential libvips-dev unixodbc
 sudo apt install -y clangd colordiff file fontconfig libunwind8 net-tools vim
 sudo apt install -y wl-clipboard
