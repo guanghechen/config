@@ -609,6 +609,54 @@ local function preview_render(composer, bufnr)
 end
 
 local picker ---@type era.m.picker.ListComposer
+
+---@return nil
+local function copy_current_filepath()
+  local lnum_current = picker.result.lnum_current:snapshot() ---@type integer
+  local item = picker:retrieve(lnum_current) ---@type era.m.picker.composer.list.IItem|nil
+  ---@cast item era.fn.find_explorer.IItem|nil
+
+  if item == nil then
+    return
+  end
+
+  local filepath = item.data.fileitem.path ---@type string
+  if #filepath < 1 then
+    return
+  end
+
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
+  local winnr_result = picker.result:get_winnr() ---@type integer|nil
+  if winnr_result == nil or winnr_result < 1 or not vim.api.nvim_win_is_valid(winnr_result) then
+    return
+  end
+
+  ---@return nil
+  local function handle()
+    era.fn.select_copy_filepath({
+      filepath = filepath,
+      relative = "cursor",
+      row = 1,
+      col = 4,
+      on_completed = function()
+        if winnr_current ~= winnr_result then
+          vim.schedule(function()
+            if vim.api.nvim_win_is_valid(winnr_current) then
+              vim.api.nvim_set_current_win(winnr_current)
+            end
+          end)
+        end
+      end,
+    })
+  end
+
+  if winnr_current == winnr_result then
+    handle()
+  else
+    vim.api.nvim_win_call(winnr_result, handle)
+  end
+end
+
 picker = era.m.picker.ListComposer.new({
   name = name,
   autosort = false,
@@ -639,6 +687,12 @@ picker = era.m.picker.ListComposer.new({
         end
       end,
     },
+    {
+      modes = { "n", "x" },
+      key = "oc",
+      desc = "filetree: copy filepath",
+      callback = copy_current_filepath,
+    },
   },
 
   keymaps_result = {
@@ -655,6 +709,12 @@ picker = era.m.picker.ListComposer.new({
           era.fn.add_locations_to_ai({ { filepath = item.data.fileitem.path } })
         end
       end,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "oc",
+      desc = "filetree: copy filepath",
+      callback = copy_current_filepath,
     },
   },
 
