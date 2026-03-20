@@ -309,10 +309,10 @@ M.templates = {
       if not stl.env.IS_TMUX then
         return false
       end
-      local cwd = dot.path.cwd()
+      local cwd = yoz.path.normalize(vim.fn.getcwd(), false, "/")
       local config_home = vim.env.XDG_CONFIG_HOME or (vim.env.HOME .. "/.config")
-      local nvim_config = config_home .. "/nvim"
-      local nvchad_config = config_home .. "/nvim-nvchad"
+      local nvim_config = yoz.path.normalize(config_home .. "/nvim", false, "/")
+      local nvchad_config = yoz.path.normalize(config_home .. "/nvim-nvchad", false, "/")
       return cwd == nvim_config or cwd == nvchad_config
     end,
   },

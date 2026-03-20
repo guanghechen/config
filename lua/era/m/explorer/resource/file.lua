@@ -41,14 +41,13 @@ M.__index = M
 ---@param keep_trailing_slash           boolean|nil
 ---@return string
 local function normalize_filepath(filepath, keep_trailing_slash)
-  return dot.path.normalize(filepath, keep_trailing_slash ~= false, "/")
+  return stl.os.path.normalize(filepath, keep_trailing_slash)
 end
 
 ---@param filepath                      string
 ---@return string
 local function to_os_filepath(filepath)
-  local keep_trailing_slash = filepath:sub(-1) == "/" ---@type boolean
-  return dot.path.normalize(filepath, keep_trailing_slash, OS_SEP)
+  return stl.os.path.to_os(filepath)
 end
 
 ---@param props                         era.m.explorer.resource.file.IProps

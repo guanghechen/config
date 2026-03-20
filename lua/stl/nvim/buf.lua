@@ -47,7 +47,7 @@ local function normalize_bufpath(filepath)
 
   local last = filepath:sub(-1) ---@type string
   local keep_trailing_slash = last == "/" or last == "\\" ---@type boolean
-  return dot.path.normalize(filepath, keep_trailing_slash, "/")
+  return yoz.path.normalize(filepath, keep_trailing_slash, "/")
 end
 
 ---@param filepath                      string

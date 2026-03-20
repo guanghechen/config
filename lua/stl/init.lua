@@ -192,6 +192,7 @@ local __mods = {
   filetype = "stl.filetype",
   fn = "stl.fn",
   fs = "stl.fs",
+  os = "stl.os",
   hot = "stl.hot",
   prompt = "stl.prompt",
   icon = "stl.icon",
@@ -226,6 +227,7 @@ local __mods = {
 ---@field public filetype               stl.filetype
 ---@field public fn                     stl.fn
 ---@field public fs                     stl.fs
+---@field public os                     stl.os
 ---@field public git                    stl.git
 ---@field public hot                    stl.hot
 ---@field public icon                   stl.icon
