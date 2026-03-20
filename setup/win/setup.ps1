@@ -123,6 +123,13 @@ Set-Location -Path $repomain
 . .\setup\win\app\nvim.ps1
 
 Set-Location -Path $repomain
+try {
+  & .\setup\win\bot\font-maple.ps1
+} catch {
+  Write-Host "  [setup font (Maple)] $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
+Set-Location -Path $repomain
 . .\setup\win\theme.ps1
 
 Write-Host "`n ===== [setup settings] =====" -ForegroundColor Magenta
