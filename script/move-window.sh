@@ -54,7 +54,7 @@ function _ghc_tmux_move_window_ {
   fi
 
   if ! tmux has-session -t "${target_session_name}" 2>/dev/null; then
-    if ! tmux new-session -d -s "${target_session_name}"; then
+    if ! tmux new-session -d -s "${target_session_name}" -e GHC_SKIP_INITIAL_WINDOW_RENAME=1; then
       _ghc_tmux_notify_ "failed to create session: ${target_session_name}"
       return 1
     fi
