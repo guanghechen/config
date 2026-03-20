@@ -419,7 +419,8 @@ end
 ---@param cb                             fun(image_src?: string, image_pos?: era.m.image.Pos)
 ---@return nil
 function M.at_cursor(cb)
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   M.find(vim.api.nvim_get_current_buf(), function(imgs)
     for _, img in ipairs(imgs) do
       local range = img.range

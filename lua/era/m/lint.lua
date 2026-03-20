@@ -59,8 +59,10 @@ end
 
 ---@return string|nil
 local function word_under_cursor()
-  local cursor = vim.api.nvim_win_get_cursor(0)
-  local context = resolve_word_context(vim.api.nvim_get_current_buf(), cursor[1] - 1, cursor[2])
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
+  local context = resolve_word_context(bufnr, cursor[1] - 1, cursor[2])
   if context ~= nil then
     return context.normalized
   end

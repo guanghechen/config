@@ -784,7 +784,8 @@ command
     uuid = K.git.hunk_goto_prev.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if vim.api.nvim_get_option_value("diff", { win = winnr }) then
         vim.cmd.normal({ "[c", bang = true })
       else
         era.m.git.hunk.nav("prev")
@@ -795,7 +796,8 @@ command
     uuid = K.git.hunk_goto_next.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if vim.api.nvim_get_option_value("diff", { win = winnr }) then
         vim.cmd.normal({ "]c", bang = true })
       else
         era.m.git.hunk.nav("next")
@@ -806,7 +808,8 @@ command
     uuid = K.git.hunk_goto_prev_all.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if vim.api.nvim_get_option_value("diff", { win = winnr }) then
         vim.cmd.normal({ "[c", bang = true })
       else
         era.m.git.hunk.nav_all("prev")
@@ -817,7 +820,8 @@ command
     uuid = K.git.hunk_goto_next_all.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
-      if vim.api.nvim_get_option_value("diff", { win = 0 }) then
+      local winnr = vim.api.nvim_get_current_win() ---@type integer
+      if vim.api.nvim_get_option_value("diff", { win = winnr }) then
         vim.cmd.normal({ "]c", bang = true })
       else
         era.m.git.hunk.nav_all("next")

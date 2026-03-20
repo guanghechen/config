@@ -3,7 +3,8 @@ local M = {}
 
 ---@return nil
 function M.goto_indent_scope_top()
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   local lnum_cur = cursor[1] ---@type integer
   local line_cur = vim.fn.getline(lnum_cur) ---@type string
   local fnbc = string.find(line_cur, "%S") ---@type integer|nil
@@ -13,18 +14,20 @@ function M.goto_indent_scope_top()
     local line = vim.fn.getline(lnum) ---@type string
     local col = string.find(line, "%S") ---@type integer|nil
     if col ~= nil and col <= col_cur then
-      vim.api.nvim_win_set_cursor(0, { lnum, col - 1 })
+      vim.api.nvim_win_set_cursor(winnr, { lnum, col - 1 })
       return
     end
   end
 
-  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  vim.api.nvim_win_set_cursor(winnr, { 1, 0 })
 end
 
 ---@return nil
 function M.goto_indent_scope_bot()
-  local N = vim.api.nvim_buf_line_count(0) ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local N = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   local lnum_cur = cursor[1] ---@type integer
   local line_cur = vim.fn.getline(lnum_cur) ---@type string
   local fnbc = string.find(line_cur, "%S") ---@type integer|nil
@@ -34,12 +37,12 @@ function M.goto_indent_scope_bot()
     local line = vim.fn.getline(lnum) ---@type string
     local col = string.find(line, "%S") ---@type integer|nil
     if col ~= nil and col <= col_cur then
-      vim.api.nvim_win_set_cursor(0, { lnum, col - 1 })
+      vim.api.nvim_win_set_cursor(winnr, { lnum, col - 1 })
       return
     end
   end
 
-  vim.api.nvim_win_set_cursor(0, { N, 0 })
+  vim.api.nvim_win_set_cursor(winnr, { N, 0 })
 end
 
 return M

@@ -28,8 +28,8 @@ end
 ---@param name                         string                          unique buffer name
 ---@return integer                     bufnr
 function M.create_sbs_buffer(name)
-  local existing = vim.fn.bufnr(name)
-  if existing ~= -1 then
+  local existing = stl.nvim.buf.locate_bufnr(name) ---@type integer|nil
+  if existing ~= nil then
     return existing
   end
 
@@ -48,8 +48,8 @@ end
 ---@param filepath                     string                          absolute path
 ---@return integer                     bufnr
 function M.find_or_create_local_buffer(filepath)
-  local bufnr = vim.fn.bufnr(filepath)
-  if bufnr ~= -1 then
+  local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
+  if bufnr ~= nil then
     vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
     return bufnr
   end

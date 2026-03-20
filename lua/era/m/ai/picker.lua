@@ -97,8 +97,9 @@ end
 ---@param winnr                         integer
 ---@return nil
 local function restore_window(winnr)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   if vim.api.nvim_win_is_valid(winnr) then
-    vim.api.nvim_tabpage_set_win(0, winnr)
+    vim.api.nvim_tabpage_set_win(tabnr, winnr)
   end
 end
 

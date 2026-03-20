@@ -51,8 +51,9 @@ end
 ---@return integer|nil
 local function pick_window(filter, winnr_candidate, split_as_needed)
   local winnr_original = vim.api.nvim_get_current_win() ---@type integer
+  local tabnr_current = vim.api.nvim_get_current_tabpage() ---@type integer
 
-  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr_current) ---@type integer[]
   local N = 0 ---@type integer
   for i = 1, #winnrs, 1 do
     local winnr = winnrs[i] ---@type integer

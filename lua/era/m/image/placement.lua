@@ -418,10 +418,11 @@ end
 ---@return era.m.image.State
 function M:state()
   local state = require("era.m.image.state")
+  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
   local width, height = vim.o.columns, vim.o.lines
   local wins = {} ---@type integer[]
   local is_fallback = not state.env.placeholders
-  local zindex = vim.api.nvim_win_get_config(0).zindex or 0
+  local zindex = vim.api.nvim_win_get_config(winnr_current).zindex or 0
 
   for _, winnr in ipairs(self:wins()) do
     width = math.min(width, vim.api.nvim_win_get_width(winnr))

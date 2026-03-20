@@ -111,7 +111,8 @@ local function fetch_data()
       end
     end
 
-    local buf_keymaps = vim.api.nvim_buf_get_keymap(0, mode)
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local buf_keymaps = vim.api.nvim_buf_get_keymap(bufnr, mode)
     for _, km in ipairs(buf_keymaps) do
       local lhs = normalize_lhs(km.lhs or "")
       local key = mode .. ":buf:" .. lhs

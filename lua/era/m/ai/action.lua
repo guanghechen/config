@@ -270,7 +270,7 @@ function M.edit()
     return
   end
 
-  local filepath = vim.api.nvim_buf_get_name(0) ---@type string
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if filepath == "" then
     stl.reporter.warn({
       from = __module_name__,
@@ -352,7 +352,8 @@ end
 
 ---@return nil
 function M.send_file()
-  local filepath = vim.api.nvim_buf_get_name(0) ---@type string
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   if filepath == "" then
     stl.reporter.warn({
       from = __module_name__,

@@ -164,7 +164,8 @@ end
 ---@return integer
 ---@return integer
 function M:__calc_position__(width, height)
-  local cursor_pos = vim.fn.screenpos(0, vim.fn.line("."), vim.fn.col("."))
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor_pos = vim.fn.screenpos(winnr, vim.fn.line("."), vim.fn.col("."))
   local cursor_row = cursor_pos.row ---@type integer
   local cursor_col = cursor_pos.col ---@type integer
   local screen_width = vim.o.columns ---@type integer

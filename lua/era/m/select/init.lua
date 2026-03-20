@@ -191,14 +191,16 @@ function M.select(items, opts, on_choice)
     } or nil,
 
     on_cancel = function()
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_tabpage_set_win(0, winnr)
+        vim.api.nvim_tabpage_set_win(tabnr, winnr)
       end
     end,
 
     on_confirm = function(composer, item)
+      local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_tabpage_set_win(0, winnr)
+        vim.api.nvim_tabpage_set_win(tabnr, winnr)
       end
       composer:close()
 

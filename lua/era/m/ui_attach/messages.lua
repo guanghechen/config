@@ -149,6 +149,7 @@ function M.show(task)
 
   if kind == "search_count" or kind == "search_cmd" then
     dot.state.status.searching:next(true)
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     local line = vim.fn.line(".") - 1
     local virt_text = {} ---@type string[][]
     for _, piece in ipairs(content) do
@@ -156,8 +157,8 @@ function M.show(task)
       table.insert(virt_text, { text, "f_um_search_count" })
     end
 
-    vim.api.nvim_buf_clear_namespace(0, nsnrs.search_count, 0, -1)
-    vim.api.nvim_buf_set_extmark(0, nsnrs.search_count, line, -1, {
+    vim.api.nvim_buf_clear_namespace(bufnr, nsnrs.search_count, 0, -1)
+    vim.api.nvim_buf_set_extmark(bufnr, nsnrs.search_count, line, -1, {
       virt_text = virt_text,
       virt_text_pos = "eol",
       hl_mode = "combine",

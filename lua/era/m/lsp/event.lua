@@ -39,8 +39,8 @@ end
 ---@param to                            string
 ---@return boolean
 function M.rename_buf(from, to)
-  local from_bufnr = vim.fn.bufnr(from) ---@type integer
-  if from_bufnr >= 0 then
+  local from_bufnr = stl.nvim.buf.locate_bufnr(from) ---@type integer|nil
+  if from_bufnr ~= nil then
     local to_bufnr = vim.fn.bufadd(to) ---@type integer
     vim.api.nvim_set_option_value("buflisted", true, { buf = to_bufnr })
     for _, win in ipairs(vim.fn.win_findbuf(from_bufnr)) do
@@ -169,7 +169,10 @@ function M.on_attach(client, bufnr)
   end
 
   if support_foldingRange == 1 then
-    vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.lsp.foldexpr()", { win = 0, scope = "local" })
+    local winnr = vim.fn.bufwinid(bufnr) ---@type integer
+    if winnr ~= -1 then
+      vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.lsp.foldexpr()", { win = winnr, scope = "local" })
+    end
   end
 
   -- illuminate

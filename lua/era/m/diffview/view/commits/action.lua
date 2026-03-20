@@ -19,8 +19,9 @@ local M = {}
 ---Get current buffer and cursor line number
 ---@return integer bufnr, integer lnum
 local function get_cursor_info()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1]
   return bufnr, lnum
 end
 
@@ -422,12 +423,14 @@ function M.show_details(_)
 
   stl.async.run(function()
     -- Fetch full commit details
-    local result = stl.git.exec.exec({
-      "show",
-      "--no-patch",
-      "--format=fuller",
-      hash,
-    }, nil, nil):await()
+    local result = stl.git.exec
+      .exec({
+        "show",
+        "--no-patch",
+        "--format=fuller",
+        hash,
+      }, nil, nil)
+      :await()
 
     if result.code ~= 0 then
       stl.async.scheduler()
@@ -471,38 +474,42 @@ function M.restore_file(ctx)
     end
 
     -- Restore file using git show
-    stl.git.exec.exec_async({ "show", commit.hash .. ":" .. filepath }, { cwd = dot.path.workspace() }, function(lines, code)
-      if code ~= 0 then
-        stl.reporter.warn({
-          from = __module_name__,
-          subject = "restore_file",
-          message = "Failed to get file content from commit",
-        })
-        return
-      end
-
-      -- Write to file
-      vim.schedule(function()
-        local ok, err = pcall(vim.fn.writefile, lines, full_path)
-        if ok then
-          stl.reporter.info({
+    stl.git.exec.exec_async(
+      { "show", commit.hash .. ":" .. filepath },
+      { cwd = dot.path.workspace() },
+      function(lines, code)
+        if code ~= 0 then
+          stl.reporter.warn({
             from = __module_name__,
             subject = "restore_file",
-            message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
+            message = "Failed to get file content from commit",
           })
-          -- Refresh to show changes
-          stl.async.run(function()
-            M.refresh(ctx)
-          end)
-        else
-          stl.reporter.error({
-            from = __module_name__,
-            subject = "restore_file",
-            message = "Failed to write file: " .. tostring(err),
-          })
+          return
         end
-      end)
-    end)
+
+        -- Write to file
+        vim.schedule(function()
+          local ok, err = pcall(vim.fn.writefile, lines, full_path)
+          if ok then
+            stl.reporter.info({
+              from = __module_name__,
+              subject = "restore_file",
+              message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
+            })
+            -- Refresh to show changes
+            stl.async.run(function()
+              M.refresh(ctx)
+            end)
+          else
+            stl.reporter.error({
+              from = __module_name__,
+              subject = "restore_file",
+              message = "Failed to write file: " .. tostring(err),
+            })
+          end
+        end)
+      end
+    )
   end)
 end
 

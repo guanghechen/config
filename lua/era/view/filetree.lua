@@ -485,7 +485,8 @@ end
 ---Go to parent node in tree (line with smaller depth).
 ---@param base_indent_len               integer                             bytes of base indent before tree structure
 function M.goto_parent_node(base_indent_len)
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   local lnum_cur = cursor[1] ---@type integer
   local line_cur = vim.fn.getline(lnum_cur) ---@type string
   local depth_cur = M.get_tree_depth(line_cur, base_indent_len) ---@type integer
@@ -501,7 +502,7 @@ function M.goto_parent_node(base_indent_len)
     if depth < depth_cur then
       -- Position cursor at the start of the content (after tree structure)
       local content_start = line:find("[^ │├╰─]") or 1
-      vim.api.nvim_win_set_cursor(0, { lnum, content_start - 1 })
+      vim.api.nvim_win_set_cursor(winnr, { lnum, content_start - 1 })
       return
     end
   end
@@ -510,8 +511,10 @@ end
 ---Go to last direct child node or last sibling if on a leaf node.
 ---@param base_indent_len               integer                             bytes of base indent before tree structure
 function M.goto_last_child_or_sibling(base_indent_len)
-  local N = vim.api.nvim_buf_line_count(0) ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local N = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   local lnum_cur = cursor[1] ---@type integer
   local line_cur = vim.fn.getline(lnum_cur) ---@type string
   local depth_cur = M.get_tree_depth(line_cur, base_indent_len) ---@type integer
@@ -539,7 +542,7 @@ function M.goto_last_child_or_sibling(base_indent_len)
       end
       local last_child_line = vim.fn.getline(last_child_lnum) ---@type string
       local content_start = last_child_line:find("[^ │├╰─]") or 1
-      vim.api.nvim_win_set_cursor(0, { last_child_lnum, content_start - 1 })
+      vim.api.nvim_win_set_cursor(winnr, { last_child_lnum, content_start - 1 })
       return
     end
   end
@@ -563,7 +566,7 @@ function M.goto_last_child_or_sibling(base_indent_len)
   if last_sibling_lnum ~= lnum_cur then
     local last_sibling_line = vim.fn.getline(last_sibling_lnum) ---@type string
     local content_start = last_sibling_line:find("[^ │├╰─]") or 1
-    vim.api.nvim_win_set_cursor(0, { last_sibling_lnum, content_start - 1 })
+    vim.api.nvim_win_set_cursor(winnr, { last_sibling_lnum, content_start - 1 })
   end
 end
 

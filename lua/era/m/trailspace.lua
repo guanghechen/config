@@ -61,7 +61,7 @@ function M.trim()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local curpos = vim.api.nvim_win_get_cursor(winnr)
   vim.cmd([[keeppatterns %s/\s\+$//e]])
-  vim.api.nvim_win_set_cursor(0, curpos)
+  vim.api.nvim_win_set_cursor(winnr, curpos)
 end
 
 ---@return nil

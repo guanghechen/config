@@ -119,9 +119,16 @@ function M.locate_bufnr(filepath)
     bufnr_to_filepath[bufnr] = nil
   end
 
-  bufnr = vim.fn.bufnr(filepath) ---@type integer
-  if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
-    return bufnr
+  local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
+  for _, c_bufnr in ipairs(bufnrs) do
+    if vim.api.nvim_buf_is_valid(c_bufnr) then
+      local c_filepath = vim.api.nvim_buf_get_name(c_bufnr) ---@type string
+      if c_filepath == filepath then
+        filepath_to_bufnr[filepath] = c_bufnr
+        bufnr_to_filepath[c_bufnr] = filepath
+        return c_bufnr
+      end
+    end
   end
 end
 

@@ -195,7 +195,8 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   group = augroup("check_file_change"),
   callback = function()
-    local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 }) ---@type string
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
     if buftype == "" or buftype == "nowrite" then
       vim.cmd("checktime")
     end

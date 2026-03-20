@@ -201,8 +201,8 @@ function M.readonly(position)
   local component = {
     name = "file:readonly",
     atomic = true,
-    condition = function()
-      return vim.api.nvim_get_option_value("readonly", { buf = 0 })
+    condition = function(context)
+      return vim.api.nvim_get_option_value("readonly", { buf = context.bufnr })
     end,
     render = function()
       local text = stl.icon.ui.Lock .. " [RO]" ---@type string

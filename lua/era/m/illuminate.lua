@@ -68,7 +68,8 @@ local function get_reference_words(bufnr)
   local extmarks = {} ---@type vim.api.keyset.get_extmark_item[]
   local words = {} ---@type era.m.illuminate.ILspWord[]
 
-  local cursor = vim.api.nvim_win_get_cursor(0)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr)
   vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(bufnr, ns_lsp_ref, 0, -1, { details = true }))
   vim.list_extend(extmarks, vim.api.nvim_buf_get_extmarks(bufnr, ns_nvim_ref, 0, -1, { details = true }))
 
@@ -152,10 +153,11 @@ function M.jump(step, cycle)
 
   local target = words[new_index]
   if target then
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
     if config.jumplist then
       vim.cmd.normal({ "m`", bang = true })
     end
-    vim.api.nvim_win_set_cursor(0, target.from)
+    vim.api.nvim_win_set_cursor(winnr, target.from)
     if config.notify_jump then
       stl.reporter.info({
         from = __module_name__,

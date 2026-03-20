@@ -107,8 +107,9 @@ function M.get_children(tree_tbl, keys, mode)
 
   local node = M.find(tree_tbl, keys)
   if node and node.proxy then
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
     local global_maps = vim.api.nvim_get_keymap(mode)
-    local buf_maps = vim.api.nvim_buf_get_keymap(0, mode)
+    local buf_maps = vim.api.nvim_buf_get_keymap(bufnr, mode)
     local all_maps = vim.list_extend(global_maps, buf_maps)
 
     for _, km in ipairs(all_maps) do

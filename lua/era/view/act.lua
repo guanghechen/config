@@ -453,10 +453,11 @@ function M:__layout__()
     total_height = max_total_height
   end
 
-  local cursor_pos = vim.api.nvim_win_get_cursor(0) ---@type integer[]
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor_pos = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
   local cursor_row = cursor_pos[1] ---@type integer
   local cursor_col = cursor_pos[2] ---@type integer
-  local screen_pos = vim.fn.screenpos(0, cursor_row, cursor_col + 1) ---@type table
+  local screen_pos = vim.fn.screenpos(winnr, cursor_row, cursor_col + 1) ---@type table
   local win_row = screen_pos.row ---@type integer
   local win_col = screen_pos.col ---@type integer
 

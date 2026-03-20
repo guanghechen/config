@@ -254,7 +254,8 @@ function M:__setup_keymaps__()
 
   -- Toggle expand/collapse for current section
   vim.keymap.set("n", "<CR>", function()
-    local line = vim.api.nvim_win_get_cursor(0)[1]
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local line = vim.api.nvim_win_get_cursor(winnr)[1]
     local content = vim.api.nvim_buf_get_lines(self._bufnr, line - 1, line, false)[1]
 
     if content:match("^[󰅀󰅂]%s*Plan") then

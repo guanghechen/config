@@ -102,10 +102,11 @@ end
 ---@return string|string[]|nil
 local function resolve_ts(spec)
   local line = vim.fn.getline(".")
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
 
   -- nvim_win_get_cursor returns (1,0) indexed tuple
   -- treesitter.get_node expects (0,0) indexed tuple
-  local pos = vim.api.nvim_win_get_cursor(0)
+  local pos = vim.api.nvim_win_get_cursor(winnr)
   pos[1] = pos[1] - 1
 
   -- set position to the first non whitespace character
@@ -202,7 +203,8 @@ function M.dressing()
   ---@diagnostic disable-next-line: duplicate-set-field
   vim.filetype.get_option = function(filetype, option)
     if filetype == "comment" then
-      filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 })
+      local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+      filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
     end
 
     if option == "commentstring" then

@@ -131,8 +131,9 @@ local group_items = {
             title = string.format("Reopen with encoding (%s)", filename),
             on_select = function(encoding)
               if encoding ~= nil then
+                local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
                 if vim.api.nvim_win_is_valid(winnr_command) then
-                  vim.api.nvim_tabpage_set_win(0, winnr_command)
+                  vim.api.nvim_tabpage_set_win(tabnr, winnr_command)
                 end
                 if vim.api.nvim_buf_is_valid(bufnr) then
                   vim.cmd("e ++enc=" .. encoding)
@@ -149,8 +150,9 @@ local group_items = {
             title = string.format("Resave with encoding (%s)", filename),
             on_select = function(encoding)
               if encoding ~= nil then
+                local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
                 if vim.api.nvim_win_is_valid(winnr_command) then
-                  vim.api.nvim_tabpage_set_win(0, winnr_command)
+                  vim.api.nvim_tabpage_set_win(tabnr, winnr_command)
                 end
                 if vim.api.nvim_buf_is_valid(bufnr) then
                   vim.api.nvim_buf_call(bufnr, function()

@@ -13,7 +13,8 @@ local function get_available_linters()
     return {}
   end
 
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
   local names = lint._resolve_linter_by_ft(filetype) ---@type string[]
   names = vim.list_slice(names)
   vim.list_extend(names, lint.linters_by_ft["_"] or {})

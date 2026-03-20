@@ -47,18 +47,19 @@ return {
 
     return {
       enabled = function()
-        if vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "nowrite" then
+        local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+        if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite" then
           return false
         end
 
         -- Disable on .env* files
-        local bufname = vim.api.nvim_buf_get_name(0)
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
         local filename = vim.fn.fnamemodify(bufname, ":t")
         if filename:match("^%.env") or filename:match("%.http%.out$") then
           return false
         end
 
-        local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
+        local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
         if not stl.filetype.is_cmp_enabled(filetype) then
           return false
         end

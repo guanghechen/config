@@ -288,10 +288,12 @@ M.spec = {
     vim.treesitter.language.register("json", "jsonc")
     vim.api.nvim_create_autocmd("FileType", {
       pattern = ensure_filetypes,
-      callback = function()
+      callback = function(event)
+        local bufnr = event.buf ---@type integer
+        local winnr = vim.api.nvim_get_current_win() ---@type integer
         vim.treesitter.start()
-        vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = 0, scope = "local" })
-        vim.api.nvim_set_option_value("indentexpr", "v:lua.require'nvim-treesitter'.indentexpr()", { buf = 0 })
+        vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = winnr, scope = "local" })
+        vim.api.nvim_set_option_value("indentexpr", "v:lua.require'nvim-treesitter'.indentexpr()", { buf = bufnr })
       end,
     })
   end,

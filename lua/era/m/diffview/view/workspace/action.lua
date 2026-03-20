@@ -26,8 +26,9 @@ local M = {}
 ---Get current buffer and cursor line number
 ---@return integer bufnr, integer lnum
 local function get_cursor_info()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1]
   return bufnr, lnum
 end
 
@@ -69,6 +70,7 @@ end
 ---Toggle directory collapse at cursor
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.toggle_collapse(ctx)
+  local winnr = vim.api.nvim_get_current_win()
   local bufnr, lnum = get_cursor_info()
 
   -- Get item at line
@@ -84,7 +86,7 @@ function M.toggle_collapse(ctx)
   workspace_view.render_changes(ctx)
 
   -- Restore cursor position
-  vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+  vim.api.nvim_win_set_cursor(winnr, { lnum, 0 })
 end
 
 ----------------------------------------------------------------------------------------------------

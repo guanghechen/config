@@ -3,7 +3,8 @@ local txt = stl.nvim.fn.txt
 ---@param filetype                      string
 ---@return integer
 local function get_pane_width(filetype)
-  local winnrs = vim.api.nvim_tabpage_list_wins(0) ---@type integer[]
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
   for _, winnr in ipairs(winnrs) do
     local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
     if vim.api.nvim_get_option_value("filetype", { buf = bufnr }) == filetype then

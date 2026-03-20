@@ -5,7 +5,8 @@ local __module_name__ = "era.fn.run_code_as_neovim_command" ---@type string
 local function run_code_as_neovim_command()
   local selected = stl.nvim.buf.retrieve_selected_text() ---@type string
   if selected == "" then
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) ---@type string[]
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
     selected = table.concat(lines, "\n")
   end
 

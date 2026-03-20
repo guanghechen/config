@@ -76,7 +76,11 @@ end
 ---@return nil
 local function __tmux_navigate__(direction)
   if direction == "n" then
-    local is_last_win = (vim.fn.winnr() == vim.fn.winnr("$"))
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    local winnrs = vim.api.nvim_tabpage_list_wins(tabnr) ---@type integer[]
+    local winnr_current = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
+    local winnr_last = winnrs[#winnrs] ---@type integer|nil
+    local is_last_win = winnr_last ~= nil and winnr_current == winnr_last
 
     if is_last_win then
       pcall(__tmux_navigate_window_topmost__)

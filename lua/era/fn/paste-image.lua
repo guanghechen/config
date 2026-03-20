@@ -7,7 +7,8 @@ local BYTE_DOT = 0x2e ---@type integer '.'
 ---@return boolean
 local function insert_markup(alt, src)
   local content = src ---@type string
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
 
   if filetype == "markdown" or filetype == stl.filetype.NOTEPAD then
     content = string.format("![%s](%s)", alt, src)
@@ -23,9 +24,10 @@ end
 local function paste_image(filepath_target)
   local ok = era.m.clipboard.paste_image_from_clipboard(filepath_target)
   if ok then
-    local filetype = vim.api.nvim_get_option_value("filetype", { buf = 0 }) ---@type string
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
     if stl.filetype.is_sourcefile(filetype) then
-      local filepath_current = vim.api.nvim_buf_get_name(0) ---@type string
+      local filepath_current = vim.api.nvim_buf_get_name(bufnr) ---@type string
       local src = dot.path.relative(dot.path.dirname(filepath_current), filepath_target, "/") ---@type string
       if #src > 1 then
         if string.byte(src, 1, 1) ~= BYTE_DOT then

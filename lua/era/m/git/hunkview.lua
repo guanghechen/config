@@ -20,12 +20,13 @@ M.__index = M
 ---@return era.m.git.Hunkview
 function M.new(props)
   local self = setmetatable({}, M)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
   self._disposed = false
   self._board_bufnr = nil
   self._board_winnr = nil
   self._ns = vim.api.nvim_create_namespace("board_git_hunk")
   self._bufnr = props.bufnr
-  self._lnum = vim.api.nvim_win_get_cursor(0)[1]
+  self._lnum = vim.api.nvim_win_get_cursor(winnr)[1]
   return self
 end
 
@@ -136,7 +137,8 @@ end
 ---@return integer
 ---@return integer
 function M:__calc_position__(width, height)
-  local cursor_pos = vim.fn.screenpos(0, vim.fn.line("."), vim.fn.col("."))
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local cursor_pos = vim.fn.screenpos(winnr, vim.fn.line("."), vim.fn.col("."))
   local cursor_row = cursor_pos.row ---@type integer
   local cursor_col = cursor_pos.col ---@type integer
   local screen_width = vim.o.columns ---@type integer

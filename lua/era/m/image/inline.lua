@@ -67,11 +67,12 @@ end
 
 ---@return nil
 function M:conceal()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
   local mode = vim.fn.mode():sub(1, 1):lower() ---@type string
   for _, img in pairs(self.imgs) do
     img:show()
   end
-  if vim.api.nvim_get_option_value("concealcursor", { win = 0 }):find(mode) then
+  if vim.api.nvim_get_option_value("concealcursor", { win = winnr }):find(mode) then
     return
   end
   local from, to = vim.fn.line("v"), vim.fn.line(".")
