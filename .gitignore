@@ -1,3 +1,4 @@
+.codex-global-state.json
 .personality_migration
 config.toml
 history.jsonl
@@ -9,7 +10,9 @@ version.json
 /themes/local.tmTheme
 
 log/
-shell_snapshots/
 sessions/
+shell_snapshots/
+sqlite/
 tmp/
+vendor_imports/
 
