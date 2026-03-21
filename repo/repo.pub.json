@@ -23,6 +23,13 @@
       "editions": ["nix", "osx"]
     },
     {
+      "name": "rust-stl",
+      "remote": "https://github.com/guanghechen/rust-stl.git",
+      "main": "main",
+      "location": "${HOME}/ws/github/guanghechen/rust-stl",
+      "editions": ["nix", "osx"]
+    },
+    {
       "name": "sora",
       "remote": "https://github.com/guanghechen/sora.git",
       "main": "main",
