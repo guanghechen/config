@@ -1,7 +1,6 @@
 {
   "$schema": "https://cdn.jsdelivr.net/npm/@guanghechen/commander@latest/lib/schema/preset.schema.json",
   "version": 1,
-  "defaults": { "profile": "start" },
   "profiles": {
     "auth": {
       "envFile": "../.env.local",
