@@ -32,8 +32,20 @@ $expectedMapleFontFiles = @(
   "MapleMono-NF-CN-ThinItalic.ttf"
 )
 
-$mapleFontFileNameRegex = '^(MapleMono|MapleMonoNormalNL)-NF-CN-[A-Za-z]+(?:Italic)?\.(ttf|otf|ttc)$'
-$mapleFontRegistryNameRegex = '^Maple Mono( Normal NL)? NF CN'
+$managedMapleFontFileSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($fontFileName in $expectedMapleFontFiles) {
+  [void]$managedMapleFontFileSet.Add($fontFileName)
+}
+
+$managedMapleRegistryNameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($fontFileName in $expectedMapleFontFiles) {
+  $fontType = if ([System.IO.Path]::GetExtension($fontFileName).ToLowerInvariant() -eq ".otf") { "OpenType" } else { "TrueType" }
+  $fontNameWithoutExtension = [System.IO.Path]::GetFileNameWithoutExtension($fontFileName)
+  $registryName = "$fontNameWithoutExtension ($fontType)"
+  [void]$managedMapleRegistryNameSet.Add($registryName)
+}
+
+$legacyMapleFontFileNameRegex = '^MapleMonoNormalNL-NF-CN-[A-Za-z]+(?:Italic)?\.(ttf|otf|ttc)$'
 
 function Test-IsAdmin {
   $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -50,7 +62,24 @@ function Test-IsMapleFontFileName {
     return $false
   }
 
-  return $FileName -match $mapleFontFileNameRegex
+  return $managedMapleFontFileSet.Contains($FileName) -or ($FileName -match $legacyMapleFontFileNameRegex)
+}
+
+function Get-FontFileNameFromRegistryValue {
+  param(
+    [string]$Value
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return ""
+  }
+
+  $leaf = Split-Path -Path $Value -Leaf -ErrorAction SilentlyContinue
+  if ([string]::IsNullOrWhiteSpace($leaf)) {
+    return $Value
+  }
+
+  return $leaf
 }
 
 function Test-IsMapleRegistryItem {
@@ -59,18 +88,11 @@ function Test-IsMapleRegistryItem {
     [string]$Value
   )
 
-  if (-not [string]::IsNullOrWhiteSpace($Name) -and ($Name -match $mapleFontRegistryNameRegex)) {
+  if (-not [string]::IsNullOrWhiteSpace($Name) -and $managedMapleRegistryNameSet.Contains($Name)) {
     return $true
   }
 
-  if ([string]::IsNullOrWhiteSpace($Value)) {
-    return $false
-  }
-
-  $valueFileName = Split-Path -Path $Value -Leaf
-  if ([string]::IsNullOrWhiteSpace($valueFileName)) {
-    $valueFileName = $Value
-  }
+  $valueFileName = Get-FontFileNameFromRegistryValue -Value $Value
 
   return Test-IsMapleFontFileName -FileName $valueFileName
 }
@@ -95,19 +117,16 @@ function Get-MapleRegistryItems {
 
 function Test-MapleInstalledAt {
   param(
-    [string]$FontDir,
-    [string]$RegistryPath
+    [string]$FontDir
   )
 
-  $fontFiles = @(
+  $installedFontNames = @(
     Get-ChildItem -Path $FontDir -File -ErrorAction SilentlyContinue |
-      Where-Object { Test-IsMapleFontFileName -FileName $_.Name }
+      Where-Object { Test-IsMapleFontFileName -FileName $_.Name } |
+      ForEach-Object { $_.Name }
   )
-  if ($fontFiles.Count -gt 0) {
-    return $true
-  }
-
-  return (Get-MapleRegistryItems -RegistryPath $RegistryPath).Count -gt 0
+  $missingFontFiles = @($expectedMapleFontFiles | Where-Object { $installedFontNames -notcontains $_ })
+  return $missingFontFiles.Count -eq 0
 }
 
 function Remove-MapleFontsAt {
@@ -156,8 +175,8 @@ function Invoke-ElevatedSelf {
   }
 }
 
-$installedInUserScope = Test-MapleInstalledAt -FontDir $userFontDir -RegistryPath $userRegistryPath
-$installedInSystemScope = Test-MapleInstalledAt -FontDir $systemFontDir -RegistryPath $systemRegistryPath
+$installedInUserScope = Test-MapleInstalledAt -FontDir $userFontDir
+$installedInSystemScope = Test-MapleInstalledAt -FontDir $systemFontDir
 $installedInAnyScope = $installedInUserScope -or $installedInSystemScope
 
 if ((-not $Force) -and $installedInAnyScope) {
@@ -172,7 +191,7 @@ if (-not (Test-IsAdmin)) {
 }
 
 if ($Force -and $installedInAnyScope) {
-  Write-Host "  [setup font (Maple)] force removing existing Maple fonts..." -ForegroundColor Cyan
+  Write-Host "  [setup font (Maple)] force removing existing MapleMono-NF-CN fonts..." -ForegroundColor Cyan
 }
 
 Remove-MapleFontsAt -FontDir $userFontDir -RegistryPath $userRegistryPath
@@ -211,9 +230,24 @@ foreach ($fontFile in $fontFiles) {
   $targetPath = Join-Path $systemFontDir $fontFile.Name
   Copy-Item -Path $fontFile.FullName -Destination $targetPath -Force
 
-  $fontType = if ($fontFile.Extension -eq ".otf") { "OpenType" } else { "TrueType" }
+  $fontType = if ($fontFile.Extension.ToLowerInvariant() -eq ".otf") { "OpenType" } else { "TrueType" }
   $registryName = "$($fontFile.BaseName) ($fontType)"
   New-ItemProperty -Path $systemRegistryPath -Name $registryName -PropertyType String -Value $fontFile.Name -Force | Out-Null
+}
+
+$installedSystemFontNames = @(
+  Get-ChildItem -Path $systemFontDir -File -ErrorAction SilentlyContinue |
+    Where-Object { Test-IsMapleFontFileName -FileName $_.Name } |
+    ForEach-Object { $_.Name }
+)
+$missingInstalledFiles = @($expectedMapleFontFiles | Where-Object { $installedSystemFontNames -notcontains $_ })
+if ($missingInstalledFiles.Count -gt 0) {
+  throw "Maple font installation incomplete. Missing installed files: $($missingInstalledFiles -join ', ')"
+}
+
+$installedRegistryItems = @(Get-MapleRegistryItems -RegistryPath $systemRegistryPath)
+if ($installedRegistryItems.Count -ne $expectedMapleFontFiles.Count) {
+  throw "Maple font registry entries are incomplete. Expected $($expectedMapleFontFiles.Count), actual $($installedRegistryItems.Count)."
 }
 
 Write-Host "  [setup font (Maple)] done. Installed to $systemFontDir" -ForegroundColor Green
