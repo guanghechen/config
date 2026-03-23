@@ -3,6 +3,13 @@
   "version": 1,
   "defaults": { "profile": "start" },
   "profiles": {
+    "auth": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {
+        "force": true
+      }
+    },
     "start": {
       "envFile": "../.env.local",
       "envs": {},
