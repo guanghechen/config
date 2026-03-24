@@ -17,5 +17,5 @@ else
   printf "\e[96m  [setup rust] setting up ~/.cargo/config.toml...\e[0m\n"
   cp "$HOME/.config/guanghechen/asset/conf/cargo.toml" "$HOME/.cargo/config.toml"
 
-  cargo install inferno
+  cargo install cargo-watch inferno
 fi
