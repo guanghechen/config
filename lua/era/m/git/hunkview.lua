@@ -196,7 +196,7 @@ function M:__render__(hunk)
       lnum = lnum,
       coll = 0,
       colr = #line,
-      hlname = "DiffDelete",
+      hlname = "DiffDelRight",
     }
     signs[lnum] = { sign = "-", hlname = "Removed" }
 
@@ -208,7 +208,7 @@ function M:__render__(hunk)
             lnum = lnum,
             coll = change.old_start,
             colr = math.min(change.old_end, #line),
-            hlname = "DiffText",
+            hlname = "DiffWordLeft",
           }
         end
       end
@@ -222,7 +222,7 @@ function M:__render__(hunk)
       lnum = lnum,
       coll = 0,
       colr = #line,
-      hlname = "DiffAdd",
+      hlname = "DiffAddRight",
     }
     signs[lnum] = { sign = "+", hlname = "Added" }
 
@@ -234,7 +234,7 @@ function M:__render__(hunk)
             lnum = lnum,
             coll = change.new_start,
             colr = math.min(change.new_end, #line),
-            hlname = "DiffText",
+            hlname = "DiffWordRight",
           }
         end
       end
@@ -318,11 +318,11 @@ function M:__show_popup__(hunk, is_staged)
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winhighlight", table.concat({
-    "CursorLine:fb_git_hunk_cursorline",
+    "CursorLine:m_ghp_cursor",
     "FloatBorder:ms_b_bg0",
     "FloatTitle:ms_b_bg0",
-    "Normal:fb_git_hunk_normal",
-    "SignColumn:fb_git_hunk_normal",
+    "Normal:m_ghp_normal",
+    "SignColumn:m_ghp_normal",
   }, ","), { win = winnr, scope = "local" })
 
   self:__setup_keymaps__(board_bufnr, hunk, is_staged)
