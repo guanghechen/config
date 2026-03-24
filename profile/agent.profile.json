@@ -13,6 +13,13 @@
     "port": 4747
   },
   "variants": {
+    "github": {
+      "envs": {
+        "ANTHROPIC_BASE_URL": "https://api.github.com",
+        "ANTHROPIC_AUTH_TOKEN": "${env:KIT_COPILOT_GITHUB_TOKEN} This won't work, since we not support inject env yet.",
+        "NODE_ENV": "production"
+      }
+    },
     "dev": {
       "envs": {
         "NODE_ENV": "development"
