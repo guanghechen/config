@@ -47,7 +47,8 @@ mvs({ "n", "x" }, "gQ", "editor.action.formatDocument", "code: format")
 -------------------------------------------------------------------------------------------#[c]ode--
 
 --#[c]opy-------------------------------------------------------------------------------------------
-mvs({ "i", "n", "x" }, { "<C-a>C", "<D-C>", "<M-C>" }, "workbench.action.files.copyPathOfActiveFile", "copy: file path")
+mvs({ "i", "n", "x" }, "<C-S-c>", "workbench.action.files.copyPathOfActiveFile", "copy: file path")
+mvs({ "n", "x" }, "<leader>pc", "workbench.action.files.copyPathOfActiveFile", "copy: file path")
 mvs({ "n", "x" }, "<leader>yp", "workbench.action.files.copyPathOfActiveFile", "copy: file path")
 mvs({ "n", "x" }, "<leader>yr", "copyRelativeFilePath", "copy: relative file path")
 -------------------------------------------------------------------------------------------#[c]opy--
