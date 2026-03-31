@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Commit"
+  short_description: "Create safe, convention-aligned git commits"
+  default_prompt: "Create a commit from current changes following repo conventions."
