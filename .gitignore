@@ -9,6 +9,7 @@ version.json
 /skills/.system
 /themes/local.tmTheme
 
+.tmp/
 log/
 sessions/
 shell_snapshots/
