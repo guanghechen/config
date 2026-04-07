@@ -67,8 +67,8 @@ where.exe claude
 # 然后查看 node_modules/@anthropic-ai/claude-code/cli.js
 ```
 
-> **Note**: 从 v2.1.50 起，Claude Code 使用 Bun SEA (Single Executable Application) 打包为 ELF 二进制。
-> patch 框架会自动检测文件格式，ELF 用 `latin1` 编码读写以保证二进制字节不变。
+> **Note**: 新版 Claude Code 可能是 `cli.js`（Node.js 文本脚本）或 Bun SEA ELF 二进制（取决于安装分发方式）。
+> patch 框架会自动检测文件格式：ELF 用 `latin1` 编码读写以保证二进制字节不变，脚本文件用 `utf-8`。
 
 ### Step 3: 搜索需要 patch 的变量名
 
@@ -82,8 +82,8 @@ rg --text 'var \w+=200000' /path/to/executable
 # Image Paste (Windows) - 搜索 keybinding
 rg --text '==="windows"\?"alt\+v":"ctrl\+v"' /path/to/executable
 
-# Image Paste (Windows) - 搜索 displayText
-rg --text '==="windows"\?\{displayText:' /path/to/executable
+# Image Paste (Windows, 可选) - 某些版本有 displayText/check(meta) 片段
+rg --text 'displayText:' /path/to/executable
 
 # Image Paste (WSL/Linux) - 搜索 wl-paste 命令
 rg --text 'wl-paste --type image/png' /path/to/executable
@@ -108,10 +108,10 @@ rg --text 'wl-paste --type image/png' /path/to/executable
 
 1. patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
 
-2. **Windows 平台需要两个 patch**（缺一不可）：
-   - `win-image-paste-keybinding`: 将 keybinding 从 `alt+v` 改为 `ctrl+v`
-   - `win-image-paste-shortcut`: 将 displayText 和 check 中的 `meta` 改为 `ctrl`
-   - `win-image-paste-ctrl-v`（≤ 2.1.29）: 在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑
+2. Windows 平台 patch 组合随版本变化：
+   - 通用必需：`win-image-paste-keybinding`（将 keybinding 从 `alt+v` 改为 `ctrl+v`）
+   - 部分版本：`win-image-paste-shortcut`（将 displayText/check 中的 `meta` 改为 `ctrl`）
+   - 旧版本（≤ 2.1.29）：`win-image-paste-ctrl-v`（在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑）
 
 3. WSL/Linux 平台 patch：
    - `checkImage-grep-pattern`（< 2.1.50）: 添加 BMP 格式支持（2.1.50 已内置）
@@ -126,6 +126,6 @@ node index.mjs
 确认输出显示 `Patched` 而非 `Pattern not found`。
 
 **Windows 测试 checklist**：
-- [ ] `win-image-paste-shortcut` 显示 `Patched`
-- [ ] `win-image-paste-ctrl-v` 显示 `Patched`
+- [ ] `win-image-paste-keybinding` 显示 `Patched` 或 `Already patched`
+- [ ] 如版本包含对应 patch，`win-image-paste-shortcut` / `win-image-paste-ctrl-v` 显示 `Patched` 或 `Already patched`
 - [ ] 在 Claude Code 中按 Ctrl+V 能粘贴剪贴板中的图片

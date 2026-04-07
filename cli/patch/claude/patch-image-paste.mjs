@@ -24,6 +24,71 @@ import { applyPatches, replaceAll } from './util.mjs'
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.92 - Windows patch
+  // In this version, Chat keybindings still use Alt+V on Windows:
+  //   yHz=T1()==="windows"?"alt+v":"ctrl+v"
+  // We patch it to Ctrl+V for consistent Windows paste behavior.
+  {
+    name: 'win-image-paste-keybinding',
+    version: '2.1.92',
+    platform: ['win'],
+    search: /(\w+)=T1\(\)==="windows"\?"alt\+v":"ctrl\+v"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return `${varName}=T1()==="windows"?"ctrl+v":"ctrl+v"`
+      }),
+    verify: (text) => text.includes('T1()==="windows"?"ctrl+v":"ctrl+v"'),
+  },
+  // 2.1.92 - WSL patches
+  // Keep the Windows clipboard fallback through powershell.exe first.
+  {
+    name: 'wsl-image-paste-checkImage',
+    version: '2.1.92',
+    platform: ['wsl'],
+    search:
+      'xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)" || wl-paste -l 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
+    replace: (content, matches) =>
+      replaceAll(
+        content,
+        matches,
+        () =>
+          'powershell.exe -NoProfile -Command "if ((Get-Clipboard -Format Image) -eq \\$null) { exit 1 }" 2>/dev/null || xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)" || wl-paste -l 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
+      ),
+    verify: (text) =>
+      text.includes(
+        'powershell.exe -NoProfile -Command "if ((Get-Clipboard -Format Image) -eq \\$null) { exit 1 }" 2>/dev/null || xclip -selection clipboard -t TARGETS',
+      ),
+  },
+  {
+    name: 'wsl-image-paste-saveImage',
+    version: '2.1.92',
+    platform: ['wsl'],
+    search:
+      /xclip -selection clipboard -t image\/png -o > "\$\{(\w+)\}" 2>\/dev\/null \|\| wl-paste --type image\/png > "\$\{\1\}" 2>\/dev\/null \|\| xclip -selection clipboard -t image\/bmp -o > "\$\{\1\}" 2>\/dev\/null \|\| wl-paste --type image\/bmp > "\$\{\1\}"/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        const psCmd = [
+          "\\$img = Get-Clipboard -Format Image;",
+          "if (\\$img) {",
+          "  \\$ms = New-Object System.IO.MemoryStream;",
+          "  \\$img.Save(\\$ms, [System.Drawing.Imaging.ImageFormat]::Png);",
+          "  \\$bytes = \\$ms.ToArray();",
+          "  [Console]::OpenStandardOutput().Write(\\$bytes, 0, \\$bytes.Length)",
+          "}",
+        ].join(' ')
+        return (
+          `powershell.exe -NoProfile -Command '${psCmd}' > "\${${varName}}" 2>/dev/null || ` +
+          `xclip -selection clipboard -t image/png -o > "\${${varName}}" 2>/dev/null || ` +
+          `wl-paste --type image/png > "\${${varName}}" 2>/dev/null || ` +
+          `xclip -selection clipboard -t image/bmp -o > "\${${varName}}" 2>/dev/null || ` +
+          `wl-paste --type image/bmp > "\${${varName}}"`
+        )
+      }),
+    verify: (text) =>
+      text.includes("powershell.exe -NoProfile -Command '\\$img = Get-Clipboard -Format Image;"),
+  },
   // 2.1.70 - Windows patches
   // Same as 2.1.50: grep already includes bmp, saveImage chain has bmp fallback.
   // Only Windows keybinding/shortcut patches are needed.
