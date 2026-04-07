@@ -150,12 +150,12 @@ function M.on_attach(client, bufnr)
     if support_codelens == 1 then
       local enable_code_lens = dot.context.lsp.code_lens:snapshot() ---@type boolean
       if enable_code_lens then
-        vim.lsp.codelens.refresh({ bufnr = bufnr })
+        vim.lsp.codelens.enable(true, { bufnr = bufnr })
         vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
           buffer = bufnr,
           group = augroup_codelens,
           callback = function()
-            vim.lsp.codelens.refresh({ bufnr = bufnr })
+            vim.lsp.codelens.enable(true, { bufnr = bufnr })
           end,
         })
       end
@@ -285,7 +285,7 @@ function M.on_attach(client, bufnr)
       modes = { "n", "x" },
       key = "<leader>cC",
       callback = function()
-        vim.lsp.codelens.refresh()
+        vim.lsp.codelens.enable(true, { bufnr = bufnr })
       end,
       desc = "lsp: refresh & display codelens",
     },

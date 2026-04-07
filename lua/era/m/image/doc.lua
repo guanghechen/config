@@ -397,10 +397,10 @@ function M.find(bufnr, cb, opts)
   end
 
   if from and to then
-    vim.treesitter.get_parser(bufnr):parse({ from, to })
+    parser:parse({ from, to })
     parse_callback()
   else
-    vim.treesitter.get_parser(bufnr):parse(true)
+    parser:parse(true)
     parse_callback()
   end
 end
