@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Changeset"
+  short_description: "在 tmux pane 中执行 changeset 版本发布流程"
+  default_prompt: "Use $publish-changeset to run changeset version and publish in a target tmux pane for a monorepo release."
