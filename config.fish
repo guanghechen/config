@@ -21,6 +21,13 @@ else
     set -gx GHC_ENV_PLATFORM nix
 end
 
+### preference
+set -x PREFER_NEOVIM_VERSION stable
+set -x PREFER_TMUX_VERSION stable
+set -x ROOT_SOURCECODES "$HOME/sourcecodes"
+set -x ROOT_WORKSPACE "$HOME/ws"
+set -x YOZ_SERVER_PORT 7777
+
 ## setup paths
 set -gx CONDARC "$HOME/.config/conda/condarc"
 set -gx LS_COLORS "di=1;94:ln=1;96:ex=1;92:or=1;91:mi=1;91:pi=93:so=1;95:bd=1;93:cd=1;93"
@@ -61,13 +68,6 @@ set -gx NODE_OPTIONS "--max-old-space-size=8192"
 set -gx PYTHONIOENCODING utf8
 set -gx PYTHONPYCACHEPREFIX "$HOME/.cache/pycache"
 set -gx PYTHONUTF8 1
-
-### preference
-set -x PREFER_NEOVIM_VERSION nightly
-set -x PREFER_TMUX_VERSION stable
-set -x ROOT_SOURCECODES "$HOME/sourcecodes"
-set -x ROOT_WORKSPACE "$HOME/ws"
-set -x YOZ_SERVER_PORT 7777
 
 ### agents
 set -gx ANTHROPIC_BASE_URL 'http://127.0.0.1:4747/api/claude'
