@@ -30,7 +30,7 @@ setx YAZI_FILE_ONE        "$env:YAZI_FILE_ONE"
 
 ## Agent Environment ###############################################################################
 $env:ANTHROPIC_BASE_URL               = "http://127.0.0.1:4747/api/claude"
-$env:ANTHROPIC_MODEL                  = "claude-opus-4.6-fast"
+$env:ANTHROPIC_MODEL                  = "claude-opus-4.7"
 $env:ANTHROPIC_SMALL_FAST_MODEL       = "claude-sonnet-4.6"
 $env:CLAUDE_CONFIG_DIR                = Join-Path $env:XDG_CONFIG_HOME "claude"
 $env:CODEX_HOME                       = Join-Path $env:XDG_CONFIG_HOME "codex"
