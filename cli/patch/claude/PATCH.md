@@ -39,6 +39,7 @@ node index.mjs 200000
 | `index.mjs`                | Entry point               |
 | `patch-image-paste.mjs`    | Image paste patches       |
 | `patch-context-window.mjs` | Context window patches    |
+| `wsl-image-paste.bash`     | WSL clipboard helper      |
 | `util.mjs`                 | Patch utilities           |
 | `types.mjs`                | Type definitions (JSDoc)  |
 

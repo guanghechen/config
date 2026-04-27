@@ -7,9 +7,58 @@
 import { applyPatches, replaceAll } from './util.mjs'
 
 const targetSize = process.argv[2] || '144000'
+const jsIdentifier = String.raw`[A-Za-z_$][A-Za-z0-9_$]*`
+const contextWindow1mSearch = new RegExp(
+  String.raw`CLAUDE_CODE_MAX_CONTEXT_TOKENS\)\{let ${jsIdentifier}=parseInt\(process\.env\.CLAUDE_CODE_MAX_CONTEXT_TOKENS,10\);if\(!isNaN\(${jsIdentifier}\)&&${jsIdentifier}>0\)return ${jsIdentifier}\}` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;if\(${jsIdentifier}\?\.includes\(${jsIdentifier}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;let ${jsIdentifier}=${jsIdentifier}\(${jsIdentifier}\);if\(${jsIdentifier}!==null\)return ${jsIdentifier};return (${jsIdentifier})`,
+)
+const contextWindowSnippetSearch = new RegExp(
+  String.raw`CLAUDE_CODE_MAX_CONTEXT_TOKENS\)\{let ${jsIdentifier}=parseInt\(process\.env\.CLAUDE_CODE_MAX_CONTEXT_TOKENS,10\);if\(!isNaN\(${jsIdentifier}\)&&${jsIdentifier}>0\)return ${jsIdentifier}\}` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);if\(${jsIdentifier}\?\.includes\(${jsIdentifier}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);let ${jsIdentifier}=${jsIdentifier}\(${jsIdentifier}\);if\(${jsIdentifier}!==null\)return ${jsIdentifier};return (${jsIdentifier})`,
+  'g',
+)
+
+/**
+ * @param {string} text
+ * @returns {boolean}
+ */
+function hasPatchedContextWindow1m(text) {
+  const matches = [...text.matchAll(contextWindowSnippetSearch)]
+  return matches.length > 0 && matches.every((m) => m[1] === m[4] && m[2] === m[4] && m[3] === m[4])
+}
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.119 - Context window variable keeps the same role, but surrounding
+  // output-token constants changed from 64K to 128K and identifiers may contain `$`.
+  {
+    name: 'context-window-200k',
+    version: '2.1.119',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /var ([A-Za-z_$][A-Za-z0-9_$]*)=200000,[A-Za-z_$][A-Za-z0-9_$]*=20000,[A-Za-z_$][A-Za-z0-9_$]*=32000,[A-Za-z_$][A-Za-z0-9_$]*=128000,[A-Za-z_$][A-Za-z0-9_$]*=8000/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => m.matched_text.replace(/=200000/, `=${targetSize}`)),
+    verify: (text) =>
+      new RegExp(
+        `var ${jsIdentifier}=${targetSize},${jsIdentifier}=20000,${jsIdentifier}=32000,${jsIdentifier}=128000,${jsIdentifier}=8000`,
+      ).test(text),
+  },
+  // 2.1.119 - 1M-capable models now return `1e6` directly in the context
+  // function. Replace those branches with the default context variable.
+  {
+    name: 'context-window-1e6',
+    version: '2.1.119',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: contextWindow1mSearch,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return m.matched_text.replaceAll('return 1e6', `return ${varName}`)
+      }),
+    verify: hasPatchedContextWindow1m,
+  },
   // 2.1.92 - Context window variable follows the same shape as 2.1.50+
   {
     name: 'context-window-200k',
