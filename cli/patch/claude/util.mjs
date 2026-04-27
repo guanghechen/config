@@ -12,7 +12,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import * as chalk from '#chalk'
 import { PLATFORM } from '#env'
 
@@ -32,17 +32,41 @@ export function getCliPath() {
 
   try {
     const cmd = isNativeWindows ? 'where.exe claude' : 'which claude'
-    const which = execSync(cmd, { encoding: 'utf-8' }).trim().split(/\r?\n/)[0]
+    const output = execSync(cmd, { encoding: 'utf-8' })
 
     if (isNativeWindows) {
-      const cliJs = join(dirname(which), 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js')
-      return existsSync(cliJs) ? cliJs : null
+      return getWindowsCliPath(output)
     }
 
+    const which = output.trim().split(/\r?\n/)[0]
     return realpathSync(which)
   } catch {
     return null
   }
+}
+
+/**
+ * @param {string} whereOutput
+ * @returns {string | null}
+ */
+function getWindowsCliPath(whereOutput) {
+  for (const which of whereOutput.trim().split(/\r?\n/).filter(Boolean)) {
+    const binDir = dirname(which)
+    const packageDirs = [
+      join(binDir, 'node_modules', '@anthropic-ai', 'claude-code'),
+      join(binDir, '..', '@anthropic-ai', 'claude-code'),
+    ]
+    const candidates = [
+      ...(basename(which).toLowerCase() === 'claude.exe' ? [which] : []),
+      ...packageDirs.flatMap((packageDir) => [join(packageDir, 'bin', 'claude.exe'), join(packageDir, 'cli.js')]),
+    ]
+
+    for (const candidate of candidates) {
+      if (existsSync(candidate)) return realpathSync(candidate)
+    }
+  }
+
+  return null
 }
 
 /**
@@ -61,7 +85,7 @@ export function getCliVersion() {
 
 /**
  * Detect file encoding for read/write.
- * ELF binaries (Bun SEA) must use latin1 to preserve byte-level fidelity;
+ * Native binaries must use latin1 to preserve byte-level fidelity;
  * plain JS files use utf-8.
  *
  * @param {string} filePath
@@ -75,8 +99,11 @@ function detectEncoding(filePath) {
   } finally {
     closeSync(fd)
   }
-  // ELF magic: 0x7f 'E' 'L' 'F'
-  if (header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46) return 'latin1'
+
+  const magic = header.readUInt32BE(0)
+  const isElf = magic === 0x7f454c46
+  const isPe = header[0] === 0x4d && header[1] === 0x5a
+  if (isElf || isPe) return 'latin1'
   return 'utf-8'
 }
 

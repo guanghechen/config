@@ -65,11 +65,12 @@ realpath $(which claude)
 
 # Windows (PowerShell)
 where.exe claude
-# 然后查看 node_modules/@anthropic-ai/claude-code/cli.js
+# 新版通常对应 node_modules/@anthropic-ai/claude-code/bin/claude.exe
+# 旧版可能对应 node_modules/@anthropic-ai/claude-code/cli.js
 ```
 
-> **Note**: 新版 Claude Code 可能是 `cli.js`（Node.js 文本脚本）或 Bun SEA ELF 二进制（取决于安装分发方式）。
-> patch 框架会自动检测文件格式：ELF 用 `latin1` 编码读写以保证二进制字节不变，脚本文件用 `utf-8`。
+> **Note**: Claude Code 可能是 `cli.js`（Node.js 文本脚本）或 native binary（ELF / PE，取决于平台和安装分发方式）。
+> patch 框架会自动检测文件格式：native binary 用 `latin1` 编码读写以保证二进制字节不变，脚本文件用 `utf-8`。
 
 ### Step 3: 搜索需要 patch 的变量名
 
