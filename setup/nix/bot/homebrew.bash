@@ -2,7 +2,11 @@
 
 if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/brew" ]; then
   printf "\e[96m  [setup homebrew] installing homebrew...\e[0m\n"
-  yes | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [ -t 0 ]; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  else
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 else
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
