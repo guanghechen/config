@@ -27,7 +27,7 @@ else
   fi
 
   printf "\e[96m  [setup miniforge] installing...\e[0m\n"
-  printf "\n\nyes\n%s\nyes\n" "$HOME_MINIFORGE" | bash "${miniforge_setup_sh}" # should install at ~/.app/miniforge3
+  bash "${miniforge_setup_sh}" -b -p "$HOME_MINIFORGE" -c
 fi
 export PATH=$HOME_MINIFORGE/bin:$PATH
 
@@ -36,7 +36,7 @@ printf "\e[96m  [setup miniforge] setting up conda...\e[0m\n"
 source "$HOME_MINIFORGE/etc/profile.d/conda.sh"
 conda config --set auto_activate_base false
 
-if conda env list | grep -q "^lemon\s"; then
+if conda env list | grep -q "^lemon[[:space:]]"; then
   printf "\e[93m  [setup miniforge] the 'lemon' env is already created. (skipped)\e[0m\n"
 else
   printf "\e[96m  [setup miniforge] creating 'lemon' env with conda...\e[0m\n"

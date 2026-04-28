@@ -8,8 +8,10 @@ if [ -e "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
   export HOME_HOMEBREW=/home/linuxbrew/.linuxbrew
 elif [ -e "/opt/homebrew/bin/brew" ]; then
   export HOME_HOMEBREW=/opt/homebrew
+elif [ -e "/usr/local/bin/brew" ]; then
+  export HOME_HOMEBREW=/usr/local
 fi
-if [[ ":$PATH:" != *":$HOME_HOMEBREW:"* ]]; then
+if [ -n "${HOME_HOMEBREW:-}" ] && [[ ":$PATH:" != *":$HOME_HOMEBREW/bin:"* ]]; then
   export PATH=$PATH:"$HOME_HOMEBREW/bin"
 fi
 

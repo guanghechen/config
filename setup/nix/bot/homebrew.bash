@@ -1,11 +1,11 @@
 #! /usr/bin/env bash
 
-if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/brew" ]; then
+if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ] && [ ! -f "/opt/homebrew/bin/brew" ] && [ ! -f "/usr/local/bin/brew" ]; then
   printf "\e[96m  [setup homebrew] installing homebrew...\e[0m\n"
-  if [ -t 0 ]; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  else
+  if [ -n "${CI:-}" ] || [ "${GHC_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  else
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
   printf "\e[96m  [setup homebrew] updating...\e[0m\n"
 else

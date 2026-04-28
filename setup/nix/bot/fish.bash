@@ -13,6 +13,10 @@ if [[
 else
   printf "\e[96m  [setup homebrew] setting up fish...\e[0m\n"
   brew install fish
-  echo "$fish_path" | sudo tee -a /etc/shells
-  chsh -s "$fish_path"
+  if [ -n "${CI:-}" ] || [ "${GHC_NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    printf "\e[93m  [setup homebrew] non-interactive shell detected. (skipped chsh)\e[0m\n"
+  else
+    echo "$fish_path" | sudo tee -a /etc/shells
+    chsh -s "$fish_path"
+  fi
 fi
