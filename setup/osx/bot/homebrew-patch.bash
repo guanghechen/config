@@ -6,6 +6,9 @@ source "$HOME/.config/guanghechen/setup/nix/bot/env.bash"
 brew tap microsoft/git
 brew install --cask git-credential-manager
 
+### Install wget
+brew install wget
+
 ### Install odbc
 brew install unixodbc
 
