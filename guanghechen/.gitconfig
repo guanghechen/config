@@ -3,4 +3,5 @@
   email = me.guanghechen@gmail.com
 
 [credential]
+  helper =
   helper = store --file ~/.config/git/guanghechen/.git-credentials
