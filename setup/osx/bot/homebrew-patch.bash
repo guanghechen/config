@@ -12,6 +12,12 @@ brew install unixodbc
 ### Install pngpaste
 brew install pngpaste
 
+### Install alacritty
+brew install --cask alacritty
+
+### Install ghostty
+brew install --cask ghostty
+
 ### Install kitty
 brew install --cask kitty
 
