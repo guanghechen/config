@@ -7,10 +7,10 @@ FORCE=false
 
 for arg in "$@"; do
   case $arg in
-    --force)
-      FORCE=true
-      shift
-      ;;
+  --force)
+    FORCE=true
+    shift
+    ;;
   esac
 done
 
