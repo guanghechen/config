@@ -8,14 +8,15 @@ import { applyPatches, replaceAll } from './util.mjs'
 
 const targetSize = process.argv[2] || '144000'
 const jsIdentifier = String.raw`[A-Za-z_$][A-Za-z0-9_$]*`
+const jsMemberExpression = String.raw`${jsIdentifier}(?:\.${jsIdentifier})*`
 const contextWindow1mSearch = new RegExp(
   String.raw`CLAUDE_CODE_MAX_CONTEXT_TOKENS\)\{let ${jsIdentifier}=parseInt\(process\.env\.CLAUDE_CODE_MAX_CONTEXT_TOKENS,10\);if\(!isNaN\(${jsIdentifier}\)&&${jsIdentifier}>0\)return ${jsIdentifier}\}` +
-    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;if\(${jsIdentifier}\?\.includes\(${jsIdentifier}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;if\(${jsIdentifier}\?\.includes\(${jsMemberExpression}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;` +
     String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return 1e6;let ${jsIdentifier}=${jsIdentifier}\(${jsIdentifier}\);if\(${jsIdentifier}!==null\)return ${jsIdentifier};return (${jsIdentifier})`,
 )
 const contextWindowSnippetSearch = new RegExp(
   String.raw`CLAUDE_CODE_MAX_CONTEXT_TOKENS\)\{let ${jsIdentifier}=parseInt\(process\.env\.CLAUDE_CODE_MAX_CONTEXT_TOKENS,10\);if\(!isNaN\(${jsIdentifier}\)&&${jsIdentifier}>0\)return ${jsIdentifier}\}` +
-    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);if\(${jsIdentifier}\?\.includes\(${jsIdentifier}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);` +
+    String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);if\(${jsIdentifier}\?\.includes\(${jsMemberExpression}\)&&${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);` +
     String.raw`if\(${jsIdentifier}\(${jsIdentifier}\)\)return (${jsIdentifier}|1e6);let ${jsIdentifier}=${jsIdentifier}\(${jsIdentifier}\);if\(${jsIdentifier}!==null\)return ${jsIdentifier};return (${jsIdentifier})`,
   'g',
 )
@@ -31,6 +32,34 @@ function hasPatchedContextWindow1m(text) {
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.146 - Context window constants keep the same role as 2.1.119,
+  // but the trailing 8K constant is no longer adjacent in the bundle.
+  {
+    name: 'context-window-200k',
+    version: '2.1.146',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /var ([A-Za-z_$][A-Za-z0-9_$]*)=200000,[A-Za-z_$][A-Za-z0-9_$]*=20000,[A-Za-z_$][A-Za-z0-9_$]*=32000,[A-Za-z_$][A-Za-z0-9_$]*=128000/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => m.matched_text.replace(/=200000/, `=${targetSize}`)),
+    verify: (text) =>
+      new RegExp(
+        `var ${jsIdentifier}=${targetSize},${jsIdentifier}=20000,${jsIdentifier}=32000,${jsIdentifier}=128000`,
+      ).test(text),
+  },
+  // 2.1.146 - 1M-capable branches now include a member expression in the
+  // header allowlist check, for example `includes(TF.header)`.
+  {
+    name: 'context-window-1e6',
+    version: '2.1.146',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: contextWindow1mSearch,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return m.matched_text.replaceAll('return 1e6', `return ${varName}`)
+      }),
+    verify: hasPatchedContextWindow1m,
+  },
   // 2.1.119 - Context window variable keeps the same role, but surrounding
   // output-token constants changed from 64K to 128K and identifiers may contain `$`.
   {
