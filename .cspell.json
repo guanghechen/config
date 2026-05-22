@@ -1,5 +1,7 @@
 {
-  "ignorePaths": ["config/theme/app/newsboat.hbs"],
+  "ignorePaths": [
+    "config/theme/app/newsboat.hbs"
+  ],
   "language": "en",
   "version": "0.2",
   "words": [
@@ -9,13 +11,17 @@
     "calt",
     "catppuccin",
     "cmdline",
+    "desktopservices",
+    "dont",
     "emph",
+    "excludesfile",
     "flowerlit",
     "fzfrc",
     "ghostty",
     "gitmoji",
     "gruvbox",
     "guanghechen",
+    "killall",
     "komorebi",
     "lazygit",
     "lintfix",

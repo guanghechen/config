@@ -37,6 +37,23 @@
   - Shortcut: `Command + 2`
   - Then `View` -> `Show View Options` -> `Use as Defaults`
 
+### Finder Hygiene
+
+- **Avoid `.DS_Store` on shared volumes**
+  - `defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true`
+  - `defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true`
+  - Restart Finder: `killall Finder`
+
+- **Ignore `.DS_Store` in Git**
+  - Add `.DS_Store` to `~/.gitignore_global`
+  - Set `core.excludesfile` to `~/.gitignore_global`
+
+- **Clean local `.DS_Store` files manually**
+  - Run inside the target directory only:
+    ```bash
+    fd -H '^\.DS_Store$' . -x rm
+    ```
+
 ## Keyboard Shortcuts
 
 Open `System Settings` -> `Keyboard` -> `Keyboard Shortcuts`.
