@@ -27,6 +27,13 @@ yoz -> stl -> dot -> era -> ark/vendor
 - Keep `__module_name__` in each module for structured reporting.
 - Keymaps should use `stl.t.IKeymap[]` and `stl.nvim.fn.bindkeys`.
 
+## Tooling
+
+- Prefer repo/Mason-provided developer tools before suggesting new installs.
+- Mason binaries live under `~/.local/share/nvim/mason/bin/`; `stylua` is available there and should be invoked directly from shell automation when it is not on `PATH`.
+- `mason.nvim` is configured with `PATH = "skip"`; `stl.env` prepends Mason's bin dir inside Neovim runtime, but external shells may not inherit it.
+- `luac` is not a Mason-managed Lua formatter/checker here; when system `luac` is unavailable, use `nvim -l <test-file>` or headless Neovim loading for Lua validation.
+
 ## Module Usage Guidance (`yoz` / `stl` / `dot`)
 
 - `yoz`: use for performance-sensitive helpers (path, fs, search, replace, uri).
