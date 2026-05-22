@@ -7,12 +7,12 @@
 
 ## Naming Conventions
 
-| Convention | Example                                       |
-|:-----------|:----------------------------------------------|
-| Buffer nr  | `bufnr` (not `buf`)                           |
-| Window nr  | `winnr` (not `win`)                           |
-| Tab nr     | `tabnr` (not `tab`)                           |
-| Arrays     | `bufnrs`, `winnrs`, `tabnrs` (not `bufs`)     |
+| Convention | Example                                   |
+| :--------- | :---------------------------------------- |
+| Buffer nr  | `bufnr` (not `buf`)                       |
+| Window nr  | `winnr` (not `win`)                       |
+| Tab nr     | `tabnr` (not `tab`)                       |
+| Arrays     | `bufnrs`, `winnrs`, `tabnrs` (not `bufs`) |
 
 ## API Preferences
 
@@ -68,6 +68,14 @@ local __module_name__ = "era.m.example" ---@type string
 ```
 
 Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
+
+## Lua Tests
+
+- Lua test suites live under `lua/__test__/` and use `__test__.harness`.
+- Run one suite with `nvim -l lua/__test__/<suite>.lua`.
+- Run all suites with `nvim -l lua/__test__/run.lua`.
+- Use `__test__.bootstrap` for explicit runtime globals; do not rely on full config bootstrap unless a suite is specifically validating bootstrap behavior.
+- Use harness patch helpers for `_G`, `vim`, and table mocks so cleanup runs after each case.
 
 ## Keymap Style
 
