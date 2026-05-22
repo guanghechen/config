@@ -34,6 +34,10 @@ brew install yazi ffmpegthumbnailer imagemagick jq poppler sevenzip starship jst
 printf "\e[96m  [setup homebrew] installing hardware utilities (cpu/memo/disk/network)...\e[0m\n"
 brew install btop fastfetch httpie
 
+### Install github cli
+printf "\e[96m  [setup homebrew] installing github cli...\e[0m\n"
+brew install gh
+
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
 brew install automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip zoxide
