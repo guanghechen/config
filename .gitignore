@@ -1,20 +1,22 @@
+/goals_*.sqlite*
+/logs_*.sqlite*
+/state*.sqlite*
+
 .codex-global-state.json
 .personality_migration
 cap_sid
 config.toml
 history.jsonl
 installation_id
-logs_*.sqlite*
 sandbox.log
-state*.sqlite*
 version.json
-
-/skills/.system
-/themes/local.tmTheme
 
 /.sandbox/
 /.sandbox-bin/
 /.sandbox-secrets/
+/skills/.system
+/themes/local.tmTheme
+
 .tmp/
 log/
 sessions/
