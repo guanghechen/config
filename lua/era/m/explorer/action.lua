@@ -271,7 +271,7 @@ function M:create_file()
       return
     end
 
-    local filename = normalize_filepath(vim.trim(input), false) ---@type string
+    local filename = normalize_filepath(vim.trim(input)) ---@type string
     local is_directory = filename:sub(-1) == "/" ---@type boolean
     local new_filepath = normalize_filepath(root_filepath .. filename, is_directory) ---@type string
     local resource = ctx.resource_manager:create(new_filepath) ---@type era.m.explorer.resource.INode|nil
