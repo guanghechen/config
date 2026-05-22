@@ -1,22 +1,56 @@
-## Settings
+# macOS Setup
+
+## System Settings
 
 ### General
 
-1. Battery:
-   - Charging -> Charge Limit : set to 80%
+- **Battery**
+  - `Charging` -> `Charge Limit`: set to `80%`
 
-2. Desktop & Dock:
-   - enable the **Automatically hide and show the Dock**
+- **Desktop & Dock**
+  - Enable `Automatically hide and show the Dock`
 
+### Finder
 
-### Change MBP Keyboard Shortcuts
+- **Path bar**
+  - `View` -> `Show Path Bar`
+  - Shortcut: `Option + Command + P`
 
-Open System Settings : Keyboard -> Keyboard shortcuts
+- **Status bar**
+  - `View` -> `Show Status Bar`
+  - Shortcut: `Command + /`
 
-1. Keyboard : Move focus to next window use `` option + ` ``, then disable all other shortcuts.
-2. Screenshots: disable all shortcuts.
-3. Function Keys: enable the **Use F1,F2, etc. keys as standard function keys**
-4. Modifier Keys:
-   - Globe    => Control
-   - Control  => Globe
+- **Filename extensions**
+  - `Finder` -> `Settings` -> `Advanced`
+  - Enable `Show all filename extensions`
 
+- **Search scope**
+  - `Finder` -> `Settings` -> `Advanced`
+  - Set `When performing a search` to `Search the Current Folder`
+
+- **Folder sorting**
+  - `Finder` -> `Settings` -> `Advanced`
+  - Enable `Keep folders on top: In windows when sorting by name`
+
+- **Default view**
+  - `View` -> `as List`
+  - Shortcut: `Command + 2`
+  - Then `View` -> `Show View Options` -> `Use as Defaults`
+
+## Keyboard Shortcuts
+
+Open `System Settings` -> `Keyboard` -> `Keyboard Shortcuts`.
+
+- **Keyboard**
+  - Set `Move focus to next window` to `` Option + ` ``
+  - Disable other shortcuts
+
+- **Screenshots**
+  - Disable all shortcuts
+
+- **Function Keys**
+  - Enable `Use F1, F2, etc. keys as standard function keys`
+
+- **Modifier Keys**
+  - `Globe` -> `Control`
+  - `Control` -> `Globe`
