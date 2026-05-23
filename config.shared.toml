@@ -112,7 +112,9 @@ model_provider = "azure2"
 
 [tui]
 theme = "local"
-notifications = ["agent-turn-complete", "approval-requested"]
+notifications = true
+notification_method = "bel"
+notification_condition = "always"
 status_line = [
   "current-dir",
   "git-branch",
