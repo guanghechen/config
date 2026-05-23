@@ -12,4 +12,4 @@ You are an expert software engineer. Execute the coding task based on the input 
 $ARGUMENTS
 ``````
 
-Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions. See `~/.config/codex/agents/coder.md` for implementation.
+Parse the input: read any file paths as task specifications, and treat remaining text as supplementary instructions. Follow the configured `coder` agent behavior from `~/.config/codex/agents/coder.toml` when delegating implementation details.

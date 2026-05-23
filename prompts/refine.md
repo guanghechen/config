@@ -22,7 +22,7 @@ The argument can be one of the following:
 ## Behavior
 
 - **If literal text**: Output the refined text directly to stdout
-- **If file/URI/path with position**: Read the resource, refine the content at the specified location, and edit in place using the Edit tool
+- **If file/URI/path with position**: Read the resource, refine the content at the specified location, and edit in place using available editing tools
 
 ## Guidelines
 

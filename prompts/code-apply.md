@@ -42,7 +42,7 @@ If no specific issues are provided, apply all actionable issues (Critical and Wa
 - Skip suggestions unless explicitly requested
 - If unclear, ask for clarification
 
-See `~/.config/codex/agents/coder.md` for implementation.
+Follow the configured `coder` agent behavior from `~/.config/codex/agents/coder.toml` when delegating implementation details.
 
 ## Post-Apply Verification
 
