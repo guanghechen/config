@@ -19,16 +19,18 @@
 
 > **ALWAYS** follow simple design, modularity, single responsibility. Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
 
-1. Prefer self-documenting code over comments. Comment "WHY", not "WHAT". No premature abstraction.
-2. Choose the simplest effective solution; high cohesion, low coupling.
-3. Organize code: imports → constants → types → public API → private impl → entry point.
-4. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
-5. **ALWAYS**: Early return; avoid nested conditions.
-6. **ALWAYS**: Error handling by function type:
+1. For non-trivial coding tasks, define or derive explicit success criteria during planning; prefer a reproducible test or verification command when feasible.
+2. Prefer self-documenting code over comments. Comment "WHY", not "WHAT". No premature abstraction.
+3. Choose the simplest effective solution; high cohesion, low coupling. If an implementation grows noticeably larger than the problem requires, stop and simplify before continuing.
+4. Keep changes traceable to the user request: every changed line must be required by the task or by cleanup caused by the current change.
+5. Organize code: imports → constants → types → public API → private impl → entry point.
+6. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
+7. **ALWAYS**: Early return; avoid nested conditions.
+8. **ALWAYS**: Error handling by function type:
    - Internal (private): Propagate errors to caller (unless designed to suppress).
    - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
    - Exposed pure (no side effects): Propagate errors transparently.
-7. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
+9. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
 
 ## Environment
 
