@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows PATH"
+  short_description: "Preview and safely reorder Windows PATH"
+  default_prompt: "Use $windows-path to preview and safely reorder Windows System/User PATH entries."
