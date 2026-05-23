@@ -1,11 +1,11 @@
 ---
 name: playwright-cli
-description: Automate browser interactions from the shell with the Microsoft Playwright CLI. Use when the user needs Codex to navigate pages, inspect snapshots, click or fill elements, capture screenshots/PDFs/videos/traces, debug Playwright tests, mock network requests, or extract page data without a full MCP browser loop.
+description: Automate browser interactions from the shell with the Microsoft Playwright CLI. Use when the user needs an agent to navigate pages, inspect snapshots, click or fill elements, capture screenshots/PDFs/videos/traces, debug Playwright tests, mock network requests, or extract page data without a full MCP browser loop.
 ---
 
 # Playwright CLI
 
-Use `playwright-cli` for token-efficient browser automation from Codex. Prefer it for deterministic page interaction and web test debugging. Use a browser MCP such as Playwright MCP or Chrome DevTools MCP only when the task needs rich persistent tool introspection, deep Chrome DevTools/performance analysis, or the user explicitly asks for MCP.
+Use `playwright-cli` for token-efficient browser automation from an agent session. Prefer it for deterministic page interaction and web test debugging. Use a browser MCP such as Playwright MCP or Chrome DevTools MCP only when the task needs rich persistent tool introspection, deep Chrome DevTools/performance analysis, or the user explicitly asks for MCP.
 
 ## Availability
 
