@@ -40,4 +40,4 @@ brew install gh
 
 ### Install usual tools
 printf "\e[96m  [setup homebrew] installing usual tools...\e[0m\n"
-brew install automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip zoxide
+brew install automake bat duf ffmpeg fzf git-lfs hyperfine jq lsd scc tldr tree tty-clock unzip yt-dlp zoxide
