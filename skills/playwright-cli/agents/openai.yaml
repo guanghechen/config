@@ -1,0 +1,4 @@
+interface:
+  display_name: "Playwright CLI"
+  short_description: "Automate browser workflows from the shell"
+  default_prompt: "Use $playwright-cli to inspect and interact with this web page from the shell."
