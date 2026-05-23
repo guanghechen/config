@@ -15,6 +15,8 @@ tmux send-keys -t %3 'message text' Enter
 sleep 2 && tmux send-keys -t %3 C-m C-m
 ```
 
+长 Review Packet：优先写入临时 handoff 文件或使用 tmux buffer，再发送简短指令让 reviewer 读取。不要用 `send-keys` 直接发送大段 Markdown、含引号文本或 noisy scrollback。
+
 Safety：
 - 不要向另一个 pane 发送 destructive shell 或 git write commands，除非用户明确要求。
 - 不要把 unbounded pane scrollback 当成 Review Packet。

@@ -25,6 +25,8 @@ description: 用于在 tmux panes、TUI sessions 或 inline handoffs 中协调 p
 
 把 tmux 当作 transport 和 observation layer。真正的 source of truth 是结构化 handoff：Review Packet、Findings、Resolution Notes 和最终 consensus。
 
+Reviewer 默认 read-only。除非用户明确要求 reviewer patch，否则 reviewer 只读 diff、文件、测试输出和 artifacts，不修改 workspace、不 stage、不 commit。
+
 ## Architecture Gate
 
 Minimal core：workflow 可以只靠 plain text handoffs 运行，不依赖 tmux、scripts 或特定 agent TUI。
@@ -63,7 +65,7 @@ Interface contract：
 - Primary 负责 implementation 和最终 resolution。
 - Reviewer 独立检查 correctness、security、regressions、tests 和 maintainability risks。
 - 如果用户提供了 tmux pane refs，按 `references/tmux-handoff.md` 使用 tmux commands。
-- 如果没有 pane refs，先生成 inline Review Packet；只有在无法执行时才询问缺失的 pane ref。
+- 如果没有 pane refs，进入 inline handoff：生成 Review Packet 给用户转交 reviewer，并等待用户贴回 reviewer Findings；不要把 primary 自己的 self-review 当作 independent reviewer output。
 
 2. Run scope gate。
 - 只有存在具体 review object 时才进入 review loop：diff、patch、changed files、design doc、test artifact 或其他 bounded work product。
@@ -113,12 +115,14 @@ Interface contract：
 
 Reviewer should：
 - 独立 review mandatory artifacts；如果能访问同一 workspace，直接 inspect diff/files，而不是只接受 primary agent 的解释。
+- 默认只读 workspace；除非用户明确要求 reviewer patch，否则不要修改文件、stage、commit 或运行 destructive commands。
 - 优先关注 behavioral bugs、security issues、data loss、races、missing tests 和 broken contracts。
 - 避免 style-only comments，除非它们影响 maintainability 或 correctness。
 - 每个 issue 都给出 stable Finding ID、concrete trigger、evidence 和 impact。
 
 Reviewer should not：
 - Rubber-stamp primary agent 的解释。
+- 直接修代码并绕过 Finding ID / Resolution Notes 流程。
 - 在没有 trigger、evidence 和 impact 的情况下提出抽象 design concerns。
 - 在缺少 mandatory artifacts 时假装完成 full review；应请求 evidence 或标记 residual risk。
 - 在 narrow fix 足以处理风险时要求 broad rewrites。

@@ -1,4 +1,4 @@
 interface:
   display_name: "Multi-Agent Review"
-  short_description: "协调结构化 agent code review"
-  default_prompt: "Use $multi-agent-review 来协调 primary agent 和 reviewer agent 完成结构化 code review loop。"
+  short_description: "Coordinate evidence-backed agent code review"
+  default_prompt: "Use $multi-agent-review to coordinate a structured primary/reviewer code review loop."
