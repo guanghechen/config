@@ -9,6 +9,7 @@ web_search = "disabled"
 multi_agent = true
 powershell_utf8 = true
 prevent_idle_sleep = true
+realtime_conversation = true
 voice_transcription = true
 
 [agents.coder]
@@ -109,6 +110,11 @@ model_provider = "azure2"
 model = "gpt-5.4-pro"
 model_reasoning_effort = "high"
 model_provider = "azure2"
+
+[realtime]
+version = "v2"
+transport = "websocket"
+type = "conversational"
 
 [tui]
 theme = "local"
