@@ -1,3 +1,16 @@
+/.last-cleanup
+/.claude.json*
+/.claude*.json*
+
+
+*.local.json
+history.jsonl
+stats-cache.json
+
+/backups/
+/image-cache/
+/sessions/
+
 cache/
 debug/
 file-history/
@@ -13,9 +26,3 @@ tasks/
 telemetry/
 todos/
 
-.claude.json*
-.claude*.json*
-*.local.json
-history.jsonl
-stats-cache.json
-image-cache/

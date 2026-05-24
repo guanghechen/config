@@ -65,9 +65,9 @@
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "editorMode": "vim",
   "feedbackSurveyState": {
     "lastShownTime": 1754640140229
-  },
-  "theme": "light",
-  "editorMode": "vim"
+  }
 }
