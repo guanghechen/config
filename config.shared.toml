@@ -7,10 +7,8 @@ web_search = "disabled"
 
 [features]
 multi_agent = true
-powershell_utf8 = true
 prevent_idle_sleep = true
 realtime_conversation = true
-voice_transcription = true
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
@@ -128,6 +126,7 @@ status_line = [
   "context-remaining",
   "context-window-size",
 ]
+terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
 
 [notice]
 
