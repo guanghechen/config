@@ -2,27 +2,8 @@
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
+import { isSensitiveFile } from "./sensitive.mjs"
 import { outputHook } from "./util.mjs"
-
-const SENSITIVE_PATTERNS = [
-  /\.http_request$/,
-  /\.http_response$/,
-  /^\.env/,
-  /credentials/i,
-]
-
-const SENSITIVE_PATHS = [
-  /(?:^|[\\/])\.ssh[\\/]/,
-  /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
-  /(?:^|[\\/])local[\\/]env\.[^/\\]+$/,
-]
-
-function isSensitiveFile(filepath) {
-  const base = path.basename(filepath)
-  return (
-    SENSITIVE_PATTERNS.some((p) => p.test(base)) || SENSITIVE_PATHS.some((p) => p.test(filepath))
-  )
-}
 
 function extractFilePath(input) {
   switch (input.tool_name) {
