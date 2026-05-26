@@ -7,9 +7,39 @@
       "envFile": "../.env.local",
       "envs": {},
       "opts": {
-        "provider": "azure",
-        "model": "gpt-image-1-5"
+        "provider": "image2",
+        "model": "image2"
       },
+      "defaultVariant": "default",
+      "variants": {
+        "default": {}
+      }
+    },
+    "healthcheck": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {
+        "provider": "image2",
+        "model": "image2"
+      },
+      "defaultVariant": "default",
+      "variants": {
+        "default": {}
+      }
+    },
+    "batch": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {},
+      "defaultVariant": "default",
+      "variants": {
+        "default": {}
+      }
+    },
+    "edit": {
+      "envFile": "../.env.local",
+      "envs": {},
+      "opts": {},
       "defaultVariant": "default",
       "variants": {
         "default": {}
