@@ -7,8 +7,8 @@ import { outputHook } from "./util.mjs"
 const SENSITIVE_PATTERNS = [
   /\.http_request$/,
   /\.http_response$/,
-  /^\.env\.local$/,
-  /^\.git-credentials$/,
+  /^\.env/,
+  /credentials/i,
 ]
 
 const SENSITIVE_PATHS = [
@@ -29,6 +29,7 @@ function extractFilePath(input) {
     case "Read":
     case "Write":
     case "Edit":
+    case "MultiEdit":
       return input.tool_input?.file_path
     case "NotebookEdit":
       return input.tool_input?.notebook_path
