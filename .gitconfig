@@ -104,6 +104,14 @@
 
 ####################################################################################################
 
+[credential "https://guanghechen@github.com"]
+  helper =
+  helper = store --file ~/.config/git/guanghechen/.git-credentials
+
+[credential "https://yozorajs@github.com"]
+  helper =
+  helper = store --file ~/.config/git/yozora/.git-credentials
+
 [include]
   path = ~/.config/git-delta/config.conf
 
