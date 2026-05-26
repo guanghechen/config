@@ -6,9 +6,16 @@ suppress_unstable_features_warning = true
 web_search = "disabled"
 
 [features]
+goals = true
+memories = true
 multi_agent = true
 prevent_idle_sleep = true
 realtime_conversation = true
+
+[memories]
+use_memories = true
+generate_memories = true
+disable_on_external_context = true
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
@@ -122,9 +129,12 @@ notification_condition = "always"
 status_line = [
   "current-dir",
   "git-branch",
+  "branch-changes",
+  "pull-request-number",
   "model-with-reasoning",
   "context-remaining",
   "context-window-size",
+  "run-state",
 ]
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
 
