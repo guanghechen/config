@@ -43,6 +43,12 @@ if test -f "$HOME/.app/miniforge3/bin/conda"
     # end
 end
 
+### pnpm
+set -gx PNPM_HOME "$HOME/Library/pnpm"
+if not string match -q -- "$PNPM_HOME/bin" $PATH
+    set -gx PATH "$PNPM_HOME/bin" $PATH
+end
+
 ### tmux
 if not set -q PREFER_TMUX_VERSION; or test "$PREFER_TMUX_VERSION" != stable
     if test -f "$ROOT_SOURCECODES/github/tmux/tmux/tmux"
