@@ -9,6 +9,22 @@
     "commit": "",
     "pr": ""
   },
+  "permissions": {
+    "deny": [
+      "Read(//**/.env*)",
+      "Read(//**/.ssh/**)",
+      "Read(//**/local/env.*)",
+      "Read(//**/*credentials*)",
+      "Read(//**/*.http_request)",
+      "Read(//**/*.http_response)",
+      "Edit(//**/.env*)",
+      "Edit(//**/.ssh/**)",
+      "Edit(//**/local/env.*)",
+      "Edit(//**/*credentials*)",
+      "Edit(//**/*.http_request)",
+      "Edit(//**/*.http_response)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
