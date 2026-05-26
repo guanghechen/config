@@ -25,18 +25,32 @@ function ghc-update-agents --description "Update AI coding agents globally"
         printf "\e[96m  Patching Claude Code...\e[0m\n"
         node ~/.config/guanghechen/cli/patch-agents.mjs --agent claude
 
-        # Sync Claude Code plugins from settings.json
+        # Sync only enabled Claude Code plugins from settings.json
         set -l claude_settings_file "$HOME/.config/claude/settings.json"
         if test -f $claude_settings_file
-            set -l plugins (jq -r '.enabledPlugins // {} | to_entries | map(select(.value == true)) | .[].key' $claude_settings_file 2>/dev/null)
-            if test (count $plugins) -gt 0
-                printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
-                claude plugin marketplace update
-                for plugin in $plugins
-                    printf "\e[90m  Installing %s...\e[0m\n" $plugin
-                    claude plugin install $plugin --scope user 2>/dev/null
+            set -l plugin_entries (jq -r '.enabledPlugins // {} | to_entries[] | "\(.key)\t\(.value == true)"' $claude_settings_file 2>/dev/null)
+            set -l synced_plugins 0
+            for plugin_entry in $plugin_entries
+                set -l plugin_parts (string split \t -- $plugin_entry)
+                set -l plugin $plugin_parts[1]
+                set -l plugin_enabled $plugin_parts[2]
+
+                if test "$plugin_enabled" != true
+                    continue
                 end
-                printf "\e[92m  Synced %d plugin(s)\e[0m\n\n" (count $plugins)
+
+                if test $synced_plugins -eq 0
+                    printf "\e[96m  Syncing Claude Code plugins...\e[0m\n"
+                    claude plugin marketplace update
+                end
+
+                printf "\e[90m  Installing %s...\e[0m\n" $plugin
+                claude plugin install $plugin --scope user 2>/dev/null
+                set synced_plugins (math $synced_plugins + 1)
+            end
+
+            if test $synced_plugins -gt 0
+                printf "\e[92m  Synced %d plugin(s)\e[0m\n\n" $synced_plugins
             end
         end
     end
