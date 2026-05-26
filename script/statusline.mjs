@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 import { execSync } from "node:child_process"
-import { readFileSync, existsSync } from "node:fs"
+import { createHash } from "node:crypto"
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import os from "node:os"
 import path from "node:path"
+
+const GIT_CACHE_TTL_MS = 5000
 
 const ANSI = {
   reset: "\x1b[0m",
@@ -121,7 +125,33 @@ function renderPath(cwd) {
   return `${ANSI.blue}󱃪 ${abbreviatePath(cwd)}${ANSI.reset}`
 }
 
-function renderGit(cwd) {
+function getGitCachePath(data, cwd) {
+  const session = data.session_id || "no-session"
+  const key = createHash("sha1").update(`${session}\0${cwd}`).digest("hex")
+  return path.join(os.tmpdir(), "claude-statusline", `${key}.json`)
+}
+
+function readGitCache(file) {
+  try {
+    if (Date.now() - statSync(file).mtimeMs > GIT_CACHE_TTL_MS) return null
+
+    const cached = JSON.parse(readFileSync(file, "utf-8"))
+    return typeof cached.output === "string" ? cached.output : null
+  } catch {
+    return null
+  }
+}
+
+function writeGitCache(file, output) {
+  try {
+    mkdirSync(path.dirname(file), { recursive: true })
+    writeFileSync(file, JSON.stringify({ output }), "utf-8")
+  } catch {
+    // ignore
+  }
+}
+
+function renderGitUncached(cwd) {
   try {
     const status = execGit(cwd, "git status -sb")
     const lines = status.split("\n")
@@ -158,6 +188,16 @@ function renderGit(cwd) {
   } catch {
     return ""
   }
+}
+
+function renderGit(data, cwd) {
+  const cacheFile = getGitCachePath(data, cwd)
+  const cached = readGitCache(cacheFile)
+  if (cached !== null) return cached
+
+  const output = renderGitUncached(cwd)
+  writeGitCache(cacheFile, output)
+  return output
 }
 
 function renderModel(data) {
@@ -225,7 +265,7 @@ function render(data) {
   const cwd = path.normalize(data.cwd || process.cwd())
   const parts = [
     renderPath(cwd),
-    renderGit(cwd),
+    renderGit(data, cwd),
     renderModel(data),
     renderContext(data),
     renderCost(data),

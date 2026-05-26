@@ -70,7 +70,8 @@
   "statusLine": {
     "type": "command",
     "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/statusline.mjs').href)\"",
-    "padding": 0
+    "padding": 0,
+    "refreshInterval": 5
   },
   "enabledPlugins": {
     "lua-lsp@claude-plugins-official": false,
@@ -81,8 +82,5 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
-  "editorMode": "vim",
-  "feedbackSurveyState": {
-    "lastShownTime": 1754640140229
-  }
+  "editorMode": "vim"
 }
