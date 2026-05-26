@@ -4,17 +4,22 @@
 /state*.sqlite*
 
 .codex-global-state.json
+.codex-global-state.json.*
 .personality_migration
 cap_sid
 config.toml
 history.jsonl
 installation_id
 sandbox.log
+session_index.jsonl
 version.json
 
 /.sandbox/
 /.sandbox-bin/
 /.sandbox-secrets/
+/archived_sessions/
+/computer-use/
+/plugins/cache/
 /skills/.system
 /themes/local.tmTheme
 
