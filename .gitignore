@@ -19,6 +19,7 @@ version.json
 /.sandbox-secrets/
 /archived_sessions/
 /computer-use/
+/memories/
 /plugins/cache/
 /skills/.system
 /themes/local.tmTheme
