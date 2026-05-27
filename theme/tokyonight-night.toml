@@ -129,16 +129,16 @@ rules = [
   # { mime = "inode/empty", fg = "#f7768e" },
 
   # Special files
-  { name = "*", is = "orphan", bg = "#f7768e" },
-  { name = "*", is = "exec"  , fg = "#9ece6a" },
+  { url = "*", is = "orphan", bg = "#f7768e" },
+  { url = "*", is = "exec"  , fg = "#9ece6a" },
 
   # Dummy files
-  { name = "*", is = "dummy", bg = "#f7768e" },
-  { name = "*/", is = "dummy", bg = "#f7768e" },
+  { url = "*", is = "dummy", bg = "#f7768e" },
+  { url = "*/", is = "dummy", bg = "#f7768e" },
 
   # Fallback
-  # { name = "*", fg = "#9ba5cf" },
-  { name = "*/", fg = "#7aa2f7" }
+  # { url = "*", fg = "#9ba5cf" },
+  { url = "*/", fg = "#7aa2f7" }
 ]
 
 [icon]
