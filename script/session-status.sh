@@ -9,9 +9,18 @@ function _ghc_tmux_session_status_ {
   local sep_left=${6:-}
   local sep_right=${7:-}
 
-  local index=1
+  local -a session_names=()
   local session_name
   while IFS= read -r session_name; do
+    session_names+=("${session_name}")
+  done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+
+  if [ "${#session_names[@]}" -le 1 ]; then
+    return
+  fi
+
+  local index=1
+  for session_name in "${session_names[@]}"; do
     if [ "${index}" -gt 1 ]; then
       printf ' '
     fi
@@ -26,7 +35,7 @@ function _ghc_tmux_session_status_ {
     fi
 
     index=$((index + 1))
-  done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+  done
 }
 
 _ghc_tmux_session_status_ "$@"
