@@ -1,4 +1,5 @@
 name = "code-simplifier"
+description = "Refines recently changed code for clarity and maintainability without changing behavior."
 
 developer_instructions = """
 # Code Simplifier Agent

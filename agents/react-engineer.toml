@@ -1,4 +1,5 @@
 name = "react-engineer"
+description = "Frontend specialist for React + TypeScript + Tailwind tasks."
 
 developer_instructions = """
 # React Engineer Agent

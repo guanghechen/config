@@ -1,6 +1,5 @@
 approval_policy = "on-request"
 personality = "pragmatic"
-profile = "copilot"
 sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "disabled"
@@ -65,83 +64,6 @@ network_access = true
 
 [shell_environment_policy]
 inherit = "all"
-
-[model_providers.copilot]
-name = "copilot"
-base_url = "http://localhost:4747/api/codex"
-env_key = "OPENAI_CODEX_AUTH_TOKEN"
-wire_api = "responses"
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
-
-[model_providers.copilot-dev]
-name = "copilot-dev"
-base_url = "http://localhost:4848/api/codex"
-env_key = "OPENAI_CODEX_AUTH_TOKEN"
-wire_api = "responses"
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
-
-[model_providers.azure]
-name = "azure"
-base_url = "https://*.azure.com/openai/v1"
-env_key = "AZURE_OPENAI_CODEX_API_KEY"
-wire_api = "responses"
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
-
-[model_providers.azure2]
-name = "azure2"
-base_url = "https://*.azure.com/openai/v1"
-env_key = "AZURE_OPENAI_CODEX_API_KEY2"
-wire_api = "responses"
-request_max_retries = 3
-stream_max_retries = 0
-stream_idle_timeout_ms = 3000000
-
-[profiles.copilot]
-model = "gpt-5.5"
-model_provider = "copilot"
-model_reasoning_effort = "high"
-model_context_window = 272000
-model_auto_compact_token_limit = 244800
-
-[profiles.copilot-5-5]
-model = "gpt-5.5"
-model_provider = "copilot"
-model_reasoning_effort = "high"
-model_context_window = 272000
-model_auto_compact_token_limit = 244800
-
-[profiles.copilot-dev]
-model = "gpt-5.5"
-model_provider = "copilot-dev"
-model_reasoning_effort = "high"
-model_context_window = 272000
-model_auto_compact_token_limit = 244800
-
-[profiles.azure]
-model = "gpt-5.3-codex"
-model_reasoning_effort = "high"
-model_provider = "azure"
-
-[profiles.azure-5-4]
-model = "gpt-5.4-pro"
-model_reasoning_effort = "high"
-model_provider = "azure"
-
-[profiles.azure2]
-model = "gpt-5.3-codex"
-model_reasoning_effort = "high"
-model_provider = "azure2"
-
-[profiles.azure2-5-4]
-model = "gpt-5.4-pro"
-model_reasoning_effort = "high"
-model_provider = "azure2"
 
 [realtime]
 version = "v2"

@@ -1,4 +1,5 @@
 name = "repair"
+description = "Iterative repair agent for bug fixing, optimization, and refactoring."
 
 developer_instructions = """
 # Repair Agent

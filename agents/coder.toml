@@ -1,4 +1,5 @@
 name = "coder"
+description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
 
 developer_instructions = """
 # Coder Agent
