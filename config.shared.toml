@@ -32,12 +32,6 @@ matcher = "^Bash$"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = 'node "$HOME/.config/codex/script/hook/pre-bash-git.mjs"'
-timeout = 5
-statusMessage = "Checking git command policy"
-
-[[hooks.PreToolUse.hooks]]
-type = "command"
 command = 'node "$HOME/.config/codex/script/hook/pre-bash-sensitive.mjs"'
 timeout = 5
 statusMessage = "Checking sensitive path usage"
