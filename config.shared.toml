@@ -7,6 +7,7 @@ web_search = "disabled"
 
 [features]
 goals = true
+hooks = true
 memories = true
 multi_agent = true
 prevent_idle_sleep = true
@@ -16,6 +17,38 @@ realtime_conversation = true
 generate_memories = false
 disable_on_external_context = true
 use_memories = false
+
+[[hooks.PreToolUse]]
+matcher = "*"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'node "$HOME/.config/codex/script/hook/pre-tool-use.mjs"'
+timeout = 5
+statusMessage = "Checking sensitive file access"
+
+[[hooks.PreToolUse]]
+matcher = "^Bash$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'node "$HOME/.config/codex/script/hook/pre-bash-git.mjs"'
+timeout = 5
+statusMessage = "Checking git command policy"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'node "$HOME/.config/codex/script/hook/pre-bash-sensitive.mjs"'
+timeout = 5
+statusMessage = "Checking sensitive path usage"
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = 'node "$HOME/.config/codex/script/hook/notify.mjs"'
+timeout = 5
+statusMessage = "Sending terminal notification"
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
