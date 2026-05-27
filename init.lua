@@ -11,6 +11,11 @@ local function get_starship_config()
   return nil
 end
 
+ps.sub("ind-app-title", function(body)
+  body.value = "yazi: " .. tostring(cx.active.current.cwd)
+  return body
+end)
+
 require("git"):setup()
 require("full-border"):setup({
   type = ui.Border.ROUNDED,

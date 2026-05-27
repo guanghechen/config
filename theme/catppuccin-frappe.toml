@@ -15,7 +15,7 @@ icon_command            = ""
 [confirm]
 border                  = { fg = "#8CAAEE" }
 title                   = { fg = "#8CAAEE" }
-content                 = {}
+body                    = {}
 list                    = {}
 btn_yes                 = { reversed = true }
 btn_no                  = {}

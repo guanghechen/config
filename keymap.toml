@@ -42,7 +42,7 @@ keymap = [
   { on = ["g", "?"],          run = "help",                                           desc = "goto: help" },
   { on = ["g", "h"],          run = "cd ~",                                           desc = "goto: home" },
   { on = ["g", "i"],          run = "cd --interactive",                               desc = "goto: interactively" },
-  { on = ["g", "t"],          run = "tasks_show",                                     desc = "Show task manager" },
+  { on = ["g", "t"],          run = "tasks:show",                                     desc = "Show task manager" },
 
   # Linemode
   { on = ["m", "s"],          run = "linemode size",                                  desc = "linemode: size" },

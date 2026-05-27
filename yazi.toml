@@ -10,7 +10,7 @@ sort_dir_first      = true
 sort_reverse        = false
 sort_sensitive      = false
 sort_translit       = false
-title_format        = "yazi: {cwd}"
+sort_fallback       = "alphabetical"
 
 [confirm]
 trash_title         = "Trash {n} selected file{s}?"
