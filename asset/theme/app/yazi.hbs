@@ -15,7 +15,7 @@ icon_command            = ""
 [confirm]
 border                  = { fg = "{{unified.blue}}" }
 title                   = { fg = "{{unified.blue}}" }
-content                 = {}
+body                    = {}
 list                    = {}
 btn_yes                 = { reversed = true }
 btn_no                  = {}
@@ -129,16 +129,16 @@ rules = [
   # { mime = "inode/empty", fg = "{{unified.red}}" },
 
   # Special files
-  { name = "*", is = "orphan", bg = "{{unified.red}}" },
-  { name = "*", is = "exec"  , fg = "{{unified.green}}" },
+  { url = "*", is = "orphan", bg = "{{unified.red}}" },
+  { url = "*", is = "exec"  , fg = "{{unified.green}}" },
 
   # Dummy files
-  { name = "*", is = "dummy", bg = "{{unified.red}}" },
-  { name = "*/", is = "dummy", bg = "{{unified.red}}" },
+  { url = "*", is = "dummy", bg = "{{unified.red}}" },
+  { url = "*/", is = "dummy", bg = "{{unified.red}}" },
 
   # Fallback
-  # { name = "*", fg = "{{unified.fg2}}" },
-  { name = "*/", fg = "{{unified.blue}}" }
+  # { url = "*", fg = "{{unified.fg2}}" },
+  { url = "*/", fg = "{{unified.blue}}" }
 ]
 
 [icon]
