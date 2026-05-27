@@ -13,9 +13,9 @@ prevent_idle_sleep = true
 realtime_conversation = true
 
 [memories]
-use_memories = true
-generate_memories = true
+generate_memories = false
 disable_on_external_context = true
+use_memories = false
 
 [agents.coder]
 description = "Implementation-focused coding agent for writing, modifying, and reviewing code."
@@ -139,4 +139,3 @@ status_line = [
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
 
 [notice]
-
