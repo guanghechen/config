@@ -1,6 +1,7 @@
 /goals_*.sqlite*
 /logs_*.sqlite*
 /skills/kit-*
+/skills/yui-*
 /state*.sqlite*
 
 .codex-global-state.json
