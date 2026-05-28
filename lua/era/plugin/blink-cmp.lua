@@ -1,10 +1,23 @@
 ---@see https://github.com/saghen/blink.cmp/tree/2e4e54b1283f4cf3673063fc3e10993c20aeec5c
 
+local function build_blink_cmp()
+  local root = require("era.m.plugin.state").options.root
+  for _, name in ipairs({ "blink.lib", "blink.cmp" }) do
+    local path = dot.path.join(root, name)
+    if yoz.path.is_exist(path) then
+      vim.opt.rtp:prepend(path)
+    end
+  end
+
+  require("blink.cmp").build():wait(60000)
+end
+
 return {
   name = "blink.cmp",
-  build = "cargo build --release", -- See https://github.com/saghen/frizbee/issues/53#issuecomment-3823112232
+  build = build_blink_cmp,
   event = { "InsertEnter", "CmdlineEnter" },
   dependencies = {
+    "blink.lib",
     "friendly-snippets",
   },
   opts = function()
@@ -171,24 +184,7 @@ return {
               },
             },
           },
-          direction_priority = function()
-            local ctx = require("blink.cmp").get_context()
-            local item = require("blink.cmp").get_selected_item()
-            if ctx == nil or item == nil then
-              return { "s", "n" }
-            end
-
-            local item_text = item.textEdit ~= nil and item.textEdit.newText or item.insertText or item.label
-            local is_multiline = item_text:find("\n") ~= nil
-
-            -- after showing the menu upwards, we want to maintain that direction
-            -- until we re-open the menu, so store the context id in a global variable
-            if is_multiline or vim.g.blink_cmp_upwards_ctx_id == ctx.id then
-              vim.g.blink_cmp_upwards_ctx_id = ctx.id
-              return { "n", "s" }
-            end
-            return { "s", "n" }
-          end,
+          direction_priority = { "s", "n" },
         },
       },
       fuzzy = {
