@@ -10,6 +10,8 @@ stats-cache.json
 /backups/
 /image-cache/
 /sessions/
+/skills/kit-*
+/skills/yui-*
 
 cache/
 debug/
