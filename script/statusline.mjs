@@ -20,8 +20,12 @@ const ANSI = {
   cyan: "\x1b[96m",
 }
 
+// GIT_OPTIONAL_LOCKS=0 prevents `git status` from refreshing the index
+// (which would take .git/index.lock and race the user's own git commands).
+const GIT_ENV = { ...process.env, GIT_OPTIONAL_LOCKS: "0" }
+
 function execGit(cwd, cmd) {
-  return execSync(cmd, { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim()
+  return execSync(cmd, { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], env: GIT_ENV }).trim()
 }
 
 function abbreviatePath(cwd) {
