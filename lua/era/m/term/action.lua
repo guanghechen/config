@@ -52,7 +52,7 @@ local function open_yazi(name, cwd, filepath)
   local tempname = dot.path.locate_cache_filepath("yazi-chooser-files.txt") ---@type string
 
   local dirpath = dot.path.dirname(filepath) ---@type string
-  local cmd = string.format('yazi "%s" --chooser-file="%s"', dirpath, tempname) ---@type string
+  local cmd = string.format("yazi %s --chooser-file=%s", vim.fn.shellescape(dirpath), vim.fn.shellescape(tempname)) ---@type string
   S.widget:toggle_and_focus({
     uuid = string.format("69f6829d-c54a-46a2-8c52-5f2f2d40aa93#%s", name),
     name = name,

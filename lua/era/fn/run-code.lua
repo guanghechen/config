@@ -133,7 +133,7 @@ local runners = {
   ----------------------------------------------------------------------------------------------------
   lua = {
     run = function(filepath)
-      vim.cmd("luafile " .. filepath)
+      vim.cmd("luafile " .. vim.fn.fnameescape(filepath))
     end,
   },
   mjs = {
