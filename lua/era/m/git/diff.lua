@@ -123,7 +123,7 @@ function M.run_diff(old_lines, new_lines)
   end
 
   local diff_opts = { result_type = "indices", algorithm = "histogram" }
-  local ok, raw = pcall(vim.diff, a, b, diff_opts) ---@diagnostic disable-line: deprecated
+  local ok, raw = pcall(vim.text.diff, a, b, diff_opts)
   if not ok or type(raw) ~= "table" then
     return hunks
   end
@@ -163,7 +163,7 @@ end
 local DIFF_WORKER_FN = [[
 return function(a, b)
   local diff_opts = { result_type = "indices", algorithm = "histogram" }
-  local ok, raw = pcall(vim.diff, a, b, diff_opts)
+  local ok, raw = pcall(vim.text.diff, a, b, diff_opts)
   if not ok or type(raw) ~= "table" then
     return ""
   end
