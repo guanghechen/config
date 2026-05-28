@@ -11,5 +11,6 @@
 .playwright/
 .playwright-cli/
 .playwright-mcp/
+.tmp/
 local/
 node_modules/
