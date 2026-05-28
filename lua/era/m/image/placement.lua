@@ -292,7 +292,7 @@ function M:render_grid(loc)
         end_row = range[3] - 1,
         end_col = range[4],
         conceal = conceal,
-        invalidate = vim.fn.has("nvim-0.10") == 1 and true or nil,
+        invalidate = true,
         virt_text_pos = "inline",
         virt_text = { { img[1], hl } },
         virt_text_hide = true,
@@ -327,7 +327,7 @@ function M:render_grid(loc)
         }
       end
       local last = extmarks[#extmarks]
-      if last and #img == 0 and (last.row < range[3] - 1) and vim.fn.has("nvim-0.11.4") == 1 then
+      if last and #img == 0 and (last.row < range[3] - 1) then
         extmarks[#extmarks + 1] = {
           row = last.row + 1,
           end_row = range[3] - 1,

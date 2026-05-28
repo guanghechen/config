@@ -198,8 +198,6 @@ function M.gen_hlgroup_map(context)
     Variable = { fg = c.fg },
     UnderLined = { underline = true },
     vCursor = { fg = c.bg, bg = c.fg },
-    VertSplit = { fg = c.fg_gutter, blend = t and 50 or 0 },
-    VertSplitActive = { fg = c.orange },
     Visual = { bg = c.bg_visual, bold = true },
     VisualNOS = { bg = c.bg_visual, bold = true },
     WarningMsg = { fg = c.warning },

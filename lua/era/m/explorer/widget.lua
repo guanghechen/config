@@ -10,7 +10,6 @@ local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "EndOfBuffer:m_ex_eob",
   "Normal:m_ex_bg",
   "SignColumn:m_ex_bg",
-  "VertSplit:m_ex_border",
   "WinBar:m_ex_winbar",
   "WinBarNC:m_ex_winbar",
   "WinSeparator:m_ex_border",

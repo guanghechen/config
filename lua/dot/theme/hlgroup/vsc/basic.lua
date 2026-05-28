@@ -150,7 +150,11 @@ function M.gen_hlgroup_map(context)
     FloatBorder = { fg = c.dropdown_border, bg = t and c.dropdown_background or c.none, blend = t and 50 or 0 },
     FloatNormal = { fg = c.dropdown_foreground, bg = t and c.dropdown_background or c.none, blend = t and 50 or 0 },
     FloatActiveTitle = { link = "ms_b_bg0" },
-    FloatTitle = { fg = c.notificationCenterHeader_foreground, bg = t and c.notificationCenterHeader_background or c.none, bold = true },
+    FloatTitle = {
+      fg = c.notificationCenterHeader_foreground,
+      bg = t and c.notificationCenterHeader_background or c.none,
+      bold = true,
+    },
     FoldColumn = { fg = c.editorLineNumber_foreground },
     Folded = { fg = c.descriptionForeground, bg = c.editorWidget_background },
     Function = { fg = c.tokenFunctionDeclarations },
@@ -240,8 +244,6 @@ function M.gen_hlgroup_map(context)
     WildMenu = { fg = c.menu_foreground, bg = c.menu_selectionBackground, bold = true },
     WinBar = { fg = c.titleBar_activeForeground, bg = u.bg0 },
     WinBarNC = { fg = c.titleBar_inactiveForeground, bg = u.bg1 },
-    VertSplit = { fg = c.editorGroupHeader_tabsBorder },
-    VertSplitActive = { fg = c.tab_activeBorder },
     WinSeparator = { fg = c.editorGroup_border },
   }
 

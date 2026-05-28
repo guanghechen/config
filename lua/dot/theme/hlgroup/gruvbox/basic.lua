@@ -223,8 +223,6 @@ function M.gen_hlgroup_map(context)
     Title = { link = t and "ms_b_none" or "ms_b_bg0" },
     TooLong = { fg = c.red },
     UnderLined = { fg = c.blue, underline = true },
-    VertSplit = { fg = c.bg2 },
-    VertSplitActive = { fg = c.brightOrange },
     Visual = { bg = cs.mix(c.bg0, c.purple, 65), blend = 0, reverse = false },
     VisualNOS = { link = "Visual" },
     WildMenu = { fg = c.blue, bg = c.bg2, bold = true },
