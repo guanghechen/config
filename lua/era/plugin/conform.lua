@@ -1,4 +1,4 @@
----@see https://github.com/stevearc/conform.nvim/tree/4993e07fac6679d0a5005aa7499e0bad2bd39f19
+---@see https://github.com/stevearc/conform.nvim
 
 -- stylua: ignore start
 local formatters_by_ft = {

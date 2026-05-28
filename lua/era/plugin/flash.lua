@@ -1,4 +1,4 @@
----@see https://github.com/folke/folke/flash.nvim/tree/fcea7ff883235d9024dc41e638f164a450c14ca2
+---@see https://github.com/folke/flash.nvim
 
 -- Flash enhances the built-in search functionality by showing labels
 -- at the end of each match, letting you quickly jump to a specific location.

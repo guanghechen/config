@@ -1,4 +1,4 @@
----@see https://github.com/mfussenegger/nvim-lint/tree/d1118791070d090777398792a73032a0ca5c79ff
+---@see https://github.com/mfussenegger/nvim-lint
 
 local __module_name__ = "era.plugin.nvim-lint" ---@type string
 

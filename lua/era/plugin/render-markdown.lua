@@ -1,4 +1,4 @@
----@see https://github.com/MeanderingProgrammer/render-markdown.nvim/tree/6e0e8902dac70fecbdd8ce557d142062a621ec38
+---@see https://github.com/MeanderingProgrammer/render-markdown.nvim
 
 return {
   name = "render-markdown.nvim",
@@ -362,7 +362,6 @@ return {
       border_virtual = true,
       cell = "padded",
       preset = "round",
-      filler = "f_md_table_filler",
       head = "f_md_table_head",
       row = "f_md_table_row",
       style = "full",

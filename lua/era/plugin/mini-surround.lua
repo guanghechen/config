@@ -1,4 +1,4 @@
----@see https://github.com/nvim-mini/mini.surround/tree/88c52297ed3e69ecf9f8652837888ecc727a28ee
+---@see https://github.com/nvim-mini/mini.surround
 
 return {
   name = "mini.surround",

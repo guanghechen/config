@@ -1,4 +1,4 @@
----@see https://github.com/nvim-mini/mini.ai/tree/bfb26d9072670c3aaefab0f53024b2f3729c8083
+---@see https://github.com/nvim-mini/mini.ai
 
 -- taken from MiniExtra.gen_ai_spec.buffer
 local function ai_buffer(ai_type)

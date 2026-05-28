@@ -1,4 +1,4 @@
----@see https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/227165aaeb07b567fb9c066f224816aa8f3ce63f
+---@see https://github.com/nvim-treesitter/nvim-treesitter-textobjects
 
 return {
   name = "nvim-treesitter-textobjects",

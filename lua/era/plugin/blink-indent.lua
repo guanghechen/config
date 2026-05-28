@@ -1,4 +1,4 @@
----@see https://github.com/saghen/blink.indent/tree/2f4ac0d1bc642049d97da909cae02a5a5bd0beab
+---@see https://github.com/saghen/blink.indent
 
 return {
   name = "blink.indent",

@@ -1,4 +1,4 @@
----@see https://github.com/nvim-treesitter/nvim-treesitter-context/tree/660861b1849256398f70450afdf93908d28dc945
+---@see https://github.com/nvim-treesitter/nvim-treesitter-context
 
 return {
   name = "nvim-treesitter-context",

@@ -1,4 +1,4 @@
----@see https://github.com/nvim-treesitter/nvim-treesitter/tree/c5871d9d870c866fea9f271f1a3b3f29049a4793
+---@see https://github.com/nvim-treesitter/nvim-treesitter
 
 local __module_name__ = "era.plugin.nvim-treesitter" ---@type string
 

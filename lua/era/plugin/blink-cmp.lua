@@ -1,4 +1,4 @@
----@see https://github.com/saghen/blink.cmp/tree/2e4e54b1283f4cf3673063fc3e10993c20aeec5c
+---@see https://github.com/saghen/blink.cmp
 
 local function build_blink_cmp()
   local root = require("era.m.plugin.state").options.root

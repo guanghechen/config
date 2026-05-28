@@ -1,4 +1,4 @@
----@see https://github.com/nvim-mini/mini.hipatterns/tree/add8d8abad602787377ec5d81f6b248605828e0f
+---@see https://github.com/nvim-mini/mini.hipatterns
 
 ---@type table<string, true>
 local css_filetypes = {

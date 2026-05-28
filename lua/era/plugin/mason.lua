@@ -1,4 +1,4 @@
----@see https://github.com/mason-org/mason.nvim/tree/57e5a8addb8c71fb063ee4acda466c7cf6ad2800
+---@see https://github.com/mason-org/mason.nvim
 
 local __module_name__ = "era.plugin.mason" ---@type string
 
