@@ -1,3 +1,11 @@
+## Requirements
+
+* Install Xcode Command Line Tools to provide the `git` command:
+
+  ```bash
+  xcode-select --install
+  ```
+
 ## Bootstrap
 
 * Nix: [Nix Setup](./setup/nix/README.md)
