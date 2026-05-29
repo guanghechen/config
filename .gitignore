@@ -11,6 +11,7 @@ cap_sid
 config.toml
 history.jsonl
 installation_id
+memories_*.sqlite*
 sandbox.log
 session_index.jsonl
 version.json
