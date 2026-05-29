@@ -11,18 +11,18 @@
   },
   "permissions": {
     "deny": [
-      "Read(//**/.env*)",
-      "Read(//**/.ssh/**)",
-      "Read(//**/local/env.*)",
-      "Read(//**/*credentials*)",
       "Read(//**/*.http_request)",
       "Read(//**/*.http_response)",
-      "Edit(//**/.env*)",
-      "Edit(//**/.ssh/**)",
-      "Edit(//**/local/env.*)",
-      "Edit(//**/*credentials*)",
+      "Read(//**/.env*)",
+      "Read(//**/.git-credentials)",
+      "Read(//**/.ssh/**)",
+      "Read(//**/local/env.*)",
       "Edit(//**/*.http_request)",
-      "Edit(//**/*.http_response)"
+      "Edit(//**/*.http_response)",
+      "Edit(//**/.env*)",
+      "Edit(//**/.git-credentials)",
+      "Edit(//**/.ssh/**)",
+      "Edit(//**/local/env.*)"
     ]
   },
   "hooks": {
