@@ -20,6 +20,11 @@ if type -q fnm
     fnm env --use-on-cd --shell fish | source
 end
 
+### flutter
+if test -f "$ROOT_SOURCECODES/github/flutter/flutter/bin/flutter"
+    fish_add_path --prepend "$ROOT_SOURCECODES/github/flutter/flutter/bin"
+end
+
 ## fzf (CSI u: Ctrl+Shift+Key)
 set -gx FZF_DEFAULT_COMMAND "fd --hidden --follow --no-ignore-vcs --color=never --exclude=.git --exclude=node_modules --exclude=.DS_Store --type=f"
 set -gx FZF_DEFAULT_OPTS_FILE "$HOME/.config/fzf/fzf.fzfrc"
