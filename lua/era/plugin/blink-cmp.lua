@@ -2,6 +2,11 @@
 
 local function build_blink_cmp()
   local root = require("era.m.plugin.state").options.root
+  local site = dot.path.join(vim.fn.stdpath("data"), "site")
+  if yoz.path.is_exist(site) then
+    vim.opt.rtp:prepend(site)
+  end
+
   for _, name in ipairs({ "blink.lib", "blink.cmp" }) do
     local path = dot.path.join(root, name)
     if yoz.path.is_exist(path) then
