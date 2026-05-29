@@ -11,7 +11,7 @@
 
 ## Security
 
-1. **CRITICAL**: Never access secrets (`.ssh/`, `.env*`, `local/env.*`, `*credentials*`, `*.http_request`, `*.http_response`).
+1. **CRITICAL**: Never access secrets (`.ssh/`, `.env*`, `local/env.*`, `.git-credentials`, `*.http_request`, `*.http_response`).
 2. **CRITICAL**: Never run git write commands (`add/rm/clean/commit/checkout/restore/reset/stash/push`) unless **explicitly instructed**.
 3. **ALWAYS**: Confirm with user before installing packages (especially global CLI tools). List packages to be installed — risk of supply-chain attacks.
 
