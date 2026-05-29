@@ -4,7 +4,7 @@ export const SENSITIVE_PATTERNS = [
   /\.http_request$/,
   /\.http_response$/,
   /^\.env/,
-  /credentials/i,
+  /^\.git-credentials$/,
 ]
 
 export const SENSITIVE_PATHS = [
