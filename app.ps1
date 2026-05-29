@@ -7,7 +7,7 @@ function cc0 {
   $env:ANTHROPIC_API_KEY = ''
   $env:ANTHROPIC_BASE_URL = $env:GHC_ANTHROPIC_BASE_URL
   $env:ANTHROPIC_AUTH_TOKEN = $env:GHC_ANTHROPIC_AUTH_TOKEN
-  $env:ANTHROPIC_MODEL = 'claude-opus-4.7'
+  $env:ANTHROPIC_MODEL = 'claude-opus-4.8'
   $env:ANTHROPIC_SMALL_FAST_MODEL = 'claude-sonnet-4.6'
   claude --dangerously-skip-permissions @args
 }
@@ -17,28 +17,8 @@ function cx0 {
   codex -p copilot --dangerously-bypass-approvals-and-sandbox @args
 }
 
-function cx5-4 {
-  codex -p copilot-5-4 --dangerously-bypass-approvals-and-sandbox @args
-}
-
 function cxd {
   codex -p copilot-dev --dangerously-bypass-approvals-and-sandbox @args
-}
-
-function cxa {
-  codex -p azure --dangerously-bypass-approvals-and-sandbox @args
-}
-
-function cxa-5-4 {
-  codex -p azure-5-4 --dangerously-bypass-approvals-and-sandbox @args
-}
-
-function cxa2 {
-  codex -p azure2 --dangerously-bypass-approvals-and-sandbox @args
-}
-
-function cxa2-5-4 {
-  codex -p azure2-5-4 --dangerously-bypass-approvals-and-sandbox @args
 }
 
 

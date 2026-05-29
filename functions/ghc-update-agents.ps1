@@ -47,15 +47,13 @@ function ghc-update-agents {
       catch {
         $settingsJson = $null
       }
-
-      claude plugin marketplace update
       $excludedPlugins = @(
         "ralph-loop@claude-plugins-official"
       )
       $enabledPlugins = @()
       if ($settingsJson -and $settingsJson.enabledPlugins) {
         foreach ($entry in $settingsJson.enabledPlugins.PSObject.Properties) {
-          if ($entry.Value -eq $true -and $entry.Name -notin $excludedPlugins) {
+          if ($entry.Value -is [bool] -and $entry.Value -and $entry.Name -notin $excludedPlugins) {
             $enabledPlugins += $entry.Name
           }
         }
@@ -63,6 +61,7 @@ function ghc-update-agents {
 
       if ($enabledPlugins.Count -gt 0) {
         Write-Host "  Syncing Claude Code plugins..." -ForegroundColor Cyan
+        claude plugin marketplace update
         foreach ($plugin in $enabledPlugins) {
           Write-Host "  Installing $plugin..." -ForegroundColor DarkGray
           claude plugin install $plugin --scope user | Out-Null

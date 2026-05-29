@@ -27,8 +27,32 @@ function ghc-opensource {
   }
 
   if (-not $repoPath) {
-    Write-Host "  Usage: ghc-opensource [--github] <author/reponame>" -ForegroundColor Yellow
+    Write-Host "  Usage: ghc-opensource [--github] <author/reponame|github-url>" -ForegroundColor Yellow
     return
+  }
+
+  if ($platform -eq "--github") {
+    $githubUrlMatch = [regex]::Match($repoPath, '^https?://github\.com/([^/?#]+)/([^/?#]+)')
+    if ($githubUrlMatch.Success) {
+      $ownerName = $githubUrlMatch.Groups[1].Value
+      $repoName = $githubUrlMatch.Groups[2].Value -replace '\.git$', ''
+      $reservedGithubPaths = @(
+        "about", "account", "apps", "blog", "business", "codespaces", "collections", "contact",
+        "customer-stories", "dashboard", "enterprise", "events", "explore", "features",
+        "github-copilot", "join", "login", "marketplace", "new", "notifications", "orgs",
+        "organizations", "pricing", "pulls", "repositories", "search", "security", "settings",
+        "showcases", "sponsors", "topics", "trending", "users"
+      )
+      $ownerNamePattern = '^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$'
+      $repoNamePattern = '^[A-Za-z0-9._-]+$'
+      $isReservedGithubPath = $reservedGithubPaths -contains $ownerName.ToLowerInvariant()
+      $isValidOwnerName = $ownerName -match $ownerNamePattern
+      $isValidRepoName = $repoName -match $repoNamePattern
+
+      if (-not $isReservedGithubPath -and $isValidOwnerName -and $isValidRepoName) {
+        $repoPath = "$ownerName/$repoName"
+      }
+    }
   }
 
   switch ($platform) {
