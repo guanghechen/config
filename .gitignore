@@ -7,11 +7,13 @@
 .codex-global-state.json
 .codex-global-state.json.*
 .personality_migration
+auth.json
 cap_sid
 config.toml
 history.jsonl
 installation_id
 memories_*.sqlite*
+models_cache.json
 sandbox.log
 session_index.jsonl
 version.json
@@ -20,6 +22,8 @@ version.json
 /.sandbox-bin/
 /.sandbox-secrets/
 /archived_sessions/
+/automations/
+/cache/
 /computer-use/
 /memories/
 /plugins/cache/
