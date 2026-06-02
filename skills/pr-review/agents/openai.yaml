@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Review"
+  short_description: "Review PR risk, code quality, scope, value, and readiness"
+  default_prompt: "Use $pr-review to review this PR for risk, code quality, scope, value, testability, and merge readiness."
