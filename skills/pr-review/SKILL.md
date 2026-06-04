@@ -84,6 +84,10 @@ Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
 - `Approve`：未发现阻塞问题，范围、价值、验证都足够清楚。
 - `Needs redesign`：问题主要来自方向、价值、范围或架构边界，无法靠局部 patch 修好。
 
+收敛判断（反复执行时）：当某轮无新增 `Blocker`/`Should Fix`、仅剩 `Nit` 或可选打磨时，显式声明「已达可合入收敛点，剩余为可选项」，不要为了找问题而继续升级 Nit；是否继续打磨交由我决定。
+
+若对当前结论仍不够满意（如证据不足、范围存疑、价值待确认），在末尾补一条简要的下一步建议（需要补的信息、可拆的边界或待验证的点），供我判断后再决定。
+
 ## 示例（正反对比）
 
 风险评估
