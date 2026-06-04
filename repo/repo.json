@@ -83,6 +83,10 @@
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
         {
+          "branch": "karabiner",
+          "editions": ["osx"]
+        },
+        {
           "branch": "kit",
           "editions": ["nix", "nix-remote", "osx", "win"]
         },
