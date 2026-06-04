@@ -1,0 +1,19 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Karabiner-Elements generated automatic backups
+automatic_backups/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Editor / tool local state
+.vscode/
+.idea/
