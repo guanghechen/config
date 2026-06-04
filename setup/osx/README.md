@@ -71,3 +71,12 @@ Open `System Settings` -> `Keyboard` -> `Keyboard Shortcuts`.
 - **Modifier Keys**
   - `Globe` -> `Control`
   - `Control` -> `Globe`
+
+## FAQ
+
+### Karabiner-Elements does not work
+
+1. Open `System Settings` -> `General` -> `Login Items & Extensions`, then make sure both Karabiner-related items are enabled.
+2. Karabiner-Elements also needs `Accessibility Access` and `Driver Extension` permissions. When the permission dialog appears, click `Open System Settings` and enable the requested permissions from the redirected settings page.
+3. The Windows App bundle item uses this `Bundle Identifier`: `com.microsoft.rdc.macos`.
+4. Use separate Karabiner-Elements profiles for different key mappings. This makes it possible to switch to a dedicated mapping when working inside a remote Windows session.

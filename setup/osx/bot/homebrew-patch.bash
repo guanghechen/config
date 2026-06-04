@@ -34,3 +34,9 @@ brew install FelixKratz/formulae/borders
 
 ### Install OSX System Utilities
 brew install mole
+
+### Install karabiner-elements
+### macOS built-in modifier-key remapping only applies to the local device. We need
+### Karabiner-Elements so keyboard key swaps keep working when this Mac controls
+### another macOS device through Universal Control.
+brew install --cask karabiner-elements
