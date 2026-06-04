@@ -76,6 +76,17 @@
         }
       ],
       "name": "win",
+      "simple_modifications": [
+        {
+          "from": { "key_code": "caps_lock" },
+          "to": [
+            {
+              "key_code": "left_shift",
+              "modifiers": ["left_option"]
+            }
+          ]
+        }
+      ],
       "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
     },
     {
@@ -181,6 +192,30 @@
                   "modifiers": { "optional": ["any"] }
                 },
                 "to": [{ "key_code": "left_command" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Use caps lock as left option left shift in Microsoft Remote Desktop",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": ["^com\\.microsoft\\.rdc\\.macos$"],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "caps_lock",
+                  "modifiers": { "optional": ["any"] }
+                },
+                "to": [
+                  {
+                    "key_code": "left_shift",
+                    "modifiers": ["left_option"]
+                  }
+                ],
                 "type": "basic"
               }
             ]
