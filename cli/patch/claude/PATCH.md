@@ -2,6 +2,8 @@
 
 Runtime patches for Claude Code CLI.
 
+Latest verified on WSL/Linux: Claude Code `2.1.163`
+
 ## Patches
 
 ### 1. Image Paste

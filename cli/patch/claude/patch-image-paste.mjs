@@ -37,6 +37,53 @@ function padToLength(value, length) {
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.163 - Windows patch
+  // Chat keybinding now maps Windows/WSL to Alt+V through a shared boolean:
+  //   fC_=zC_?"alt+v":"ctrl+v"
+  // Keep the replacement length stable for native binary patching.
+  {
+    name: 'win-image-paste-keybinding',
+    version: '2.1.163',
+    platform: ['win'],
+    search: new RegExp(`(${jsIdentifier})=(${jsIdentifier})\\?"alt\\+v":"ctrl\\+v"`),
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName, platformVar] = m.matched_groups
+        return `${varName}=${platformVar}?"ctrl+v":"ctr+v"`
+      }),
+    verify: (text) => new RegExp(`${jsIdentifier}=${jsIdentifier}\\?"ctrl\\+v":"ctr\\+v"`).test(text),
+  },
+  // 2.1.163 - WSL patches
+  // Upstream still tries the WSL clipboard before the Windows clipboard.
+  // Use the helper so images copied on the Windows side are checked first.
+  {
+    name: 'wsl-image-paste-checkImage',
+    version: '2.1.163',
+    platform: ['wsl'],
+    search:
+      'xclip -selection clipboard -t TARGETS -o 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)" || wl-paste -l 2>/dev/null | grep -E "image/(png|jpeg|jpg|gif|webp|bmp)"',
+    replace: (content, matches) =>
+      replaceAll(
+        content,
+        matches,
+        (m) => padToLength(`${wslImagePasteHelper} check`, m.matched_text.length),
+      ),
+    verify: (text) => text.includes(`${wslImagePasteHelper} check`),
+  },
+  {
+    name: 'wsl-image-paste-saveImage',
+    version: '2.1.163',
+    platform: ['wsl'],
+    search: new RegExp(
+      String.raw`xclip -selection clipboard -t image/png -o > \$\{(${jsIdentifier})\} 2>/dev/null \|\| wl-paste --type image/png > \$\{\1\} 2>/dev/null \|\| xclip -selection clipboard -t image/bmp -o > \$\{\1\} 2>/dev/null \|\| wl-paste --type image/bmp > \$\{\1\}`,
+    ),
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return padToLength(`${wslImagePasteHelper} save \${${varName}}`, m.matched_text.length)
+      }),
+    verify: (text) => text.includes(`${wslImagePasteHelper} save`),
+  },
   // 2.1.146 - Windows patch
   // Chat keybindings still use Alt+V on Windows:
   //   go1=s$()==="windows"?"alt+v":"ctrl+v"

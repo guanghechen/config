@@ -32,6 +32,32 @@ function hasPatchedContextWindow1m(text) {
 
 /** @type {IPatch[]} */
 const patches = [
+  // 2.1.163 - Context window constants keep the same role as 2.1.146.
+  {
+    name: 'context-window-200k',
+    version: '2.1.163',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: /var ([A-Za-z_$][A-Za-z0-9_$]*)=200000,[A-Za-z_$][A-Za-z0-9_$]*=20000,[A-Za-z_$][A-Za-z0-9_$]*=32000,[A-Za-z_$][A-Za-z0-9_$]*=128000/,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => m.matched_text.replace(/=200000/, `=${targetSize}`)),
+    verify: (text) =>
+      new RegExp(
+        `var ${jsIdentifier}=${targetSize},${jsIdentifier}=20000,${jsIdentifier}=32000,${jsIdentifier}=128000`,
+      ).test(text),
+  },
+  // 2.1.163 - 1M-capable branches keep the same shape as 2.1.146.
+  {
+    name: 'context-window-1e6',
+    version: '2.1.163',
+    platform: ['wsl', 'win', 'osx', 'nix'],
+    search: contextWindow1mSearch,
+    replace: (content, matches) =>
+      replaceAll(content, matches, (m) => {
+        const [varName] = m.matched_groups
+        return m.matched_text.replaceAll('return 1e6', `return ${varName}`)
+      }),
+    verify: hasPatchedContextWindow1m,
+  },
   // 2.1.146 - Context window constants keep the same role as 2.1.119,
   // but the trailing 8K constant is no longer adjacent in the bundle.
   {
