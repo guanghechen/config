@@ -1,6 +1,6 @@
 ---
 name: tmux-pane-collab
-description: Use when the user asks the current agent to communicate, discuss, or collaborate with another agent through tmux panes, and provides an explicit target pane ref such as %N, #N, or @M#N. Do not use without a target pane ref; never guess, scan for, or auto-select panes.
+description: Use when the user asks the current agent to communicate, discuss, or collaborate with another agent through tmux panes, and provides an explicit target pane ref such as %N, #N, or @M#N. Do not use without a target pane ref; never guess, scan for, or auto-select panes. For a structured code-review loop (findings, per-item resolution, consensus), use multi-agent-review instead.
 ---
 
 # Tmux Pane Collab
