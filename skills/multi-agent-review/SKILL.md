@@ -1,6 +1,6 @@
 ---
 name: multi-agent-review
-description: 用于在 tmux panes、TUI sessions 或 inline handoffs 中协调 primary agent 和 reviewer agent 进行结构化 code review、讨论 review comments、处理 findings，并达成 consensus。Use when the user asks one agent to ask another agent to review work, resolve findings, or reach consensus between agents.
+description: 用于在 tmux panes、TUI sessions 或 inline handoffs 中协调 primary agent 和 reviewer agent 进行结构化 code review、讨论 review comments、处理 findings，并达成 consensus。Use when the user asks one agent to ask another agent to review work, resolve findings, or reach consensus between agents. For lightweight agent messaging without the review-loop structure, use tmux-pane-collab.
 argument-hint: "[pane-ref | review scope]"
 ---
 
@@ -65,7 +65,7 @@ Interface contract：
 1. Identify roles and transport。
 - Primary 负责 implementation 和最终 resolution。
 - Reviewer 独立检查 correctness、security、regressions、tests 和 maintainability risks。
-- 如果用户提供了 tmux pane refs，按 `references/tmux-handoff.md` 使用 tmux commands。
+- 如果用户提供了 tmux pane refs，用 `tmux-pane-collab` skill 的 tmux transport conventions 发送 handoff，并遵守 `references/tmux-handoff.md` 的 review-specific notes。
 - 如果没有 pane refs，进入 inline handoff：生成 Review Packet 给用户转交 reviewer，并等待用户贴回 reviewer Findings；不要把 primary 自己的 self-review 当作 independent reviewer output。
 
 2. Run scope gate。
@@ -148,4 +148,4 @@ Primary should not：
 - `references/review-request.md`：primary 发给 reviewer 的 Review Packet 模板。
 - `references/review-findings.md`：reviewer 必须遵守的 Findings 格式。
 - `references/resolution-notes.md`：primary 逐条回应 findings 的 Resolution Notes 格式。
-- `references/tmux-handoff.md`：tmux pane command conventions 和 safety notes。
+- `references/tmux-handoff.md`：review-specific tmux notes；通用 tmux transport conventions 复用 `tmux-pane-collab` skill。
