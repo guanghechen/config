@@ -42,6 +42,7 @@ function _ghc_tmux_session_status_ {
   local status_bg=${5:-default}
   local sep_left=${6:-}
   local sep_right=${7:-}
+  local display_mode=${8:-index}
 
   local -a session_ids=()
   local -a session_names=()
@@ -64,7 +65,26 @@ function _ghc_tmux_session_status_ {
   for session_name in "${session_names[@]}"; do
     local session_id=${session_ids[$offset]}
 
-    if [ "${session_name}" == "${current_session_name}" ]; then
+    if [ "${display_mode}" == "kitty" ]; then
+      if [ "${index}" -gt 1 ]; then
+        printf ' '
+      fi
+
+      if [ "${session_name}" == "${current_session_name}" ]; then
+        local left_sep=$sep_left
+        if [ "${index}" -eq 1 ]; then
+          left_sep=
+        fi
+
+        printf '#[fg=%s,bg=%s]#[range=session|%s]%s#[fg=%s,bg=%s,bold] 󱝁 %s󱝁 #[fg=%s,bg=%s]%s#[norange]#[default]' \
+          "${current_bg}" "${status_bg}" "${session_id}" "${left_sep}" \
+          "${current_fg}" "${current_bg}" "${session_name}" \
+          "${current_bg}" "${status_bg}" "${sep_right}"
+      else
+        printf '#[%s]#[range=session|%s]%s | %s#[norange]#[default]' \
+          "${normal_style}" "${session_id}" "${session_name}" "${index}"
+      fi
+    elif [ "${session_name}" == "${current_session_name}" ]; then
       printf '#[fg=%s,bg=%s,bold]#[range=session|%s]%s%s%s#[norange]#[default]' \
         "${current_fg}" "${current_bg}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"
     else
