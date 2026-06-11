@@ -10,21 +10,17 @@ function _ghc_tmux_toggle_status_ {
   elif [ "$direction" == "forward" ]; then
     case "$mode" in
       "01") tmux set -g @GHC_SL_MODE "02" ;;
-      "02") tmux set -g @GHC_SL_MODE "03" ;;
-      "03") tmux set -g @GHC_SL_MODE "11" ;;
+      "02") tmux set -g @GHC_SL_MODE "11" ;;
       "11") tmux set -g @GHC_SL_MODE "12" ;;
-      "12") tmux set -g @GHC_SL_MODE "13" ;;
-      "13") tmux set -g @GHC_SL_MODE "01" ;;
+      "12") tmux set -g @GHC_SL_MODE "01" ;;
       *) tmux set -g @GHC_SL_MODE "01" ;;
     esac
   elif [ "$direction" == "backward" ]; then
     case "$mode" in
-      "01") tmux set -g @GHC_SL_MODE "13" ;;
+      "01") tmux set -g @GHC_SL_MODE "12" ;;
       "02") tmux set -g @GHC_SL_MODE "01" ;;
-      "03") tmux set -g @GHC_SL_MODE "02" ;;
-      "11") tmux set -g @GHC_SL_MODE "03" ;;
+      "11") tmux set -g @GHC_SL_MODE "02" ;;
       "12") tmux set -g @GHC_SL_MODE "11" ;;
-      "13") tmux set -g @GHC_SL_MODE "12" ;;
       *) tmux set -g @GHC_SL_MODE "01" ;;
     esac
   fi
