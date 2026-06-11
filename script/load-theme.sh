@@ -57,7 +57,7 @@ function _ghc_tmux_load_theme_ {
       tmux set -g status-position "$status_position"
       tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
       tmux set-hook -g 'client-resized[40]' "run-shell 'bash $HOME/.config/tmux/script/status-layout.sh'"
-      tmux run-shell "bash $HOME/.config/tmux/script/status-layout.sh"
+      bash "$HOME/.config/tmux/script/status-layout.sh"
       ;;
   esac
 
