@@ -46,11 +46,14 @@ function _ghc_tmux_focus_session_ {
     index=$((index + 1))
   done <<<"$sessions"
 
+  local session_count
+  session_count=$(echo "$sessions" | wc -l)
+
   # Calculate the index of the target session based on the direction
   if [ "$direction" == "prev" ]; then
-    target_index=$(((index - 1 + $(echo "$sessions" | wc -l)) % $(echo "$sessions" | wc -l)))
+    target_index=$(((index - 1 + session_count) % session_count))
   elif [ "$direction" == "next" ]; then
-    target_index=$(((index + 1) % $(echo "$sessions" | wc -l)))
+    target_index=$(((index + 1) % session_count))
   else
     echo "Invalid direction: $direction"
     exit 1
