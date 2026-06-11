@@ -43,34 +43,37 @@ function _ghc_tmux_session_status_ {
   local sep_left=${6:-}
   local sep_right=${7:-}
 
+  local -a session_ids=()
   local -a session_names=()
+  local session_separator=$'\t'
+  local session_id
   local session_name
-  while IFS= read -r session_name; do
+  while IFS="${session_separator}" read -r session_id session_name; do
     if _ghc_tmux_same_session_group_ "${current_session_name}" "${session_name}"; then
+      session_ids+=("${session_id}")
       session_names+=("${session_name}")
     fi
-  done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+  done < <(tmux list-sessions -F "#{session_id}${session_separator}#{session_name}" 2>/dev/null)
 
   if [ "${#session_names[@]}" -le 1 ]; then
     return
   fi
 
   local index=1
+  local offset=0
   for session_name in "${session_names[@]}"; do
-    if [ "${index}" -gt 1 ]; then
-      printf ' '
-    fi
+    local session_id=${session_ids[$offset]}
 
     if [ "${session_name}" == "${current_session_name}" ]; then
-      printf '#[fg=%s,bg=%s]%s#[fg=%s,bg=%s,bold]%s#[fg=%s,bg=%s]%s#[default]' \
-        "${current_bg}" "${status_bg}" "${sep_left}" \
-        "${current_fg}" "${current_bg}" "${index}" \
-        "${current_bg}" "${status_bg}" "${sep_right}"
+      printf '#[fg=%s,bg=%s,bold]#[range=session|%s]%s%s%s#[norange]#[default]' \
+        "${current_fg}" "${current_bg}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"
     else
-      printf '#[%s]%s#[default]' "${normal_style}" "${index}"
+      printf '#[%s]#[range=session|%s]%s%s%s#[norange]#[default]' \
+        "${normal_style}" "${session_id}" "${sep_left}" "${index}" "${sep_right}"
     fi
 
     index=$((index + 1))
+    offset=$((offset + 1))
   done
 }
 
