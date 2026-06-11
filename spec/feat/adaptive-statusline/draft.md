@@ -32,6 +32,6 @@ Consolidate tmux statusline modes and keep the adaptive mode that uses two statu
 
 - Implement `script/status-layout.sh` as the layout owner.
 - Use `client_width >= 200` as wide layout.
-- Narrow layout line 0: session/global info.
-- Narrow layout line 1: current session/window info.
+- Narrow layout line 0: host, current session, session list, and global info.
+- Narrow layout line 1: current window, pane, and app info.
 - Wide layout line 0: merged info using existing status-left/right plus window list.
