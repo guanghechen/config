@@ -36,8 +36,9 @@ argument-hint: "[pane-ref | message intent]"
    如果无法获取，且用户没有提供 reply pane，则要求用户补充。讨论、协商、等待回复等双向场景必须有 `Reply-To`；只有 one-way handoff 可省略。
 
 4. 构造结构化消息并发送到目标 pane。
-5. 如用户要求等待回复，用 `tmux capture-pane -ep -t '<target>'` 读取目标 pane。
-6. 多轮协作时保持同一 `Thread`，简洁延续上下文，不粘贴无关 scrollback。
+5. 发送后必须确认消息已经实际提交，而不是只停留在输入框。
+6. 如用户要求等待回复，用 `tmux capture-pane -ep -t '<target>'` 读取目标 pane。
+7. 多轮协作时保持同一 `Thread`，简洁延续上下文，不粘贴无关 scrollback。
 
 ## 消息格式
 
@@ -63,11 +64,10 @@ Response contract:
 
 ## 发送命令
 
-极短且无特殊字符的消息可用：
+极短且无特殊字符的消息，可直接键入文本（先不带 Enter，提交统一在下面 verify 步骤完成）：
 
 ```bash
-tmux send-keys -t '<target>' '<message>' Enter
-sleep 2 && tmux send-keys -t '<target>' C-m C-m
+tmux send-keys -t '<target>' '<message>'
 ```
 
 默认优先用 tmux buffer，尤其是多行消息或包含引号、反斜杠、shell 特殊字符的消息：
@@ -80,8 +80,19 @@ MSG
 tmux load-buffer "$tmp"
 tmux paste-buffer -t '<target>'
 rm -f "$tmp"
-sleep 2 && tmux send-keys -t '<target>' C-m C-m
 ```
+
+不论是上面哪种方式键入/paste，都不要假定已提交。先 capture 看状态，按状态触发（processing 优先判断），最后再 capture 确认：
+
+```bash
+tmux capture-pane -ep -t '<target>' | tail -40
+```
+
+- pane 正 processing（footer 如 `esc to interrupt`）：**绝不**发 `Escape`（会打断对方 turn）。footer 提示可排队就 `tmux send-keys -t '<target>' Tab`，否则等它空闲。
+- 空闲普通 prompt、文本未提交：`tmux send-keys -t '<target>' Enter`。
+- 模态编辑器残留 insert 态（vim 类 `-- INSERT --`）：`tmux send-keys -t '<target>' Escape` 后再 `... Enter`。
+
+再次 capture，直到 prompt 清空 / 进入 processing / 出现 queued 提示 / 对方开始回复，才算发送成功。未确认就继续 capture 判断，不要依赖固定 sleep。
 
 ## 规则
 

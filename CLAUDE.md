@@ -44,7 +44,10 @@
    - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
 2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-4. **CRITICAL**: Inter-agent communication: After sending message to agent pane, trigger with `sleep 2 && tmux send-keys -t {pane_ref} C-m C-m`
+4. **CRITICAL**: Inter-agent communication must verify actual submission, not just paste:
+   - Send multi-line messages via tmux buffer (`load-buffer` + `paste-buffer`) to avoid shell quoting issues; keying or pasting text does not submit it.
+   - `tmux capture-pane -ep -t {pane_ref}` first, then trigger by state (check processing FIRST): processing (footer shows `esc to interrupt`) → NEVER `Escape` (it interrupts the turn); send `Tab` only if a queue hint shows, else wait. Idle prompt, text unsent → `Enter`. Modal editor stuck in insert (vim-like `-- INSERT --`) → `Escape` then `Enter`.
+   - Re-capture to confirm (prompt cleared, processing started, message queued, or peer replied) before claiming sent; retry the capture instead of trusting a fixed delay.
 
 ## Architecture Governance
 
