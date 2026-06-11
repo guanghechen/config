@@ -76,9 +76,9 @@ function _ghc_tmux_session_status_ {
           left_sep=
         fi
 
-        printf '#[fg=%s,bg=%s]#[range=session|%s]%s#[fg=%s,bg=%s,bold] 󱝁 %s󱝁 #[fg=%s,bg=%s]%s#[norange]#[default]' \
+        printf '#[fg=%s,bg=%s]#[range=session|%s]%s#[fg=%s,bg=%s,bold] %s | %s #[fg=%s,bg=%s]%s#[norange]#[default]' \
           "${current_bg}" "${status_bg}" "${session_id}" "${left_sep}" \
-          "${current_fg}" "${current_bg}" "${session_name}" \
+          "${current_fg}" "${current_bg}" "${session_name}" "${index}" \
           "${current_bg}" "${status_bg}" "${sep_right}"
       else
         printf '#[%s]#[range=session|%s]%s | %s#[norange]#[default]' \
