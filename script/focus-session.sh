@@ -16,6 +16,27 @@ function _ghc_tmux_focus_session_ {
     sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9a-f]+$' | grep -v -E '^G[0-9]+-')
   fi
 
+  if [[ "${direction}" =~ ^[0-9]$ ]]; then
+    if [ "${direction}" == "0" ]; then
+      tmux display-message "No session at index ${direction}"
+      return 0
+    fi
+
+    local target_session_name
+    target_session_name=$(echo "${sessions}" | sed -n "${direction}p")
+
+    if [ -z "${target_session_name}" ]; then
+      tmux display-message "No session at index ${direction}"
+      return 0
+    fi
+
+    if [ "${current_session_name}" != "${target_session_name}" ]; then
+      tmux switch-client -t "${target_session_name}"
+    fi
+
+    return 0
+  fi
+
   # Find the index of the current session in the list of sessions
   local index=0
   while IFS= read -r session; do
