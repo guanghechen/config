@@ -11,6 +11,36 @@ function _ghc_tmux_set_status_ {
   fi
 }
 
+
+function _ghc_tmux_status_renderer_bin_ {
+  local status_renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  if [ -x "$status_renderer" ]; then
+    printf '%s\n' "$status_renderer"
+  fi
+}
+
+function _ghc_tmux_status02_layout_command_ {
+  local status_renderer
+  status_renderer=$(_ghc_tmux_status_renderer_bin_)
+  if [ -n "$status_renderer" ]; then
+    printf "run-shell '%s apply'\n" "$status_renderer"
+    return
+  fi
+
+  printf "run-shell 'bash %s/.config/tmux/script/status-layout.sh'\n" "$HOME"
+}
+
+function _ghc_tmux_apply_status02_layout_ {
+  local status_renderer
+  status_renderer=$(_ghc_tmux_status_renderer_bin_)
+  if [ -n "$status_renderer" ]; then
+    "$status_renderer" apply
+    return
+  fi
+
+  bash "$HOME/.config/tmux/script/status-layout.sh"
+}
+
 function _ghc_tmux_normalize_status_mode_ {
   local status_mode=$1
 
@@ -59,11 +89,12 @@ function _ghc_tmux_load_theme_ {
       tmux set -g status-justify centre
       tmux set -g status-position "$status_position"
       tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-      local layout_hook_command="run-shell 'bash $HOME/.config/tmux/script/status-layout.sh'"
+      local layout_hook_command
+      layout_hook_command=$(_ghc_tmux_status02_layout_command_)
       for layout_hook in 'client-resized[40]' 'client-session-changed[40]' 'session-created[40]' 'session-closed[40]' 'session-renamed[40]'; do
         tmux set-hook -g "$layout_hook" "$layout_hook_command"
       done
-      bash "$HOME/.config/tmux/script/status-layout.sh"
+      _ghc_tmux_apply_status02_layout_
       ;;
   esac
 
