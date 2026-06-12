@@ -33,6 +33,14 @@
    - Exposed pure (no side effects): Propagate errors transparently.
 9. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
 
+## Architecture Governance
+
+1. **ALWAYS**: For new feature work or non-trivial refactor tasks, follow `arch-gate` skill before implementation.
+   For tiny scoped changes, skipping is allowed only with an explicit reason.
+   Unresolved items must be centralized before implementation and must not be scattered in final design.
+2. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
+3. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
+
 ## Environment
 
 ### Tmux
@@ -46,11 +54,3 @@
 2. **CRITICAL**: Locate this agent's own pane via `$TMUX_PANE`; never use bare `tmux display-message -p '#{pane_id}'`, which returns the focused client's active pane.
 3. **ALWAYS**: Use `tmux capture-pane -ep -t {target}` to inspect a pane.
 4. **ALWAYS**: Choose tmux skill by intent: raw pane operations (inspect, shell/editor/TUI/agent pane keystrokes) use `tmux`; structured agent-to-agent messages use `tmux-pane-collab`.
-
-## Architecture Governance
-
-1. **ALWAYS**: For new feature work or non-trivial refactor tasks, follow `arch-gate` skill before implementation.
-   For tiny scoped changes, skipping is allowed only with an explicit reason.
-   Unresolved items must be centralized before implementation and must not be scattered in final design.
-2. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
-3. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
