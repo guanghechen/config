@@ -19,26 +19,29 @@ function _ghc_tmux_status_renderer_bin_ {
   fi
 }
 
-function _ghc_tmux_status02_layout_command_ {
-  local status_renderer
-  status_renderer=$(_ghc_tmux_status_renderer_bin_)
-  if [ -n "$status_renderer" ]; then
-    printf "run-shell '%s apply'\n" "$status_renderer"
-    return
-  fi
-
-  printf "run-shell 'bash %s/.config/tmux/script/status-layout.sh'\n" "$HOME"
+function _ghc_tmux_status_layout_hooks_ {
+  printf '%s\n' \
+    'client-resized[40]' \
+    'client-session-changed[40]' \
+    'session-created[40]' \
+    'session-closed[40]' \
+    'session-renamed[40]'
 }
 
-function _ghc_tmux_apply_status02_layout_ {
-  local status_renderer
-  status_renderer=$(_ghc_tmux_status_renderer_bin_)
-  if [ -n "$status_renderer" ]; then
-    "$status_renderer" apply
-    return
-  fi
+function _ghc_tmux_unset_status_layout_hooks_ {
+  local layout_hook
+  for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
+    tmux set-hook -gu "$layout_hook" 2>/dev/null || true
+  done
+}
 
-  bash "$HOME/.config/tmux/script/status-layout.sh"
+function _ghc_tmux_load_status01_ {
+  local status_position=$1
+
+  _ghc_tmux_set_status_ on
+  tmux set -g status-justify centre
+  tmux set -g status-position "$status_position"
+  tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
 }
 
 function _ghc_tmux_normalize_status_mode_ {
@@ -66,10 +69,7 @@ function _ghc_tmux_load_theme_ {
     tmux set -g @GHC_PSL_MODE "$panestatus_mode"
   fi
 
-  local layout_hook
-  for layout_hook in 'client-resized[40]' 'client-session-changed[40]' 'session-created[40]' 'session-closed[40]' 'session-renamed[40]'; do
-    tmux set-hook -gu "$layout_hook" 2>/dev/null || true
-  done
+  _ghc_tmux_unset_status_layout_hooks_
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
 
@@ -80,21 +80,31 @@ function _ghc_tmux_load_theme_ {
 
   case "$status_mode" in
     "01" | "11")
-      _ghc_tmux_set_status_ on
-      tmux set -g status-justify centre
-      tmux set -g status-position "$status_position"
-      tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
+      _ghc_tmux_load_status01_ "$status_position"
       ;;
     "02" | "12")
+      local status_renderer
+      status_renderer=$(_ghc_tmux_status_renderer_bin_)
       tmux set -g status-justify centre
       tmux set -g status-position "$status_position"
-      tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-      local layout_hook_command
-      layout_hook_command=$(_ghc_tmux_status02_layout_command_)
-      for layout_hook in 'client-resized[40]' 'client-session-changed[40]' 'session-created[40]' 'session-closed[40]' 'session-renamed[40]'; do
-        tmux set-hook -g "$layout_hook" "$layout_hook_command"
-      done
-      _ghc_tmux_apply_status02_layout_
+
+      if [ -z "$status_renderer" ]; then
+        _ghc_tmux_load_status01_ "$status_position"
+        tmux display-message "Rust status renderer missing; fallback to status01" 2>/dev/null || true
+      else
+        tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
+        local layout_hook
+        local layout_hook_command="run-shell '$status_renderer apply'"
+        for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
+          tmux set-hook -g "$layout_hook" "$layout_hook_command"
+        done
+
+        if ! "$status_renderer" apply; then
+          _ghc_tmux_unset_status_layout_hooks_
+          _ghc_tmux_load_status01_ "$status_position"
+          tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true
+        fi
+      fi
       ;;
   esac
 

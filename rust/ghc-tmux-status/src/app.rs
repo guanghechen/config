@@ -196,23 +196,23 @@ fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool {
     context
         .snapshot
         .options
-        .get("@GHC_SL_STATUS02_SESSION_FORMAT")
-        .is_some_and(|value| value == &rendered.session_format.rich_text)
+        .get("@GHC_SL_STATUS02_LEFT")
+        .is_some_and(|value| value == &rendered.status_left.rich_text)
+        && context
+            .snapshot
+            .options
+            .get("@GHC_SL_STATUS02_RIGHT")
+            .is_some_and(|value| value == &rendered.status_right.rich_text)
+        && context
+            .snapshot
+            .options
+            .get("@GHC_SL_STATUS02_SESSION_FORMAT")
+            .is_some_and(|value| value == &rendered.session_format.rich_text)
         && context
             .snapshot
             .options
             .get("@GHC_SL_STATUS02_CURRENT_FORMAT")
             .is_some_and(|value| value == &rendered.current_format.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("status-left")
-            .is_some_and(|value| value == &rendered.status_left.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("status-right")
-            .is_some_and(|value| value == &rendered.status_right.rich_text)
         && context
             .snapshot
             .options

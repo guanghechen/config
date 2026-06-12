@@ -25,6 +25,16 @@ impl TmuxAdapter {
         let mut args = vec![
             "set".to_string(),
             "-g".to_string(),
+            "@GHC_SL_STATUS02_LEFT".to_string(),
+            status.status_left.rich_text.clone(),
+            ";".to_string(),
+            "set".to_string(),
+            "-g".to_string(),
+            "@GHC_SL_STATUS02_RIGHT".to_string(),
+            status.status_right.rich_text.clone(),
+            ";".to_string(),
+            "set".to_string(),
+            "-g".to_string(),
             "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
             status.session_format.rich_text.clone(),
             ";".to_string(),
@@ -36,12 +46,12 @@ impl TmuxAdapter {
             "set".to_string(),
             "-g".to_string(),
             "status-left".to_string(),
-            status.status_left.rich_text.clone(),
+            "#{E:@GHC_SL_STATUS02_LEFT}".to_string(),
             ";".to_string(),
             "set".to_string(),
             "-g".to_string(),
             "status-right".to_string(),
-            status.status_right.rich_text.clone(),
+            "#{E:@GHC_SL_STATUS02_RIGHT}".to_string(),
         ];
 
         for (name, value) in component_cache_options {
@@ -312,10 +322,10 @@ const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
 const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_MODE",
     "@GHC_SL_LAYOUT",
+    "@GHC_SL_STATUS02_LEFT",
+    "@GHC_SL_STATUS02_RIGHT",
     "@GHC_SL_STATUS02_SESSION_FORMAT",
     "@GHC_SL_STATUS02_CURRENT_FORMAT",
-    "status-left",
-    "status-right",
     "@GHC_STATUS_COMPONENT_CACHE_session_list",
     "@GHC_STATUS_COMPONENT_CACHE_duration",
 ];
