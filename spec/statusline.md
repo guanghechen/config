@@ -9,7 +9,7 @@
 - 每个 component 必须实现 `snapshot` 和 `render`。
 - component 自己维护 cache、刷新策略和 degrade 策略。
 - `Tick` 是 render event，由 runtime 统一驱动。
-- CPU / memory / network 先只支持 macOS；其他平台隐藏 component。
+- CPU / memory / network 是三个独立 component；先只支持 macOS，其他平台隐藏。
 - tmux native window list 暂不重写。
 - dynamic plugin 暂不实现，只保留稳定边界。
 
@@ -313,12 +313,14 @@ ghc-tmux-status dump-state
 | `layout`          | pure layout calculation         |
 | `dump-state`      | print debug snapshot/state      |
 
-## 12. System Metrics
+## 12. Metrics Components
 
-component：
+components：
 
 ```text
-SystemMetricsComponent
+CpuComponent
+MemoryComponent
+NetworkComponent
 ```
 
 显示内容：
@@ -343,14 +345,18 @@ src/platform.rs
 src/metric/mod.rs
 src/metric/darwin.rs
 src/metric/unsupported.rs
-src/component/system_metrics.rs
+src/component/cpu.rs
+src/component/memory.rs
+src/component/network.rs
 ```
 
 provider：
 
 ```rust
 pub trait MetricsProvider {
-    fn sample(&self, previous: Option<&SystemMetricsSample>) -> AppResult<SystemMetricsSnapshot>;
+    fn sample_cpu(&self) -> AppResult<CpuSnapshot>;
+    fn sample_memory(&self) -> AppResult<MemorySnapshot>;
+    fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot>;
 }
 ```
 
@@ -374,7 +380,7 @@ tx_speed = (current_tx_bytes - previous_tx_bytes) / elapsed_seconds
 - 默认 interface：`en0`。
 - 允许未来通过 tmux option 覆盖 interface。
 - counter reset / negative delta：本次 speed = `0`，刷新 cache。
-- unsupported / parse failure：隐藏 component。
+- unsupported / parse failure：隐藏对应 component。
 
 ## 13. Theme
 
@@ -440,7 +446,9 @@ window_id
 optional components：
 
 ```text
-system_metrics
+cpu
+memory
+network
 ```
 
 ## 16. Tests
@@ -458,5 +466,5 @@ literal_text width
 component cache reuse
 final cache no-op
 Rust missing / apply failed fallback
-macOS metrics success / parse failure / counter reset
+macOS cpu/memory/network success / parse failure / counter reset
 ```

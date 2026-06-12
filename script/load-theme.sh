@@ -93,13 +93,13 @@ function _ghc_tmux_load_theme_ {
         tmux display-message "Rust status renderer missing; fallback to status01" 2>/dev/null || true
       else
         tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-        local layout_hook
-        local layout_hook_command="run-shell '$status_renderer apply'"
-        for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
-          tmux set-hook -g "$layout_hook" "$layout_hook_command"
-        done
+        tmux set-hook -g 'client-resized[40]' "run-shell '$status_renderer apply client-resized'"
+        tmux set-hook -g 'client-session-changed[40]' "run-shell '$status_renderer apply session-changed'"
+        tmux set-hook -g 'session-created[40]' "run-shell '$status_renderer apply session-created'"
+        tmux set-hook -g 'session-closed[40]' "run-shell '$status_renderer apply session-closed'"
+        tmux set-hook -g 'session-renamed[40]' "run-shell '$status_renderer apply session-renamed'"
 
-        if ! "$status_renderer" apply; then
+        if ! "$status_renderer" apply theme-loaded; then
           _ghc_tmux_unset_status_layout_hooks_
           _ghc_tmux_load_status01_ "$status_position"
           tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true

@@ -1,12 +1,13 @@
 use crate::cache::TmuxComponentCache;
 use crate::component::{
-    DateComponent, DurationComponent, FullscreenComponent, HostComponent, PrefixIndicatorComponent,
-    SessionBellComponent, SessionListComponent, TimeComponent, WindowIdComponent,
+    CpuComponent, DateComponent, DurationComponent, FullscreenComponent, HostComponent,
+    MemoryComponent, NetworkComponent, PrefixIndicatorComponent, SessionBellComponent,
+    SessionListComponent, TimeComponent, WindowIdComponent,
 };
 use crate::composer::render_components;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
-use crate::model::{LayoutKind, RenderContext, RenderedSegment, RenderedStatus};
+use crate::model::{LayoutKind, RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
 use crate::session_group::SessionGrouper;
 use crate::status_component::StatusComponent;
 use crate::tmux::TmuxAdapter;
@@ -23,12 +24,12 @@ impl StatusApp {
         }
     }
 
-    pub fn apply(&self) -> AppResult<()> {
+    pub fn apply(&self, event: RenderEvent) -> AppResult<()> {
         let Some(context) = self.live_context_if_active()? else {
             return Ok(());
         };
-        let (rendered, cache_options) = self.render_status02(&context)?;
-        if cache_matches(&context, &rendered) {
+        let (rendered, cache_options) = self.render_status02(&context, &event)?;
+        if cache_matches(&context, &rendered) && cache_options.is_empty() {
             return Ok(());
         }
         self.tmux
@@ -37,7 +38,8 @@ impl StatusApp {
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
         let context = self.live_context()?;
-        let (rendered, _cache_options) = self.render_status02(&context)?;
+        let event = RenderEvent::manual_apply();
+        let (rendered, _cache_options) = self.render_status02(&context, &event)?;
         println!("status-left={}", rendered.status_left.rich_text);
         println!("status-right={}", rendered.status_right.rich_text);
         println!(
@@ -108,29 +110,37 @@ impl StatusApp {
     fn render_status02(
         &self,
         context: &RenderContext,
+        event: &RenderEvent,
     ) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
         let mut cache = TmuxComponentCache::from_options(&context.snapshot.options);
 
         let mut host = HostComponent;
         let mut session_list = SessionListComponent;
         let mut left_components: [&mut dyn StatusComponent; 2] = [&mut host, &mut session_list];
-        let status_left = render_components(&mut left_components, context, &mut cache)?;
+        let status_left = render_components(&mut left_components, context, event, &mut cache)?;
 
         let mut fullscreen = FullscreenComponent;
         let mut window_id = WindowIdComponent;
         let mut prefix = PrefixIndicatorComponent;
+        let mut cpu = CpuComponent;
+        let mut memory = MemoryComponent;
+        let mut network = NetworkComponent;
         let mut duration = DurationComponent;
         let mut date = DateComponent;
         let mut time = TimeComponent;
-        let mut right_components: [&mut dyn StatusComponent; 6] = [
+        let mut right_components: [&mut dyn StatusComponent; 9] = [
             &mut fullscreen,
             &mut window_id,
             &mut prefix,
+            &mut cpu,
+            &mut memory,
+            &mut network,
             &mut duration,
             &mut date,
             &mut time,
         ];
-        let status_right_body = render_components(&mut right_components, context, &mut cache)?;
+        let status_right_body =
+            render_components(&mut right_components, context, event, &mut cache)?;
         let status_right = RenderedSegment {
             literal_text: format!(" {}", status_right_body.literal_text),
             rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
@@ -138,17 +148,23 @@ impl StatusApp {
 
         let mut row0_right_prefix = PrefixIndicatorComponent;
         let mut row0_bell = SessionBellComponent;
+        let mut row0_cpu = CpuComponent;
+        let mut row0_memory = MemoryComponent;
+        let mut row0_network = NetworkComponent;
         let mut row0_duration = DurationComponent;
         let mut row0_date = DateComponent;
         let mut row0_time = TimeComponent;
-        let mut row0_right_components: [&mut dyn StatusComponent; 5] = [
+        let mut row0_right_components: [&mut dyn StatusComponent; 8] = [
             &mut row0_right_prefix,
             &mut row0_bell,
+            &mut row0_cpu,
+            &mut row0_memory,
+            &mut row0_network,
             &mut row0_duration,
             &mut row0_date,
             &mut row0_time,
         ];
-        let row0_right = render_components(&mut row0_right_components, context, &mut cache)?;
+        let row0_right = render_components(&mut row0_right_components, context, event, &mut cache)?;
 
         let session_format = RenderedSegment {
             literal_text: format!("{}{}", status_left.literal_text, row0_right.literal_text),
@@ -162,7 +178,7 @@ impl StatusApp {
         let mut row1_window_id = WindowIdComponent;
         let mut row1_right_components: [&mut dyn StatusComponent; 2] =
             [&mut row1_fullscreen, &mut row1_window_id];
-        let row1_right = render_components(&mut row1_right_components, context, &mut cache)?;
+        let row1_right = render_components(&mut row1_right_components, context, event, &mut cache)?;
         let current_format = RenderedSegment {
             literal_text: row1_right.literal_text,
             rich_text: format_current_format(&row1_right.rich_text),

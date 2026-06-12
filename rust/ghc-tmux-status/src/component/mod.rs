@@ -1,17 +1,23 @@
+mod cpu;
 mod date;
 mod duration;
 mod fullscreen;
 mod host;
+mod memory;
+mod network;
 mod prefix_indicator;
 mod session_bell;
 mod session_list;
 mod time;
 mod window_id;
 
+pub use cpu::CpuComponent;
 pub use date::DateComponent;
 pub use duration::DurationComponent;
 pub use fullscreen::FullscreenComponent;
 pub use host::HostComponent;
+pub use memory::MemoryComponent;
+pub use network::NetworkComponent;
 pub use prefix_indicator::PrefixIndicatorComponent;
 pub use session_bell::SessionBellComponent;
 pub use session_list::SessionListComponent;

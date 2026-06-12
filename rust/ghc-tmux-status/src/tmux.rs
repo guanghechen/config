@@ -326,8 +326,18 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_STATUS02_RIGHT",
     "@GHC_SL_STATUS02_SESSION_FORMAT",
     "@GHC_SL_STATUS02_CURRENT_FORMAT",
+    "@GHC_STATUS_COMPONENT_CACHE_host",
+    "@GHC_STATUS_COMPONENT_CACHE_prefix_indicator",
+    "@GHC_STATUS_COMPONENT_CACHE_session_bell",
+    "@GHC_STATUS_COMPONENT_CACHE_date",
+    "@GHC_STATUS_COMPONENT_CACHE_time",
+    "@GHC_STATUS_COMPONENT_CACHE_fullscreen",
+    "@GHC_STATUS_COMPONENT_CACHE_window_id",
     "@GHC_STATUS_COMPONENT_CACHE_session_list",
     "@GHC_STATUS_COMPONENT_CACHE_duration",
+    "@GHC_STATUS_COMPONENT_CACHE_cpu",
+    "@GHC_STATUS_COMPONENT_CACHE_memory",
+    "@GHC_STATUS_COMPONENT_CACHE_network",
 ];
 
 #[cfg(test)]
@@ -363,7 +373,11 @@ $2	dev"
     fn parses_empty_status_and_tabbed_cache_options() {
         let mut option_values = vec![""; SNAPSHOT_OPTION_NAMES.len()];
         option_values[0] = "02";
-        option_values[6] = "key	literal	rich";
+        let session_list_index = SNAPSHOT_OPTION_NAMES
+            .iter()
+            .position(|name| *name == "@GHC_STATUS_COMPONENT_CACHE_session_list")
+            .unwrap();
+        option_values[session_list_index] = "key	literal	rich";
         let options = option_values.join(&FIELD_SEP.to_string());
         let output = format!(
             "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42

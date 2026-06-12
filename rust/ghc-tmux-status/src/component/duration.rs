@@ -1,7 +1,7 @@
 use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::StatusComponent;
+use crate::model::{RenderContext, RenderEvent, RenderedSegment};
+use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
 
 pub struct DurationComponent;
 
@@ -10,21 +10,26 @@ impl StatusComponent for DurationComponent {
         "duration"
     }
 
-    fn render(
+    fn interests(&self) -> ComponentInterests {
+        ComponentInterests::Periodic { interval_secs: 20 }
+    }
+
+    fn snapshot(
         &mut self,
         context: &RenderContext,
+        _event: &RenderEvent,
         cache: &mut dyn ComponentCache,
-    ) -> AppResult<RenderedSegment> {
+    ) -> AppResult<ComponentSnapshot> {
         let now = unix_now();
         let minute_bucket = now / 60;
         let cache_key = format!("{}:{minute_bucket}", context.snapshot.session_created);
         if let Some(cached) = cache.get(self.id(), &cache_key)
             && let Some((literal_text, rich_text)) = cached.split_once('\t')
         {
-            return Ok(RenderedSegment {
+            return Ok(ComponentSnapshot::Rendered(RenderedSegment {
                 literal_text: literal_text.to_string(),
                 rich_text: rich_text.to_string(),
-            });
+            }));
         }
 
         let duration = format_duration(now.saturating_sub(context.snapshot.session_created));
@@ -37,7 +42,7 @@ impl StatusComponent for DurationComponent {
             &cache_key,
             format!("{}\t{}", rendered.literal_text, rendered.rich_text),
         );
-        Ok(rendered)
+        Ok(ComponentSnapshot::Rendered(rendered))
     }
 }
 

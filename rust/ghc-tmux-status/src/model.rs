@@ -1,5 +1,46 @@
 use std::collections::BTreeMap;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum RenderEventKind {
+    Tick,
+    ThemeLoaded,
+    ClientResized,
+    SessionChanged,
+    SessionCreated,
+    SessionClosed,
+    SessionRenamed,
+    ManualApply,
+}
+
+impl RenderEventKind {
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "tick" => Some(Self::Tick),
+            "theme-loaded" => Some(Self::ThemeLoaded),
+            "client-resized" => Some(Self::ClientResized),
+            "session-changed" => Some(Self::SessionChanged),
+            "session-created" => Some(Self::SessionCreated),
+            "session-closed" => Some(Self::SessionClosed),
+            "session-renamed" => Some(Self::SessionRenamed),
+            "manual-apply" => Some(Self::ManualApply),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RenderEvent {
+    pub kind: RenderEventKind,
+}
+
+impl RenderEvent {
+    pub fn manual_apply() -> Self {
+        Self {
+            kind: RenderEventKind::ManualApply,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionInfo {
     pub id: String,

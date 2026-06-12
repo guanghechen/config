@@ -4,7 +4,9 @@ mod component;
 mod composer;
 mod error;
 mod layout;
+mod metric;
 mod model;
+mod platform;
 mod session_group;
 mod status_component;
 mod tmux;
@@ -13,6 +15,7 @@ mod width;
 use crate::app::StatusApp;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
+use crate::model::{RenderEvent, RenderEventKind};
 
 fn main() {
     if let Err(error) = run() {
@@ -30,7 +33,16 @@ fn run() -> AppResult<()> {
 
     let app = StatusApp::live();
     match command.as_str() {
-        "apply" => app.apply(),
+        "apply" => {
+            let event = match args.next() {
+                Some(value) => RenderEvent {
+                    kind: RenderEventKind::parse(&value)
+                        .ok_or_else(|| AppError::Usage(format!("unknown render event: {value}")))?,
+                },
+                None => RenderEvent::manual_apply(),
+            };
+            app.apply(event)
+        }
         "dump-state" => app.dump_state(),
         "render" => match args.next().as_deref() {
             Some("status02") => app.render_status02_stdout(),
