@@ -1,11 +1,13 @@
 use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::metric::{MemorySnapshot, provider_for};
+use crate::metric::{MemorySnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::platform::current_platform;
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
-pub struct MemoryComponent;
+#[derive(Default)]
+pub struct MemoryComponent {
+    snapshot: Option<MemorySnapshot>,
+}
 
 impl StatusComponent for MemoryComponent {
     fn id(&self) -> &'static str {
@@ -21,28 +23,32 @@ impl StatusComponent for MemoryComponent {
         _context: &RenderContext,
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
-        let cache_key = "v4";
-        let cached = cache.get(self.id(), cache_key).and_then(parse_cache);
-        if let Some((timestamp, rendered)) = cached.as_ref()
-            && (!should_refresh(event) || is_fresh(*timestamp))
+    ) -> AppResult<()> {
+        let cached = cache.get(self.id()).and_then(parse_cache);
+        if let Some(snapshot) = cached.clone()
+            && (!should_refresh(event) || is_fresh(snapshot.timestamp_seconds))
         {
-            return Ok(ComponentSnapshot::Rendered(rendered.clone()));
+            self.snapshot = Some(snapshot);
+            return Ok(());
         }
 
-        let provider = provider_for(current_platform());
-        match provider.sample_memory() {
+        let provider = provider_for_current_platform();
+        self.snapshot = match provider.sample_memory() {
             Ok(snapshot) => {
-                let rendered = render_memory(&snapshot);
-                cache.set(self.id(), cache_key, encode_cache(&snapshot, &rendered));
-                Ok(ComponentSnapshot::Rendered(rendered))
+                cache.set(self.id(), encode_cache(&snapshot));
+                Some(snapshot)
             }
-            Err(_) => Ok(ComponentSnapshot::Rendered(
-                cached
-                    .map(|(_, rendered)| rendered)
-                    .unwrap_or_else(RenderedSegment::empty),
-            )),
-        }
+            Err(_) => cached,
+        };
+        Ok(())
+    }
+
+    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(self
+            .snapshot
+            .as_ref()
+            .map(render_memory)
+            .unwrap_or_else(RenderedSegment::empty))
     }
 }
 
@@ -70,25 +76,16 @@ fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
     }
 }
 
-fn encode_cache(snapshot: &MemorySnapshot, rendered: &RenderedSegment) -> String {
-    format!(
-        "{}\t{}\t{}",
-        snapshot.timestamp_seconds, rendered.literal_text, rendered.rich_text
-    )
+fn encode_cache(snapshot: &MemorySnapshot) -> String {
+    format!("{}\t{}", snapshot.timestamp_seconds, snapshot.percent)
 }
 
-fn parse_cache(value: &str) -> Option<(u64, RenderedSegment)> {
-    let mut parts = value.splitn(3, '\t');
-    let timestamp_seconds = parts.next()?.parse::<u64>().ok()?;
-    let literal_text = parts.next()?.to_string();
-    let rich_text = parts.next()?.to_string();
-    Some((
-        timestamp_seconds,
-        RenderedSegment {
-            literal_text,
-            rich_text,
-        },
-    ))
+fn parse_cache(value: &str) -> Option<MemorySnapshot> {
+    let mut parts = value.splitn(2, '\t');
+    Some(MemorySnapshot {
+        timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
+        percent: parts.next()?.parse::<f64>().ok()?,
+    })
 }
 
 fn unix_now() -> u64 {
@@ -109,9 +106,7 @@ mod tests {
             percent: 47.0,
             timestamp_seconds: 1,
         };
-        let rendered = super::render_memory(&snapshot);
-        let parsed = parse_cache(&encode_cache(&snapshot, &rendered)).unwrap();
-        assert_eq!(parsed.0, 1);
-        assert_eq!(parsed.1, rendered);
+        let parsed = parse_cache(&encode_cache(&snapshot)).unwrap();
+        assert_eq!(parsed, snapshot);
     }
 }

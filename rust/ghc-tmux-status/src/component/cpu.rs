@@ -1,11 +1,13 @@
 use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::metric::{CpuSnapshot, provider_for};
+use crate::metric::{CpuSample, CpuSnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::platform::current_platform;
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
-pub struct CpuComponent;
+#[derive(Default)]
+pub struct CpuComponent {
+    snapshot: Option<CpuSnapshot>,
+}
 
 impl StatusComponent for CpuComponent {
     fn id(&self) -> &'static str {
@@ -21,28 +23,33 @@ impl StatusComponent for CpuComponent {
         _context: &RenderContext,
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
-        let cache_key = "v4";
-        let cached = cache.get(self.id(), cache_key).and_then(parse_cache);
-        if let Some((timestamp, rendered)) = cached.as_ref()
-            && (!should_refresh(event) || is_fresh(*timestamp))
+    ) -> AppResult<()> {
+        let cached = cache.get(self.id()).and_then(parse_cache);
+        if let Some(snapshot) = cached.clone()
+            && (!should_refresh(event) || is_fresh(snapshot.timestamp_seconds))
         {
-            return Ok(ComponentSnapshot::Rendered(rendered.clone()));
+            self.snapshot = Some(snapshot);
+            return Ok(());
         }
 
-        let provider = provider_for(current_platform());
-        match provider.sample_cpu() {
+        let provider = provider_for_current_platform();
+        self.snapshot = match provider.sample_cpu(cached.as_ref().map(|snapshot| &snapshot.sample))
+        {
             Ok(snapshot) => {
-                let rendered = render_cpu(&snapshot);
-                cache.set(self.id(), cache_key, encode_cache(&snapshot, &rendered));
-                Ok(ComponentSnapshot::Rendered(rendered))
+                cache.set(self.id(), encode_cache(&snapshot));
+                Some(snapshot)
             }
-            Err(_) => Ok(ComponentSnapshot::Rendered(
-                cached
-                    .map(|(_, rendered)| rendered)
-                    .unwrap_or_else(RenderedSegment::empty),
-            )),
-        }
+            Err(_) => cached,
+        };
+        Ok(())
+    }
+
+    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(self
+            .snapshot
+            .as_ref()
+            .map(render_cpu)
+            .unwrap_or_else(RenderedSegment::empty))
     }
 }
 
@@ -70,25 +77,30 @@ fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
     }
 }
 
-fn encode_cache(snapshot: &CpuSnapshot, rendered: &RenderedSegment) -> String {
+fn encode_cache(snapshot: &CpuSnapshot) -> String {
     format!(
-        "{}\t{}\t{}",
-        snapshot.timestamp_seconds, rendered.literal_text, rendered.rich_text
+        "{}\t{}\t{}\t{}\t{}\t{}",
+        snapshot.timestamp_seconds,
+        snapshot.percent,
+        snapshot.sample.user,
+        snapshot.sample.nice,
+        snapshot.sample.system,
+        snapshot.sample.idle
     )
 }
 
-fn parse_cache(value: &str) -> Option<(u64, RenderedSegment)> {
-    let mut parts = value.splitn(3, '\t');
-    let timestamp_seconds = parts.next()?.parse::<u64>().ok()?;
-    let literal_text = parts.next()?.to_string();
-    let rich_text = parts.next()?.to_string();
-    Some((
-        timestamp_seconds,
-        RenderedSegment {
-            literal_text,
-            rich_text,
+fn parse_cache(value: &str) -> Option<CpuSnapshot> {
+    let mut parts = value.splitn(6, '\t');
+    Some(CpuSnapshot {
+        timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
+        percent: parts.next()?.parse::<f64>().ok()?,
+        sample: CpuSample {
+            user: parts.next()?.parse::<u64>().ok()?,
+            nice: parts.next()?.parse::<u64>().ok()?,
+            system: parts.next()?.parse::<u64>().ok()?,
+            idle: parts.next()?.parse::<u64>().ok()?,
         },
-    ))
+    })
 }
 
 fn unix_now() -> u64 {
@@ -101,17 +113,21 @@ fn unix_now() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{encode_cache, parse_cache};
-    use crate::metric::CpuSnapshot;
+    use crate::metric::{CpuSample, CpuSnapshot};
 
     #[test]
     fn parses_cpu_cache() {
         let snapshot = CpuSnapshot {
             percent: 12.0,
             timestamp_seconds: 1,
+            sample: CpuSample {
+                user: 1,
+                nice: 2,
+                system: 3,
+                idle: 4,
+            },
         };
-        let rendered = super::render_cpu(&snapshot);
-        let parsed = parse_cache(&encode_cache(&snapshot, &rendered)).unwrap();
-        assert_eq!(parsed.0, 1);
-        assert_eq!(parsed.1, rendered);
+        let parsed = parse_cache(&encode_cache(&snapshot)).unwrap();
+        assert_eq!(parsed, snapshot);
     }
 }

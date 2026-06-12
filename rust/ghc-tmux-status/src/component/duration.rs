@@ -1,9 +1,12 @@
 use crate::cache::ComponentCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
-pub struct DurationComponent;
+#[derive(Default)]
+pub struct DurationComponent {
+    duration: String,
+}
 
 impl StatusComponent for DurationComponent {
     fn id(&self) -> &'static str {
@@ -18,31 +21,23 @@ impl StatusComponent for DurationComponent {
         &mut self,
         context: &RenderContext,
         _event: &RenderEvent,
-        cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
-        let now = unix_now();
-        let minute_bucket = now / 60;
-        let cache_key = format!("{}:{minute_bucket}", context.snapshot.session_created);
-        if let Some(cached) = cache.get(self.id(), &cache_key)
-            && let Some((literal_text, rich_text)) = cached.split_once('\t')
-        {
-            return Ok(ComponentSnapshot::Rendered(RenderedSegment {
-                literal_text: literal_text.to_string(),
-                rich_text: rich_text.to_string(),
-            }));
-        }
+        _cache: &mut dyn ComponentCache,
+    ) -> AppResult<()> {
+        self.duration =
+            format_duration(unix_now().saturating_sub(context.snapshot.session_created));
+        Ok(())
+    }
 
-        let duration = format_duration(now.saturating_sub(context.snapshot.session_created));
-        let rendered = RenderedSegment {
-            literal_text: format!(" {duration} "),
-            rich_text: "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_DURATION} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #(~/.config/tmux/script/duration.sh #{session_created}) ".to_string(),
-        };
-        cache.set(
-            self.id(),
-            &cache_key,
-            format!("{}\t{}", rendered.literal_text, rendered.rich_text),
+    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        let literal_text = format!(" {} ", self.duration);
+        let rich_text = format!(
+            "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {} ",
+            self.duration
         );
-        Ok(ComponentSnapshot::Rendered(rendered))
+        Ok(RenderedSegment {
+            literal_text,
+            rich_text,
+        })
     }
 }
 

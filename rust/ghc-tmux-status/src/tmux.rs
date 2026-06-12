@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 use std::process::Command;
 
+use crate::commit::TmuxCommandPlan;
 use crate::error::{AppError, AppResult};
-use crate::model::{RenderContext, RenderedStatus, SessionInfo, TmuxSnapshot};
+use crate::model::{SessionInfo, TmuxSnapshot};
 
 pub struct TmuxAdapter;
 
@@ -16,106 +17,18 @@ impl TmuxAdapter {
         parse_snapshot_output(&output)
     }
 
-    pub fn commit_status02(
-        &self,
-        status: &RenderedStatus,
-        context: &RenderContext,
-        component_cache_options: Vec<(String, String)>,
-    ) -> AppResult<()> {
-        let mut args = vec![
-            "set".to_string(),
-            "-g".to_string(),
-            "@GHC_SL_STATUS02_LEFT".to_string(),
-            status.status_left.rich_text.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "@GHC_SL_STATUS02_RIGHT".to_string(),
-            status.status_right.rich_text.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-            status.session_format.rich_text.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-            status.current_format.rich_text.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "status-left".to_string(),
-            "#{E:@GHC_SL_STATUS02_LEFT}".to_string(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "status-right".to_string(),
-            "#{E:@GHC_SL_STATUS02_RIGHT}".to_string(),
-        ];
-
-        for (name, value) in component_cache_options {
-            args.extend([
-                ";".to_string(),
-                "set".to_string(),
-                "-g".to_string(),
-                name,
-                value,
-            ]);
+    pub fn commit_plan(&self, plan: &TmuxCommandPlan) -> AppResult<()> {
+        if plan.is_empty() {
+            return Ok(());
         }
 
-        let plan = &context.layout;
-
-        args.extend([
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "@GHC_SL_LAYOUT".to_string(),
-            plan.key.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "status-position".to_string(),
-            plan.position.as_str().to_string(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "status-justify".to_string(),
-            "centre".to_string(),
-            ";".to_string(),
-            "set".to_string(),
-            "-g".to_string(),
-            "status".to_string(),
-            plan.target_status.clone(),
-            ";".to_string(),
-            "set".to_string(),
-            "status".to_string(),
-            plan.target_status.clone(),
-        ]);
-
-        if plan.rows == 1 {
-            args.extend([
-                ";".to_string(),
-                "set".to_string(),
-                "-gu".to_string(),
-                "status-format".to_string(),
-            ]);
-        } else {
-            args.extend([
-                ";".to_string(),
-                "set".to_string(),
-                "-g".to_string(),
-                "status-format[0]".to_string(),
-                "#{E:@GHC_SL_STATUS02_SESSION_FORMAT}".to_string(),
-                ";".to_string(),
-                "set".to_string(),
-                "-g".to_string(),
-                "status-format[1]".to_string(),
-                "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}".to_string(),
-            ]);
+        let combined = self.tmux_status(plan.to_tmux_args());
+        if combined.is_err() {
+            for command in &plan.commands {
+                self.tmux_status(command.args())?;
+            }
         }
 
-        self.tmux_status(args)?;
         let _ = self.tmux_status(["refresh-client".to_string(), "-S".to_string()]);
         Ok(())
     }
@@ -326,15 +239,6 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_STATUS02_RIGHT",
     "@GHC_SL_STATUS02_SESSION_FORMAT",
     "@GHC_SL_STATUS02_CURRENT_FORMAT",
-    "@GHC_STATUS_COMPONENT_CACHE_host",
-    "@GHC_STATUS_COMPONENT_CACHE_prefix_indicator",
-    "@GHC_STATUS_COMPONENT_CACHE_session_bell",
-    "@GHC_STATUS_COMPONENT_CACHE_date",
-    "@GHC_STATUS_COMPONENT_CACHE_time",
-    "@GHC_STATUS_COMPONENT_CACHE_fullscreen",
-    "@GHC_STATUS_COMPONENT_CACHE_window_id",
-    "@GHC_STATUS_COMPONENT_CACHE_session_list",
-    "@GHC_STATUS_COMPONENT_CACHE_duration",
     "@GHC_STATUS_COMPONENT_CACHE_cpu",
     "@GHC_STATUS_COMPONENT_CACHE_memory",
     "@GHC_STATUS_COMPONENT_CACHE_network",
@@ -373,11 +277,11 @@ $2	dev"
     fn parses_empty_status_and_tabbed_cache_options() {
         let mut option_values = vec![""; SNAPSHOT_OPTION_NAMES.len()];
         option_values[0] = "02";
-        let session_list_index = SNAPSHOT_OPTION_NAMES
+        let network_index = SNAPSHOT_OPTION_NAMES
             .iter()
-            .position(|name| *name == "@GHC_STATUS_COMPONENT_CACHE_session_list")
+            .position(|name| *name == "@GHC_STATUS_COMPONENT_CACHE_network")
             .unwrap();
-        option_values[session_list_index] = "key	literal	rich";
+        option_values[network_index] = "1	2	3	4	5";
         let options = option_values.join(&FIELD_SEP.to_string());
         let output = format!(
             "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42
@@ -393,9 +297,9 @@ $1	yui"
         assert_eq!(
             snapshot
                 .options
-                .get("@GHC_STATUS_COMPONENT_CACHE_session_list")
+                .get("@GHC_STATUS_COMPONENT_CACHE_network")
                 .unwrap(),
-            "key	literal	rich"
+            "1	2	3	4	5"
         );
     }
 }

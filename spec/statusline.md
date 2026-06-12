@@ -4,12 +4,12 @@
 
 - `status02` 由 Rust renderer 持有；`status01` 是 fallback。
 - 当前实现使用 CLI + tmux option cache，不使用 daemon。
-- `StatusLineRuntime` 监听事件、分发 component、compose、commit。
-- component 不持有 `StatusLineRuntime`，不直接读写 tmux。
+- `StatusRuntime` 负责 read snapshot、resolve context、render components、compose、commit。
+- component 不持有 `StatusRuntime`，不直接读写 tmux。
 - 每个 component 必须实现 `snapshot` 和 `render`。
-- component 自己维护 cache、刷新策略和 degrade 策略。
+- component 自己维护 snapshot、bounded cache、刷新策略和 degrade 策略。
 - `Tick` 是 render event，由 runtime 统一驱动。
-- CPU / memory / network 是三个独立 component；先只支持 macOS，其他平台隐藏。
+- CPU / memory / network 是三个独立 component；先只支持 macOS，其他平台隐藏。CPU 使用 native ticks，memory/network 暂用系统命令。
 - tmux native window list 暂不重写。
 - dynamic plugin 暂不实现，只保留稳定边界。
 
@@ -56,11 +56,12 @@ tmux event / tick
   -> TmuxAdapter.read_snapshot
   -> SessionGrouper.group
   -> LayoutEngine.resolve
-  -> StatusLineRuntime.dispatch
+  -> StatusRuntime.render
   -> Component.snapshot
   -> Component.render
   -> StatusComposer.compose
-  -> TmuxAdapter.commit
+  -> CommitPlanner.plan
+  -> TmuxAdapter.commit_plan
 ```
 
 职责：
@@ -68,15 +69,16 @@ tmux event / tick
 | Module              | Responsibility                         |
 |---------------------|----------------------------------------|
 | `TmuxAdapter`       | 唯一 tmux read/write 边界              |
-| `StatusLineRuntime` | event dispatch / component order / commit |
-| `StatusComponent`   | snapshot / cache / render / degrade    |
+| `StatusRuntime`     | pipeline orchestration                 |
+| `StatusComponent`   | snapshot / bounded cache / render / degrade |
 | `StatusComposer`    | compose `RenderedSegment`              |
+| `CommitPlanner`     | delta commit planning                  |
 | `MetricProvider`    | platform-specific metrics sampling     |
 
 禁止依赖：
 
 ```text
-StatusComponent -> StatusLineRuntime
+StatusComponent -> StatusRuntime
 StatusComponent -> TmuxAdapter
 StatusComposer  -> ComponentCache internals
 MetricProvider  -> TmuxAdapter
@@ -136,9 +138,9 @@ pub struct RenderEvent {
 
 规则：
 
-- `Tick` 触发所有 registered components。
-- 非 `Tick` event 优先只触发订阅该 event 的 components。
-- 未触发的 component 优先复用 cached rendered output。
+- `Tick` / `ThemeLoaded` / `ManualApply` 给所有 registered components 一次刷新机会。
+- 非周期事件由 component 根据 `interests` 和 cache policy 自行决定是否取新 snapshot。
+- component 可以复用 bounded cache，但不缓存 generic rendered rich_text。
 - cache missing 时可以 fresh snapshot。
 - 每次 event 后统一 compose final statusline。
 
@@ -154,13 +156,9 @@ pub trait StatusComponent {
         context: &RenderContext,
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot>;
+    ) -> AppResult<()>;
 
-    fn render(
-        &self,
-        context: &RenderContext,
-        snapshot: &ComponentSnapshot,
-    ) -> AppResult<RenderedSegment>;
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
 }
 ```
 
@@ -182,10 +180,11 @@ pub struct RenderedSegment {
 
 约束：
 
-- `snapshot` 负责取数、cache、stale 判断和 degrade。
-- `render` 负责把 snapshot 转成 tmux format。
+- `snapshot` 负责取数、bounded cache、stale 判断和 degrade。
+- `render` 负责把 component 内部 snapshot 转成 tmux format。
 - `literal_text` 是纯文本，用于宽度计算。
 - `rich_text` 是 tmux statusline fragment。
+- core 不读 component 内部 snapshot。
 
 ## 7. Cache
 
@@ -207,10 +206,13 @@ final row cache：
 
 规则：
 
+- component cache 是 single-slot bounded payload。
+- 不缓存 generic rendered rich_text。
 - component 只写自己的 cache。
 - final row cache 只由 renderer 写。
 - compose 完整成功后才 commit。
-- final cache 相同则 no-op。
+- commit 使用 delta plan，只写变化的长 option。
+- final cache 相同且 component cache 无变化则 no-op。
 - optional component 失败：stale cache -> hidden -> continue。
 - required component 失败：abort current commit，保留上一版 statusline。
 

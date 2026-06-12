@@ -1,5 +1,6 @@
 mod app;
 mod cache;
+mod commit;
 mod component;
 mod composer;
 mod error;
@@ -7,6 +8,7 @@ mod layout;
 mod metric;
 mod model;
 mod platform;
+mod runtime;
 mod session_group;
 mod status_component;
 mod tmux;

@@ -1,11 +1,13 @@
 use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::metric::{NetworkSample, NetworkSnapshot, provider_for};
+use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::platform::current_platform;
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
-pub struct NetworkComponent;
+#[derive(Default)]
+pub struct NetworkComponent {
+    snapshot: Option<NetworkSnapshot>,
+}
 
 impl StatusComponent for NetworkComponent {
     fn id(&self) -> &'static str {
@@ -21,32 +23,33 @@ impl StatusComponent for NetworkComponent {
         _context: &RenderContext,
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
-        let cache_key = "v2:en0";
-        let cached = cache.get(self.id(), cache_key).and_then(parse_cache);
-        if let Some((sample, rendered)) = cached.as_ref()
-            && (!should_refresh(event) || is_fresh(sample.timestamp_seconds))
+    ) -> AppResult<()> {
+        let cached = cache.get(self.id()).and_then(parse_cache);
+        if let Some(snapshot) = cached.clone()
+            && (!should_refresh(event) || is_fresh(snapshot.sample.timestamp_seconds))
         {
-            return Ok(ComponentSnapshot::Rendered(rendered.clone()));
+            self.snapshot = Some(snapshot);
+            return Ok(());
         }
 
-        let provider = provider_for(current_platform());
-        match provider.sample_network(cached.as_ref().map(|(sample, _)| sample)) {
-            Ok(snapshot) => {
-                let rendered = render_network(&snapshot);
-                cache.set(
-                    self.id(),
-                    cache_key,
-                    encode_cache(&snapshot.sample, &rendered),
-                );
-                Ok(ComponentSnapshot::Rendered(rendered))
-            }
-            Err(_) => Ok(ComponentSnapshot::Rendered(
-                cached
-                    .map(|(_, rendered)| rendered)
-                    .unwrap_or_else(RenderedSegment::empty),
-            )),
-        }
+        let provider = provider_for_current_platform();
+        self.snapshot =
+            match provider.sample_network(cached.as_ref().map(|snapshot| &snapshot.sample)) {
+                Ok(snapshot) => {
+                    cache.set(self.id(), encode_cache(&snapshot));
+                    Some(snapshot)
+                }
+                Err(_) => cached,
+            };
+        Ok(())
+    }
+
+    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(self
+            .snapshot
+            .as_ref()
+            .map(render_network)
+            .unwrap_or_else(RenderedSegment::empty))
     }
 }
 
@@ -92,35 +95,29 @@ fn format_speed(bytes_per_second: u64) -> String {
     format!("{bytes_per_second}B")
 }
 
-fn encode_cache(sample: &NetworkSample, rendered: &RenderedSegment) -> String {
+fn encode_cache(snapshot: &NetworkSnapshot) -> String {
     format!(
         "{}\t{}\t{}\t{}\t{}",
-        sample.timestamp_seconds,
-        sample.rx_bytes,
-        sample.tx_bytes,
-        rendered.literal_text,
-        rendered.rich_text
+        snapshot.sample.timestamp_seconds,
+        snapshot.sample.rx_bytes,
+        snapshot.sample.tx_bytes,
+        snapshot.rx_bytes_per_second,
+        snapshot.tx_bytes_per_second
     )
 }
 
-fn parse_cache(value: &str) -> Option<(NetworkSample, RenderedSegment)> {
+fn parse_cache(value: &str) -> Option<NetworkSnapshot> {
     let mut parts = value.splitn(5, '\t');
-    let timestamp_seconds = parts.next()?.parse::<u64>().ok()?;
-    let rx_bytes = parts.next()?.parse::<u64>().ok()?;
-    let tx_bytes = parts.next()?.parse::<u64>().ok()?;
-    let literal_text = parts.next()?.to_string();
-    let rich_text = parts.next()?.to_string();
-    Some((
-        NetworkSample {
-            timestamp_seconds,
-            rx_bytes,
-            tx_bytes,
-        },
-        RenderedSegment {
-            literal_text,
-            rich_text,
-        },
-    ))
+    let sample = NetworkSample {
+        timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
+        rx_bytes: parts.next()?.parse::<u64>().ok()?,
+        tx_bytes: parts.next()?.parse::<u64>().ok()?,
+    };
+    Some(NetworkSnapshot {
+        sample,
+        rx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
+        tx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
+    })
 }
 
 fn unix_now() -> u64 {
@@ -153,9 +150,7 @@ mod tests {
                 tx_bytes: 3,
             },
         };
-        let rendered = super::render_network(&snapshot);
-        let parsed = parse_cache(&super::encode_cache(&snapshot.sample, &rendered)).unwrap();
-        assert_eq!(parsed.0.rx_bytes, 2);
-        assert_eq!(parsed.1, rendered);
+        let parsed = parse_cache(&super::encode_cache(&snapshot)).unwrap();
+        assert_eq!(parsed, snapshot);
     }
 }

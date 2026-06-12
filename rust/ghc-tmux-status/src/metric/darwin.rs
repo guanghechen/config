@@ -1,8 +1,11 @@
 use std::process::Command;
+use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{AppError, AppResult};
-use crate::metric::{CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot};
+use crate::metric::{
+    CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
+};
 
 pub struct DarwinMetricsProvider {
     interface: String,
@@ -17,10 +20,12 @@ impl DarwinMetricsProvider {
 }
 
 impl MetricsProvider for DarwinMetricsProvider {
-    fn sample_cpu(&self) -> AppResult<CpuSnapshot> {
+    fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot> {
+        let sample = read_cpu_sample()?;
         Ok(CpuSnapshot {
-            percent: read_cpu_percent()?,
+            percent: calculate_cpu_percent(previous, &sample),
             timestamp_seconds: unix_now(),
+            sample,
         })
     }
 
@@ -49,25 +54,89 @@ impl MetricsProvider for DarwinMetricsProvider {
     }
 }
 
-fn read_cpu_percent() -> AppResult<f64> {
-    let cpu_total = parse_ps_cpu_total(&command_output("ps", &["-A", "-o", "%cpu="])?)?;
-    let cpu_count = command_output("sysctl", &["-n", "hw.ncpu"])?
-        .trim()
-        .parse::<f64>()
-        .map_err(|_| AppError::Render("failed to parse hw.ncpu".to_string()))?;
-    if cpu_count <= 0.0 {
-        return Err(AppError::Render("invalid hw.ncpu".to_string()));
+fn read_cpu_sample() -> AppResult<CpuSample> {
+    read_cpu_sample_native()
+}
+
+#[cfg(target_os = "macos")]
+fn read_cpu_sample_native() -> AppResult<CpuSample> {
+    let mut info = HostCpuLoadInfo::default();
+    let mut count = HOST_CPU_LOAD_INFO_COUNT;
+    let result = unsafe {
+        host_statistics(
+            mach_host_self(),
+            HOST_CPU_LOAD_INFO,
+            (&mut info as *mut HostCpuLoadInfo).cast::<Integer>(),
+            &mut count,
+        )
+    };
+    if result != KERN_SUCCESS {
+        return Err(AppError::Render(
+            "host_statistics cpu load failed".to_string(),
+        ));
     }
-    Ok((cpu_total / cpu_count).clamp(0.0, 100.0))
+
+    Ok(CpuSample {
+        user: info.cpu_ticks[CPU_STATE_USER].into(),
+        system: info.cpu_ticks[CPU_STATE_SYSTEM].into(),
+        idle: info.cpu_ticks[CPU_STATE_IDLE].into(),
+        nice: info.cpu_ticks[CPU_STATE_NICE].into(),
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+fn read_cpu_sample_native() -> AppResult<CpuSample> {
+    Err(AppError::Render(
+        "native darwin cpu sampling is unavailable".to_string(),
+    ))
+}
+
+fn calculate_cpu_percent(previous: Option<&CpuSample>, current: &CpuSample) -> f64 {
+    let Some(previous) = previous else {
+        return cpu_percent_from_ticks(current.user, current.nice, current.system, current.idle);
+    };
+
+    let user = current.user.saturating_sub(previous.user);
+    let nice = current.nice.saturating_sub(previous.nice);
+    let system = current.system.saturating_sub(previous.system);
+    let idle = current.idle.saturating_sub(previous.idle);
+    cpu_percent_from_ticks(user, nice, system, idle)
+}
+
+fn cpu_percent_from_ticks(user: u64, nice: u64, system: u64, idle: u64) -> f64 {
+    let used = user.saturating_add(nice).saturating_add(system);
+    let total = used.saturating_add(idle);
+    if total == 0 {
+        return 0.0;
+    }
+    (used as f64 * 100.0 / total as f64).clamp(0.0, 100.0)
 }
 
 fn read_memory_percent() -> AppResult<f64> {
-    let total_bytes = command_output("sysctl", &["-n", "hw.memsize"])?
-        .trim()
-        .parse::<f64>()
-        .map_err(|_| AppError::Render("failed to parse hw.memsize".to_string()))?;
+    let total_bytes = darwin_system_info()?.memory_bytes as f64;
     let vm_stat = command_output("vm_stat", &[])?;
     parse_vm_stat_memory_percent(&vm_stat, total_bytes)
+}
+
+#[derive(Clone, Debug)]
+struct DarwinSystemInfo {
+    memory_bytes: u64,
+}
+
+fn darwin_system_info() -> AppResult<&'static DarwinSystemInfo> {
+    static SYSTEM_INFO: OnceLock<AppResult<DarwinSystemInfo>> = OnceLock::new();
+    SYSTEM_INFO
+        .get_or_init(read_darwin_system_info)
+        .as_ref()
+        .map_err(|error| AppError::Render(error.to_string()))
+}
+
+fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
+    let memory_bytes = command_output("sysctl", &["-n", "hw.memsize"])?
+        .trim()
+        .parse::<u64>()
+        .map_err(|_| AppError::Render("failed to parse hw.memsize".to_string()))?;
+    Ok(DarwinSystemInfo { memory_bytes })
 }
 
 fn read_network_counters(interface: &str) -> AppResult<(u64, u64)> {
@@ -85,20 +154,6 @@ fn command_output(command: &str, args: &[&str]) -> AppResult<String> {
         )));
     }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
-}
-
-fn parse_ps_cpu_total(output: &str) -> AppResult<f64> {
-    let mut total = 0.0;
-    for line in output.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        total += line
-            .parse::<f64>()
-            .map_err(|_| AppError::Render("failed to parse ps cpu field".to_string()))?;
-    }
-    Ok(total)
 }
 
 fn parse_vm_stat_memory_percent(output: &str, total_bytes: f64) -> AppResult<f64> {
@@ -176,6 +231,50 @@ fn calculate_speed(
     )
 }
 
+#[cfg(target_os = "macos")]
+type Integer = i32;
+#[cfg(target_os = "macos")]
+type MachPort = u32;
+#[cfg(target_os = "macos")]
+type MachMsgTypeNumber = u32;
+#[cfg(target_os = "macos")]
+type KernReturn = i32;
+
+#[cfg(target_os = "macos")]
+#[repr(C)]
+#[derive(Default)]
+struct HostCpuLoadInfo {
+    cpu_ticks: [u32; CPU_STATE_MAX],
+}
+
+#[cfg(target_os = "macos")]
+unsafe extern "C" {
+    fn mach_host_self() -> MachPort;
+    fn host_statistics(
+        host: MachPort,
+        flavor: i32,
+        host_info_out: *mut Integer,
+        host_info_out_count: *mut MachMsgTypeNumber,
+    ) -> KernReturn;
+}
+
+#[cfg(target_os = "macos")]
+const KERN_SUCCESS: KernReturn = 0;
+#[cfg(target_os = "macos")]
+const HOST_CPU_LOAD_INFO: i32 = 3;
+#[cfg(target_os = "macos")]
+const CPU_STATE_USER: usize = 0;
+#[cfg(target_os = "macos")]
+const CPU_STATE_SYSTEM: usize = 1;
+#[cfg(target_os = "macos")]
+const CPU_STATE_IDLE: usize = 2;
+#[cfg(target_os = "macos")]
+const CPU_STATE_NICE: usize = 3;
+#[cfg(target_os = "macos")]
+const CPU_STATE_MAX: usize = 4;
+#[cfg(target_os = "macos")]
+const HOST_CPU_LOAD_INFO_COUNT: MachMsgTypeNumber = 4;
+
 fn unix_now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -186,14 +285,34 @@ fn unix_now() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        calculate_speed, parse_netstat_counters, parse_ps_cpu_total, parse_vm_stat_memory_percent,
+        calculate_cpu_percent, calculate_speed, cpu_percent_from_ticks, parse_netstat_counters,
+        parse_vm_stat_memory_percent, read_cpu_sample, read_darwin_system_info,
     };
-    use crate::metric::NetworkSample;
+    use crate::metric::{CpuSample, NetworkSample};
 
     #[test]
-    fn parses_ps_cpu_total() {
-        let output = " 10.5\n2.0\n 0.5\n";
-        assert_eq!(parse_ps_cpu_total(output).unwrap(), 13.0);
+    fn calculates_cpu_percent_from_ticks() {
+        assert_eq!(cpu_percent_from_ticks(1, 1, 2, 6), 40.0);
+        let previous = CpuSample {
+            user: 10,
+            nice: 10,
+            system: 10,
+            idle: 70,
+        };
+        let current = CpuSample {
+            user: 20,
+            nice: 10,
+            system: 20,
+            idle: 100,
+        };
+        assert_eq!(calculate_cpu_percent(Some(&previous), &current), 40.0);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn reads_cpu_sample() {
+        let sample = read_cpu_sample().unwrap();
+        assert!(sample.user + sample.nice + sample.system + sample.idle > 0);
     }
 
     #[test]
@@ -203,6 +322,13 @@ mod tests {
             parse_vm_stat_memory_percent(output, 4096.0 * 1000.0).unwrap(),
             15.0
         );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn parses_darwin_system_info() {
+        let info = read_darwin_system_info().unwrap();
+        assert!(info.memory_bytes > 0);
     }
 
     #[test]

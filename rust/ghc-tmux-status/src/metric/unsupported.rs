@@ -1,10 +1,12 @@
 use crate::error::{AppError, AppResult};
-use crate::metric::{CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot};
+use crate::metric::{
+    CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
+};
 
 pub struct UnsupportedMetricsProvider;
 
 impl MetricsProvider for UnsupportedMetricsProvider {
-    fn sample_cpu(&self) -> AppResult<CpuSnapshot> {
+    fn sample_cpu(&self, _previous: Option<&CpuSample>) -> AppResult<CpuSnapshot> {
         Err(unsupported())
     }
 

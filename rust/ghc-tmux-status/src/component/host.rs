@@ -1,7 +1,6 @@
-use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::model::{RenderContext, RenderedSegment};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
 pub struct HostComponent;
 
@@ -14,17 +13,12 @@ impl StatusComponent for HostComponent {
         ComponentInterests::Static
     }
 
-    fn snapshot(
-        &mut self,
-        context: &RenderContext,
-        _event: &RenderEvent,
-        _cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         let host = truncate_chars(&context.snapshot.host, 16);
-        Ok(ComponentSnapshot::Rendered(RenderedSegment {
+        Ok(RenderedSegment {
             literal_text: format!(" {host} "),
             rich_text: "#[fg=#{@GHC_SL_BG_PILL_HOST}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_HOST}]#{@GHC_SYM_OS} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{=16:host} ".to_string(),
-        }))
+        })
     }
 }
 

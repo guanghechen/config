@@ -1,7 +1,6 @@
-use crate::cache::ComponentCache;
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::status_component::{ComponentInterests, ComponentSnapshot, StatusComponent};
+use crate::model::{RenderContext, RenderEventKind, RenderedSegment};
+use crate::status_component::{ComponentInterests, StatusComponent};
 
 pub struct SessionListComponent;
 
@@ -19,40 +18,8 @@ impl StatusComponent for SessionListComponent {
         ])
     }
 
-    fn snapshot(
-        &mut self,
-        context: &RenderContext,
-        _event: &RenderEvent,
-        cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot> {
-        let cache_key = format!(
-            "{}:{}",
-            context.group.current_session_name,
-            context
-                .group
-                .sessions
-                .iter()
-                .map(|session| format!("{}={}", session.id, session.name))
-                .collect::<Vec<_>>()
-                .join(",")
-        );
-
-        if let Some(cached) = cache.get(self.id(), &cache_key)
-            && let Some((literal_text, rich_text)) = cached.split_once('\t')
-        {
-            return Ok(ComponentSnapshot::Rendered(RenderedSegment {
-                literal_text: literal_text.to_string(),
-                rich_text: rich_text.to_string(),
-            }));
-        }
-
-        let rendered = render_session_list(context);
-        cache.set(
-            self.id(),
-            &cache_key,
-            format!("{}\t{}", rendered.literal_text, rendered.rich_text),
-        );
-        Ok(ComponentSnapshot::Rendered(rendered))
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(render_session_list(context))
     }
 }
 

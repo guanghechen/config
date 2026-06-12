@@ -2,15 +2,24 @@ mod darwin;
 mod unsupported;
 
 use crate::error::AppResult;
-use crate::platform::Platform;
+use crate::platform::{Platform, current_platform};
 
 pub use darwin::DarwinMetricsProvider;
 pub use unsupported::UnsupportedMetricsProvider;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CpuSample {
+    pub user: u64,
+    pub nice: u64,
+    pub system: u64,
+    pub idle: u64,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CpuSnapshot {
     pub percent: f64,
     pub timestamp_seconds: u64,
+    pub sample: CpuSample,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -34,9 +43,13 @@ pub struct NetworkSnapshot {
 }
 
 pub trait MetricsProvider {
-    fn sample_cpu(&self) -> AppResult<CpuSnapshot>;
+    fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot>;
     fn sample_memory(&self) -> AppResult<MemorySnapshot>;
     fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot>;
+}
+
+pub fn provider_for_current_platform() -> Box<dyn MetricsProvider> {
+    provider_for(current_platform())
 }
 
 pub fn provider_for(platform: Platform) -> Box<dyn MetricsProvider> {

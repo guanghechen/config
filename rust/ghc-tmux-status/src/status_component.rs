@@ -11,20 +11,14 @@ pub trait StatusComponent {
 
     fn snapshot(
         &mut self,
-        context: &RenderContext,
-        event: &RenderEvent,
-        cache: &mut dyn ComponentCache,
-    ) -> AppResult<ComponentSnapshot>;
-
-    fn render(
-        &self,
         _context: &RenderContext,
-        snapshot: &ComponentSnapshot,
-    ) -> AppResult<RenderedSegment> {
-        match snapshot {
-            ComponentSnapshot::Rendered(segment) => Ok(segment.clone()),
-        }
+        _event: &RenderEvent,
+        _cache: &mut dyn ComponentCache,
+    ) -> AppResult<()> {
+        Ok(())
     }
+
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
 }
 
 pub enum ComponentInterests {
@@ -53,9 +47,4 @@ impl ComponentInterests {
             }
         }
     }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ComponentSnapshot {
-    Rendered(RenderedSegment),
 }
