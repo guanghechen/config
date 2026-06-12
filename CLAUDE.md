@@ -42,6 +42,7 @@
    - `%N` (e.g., `%3`) - Global pane id: `-t %3`
    - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
    - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
+2. **CRITICAL**: Locate own pane via `$TMUX_PANE`, NEVER `tmux display-message -p '#{pane_id}'` — the latter returns the active pane of the client's focused window, wrong when this agent isn't focused. `$TMUX_PANE` is per-pane, fixed regardless of focus, inherited by children. Empty only when not directly forked by tmux (`ssh`/`docker exec`) — then ask the user.
 2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
 4. **CRITICAL**: Inter-agent communication must verify actual submission, not just paste:

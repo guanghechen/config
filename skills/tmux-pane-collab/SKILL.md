@@ -32,10 +32,10 @@ argument-hint: "[pane-ref | message intent]"
 3. 若需要对方回发，取当前 pane id 作为 `from`，并令 `original = from`（发起者即本机）：
 
    ```bash
-   tmux display-message -p '#{pane_id}'
+   echo "$TMUX_PANE"
    ```
 
-   **仅发起首条**可用 `display-message`（无上游消息可参照）；如果无法获取且用户没有提供 reply pane，则要求用户补充。讨论、协商等双向场景必须有有效的 `from`；只有 one-way handoff 可省略。
+   `$TMUX_PANE` 进程级绑定、不随焦点变化、被子进程继承，是定位自己的稳定方法。用户显式提供时以用户为准；仅当它为空（进程非 tmux 直接 fork，如 `ssh`/`docker exec`）且用户未提供时才要求补充。双向场景必须有有效 `from`，只有 one-way handoff 可省略。
 
 4. 构造结构化消息（`turn: 1`，`from`/`to`/`original` 齐全）并发送到 `to`。
 5. 发送后必须确认消息已经实际提交，而不是只停留在输入框（见「发送命令」的 verify 步骤）。
@@ -45,7 +45,7 @@ argument-hint: "[pane-ref | message intent]"
 
 当前 pane 收到一条符合「消息格式」的消息时：
 
-1. 取字段：本机即收到消息的 `to`（**不要用 `display-message` 重新定位自己**）；对方即 `from`；并读 `original` / `topic` / `turn` / `mode`。
+1. 取字段：本机即收到消息的 `to`；对方即 `from`；并读 `original` / `topic` / `turn` / `mode`。**double check**：若 `$TMUX_PANE` 非空，断言 `to == $TMUX_PANE`；不等说明消息可能投错 pane（发送方填错 `to` 或 send-keys 发岔），**硬停**——报告差异、请用户裁决，绝不用 `to` 冒充身份回写。`$TMUX_PANE` 为空（如 `ssh`/`docker exec`）则跳过此检查、照常用 `to`。
 2. **先按收到的 `mode` 决定是否需要回写**：
    - `handoff` / `answer`：单向/收尾消息，只消费、不回写。处理完即结束。
    - `ask`：单个问题，回**一条** `mode: answer` 后即结束（一问一答单发对，不进入多轮、不沿用 `ask`）。
@@ -79,7 +79,7 @@ response: <见下方按 mode 的约定>
 ```
 
 - `from` / `to`：本条消息的发送方 / 接收方 pane。**回写时一律互换**：新 `from` = 收到消息的 `to`，新 `to` = 收到消息的 `from`。
-- **禁止用 `tmux display-message -p '#{pane_id}'` 定位自己**——它返回的是当前 client 附着的 active pane，可能不是本 agent 所在 pane（用户鼠标焦点在别处时会误判）。回写侧自己的 pane 一律取自收到消息的 `to`。仅**发起侧首条**没有上游 `to` 可用，此时才用 `display-message` 取 `from`（首条由用户主动发起，焦点通常在发起 pane，风险可控）。
+- **定位自己用 `$TMUX_PANE`，不要用 `tmux display-message -p '#{pane_id}'`**——后者返回当前 client 聚焦 window 的 active pane，本 agent 不在焦点时会误判；`$TMUX_PANE` 进程级绑定、不随焦点变化。回写侧身份取自收到消息的 `to`，并用 `$TMUX_PANE` 对其做 double check（见「回写侧」step 1）。仅**发起侧首条**无上游 `to` 时，才取 `$TMUX_PANE` 作 `from`。
 - `original`：thread 发起者的 pane，整个 thread **恒定不变**，照抄延续。它是 thread 的稳定锚点（`from`/`to` 每条都在换），也是 `turn` 的唯一计数权威与轮次上限（cap）的唯一责任方。
 - `turn`：**只有 `original` 递增 `turn`**——`original` 每发起新一轮 +1；非 `original` 一方回写时**原样保留** `turn`。发起首条为 `1`。
 - 轮次上限（cap）只由 `original` 关心与执行：`original` 在用收到的 `turn` 判终止时检查 cap，到顶就自己收尾、不再发新一轮，thread 随之结束。非 `original` 一方**无需知道也无需携带 cap**，可永远视自己在 capacity 内、只管回应（cap 一旦到顶，`original` 不会再发来新消息）。
@@ -131,4 +131,4 @@ tmux capture-pane -ep -t '<target>' | tail -40
 - cap 是 `original` 的专属责任：只有 `original` 递增并检查 `turn`，故只有它判 cap。**判终止用收到的 `turn`、先于任何递增**——`original` 收到回复后先看 `turn` 是否达 cap，达到就收尾、不再 +1。非 `original` 一方无需关心 cap。
 - 收尾责任：触发任一终止条件时，本条回写改用 `mode: answer`（结论 + 遗留的需用户裁决事项），不再向对方提问。收尾 `answer` **沿用当前 `turn`、不另起新一轮**（即收尾不会让 `turn` 超过 cap）；发出后结束本轮、不再要求对方回复，并把待裁决事项整理给用户。
 - 读取 pane 回复时，只提取当前 `topic` 相关内容；边界不清时说明不确定性。
-- 入站消息字段残缺的兜底：缺 `to` 则无法可靠定位本机，停下来要求用户确认本机 pane；缺 `original` 则按"对方为 `original`"处理（即本机视作 responder，`turn` 原样保留）；缺 `turn` 则视作 `1`。任一兜底都在回复里注明所做假设。
+- 入站消息字段残缺的兜底：缺 `to` 则无法可靠定位本机，停下来要求用户确认本机 pane；`to` 在但与 `$TMUX_PANE` 不符（消息可能投错 pane），硬停、报告差异并请用户裁决（见「回写侧」step 1）；缺 `original` 则按"对方为 `original`"处理（即本机视作 responder，`turn` 原样保留）；缺 `turn` 则视作 `1`。任一兜底都在回复里注明所做假设。
