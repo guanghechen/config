@@ -1,6 +1,6 @@
 ---
 name: tmux-pane-collab
-description: Use when the user asks this agent to communicate with another agent through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane receives a tmux-pane-collab protocol message. Handle inbound messages according to mode/response. Never guess, scan for, or auto-select panes. For structured review loops, use multi-agent-review instead.
+description: Use when the user asks this agent to communicate with another agent through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane receives a tmux-pane-collab protocol message. Handle inbound messages according to mode/expect. Never guess, scan for, or auto-select panes. For structured review loops, use multi-agent-review instead.
 argument-hint: "[pane-ref | protocol message]"
 ---
 
@@ -76,13 +76,14 @@ tmux display-message -p -t '<tmux target>' '#{pane_id}'
 假定目标 pane 运行的 agent 能解析本协议。所有协议消息都以触发头作为第一行；防回写循环靠 `mode`，不靠省略触发头。
 
 ```text
-[tmux-pane-collab] 请用 tmux-pane-collab skill 处理本消息，并按 mode/response 约定处理。
+[tmux-pane-collab] 请用 tmux-pane-collab skill 处理本消息，并按 mode/expect 约定处理。
 to: %TARGET_PANE
 from: %SOURCE_PANE
 original: %ORIGINATOR_PANE
-topic: <short topic>
 mode: ask | discuss | handoff | final
 turn: <n>
+
+topic: <short topic>
 
 goal: <definition of done; required for discuss>
 
@@ -90,7 +91,7 @@ context: <necessary context>
 
 message: <current request or payload>
 
-response: <required only for ask/discuss>
+expect: <required only for ask/discuss>
 ```
 
 字段必填性。缺失 `required` 字段时按「Hard Stop 规则」处理。
@@ -101,7 +102,7 @@ response: <required only for ask/discuss>
 | original | required | required | omit     | copy            |
 | turn     | required | required | omit     | copy            |
 | goal     | optional | required | omit     | copy if present |
-| response | required | required | omit     | omit            |
+| expect   | required | required | omit     | omit            |
 
 `common` = 触发头、`to`、`from`、`topic`、`mode`、`message`。
 
@@ -112,7 +113,7 @@ Mode 语义：
 - `handoff`：单向交接；不期待回复。
 - `final`：单向答复或收尾；不期待回复。
 
-`response` 只在 `ask` / `discuss` 中出现：
+`expect` 只在 `ask` / `discuss` 中出现：
 
 - `ask`：要求对方回一条 `mode: final`，回写到 `from`，保留 `topic` / `original` / `turn`。
 - `discuss`：要求对方回写同格式消息，保留 `topic` / `goal` / `original`，按 `turn` 规则处理，并确认提交。
