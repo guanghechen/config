@@ -159,7 +159,10 @@
         },
         {
           "branch": "tmux",
-          "editions": ["nix", "nix-remote", "osx"]
+          "editions": ["nix", "nix-remote", "osx"],
+          "on": {
+            "synced": "cd rust/ghc-tmux-status && cargo build --release"
+          }
         },
         {
           "branch": "tsuki",
