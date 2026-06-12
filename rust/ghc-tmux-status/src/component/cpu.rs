@@ -65,7 +65,7 @@ fn is_fresh(timestamp_seconds: u64) -> bool {
 }
 
 fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
-    let cpu = snapshot.percent.round() as u64;
+    let cpu = format_percent(snapshot.percent);
     let literal_text = format!(" {cpu}% ");
     let rich_value = format!(" {cpu}%% ");
     let rich_text = format!(
@@ -75,6 +75,10 @@ fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
         literal_text,
         rich_text,
     }
+}
+
+fn format_percent(percent: f64) -> String {
+    format!("{:>2}", percent.round() as u64)
 }
 
 fn encode_cache(snapshot: &CpuSnapshot) -> String {
@@ -112,8 +116,15 @@ fn unix_now() -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{encode_cache, parse_cache};
+    use super::{encode_cache, format_percent, parse_cache};
     use crate::metric::{CpuSample, CpuSnapshot};
+
+    #[test]
+    fn formats_cpu_percent_with_at_least_two_digits() {
+        assert_eq!(format_percent(5.0), " 5");
+        assert_eq!(format_percent(12.0), "12");
+        assert_eq!(format_percent(100.0), "100");
+    }
 
     #[test]
     fn parses_cpu_cache() {
