@@ -1,103 +1,151 @@
 ---
 name: tmux-pane-collab
-description: Use when the user asks the current agent to communicate, discuss, or collaborate with another agent through tmux panes and provides an explicit target pane ref (%N, #N, or @M#N) — OR when this pane receives a message in this skill's format (from / to / original / topic / mode fields), which must be handled as a write-back. Do not initiate without a target pane ref; never guess, scan for, or auto-select panes. For a structured code-review loop (findings, per-item resolution, consensus), use multi-agent-review instead.
-argument-hint: "[pane-ref | message intent]"
+description: Use when the user asks this agent to communicate with another agent through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane receives a tmux-pane-collab protocol message. Handle inbound messages according to mode/response. Never guess, scan for, or auto-select panes. For structured review loops, use multi-agent-review instead.
+argument-hint: "[pane-ref | protocol message]"
 ---
 
 # Tmux Pane Collab
 
-用于通过 tmux pane 与另一个 agent 通信、讨论或协作。
+通过 tmux pane 在两个 agent 之间交换结构化消息。
 
 ## 使用边界
 
-满足以下**任一**情况即使用本 skill：
+仅在以下场景使用本 skill：
 
-- **发起侧**：用户明确要求通过 tmux pane 与其它 agent 进行 multi-agent 协作，且明确提供目标 pane ref（`%N`、`#N` 或 `@M#N`）。
-- **回写侧**：当前 pane 收到一条符合本 skill「消息格式」的消息（含 `from` / `to` / `original` / `topic` / `mode` 等字段），即视为触发本 skill 的回写场景。本机身份取自消息的 `to`，按该消息 `response` 约定回写到其 `from`。
+- **发起侧**：用户明确要求通过 tmux pane 与另一个 agent 协作，并提供目标 pane ref：`%N`、`#N` 或 `@M#N`。
+- **回写侧**：当前 pane 收到符合本协议「消息格式」的入站消息。
 
-发起侧若用户没有提供目标 pane ref，停止并要求用户补充。不要猜测、扫描或自动选择 pane。
+发起侧没有目标 pane ref 时停止并要求用户补充。不要猜测、扫描或自动选择 pane。
 
-## Pane ref
+本协议只支持**两方点对点** thread；`original`、`turn`、`goal` 均按两方模型定义，不支持三方及以上同 thread 协作。
 
-- `%3` → tmux target `%3`
-- `#2` → tmux target `:.2`
-- `@1#2` → tmux target `@1.2`
+## 核心模型
 
-## 基本流程
+- 所有消息里的 pane 字段（`to` / `from` / `original`）必须是纯 pane id：`%N`。
+- 用户给的 `#N` / `@M#N` 只用于定位 tmux target，写入消息前必须 canonicalize 为 `%N`。
+- 定位自己用 `$TMUX_PANE`；不要用不带 `-t` 的 `tmux display-message -p '#{pane_id}'`，它会返回当前 client 聚焦 pane。
+- `original` 是 thread 发起者，整个 thread 恒定不变；只有它递增 `turn` 并执行 cap 退出。
+- `topic` 描述讨论对象；`goal` 定义完成条件。`discuss` 必须有 `goal`。
 
-### 发起侧
+Pane ref 到 tmux target 的转换：
 
-1. 确认用户是在要求 multi-agent communication / discussion through tmux panes。
-2. 校验用户提供的目标 pane ref，并转换为 tmux target，作为 `to`。
-3. 若需要对方回发，取当前 pane id 作为 `from`，并令 `original = from`（发起者即本机）：
+| ref    | target |
+|--------|--------|
+| `%3`   | `%3`   |
+| `#2`   | `:.2`  |
+| `@1#2` | `@1.2` |
 
-   ```bash
-   echo "$TMUX_PANE"
-   ```
+Canonicalize 目标 pane：
 
-   `$TMUX_PANE` 进程级绑定、不随焦点变化、被子进程继承，是定位自己的稳定方法。用户显式提供时以用户为准；仅当它为空（进程非 tmux 直接 fork，如 `ssh`/`docker exec`）且用户未提供时才要求补充。双向场景必须有有效 `from`，只有 one-way handoff 可省略。
+```bash
+tmux display-message -p -t '<tmux target>' '#{pane_id}'
+```
 
-4. 构造结构化消息（`turn: 1`，`from`/`to`/`original` 齐全）并发送到 `to`。
-5. 发送后必须确认消息已经实际提交，而不是只停留在输入框（见「发送命令」的 verify 步骤）。
-6. **被动接收回复，不要轮询。** peer 同样装有本 skill，会按 `response` 约定把回复 paste + Enter 到我们 `from` 指向的 pane——这相当于把回复作为一条新输入提交给我们，会自然唤醒下一轮。因此确认消息已提交后，**结束本轮、让出控制权**，等 peer 的回复作为新 prompt 到达即可。禁止用 `sleep` + 反复 `capture-pane` 空等回复。
+带 `-t` 的 `display-message` 对指定 target 取 `pane_id`，不受焦点影响；它与上面禁用的无 `-t` 用法不同。
 
-### 回写侧
+## 发起侧流程
 
-当前 pane 收到一条符合「消息格式」的消息时：
+1. 确认用户要求的是 tmux pane 协作，并提供了目标 pane ref。
+2. 将目标 pane ref 转为 tmux target，再 canonicalize 为 `%N`，作为 `to`。
+3. 取 `$TMUX_PANE` 作为 `from`；用户显式提供本机 pane id 时以用户为准。所有消息都必须有有效 `from`；无法定位本机则不发。
+4. 首条消息设 `turn: 1`，`original = from`。`discuss` 必须写明 `topic` 和 `goal`；`ask` 必须写明 `topic`，`goal` 可省。
+5. 按「发送与确认」投递。确认提交后结束本轮，等待 peer 的回复作为新输入唤醒本 pane；不要轮询等待。
+6. `ask` / `discuss` 需要登记一次性 liveness fallback；`handoff` / `final` 不登记。
 
-1. 取字段：本机即收到消息的 `to`；对方即 `from`；并读 `original` / `topic` / `turn` / `mode`。**double check**：若 `$TMUX_PANE` 非空，断言 `to == $TMUX_PANE`；不等说明消息可能投错 pane（发送方填错 `to` 或 send-keys 发岔），**硬停**——报告差异、请用户裁决，绝不用 `to` 冒充身份回写。`$TMUX_PANE` 为空（如 `ssh`/`docker exec`）则跳过此检查、照常用 `to`。
-2. **先按收到的 `mode` 决定是否需要回写**：
-   - `handoff` / `answer`：单向/收尾消息，只消费、不回写。处理完即结束。
-   - `ask`：单个问题，回**一条** `mode: answer` 后即结束（一问一答单发对，不进入多轮、不沿用 `ask`）。
-   - `communicate` / `discuss` / `collaborate`：多轮消息，需要回写，继续下面步骤。
-3. 处理 `message` 要求的内容，得出本轮结论。
-4. 判断本机是否 `original`（本机 `== original`）：
-   - **本机非 `original`（responder）**：不关心轮次上限（cap 是 `original` 的责任，见「规则」），照常回写，`turn` **原样保留**，`mode` **沿用收到的 `mode`**。仅当已达成一致、或仅剩需用户裁决事项时，才主动切 `mode: answer` 收尾。
-   - **本机即 `original`**：先用**收到的 `turn`** 判断是否触发终止条件（见「规则」，此判断先于任何递增）。未触发则 `turn` +1、沿用原 `mode` 续问；触发则切 `mode: answer` 收尾、`turn` 不递增。
-5. 构造回写消息，**按「消息格式」补全所有字段**（`from`/`to`/`original`/`topic`/`turn`/`mode`/`context`/`message`/`response`）：`from` = 收到的 `to`，`to` = 收到的 `from`，`original` 照抄，`topic` 不变，`turn`/`mode` 按上一步处理；非收尾消息别漏写 `response`。
-6. **投递**：若**收到消息的 `from` 等于本机 pane**（消息来自自己，自投/测试场景），不要 send-keys 造成自投循环，直接把结论作为普通输出呈现给用户并说明；否则按 verify 步骤 send-keys 到 `to`，确认提交后结束本轮。
+## 回写侧流程
 
-多轮协作时保持同一 `topic` / `original`，简洁延续上下文，不粘贴无关 scrollback。
+入站消息先过三关。任一不过即 hard stop，向用户报告原因，不处理 `message`。
+
+1. **shape**：所有 present 的 pane 字段（`to` / `from` / `original`）必须是 `%N`。若收到 `:.N` / `@M.N` 等形式，先用带 `-t` 的 `display-message` canonicalize；失败则 hard stop。
+2. **identity**：本机 = 入站 `to`，对方 = 入站 `from`。若 `$TMUX_PANE` 非空，必须满足 `to == $TMUX_PANE`；不满足则视为投错 pane，hard stop，绝不用 `to` 冒充本机。
+3. **source**：多轮续轮必须匹配当前 thread 的 `original` / `topic`，且入站 `from` 必须等于我们上一轮的 `to`。首轮必须来自用户显式指定的目标 pane。不匹配则 hard stop。
+
+三关通过后：
+
+1. 按 `mode` 分派：`handoff` / `final` 只消费不回写；`ask` 回一条 `final`；`discuss` 继续处理。
+2. 处理 `message`，得出本轮结论。
+3. 若本机不是 `original`：`turn` 原样保留。默认沿用 `discuss`；若 `goal` 已达成或只剩用户裁决事项，可切 `mode: final`。
+4. 若本机是 `original`：先用收到的 `turn` 判退出；触发则切 `mode: final` 且不递增，否则 `turn + 1` 并沿用 `discuss`。
+5. 构造回写：`from = 收到的 to`，`to = 收到的 from`，`original` / `topic` 照抄，`goal` 有则照抄，`turn` / `mode` 按上一步。
+6. 若入站 `from` 等于本机 pane，视为自投/测试场景，直接向用户输出结论，不 send-keys；否则按「发送与确认」投递。
+
+多轮协作保持同一 `topic` / `goal` / `original`，只携带当前 thread 必要上下文，不粘贴无关 scrollback。
 
 ## 消息格式
 
-可以永远假定目标 pane 上运行的 agent 也理解本 skill。所有 pane 字段都是纯 tmux pane id（如 `%3`），可直接用作 `-t` target，无需解析 window/index。
+假定目标 pane 运行的 agent 能解析本协议。所有协议消息都以触发头作为第一行；防回写循环靠 `mode`，不靠省略触发头。
 
 ```text
-from: %SOURCE_PANE
+[tmux-pane-collab] 请用 tmux-pane-collab skill 处理本消息，并按 mode/response 约定处理。
 to: %TARGET_PANE
+from: %SOURCE_PANE
 original: %ORIGINATOR_PANE
-topic: <当前讨论主题的简短描述>
+topic: <short topic>
+mode: ask | discuss | handoff | final
 turn: <n>
-mode: communicate | discuss | collaborate | handoff | ask | answer
 
-context: <必要背景；首次消息写任务背景，后续消息写上一轮要点>
+goal: <definition of done; required for discuss>
 
-message: <当前轮次发给对方、需要对方核心 focus 的内容>
+context: <necessary context>
 
-response: <见下方按 mode 的约定>
+message: <current request or payload>
+
+response: <required only for ask/discuss>
 ```
 
-- `from` / `to`：本条消息的发送方 / 接收方 pane。**回写时一律互换**：新 `from` = 收到消息的 `to`，新 `to` = 收到消息的 `from`。
-- **定位自己用 `$TMUX_PANE`，不要用 `tmux display-message -p '#{pane_id}'`**——后者返回当前 client 聚焦 window 的 active pane，本 agent 不在焦点时会误判；`$TMUX_PANE` 进程级绑定、不随焦点变化。回写侧身份取自收到消息的 `to`，并用 `$TMUX_PANE` 对其做 double check（见「回写侧」step 1）。仅**发起侧首条**无上游 `to` 时，才取 `$TMUX_PANE` 作 `from`。
-- `original`：thread 发起者的 pane，整个 thread **恒定不变**，照抄延续。它是 thread 的稳定锚点（`from`/`to` 每条都在换），也是 `turn` 的唯一计数权威与轮次上限（cap）的唯一责任方。
-- `turn`：**只有 `original` 递增 `turn`**——`original` 每发起新一轮 +1；非 `original` 一方回写时**原样保留** `turn`。发起首条为 `1`。
-- 轮次上限（cap）只由 `original` 关心与执行：`original` 在用收到的 `turn` 判终止时检查 cap，到顶就自己收尾、不再发新一轮，thread 随之结束。非 `original` 一方**无需知道也无需携带 cap**，可永远视自己在 capacity 内、只管回应（cap 一旦到顶，`original` 不会再发来新消息）。
-- `mode`：选用场景——`discuss`（有分歧/需来回收敛，多轮）、`collaborate`（共同推进一项产出，多轮）、`communicate`（同步信息、期待简短确认）、`ask`（单个问题，期待对方以 `answer` 单次回复，通常不进入多轮）、`handoff`（单向交接，不期待回复）、`answer`（回复 `ask` 或收尾，单向）。`ask` ↔ `answer` 是一问一答的单发对，不开启多轮；要多轮往返用 `discuss` / `collaborate`。
-- `response` 字段按 mode 区分：
-  - `communicate` / `discuss` / `collaborate`：期待对方多轮回写。要求对方得出结论后，使用 tmux-pane-collab skill 往 `from` 指向的 pane 回写一条**同样格式**的消息（保留相同 `topic` / `original`，按上面 `turn` 规则处理），并确认已 paste + Enter 提交。
-  - `ask`：期待对方回**一条** `mode: answer`（同格式、回写到 `from`、保留 `topic` / `original` / `turn`），不进入多轮。
-  - `handoff` / `answer`：单向消息（handoff = 交接，answer = 收尾），不期待回复，省略 `response` 字段。
+字段必填性。缺失 `required` 字段时按「Hard Stop 规则」处理。
 
-## 发送命令
+| field    | ask      | discuss  | handoff  | final           |
+|----------|----------|----------|----------|-----------------|
+| common   | required | required | required | required        |
+| original | required | required | omit     | copy            |
+| turn     | required | required | omit     | copy            |
+| goal     | optional | required | omit     | copy if present |
+| response | required | required | omit     | omit            |
 
-极短且无特殊字符的消息，可直接键入文本（先不带 Enter，提交统一在下面 verify 步骤完成）：
+`common` = 触发头、`to`、`from`、`topic`、`mode`、`message`。
+
+Mode 语义：
+
+- `ask`：单个问题；对方回一条 `final`，不进入多轮。
+- `discuss`：多轮讨论；靠 `goal`、cap 或用户裁决边界退出。
+- `handoff`：单向交接；不期待回复。
+- `final`：单向答复或收尾；不期待回复。
+
+`response` 只在 `ask` / `discuss` 中出现：
+
+- `ask`：要求对方回一条 `mode: final`，回写到 `from`，保留 `topic` / `original` / `turn`。
+- `discuss`：要求对方回写同格式消息，保留 `topic` / `goal` / `original`，按 `turn` 规则处理，并确认提交。
+
+## turn / cap / 退出
+
+- `turn` 只由 `original` 递增。非 `original` 回写时原样保留。首轮为 `1`。
+- cap 只由 `original` 执行。默认 `5`；用户显式要求或议题明显复杂时可用 `10`。
+- 退出条件：`goal` 达成；`turn` 达 cap；或只剩需用户裁决的分歧/问题。
+- cap 退出只由 `original` 判定，且先用收到的 `turn` 判，再决定是否递增。
+- `goal` 达成或只剩用户裁决事项时，任一方都可以切 `mode: final`。
+- `final` 沿用当前 `turn`，不另起新一轮；谁发送 `final`，谁负责把结论和待裁决事项整理给用户。
+
+## Liveness
+
+确认提交后不要轮询等待回复；让 peer 的回写作为新输入唤醒本 pane。`ask` / `discuss` 等待回写，因此登记一次性 fallback（例如 15-20 分钟后的 one-shot 提醒）；`handoff` / `final` 不登记。
+
+Fallback 状态：
+
+- `sent-awaiting-reply`：消息已提交，正在等对方回发。到点先检查是否已推进；未推进才 capture peer 一次，判断重发或上报用户。
+- `pending-unsent`：消息未确认送达，例如 peer 忙且不能排队。到点先重试投递；仍不能投递则上报用户，不按“等回复”处理。
+
+收到回复后，旧 fallback 作废。无 scheduler 可用时，明确告知用户已让出控制权，并请用户在超时未回时提醒你检查；不要静默无限等待。
+
+## 发送与确认
+
+短消息可直接键入，但先不要提交：
 
 ```bash
 tmux send-keys -t '<target>' '<message>'
 ```
 
-默认优先用 tmux buffer，尤其是多行消息或包含引号、反斜杠、shell 特殊字符的消息：
+多行消息默认使用 tmux buffer：
 
 ```bash
 tmp=$(mktemp /tmp/tmux-agent-collab.XXXXXX)
@@ -109,26 +157,33 @@ tmux paste-buffer -t '<target>'
 rm -f "$tmp"
 ```
 
-不论是上面哪种方式键入/paste，都不要假定已提交。先 capture 看状态，按状态触发（processing 优先判断），最后再 capture 确认。这里的 `capture-pane` 只用于**确认我们自己发出的消息已提交**，不用于轮询等回复：
+paste 或键入后必须确认提交：
 
 ```bash
 tmux capture-pane -ep -t '<target>' | tail -40
 ```
 
-- pane 正 processing（footer 如 `esc to interrupt`）：**绝不**发 `Escape`（会打断对方 turn）。footer 提示可排队就 `tmux send-keys -t '<target>' Tab`，否则等它空闲。
-- 空闲普通 prompt、文本未提交：`tmux send-keys -t '<target>' Enter`。
-- 模态编辑器残留 insert 态（vim 类 `-- INSERT --`）：先**单独**发 `tmux send-keys -t '<target>' Escape`，**重新 capture 确认 `-- INSERT --` 已消失**，再发 `tmux send-keys -t '<target>' Enter`。**绝不**把 Escape 和 Enter 在同一步连发——Enter 可能在退出 insert 前到达，只是插入换行而非提交。
+- 正在 processing（footer 如 `esc to interrupt`）：绝不发送 `Escape`。若 TUI 明确提示可排队，发送 `Tab`；否则等待，或按末段规则降级处理。
+- 空闲 prompt 且文本未提交：发送 `Enter`。
+- 模态编辑器 insert 态（如 `-- INSERT --`）：先单独发送 `Escape`，重新 capture 确认退出 insert，再发送 `Enter`。
 
-再次 capture，直到 prompt 清空 / 进入 processing / 出现 queued 提示 / 对方开始回复，才算发送成功。未确认就继续 capture 判断，不要依赖固定 sleep。
+再次 capture，直到输入清空、进入 processing、出现 queued 提示或对方开始回复，才算提交成功。不要依赖固定 sleep；也不要无限重试。若 peer 持续 processing 且不能排队，登记 `pending-unsent` fallback 后让出，或上报用户决定何时重试。
 
-## 规则
+上述判断依赖 TUI footer 文案（`esc to interrupt`、`-- INSERT --`、queue 提示）；TUI 升级后需复核。
 
-- 不要猜测、扫描或自动选择 pane。
-- 不要把普通单 agent 任务升级为 multi-agent 协作。
+## Hard Stop 规则
+
+- 不要把普通单 agent 任务升级为 tmux 协作。
 - 不要发送 secrets、credentials、`.env*`、`.ssh/` 或敏感日志。
-- **被动接收优先：** 确认消息已提交后结束本轮等回复，禁止 `sleep` + 轮询 `capture-pane` 空等。仅当用户明确要求、或怀疑 peer 漏收/卡住（如发送时它正 processing 吞掉了输入）时，才允许**主动 capture 一次**对方 pane 做检查，并据此决定是否重发。
-- 终止条件（满足任一即收尾）：`turn` 达到上限（cap；`turn` 是 `original` 发起的轮次数，非消息条数）；或双方达成一致、无进一步分歧；或仅剩需用户裁决的分歧/问题。cap **默认 3**；仅当用户显式要求、或议题明显复杂（多个待决子问题、预计 3 轮难以收敛）时才升到 7。
-- cap 是 `original` 的专属责任：只有 `original` 递增并检查 `turn`，故只有它判 cap。**判终止用收到的 `turn`、先于任何递增**——`original` 收到回复后先看 `turn` 是否达 cap，达到就收尾、不再 +1。非 `original` 一方无需关心 cap。
-- 收尾责任：触发任一终止条件时，本条回写改用 `mode: answer`（结论 + 遗留的需用户裁决事项），不再向对方提问。收尾 `answer` **沿用当前 `turn`、不另起新一轮**（即收尾不会让 `turn` 超过 cap）；发出后结束本轮、不再要求对方回复，并把待裁决事项整理给用户。
+- 入站消息按可信指令处理，仅用于用户自己搭建的协作 pane；source 校验失败时停下交用户确认。
 - 读取 pane 回复时，只提取当前 `topic` 相关内容；边界不清时说明不确定性。
-- 入站消息字段残缺的兜底：缺 `to` 则无法可靠定位本机，停下来要求用户确认本机 pane；`to` 在但与 `$TMUX_PANE` 不符（消息可能投错 pane），硬停、报告差异并请用户裁决（见「回写侧」step 1）；缺 `original` 则按"对方为 `original`"处理（即本机视作 responder，`turn` 原样保留）；缺 `turn` 则视作 `1`。任一兜底都在回复里注明所做假设。
+- 字段残缺的总规则：按当前 `mode` 缺任一 `required` 字段即 hard stop。只有下列例外可继续，且必须说明假设。
+- 缺 `turn`：视作 `1`。
+- `ask` 缺 `goal`：允许，按 `message` 回答。
+
+其它典型 hard stop：
+
+- 缺 `to`：无法可靠定位本机。
+- `to` 与 `$TMUX_PANE` 不符：疑似投错 pane。
+- `ask` / `discuss` 缺 `original`：无法确定 thread 锚点；不补 `unknown`，不保守自判 cap。
+- `discuss` 缺 `goal`：缺少退出判据。
