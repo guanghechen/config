@@ -37,6 +37,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
     let mut rich_text = String::from(
         "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=default]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bold]#{@GHC_SYM_SESSION} #[default] ",
     );
+    let mut previous_palette = None;
     for (offset, session) in context.group.sessions.iter().enumerate() {
         let index = offset + 1;
         let is_active = session.name == context.group.current_session_name;
@@ -48,10 +49,17 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
         literal_text.push_str(&format!("{} | {}", session.name, index));
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
-        rich_text.push_str(&render_left_edge(palette.left_edge_bg));
+        if let Some(left_palette) = previous_palette {
+            rich_text.push_str(&render_join_separator(left_palette, palette));
+        } else {
+            rich_text.push_str(&render_left_edge(palette.left_edge_bg, LIST_SURFACE_BG));
+        }
         rich_text.push_str(&render_item_body(is_active, &session.name, index, palette));
-        rich_text.push_str(&render_right_edge(palette.right_edge_bg));
+        if index == context.group.sessions.len() {
+            rich_text.push_str(&render_right_edge(palette.right_edge_bg, LIST_SURFACE_BG));
+        }
         rich_text.push_str("#[norange]#[default]");
+        previous_palette = Some(palette);
     }
 
     RenderedSegment {
@@ -62,6 +70,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
 
 #[derive(Clone, Copy)]
 struct SessionItemPalette {
+    is_active: bool,
     body_bg: &'static str,
     left_edge_bg: &'static str,
     right_edge_bg: &'static str,
@@ -71,6 +80,7 @@ impl SessionItemPalette {
     fn new(is_active: bool) -> Self {
         if is_active {
             return Self {
+                is_active,
                 body_bg: ACTIVE_BG,
                 left_edge_bg: ACTIVE_BG,
                 right_edge_bg: ACTIVE_BG,
@@ -78,6 +88,7 @@ impl SessionItemPalette {
         }
 
         Self {
+            is_active,
             body_bg: INACTIVE_BODY_BG,
             left_edge_bg: INACTIVE_BODY_BG,
             right_edge_bg: INACTIVE_RIGHT_EDGE_BG,
@@ -85,12 +96,23 @@ impl SessionItemPalette {
     }
 }
 
-fn render_left_edge(right_bg: &str) -> String {
-    format!("#[fg={right_bg}#,bg={LIST_SURFACE_BG}]#{{@GHC_SEP_SLANT_LEFT}}")
+fn render_join_separator(left: SessionItemPalette, right: SessionItemPalette) -> String {
+    if right.is_active {
+        return render_left_edge(right.left_edge_bg, left.body_bg);
+    }
+    if left.is_active {
+        return render_right_edge(left.right_edge_bg, right.body_bg);
+    }
+
+    render_right_edge(left.body_bg, right.body_bg)
 }
 
-fn render_right_edge(left_bg: &str) -> String {
-    format!("#[fg={left_bg}#,bg={LIST_SURFACE_BG}]#{{@GHC_SEP_SLANT_RIGHT}}")
+fn render_left_edge(edge_bg: &str, surface_bg: &str) -> String {
+    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_LEFT}}")
+}
+
+fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
+    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_RIGHT}}")
 }
 
 fn render_item_body(
@@ -116,7 +138,7 @@ fn render_item_body(
 mod tests {
     use super::{
         ACTIVE_BG, INACTIVE_BODY_BG, INACTIVE_RIGHT_EDGE_BG, SessionItemPalette, render_item_body,
-        render_left_edge, render_right_edge,
+        render_join_separator, render_left_edge, render_right_edge,
     };
 
     #[test]
@@ -125,6 +147,7 @@ mod tests {
         let item = render_item_body(true, "tmux", 2, palette);
         assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
         assert!(item.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
+        assert!(palette.is_active);
         assert_eq!(palette.body_bg, ACTIVE_BG);
         assert_eq!(palette.left_edge_bg, ACTIVE_BG);
         assert_eq!(palette.right_edge_bg, ACTIVE_BG);
@@ -140,19 +163,38 @@ mod tests {
         assert!(!item.contains("@GHC_SL_BG_WIN_NUM"));
         assert!(item.contains(" dev "));
         assert!(item.contains("| 2 "));
+        assert!(!palette.is_active);
         assert_eq!(palette.body_bg, INACTIVE_BODY_BG);
         assert_eq!(palette.left_edge_bg, INACTIVE_BODY_BG);
         assert_eq!(palette.right_edge_bg, INACTIVE_RIGHT_EDGE_BG);
     }
 
     #[test]
+    fn join_separator_collapses_internal_edges_to_one_glyph() {
+        let inactive = SessionItemPalette::new(false);
+        let active = SessionItemPalette::new(true);
+        assert_eq!(
+            render_join_separator(inactive, active),
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_WIN_NAME}]#{@GHC_SEP_SLANT_LEFT}"
+        );
+        assert_eq!(
+            render_join_separator(active, inactive),
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_WIN_NAME}]#{@GHC_SEP_SLANT_RIGHT}"
+        );
+        assert_eq!(
+            render_join_separator(inactive, inactive),
+            "#[fg=#{@GHC_SL_BG_WIN_NAME}#,bg=#{@GHC_SL_BG_WIN_NAME}]#{@GHC_SEP_SLANT_RIGHT}"
+        );
+    }
+
+    #[test]
     fn item_edges_connect_to_list_surface_without_collapsing() {
         assert_eq!(
-            render_left_edge("#{item_name}"),
+            render_left_edge("#{item_name}", "default"),
             "#[fg=#{item_name}#,bg=default]#{@GHC_SEP_SLANT_LEFT}"
         );
         assert_eq!(
-            render_right_edge("#{item_num}"),
+            render_right_edge("#{item_num}", "default"),
             "#[fg=#{item_num}#,bg=default]#{@GHC_SEP_SLANT_RIGHT}"
         );
     }
