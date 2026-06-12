@@ -129,12 +129,12 @@ impl StatusApp {
         let mut date = DateComponent;
         let mut time = TimeComponent;
         let mut right_components: [&mut dyn StatusComponent; 9] = [
+            &mut network,
             &mut fullscreen,
             &mut window_id,
             &mut prefix,
             &mut cpu,
             &mut memory,
-            &mut network,
             &mut duration,
             &mut date,
             &mut time,
@@ -155,11 +155,11 @@ impl StatusApp {
         let mut row0_date = DateComponent;
         let mut row0_time = TimeComponent;
         let mut row0_right_components: [&mut dyn StatusComponent; 8] = [
+            &mut row0_network,
             &mut row0_right_prefix,
             &mut row0_bell,
             &mut row0_cpu,
             &mut row0_memory,
-            &mut row0_network,
             &mut row0_duration,
             &mut row0_date,
             &mut row0_time,

@@ -22,7 +22,7 @@ impl StatusComponent for MemoryComponent {
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
     ) -> AppResult<ComponentSnapshot> {
-        let cache_key = "v1";
+        let cache_key = "v4";
         let cached = cache.get(self.id(), cache_key).and_then(parse_cache);
         if let Some((timestamp, rendered)) = cached.as_ref()
             && (!should_refresh(event) || is_fresh(*timestamp))
@@ -59,9 +59,10 @@ fn is_fresh(timestamp_seconds: u64) -> bool {
 
 fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
     let memory = snapshot.percent.round() as u64;
-    let literal_text = format!(" MEM {memory}% ");
+    let literal_text = format!(" {memory}% ");
+    let rich_value = format!(" {memory}%% ");
     let rich_text = format!(
-        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{literal_text}"
+        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_MEMORY}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{rich_value}"
     );
     RenderedSegment {
         literal_text,

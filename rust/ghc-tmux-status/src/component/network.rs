@@ -22,7 +22,7 @@ impl StatusComponent for NetworkComponent {
         event: &RenderEvent,
         cache: &mut dyn ComponentCache,
     ) -> AppResult<ComponentSnapshot> {
-        let cache_key = "v1:en0";
+        let cache_key = "v2:en0";
         let cached = cache.get(self.id(), cache_key).and_then(parse_cache);
         if let Some((sample, rendered)) = cached.as_ref()
             && (!should_refresh(event) || is_fresh(sample.timestamp_seconds))
@@ -66,7 +66,7 @@ fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
     let tx = format_speed(snapshot.tx_bytes_per_second);
     let literal_text = format!(" ↓{rx} ↑{tx} ");
     let rich_text = format!(
-        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{literal_text}"
+        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_NET}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{literal_text}"
     );
     RenderedSegment {
         literal_text,
