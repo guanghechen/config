@@ -1,4 +1,4 @@
 interface:
   display_name: "Tmux Pane Collab"
-  short_description: "Coordinate agent collaboration through tmux panes"
-  default_prompt: "Use $tmux-pane-collab to collaborate with another agent through a specified tmux pane."
+  short_description: "Send structured agent messages through tmux panes"
+  default_prompt: "Use $tmux-pane-collab to send a structured message to another agent through an explicit tmux pane."

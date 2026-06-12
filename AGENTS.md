@@ -1,13 +1,14 @@
 # Supreme Principles
 
-> **Constitutional rules.** `CRITICAL` and `ALWAYS` rules take highest precedence — project-level CLAUDE.md MUST NOT override. Other rules are recommendations and may be adapted per context.
+> **Constitutional rules.** `CRITICAL` and `ALWAYS` rules take highest precedence — project-level AGENTS.md MUST NOT override. Other rules are recommendations and may be adapted per context.
 
 1. **CRITICAL**: For complex tasks, multiple options, or any concerns — discuss first, align on direction before doing the work.
 2. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
-3. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
-4. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
-5. **ALWAYS**: For non-trivial proposals, give 2-3 concrete examples with brief contrasts and one recommendation.
-6. **ALWAYS**: When identifying issues, show concrete examples; if no minimal repro, state trigger, evidence, and impact.
+3. **ALWAYS**: Assume the user is a senior computer engineer; communicate concisely, precisely, and with clear logical structure. Avoid tutorial-style explanations unless requested.
+4. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
+5. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
+6. **ALWAYS**: For non-trivial proposals, give 2-3 concrete examples with brief contrasts and one recommendation.
+7. **ALWAYS**: When identifying issues, show concrete examples; if no minimal repro, state trigger, evidence, and impact.
 
 ## Security
 
@@ -32,23 +33,6 @@
    - Exposed pure (no side effects): Propagate errors transparently.
 9. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
 
-## Environment
-
-### Tmux
-
-> Apply when user mentions tmux or pane references (`%N`, `#N`, `@M#N`).
-
-1. **CRITICAL**: Pane reference conventions:
-   - `%N` (e.g., `%3`) - Global pane id: `-t %3`
-   - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
-   - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
-2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-4. **CRITICAL**: Inter-agent communication must verify actual submission, not just paste:
-   - Send multi-line messages via tmux buffer (`load-buffer` + `paste-buffer`) to avoid shell quoting issues; keying or pasting text does not submit it.
-   - `tmux capture-pane -ep -t {pane_ref}` first, then trigger by state (check processing FIRST): processing (footer shows `esc to interrupt`) → NEVER `Escape` (it interrupts the turn); send `Tab` only if a queue hint shows, else wait. Idle prompt, text unsent → `Enter`. Modal editor stuck in insert (vim-like `-- INSERT --`) → `Escape` then `Enter`.
-   - Re-capture to confirm (prompt cleared, processing started, message queued, or peer replied) before claiming sent; retry the capture instead of trusting a fixed delay.
-
 ## Architecture Governance
 
 1. **ALWAYS**: For new feature work or non-trivial refactor tasks, follow `arch-gate` skill before implementation.
@@ -56,3 +40,17 @@
    Unresolved items must be centralized before implementation and must not be scattered in final design.
 2. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
 3. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
+
+## Environment
+
+### Tmux
+
+> Apply when user mentions tmux or pane references (`%N`, `#N`, `@M#N`).
+
+1. **CRITICAL**: Pane ref conventions:
+   - `%N`: global pane id, use `-t %N`
+   - `#N`: pane index in current window, use `-t :.N`
+   - `@M#N`: pane index N in window @M, use `-t @M.N`
+2. **CRITICAL**: Locate this agent's own pane via `$TMUX_PANE`; never use bare `tmux display-message -p '#{pane_id}'`, which returns the focused client's active pane.
+3. **ALWAYS**: Use `tmux capture-pane -ep -t {target}` to inspect a pane.
+4. **ALWAYS**: Choose tmux skill by intent: raw pane operations (inspect, shell/editor/TUI/agent pane keystrokes) use `tmux`; structured agent-to-agent messages use `tmux-pane-collab`.
