@@ -12,13 +12,21 @@ function _ghc_tmux_status_layout_ {
     esac
   done < <(tmux show -gq 2>/dev/null)
 
+  local client_context
+  client_context=$(tmux display-message -p '#{client_width}	#{session_name}' 2>/dev/null)
+
   local width
-  width=$(tmux display-message -p '#{client_width}' 2>/dev/null)
+  local current_session_name
+  IFS=$'	' read -r width current_session_name <<< "$client_context"
 
   local current_status
   current_status=$(tmux show -qv status)
 
   if [ "$mode" != "02" ] && [ "$mode" != "12" ]; then
+    return 0
+  fi
+
+  if [ "$current_status" == "off" ]; then
     return 0
   fi
 
@@ -32,8 +40,14 @@ function _ghc_tmux_status_layout_ {
     position="bottom"
   fi
 
+  local session_count
+  session_count=$(bash "$HOME/.config/tmux/script/session-status.sh" "$current_session_name" "" "" "" "" "" "" "count")
+  if ! [[ "$session_count" =~ ^[0-9]+$ ]]; then
+    session_count=2
+  fi
+
   local layout="narrow"
-  if [ "$width" -ge "$wide_threshold" ]; then
+  if [ "$session_count" -le 1 ] || [ "$width" -ge "$wide_threshold" ]; then
     layout="wide"
   fi
 
@@ -41,10 +55,6 @@ function _ghc_tmux_status_layout_ {
   local target_status="2"
   if [ "$layout" == "wide" ]; then
     target_status="on"
-  fi
-
-  if [ "$current_status" == "off" ]; then
-    return 0
   fi
 
   if [ "$current_layout" == "$layout_key" ] && [ "$current_status" == "$target_status" ]; then

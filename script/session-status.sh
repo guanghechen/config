@@ -43,6 +43,8 @@ function _ghc_tmux_session_status_ {
   local sep_left=${6:-}
   local sep_right=${7:-}
   local display_mode=${8:-index}
+  local prefix_symbol=${9:-}
+  local prefix_sep_left=${10:-}
 
   local -a session_ids=()
   local -a session_names=()
@@ -56,8 +58,19 @@ function _ghc_tmux_session_status_ {
     fi
   done < <(tmux list-sessions -F "#{session_id}${session_separator}#{session_name}" 2>/dev/null)
 
+  if [ "${display_mode}" == "count" ]; then
+    printf '%s\n' "${#session_names[@]}"
+    return
+  fi
+
   if [ "${#session_names[@]}" -le 1 ]; then
     return
+  fi
+
+  if [ "${display_mode}" == "kitty" ] && [ -n "${prefix_symbol}" ]; then
+    printf '#[fg=%s]%s#[fg=%s,bg=%s,bold]%s #[default] ' \
+      "${current_bg}" "${prefix_sep_left}" \
+      "${current_fg}" "${current_bg}" "${prefix_symbol}"
   fi
 
   local index=1

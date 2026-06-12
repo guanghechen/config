@@ -36,7 +36,10 @@ function _ghc_tmux_load_theme_ {
     tmux set -g @GHC_PSL_MODE "$panestatus_mode"
   fi
 
-  tmux set-hook -gu 'client-resized[40]' 2>/dev/null || true
+  local layout_hook
+  for layout_hook in 'client-resized[40]' 'client-session-changed[40]' 'session-created[40]' 'session-closed[40]' 'session-renamed[40]'; do
+    tmux set-hook -gu "$layout_hook" 2>/dev/null || true
+  done
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
 
@@ -56,7 +59,10 @@ function _ghc_tmux_load_theme_ {
       tmux set -g status-justify centre
       tmux set -g status-position "$status_position"
       tmux source "$HOME/.config/tmux/conf/theme/status02.tmux.conf"
-      tmux set-hook -g 'client-resized[40]' "run-shell 'bash $HOME/.config/tmux/script/status-layout.sh'"
+      local layout_hook_command="run-shell 'bash $HOME/.config/tmux/script/status-layout.sh'"
+      for layout_hook in 'client-resized[40]' 'client-session-changed[40]' 'session-created[40]' 'session-closed[40]' 'session-renamed[40]'; do
+        tmux set-hook -g "$layout_hook" "$layout_hook_command"
+      done
       bash "$HOME/.config/tmux/script/status-layout.sh"
       ;;
   esac
