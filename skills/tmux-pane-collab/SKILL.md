@@ -1,6 +1,12 @@
 ---
 name: tmux-pane-collab
-description: Use when the user asks this agent to communicate with another agent through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane receives a tmux-pane-collab protocol message. Handle inbound messages according to mode/expect. Never guess, scan for, or auto-select panes. For structured review loops, use multi-agent-review instead.
+description: >-
+  Use when the user asks this agent to send a structured agent-to-agent message
+  through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane
+  receives a tmux-pane-collab protocol message. Handle inbound messages according
+  to mode/expect. For raw pane operations, use tmux instead. Never guess, scan
+  for, or auto-select panes. For structured review loops, use multi-agent-review
+  instead.
 argument-hint: "[pane-ref | protocol message]"
 ---
 
@@ -12,7 +18,7 @@ argument-hint: "[pane-ref | protocol message]"
 
 仅在以下场景使用本 skill：
 
-- **发起侧**：用户明确要求通过 tmux pane 与另一个 agent 协作，并提供目标 pane ref：`%N`、`#N` 或 `@M#N`。
+- **发起侧**：用户明确要求通过 tmux pane 向另一个 agent 发送结构化协作消息，并提供目标 pane ref：`%N`、`#N` 或 `@M#N`。
 - **回写侧**：当前 pane 收到符合本协议「消息格式」的入站消息。
 
 发起侧没有目标 pane ref 时停止并要求用户补充。不要猜测、扫描或自动选择 pane。

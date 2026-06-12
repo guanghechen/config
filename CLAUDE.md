@@ -39,17 +39,13 @@
 
 > Apply when user mentions tmux or pane references (`%N`, `#N`, `@M#N`).
 
-1. **CRITICAL**: Pane reference conventions:
-   - `%N` (e.g., `%3`) - Global pane id: `-t %3`
-   - `#N` (e.g., `#3`) - Pane index N in current window: `-t :.N`
-   - `@M#N` (e.g., `@1#2`) - Pane index N in window @M: `-t @M.N`
-2. **CRITICAL**: Locate own pane via `$TMUX_PANE`, NEVER `tmux display-message -p '#{pane_id}'` — the latter returns the active pane of the client's focused window, wrong when this agent isn't focused. `$TMUX_PANE` is per-pane, fixed regardless of focus, inherited by children. Empty only when not directly forked by tmux (`ssh`/`docker exec`) — then ask the user.
-2. **CRITICAL**: `tmux capture-pane -ep -t {pane_ref}` - View pane buffer (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-3. **CRITICAL**: `tmux send-keys -t {pane_ref} 'command' Enter` - Send commands to pane (e.g., `-t %3`, `-t :.1`, `-t @1.2`)
-4. **CRITICAL**: Inter-agent communication must verify actual submission, not just paste:
-   - Send multi-line messages via tmux buffer (`load-buffer` + `paste-buffer`) to avoid shell quoting issues; keying or pasting text does not submit it.
-   - `tmux capture-pane -ep -t {pane_ref}` first, then trigger by state (check processing FIRST): processing (footer shows `esc to interrupt`) → NEVER `Escape` (it interrupts the turn); send `Tab` only if a queue hint shows, else wait. Idle prompt, text unsent → `Enter`. Modal editor stuck in insert (vim-like `-- INSERT --`) → send `Escape` ALONE, re-capture to confirm `-- INSERT --` is gone, THEN `Enter`. Never chain `Escape` and `Enter` in one step — the `Enter` can land before insert mode exits and just inserts a newline instead of submitting.
-   - Re-capture to confirm (prompt cleared, processing started, message queued, or peer replied) before claiming sent; retry the capture instead of trusting a fixed delay.
+1. **CRITICAL**: Pane ref conventions:
+   - `%N`: global pane id, use `-t %N`
+   - `#N`: pane index in current window, use `-t :.N`
+   - `@M#N`: pane index N in window @M, use `-t @M.N`
+2. **CRITICAL**: Locate this agent's own pane via `$TMUX_PANE`; never use bare `tmux display-message -p '#{pane_id}'`, which returns the focused client's active pane.
+3. **ALWAYS**: Use `tmux capture-pane -ep -t {target}` to inspect a pane.
+4. **ALWAYS**: Choose tmux skill by intent: raw pane operations (inspect, shell/editor/TUI/agent pane keystrokes) use `tmux`; structured agent-to-agent messages use `tmux-pane-collab`.
 
 ## Architecture Governance
 
