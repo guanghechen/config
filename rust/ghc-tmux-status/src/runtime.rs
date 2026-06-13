@@ -11,7 +11,7 @@ use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
     ordered_sessions, swap_current,
 };
-use crate::status_length::status_left_length;
+use crate::status_length::{status_left_length, status_right_length};
 use crate::status_widget::StatusWidget;
 use crate::tmux::TmuxAdapter;
 use crate::util::width::display_width;
@@ -61,6 +61,10 @@ impl StatusRuntime {
         println!(
             "status-left-length={}",
             status_left_length(&rendered, &context)
+        );
+        println!(
+            "status-right-length={}",
+            status_right_length(&rendered, &context)
         );
         println!(
             "@GHC_SL_STATUS02_SESSION_FORMAT={}",

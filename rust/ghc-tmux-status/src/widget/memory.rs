@@ -5,6 +5,7 @@ use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment}
 use crate::status_widget::StatusWidget;
 use crate::util::format::format_percent_min_width_2;
 use crate::util::time::unix_timestamp_seconds;
+use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
 pub struct MemoryWidget {
@@ -65,7 +66,8 @@ fn is_fresh(timestamp_seconds: u64) -> bool {
 
 fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
     let memory = format_percent_min_width_2(snapshot.percent);
-    let literal_text = format!(" {memory}% ");
+    let body_literal = format!(" {memory}% ");
+    let literal_text = pill_literal(&body_literal);
     let rich_value = format!(" {memory}%% ");
     let rich_text = format!(
         "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_MEMORY}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{rich_value}"

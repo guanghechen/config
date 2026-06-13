@@ -2,6 +2,7 @@ use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::StatusWidget;
 use crate::util::shell::shell_quote;
+use crate::widget::pill::pill_literal;
 
 pub struct TimeWidget;
 
@@ -12,7 +13,7 @@ impl StatusWidget for TimeWidget {
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
-            literal_text: " 00:00:00 ".to_string(),
+            literal_text: pill_literal(" 00:00:00 "),
             rich_text: format!(
                 "#[fg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SYM_TIME}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] %H:%M:%S {}",
                 tick_trigger()
@@ -55,7 +56,7 @@ mod tests {
     fn renders_time_with_seconds() {
         let segment = TimeWidget.render(&context()).unwrap();
 
-        assert_eq!(segment.literal_text, " 00:00:00 ");
+        assert_eq!(segment.literal_text, "¤  00:00:00 ");
         assert!(segment.rich_text.contains("%H:%M:%S"));
     }
 

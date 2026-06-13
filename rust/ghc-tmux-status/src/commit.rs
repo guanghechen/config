@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus, TmuxSnapshot};
-use crate::status_length::status_left_length;
+use crate::status_length::{status_left_length, status_right_length};
 
 const STATUS02_STATUS_INTERVAL_SECONDS: &str = "1";
 // Keep in sync with conf/theme.tmux.conf; sourcing the theme is the primary inactive reset.
@@ -123,6 +123,12 @@ impl CommitPlanner {
             STATUS02_STATUS_INTERVAL_SECONDS,
         );
         push_set_global(&mut plan, "status-right", "#{E:@GHC_SL_STATUS02_RIGHT}");
+        push_global_if_changed(
+            &mut plan,
+            options,
+            "status-right-length",
+            &status_right_length(status, context),
+        );
         push_set_global(
             &mut plan,
             "status-position",
@@ -276,6 +282,37 @@ mod tests {
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
             TmuxCommand::SetGlobal { name, .. } if name == "status-left-length"
+        )));
+    }
+
+    #[test]
+    fn sets_dynamic_status_right_length_when_cached_value_is_stale() {
+        let status = rendered_status(&"x".repeat(90));
+        let context = context_with_options(BTreeMap::from([(
+            "status-right-length".to_string(),
+            "84".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, value }
+                if name == "status-right-length" && value == "92"
+        )));
+    }
+
+    #[test]
+    fn skips_dynamic_status_right_length_when_cached_value_matches() {
+        let status = rendered_status(&"x".repeat(90));
+        let context = context_with_options(BTreeMap::from([(
+            "status-right-length".to_string(),
+            "92".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(!plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, .. } if name == "status-right-length"
         )));
     }
 

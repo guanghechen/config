@@ -5,6 +5,7 @@ mod fullscreen;
 mod host;
 mod memory;
 mod network;
+mod pill;
 mod prefix_indicator;
 mod session_bell;
 mod session_list;

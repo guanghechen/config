@@ -4,6 +4,7 @@ use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platfor
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
 use crate::status_widget::StatusWidget;
 use crate::util::time::unix_timestamp_seconds;
+use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
 pub struct NetworkWidget {
@@ -66,9 +67,10 @@ fn is_fresh(timestamp_seconds: u64) -> bool {
 fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
     let rx = format_speed(snapshot.rx_bytes_per_second);
     let tx = format_speed(snapshot.tx_bytes_per_second);
-    let literal_text = format!(" ↓{rx} ↑{tx} ");
+    let body_literal = format!(" ↓{rx} ↑{tx} ");
+    let literal_text = pill_literal(&body_literal);
     let rich_text = format!(
-        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_NET}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{literal_text}"
+        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_NET}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{body_literal}"
     );
     RenderedSegment {
         literal_text,

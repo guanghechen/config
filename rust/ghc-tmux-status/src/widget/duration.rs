@@ -3,6 +3,7 @@ use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
 use crate::status_widget::StatusWidget;
 use crate::util::time::unix_timestamp_seconds;
+use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
 pub struct DurationWidget {
@@ -27,7 +28,8 @@ impl StatusWidget for DurationWidget {
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
-        let literal_text = format!(" {} ", self.duration);
+        let body_literal = format!(" {} ", self.duration);
+        let literal_text = pill_literal(&body_literal);
         let rich_text = format!(
             "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {} ",
             self.duration
