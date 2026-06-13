@@ -1,6 +1,6 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEventKind, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 
 const LIST_SURFACE_BG: &str = "default";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
@@ -18,15 +18,15 @@ const SESSION_ICON_PILL_LITERAL: &str = "  ";
 const SLANT_LEFT_LITERAL: char = '';
 const SLANT_RIGHT_LITERAL: char = '';
 
-pub struct SessionListComponent;
+pub struct SessionListWidget;
 
-impl StatusComponent for SessionListComponent {
+impl StatusWidget for SessionListWidget {
     fn id(&self) -> &'static str {
         "session-list"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Events(&[
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Events(&[
             RenderEventKind::SessionChanged,
             RenderEventKind::SessionCreated,
             RenderEventKind::SessionClosed,

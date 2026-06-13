@@ -1,30 +1,30 @@
-use crate::cache::ComponentCache;
+use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::metric::{MemorySnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 use crate::util::format::format_percent_min_width_2;
 use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
-pub struct MemoryComponent {
+pub struct MemoryWidget {
     snapshot: Option<MemorySnapshot>,
 }
 
-impl StatusComponent for MemoryComponent {
+impl StatusWidget for MemoryWidget {
     fn id(&self) -> &'static str {
         "memory"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Periodic { interval_secs: 20 }
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn snapshot(
         &mut self,
         _context: &RenderContext,
         event: &RenderEvent,
-        cache: &mut dyn ComponentCache,
+        cache: &mut dyn WidgetCache,
     ) -> AppResult<()> {
         let cached = cache.get(self.id()).and_then(parse_cache);
         if let Some(snapshot) = cached.clone()

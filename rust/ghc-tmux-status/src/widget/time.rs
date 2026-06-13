@@ -1,17 +1,17 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 use crate::util::shell::shell_quote;
 
-pub struct TimeComponent;
+pub struct TimeWidget;
 
-impl StatusComponent for TimeComponent {
+impl StatusWidget for TimeWidget {
     fn id(&self) -> &'static str {
         "time"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Periodic { interval_secs: 1 }
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Periodic { interval_secs: 1 }
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
@@ -48,16 +48,16 @@ fn fallback_binary_path() -> String {
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::TimeComponent;
+    use super::TimeWidget;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
         TmuxSnapshot,
     };
-    use crate::status_component::StatusComponent;
+    use crate::status_widget::StatusWidget;
 
     #[test]
     fn renders_time_with_seconds() {
-        let segment = TimeComponent.render(&context()).unwrap();
+        let segment = TimeWidget.render(&context()).unwrap();
 
         assert_eq!(segment.literal_text, " 00:00:00 ");
         assert!(segment.rich_text.contains("%H:%M:%S"));

@@ -1,10 +1,10 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::StatusComponent;
+use crate::status_widget::StatusWidget;
 
-pub struct FullscreenComponent;
+pub struct FullscreenWidget;
 
-impl StatusComponent for FullscreenComponent {
+impl StatusWidget for FullscreenWidget {
     fn id(&self) -> &'static str {
         "fullscreen"
     }

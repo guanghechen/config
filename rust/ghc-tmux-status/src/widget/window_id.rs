@@ -1,10 +1,10 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::StatusComponent;
+use crate::status_widget::StatusWidget;
 
-pub struct WindowIdComponent;
+pub struct WindowIdWidget;
 
-impl StatusComponent for WindowIdComponent {
+impl StatusWidget for WindowIdWidget {
     fn id(&self) -> &'static str {
         "window-id"
     }

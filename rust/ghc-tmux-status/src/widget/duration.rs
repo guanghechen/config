@@ -1,28 +1,28 @@
-use crate::cache::ComponentCache;
+use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
-pub struct DurationComponent {
+pub struct DurationWidget {
     duration: String,
 }
 
-impl StatusComponent for DurationComponent {
+impl StatusWidget for DurationWidget {
     fn id(&self) -> &'static str {
         "duration"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Periodic { interval_secs: 20 }
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn snapshot(
         &mut self,
         context: &RenderContext,
         _event: &RenderEvent,
-        _cache: &mut dyn ComponentCache,
+        _cache: &mut dyn WidgetCache,
     ) -> AppResult<()> {
         self.duration = format_duration(
             (unix_timestamp_seconds() as i64).saturating_sub(context.snapshot.session_created),

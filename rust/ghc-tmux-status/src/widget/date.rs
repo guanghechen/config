@@ -1,16 +1,16 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 
-pub struct DateComponent;
+pub struct DateWidget;
 
-impl StatusComponent for DateComponent {
+impl StatusWidget for DateWidget {
     fn id(&self) -> &'static str {
         "date"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Periodic { interval_secs: 20 }
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {

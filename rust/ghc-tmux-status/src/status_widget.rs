@@ -1,19 +1,19 @@
-use crate::cache::ComponentCache;
+use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
 
-pub trait StatusComponent {
+pub trait StatusWidget {
     fn id(&self) -> &'static str;
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::All
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::All
     }
 
     fn snapshot(
         &mut self,
         _context: &RenderContext,
         _event: &RenderEvent,
-        _cache: &mut dyn ComponentCache,
+        _cache: &mut dyn WidgetCache,
     ) -> AppResult<()> {
         Ok(())
     }
@@ -21,14 +21,14 @@ pub trait StatusComponent {
     fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
 }
 
-pub enum ComponentInterests {
+pub enum WidgetInterests {
     Static,
     All,
     Events(&'static [RenderEventKind]),
     Periodic { interval_secs: u64 },
 }
 
-impl ComponentInterests {
+impl WidgetInterests {
     pub fn matches(&self, event: &RenderEvent) -> bool {
         if matches!(
             event.kind,

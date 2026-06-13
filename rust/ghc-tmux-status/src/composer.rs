@@ -1,23 +1,23 @@
-use crate::cache::ComponentCache;
+use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
-use crate::status_component::{ComponentInterests, StatusComponent};
 use crate::status_length::status_left_length;
+use crate::status_widget::{StatusWidget, WidgetInterests};
 
-pub fn render_components(
-    components: &mut [&mut dyn StatusComponent],
+pub fn render_widgets(
+    widgets: &mut [&mut dyn StatusWidget],
     context: &RenderContext,
     event: &RenderEvent,
-    cache: &mut dyn ComponentCache,
+    cache: &mut dyn WidgetCache,
 ) -> AppResult<RenderedSegment> {
     let mut literal_text = String::new();
     let mut rich_text = String::new();
-    for component in components {
-        let interests = component.interests();
-        if interests.matches(event) || !matches!(interests, ComponentInterests::Static) {
-            component.snapshot(context, event, cache)?;
+    for widget in widgets {
+        let interests = widget.interests();
+        if interests.matches(event) || !matches!(interests, WidgetInterests::Static) {
+            widget.snapshot(context, event, cache)?;
         }
-        let segment = component.render(context)?;
+        let segment = widget.render(context)?;
         literal_text.push_str(&segment.literal_text);
         rich_text.push_str(&segment.rich_text);
     }

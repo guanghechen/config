@@ -1,7 +1,6 @@
 mod app;
 mod cache;
 mod commit;
-mod component;
 mod composer;
 mod error;
 mod layout;
@@ -10,10 +9,11 @@ mod model;
 mod platform;
 mod runtime;
 mod session_group;
-mod status_component;
 mod status_length;
+mod status_widget;
 mod tmux;
 mod util;
+mod widget;
 
 use crate::app::StatusApp;
 use crate::error::{AppError, AppResult};

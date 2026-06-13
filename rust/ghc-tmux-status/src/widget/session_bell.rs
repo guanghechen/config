@@ -1,10 +1,10 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::StatusComponent;
+use crate::status_widget::StatusWidget;
 
-pub struct SessionBellComponent;
+pub struct SessionBellWidget;
 
-impl StatusComponent for SessionBellComponent {
+impl StatusWidget for SessionBellWidget {
     fn id(&self) -> &'static str {
         "session-bell"
     }

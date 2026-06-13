@@ -1,21 +1,21 @@
-use crate::cache::TmuxComponentCache;
+use crate::cache::{TmuxWidgetCache, WIDGET_CACHE_OPTION_PREFIX};
 use crate::commit::CommitPlanner;
-use crate::component::{
-    CpuComponent, DateComponent, DurationComponent, FullscreenComponent, HostComponent,
-    MemoryComponent, NetworkComponent, PrefixIndicatorComponent, SessionBellComponent,
-    SessionListComponent, TimeComponent, WindowIdComponent,
-};
-use crate::composer::{cache_matches, format_current_format, render_components};
+use crate::composer::{cache_matches, format_current_format, render_widgets};
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::model::{
     RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus, TmuxSnapshot,
 };
 use crate::session_group::SessionGrouper;
-use crate::status_component::StatusComponent;
 use crate::status_length::status_left_length;
+use crate::status_widget::StatusWidget;
 use crate::tmux::TmuxAdapter;
 use crate::util::width::display_width;
+use crate::widget::{
+    CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
+    NetworkWidget, PrefixIndicatorWidget, SessionBellWidget, SessionListWidget, TimeWidget,
+    WindowIdWidget,
+};
 
 pub struct StatusRuntime {
     tmux: TmuxAdapter,
@@ -133,23 +133,23 @@ impl StatusRuntime {
         context: &RenderContext,
         event: &RenderEvent,
     ) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
-        let mut cache = TmuxComponentCache::from_options(&context.snapshot.options);
+        let mut cache = TmuxWidgetCache::from_options(&context.snapshot.options);
 
-        let mut host = HostComponent;
-        let mut session_list = SessionListComponent;
-        let mut left_components: [&mut dyn StatusComponent; 2] = [&mut host, &mut session_list];
-        let status_left = render_components(&mut left_components, context, event, &mut cache)?;
+        let mut host = HostWidget;
+        let mut session_list = SessionListWidget;
+        let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
+        let status_left = render_widgets(&mut left_widgets, context, event, &mut cache)?;
 
-        let mut fullscreen = FullscreenComponent;
-        let mut window_id = WindowIdComponent;
-        let mut network = NetworkComponent::default();
-        let mut prefix = PrefixIndicatorComponent;
-        let mut cpu = CpuComponent::default();
-        let mut memory = MemoryComponent::default();
-        let mut duration = DurationComponent::default();
-        let mut date = DateComponent;
-        let mut time = TimeComponent;
-        let mut right_components: [&mut dyn StatusComponent; 9] = [
+        let mut fullscreen = FullscreenWidget;
+        let mut window_id = WindowIdWidget;
+        let mut network = NetworkWidget::default();
+        let mut prefix = PrefixIndicatorWidget;
+        let mut cpu = CpuWidget::default();
+        let mut memory = MemoryWidget::default();
+        let mut duration = DurationWidget::default();
+        let mut date = DateWidget;
+        let mut time = TimeWidget;
+        let mut right_widgets: [&mut dyn StatusWidget; 9] = [
             &mut fullscreen,
             &mut window_id,
             &mut network,
@@ -160,22 +160,21 @@ impl StatusRuntime {
             &mut date,
             &mut time,
         ];
-        let status_right_body =
-            render_components(&mut right_components, context, event, &mut cache)?;
+        let status_right_body = render_widgets(&mut right_widgets, context, event, &mut cache)?;
         let status_right = RenderedSegment {
             literal_text: format!(" {}", status_right_body.literal_text),
             rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
         };
 
-        let mut row0_network = NetworkComponent::default();
-        let mut row0_right_prefix = PrefixIndicatorComponent;
-        let mut row0_bell = SessionBellComponent;
-        let mut row0_cpu = CpuComponent::default();
-        let mut row0_memory = MemoryComponent::default();
-        let mut row0_duration = DurationComponent::default();
-        let mut row0_date = DateComponent;
-        let mut row0_time = TimeComponent;
-        let mut row0_right_components: [&mut dyn StatusComponent; 8] = [
+        let mut row0_network = NetworkWidget::default();
+        let mut row0_right_prefix = PrefixIndicatorWidget;
+        let mut row0_bell = SessionBellWidget;
+        let mut row0_cpu = CpuWidget::default();
+        let mut row0_memory = MemoryWidget::default();
+        let mut row0_duration = DurationWidget::default();
+        let mut row0_date = DateWidget;
+        let mut row0_time = TimeWidget;
+        let mut row0_right_widgets: [&mut dyn StatusWidget; 8] = [
             &mut row0_network,
             &mut row0_right_prefix,
             &mut row0_bell,
@@ -185,7 +184,7 @@ impl StatusRuntime {
             &mut row0_date,
             &mut row0_time,
         ];
-        let row0_right = render_components(&mut row0_right_components, context, event, &mut cache)?;
+        let row0_right = render_widgets(&mut row0_right_widgets, context, event, &mut cache)?;
 
         let session_format = RenderedSegment {
             literal_text: format!("{}{}", status_left.literal_text, row0_right.literal_text),
@@ -195,11 +194,11 @@ impl StatusRuntime {
             ),
         };
 
-        let mut row1_fullscreen = FullscreenComponent;
-        let mut row1_window_id = WindowIdComponent;
-        let mut row1_right_components: [&mut dyn StatusComponent; 2] =
+        let mut row1_fullscreen = FullscreenWidget;
+        let mut row1_window_id = WindowIdWidget;
+        let mut row1_right_widgets: [&mut dyn StatusWidget; 2] =
             [&mut row1_fullscreen, &mut row1_window_id];
-        let row1_right = render_components(&mut row1_right_components, context, event, &mut cache)?;
+        let row1_right = render_widgets(&mut row1_right_widgets, context, event, &mut cache)?;
         let current_format = RenderedSegment {
             literal_text: row1_right.literal_text,
             rich_text: format_current_format(&row1_right.rich_text),
@@ -227,7 +226,7 @@ fn cache_bytes(context: &RenderContext) -> usize {
         .snapshot
         .options
         .iter()
-        .filter(|(name, _)| name.starts_with("@GHC_STATUS_COMPONENT_CACHE_"))
+        .filter(|(name, _)| name.starts_with(WIDGET_CACHE_OPTION_PREFIX))
         .map(|(_, value)| value.len())
         .sum()
 }

@@ -1,16 +1,16 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_widget::{StatusWidget, WidgetInterests};
 
-pub struct HostComponent;
+pub struct HostWidget;
 
-impl StatusComponent for HostComponent {
+impl StatusWidget for HostWidget {
     fn id(&self) -> &'static str {
         "host"
     }
 
-    fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Static
+    fn interests(&self) -> WidgetInterests {
+        WidgetInterests::Static
     }
 
     fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
@@ -35,18 +35,16 @@ fn truncate_chars(text: &str, limit: usize) -> String {
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::HostComponent;
+    use super::HostWidget;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
         TmuxSnapshot,
     };
-    use crate::status_component::StatusComponent;
+    use crate::status_widget::StatusWidget;
 
     #[test]
     fn literal_text_accounts_for_visible_host_pill_glyphs() {
-        let segment = HostComponent
-            .render(&context_with_host("mbp-m5-64g"))
-            .unwrap();
+        let segment = HostWidget.render(&context_with_host("mbp-m5-64g")).unwrap();
         assert_eq!(segment.literal_text, "  mbp-m5-64g ");
     }
 

@@ -1,10 +1,10 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_component::StatusComponent;
+use crate::status_widget::StatusWidget;
 
-pub struct PrefixIndicatorComponent;
+pub struct PrefixIndicatorWidget;
 
-impl StatusComponent for PrefixIndicatorComponent {
+impl StatusWidget for PrefixIndicatorWidget {
     fn id(&self) -> &'static str {
         "prefix-indicator"
     }

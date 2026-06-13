@@ -73,7 +73,7 @@ impl CommitPlanner {
         status: &RenderedStatus,
         context: &RenderContext,
         event: &RenderEvent,
-        component_cache_options: Vec<(String, String)>,
+        widget_cache_options: Vec<(String, String)>,
     ) -> TmuxCommandPlan {
         let mut plan = TmuxCommandPlan::default();
         let options = &context.snapshot.options;
@@ -103,7 +103,7 @@ impl CommitPlanner {
             &status.current_format.rich_text,
         );
 
-        for (name, value) in component_cache_options {
+        for (name, value) in widget_cache_options {
             push_global_if_changed(&mut plan, options, &name, &value);
         }
 
@@ -150,7 +150,7 @@ impl CommitPlanner {
         }
 
         if event.kind == RenderEventKind::ThemeLoaded {
-            for name in LEGACY_COMPONENT_CACHE_OPTIONS {
+            for name in LEGACY_WIDGET_CACHE_OPTIONS {
                 plan.commands.push(TmuxCommand::UnsetGlobal {
                     name: name.to_string(),
                 });
@@ -187,7 +187,8 @@ fn push_set_session(plan: &mut TmuxCommandPlan, name: &str, value: &str) {
     });
 }
 
-const LEGACY_COMPONENT_CACHE_OPTIONS: &[&str] = &[
+// External tmux option names keep COMPONENT for compatibility with existing cached values.
+const LEGACY_WIDGET_CACHE_OPTIONS: &[&str] = &[
     "@GHC_STATUS_COMPONENT_CACHE_host",
     "@GHC_STATUS_COMPONENT_CACHE_prefix_indicator",
     "@GHC_STATUS_COMPONENT_CACHE_session_bell",
@@ -234,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn includes_theme_loaded_legacy_cache_cleanup() {
+    fn includes_theme_loaded_legacy_widget_cache_cleanup() {
         let status = rendered_status("new");
         let context = context_with_options(BTreeMap::new());
         let event = RenderEvent {
