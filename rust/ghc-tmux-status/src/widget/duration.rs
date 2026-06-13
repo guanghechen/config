@@ -1,38 +1,25 @@
-use crate::cache::WidgetCache;
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::status_widget::StatusWidget;
+use crate::model::{RenderContext, RenderedSegment};
+use crate::status_widget::ComputedWidget;
 use crate::util::time::unix_timestamp_seconds;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
-pub struct DurationWidget {
-    duration: String,
-}
+pub struct DurationWidget;
 
-impl StatusWidget for DurationWidget {
+impl ComputedWidget for DurationWidget {
     fn id(&self) -> &'static str {
         "duration"
     }
 
-    fn snapshot(
-        &mut self,
-        context: &RenderContext,
-        _event: &RenderEvent,
-        _cache: &mut dyn WidgetCache,
-    ) -> AppResult<()> {
-        self.duration = format_duration(
+    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+        let duration = format_duration(
             (unix_timestamp_seconds() as i64).saturating_sub(context.snapshot.session_created),
         );
-        Ok(())
-    }
-
-    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
-        let body_literal = format!(" {} ", self.duration);
+        let body_literal = format!(" {duration} ");
         let literal_text = pill_literal(&body_literal);
         let rich_text = format!(
-            "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {} ",
-            self.duration
+            "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_DURATION}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] {duration} "
         );
         Ok(RenderedSegment {
             literal_text,

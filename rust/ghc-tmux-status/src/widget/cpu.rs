@@ -1,69 +1,46 @@
-use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::metric::{CpuSample, CpuSnapshot, provider_for_current_platform};
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::status_widget::StatusWidget;
+use crate::model::RenderedSegment;
+use crate::status_widget::CachedMetricWidget;
 use crate::util::format::format_percent_min_width_2;
-use crate::util::time::unix_timestamp_seconds;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
-pub struct CpuWidget {
-    snapshot: Option<CpuSnapshot>,
-}
+pub struct CpuWidget;
 
-impl StatusWidget for CpuWidget {
+impl CachedMetricWidget for CpuWidget {
+    type Snapshot = CpuSnapshot;
+
     fn id(&self) -> &'static str {
         "cpu"
     }
 
-    fn snapshot(
-        &mut self,
-        _context: &RenderContext,
-        event: &RenderEvent,
-        cache: &mut dyn WidgetCache,
-    ) -> AppResult<()> {
-        let cached = cache.get(self.id()).and_then(parse_cache);
-        if let Some(snapshot) = cached.clone()
-            && (!should_refresh(event) || is_fresh(snapshot.timestamp_seconds))
-        {
-            self.snapshot = Some(snapshot);
-            return Ok(());
-        }
-
-        let provider = provider_for_current_platform();
-        self.snapshot = match provider.sample_cpu(cached.as_ref().map(|snapshot| &snapshot.sample))
-        {
-            Ok(snapshot) => {
-                cache.set(self.id(), encode_cache(&snapshot));
-                Some(snapshot)
-            }
-            Err(_) => cached,
-        };
-        Ok(())
+    fn ttl_seconds(&self) -> u64 {
+        REFRESH_INTERVAL_SECONDS
     }
 
-    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
-        Ok(self
-            .snapshot
-            .as_ref()
-            .map(render_cpu)
-            .unwrap_or_else(RenderedSegment::empty))
+    fn timestamp_seconds(&self, snapshot: &Self::Snapshot) -> u64 {
+        snapshot.timestamp_seconds
     }
-}
 
-fn should_refresh(event: &RenderEvent) -> bool {
-    matches!(
-        event.kind,
-        RenderEventKind::Tick | RenderEventKind::ManualApply | RenderEventKind::ThemeLoaded
-    )
+    fn decode_cache(&self, value: &str) -> Option<Self::Snapshot> {
+        parse_cache(value)
+    }
+
+    fn encode_cache(&self, snapshot: &Self::Snapshot) -> String {
+        encode_cache(snapshot)
+    }
+
+    fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
+        provider_for_current_platform().sample_cpu(previous.map(|snapshot| &snapshot.sample))
+    }
+
+    fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {
+        render_cpu(snapshot)
+    }
 }
 
 const REFRESH_INTERVAL_SECONDS: u64 = 20;
-
-fn is_fresh(timestamp_seconds: u64) -> bool {
-    unix_timestamp_seconds().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
-}
 
 fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
     let cpu = format_percent_min_width_2(snapshot.percent);

@@ -12,7 +12,7 @@ use crate::session::{
     ordered_sessions, swap_current,
 };
 use crate::status_length::{status_left_length, status_right_length};
-use crate::status_widget::StatusWidget;
+use crate::status_widget::{StatusWidget, cached_metric, computed, template};
 use crate::tmux::TmuxAdapter;
 use crate::util::width::display_width;
 use crate::widget::{
@@ -182,20 +182,20 @@ impl StatusRuntime {
     ) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
         let mut cache = TmuxWidgetCache::from_options(&context.snapshot.options);
 
-        let mut host = HostWidget;
-        let mut session_list = SessionListWidget;
+        let mut host = computed(HostWidget);
+        let mut session_list = computed(SessionListWidget);
         let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
         let status_left = render_widgets(&mut left_widgets, context, event, &mut cache)?;
 
-        let mut fullscreen = FullscreenWidget;
-        let mut window_id = WindowIdWidget;
-        let mut network = NetworkWidget::default();
-        let mut prefix = PrefixIndicatorWidget;
-        let mut cpu = CpuWidget::default();
-        let mut memory = MemoryWidget::default();
-        let mut duration = DurationWidget::default();
-        let mut date = DateWidget;
-        let mut time = TimeWidget;
+        let mut fullscreen = template(FullscreenWidget);
+        let mut window_id = template(WindowIdWidget);
+        let mut network = cached_metric(NetworkWidget);
+        let mut prefix = template(PrefixIndicatorWidget);
+        let mut cpu = cached_metric(CpuWidget);
+        let mut memory = cached_metric(MemoryWidget);
+        let mut duration = computed(DurationWidget);
+        let mut date = template(DateWidget);
+        let mut time = template(TimeWidget);
         let mut right_widgets: [&mut dyn StatusWidget; 9] = [
             &mut fullscreen,
             &mut window_id,
@@ -213,14 +213,14 @@ impl StatusRuntime {
             rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
         };
 
-        let mut row0_network = NetworkWidget::default();
-        let mut row0_right_prefix = PrefixIndicatorWidget;
-        let mut row0_bell = SessionBellWidget;
-        let mut row0_cpu = CpuWidget::default();
-        let mut row0_memory = MemoryWidget::default();
-        let mut row0_duration = DurationWidget::default();
-        let mut row0_date = DateWidget;
-        let mut row0_time = TimeWidget;
+        let mut row0_network = cached_metric(NetworkWidget);
+        let mut row0_right_prefix = template(PrefixIndicatorWidget);
+        let mut row0_bell = template(SessionBellWidget);
+        let mut row0_cpu = cached_metric(CpuWidget);
+        let mut row0_memory = cached_metric(MemoryWidget);
+        let mut row0_duration = computed(DurationWidget);
+        let mut row0_date = template(DateWidget);
+        let mut row0_time = template(TimeWidget);
         let mut row0_right_widgets: [&mut dyn StatusWidget; 8] = [
             &mut row0_network,
             &mut row0_right_prefix,
@@ -241,8 +241,8 @@ impl StatusRuntime {
             ),
         };
 
-        let mut row1_fullscreen = FullscreenWidget;
-        let mut row1_window_id = WindowIdWidget;
+        let mut row1_fullscreen = template(FullscreenWidget);
+        let mut row1_window_id = template(WindowIdWidget);
         let mut row1_right_widgets: [&mut dyn StatusWidget; 2] =
             [&mut row1_fullscreen, &mut row1_window_id];
         let row1_right = render_widgets(&mut row1_right_widgets, context, event, &mut cache)?;

@@ -1,15 +1,13 @@
 use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
+use crate::util::time::unix_timestamp_seconds;
 
 pub trait StatusWidget {
     fn id(&self) -> &'static str;
+    fn lifecycle(&self) -> WidgetLifecycle;
 
-    fn interests(&self) -> SnapshotPolicy {
-        SnapshotPolicy::Dynamic
-    }
-
-    fn snapshot(
+    fn refresh(
         &mut self,
         _context: &RenderContext,
         _event: &RenderEvent,
@@ -21,53 +19,423 @@ pub trait StatusWidget {
     fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
 }
 
-/// Controls whether a widget refreshes its internal snapshot for a render event.
-///
-/// This is only a static-vs-dynamic dispatcher gate. Periodic throttling belongs
-/// inside each widget, for example the metric widgets' cache TTL.
-pub enum SnapshotPolicy {
-    /// Snapshot only on full-refresh events; render may still read the live context.
-    Static,
-    /// Snapshot on every render event.
-    Dynamic,
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WidgetLifecycle {
+    /// Native tmux template. No Rust refresh/cache; safe to render every tick.
+    Template,
+    /// Cheap process-local computation from context or local time. No external IO/cache.
+    Computed,
+    /// Expensive sampling controlled by the shared cache TTL adapter.
+    CachedMetric { ttl_seconds: u64 },
 }
 
-impl SnapshotPolicy {
-    pub fn should_snapshot(&self, event: &RenderEvent) -> bool {
-        match self {
-            Self::Dynamic => true,
-            Self::Static => matches!(
-                event.kind,
-                RenderEventKind::Tick | RenderEventKind::ThemeLoaded | RenderEventKind::ManualApply
-            ),
+pub trait TemplateWidget {
+    fn id(&self) -> &'static str;
+    fn render_template(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
+}
+
+pub trait ComputedWidget {
+    fn id(&self) -> &'static str;
+    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment>;
+}
+
+pub trait CachedMetricWidget {
+    type Snapshot: Clone;
+
+    fn id(&self) -> &'static str;
+    fn ttl_seconds(&self) -> u64;
+    fn timestamp_seconds(&self, snapshot: &Self::Snapshot) -> u64;
+    fn decode_cache(&self, value: &str) -> Option<Self::Snapshot>;
+    fn encode_cache(&self, snapshot: &Self::Snapshot) -> String;
+    fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot>;
+    fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment;
+
+    fn should_refresh(&self, event: &RenderEvent) -> bool {
+        matches!(
+            event.kind,
+            RenderEventKind::Tick | RenderEventKind::ManualApply | RenderEventKind::ThemeLoaded
+        )
+    }
+}
+
+pub struct Template<T> {
+    widget: T,
+}
+
+pub struct Computed<T> {
+    widget: T,
+}
+
+pub struct CachedMetric<T: CachedMetricWidget> {
+    widget: T,
+    snapshot: Option<T::Snapshot>,
+}
+
+pub fn template<T: TemplateWidget>(widget: T) -> Template<T> {
+    Template { widget }
+}
+
+pub fn computed<T: ComputedWidget>(widget: T) -> Computed<T> {
+    Computed { widget }
+}
+
+pub fn cached_metric<T: CachedMetricWidget>(widget: T) -> CachedMetric<T> {
+    CachedMetric {
+        widget,
+        snapshot: None,
+    }
+}
+
+impl<T: TemplateWidget> StatusWidget for Template<T> {
+    fn id(&self) -> &'static str {
+        self.widget.id()
+    }
+
+    fn lifecycle(&self) -> WidgetLifecycle {
+        WidgetLifecycle::Template
+    }
+
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+        self.widget.render_template(context)
+    }
+}
+
+impl<T: ComputedWidget> StatusWidget for Computed<T> {
+    fn id(&self) -> &'static str {
+        self.widget.id()
+    }
+
+    fn lifecycle(&self) -> WidgetLifecycle {
+        WidgetLifecycle::Computed
+    }
+
+    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+        self.widget.render_computed(context)
+    }
+}
+
+impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
+    fn id(&self) -> &'static str {
+        self.widget.id()
+    }
+
+    fn lifecycle(&self) -> WidgetLifecycle {
+        WidgetLifecycle::CachedMetric {
+            ttl_seconds: self.widget.ttl_seconds(),
         }
+    }
+
+    fn refresh(
+        &mut self,
+        _context: &RenderContext,
+        event: &RenderEvent,
+        cache: &mut dyn WidgetCache,
+    ) -> AppResult<()> {
+        let cached = cache
+            .get(self.id())
+            .and_then(|value| self.widget.decode_cache(value));
+        if let Some(snapshot) = cached.clone()
+            && (!self.widget.should_refresh(event) || self.is_fresh(&snapshot))
+        {
+            self.snapshot = Some(snapshot);
+            return Ok(());
+        }
+
+        self.snapshot = match self.widget.sample(cached.as_ref()) {
+            Ok(snapshot) => {
+                cache.set(self.id(), self.widget.encode_cache(&snapshot));
+                Some(snapshot)
+            }
+            Err(_) => cached,
+        };
+        Ok(())
+    }
+
+    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        Ok(self
+            .snapshot
+            .as_ref()
+            .map(|snapshot| self.widget.render_snapshot(snapshot))
+            .unwrap_or_else(RenderedSegment::empty))
+    }
+}
+
+impl<T: CachedMetricWidget> CachedMetric<T> {
+    fn is_fresh(&self, snapshot: &T::Snapshot) -> bool {
+        unix_timestamp_seconds().saturating_sub(self.widget.timestamp_seconds(snapshot))
+            < self.widget.ttl_seconds()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::SnapshotPolicy;
-    use crate::model::{RenderEvent, RenderEventKind};
+    use std::cell::Cell;
+    use std::collections::BTreeMap;
+    use std::rc::Rc;
+
+    use super::{
+        CachedMetricWidget, ComputedWidget, StatusWidget, TemplateWidget, WidgetLifecycle,
+        cached_metric, computed, template,
+    };
+    use crate::cache::{TmuxWidgetCache, WidgetCache};
+    use crate::error::{AppError, AppResult};
+    use crate::model::{
+        LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderEventKind, RenderedSegment,
+        SessionGroupView, StatusMode, StatusPosition, TmuxSnapshot,
+    };
+
+    struct FakeTemplate;
+
+    impl TemplateWidget for FakeTemplate {
+        fn id(&self) -> &'static str {
+            "template"
+        }
+
+        fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+            Ok(RenderedSegment {
+                literal_text: "template".to_string(),
+                rich_text: "template".to_string(),
+            })
+        }
+    }
+
+    struct FakeComputed;
+
+    impl ComputedWidget for FakeComputed {
+        fn id(&self) -> &'static str {
+            "computed"
+        }
+
+        fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+            Ok(RenderedSegment {
+                literal_text: context.snapshot.host.clone(),
+                rich_text: context.snapshot.host.clone(),
+            })
+        }
+    }
+
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    struct FakeSnapshot {
+        timestamp_seconds: u64,
+        value: u64,
+    }
+
+    struct FakeMetric {
+        calls: Rc<Cell<usize>>,
+        now: u64,
+        fails: bool,
+    }
+
+    impl CachedMetricWidget for FakeMetric {
+        type Snapshot = FakeSnapshot;
+
+        fn id(&self) -> &'static str {
+            "fake"
+        }
+
+        fn ttl_seconds(&self) -> u64 {
+            20
+        }
+
+        fn timestamp_seconds(&self, snapshot: &Self::Snapshot) -> u64 {
+            snapshot.timestamp_seconds
+        }
+
+        fn decode_cache(&self, value: &str) -> Option<Self::Snapshot> {
+            let (timestamp_seconds, value) = value.split_once(':')?;
+            Some(FakeSnapshot {
+                timestamp_seconds: timestamp_seconds.parse().ok()?,
+                value: value.parse().ok()?,
+            })
+        }
+
+        fn encode_cache(&self, snapshot: &Self::Snapshot) -> String {
+            format!("{}:{}", snapshot.timestamp_seconds, snapshot.value)
+        }
+
+        fn sample(&self, _previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
+            self.calls.set(self.calls.get() + 1);
+            if self.fails {
+                return Err(AppError::Render("fake metric sample failed".to_string()));
+            }
+
+            Ok(FakeSnapshot {
+                timestamp_seconds: self.now,
+                value: 42,
+            })
+        }
+
+        fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {
+            RenderedSegment {
+                literal_text: snapshot.value.to_string(),
+                rich_text: snapshot.value.to_string(),
+            }
+        }
+    }
 
     #[test]
-    fn dynamic_widgets_snapshot_on_every_event() {
+    fn template_adapter_renders_without_cache_refresh() {
+        let mut widget = template(FakeTemplate);
+        let mut cache = TmuxWidgetCache::default();
+
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(widget.lifecycle(), WidgetLifecycle::Template);
+        assert_eq!(segment.literal_text, "template");
+        assert!(cache.pending_options().is_empty());
+    }
+
+    #[test]
+    fn computed_adapter_renders_from_context_without_cache_refresh() {
+        let mut widget = computed(FakeComputed);
+        let mut cache = TmuxWidgetCache::default();
+
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(widget.lifecycle(), WidgetLifecycle::Computed);
+        assert_eq!(segment.literal_text, "h");
+        assert!(cache.pending_options().is_empty());
+    }
+
+    #[test]
+    fn cached_metric_uses_fresh_cache_without_sampling() {
+        let calls = Rc::new(Cell::new(0));
+        let mut widget = cached_metric(FakeMetric {
+            calls: Rc::clone(&calls),
+            now: 100,
+            fails: false,
+        });
+        let mut cache = cache_with_value("9999999999:7");
+
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(
+            widget.lifecycle(),
+            WidgetLifecycle::CachedMetric { ttl_seconds: 20 }
+        );
+        assert_eq!(calls.get(), 0);
+        assert_eq!(segment.literal_text, "7");
+        assert!(cache.pending_options().is_empty());
+    }
+
+    #[test]
+    fn cached_metric_samples_and_updates_stale_cache() {
+        let calls = Rc::new(Cell::new(0));
+        let mut widget = cached_metric(FakeMetric {
+            calls: Rc::clone(&calls),
+            now: 100,
+            fails: false,
+        });
+        let mut cache = cache_with_value("1:7");
+
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(calls.get(), 1);
+        assert_eq!(segment.literal_text, "42");
+        assert_eq!(cache.get("fake"), Some("100:42"));
+    }
+
+    #[test]
+    fn cached_metric_skips_sampling_on_non_refresh_event() {
+        let calls = Rc::new(Cell::new(0));
+        let mut widget = cached_metric(FakeMetric {
+            calls: Rc::clone(&calls),
+            now: 100,
+            fails: false,
+        });
+        let mut cache = cache_with_value("1:7");
         let event = RenderEvent {
             kind: RenderEventKind::ClientResized,
         };
 
-        assert!(SnapshotPolicy::Dynamic.should_snapshot(&event));
+        widget.refresh(&context(), &event, &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(calls.get(), 0);
+        assert_eq!(segment.literal_text, "7");
     }
 
     #[test]
-    fn static_widgets_snapshot_only_on_render_driven_events() {
-        let resize = RenderEvent {
-            kind: RenderEventKind::ClientResized,
-        };
-        let tick = RenderEvent {
-            kind: RenderEventKind::Tick,
-        };
+    fn cached_metric_sample_failure_falls_back_to_cached_snapshot() {
+        let calls = Rc::new(Cell::new(0));
+        let mut widget = cached_metric(FakeMetric {
+            calls: Rc::clone(&calls),
+            now: 100,
+            fails: true,
+        });
+        let mut cache = cache_with_value("1:7");
 
-        assert!(!SnapshotPolicy::Static.should_snapshot(&resize));
-        assert!(SnapshotPolicy::Static.should_snapshot(&tick));
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(calls.get(), 1);
+        assert_eq!(segment.literal_text, "7");
+        assert_eq!(cache.get("fake"), Some("1:7"));
+        assert!(cache.pending_options().is_empty());
+    }
+
+    #[test]
+    fn cached_metric_sample_failure_without_cache_renders_empty() {
+        let calls = Rc::new(Cell::new(0));
+        let mut widget = cached_metric(FakeMetric {
+            calls: Rc::clone(&calls),
+            now: 100,
+            fails: true,
+        });
+        let mut cache = TmuxWidgetCache::default();
+
+        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        let segment = widget.render(&context()).unwrap();
+
+        assert_eq!(calls.get(), 1);
+        assert_eq!(segment, RenderedSegment::empty());
+        assert!(cache.pending_options().is_empty());
+    }
+
+    fn cache_with_value(value: &str) -> TmuxWidgetCache {
+        let mut options = BTreeMap::new();
+        options.insert(
+            "@GHC_STATUS_COMPONENT_CACHE_fake".to_string(),
+            value.to_string(),
+        );
+        TmuxWidgetCache::from_options(&options)
+    }
+
+    fn tick() -> RenderEvent {
+        RenderEvent {
+            kind: RenderEventKind::Tick,
+        }
+    }
+
+    fn context() -> RenderContext {
+        RenderContext {
+            snapshot: TmuxSnapshot {
+                mode: "02".to_string(),
+                current_layout: "02:wide".to_string(),
+                status: "on".to_string(),
+                width: 200,
+                current_session_name: "s".to_string(),
+                host: "h".to_string(),
+                session_created: 1,
+                sessions: Vec::new(),
+                options: BTreeMap::new(),
+            },
+            group: SessionGroupView {
+                current_session_name: "s".to_string(),
+                sessions: Vec::new(),
+            },
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind: LayoutKind::Wide,
+                rows: 1,
+                target_status: "on".to_string(),
+                key: "02:wide".to_string(),
+            },
+        }
     }
 }

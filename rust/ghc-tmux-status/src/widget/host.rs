@@ -1,19 +1,15 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::{SnapshotPolicy, StatusWidget};
+use crate::status_widget::ComputedWidget;
 
 pub struct HostWidget;
 
-impl StatusWidget for HostWidget {
+impl ComputedWidget for HostWidget {
     fn id(&self) -> &'static str {
         "host"
     }
 
-    fn interests(&self) -> SnapshotPolicy {
-        SnapshotPolicy::Static
-    }
-
-    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         let host = truncate_chars(&context.snapshot.host, 16);
         Ok(RenderedSegment {
             literal_text: format!("{ROUND_LEFT}{OS_ICON}  {host} "),
@@ -40,11 +36,13 @@ mod tests {
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
         TmuxSnapshot,
     };
-    use crate::status_widget::StatusWidget;
+    use crate::status_widget::ComputedWidget;
 
     #[test]
     fn literal_text_accounts_for_visible_host_pill_glyphs() {
-        let segment = HostWidget.render(&context_with_host("mbp-m5-64g")).unwrap();
+        let segment = HostWidget
+            .render_computed(&context_with_host("mbp-m5-64g"))
+            .unwrap();
         assert_eq!(segment.literal_text, "  mbp-m5-64g ");
     }
 

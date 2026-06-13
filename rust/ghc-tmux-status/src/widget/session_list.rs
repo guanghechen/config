@@ -1,6 +1,6 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::StatusWidget;
+use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
@@ -19,12 +19,12 @@ const SLANT_RIGHT_LITERAL: char = '';
 
 pub struct SessionListWidget;
 
-impl StatusWidget for SessionListWidget {
+impl ComputedWidget for SessionListWidget {
     fn id(&self) -> &'static str {
         "session-list"
     }
 
-    fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
+    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(render_session_list(context))
     }
 }

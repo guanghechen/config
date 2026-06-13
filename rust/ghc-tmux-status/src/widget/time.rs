@@ -1,17 +1,17 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::StatusWidget;
+use crate::status_widget::TemplateWidget;
 use crate::util::shell::shell_quote;
 use crate::widget::pill::pill_literal;
 
 pub struct TimeWidget;
 
-impl StatusWidget for TimeWidget {
+impl TemplateWidget for TimeWidget {
     fn id(&self) -> &'static str {
         "time"
     }
 
-    fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+    fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" 00:00:00 "),
             rich_text: format!(
@@ -50,11 +50,11 @@ mod tests {
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
         TmuxSnapshot,
     };
-    use crate::status_widget::StatusWidget;
+    use crate::status_widget::TemplateWidget;
 
     #[test]
     fn renders_time_with_seconds() {
-        let segment = TimeWidget.render(&context()).unwrap();
+        let segment = TimeWidget.render_template(&context()).unwrap();
 
         assert_eq!(segment.literal_text, "¤  00:00:00 ");
         assert!(segment.rich_text.contains("%H:%M:%S"));
