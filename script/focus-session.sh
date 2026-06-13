@@ -1,7 +1,28 @@
 #! /usr/bin/env bash
 
+
+function _ghc_tmux_status_renderer_bin_ {
+  local status_renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  if [ ! -x "$status_renderer" ]; then
+    return 0
+  fi
+
+  local help_text
+  help_text=$("$status_renderer" help 2>/dev/null || true)
+  if [[ "$help_text" == *"session focus"* ]]; then
+    printf '%s\n' "$status_renderer"
+  fi
+}
+
 function _ghc_tmux_focus_session_ {
   local direction=$1
+  local status_renderer
+  status_renderer=$(_ghc_tmux_status_renderer_bin_)
+  if [ -n "$status_renderer" ]; then
+    "$status_renderer" session focus "$direction"
+    return $?
+  fi
+
   local current_session_name
   current_session_name="$(tmux display-message -p '#S')"
 

@@ -4,9 +4,13 @@ use crate::composer::{cache_matches, format_current_format, render_widgets};
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::model::{
-    RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus, TmuxSnapshot,
+    RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus, SessionGroupView,
+    TmuxSnapshot,
 };
-use crate::session_group::SessionGrouper;
+use crate::session::{
+    FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
+    ordered_sessions, swap_current,
+};
 use crate::status_length::status_left_length;
 use crate::status_widget::StatusWidget;
 use crate::tmux::TmuxAdapter;
@@ -100,6 +104,45 @@ impl StatusRuntime {
         Ok(())
     }
 
+    pub fn focus_session(&self, target: FocusTarget) -> AppResult<()> {
+        let snapshot = self.tmux.read_snapshot()?;
+        let group = ordered_group_from_snapshot(&snapshot);
+        let Some(target_session) =
+            focus_target(&group.sessions, &snapshot.current_session_name, target)
+        else {
+            return self.tmux.display_message(&focus_missing_message(target));
+        };
+
+        if target_session.name == snapshot.current_session_name {
+            return Ok(());
+        }
+
+        self.tmux.switch_client(&target_session.id)
+    }
+
+    pub fn swap_session(&self, direction: MoveDirection) -> AppResult<()> {
+        let snapshot = self.tmux.read_snapshot()?;
+        let group = ordered_group_from_snapshot(&snapshot);
+        let order_value = session_order_value(&snapshot);
+        match swap_current(
+            &snapshot.sessions,
+            &group.sessions,
+            &snapshot.current_session_name,
+            order_value,
+            direction,
+        ) {
+            SwapOutcome::Changed(order) => {
+                self.tmux.set_global_option(SESSION_ORDER_OPTION, &order)?;
+                self.apply(RenderEvent::manual_apply())
+            }
+            SwapOutcome::AlreadyFirst => self.tmux.display_message("Already first session"),
+            SwapOutcome::AlreadyLast => self.tmux.display_message("Already last session"),
+            SwapOutcome::CurrentMissing => {
+                self.tmux.display_message("Current session is not visible")
+            }
+        }
+    }
+
     fn live_context(&self) -> AppResult<RenderContext> {
         match self.live_context_state()? {
             LiveContextState::Active(context) => Ok(context),
@@ -111,7 +154,7 @@ impl StatusRuntime {
 
     fn live_context_state(&self) -> AppResult<LiveContextState> {
         let snapshot = self.tmux.read_snapshot()?;
-        let group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
+        let group = ordered_group_from_snapshot(&snapshot);
         let Some(layout) = LayoutEngine::resolve(
             &snapshot.mode,
             &snapshot.status,
@@ -219,6 +262,26 @@ impl StatusRuntime {
 enum LiveContextState {
     Active(RenderContext),
     Inactive(TmuxSnapshot),
+}
+
+fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
+    let mut group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
+    group.sessions = ordered_sessions(&group.sessions, session_order_value(snapshot));
+    group
+}
+
+fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
+    snapshot
+        .options
+        .get(SESSION_ORDER_OPTION)
+        .map(String::as_str)
+}
+
+fn focus_missing_message(target: FocusTarget) -> String {
+    match target {
+        FocusTarget::Index(index) => format!("No session at index {index}"),
+        FocusTarget::Previous | FocusTarget::Next => "No session to focus".to_string(),
+    }
 }
 
 fn cache_bytes(context: &RenderContext) -> usize {

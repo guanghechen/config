@@ -8,7 +8,7 @@ mod metric;
 mod model;
 mod platform;
 mod runtime;
-mod session_group;
+mod session;
 mod status_length;
 mod status_widget;
 mod tmux;
@@ -19,6 +19,7 @@ use crate::app::StatusApp;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::model::{RenderEvent, RenderEventKind};
+use crate::session::{FocusTarget, MoveDirection};
 
 fn main() {
     if let Err(error) = run() {
@@ -51,12 +52,39 @@ fn run() -> AppResult<()> {
             Some("status02") => app.render_status02_stdout(),
             _ => Err(AppError::Usage("expected: render status02".to_string())),
         },
+        "session" => run_session(&app, args.collect()),
         "layout" => run_layout(args.collect()),
         "help" | "--help" | "-h" => {
             print_help();
             Ok(())
         }
         _ => Err(AppError::Usage(format!("unknown command: {command}"))),
+    }
+}
+
+fn run_session(app: &StatusApp, args: Vec<String>) -> AppResult<()> {
+    if args.len() != 2 {
+        return Err(AppError::Usage(
+            "expected: session <focus|swap> <prev|next|index>".to_string(),
+        ));
+    }
+
+    match args[0].as_str() {
+        "focus" => {
+            let target = FocusTarget::parse(&args[1]).ok_or_else(|| {
+                AppError::Usage(format!("invalid session focus target: {}", args[1]))
+            })?;
+            app.focus_session(target)
+        }
+        "swap" => {
+            let direction = MoveDirection::parse(&args[1]).ok_or_else(|| {
+                AppError::Usage(format!("invalid session swap direction: {}", args[1]))
+            })?;
+            app.swap_session(direction)
+        }
+        _ => Err(AppError::Usage(
+            "expected: session <focus|swap> <prev|next|index>".to_string(),
+        )),
     }
 }
 
@@ -95,6 +123,14 @@ fn run_layout(args: Vec<String>) -> AppResult<()> {
 
 fn print_help() {
     println!(
-        "ghc-tmux-status\n\nUSAGE:\n  ghc-tmux-status apply\n  ghc-tmux-status render status02\n  ghc-tmux-status layout <mode> <status> <width> <session-count>\n  ghc-tmux-status dump-state"
+        "ghc-tmux-status
+
+USAGE:
+  ghc-tmux-status apply
+  ghc-tmux-status render status02
+  ghc-tmux-status session focus <prev|next|index>
+  ghc-tmux-status session swap <prev|next>
+  ghc-tmux-status layout <mode> <status> <width> <session-count>
+  ghc-tmux-status dump-state"
     );
 }

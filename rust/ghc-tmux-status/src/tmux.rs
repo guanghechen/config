@@ -33,6 +33,27 @@ impl TmuxAdapter {
         Ok(())
     }
 
+    pub fn switch_client(&self, target_session_id: &str) -> AppResult<()> {
+        self.tmux_status([
+            "switch-client".to_string(),
+            "-t".to_string(),
+            target_session_id.to_string(),
+        ])
+    }
+
+    pub fn set_global_option(&self, name: &str, value: &str) -> AppResult<()> {
+        self.tmux_status([
+            "set".to_string(),
+            "-g".to_string(),
+            name.to_string(),
+            value.to_string(),
+        ])
+    }
+
+    pub fn display_message(&self, message: &str) -> AppResult<()> {
+        self.tmux_status(["display-message".to_string(), message.to_string()])
+    }
+
     fn tmux_output<I, S>(&self, args: I) -> AppResult<String>
     where
         I: IntoIterator<Item = S>,
@@ -241,6 +262,7 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_STATUS02_CURRENT_FORMAT",
     "status-left-length",
     "status-interval",
+    "@GHC_SL_SESSION_ORDER",
     "@GHC_STATUS_COMPONENT_CACHE_cpu",
     "@GHC_STATUS_COMPONENT_CACHE_memory",
     "@GHC_STATUS_COMPONENT_CACHE_network",
