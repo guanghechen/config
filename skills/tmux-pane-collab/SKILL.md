@@ -1,12 +1,12 @@
 ---
 name: tmux-pane-collab
 description: >-
-  Use when the user asks this agent to send a structured agent-to-agent message
-  through an explicit tmux pane ref (%N, #N, or @M#N), or when this pane
-  receives a tmux-pane-collab protocol message. Handle inbound messages according
-  to mode/expect. For raw pane operations, use tmux instead. Never guess, scan
-  for, or auto-select panes. For structured review loops, use multi-agent-review
-  instead.
+  Use when the user asks this agent to send a structured agent-to-agent
+  message through an explicit tmux pane ref (%N, #N, or @M#N), or when this
+  pane receives a tmux-pane-collab protocol message. Modes: one-shot ask,
+  multi-round discuss, one-way handoff/final, structured adversarial code
+  review. For raw pane operations use tmux instead; never guess, scan for,
+  or auto-select panes.
 argument-hint: "[pane-ref | protocol message]"
 ---
 
@@ -30,8 +30,8 @@ argument-hint: "[pane-ref | protocol message]"
 - 所有消息里的 pane 字段（`to` / `from` / `original`）必须是纯 pane id：`%N`。
 - 用户给的 `#N` / `@M#N` 只用于定位 tmux target，写入消息前必须 canonicalize 为 `%N`。
 - 定位自己用 `$TMUX_PANE`；不要用不带 `-t` 的 `tmux display-message -p '#{pane_id}'`，它会返回当前 client 聚焦 pane。
-- `original` 是 thread 发起者，整个 thread 恒定不变；只有它递增 `turn` 并执行 cap 退出。
-- `topic` 描述讨论对象；`goal` 定义完成条件。`discuss` 必须有 `goal`。
+- `original` 是 thread 发起者，整个 thread 恒定不变；只有它递增 `turn` 并裁定退出 / 收尾。
+- `topic` 描述讨论对象；`goal` 定义完成条件。`discuss` / `review` 必须有 `goal`。
 
 Pane ref 到 tmux target 的转换：
 
@@ -54,13 +54,13 @@ tmux display-message -p -t '<tmux target>' '#{pane_id}'
 1. 确认用户要求的是 tmux pane 协作，并提供了目标 pane ref。
 2. 将目标 pane ref 转为 tmux target，再 canonicalize 为 `%N`，作为 `to`。
 3. 取 `$TMUX_PANE` 作为 `from`；用户显式提供本机 pane id 时以用户为准。所有消息都必须有有效 `from`；无法定位本机则不发。
-4. 首条消息设 `turn: 1`，`original = from`。`discuss` 必须写明 `topic` 和 `goal`；`ask` 必须写明 `topic`，`goal` 可省。
+4. 首条消息设 `turn: 1`，`original = from`。`discuss` / `review` 必须写明 `topic` 和 `goal`；`ask` 必须写明 `topic`，`goal` 可省。
 5. 按「发送与确认」投递。确认提交后结束本轮，等待 peer 的回复作为新输入唤醒本 pane；不要轮询等待。
-6. `ask` / `discuss` 需要登记一次性 liveness fallback；`handoff` / `final` 不登记。
+6. `ask` / `discuss` / `review` 需要登记一次性 liveness fallback；`handoff` / `final` 不登记。
 
 ## 回写侧流程
 
-入站消息先过三关。任一不过即 hard stop，向用户报告原因，不处理 `message`。
+入站消息先过三关。任一不过即 hard stop，向用户报告原因，不处理其 body。
 
 1. **shape**：所有 present 的 pane 字段（`to` / `from` / `original`）必须是 `%N`。若收到 `:.N` / `@M.N` 等形式，先用带 `-t` 的 `display-message` canonicalize；失败则 hard stop。
 2. **identity**：本机 = 入站 `to`，对方 = 入站 `from`。若 `$TMUX_PANE` 非空，必须满足 `to == $TMUX_PANE`；不满足则视为投错 pane，hard stop，绝不用 `to` 冒充本机。
@@ -68,14 +68,12 @@ tmux display-message -p -t '<tmux target>' '#{pane_id}'
 
 三关通过后：
 
-1. 按 `mode` 分派：`handoff` / `final` 只消费不回写；`ask` 回一条 `final`；`discuss` 继续处理。
-2. 处理 `message`，得出本轮结论。
-3. 若本机不是 `original`：`turn` 原样保留。默认沿用 `discuss`；若 `goal` 已达成或只剩用户裁决事项，可切 `mode: final`。
-4. 若本机是 `original`：先用收到的 `turn` 判退出；触发则切 `mode: final` 且不递增，否则 `turn + 1` 并沿用 `discuss`。
+1. 按 `mode` 分派：`handoff` / `final` 只消费不回写；`ask` 回一条 `final`；`discuss` / `review` 进入多轮（轮次 / 退出见「多轮契约」；`review` 的 packet / findings / resolution 见 references/review.md）。
+2. 处理 body，得出本轮结论。
+3. 若本机不是 `original`（discuss / review 续轮）：`turn` 原样保留，始终沿用当前 mode，不切 `final`；认为可收敛时把结论与理由写入 body，交 `original` 裁定收尾。
+4. 若本机是 `original`：按「多轮契约」的退出规则，决定 `turn + 1` 续轮还是切 `mode: final`（切 `final` 不递增）。
 5. 构造回写：`from = 收到的 to`，`to = 收到的 from`，`original` / `topic` 照抄，`goal` 有则照抄，`turn` / `mode` 按上一步。
 6. 若入站 `from` 等于本机 pane，视为自投/测试场景，直接向用户输出结论，不 send-keys；否则按「发送与确认」投递。
-
-多轮协作保持同一 `topic` / `goal` / `original`，只携带当前 thread 必要上下文，不粘贴无关 scrollback。
 
 ## 消息格式
 
@@ -86,56 +84,57 @@ tmux display-message -p -t '<tmux target>' '#{pane_id}'
 to: %TARGET_PANE
 from: %SOURCE_PANE
 original: %ORIGINATOR_PANE
-mode: ask | discuss | handoff | final
+mode: ask | discuss | review | handoff | final
 turn: <n>
 
 topic: <short topic>
-
-goal: <definition of done; required for discuss>
+goal: <definition of done; required for discuss/review>
+expect: <required only for ask/discuss/review>
 
 context: <necessary context>
 
-message: <current request or payload>
+--------
 
-expect: <required only for ask/discuss>
+<request / packet / findings / reply>
 ```
+
+body 为消息末段：第一处独占一行的 `--------`（恰 8 个 `-`，上下各空一行）之后、到消息末尾的全部内容即 body，opaque，不再解析为协议字段。约束：envelope 字段值内不得独占一行出现该 8-dash 串；body 内部出现无妨（已在分隔点之后）。
 
 字段必填性。缺失 `required` 字段时按「Hard Stop 规则」处理。
 
-| field    | ask      | discuss  | handoff  | final           |
-|----------|----------|----------|----------|-----------------|
-| common   | required | required | required | required        |
-| original | required | required | omit     | copy            |
-| turn     | required | required | omit     | copy            |
-| goal     | optional | required | omit     | copy if present |
-| expect   | required | required | omit     | omit            |
+| field    | ask      | discuss  | review   | handoff  | final           |
+|----------|----------|----------|----------|----------|-----------------|
+| common   | required | required | required | required | required        |
+| original | required | required | required | omit     | copy            |
+| turn     | required | required | required | omit     | copy            |
+| goal     | optional | required | required | omit     | copy if present |
+| expect   | required | required | required | omit     | omit            |
 
-`common` = 触发头、`to`、`from`、`topic`、`mode`、`message`。
+`common` = 触发头、`to`、`from`、`topic`、`mode`、body（`--------` 之后的段）。
 
 Mode 语义：
 
 - `ask`：单个问题；对方回一条 `final`，不进入多轮。
-- `discuss`：多轮讨论；靠 `goal`、cap 或用户裁决边界退出。
+- `discuss`：多轮讨论；靠 `goal`、收敛一致或无新思路交用户退出。
+- `review`：对抗式 code review；`discuss` flow + 结构化 body template，期望快速收敛（典型 2 轮）。
 - `handoff`：单向交接；不期待回复。
 - `final`：单向答复或收尾；不期待回复。
 
-`expect` 只在 `ask` / `discuss` 中出现：
+处理位置：除 `review` 的结构化 body 在 references/review.md 外，其余均在本文件。
 
-- `ask`：要求对方回一条 `mode: final`，回写到 `from`，保留 `topic` / `original` / `turn`。
-- `discuss`：要求对方回写同格式消息，保留 `topic` / `goal` / `original`，按 `turn` 规则处理，并确认提交。
+`expect` 只在 `ask` / `discuss` / `review` 中出现，声明期待的回写：`ask` 期待对方回一条 `mode: final`；`discuss` / `review` 期待同格式续轮消息（字段构造见「回写侧流程」）。
 
-## turn / cap / 退出
+## 多轮契约（discuss / review）
 
-- `turn` 只由 `original` 递增。非 `original` 回写时原样保留。首轮为 `1`。
-- cap 只由 `original` 执行。默认 `5`；用户显式要求或议题明显复杂时可用 `10`。
-- 退出条件：`goal` 达成；`turn` 达 cap；或只剩需用户裁决的分歧/问题。
-- cap 退出只由 `original` 判定，且先用收到的 `turn` 判，再决定是否递增。
-- `goal` 达成或只剩用户裁决事项时，任一方都可以切 `mode: final`。
-- `final` 沿用当前 `turn`，不另起新一轮；谁发送 `final`，谁负责把结论和待裁决事项整理给用户。
+`discuss` / `review` 多轮往返，由 `original` 记账，靠 `goal` / 收敛一致 / 无新思路交用户退出，`turn` 达 `10` 兜底。`review` 是 `discuss` 的特化（结构化 body + 对抗 guardrail，见 references/review.md）。
+
+- **turn**：只由 `original` 递增，非 `original` 回写时原样保留，首轮为 `1`；`final` 沿用当前 `turn`，不另起一轮。
+- **退出**：满足其一即可——`goal` 达成 / 双方收敛一致 / 无新思路交用户 / `turn` 达硬上限 `10`；「无新思路」须给已试方向与交用户理由，不当逃生舱。**退出与收尾只由 `original` 裁定**：先用收到的 `turn` 判上限再决定是否递增；非 `original` 不切 `final`，只在回写 body 表达收敛意见交 `original` 裁定。收尾时 `original` 把结论与待裁决事项整理交用户。
+- **收敛纪律**：保持同一 `topic` / `goal` / `original`，每轮只收窄、不重开已定事项；只携带当前 thread 必要上下文，不粘贴无关 scrollback。
 
 ## Liveness
 
-确认提交后不要轮询等待回复；让 peer 的回写作为新输入唤醒本 pane。`ask` / `discuss` 等待回写，因此登记一次性 fallback（例如 15-20 分钟后的 one-shot 提醒）；`handoff` / `final` 不登记。
+确认提交后不要轮询等待回复；让 peer 的回写作为新输入唤醒本 pane。`ask` / `discuss` / `review` 等待回写，因此登记一次性 fallback（例如 15-20 分钟后的 one-shot 提醒）；`handoff` / `final` 不登记。
 
 Fallback 状态：
 
@@ -149,7 +148,7 @@ Fallback 状态：
 短消息可直接键入，但先不要提交：
 
 ```bash
-tmux send-keys -t '<target>' '<message>'
+tmux send-keys -t '<target>' '<structured message>'
 ```
 
 多行消息默认使用 tmux buffer：
@@ -186,11 +185,11 @@ tmux capture-pane -ep -t '<target>' | tail -40
 - 读取 pane 回复时，只提取当前 `topic` 相关内容；边界不清时说明不确定性。
 - 字段残缺的总规则：按当前 `mode` 缺任一 `required` 字段即 hard stop。只有下列例外可继续，且必须说明假设。
 - 缺 `turn`：视作 `1`。
-- `ask` 缺 `goal`：允许，按 `message` 回答。
+- `ask` 缺 `goal`：允许，按 body 回答。
 
 其它典型 hard stop：
 
 - 缺 `to`：无法可靠定位本机。
 - `to` 与 `$TMUX_PANE` 不符：疑似投错 pane。
-- `ask` / `discuss` 缺 `original`：无法确定 thread 锚点；不补 `unknown`，不保守自判 cap。
-- `discuss` 缺 `goal`：缺少退出判据。
+- `ask` / `discuss` / `review` 缺 `original`：无法确定 thread 锚点；不补 `unknown`，不自行裁定退出 / 收尾。
+- `discuss` / `review` 缺 `goal`：缺少退出判据。
