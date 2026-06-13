@@ -49,6 +49,20 @@
       }
     },
     {
+      "id": "ghc.input.alt_shift_minus",
+      "command": {
+        "action": "sendInput",
+        "input": "\u0001\u005f"
+      }
+    },
+    {
+      "id": "ghc.input.alt_shift_backslash",
+      "command": {
+        "action": "sendInput",
+        "input": "\u0001\u007c"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_,",
       "command": {
         "action": "sendInput",
@@ -787,8 +801,12 @@
       "keys": "alt+space"
     },
     {
-      "id": null,
+      "id": "ghc.input.alt_shift_minus",
       "keys": "alt+shift+minus"
+    },
+    {
+      "id": "ghc.input.alt_shift_backslash",
+      "keys": "alt+shift+sc(43)"
     },
     {
       "id": null,
