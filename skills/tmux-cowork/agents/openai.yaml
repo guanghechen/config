@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tmux Cowork"
+  short_description: "Send structured agent messages through tmux panes"
+  default_prompt: "Use $tmux-cowork to send a structured message to another agent through an explicit tmux pane."

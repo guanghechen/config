@@ -5,7 +5,7 @@ description: >-
   (%N, #N, or @M#N): inspect, type, send keys, paste, or run commands. Choose
   by intent, not by what is running in the pane; raw operations on an agent pane
   still use this skill. For structured agent-to-agent messages, use
-  tmux-pane-collab instead. Never guess, scan for, or auto-select panes.
+  tmux-cowork instead. Never guess, scan for, or auto-select panes.
 argument-hint: "<pane-ref> [inspect | keys | command | paste]"
 ---
 
@@ -19,7 +19,7 @@ Use this skill only when all conditions are met:
 
 - The user asks to inspect, operate, type into, send keys, run a command, or paste into a tmux pane.
 - The user provides an explicit pane ref: `%N`, `#N`, or `@M#N`.
-- The task is a raw pane operation, not a structured agent-to-agent message. Use `tmux-pane-collab` only for structured messages.
+- The task is a raw pane operation, not a structured agent-to-agent message. Use `tmux-cowork` only for structured messages.
 
 If no pane ref is provided, stop and ask for one. Never guess, scan for, or auto-select panes.
 
@@ -103,7 +103,7 @@ Paste does not mean submit. Whether to send `Enter` depends on the target state 
 ## Hard Stop Rules
 
 - Never guess, scan for, or auto-select panes.
-- Do not upgrade ordinary pane operations into `tmux-pane-collab`.
+- Do not upgrade ordinary pane operations into `tmux-cowork`.
 - Do not send secrets, credentials, `.env*` content, or sensitive logs.
 - Do not submit text when the target state is unclear; capture first and state the uncertainty.
 - Do not claim success unless a re-capture shows a clear result.
