@@ -40,7 +40,7 @@
 | Port | Input | Output | Idempotency | Timeout | Error Contract |
 |------|-------|--------|-------------|---------|----------------|
 | `ordered_sessions` | sessions + order ids | ordered sessions | pure | none | no panic on stale ids |
-| `swap_current` | live sessions + visible group + current + direction | new order or boundary | pure | none | typed no-op |
+| `swap_current` | live sessions + visible group + current + direction | new order or single-item no-op | pure | none | typed no-op |
 | `focus_target` | ordered group + current + target | target id or none | pure | none | typed no-op |
 | `session swap` CLI | prev/next | tmux order update | idempotent at boundary | process | `AppError` |
 

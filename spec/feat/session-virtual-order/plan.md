@@ -21,8 +21,8 @@
 ## 3. Acceptance Criteria
 
 - Rendered session list and `session focus 1..9/prev/next` share the same order.
-- `session swap prev|next` swaps current session with visible neighbor in current group only.
-- Boundary swap is no-op with a tmux message.
+- `session swap prev|next` swaps current session with visible neighbor in current group only, wrapping first/last like focus shortcuts.
+- A single visible session swap is no-op with a tmux message.
 - Stale ids are ignored; new ids append.
 - `cargo test`, `cargo clippy -- -D warnings`, and `bash -n` pass.
 

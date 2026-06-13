@@ -28,7 +28,7 @@ Add a virtual session order shared by status02 rendering and session focus/swap 
 | SnapshotRead | GroupedSessions | render/focus/swap | snapshot valid | abort with tmux parse error |
 | GroupedSessions | OrderedSessions | render/focus/swap | order option parsed leniently | degrade by appending live sessions |
 | OrderedSessions | FocusedSession | `session focus` | target exists | display message and no-op |
-| OrderedSessions | SwappedOrder | `session swap` | neighbor exists | display boundary message and no-op |
+| OrderedSessions | SwappedOrder | `session swap` | visible sessions > 1 | wrap around and swap first/last visible sessions; no-op when alone |
 | SwappedOrder | SnapshotRead | order written | status02 active or inactive | retry through normal runtime apply path |
 
 ## 4. Failure Path
@@ -43,7 +43,7 @@ Add a virtual session order shared by status02 rendering and session focus/swap 
 - Render order and focus numeric order use the same ordered group.
 - The persisted order stores session ids only.
 - Reordering never crosses the current visible session group.
-- Boundary swap is no-op, not wrap.
+- Boundary swap wraps like focus shortcuts when visible session count > 1; a single visible session is no-op.
 
 ## 6. Test Matrix
 

@@ -57,19 +57,17 @@ pub fn swap_current(
         return SwapOutcome::CurrentMissing;
     };
 
+    let count = ordered_group.len();
+    if count <= 1 {
+        return match direction {
+            MoveDirection::Previous => SwapOutcome::AlreadyFirst,
+            MoveDirection::Next => SwapOutcome::AlreadyLast,
+        };
+    }
+
     let neighbor_index = match direction {
-        MoveDirection::Previous => {
-            if current_index == 0 {
-                return SwapOutcome::AlreadyFirst;
-            }
-            current_index - 1
-        }
-        MoveDirection::Next => {
-            if current_index + 1 >= ordered_group.len() {
-                return SwapOutcome::AlreadyLast;
-            }
-            current_index + 1
-        }
+        MoveDirection::Previous => (current_index + count - 1) % count,
+        MoveDirection::Next => (current_index + 1) % count,
     };
 
     let current_id = &ordered_group[current_index].id;
@@ -234,8 +232,23 @@ mod tests {
     }
 
     #[test]
-    fn swap_does_not_wrap_at_boundaries() {
-        let live = sessions([("$1", "a"), ("$2", "b")]);
+    fn swap_direction_wraps_like_focus_shortcuts() {
+        let live = sessions([("$1", "a"), ("$2", "b"), ("$3", "c")]);
+        let ordered = ordered_sessions(&live, None);
+
+        assert_eq!(
+            swap_current(&live, &ordered, "a", None, MoveDirection::Previous),
+            SwapOutcome::Changed("$3\t$2\t$1".to_string())
+        );
+        assert_eq!(
+            swap_current(&live, &ordered, "c", None, MoveDirection::Next),
+            SwapOutcome::Changed("$3\t$2\t$1".to_string())
+        );
+    }
+
+    #[test]
+    fn swap_single_visible_session_is_noop() {
+        let live = sessions([("$1", "a")]);
         let ordered = ordered_sessions(&live, None);
 
         assert_eq!(
@@ -243,7 +256,7 @@ mod tests {
             SwapOutcome::AlreadyFirst
         );
         assert_eq!(
-            swap_current(&live, &ordered, "b", None, MoveDirection::Next),
+            swap_current(&live, &ordered, "a", None, MoveDirection::Next),
             SwapOutcome::AlreadyLast
         );
     }
