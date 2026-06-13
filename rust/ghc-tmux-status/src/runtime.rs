@@ -281,7 +281,7 @@ impl StatusRuntime {
 
         let mut row0_network = cached_metric(NetworkWidget);
         let mut row0_right_prefix = template(PrefixIndicatorWidget);
-        let mut row0_bell = template(SessionBellWidget);
+        let mut row0_bell = computed(SessionBellWidget);
         let mut row0_cpu = cached_metric(CpuWidget);
         let mut row0_memory = cached_metric(MemoryWidget);
         let mut row0_duration = computed(DurationWidget);

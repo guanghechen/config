@@ -4,10 +4,11 @@
 
 | Module | Responsibility | Public Ports | Private Runtime |
 |--------|----------------|--------------|-----------------|
-| `tmux.rs` | Read tmux snapshot including per-session bell flag | `TmuxAdapter::read_snapshot` | `list-sessions` parser |
+| `tmux.rs` | Read tmux snapshot and aggregate per-session bell state | `TmuxAdapter::read_snapshot` | `list-sessions` + `list-windows -a` parsers |
 | `model.rs` | Carry session snapshot data | `SessionInfo.has_bell` | none |
 | `session/*` | Group/order/focus/swap sessions | pure functions over `SessionInfo` | none |
 | `widget/session_list.rs` | Render session list body and literal width shadow | `SessionListWidget` | item palette/body helpers |
+| `widget/session_bell.rs` | Render current-session bell pill from aggregated snapshot state | `SessionBellWidget` | current-session lookup |
 | `runtime.rs` | Orchestrate snapshot/render/commit cadence | existing apply flow | one-second tick |
 
 ## 2. Dependency Graph
@@ -44,7 +45,7 @@
 
 ### Minimal Core
 
-- baseline capabilities: status02 still renders without bell data; missing bell field degrades to `false`.
+- baseline capabilities: status02 still renders without bell data; missing window bell rows degrade to `false`.
 - works without optional plugins: true
 
 ### Plugin Contract
@@ -54,7 +55,7 @@ No plugin boundary is introduced. tmux is the only external capability and failu
 ## 6. Observability and Degrade Strategy
 
 - `dump-state` and trace inherit the changed session rich text/length behavior from existing observability.
-- Missing or malformed bell flag degrades to no bell marker.
+- Missing or malformed window bell rows degrade to no bell marker.
 - Bell state convergence can be live-smoked by triggering a bell in a non-focused session and then focusing the alerted window.
 
 ## 7. Open Decisions（唯一待定区）

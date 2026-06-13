@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::process::Command;
 
 use crate::commit::TmuxCommandPlan;
@@ -121,7 +121,16 @@ fn snapshot_command_args() -> Vec<String> {
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        "#{session_id}\t#{session_name}\t#{session_bell_flag}".to_string(),
+        "#{session_id}\t#{session_name}".to_string(),
+        ";".to_string(),
+        "display-message".to_string(),
+        "-p".to_string(),
+        WINDOWS_MARK.to_string(),
+        ";".to_string(),
+        "list-windows".to_string(),
+        "-a".to_string(),
+        "-F".to_string(),
+        "#{session_id}\t#{window_bell_flag}".to_string(),
     ]
 }
 
@@ -165,7 +174,24 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
     let current_layout = options.get("@GHC_SL_LAYOUT").cloned().unwrap_or_default();
 
     expect_marker(lines.next(), SESSIONS_MARK)?;
-    let sessions = lines.filter_map(parse_session_line).collect();
+    let mut session_lines = Vec::new();
+    let windows_line = loop {
+        let line = lines
+            .next()
+            .ok_or_else(|| AppError::TmuxParse("missing windows section".to_string()))?;
+        if line == WINDOWS_MARK {
+            break line;
+        }
+        session_lines.push(line);
+    };
+    expect_marker(Some(windows_line), WINDOWS_MARK)?;
+    let belling_sessions = lines
+        .filter_map(parse_window_bell_line)
+        .collect::<BTreeSet<_>>();
+    let sessions = session_lines
+        .into_iter()
+        .filter_map(|line| parse_session_line(line, &belling_sessions))
+        .collect();
 
     if current_session_name.is_empty() {
         return Err(AppError::TmuxParse(
@@ -186,17 +212,23 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
     })
 }
 
-fn parse_session_line(line: &str) -> Option<SessionInfo> {
-    let mut fields = line.splitn(3, '\t');
-    let id = fields.next()?;
-    let name = fields.next()?;
-    let has_bell = fields.next() == Some("1");
+fn parse_session_line(line: &str, belling_sessions: &BTreeSet<String>) -> Option<SessionInfo> {
+    let (id, name) = line.split_once('\t')?;
 
     Some(SessionInfo {
         id: id.to_string(),
         name: name.to_string(),
-        has_bell,
+        has_bell: belling_sessions.contains(id),
     })
+}
+
+fn parse_window_bell_line(line: &str) -> Option<String> {
+    let (session_id, has_bell) = line.split_once('\t')?;
+    if has_bell == "1" {
+        return Some(session_id.to_string());
+    }
+
+    None
 }
 
 fn parse_options_line(options_line: &str) -> AppResult<BTreeMap<String, String>> {
@@ -257,6 +289,7 @@ const CONTEXT_MARK: &str = "__GHC_STATUS_CONTEXT__";
 const STATUS_MARK: &str = "__GHC_STATUS_STATUS__";
 const OPTIONS_MARK: &str = "__GHC_STATUS_OPTIONS__";
 const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
+const WINDOWS_MARK: &str = "__GHC_STATUS_WINDOWS__";
 
 const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_MODE",
@@ -276,9 +309,11 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use super::{
         CONTEXT_MARK, FIELD_SEP, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTION_NAMES, STATUS_MARK,
-        parse_session_line, parse_snapshot_output,
+        WINDOWS_MARK, parse_session_line, parse_snapshot_output, parse_window_bell_line,
     };
 
     #[test]
@@ -292,8 +327,11 @@ mod tests {
 on
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui	0
-$2	dev	1"
+$1	yui
+$2	dev
+{WINDOWS_MARK}
+$1	0
+$2	1"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();
@@ -306,12 +344,20 @@ $2	dev	1"
     }
 
     #[test]
-    fn parses_legacy_two_field_session_line_without_bell() {
-        let session = parse_session_line("$1\tlegacy").unwrap();
+    fn parses_session_line_with_aggregated_window_bell_state() {
+        let belling_sessions = BTreeSet::from(["$1".to_string()]);
+
+        let session = parse_session_line("$1\tlegacy", &belling_sessions).unwrap();
 
         assert_eq!(session.id, "$1");
         assert_eq!(session.name, "legacy");
-        assert!(!session.has_bell);
+        assert!(session.has_bell);
+    }
+
+    #[test]
+    fn parses_window_bell_line_only_when_window_has_bell() {
+        assert_eq!(parse_window_bell_line("$1\t1"), Some("$1".to_string()));
+        assert_eq!(parse_window_bell_line("$1\t0"), None);
     }
 
     #[test]
@@ -329,7 +375,9 @@ $2	dev	1"
 {STATUS_MARK}
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui	0"
+$1	yui
+{WINDOWS_MARK}
+$1	0"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();

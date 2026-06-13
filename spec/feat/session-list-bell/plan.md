@@ -4,7 +4,7 @@
 
 | Design Ref | Design Source | Code Target | Test Target |
 |------------|---------------|-------------|-------------|
-| Bell snapshot | flow §3 | `tmux.rs`, `model.rs` | tmux parser tests |
+| Bell snapshot | flow §3 | `tmux.rs`, `model.rs` | tmux session/window parser tests |
 | Bell render | flow §5 | `widget/session_list.rs` | session list render tests |
 | Convergence | flow §3/§4 | existing runtime tick | no new runtime code |
 
@@ -12,7 +12,7 @@
 
 | Step | Design Ref | Change Area | Inputs | Outputs | Verification | Code Target |
 |------|------------|-------------|--------|---------|--------------|-------------|
-| 1 | Bell snapshot | model/tmux | `session_bell_flag` | `SessionInfo.has_bell` | parser tests | `model.rs`, `tmux.rs` |
+| 1 | Bell snapshot | model/tmux | `window_bell_flag` grouped by `session_id` | `SessionInfo.has_bell` | parser tests | `model.rs`, `tmux.rs` |
 | 2 | Bell render | widget | session `has_bell` | icon in item body | render tests | `widget/session_list.rs` |
 | 3 | Validation | tests/build | code tree | green checks | fmt/test/clippy/build | Rust crate |
 
@@ -31,6 +31,6 @@ Revert `SessionInfo.has_bell`, restore two-field `list-sessions` format, and rem
 
 | Step | Status | Notes |
 |------|--------|-------|
-| 1 | completed | `SessionInfo.has_bell` parses `session_bell_flag`. |
+| 1 | completed | `SessionInfo.has_bell` is computed by aggregating `window_bell_flag` per `session_id`. |
 | 2 | completed | Session items render a local bell icon without changing slants. |
 | 3 | completed | `cargo fmt`, `cargo test`, `cargo clippy -- -D warnings`, and release build passed. |
