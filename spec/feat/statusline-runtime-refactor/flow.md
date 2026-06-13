@@ -56,7 +56,7 @@
 
 | Case                  | Input                         | Expected                         |
 |-----------------------|-------------------------------|----------------------------------|
-| wide single session   | mode 02, session_count 1      | one row, no session list         |
+| wide single session   | mode 02, session_count 1      | one row with session list        |
 | narrow multi session  | mode 02, width < 200          | two rows                         |
 | local status off      | session-local status off      | no-op                            |
 | metrics unsupported   | platform != macOS             | metrics hidden                   |

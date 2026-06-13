@@ -38,7 +38,7 @@
 - `@GHC_STATUS_COMPONENT_CACHE_*` total payload remains bounded after repeated ticks。
 - status02 wide/narrow behavior remains unchanged。
 - Wide status02 updates `status-left-length` from rendered left width, so the last session slant is not clipped by static 64。
-- single-session mode still one row and hides session list。
+- single-session mode still one row and renders the single session item。
 
 ## 4. Rollback Plan
 

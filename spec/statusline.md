@@ -272,7 +272,7 @@ adaptive status 只作用于 `02` 和 `12`。
 
 ```text
 local status off   -> no-op
-session_count <= 1 -> wide, one row, no session list
+session_count <= 1 -> wide, one row; render session list when count == 1
 width >= 200       -> wide, one row
 otherwise          -> narrow, two rows
 invalid width      -> wide

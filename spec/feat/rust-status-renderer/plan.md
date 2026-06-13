@@ -39,7 +39,7 @@
 - Renderer uses `literal_text` for monospace width calculation and `rich_text` for tmux status composition.
 - Components own refresh decisions and component-scoped cache keys.
 - Session group output matches the current shell implementation for normal, `_popup@*`, agent, and `G<number>-*` sessions.
-- Single-session groups render no session list and force one-row status.
+- Single-session groups render their session list item and force one-row status.
 - Multi-session groups use two rows only below width `200`.
 - Session-local `status off` is preserved.
 - Hook path avoids steady-state `#(bash session-status.sh ...)` for session list rendering after migration.

@@ -36,7 +36,7 @@ impl ComputedWidget for SessionListWidget {
 /// create/close/rename/switch, but dispatch remains dynamic to keep the widget
 /// contract simple and honest.
 fn render_session_list(context: &RenderContext) -> RenderedSegment {
-    if context.group.sessions.len() <= 1 {
+    if context.group.sessions.is_empty() {
         return RenderedSegment::empty();
     }
 
@@ -225,8 +225,8 @@ mod tests {
         render_right_edge, render_session_list,
     };
     use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
-        StatusPosition, TmuxSnapshot,
+        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, SessionGroupView, SessionInfo,
+        StatusMode, StatusPosition, TmuxSnapshot,
     };
 
     #[test]
@@ -356,6 +356,24 @@ mod tests {
         let segment = render_session_list(&context);
 
         assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+    }
+
+    #[test]
+    fn single_visible_session_still_renders_session_list() {
+        let context = context_with_sessions("dev", [("$1", "dev")]);
+        let segment = render_session_list(&context);
+
+        assert!(segment.rich_text.contains("#[range=session|$1]"));
+        assert!(segment.rich_text.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
+        assert_eq!(segment.literal_text, " dev | 1 ");
+    }
+
+    #[test]
+    fn empty_session_group_renders_empty_list() {
+        let context = context_with_sessions("dev", []);
+        let segment = render_session_list(&context);
+
+        assert_eq!(segment, RenderedSegment::empty());
     }
 
     #[test]

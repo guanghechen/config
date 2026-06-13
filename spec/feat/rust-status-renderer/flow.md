@@ -57,7 +57,7 @@ This flow covers the status02 Rust render path: collecting tmux state, deriving 
 - Rust never owns native window item rendering in this phase.
 - Modes other than `02` and `12` are not modified by the Rust status02 path.
 - Session-local `status off` prevents layout/status writes for that session context.
-- A single-session current group renders no session list and uses one status row.
+- A single-session current group renders its session list item and uses one status row.
 - Multi-session current group uses two rows only when width is below `200`.
 - Every component render returns `literal_text` and `rich_text`.
 - `literal_text` contains no tmux style directives and is safe for monospace width calculation.
@@ -69,7 +69,7 @@ This flow covers the status02 Rust render path: collecting tmux state, deriving 
 
 | Case                  | Input                                  | Expected                                      |
 |-----------------------|----------------------------------------|-----------------------------------------------|
-| Single session group  | mode `02`, count `1`, width `120`      | one row, no session list                      |
+| Single session group  | mode `02`, count `1`, width `120`      | one row with session list                     |
 | Narrow group top      | mode `02`, count `2`, width `120`      | status `2`, top position, two cached rows     |
 | Wide group top        | mode `02`, count `2`, width `220`      | status `on`, top position, one-line cache     |
 | Narrow group bottom   | mode `12`, count `2`, width `120`      | status `2`, bottom position                   |

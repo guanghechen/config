@@ -29,7 +29,7 @@
 | From | To | Event | Guard | Timeout | Error Handling |
 |------|----|-------|-------|---------|----------------|
 | tmux alert state | snapshot | tick/theme/manual/session event | status02 active | tmux command timeout inherited from process | propagate apply error |
-| snapshot | render | valid snapshot | visible sessions > 1 | none | render empty if list suppressed |
+| snapshot | render | valid snapshot | visible sessions > 0 | none | render empty only when list is empty |
 | render | commit | changed rich text or length | commit planner diff | tmux command timeout inherited from process | keep prior options |
 
 ## 4. Interface Contracts

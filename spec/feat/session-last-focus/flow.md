@@ -26,7 +26,7 @@ Highlight the previously focused session in status02 and add a shortcut to jump 
 | From             | To                | Trigger                  | Guard                            | On Failure          |
 |------------------|-------------------|--------------------------|----------------------------------|---------------------|
 | LastSessionState | SnapshotLoaded    | tick/session/manual apply | status02 active                 | retry next apply    |
-| SnapshotLoaded   | RenderedList      | render status02          | visible session count > 1        | render empty on <=1 |
+| SnapshotLoaded   | RenderedList      | render status02          | visible session count > 0        | render empty on 0   |
 | RenderedList     | Committed         | cache mismatch           | rendered text changed            | keep prior status   |
 | LastSessionState | LastSessionJumped | keypress                 | tmux has live last session       | tmux message/error  |
 

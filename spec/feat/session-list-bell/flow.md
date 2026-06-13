@@ -27,7 +27,7 @@ Add per-session bell indication to status02 session list. A session has bell whe
 |----------------|----------------|---------------------------------|--------------------------|--------------------------|
 | TmuxAlertState | SnapshotLoaded | tick/theme/session/manual apply | status02 active          | abort current apply      |
 | SnapshotLoaded | GroupOrdered   | snapshot parsed                 | valid current session    | abort current apply      |
-| GroupOrdered   | RenderedList   | render status02                 | visible sessions > 1     | render empty on <=1      |
+| GroupOrdered   | RenderedList   | render status02                 | visible sessions > 0     | render empty on 0        |
 | RenderedList   | Committed      | cache mismatch                  | text or length changed   | leave previous status    |
 | Committed      | SnapshotLoaded | next tick                       | status02 active          | retry next tick          |
 
