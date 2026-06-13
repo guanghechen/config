@@ -1,16 +1,16 @@
 ---
-name: tmux-pane-collab
+name: tmux-cowork
 description: >-
   Use when the user asks this agent to send a structured agent-to-agent
   message through an explicit tmux pane ref (%N, #N, or @M#N), or when this
-  pane receives a tmux-pane-collab protocol message. Modes: one-shot ask,
+  pane receives a tmux-cowork protocol message. Modes: one-shot ask,
   multi-round discuss, one-way handoff/final, structured adversarial code
   review. For raw pane operations use tmux instead; never guess, scan for,
   or auto-select panes.
 argument-hint: "[pane-ref | protocol message]"
 ---
 
-# Tmux Pane Collab
+# Tmux Cowork
 
 通过 tmux pane 在两个 agent 之间交换结构化消息。
 
@@ -80,7 +80,7 @@ tmux display-message -p -t '<tmux target>' '#{pane_id}'
 假定目标 pane 运行的 agent 能解析本协议。所有协议消息都以触发头作为第一行；防回写循环靠 `mode`，不靠省略触发头。
 
 ```text
-[tmux-pane-collab] 请用 tmux-pane-collab skill 处理本消息，并按 mode/expect 约定处理。
+[tmux-cowork] 请用 tmux-cowork skill 处理本消息，并按 mode/expect 约定处理。
 to: %TARGET_PANE
 from: %SOURCE_PANE
 original: %ORIGINATOR_PANE
@@ -154,7 +154,7 @@ tmux send-keys -t '<target>' '<structured message>'
 多行消息默认使用 tmux buffer：
 
 ```bash
-tmp=$(mktemp /tmp/tmux-agent-collab.XXXXXX)
+tmp=$(mktemp /tmp/tmux-cowork.XXXXXX)
 cat > "$tmp" <<'MSG'
 <structured message>
 MSG

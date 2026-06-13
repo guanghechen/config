@@ -4,12 +4,12 @@
 
 ## 与协议的关系
 
-review 不是独立通信格式，而是 `mode: review` 的 body 约定：默认每个产物 = 一条 pane-collab 消息，外层信封按 SKILL.md「消息格式」。
+review 不是独立通信格式，而是 `mode: review` 的 body 约定：默认每个产物 = 一条 tmux-cowork 消息，外层信封按 SKILL.md「消息格式」。
 
 - 信封复用：review 目标写 `goal`，review 对象写 `topic`，轮次用 `turn`——这些**不在 body 重复**。
 - body（`--------` 之后）只放协议没有的 review 专属字段，沿用小写 `key: value` + 空行分隔。
 - review = `discuss` flow + 结构化 body，primary 为 `original`；turn / 退出 / 上限见「多轮契约」，寻址（to/from 互换）见「回写侧流程」，投递见「发送与确认」。
-- transport：默认走 pane-collab（两个 agent pane）；无第二 pane 时 inline 跑——primary 生成 Packet 交用户转给 reviewer，等用户贴回 Findings，沿用同一套结构化产物。任何形态都不得用 primary 的 self-review 冒充 independent reviewer。
+- transport：默认走 tmux-cowork（两个 agent pane）；无第二 pane 时 inline 跑——primary 生成 Packet 交用户转给 reviewer，等用户贴回 Findings，沿用同一套结构化产物。任何形态都不得用 primary 的 self-review 冒充 independent reviewer。
 - roles：primary 持有改动并发起，reviewer 默认 read-only（不改文件 / 不 stage / 不 commit），除非用户明确要求 patch。
 
 | 产物             | mode   | turn |
@@ -33,7 +33,7 @@ review 不是独立通信格式，而是 `mode: review` 的 body 约定：默认
 一条完整的 review 消息长这样；后面的 body 模板只给 `--------` 之后那段。
 
 ```text
-[tmux-pane-collab] 请用 tmux-pane-collab skill 处理本消息，并按 mode/expect 约定处理。
+[tmux-cowork] 请用 tmux-cowork skill 处理本消息，并按 mode/expect 约定处理。
 to: %5
 from: %3
 original: %3

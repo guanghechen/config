@@ -53,4 +53,4 @@
    - `@M#N`: pane index N in window @M, use `-t @M.N`
 2. **CRITICAL**: Locate this agent's own pane via `$TMUX_PANE`; never use bare `tmux display-message -p '#{pane_id}'`, which returns the focused client's active pane.
 3. **ALWAYS**: Use `tmux capture-pane -ep -t {target}` to inspect a pane.
-4. **ALWAYS**: Choose tmux skill by intent: raw pane operations (inspect, shell/editor/TUI/agent pane keystrokes) use `tmux`; structured agent-to-agent messages use `tmux-pane-collab`.
+4. **ALWAYS**: Choose tmux skill by intent: raw pane operations (inspect, shell/editor/TUI/agent pane keystrokes) use `tmux`; structured agent-to-agent messages use `tmux-cowork`.
