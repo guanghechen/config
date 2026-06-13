@@ -2,7 +2,7 @@ use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
@@ -13,10 +13,6 @@ pub struct NetworkWidget {
 impl StatusWidget for NetworkWidget {
     fn id(&self) -> &'static str {
         "network"
-    }
-
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn snapshot(

@@ -2,7 +2,7 @@ use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
 use crate::status_length::status_left_length;
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 
 pub fn render_widgets(
     widgets: &mut [&mut dyn StatusWidget],
@@ -13,8 +13,7 @@ pub fn render_widgets(
     let mut literal_text = String::new();
     let mut rich_text = String::new();
     for widget in widgets {
-        let interests = widget.interests();
-        if interests.matches(event) || !matches!(interests, WidgetInterests::Static) {
+        if widget.interests().should_snapshot(event) {
             widget.snapshot(context, event, cache)?;
         }
         let segment = widget.render(context)?;

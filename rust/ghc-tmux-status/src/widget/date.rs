@@ -1,16 +1,12 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 
 pub struct DateWidget;
 
 impl StatusWidget for DateWidget {
     fn id(&self) -> &'static str {
         "date"
-    }
-
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {

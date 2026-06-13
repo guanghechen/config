@@ -1,6 +1,6 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 use crate::util::shell::shell_quote;
 
 pub struct TimeWidget;
@@ -8,10 +8,6 @@ pub struct TimeWidget;
 impl StatusWidget for TimeWidget {
     fn id(&self) -> &'static str {
         "time"
-    }
-
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Periodic { interval_secs: 1 }
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {

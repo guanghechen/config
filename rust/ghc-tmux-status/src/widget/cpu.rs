@@ -2,7 +2,7 @@ use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::metric::{CpuSample, CpuSnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 use crate::util::format::format_percent_min_width_2;
 use crate::util::time::unix_timestamp_seconds;
 
@@ -14,10 +14,6 @@ pub struct CpuWidget {
 impl StatusWidget for CpuWidget {
     fn id(&self) -> &'static str {
         "cpu"
-    }
-
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn snapshot(

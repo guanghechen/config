@@ -1,6 +1,6 @@
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEventKind, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::model::{RenderContext, RenderedSegment};
+use crate::status_widget::StatusWidget;
 
 const LIST_SURFACE_BG: &str = "default";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
@@ -25,20 +25,14 @@ impl StatusWidget for SessionListWidget {
         "session-list"
     }
 
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Events(&[
-            RenderEventKind::SessionChanged,
-            RenderEventKind::SessionCreated,
-            RenderEventKind::SessionClosed,
-            RenderEventKind::SessionRenamed,
-        ])
-    }
-
     fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(render_session_list(context))
     }
 }
 
+/// Rebuilds from the session snapshot. Semantically relevant events are session
+/// create/close/rename/switch, but dispatch remains dynamic to keep the widget
+/// contract simple and honest.
 fn render_session_list(context: &RenderContext) -> RenderedSegment {
     if context.group.sessions.len() <= 1 {
         return RenderedSegment::empty();

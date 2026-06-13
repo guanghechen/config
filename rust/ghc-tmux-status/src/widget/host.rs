@@ -1,6 +1,6 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::{SnapshotPolicy, StatusWidget};
 
 pub struct HostWidget;
 
@@ -9,8 +9,8 @@ impl StatusWidget for HostWidget {
         "host"
     }
 
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Static
+    fn interests(&self) -> SnapshotPolicy {
+        SnapshotPolicy::Static
     }
 
     fn render(&self, context: &RenderContext) -> AppResult<RenderedSegment> {

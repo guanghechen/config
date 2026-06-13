@@ -1,7 +1,7 @@
 use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::status_widget::{StatusWidget, WidgetInterests};
+use crate::status_widget::StatusWidget;
 use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
@@ -12,10 +12,6 @@ pub struct DurationWidget {
 impl StatusWidget for DurationWidget {
     fn id(&self) -> &'static str {
         "duration"
-    }
-
-    fn interests(&self) -> WidgetInterests {
-        WidgetInterests::Periodic { interval_secs: 20 }
     }
 
     fn snapshot(
