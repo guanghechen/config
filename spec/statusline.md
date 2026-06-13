@@ -39,6 +39,24 @@ set -g status-left  "#{E:@GHC_SL_STATUS02_LEFT}"
 set -g status-right "#{E:@GHC_SL_STATUS02_RIGHT}"
 ```
 
+`status02` steady-state 不依赖 legacy bash renderers：
+
+```text
+session list  -> Rust component
+duration      -> Rust component
+layout        -> Rust runtime
+metrics       -> Rust components
+tick trigger  -> tmux #() launches ghc-tmux-status apply tick
+```
+
+Legacy shell helpers are retained for status01 fallback / rollback:
+
+```text
+script/session-status.sh -> status01
+script/duration.sh       -> status01
+script/status-layout.sh  -> legacy status02 rollback only
+```
+
 fallback：
 
 ```text

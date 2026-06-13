@@ -1,5 +1,8 @@
 #! /usr/bin/env bash
 
+# Legacy layout selector retained for status01/rollback documentation.
+# status02/12 steady-state layout is owned by ghc-tmux-status Rust runtime.
+
 function _ghc_tmux_status_layout_ {
   local mode
   local current_layout
