@@ -1,11 +1,11 @@
 use std::process::Command;
 use std::sync::OnceLock;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{AppError, AppResult};
 use crate::metric::{
     CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
 };
+use crate::util::time::unix_timestamp_seconds;
 
 pub struct DarwinMetricsProvider {
     interface: String,
@@ -24,7 +24,7 @@ impl MetricsProvider for DarwinMetricsProvider {
         let sample = read_cpu_sample()?;
         Ok(CpuSnapshot {
             percent: calculate_cpu_percent(previous, &sample),
-            timestamp_seconds: unix_now(),
+            timestamp_seconds: unix_timestamp_seconds(),
             sample,
         })
     }
@@ -32,12 +32,12 @@ impl MetricsProvider for DarwinMetricsProvider {
     fn sample_memory(&self) -> AppResult<MemorySnapshot> {
         Ok(MemorySnapshot {
             percent: read_memory_percent()?,
-            timestamp_seconds: unix_now(),
+            timestamp_seconds: unix_timestamp_seconds(),
         })
     }
 
     fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot> {
-        let timestamp_seconds = unix_now();
+        let timestamp_seconds = unix_timestamp_seconds();
         let (rx_bytes, tx_bytes) = read_network_counters(&self.interface)?;
         let (rx_bytes_per_second, tx_bytes_per_second) =
             calculate_speed(previous, timestamp_seconds, rx_bytes, tx_bytes);
@@ -274,13 +274,6 @@ const CPU_STATE_NICE: usize = 3;
 const CPU_STATE_MAX: usize = 4;
 #[cfg(target_os = "macos")]
 const HOST_CPU_LOAD_INFO_COUNT: MachMsgTypeNumber = 4;
-
-fn unix_now() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
-        .unwrap_or_default()
-}
 
 #[cfg(test)]
 mod tests {

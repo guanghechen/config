@@ -1,6 +1,7 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::util::shell::shell_quote;
 
 pub struct TimeComponent;
 
@@ -43,15 +44,11 @@ fn fallback_binary_path() -> String {
         })
 }
 
-fn shell_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "'\\''"))
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::{TimeComponent, shell_quote};
+    use super::TimeComponent;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
         TmuxSnapshot,
@@ -64,13 +61,6 @@ mod tests {
 
         assert_eq!(segment.literal_text, " 00:00:00 ");
         assert!(segment.rich_text.contains("%H:%M:%S"));
-    }
-
-    #[test]
-    fn quotes_tick_binary_path_for_shell() {
-        assert_eq!(shell_quote("/tmp/app"), "'/tmp/app'");
-        assert_eq!(shell_quote("/tmp/with space/app"), "'/tmp/with space/app'");
-        assert_eq!(shell_quote("/tmp/it's/app"), "'/tmp/it'\\''s/app'");
     }
 
     fn context() -> RenderContext {

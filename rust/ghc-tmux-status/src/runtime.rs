@@ -15,7 +15,7 @@ use crate::session_group::SessionGrouper;
 use crate::status_component::StatusComponent;
 use crate::status_length::status_left_length;
 use crate::tmux::TmuxAdapter;
-use crate::width::display_width;
+use crate::util::width::display_width;
 
 pub struct StatusRuntime {
     tmux: TmuxAdapter,

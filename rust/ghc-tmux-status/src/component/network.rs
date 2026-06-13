@@ -3,6 +3,7 @@ use crate::error::AppResult;
 use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
 use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
 pub struct NetworkComponent {
@@ -63,7 +64,7 @@ fn should_refresh(event: &RenderEvent) -> bool {
 const REFRESH_INTERVAL_SECONDS: u64 = 20;
 
 fn is_fresh(timestamp_seconds: u64) -> bool {
-    unix_now().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
+    unix_timestamp_seconds().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
 }
 
 fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
@@ -120,13 +121,6 @@ fn parse_cache(value: &str) -> Option<NetworkSnapshot> {
         rx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
         tx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
     })
-}
-
-fn unix_now() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
-        .unwrap_or_default()
 }
 
 #[cfg(test)]

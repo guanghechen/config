@@ -3,6 +3,8 @@ use crate::error::AppResult;
 use crate::metric::{MemorySnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
 use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::util::format::format_percent_min_width_2;
+use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
 pub struct MemoryComponent {
@@ -62,11 +64,11 @@ fn should_refresh(event: &RenderEvent) -> bool {
 const REFRESH_INTERVAL_SECONDS: u64 = 20;
 
 fn is_fresh(timestamp_seconds: u64) -> bool {
-    unix_now().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
+    unix_timestamp_seconds().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
 }
 
 fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
-    let memory = format_percent(snapshot.percent);
+    let memory = format_percent_min_width_2(snapshot.percent);
     let literal_text = format!(" {memory}% ");
     let rich_value = format!(" {memory}%% ");
     let rich_text = format!(
@@ -76,10 +78,6 @@ fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
         literal_text,
         rich_text,
     }
-}
-
-fn format_percent(percent: f64) -> String {
-    format!("{:>2}", percent.round() as u64)
 }
 
 fn encode_cache(snapshot: &MemorySnapshot) -> String {
@@ -94,24 +92,10 @@ fn parse_cache(value: &str) -> Option<MemorySnapshot> {
     })
 }
 
-fn unix_now() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs())
-        .unwrap_or_default()
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{encode_cache, format_percent, parse_cache};
+    use super::{encode_cache, parse_cache};
     use crate::metric::MemorySnapshot;
-
-    #[test]
-    fn formats_memory_percent_with_at_least_two_digits() {
-        assert_eq!(format_percent(5.0), " 5");
-        assert_eq!(format_percent(12.0), "12");
-        assert_eq!(format_percent(100.0), "100");
-    }
 
     #[test]
     fn parses_memory_cache() {

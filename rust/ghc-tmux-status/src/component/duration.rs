@@ -2,6 +2,7 @@ use crate::cache::ComponentCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
 use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
 pub struct DurationComponent {
@@ -23,8 +24,9 @@ impl StatusComponent for DurationComponent {
         _event: &RenderEvent,
         _cache: &mut dyn ComponentCache,
     ) -> AppResult<()> {
-        self.duration =
-            format_duration(unix_now().saturating_sub(context.snapshot.session_created));
+        self.duration = format_duration(
+            (unix_timestamp_seconds() as i64).saturating_sub(context.snapshot.session_created),
+        );
         Ok(())
     }
 
@@ -39,13 +41,6 @@ impl StatusComponent for DurationComponent {
             rich_text,
         })
     }
-}
-
-fn unix_now() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_secs() as i64)
-        .unwrap_or_default()
 }
 
 fn format_duration(seconds: i64) -> String {

@@ -1,5 +1,5 @@
 use crate::model::{RenderContext, RenderedStatus};
-use crate::width::display_width;
+use crate::util::width::display_width;
 
 const DEFAULT_STATUS_LEFT_LENGTH: usize = 64;
 const STATUS_LEFT_LENGTH_PADDING: usize = 2;

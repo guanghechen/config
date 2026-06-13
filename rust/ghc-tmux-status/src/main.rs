@@ -13,7 +13,7 @@ mod session_group;
 mod status_component;
 mod status_length;
 mod tmux;
-mod width;
+mod util;
 
 use crate::app::StatusApp;
 use crate::error::{AppError, AppResult};
