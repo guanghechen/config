@@ -75,6 +75,12 @@ pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool
             .options
             .get("status-left-length")
             .is_some_and(|value| value == &status_left_length(rendered, context))
+        // Prevent stale 20s redraw from being mistaken for a status02 no-op after cache convergence.
+        && context
+            .snapshot
+            .options
+            .get("status-interval")
+            .is_some_and(|value| value == "1")
         && context.snapshot.status == context.layout.target_status
 }
 
@@ -121,6 +127,7 @@ mod tests {
             ),
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
             ("status-left-length".to_string(), "70".to_string()),
+            ("status-interval".to_string(), "1".to_string()),
         ]));
 
         assert!(cache_matches(&context, &status));
@@ -148,6 +155,35 @@ mod tests {
             ),
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
             ("status-left-length".to_string(), "64".to_string()),
+            ("status-interval".to_string(), "1".to_string()),
+        ]));
+
+        assert!(!cache_matches(&context, &status));
+    }
+
+    #[test]
+    fn cache_misses_when_status_interval_is_stale() {
+        let status = rendered_status(&"x".repeat(68));
+        let context = context_with_options(BTreeMap::from([
+            (
+                "@GHC_SL_STATUS02_LEFT".to_string(),
+                status.status_left.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_RIGHT".to_string(),
+                status.status_right.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
+                status.session_format.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
+                status.current_format.rich_text.clone(),
+            ),
+            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
+            ("status-left-length".to_string(), "70".to_string()),
+            ("status-interval".to_string(), "20".to_string()),
         ]));
 
         assert!(!cache_matches(&context, &status));

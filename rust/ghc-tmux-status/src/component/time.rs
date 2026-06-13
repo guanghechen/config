@@ -10,14 +10,14 @@ impl StatusComponent for TimeComponent {
     }
 
     fn interests(&self) -> ComponentInterests {
-        ComponentInterests::Periodic { interval_secs: 20 }
+        ComponentInterests::Periodic { interval_secs: 1 }
     }
 
     fn render(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
-            literal_text: " 00:00 ".to_string(),
+            literal_text: " 00:00:00 ".to_string(),
             rich_text: format!(
-                "#[fg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SYM_TIME}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] %H:%M {}",
+                "#[fg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SYM_TIME}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] %H:%M:%S {}",
                 tick_trigger()
             ),
         })
@@ -49,12 +49,55 @@ fn shell_quote(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::shell_quote;
+    use std::collections::BTreeMap;
+
+    use super::{TimeComponent, shell_quote};
+    use crate::model::{
+        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
+        TmuxSnapshot,
+    };
+    use crate::status_component::StatusComponent;
+
+    #[test]
+    fn renders_time_with_seconds() {
+        let segment = TimeComponent.render(&context()).unwrap();
+
+        assert_eq!(segment.literal_text, " 00:00:00 ");
+        assert!(segment.rich_text.contains("%H:%M:%S"));
+    }
 
     #[test]
     fn quotes_tick_binary_path_for_shell() {
         assert_eq!(shell_quote("/tmp/app"), "'/tmp/app'");
         assert_eq!(shell_quote("/tmp/with space/app"), "'/tmp/with space/app'");
         assert_eq!(shell_quote("/tmp/it's/app"), "'/tmp/it'\\''s/app'");
+    }
+
+    fn context() -> RenderContext {
+        RenderContext {
+            snapshot: TmuxSnapshot {
+                mode: "02".to_string(),
+                current_layout: "02:wide".to_string(),
+                status: "on".to_string(),
+                width: 200,
+                current_session_name: "s".to_string(),
+                host: "h".to_string(),
+                session_created: 1,
+                sessions: Vec::new(),
+                options: BTreeMap::new(),
+            },
+            group: SessionGroupView {
+                current_session_name: "s".to_string(),
+                sessions: Vec::new(),
+            },
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind: LayoutKind::Wide,
+                rows: 1,
+                target_status: "on".to_string(),
+                key: "02:wide".to_string(),
+            },
+        }
     }
 }

@@ -240,6 +240,7 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_STATUS02_SESSION_FORMAT",
     "@GHC_SL_STATUS02_CURRENT_FORMAT",
     "status-left-length",
+    "status-interval",
     "@GHC_STATUS_COMPONENT_CACHE_cpu",
     "@GHC_STATUS_COMPONENT_CACHE_memory",
     "@GHC_STATUS_COMPONENT_CACHE_network",

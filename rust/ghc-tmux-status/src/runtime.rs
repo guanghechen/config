@@ -8,7 +8,9 @@ use crate::component::{
 use crate::composer::{cache_matches, format_current_format, render_components};
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus};
+use crate::model::{
+    RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus, TmuxSnapshot,
+};
 use crate::session_group::SessionGrouper;
 use crate::status_component::StatusComponent;
 use crate::status_length::status_left_length;
@@ -27,8 +29,12 @@ impl StatusRuntime {
     }
 
     pub fn apply(&self, event: RenderEvent) -> AppResult<()> {
-        let Some(context) = self.live_context_if_active()? else {
-            return Ok(());
+        let context = match self.live_context_state()? {
+            LiveContextState::Active(context) => context,
+            LiveContextState::Inactive(snapshot) => {
+                let plan = CommitPlanner::plan_inactive(&snapshot);
+                return self.tmux.commit_plan(&plan);
+            }
         };
         let (rendered, cache_options) = self.render_status02(&context, &event)?;
         if event.kind != RenderEventKind::ThemeLoaded
@@ -95,11 +101,15 @@ impl StatusRuntime {
     }
 
     fn live_context(&self) -> AppResult<RenderContext> {
-        self.live_context_if_active()?
-            .ok_or_else(|| AppError::Render("status02 layout is not active".to_string()))
+        match self.live_context_state()? {
+            LiveContextState::Active(context) => Ok(context),
+            LiveContextState::Inactive(_) => Err(AppError::Render(
+                "status02 layout is not active".to_string(),
+            )),
+        }
     }
 
-    fn live_context_if_active(&self) -> AppResult<Option<RenderContext>> {
+    fn live_context_state(&self) -> AppResult<LiveContextState> {
         let snapshot = self.tmux.read_snapshot()?;
         let group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
         let Some(layout) = LayoutEngine::resolve(
@@ -108,10 +118,10 @@ impl StatusRuntime {
             snapshot.width,
             group.sessions.len(),
         ) else {
-            return Ok(None);
+            return Ok(LiveContextState::Inactive(snapshot));
         };
 
-        Ok(Some(RenderContext {
+        Ok(LiveContextState::Active(RenderContext {
             snapshot,
             group,
             layout,
@@ -205,6 +215,11 @@ impl StatusRuntime {
             cache.pending_options(),
         ))
     }
+}
+
+enum LiveContextState {
+    Active(RenderContext),
+    Inactive(TmuxSnapshot),
 }
 
 fn cache_bytes(context: &RenderContext) -> usize {

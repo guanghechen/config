@@ -1,7 +1,11 @@
 use std::collections::BTreeMap;
 
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus};
+use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus, TmuxSnapshot};
 use crate::status_length::status_left_length;
+
+const STATUS02_STATUS_INTERVAL_SECONDS: &str = "1";
+// Keep in sync with conf/theme.tmux.conf; sourcing the theme is the primary inactive reset.
+const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TmuxCommand {
@@ -54,6 +58,17 @@ impl TmuxCommandPlan {
 pub struct CommitPlanner;
 
 impl CommitPlanner {
+    pub fn plan_inactive(snapshot: &TmuxSnapshot) -> TmuxCommandPlan {
+        let mut plan = TmuxCommandPlan::default();
+        push_global_if_changed(
+            &mut plan,
+            &snapshot.options,
+            "status-interval",
+            DEFAULT_STATUS_INTERVAL_SECONDS,
+        );
+        plan
+    }
+
     pub fn plan(
         status: &RenderedStatus,
         context: &RenderContext,
@@ -100,6 +115,12 @@ impl CommitPlanner {
             options,
             "status-left-length",
             &status_left_length(status, context),
+        );
+        push_global_if_changed(
+            &mut plan,
+            options,
+            "status-interval",
+            STATUS02_STATUS_INTERVAL_SECONDS,
         );
         push_set_global(&mut plan, "status-right", "#{E:@GHC_SL_STATUS02_RIGHT}");
         push_set_global(
@@ -257,6 +278,58 @@ mod tests {
         )));
     }
 
+    #[test]
+    fn sets_one_second_status_interval_when_cached_value_is_stale() {
+        let status = rendered_status("same");
+        let context = context_with_options(BTreeMap::from([(
+            "status-interval".to_string(),
+            "20".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, value }
+                if name == "status-interval" && value == "1"
+        )));
+    }
+
+    #[test]
+    fn skips_one_second_status_interval_when_cached_value_matches() {
+        let status = rendered_status("same");
+        let context = context_with_options(BTreeMap::from([(
+            "status-interval".to_string(),
+            "1".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(!plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, .. } if name == "status-interval"
+        )));
+    }
+
+    #[test]
+    fn resets_status_interval_when_runtime_is_inactive() {
+        let mut snapshot = tmux_snapshot(BTreeMap::from([(
+            "status-interval".to_string(),
+            "1".to_string(),
+        )]));
+        let plan = CommitPlanner::plan_inactive(&snapshot);
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, value }
+                if name == "status-interval" && value == "20"
+        )));
+
+        snapshot
+            .options
+            .insert("status-interval".to_string(), "20".to_string());
+        let plan = CommitPlanner::plan_inactive(&snapshot);
+        assert!(plan.is_empty());
+    }
+
     fn rendered_status(value: &str) -> RenderedStatus {
         let segment = RenderedSegment {
             literal_text: value.to_string(),
@@ -272,17 +345,7 @@ mod tests {
 
     fn context_with_options(options: BTreeMap<String, String>) -> RenderContext {
         RenderContext {
-            snapshot: TmuxSnapshot {
-                mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
-                status: "on".to_string(),
-                width: 200,
-                current_session_name: "s".to_string(),
-                host: "h".to_string(),
-                session_created: 1,
-                sessions: Vec::new(),
-                options,
-            },
+            snapshot: tmux_snapshot(options),
             group: SessionGroupView {
                 current_session_name: "s".to_string(),
                 sessions: Vec::new(),
@@ -295,6 +358,20 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+        }
+    }
+
+    fn tmux_snapshot(options: BTreeMap<String, String>) -> TmuxSnapshot {
+        TmuxSnapshot {
+            mode: "02".to_string(),
+            current_layout: "02:wide".to_string(),
+            status: "on".to_string(),
+            width: 200,
+            current_session_name: "s".to_string(),
+            host: "h".to_string(),
+            session_created: 1,
+            sessions: Vec::new(),
+            options,
         }
     }
 }

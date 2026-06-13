@@ -60,8 +60,10 @@ fn should_refresh(event: &RenderEvent) -> bool {
     )
 }
 
+const REFRESH_INTERVAL_SECONDS: u64 = 20;
+
 fn is_fresh(timestamp_seconds: u64) -> bool {
-    unix_now().saturating_sub(timestamp_seconds) <= 1
+    unix_now().saturating_sub(timestamp_seconds) < REFRESH_INTERVAL_SECONDS
 }
 
 fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
