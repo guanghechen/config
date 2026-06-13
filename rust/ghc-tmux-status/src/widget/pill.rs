@@ -3,7 +3,6 @@
 // status-*-length uses literal_text as a tmux-width shadow, so keep this helper
 // in sync when the rich pill shape changes.
 const ROUND_LEFT_LITERAL: &str = "";
-const ROUND_RIGHT_LITERAL: &str = "";
 const ICON_LITERAL: &str = "¤";
 
 pub(super) fn pill_literal(body: &str) -> String {
@@ -20,13 +19,9 @@ pub(super) fn prefix_literal() -> String {
     format!("{ICON_LITERAL} ,")
 }
 
-pub(super) fn alert_literal() -> String {
-    format!("{ROUND_LEFT_LITERAL}{ICON_LITERAL}{ROUND_RIGHT_LITERAL} ,")
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{alert_literal, pill_literal, prefix_literal};
+    use super::{pill_literal, prefix_literal};
 
     #[test]
     fn pill_literal_mirrors_round_icon_spacer_shape() {
@@ -34,8 +29,7 @@ mod tests {
     }
 
     #[test]
-    fn conditional_literals_cover_non_pill_indicators() {
+    fn prefix_literal_mirrors_bare_prefix_indicator_shape() {
         assert_eq!(prefix_literal(), "¤ ,");
-        assert_eq!(alert_literal(), "¤ ,");
     }
 }

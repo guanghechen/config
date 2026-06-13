@@ -13,7 +13,7 @@
 | Step | Design Ref | Change Area | Inputs | Outputs | Verification | Code Target |
 |------|------------|-------------|--------|---------|--------------|-------------|
 | 1 | Lifecycle adapters | trait API | old `StatusWidget` | adapter constructors and contracts | cargo test | `status_widget.rs` |
-| 2 | Template widgets | cheap tmux-template widgets | render bodies | `TemplateWidget` impls | existing tests | `widget/{date,time,fullscreen,window_id,prefix_indicator,session_bell}.rs` |
+| 2 | Template widgets | cheap tmux-template widgets | render bodies | `TemplateWidget` impls | existing tests | `widget/{date,time,fullscreen,window_id,prefix_indicator}.rs` |
 | 3 | Computed widgets | context/local cheap widgets | render bodies | `ComputedWidget` impls | existing tests | `widget/{host,session_list,duration}.rs` |
 | 4 | Cached metrics | metric widgets | cache parse/encode/sample/render | `CachedMetricWidget` impls | fresh/stale adapter tests | `widget/{cpu,memory,network}.rs` |
 | 5 | Runtime wiring | placement construction | exported constructors | behavior-equivalent render | cargo test/clippy/build | `runtime.rs`, `widget/mod.rs` |

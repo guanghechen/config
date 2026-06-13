@@ -455,7 +455,6 @@ built-in components：
 host
 session_list
 prefix_indicator
-session_bell
 duration
 date
 time

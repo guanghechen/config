@@ -20,8 +20,7 @@ use crate::tmux::TmuxAdapter;
 use crate::util::width::display_width;
 use crate::widget::{
     CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
-    NetworkWidget, PrefixIndicatorWidget, SessionBellWidget, SessionListWidget, TimeWidget,
-    WindowIdWidget,
+    NetworkWidget, PrefixIndicatorWidget, SessionListWidget, TimeWidget, WindowIdWidget,
 };
 
 pub struct StatusRuntime {
@@ -267,10 +266,10 @@ impl StatusRuntime {
         let mut date = template(DateWidget);
         let mut time = template(TimeWidget);
         let mut right_widgets: [&mut dyn StatusWidget; 9] = [
+            &mut prefix,
             &mut fullscreen,
             &mut window_id,
             &mut network,
-            &mut prefix,
             &mut cpu,
             &mut memory,
             &mut duration,
@@ -285,16 +284,14 @@ impl StatusRuntime {
 
         let mut row0_network = cached_metric(NetworkWidget);
         let mut row0_right_prefix = template(PrefixIndicatorWidget);
-        let mut row0_bell = computed(SessionBellWidget);
         let mut row0_cpu = cached_metric(CpuWidget);
         let mut row0_memory = cached_metric(MemoryWidget);
         let mut row0_duration = computed(DurationWidget);
         let mut row0_date = template(DateWidget);
         let mut row0_time = template(TimeWidget);
-        let mut row0_right_widgets: [&mut dyn StatusWidget; 8] = [
-            &mut row0_network,
+        let mut row0_right_widgets: [&mut dyn StatusWidget; 7] = [
             &mut row0_right_prefix,
-            &mut row0_bell,
+            &mut row0_network,
             &mut row0_cpu,
             &mut row0_memory,
             &mut row0_duration,
@@ -358,7 +355,7 @@ fn focus_missing_message(target: FocusTarget) -> String {
     }
 }
 
-const TEMPLATE_WIDGET_PLACEMENTS: usize = 11;
+const TEMPLATE_WIDGET_PLACEMENTS: usize = 10;
 const COMPUTED_WIDGET_PLACEMENTS: usize = 4;
 const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 6;
 

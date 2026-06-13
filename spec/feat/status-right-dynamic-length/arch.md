@@ -4,7 +4,7 @@
 
 | Module | Responsibility | Public Ports | Private Runtime |
 |--------|----------------|--------------|-----------------|
-| `widget::pill` | Shared literal placeholders for tmux pill glyphs | `pill_literal`, `conditional_pill_literal`, `prefix_literal`, `alert_literal` | glyph placeholder constants |
+| `widget::pill` | Shared literal placeholders for tmux pill glyphs | `pill_literal`, `conditional_pill_literal`, `prefix_literal` | glyph placeholder constants |
 | widgets | Render rich text and faithful literal shadows | `StatusWidget::render` | widget-specific body text |
 | `status_length` | Compute bounded tmux length options | `status_left_length`, `status_right_length` | width formula |
 | `composer` | Decide no-op based on rendered outputs and length options | `cache_matches` | snapshot option comparison |
