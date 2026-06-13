@@ -63,6 +63,13 @@
       }
     },
     {
+      "id": "ghc.input.alt_shift_apostrophe",
+      "command": {
+        "action": "sendInput",
+        "input": "\u0001\u0022"
+      }
+    },
+    {
       "id": "ghc.input.ctrl_,",
       "command": {
         "action": "sendInput",
@@ -807,6 +814,10 @@
     {
       "id": "ghc.input.alt_shift_backslash",
       "keys": "alt+shift+sc(43)"
+    },
+    {
+      "id": "ghc.input.alt_shift_apostrophe",
+      "keys": "alt+shift+sc(40)"
     },
     {
       "id": null,
