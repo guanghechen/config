@@ -121,7 +121,7 @@ fn snapshot_command_args() -> Vec<String> {
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        "#{session_id}\t#{session_name}".to_string(),
+        "#{session_id}\t#{session_name}\t#{session_bell_flag}".to_string(),
     ]
 }
 
@@ -165,15 +165,7 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
     let current_layout = options.get("@GHC_SL_LAYOUT").cloned().unwrap_or_default();
 
     expect_marker(lines.next(), SESSIONS_MARK)?;
-    let sessions = lines
-        .filter_map(|line| {
-            let (id, name) = line.split_once('\t')?;
-            Some(SessionInfo {
-                id: id.to_string(),
-                name: name.to_string(),
-            })
-        })
-        .collect();
+    let sessions = lines.filter_map(parse_session_line).collect();
 
     if current_session_name.is_empty() {
         return Err(AppError::TmuxParse(
@@ -191,6 +183,19 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
         session_created,
         sessions,
         options,
+    })
+}
+
+fn parse_session_line(line: &str) -> Option<SessionInfo> {
+    let mut fields = line.splitn(3, '\t');
+    let id = fields.next()?;
+    let name = fields.next()?;
+    let has_bell = fields.next() == Some("1");
+
+    Some(SessionInfo {
+        id: id.to_string(),
+        name: name.to_string(),
+        has_bell,
     })
 }
 
@@ -273,7 +278,7 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
 mod tests {
     use super::{
         CONTEXT_MARK, FIELD_SEP, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTION_NAMES, STATUS_MARK,
-        parse_snapshot_output,
+        parse_session_line, parse_snapshot_output,
     };
 
     #[test]
@@ -287,8 +292,8 @@ mod tests {
 on
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui
-$2	dev"
+$1	yui	0
+$2	dev	1"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();
@@ -296,6 +301,17 @@ $2	dev"
         assert_eq!(snapshot.status, "on");
         assert_eq!(snapshot.current_session_name, "yui");
         assert_eq!(snapshot.sessions.len(), 2);
+        assert!(!snapshot.sessions[0].has_bell);
+        assert!(snapshot.sessions[1].has_bell);
+    }
+
+    #[test]
+    fn parses_legacy_two_field_session_line_without_bell() {
+        let session = parse_session_line("$1\tlegacy").unwrap();
+
+        assert_eq!(session.id, "$1");
+        assert_eq!(session.name, "legacy");
+        assert!(!session.has_bell);
     }
 
     #[test]
@@ -313,7 +329,7 @@ $2	dev"
 {STATUS_MARK}
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui"
+$1	yui	0"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();

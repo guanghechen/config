@@ -267,6 +267,7 @@ mod tests {
             .map(|(id, name)| SessionInfo {
                 id: id.to_string(),
                 name: name.to_string(),
+                has_bell: false,
             })
             .collect()
     }

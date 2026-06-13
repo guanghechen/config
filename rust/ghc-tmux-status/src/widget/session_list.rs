@@ -9,6 +9,7 @@ const INACTIVE_NAME_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NAME}";
 const INACTIVE_NAME_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NAME}";
 const INACTIVE_NUM_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NUM}";
 const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
+const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 
@@ -16,6 +17,7 @@ const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 // literal_text as a tmux-width shadow, so update them with the rich item shape.
 const SLANT_LEFT_LITERAL: char = '';
 const SLANT_RIGHT_LITERAL: char = '';
+const BELL_LITERAL: char = '¤';
 
 pub struct SessionListWidget;
 
@@ -55,8 +57,18 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
             literal_text.push(SLANT_LEFT_LITERAL);
             rich_text.push_str(&render_left_edge(palette.name_bg, LIST_SURFACE_BG));
         }
-        literal_text.push_str(&render_item_body_literal(&session.name, index, palette));
-        rich_text.push_str(&render_item_body(&session.name, index, palette));
+        literal_text.push_str(&render_item_body_literal(
+            &session.name,
+            index,
+            session.has_bell,
+            palette,
+        ));
+        rich_text.push_str(&render_item_body(
+            &session.name,
+            index,
+            session.has_bell,
+            palette,
+        ));
         if is_last {
             literal_text.push(SLANT_RIGHT_LITERAL);
             rich_text.push_str(&render_right_edge(
@@ -128,20 +140,48 @@ fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
 fn render_item_body_literal(
     session_name: &str,
     index: usize,
+    has_bell: bool,
     palette: SessionItemPalette,
 ) -> String {
+    if palette.is_active && has_bell {
+        return format!(" {session_name} | {index} {BELL_LITERAL}");
+    }
+
     if palette.is_active {
         return format!(" {session_name} | {index} ");
+    }
+
+    if has_bell {
+        return format!(" {session_name}  {index} {BELL_LITERAL}");
     }
 
     format!(" {session_name}  {index} ")
 }
 
-fn render_item_body(session_name: &str, index: usize, palette: SessionItemPalette) -> String {
+fn render_item_body(
+    session_name: &str,
+    index: usize,
+    has_bell: bool,
+    palette: SessionItemPalette,
+) -> String {
+    if palette.is_active && has_bell {
+        return format!(
+            "#[fg={ACTIVE_FG}#,bg={}#,bold] {session_name} | {index} #[fg={ACTIVE_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={ACTIVE_FG}#,bg={}#,bold]",
+            palette.name_bg, palette.name_bg, palette.name_bg
+        );
+    }
+
     if palette.is_active {
         return format!(
             "#[fg={ACTIVE_FG}#,bg={}#,bold] {session_name} | {index} ",
             palette.name_bg
+        );
+    }
+
+    if has_bell {
+        return format!(
+            "#[fg={INACTIVE_NAME_FG}#,bg={}] {session_name} #[fg={INACTIVE_NUM_FG}#,bg={}] {index} #[fg={INACTIVE_BELL_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}",
+            palette.name_bg, palette.num_bg, palette.num_bg
         );
     }
 
@@ -157,8 +197,8 @@ mod tests {
 
     use super::{
         ACTIVE_BG, INACTIVE_NAME_BG, INACTIVE_NUM_BG, LAST_INACTIVE_RANGE_CLOSE, LIST_SURFACE_BG,
-        RANGE_CLOSE, SessionItemPalette, render_item_body, render_join_separator, render_left_edge,
-        render_right_edge, render_session_list,
+        RANGE_CLOSE, SessionItemPalette, render_item_body, render_item_body_literal,
+        render_join_separator, render_left_edge, render_right_edge, render_session_list,
     };
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
@@ -168,7 +208,7 @@ mod tests {
     #[test]
     fn active_item_uses_session_active_color_for_body_and_edges() {
         let palette = SessionItemPalette::new(true);
-        let item = render_item_body("tmux", 2, palette);
+        let item = render_item_body("tmux", 2, false, palette);
         assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
         assert!(item.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
         assert!(palette.is_active);
@@ -180,7 +220,7 @@ mod tests {
     #[test]
     fn inactive_item_uses_session_item_inactive_colors() {
         let palette = SessionItemPalette::new(false);
-        let item = render_item_body("dev", 2, palette);
+        let item = render_item_body("dev", 2, false, palette);
         assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
         assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
         assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NUM"));
@@ -192,6 +232,34 @@ mod tests {
         assert_eq!(palette.name_bg, INACTIVE_NAME_BG);
         assert_eq!(palette.num_bg, INACTIVE_NUM_BG);
         assert_eq!(palette.terminal_edge_fg, INACTIVE_NUM_BG);
+    }
+
+    #[test]
+    fn active_item_with_bell_renders_bell_after_number() {
+        let palette = SessionItemPalette::new(true);
+        let item = render_item_body("tmux", 2, true, palette);
+        assert!(item.contains("@GHC_SYM_WIN_BELL"));
+        assert!(item.contains(" tmux | "));
+        assert!(item.contains(" 2 "));
+        assert_eq!(
+            render_item_body_literal("tmux", 2, true, palette),
+            " tmux | 2 ¤"
+        );
+    }
+
+    #[test]
+    fn inactive_item_with_bell_renders_bell_without_pipe() {
+        let palette = SessionItemPalette::new(false);
+        let item = render_item_body("dev", 2, true, palette);
+        assert!(item.contains("@GHC_SYM_WIN_BELL"));
+        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
+        assert!(item.contains(" dev "));
+        assert!(item.contains(" 2 "));
+        assert!(!item.contains("| 2 "));
+        assert_eq!(
+            render_item_body_literal("dev", 2, true, palette),
+            " dev  2 ¤"
+        );
     }
 
     #[test]
@@ -241,15 +309,35 @@ mod tests {
         assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
     }
 
+    #[test]
+    fn rendered_list_includes_bell_marker_and_literal_width_for_belling_session() {
+        let context =
+            context_with_session_states("dev", [("$1", "dev", false), ("$2", "yui", true)]);
+        let segment = render_session_list(&context);
+
+        assert!(segment.rich_text.contains("@GHC_SYM_WIN_BELL"));
+        assert!(segment.rich_text.contains("#[range=session|$2]"));
+        assert_eq!(segment.literal_text, " dev | 1  yui  2 ¤ ");
+    }
+
     fn context_with_sessions<const N: usize>(
         current_session_name: &str,
         sessions: [(&str, &str); N],
     ) -> RenderContext {
+        let sessions = sessions.map(|(id, name)| (id, name, false));
+        context_with_session_states(current_session_name, sessions)
+    }
+
+    fn context_with_session_states<const N: usize>(
+        current_session_name: &str,
+        sessions: [(&str, &str, bool); N],
+    ) -> RenderContext {
         let sessions = sessions
             .into_iter()
-            .map(|(id, name)| SessionInfo {
+            .map(|(id, name, has_bell)| SessionInfo {
                 id: id.to_string(),
                 name: name.to_string(),
+                has_bell,
             })
             .collect::<Vec<_>>();
 

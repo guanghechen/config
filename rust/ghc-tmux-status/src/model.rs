@@ -58,6 +58,7 @@ impl RenderEvent {
 pub struct SessionInfo {
     pub id: String,
     pub name: String,
+    pub has_bell: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
