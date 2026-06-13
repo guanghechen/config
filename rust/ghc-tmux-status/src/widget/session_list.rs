@@ -14,7 +14,6 @@ const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 
 // These placeholders mirror glyph variables in rich_text. status-left-length uses
 // literal_text as a tmux-width shadow, so update them with the rich item shape.
-const SESSION_ICON_PILL_LITERAL: &str = "  ";
 const SLANT_LEFT_LITERAL: char = '';
 const SLANT_RIGHT_LITERAL: char = '';
 
@@ -38,10 +37,8 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
         return RenderedSegment::empty();
     }
 
-    let mut literal_text = String::from(SESSION_ICON_PILL_LITERAL);
-    let mut rich_text = String::from(
-        "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=default]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bold]#{@GHC_SYM_SESSION} #[default] ",
-    );
+    let mut literal_text = String::new();
+    let mut rich_text = String::new();
     let session_count = context.group.sessions.len();
     let mut previous_palette = None;
     for (offset, session) in context.group.sessions.iter().enumerate() {
@@ -232,7 +229,7 @@ mod tests {
         let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
-        assert_eq!(segment.literal_text, "   dev | 1  yui | 2  ");
+        assert_eq!(segment.literal_text, " dev | 1  yui | 2  ");
     }
 
     fn context_with_sessions<const N: usize>(
