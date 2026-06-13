@@ -13,6 +13,19 @@ pub enum RenderEventKind {
 }
 
 impl RenderEventKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Tick => "tick",
+            Self::ThemeLoaded => "theme-loaded",
+            Self::ClientResized => "client-resized",
+            Self::SessionChanged => "session-changed",
+            Self::SessionCreated => "session-created",
+            Self::SessionClosed => "session-closed",
+            Self::SessionRenamed => "session-renamed",
+            Self::ManualApply => "manual-apply",
+        }
+    }
+
     pub fn parse(value: &str) -> Option<Self> {
         match value {
             "tick" => Some(Self::Tick),

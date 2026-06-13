@@ -6,6 +6,7 @@ mod error;
 mod layout;
 mod metric;
 mod model;
+mod observability;
 mod platform;
 mod runtime;
 mod session;

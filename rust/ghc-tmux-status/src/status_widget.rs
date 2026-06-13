@@ -1,6 +1,7 @@
 use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
+use crate::observability::{trace_enabled, trace_line};
 use crate::util::time::unix_timestamp_seconds;
 
 pub trait StatusWidget {
@@ -134,19 +135,68 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
         let cached = cache
             .get(self.id())
             .and_then(|value| self.widget.decode_cache(value));
-        if let Some(snapshot) = cached.clone()
-            && (!self.widget.should_refresh(event) || self.is_fresh(&snapshot))
-        {
-            self.snapshot = Some(snapshot);
-            return Ok(());
+        if let Some(snapshot) = cached.clone() {
+            let age_seconds = self.age_seconds(&snapshot);
+            if !self.widget.should_refresh(event) {
+                self.trace_refresh(|| format!(
+                    "id={} action=cache-hit reason=event-skip event={} age_seconds={} ttl_seconds={}",
+                    self.id(),
+                    event.kind.as_str(),
+                    age_seconds,
+                    self.widget.ttl_seconds()
+                ));
+                self.snapshot = Some(snapshot);
+                return Ok(());
+            }
+
+            if age_seconds < self.widget.ttl_seconds() {
+                self.trace_refresh(|| format!(
+                    "id={} action=cache-hit reason=fresh event={} age_seconds={} ttl_seconds={}",
+                    self.id(),
+                    event.kind.as_str(),
+                    age_seconds,
+                    self.widget.ttl_seconds()
+                ));
+                self.snapshot = Some(snapshot);
+                return Ok(());
+            }
         }
 
         self.snapshot = match self.widget.sample(cached.as_ref()) {
             Ok(snapshot) => {
+                self.trace_refresh(|| {
+                    format!(
+                        "id={} action=sample-ok event={} ttl_seconds={}",
+                        self.id(),
+                        event.kind.as_str(),
+                        self.widget.ttl_seconds()
+                    )
+                });
                 cache.set(self.id(), self.widget.encode_cache(&snapshot));
                 Some(snapshot)
             }
-            Err(_) => cached,
+            Err(_) => {
+                if cached.is_some() {
+                    self.trace_refresh(|| {
+                        format!(
+                            "id={} action=sample-error fallback=cache event={} ttl_seconds={}",
+                            self.id(),
+                            event.kind.as_str(),
+                            self.widget.ttl_seconds()
+                        )
+                    });
+                } else {
+                    self.trace_refresh(|| {
+                        format!(
+                            "id={} action=sample-error fallback=empty event={} ttl_seconds={}",
+                            self.id(),
+                            event.kind.as_str(),
+                            self.widget.ttl_seconds()
+                        )
+                    });
+                }
+                cached
+            }
         };
         Ok(())
     }
@@ -161,9 +211,16 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
 }
 
 impl<T: CachedMetricWidget> CachedMetric<T> {
-    fn is_fresh(&self, snapshot: &T::Snapshot) -> bool {
+    fn age_seconds(&self, snapshot: &T::Snapshot) -> u64 {
         unix_timestamp_seconds().saturating_sub(self.widget.timestamp_seconds(snapshot))
-            < self.widget.ttl_seconds()
+    }
+
+    fn trace_refresh(&self, message: impl FnOnce() -> String) {
+        if !trace_enabled() {
+            return;
+        }
+
+        trace_line("metric", message());
     }
 }
 
