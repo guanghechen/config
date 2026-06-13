@@ -300,6 +300,7 @@ bindings = [
   { key = ";",          mods = "Command",                   chars = "\u0001\u003b" },       # <Ctrl-a>;
   { key = ":",          mods = "Command|Shift",             chars = "\u0001\u003a" },       # <Ctrl-a>:
   { key = "'",          mods = "Command",                   chars = "\u0001\u0027" },       # <Ctrl-a>'
+  { key = "\"",         mods = "Command|Shift",             chars = "\u0001\u0022" },       # <Ctrl-a>"
   { key = "<",          mods = "Command|Shift",             chars = "\u0001\u003c" },       # <Ctrl-a><
   { key = ">",          mods = "Command|Shift",             chars = "\u0001\u003e" },       # <Ctrl-a>>
   { key = "[",          mods = "Command",                   chars = "\u0001\u005b" },       # <Ctrl-a>[
