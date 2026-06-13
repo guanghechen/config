@@ -10,7 +10,7 @@
 | `runtime` | Orchestrate tmux snapshot, ordering, side effects | `apply`, `focus_session`, `swap_session` | `TmuxAdapter` |
 | `tmux` | Execute tmux commands and parse snapshot | `read_snapshot`, `switch_client`, `set_global_option`, `display_message` | `Command::new("tmux")` |
 | `widget::session_list` | Render ordered group | `SessionListWidget` | tmux rich text formatting |
-| scripts/keymap | Bind user shortcuts to Rust commands | `focus-session.sh`, `swap-session.sh` | binary fallback |
+| scripts/keymap | Bind user shortcuts to focus/swap commands | `focus-session.sh`, direct `ghc-tmux-status session swap` key bindings | focus fallback; direct swap requires Rust binary |
 
 ## 2. Dependency Graph
 
@@ -58,7 +58,7 @@ No plugin architecture is introduced for this feature.
 ## 6. Observability and Degrade Strategy
 
 - Boundary/no target cases use `tmux display-message`.
-- If binary is missing, scripts display a short fallback message or use legacy focus behavior.
+- If binary is missing, focus keeps legacy shell fallback; direct swap reports through the Rust command path only when the binary is available.
 - `dump-state` may later include session order if needed.
 
 ## 7. Open Decisions

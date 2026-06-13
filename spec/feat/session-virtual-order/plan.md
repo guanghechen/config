@@ -7,7 +7,7 @@
 | session order pure logic | flow.md OrderedSessions/SwappedOrder | `src/session/list.rs` | unit tests |
 | render parity | flow.md OrderedSessions | `runtime.rs`, `widget/session_list.rs` | render smoke |
 | focus/swap CLI | arch.md Runtime/TmuxAdapter | `main.rs`, `app.rs`, `runtime.rs`, `tmux.rs` | unit + manual smoke |
-| key bindings | arch.md scripts/keymap | `script/*.sh`, `conf/keymap*.tmux.conf` | shell syntax check |
+| key bindings | arch.md scripts/keymap | `script/focus-session.sh`, `conf/keymap*.tmux.conf` | shell syntax check |
 
 ## 2. Work Breakdown
 
@@ -16,7 +16,7 @@
 | 1 | session order pure logic | session module | sessions/order/current | ordered list/swap/focus | cargo test | `src/session` |
 | 2 | render parity | runtime snapshot ordering | `@GHC_SL_SESSION_ORDER` | ordered status list | render status02 | `tmux.rs`, `runtime.rs` |
 | 3 | CLI side effects | session commands | focus/swap args | switch/order write | cargo test/clippy | `main.rs`, `runtime.rs`, `tmux.rs` |
-| 4 | key bindings | shell/tmux conf | user key press | Rust command | bash -n | `script`, `conf` |
+| 4 | key bindings | shell/tmux conf | user key press | focus script or direct Rust swap command | bash -n / source-file -n | `script`, `conf` |
 
 ## 3. Acceptance Criteria
 
@@ -39,4 +39,4 @@
 | 1 | completed | Pure order/focus/swap logic covered by unit tests. |
 | 2 | completed | Runtime applies virtual order before render/focus/swap. |
 | 3 | completed | CLI delegates to runtime and tmux adapter side effects. |
-| 4 | completed | Keymaps and scripts validated with syntax checks. |
+| 4 | completed | Keymaps and focus script validated with syntax checks. |
