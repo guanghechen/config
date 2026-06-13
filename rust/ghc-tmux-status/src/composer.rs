@@ -2,6 +2,7 @@ use crate::cache::ComponentCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
 use crate::status_component::{ComponentInterests, StatusComponent};
+use crate::status_length::status_left_length;
 
 pub fn render_components(
     components: &mut [&mut dyn StatusComponent],
@@ -69,6 +70,11 @@ pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool
             .options
             .get("@GHC_SL_LAYOUT")
             .is_some_and(|value| value == &context.layout.key)
+        && context
+            .snapshot
+            .options
+            .get("status-left-length")
+            .is_some_and(|value| value == &status_left_length(rendered, context))
         && context.snapshot.status == context.layout.target_status
 }
 
@@ -78,12 +84,113 @@ fn native_window_list_format() -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::format_current_format;
+    use std::collections::BTreeMap;
+
+    use super::{cache_matches, format_current_format};
+    use crate::model::{
+        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionGroupView,
+        StatusMode, StatusPosition, TmuxSnapshot,
+    };
 
     #[test]
     fn current_format_keeps_native_window_list() {
         let formatted = format_current_format("RIGHT");
         assert!(formatted.contains("#{W:"));
         assert!(formatted.contains("RIGHT"));
+    }
+
+    #[test]
+    fn cache_matches_requires_dynamic_status_left_length() {
+        let status = rendered_status(&"x".repeat(68));
+        let context = context_with_options(BTreeMap::from([
+            (
+                "@GHC_SL_STATUS02_LEFT".to_string(),
+                status.status_left.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_RIGHT".to_string(),
+                status.status_right.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
+                status.session_format.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
+                status.current_format.rich_text.clone(),
+            ),
+            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
+            ("status-left-length".to_string(), "70".to_string()),
+        ]));
+
+        assert!(cache_matches(&context, &status));
+    }
+
+    #[test]
+    fn cache_misses_when_status_left_length_is_stale() {
+        let status = rendered_status(&"x".repeat(68));
+        let context = context_with_options(BTreeMap::from([
+            (
+                "@GHC_SL_STATUS02_LEFT".to_string(),
+                status.status_left.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_RIGHT".to_string(),
+                status.status_right.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
+                status.session_format.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
+                status.current_format.rich_text.clone(),
+            ),
+            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
+            ("status-left-length".to_string(), "64".to_string()),
+        ]));
+
+        assert!(!cache_matches(&context, &status));
+    }
+
+    fn rendered_status(value: &str) -> RenderedStatus {
+        let segment = RenderedSegment {
+            literal_text: value.to_string(),
+            rich_text: value.to_string(),
+        };
+        RenderedStatus {
+            status_left: segment.clone(),
+            status_right: segment.clone(),
+            session_format: segment.clone(),
+            current_format: segment,
+        }
+    }
+
+    fn context_with_options(options: BTreeMap<String, String>) -> RenderContext {
+        RenderContext {
+            snapshot: TmuxSnapshot {
+                mode: "02".to_string(),
+                current_layout: "02:wide".to_string(),
+                status: "on".to_string(),
+                width: 200,
+                current_session_name: "s".to_string(),
+                host: "h".to_string(),
+                session_created: 1,
+                sessions: Vec::new(),
+                options,
+            },
+            group: SessionGroupView {
+                current_session_name: "s".to_string(),
+                sessions: Vec::new(),
+            },
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind: LayoutKind::Wide,
+                rows: 1,
+                target_status: "on".to_string(),
+                key: "02:wide".to_string(),
+            },
+        }
     }
 }

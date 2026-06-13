@@ -11,6 +11,7 @@ use crate::layout::LayoutEngine;
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment, RenderedStatus};
 use crate::session_group::SessionGrouper;
 use crate::status_component::StatusComponent;
+use crate::status_length::status_left_length;
 use crate::tmux::TmuxAdapter;
 use crate::width::display_width;
 
@@ -47,6 +48,10 @@ impl StatusRuntime {
         let (rendered, _cache_options) = self.render_status02(&context, &event)?;
         println!("status-left={}", rendered.status_left.rich_text);
         println!("status-right={}", rendered.status_right.rich_text);
+        println!(
+            "status-left-length={}",
+            status_left_length(&rendered, &context)
+        );
         println!(
             "@GHC_SL_STATUS02_SESSION_FORMAT={}",
             rendered.session_format.rich_text

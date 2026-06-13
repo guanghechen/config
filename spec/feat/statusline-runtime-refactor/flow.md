@@ -7,7 +7,7 @@
 ## 2. Boundary
 
 - Input Boundary: CLI args, tmux snapshot, tmux option cache, platform metrics commands。
-- Output Boundary: tmux global/session options, `refresh-client -S`。
+- Output Boundary: tmux global/session options（含 `status-left-length`）, `refresh-client -S`。
 
 ## 3. Dataflow State Machine
 
@@ -50,6 +50,7 @@
 - commit planner never samples metrics。
 - no status refresh path uses shell scripts except the renderer tick trigger。
 - `status01` remains fallback when renderer is unavailable or apply fails。
+- status02 one-line mode must set `status-left-length` from faithful rendered-left literal width plus 2 padding, capped at client width。
 
 ## 6. Test Matrix
 
@@ -63,6 +64,7 @@
 | cache repeat tick     | unchanged component values    | no cache growth                  |
 | delta no-op           | rendered status unchanged     | no tmux write                    |
 | command split         | large session list            | write succeeds or clear error    |
+| wide left length      | faithful status-left literal width > 62 | `status-left-length` equals width + 2 |
 
 ## 7. Open Decisions（唯一待定区）
 

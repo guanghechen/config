@@ -8,6 +8,7 @@
 | runtime split   | arch §1       | `src/runtime.rs`, `src/app.rs`      | apply/render tests   |
 | composer SRP    | arch §1       | `src/composer.rs`                   | composer tests       |
 | delta commit    | flow §3       | `src/commit.rs`, `src/tmux.rs`      | commit planner tests |
+| left length     | flow §5       | `src/status_length.rs`, `src/commit.rs`, `src/composer.rs`, `src/tmux.rs` | unit tests           |
 | metrics plugin  | arch §5       | `src/component/{cpu,memory,network}` | component tests      |
 | duration native | flow §5       | `src/component/duration.rs`         | duration tests       |
 
@@ -23,6 +24,7 @@
 | 6    | duration      | remove shell duration   | session_created     | static rich text    | no duration.sh reference  | `src/component/duration.rs` |
 | 7    | delta commit  | commit planner          | snapshot/rendered   | changed options     | planner tests             | `src/commit.rs`           |
 | 8    | integration   | tmux adapter            | command plan        | tmux apply          | live apply + dump-state   | `src/tmux.rs`             |
+| 9    | left length   | one-line clipping guard | faithful left width | dynamic length      | status length tests       | `src/status_length.rs`    |
 
 ## 3. Acceptance Criteria
 
@@ -35,6 +37,7 @@
 - Repeated `apply tick` does not increase component cache record count。
 - `@GHC_STATUS_COMPONENT_CACHE_*` total payload remains bounded after repeated ticks。
 - status02 wide/narrow behavior remains unchanged。
+- Wide status02 updates `status-left-length` from rendered left width, so the last session slant is not clipped by static 64。
 - single-session mode still one row and hides session list。
 
 ## 4. Rollback Plan
@@ -56,3 +59,4 @@
 | 6    | done    | duration is Rust-native |
 | 7    | done    | `commit.rs` added     |
 | 8    | done    | live apply verified   |
+| 9    | done    | dynamic one-line left length |

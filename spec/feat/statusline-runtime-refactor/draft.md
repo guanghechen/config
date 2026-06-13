@@ -39,6 +39,7 @@
 | layout 视觉回归     | row compose 改动                 | status02 由多段拼接        | 状态栏错位             | 保持 current format contract   |
 | stale metrics       | 系统命令失败                     | provider 可能失败          | metrics 隐藏或旧值     | stale -> hidden -> continue    |
 | tmux command 过长   | status/session/cache 内容增长    | 已出现 command too long    | apply 失败             | bounded cache + delta commit   |
+| status-left clipping| 一行 wide session list 超过静态 64 | 最后 inactive slant 被裁剪 | 右边界颜色/形状异常   | dynamic `status-left-length`   |
 | event 行为变化      | 去掉 generic rendered cache      | event skip 依赖旧 cache    | 非订阅组件仍需刷新     | render cheap，snapshot TTL     |
 
 ## 5. Draft Decisions
@@ -48,6 +49,7 @@
 1. 删除 generic rendered cache，所有 component 每次参与 compose。
 2. component cache 改为 single-slot，只保存必要 raw state 或 compact rendered fallback。
 3. commit 改为 delta，只写实际变化的 tmux options。
+4. `status-left-length` 由 renderer 按 faithful left literal width + 2 padding 计算，并以 client width 封顶，避免 wide 一行 session list 的右侧 slant 被静态长度裁剪。
 
 ## 6. Examples
 

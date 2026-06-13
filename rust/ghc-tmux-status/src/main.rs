@@ -11,6 +11,7 @@ mod platform;
 mod runtime;
 mod session_group;
 mod status_component;
+mod status_length;
 mod tmux;
 mod width;
 

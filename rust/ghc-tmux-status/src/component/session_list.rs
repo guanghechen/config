@@ -12,6 +12,12 @@ const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 
+// These placeholders mirror glyph variables in rich_text. status-left-length uses
+// literal_text as a tmux-width shadow, so update them with the rich item shape.
+const SESSION_ICON_PILL_LITERAL: &str = "  ";
+const SLANT_LEFT_LITERAL: char = '';
+const SLANT_RIGHT_LITERAL: char = '';
+
 pub struct SessionListComponent;
 
 impl StatusComponent for SessionListComponent {
@@ -38,7 +44,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
         return RenderedSegment::empty();
     }
 
-    let mut literal_text = String::from(" ");
+    let mut literal_text = String::from(SESSION_ICON_PILL_LITERAL);
     let mut rich_text = String::from(
         "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=default]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bold]#{@GHC_SYM_SESSION} #[default] ",
     );
@@ -50,23 +56,25 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
         let is_active = session.name == context.group.current_session_name;
         let palette = SessionItemPalette::new(is_active);
 
-        if index > 1 {
-            literal_text.push(' ');
-        }
-        literal_text.push_str(&format!("{} | {}", session.name, index));
-
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
         if let Some(left_palette) = previous_palette {
+            literal_text.push(SLANT_RIGHT_LITERAL);
             rich_text.push_str(&render_join_separator(left_palette, palette));
         } else {
+            literal_text.push(SLANT_LEFT_LITERAL);
             rich_text.push_str(&render_left_edge(palette.name_bg, LIST_SURFACE_BG));
         }
+        literal_text.push_str(&render_item_body_literal(&session.name, index));
         rich_text.push_str(&render_item_body(&session.name, index, palette));
         if is_last {
+            literal_text.push(SLANT_RIGHT_LITERAL);
             rich_text.push_str(&render_right_edge(
                 palette.terminal_edge_fg,
                 LIST_SURFACE_BG,
             ));
+        }
+        if is_last && !palette.is_active {
+            literal_text.push(' ');
         }
         rich_text.push_str(palette.range_close(is_last));
         previous_palette = Some(palette);
@@ -126,6 +134,10 @@ fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
     format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_RIGHT}}")
 }
 
+fn render_item_body_literal(session_name: &str, index: usize) -> String {
+    format!(" {session_name} | {index} ")
+}
+
 fn render_item_body(session_name: &str, index: usize, palette: SessionItemPalette) -> String {
     if palette.is_active {
         return format!(
@@ -142,10 +154,16 @@ fn render_item_body(session_name: &str, index: usize, palette: SessionItemPalett
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::{
         ACTIVE_BG, INACTIVE_NAME_BG, INACTIVE_NUM_BG, LAST_INACTIVE_RANGE_CLOSE, LIST_SURFACE_BG,
         RANGE_CLOSE, SessionItemPalette, render_item_body, render_join_separator, render_left_edge,
-        render_right_edge,
+        render_right_edge, render_session_list,
+    };
+    use crate::model::{
+        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
+        StatusPosition, TmuxSnapshot,
     };
 
     #[test]
@@ -214,5 +232,51 @@ mod tests {
         assert_eq!(inactive.range_close(true), LAST_INACTIVE_RANGE_CLOSE);
         assert_eq!(inactive.range_close(false), RANGE_CLOSE);
         assert_eq!(active.range_close(true), RANGE_CLOSE);
+    }
+    #[test]
+    fn literal_text_accounts_for_visible_session_list_glyphs() {
+        let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
+        let segment = render_session_list(&context);
+
+        assert_eq!(segment.literal_text, "   dev | 1  yui | 2  ");
+    }
+
+    fn context_with_sessions<const N: usize>(
+        current_session_name: &str,
+        sessions: [(&str, &str); N],
+    ) -> RenderContext {
+        let sessions = sessions
+            .into_iter()
+            .map(|(id, name)| SessionInfo {
+                id: id.to_string(),
+                name: name.to_string(),
+            })
+            .collect::<Vec<_>>();
+
+        RenderContext {
+            snapshot: TmuxSnapshot {
+                mode: "02".to_string(),
+                current_layout: "02:wide".to_string(),
+                status: "on".to_string(),
+                width: 200,
+                current_session_name: current_session_name.to_string(),
+                host: "h".to_string(),
+                session_created: 1,
+                sessions: sessions.clone(),
+                options: BTreeMap::new(),
+            },
+            group: SessionGroupView {
+                current_session_name: current_session_name.to_string(),
+                sessions,
+            },
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind: LayoutKind::Wide,
+                rows: 1,
+                target_status: "on".to_string(),
+                key: "02:wide".to_string(),
+            },
+        }
     }
 }

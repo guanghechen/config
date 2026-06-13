@@ -13,6 +13,7 @@
 | `cache`             | bounded cache slots                    | `ComponentCache`                     | option encoding              |
 | `composer`          | assemble rows                          | `compose_status02`                   | component order              |
 | `commit`            | build delta plan                       | `CommitPlanner::plan`                | changed-option detection     |
+| `status_length`     | compute tmux status length budgets     | `status_left_length`                 | width/padding rules          |
 | `metric`            | platform metrics provider              | `MetricsProvider`                    | macOS native CPU + commands  |
 | `platform`          | OS detection                           | `current_platform`                   | `OnceLock` detection         |
 
@@ -25,7 +26,8 @@ main -> runtime -> tmux
               -> layout
               -> session_group
               -> composer -> component -> cache
-              -> commit
+              -> composer -> status_length -> width
+              -> commit -> status_length
 component::metrics -> metric -> platform
 ```
 
@@ -69,6 +71,7 @@ layout    -> tmux
 | `StatusComponent::snapshot` | `RenderContext`, cache       | component snapshot      | yes         | component TTL | stale/hidden/error          |
 | `StatusComponent::render`  | component snapshot            | `RenderedSegment`       | yes         | in-process    | render error                |
 | `CommitPlanner::plan`      | snapshot, rendered, cache ops | `TmuxCommandPlan`       | yes         | in-process    | plan error                  |
+| `status_length::status_left_length` | rendered status, context | tmux length string | yes | in-process | pure calculation            |
 | `TmuxAdapter::commit_plan` | command plan                  | `()`                    | yes         | tmux default  | write error                 |
 
 ## 5. Minimal Core + Plugin Contract
@@ -93,6 +96,7 @@ layout    -> tmux
 - required component failure aborts current commit and keeps previous statusline。
 - cache size must be visible enough for manual diagnosis。
 - command length retry must report concise error if split retry fails。
+- `render status02` prints computed `status-left-length` for clipping diagnosis。
 
 ## 7. Open Decisions（唯一待定区）
 

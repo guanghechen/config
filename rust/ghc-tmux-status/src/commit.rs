@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus};
+use crate::status_length::status_left_length;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TmuxCommand {
@@ -94,6 +95,12 @@ impl CommitPlanner {
         push_global_if_changed(&mut plan, options, "@GHC_SL_LAYOUT", &context.layout.key);
 
         push_set_global(&mut plan, "status-left", "#{E:@GHC_SL_STATUS02_LEFT}");
+        push_global_if_changed(
+            &mut plan,
+            options,
+            "status-left-length",
+            &status_left_length(status, context),
+        );
         push_set_global(&mut plan, "status-right", "#{E:@GHC_SL_STATUS02_RIGHT}");
         push_set_global(
             &mut plan,
@@ -216,6 +223,37 @@ mod tests {
         assert!(plan.commands.iter().any(|command| matches!(
             command,
             TmuxCommand::UnsetGlobal { name } if name == "@GHC_STATUS_COMPONENT_CACHE_duration"
+        )));
+    }
+
+    #[test]
+    fn sets_dynamic_status_left_length_when_cached_value_is_stale() {
+        let status = rendered_status(&"x".repeat(68));
+        let context = context_with_options(BTreeMap::from([(
+            "status-left-length".to_string(),
+            "64".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, value }
+                if name == "status-left-length" && value == "70"
+        )));
+    }
+
+    #[test]
+    fn skips_dynamic_status_left_length_when_cached_value_matches() {
+        let status = rendered_status(&"x".repeat(68));
+        let context = context_with_options(BTreeMap::from([(
+            "status-left-length".to_string(),
+            "70".to_string(),
+        )]));
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(!plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetGlobal { name, .. } if name == "status-left-length"
         )));
     }
 
