@@ -125,9 +125,9 @@ impl StatusRuntime {
         let mut left_components: [&mut dyn StatusComponent; 2] = [&mut host, &mut session_list];
         let status_left = render_components(&mut left_components, context, event, &mut cache)?;
 
-        let mut network = NetworkComponent::default();
         let mut fullscreen = FullscreenComponent;
         let mut window_id = WindowIdComponent;
+        let mut network = NetworkComponent::default();
         let mut prefix = PrefixIndicatorComponent;
         let mut cpu = CpuComponent::default();
         let mut memory = MemoryComponent::default();
@@ -135,9 +135,9 @@ impl StatusRuntime {
         let mut date = DateComponent;
         let mut time = TimeComponent;
         let mut right_components: [&mut dyn StatusComponent; 9] = [
-            &mut network,
             &mut fullscreen,
             &mut window_id,
+            &mut network,
             &mut prefix,
             &mut cpu,
             &mut memory,
