@@ -54,6 +54,7 @@ mod tests {
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: "s".to_string(),
+                client_last_session: String::new(),
                 host: host.to_string(),
                 session_created: 1,
                 sessions: Vec::new(),

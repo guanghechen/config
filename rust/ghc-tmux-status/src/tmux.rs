@@ -100,7 +100,7 @@ fn snapshot_command_args() -> Vec<String> {
         "display-message".to_string(),
         "-p".to_string(),
         format!(
-            "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
+            "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
         ),
         ";".to_string(),
         "display-message".to_string(),
@@ -150,7 +150,8 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
     let context_line = lines
         .next()
         .ok_or_else(|| AppError::TmuxParse("missing context section".to_string()))?;
-    let (width, current_session_name, host, session_created) = parse_context_line(context_line)?;
+    let (width, current_session_name, client_last_session, host, session_created) =
+        parse_context_line(context_line)?;
 
     expect_marker(lines.next(), STATUS_MARK)?;
     let mut status_lines = Vec::new();
@@ -205,6 +206,7 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
         status,
         width,
         current_session_name,
+        client_last_session,
         host,
         session_created,
         sessions,
@@ -249,7 +251,7 @@ fn parse_options_line(options_line: &str) -> AppResult<BTreeMap<String, String>>
     Ok(options)
 }
 
-fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, i64)> {
+fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, String, i64)> {
     let mut fields = context_line.split(FIELD_SEP);
     let marker = fields.next();
     if marker != Some(CONTEXT_MARK) {
@@ -264,13 +266,20 @@ fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, i
         .and_then(|value| value.parse::<usize>().ok())
         .unwrap_or(200);
     let current_session_name = fields.next().unwrap_or_default().to_string();
+    let client_last_session = fields.next().unwrap_or_default().to_string();
     let host = fields.next().unwrap_or_default().to_string();
     let session_created = fields
         .next()
         .and_then(|value| value.parse::<i64>().ok())
         .unwrap_or_default();
 
-    Ok((width, current_session_name, host, session_created))
+    Ok((
+        width,
+        current_session_name,
+        client_last_session,
+        host,
+        session_created,
+    ))
 }
 
 fn expect_marker(line: Option<&str>, marker: &str) -> AppResult<()> {
@@ -322,7 +331,7 @@ mod tests {
             .collect::<Vec<_>>()
             .join(&FIELD_SEP.to_string());
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
 {STATUS_MARK}
 on
 {OPTIONS_MARK}{FIELD_SEP}{options}
@@ -338,6 +347,7 @@ $2	1"
         assert_eq!(snapshot.width, 120);
         assert_eq!(snapshot.status, "on");
         assert_eq!(snapshot.current_session_name, "yui");
+        assert_eq!(snapshot.client_last_session, "dev");
         assert_eq!(snapshot.sessions.len(), 2);
         assert!(!snapshot.sessions[0].has_bell);
         assert!(snapshot.sessions[1].has_bell);
@@ -371,7 +381,7 @@ $2	1"
         option_values[network_index] = "1	2	3	4	5";
         let options = option_values.join(&FIELD_SEP.to_string());
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}42
 {STATUS_MARK}
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}

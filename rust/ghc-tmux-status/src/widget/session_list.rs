@@ -9,6 +9,7 @@ const INACTIVE_NAME_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NAME}";
 const INACTIVE_NAME_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NAME}";
 const INACTIVE_NUM_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NUM}";
 const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
+const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
 const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
@@ -47,7 +48,10 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
         let index = offset + 1;
         let is_last = index == session_count;
         let is_active = session.name == context.group.current_session_name;
-        let palette = SessionItemPalette::new(is_active);
+        let is_last_focus = !is_active
+            && !context.snapshot.client_last_session.is_empty()
+            && session.name == context.snapshot.client_last_session;
+        let palette = SessionItemPalette::new(is_active, is_last_focus);
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
         if let Some(left_palette) = previous_palette {
@@ -93,17 +97,21 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
 struct SessionItemPalette {
     is_active: bool,
     name_bg: &'static str,
+    name_fg: &'static str,
     num_bg: &'static str,
+    num_fg: &'static str,
     terminal_edge_fg: &'static str,
 }
 
 impl SessionItemPalette {
-    fn new(is_active: bool) -> Self {
+    fn new(is_active: bool, is_last_focus: bool) -> Self {
         if is_active {
             return Self {
                 is_active,
                 name_bg: ACTIVE_BG,
+                name_fg: ACTIVE_FG,
                 num_bg: ACTIVE_BG,
+                num_fg: ACTIVE_FG,
                 terminal_edge_fg: ACTIVE_BG,
             };
         }
@@ -111,7 +119,17 @@ impl SessionItemPalette {
         Self {
             is_active,
             name_bg: INACTIVE_NAME_BG,
+            name_fg: if is_last_focus {
+                LAST_FG
+            } else {
+                INACTIVE_NAME_FG
+            },
             num_bg: INACTIVE_NUM_BG,
+            num_fg: if is_last_focus {
+                LAST_FG
+            } else {
+                INACTIVE_NUM_FG
+            },
             terminal_edge_fg: INACTIVE_NUM_BG,
         }
     }
@@ -166,28 +184,33 @@ fn render_item_body(
 ) -> String {
     if palette.is_active && has_bell {
         return format!(
-            "#[fg={ACTIVE_FG}#,bg={}#,bold] {session_name} | {index} #[fg={ACTIVE_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={ACTIVE_FG}#,bg={}#,bold]",
-            palette.name_bg, palette.name_bg, palette.name_bg
+            "#[fg={}#,bg={}#,bold] {session_name} | {index} #[fg={}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={}#,bg={}#,bold]",
+            palette.name_fg,
+            palette.name_bg,
+            palette.name_fg,
+            palette.name_bg,
+            palette.name_fg,
+            palette.name_bg
         );
     }
 
     if palette.is_active {
         return format!(
-            "#[fg={ACTIVE_FG}#,bg={}#,bold] {session_name} | {index} ",
-            palette.name_bg
+            "#[fg={}#,bg={}#,bold] {session_name} | {index} ",
+            palette.name_fg, palette.name_bg
         );
     }
 
     if has_bell {
         return format!(
-            "#[fg={INACTIVE_NAME_FG}#,bg={}] {session_name} #[fg={INACTIVE_NUM_FG}#,bg={}] {index} #[fg={INACTIVE_BELL_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}",
-            palette.name_bg, palette.num_bg, palette.num_bg
+            "#[fg={}#,bg={}] {session_name} #[fg={}#,bg={}] {index} #[fg={INACTIVE_BELL_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}",
+            palette.name_fg, palette.name_bg, palette.num_fg, palette.num_bg, palette.num_bg
         );
     }
 
     format!(
-        "#[fg={INACTIVE_NAME_FG}#,bg={}] {session_name} #[fg={INACTIVE_NUM_FG}#,bg={}] {index} ",
-        palette.name_bg, palette.num_bg
+        "#[fg={}#,bg={}] {session_name} #[fg={}#,bg={}] {index} ",
+        palette.name_fg, palette.name_bg, palette.num_fg, palette.num_bg
     )
 }
 
@@ -196,9 +219,10 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::{
-        ACTIVE_BG, INACTIVE_NAME_BG, INACTIVE_NUM_BG, LAST_INACTIVE_RANGE_CLOSE, LIST_SURFACE_BG,
-        RANGE_CLOSE, SessionItemPalette, render_item_body, render_item_body_literal,
-        render_join_separator, render_left_edge, render_right_edge, render_session_list,
+        ACTIVE_BG, ACTIVE_FG, INACTIVE_NAME_BG, INACTIVE_NUM_BG, LAST_FG,
+        LAST_INACTIVE_RANGE_CLOSE, LIST_SURFACE_BG, RANGE_CLOSE, SessionItemPalette,
+        render_item_body, render_item_body_literal, render_join_separator, render_left_edge,
+        render_right_edge, render_session_list,
     };
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
@@ -207,7 +231,7 @@ mod tests {
 
     #[test]
     fn active_item_uses_session_active_color_for_body_and_edges() {
-        let palette = SessionItemPalette::new(true);
+        let palette = SessionItemPalette::new(true, false);
         let item = render_item_body("tmux", 2, false, palette);
         assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
         assert!(item.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
@@ -218,8 +242,19 @@ mod tests {
     }
 
     #[test]
+    fn active_palette_wins_over_last_session_marker() {
+        let palette = SessionItemPalette::new(true, true);
+        let item = render_item_body("tmux", 2, false, palette);
+
+        assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
+        assert!(!item.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+        assert_eq!(palette.name_fg, ACTIVE_FG);
+        assert_eq!(palette.num_fg, ACTIVE_FG);
+    }
+
+    #[test]
     fn inactive_item_uses_session_item_inactive_colors() {
-        let palette = SessionItemPalette::new(false);
+        let palette = SessionItemPalette::new(false, false);
         let item = render_item_body("dev", 2, false, palette);
         assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
         assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
@@ -235,8 +270,22 @@ mod tests {
     }
 
     #[test]
+    fn last_session_item_uses_orange_text_without_changing_backgrounds() {
+        let palette = SessionItemPalette::new(false, true);
+        let item = render_item_body("yui", 3, false, palette);
+
+        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
+        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
+        assert_eq!(palette.name_fg, LAST_FG);
+        assert_eq!(palette.num_fg, LAST_FG);
+        assert_eq!(palette.name_bg, INACTIVE_NAME_BG);
+        assert_eq!(palette.num_bg, INACTIVE_NUM_BG);
+    }
+
+    #[test]
     fn active_item_with_bell_renders_bell_after_number() {
-        let palette = SessionItemPalette::new(true);
+        let palette = SessionItemPalette::new(true, false);
         let item = render_item_body("tmux", 2, true, palette);
         assert!(item.contains("@GHC_SYM_WIN_BELL"));
         assert!(item.contains(" tmux | "));
@@ -249,7 +298,7 @@ mod tests {
 
     #[test]
     fn inactive_item_with_bell_renders_bell_without_pipe() {
-        let palette = SessionItemPalette::new(false);
+        let palette = SessionItemPalette::new(false, false);
         let item = render_item_body("dev", 2, true, palette);
         assert!(item.contains("@GHC_SYM_WIN_BELL"));
         assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
@@ -264,8 +313,8 @@ mod tests {
 
     #[test]
     fn join_separator_collapses_internal_edges_to_one_glyph() {
-        let inactive = SessionItemPalette::new(false);
-        let active = SessionItemPalette::new(true);
+        let inactive = SessionItemPalette::new(false, false);
+        let active = SessionItemPalette::new(true, false);
         assert_eq!(
             render_join_separator(inactive, active),
             "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_SLANT_RIGHT}"
@@ -282,7 +331,7 @@ mod tests {
 
     #[test]
     fn last_inactive_item_edge_uses_num_bg_on_default_surface() {
-        let inactive = SessionItemPalette::new(false);
+        let inactive = SessionItemPalette::new(false, false);
         assert_eq!(
             render_left_edge("#{item_name}", "default"),
             "#[fg=#{item_name}#,bg=default]#{@GHC_SEP_SLANT_LEFT}"
@@ -295,8 +344,8 @@ mod tests {
 
     #[test]
     fn inactive_last_item_keeps_one_space_before_default() {
-        let inactive = SessionItemPalette::new(false);
-        let active = SessionItemPalette::new(true);
+        let inactive = SessionItemPalette::new(false, false);
+        let active = SessionItemPalette::new(true, false);
         assert_eq!(inactive.range_close(true), LAST_INACTIVE_RANGE_CLOSE);
         assert_eq!(inactive.range_close(false), RANGE_CLOSE);
         assert_eq!(active.range_close(true), RANGE_CLOSE);
@@ -306,6 +355,20 @@ mod tests {
         let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
+        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+    }
+
+    #[test]
+    fn rendered_list_marks_visible_last_session_with_orange_text() {
+        let context = context_with_session_states_and_last(
+            "dev",
+            "yui",
+            [("$1", "dev", false), ("$2", "yui", false)],
+        );
+        let segment = render_session_list(&context);
+
+        assert!(segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+        assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
     }
 
@@ -332,6 +395,14 @@ mod tests {
         current_session_name: &str,
         sessions: [(&str, &str, bool); N],
     ) -> RenderContext {
+        context_with_session_states_and_last(current_session_name, "", sessions)
+    }
+
+    fn context_with_session_states_and_last<const N: usize>(
+        current_session_name: &str,
+        client_last_session: &str,
+        sessions: [(&str, &str, bool); N],
+    ) -> RenderContext {
         let sessions = sessions
             .into_iter()
             .map(|(id, name, has_bell)| SessionInfo {
@@ -348,6 +419,7 @@ mod tests {
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: current_session_name.to_string(),
+                client_last_session: client_last_session.to_string(),
                 host: "h".to_string(),
                 session_created: 1,
                 sessions: sessions.clone(),

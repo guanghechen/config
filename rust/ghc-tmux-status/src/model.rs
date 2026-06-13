@@ -68,6 +68,7 @@ pub struct TmuxSnapshot {
     pub status: String,
     pub width: usize,
     pub current_session_name: String,
+    pub client_last_session: String,
     pub host: String,
     pub session_created: i64,
     pub sessions: Vec<SessionInfo>,

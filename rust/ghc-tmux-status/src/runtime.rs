@@ -143,6 +143,10 @@ impl StatusRuntime {
         println!("status={}", context.snapshot.status);
         println!("width={}", context.snapshot.width);
         println!("current_session={}", context.snapshot.current_session_name);
+        println!(
+            "client_last_session={}",
+            context.snapshot.client_last_session
+        );
         println!("group_count={}", context.group.sessions.len());
         println!("layout={}", context.layout.key);
         println!("rows={}", context.layout.rows);
@@ -612,6 +616,7 @@ mod tests {
             status: "on".to_string(),
             width: 200,
             current_session_name: "s".to_string(),
+            client_last_session: String::new(),
             host: "h".to_string(),
             session_created: 1,
             sessions: Vec::new(),

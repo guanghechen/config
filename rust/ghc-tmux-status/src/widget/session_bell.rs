@@ -74,6 +74,7 @@ mod tests {
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: "tmux".to_string(),
+                client_last_session: String::new(),
                 host: "h".to_string(),
                 session_created: 1,
                 sessions: sessions.clone(),
