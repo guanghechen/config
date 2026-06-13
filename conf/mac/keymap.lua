@@ -282,6 +282,8 @@ function M.setup(config)
     { key = "]", mods = "CMD", seq = "\x01\x5d" },
     { key = "{", mods = "CMD|SHIFT", seq = "\x01\x7b" },
     { key = "}", mods = "CMD|SHIFT", seq = "\x01\x7d" },
+    { key = "_", mods = "CMD|SHIFT", seq = "\x01\x5f" },
+    { key = "|", mods = "CMD|SHIFT", seq = "\x01\x7c" },
     { key = "Enter", mods = "CMD", seq = "\x1b\x0d" },
     { key = ";", mods = "CMD", seq = "\x01\x3b" },
     { key = ":", mods = "CMD|SHIFT", seq = "\x01\x3a" },
