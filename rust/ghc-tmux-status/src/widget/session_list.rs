@@ -55,7 +55,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
             literal_text.push(SLANT_LEFT_LITERAL);
             rich_text.push_str(&render_left_edge(palette.name_bg, LIST_SURFACE_BG));
         }
-        literal_text.push_str(&render_item_body_literal(&session.name, index));
+        literal_text.push_str(&render_item_body_literal(&session.name, index, palette));
         rich_text.push_str(&render_item_body(&session.name, index, palette));
         if is_last {
             literal_text.push(SLANT_RIGHT_LITERAL);
@@ -125,8 +125,16 @@ fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
     format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_RIGHT}}")
 }
 
-fn render_item_body_literal(session_name: &str, index: usize) -> String {
-    format!(" {session_name} | {index} ")
+fn render_item_body_literal(
+    session_name: &str,
+    index: usize,
+    palette: SessionItemPalette,
+) -> String {
+    if palette.is_active {
+        return format!(" {session_name} | {index} ");
+    }
+
+    format!(" {session_name}  {index} ")
 }
 
 fn render_item_body(session_name: &str, index: usize, palette: SessionItemPalette) -> String {
@@ -138,7 +146,7 @@ fn render_item_body(session_name: &str, index: usize, palette: SessionItemPalett
     }
 
     format!(
-        "#[fg={INACTIVE_NAME_FG}#,bg={}] {session_name} #[fg={INACTIVE_NUM_FG}#,bg={}]| {index} ",
+        "#[fg={INACTIVE_NAME_FG}#,bg={}] {session_name} #[fg={INACTIVE_NUM_FG}#,bg={}] {index} ",
         palette.name_bg, palette.num_bg
     )
 }
@@ -178,7 +186,8 @@ mod tests {
         assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NUM"));
         assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
         assert!(item.contains(" dev "));
-        assert!(item.contains("| 2 "));
+        assert!(item.contains(" 2 "));
+        assert!(!item.contains("| 2 "));
         assert!(!palette.is_active);
         assert_eq!(palette.name_bg, INACTIVE_NAME_BG);
         assert_eq!(palette.num_bg, INACTIVE_NUM_BG);
@@ -229,7 +238,7 @@ mod tests {
         let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
-        assert_eq!(segment.literal_text, " dev | 1  yui | 2  ");
+        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
     }
 
     fn context_with_sessions<const N: usize>(
