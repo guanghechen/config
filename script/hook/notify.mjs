@@ -1,65 +1,107 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 
-const NOTIFICATION_METHOD = "auto"
+const BODY_MAX = 200
 
-const input = JSON.parse(readFileSync(0, "utf-8"))
-const event = input.hook_event_name || "Claude Code"
+main()
 
-const title = sanitize(input.title || `Claude Code: ${event}`)
-const message = truncate(
-  sanitize(
+function main() {
+  const input = readInput()
+  const event = input.hook_event_name || "Claude Code"
+  const message =
     input.message ||
-      input.last_assistant_message ||
-      (event === "Stop" ? "任务执行完毕" : "有新通知"),
-  ),
-)
-const shouldUseBel =
-  NOTIFICATION_METHOD === "bel" ||
-  (NOTIFICATION_METHOD === "auto" && !supportsOsc9())
+    input.last_assistant_message ||
+    (event === "Stop" ? "任务执行完毕" : "有新通知")
 
-if (shouldUseBel) {
-  writeBel()
-} else {
-  writeOsc9(`${title}: ${message}`)
+  notify(truncate(sanitize(`Claude Code: ${message}`)))
 }
 
-function supportsOsc9() {
-  const termProgram = (process.env.TERM_PROGRAM || "").toLowerCase()
-  const term = (process.env.TERM || "").toLowerCase()
-
-  return (
-    termProgram === "ghostty" ||
-    termProgram === "wezterm" ||
-    !!process.env.ITERM_SESSION_ID ||
-    /^(xterm-ghostty|xterm-kitty|wezterm)/.test(term)
-  )
+function readInput() {
+  try {
+    return JSON.parse(readFileSync(0, "utf-8"))
+  } catch {
+    return {}
+  }
 }
 
-function writeOsc9(text) {
-  const payload = text.replaceAll("\x1b", "\x1b\x1b")
+// 两条互补信号：
+//  1) BEL → 自己 pane 的 pty，设所在 session 的 window bell flag（切回该 session 可见）；
+//  2) OSC 9 → 所有 attached client 的 tty，直达外层终端弹桌面通知。直写 client tty 不经
+//     pane→tmux 转发，故无需 passthrough，也不受 Claude 所在 pane/session 可见性影响。
+function notify(body) {
+  const bel = "\x07"
 
-  if (process.env.TMUX || process.env.TMUX_PANE) {
-    process.stderr.write(`\x1bPtmux;\x1b\x1b]9;${payload}\x07\x1b\\`)
-    return
+  const paneTty = tmuxPaneTty()
+  if (paneTty) {
+    try {
+      writeFileSync(paneTty, bel)
+    } catch {}
   }
 
-  process.stderr.write(`\x1b]9;${payload}\x07`)
+  const clientTtys = tmuxClientTtys()
+  if (clientTtys.length > 0) {
+    let delivered = false
+    for (const tty of clientTtys) {
+      try {
+        writeFileSync(tty, osc9(body))
+        delivered = true
+      } catch {}
+    }
+    if (delivered) return
+  }
+
+  // 兜底：非 tmux 或无 attached client → 控制终端
+  try {
+    writeFileSync("/dev/tty", bel + osc9(body))
+  } catch {
+    process.stderr.write(bel)
+  }
 }
 
-function writeBel() {
-  process.stderr.write("\x07")
+function tmuxPaneTty() {
+  const pane = process.env.TMUX_PANE
+  if (!pane || !process.env.TMUX) return null
+
+  // hook 子进程的 /dev/tty 未必是该 pane 的 pty，故经 pane id 显式定位
+  try {
+    return execFileSync("tmux", ["display", "-p", "-t", pane, "#{pane_tty}"], {
+      encoding: "utf-8",
+    }).trim()
+  } catch {
+    return null
+  }
+}
+
+// 枚举该 tmux server 上所有 attached client 的 tty。无论 Claude 在哪个 session、
+// 用户 switch-client 到哪，client tty 始终指向用户当前的外层终端。
+function tmuxClientTtys() {
+  if (!process.env.TMUX) return []
+
+  try {
+    return execFileSync("tmux", ["list-clients", "-F", "#{client_tty}"], {
+      encoding: "utf-8",
+    })
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+function osc9(text) {
+  return `\x1b]9;${text}\x07`
 }
 
 function truncate(text) {
-  return text.length > 200 ? `${text.slice(0, 197)}...` : text
+  return text.length > BODY_MAX ? `${text.slice(0, BODY_MAX - 3)}...` : text
 }
 
 function sanitize(text) {
   return String(text)
     .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, " ")
-    .replace(/[\x07\x1b]/g, "")
     .replace(/\s+/g, " ")
     .trim()
 }
