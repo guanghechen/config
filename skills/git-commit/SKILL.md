@@ -51,7 +51,7 @@ Interpret arguments as constraints first, hints second.
    - On any finding, stop and ask confirmation before commit.
 
 4. Compose message
-   - Run `git log --oneline -10`; follow the observed style, else Conventional Commits as `:gitmoji: <type>[scope]: <description>`.
+   - Run `git log --oneline -10`; follow the observed style, else Conventional Commits as `:gitmoji: type(scope): description` (scope optional).
    - English; concise imperative description.
    - If target changes are clearly unrelated, propose split commits; else one cohesive commit.
 
