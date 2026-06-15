@@ -1,16 +1,21 @@
 ---
 name: pr-review
-description: Review pull requests, diffs, branches, commits, or changesets with emphasis on risk, code polishing, scope control, value, testability, and merge readiness. Use when the user asks to review a PR, audit a diff, polish changes, judge whether changes should merge, or check whether a PR matches its issue.
-argument-hint: "[pr number | diff | branch]"
+description: Review a pull request or a base-to-worktree diff with emphasis on risk, code polishing, scope control, value, testability, and merge readiness. Use when the user asks to review a specific PR (by id, branch, or the current branch's PR), or to review everything changed since a given base commit/branch up to the current working tree.
+argument-hint: "[pr number/branch | base commit/branch]"
 ---
 
 # PR Review
 
 ## 使用边界
 
-当用户要求 review PR、diff、branch、commit 或 changeset，或判断某个 PR 是否值得合入时使用本 skill。
+本 skill 处理两类审查请求：
 
-目标不是泛泛表扬或格式检查，而是判断：这个 PR 是否以足够小、足够清晰、足够可验证的方式解决了真实问题，且没有引入不合理风险。
+1. **PR 审查**：用户给出具体 PR id、指定分支，或当前分支已关联 PR。base 取该 PR 的 merge target，审查范围是 PR 引入的提交（`base...HEAD`）。
+2. **base→工作树 审查**：用户给出一个 base（commit hash 或分支），要求审查从该 base 到当前文件状态的所有 diff。范围含已提交、staged、unstaged 改动，以及未跟踪新文件。
+
+不属于这两类的请求（如泛泛「看看这段代码」），先确认它能否归入其一，否则说明本 skill 不适用。
+
+目标不是泛泛表扬或格式检查，而是判断：这些改动是否以足够小、足够清晰、足够可验证的方式解决了真实问题，且没有引入不合理风险。
 
 ## 审查原则
 
@@ -23,16 +28,20 @@ argument-hint: "[pr number | diff | branch]"
 ## 工作流
 
 1. 获取审查对象
-   - 若用户已提供 PR 描述、issue 或 diff，直接基于已有内容审查。
-   - 若用户未提供 diff 且 `gh` 可用，可用 `gh pr view <n>`、`gh pr diff <n>` 获取 PR 描述、关联 issue 和 diff；本地分支可用 `git diff <base>...HEAD`。
+   - 先判定属于哪一类：
+     - **PR 审查**：用户给出 PR id、分支名，或要求审查当前分支的 PR。用 `gh` 取材：`gh pr view <n>`（含描述、关联 issue）、`gh pr diff <n>`（diff）；当前分支的 PR 用 `gh pr view`（不带号，自动解析当前分支）。base = 该 PR 的 merge target（`gh pr view <n> --json baseRefName`），不要臆测。审查范围是 PR 引入的提交，即 `base...HEAD`。
+     - **base→工作树 审查**：用户给出 base（commit hash 或分支）。取材覆盖到当前文件状态：
+       - 已提交 + 已跟踪的未提交改动：`git diff <base>`（含 staged 与 unstaged）。
+       - 未跟踪新文件：`git status --porcelain` 取 `??` 行，逐个 `git diff --no-index /dev/null <path>` 读入（与 git-commit 一致）；忽略被 `.gitignore` 排除项。
    - 若 issue 或目标可见，先提炼 1-3 条成功标准：合入后应解决什么、不能改变什么。
+   - secret 处理：diff 或文件内容中出现 secret，mask 具体值并把 secret leak 作为 finding；若 review 范围涉及 secret-looking 路径（如 `.env*`、`.ssh/`、credential/request dump），按全局安全规则停止，不读取其内容。
 
-2. intent/scope mapping
+2. 意图/范围映射
    - 把每类改动映射到 issue、PR 描述或成功标准，按三类归档：
      - In scope：直接服务 issue/目标/必要验证。
      - Supportive：不直接解决问题，但很小、收益明确、风险极低（如同一代码路径上的 typo、补齐缺失 fixture）。
-     - Out of scope：无法映射，或扩大行为面/评审面/测试面/发布风险；通常建议拆到后续 PR。
-   - 对 foundation/refactor PR，要求指出后续 PR 会依赖的具体接口、模块边界或删除的复杂度，而非抽象地「为以后做准备」。
+     - Out of scope：无法映射，或扩大行为面/评审面/测试面/发布风险；通常建议拆到后续提交或独立 PR。
+   - 对 foundation/refactor 类改动，要求指出后续工作会依赖的具体接口、模块边界或删除的复杂度，而非抽象地「为以后做准备」。
 
 3. 建立改动地图
    - 按功能代码、测试、配置、迁移、文档、生成物分类。
@@ -60,7 +69,7 @@ argument-hint: "[pr number | diff | branch]"
   问题：具体说明哪里不对。
   证据：引用 diff、现有行为、issue 要求或触发路径。
   影响：用户、系统、数据、维护或发布层面的后果。
-  建议：可执行的修改方向；若需拆 PR，说明拆分边界。
+  建议：可执行的修改方向；若需拆分，说明拆到后续提交或独立 PR 的边界。
 ```
 
 Severity：
@@ -83,6 +92,13 @@ Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
 - `Conditional approve`：无 blocker，但有明确 follow-up、验证缺口或小范围修改要求。
 - `Approve`：未发现阻塞问题，范围、价值、验证都足够清楚。
 - `Needs redesign`：问题主要来自方向、价值、范围或架构边界，无法靠局部 patch 修好。
+
+severity → verdict 映射（取最高档）：
+
+- 有 `Blocker`：`Request changes`（若根因是方向/范围/架构而非局部缺陷，则 `Needs redesign`）。
+- 无 `Blocker`、有 `Should Fix`：`Conditional approve`，把这些 `Should Fix` 列为合入前的小范围修改要求。
+- 仅剩 `Question` 未决：默认 `Conditional approve` 并列出待澄清项；仅当澄清结果可能推翻设计、不澄清就无法判断能否合入时，才用 `Request changes`。
+- 只剩 `Nit` 或无 finding：`Approve`。
 
 收敛判断（反复执行时）：当某轮无新增 `Blocker`/`Should Fix`、仅剩 `Nit` 或可选打磨时，显式声明「已达可合入收敛点，剩余为可选项」，不要为了找问题而继续升级 Nit；是否继续打磨交由我决定。
 
@@ -114,6 +130,6 @@ Merge Verdict: Request changes | Conditional approve | Approve | Needs redesign
 
 - 不要把个人风格偏好包装成阻塞问题。
 - 不要只罗列 diff，要分析行为和维护影响。
-- 不要因为 PR 较大就笼统反对；指出具体可拆边界和风险来源。
+- 不要因为改动较大就笼统反对；指出具体可拆边界和风险来源。
 - 不要因为测试通过就停止审查；测试只降低风险，不替代范围和价值判断。
-- 不要建议无关大重构，除非它是修复当前 PR 风险的最小必要改动。
+- 不要建议无关大重构，除非它是修复当前改动风险的最小必要改动。
