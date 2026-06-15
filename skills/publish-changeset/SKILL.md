@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Publish Changeset
 
-Run a deterministic release flow in tmux. Stop immediately on failure, report the failing step, and do not continue until the user decides.
+Run a deterministic release flow in tmux. On any failure, stop at once, report the failing step, and wait for the user to decide.
 
 ## Required Input
 
@@ -17,39 +17,39 @@ Accept arguments in this format:
 {tmux pane ref} [scope]
 ```
 
-- Parse `tmux pane ref` as required:
-  - `%N` -> use with `-t %N`
-  - `#N` -> use with `-t :.N`
-  - `@M#N` -> use with `-t @M.N`
-- Parse `scope` as optional release context:
+- `tmux pane ref` (required) — the target pane for the whole release flow.
+- `scope` (optional release context):
   - bump hint: `major`, `minor`, `patch`
   - or free-text context (for example `breaking API change`, `bug fixes only`)
 
-If no pane ref is provided, ask for it before doing anything.
+If no pane ref is given, ask for it before doing anything.
 
 ## tmux Command Contract
 
-- Send commands only via:
-  - `tmux send-keys -t <pane_ref> '<command>' Enter`
-- Read output only via:
-  - `tmux capture-pane -ep -t <pane_ref>`
-- For interaction-sensitive steps, trigger input with:
-  - `sleep 2 && tmux send-keys -t <pane_ref> C-m C-m`
+Release-specific submission rules for driving the target pane:
 
-Wait for each step to finish before starting the next one.
+- Send a shell command only once the target pane is confirmed to be an idle shell prompt:
+  - `tmux send-keys -t <pane_ref> '<command>' Enter`
+- For interaction-sensitive steps, capture first, identify the exact prompt state, then send only the single expected key or value.
+- Never submit with a fixed sleep such as `sleep 2 && ...`, and never send a blind double-Enter.
+
+Let each step finish before starting the next.
 
 ## Workflow
 
-### 1) Pre-flight checks
+The flow has three confirmation gates (Steps 4, 6, 9). Each gate authorizes only the steps up to the next gate, never beyond it.
 
-Run and evaluate:
+### Step 1 — Pre-flight checks
 
-- `git status` (require clean working tree)
-- presence of `.changeset/*.md` excluding `.changeset/README.md`
+- Verify, in order:
+  - `git status` — the tree must be clean, except that uncommitted `.changeset/*.md` files are allowed (a manually prepared changeset)
+  - `git branch --show-current` — branch is non-empty; record it as the release branch for Step 10
+- Detect `.changeset/*.md` (excluding `.changeset/README.md`): if present, Step 3 is skipped and these drive the release; if absent, Step 3 generates them.
+- Stop when:
+  - any non-changeset path is uncommitted → ask whether to clean/stash manually
+  - branch is detached or unknown → ask for the branch/ref to push
 
-If working tree is dirty, stop and ask user whether to clean/stash manually.
-
-### 2) Build verification
+### Step 2 — Build verification
 
 Run:
 
@@ -57,27 +57,25 @@ Run:
 pnpm build:production
 ```
 
-If build fails, stop and report error output.
+If the build fails, stop and report the error output.
 
-### 3) Detect packages to release (when no changeset files exist)
+### Step 3 — Detect packages and generate changesets
 
-For each monorepo package:
+Runs only when no changeset file exists. Prepare the generated changesets **in memory** — never write or commit before the user confirms.
 
-1. Find latest git tag matching `<package-name>@*`
-2. Detect commits touching package since latest tag
-3. If no tag exists, check whether package has ever been published to npm
+1. **Scan** each package for unreleased work:
+   - latest git tag matching `<package-name>@*`
+   - commits touching the package since that tag
+   - if no tag exists, whether the package was ever published to npm
+2. **Build** a changeset for each package that has unreleased commits:
+   - **bump type** — use `scope` if it names `major|minor|patch`; otherwise infer from commits:
+     - `feat` / `:sparkles:` → `minor`
+     - `fix` / `:bug:` → `patch`
+     - breaking (`!`) / `:boom:` → `major`
+     - fallback → `patch`
+   - **summary** — from commit messages, folding in free-text `scope` when given
 
-For every package with unreleased commits:
-
-1. Choose bump type:
-   - If `scope` contains `major|minor|patch`, use it directly
-   - Otherwise infer from commit messages:
-     - `feat` or `:sparkles:` -> `minor`
-     - `fix` or `:bug:` -> `patch`
-     - breaking marker (`!`) or `:boom:` -> `major`
-     - fallback -> `patch`
-2. Summarize changes from commit messages, incorporating free-text `scope` context when provided
-3. Create `.changeset/<random-name>.md`:
+Each generated changeset takes this exact shape:
 
 ```markdown
 ---
@@ -87,75 +85,72 @@ For every package with unreleased commits:
 <summary>
 ```
 
-4. Commit the changeset as:
-   - `:bookmark: chore: add changeset for <package>@<bump-type>`
-5. Keep final bump type + summary in the same changeset commit. If content must be fixed before push, amend that same commit instead of adding a follow-up content-only commit.
+If no package needs release, report and stop.
 
-If no packages need release, report and stop.
+### Step 4 — Analyze release plan and confirm
 
-### 4) Analyze changesets
+Merge existing `.changeset/*.md` files with any changesets generated in Step 3, then present the plan **before** writing any generated changeset or running versioning.
 
-Read all files under `.changeset/` and summarize package bump plan (`major|minor|patch`). Show summary to user.
+The plan lists:
 
-### 5) Version bump
+- the bump per package (`major|minor|patch`)
+- the source of each bump: an existing changeset file, or a generated changeset
+- the full content of every generated changeset (package, bump, summary)
 
-Before running versioning:
+**Gate** — confirming the plan authorizes **Step 5 only**: writing the generated changesets, committing them, and running `pnpm changeset version`. Then stop for the Step 6 review; the version-bump commit, the rebuild, and the npm publish each have a later gate of their own. If the user rejects or edits, revise the plan or stop.
 
-1. Snapshot old versions for all to-be-released packages
+### Step 5 — Materialize changesets and run versioning
 
-Run:
+1. **Materialize** — only if Step 3 generated changesets; otherwise skip to versioning:
+   - write each generated changeset as `.changeset/<random-name>.md`
+   - commit only those files: `:bookmark: chore: add changeset for <package>@<bump-type>`
+   - if its content needs fixing while the commit is still local, amend that changeset commit rather than adding a content-only follow-up
+   - a pre-existing changeset (including an uncommitted manual one from Step 1) is left as-is here; Step 7 consumes it into the release commit
+2. **Version** the release:
+   - snapshot old versions of all to-be-released packages
+   - run `pnpm changeset version`
+   - record the package/version results for the later commit message and tags
+   - read the updated manifests to build the Step 6 transitions, but do not show them until Step 6
 
-```bash
-pnpm changeset version
-```
+If versioning fails on a missing `GITHUB_TOKEN`, offer to:
 
-After completion:
+- set `GITHUB_TOKEN` and retry
+- update versions and changelog by hand (explain the expected edits)
+- switch changelog config to `@changesets/changelog-git`
 
-1. Record package/version results from `pnpm changeset version` output for later commit message and git tags
-2. Read updated manifests to collect new versions and build release transitions for Step 6 display
+### Step 6 — Review versioned changes
 
-Do not display transition lines yet.
+1. run `git status` and `git diff --stat`
+2. show the release preview — one package per line, sorted by name:
 
-If this step fails due to missing `GITHUB_TOKEN`, offer options:
+   ```text
+   <package> <old version> -> <new version>
+   ```
 
-1. Set `GITHUB_TOKEN` and retry
-2. Manually update versions and changelog (explain expected modifications)
-3. Switch changelog config to `@changesets/changelog-git`
+3. add concise changelog highlights
 
-### 6) Review changes
+**Gate** — confirming authorizes:
 
-Run:
+- **Step 7** — commit the version bump
+- **Step 8** — rebuild with bumped versions
 
-- `git status`
-- `git diff --stat`
+Then stop for the Step 9 publish gate.
 
-Show release preview with exact format. This is the first and only confirmation-facing display:
+### Step 7 — Commit version bump
 
-```text
-<package> <old version> -> <new version>
-```
+Stage the release files explicitly:
 
-- Output one package per line
-- Sort by package name
+- every changed `package.json`
+- every updated `CHANGELOG.md`
+- every deleted `.changeset/*.md`
 
-Show concise changelog highlights.
-Ask user confirmation before commit.
-
-### 7) Commit version bump
-
-If user confirms, stage release files explicitly and commit with:
-
-- all changed `package.json` files
-- all updated `CHANGELOG.md` files
-- all deleted `.changeset/*.md` files
+Commit with the real released-package list:
 
 ```text
 :bookmark: release: @foo/a@1.0.0, @foo/b@1.3.2
 ```
 
-Use real released package list in message.
-
-### 8) Rebuild with bumped versions
+### Step 8 — Rebuild with bumped versions
 
 Run:
 
@@ -165,26 +160,33 @@ pnpm build:production
 
 This rebuild is mandatory. If it fails, stop and report.
 
-### 9) Publish
+### Step 9 — Confirm and publish to npm
 
-Run:
+Just before publishing, ask for explicit confirmation listing the exact packages and versions:
 
-```bash
-pnpm changeset publish
+```text
+Confirm publish to npm (irreversible):
+<package> <new version>
 ```
 
-Allow OTP interaction window up to 1 minute.
+**Gate** — confirming authorizes:
 
-### 10) Create git tags and push
+- **publish** — run `pnpm changeset publish`
+- **Step 10** — tag and push, as the natural completion of the publish
 
-After successful publish:
+Allow up to 1 minute for OTP. For any OTP or confirmation prompt, capture the pane first, verify it, then send the input once.
 
-1. Tag each published package as `<package-name>@<version>`
-2. Push commit and tags:
-   - `git push`
-   - `git push --tags`
+### Step 10 — Tag and push exact refs
 
-### 11) Final summary
+After a successful publish:
+
+1. tag each published package as `<package-name>@<version>`
+2. push the release commit to the branch recorded in Step 1: `git push origin HEAD:<branch>`
+3. push only this run's tags: `git push origin <tag1> <tag2>`
+
+Never use `git push --tags`.
+
+### Step 11 — Final summary
 
 Report:
 
@@ -194,11 +196,11 @@ Report:
 
 ## Timeout Rules
 
-- OTP waiting timeout: 1 minute
-- No output timeout: 10 minutes (auto-exit and report)
+- OTP wait: 1 minute
+- No output: 10 minutes (auto-exit and report)
 
 ## Failure Handling
 
-- Treat build/version/commit/publish failures as hard stop.
-- Never continue to publish when earlier gating steps failed.
-- Always provide trigger, evidence (key output), and impact in the failure report.
+- Treat any build/version/commit/publish failure as a hard stop.
+- Never publish when an earlier gating step failed.
+- Always report trigger, evidence (key output), and impact.
