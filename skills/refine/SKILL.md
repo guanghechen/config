@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Polish, proofread, or lightly rewrite supplied text while preserving meaning, tone, formatting, code snippets, identifiers, and paths. Use when the user asks to refine, improve wording, fix typos, make prose clearer, or produce a polished English version of existing text.
+description: Polish, proofread, or lightly rewrite supplied text in its own language while preserving meaning, tone, formatting, code snippets, identifiers, and paths. Use when the user asks to refine, improve wording, fix typos, or make prose clearer. To render the text in a different language, use translate instead.
 argument-hint: "[text | file[:range]]"
 ---
 
@@ -21,9 +21,8 @@ Treat an argument as a path only when it is readable or clearly uses file/positi
 
 ## Language
 
-- Default: keep the source language.
-- If the user explicitly asks for English output, produce polished English while preserving meaning.
-- If the user asks for a specific language, follow that language.
+- Refine within the source language; preserve it.
+- This skill does not change the text's language. If the user wants the text rendered in another language, that is a translation task — defer to the `translate` skill instead of refining across languages.
 - Do not translate code, commands, identifiers, API names, URLs, or file paths.
 
 ## Behavior
