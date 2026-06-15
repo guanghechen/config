@@ -1,6 +1,6 @@
 ---
 name: publish-changeset
-description: "Execute a monorepo changeset version-and-publish release workflow inside a specified tmux pane, including pre-flight checks, build verification, package bump detection, changeset creation, versioning, review, publish, and tag push. Use when the user asks to run or assist a real release in tmux with pane refs like %N, #N, or @M#N."
+description: "Execute a monorepo changeset version-and-publish release workflow inside a specified tmux pane, including pre-flight checks, build verification, package bump detection, changeset creation, versioning, review, publish, and exact tag push. Use when the user asks to run or assist a real release in tmux with pane refs like %N, #N, or @M#N."
 argument-hint: "[tmux-pane-ref] [scope]"
 disable-model-invocation: true
 ---
