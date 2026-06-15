@@ -8,13 +8,13 @@ use crate::metric::{
 use crate::util::time::unix_timestamp_seconds;
 
 pub struct DarwinMetricsProvider {
-    interface: String,
+    interface: Option<String>,
 }
 
 impl DarwinMetricsProvider {
-    pub fn new(interface: &str) -> Self {
+    pub fn new(interface: Option<&str>) -> Self {
         Self {
-            interface: interface.to_string(),
+            interface: interface.map(str::to_string),
         }
     }
 }
@@ -38,7 +38,11 @@ impl MetricsProvider for DarwinMetricsProvider {
 
     fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot> {
         let timestamp_seconds = unix_timestamp_seconds();
-        let (rx_bytes, tx_bytes) = read_network_counters(&self.interface)?;
+        let interface = match self.interface.as_deref() {
+            Some(interface) => interface.to_string(),
+            None => default_network_interface(),
+        };
+        let (rx_bytes, tx_bytes) = read_network_counters(&interface)?;
         let (rx_bytes_per_second, tx_bytes_per_second) =
             calculate_speed(previous, timestamp_seconds, rx_bytes, tx_bytes);
 
@@ -144,6 +148,29 @@ fn read_network_counters(interface: &str) -> AppResult<(u64, u64)> {
     parse_netstat_counters(&output)
 }
 
+const FALLBACK_NETWORK_INTERFACE: &str = "en0";
+
+fn default_network_interface() -> String {
+    static INTERFACE: OnceLock<String> = OnceLock::new();
+    INTERFACE.get_or_init(detect_default_network_interface).clone()
+}
+
+fn detect_default_network_interface() -> String {
+    command_output("route", &["-n", "get", "default"])
+        .ok()
+        .as_deref()
+        .and_then(parse_route_interface)
+        .unwrap_or_else(|| FALLBACK_NETWORK_INTERFACE.to_string())
+}
+
+fn parse_route_interface(output: &str) -> Option<String> {
+    output.lines().find_map(|line| {
+        let (_, value) = line.trim().split_once("interface:")?;
+        let interface = value.trim();
+        (!interface.is_empty()).then(|| interface.to_string())
+    })
+}
+
 fn command_output(command: &str, args: &[&str]) -> AppResult<String> {
     let output = Command::new(command).args(args).output()?;
     if !output.status.success() {
@@ -200,13 +227,16 @@ fn parse_netstat_counters(output: &str) -> AppResult<(u64, u64)> {
         .find(|line| line.contains("<Link#"))
         .ok_or_else(|| AppError::Render("failed to find netstat link row".to_string()))?;
     let fields = line.split_whitespace().collect::<Vec<_>>();
-    if fields.len() <= 9 {
+    // Tunnel/VPN interfaces (utun*) emit an empty Address column, so the Link row
+    // has 10 fields instead of en0's 11. Index from the tail, where the trailing
+    // columns (.. Ibytes Opkts Oerrs Obytes Coll) are positionally fixed.
+    if fields.len() < 10 {
         return Err(AppError::Render("invalid netstat link row".to_string()));
     }
-    let rx_bytes = fields[6]
+    let rx_bytes = fields[fields.len() - 5]
         .parse::<u64>()
         .map_err(|_| AppError::Render("failed to parse netstat rx bytes".to_string()))?;
-    let tx_bytes = fields[9]
+    let tx_bytes = fields[fields.len() - 2]
         .parse::<u64>()
         .map_err(|_| AppError::Render("failed to parse netstat tx bytes".to_string()))?;
     Ok((rx_bytes, tx_bytes))
@@ -279,7 +309,8 @@ const HOST_CPU_LOAD_INFO_COUNT: MachMsgTypeNumber = 4;
 mod tests {
     use super::{
         calculate_cpu_percent, calculate_speed, cpu_percent_from_ticks, parse_netstat_counters,
-        parse_vm_stat_memory_percent, read_cpu_sample, read_darwin_system_info,
+        parse_route_interface, parse_vm_stat_memory_percent, read_cpu_sample,
+        read_darwin_system_info,
     };
     use crate::metric::{CpuSample, NetworkSample};
 
@@ -328,6 +359,27 @@ mod tests {
     fn parses_netstat_counters() {
         let output = "Name Mtu Network Address Ipkts Ierrs Ibytes Opkts Oerrs Obytes Coll\nen0 1500 <Link#15> aa:bb 10 0 1024 20 0 2048 0";
         assert_eq!(parse_netstat_counters(output).unwrap(), (1024, 2048));
+    }
+
+    #[test]
+    fn parses_netstat_counters_for_tunnel_without_address() {
+        // utun* Link rows omit the Address column (10 fields, not 11).
+        let output = "Name Mtu Network Address Ipkts Ierrs Ibytes Opkts Oerrs Obytes Coll\nutun4 1400 <Link#22> 59141856 0 62458123626 23129188 0 5846297823 0";
+        assert_eq!(
+            parse_netstat_counters(output).unwrap(),
+            (62458123626, 5846297823)
+        );
+    }
+
+    #[test]
+    fn parses_route_default_interface() {
+        let output = "   route to: default\ndestination: default\n       gateway: 192.168.1.1\n     interface: en1\n";
+        assert_eq!(parse_route_interface(output), Some("en1".to_string()));
+    }
+
+    #[test]
+    fn route_interface_missing_yields_none() {
+        assert_eq!(parse_route_interface("destination: default\n"), None);
     }
 
     #[test]

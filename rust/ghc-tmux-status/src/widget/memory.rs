@@ -32,7 +32,7 @@ impl CachedMetricWidget for MemoryWidget {
     }
 
     fn sample(&self, _previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
-        provider_for_current_platform().sample_memory()
+        provider_for_current_platform(None).sample_memory()
     }
 
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {

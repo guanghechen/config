@@ -5,7 +5,15 @@ use crate::status_widget::CachedMetricWidget;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
-pub struct NetworkWidget;
+pub struct NetworkWidget {
+    interface: Option<String>,
+}
+
+impl NetworkWidget {
+    pub fn for_interface(interface: Option<String>) -> Self {
+        Self { interface }
+    }
+}
 
 impl CachedMetricWidget for NetworkWidget {
     type Snapshot = NetworkSnapshot;
@@ -31,7 +39,8 @@ impl CachedMetricWidget for NetworkWidget {
     }
 
     fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
-        provider_for_current_platform().sample_network(previous.map(|snapshot| &snapshot.sample))
+        provider_for_current_platform(self.interface.as_deref())
+            .sample_network(previous.map(|snapshot| &snapshot.sample))
     }
 
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {

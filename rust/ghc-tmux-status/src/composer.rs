@@ -1,10 +1,115 @@
-use crate::cache::WidgetCache;
+use crate::cache::{TmuxWidgetCache, WidgetCache};
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
+use crate::metric::NET_INTERFACE_OPTION;
+use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus, TmuxSnapshot};
 use crate::status_length::{status_left_length, status_right_length};
-use crate::status_widget::{StatusWidget, WidgetLifecycle};
+use crate::status_widget::{
+    StatusWidget, WidgetLifecycle, cached_metric, computed, template,
+};
+use crate::widget::{
+    CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
+    NetworkWidget, PrefixIndicatorWidget, SessionListWidget, TimeWidget, WindowIdWidget,
+};
 
-pub fn render_widgets(
+/// Renders the status02 layout once and returns the rendered segments plus any
+/// widget-cache option writes accumulated during sampling.
+///
+/// Each widget type is instantiated exactly once. The single-row and two-row
+/// layouts share the rendered sub-segments (prefix / window chrome / metrics):
+/// segment concatenation is associative, so composing the shared pieces is
+/// byte-identical to rendering each row independently.
+pub fn render_status02(
+    context: &RenderContext,
+    event: &RenderEvent,
+) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
+    let mut cache = TmuxWidgetCache::from_options(&context.snapshot.options);
+    let net_interface = network_interface_override(&context.snapshot);
+
+    let mut host = computed(HostWidget);
+    let mut session_list = computed(SessionListWidget);
+    let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
+    let status_left = render_widgets(&mut left_widgets, context, event, &mut cache)?;
+
+    let mut prefix = template(PrefixIndicatorWidget);
+    let mut prefix_widgets: [&mut dyn StatusWidget; 1] = [&mut prefix];
+    let prefix_segment = render_widgets(&mut prefix_widgets, context, event, &mut cache)?;
+
+    let mut fullscreen = template(FullscreenWidget);
+    let mut window_id = template(WindowIdWidget);
+    let mut chrome_widgets: [&mut dyn StatusWidget; 2] = [&mut fullscreen, &mut window_id];
+    let chrome_segment = render_widgets(&mut chrome_widgets, context, event, &mut cache)?;
+
+    let mut network = cached_metric(NetworkWidget::for_interface(net_interface));
+    let mut cpu = cached_metric(CpuWidget);
+    let mut memory = cached_metric(MemoryWidget);
+    let mut duration = computed(DurationWidget);
+    let mut date = template(DateWidget);
+    let mut time = template(TimeWidget);
+    let mut metric_widgets: [&mut dyn StatusWidget; 6] = [
+        &mut network,
+        &mut cpu,
+        &mut memory,
+        &mut duration,
+        &mut date,
+        &mut time,
+    ];
+    let metric_segment = render_widgets(&mut metric_widgets, context, event, &mut cache)?;
+
+    let status_right_body =
+        concat_segments(&[&prefix_segment, &chrome_segment, &metric_segment]);
+    let status_right = RenderedSegment {
+        literal_text: format!(" {}", status_right_body.literal_text),
+        rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
+    };
+
+    let row0_right = concat_segments(&[&prefix_segment, &metric_segment]);
+    let session_format = RenderedSegment {
+        literal_text: format!("{}{}", status_left.literal_text, row0_right.literal_text),
+        rich_text: format!(
+            "#[default]#[align=left]{}#[align=right]{}#[default]",
+            status_left.rich_text, row0_right.rich_text
+        ),
+    };
+
+    let current_format = RenderedSegment {
+        literal_text: chrome_segment.literal_text.clone(),
+        rich_text: format_current_format(&chrome_segment.rich_text),
+    };
+
+    Ok((
+        RenderedStatus {
+            status_left,
+            status_right,
+            session_format,
+            current_format,
+        },
+        cache.pending_options(),
+    ))
+}
+
+fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
+    let mut literal_text = String::new();
+    let mut rich_text = String::new();
+    for segment in segments {
+        literal_text.push_str(&segment.literal_text);
+        rich_text.push_str(&segment.rich_text);
+    }
+    RenderedSegment {
+        literal_text,
+        rich_text,
+    }
+}
+
+fn network_interface_override(snapshot: &TmuxSnapshot) -> Option<String> {
+    snapshot
+        .options
+        .get(NET_INTERFACE_OPTION)
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+}
+
+fn render_widgets(
     widgets: &mut [&mut dyn StatusWidget],
     context: &RenderContext,
     event: &RenderEvent,
@@ -26,7 +131,7 @@ pub fn render_widgets(
     })
 }
 
-pub fn format_current_format(row_right: &str) -> String {
+fn format_current_format(row_right: &str) -> String {
     format!(
         "#[default]\
 #[align=left #{{E:status-left-style}}]\

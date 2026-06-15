@@ -32,7 +32,7 @@ impl CachedMetricWidget for CpuWidget {
     }
 
     fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
-        provider_for_current_platform().sample_cpu(previous.map(|snapshot| &snapshot.sample))
+        provider_for_current_platform(None).sample_cpu(previous.map(|snapshot| &snapshot.sample))
     }
 
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {

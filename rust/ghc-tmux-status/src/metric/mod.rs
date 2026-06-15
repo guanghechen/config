@@ -48,13 +48,16 @@ pub trait MetricsProvider {
     fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot>;
 }
 
-pub fn provider_for_current_platform() -> Box<dyn MetricsProvider> {
-    provider_for(current_platform())
+pub fn provider_for_current_platform(interface: Option<&str>) -> Box<dyn MetricsProvider> {
+    provider_for(current_platform(), interface)
 }
 
-pub fn provider_for(platform: Platform) -> Box<dyn MetricsProvider> {
+pub fn provider_for(platform: Platform, interface: Option<&str>) -> Box<dyn MetricsProvider> {
     match platform {
-        Platform::Osx => Box::new(DarwinMetricsProvider::new("en0")),
+        Platform::Osx => Box::new(DarwinMetricsProvider::new(interface)),
         Platform::Win | Platform::Wsl | Platform::Nix => Box::new(UnsupportedMetricsProvider),
     }
 }
+
+// tmux option overriding the auto-detected primary network interface.
+pub const NET_INTERFACE_OPTION: &str = "@GHC_SL_NET_IFACE";

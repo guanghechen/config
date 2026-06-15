@@ -3,6 +3,7 @@ mod cache;
 mod commit;
 mod composer;
 mod error;
+mod introspect;
 mod layout;
 mod metric;
 mod model;

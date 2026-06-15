@@ -330,6 +330,7 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "status-right-length",
     "status-interval",
     "@GHC_SL_SESSION_ORDER",
+    "@GHC_SL_NET_IFACE",
     "@GHC_STATUS_COMPONENT_CACHE_cpu",
     "@GHC_STATUS_COMPONENT_CACHE_memory",
     "@GHC_STATUS_COMPONENT_CACHE_network",
