@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum RenderEventKind {
-    Tick,
+    Heartbeat,
     ThemeLoaded,
     ClientResized,
     SessionChanged,
@@ -16,7 +16,7 @@ pub enum RenderEventKind {
 impl RenderEventKind {
     pub fn as_str(self) -> &'static str {
         match self {
-            Self::Tick => "tick",
+            Self::Heartbeat => "heartbeat",
             Self::ThemeLoaded => "theme-loaded",
             Self::ClientResized => "client-resized",
             Self::SessionChanged => "session-changed",
@@ -30,7 +30,7 @@ impl RenderEventKind {
 
     pub fn parse(value: &str) -> Option<Self> {
         match value {
-            "tick" => Some(Self::Tick),
+            "heartbeat" => Some(Self::Heartbeat),
             "theme-loaded" => Some(Self::ThemeLoaded),
             "client-resized" => Some(Self::ClientResized),
             "session-changed" => Some(Self::SessionChanged),
@@ -174,7 +174,7 @@ mod tests {
     use super::RenderEventKind;
 
     const ALL_EVENT_KINDS: &[RenderEventKind] = &[
-        RenderEventKind::Tick,
+        RenderEventKind::Heartbeat,
         RenderEventKind::ThemeLoaded,
         RenderEventKind::ClientResized,
         RenderEventKind::SessionChanged,

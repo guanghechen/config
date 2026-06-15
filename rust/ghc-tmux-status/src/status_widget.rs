@@ -22,7 +22,7 @@ pub trait StatusWidget {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum WidgetLifecycle {
-    /// Native tmux template. No Rust refresh/cache; safe to render every tick.
+    /// Native tmux template. No Rust refresh/cache; safe to render every redraw.
     Template,
     /// Cheap process-local computation from context or local time. No external IO/cache.
     Computed,
@@ -50,13 +50,6 @@ pub trait CachedMetricWidget {
     fn encode_cache(&self, snapshot: &Self::Snapshot) -> String;
     fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot>;
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment;
-
-    fn should_refresh(&self, _event: &RenderEvent) -> bool {
-        // Sampling cadence is governed by the TTL age check, not by event kind.
-        // Returning true for every event keeps new hooks/events from silently
-        // freezing metrics; the TTL remains the real throttle.
-        true
-    }
 }
 
 pub struct Template<T> {
@@ -137,18 +130,6 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
             .and_then(|value| self.widget.decode_cache(value));
         if let Some(snapshot) = cached.clone() {
             let age_seconds = self.age_seconds(&snapshot);
-            if !self.widget.should_refresh(event) {
-                self.trace_refresh(|| format!(
-                    "id={} action=cache-hit reason=event-skip event={} age_seconds={} ttl_seconds={}",
-                    self.id(),
-                    event.kind.as_str(),
-                    age_seconds,
-                    self.widget.ttl_seconds()
-                ));
-                self.snapshot = Some(snapshot);
-                return Ok(());
-            }
-
             if age_seconds < self.widget.ttl_seconds() {
                 self.trace_refresh(|| format!(
                     "id={} action=cache-hit reason=fresh event={} age_seconds={} ttl_seconds={}",
@@ -335,7 +316,7 @@ mod tests {
         let mut widget = template(FakeTemplate);
         let mut cache = TmuxWidgetCache::default();
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(widget.lifecycle(), WidgetLifecycle::Template);
@@ -348,7 +329,7 @@ mod tests {
         let mut widget = computed(FakeComputed);
         let mut cache = TmuxWidgetCache::default();
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(widget.lifecycle(), WidgetLifecycle::Computed);
@@ -366,7 +347,7 @@ mod tests {
         });
         let mut cache = cache_with_value("9999999999:7");
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(
@@ -388,7 +369,7 @@ mod tests {
         });
         let mut cache = cache_with_value("1:7");
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(calls.get(), 1);
@@ -427,7 +408,7 @@ mod tests {
         });
         let mut cache = cache_with_value("1:7");
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(calls.get(), 1);
@@ -446,7 +427,7 @@ mod tests {
         });
         let mut cache = TmuxWidgetCache::default();
 
-        widget.refresh(&context(), &tick(), &mut cache).unwrap();
+        widget.refresh(&context(), &heartbeat(), &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
         assert_eq!(calls.get(), 1);
@@ -463,9 +444,9 @@ mod tests {
         TmuxWidgetCache::from_options(&options)
     }
 
-    fn tick() -> RenderEvent {
+    fn heartbeat() -> RenderEvent {
         RenderEvent {
-            kind: RenderEventKind::Tick,
+            kind: RenderEventKind::Heartbeat,
         }
     }
 

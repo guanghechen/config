@@ -115,7 +115,13 @@ impl StatusRuntime {
             return Ok(());
         }
 
-        self.apply(RenderEvent { kind: RenderEventKind::Tick })?;
+        // Always reschedule, even if this beat's apply fails: a transient tmux
+        // error must not permanently kill the no-event fallback refresh source.
+        if let Err(error) = self.apply(RenderEvent {
+            kind: RenderEventKind::Heartbeat,
+        }) {
+            self.trace_apply(|| format!("event=heartbeat action=apply-error error={error}"));
+        }
         self.schedule_next_heartbeat(expected_generation)
     }
 
@@ -371,20 +377,19 @@ fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
     group
 }
 
+const RELEASE_BINARY_RELATIVE_PATH: &str =
+    ".config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status";
+
 fn heartbeat_self_command_path() -> String {
     let path = std::env::current_exe()
         .ok()
         .and_then(|path| path.into_os_string().into_string().ok())
-        .unwrap_or_else(|| {
+        .or_else(|| {
             std::env::var("HOME")
-                .map(|home| {
-                    format!("{home}/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status")
-                })
-                .unwrap_or_else(|_| {
-                    "/Users/wanchenfang/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
-                        .to_string()
-                })
-        });
+                .ok()
+                .map(|home| format!("{home}/{RELEASE_BINARY_RELATIVE_PATH}"))
+        })
+        .unwrap_or_else(|| "ghc-tmux-status".to_string());
     format!("'{}'", path.replace('\'', "'\\''"))
 }
 
