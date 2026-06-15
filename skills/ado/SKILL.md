@@ -15,6 +15,12 @@ Interact with Azure DevOps via `az boards`, `az repos`, `az pipelines`, and `az 
 - **Use English for all outputs and modifications**
 - **Write operations require explicit user approval before execution**
 
+The commands below keep `--org <ORG> --project <PROJECT>` explicit for clarity. Optional: configuring local CLI defaults once lets you omit both flags afterward — this writes Azure CLI local config, so run it only when you want that:
+
+```bash
+az devops configure --defaults organization=https://dev.azure.com/<ORG> project=<PROJECT>
+```
+
 ## Arguments
 
 - `<url>` — ADO URL (auto-detects resource type)
