@@ -40,7 +40,7 @@ impl CachedMetricWidget for CpuWidget {
     }
 }
 
-const REFRESH_INTERVAL_SECONDS: u64 = 20;
+const REFRESH_INTERVAL_SECONDS: u64 = 30;
 
 fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
     let cpu = format_percent_min_width_2(snapshot.percent);

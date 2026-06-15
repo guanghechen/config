@@ -1,7 +1,6 @@
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::TemplateWidget;
-use crate::util::shell::shell_quote;
 use crate::widget::pill::pill_literal;
 
 pub struct TimeWidget;
@@ -14,31 +13,9 @@ impl TemplateWidget for TimeWidget {
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" 00:00:00 "),
-            rich_text: format!(
-                "#[fg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_TIME}}]#{{@GHC_SYM_TIME}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}] %H:%M:%S {}",
-                tick_trigger()
-            ),
+            rich_text: "#[fg=#{@GHC_SL_BG_PILL_TIME}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_TIME}]#{@GHC_SYM_TIME} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] %H:%M:%S ".to_string(),
         })
     }
-}
-
-fn tick_trigger() -> String {
-    let binary = std::env::current_exe()
-        .ok()
-        .and_then(|path| path.into_os_string().into_string().ok())
-        .unwrap_or_else(fallback_binary_path);
-    format!("#({} apply tick >/dev/null 2>&1)", shell_quote(&binary))
-}
-
-fn fallback_binary_path() -> String {
-    std::env::var("HOME")
-        .map(|home| {
-            format!("{home}/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status")
-        })
-        .unwrap_or_else(|_| {
-            "/Users/wanchenfang/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
-                .to_string()
-        })
 }
 
 #[cfg(test)]
@@ -58,6 +35,7 @@ mod tests {
 
         assert_eq!(segment.literal_text, "¤  00:00:00 ");
         assert!(segment.rich_text.contains("%H:%M:%S"));
+        assert!(!segment.rich_text.contains("#("));
     }
 
     fn context() -> RenderContext {

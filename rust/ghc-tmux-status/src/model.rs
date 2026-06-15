@@ -9,6 +9,7 @@ pub enum RenderEventKind {
     SessionCreated,
     SessionClosed,
     SessionRenamed,
+    WindowChanged,
     ManualApply,
 }
 
@@ -22,6 +23,7 @@ impl RenderEventKind {
             Self::SessionCreated => "session-created",
             Self::SessionClosed => "session-closed",
             Self::SessionRenamed => "session-renamed",
+            Self::WindowChanged => "window-changed",
             Self::ManualApply => "manual-apply",
         }
     }
@@ -35,6 +37,7 @@ impl RenderEventKind {
             "session-created" => Some(Self::SessionCreated),
             "session-closed" => Some(Self::SessionClosed),
             "session-renamed" => Some(Self::SessionRenamed),
+            "window-changed" => Some(Self::WindowChanged),
             "manual-apply" => Some(Self::ManualApply),
             _ => None,
         }
@@ -164,4 +167,33 @@ pub struct RenderContext {
     pub snapshot: TmuxSnapshot,
     pub group: SessionGroupView,
     pub layout: LayoutPlan,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RenderEventKind;
+
+    const ALL_EVENT_KINDS: &[RenderEventKind] = &[
+        RenderEventKind::Tick,
+        RenderEventKind::ThemeLoaded,
+        RenderEventKind::ClientResized,
+        RenderEventKind::SessionChanged,
+        RenderEventKind::SessionCreated,
+        RenderEventKind::SessionClosed,
+        RenderEventKind::SessionRenamed,
+        RenderEventKind::WindowChanged,
+        RenderEventKind::ManualApply,
+    ];
+
+    #[test]
+    fn event_kind_as_str_parse_round_trips() {
+        for kind in ALL_EVENT_KINDS {
+            assert_eq!(RenderEventKind::parse(kind.as_str()), Some(*kind));
+        }
+    }
+
+    #[test]
+    fn parse_rejects_unknown_event_kind() {
+        assert_eq!(RenderEventKind::parse("not-an-event"), None);
+    }
 }

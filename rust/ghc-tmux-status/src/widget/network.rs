@@ -39,7 +39,7 @@ impl CachedMetricWidget for NetworkWidget {
     }
 }
 
-const REFRESH_INTERVAL_SECONDS: u64 = 20;
+const REFRESH_INTERVAL_SECONDS: u64 = 30;
 
 fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
     let rx = format_speed(snapshot.rx_bytes_per_second);

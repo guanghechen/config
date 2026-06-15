@@ -25,7 +25,8 @@ function _ghc_tmux_status_layout_hooks_ {
     'client-session-changed[40]' \
     'session-created[40]' \
     'session-closed[40]' \
-    'session-renamed[40]'
+    'session-renamed[40]' \
+    'session-window-changed[40]'
 }
 
 function _ghc_tmux_unset_status_layout_hooks_ {
@@ -33,6 +34,16 @@ function _ghc_tmux_unset_status_layout_hooks_ {
   for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
     tmux set-hook -gu "$layout_hook" 2>/dev/null || true
   done
+}
+
+# Bump the heartbeat generation so any in-flight self-scheduling chain from a
+# previous load expires on its next wake (it compares the stored generation and
+# exits when it no longer matches). Returns the new generation on stdout.
+function _ghc_tmux_bump_heartbeat_generation_ {
+  local generation
+  generation=$(( $(tmux show -gqv @GHC_SL_HEARTBEAT_GEN 2>/dev/null || echo 0) + 1 ))
+  tmux set -g @GHC_SL_HEARTBEAT_GEN "$generation"
+  printf '%s\n' "$generation"
 }
 
 function _ghc_tmux_load_status01_ {
@@ -73,6 +84,11 @@ function _ghc_tmux_load_theme_ {
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
 
+  # Expire any prior heartbeat chain; only the status02 branch starts a new one,
+  # so switching to status01 leaves the bumped generation with no live chain.
+  local heartbeat_generation
+  heartbeat_generation=$(_ghc_tmux_bump_heartbeat_generation_)
+
   local status_position="top"
   if [ "$status_mode" == "11" ] || [ "$status_mode" == "12" ]; then
     status_position="bottom"
@@ -98,11 +114,14 @@ function _ghc_tmux_load_theme_ {
         tmux set-hook -g 'session-created[40]' "run-shell '$status_renderer apply session-created'"
         tmux set-hook -g 'session-closed[40]' "run-shell '$status_renderer apply session-closed'"
         tmux set-hook -g 'session-renamed[40]' "run-shell '$status_renderer apply session-renamed'"
+        tmux set-hook -g 'session-window-changed[40]' "run-shell '$status_renderer apply window-changed'"
 
         if ! "$status_renderer" apply theme-loaded; then
           _ghc_tmux_unset_status_layout_hooks_
           _ghc_tmux_load_status01_ "$status_position"
           tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true
+        else
+          tmux run-shell -b -d 30 "'$status_renderer' heartbeat $heartbeat_generation"
         fi
       fi
       ;;

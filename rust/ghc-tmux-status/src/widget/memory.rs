@@ -40,7 +40,7 @@ impl CachedMetricWidget for MemoryWidget {
     }
 }
 
-const REFRESH_INTERVAL_SECONDS: u64 = 20;
+const REFRESH_INTERVAL_SECONDS: u64 = 30;
 
 fn render_memory(snapshot: &MemorySnapshot) -> RenderedSegment {
     let memory = format_percent_min_width_2(snapshot.percent);

@@ -1,6 +1,6 @@
 use crate::cache::WidgetCache;
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedSegment};
+use crate::model::{RenderContext, RenderEvent, RenderedSegment};
 use crate::observability::{trace_enabled, trace_line};
 use crate::util::time::unix_timestamp_seconds;
 
@@ -51,11 +51,11 @@ pub trait CachedMetricWidget {
     fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot>;
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment;
 
-    fn should_refresh(&self, event: &RenderEvent) -> bool {
-        matches!(
-            event.kind,
-            RenderEventKind::Tick | RenderEventKind::ManualApply | RenderEventKind::ThemeLoaded
-        )
+    fn should_refresh(&self, _event: &RenderEvent) -> bool {
+        // Sampling cadence is governed by the TTL age check, not by event kind.
+        // Returning true for every event keeps new hooks/events from silently
+        // freezing metrics; the TTL remains the real throttle.
+        true
     }
 }
 
@@ -397,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn cached_metric_skips_sampling_on_non_refresh_event() {
+    fn cached_metric_samples_on_event_hook() {
         let calls = Rc::new(Cell::new(0));
         let mut widget = cached_metric(FakeMetric {
             calls: Rc::clone(&calls),
@@ -406,14 +406,15 @@ mod tests {
         });
         let mut cache = cache_with_value("1:7");
         let event = RenderEvent {
-            kind: RenderEventKind::ClientResized,
+            kind: RenderEventKind::WindowChanged,
         };
 
         widget.refresh(&context(), &event, &mut cache).unwrap();
         let segment = widget.render(&context()).unwrap();
 
-        assert_eq!(calls.get(), 0);
-        assert_eq!(segment.literal_text, "7");
+        assert_eq!(calls.get(), 1);
+        assert_eq!(segment.literal_text, "42");
+        assert_eq!(cache.get("fake"), Some("100:42"));
     }
 
     #[test]

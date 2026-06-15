@@ -48,6 +48,12 @@ fn run() -> AppResult<()> {
             };
             app.apply(event)
         }
+        "heartbeat" => {
+            let generation = args
+                .next()
+                .ok_or_else(|| AppError::Usage("expected: heartbeat <generation>".to_string()))?;
+            app.heartbeat(&generation)
+        }
         "dump-state" => app.dump_state(),
         "render" => match args.next().as_deref() {
             Some("status02") => app.render_status02_stdout(),
@@ -128,6 +134,7 @@ fn print_help() {
 
 USAGE:
   ghc-tmux-status apply
+  ghc-tmux-status heartbeat <generation>
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>

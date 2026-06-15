@@ -50,6 +50,20 @@ impl TmuxAdapter {
         ])
     }
 
+    pub fn show_global_option(&self, name: &str) -> AppResult<String> {
+        self.tmux_output(["show".to_string(), "-gqv".to_string(), name.to_string()])
+    }
+
+    pub fn schedule_background(&self, delay_seconds: u64, command: &str) -> AppResult<()> {
+        self.tmux_status([
+            "run-shell".to_string(),
+            "-b".to_string(),
+            "-d".to_string(),
+            delay_seconds.to_string(),
+            command.to_string(),
+        ])
+    }
+
     pub fn display_message(&self, message: &str) -> AppResult<()> {
         self.tmux_status(["display-message".to_string(), message.to_string()])
     }

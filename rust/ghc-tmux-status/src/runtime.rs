@@ -27,6 +27,9 @@ pub struct StatusRuntime {
     tmux: TmuxAdapter,
 }
 
+const HEARTBEAT_GENERATION_OPTION: &str = "@GHC_SL_HEARTBEAT_GEN";
+const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
+
 impl StatusRuntime {
     pub fn live() -> Self {
         Self {
@@ -39,7 +42,6 @@ impl StatusRuntime {
         let context_start = Instant::now();
         let context_state = self.live_context_state()?;
         let context_ms = duration_ms(context_start.elapsed());
-
         let context = match context_state {
             LiveContextState::Active(context) => context,
             LiveContextState::Inactive(snapshot) => {
@@ -96,6 +98,34 @@ impl StatusRuntime {
             )
         });
         result
+    }
+
+    pub fn heartbeat(&self, expected_generation: &str) -> AppResult<()> {
+        let current_generation = self
+            .tmux
+            .show_global_option(HEARTBEAT_GENERATION_OPTION)
+            .unwrap_or_default();
+        if current_generation != expected_generation {
+            // A newer chain (or a non-02 layout) superseded this one; let it die.
+            self.trace_apply(|| {
+                format!(
+                    "event=heartbeat action=expired expected={expected_generation} current={current_generation}"
+                )
+            });
+            return Ok(());
+        }
+
+        self.apply(RenderEvent { kind: RenderEventKind::Tick })?;
+        self.schedule_next_heartbeat(expected_generation)
+    }
+
+    fn schedule_next_heartbeat(&self, generation: &str) -> AppResult<()> {
+        let command = format!(
+            "{} heartbeat {generation}",
+            heartbeat_self_command_path()
+        );
+        self.tmux
+            .schedule_background(HEARTBEAT_INTERVAL_SECONDS, &command)
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
@@ -339,6 +369,23 @@ fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
     let mut group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
     group.sessions = ordered_sessions(&group.sessions, session_order_value(snapshot));
     group
+}
+
+fn heartbeat_self_command_path() -> String {
+    let path = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.into_os_string().into_string().ok())
+        .unwrap_or_else(|| {
+            std::env::var("HOME")
+                .map(|home| {
+                    format!("{home}/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status")
+                })
+                .unwrap_or_else(|_| {
+                    "/Users/wanchenfang/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+                        .to_string()
+                })
+        });
+    format!("'{}'", path.replace('\'', "'\\''"))
 }
 
 fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
