@@ -4,7 +4,7 @@ use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus, 
 use crate::status_length::{status_left_length, status_right_length};
 
 const STATUS02_STATUS_INTERVAL_SECONDS: &str = "1";
-// Keep in sync with conf/theme.tmux.conf; sourcing the theme is the primary inactive reset.
+// Reset interval when status02 is inactive; status01 also sets 20 on load.
 const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
