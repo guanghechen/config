@@ -35,11 +35,8 @@
 
 ## Architecture Governance
 
-1. **ALWAYS**: For new feature work or non-trivial refactor tasks, follow `arch-gate` skill before implementation.
-   For tiny scoped changes, skipping is allowed only with an explicit reason.
-   Unresolved items must be centralized before implementation and must not be scattered in final design.
-2. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
-3. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
+1. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
+2. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
 
 ## Environment
 
