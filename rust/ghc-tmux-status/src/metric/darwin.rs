@@ -156,7 +156,13 @@ fn default_network_interface() -> String {
 }
 
 fn detect_default_network_interface() -> String {
-    command_output("route", &["-n", "get", "default"])
+    default_interface_from_route_result(command_output("route", &["-n", "get", "default"]))
+}
+
+// Resiliency policy split from the IO boundary above: any route failure (Err) or
+// missing/blank `interface:` line degrades to en0 rather than aborting the render.
+fn default_interface_from_route_result(route_output: AppResult<String>) -> String {
+    route_output
         .ok()
         .as_deref()
         .and_then(parse_route_interface)
@@ -308,10 +314,11 @@ const HOST_CPU_LOAD_INFO_COUNT: MachMsgTypeNumber = 4;
 #[cfg(test)]
 mod tests {
     use super::{
-        calculate_cpu_percent, calculate_speed, cpu_percent_from_ticks, parse_netstat_counters,
-        parse_route_interface, parse_vm_stat_memory_percent, read_cpu_sample,
-        read_darwin_system_info,
+        calculate_cpu_percent, calculate_speed, cpu_percent_from_ticks,
+        default_interface_from_route_result, parse_netstat_counters, parse_route_interface,
+        parse_vm_stat_memory_percent, read_cpu_sample, read_darwin_system_info,
     };
+    use crate::error::AppError;
     use crate::metric::{CpuSample, NetworkSample};
 
     #[test]
@@ -380,6 +387,29 @@ mod tests {
     #[test]
     fn route_interface_missing_yields_none() {
         assert_eq!(parse_route_interface("destination: default\n"), None);
+    }
+
+    #[test]
+    fn route_failure_degrades_to_fallback_interface() {
+        let failed = Err(AppError::Render("route failed".to_string()));
+        assert_eq!(default_interface_from_route_result(failed), "en0");
+    }
+
+    #[test]
+    fn route_empty_or_blank_interface_degrades_to_fallback() {
+        assert_eq!(default_interface_from_route_result(Ok(String::new())), "en0");
+        assert_eq!(
+            default_interface_from_route_result(Ok("interface:   \n".to_string())),
+            "en0"
+        );
+    }
+
+    #[test]
+    fn route_named_interface_is_used() {
+        assert_eq!(
+            default_interface_from_route_result(Ok("interface: en1\n".to_string())),
+            "en1"
+        );
     }
 
     #[test]
