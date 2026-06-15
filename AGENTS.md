@@ -18,25 +18,28 @@
 
 ## Coding
 
-> **ALWAYS** follow simple design, modularity, single responsibility. Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
+> **ALWAYS**: Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
 
-1. For non-trivial coding tasks, define or derive explicit success criteria during planning; prefer a reproducible test or verification command when feasible.
-2. Prefer self-documenting code over comments. Comment "WHY", not "WHAT". No premature abstraction.
-3. Choose the simplest effective solution; high cohesion, low coupling. If an implementation grows noticeably larger than the problem requires, stop and simplify before continuing.
-4. Keep changes traceable to the user request: every changed line must be required by the task or by cleanup caused by the current change.
-5. Organize code: imports → constants → types → public API → private impl → entry point.
-6. **ALWAYS**: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
-7. **ALWAYS**: Early return; avoid nested conditions.
-8. **ALWAYS**: Error handling by function type:
+1. `[planning]` For non-trivial coding tasks, define or derive explicit success criteria during planning; prefer a reproducible test or verification command when feasible.
+2. `[traceability]` Keep changes traceable to the user request: every changed line must be required by the task or by cleanup caused by the current change.
+3. `[comments]` Prefer self-documenting code over comments. Comment "WHY", not "WHAT".
+4. `[layout]` Organize code: imports → constants → types → public API → private impl → entry point.
+5. **ALWAYS** `[naming]`: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
+6. **ALWAYS** `[early-return]`: Early return; avoid nested conditions.
+7. **ALWAYS** `[error-handling]`: Error handling by function type:
    - Internal (private): Propagate errors to caller (unless designed to suppress).
    - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
    - Exposed pure (no side effects): Propagate errors transparently.
-9. **CRITICAL**: For large implementation/refactor tasks, strictly enforce Single Responsibility Principle (SRP): design intentional directory/module boundaries, keep layer calls explicit and one-directional, and avoid cross-layer coupling or circular dependency/call chains.
 
-## Architecture Governance
+## Architecture / Code Design
 
-1. **ALWAYS**: `Dataflow State Machine` must define input/output boundary, states, transitions, state owner, read/write permission, and failure path (`retry/rollback/degrade/abort`); `Interaction Lifecycle Model` must define SRP boundary, one-way dependencies, interface contract (input/output/error/timeout), lifecycle (`init/start/stop/dispose`), and no cross-module internal state access.
-2. **CRITICAL**: When extensibility, third-party integration, or multi-implementation replacement is required, enforce runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
+Full structural design principles live in the `code-design` skill; the rules below are the always-on subset for every coding task.
+
+1. **CRITICAL** `[module-boundary]`: For large implementation/refactor tasks, strictly enforce SRP — intentional directory/module boundaries, explicit one-way layer calls, and no cross-layer coupling or circular dependency/call chains.
+2. **ALWAYS** `[structure-bias]`: Default to the simplest effective design — high cohesion, low coupling, abstraction on demand (extract a pattern only when the 2nd/3rd real peer appears, never preemptively). If an implementation grows noticeably larger than the problem requires, stop and simplify.
+3. **ALWAYS** `[stateful-contract]`: When a change touches a stateful flow or a module boundary, make explicit — in code or a short note — the state owner and single writer, one-way data flow, interface input/output/error/timeout contract, and failure paths (`retry/rollback/degrade/abort`). No standalone design document is required by default; use a short note unless complexity or the user asks for more.
+4. **CRITICAL** `[plugin-core]`: When extensibility, third-party integration, or multi-implementation replacement is genuinely required, enforce a runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
+5. **ALWAYS** `[open-questions]`: Centralize unresolved design questions in one place; resolve them or explicitly mark them non-blocking before implementation.
 
 ## Environment
 
