@@ -201,10 +201,10 @@ fn native_window_list_format() -> &'static str {
 mod tests {
     use std::collections::BTreeMap;
 
-    use super::{cache_matches, format_current_format};
+    use super::{cache_matches, format_current_format, render_status02};
     use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionGroupView,
-        StatusMode, StatusPosition, TmuxSnapshot,
+        LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderedSegment, RenderedStatus,
+        SessionGroupView, SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
     };
 
     #[test]
@@ -212,6 +212,173 @@ mod tests {
         let formatted = format_current_format("RIGHT");
         assert!(formatted.contains("#{W:"));
         assert!(formatted.contains("RIGHT"));
+    }
+
+    // The contract tests below lock the structural invariants of render_status02 —
+    // row composition, shared sub-segment reuse, chrome routing, wrappers, metric
+    // order, and cache-write behavior. They deliberately assert structure (markers,
+    // ordering, presence/absence) rather than any color/style value, so intentional
+    // theme tweaks do not churn them; only a structural regression breaks them.
+    //
+    // Stable text markers come from Template widgets (fixed strings): window_id
+    // `@00`, fullscreen `00/00`, time `00:00:00`. Metrics render off a pre-filled
+    // fresh cache so refresh is a cache-hit and never samples the host.
+
+    #[test]
+    fn render_status02_composes_row0_as_left_then_shared_right() {
+        let context = contract_context();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+
+        // session_format is literally status_left ++ row0_right, so status_left is a
+        // prefix of it. This locks the line 65-72 composition.
+        assert!(
+            rendered
+                .session_format
+                .literal_text
+                .starts_with(&rendered.status_left.literal_text)
+        );
+    }
+
+    #[test]
+    fn render_status02_shares_metric_tail_across_both_rows() {
+        let context = contract_context();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+
+        // Associativity witness: the metric block is rendered once and is the tail of
+        // both the status_right body and the session row0_right, with each appending
+        // exactly `#[default]` after it. So the suffix from the first metric marker to
+        // end must be byte-identical across the two rows. This is the strong form: a
+        // regression that drops network/cpu/memory/duration from the session row (or
+        // otherwise desyncs the two metric blocks) breaks the equality, whereas a mere
+        // "both rows contain time" check would not. Ordering (asserted on status_right
+        // below) therefore transitively holds for the session row too.
+        let right_rich = &rendered.status_right.rich_text;
+        let session_rich = &rendered.session_format.rich_text;
+        let right_tail = &right_rich[right_rich.find("@GHC_SYM_NET").expect("network in right")..];
+        let session_tail =
+            &session_rich[session_rich.find("@GHC_SYM_NET").expect("network in session")..];
+        assert_eq!(right_tail, session_tail);
+
+        let right_literal = &rendered.status_right.literal_text;
+        let session_literal = &rendered.session_format.literal_text;
+        let right_literal_tail =
+            &right_literal[right_literal.find('↓').expect("network in right literal")..];
+        let session_literal_tail =
+            &session_literal[session_literal.find('↓').expect("network in session literal")..];
+        assert_eq!(right_literal_tail, session_literal_tail);
+        assert!(right_literal_tail.ends_with(" 00:00:00 "));
+    }
+
+    #[test]
+    fn render_status02_routes_chrome_into_status_right_only() {
+        let context = contract_context();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+
+        // Chrome (fullscreen + window_id) belongs to status_right and the per-session
+        // current_format, never to the session row (row0_right = prefix + metric only).
+        assert!(rendered.status_right.literal_text.contains("@00"));
+        assert!(rendered.status_right.literal_text.contains("00/00"));
+        assert!(!rendered.session_format.literal_text.contains("@00"));
+        assert!(!rendered.session_format.literal_text.contains("00/00"));
+    }
+
+    #[test]
+    fn render_status02_wraps_rows_with_default_and_align() {
+        let context = contract_context();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+
+        assert!(rendered.status_right.rich_text.starts_with("#[default] "));
+        assert!(rendered.status_right.rich_text.ends_with("#[default]"));
+        assert!(rendered.session_format.rich_text.contains("#[align=left]"));
+        assert!(rendered.session_format.rich_text.contains("#[align=right]"));
+        assert!(rendered.current_format.rich_text.contains("#{W:"));
+        assert!(rendered.current_format.rich_text.contains("#[list=on"));
+    }
+
+    #[test]
+    fn render_status02_orders_metrics_left_to_right() {
+        let context = contract_context();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let rich = &rendered.status_right.rich_text;
+
+        // Intended metric order: network, cpu, memory, duration, date, time. Keyed on
+        // glyph-identity symbols (which metric), not styles. A deliberate reorder is a
+        // semantic change and updates this single assertion.
+        let net = rich.find("@GHC_SYM_NET").expect("network symbol");
+        let cpu = rich.find("@GHC_SYM_CPU").expect("cpu symbol");
+        let memory = rich.find("@GHC_SYM_MEMORY").expect("memory symbol");
+        let duration = rich.find("@GHC_SYM_DURATION").expect("duration symbol");
+        let date = rich.find("%a, %d %b").expect("date template");
+        let time = rich.find("%H:%M:%S").expect("time template");
+
+        assert!(net < cpu);
+        assert!(cpu < memory);
+        assert!(memory < duration);
+        assert!(duration < date);
+        assert!(date < time);
+    }
+
+    #[test]
+    fn render_status02_writes_no_cache_options_when_metric_cache_fresh() {
+        let context = contract_context();
+        let (_, cache_options) =
+            render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+
+        // Fresh metric cache ⇒ no sampling ⇒ zero option writes. This underpins the
+        // noop short-circuit in StatusRuntime::apply (cache_options.is_empty()).
+        assert!(cache_options.is_empty());
+    }
+
+    fn contract_context() -> RenderContext {
+        // Far-future cache timestamps keep all three metrics a fresh cache-hit, so
+        // refresh never forks netstat/vm_stat and the render stays deterministic.
+        let options = BTreeMap::from([
+            (
+                "@GHC_STATUS_COMPONENT_CACHE_cpu".to_string(),
+                "9999999999\t12\t1\t2\t3\t4".to_string(),
+            ),
+            (
+                "@GHC_STATUS_COMPONENT_CACHE_memory".to_string(),
+                "9999999999\t47".to_string(),
+            ),
+            (
+                "@GHC_STATUS_COMPONENT_CACHE_network".to_string(),
+                "9999999999\t0\t0\t0\t0".to_string(),
+            ),
+        ]);
+        let sessions = vec![SessionInfo {
+            id: "$1".to_string(),
+            name: "main".to_string(),
+            has_bell: false,
+        }];
+
+        RenderContext {
+            snapshot: TmuxSnapshot {
+                mode: "02".to_string(),
+                current_layout: "02:wide".to_string(),
+                status: "on".to_string(),
+                width: 200,
+                current_session_name: "main".to_string(),
+                client_last_session: String::new(),
+                host: "h".to_string(),
+                // Far-future start ⇒ saturating duration pins to "0m", no wall-clock drift.
+                session_created: 9_999_999_999,
+                sessions: sessions.clone(),
+                options,
+            },
+            group: SessionGroupView {
+                current_session_name: "main".to_string(),
+                sessions,
+            },
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind: LayoutKind::Wide,
+                rows: 1,
+                target_status: "on".to_string(),
+                key: "02:wide".to_string(),
+            },
+        }
     }
 
     #[test]
