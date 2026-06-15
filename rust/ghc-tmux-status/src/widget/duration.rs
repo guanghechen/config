@@ -35,10 +35,10 @@ fn format_duration(seconds: i64) -> String {
     let minutes = (seconds % 3_600) / 60;
 
     if days > 0 {
-        return format!("{days}d{hours}h");
+        return format!("{days}d {hours:02}h");
     }
     if hours > 0 {
-        return format!("{hours}h{minutes}m");
+        return format!("{hours}h {minutes:02}m");
     }
     format!("{minutes}m")
 }
@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn formats_duration_compactly() {
         assert_eq!(format_duration(59), "0m");
-        assert_eq!(format_duration(3_600 + 120), "1h2m");
-        assert_eq!(format_duration(86_400 + 7_200), "1d2h");
+        assert_eq!(format_duration(3_600 + 120), "1h 02m");
+        assert_eq!(format_duration(86_400 + 7_200), "1d 02h");
     }
 }
