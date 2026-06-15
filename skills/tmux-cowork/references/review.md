@@ -1,18 +1,18 @@
-# review flow（对抗式 code review）
+# review flow (adversarial code review)
 
-在一个 primary agent 与一个 independent reviewer agent 之间跑一轮**对抗式**结构化 review。价值是逆住 LLM-to-LLM review 的两个默认失效：reviewer 倾向 rubber-stamp、primary 倾向 defend。用结构和 guardrail 强制 evidence-backed findings 与诚实收尾。
+Run one round of **adversarial** structured review between a primary agent and an independent reviewer agent. The value is in countering the two default failure modes of LLM-to-LLM review: the reviewer tends to rubber-stamp, the primary tends to defend. Use structure and guardrails to force evidence-backed findings and an honest wrap-up.
 
-## 与协议的关系
+## Relation to the protocol
 
-review 不是独立通信格式，而是 `mode: review` 的 body 约定：默认每个产物 = 一条 tmux-cowork 消息，外层信封按 SKILL.md「消息格式」。
+review is not a separate message format but a body convention for `mode: review`: by default each artifact = one tmux-cowork message, with the outer envelope following SKILL.md "Message format".
 
-- 信封复用：review 目标写 `goal`，review 对象写 `topic`，轮次用 `turn`——这些**不在 body 重复**。
-- body（`--------` 之后）只放协议没有的 review 专属字段，沿用小写 `key: value` + 空行分隔。
-- review = `discuss` flow + 结构化 body，primary 为 `original`；turn / 退出 / 上限见「多轮契约」，寻址（to/from 互换）见「回写侧流程」，投递见「发送与确认」。
-- transport：默认走 tmux-cowork（两个 agent pane）；无第二 pane 时 inline 跑——primary 生成 Packet 交用户转给 reviewer，等用户贴回 Findings，沿用同一套结构化产物。任何形态都不得用 primary 的 self-review 冒充 independent reviewer。
-- roles：primary 持有改动并发起，reviewer 默认 read-only（不改文件 / 不 stage / 不 commit），除非用户明确要求 patch。
+- Envelope reuse: write the review goal in `goal`, the review object in `topic`, and the round in `turn` — these are **not repeated in the body**.
+- The body (after `--------`) holds only review-specific fields the protocol does not have, using the same lowercase `key: value` plus blank-line separation.
+- review = `discuss` flow plus a structured body, with the primary as `original`; for turn / exit / cap see "Multi-round contract", for addressing (to/from swap) see "Receiver flow", and for delivery see "Send and confirm".
+- transport: tmux-cowork by default (two agent panes); with no second pane, run inline — the primary produces the Packet for the user to pass to the reviewer, waits for the user to paste back the Findings, and reuses the same structured artifacts. In any form, the primary's self-review must not stand in for an independent reviewer.
+- roles: the primary holds the change and starts the review; the reviewer is read-only by default (no file edits / no stage / no commit) unless the user explicitly asks for a patch.
 
-| 产物             | mode   | turn |
+| Artifact         | mode   | turn |
 |------------------|--------|------|
 | Review Packet    | review | 1    |
 | Findings         | review | 1    |
@@ -20,20 +20,20 @@ review 不是独立通信格式，而是 `mode: review` 的 body 约定：默认
 | re-review        | review | 2    |
 | Consensus label  | final  | 2    |
 
-> 下表为**典型 2 轮**路径。Findings 明确 `no blocking findings` 时，primary 可在 turn 1 后直接收尾（`Consensus` 或 `Consensus with residual risks`），跳过 Resolution / re-review；有 Medium+ finding 则走 Resolution / re-review，未收敛项按 turn 循环，直到 `original` 判定收敛或 `turn` 达硬上限 `10`，能早收就早收。
+> The table above is the **typical 2-round** path. When the Findings clearly state `no blocking findings`, the primary may wrap up right after turn 1 (`Consensus` or `Consensus with residual risks`), skipping Resolution / re-review; with a Medium+ finding, go through Resolution / re-review, looping unresolved items by turn until `original` judges convergence or `turn` hits the hard cap `10` — wrap up early when you can.
 
-## 何时用
+## When to use
 
-- 有具体 review object（diff / patch / changed files / design doc / test artifact）时才跑。
-- tiny local change 直接 self-check，别套 review loop。
-- 没有具体 artifact 的开放讨论 / brainstorming 用 `mode: discuss`，不属于 `review`。
+- Run it only when there is a concrete review object (diff / patch / changed files / design doc / test artifact).
+- For a tiny local change, just self-check; do not wrap it in a review loop.
+- Open discussion / brainstorming with no concrete artifact uses `mode: discuss` and is not `review`.
 
-## 完整样例（turn 1 · Review Packet）
+## Full example (turn 1 · Review Packet)
 
-一条完整的 review 消息长这样；后面的 body 模板只给 `--------` 之后那段。
+A complete review message looks like this; the body templates below give only the segment after `--------`.
 
 ```text
-[tmux-cowork] 请用 tmux-cowork skill 处理本消息，并按 mode/expect 约定处理。
+[tmux-cowork] Please handle this message with the tmux-cowork skill, following the mode/expect contract.
 to: %5
 from: %3
 original: %3
@@ -41,78 +41,78 @@ mode: review
 turn: 1
 
 topic: auth middleware patch
-goal: 确认 patch 正确实现 session 校验且无 regression，达成 consensus 或收敛到 bounded risk
-expect: 回 Findings（mode: review 同格式回写，保留 topic / goal / original / turn）
+goal: confirm the patch implements session validation correctly with no regression; reach consensus or converge to bounded risk
+expect: reply with Findings (mode: review, same format, keep topic / goal / original / turn)
 
-context: 重写 auth middleware，legal 要求改 session token 存储方式
+context: rewriting auth middleware; legal requires changing how the session token is stored
 
 --------
 
 scope: correctness / security / regressions
-changed files: src/auth/mw.ts（重写校验）, src/auth/store.ts（token 存储）
+changed files: src/auth/mw.ts (validation rewrite), src/auth/store.ts (token storage)
 diff source: git diff main...HEAD
-tests run: pnpm test auth — pass; e2e not run（无 staging）
-known unverified: 并发刷新 token 路径未测
-behavior changed: session 校验失败现返回 401（原 500）
+tests run: pnpm test auth — pass; e2e not run (no staging)
+known unverified: concurrent token-refresh path untested
+behavior changed: session validation failure now returns 401 (was 500)
 ```
 
-## body 模板
+## body templates
 
-`finding` id（如 `F-001`）在 Findings、Resolution、re-review 中保持不变。
+A `finding` id (such as `F-001`) stays the same across Findings, Resolution, and re-review.
 
-### Review Packet（turn 1, primary → reviewer）
+### Review Packet (turn 1, primary → reviewer)
 
-primary summary 不替代 diff/test evidence；diff 大时给 artifact link / file list / 最小 snippets，不粘 noisy scrollback。
+The primary summary does not replace diff/test evidence; when the diff is large, give an artifact link / file list / minimal snippets, and do not paste noisy scrollback.
 
 ```text
-scope: <correctness / security / regressions / tests / API contract / maintainability 的重点>
-changed files: <路径 + 一句作用>
+scope: <focus among correctness / security / regressions / tests / API contract / maintainability>
+changed files: <path + one line on its role>
 diff source: <git diff / patch / explicit snippets / artifact path>
-tests run: <command + pass/fail；没跑写 not run + 原因>
-known unverified: <未验证路径 / 环境限制 / missing tests / assumptions>
-behavior changed: <user-visible 或 API-visible 变化>
+tests run: <command + pass/fail; if not run, write not run + reason>
+known unverified: <unverified paths / environment limits / missing tests / assumptions>
+behavior changed: <user-visible or API-visible change>
 ```
 
-### Findings（turn 1 回写, reviewer → primary）
+### Findings (turn 1 reply, reviewer → primary)
 
-按 severity 排序，每条一个块、空行分隔；给不出 trigger+evidence 的降级成 residual risk。re-review 复用 `finding` id 并加 `status: confirmed-fixed | still-open | withdrawn | escalated`，不重新编号。
+Sorted by severity, one block each, blank-line separated; anything without trigger+evidence is downgraded to a residual risk. re-review reuses the `finding` id and adds `status: confirmed-fixed | still-open | withdrawn | escalated`, without renumbering.
 
 ```text
 finding: F-001
 severity: Critical | High | Medium | Low
-trigger: <触发问题的 condition 或 code path>
+trigger: <the condition or code path that triggers the problem>
 evidence: <file / function / line / diff hunk / command output / observable behavior>
-impact: <什么坏、影响谁、为什么重要>
-fix: <最窄的修复>
+impact: <what breaks, who is affected, why it matters>
+fix: <the narrowest fix>
 confidence: High | Medium | Low
 
-no blocking findings: <仅当无 Critical/High/Medium 时>
-residual risks: <未验证区 / missing tests / 低信心>
+no blocking findings: <only when there is no Critical/High/Medium>
+residual risks: <unverified areas / missing tests / low confidence>
 ```
 
-### Resolution Notes（turn 2, primary → reviewer）
+### Resolution Notes (turn 2, primary → reviewer)
 
-逐条回应，每个 finding 只回一次；needs-discussion 只提一个 narrow question。
+Respond item by item, once per finding; for needs-discussion raise just one narrow question.
 
 ```text
 finding: F-001
 decision: accept | reject | needs-discussion
-reason: <为什么这个 decision 对>
-action: <patch / test / doc，或 none>
-verification: <command/test/evidence，或 not run + 原因>
-residual risk: <剩余风险，或 none>
+reason: <why this decision is right>
+action: <patch / test / doc, or none>
+verification: <command/test/evidence, or not run + reason>
+residual risk: <remaining risk, or none>
 ```
 
-### Consensus label（收尾 · mode: final）
+### Consensus label (wrap-up · mode: final)
 
-由 primary（= `original`）在收到 re-review 后发：primary 判退出（退出判据见「多轮契约」），按 reviewer 给出的 finding severity 与 status **机械映射** label、无裁量，并整理交用户；reviewer 不切 `final`。
+Sent by the primary (= `original`) after receiving the re-review: the primary decides exit (exit criteria in "Multi-round contract"), **mechanically maps** the label from the finding severity and status the reviewer gave, with no discretion, and organizes it for the user; the reviewer does not switch to `final`.
 
-- `Consensus`：blocking findings 全 `confirmed-fixed` / `withdrawn`，验证已跑或有充分替代 evidence，且无 residual risk。
-- `Consensus with residual risks`：blocking 全清，但留有未跑测试 / 低信心区 / 环境限制 / 未修的 Low finding。
-- `No consensus / user decision needed`：有 blocking（Medium+）finding 仍 `still-open` / `escalated`，或硬上限 `10` 内仍无法用 evidence 收敛的 material risk。
+- `Consensus`: all blocking findings are `confirmed-fixed` / `withdrawn`, verification has run or there is sufficient alternative evidence, and there is no residual risk.
+- `Consensus with residual risks`: all blocking findings cleared, but there remain unrun tests / low-confidence areas / environment limits / an unfixed Low finding.
+- `No consensus / user decision needed`: a blocking (Medium+) finding is still `still-open` / `escalated`, or there is a material risk that cannot be converged with evidence within the hard cap `10`.
 
 ## Guardrails
 
-- reviewer 不许 rubber-stamp、不许提没有 trigger+evidence 的抽象 concern、不许绕过 `finding` id 直接改代码。
-- primary 不许藏 unrun tests / known failures；有未解决 blocking（Medium+）finding 时不许称 `Consensus`，有未验证风险时只能用 `Consensus with residual risks`。
-- 任一阶段缺 mandatory artifact：要求补齐或把终态降级，别拿 primary summary 当完整 evidence。
+- The reviewer must not rubber-stamp, must not raise an abstract concern without trigger+evidence, and must not bypass the `finding` id to edit code directly.
+- The primary must not hide unrun tests / known failures; with an unresolved blocking (Medium+) finding it must not claim `Consensus`, and with an unverified risk it may only use `Consensus with residual risks`.
+- If any stage is missing a mandatory artifact: ask for it or downgrade the final state; do not treat the primary summary as complete evidence.
