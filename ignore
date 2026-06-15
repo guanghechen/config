@@ -7,6 +7,7 @@
 *.swp
 *.tsbuildinfo
 
+.claude/*.lock
 .code-analyzer/
 .playwright/
 .playwright-cli/
