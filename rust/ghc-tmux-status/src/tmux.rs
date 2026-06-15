@@ -22,14 +22,19 @@ impl TmuxAdapter {
             return Ok(());
         }
 
-        let combined = self.tmux_status(plan.to_tmux_args());
-        if combined.is_err() {
+        // Fold the redraw into the same command string so the happy path costs a
+        // single tmux round-trip (set...; refresh-client -S) instead of two.
+        let mut combined_args = plan.to_tmux_args();
+        combined_args.push(";".to_string());
+        combined_args.push("refresh-client".to_string());
+        combined_args.push("-S".to_string());
+
+        if self.tmux_status(combined_args).is_err() {
             for command in &plan.commands {
                 self.tmux_status(command.args())?;
             }
+            let _ = self.tmux_status(["refresh-client".to_string(), "-S".to_string()]);
         }
-
-        let _ = self.tmux_status(["refresh-client".to_string(), "-S".to_string()]);
         Ok(())
     }
 
