@@ -29,11 +29,12 @@ This protocol supports only **two-party point-to-point** threads; `original`, `t
 
 - Every pane field in a message (`to` / `from` / `original`) must be a plain pane id: `%N`.
 - A user-supplied `#N` / `@M#N` is only used to locate a tmux target; canonicalize it to `%N` before writing it into a message.
+- Once a ref is canonicalized to `%N`, every later `-t` (`send-keys` / `paste-buffer` / `capture-pane`) **must use that `%N`**, never an index-style target like `:.N` / `@M.N`. These re-resolve at command time and can address a different pane than the one you locked: `:.N` is relative to the current window from tmux's command/client context, so it can land in a different window than the one you resolved; `@M.N` pins the window id `@M` but still selects by the mutable pane index `N`, which shifts when panes are added or closed.
 - Use `$TMUX_PANE` to locate yourself; do not use `tmux display-message -p '#{pane_id}'` without `-t`, which returns the focused pane of the current client.
 - `original` is the thread starter and stays fixed for the whole thread; only it increments `turn` and decides when to exit or wrap up.
 - `topic` says what is being discussed; `goal` defines the done condition. `discuss` / `review` must have a `goal`.
 
-Pane ref to tmux target mapping:
+Pane ref to tmux target mapping (the right column is **only** for feeding `display-message -t` to obtain `%N`; never use `:.2` / `@1.2` as a send/capture target):
 
 | ref    | target |
 |--------|--------|
@@ -147,10 +148,12 @@ Once a reply arrives, the old fallback is void. When no scheduler is available, 
 
 ## Send and confirm
 
+Every `-t` below uses the canonical `%N` you resolved as the message's `to` (sender: from Sender flow step 2; receiver replying: the inbound `from`, already `%N` after the shape check); never fall back to the original ref or its index-style mapping (`:.N` / `@M.N`). Those re-resolve at command time and can address a different pane: `:.N` follows the current window from tmux's command/client context, `@M.N` follows the mutable pane index inside `@M`. Then `send-keys` / `paste-buffer` can write to the wrong pane, and `capture-pane` can read the wrong pane — falsely confirming delivery or driving the next `Enter` / `Tab` / `Escape` off irrelevant TUI state.
+
 A short message can be typed directly, but do not submit it yet:
 
 ```bash
-tmux send-keys -t '<target>' '<structured message>'
+tmux send-keys -t '%N' '<structured message>'
 ```
 
 For a multi-line message, use a tmux buffer by default:
@@ -161,19 +164,21 @@ cat > "$tmp" <<'MSG'
 <structured message>
 MSG
 tmux load-buffer "$tmp"
-tmux paste-buffer -t '<target>'
+tmux paste-buffer -t '%N'
 rm -f "$tmp"
 ```
 
 After pasting or typing, you must confirm submission:
 
 ```bash
-tmux capture-pane -ep -t '<target>' | tail -40
+tmux capture-pane -ep -t '%N' | tail -40
 ```
 
 - Processing (footer such as `esc to interrupt`): never send `Escape`. If the TUI clearly says it can queue, send `Tab`; otherwise wait, or degrade per the rule in the last paragraph.
 - Idle prompt with text not yet submitted: send `Enter`.
 - Modal editor in insert state (such as `-- INSERT --`): send `Escape` alone first, capture again to confirm insert is exited, then send `Enter`.
+
+All confirmation keystrokes above are also addressed to the same pane: `tmux send-keys -t '%N' Enter` / `Tab` / `Escape`. Never use a bare `send-keys Enter` or an index-style target here — that is the same wrong-pane leak as the send step.
 
 Capture again; submission counts as successful only when the input clears, processing starts, a queued hint appears, or the peer begins replying. Do not rely on a fixed sleep, and do not retry forever. If the peer keeps processing and cannot queue, register a `pending-unsent` fallback and hand back, or report to the user to decide when to retry.
 
