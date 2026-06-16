@@ -2,7 +2,7 @@
 
 Runtime patches for Claude Code CLI.
 
-Latest verified on WSL/Linux: Claude Code `2.1.163`
+Latest verified on WSL/Linux: Claude Code `2.1.178`
 
 ## Patches
 
@@ -16,22 +16,22 @@ Latest verified on WSL/Linux: Claude Code `2.1.163`
 | Windows   | Windows Terminal 不支持 bracketed paste mode               | 在 input handler 中直接检测 `Ctrl+V`           |
 | WSL/Linux | `wl-paste` 可能输出 BMP 格式                               | 添加 BMP 支持，自动转 PNG (需 ImageMagick)     |
 
-### 2. Context Window
+### 2. Context Window (manual only)
 
-统一 context window 为 **144K tokens**。
+> 默认 `index.mjs` **不再** patch context window — 新版默认 200K/1M 直接保留。
+> 仅在需要时手动运行此脚本。
 
 - Platforms: win / nix / osx / wsl
-- Default: `144000`
-- Custom: `node index.mjs [size]`
+- Custom: `node patch-context-window.mjs [size]`
 
 ## Usage
 
 ```bash
-# Apply all patches (default 144K context)
+# Apply image-paste patches (default flow)
 node index.mjs
 
-# Custom context window size
-node index.mjs 200000
+# (Optional) manually limit context window
+node patch-context-window.mjs 144000
 ```
 
 ## Files

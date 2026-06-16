@@ -5,10 +5,12 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const contextWindowSize = process.argv[2]
 
+// Context-window patching is intentionally not part of the default flow:
+// newer Claude Code defaults (200K / 1M) are kept as-is. The
+// patch-context-window.mjs script is retained for manual use if needed:
+//   node patch-context-window.mjs [size]
 const patches = [
-  { name: 'context-window', file: 'patch-context-window.mjs', args: contextWindowSize ? [contextWindowSize] : [] },
   { name: 'image-paste', file: 'patch-image-paste.mjs', args: [] },
 ]
 
