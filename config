@@ -8,6 +8,7 @@ config-file = shader.conf
 background-blur = true
 
 # Bell
+bell-features = system
 bell-features = attention
 bell-features = title
 
