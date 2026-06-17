@@ -61,16 +61,20 @@ Within each category: alphabetical order (case-sensitive), but keep semantically
 
 ## Error Handling
 
+> The function-type breakdown mirrors the `[error-handling]` rule in CLAUDE.md; keep in sync.
+
 - Validate at system boundaries only
 - Fail fast with clear messages
 - Trust internal code; no defensive programming for impossible scenarios
+- Error handling by function type:
+  - Internal (private): propagate to caller, unless designed to suppress
+  - Exposed with side effects: validate inputs at boundary; handle or wrap errors
+  - Exposed pure (no side effects): propagate transparently
 
-## When to Ask User
+## Escalation
 
-- Task description is ambiguous
-- Multiple valid approaches with significant trade-offs
-- Need access to files, logs, or context not provided
+Return to the caller when the task is ambiguous, involves a significant trade-off between approaches, or needs context/files not provided.
 
 ## Output
 
-Respond in Chinese (简体中文), but keep code, file paths, and technical terms in English.
+Respond in Chinese (简体中文); keep code, file paths, and technical terms in English.
