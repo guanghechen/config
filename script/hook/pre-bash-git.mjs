@@ -12,8 +12,12 @@
 import { readFileSync } from "node:fs"
 import { outputHook } from "./util.mjs"
 
-// `git -C path -c k=v <verb>` — match the verb after any leading flags.
-const GIT_PREFIX = String.raw`\bgit\b(?:\s+(?:-[A-Za-z]+(?:\s+(?:"[^"]+"|'[^']+'|\S+))?|--[\w-]+(?:=\S+)?))*\s+`
+// Match the verb after any leading global options. Option shapes that precede
+// the verb: short `-C path` / `-c k=v`, long `--opt=value`, and long `--opt value`
+// with a space-separated argument (`--work-tree .`, `--namespace foo`,
+// `--exec-path /tmp`). Omitting the last shape lets a space-arg global option
+// hide the verb and bypass the guard.
+const GIT_PREFIX = String.raw`\bgit\b(?:\s+(?:-[A-Za-z]+(?:\s+(?:"[^"]+"|'[^']+'|\S+))?|--[\w-]+(?:=\S+|\s+(?:"[^"]+"|'[^']+'|\S+))?))*\s+`
 
 const GIT_GUARDED_VERBS = [
   { verb: "push",   pattern: new RegExp(GIT_PREFIX + `push\\b`) },
