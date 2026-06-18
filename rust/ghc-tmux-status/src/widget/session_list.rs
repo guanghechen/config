@@ -3,6 +3,9 @@ use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
+// Explicit surface color (not the "default" token): usable as a foreground so the head
+// can paint the bar color as an arrow-ink notch. `default` as fg = status-line text color.
+const LIST_SURFACE_INK: &str = "#{@GHC_SL_BG_SESSION_LIST_SURFACE}";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
 const ACTIVE_FG: &str = "#{@GHC_SL_FG_SESSION_LIST_ACTIVE}";
 const INACTIVE_NAME_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NAME}";
@@ -14,10 +17,9 @@ const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 
-// These placeholders mirror glyph variables in rich_text. status-left-length uses
-// literal_text as a tmux-width shadow, so update them with the rich item shape.
-const SLANT_LEFT_LITERAL: char = '';
-const SLANT_RIGHT_LITERAL: char = '';
+// This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
+// uses literal_text as a tmux-width shadow, so update it with the rich item shape.
+const ARROW_LITERAL: char = '';
 const BELL_LITERAL: char = '¤';
 
 pub struct SessionListWidget;
@@ -55,11 +57,11 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
         if let Some(left_palette) = previous_palette {
-            literal_text.push(SLANT_RIGHT_LITERAL);
+            literal_text.push(ARROW_LITERAL);
             rich_text.push_str(&render_join_separator(left_palette, palette));
         } else {
-            literal_text.push(SLANT_LEFT_LITERAL);
-            rich_text.push_str(&render_left_edge(palette.name_bg, LIST_SURFACE_BG));
+            literal_text.push(ARROW_LITERAL);
+            rich_text.push_str(&render_left_edge(palette.name_bg));
         }
         literal_text.push_str(&render_item_body_literal(
             &session.name,
@@ -74,7 +76,7 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
             palette,
         ));
         if is_last {
-            literal_text.push(SLANT_RIGHT_LITERAL);
+            literal_text.push(ARROW_LITERAL);
             rich_text.push_str(&render_right_edge(
                 palette.terminal_edge_fg,
                 LIST_SURFACE_BG,
@@ -147,12 +149,16 @@ fn render_join_separator(left: SessionItemPalette, right: SessionItemPalette) ->
     render_right_edge(left.num_bg, right.name_bg)
 }
 
-fn render_left_edge(edge_bg: &str, surface_bg: &str) -> String {
-    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_LEFT}}")
+fn render_left_edge(edge_bg: &str) -> String {
+    // The surface color paints the arrow ink over the item-colored cell, carving a
+    // right-pointing ">" notch out of the block's left edge that reveals the bar behind.
+    // (Head only; joins/tail instead ink the item color onto a default-bg surface. The
+    // literal "default" token can't serve here: as a foreground it is the bar's text color.)
+    format!("#[fg={LIST_SURFACE_INK}#,bg={edge_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
 }
 
 fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
-    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_SLANT_RIGHT}}")
+    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
 }
 
 fn render_item_body_literal(
@@ -317,15 +323,15 @@ mod tests {
         let active = SessionItemPalette::new(true, false);
         assert_eq!(
             render_join_separator(inactive, active),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_SLANT_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_ARROW_RIGHT}"
         );
         assert_eq!(
             render_join_separator(active, inactive),
-            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_SLANT_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
         );
         assert_eq!(
             render_join_separator(inactive, inactive),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_SLANT_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
@@ -333,12 +339,12 @@ mod tests {
     fn last_inactive_item_edge_uses_num_bg_on_default_surface() {
         let inactive = SessionItemPalette::new(false, false);
         assert_eq!(
-            render_left_edge("#{item_name}", "default"),
-            "#[fg=#{item_name}#,bg=default]#{@GHC_SEP_SLANT_LEFT}"
+            render_left_edge("#{item_name}"),
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,bg=#{item_name}]#{@GHC_SEP_ARROW_RIGHT}"
         );
         assert_eq!(
             render_right_edge(inactive.terminal_edge_fg, LIST_SURFACE_BG),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=default]#{@GHC_SEP_SLANT_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=default]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
@@ -355,7 +361,7 @@ mod tests {
         let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
-        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
     }
 
     #[test]
@@ -365,7 +371,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("#[range=session|$1]"));
         assert!(segment.rich_text.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        assert_eq!(segment.literal_text, " dev | 1 ");
+        assert_eq!(segment.literal_text, " dev | 1 ");
     }
 
     #[test]
@@ -387,7 +393,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
         assert!(segment.rich_text.contains("#[range=session|$2]"));
-        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
     }
 
     #[test]
@@ -398,7 +404,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("@GHC_SYM_WIN_BELL"));
         assert!(segment.rich_text.contains("#[range=session|$2]"));
-        assert_eq!(segment.literal_text, " dev | 1  yui  2 ¤ ");
+        assert_eq!(segment.literal_text, " dev | 1  yui  2 ¤ ");
     }
 
     fn context_with_sessions<const N: usize>(
