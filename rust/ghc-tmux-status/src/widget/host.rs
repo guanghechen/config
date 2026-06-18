@@ -13,7 +13,7 @@ impl ComputedWidget for HostWidget {
         let host = truncate_chars(&context.snapshot.host, 16);
         Ok(RenderedSegment {
             literal_text: format!("{ARROW_RIGHT} {OS_ICON} {host} "),
-            rich_text: "#[fg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,bg=#{@GHC_SL_BG_PILL_HOST}]#{@GHC_SEP_ARROW_RIGHT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_HOST}] #{@GHC_SYM_OS}#[fg=#{@GHC_SL_FG_PILL_TXT}#,bg=#{@GHC_SL_BG_PILL_HOST}] #{=16:host} ".to_string(),
+            rich_text: "#[fg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,bg=#{@GHC_SL_BG_PILL_HOST}]#{@GHC_SEP_ARROW_RIGHT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_HOST}] #{@GHC_SYM_OS}#[fg=#{@GHC_SL_FG_PILL_HOST_TXT}#,bg=#{@GHC_SL_BG_PILL_HOST}] #{=16:host} ".to_string(),
         })
     }
 }
