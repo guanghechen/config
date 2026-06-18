@@ -3,9 +3,10 @@ use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
-// Explicit surface color (not the "default" token): usable as a foreground so the head
-// can paint the bar color as an arrow-ink notch. `default` as fg = status-line text color.
-const LIST_SURFACE_INK: &str = "#{@GHC_SL_BG_SESSION_LIST_SURFACE}";
+// The first item's ">" is a powerline join the orange host segment points into the
+// session list: the arrow ink is the host pill color over the item-colored cell, so the
+// host flows straight on. (Not the "default" token: as fg it would be the bar text color.)
+const HEAD_NOTCH_FG: &str = "#{@GHC_SL_BG_PILL_HOST}";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
 const ACTIVE_FG: &str = "#{@GHC_SL_FG_SESSION_LIST_ACTIVE}";
 const INACTIVE_NAME_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NAME}";
@@ -150,11 +151,10 @@ fn render_join_separator(left: SessionItemPalette, right: SessionItemPalette) ->
 }
 
 fn render_left_edge(edge_bg: &str) -> String {
-    // The surface color paints the arrow ink over the item-colored cell, carving a
-    // right-pointing ">" notch out of the block's left edge that reveals the bar behind.
-    // (Head only; joins/tail instead ink the item color onto a default-bg surface. The
-    // literal "default" token can't serve here: as a foreground it is the bar's text color.)
-    format!("#[fg={LIST_SURFACE_INK}#,bg={edge_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
+    // The orange host segment points its ">" arrow into the first item: ink = host pill
+    // color, bg = the item color, so the host flows into the session list as a powerline
+    // join. (Head only; joins/tail keep item-colored ink, see render_right_edge.)
+    format!("#[fg={HEAD_NOTCH_FG}#,bg={edge_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
 }
 
 fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
@@ -340,7 +340,7 @@ mod tests {
         let inactive = SessionItemPalette::new(false, false);
         assert_eq!(
             render_left_edge("#{item_name}"),
-            "#[fg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,bg=#{item_name}]#{@GHC_SEP_ARROW_RIGHT}"
+            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{item_name}]#{@GHC_SEP_ARROW_RIGHT}"
         );
         assert_eq!(
             render_right_edge(inactive.terminal_edge_fg, LIST_SURFACE_BG),
