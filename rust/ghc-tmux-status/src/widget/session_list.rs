@@ -16,12 +16,15 @@ const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
 const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
-const LAST_INACTIVE_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
+// The last item always pads one trailing cell so status-left-length stays constant no
+// matter which client is on which session (the active state is decided per-client at
+// redraw, so the literal width shadow must not depend on it).
+const LAST_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
 
 // This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
 // uses literal_text as a tmux-width shadow, so update it with the rich item shape.
-const ARROW_LITERAL: char = '';
-const BELL_LITERAL: char = '¤';
+const ARROW_LITERAL: char = '\u{e0b0}';
+const BELL_LITERAL: char = '\u{00a4}';
 
 pub struct SessionListWidget;
 
@@ -35,9 +38,10 @@ impl ComputedWidget for SessionListWidget {
     }
 }
 
-/// Rebuilds from the session snapshot. Semantically relevant events are session
-/// create/close/rename/switch, but dispatch remains dynamic to keep the widget
-/// contract simple and honest.
+/// Rebuilds from the session snapshot. The active session and the last-focus marker are
+/// per-client facts, so they are emitted as tmux conditionals keyed on `#{session_id}` /
+/// `#{client_last_session}` rather than baked from one client's viewpoint: a single shared
+/// option then renders correctly for every attached client at its own status redraw.
 fn render_session_list(context: &RenderContext) -> RenderedSegment {
     if context.group.sessions.is_empty() {
         return RenderedSegment::empty();
@@ -46,48 +50,33 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
     let mut literal_text = String::new();
     let mut rich_text = String::new();
     let session_count = context.group.sessions.len();
-    let mut previous_palette = None;
+    let mut previous_id: Option<&str> = None;
     for (offset, session) in context.group.sessions.iter().enumerate() {
         let index = offset + 1;
         let is_last = index == session_count;
-        let is_active = session.name == context.group.current_session_name;
-        let is_last_focus = !is_active
-            && !context.snapshot.client_last_session.is_empty()
-            && session.name == context.snapshot.client_last_session;
-        let palette = SessionItemPalette::new(is_active, is_last_focus);
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
-        if let Some(left_palette) = previous_palette {
-            literal_text.push(ARROW_LITERAL);
-            rich_text.push_str(&render_join_separator(left_palette, palette));
-        } else {
-            literal_text.push(ARROW_LITERAL);
-            rich_text.push_str(&render_left_edge(palette.name_bg));
+        literal_text.push(ARROW_LITERAL);
+        match previous_id {
+            Some(left_id) => rich_text.push_str(&render_join_separator(left_id, &session.id)),
+            None => rich_text.push_str(&render_left_edge(&session.id)),
         }
-        literal_text.push_str(&render_item_body_literal(
-            &session.name,
-            index,
-            session.has_bell,
-            palette,
-        ));
+        literal_text.push_str(&render_item_body_literal(&session.name, index, session.has_bell));
         rich_text.push_str(&render_item_body(
             &session.name,
             index,
             session.has_bell,
-            palette,
+            &session.id,
         ));
         if is_last {
             literal_text.push(ARROW_LITERAL);
-            rich_text.push_str(&render_right_edge(
-                palette.terminal_edge_fg,
-                LIST_SURFACE_BG,
-            ));
-        }
-        if is_last && !palette.is_active {
             literal_text.push(' ');
+            rich_text.push_str(&render_right_edge(&session.id));
+            rich_text.push_str(LAST_RANGE_CLOSE);
+        } else {
+            rich_text.push_str(RANGE_CLOSE);
         }
-        rich_text.push_str(palette.range_close(is_last));
-        previous_palette = Some(palette);
+        previous_id = Some(&session.id);
     }
 
     RenderedSegment {
@@ -96,85 +85,75 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
     }
 }
 
-#[derive(Clone, Copy)]
-struct SessionItemPalette {
-    is_active: bool,
-    name_bg: &'static str,
-    name_fg: &'static str,
-    num_bg: &'static str,
-    num_fg: &'static str,
-    terminal_edge_fg: &'static str,
+/// `1` for the client whose current session is this item, `0` otherwise. Keyed on the
+/// stable session id (not the name) so duplicate session names cannot alias.
+fn active_condition(session_id: &str) -> String {
+    format!("#{{==:#{{session_id}},{session_id}}}")
 }
 
-impl SessionItemPalette {
-    fn new(is_active: bool, is_last_focus: bool) -> Self {
-        if is_active {
-            return Self {
-                is_active,
-                name_bg: ACTIVE_BG,
-                name_fg: ACTIVE_FG,
-                num_bg: ACTIVE_BG,
-                num_fg: ACTIVE_FG,
-                terminal_edge_fg: ACTIVE_BG,
-            };
-        }
-
-        Self {
-            is_active,
-            name_bg: INACTIVE_NAME_BG,
-            name_fg: if is_last_focus {
-                LAST_FG
-            } else {
-                INACTIVE_NAME_FG
-            },
-            num_bg: INACTIVE_NUM_BG,
-            num_fg: if is_last_focus {
-                LAST_FG
-            } else {
-                INACTIVE_NUM_FG
-            },
-            terminal_edge_fg: INACTIVE_NUM_BG,
-        }
-    }
-
-    fn range_close(self, is_last: bool) -> &'static str {
-        if is_last && !self.is_active {
-            return LAST_INACTIVE_RANGE_CLOSE;
-        }
-
-        RANGE_CLOSE
-    }
+/// `cond ? active : inactive`, written as a tmux `#{?...}` so only the selected branch is
+/// expanded at redraw (style commas inside the branches stay escaped as `#,`).
+fn conditional(cond: &str, active: &str, inactive: &str) -> String {
+    format!("#{{?{cond},{active},{inactive}}}")
 }
 
-fn render_join_separator(left: SessionItemPalette, right: SessionItemPalette) -> String {
-    render_right_edge(left.num_bg, right.name_bg)
+/// Inactive foreground: orange last-focus ink when this item is the client's
+/// `client_last_session`, otherwise the base item ink. Per-client like the active state.
+/// The compared name is a literal so a `,`/`#`/`}` in it cannot split the surrounding DSL.
+fn last_focus_fg(session_name: &str, base_fg: &str) -> String {
+    let name = compare_literal(session_name);
+    format!("#{{?#{{==:#{{client_last_session}},{name}}},{LAST_FG},{base_fg}}}")
 }
 
-fn render_left_edge(edge_bg: &str) -> String {
+/// Wraps a session name as a tmux literal for use as an `#{==}` right-value. It is compared
+/// against the raw `#{client_last_session}` and never drawn, so it only has to survive the
+/// format-expand pass: `#{l:}` brace-protects `,`, and `#`->`##` / `}`->`#}` (in that order,
+/// so the `#` injected by `#}` is not re-doubled) stop `#`/`}` from terminating the format.
+/// `format_unescape` then folds these back to the raw name for the comparison.
+fn compare_literal(session_name: &str) -> String {
+    let escaped = session_name.replace('#', "##").replace('}', "#}");
+    format!("#{{l:{escaped}}}")
+}
+
+/// Wraps a session name as a tmux literal for *visible* branch text. Display text crosses two
+/// folding stages: format-expand (where `#{l:}`/`format_unescape` folds `##`->`#`) and then
+/// `format_draw` (which folds `##`->`#` again and reads `#[` as a style introducer). A raw `#`
+/// would survive to the draw stage and either inject `#[...]` style markup or mis-measure the
+/// on-screen width against the raw-name `literal_text` shadow. Doubling for *both* folds means
+/// `#`->`####`; `}`->`#}` (order: `#` first) since `}` is not draw-special; `,` stays
+/// brace-protected by `#{l:}`.
+fn display_literal(session_name: &str) -> String {
+    let escaped = session_name.replace('#', "####").replace('}', "#}");
+    format!("#{{l:{escaped}}}")
+}
+
+fn render_arrow(fg: &str, bg: &str) -> String {
+    format!("#[fg={fg}#,bg={bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
+}
+
+fn render_left_edge(first_session_id: &str) -> String {
     // The orange host segment points its ">" arrow into the first item: ink = host pill
-    // color, bg = the item color, so the host flows into the session list as a powerline
-    // join. (Head only; joins/tail keep item-colored ink, see render_right_edge.)
-    format!("#[fg={HEAD_NOTCH_FG}#,bg={edge_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
+    // color, bg = the item color (active or name bg, decided per-client).
+    let bg = conditional(&active_condition(first_session_id), ACTIVE_BG, INACTIVE_NAME_BG);
+    render_arrow(HEAD_NOTCH_FG, &bg)
 }
 
-fn render_right_edge(edge_bg: &str, surface_bg: &str) -> String {
-    format!("#[fg={edge_bg}#,bg={surface_bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
+fn render_join_separator(left_id: &str, right_id: &str) -> String {
+    // Powerline seam between two items: ink = left item's trailing (num) bg, bg = right
+    // item's leading (name) bg. Both sides depend on each item's per-client active state.
+    let fg = conditional(&active_condition(left_id), ACTIVE_BG, INACTIVE_NUM_BG);
+    let bg = conditional(&active_condition(right_id), ACTIVE_BG, INACTIVE_NAME_BG);
+    render_arrow(&fg, &bg)
 }
 
-fn render_item_body_literal(
-    session_name: &str,
-    index: usize,
-    has_bell: bool,
-    palette: SessionItemPalette,
-) -> String {
-    if palette.is_active && has_bell {
-        return format!(" {session_name} | {index} {BELL_LITERAL}");
-    }
+fn render_right_edge(last_id: &str) -> String {
+    let fg = conditional(&active_condition(last_id), ACTIVE_BG, INACTIVE_NUM_BG);
+    render_arrow(&fg, LIST_SURFACE_BG)
+}
 
-    if palette.is_active {
-        return format!(" {session_name} | {index} ");
-    }
-
+fn render_item_body_literal(session_name: &str, index: usize, has_bell: bool) -> String {
+    // Active (` name | N `) and inactive (` name  N `) bodies are equal width, so the
+    // literal width shadow is active-invariant: one form covers every client's render.
     if has_bell {
         return format!(" {session_name}  {index} {BELL_LITERAL}");
     }
@@ -182,41 +161,37 @@ fn render_item_body_literal(
     format!(" {session_name}  {index} ")
 }
 
-fn render_item_body(
-    session_name: &str,
-    index: usize,
-    has_bell: bool,
-    palette: SessionItemPalette,
-) -> String {
-    if palette.is_active && has_bell {
-        return format!(
-            "#[fg={}#,bg={}#,bold] {session_name} | {index} #[fg={}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={}#,bg={}#,bold]",
-            palette.name_fg,
-            palette.name_bg,
-            palette.name_fg,
-            palette.name_bg,
-            palette.name_fg,
-            palette.name_bg
-        );
-    }
+fn render_item_body(session_name: &str, index: usize, has_bell: bool, session_id: &str) -> String {
+    conditional(
+        &active_condition(session_id),
+        &active_item_body(session_name, index, has_bell),
+        &inactive_item_body(session_name, index, has_bell),
+    )
+}
 
-    if palette.is_active {
-        return format!(
-            "#[fg={}#,bg={}#,bold] {session_name} | {index} ",
-            palette.name_fg, palette.name_bg
-        );
-    }
-
+fn active_item_body(session_name: &str, index: usize, has_bell: bool) -> String {
+    let name = display_literal(session_name);
     if has_bell {
         return format!(
-            "#[fg={}#,bg={}] {session_name} #[fg={}#,bg={}] {index} #[fg={INACTIVE_BELL_FG}#,bg={}#,bold]#{{@GHC_SYM_WIN_BELL}}",
-            palette.name_fg, palette.name_bg, palette.num_fg, palette.num_bg, palette.num_bg
+            "#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold] {name} | {index} #[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold]"
+        );
+    }
+
+    format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold] {name} | {index} ")
+}
+
+fn inactive_item_body(session_name: &str, index: usize, has_bell: bool) -> String {
+    let name_fg = last_focus_fg(session_name, INACTIVE_NAME_FG);
+    let num_fg = last_focus_fg(session_name, INACTIVE_NUM_FG);
+    let name = display_literal(session_name);
+    if has_bell {
+        return format!(
+            "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}] {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} #[fg={INACTIVE_BELL_FG}#,bg={INACTIVE_NUM_BG}#,bold]#{{@GHC_SYM_WIN_BELL}}"
         );
     }
 
     format!(
-        "#[fg={}#,bg={}] {session_name} #[fg={}#,bg={}] {index} ",
-        palette.name_fg, palette.name_bg, palette.num_fg, palette.num_bg
+        "#[fg={name_fg}#,bg={INACTIVE_NAME_BG}] {name} #[fg={num_fg}#,bg={INACTIVE_NUM_BG}] {index} "
     )
 }
 
@@ -225,143 +200,146 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::{
-        ACTIVE_BG, ACTIVE_FG, INACTIVE_NAME_BG, INACTIVE_NUM_BG, LAST_FG,
-        LAST_INACTIVE_RANGE_CLOSE, LIST_SURFACE_BG, RANGE_CLOSE, SessionItemPalette,
+        RenderedSegment, active_item_body, compare_literal, display_literal, inactive_item_body,
         render_item_body, render_item_body_literal, render_join_separator, render_left_edge,
         render_right_edge, render_session_list,
     };
     use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, SessionGroupView, SessionInfo,
-        StatusMode, StatusPosition, TmuxSnapshot,
+        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
+        StatusPosition, TmuxSnapshot,
     };
 
     #[test]
-    fn active_item_uses_session_active_color_for_body_and_edges() {
-        let palette = SessionItemPalette::new(true, false);
-        let item = render_item_body("tmux", 2, false, palette);
-        assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
-        assert!(item.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        assert!(palette.is_active);
-        assert_eq!(palette.name_bg, ACTIVE_BG);
-        assert_eq!(palette.num_bg, ACTIVE_BG);
-        assert_eq!(palette.terminal_edge_fg, ACTIVE_BG);
+    fn item_body_is_a_per_client_conditional_on_session_id() {
+        let body = render_item_body("tmux", 2, false, "$2");
+        assert!(body.starts_with("#{?#{==:#{session_id},$2},"));
+        // Active branch colors.
+        assert!(body.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
+        assert!(body.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
+        // Inactive branch colors plus the per-client last-focus marker.
+        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
+        assert!(body.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
+        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_NUM"));
+        assert!(body.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
+        assert!(body.contains("#{==:#{client_last_session},#{l:tmux}}"));
+        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
     }
 
     #[test]
-    fn active_palette_wins_over_last_session_marker() {
-        let palette = SessionItemPalette::new(true, true);
-        let item = render_item_body("tmux", 2, false, palette);
-
-        assert!(item.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
-        assert!(!item.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
-        assert_eq!(palette.name_fg, ACTIVE_FG);
-        assert_eq!(palette.num_fg, ACTIVE_FG);
-    }
-
-    #[test]
-    fn inactive_item_uses_session_item_inactive_colors() {
-        let palette = SessionItemPalette::new(false, false);
-        let item = render_item_body("dev", 2, false, palette);
-        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
-        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
-        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_NUM"));
-        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
-        assert!(item.contains(" dev "));
-        assert!(item.contains(" 2 "));
-        assert!(!item.contains("| 2 "));
-        assert!(!palette.is_active);
-        assert_eq!(palette.name_bg, INACTIVE_NAME_BG);
-        assert_eq!(palette.num_bg, INACTIVE_NUM_BG);
-        assert_eq!(palette.terminal_edge_fg, INACTIVE_NUM_BG);
-    }
-
-    #[test]
-    fn last_session_item_uses_orange_text_without_changing_backgrounds() {
-        let palette = SessionItemPalette::new(false, true);
-        let item = render_item_body("yui", 3, false, palette);
-
-        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
-        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
-        assert!(item.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
-        assert_eq!(palette.name_fg, LAST_FG);
-        assert_eq!(palette.num_fg, LAST_FG);
-        assert_eq!(palette.name_bg, INACTIVE_NAME_BG);
-        assert_eq!(palette.num_bg, INACTIVE_NUM_BG);
-    }
-
-    #[test]
-    fn active_item_with_bell_renders_bell_after_number() {
-        let palette = SessionItemPalette::new(true, false);
-        let item = render_item_body("tmux", 2, true, palette);
-        assert!(item.contains("@GHC_SYM_WIN_BELL"));
-        assert!(item.contains(" tmux | "));
-        assert!(item.contains(" 2 "));
+    fn active_branch_uses_pipe_and_active_palette_without_last_marker() {
+        let active = active_item_body("tmux", 2, false);
         assert_eq!(
-            render_item_body_literal("tmux", 2, true, palette),
-            " tmux | 2 ¤"
+            active,
+            "#[fg=#{@GHC_SL_FG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bold] #{l:tmux} | 2 "
+        );
+        assert!(!active.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+    }
+
+    #[test]
+    fn inactive_branch_splits_name_and_number_with_last_focus_fg() {
+        let inactive = inactive_item_body("dev", 2, false);
+        assert_eq!(
+            inactive,
+            "#[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}] #{l:dev} #[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NUM}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NUM}] 2 "
         );
     }
 
     #[test]
-    fn inactive_item_with_bell_renders_bell_without_pipe() {
-        let palette = SessionItemPalette::new(false, false);
-        let item = render_item_body("dev", 2, true, palette);
-        assert!(item.contains("@GHC_SYM_WIN_BELL"));
-        assert!(item.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
-        assert!(item.contains(" dev "));
-        assert!(item.contains(" 2 "));
-        assert!(!item.contains("| 2 "));
+    fn active_branch_with_bell_renders_bell_after_number() {
+        let active = active_item_body("tmux", 2, true);
+        assert!(active.contains("@GHC_SYM_WIN_BELL"));
+        assert!(active.contains(" #{l:tmux} | 2 "));
+        assert_eq!(render_item_body_literal("tmux", 2, true), " tmux  2 ¤");
+    }
+
+    #[test]
+    fn inactive_branch_with_bell_renders_bell_without_pipe() {
+        let inactive = inactive_item_body("dev", 2, true);
+        assert!(inactive.contains("@GHC_SYM_WIN_BELL"));
+        assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
+        assert!(inactive.contains(" #{l:dev} "));
+        assert!(inactive.contains(" 2 "));
+        assert!(!inactive.contains("| 2 "));
+        assert_eq!(render_item_body_literal("dev", 2, true), " dev  2 ¤");
+    }
+
+    #[test]
+    fn compare_literal_escapes_for_the_format_expand_pass_only() {
+        // `==` right-value never reaches format_draw, so a single `#{l:}` fold is enough:
+        // `,` is brace-protected, `#`->`##`, `}`->`#}` (and the order keeps `#}`'s `#` intact).
+        assert_eq!(compare_literal("a,b"), "#{l:a,b}");
+        assert_eq!(compare_literal("a#b"), "#{l:a##b}");
+        assert_eq!(compare_literal("a}b"), "#{l:a#}b}");
+        assert_eq!(compare_literal("a#}b"), "#{l:a###}b}");
+    }
+
+    #[test]
+    fn display_literal_double_escapes_hash_for_the_draw_stage() {
+        // Visible text crosses format-expand AND format_draw; each folds `##`->`#`, so `#`
+        // must be quadrupled. `}` is not draw-special, so it still only needs `#}`.
+        assert_eq!(display_literal("a,b"), "#{l:a,b}");
+        assert_eq!(display_literal("a#b"), "#{l:a####b}");
+        assert_eq!(display_literal("a}b"), "#{l:a#}b}");
+        // A draw-stage style introducer in the name is neutralised, not injected.
+        assert_eq!(display_literal("a#[x]"), "#{l:a####[x]}");
+    }
+
+    #[test]
+    fn item_bodies_use_draw_safe_display_and_expand_safe_compare() {
+        // Display text takes the draw-safe (quadrupled) form in both branches...
+        let active = active_item_body("a#b", 1, false);
+        assert!(active.contains(" #{l:a####b} | 1 "));
+        let inactive = inactive_item_body("a#b", 1, false);
+        assert!(inactive.contains(" #{l:a####b} "));
+        // ...while the last-focus compare right-value keeps the expand-only (doubled) form.
+        assert!(inactive.contains("#{==:#{client_last_session},#{l:a##b}}"));
+    }
+
+    #[test]
+    fn join_separator_keys_both_sides_on_session_id() {
         assert_eq!(
-            render_item_body_literal("dev", 2, true, palette),
-            " dev  2 ¤"
+            render_join_separator("$1", "$2"),
+            "#[fg=#{?#{==:#{session_id},$1},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=#{?#{==:#{session_id},$2},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NAME}}]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
     #[test]
-    fn join_separator_collapses_internal_edges_to_one_glyph() {
-        let inactive = SessionItemPalette::new(false, false);
-        let active = SessionItemPalette::new(true, false);
+    fn left_edge_keys_first_item_background_on_session_id() {
         assert_eq!(
-            render_join_separator(inactive, active),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_ARROW_RIGHT}"
-        );
-        assert_eq!(
-            render_join_separator(active, inactive),
-            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
-        );
-        assert_eq!(
-            render_join_separator(inactive, inactive),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
+            render_left_edge("$1"),
+            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{?#{==:#{session_id},$1},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NAME}}]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
     #[test]
-    fn last_inactive_item_edge_uses_num_bg_on_default_surface() {
-        let inactive = SessionItemPalette::new(false, false);
+    fn right_edge_keys_last_item_ink_on_session_id_over_default_surface() {
         assert_eq!(
-            render_left_edge("#{item_name}"),
-            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{item_name}]#{@GHC_SEP_ARROW_RIGHT}"
-        );
-        assert_eq!(
-            render_right_edge(inactive.terminal_edge_fg, LIST_SURFACE_BG),
-            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=default]#{@GHC_SEP_ARROW_RIGHT}"
+            render_right_edge("$2"),
+            "#[fg=#{?#{==:#{session_id},$2},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=default]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
-    #[test]
-    fn inactive_last_item_keeps_one_space_before_default() {
-        let inactive = SessionItemPalette::new(false, false);
-        let active = SessionItemPalette::new(true, false);
-        assert_eq!(inactive.range_close(true), LAST_INACTIVE_RANGE_CLOSE);
-        assert_eq!(inactive.range_close(false), RANGE_CLOSE);
-        assert_eq!(active.range_close(true), RANGE_CLOSE);
-    }
     #[test]
     fn literal_text_accounts_for_visible_session_list_glyphs() {
         let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
-        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+        assert_eq!(
+            segment.literal_text,
+            "\u{e0b0} dev  1 \u{e0b0} yui  2 \u{e0b0} "
+        );
+    }
+
+    #[test]
+    fn literal_and_rich_are_independent_of_current_session() {
+        // The whole point of the per-client conditional rewrite: one shared option string
+        // renders correctly for every client, so neither the rich text nor its width shadow
+        // may depend on which session is current at build time.
+        let on_dev = render_session_list(&context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]));
+        let on_yui = render_session_list(&context_with_sessions("yui", [("$1", "dev"), ("$2", "yui")]));
+
+        assert_eq!(on_dev.literal_text, on_yui.literal_text);
+        assert_eq!(on_dev.rich_text, on_yui.rich_text);
     }
 
     #[test]
@@ -371,7 +349,7 @@ mod tests {
 
         assert!(segment.rich_text.contains("#[range=session|$1]"));
         assert!(segment.rich_text.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        assert_eq!(segment.literal_text, " dev | 1 ");
+        assert_eq!(segment.literal_text, "\u{e0b0} dev  1 \u{e0b0} ");
     }
 
     #[test]
@@ -383,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn rendered_list_marks_visible_last_session_with_orange_text() {
+    fn rendered_list_emits_per_client_last_focus_marker() {
         let context = context_with_session_states_and_last(
             "dev",
             "yui",
@@ -392,8 +370,12 @@ mod tests {
         let segment = render_session_list(&context);
 
         assert!(segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+        assert!(segment.rich_text.contains("#{==:#{client_last_session},#{l:yui}}"));
         assert!(segment.rich_text.contains("#[range=session|$2]"));
-        assert_eq!(segment.literal_text, " dev | 1  yui  2  ");
+        assert_eq!(
+            segment.literal_text,
+            "\u{e0b0} dev  1 \u{e0b0} yui  2 \u{e0b0} "
+        );
     }
 
     #[test]
@@ -404,7 +386,10 @@ mod tests {
 
         assert!(segment.rich_text.contains("@GHC_SYM_WIN_BELL"));
         assert!(segment.rich_text.contains("#[range=session|$2]"));
-        assert_eq!(segment.literal_text, " dev | 1  yui  2 ¤ ");
+        assert_eq!(
+            segment.literal_text,
+            "\u{e0b0} dev  1 \u{e0b0} yui  2 ¤\u{e0b0} "
+        );
     }
 
     fn context_with_sessions<const N: usize>(
