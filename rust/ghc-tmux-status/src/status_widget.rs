@@ -1,7 +1,7 @@
 use crate::cache::WidgetCache;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment};
-use crate::observability::{trace_enabled, trace_line};
+use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::util::time::unix_timestamp_seconds;
 
 pub trait StatusWidget {
@@ -144,12 +144,14 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
             }
         }
 
+        let sample_start = std::time::Instant::now();
         let sampled = self.widget.sample(cached.as_ref());
+        let sample_ms = duration_ms(sample_start.elapsed());
         self.snapshot = match sampled {
             Ok(snapshot) => {
                 self.trace_refresh(|| {
                     format!(
-                        "id={} action=sample-ok event={} ttl_seconds={}",
+                        "id={} action=sample-ok event={} ttl_seconds={} sample_ms={sample_ms:.2}",
                         self.id(),
                         event.kind.as_str(),
                         self.widget.ttl_seconds()
@@ -162,7 +164,7 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
                 if cached.is_some() {
                     self.trace_refresh(|| {
                         format!(
-                            "id={} action=sample-error fallback=cache event={} ttl_seconds={}",
+                            "id={} action=sample-error fallback=cache event={} ttl_seconds={} sample_ms={sample_ms:.2}",
                             self.id(),
                             event.kind.as_str(),
                             self.widget.ttl_seconds()
@@ -171,7 +173,7 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
                 } else {
                     self.trace_refresh(|| {
                         format!(
-                            "id={} action=sample-error fallback=empty event={} ttl_seconds={}",
+                            "id={} action=sample-error fallback=empty event={} ttl_seconds={} sample_ms={sample_ms:.2}",
                             self.id(),
                             event.kind.as_str(),
                             self.widget.ttl_seconds()

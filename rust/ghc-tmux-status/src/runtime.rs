@@ -82,9 +82,10 @@ impl StatusRuntime {
         if is_noop {
             self.trace_apply(|| {
                 format!(
-                    "event={} active=true noop=true layout={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2} cache_pending=0",
+                    "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2} cache_pending=0",
                     event.kind.as_str(),
                     context.layout.key,
+                    context.group.sessions.len(),
                     duration_ms(total_start.elapsed())
                 )
             });
@@ -99,9 +100,10 @@ impl StatusRuntime {
         let result = self.tmux.commit_plan(&plan);
         self.trace_apply(|| {
             format!(
-                "event={} active=true noop=false layout={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} cache_pending={cache_pending_count} plan_commands={plan_commands}",
+                "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} cache_pending={cache_pending_count} plan_commands={plan_commands}",
                 event.kind.as_str(),
                 context.layout.key,
+                context.group.sessions.len(),
                 duration_ms(commit_start.elapsed()),
                 duration_ms(total_start.elapsed())
             )
@@ -144,6 +146,7 @@ impl StatusRuntime {
     }
 
     pub fn cpu_sample(&self, expected_generation: &str) -> AppResult<()> {
+        let total_start = Instant::now();
         // One round-trip reads both the generation guard and the previous tick state.
         let values = self
             .tmux
@@ -167,14 +170,29 @@ impl StatusRuntime {
         // double-schedule: tick only writes through a single `set...;run-shell` list of
         // fixed valid option names, so a mid-list failure that still queues run-shell is
         // unreachable; a dead server fails both the folded call and this fallback.
-        if let Err(error) = self.tick_cpu_sample(&previous_state, expected_generation) {
-            self.trace_apply(|| format!("event=cpu-sample action=sample-error error={error}"));
-            return self.schedule_next_cpu_sample(expected_generation);
+        match self.tick_cpu_sample(&previous_state, expected_generation) {
+            Ok(published) => {
+                self.trace_apply(|| {
+                    format!(
+                        "event=cpu-sample action=sample-ok published={published} total_ms={:.2}",
+                        duration_ms(total_start.elapsed())
+                    )
+                });
+                Ok(())
+            }
+            Err(error) => {
+                self.trace_apply(|| {
+                    format!(
+                        "event=cpu-sample action=sample-error error={error} total_ms={:.2}",
+                        duration_ms(total_start.elapsed())
+                    )
+                });
+                self.schedule_next_cpu_sample(expected_generation)
+            }
         }
-        Ok(())
     }
 
-    fn tick_cpu_sample(&self, previous_state: &str, generation: &str) -> AppResult<()> {
+    fn tick_cpu_sample(&self, previous_state: &str, generation: &str) -> AppResult<bool> {
         let previous = decode_cpu_snapshot(previous_state);
         let snapshot = sample_cpu(previous.as_ref())?;
         // Persist the fresh tick baseline for the next delta regardless of staleness.
@@ -198,7 +216,8 @@ impl StatusRuntime {
         }
         let command = format!("{} cpu-sample {generation}", heartbeat_self_command_path());
         self.tmux
-            .apply_sets_and_reschedule(&sets, CPU_SAMPLE_INTERVAL_SECONDS, &command)
+            .apply_sets_and_reschedule(&sets, CPU_SAMPLE_INTERVAL_SECONDS, &command)?;
+        Ok(now.is_some())
     }
 
     fn schedule_next_cpu_sample(&self, generation: &str) -> AppResult<()> {
