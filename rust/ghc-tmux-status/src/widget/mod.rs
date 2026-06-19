@@ -11,7 +11,7 @@ mod session_list;
 mod time;
 mod window_id;
 
-pub use cpu::CpuWidget;
+pub use cpu::{CpuWidget, decode_cpu_snapshot, encode_cpu_snapshot, sample_cpu};
 pub use date::DateWidget;
 pub use duration::DurationWidget;
 pub use fullscreen::FullscreenWidget;

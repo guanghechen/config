@@ -40,7 +40,7 @@ pub fn render_status02(
     let chrome_segment = render_widgets(&mut chrome_widgets, context, event, &mut cache)?;
 
     let mut network = cached_metric(NetworkWidget::for_interface(net_interface));
-    let mut cpu = cached_metric(CpuWidget);
+    let mut cpu = template(CpuWidget);
     let mut memory = cached_metric(MemoryWidget);
     let mut duration = computed(DurationWidget);
     let mut date = template(DateWidget);

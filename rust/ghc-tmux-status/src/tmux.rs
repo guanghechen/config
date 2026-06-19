@@ -59,6 +59,29 @@ impl TmuxAdapter {
         self.tmux_output(["show".to_string(), "-gqv".to_string(), name.to_string()])
     }
 
+    /// Reads several global options in one tmux invocation, returning their values
+    /// in request order. A `display-message` format joins them with FIELD_SEP, which
+    /// never collides with the values' own `\t` separators. Missing/empty trailing
+    /// fields are padded back so the result always has `names.len()` entries.
+    pub fn show_global_options(&self, names: &[&str]) -> AppResult<Vec<String>> {
+        let format = show_global_options_format(names);
+        let output = self.tmux_output(["display-message".to_string(), "-p".to_string(), format])?;
+        Ok(split_padded_option_values(&output, names.len()))
+    }
+
+    /// Folds a run of global-option sets plus a delayed background reschedule into a
+    /// single tmux invocation. argv style (each token a separate element joined by a
+    /// literal `;`), so option values and the command string pass verbatim with no
+    /// shell quoting hazard.
+    pub fn apply_sets_and_reschedule(
+        &self,
+        sets: &[(&str, &str)],
+        delay_seconds: u64,
+        command: &str,
+    ) -> AppResult<()> {
+        self.tmux_status(sets_and_reschedule_args(sets, delay_seconds, command))
+    }
+
     pub fn schedule_background(&self, delay_seconds: u64, command: &str) -> AppResult<()> {
         self.tmux_status([
             "run-shell".to_string(),
@@ -162,6 +185,45 @@ fn options_format() -> String {
         format.push('}');
     }
     format
+}
+
+fn show_global_options_format(names: &[&str]) -> String {
+    names
+        .iter()
+        .map(|name| format!("#{{{name}}}"))
+        .collect::<Vec<_>>()
+        .join(&FIELD_SEP.to_string())
+}
+
+fn split_padded_option_values(output: &str, count: usize) -> Vec<String> {
+    let mut values = output
+        .split(FIELD_SEP)
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    values.resize(count, String::new());
+    values
+}
+
+fn sets_and_reschedule_args(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> Vec<String> {
+    let mut args: Vec<String> = Vec::new();
+    for (name, value) in sets {
+        if !args.is_empty() {
+            args.push(";".to_string());
+        }
+        args.push("set".to_string());
+        args.push("-g".to_string());
+        args.push((*name).to_string());
+        args.push((*value).to_string());
+    }
+    if !args.is_empty() {
+        args.push(";".to_string());
+    }
+    args.push("run-shell".to_string());
+    args.push("-b".to_string());
+    args.push("-d".to_string());
+    args.push(delay_seconds.to_string());
+    args.push(command.to_string());
+    args
 }
 
 fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
@@ -343,6 +405,7 @@ mod tests {
     use super::{
         CONTEXT_MARK, FIELD_SEP, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTION_NAMES, STATUS_MARK,
         WINDOWS_MARK, parse_session_line, parse_snapshot_output, parse_window_bell_line,
+        sets_and_reschedule_args, show_global_options_format, split_padded_option_values,
     };
 
     #[test]
@@ -420,5 +483,48 @@ $1	0"
                 .unwrap(),
             "1	2	3	4	5"
         );
+    }
+
+    #[test]
+    fn show_global_options_format_joins_placeholders_with_field_sep() {
+        let format = show_global_options_format(&["@A", "@B"]);
+        assert_eq!(format, format!("#{{@A}}{FIELD_SEP}#{{@B}}"));
+    }
+
+    #[test]
+    fn split_padded_option_values_pads_missing_trailing_fields() {
+        let output = format!("gen-1{FIELD_SEP}state-blob");
+        assert_eq!(
+            split_padded_option_values(&output, 2),
+            vec!["gen-1".to_string(), "state-blob".to_string()]
+        );
+
+        // A blank current generation collapses to one empty token; the state slot is padded.
+        assert_eq!(
+            split_padded_option_values("", 2),
+            vec![String::new(), String::new()]
+        );
+    }
+
+    #[test]
+    fn sets_and_reschedule_args_orders_sets_then_reschedule() {
+        let args = sets_and_reschedule_args(
+            &[("@GHC_SL_CPU_SAMPLE", "blob"), ("@GHC_CPU_NOW", "100")],
+            2,
+            "'/bin/ghc' cpu-sample 7",
+        );
+        assert_eq!(
+            args,
+            vec![
+                "set", "-g", "@GHC_SL_CPU_SAMPLE", "blob", ";", "set", "-g", "@GHC_CPU_NOW", "100",
+                ";", "run-shell", "-b", "-d", "2", "'/bin/ghc' cpu-sample 7",
+            ]
+        );
+    }
+
+    #[test]
+    fn sets_and_reschedule_args_skips_separator_with_no_sets() {
+        let args = sets_and_reschedule_args(&[], 2, "cmd");
+        assert_eq!(args, vec!["run-shell", "-b", "-d", "2", "cmd"]);
     }
 }

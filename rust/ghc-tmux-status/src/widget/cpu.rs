@@ -1,62 +1,37 @@
 use crate::error::AppResult;
 use crate::metric::{CpuSample, CpuSnapshot, provider_for_current_platform};
-use crate::model::RenderedSegment;
-use crate::status_widget::CachedMetricWidget;
-use crate::util::format::format_percent_min_width_2;
+use crate::model::{RenderContext, RenderedSegment};
+use crate::status_widget::TemplateWidget;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
 pub struct CpuWidget;
 
-impl CachedMetricWidget for CpuWidget {
-    type Snapshot = CpuSnapshot;
-
+impl TemplateWidget for CpuWidget {
     fn id(&self) -> &'static str {
         "cpu"
     }
 
-    fn ttl_seconds(&self) -> u64 {
-        REFRESH_INTERVAL_SECONDS
-    }
-
-    fn timestamp_seconds(&self, snapshot: &Self::Snapshot) -> u64 {
-        snapshot.timestamp_seconds
-    }
-
-    fn decode_cache(&self, value: &str) -> Option<Self::Snapshot> {
-        parse_cache(value)
-    }
-
-    fn encode_cache(&self, snapshot: &Self::Snapshot) -> String {
-        encode_cache(snapshot)
-    }
-
-    fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
-        provider_for_current_platform(None).sample_cpu(previous.map(|snapshot| &snapshot.sample))
-    }
-
-    fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {
-        render_cpu(snapshot)
+    // The CPU pill emits a tmux indirect reference instead of a baked number. A detached
+    // sampler chain refreshes `@GHC_CPU_NOW` every couple seconds and `status-interval=1`
+    // re-expands it, so the live reading tracks load within ~3s without rewriting the big
+    // status option on every change. The literal placeholder is fixed at the widest value
+    // (100%) so `status_right_length` stays stable regardless of the live digits.
+    fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        let literal_text = pill_literal(" 100% ");
+        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_CPU} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_CPU_NOW}%% ".to_string();
+        Ok(RenderedSegment {
+            literal_text,
+            rich_text,
+        })
     }
 }
 
-const REFRESH_INTERVAL_SECONDS: u64 = 30;
-
-fn render_cpu(snapshot: &CpuSnapshot) -> RenderedSegment {
-    let cpu = format_percent_min_width_2(snapshot.percent);
-    let body_literal = format!(" {cpu}% ");
-    let literal_text = pill_literal(&body_literal);
-    let rich_value = format!(" {cpu}%% ");
-    let rich_text = format!(
-        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_CPU}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{rich_value}"
-    );
-    RenderedSegment {
-        literal_text,
-        rich_text,
-    }
+pub fn sample_cpu(previous: Option<&CpuSnapshot>) -> AppResult<CpuSnapshot> {
+    provider_for_current_platform(None).sample_cpu(previous.map(|snapshot| &snapshot.sample))
 }
 
-fn encode_cache(snapshot: &CpuSnapshot) -> String {
+pub fn encode_cpu_snapshot(snapshot: &CpuSnapshot) -> String {
     format!(
         "{}\t{}\t{}\t{}\t{}\t{}",
         snapshot.timestamp_seconds,
@@ -68,7 +43,7 @@ fn encode_cache(snapshot: &CpuSnapshot) -> String {
     )
 }
 
-fn parse_cache(value: &str) -> Option<CpuSnapshot> {
+pub fn decode_cpu_snapshot(value: &str) -> Option<CpuSnapshot> {
     let mut parts = value.splitn(6, '\t');
     Some(CpuSnapshot {
         timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
@@ -84,11 +59,11 @@ fn parse_cache(value: &str) -> Option<CpuSnapshot> {
 
 #[cfg(test)]
 mod tests {
-    use super::{encode_cache, parse_cache};
+    use super::{decode_cpu_snapshot, encode_cpu_snapshot};
     use crate::metric::{CpuSample, CpuSnapshot};
 
     #[test]
-    fn parses_cpu_cache() {
+    fn round_trips_cpu_snapshot() {
         let snapshot = CpuSnapshot {
             percent: 12.0,
             timestamp_seconds: 1,
@@ -99,7 +74,7 @@ mod tests {
                 idle: 4,
             },
         };
-        let parsed = parse_cache(&encode_cache(&snapshot)).unwrap();
+        let parsed = decode_cpu_snapshot(&encode_cpu_snapshot(&snapshot)).unwrap();
         assert_eq!(parsed, snapshot);
     }
 }

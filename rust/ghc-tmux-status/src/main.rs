@@ -55,6 +55,12 @@ fn run() -> AppResult<()> {
                 .ok_or_else(|| AppError::Usage("expected: heartbeat <generation>".to_string()))?;
             app.heartbeat(&generation)
         }
+        "cpu-sample" => {
+            let generation = args
+                .next()
+                .ok_or_else(|| AppError::Usage("expected: cpu-sample <generation>".to_string()))?;
+            app.cpu_sample(&generation)
+        }
         "dump-state" => app.dump_state(),
         "render" => match args.next().as_deref() {
             Some("status02") => app.render_status02_stdout(),
@@ -136,6 +142,7 @@ fn print_help() {
 USAGE:
   ghc-tmux-status apply
   ghc-tmux-status heartbeat <generation>
+  ghc-tmux-status cpu-sample <generation>
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>

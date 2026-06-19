@@ -49,6 +49,7 @@ pub trait CachedMetricWidget {
     fn decode_cache(&self, value: &str) -> Option<Self::Snapshot>;
     fn encode_cache(&self, snapshot: &Self::Snapshot) -> String;
     fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot>;
+
     fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment;
 }
 
@@ -143,7 +144,8 @@ impl<T: CachedMetricWidget> StatusWidget for CachedMetric<T> {
             }
         }
 
-        self.snapshot = match self.widget.sample(cached.as_ref()) {
+        let sampled = self.widget.sample(cached.as_ref());
+        self.snapshot = match sampled {
             Ok(snapshot) => {
                 self.trace_refresh(|| {
                     format!(

@@ -1,14 +1,14 @@
 use crate::cache::WIDGET_CACHE_OPTION_PREFIX;
 use crate::model::TmuxSnapshot;
 use crate::status_widget::CachedMetricWidget;
-use crate::widget::{CpuWidget, MemoryWidget, NetworkWidget};
+use crate::widget::{MemoryWidget, NetworkWidget};
 
 // Placement counts describe how many times each widget lifecycle appears in the
 // rendered status02 output (duplicates across rows included). Maintained by hand
 // for `dump-state`; kept in sync with the render in composer::render_status02.
-pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 10;
+pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 12;
 pub const COMPUTED_WIDGET_PLACEMENTS: usize = 4;
-pub const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 6;
+pub const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 4;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MetricCacheState {
@@ -74,13 +74,8 @@ struct MetricCacheSpec {
     timestamp_seconds: fn(&str) -> Option<u64>,
 }
 
-fn metric_cache_specs() -> [MetricCacheSpec; 3] {
+fn metric_cache_specs() -> [MetricCacheSpec; 2] {
     [
-        MetricCacheSpec {
-            id: "cpu",
-            ttl_seconds: CpuWidget.ttl_seconds(),
-            timestamp_seconds: cpu_cache_timestamp_seconds,
-        },
         MetricCacheSpec {
             id: "memory",
             ttl_seconds: MemoryWidget.ttl_seconds(),
@@ -94,11 +89,12 @@ fn metric_cache_specs() -> [MetricCacheSpec; 3] {
     ]
 }
 
+// CPU is no longer a TTL-cached metric (it renders a live tmux indirect reference
+// refreshed by a detached sampler), so it is absent from the production specs above.
+// The decoder stays here, test-gated, to exercise the generic cache-state logic.
+#[cfg(test)]
 fn cpu_cache_timestamp_seconds(value: &str) -> Option<u64> {
-    let widget = CpuWidget;
-    widget
-        .decode_cache(value)
-        .map(|snapshot| widget.timestamp_seconds(&snapshot))
+    crate::widget::decode_cpu_snapshot(value).map(|snapshot| snapshot.timestamp_seconds)
 }
 
 fn memory_cache_timestamp_seconds(value: &str) -> Option<u64> {

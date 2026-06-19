@@ -18,7 +18,9 @@ use crate::session::{
 };
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::TmuxAdapter;
+use crate::util::format::format_percent_width_3;
 use crate::util::width::display_width;
+use crate::widget::{decode_cpu_snapshot, encode_cpu_snapshot, sample_cpu};
 
 pub struct StatusRuntime {
     tmux: TmuxAdapter,
@@ -26,6 +28,16 @@ pub struct StatusRuntime {
 
 const HEARTBEAT_GENERATION_OPTION: &str = "@GHC_SL_HEARTBEAT_GEN";
 const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
+
+// CPU runs a faster, lighter chain than the heartbeat: it republishes only the small
+// `@GHC_CPU_NOW` option (expanded live by status-interval=1) instead of recomputing and
+// committing the whole status line. This keeps the displayed load within ~3s without the
+// per-redraw cost of a full render.
+const CPU_SAMPLE_GENERATION_OPTION: &str = "@GHC_SL_CPU_GEN";
+const CPU_NOW_OPTION: &str = "@GHC_CPU_NOW";
+const CPU_SAMPLE_STATE_OPTION: &str = "@GHC_SL_CPU_SAMPLE";
+const CPU_SAMPLE_INTERVAL_SECONDS: u64 = 2;
+const CPU_SAMPLE_STALE_LIMIT_SECONDS: u64 = 5;
 
 impl StatusRuntime {
     pub fn live() -> Self {
@@ -129,6 +141,70 @@ impl StatusRuntime {
         );
         self.tmux
             .schedule_background(HEARTBEAT_INTERVAL_SECONDS, &command)
+    }
+
+    pub fn cpu_sample(&self, expected_generation: &str) -> AppResult<()> {
+        // One round-trip reads both the generation guard and the previous tick state.
+        let values = self
+            .tmux
+            .show_global_options(&[CPU_SAMPLE_GENERATION_OPTION, CPU_SAMPLE_STATE_OPTION])
+            .unwrap_or_default();
+        let current_generation = values.first().map(String::as_str).unwrap_or_default();
+        if current_generation != expected_generation {
+            // A newer chain (or a non-02 layout) superseded this one; let it die.
+            self.trace_apply(|| {
+                format!(
+                    "event=cpu-sample action=expired expected={expected_generation} current={current_generation}"
+                )
+            });
+            return Ok(());
+        }
+        let previous_state = values.get(1).cloned().unwrap_or_default();
+
+        // Happy path folds the state write, optional live-percent write, and the next
+        // reschedule into one tmux invocation (tick_cpu_sample). On error the
+        // self-scheduling chain must not die, so reschedule standalone. This cannot
+        // double-schedule: tick only writes through a single `set...;run-shell` list of
+        // fixed valid option names, so a mid-list failure that still queues run-shell is
+        // unreachable; a dead server fails both the folded call and this fallback.
+        if let Err(error) = self.tick_cpu_sample(&previous_state, expected_generation) {
+            self.trace_apply(|| format!("event=cpu-sample action=sample-error error={error}"));
+            return self.schedule_next_cpu_sample(expected_generation);
+        }
+        Ok(())
+    }
+
+    fn tick_cpu_sample(&self, previous_state: &str, generation: &str) -> AppResult<()> {
+        let previous = decode_cpu_snapshot(previous_state);
+        let snapshot = sample_cpu(previous.as_ref())?;
+        // Persist the fresh tick baseline for the next delta regardless of staleness.
+        let state = encode_cpu_snapshot(&snapshot);
+
+        // Only publish a live percentage when the previous baseline is recent enough that
+        // the delta reflects load right now. A gap (first sample, suspend/resume, layout
+        // switch) would average over a long window, so re-prime silently and keep the last
+        // displayed value instead of showing a misleading flat reading.
+        let publishable = previous.is_some_and(|previous| {
+            snapshot
+                .timestamp_seconds
+                .saturating_sub(previous.timestamp_seconds)
+                <= CPU_SAMPLE_STALE_LIMIT_SECONDS
+        });
+        let now = publishable.then(|| format_percent_width_3(snapshot.percent));
+
+        let mut sets: Vec<(&str, &str)> = vec![(CPU_SAMPLE_STATE_OPTION, state.as_str())];
+        if let Some(now) = now.as_deref() {
+            sets.push((CPU_NOW_OPTION, now));
+        }
+        let command = format!("{} cpu-sample {generation}", heartbeat_self_command_path());
+        self.tmux
+            .apply_sets_and_reschedule(&sets, CPU_SAMPLE_INTERVAL_SECONDS, &command)
+    }
+
+    fn schedule_next_cpu_sample(&self, generation: &str) -> AppResult<()> {
+        let command = format!("{} cpu-sample {generation}", heartbeat_self_command_path());
+        self.tmux
+            .schedule_background(CPU_SAMPLE_INTERVAL_SECONDS, &command)
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
