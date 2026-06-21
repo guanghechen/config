@@ -95,13 +95,30 @@ fn normalized_order(sessions: &[SessionInfo], order_value: Option<&str>) -> Vec<
         }
     }
 
-    for session in sessions {
+    for session in sessions_by_creation_id(sessions) {
         if !order.contains(&session.id) {
             order.push(session.id.clone());
         }
     }
 
     order
+}
+
+fn sessions_by_creation_id(sessions: &[SessionInfo]) -> Vec<&SessionInfo> {
+    // tmux session ids are allocated monotonically within a server, so numeric id
+    // order gives a stable creation-order fallback for sessions missing from the virtual order.
+    let mut indexed_sessions = sessions.iter().enumerate().collect::<Vec<_>>();
+    indexed_sessions.sort_by_key(|(index, session)| {
+        (session_id_number(&session.id).unwrap_or(u64::MAX), *index)
+    });
+    indexed_sessions
+        .into_iter()
+        .map(|(_, session)| session)
+        .collect()
+}
+
+fn session_id_number(session_id: &str) -> Option<u64> {
+    session_id.strip_prefix('$')?.parse().ok()
 }
 
 fn parse_order(value: Option<&str>) -> Vec<String> {
@@ -125,10 +142,18 @@ mod tests {
 
     #[test]
     fn applies_order_and_appends_new_sessions() {
-        let sessions = sessions([("$1", "a"), ("$2", "b"), ("$3", "c")]);
+        let sessions = sessions([("$3", "c"), ("$1", "a"), ("$2", "b")]);
         let ordered = ordered_sessions(&sessions, Some("$2\t$9\t$1"));
 
         assert_eq!(names(&ordered), vec!["b", "a", "c"]);
+    }
+
+    #[test]
+    fn orders_unpersisted_sessions_by_creation_id() {
+        let sessions = sessions([("$3", "new"), ("$1", "first"), ("$2", "second")]);
+        let ordered = ordered_sessions(&sessions, None);
+
+        assert_eq!(names(&ordered), vec!["first", "second", "new"]);
     }
 
     #[test]
