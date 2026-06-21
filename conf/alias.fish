@@ -38,6 +38,7 @@ alias vdir='vdir --color=auto'
 
 ### claude code
 abbr -a ccc 'claude --dangerously-skip-permissions'
+abbr -a cccc 'env CLAUDE_GIT_COMMIT_ALLOW=1 claude --dangerously-skip-permissions'
 
 ### codex
 abbr -a cx0 'codex -p copilot --dangerously-bypass-approvals-and-sandbox'
