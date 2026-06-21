@@ -46,13 +46,20 @@ function _ghc_tmux_bump_heartbeat_generation_ {
   printf '%s\n' "$generation"
 }
 
-# Same generation-guard mechanism as the heartbeat, for the independent CPU sampler
-# chain that refreshes @GHC_CPU_NOW every couple seconds.
-function _ghc_tmux_bump_cpu_generation_ {
+# Same generation-guard mechanism as the heartbeat, for the unified metric sampler
+# chain. Must match ghc-tmux-status METRIC_SAMPLE_GENERATION_OPTION.
+function _ghc_tmux_bump_metric_generation_ {
+  local generation
+  generation=$(( $(tmux show -gqv @GHC_SL_METRIC_GEN 2>/dev/null || echo 0) + 1 ))
+  tmux set -g @GHC_SL_METRIC_GEN "$generation"
+  printf '%s\n' "$generation"
+}
+
+# Expire pre-unified CPU-only sampler chains after upgrade/reload.
+function _ghc_tmux_bump_legacy_cpu_generation_ {
   local generation
   generation=$(( $(tmux show -gqv @GHC_SL_CPU_GEN 2>/dev/null || echo 0) + 1 ))
   tmux set -g @GHC_SL_CPU_GEN "$generation"
-  printf '%s\n' "$generation"
 }
 
 function _ghc_tmux_load_status01_ {
@@ -93,13 +100,13 @@ function _ghc_tmux_load_theme_ {
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
 
-  # Expire any prior heartbeat chain; only the status02 branch starts a new one,
-  # so switching to status01 leaves the bumped generation with no live chain. The
-  # CPU sampler chain follows the same expire-then-maybe-restart discipline.
+  # Expire any prior heartbeat/metric chains; only the status02 branch starts new
+  # ones, so switching to status01 leaves bumped generations with no live chain.
   local heartbeat_generation
   heartbeat_generation=$(_ghc_tmux_bump_heartbeat_generation_)
-  local cpu_generation
-  cpu_generation=$(_ghc_tmux_bump_cpu_generation_)
+  local metric_generation
+  metric_generation=$(_ghc_tmux_bump_metric_generation_)
+  _ghc_tmux_bump_legacy_cpu_generation_
 
   local status_position="top"
   if [ "$status_mode" == "11" ] || [ "$status_mode" == "12" ]; then
@@ -134,12 +141,19 @@ function _ghc_tmux_load_theme_ {
           tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true
         else
           tmux run-shell -b -d 30 "'$status_renderer' heartbeat $heartbeat_generation"
-          # Seed a width-3 placeholder so the pill never renders a blank "%" before the
-          # first publishable sample; keep any live value across reloads.
+          # Seed fixed-width placeholders so metric pills never render blank values
+          # before the first publishable sample; keep live values across reloads.
           if [ -z "$(tmux show -gqv @GHC_CPU_NOW 2>/dev/null)" ]; then
             tmux set -g @GHC_CPU_NOW "  0"
           fi
-          tmux run-shell -b -d 2 "'$status_renderer' cpu-sample $cpu_generation"
+          if [ -z "$(tmux show -gqv @GHC_MEM_NOW 2>/dev/null)" ]; then
+            tmux set -g @GHC_MEM_NOW "  0"
+          fi
+          if [ -z "$(tmux show -gqv @GHC_NET_NOW 2>/dev/null)" ]; then
+            tmux set -g @GHC_NET_NOW "↓   0B ↑   0B"
+          fi
+          # The renderer self-reschedules this sampler every STATUS_INTERVAL_SECONDS.
+          tmux run-shell -b "'$status_renderer' metrics-sample $metric_generation"
         fi
       fi
       ;;

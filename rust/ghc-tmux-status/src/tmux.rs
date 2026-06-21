@@ -2,6 +2,11 @@ use std::collections::BTreeMap;
 use std::process::Command;
 
 use crate::commit::TmuxCommandPlan;
+use crate::config::{
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
+    LEGACY_CPU_SAMPLE_GENERATION_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
+    METRIC_SAMPLE_GENERATION_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
+};
 use crate::error::{AppError, AppResult};
 use crate::model::{SessionInfo, TmuxSnapshot};
 
@@ -195,7 +200,11 @@ fn split_padded_option_values(output: &str, count: usize) -> Vec<String> {
     values
 }
 
-fn sets_and_reschedule_args(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> Vec<String> {
+fn sets_and_reschedule_args(
+    sets: &[(&str, &str)],
+    delay_seconds: u64,
+    command: &str,
+) -> Vec<String> {
     let mut args: Vec<String> = Vec::new();
     for (name, value) in sets {
         if !args.is_empty() {
@@ -360,6 +369,15 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "status-interval",
     "@GHC_SL_SESSION_ORDER",
     "@GHC_SL_NET_IFACE",
+    HEARTBEAT_GENERATION_OPTION,
+    METRIC_SAMPLE_GENERATION_OPTION,
+    LEGACY_CPU_SAMPLE_GENERATION_OPTION,
+    CPU_SAMPLE_STATE_OPTION,
+    CPU_NOW_OPTION,
+    MEMORY_SAMPLE_STATE_OPTION,
+    MEMORY_NOW_OPTION,
+    NETWORK_SAMPLE_STATE_OPTION,
+    NETWORK_NOW_OPTION,
     "@GHC_STATUS_COMPONENT_CACHE_cpu",
     "@GHC_STATUS_COMPONENT_CACHE_memory",
     "@GHC_STATUS_COMPONENT_CACHE_network",
@@ -415,7 +433,7 @@ $2	dev	1"
         option_values[0] = "02";
         let network_index = SNAPSHOT_OPTION_NAMES
             .iter()
-            .position(|name| *name == "@GHC_STATUS_COMPONENT_CACHE_network")
+            .position(|name| *name == "@GHC_SL_NET_SAMPLE")
             .unwrap();
         option_values[network_index] = "1	2	3	4	5";
         let options = option_values.join(&FIELD_SEP.to_string());
@@ -431,10 +449,7 @@ $1	yui	0"
         assert_eq!(snapshot.status, "");
         assert_eq!(snapshot.mode, "02");
         assert_eq!(
-            snapshot
-                .options
-                .get("@GHC_STATUS_COMPONENT_CACHE_network")
-                .unwrap(),
+            snapshot.options.get("@GHC_SL_NET_SAMPLE").unwrap(),
             "1	2	3	4	5"
         );
     }
@@ -464,14 +479,27 @@ $1	yui	0"
     fn sets_and_reschedule_args_orders_sets_then_reschedule() {
         let args = sets_and_reschedule_args(
             &[("@GHC_SL_CPU_SAMPLE", "blob"), ("@GHC_CPU_NOW", "100")],
-            2,
-            "'/bin/ghc' cpu-sample 7",
+            5,
+            "'/bin/ghc' metrics-sample 7",
         );
         assert_eq!(
             args,
             vec![
-                "set", "-g", "@GHC_SL_CPU_SAMPLE", "blob", ";", "set", "-g", "@GHC_CPU_NOW", "100",
-                ";", "run-shell", "-b", "-d", "2", "'/bin/ghc' cpu-sample 7",
+                "set",
+                "-g",
+                "@GHC_SL_CPU_SAMPLE",
+                "blob",
+                ";",
+                "set",
+                "-g",
+                "@GHC_CPU_NOW",
+                "100",
+                ";",
+                "run-shell",
+                "-b",
+                "-d",
+                "5",
+                "'/bin/ghc' metrics-sample 7",
             ]
         );
     }

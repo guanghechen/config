@@ -29,10 +29,6 @@ const BELL_LITERAL: char = '\u{00a4}';
 pub struct SessionListWidget;
 
 impl ComputedWidget for SessionListWidget {
-    fn id(&self) -> &'static str {
-        "session-list"
-    }
-
     fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(render_session_list(context))
     }
@@ -61,7 +57,11 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
             Some(left_id) => rich_text.push_str(&render_join_separator(left_id, &session.id)),
             None => rich_text.push_str(&render_left_edge(&session.id)),
         }
-        literal_text.push_str(&render_item_body_literal(&session.name, index, session.has_bell));
+        literal_text.push_str(&render_item_body_literal(
+            &session.name,
+            index,
+            session.has_bell,
+        ));
         rich_text.push_str(&render_item_body(
             &session.name,
             index,
@@ -134,7 +134,11 @@ fn render_arrow(fg: &str, bg: &str) -> String {
 fn render_left_edge(first_session_id: &str) -> String {
     // The orange host segment points its ">" arrow into the first item: ink = host pill
     // color, bg = the item color (active or name bg, decided per-client).
-    let bg = conditional(&active_condition(first_session_id), ACTIVE_BG, INACTIVE_NAME_BG);
+    let bg = conditional(
+        &active_condition(first_session_id),
+        ACTIVE_BG,
+        INACTIVE_NAME_BG,
+    );
     render_arrow(HEAD_NOTCH_FG, &bg)
 }
 
@@ -335,8 +339,14 @@ mod tests {
         // The whole point of the per-client conditional rewrite: one shared option string
         // renders correctly for every client, so neither the rich text nor its width shadow
         // may depend on which session is current at build time.
-        let on_dev = render_session_list(&context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]));
-        let on_yui = render_session_list(&context_with_sessions("yui", [("$1", "dev"), ("$2", "yui")]));
+        let on_dev = render_session_list(&context_with_sessions(
+            "dev",
+            [("$1", "dev"), ("$2", "yui")],
+        ));
+        let on_yui = render_session_list(&context_with_sessions(
+            "yui",
+            [("$1", "dev"), ("$2", "yui")],
+        ));
 
         assert_eq!(on_dev.literal_text, on_yui.literal_text);
         assert_eq!(on_dev.rich_text, on_yui.rich_text);
@@ -370,7 +380,11 @@ mod tests {
         let segment = render_session_list(&context);
 
         assert!(segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
-        assert!(segment.rich_text.contains("#{==:#{client_last_session},#{l:yui}}"));
+        assert!(
+            segment
+                .rich_text
+                .contains("#{==:#{client_last_session},#{l:yui}}")
+        );
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,

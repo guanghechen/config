@@ -6,10 +6,6 @@ use crate::widget::pill::pill_literal;
 pub struct WindowIdWidget;
 
 impl TemplateWidget for WindowIdWidget {
-    fn id(&self) -> &'static str {
-        "window-id"
-    }
-
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" @00 "),

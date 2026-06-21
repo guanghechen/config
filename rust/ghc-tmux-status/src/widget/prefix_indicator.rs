@@ -6,10 +6,6 @@ use crate::widget::pill::prefix_literal;
 pub struct PrefixIndicatorWidget;
 
 impl TemplateWidget for PrefixIndicatorWidget {
-    fn id(&self) -> &'static str {
-        "prefix-indicator"
-    }
-
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: prefix_literal(),

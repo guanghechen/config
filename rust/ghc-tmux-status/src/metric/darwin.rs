@@ -152,7 +152,9 @@ const FALLBACK_NETWORK_INTERFACE: &str = "en0";
 
 fn default_network_interface() -> String {
     static INTERFACE: OnceLock<String> = OnceLock::new();
-    INTERFACE.get_or_init(detect_default_network_interface).clone()
+    INTERFACE
+        .get_or_init(detect_default_network_interface)
+        .clone()
 }
 
 fn detect_default_network_interface() -> String {
@@ -397,7 +399,10 @@ mod tests {
 
     #[test]
     fn route_empty_or_blank_interface_degrades_to_fallback() {
-        assert_eq!(default_interface_from_route_result(Ok(String::new())), "en0");
+        assert_eq!(
+            default_interface_from_route_result(Ok(String::new())),
+            "en0"
+        );
         assert_eq!(
             default_interface_from_route_result(Ok("interface:   \n".to_string())),
             "en0"

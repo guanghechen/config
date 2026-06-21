@@ -6,10 +6,6 @@ use crate::widget::pill::pill_literal;
 pub struct TimeWidget;
 
 impl TemplateWidget for TimeWidget {
-    fn id(&self) -> &'static str {
-        "time"
-    }
-
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" 00:00:00 "),

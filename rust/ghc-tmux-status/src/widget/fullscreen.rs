@@ -6,10 +6,6 @@ use crate::widget::pill::conditional_pill_literal;
 pub struct FullscreenWidget;
 
 impl TemplateWidget for FullscreenWidget {
-    fn id(&self) -> &'static str {
-        "fullscreen"
-    }
-
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: conditional_pill_literal(" 00/00 ,"),

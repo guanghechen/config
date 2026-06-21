@@ -5,10 +5,6 @@ use crate::status_widget::ComputedWidget;
 pub struct HostWidget;
 
 impl ComputedWidget for HostWidget {
-    fn id(&self) -> &'static str {
-        "host"
-    }
-
     fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         let host = truncate_chars(&context.snapshot.host, 16);
         Ok(RenderedSegment {

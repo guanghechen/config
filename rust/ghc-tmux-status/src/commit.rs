@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
+use crate::config::STATUS_INTERVAL_SECONDS_STR;
 use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus, TmuxSnapshot};
 use crate::status_length::{status_left_length, status_right_length};
 
-const STATUS02_STATUS_INTERVAL_SECONDS: &str = "1";
 // Reset interval when status02 is inactive; status01 also sets 20 on load.
 const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
 
@@ -120,7 +120,7 @@ impl CommitPlanner {
             &mut plan,
             options,
             "status-interval",
-            STATUS02_STATUS_INTERVAL_SECONDS,
+            STATUS_INTERVAL_SECONDS_STR,
         );
         push_set_global(&mut plan, "status-right", "#{E:@GHC_SL_STATUS02_RIGHT}");
         push_global_if_changed(
@@ -205,6 +205,9 @@ const LEGACY_WIDGET_CACHE_OPTIONS: &[&str] = &[
     "@GHC_STATUS_COMPONENT_CACHE_session_list",
     "@GHC_STATUS_COMPONENT_CACHE_duration",
     "@GHC_STATUS_COMPONENT_CACHE_system_metrics",
+    "@GHC_STATUS_COMPONENT_CACHE_cpu",
+    "@GHC_STATUS_COMPONENT_CACHE_memory",
+    "@GHC_STATUS_COMPONENT_CACHE_network",
 ];
 
 #[cfg(test)]
@@ -317,7 +320,7 @@ mod tests {
     }
 
     #[test]
-    fn sets_one_second_status_interval_when_cached_value_is_stale() {
+    fn sets_five_second_status_interval_when_cached_value_is_stale() {
         let status = rendered_status("same");
         let context = context_with_options(BTreeMap::from([(
             "status-interval".to_string(),
@@ -328,16 +331,16 @@ mod tests {
         assert!(plan.commands.iter().any(|command| matches!(
             command,
             TmuxCommand::SetGlobal { name, value }
-                if name == "status-interval" && value == "1"
+                if name == "status-interval" && value == "5"
         )));
     }
 
     #[test]
-    fn skips_one_second_status_interval_when_cached_value_matches() {
+    fn skips_five_second_status_interval_when_cached_value_matches() {
         let status = rendered_status("same");
         let context = context_with_options(BTreeMap::from([(
             "status-interval".to_string(),
-            "1".to_string(),
+            "5".to_string(),
         )]));
         let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
 
@@ -351,7 +354,7 @@ mod tests {
     fn resets_status_interval_when_runtime_is_inactive() {
         let mut snapshot = tmux_snapshot(BTreeMap::from([(
             "status-interval".to_string(),
-            "1".to_string(),
+            "5".to_string(),
         )]));
         let plan = CommitPlanner::plan_inactive(&snapshot);
 

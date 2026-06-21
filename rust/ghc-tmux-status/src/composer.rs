@@ -1,18 +1,16 @@
-use crate::cache::{TmuxWidgetCache, WidgetCache};
+use crate::config::STATUS_INTERVAL_SECONDS_STR;
 use crate::error::AppResult;
-use crate::metric::NET_INTERFACE_OPTION;
-use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus, TmuxSnapshot};
+use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
 use crate::status_length::{status_left_length, status_right_length};
-use crate::status_widget::{
-    StatusWidget, WidgetLifecycle, cached_metric, computed, template,
-};
+use crate::status_widget::{StatusWidget, computed, template};
 use crate::widget::{
     CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
     NetworkWidget, PrefixIndicatorWidget, SessionListWidget, TimeWidget, WindowIdWidget,
 };
 
 /// Renders the status02 layout once and returns the rendered segments plus any
-/// widget-cache option writes accumulated during sampling.
+/// structural option writes. Dynamic metrics are sampler-owned indirect tmux
+/// references, not render-time samples.
 ///
 /// Each widget type is instantiated exactly once. The single-row and two-row
 /// layouts share the rendered sub-segments (prefix / window chrome / metrics):
@@ -22,26 +20,23 @@ pub fn render_status02(
     context: &RenderContext,
     event: &RenderEvent,
 ) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
-    let mut cache = TmuxWidgetCache::from_options(&context.snapshot.options);
-    let net_interface = network_interface_override(&context.snapshot);
-
     let mut host = computed(HostWidget);
     let mut session_list = computed(SessionListWidget);
     let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
-    let status_left = render_widgets(&mut left_widgets, context, event, &mut cache)?;
+    let status_left = render_widgets(&mut left_widgets, context, event)?;
 
     let mut prefix = template(PrefixIndicatorWidget);
     let mut prefix_widgets: [&mut dyn StatusWidget; 1] = [&mut prefix];
-    let prefix_segment = render_widgets(&mut prefix_widgets, context, event, &mut cache)?;
+    let prefix_segment = render_widgets(&mut prefix_widgets, context, event)?;
 
     let mut fullscreen = template(FullscreenWidget);
     let mut window_id = template(WindowIdWidget);
     let mut chrome_widgets: [&mut dyn StatusWidget; 2] = [&mut fullscreen, &mut window_id];
-    let chrome_segment = render_widgets(&mut chrome_widgets, context, event, &mut cache)?;
+    let chrome_segment = render_widgets(&mut chrome_widgets, context, event)?;
 
-    let mut network = cached_metric(NetworkWidget::for_interface(net_interface));
+    let mut network = template(NetworkWidget);
     let mut cpu = template(CpuWidget);
-    let mut memory = cached_metric(MemoryWidget);
+    let mut memory = template(MemoryWidget);
     let mut duration = computed(DurationWidget);
     let mut date = template(DateWidget);
     let mut time = template(TimeWidget);
@@ -53,10 +48,9 @@ pub fn render_status02(
         &mut date,
         &mut time,
     ];
-    let metric_segment = render_widgets(&mut metric_widgets, context, event, &mut cache)?;
+    let metric_segment = render_widgets(&mut metric_widgets, context, event)?;
 
-    let status_right_body =
-        concat_segments(&[&prefix_segment, &chrome_segment, &metric_segment]);
+    let status_right_body = concat_segments(&[&prefix_segment, &chrome_segment, &metric_segment]);
     let status_right = RenderedSegment {
         literal_text: format!(" {}", status_right_body.literal_text),
         rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
@@ -83,7 +77,7 @@ pub fn render_status02(
             session_format,
             current_format,
         },
-        cache.pending_options(),
+        Vec::new(),
     ))
 }
 
@@ -100,27 +94,14 @@ fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
     }
 }
 
-fn network_interface_override(snapshot: &TmuxSnapshot) -> Option<String> {
-    snapshot
-        .options
-        .get(NET_INTERFACE_OPTION)
-        .map(|value| value.trim())
-        .filter(|value| !value.is_empty())
-        .map(str::to_string)
-}
-
 fn render_widgets(
     widgets: &mut [&mut dyn StatusWidget],
     context: &RenderContext,
-    event: &RenderEvent,
-    cache: &mut dyn WidgetCache,
+    _event: &RenderEvent,
 ) -> AppResult<RenderedSegment> {
     let mut literal_text = String::new();
     let mut rich_text = String::new();
     for widget in widgets {
-        if matches!(widget.lifecycle(), WidgetLifecycle::CachedMetric { .. }) {
-            widget.refresh(context, event, cache)?;
-        }
         let segment = widget.render(context)?;
         literal_text.push_str(&segment.literal_text);
         rich_text.push_str(&segment.rich_text);
@@ -189,7 +170,7 @@ pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool
             .snapshot
             .options
             .get("status-interval")
-            .is_some_and(|value| value == "1")
+            .is_some_and(|value| value == STATUS_INTERVAL_SECONDS_STR)
         && context.snapshot.status == context.layout.target_status
 }
 
@@ -202,6 +183,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::{cache_matches, format_current_format, render_status02};
+    use crate::config::STATUS_INTERVAL_SECONDS_STR;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderedSegment, RenderedStatus,
         SessionGroupView, SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
@@ -221,8 +203,8 @@ mod tests {
     // theme tweaks do not churn them; only a structural regression breaks them.
     //
     // Stable text markers come from Template widgets (fixed strings): window_id
-    // `@00`, fullscreen `00/00`, time `00:00:00`. Metrics render off a pre-filled
-    // fresh cache so refresh is a cache-hit and never samples the host.
+    // `@00`, fullscreen `00/00`, time `00:00:00`. Dynamic metrics render as
+    // indirect tmux options, so these contract tests never sample the host.
 
     #[test]
     fn render_status02_composes_row0_as_left_then_shared_right() {
@@ -255,16 +237,18 @@ mod tests {
         let right_rich = &rendered.status_right.rich_text;
         let session_rich = &rendered.session_format.rich_text;
         let right_tail = &right_rich[right_rich.find("@GHC_SYM_NET").expect("network in right")..];
-        let session_tail =
-            &session_rich[session_rich.find("@GHC_SYM_NET").expect("network in session")..];
+        let session_tail = &session_rich[session_rich
+            .find("@GHC_SYM_NET")
+            .expect("network in session")..];
         assert_eq!(right_tail, session_tail);
 
         let right_literal = &rendered.status_right.literal_text;
         let session_literal = &rendered.session_format.literal_text;
         let right_literal_tail =
             &right_literal[right_literal.find('↓').expect("network in right literal")..];
-        let session_literal_tail =
-            &session_literal[session_literal.find('↓').expect("network in session literal")..];
+        let session_literal_tail = &session_literal[session_literal
+            .find('↓')
+            .expect("network in session literal")..];
         assert_eq!(right_literal_tail, session_literal_tail);
         assert!(right_literal_tail.ends_with(" 00:00:00 "));
     }
@@ -319,33 +303,18 @@ mod tests {
     }
 
     #[test]
-    fn render_status02_writes_no_cache_options_when_metric_cache_fresh() {
+    fn render_status02_writes_no_cache_options_for_sampler_metrics() {
         let context = contract_context();
-        let (_, cache_options) =
-            render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (_, cache_options) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
 
-        // Fresh metric cache ⇒ no sampling ⇒ zero option writes. This underpins the
-        // noop short-circuit in StatusRuntime::apply (cache_options.is_empty()).
+        // Dynamic metrics are sampler-owned indirect options; render never writes
+        // metric cache options. This underpins the noop short-circuit in
+        // StatusRuntime::apply (cache_options.is_empty()).
         assert!(cache_options.is_empty());
     }
 
     fn contract_context() -> RenderContext {
-        // Far-future cache timestamps keep all three metrics a fresh cache-hit, so
-        // refresh never forks netstat/vm_stat and the render stays deterministic.
-        let options = BTreeMap::from([
-            (
-                "@GHC_STATUS_COMPONENT_CACHE_cpu".to_string(),
-                "9999999999\t12\t1\t2\t3\t4".to_string(),
-            ),
-            (
-                "@GHC_STATUS_COMPONENT_CACHE_memory".to_string(),
-                "9999999999\t47".to_string(),
-            ),
-            (
-                "@GHC_STATUS_COMPONENT_CACHE_network".to_string(),
-                "9999999999\t0\t0\t0\t0".to_string(),
-            ),
-        ]);
+        let options = BTreeMap::new();
         let sessions = vec![SessionInfo {
             id: "$1".to_string(),
             name: "main".to_string(),
@@ -404,7 +373,10 @@ mod tests {
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
             ("status-left-length".to_string(), "70".to_string()),
             ("status-right-length".to_string(), "84".to_string()),
-            ("status-interval".to_string(), "1".to_string()),
+            (
+                "status-interval".to_string(),
+                STATUS_INTERVAL_SECONDS_STR.to_string(),
+            ),
         ]));
 
         assert!(cache_matches(&context, &status));
@@ -433,7 +405,10 @@ mod tests {
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
             ("status-left-length".to_string(), "64".to_string()),
             ("status-right-length".to_string(), "84".to_string()),
-            ("status-interval".to_string(), "1".to_string()),
+            (
+                "status-interval".to_string(),
+                STATUS_INTERVAL_SECONDS_STR.to_string(),
+            ),
         ]));
 
         assert!(!cache_matches(&context, &status));
@@ -462,7 +437,10 @@ mod tests {
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
             ("status-left-length".to_string(), "92".to_string()),
             ("status-right-length".to_string(), "84".to_string()),
-            ("status-interval".to_string(), "1".to_string()),
+            (
+                "status-interval".to_string(),
+                STATUS_INTERVAL_SECONDS_STR.to_string(),
+            ),
         ]));
 
         assert!(!cache_matches(&context, &status));

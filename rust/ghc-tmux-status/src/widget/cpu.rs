@@ -8,15 +8,11 @@ use crate::widget::pill::pill_literal;
 pub struct CpuWidget;
 
 impl TemplateWidget for CpuWidget {
-    fn id(&self) -> &'static str {
-        "cpu"
-    }
-
-    // The CPU pill emits a tmux indirect reference instead of a baked number. A detached
-    // sampler chain refreshes `@GHC_CPU_NOW` every couple seconds and `status-interval=1`
-    // re-expands it, so the live reading tracks load within ~3s without rewriting the big
-    // status option on every change. The literal placeholder is fixed at the widest value
-    // (100%) so `status_right_length` stays stable regardless of the live digits.
+    // The CPU pill emits a tmux indirect reference instead of a baked number. The
+    // unified metric sampler is the single writer of `@GHC_CPU_NOW`, so tmux redraws
+    // can show fresh values without rewriting the big status option on every sample.
+    // The literal placeholder is fixed at the widest value (100%) so
+    // `status_right_length` stays stable regardless of the live digits.
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         let literal_text = pill_literal(" 100% ");
         let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_CPU} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_CPU_NOW}%% ".to_string();

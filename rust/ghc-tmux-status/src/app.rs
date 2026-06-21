@@ -22,6 +22,10 @@ impl StatusApp {
         self.runtime.heartbeat(expected_generation)
     }
 
+    pub fn metrics_sample(&self, expected_generation: &str) -> AppResult<()> {
+        self.runtime.metrics_sample(expected_generation)
+    }
+
     pub fn cpu_sample(&self, expected_generation: &str) -> AppResult<()> {
         self.runtime.cpu_sample(expected_generation)
     }

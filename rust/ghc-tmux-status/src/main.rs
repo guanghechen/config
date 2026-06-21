@@ -2,6 +2,7 @@ mod app;
 mod cache;
 mod commit;
 mod composer;
+mod config;
 mod error;
 mod introspect;
 mod layout;
@@ -54,6 +55,12 @@ fn run() -> AppResult<()> {
                 .next()
                 .ok_or_else(|| AppError::Usage("expected: heartbeat <generation>".to_string()))?;
             app.heartbeat(&generation)
+        }
+        "metrics-sample" => {
+            let generation = args.next().ok_or_else(|| {
+                AppError::Usage("expected: metrics-sample <generation>".to_string())
+            })?;
+            app.metrics_sample(&generation)
         }
         "cpu-sample" => {
             let generation = args
@@ -142,7 +149,7 @@ fn print_help() {
 USAGE:
   ghc-tmux-status apply
   ghc-tmux-status heartbeat <generation>
-  ghc-tmux-status cpu-sample <generation>
+  ghc-tmux-status metrics-sample <generation>
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>

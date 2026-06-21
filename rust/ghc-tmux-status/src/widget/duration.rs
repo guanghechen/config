@@ -8,10 +8,6 @@ use crate::widget::pill::pill_literal;
 pub struct DurationWidget;
 
 impl ComputedWidget for DurationWidget {
-    fn id(&self) -> &'static str {
-        "duration"
-    }
-
     fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         let duration = format_duration(
             (unix_timestamp_seconds() as i64).saturating_sub(context.snapshot.session_created),

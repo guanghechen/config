@@ -6,10 +6,6 @@ use crate::widget::pill::pill_literal;
 pub struct DateWidget;
 
 impl TemplateWidget for DateWidget {
-    fn id(&self) -> &'static str {
-        "date"
-    }
-
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
         Ok(RenderedSegment {
             literal_text: pill_literal(" Mon, 01 Jan "),

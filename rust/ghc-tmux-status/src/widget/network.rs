@@ -1,88 +1,35 @@
 use crate::error::AppResult;
 use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platform};
-use crate::model::RenderedSegment;
-use crate::status_widget::CachedMetricWidget;
+use crate::model::{RenderContext, RenderedSegment};
+use crate::status_widget::TemplateWidget;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
-pub struct NetworkWidget {
-    interface: Option<String>,
-}
+pub struct NetworkWidget;
 
-impl NetworkWidget {
-    pub fn for_interface(interface: Option<String>) -> Self {
-        Self { interface }
+impl TemplateWidget for NetworkWidget {
+    // The sampler is the single writer of `@GHC_NET_NOW`; render only installs an
+    // indirect reference so tmux redraws can show fresh bandwidth without a full render.
+    fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
+        let body_literal = " ↓ 999G ↑ 999G ";
+        let literal_text = pill_literal(body_literal);
+        let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_NET} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_NET_NOW} ".to_string();
+        Ok(RenderedSegment {
+            literal_text,
+            rich_text,
+        })
     }
 }
 
-impl CachedMetricWidget for NetworkWidget {
-    type Snapshot = NetworkSnapshot;
-
-    fn id(&self) -> &'static str {
-        "network"
-    }
-
-    fn ttl_seconds(&self) -> u64 {
-        REFRESH_INTERVAL_SECONDS
-    }
-
-    fn timestamp_seconds(&self, snapshot: &Self::Snapshot) -> u64 {
-        snapshot.sample.timestamp_seconds
-    }
-
-    fn decode_cache(&self, value: &str) -> Option<Self::Snapshot> {
-        parse_cache(value)
-    }
-
-    fn encode_cache(&self, snapshot: &Self::Snapshot) -> String {
-        encode_cache(snapshot)
-    }
-
-    fn sample(&self, previous: Option<&Self::Snapshot>) -> AppResult<Self::Snapshot> {
-        provider_for_current_platform(self.interface.as_deref())
-            .sample_network(previous.map(|snapshot| &snapshot.sample))
-    }
-
-    fn render_snapshot(&self, snapshot: &Self::Snapshot) -> RenderedSegment {
-        render_network(snapshot)
-    }
+pub fn sample_network(
+    interface: Option<&str>,
+    previous: Option<&NetworkSnapshot>,
+) -> AppResult<NetworkSnapshot> {
+    provider_for_current_platform(interface)
+        .sample_network(previous.map(|snapshot| &snapshot.sample))
 }
 
-const REFRESH_INTERVAL_SECONDS: u64 = 30;
-
-fn render_network(snapshot: &NetworkSnapshot) -> RenderedSegment {
-    let rx = format_speed(snapshot.rx_bytes_per_second);
-    let tx = format_speed(snapshot.tx_bytes_per_second);
-    let body_literal = format!(" ↓{rx} ↑{tx} ");
-    let literal_text = pill_literal(&body_literal);
-    let rich_text = format!(
-        "#[fg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SEP_ROUND_LEFT}}#[fg=#{{@GHC_SL_FG_PILL_ICON}}#,bg=#{{@GHC_SL_BG_PILL_DURATION}}]#{{@GHC_SYM_NET}} #[default]#[fg=#{{@GHC_SL_FG_PILL_TXT}}]{body_literal}"
-    );
-    RenderedSegment {
-        literal_text,
-        rich_text,
-    }
-}
-
-fn format_speed(bytes_per_second: u64) -> String {
-    const KIB: f64 = 1024.0;
-    const MIB: f64 = 1024.0 * 1024.0;
-    const GIB: f64 = 1024.0 * 1024.0 * 1024.0;
-
-    let value = bytes_per_second as f64;
-    if value >= GIB {
-        return format!("{:.1}G", value / GIB);
-    }
-    if value >= MIB {
-        return format!("{:.1}M", value / MIB);
-    }
-    if value >= KIB {
-        return format!("{:.0}K", value / KIB);
-    }
-    format!("{bytes_per_second}B")
-}
-
-fn encode_cache(snapshot: &NetworkSnapshot) -> String {
+pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {
     format!(
         "{}\t{}\t{}\t{}\t{}",
         snapshot.sample.timestamp_seconds,
@@ -93,7 +40,7 @@ fn encode_cache(snapshot: &NetworkSnapshot) -> String {
     )
 }
 
-fn parse_cache(value: &str) -> Option<NetworkSnapshot> {
+pub fn decode_network_snapshot(value: &str) -> Option<NetworkSnapshot> {
     let mut parts = value.splitn(5, '\t');
     let sample = NetworkSample {
         timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
@@ -107,20 +54,93 @@ fn parse_cache(value: &str) -> Option<NetworkSnapshot> {
     })
 }
 
+pub fn format_network_now(snapshot: &NetworkSnapshot) -> String {
+    let rx = format_speed(snapshot.rx_bytes_per_second);
+    let tx = format_speed(snapshot.tx_bytes_per_second);
+    format!("↓{rx:>5} ↑{tx:>5}")
+}
+
+fn format_speed(bytes_per_second: u64) -> String {
+    const KIB: f64 = 1024.0;
+    const MIB: f64 = 1024.0 * 1024.0;
+    const GIB: f64 = 1024.0 * 1024.0 * 1024.0;
+
+    let value = bytes_per_second as f64;
+    if value >= GIB {
+        return format_unit(value / GIB, "G");
+    }
+    if value >= MIB {
+        return format_unit(value / MIB, "M");
+    }
+    if value >= KIB {
+        return format_unit(value / KIB, "K");
+    }
+    format!("{bytes_per_second}B")
+}
+
+fn format_unit(value: f64, suffix: &str) -> String {
+    if value >= 99.95 {
+        let rounded = value.round().min(999.0) as u64;
+        return format!("{rounded}{suffix}");
+    }
+    format!("{value:.1}{suffix}")
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{format_speed, parse_cache};
+    use super::{decode_network_snapshot, format_network_now, format_speed};
     use crate::metric::{NetworkSample, NetworkSnapshot};
 
     #[test]
     fn formats_speed_compactly() {
         assert_eq!(format_speed(999), "999B");
-        assert_eq!(format_speed(12 * 1024), "12K");
+        assert_eq!(format_speed(12 * 1024), "12.0K");
         assert_eq!(format_speed(2 * 1024 * 1024), "2.0M");
+        assert_eq!(format_speed(123 * 1024 * 1024), "123M");
+        assert_eq!(format_speed(102_390), "100K");
+        assert_eq!(format_speed(1_023_590), "999K");
     }
 
     #[test]
-    fn parses_network_cache() {
+    fn formatted_speed_tokens_fit_fixed_width_budget() {
+        let samples = [
+            999,
+            1023,
+            (9.94 * 1024.0) as u64,
+            (9.95 * 1024.0) as u64,
+            (99.94 * 1024.0) as u64,
+            (99.95 * 1024.0) as u64,
+            (999.4 * 1024.0) as u64,
+            (999.6 * 1024.0) as u64,
+            (99.95 * 1024.0 * 1024.0) as u64,
+            (999.6 * 1024.0 * 1024.0 * 1024.0) as u64,
+        ];
+        for bytes_per_second in samples {
+            assert!(
+                format_speed(bytes_per_second).len() <= 5,
+                "{} formatted as {}",
+                bytes_per_second,
+                format_speed(bytes_per_second)
+            );
+        }
+    }
+
+    #[test]
+    fn formats_network_for_fixed_width_display() {
+        let snapshot = NetworkSnapshot {
+            rx_bytes_per_second: 12 * 1024,
+            tx_bytes_per_second: 999,
+            sample: NetworkSample {
+                timestamp_seconds: 1,
+                rx_bytes: 2,
+                tx_bytes: 3,
+            },
+        };
+        assert_eq!(format_network_now(&snapshot), "↓12.0K ↑ 999B");
+    }
+
+    #[test]
+    fn round_trips_network_snapshot() {
         let snapshot = NetworkSnapshot {
             rx_bytes_per_second: 1,
             tx_bytes_per_second: 2,
@@ -130,7 +150,7 @@ mod tests {
                 tx_bytes: 3,
             },
         };
-        let parsed = parse_cache(&super::encode_cache(&snapshot)).unwrap();
+        let parsed = decode_network_snapshot(&super::encode_network_snapshot(&snapshot)).unwrap();
         assert_eq!(parsed, snapshot);
     }
 }
