@@ -5,13 +5,14 @@ use crate::composer::{cache_matches, render_status02};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
     HEARTBEAT_INTERVAL_SECONDS, LEGACY_CPU_SAMPLE_GENERATION_OPTION, MEMORY_NOW_OPTION,
-    MEMORY_SAMPLE_STATE_OPTION, METRIC_SAMPLE_GENERATION_OPTION, METRIC_SAMPLE_STALE_LIMIT_SECONDS,
+    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
+    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, METRIC_SAMPLE_STALE_LIMIT_SECONDS,
     NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION, STATUS_INTERVAL_SECONDS,
 };
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
     CACHED_METRIC_WIDGET_PLACEMENTS, COMPUTED_WIDGET_PLACEMENTS, TEMPLATE_WIDGET_PLACEMENTS,
-    cache_bytes, metric_sample_states,
+    cache_bytes, metric_health_state, metric_sample_states,
 };
 use crate::layout::LayoutEngine;
 use crate::metric::NET_INTERFACE_OPTION;
@@ -24,6 +25,7 @@ use crate::session::{
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::TmuxAdapter;
 use crate::util::format::format_percent_width_3;
+use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
 use crate::widget::{
     decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot, encode_cpu_snapshot,
@@ -146,6 +148,7 @@ impl StatusRuntime {
             MEMORY_SAMPLE_STATE_OPTION,
             NETWORK_SAMPLE_STATE_OPTION,
             NET_INTERFACE_OPTION,
+            METRIC_ERROR_COUNT_OPTION,
         ]) {
             Ok(values) => values,
             Err(error) => {
@@ -174,14 +177,16 @@ impl StatusRuntime {
         let previous_memory_state = values.get(2).map(String::as_str).unwrap_or_default();
         let previous_network_state = values.get(3).map(String::as_str).unwrap_or_default();
         let network_interface = normalize_network_interface(values.get(4).map(String::as_str));
+        let previous_error_count = parse_metric_error_count(values.get(5).map(String::as_str));
 
-        // The sampler is the single writer for metric baselines and display options.
-        // Render/apply/heartbeat only install templates or repair structure.
+        // The sampler is the single writer for metric baselines, display options, and
+        // health state. Render/apply/heartbeat only install templates or repair structure.
         match self.tick_metrics_sample(
             previous_cpu_state,
             previous_memory_state,
             previous_network_state,
             network_interface,
+            previous_error_count,
             expected_generation,
         ) {
             Ok(summary) => {
@@ -228,6 +233,7 @@ impl StatusRuntime {
         previous_memory_state: &str,
         previous_network_state: &str,
         network_interface: Option<&str>,
+        previous_error_count: u64,
         generation: &str,
     ) -> AppResult<MetricPublishSummary> {
         let previous_cpu = decode_cpu_snapshot(previous_cpu_state);
@@ -289,6 +295,11 @@ impl StatusRuntime {
             Err(error) => summary.errors.push(format!("network:{error}")),
         }
 
+        set_values.extend(metric_health_sets(
+            &summary,
+            previous_error_count,
+            unix_timestamp_seconds(),
+        ));
         let sets = set_values
             .iter()
             .map(|(name, value)| (*name, value.as_str()))
@@ -371,6 +382,8 @@ impl StatusRuntime {
             "  cached_metric_placements={}",
             CACHED_METRIC_WIDGET_PLACEMENTS
         );
+        println!("metric_health:");
+        println!("  {}", metric_health_state(&context.snapshot).format_line());
         println!("metric_samples:");
         for state in metric_sample_states(&context.snapshot) {
             println!("  {}", state.format_line());
@@ -485,9 +498,61 @@ fn normalize_network_interface(value: Option<&str>) -> Option<&str> {
     value.map(str::trim).filter(|value| !value.is_empty())
 }
 
+fn parse_metric_error_count(value: Option<&str>) -> u64 {
+    value
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or_default()
+}
+
+fn metric_health_sets(
+    summary: &MetricPublishSummary,
+    previous_error_count: u64,
+    now_seconds: u64,
+) -> Vec<(&'static str, String)> {
+    if summary.errors.is_empty() {
+        return vec![
+            (METRIC_LAST_OK_OPTION, now_seconds.to_string()),
+            (METRIC_ERROR_COUNT_OPTION, "0".to_string()),
+        ];
+    }
+
+    vec![
+        (
+            METRIC_LAST_ERROR_OPTION,
+            format!(
+                "{}\t{}",
+                now_seconds,
+                sanitize_metric_error(&summary.errors.join("; "))
+            ),
+        ),
+        (
+            METRIC_ERROR_COUNT_OPTION,
+            previous_error_count.saturating_add(1).to_string(),
+        ),
+    ]
+}
+
+fn sanitize_metric_error(value: &str) -> String {
+    const MAX_ERROR_LEN: usize = 240;
+    let sanitized = value
+        .chars()
+        .map(|character| match character {
+            '\t' | '\n' | '\r' => ' ',
+            _ => character,
+        })
+        .collect::<String>();
+    sanitized.chars().take(MAX_ERROR_LEN).collect()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::normalize_network_interface;
+    use super::{
+        MetricPublishSummary, metric_health_sets, normalize_network_interface,
+        parse_metric_error_count, sanitize_metric_error,
+    };
+    use crate::config::{
+        METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
+    };
 
     #[test]
     fn normalize_network_interface_trims_and_filters_empty_values() {
@@ -498,6 +563,49 @@ mod tests {
         );
         assert_eq!(normalize_network_interface(Some("   ")), None);
         assert_eq!(normalize_network_interface(None), None);
+    }
+
+    #[test]
+    fn parse_metric_error_count_uses_zero_for_missing_or_invalid_values() {
+        assert_eq!(parse_metric_error_count(Some("7")), 7);
+        assert_eq!(parse_metric_error_count(Some("bad")), 0);
+        assert_eq!(parse_metric_error_count(None), 0);
+    }
+
+    #[test]
+    fn metric_health_sets_reset_error_count_on_clean_sample() {
+        let summary = MetricPublishSummary::default();
+        assert_eq!(
+            metric_health_sets(&summary, 3, 100),
+            vec![
+                (METRIC_LAST_OK_OPTION, "100".to_string()),
+                (METRIC_ERROR_COUNT_OPTION, "0".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn metric_health_sets_increment_error_count_and_records_last_error() {
+        let summary = MetricPublishSummary {
+            errors: vec!["network:failed\tbadly".to_string()],
+            ..MetricPublishSummary::default()
+        };
+        assert_eq!(
+            metric_health_sets(&summary, 3, 100),
+            vec![
+                (
+                    METRIC_LAST_ERROR_OPTION,
+                    "100\tnetwork:failed badly".to_string()
+                ),
+                (METRIC_ERROR_COUNT_OPTION, "4".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn sanitize_metric_error_replaces_separators_and_bounds_length() {
+        assert_eq!(sanitize_metric_error("a\tb\nc\rd"), "a b c d");
+        assert_eq!(sanitize_metric_error(&"x".repeat(300)).len(), 240);
     }
 }
 
