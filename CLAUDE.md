@@ -31,6 +31,10 @@
    - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
    - Exposed pure (no side effects): Propagate errors transparently.
 
+## Git
+
+1. **ALWAYS** `[commit-message]`: Commit messages and PR titles follow the `:gitmoji: <type>(<scope>): <description>` convention in `skills/git-commit/references/conventional-commits.md`.
+
 ## Architecture / Code Design
 
 Full structural design principles live in the `code-design` skill; the rules below are the always-on subset for every coding task.
