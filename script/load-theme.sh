@@ -144,13 +144,13 @@ function _ghc_tmux_load_theme_ {
           # Seed fixed-width placeholders so metric pills never render blank values
           # before the first publishable sample; keep live values across reloads.
           if [ -z "$(tmux show -gqv @GHC_CPU_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_CPU_NOW "  0"
+            tmux set -g @GHC_CPU_NOW " 0"
           fi
           if [ -z "$(tmux show -gqv @GHC_MEM_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_MEM_NOW "  0"
+            tmux set -g @GHC_MEM_NOW " 0"
           fi
           if [ -z "$(tmux show -gqv @GHC_NET_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_NET_NOW "↓   0B ↑   0B"
+            tmux set -g @GHC_NET_NOW "↓0B    ↑0B   "
           fi
           # The status line redraws every second; the renderer self-reschedules
           # metric sampling every METRIC_RESAMPLE_INTERVAL_SECONDS.

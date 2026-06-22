@@ -24,7 +24,7 @@ use crate::session::{
 };
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::TmuxAdapter;
-use crate::util::format::format_percent_width_3;
+use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
 use crate::widget::{
@@ -251,7 +251,7 @@ impl StatusRuntime {
                         .map(|snapshot| snapshot.timestamp_seconds),
                     snapshot.timestamp_seconds,
                 ) {
-                    set_values.push((CPU_NOW_OPTION, format_percent_width_3(snapshot.percent)));
+                    set_values.push((CPU_NOW_OPTION, format_percent_width_2(snapshot.percent)));
                     summary.cpu_published = true;
                 }
             }

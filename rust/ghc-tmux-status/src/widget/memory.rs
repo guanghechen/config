@@ -2,7 +2,7 @@ use crate::error::AppResult;
 use crate::metric::{MemorySnapshot, provider_for_current_platform};
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::TemplateWidget;
-use crate::util::format::format_percent_width_3;
+use crate::util::format::format_percent_width_2;
 use crate::widget::pill::pill_literal;
 
 #[derive(Default)]
@@ -39,7 +39,7 @@ pub fn decode_memory_snapshot(value: &str) -> Option<MemorySnapshot> {
 }
 
 pub fn format_memory_now(snapshot: &MemorySnapshot) -> String {
-    format_percent_width_3(snapshot.percent)
+    format_percent_width_2(snapshot.percent)
 }
 
 #[cfg(test)]
@@ -63,6 +63,6 @@ mod tests {
             percent: 47.0,
             timestamp_seconds: 1,
         };
-        assert_eq!(format_memory_now(&snapshot), " 47");
+        assert_eq!(format_memory_now(&snapshot), "47");
     }
 }
