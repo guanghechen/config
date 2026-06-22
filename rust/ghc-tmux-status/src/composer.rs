@@ -1,4 +1,4 @@
-use crate::config::STATUS_INTERVAL_SECONDS_STR;
+use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
 use crate::status_length::{status_left_length, status_right_length};
@@ -170,7 +170,7 @@ pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool
             .snapshot
             .options
             .get("status-interval")
-            .is_some_and(|value| value == STATUS_INTERVAL_SECONDS_STR)
+            .is_some_and(|value| value == STATUS_REDRAW_INTERVAL_SECONDS_STR)
         && context.snapshot.status == context.layout.target_status
 }
 
@@ -183,7 +183,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use super::{cache_matches, format_current_format, render_status02};
-    use crate::config::STATUS_INTERVAL_SECONDS_STR;
+    use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderedSegment, RenderedStatus,
         SessionGroupView, SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
@@ -375,7 +375,7 @@ mod tests {
             ("status-right-length".to_string(), "84".to_string()),
             (
                 "status-interval".to_string(),
-                STATUS_INTERVAL_SECONDS_STR.to_string(),
+                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
             ),
         ]));
 
@@ -407,7 +407,7 @@ mod tests {
             ("status-right-length".to_string(), "84".to_string()),
             (
                 "status-interval".to_string(),
-                STATUS_INTERVAL_SECONDS_STR.to_string(),
+                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
             ),
         ]));
 
@@ -439,7 +439,7 @@ mod tests {
             ("status-right-length".to_string(), "84".to_string()),
             (
                 "status-interval".to_string(),
-                STATUS_INTERVAL_SECONDS_STR.to_string(),
+                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
             ),
         ]));
 

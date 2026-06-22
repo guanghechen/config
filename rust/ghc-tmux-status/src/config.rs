@@ -1,10 +1,11 @@
-pub const STATUS_INTERVAL_SECONDS: u64 = 5;
-pub const STATUS_INTERVAL_SECONDS_STR: &str = "5";
+pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
+pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 5;
 pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
 
-// Samplers run at STATUS_INTERVAL_SECONDS; the wider freshness window tolerates
-// run-shell scheduling jitter, process startup delay, and second-boundary rounding.
-pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = STATUS_INTERVAL_SECONDS * 2;
+// Samplers run at METRIC_RESAMPLE_INTERVAL_SECONDS; the wider freshness window
+// tolerates run-shell scheduling jitter, process startup delay, and second-boundary
+// rounding.
+pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2;
 
 pub const HEARTBEAT_GENERATION_OPTION: &str = "@GHC_SL_HEARTBEAT_GEN";
 pub const METRIC_SAMPLE_GENERATION_OPTION: &str = "@GHC_SL_METRIC_GEN";

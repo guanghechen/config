@@ -6,8 +6,8 @@ use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
     HEARTBEAT_INTERVAL_SECONDS, LEGACY_CPU_SAMPLE_GENERATION_OPTION, MEMORY_NOW_OPTION,
     MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
-    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, METRIC_SAMPLE_STALE_LIMIT_SECONDS,
-    NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION, STATUS_INTERVAL_SECONDS,
+    METRIC_LAST_OK_OPTION, METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
+    METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
@@ -309,7 +309,7 @@ impl StatusRuntime {
             heartbeat_self_command_path()
         );
         self.tmux
-            .apply_sets_and_reschedule(&sets, STATUS_INTERVAL_SECONDS, &command)?;
+            .apply_sets_and_reschedule(&sets, METRIC_RESAMPLE_INTERVAL_SECONDS, &command)?;
         Ok(summary)
     }
 
@@ -319,7 +319,7 @@ impl StatusRuntime {
             heartbeat_self_command_path()
         );
         self.tmux
-            .schedule_background(STATUS_INTERVAL_SECONDS, &command)
+            .schedule_background(METRIC_RESAMPLE_INTERVAL_SECONDS, &command)
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
