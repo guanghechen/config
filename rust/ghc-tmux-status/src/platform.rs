@@ -8,6 +8,14 @@ pub enum Platform {
     Osx,
 }
 
+impl Platform {
+    /// Live CPU/memory/network sampling is implemented only for macOS; other
+    /// platforms have no metrics provider, so their metric pills must stay hidden.
+    pub fn supports_metrics(self) -> bool {
+        matches!(self, Platform::Osx)
+    }
+}
+
 pub fn current_platform() -> Platform {
     *PLATFORM.get_or_init(detect_platform)
 }

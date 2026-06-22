@@ -18,6 +18,7 @@ use crate::widget::{
 pub fn render_status02(
     context: &RenderContext,
     event: &RenderEvent,
+    metrics_supported: bool,
 ) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
     let mut host = computed(HostWidget);
     let mut session_list = computed(SessionListWidget);
@@ -39,14 +40,17 @@ pub fn render_status02(
     let mut duration = computed(DurationWidget);
     let mut date = template(DateWidget);
     let mut time = template(TimeWidget);
-    let mut metric_widgets: [&mut dyn StatusWidget; 6] = [
-        &mut network,
-        &mut cpu,
-        &mut memory,
-        &mut duration,
-        &mut date,
-        &mut time,
-    ];
+    // Platforms without a metrics provider (everything but macOS) never publish
+    // CPU/memory/network values, so their pills would render frozen placeholders.
+    let mut metric_widgets: Vec<&mut dyn StatusWidget> = Vec::new();
+    if metrics_supported {
+        metric_widgets.push(&mut network);
+        metric_widgets.push(&mut cpu);
+        metric_widgets.push(&mut memory);
+    }
+    metric_widgets.push(&mut duration);
+    metric_widgets.push(&mut date);
+    metric_widgets.push(&mut time);
     let metric_segment = render_widgets(&mut metric_widgets, context, event)?;
 
     let status_right_body = concat_segments(&[&prefix_segment, &chrome_segment, &metric_segment]);
@@ -195,7 +199,7 @@ mod tests {
     #[test]
     fn render_status02_composes_row0_as_left_then_shared_right() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
         // session_format is literally status_left ++ row0_right, so status_left is a
         // prefix of it. This locks the line 65-72 composition.
@@ -210,7 +214,7 @@ mod tests {
     #[test]
     fn render_status02_shares_metric_tail_across_both_rows() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
         // Associativity witness: the metric block is rendered once and is the tail of
         // both the status_right body and the session row0_right, with each appending
@@ -242,7 +246,7 @@ mod tests {
     #[test]
     fn render_status02_routes_chrome_into_status_right_only() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
         // Chrome (fullscreen + window_id) belongs to status_right and the per-session
         // current_format, never to the session row (row0_right = prefix + metric only).
@@ -255,7 +259,7 @@ mod tests {
     #[test]
     fn render_status02_wraps_rows_with_default_and_align() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
         assert!(rendered.status_right.rich_text.starts_with("#[default] "));
         assert!(rendered.status_right.rich_text.ends_with("#[default]"));
@@ -268,7 +272,7 @@ mod tests {
     #[test]
     fn render_status02_orders_metrics_left_to_right() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
         let rich = &rendered.status_right.rich_text;
 
         // Intended metric order: network, cpu, memory, duration, date, time. Keyed on
@@ -291,12 +295,28 @@ mod tests {
     #[test]
     fn render_status02_writes_no_cache_options_for_sampler_metrics() {
         let context = contract_context();
-        let (_, cache_options) = render_status02(&context, &RenderEvent::manual_apply()).unwrap();
+        let (_, cache_options) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
         // Dynamic metrics are sampler-owned indirect options; render never writes
         // metric cache options. This underpins the noop short-circuit in
         // StatusRuntime::apply (cache_options.is_empty()).
         assert!(cache_options.is_empty());
+    }
+
+    #[test]
+    fn render_status02_omits_metric_pills_without_provider() {
+        let context = contract_context();
+        let (rendered, _) =
+            render_status02(&context, &RenderEvent::manual_apply(), false).unwrap();
+        let rich = &rendered.status_right.rich_text;
+
+        // No metrics provider ⇒ network/cpu/memory pills are dropped, but the
+        // always-on duration/date/time tail still renders.
+        assert!(!rich.contains("@GHC_SYM_NET"));
+        assert!(!rich.contains("@GHC_SYM_CPU"));
+        assert!(!rich.contains("@GHC_SYM_MEMORY"));
+        assert!(rich.contains("@GHC_SYM_DURATION"));
+        assert!(rich.contains("%H:%M:%S"));
     }
 
     fn contract_context() -> RenderContext {

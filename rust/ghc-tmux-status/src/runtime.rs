@@ -20,6 +20,7 @@ use crate::model::{
     RenderContext, RenderEvent, RenderEventKind, SessionGroupView, SessionLayout, TmuxSnapshot,
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
+use crate::platform::current_platform;
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
     ordered_sessions, swap_current,
@@ -73,7 +74,8 @@ impl StatusRuntime {
         };
 
         let render_start = Instant::now();
-        let (rendered, cache_options) = render_status02(&context, &event)?;
+        let (rendered, cache_options) =
+            render_status02(&context, &event, current_platform().supports_metrics())?;
         let render_ms = duration_ms(render_start.elapsed());
         let cache_pending_count = cache_options.len();
         let is_noop = event.kind != RenderEventKind::ThemeLoaded
@@ -144,6 +146,11 @@ impl StatusRuntime {
     }
 
     pub fn metrics_sample(&self, expected_generation: &str) -> AppResult<()> {
+        // No metrics provider off macOS: sampling would only error and self-reschedule
+        // forever. Let the chain die so we stop polling on unsupported platforms.
+        if !current_platform().supports_metrics() {
+            return Ok(());
+        }
         let total_start = Instant::now();
         let values = match self.tmux.show_global_options(&[
             METRIC_SAMPLE_GENERATION_OPTION,
@@ -328,7 +335,8 @@ impl StatusRuntime {
     pub fn render_status02_stdout(&self) -> AppResult<()> {
         let context = self.live_context()?;
         let event = RenderEvent::manual_apply();
-        let (rendered, _cache_options) = render_status02(&context, &event)?;
+        let (rendered, _cache_options) =
+            render_status02(&context, &event, current_platform().supports_metrics())?;
         println!("status-left={}", rendered.status_left.rich_text);
         println!("status-right={}", rendered.status_right.rich_text);
         println!(
