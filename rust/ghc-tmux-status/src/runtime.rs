@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::commit::CommitPlanner;
+use crate::commit::{CommitPlanner, session_layouts_settled};
 use crate::composer::{cache_matches, render_status02};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
@@ -16,7 +16,9 @@ use crate::introspect::{
 };
 use crate::layout::LayoutEngine;
 use crate::metric::NET_INTERFACE_OPTION;
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, SessionGroupView, TmuxSnapshot};
+use crate::model::{
+    RenderContext, RenderEvent, RenderEventKind, SessionGroupView, SessionLayout, TmuxSnapshot,
+};
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
@@ -76,6 +78,7 @@ impl StatusRuntime {
         let cache_pending_count = cache_options.len();
         let is_noop = event.kind != RenderEventKind::ThemeLoaded
             && cache_matches(&context, &rendered)
+            && session_layouts_settled(&context, &rendered)
             && cache_options.is_empty();
         if is_noop {
             self.trace_apply(|| {
@@ -463,12 +466,64 @@ impl StatusRuntime {
             return Ok(LiveContextState::Inactive(snapshot));
         };
 
+        let session_layouts = resolve_session_layouts(&snapshot);
+
         Ok(LiveContextState::Active(RenderContext {
             snapshot,
             group,
             layout,
+            session_layouts,
         }))
     }
+}
+
+/// Reconciles a per-session target layout for every ON (not currently `off`),
+/// attached session. A session whose effective `status` is `off` (popup/agent,
+/// owned by hook/session-created.sh) is skipped — the renderer respects the
+/// current status and has no knowledge of the naming convention. Detached
+/// sessions (no client width) are skipped until a client attaches and an event
+/// re-reconciles them.
+fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
+    let min_widths = min_client_widths(&snapshot.client_widths);
+    let mut session_layouts = Vec::new();
+    for session in &snapshot.sessions {
+        if session.status == "off" {
+            continue;
+        }
+        let Some(&width) = min_widths.get(&session.id) else {
+            continue;
+        };
+        let count = SessionGrouper::group(&session.name, &snapshot.sessions)
+            .sessions
+            .len();
+        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count) else {
+            continue;
+        };
+        session_layouts.push(SessionLayout {
+            session_id: session.id.clone(),
+            session_name: session.name.clone(),
+            current_status: session.status.clone(),
+            current_layout_key: session.layout_key.clone(),
+            current_left_length: session.left_length.clone(),
+            current_right_length: session.right_length.clone(),
+            layout,
+            width,
+        });
+    }
+    session_layouts
+}
+
+/// Minimum attached-client width per session id. A session shared by several
+/// clients sizes to its narrowest client, matching tmux `window-size smallest`.
+fn min_client_widths(client_widths: &[(String, usize)]) -> std::collections::BTreeMap<String, usize> {
+    let mut min_widths: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    for (session_id, width) in client_widths {
+        min_widths
+            .entry(session_id.clone())
+            .and_modify(|current| *current = (*current).min(*width))
+            .or_insert(*width);
+    }
+    min_widths
 }
 
 enum LiveContextState {
@@ -546,13 +601,54 @@ fn sanitize_metric_error(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::{
         MetricPublishSummary, metric_health_sets, normalize_network_interface,
-        parse_metric_error_count, sanitize_metric_error,
+        parse_metric_error_count, resolve_session_layouts, sanitize_metric_error,
     };
     use crate::config::{
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     };
+    use crate::model::{SessionInfo, TmuxSnapshot};
+
+    fn session(id: &str, name: &str, status: &str) -> SessionInfo {
+        SessionInfo {
+            id: id.to_string(),
+            name: name.to_string(),
+            has_bell: false,
+            status: status.to_string(),
+            layout_key: String::new(),
+            left_length: String::new(),
+            right_length: String::new(),
+        }
+    }
+
+    #[test]
+    fn resolve_session_layouts_skips_off_status_and_detached_sessions() {
+        // on + attached -> reconciled; off + attached (popup/agent) -> skipped by
+        // status, not by name; on + detached (no client width) -> skipped.
+        let snapshot = TmuxSnapshot {
+            mode: "02".to_string(),
+            status: "on".to_string(),
+            width: 200,
+            current_session_name: "main".to_string(),
+            client_last_session: String::new(),
+            host: "h".to_string(),
+            session_created: 1,
+            sessions: vec![
+                session("$1", "main", "on"),
+                session("$2", "_popup@x", "off"),
+                session("$3", "detached", "on"),
+            ],
+            client_widths: vec![("$1".to_string(), 200), ("$2".to_string(), 200)],
+            options: BTreeMap::new(),
+        };
+
+        let layouts = resolve_session_layouts(&snapshot);
+        assert_eq!(layouts.len(), 1);
+        assert_eq!(layouts[0].session_id, "$1");
+    }
 
     #[test]
     fn normalize_network_interface_trims_and_filters_empty_values() {

@@ -36,6 +36,35 @@ function _ghc_tmux_unset_status_layout_hooks_ {
   done
 }
 
+# The renderer writes LAYOUT (rows / status-format / lengths / @GHC_SL_LAYOUT) per
+# session, and per-session options shadow the global ones. Switching modes (or any
+# reload) must clear those overrides on EVERY session, else a session left at
+# `status 2` keeps two rows under status01. We only undo the renderer's two-row
+# narrow (`status 2` -> `on`); on/off ownership is left untouched, so popup/agent
+# sessions stay `off` without needing any name-class knowledge here. All sessions'
+# resets are folded into one tmux invocation; `-q` keeps a session that vanishes
+# mid-reload from aborting the rest of the chain.
+function _ghc_tmux_reset_per_session_layout_ {
+  local -a args=()
+  local session_id session_status
+  while IFS=$'\t' read -r session_id session_status; do
+    if [ "${#args[@]}" -gt 0 ]; then
+      args+=(';')
+    fi
+    args+=(set -q -t "$session_id" -u '@GHC_SL_LAYOUT' ';' \
+           set -q -t "$session_id" -u 'status-format' ';' \
+           set -q -t "$session_id" -u 'status-left-length' ';' \
+           set -q -t "$session_id" -u 'status-right-length')
+    if [ "$session_status" = "2" ]; then
+      args+=(';' set -q -t "$session_id" status on)
+    fi
+  done < <(tmux list-sessions -F '#{session_id}'$'\t''#{status}' 2>/dev/null)
+
+  if [ "${#args[@]}" -gt 0 ]; then
+    tmux "${args[@]}" 2>/dev/null || true
+  fi
+}
+
 # Bump the heartbeat generation so any in-flight self-scheduling chain from a
 # previous load expires on its next wake (it compares the stored generation and
 # exits when it no longer matches). Returns the new generation on stdout.
@@ -99,6 +128,7 @@ function _ghc_tmux_load_theme_ {
   _ghc_tmux_unset_status_layout_hooks_
   tmux set -gu status-format 2>/dev/null || true
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
+  _ghc_tmux_reset_per_session_layout_
 
   # Expire any prior heartbeat/metric chains; only the status02 branch starts new
   # ones, so switching to status01 leaves bumped generations with no live chain.
@@ -122,6 +152,9 @@ function _ghc_tmux_load_theme_ {
       status_renderer=$(_ghc_tmux_status_renderer_bin_)
       tmux set -g status-justify centre
       tmux set -g status-position "$status_position"
+      # Global single-row baseline; the renderer overrides per session (on/2). Any
+      # session without a per-session override falls back to one row, never two.
+      tmux set -g status on
 
       if [ -z "$status_renderer" ]; then
         _ghc_tmux_load_status01_ "$status_position"

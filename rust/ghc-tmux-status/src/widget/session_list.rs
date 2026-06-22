@@ -432,13 +432,16 @@ mod tests {
                 id: id.to_string(),
                 name: name.to_string(),
                 has_bell,
+                status: "on".to_string(),
+                layout_key: String::new(),
+                left_length: String::new(),
+                right_length: String::new(),
             })
             .collect::<Vec<_>>();
 
         RenderContext {
             snapshot: TmuxSnapshot {
                 mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: current_session_name.to_string(),
@@ -446,6 +449,7 @@ mod tests {
                 host: "h".to_string(),
                 session_created: 1,
                 sessions: sessions.clone(),
+                client_widths: Vec::new(),
                 options: BTreeMap::new(),
             },
             group: SessionGroupView {
@@ -460,6 +464,7 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 }

@@ -374,7 +374,6 @@ mod tests {
     fn snapshot_with_options(options: BTreeMap<String, String>) -> TmuxSnapshot {
         TmuxSnapshot {
             mode: "02".to_string(),
-            current_layout: "02:wide".to_string(),
             status: "on".to_string(),
             width: 200,
             current_session_name: "s".to_string(),
@@ -382,6 +381,7 @@ mod tests {
             host: "h".to_string(),
             session_created: 1,
             sessions: Vec::new(),
+            client_widths: Vec::new(),
             options,
         }
     }

@@ -49,7 +49,6 @@ mod tests {
         RenderContext {
             snapshot: TmuxSnapshot {
                 mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: "s".to_string(),
@@ -57,6 +56,7 @@ mod tests {
                 host: host.to_string(),
                 session_created: 1,
                 sessions: Vec::new(),
+                client_widths: Vec::new(),
                 options: BTreeMap::new(),
             },
             group: SessionGroupView {
@@ -71,6 +71,7 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 }

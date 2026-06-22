@@ -169,7 +169,15 @@ fn snapshot_command_args() -> Vec<String> {
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        "#{session_id}\t#{session_name}\t#{session_bell_flag}".to_string(),
+        "#{session_id}\t#{session_name}\t#{session_bell_flag}\t#{status}\t#{@GHC_SL_LAYOUT}\t#{status-left-length}\t#{status-right-length}".to_string(),
+        ";".to_string(),
+        "display-message".to_string(),
+        "-p".to_string(),
+        CLIENTS_MARK.to_string(),
+        ";".to_string(),
+        "list-clients".to_string(),
+        "-F".to_string(),
+        "#{session_id}\t#{client_width}".to_string(),
     ]
 }
 
@@ -254,10 +262,23 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
 
     let options = parse_options_line(options_line)?;
     let mode = options.get("@GHC_SL_MODE").cloned().unwrap_or_default();
-    let current_layout = options.get("@GHC_SL_LAYOUT").cloned().unwrap_or_default();
 
     expect_marker(lines.next(), SESSIONS_MARK)?;
-    let sessions = lines.filter_map(parse_session_line).collect();
+    let mut sessions = Vec::new();
+    let mut saw_clients_marker = false;
+    for line in lines.by_ref() {
+        if line == CLIENTS_MARK {
+            saw_clients_marker = true;
+            break;
+        }
+        if let Some(session) = parse_session_line(line) {
+            sessions.push(session);
+        }
+    }
+    if !saw_clients_marker {
+        return Err(AppError::TmuxParse("missing clients section".to_string()));
+    }
+    let client_widths = lines.filter_map(parse_client_line).collect();
 
     if current_session_name.is_empty() {
         return Err(AppError::TmuxParse(
@@ -267,7 +288,6 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
 
     Ok(TmuxSnapshot {
         mode,
-        current_layout,
         status,
         width,
         current_session_name,
@@ -275,6 +295,7 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
         host,
         session_created,
         sessions,
+        client_widths,
         options,
     })
 }
@@ -284,12 +305,27 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
     let id = fields.next()?;
     let name = fields.next()?;
     let has_bell = fields.next() == Some("1");
+    let status = fields.next().unwrap_or_default().to_string();
+    let layout_key = fields.next().unwrap_or_default().to_string();
+    let left_length = fields.next().unwrap_or_default().to_string();
+    let right_length = fields.next().unwrap_or_default().to_string();
 
     Some(SessionInfo {
         id: id.to_string(),
         name: name.to_string(),
         has_bell,
+        status,
+        layout_key,
+        left_length,
+        right_length,
     })
+}
+
+fn parse_client_line(line: &str) -> Option<(String, usize)> {
+    let mut fields = line.split('\t');
+    let session_id = fields.next()?.to_string();
+    let width = fields.next()?.parse::<usize>().ok()?;
+    Some((session_id, width))
 }
 
 fn parse_options_line(options_line: &str) -> AppResult<BTreeMap<String, String>> {
@@ -357,6 +393,7 @@ const CONTEXT_MARK: &str = "__GHC_STATUS_CONTEXT__";
 const STATUS_MARK: &str = "__GHC_STATUS_STATUS__";
 const OPTIONS_MARK: &str = "__GHC_STATUS_OPTIONS__";
 const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
+const CLIENTS_MARK: &str = "__GHC_STATUS_CLIENTS__";
 
 const SNAPSHOT_OPTION_NAMES: &[&str] = &[
     "@GHC_SL_MODE",
@@ -391,9 +428,11 @@ const SNAPSHOT_OPTION_NAMES: &[&str] = &[
 mod tests {
     use super::{
         CONTEXT_MARK, FIELD_SEP, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTION_NAMES, STATUS_MARK,
-        parse_session_line, parse_snapshot_output, sets_and_reschedule_args,
+        parse_client_line, parse_session_line, parse_snapshot_output, sets_and_reschedule_args,
         show_global_options_format, split_padded_option_values,
     };
+
+    const CLIENTS_MARK: &str = super::CLIENTS_MARK;
 
     #[test]
     fn parses_snapshot_output() {
@@ -406,8 +445,12 @@ mod tests {
 on
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui	0
-$2	dev	1"
+$1	yui	0	on	02:wide	64	84
+$2	dev	1	2	02:narrow	120	120
+{CLIENTS_MARK}
+$1	200
+$2	120
+$2	90"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();
@@ -418,17 +461,42 @@ $2	dev	1"
         assert_eq!(snapshot.sessions.len(), 2);
         assert!(!snapshot.sessions[0].has_bell);
         assert!(snapshot.sessions[1].has_bell);
+        assert_eq!(snapshot.sessions[0].status, "on");
+        assert_eq!(snapshot.sessions[0].layout_key, "02:wide");
+        assert_eq!(snapshot.sessions[0].left_length, "64");
+        assert_eq!(snapshot.sessions[0].right_length, "84");
+        assert_eq!(snapshot.sessions[1].status, "2");
+        assert_eq!(snapshot.sessions[1].left_length, "120");
+        assert_eq!(
+            snapshot.client_widths,
+            vec![
+                ("$1".to_string(), 200),
+                ("$2".to_string(), 120),
+                ("$2".to_string(), 90),
+            ]
+        );
     }
 
     #[test]
     fn parses_session_line_reads_bell_flag_field() {
-        let belling = parse_session_line("$1\tlegacy\t1").unwrap();
+        let belling = parse_session_line("$1\tlegacy\t1\ton\t02:wide").unwrap();
         assert_eq!(belling.id, "$1");
         assert_eq!(belling.name, "legacy");
         assert!(belling.has_bell);
+        assert_eq!(belling.status, "on");
+        assert_eq!(belling.layout_key, "02:wide");
 
         let quiet = parse_session_line("$2\tdev\t0").unwrap();
         assert!(!quiet.has_bell);
+        assert_eq!(quiet.status, "");
+        assert_eq!(quiet.layout_key, "");
+    }
+
+    #[test]
+    fn parses_client_line_reads_session_and_width() {
+        assert_eq!(parse_client_line("$3\t180"), Some(("$3".to_string(), 180)));
+        assert_eq!(parse_client_line("$3\tnope"), None);
+        assert_eq!(parse_client_line("$3"), None);
     }
 
     #[test]
@@ -446,7 +514,9 @@ $2	dev	1"
 {STATUS_MARK}
 {OPTIONS_MARK}{FIELD_SEP}{options}
 {SESSIONS_MARK}
-$1	yui	0"
+$1	yui	0
+{CLIENTS_MARK}
+$1	200"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();

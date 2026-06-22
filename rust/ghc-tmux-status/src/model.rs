@@ -62,12 +62,18 @@ pub struct SessionInfo {
     pub id: String,
     pub name: String,
     pub has_bell: bool,
+    /// This session's effective `status` option (`on` / `2` / `off`), read per-session.
+    pub status: String,
+    /// This session's effective `@GHC_SL_LAYOUT` (global fallback when no override).
+    pub layout_key: String,
+    /// This session's effective `status-left-length` / `status-right-length`.
+    pub left_length: String,
+    pub right_length: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TmuxSnapshot {
     pub mode: String,
-    pub current_layout: String,
     pub status: String,
     pub width: usize,
     pub current_session_name: String,
@@ -75,6 +81,8 @@ pub struct TmuxSnapshot {
     pub host: String,
     pub session_created: i64,
     pub sessions: Vec<SessionInfo>,
+    /// Attached clients as (session_id, client_width); detached sessions are absent.
+    pub client_widths: Vec<(String, usize)>,
     pub options: BTreeMap<String, String>,
 }
 
@@ -167,6 +175,22 @@ pub struct RenderContext {
     pub snapshot: TmuxSnapshot,
     pub group: SessionGroupView,
     pub layout: LayoutPlan,
+    /// Resolved target layout for every reconciled (ON, attached) session.
+    pub session_layouts: Vec<SessionLayout>,
+}
+
+/// The per-session reconcile unit: a session's resolved target layout plus the
+/// current per-session values used to short-circuit a no-op write.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SessionLayout {
+    pub session_id: String,
+    pub session_name: String,
+    pub current_status: String,
+    pub current_layout_key: String,
+    pub current_left_length: String,
+    pub current_right_length: String,
+    pub layout: LayoutPlan,
+    pub width: usize,
 }
 
 #[cfg(test)]

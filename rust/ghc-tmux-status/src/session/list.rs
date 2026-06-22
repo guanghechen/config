@@ -293,6 +293,10 @@ mod tests {
                 id: id.to_string(),
                 name: name.to_string(),
                 has_bell: false,
+                status: "on".to_string(),
+                layout_key: String::new(),
+                left_length: String::new(),
+                right_length: String::new(),
             })
             .collect()
     }

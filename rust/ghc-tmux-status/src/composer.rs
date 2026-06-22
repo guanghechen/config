@@ -1,7 +1,6 @@
 use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
-use crate::status_length::{status_left_length, status_right_length};
 use crate::status_widget::{StatusWidget, computed, template};
 use crate::widget::{
     CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
@@ -129,6 +128,9 @@ fn format_current_format(row_right: &str) -> String {
     )
 }
 
+/// Global STYLE cache: the four `@GHC_SL_STATUS02_*` templates plus the redraw
+/// interval. LAYOUT-instance values (rows, position, lengths, `@GHC_SL_LAYOUT`)
+/// are per-session now and checked by [`session_layouts_settled`].
 pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool {
     context
         .snapshot
@@ -150,28 +152,12 @@ pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool
             .options
             .get("@GHC_SL_STATUS02_CURRENT_FORMAT")
             .is_some_and(|value| value == &rendered.current_format.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("@GHC_SL_LAYOUT")
-            .is_some_and(|value| value == &context.layout.key)
-        && context
-            .snapshot
-            .options
-            .get("status-left-length")
-            .is_some_and(|value| value == &status_left_length(rendered, context))
-        && context
-            .snapshot
-            .options
-            .get("status-right-length")
-            .is_some_and(|value| value == &status_right_length(rendered, context))
         // Prevent stale 20s redraw from being mistaken for a status02 no-op after cache convergence.
         && context
             .snapshot
             .options
             .get("status-interval")
             .is_some_and(|value| value == STATUS_REDRAW_INTERVAL_SECONDS_STR)
-        && context.snapshot.status == context.layout.target_status
 }
 
 fn native_window_list_format() -> &'static str {
@@ -319,12 +305,15 @@ mod tests {
             id: "$1".to_string(),
             name: "main".to_string(),
             has_bell: false,
+            status: "on".to_string(),
+            layout_key: "02:wide".to_string(),
+            left_length: "64".to_string(),
+            right_length: "84".to_string(),
         }];
 
         RenderContext {
             snapshot: TmuxSnapshot {
                 mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: "main".to_string(),
@@ -333,6 +322,7 @@ mod tests {
                 // Far-future start ⇒ saturating duration pins to "0m", no wall-clock drift.
                 session_created: 9_999_999_999,
                 sessions: sessions.clone(),
+                client_widths: Vec::new(),
                 options,
             },
             group: SessionGroupView {
@@ -347,11 +337,12 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 
     #[test]
-    fn cache_matches_requires_dynamic_status_left_length() {
+    fn cache_matches_on_global_style_and_interval() {
         let status = rendered_status(&"x".repeat(68));
         let context = context_with_options(BTreeMap::from([
             (
@@ -370,9 +361,6 @@ mod tests {
                 "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
                 status.current_format.rich_text.clone(),
             ),
-            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
-            ("status-left-length".to_string(), "70".to_string()),
-            ("status-right-length".to_string(), "84".to_string()),
             (
                 "status-interval".to_string(),
                 STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
@@ -380,70 +368,6 @@ mod tests {
         ]));
 
         assert!(cache_matches(&context, &status));
-    }
-
-    #[test]
-    fn cache_misses_when_status_left_length_is_stale() {
-        let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(BTreeMap::from([
-            (
-                "@GHC_SL_STATUS02_LEFT".to_string(),
-                status.status_left.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_RIGHT".to_string(),
-                status.status_right.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-                status.session_format.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-                status.current_format.rich_text.clone(),
-            ),
-            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
-            ("status-left-length".to_string(), "64".to_string()),
-            ("status-right-length".to_string(), "84".to_string()),
-            (
-                "status-interval".to_string(),
-                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
-            ),
-        ]));
-
-        assert!(!cache_matches(&context, &status));
-    }
-
-    #[test]
-    fn cache_misses_when_status_right_length_is_stale() {
-        let status = rendered_status(&"x".repeat(90));
-        let context = context_with_options(BTreeMap::from([
-            (
-                "@GHC_SL_STATUS02_LEFT".to_string(),
-                status.status_left.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_RIGHT".to_string(),
-                status.status_right.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-                status.session_format.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-                status.current_format.rich_text.clone(),
-            ),
-            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
-            ("status-left-length".to_string(), "92".to_string()),
-            ("status-right-length".to_string(), "84".to_string()),
-            (
-                "status-interval".to_string(),
-                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
-            ),
-        ]));
-
-        assert!(!cache_matches(&context, &status));
     }
 
     #[test]
@@ -491,7 +415,6 @@ mod tests {
         RenderContext {
             snapshot: TmuxSnapshot {
                 mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
                 status: "on".to_string(),
                 width: 200,
                 current_session_name: "s".to_string(),
@@ -499,6 +422,7 @@ mod tests {
                 host: "h".to_string(),
                 session_created: 1,
                 sessions: Vec::new(),
+                client_widths: Vec::new(),
                 options,
             },
             group: SessionGroupView {
@@ -513,6 +437,7 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 }

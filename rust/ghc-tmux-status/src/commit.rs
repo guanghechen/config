@@ -1,8 +1,10 @@
 use std::collections::BTreeMap;
 
 use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
-use crate::model::{RenderContext, RenderEvent, RenderEventKind, RenderedStatus, TmuxSnapshot};
-use crate::status_length::{status_left_length, status_right_length};
+use crate::model::{
+    RenderContext, RenderEvent, RenderEventKind, RenderedStatus, SessionLayout, TmuxSnapshot,
+};
+use crate::status_length::{status_left_length_for_width, status_right_length_for_width};
 
 // Reset interval when status02 is inactive; status01 also sets 20 on load.
 const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
@@ -10,8 +12,9 @@ const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TmuxCommand {
     SetGlobal { name: String, value: String },
-    SetSession { name: String, value: String },
+    SetSessionTarget { target: String, name: String, value: String },
     UnsetGlobal { name: String },
+    UnsetSessionTarget { target: String, name: String },
 }
 
 impl TmuxCommand {
@@ -23,12 +26,27 @@ impl TmuxCommand {
                 name.clone(),
                 value.clone(),
             ],
-            Self::SetSession { name, value } => {
-                vec!["set".to_string(), name.clone(), value.clone()]
-            }
+            Self::SetSessionTarget {
+                target,
+                name,
+                value,
+            } => vec![
+                "set".to_string(),
+                "-t".to_string(),
+                target.clone(),
+                name.clone(),
+                value.clone(),
+            ],
             Self::UnsetGlobal { name } => {
                 vec!["set".to_string(), "-gu".to_string(), name.clone()]
             }
+            Self::UnsetSessionTarget { target, name } => vec![
+                "set".to_string(),
+                "-t".to_string(),
+                target.clone(),
+                "-u".to_string(),
+                name.clone(),
+            ],
         }
     }
 }
@@ -107,15 +125,9 @@ impl CommitPlanner {
             push_global_if_changed(&mut plan, options, &name, &value);
         }
 
-        push_global_if_changed(&mut plan, options, "@GHC_SL_LAYOUT", &context.layout.key);
-
+        // STYLE stays global: templates + redraw cadence + position/justify apply to
+        // every client identically. LAYOUT (rows, lengths, @GHC_SL_LAYOUT) is per-session.
         push_set_global(&mut plan, "status-left", "#{E:@GHC_SL_STATUS02_LEFT}");
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "status-left-length",
-            &status_left_length(status, context),
-        );
         push_global_if_changed(
             &mut plan,
             options,
@@ -123,36 +135,54 @@ impl CommitPlanner {
             STATUS_REDRAW_INTERVAL_SECONDS_STR,
         );
         push_set_global(&mut plan, "status-right", "#{E:@GHC_SL_STATUS02_RIGHT}");
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "status-right-length",
-            &status_right_length(status, context),
-        );
         push_set_global(
             &mut plan,
             "status-position",
             context.layout.position.as_str(),
         );
         push_set_global(&mut plan, "status-justify", "centre");
-        push_set_global(&mut plan, "status", &context.layout.target_status);
-        push_set_session(&mut plan, "status", &context.layout.target_status);
 
-        if context.layout.rows == 1 {
-            plan.commands.push(TmuxCommand::UnsetGlobal {
-                name: "status-format".to_string(),
-            });
-        } else {
-            push_set_global(
+        for session_layout in &context.session_layouts {
+            // Per-session no-op: target rows, layout key, and width-derived lengths
+            // already in place. Lengths are part of the witness so a content/width
+            // change that keeps the same wide/narrow kind still refreshes them.
+            if session_layout_settled(session_layout, status) {
+                continue;
+            }
+            let target = &session_layout.session_id;
+            push_set_session_target(&mut plan, target, "@GHC_SL_LAYOUT", &session_layout.layout.key);
+            push_set_session_target(
                 &mut plan,
-                "status-format[0]",
-                "#{E:@GHC_SL_STATUS02_SESSION_FORMAT}",
+                target,
+                "status-left-length",
+                &status_left_length_for_width(status, session_layout.width),
             );
-            push_set_global(
+            push_set_session_target(
                 &mut plan,
-                "status-format[1]",
-                "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}",
+                target,
+                "status-right-length",
+                &status_right_length_for_width(status, session_layout.width),
             );
+            push_set_session_target(&mut plan, target, "status", &session_layout.layout.target_status);
+            if session_layout.layout.rows == 1 {
+                plan.commands.push(TmuxCommand::UnsetSessionTarget {
+                    target: target.clone(),
+                    name: "status-format".to_string(),
+                });
+            } else {
+                push_set_session_target(
+                    &mut plan,
+                    target,
+                    "status-format[0]",
+                    "#{E:@GHC_SL_STATUS02_SESSION_FORMAT}",
+                );
+                push_set_session_target(
+                    &mut plan,
+                    target,
+                    "status-format[1]",
+                    "#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}",
+                );
+            }
         }
 
         if event.kind == RenderEventKind::ThemeLoaded {
@@ -165,6 +195,28 @@ impl CommitPlanner {
 
         plan
     }
+}
+
+/// True when a session's per-session layout options already match the reconcile
+/// target: rows/status, layout key, and the width-derived status lengths. Lengths
+/// are part of the witness so a content- or width-driven length change that keeps
+/// the same wide/narrow kind (same key + status) still triggers a refresh.
+pub fn session_layout_settled(session_layout: &SessionLayout, status: &RenderedStatus) -> bool {
+    session_layout.current_layout_key == session_layout.layout.key
+        && session_layout.current_status == session_layout.layout.target_status
+        && session_layout.current_left_length
+            == status_left_length_for_width(status, session_layout.width)
+        && session_layout.current_right_length
+            == status_right_length_for_width(status, session_layout.width)
+}
+
+/// True when every reconciled session is already settled, so the per-session write
+/// loop would be a no-op for all of them.
+pub fn session_layouts_settled(context: &RenderContext, status: &RenderedStatus) -> bool {
+    context
+        .session_layouts
+        .iter()
+        .all(|session_layout| session_layout_settled(session_layout, status))
 }
 
 fn push_global_if_changed(
@@ -186,8 +238,9 @@ fn push_set_global(plan: &mut TmuxCommandPlan, name: &str, value: &str) {
     });
 }
 
-fn push_set_session(plan: &mut TmuxCommandPlan, name: &str, value: &str) {
-    plan.commands.push(TmuxCommand::SetSession {
+fn push_set_session_target(plan: &mut TmuxCommandPlan, target: &str, name: &str, value: &str) {
+    plan.commands.push(TmuxCommand::SetSessionTarget {
+        target: target.to_string(),
         name: name.to_string(),
         value: value.to_string(),
     });
@@ -217,8 +270,36 @@ mod tests {
     use super::{CommitPlanner, TmuxCommand};
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderEventKind, RenderedSegment,
-        RenderedStatus, SessionGroupView, StatusMode, StatusPosition, TmuxSnapshot,
+        RenderedStatus, SessionGroupView, SessionLayout, StatusMode, StatusPosition, TmuxSnapshot,
     };
+
+    fn session_layout(
+        session_id: &str,
+        kind: LayoutKind,
+        target_status: &str,
+        target_key: &str,
+        current_status: &str,
+        current_key: &str,
+    ) -> SessionLayout {
+        SessionLayout {
+            session_id: session_id.to_string(),
+            session_name: "work".to_string(),
+            current_status: current_status.to_string(),
+            current_layout_key: current_key.to_string(),
+            // Defaults match status_*_length_for_width(rendered_status("body"), 200).
+            current_left_length: "64".to_string(),
+            current_right_length: "84".to_string(),
+            layout: LayoutPlan {
+                mode: StatusMode::TopAdaptive,
+                position: StatusPosition::Top,
+                kind,
+                rows: if kind == LayoutKind::Wide { 1 } else { 2 },
+                target_status: target_status.to_string(),
+                key: target_key.to_string(),
+            },
+            width: 200,
+        }
+    }
 
     #[test]
     fn skips_unchanged_large_status_options() {
@@ -258,64 +339,80 @@ mod tests {
     }
 
     #[test]
-    fn sets_dynamic_status_left_length_when_cached_value_is_stale() {
-        let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(BTreeMap::from([(
-            "status-left-length".to_string(),
-            "64".to_string(),
-        )]));
+    fn writes_per_session_layout_for_a_changed_narrow_session() {
+        let status = rendered_status("body");
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout("$7", LayoutKind::Narrow, "2", "02:narrow", "on", "02:wide")];
         let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
-            TmuxCommand::SetGlobal { name, value }
-                if name == "status-left-length" && value == "70"
+            TmuxCommand::SetSessionTarget { target, name, value }
+                if target == "$7" && name == "status" && value == "2"
         )));
-    }
-
-    #[test]
-    fn skips_dynamic_status_left_length_when_cached_value_matches() {
-        let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(BTreeMap::from([(
-            "status-left-length".to_string(),
-            "70".to_string(),
-        )]));
-        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
-
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetSessionTarget { target, name, .. }
+                if target == "$7" && name == "status-format[0]"
+        )));
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetSessionTarget { target, name, value }
+                if target == "$7" && name == "@GHC_SL_LAYOUT" && value == "02:narrow"
+        )));
+        // Layout never leaks to the global status option anymore.
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
-            TmuxCommand::SetGlobal { name, .. } if name == "status-left-length"
+            TmuxCommand::SetGlobal { name, .. } if name == "status"
         )));
     }
 
     #[test]
-    fn sets_dynamic_status_right_length_when_cached_value_is_stale() {
-        let status = rendered_status(&"x".repeat(90));
-        let context = context_with_options(BTreeMap::from([(
-            "status-right-length".to_string(),
-            "84".to_string(),
-        )]));
+    fn wide_session_unsets_status_format_per_session() {
+        let status = rendered_status("body");
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout("$3", LayoutKind::Wide, "on", "02:wide", "2", "02:narrow")];
         let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
-            TmuxCommand::SetGlobal { name, value }
-                if name == "status-right-length" && value == "92"
+            TmuxCommand::UnsetSessionTarget { target, name }
+                if target == "$3" && name == "status-format"
         )));
     }
 
     #[test]
-    fn skips_dynamic_status_right_length_when_cached_value_matches() {
-        let status = rendered_status(&"x".repeat(90));
-        let context = context_with_options(BTreeMap::from([(
-            "status-right-length".to_string(),
-            "92".to_string(),
-        )]));
+    fn skips_per_session_layout_when_already_settled() {
+        let status = rendered_status("body");
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout("$9", LayoutKind::Wide, "on", "02:wide", "on", "02:wide")];
         let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
 
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
-            TmuxCommand::SetGlobal { name, .. } if name == "status-right-length"
+            TmuxCommand::SetSessionTarget { target, .. } | TmuxCommand::UnsetSessionTarget { target, .. }
+                if target == "$9"
+        )));
+    }
+
+    #[test]
+    fn rewrites_per_session_layout_when_only_length_is_stale() {
+        // F-001: rows + layout key match the target, but the width-derived length is
+        // stale (content/width changed within the same wide/narrow kind). The bundle
+        // must still be rewritten so the per-session length is repaired without a
+        // reload or kind/status transition.
+        let status = rendered_status("body");
+        let mut session_layout =
+            session_layout("$2", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
+        session_layout.current_left_length = "40".to_string();
+        let mut context = context_with_options(BTreeMap::new());
+        context.session_layouts = vec![session_layout];
+        let plan = CommitPlanner::plan(&status, &context, &RenderEvent::manual_apply(), vec![]);
+
+        assert!(plan.commands.iter().any(|command| matches!(
+            command,
+            TmuxCommand::SetSessionTarget { target, name, value }
+                if target == "$2" && name == "status-left-length" && value == "64"
         )));
     }
 
@@ -399,13 +496,13 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 
     fn tmux_snapshot(options: BTreeMap<String, String>) -> TmuxSnapshot {
         TmuxSnapshot {
             mode: "02".to_string(),
-            current_layout: "02:wide".to_string(),
             status: "on".to_string(),
             width: 200,
             current_session_name: "s".to_string(),
@@ -413,6 +510,7 @@ mod tests {
             host: "h".to_string(),
             session_created: 1,
             sessions: Vec::new(),
+            client_widths: Vec::new(),
             options,
         }
     }

@@ -6,28 +6,36 @@ const DEFAULT_STATUS_RIGHT_LENGTH: usize = 84;
 const STATUS_LENGTH_PADDING: usize = 2;
 
 pub fn status_left_length(status: &RenderedStatus, context: &RenderContext) -> String {
+    status_left_length_for_width(status, context.snapshot.width)
+}
+
+pub fn status_right_length(status: &RenderedStatus, context: &RenderContext) -> String {
+    status_right_length_for_width(status, context.snapshot.width)
+}
+
+pub fn status_left_length_for_width(status: &RenderedStatus, width: usize) -> String {
     dynamic_status_length(
         &status.status_left.literal_text,
-        context,
+        width,
         DEFAULT_STATUS_LEFT_LENGTH,
     )
     .to_string()
 }
 
-pub fn status_right_length(status: &RenderedStatus, context: &RenderContext) -> String {
+pub fn status_right_length_for_width(status: &RenderedStatus, width: usize) -> String {
     dynamic_status_length(
         &status.status_right.literal_text,
-        context,
+        width,
         DEFAULT_STATUS_RIGHT_LENGTH,
     )
     .to_string()
 }
 
-fn dynamic_status_length(literal_text: &str, context: &RenderContext, default: usize) -> usize {
+fn dynamic_status_length(literal_text: &str, width: usize, default: usize) -> usize {
     let desired = display_width(literal_text)
         .saturating_add(STATUS_LENGTH_PADDING)
         .max(default);
-    let max = context.snapshot.width.max(default);
+    let max = width.max(default);
 
     desired.min(max)
 }
@@ -134,7 +142,6 @@ mod tests {
         RenderContext {
             snapshot: TmuxSnapshot {
                 mode: "02".to_string(),
-                current_layout: "02:wide".to_string(),
                 status: "on".to_string(),
                 width,
                 current_session_name: "s".to_string(),
@@ -142,6 +149,7 @@ mod tests {
                 host: "h".to_string(),
                 session_created: 1,
                 sessions: Vec::new(),
+                client_widths: Vec::new(),
                 options: BTreeMap::new(),
             },
             group: SessionGroupView {
@@ -156,6 +164,7 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            session_layouts: Vec::new(),
         }
     }
 }
