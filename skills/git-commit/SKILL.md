@@ -50,9 +50,9 @@ Interpret arguments as constraints first, hints second.
    - Mask suspicious strings; never print full secret values.
    - On any finding, stop and ask confirmation before commit.
 
-4. Compose message
-   - Run `git log --oneline -10`; follow the observed style, else Conventional Commits as `:gitmoji: type(scope): description` (scope optional).
-   - English; concise imperative description.
+4. Compose message (Conventional Commits + Gitmoji)
+   - Run `git log --oneline -10` to confirm the repo's prevailing style; the convention below is the default unless the repo clearly diverges.
+   - Header format `:gitmoji: <type>(<scope>): <description>` — see [references/conventional-commits.md](references/conventional-commits.md) for the type vocabulary, gitmoji mapping table, and breaking-change / body / footer rules. PR titles use the same header format.
    - If target changes are clearly unrelated, propose split commits; else one cohesive commit.
 
 5. Stage, preview, commit
