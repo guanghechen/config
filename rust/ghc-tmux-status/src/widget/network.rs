@@ -11,8 +11,8 @@ impl TemplateWidget for NetworkWidget {
     // The sampler is the single writer of `@GHC_NET_NOW`; render only installs an
     // indirect reference so tmux redraws can show fresh bandwidth without a full render.
     fn render_template(&self, _context: &RenderContext) -> AppResult<RenderedSegment> {
-        let body_literal = format!(" ↓{:<5} ↑{:<5} ", "999G", "999G");
-        let literal_text = pill_literal(&body_literal);
+        let body_literal = " ↓99.9G ↑99.9G ";
+        let literal_text = pill_literal(body_literal);
         let rich_text = "#[fg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SEP_ROUND_LEFT}#[fg=#{@GHC_SL_FG_PILL_ICON}#,bg=#{@GHC_SL_BG_PILL_DURATION}]#{@GHC_SYM_NET} #[default]#[fg=#{@GHC_SL_FG_PILL_TXT}] #{@GHC_NET_NOW} ".to_string();
         Ok(RenderedSegment {
             literal_text,
@@ -57,7 +57,7 @@ pub fn decode_network_snapshot(value: &str) -> Option<NetworkSnapshot> {
 pub fn format_network_now(snapshot: &NetworkSnapshot) -> String {
     let rx = format_speed(snapshot.rx_bytes_per_second);
     let tx = format_speed(snapshot.tx_bytes_per_second);
-    format!("↓{rx:<5} ↑{tx:<5}")
+    format!("↓{rx} ↑{tx}")
 }
 
 fn format_speed(bytes_per_second: u64) -> String {
@@ -136,7 +136,7 @@ mod tests {
                 tx_bytes: 3,
             },
         };
-        assert_eq!(format_network_now(&snapshot), "↓12.0K ↑999B ");
+        assert_eq!(format_network_now(&snapshot), "↓12.0K ↑999B");
     }
 
     #[test]

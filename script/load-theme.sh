@@ -183,7 +183,7 @@ function _ghc_tmux_load_theme_ {
             tmux set -g @GHC_MEM_NOW " 0"
           fi
           if [ -z "$(tmux show -gqv @GHC_NET_NOW 2>/dev/null)" ]; then
-            tmux set -g @GHC_NET_NOW "↓0B    ↑0B   "
+            tmux set -g @GHC_NET_NOW "↓0B ↑0B"
           fi
           # The status line redraws every second; the renderer self-reschedules
           # metric sampling every METRIC_RESAMPLE_INTERVAL_SECONDS.
