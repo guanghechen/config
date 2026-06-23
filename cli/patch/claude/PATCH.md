@@ -8,13 +8,12 @@ Latest verified on WSL/Linux: Claude Code `2.1.186`
 
 ### 1. Image Paste
 
-跨平台图片粘贴支持，统一使用 `Ctrl+V`。
+WSL/Linux 剪贴板图片**格式**支持。键绑定（`Ctrl+V` 触发粘贴）已迁出本 patch，改由 `~/.config/claude/keybindings.json`（`ctrl+v: chat:imagePaste`，需 Claude Code v2.1.18+）配置。
 
-| Platform  | Issue                                                      | Solution                                       |
-| --------- | ---------------------------------------------------------- | ---------------------------------------------- |
-| Windows   | 默认 `Alt+V` 无效（Windows 不识别 `meta` 修饰键）          | 改用 `Ctrl+V` (`ctrl` 修饰键)                  |
-| Windows   | Windows Terminal 不支持 bracketed paste mode               | 在 input handler 中直接检测 `Ctrl+V`           |
-| WSL/Linux | `wl-paste` 可能输出 BMP 格式                               | 添加 BMP 支持，自动转 PNG (需 ImageMagick)     |
+| Platform  | Issue                               | Solution                                   |
+| --------- | ----------------------------------- | ------------------------------------------ |
+| WSL       | Windows 侧复制的图片不在 WSL 剪贴板 | helper 优先读取 Windows 剪贴板             |
+| WSL/Linux | `wl-paste` 可能输出 BMP 格式        | 添加 BMP 支持，自动转 PNG (需 ImageMagick) |
 
 ### 2. Context Window (manual only)
 
@@ -83,12 +82,6 @@ where.exe claude
 # Context Window - 搜索默认值 200000
 rg --text 'var \w+=200000' /path/to/executable
 
-# Image Paste (Windows) - 搜索 keybinding
-rg --text '==="windows"\?"alt\+v":"ctrl\+v"' /path/to/executable
-
-# Image Paste (Windows, 可选) - 某些版本有 displayText/check(meta) 片段
-rg --text 'displayText:' /path/to/executable
-
 # Image Paste (WSL/Linux) - 搜索 wl-paste 命令
 rg --text 'wl-paste --type image/png' /path/to/executable
 ```
@@ -112,10 +105,7 @@ rg --text 'wl-paste --type image/png' /path/to/executable
 
 1. patches 数组中高版本必须排在前面（降序排列），确保新版本的 patch 优先匹配。
 
-2. Windows 平台 patch 组合随版本变化：
-   - 通用必需：`win-image-paste-keybinding`（将 keybinding 从 `alt+v` 改为 `ctrl+v`）
-   - 部分版本：`win-image-paste-shortcut`（将 displayText/check 中的 `meta` 改为 `ctrl`）
-   - 旧版本（≤ 2.1.29）：`win-image-paste-ctrl-v`（在 `wrappedOnInput` 中添加 Ctrl+V 检测逻辑）
+2. Windows 键绑定（`Ctrl+V` 触发图片粘贴）不再由本 patch 处理，改用 `~/.config/claude/keybindings.json`（`ctrl+v: chat:imagePaste`，需 Claude Code v2.1.18+）。本 patch 仅保留 WSL/Linux 剪贴板格式相关条目。
 
 3. WSL/Linux 平台 patch：
    - `checkImage-grep-pattern`（< 2.1.50）: 添加 BMP 格式支持（2.1.50 已内置）
@@ -129,7 +119,7 @@ node index.mjs
 
 确认输出显示 `Patched` 而非 `Pattern not found`。
 
-**Windows 测试 checklist**：
-- [ ] `win-image-paste-keybinding` 显示 `Patched` 或 `Already patched`
-- [ ] 如版本包含对应 patch，`win-image-paste-shortcut` / `win-image-paste-ctrl-v` 显示 `Patched` 或 `Already patched`
-- [ ] 在 Claude Code 中按 Ctrl+V 能粘贴剪贴板中的图片
+**WSL/Linux 测试 checklist**：
+- [ ] `wsl-image-paste-checkImage` / `wsl-image-paste-saveImage`（或旧版 `checkImage-grep-pattern` / `wl-paste-bmp-conversion`）显示 `Patched` 或 `Already patched`
+- [ ] 已配置 `~/.config/claude/keybindings.json`（`ctrl+v: chat:imagePaste`）
+- [ ] 在 Claude Code 中按 Ctrl+V 能粘贴剪贴板中的图片（含 Windows 侧 BMP）
