@@ -2,7 +2,7 @@
 
 Runtime patches for Claude Code CLI.
 
-Latest verified on WSL/Linux: Claude Code `2.1.178`
+Latest verified on WSL/Linux: Claude Code `2.1.186`
 
 ## Patches
 
