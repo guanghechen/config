@@ -6,7 +6,7 @@ const LIST_SURFACE_BG: &str = "default";
 // The first item's ">" is a powerline join the orange host segment points into the
 // session list: the arrow ink is the host pill color over the item-colored cell, so the
 // host flows straight on. (Not the "default" token: as fg it would be the bar text color.)
-const HEAD_NOTCH_FG: &str = "#{@GHC_SL_BG_PILL_HOST}";
+const FIRST_ITEM_ARROW_FG: &str = "#{@GHC_SL_BG_PILL_HOST}";
 const ACTIVE_BG: &str = "#{@GHC_SL_BG_SESSION_LIST_ACTIVE}";
 const ACTIVE_FG: &str = "#{@GHC_SL_FG_SESSION_LIST_ACTIVE}";
 const INACTIVE_NAME_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NAME}";
@@ -139,7 +139,7 @@ fn render_left_edge(first_session_id: &str) -> String {
         ACTIVE_BG,
         INACTIVE_NAME_BG,
     );
-    render_arrow(HEAD_NOTCH_FG, &bg)
+    render_arrow(FIRST_ITEM_ARROW_FG, &bg)
 }
 
 fn render_join_separator(left_id: &str, right_id: &str) -> String {

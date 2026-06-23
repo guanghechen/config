@@ -24,7 +24,7 @@ const RANK_TIME: u8 = 6;
 /// references, not render-time samples.
 ///
 /// Each widget type is instantiated exactly once. The single-row and two-row
-/// layouts share the rendered sub-segments (prefix / window chrome / metrics):
+/// layouts share the rendered sub-segments (prefix / window indicators / metrics):
 /// segment concatenation is associative, so composing the shared pieces is
 /// byte-identical to rendering each row independently.
 pub fn render_status02(
@@ -43,8 +43,8 @@ pub fn render_status02(
 
     let mut fullscreen = template(FullscreenWidget);
     let mut window_id = template(WindowIdWidget);
-    let mut chrome_widgets: [&mut dyn StatusWidget; 2] = [&mut fullscreen, &mut window_id];
-    let chrome_segment = render_widgets(&mut chrome_widgets, context, event)?;
+    let mut window_indicator_widgets: [&mut dyn StatusWidget; 2] = [&mut fullscreen, &mut window_id];
+    let window_indicator_segment = render_widgets(&mut window_indicator_widgets, context, event)?;
 
     let network = template(NetworkWidget).render(context)?;
     let cpu = template(CpuWidget).render(context)?;
@@ -71,14 +71,14 @@ pub fn render_status02(
     // cell accounting (powerline/nerd glyphs are single-width PUA, CJK double), so the
     // narrow thresholds are exact — no slack. The prefix is reserved at its worst case
     // (the same literal shadow status-*-length uses) so an active prefix indicator never
-    // overflows a metric. The wide row additionally carries chrome and a centered window
-    // list that are intentionally not counted — wide clients are roomy, and any residual
-    // overflow falls back to tmux truncation.
+    // overflows a metric. The wide row additionally carries the window indicators and a
+    // centered window list that are intentionally not counted — wide clients are roomy,
+    // and any residual overflow falls back to tmux truncation.
     let metric_base = display_width(&status_left.literal_text)
         .saturating_add(display_width(&prefix_segment.literal_text));
     let metric_segment = responsive_metric_segment(&metrics, metric_base);
 
-    let status_right_body = concat_segments(&[&prefix_segment, &chrome_segment, &metric_segment]);
+    let status_right_body = concat_segments(&[&prefix_segment, &window_indicator_segment, &metric_segment]);
     let status_right = RenderedSegment {
         literal_text: format!(" {}", status_right_body.literal_text),
         rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
@@ -94,8 +94,8 @@ pub fn render_status02(
     };
 
     let current_format = RenderedSegment {
-        literal_text: chrome_segment.literal_text.clone(),
-        rich_text: format_current_format(&chrome_segment.rich_text),
+        literal_text: window_indicator_segment.literal_text.clone(),
+        rich_text: format_current_format(&window_indicator_segment.rich_text),
     };
 
     Ok((
@@ -408,7 +408,7 @@ mod tests {
     }
 
     // The contract tests below lock the structural invariants of render_status02 —
-    // row composition, shared sub-segment reuse, chrome routing, wrappers, metric
+    // row composition, shared sub-segment reuse, window-indicator routing, wrappers, metric
     // order, and cache-write behavior. They deliberately assert structure (markers,
     // ordering, presence/absence) rather than any color/style value, so intentional
     // theme tweaks do not churn them; only a structural regression breaks them.
@@ -465,12 +465,13 @@ mod tests {
     }
 
     #[test]
-    fn render_status02_routes_chrome_into_status_right_only() {
+    fn render_status02_routes_window_indicators_into_status_right_only() {
         let context = contract_context();
         let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
 
-        // Chrome (fullscreen + window_id) belongs to status_right and the per-session
-        // current_format, never to the session row (row0_right = prefix + metric only).
+        // The window indicators (fullscreen + window_id) belong to status_right and the
+        // per-session current_format, never to the session row (row0_right = prefix +
+        // metric only).
         assert!(rendered.status_right.literal_text.contains("@00"));
         assert!(rendered.status_right.literal_text.contains("00/00"));
         assert!(!rendered.session_format.literal_text.contains("@00"));

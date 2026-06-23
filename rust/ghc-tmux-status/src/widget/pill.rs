@@ -9,12 +9,6 @@ pub(super) fn pill_literal(body: &str) -> String {
     format!("{ROUND_LEFT_LITERAL}{ICON_LITERAL} {body}")
 }
 
-// Semantic marker for state-dependent widgets. The pessimistic width comes from
-// the caller-provided body template, while the pill shell stays shared.
-pub(super) fn conditional_pill_literal(body: &str) -> String {
-    pill_literal(body)
-}
-
 pub(super) fn prefix_literal() -> String {
     format!("{ICON_LITERAL} ,")
 }
