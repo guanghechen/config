@@ -57,13 +57,15 @@ Send ordinary keys:
 tmux send-keys -t '<target>' <key> [<key> ...]
 ```
 
-Send short text without submitting:
+Send short text without submitting. Prefer `-l` (literal) so the text is never reinterpreted as key names or control sequences:
 
 ```bash
-tmux send-keys -t '<target>' '<text>'
+tmux send-keys -l -t '<target>' '<text>'
 ```
 
-Send `Enter` only when the user asked to submit, or when you have confirmed the target is an idle shell prompt and the text is intended as a command.
+Before sending text into an agent/editor pane, confirm its input mode first (see "Editor / TUI Safety") — a Vim-mode composer in NORMAL runs your text as commands.
+
+Send `Enter` only when the user asked to submit, or when you have confirmed the target is an idle shell prompt and the text is intended as a command. After a multiline buffer, one `Enter` may not submit — re-capture and, if not submitted, send the submit key again (bounded retry).
 
 ## Run Shell Commands
 
@@ -96,8 +98,9 @@ Paste does not mean submit. Whether to send `Enter` depends on the target state 
 ## Editor / TUI Safety
 
 - Capture before acting; identify the mode before sending `Enter`, `Escape`, or control keys.
-- In Vim-like insert mode, such as `-- INSERT --`, `Enter` may only insert a newline. Submit or exit only when that is intended.
-- To leave insert mode, send `Escape` alone, re-capture to confirm the mode changed, then continue.
+- Vim-mode agent composer (e.g. Claude Code): in NORMAL (block cursor, no `-- INSERT --`) text is run as commands, so send `i` to reach INSERT before typing; `Enter` submits from any mode, so do not send `Escape` first (unnecessary, interrupts a busy agent).
+- Real editor (vim/nvim): in insert `Enter` is a newline; submit/leave via `Escape` then the editor's command — do not treat it like an agent composer.
+- Non-modal target (shell, Codex): type directly; never send `Escape`/`i`.
 - For a running TUI, REPL, or long-running command, do not type shell commands into the pane unless a prompt/input field is clearly active.
 
 ## Hard Stop Rules
@@ -107,3 +110,4 @@ Paste does not mean submit. Whether to send `Enter` depends on the target state 
 - Do not send secrets, credentials, `.env*` content, or sensitive logs.
 - Do not submit text when the target state is unclear; capture first and state the uncertainty.
 - Do not claim success unless a re-capture shows a clear result.
+- Suspected Vim-mode composer: confirm INSERT before sending text, and the text intact before `Enter`, or it is run as commands / submitted broken. (Confirmed non-modal prompts are exempt.)
