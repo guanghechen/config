@@ -44,25 +44,13 @@ local function bottom_lines(content, n)
   return out
 end
 
+--- Whether any line of the capture's footer region matches `pattern` (a Lua
+--- pattern). Lines are trimmed first, so a `^`-anchored pattern keys off the first
+--- non-space glyph; both `insert_pattern` and `busy_pattern` go through here.
 ---@param content                       string|nil
 ---@param pattern                       string|nil
 ---@return boolean
-local function is_insert(content, pattern)
-  if not content or not pattern then
-    return false
-  end
-  for _, line in ipairs(bottom_lines(content, BOTTOM_LINES)) do
-    if line:find(pattern) then
-      return true
-    end
-  end
-  return false
-end
-
----@param content                       string|nil
----@param pattern                       string|nil
----@return boolean
-local function is_busy(content, pattern)
+local function footer_has(content, pattern)
   if not content or not pattern then
     return false
   end
@@ -114,28 +102,30 @@ local function make_signature(text)
   return vim.trim(first):sub(1, SIGNATURE_LEN)
 end
 
---- Submission is confirmed when the agent starts processing (busy) or our text is
---- no longer the pending input. nil capture / unrecognized layout => not yet known.
+--- Classify what a capture says about our submission:
+---  - "submitted": the agent is processing, or our text has left the input box.
+---  - "pending":   our text is still sitting in the input box.
+---  - "unknown":   no capture, or the input-box layout could not be parsed.
 ---@param content                       string|nil
 ---@param signature                     string
 ---@param busy_pattern                  string|nil
----@return boolean
-local function is_submitted(content, signature, busy_pattern)
+---@return "submitted"|"pending"|"unknown"
+local function classify(content, signature, busy_pattern)
   if not content then
-    return false
+    return "unknown"
   end
-  if is_busy(content, busy_pattern) then
-    return true
+  if footer_has(content, busy_pattern) then
+    return "submitted"
   end
 
   local pending = extract_input(content)
   if pending == nil then
-    return false
+    return "unknown"
   end
   if signature == "" then
-    return pending == ""
+    return pending == "" and "submitted" or "pending"
   end
-  return not pending:find(signature, 1, true)
+  return pending:find(signature, 1, true) and "pending" or "submitted"
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -192,23 +182,42 @@ function M.deliver(opts, on_done)
   local signature = make_signature(opts.text)
   local can_verify = (insert_pat ~= nil) or (busy_pat ~= nil)
 
+  local finished = false
   local function done(ok, reason)
+    if finished then
+      return
+    end
+    finished = true
     if on_done then
       on_done(ok, reason)
     end
   end
 
+  -- Send the submit keystrokes - NORMAL-mode Escape then Enter for a modal editor,
+  -- bare Enter otherwise - then run `after` once they settle.
+  local function submit_keys(after)
+    if vim_mode then
+      S.tmux.send_key(pane, "Escape")
+      vim.defer_fn(function()
+        S.tmux.send_key(pane, "Enter")
+        vim.defer_fn(after, SETTLE)
+      end, SUBMIT_GAP)
+    else
+      S.tmux.send_key(pane, "Enter")
+      vim.defer_fn(after, SETTLE)
+    end
+  end
+
   -- Stage 4: confirm the message actually submitted, retrying the submit key at
-  -- most once. The retry is gated on a FRESH capture that proves the agent is idle
-  -- AND our text is still pending; we never send Escape on a busy or unparseable
-  -- frame (that would interrupt a generation the first Enter may already have
-  -- started). When we cannot prove either outcome we report "unverified" (ok=true
-  -- but unconfirmed) rather than a false "submitted".
+  -- most once. The retry is gated on proof that the agent is idle AND our text is
+  -- still pending; we never resubmit on a busy or unparseable frame (the first
+  -- Enter may already have submitted and started a generation). When neither
+  -- outcome can be proven we report "unverified" rather than a false "submitted".
   local function verify_submit(attempt)
     poll(
       pane,
       function(c)
-        return is_submitted(c, signature, busy_pat)
+        return classify(c, signature, busy_pat) == "submitted"
       end,
       VERIFY_TIMEOUT,
       VERIFY_INTERVAL,
@@ -216,66 +225,38 @@ function M.deliver(opts, on_done)
         if ok then
           return done(true, "submitted")
         end
-
         S.tmux.capture(pane, function(c)
-          if is_busy(c, busy_pat) then
-            return done(true, "submitted") -- generation started => the submit landed
+          local state = classify(c, signature, busy_pat)
+          if state == "submitted" then
+            return done(true, "submitted")
           end
-
-          local pending = extract_input(c)
-          if pending == nil then
-            return done(true, "unverified") -- layout unparseable: report honestly, send no keys
+          if state == "unknown" then
+            return done(true, "unverified") -- cannot parse the screen: report honestly, send no keys
           end
-          if signature == "" or not pending:find(signature, 1, true) then
-            return done(true, "submitted") -- our text left the input box
-          end
-
-          -- Idle and provably still pending: safe to resubmit, once.
+          -- state == "pending": idle and provably still in the box, so resubmit once.
           if attempt >= 2 then
             return done(false, "not submitted")
           end
-          if vim_mode then
-            S.tmux.send_key(pane, "Escape")
-            vim.defer_fn(function()
-              S.tmux.send_key(pane, "Enter")
-              vim.defer_fn(function()
-                verify_submit(attempt + 1)
-              end, SETTLE)
-            end, SUBMIT_GAP)
-          else
-            S.tmux.send_key(pane, "Enter")
-            vim.defer_fn(function()
-              verify_submit(attempt + 1)
-            end, SETTLE)
-          end
+          submit_keys(function()
+            verify_submit(attempt + 1)
+          end)
         end)
       end
     )
   end
 
-  -- Stage 3: submit. Modal editors must be in NORMAL mode for Enter to submit.
+  -- Stage 3: submit. A modal editor must be in NORMAL mode for Enter to submit.
   local function do_submit()
     if not submit then
       return done(true, "placed")
     end
-
-    local function press_enter()
-      S.tmux.send_key(pane, "Enter")
+    submit_keys(function()
       if can_verify then
-        vim.defer_fn(function()
-          verify_submit(1)
-        end, SETTLE)
+        verify_submit(1)
       else
         done(true, "sent")
       end
-    end
-
-    if vim_mode then
-      S.tmux.send_key(pane, "Escape")
-      vim.defer_fn(press_enter, SUBMIT_GAP)
-    else
-      press_enter()
-    end
+    end)
   end
 
   -- Stage 2: paste the text (lands in the box without submitting).
@@ -299,7 +280,7 @@ function M.deliver(opts, on_done)
         poll(
           pane,
           function(c)
-            return is_insert(c, insert_pat)
+            return footer_has(c, insert_pat)
           end,
           VERIFY_TIMEOUT,
           VERIFY_INTERVAL,
@@ -328,7 +309,7 @@ function M.deliver(opts, on_done)
     poll(
       pane,
       function(c)
-        return c ~= nil and not is_busy(c, busy_pat)
+        return c ~= nil and not footer_has(c, busy_pat)
       end,
       IDLE_TIMEOUT,
       IDLE_INTERVAL,
