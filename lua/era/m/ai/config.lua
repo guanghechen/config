@@ -26,6 +26,8 @@ M.tools = {
     proc_pattern = "\\<claude\\>",
     url = "https://github.com/anthropics/claude-code",
     vim_mode = true,
+    insert_pattern = "%-%- INSERT %-%-",
+    busy_pattern = "^%S+%s+%a+…",
   },
   codex = {
     cmd = "codex",

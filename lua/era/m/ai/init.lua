@@ -5,6 +5,7 @@ local __mods = {
   picker = "era.m.ai.picker",
   proc = "era.m.ai.proc",
   prompt = "era.m.ai.prompt",
+  sender = "era.m.ai.sender",
   state = "era.m.ai.state",
   term = "era.m.ai.term",
   tmux = "era.m.ai.tmux",
@@ -17,6 +18,7 @@ local __mods = {
 ---@field public picker                 era.m.ai.picker
 ---@field public proc                   era.m.ai.proc
 ---@field public prompt                 era.m.ai.prompt
+---@field public sender                 era.m.ai.sender
 ---@field public state                  era.m.ai.state
 ---@field public term                   era.m.ai.term
 ---@field public tmux                   era.m.ai.tmux

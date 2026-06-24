@@ -276,12 +276,18 @@ end
 --- Text sending
 ----------------------------------------------------------------------------------------------------
 
+--- Send a single tmux key. Each mode-changing key must be its own call so that
+--- `Escape` is never adjacent to the next byte (a merged `<Esc>i` is parsed as
+--- Meta-i, a merged `<Esc><CR>` as Alt-Enter); the caller spaces them in time.
 ---@param pane_id                       string
+---@param key                           string Tmux key name, e.g. "Escape", "Enter", "i", "C-u".
 ---@return boolean
-function M.send_escape_i(pane_id)
-  return exec({ "tmux", "send-keys", "-t", pane_id, "Escape", "i" }) ~= nil
+function M.send_key(pane_id, key)
+  return exec({ "tmux", "send-keys", "-t", pane_id, key }) ~= nil
 end
 
+--- Paste text via a per-pane buffer. `-r` keeps newlines literal (no LF->CR), so
+--- multi-line prompts land as text instead of submitting line by line.
 ---@param pane_id                       string
 ---@param text                          string
 ---@return boolean
@@ -293,10 +299,18 @@ function M.send_text(pane_id, text)
   return exec({ "tmux", "paste-buffer", "-b", buffer_name, "-d", "-r", "-t", pane_id }) ~= nil
 end
 
+--- Capture the pane's visible content as plain text (no escape sequences),
+--- asynchronously. `callback` receives nil when the capture fails.
 ---@param pane_id                       string
----@return boolean
-function M.send_enter(pane_id)
-  return exec({ "tmux", "send-keys", "-t", pane_id, "C-m" }) ~= nil
+---@param callback                      fun(content: string|nil)
+---@return nil
+function M.capture(pane_id, callback)
+  vim.system({ "tmux", "capture-pane", "-p", "-t", pane_id }, { text = true }, function(result)
+    local content = result.code == 0 and (result.stdout or "") or nil
+    vim.schedule(function()
+      callback(content)
+    end)
+  end)
 end
 
 return M

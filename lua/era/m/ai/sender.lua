@@ -1,0 +1,347 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.ai.sender" ---@type string
+
+local S = era.m.ai
+
+---@class era.m.ai.sender
+local M = {}
+
+--- All durations are milliseconds. They are deliberately small; correctness comes
+--- from capture-verification (when patterns are configured), not from the delays.
+local STEP_DELAY = 120 ---@type integer Gap between two mode-changing keys, so <Esc> never merges with the next byte.
+local SUBMIT_GAP = 150 ---@type integer Gap between the NORMAL-mode `Escape` and the submit `Enter`.
+local SETTLE = 120 ---@type integer Let the TUI redraw before the first verification capture.
+local VERIFY_TIMEOUT = 1500 ---@type integer Budget to confirm a footer state (insert / submitted).
+local VERIFY_INTERVAL = 120 ---@type integer Between verification captures.
+local IDLE_TIMEOUT = 12000 ---@type integer Budget to wait for a busy agent to go idle before sending.
+local IDLE_INTERVAL = 400 ---@type integer Between idle checks.
+local INSERT_TRIES = 3 ---@type integer Attempts to reach INSERT mode before giving up and pasting anyway.
+local BOTTOM_LINES = 10 ---@type integer Capture lines treated as the footer region for state detection.
+local SIGNATURE_LEN = 24 ---@type integer Prefix of the payload used to detect whether text is still pending in the box.
+local RULE_MIN = 20 ---@type integer Minimum horizontal-rule chars for a line to count as an input-box border.
+
+---@class era.m.ai.sender.IDeliverOpts
+---@field public pane_id                string
+---@field public text                   string
+---@field public submit                 boolean
+---@field public vim_mode               boolean
+---@field public insert_pattern         ?string Lua pattern; presence in the capture means the modal editor is in INSERT mode.
+---@field public busy_pattern           ?string Lua pattern (per trimmed bottom line); presence means the agent is processing.
+
+----------------------------------------------------------------------------------------------------
+--- State detection (pure functions over a plain-text capture)
+----------------------------------------------------------------------------------------------------
+
+---@param content                       string
+---@param n                             integer
+---@return string[]
+local function bottom_lines(content, n)
+  local lines = vim.split(content, "\n", { plain = true })
+  local out = {} ---@type string[]
+  for i = math.max(1, #lines - n + 1), #lines do
+    out[#out + 1] = lines[i]
+  end
+  return out
+end
+
+---@param content                       string|nil
+---@param pattern                       string|nil
+---@return boolean
+local function is_insert(content, pattern)
+  if not content or not pattern then
+    return false
+  end
+  for _, line in ipairs(bottom_lines(content, BOTTOM_LINES)) do
+    if line:find(pattern) then
+      return true
+    end
+  end
+  return false
+end
+
+---@param content                       string|nil
+---@param pattern                       string|nil
+---@return boolean
+local function is_busy(content, pattern)
+  if not content or not pattern then
+    return false
+  end
+  for _, line in ipairs(bottom_lines(content, BOTTOM_LINES)) do
+    if vim.trim(line):find(pattern) then
+      return true
+    end
+  end
+  return false
+end
+
+--- Extract the text currently pending in the input box: the region between the
+--- last two horizontal-rule borders, with the prompt marker stripped. Returns nil
+--- when the layout cannot be recognized (then submission cannot be judged here).
+---@param content                       string|nil
+---@return string|nil
+local function extract_input(content)
+  if not content then
+    return nil
+  end
+
+  local lines = vim.split(content, "\n", { plain = true })
+  local rules = {} ---@type integer[]
+  for i, line in ipairs(lines) do
+    local _, dashes = vim.trim(line):gsub("─", "")
+    if dashes >= RULE_MIN then
+      rules[#rules + 1] = i
+    end
+  end
+  if #rules < 2 then
+    return nil
+  end
+
+  local top, bottom = rules[#rules - 1], rules[#rules]
+  local parts = {} ---@type string[]
+  for i = top + 1, bottom - 1 do
+    local t = vim.trim(lines[i]):gsub("^❯%s*", ""):gsub("^>%s*", "")
+    if t ~= "" then
+      parts[#parts + 1] = t
+    end
+  end
+  return vim.trim(table.concat(parts, "\n"))
+end
+
+---@param text                          string
+---@return string
+local function make_signature(text)
+  local first = vim.split(text or "", "\n", { plain = true })[1] or ""
+  return vim.trim(first):sub(1, SIGNATURE_LEN)
+end
+
+--- Submission is confirmed when the agent starts processing (busy) or our text is
+--- no longer the pending input. nil capture / unrecognized layout => not yet known.
+---@param content                       string|nil
+---@param signature                     string
+---@param busy_pattern                  string|nil
+---@return boolean
+local function is_submitted(content, signature, busy_pattern)
+  if not content then
+    return false
+  end
+  if is_busy(content, busy_pattern) then
+    return true
+  end
+
+  local pending = extract_input(content)
+  if pending == nil then
+    return false
+  end
+  if signature == "" then
+    return pending == ""
+  end
+  return not pending:find(signature, 1, true)
+end
+
+----------------------------------------------------------------------------------------------------
+--- Async polling
+----------------------------------------------------------------------------------------------------
+
+---@param pane_id                       string
+---@param predicate                     fun(content: string|nil): boolean
+---@param timeout                       integer
+---@param interval                      integer
+---@param callback                      fun(ok: boolean)
+---@return nil
+local function poll(pane_id, predicate, timeout, interval, callback)
+  local start = vim.uv.now()
+  local function tick()
+    S.tmux.capture(pane_id, function(content)
+      if predicate(content) then
+        return callback(true)
+      end
+      if vim.uv.now() - start >= timeout then
+        return callback(false)
+      end
+      vim.defer_fn(tick, interval)
+    end)
+  end
+  tick()
+end
+
+----------------------------------------------------------------------------------------------------
+--- Public API
+----------------------------------------------------------------------------------------------------
+
+--- Deliver text to a tmux agent pane and (optionally) submit it.
+---
+--- State owner is the pane itself; this assumes a single in-flight delivery per
+--- pane (no internal queue). For a modal (vim) editor it enters INSERT before
+--- pasting and returns to NORMAL before submitting, with every mode-changing key
+--- sent separately. When `insert_pattern` / `busy_pattern` are provided it verifies
+--- each transition by capture instead of trusting fixed delays, never sends
+--- `Escape` while the agent is generating (which would interrupt it), and confirms
+--- the message actually left the input box. `on_done(ok, reason)` reports the
+--- outcome: ok=true with reason "submitted"/"placed"/"sent", or "unverified" when
+--- delivery happened but submission could not be confirmed; ok=false with
+--- "not submitted"/"busy"/"paste failed"/"unsupported source".
+---@param opts                          era.m.ai.sender.IDeliverOpts
+---@param on_done                       ?fun(ok: boolean, reason: string)
+---@return nil
+function M.deliver(opts, on_done)
+  local pane = opts.pane_id
+  local submit = opts.submit and true or false
+  local vim_mode = opts.vim_mode and true or false
+  local insert_pat = opts.insert_pattern
+  local busy_pat = opts.busy_pattern
+  local signature = make_signature(opts.text)
+  local can_verify = (insert_pat ~= nil) or (busy_pat ~= nil)
+
+  local function done(ok, reason)
+    if on_done then
+      on_done(ok, reason)
+    end
+  end
+
+  -- Stage 4: confirm the message actually submitted, retrying the submit key at
+  -- most once. The retry is gated on a FRESH capture that proves the agent is idle
+  -- AND our text is still pending; we never send Escape on a busy or unparseable
+  -- frame (that would interrupt a generation the first Enter may already have
+  -- started). When we cannot prove either outcome we report "unverified" (ok=true
+  -- but unconfirmed) rather than a false "submitted".
+  local function verify_submit(attempt)
+    poll(
+      pane,
+      function(c)
+        return is_submitted(c, signature, busy_pat)
+      end,
+      VERIFY_TIMEOUT,
+      VERIFY_INTERVAL,
+      function(ok)
+        if ok then
+          return done(true, "submitted")
+        end
+
+        S.tmux.capture(pane, function(c)
+          if is_busy(c, busy_pat) then
+            return done(true, "submitted") -- generation started => the submit landed
+          end
+
+          local pending = extract_input(c)
+          if pending == nil then
+            return done(true, "unverified") -- layout unparseable: report honestly, send no keys
+          end
+          if signature == "" or not pending:find(signature, 1, true) then
+            return done(true, "submitted") -- our text left the input box
+          end
+
+          -- Idle and provably still pending: safe to resubmit, once.
+          if attempt >= 2 then
+            return done(false, "not submitted")
+          end
+          if vim_mode then
+            S.tmux.send_key(pane, "Escape")
+            vim.defer_fn(function()
+              S.tmux.send_key(pane, "Enter")
+              vim.defer_fn(function()
+                verify_submit(attempt + 1)
+              end, SETTLE)
+            end, SUBMIT_GAP)
+          else
+            S.tmux.send_key(pane, "Enter")
+            vim.defer_fn(function()
+              verify_submit(attempt + 1)
+            end, SETTLE)
+          end
+        end)
+      end
+    )
+  end
+
+  -- Stage 3: submit. Modal editors must be in NORMAL mode for Enter to submit.
+  local function do_submit()
+    if not submit then
+      return done(true, "placed")
+    end
+
+    local function press_enter()
+      S.tmux.send_key(pane, "Enter")
+      if can_verify then
+        vim.defer_fn(function()
+          verify_submit(1)
+        end, SETTLE)
+      else
+        done(true, "sent")
+      end
+    end
+
+    if vim_mode then
+      S.tmux.send_key(pane, "Escape")
+      vim.defer_fn(press_enter, SUBMIT_GAP)
+    else
+      press_enter()
+    end
+  end
+
+  -- Stage 2: paste the text (lands in the box without submitting).
+  local function do_paste()
+    if not S.tmux.send_text(pane, opts.text) then
+      return done(false, "paste failed")
+    end
+    vim.defer_fn(do_submit, SETTLE)
+  end
+
+  -- Stage 1: reach INSERT mode. Each attempt is Escape->i so it is idempotent
+  -- (never types a literal "i") whatever the starting mode; verified when possible.
+  local function ensure_insert(attempt)
+    S.tmux.send_key(pane, "Escape")
+    vim.defer_fn(function()
+      S.tmux.send_key(pane, "i")
+      vim.defer_fn(function()
+        if not insert_pat then
+          return do_paste()
+        end
+        poll(
+          pane,
+          function(c)
+            return is_insert(c, insert_pat)
+          end,
+          VERIFY_TIMEOUT,
+          VERIFY_INTERVAL,
+          function(ok)
+            if ok or attempt >= INSERT_TRIES then
+              return do_paste()
+            end
+            ensure_insert(attempt + 1)
+          end
+        )
+      end, SETTLE)
+    end, STEP_DELAY)
+  end
+
+  local function start()
+    if vim_mode then
+      ensure_insert(1)
+    else
+      do_paste()
+    end
+  end
+
+  -- Stage 0: never drive the editor while the agent is generating (Escape would
+  -- interrupt it). Wait for idle when we can detect it; otherwise proceed.
+  if busy_pat then
+    poll(
+      pane,
+      function(c)
+        return c ~= nil and not is_busy(c, busy_pat)
+      end,
+      IDLE_TIMEOUT,
+      IDLE_INTERVAL,
+      function(idle)
+        if not idle then
+          return done(false, "busy")
+        end
+        start()
+      end
+    )
+  else
+    start()
+  end
+end
+
+return M

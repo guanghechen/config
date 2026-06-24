@@ -61,7 +61,9 @@
 ---@field public env                    fun(): table<string, string|false>
 ---@field public proc_pattern           string
 ---@field public url                    string
----@field public vim_mode               boolean If true, send <Esc>i before text to ensure insert mode.
+---@field public vim_mode               boolean If true, the input is a modal (vim) editor: enter INSERT before pasting, return to NORMAL before submitting.
+---@field public insert_pattern         ?string Lua pattern; presence in the pane capture means the modal editor is in INSERT mode. Enables insert-state verification.
+---@field public busy_pattern           ?string Lua pattern (matched per trimmed bottom line); presence means the agent is processing. Enables idle-wait before sending and submit confirmation.
 
 ---@class era.m.ai.ITmuxPaneInfo
 ---@field public session_id             string

@@ -178,40 +178,31 @@ end
 ---@param source                        era.m.ai.ISource
 ---@param text                          string
 ---@param submit                        boolean
----@return boolean
-function M.send_to_source(source, text, submit)
+---@param on_done                       fun(ok: boolean, reason: string)
+---@return nil
+function M.send_to_source(source, text, submit, on_done)
   local payload = submit and text or (vim.trim(text) .. " ")
 
   if source.type == "tmux" and source.tmux_pane then
     local tool = S.config.tools[source.agent]
-    local pane_id = source.tmux_pane.pane_id
-    if tool and tool.vim_mode then
-      S.tmux.send_escape_i(pane_id)
-      vim.defer_fn(function()
-        S.tmux.send_text(pane_id, payload)
-        if submit then
-          vim.defer_fn(function()
-            S.tmux.send_enter(pane_id)
-          end, 200)
-        end
-      end, 100)
-      return true
-    end
-
-    if not S.tmux.send_text(pane_id, payload) then
-      return false
-    end
-
-    if submit then
-      vim.defer_fn(function()
-        S.tmux.send_enter(pane_id)
-      end, 200)
-    end
-    return true
-  elseif source.type == "terminal" then
-    return S.term.send(source.id, payload, submit)
+    S.sender.deliver({
+      pane_id = source.tmux_pane.pane_id,
+      text = payload,
+      submit = submit,
+      vim_mode = tool ~= nil and tool.vim_mode or false,
+      insert_pattern = tool ~= nil and tool.insert_pattern or nil,
+      busy_pattern = tool ~= nil and tool.busy_pattern or nil,
+    }, on_done)
+    return
   end
-  return false
+
+  if source.type == "terminal" then
+    local ok = S.term.send(source.id, payload, submit)
+    on_done(ok, ok and "sent" or "failed")
+    return
+  end
+
+  on_done(false, "unsupported source")
 end
 
 ---@return nil
@@ -463,37 +454,63 @@ end
 ---@param submit                        boolean
 ---@return nil
 function M.__send_to_sources__(sources, text, submit)
+  local total = #sources
+  if total == 0 then
+    return
+  end
+
   local succeeded = {} ---@type string[]
+  local unverified = {} ---@type string[]
   local failed = {} ---@type string[]
+  local remaining = total
+
+  local function report()
+    if #succeeded > 0 then
+      stl.reporter.info({
+        from = __module_name__,
+        group = "ai",
+        subject = "Message Sent",
+        message = string.format("Sent to %s.", table.concat(succeeded, ", ")),
+      })
+    end
+
+    if #unverified > 0 then
+      stl.reporter.warn({
+        from = __module_name__,
+        group = "ai",
+        subject = "Send Unverified",
+        message = string.format("Sent to %s, but could not confirm submission.", table.concat(unverified, ", ")),
+      })
+    end
+
+    if #failed > 0 then
+      stl.reporter.error({
+        from = __module_name__,
+        group = "ai",
+        subject = "Send Failed",
+        message = string.format("Failed to send to %s.", table.concat(failed, ", ")),
+      })
+    end
+  end
 
   for _, source in ipairs(sources) do
     local agent_label = S.config.agent_labels[source.agent] or source.agent
     -- Render text for this specific agent (variable substitution + slash command transform)
     local rendered = stl.prompt.render(text, source.agent)
-    local ok = M.send_to_source(source, rendered, submit)
-    if ok then
-      succeeded[#succeeded + 1] = agent_label
-    else
-      failed[#failed + 1] = agent_label
-    end
-  end
+    M.send_to_source(source, rendered, submit, function(ok, reason)
+      if ok and reason == "unverified" then
+        unverified[#unverified + 1] = agent_label
+      elseif ok then
+        succeeded[#succeeded + 1] = agent_label
+      else
+        failed[#failed + 1] = string.format("%s (%s)", agent_label, reason or "failed")
+      end
 
-  if #succeeded > 0 then
-    stl.reporter.info({
-      from = __module_name__,
-      group = "ai",
-      subject = "Message Sent",
-      message = string.format("Sent to %s.", table.concat(succeeded, ", ")),
-    })
-  end
-
-  if #failed > 0 then
-    stl.reporter.error({
-      from = __module_name__,
-      group = "ai",
-      subject = "Send Failed",
-      message = string.format("Failed to send to %s.", table.concat(failed, ", ")),
-    })
+      remaining = remaining - 1
+      if remaining == 0 then
+        report()
+      end
+    end)
   end
 end
 
