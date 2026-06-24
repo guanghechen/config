@@ -233,6 +233,14 @@ function renderContext(data) {
   return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k (${pct}%)${ANSI.reset}`
 }
 
+function renderEffort(data) {
+  const level = data.effort?.level
+  if (!level) return ""
+  const color =
+    level === "max" || level === "xhigh" ? ANSI.red : level === "high" ? ANSI.yellow : ANSI.gray
+  return `${color}󱓞 ${level}${ANSI.reset}`
+}
+
 function renderStyle(data) {
   return `${ANSI.gray}󰉼 ${data.output_style?.name || "default"}${ANSI.reset}`
 }
@@ -273,6 +281,7 @@ function render(data) {
     renderModel(data),
     renderContext(data),
     renderCost(data),
+    renderEffort(data),
     renderStyle(data),
     renderDuration(data),
     renderTime(),
