@@ -84,6 +84,7 @@ status_line = [
   "model-with-reasoning",
   "context-remaining",
   "context-window-size",
+  "approval-mode",
   "run-state",
 ]
 terminal_title = ["activity", "project-name", "git-branch", "model-with-reasoning"]
