@@ -205,12 +205,13 @@ function renderGit(data, cwd) {
 }
 
 function renderModel(data) {
-  return `${ANSI.cyan}󰘦 ${data.model?.display_name || "Unknown"}${ANSI.reset}`
+  const name = (data.model?.display_name || "Unknown").replace(/\s*\([^)]*\)\s*$/, "")
+  return `${ANSI.cyan}󰘦 ${name}${ANSI.reset}`
 }
 
 function renderCost(data) {
   const usd = data.cost?.total_cost_usd || 0
-  return `${ANSI.yellow}$${usd.toFixed(4)}${ANSI.reset}`
+  return `${ANSI.yellow}$${usd.toFixed(2)}${ANSI.reset}`
 }
 
 function renderContext(data) {
@@ -230,7 +231,7 @@ function renderContext(data) {
   if (pct >= 80) color = ANSI.red
   else if (pct >= 50) color = ANSI.yellow
 
-  return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k (${pct}%)${ANSI.reset}`
+  return `${color}󰍛 ${(used / 1000).toFixed(1)}k/${(total / 1000).toFixed(0)}k${ANSI.reset}`
 }
 
 function renderEffort(data) {
@@ -242,7 +243,9 @@ function renderEffort(data) {
 }
 
 function renderStyle(data) {
-  return `${ANSI.gray}󰉼 ${data.output_style?.name || "default"}${ANSI.reset}`
+  const name = data.output_style?.name
+  if (!name || name === "default") return ""
+  return `${ANSI.gray}󰉼 ${name}${ANSI.reset}`
 }
 
 function formatDuration(ms) {
@@ -264,15 +267,6 @@ function renderDuration(data) {
   return `${ANSI.gray}󱎫 ${formatDuration(ms)}${ANSI.reset}`
 }
 
-function renderTime() {
-  const now = new Date()
-  const pad = (n) => n.toString().padStart(2, "0")
-  const hh = pad(now.getHours())
-  const mi = pad(now.getMinutes())
-  const ss = pad(now.getSeconds())
-  return `${ANSI.gray}󰥔 ${hh}:${mi}:${ss}${ANSI.reset}`
-}
-
 function render(data) {
   const cwd = path.normalize(data.cwd || process.cwd())
   const parts = [
@@ -284,7 +278,6 @@ function render(data) {
     renderEffort(data),
     renderStyle(data),
     renderDuration(data),
-    renderTime(),
   ].filter(Boolean)
 
   const sep = `${ANSI.gray}│${ANSI.reset}`
