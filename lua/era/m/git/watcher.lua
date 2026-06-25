@@ -135,6 +135,7 @@ local function trigger_gitdir_refresh()
 
       if do_head then
         era.m.git.buffer.invalidate_compare_text_all()
+        era.m.git.blame.invalidate_all()
         era.m.git.state.clear_ignored_cache()
         era.m.git.state.refresh(true)
       elseif do_status then

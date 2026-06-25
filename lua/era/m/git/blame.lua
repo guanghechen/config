@@ -4,17 +4,32 @@ local __module_name__ = "era.m.git.blame" ---@type string
 local NS_INLINE = "dot_module_git_inline_blame"
 local NS_BUFFER = "dot_module_git_buffer_blame"
 
+--- Sentinel rejection used when a blame run is superseded/cancelled; distinguished
+--- from a real git error so we don't report it.
+local CANCELLED = "blame:cancelled" ---@type string
+
 ---@class era.m.git.blame
 local M = {}
 
----@type table<integer, table<integer, era.m.git.BlameInfo>>
+--- Per-buffer whole-file blame, keyed by the buffer changedtick it was computed
+--- against. A cached entry is served only while changedtick still matches; any
+--- edit (or an explicit invalidate) makes it miss and re-blame.
+---@class era.m.git.blame.ICacheEntry
+---@field public tick                 integer
+---@field public entries             table<integer, era.m.git.BlameInfo>
+---@type table<integer, era.m.git.blame.ICacheEntry>
 local cache = {}
 
----@type table<integer, stl.c.CancellationToken|nil>
-local running_tokens = {}
-
----@type table<integer, stl.c.CancellationToken|nil>
-local running_buffer_tokens = {}
+--- In-flight blame run per buffer: the token to cancel it and the changedtick it
+--- was started for (so a duplicate request for the same content coalesces instead
+--- of spawning a second git process).
+---@class era.m.git.blame.IInflight
+---@field public token               stl.c.CancellationToken
+---@field public tick                integer
+---@type table<integer, era.m.git.blame.IInflight>
+local inline_inflight = {}
+---@type table<integer, era.m.git.blame.IInflight>
+local buffer_inflight = {}
 
 ---@param output                     string
 ---@return table<integer, era.m.git.BlameInfo>
@@ -114,6 +129,57 @@ local function parse_blame_output(output)
   return result
 end
 
+--- Run `git blame --porcelain` for one file. The returned Future ALWAYS settles:
+--- resolve(map) on success, reject(err) on a git error, reject(CANCELLED) when the
+--- token fires. Settling on cancel is the whole point - the caller's `:finally`
+--- runs in every case, so an in-flight marker can never leak (the historical bug).
+---@param file                       string
+---@param cwd                        string
+---@param token                      ?stl.c.CancellationToken
+---@return stl.c.Future              Resolves with table<integer, era.m.git.BlameInfo>
+local function run_blame(file, cwd, token)
+  return stl.c.Future.new(function(resolve, reject)
+    if token and token:is_cancelled() then
+      reject(CANCELLED)
+      return
+    end
+
+    local proc = stl.c.Proc.new({
+      cmd = "git",
+      args = { "-C", cwd, "blame", "--porcelain", "--", file },
+      timeout = 30000,
+      on_exit = function(p, err)
+        if err then
+          reject(tostring(p:err() or "git blame failed"))
+          return
+        end
+        resolve(parse_blame_output(p:out()))
+      end,
+    })
+
+    if token then
+      token:on_cancel(function()
+        proc:kill()
+        reject(CANCELLED)
+      end)
+    end
+  end)
+end
+
+---@param bufnr                      integer
+---@param result                     string
+local function report_failure(bufnr, result)
+  if result == CANCELLED then
+    return
+  end
+  stl.reporter.debug({
+    from = __module_name__,
+    group = "git",
+    subject = "blame",
+    message = string.format("git blame failed for buffer %d: %s", bufnr, result),
+  })
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Inline blame
 ----------------------------------------------------------------------------------------------------
@@ -126,7 +192,7 @@ end
 ---@field public prefix              string
 ---@field public priority            integer
 local inline_config = {
-  delay = 2000,
+  delay = 500,
   enabled = true,
   formatter = "<author>, <author_time:%Y-%m-%d %H:%M:%S> - <summary>",
   hl_group = "m_git_inline_blame",
@@ -139,20 +205,6 @@ local inline_ns = vim.api.nvim_create_namespace(NS_INLINE)
 
 ---@type integer
 local inline_augroup = vim.api.nvim_create_augroup("DotModuleGitInlineBlame", { clear = true })
-
----@type table<integer, uv.uv_timer_t>
-local inline_timers = {}
-
----@type table<integer, boolean>
-local inline_running = {}
-
----@class era.m.git.blame.IInlineCache
----@field public changedtick         integer
----@field public lnum                integer
----@field public info                era.m.git.BlameInfo
-
----@type table<integer, era.m.git.blame.IInlineCache>
-local inline_cache = {}
 
 ---@param info                       era.m.git.BlameInfo
 ---@return boolean
@@ -171,7 +223,7 @@ end
 ---@param info                       era.m.git.BlameInfo
 ---@param fmt                        string
 ---@return string
-local function format_inline_blame(info, fmt)
+local function format_blame(info, fmt)
   local author = info.author or ""
   if is_current_user(info) then
     author = "You"
@@ -200,6 +252,12 @@ local function format_inline_blame(info, fmt)
   return result
 end
 
+---@param info                       era.m.git.BlameInfo
+---@return boolean
+local function is_uncommitted(info)
+  return info.sha:match("^0+$") ~= nil or info.author == "Not Committed Yet"
+end
+
 ---@param bufnr                      integer
 local function inline_reset(bufnr)
   if vim.api.nvim_buf_is_valid(bufnr) then
@@ -208,35 +266,11 @@ local function inline_reset(bufnr)
 end
 
 ---@param bufnr                      integer
-local function inline_cancel_timer(bufnr)
-  local timer = inline_timers[bufnr]
-  if timer and not timer:is_closing() then
-    timer:stop()
-  end
-end
-
----@param bufnr                      integer
-local function inline_close_timer(bufnr)
-  local timer = inline_timers[bufnr]
-  if timer then
-    if not timer:is_closing() then
-      timer:stop()
-      timer:close()
-    end
-    inline_timers[bufnr] = nil
-  end
-end
-
----@param bufnr                      integer
 ---@param lnum                       integer
 ---@param info                       era.m.git.BlameInfo
 local function inline_set_extmark(bufnr, lnum, info)
-  local text ---@type string
-  if info.sha:match("^0+$") or info.author == "Not Committed Yet" then
-    text = inline_config.prefix .. "Not committed yet"
-  else
-    text = inline_config.prefix .. format_inline_blame(info, inline_config.formatter)
-  end
+  local text = inline_config.prefix
+    .. (is_uncommitted(info) and "Not committed yet" or format_blame(info, inline_config.formatter))
 
   pcall(vim.api.nvim_buf_set_extmark, bufnr, inline_ns, lnum - 1, 0, {
     id = 1,
@@ -247,52 +281,13 @@ local function inline_set_extmark(bufnr, lnum, info)
   })
 end
 
----@param file                       string
----@param cwd                        string
----@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with table<integer, era.m.git.BlameInfo>|nil
-local function run_blame(_, file, cwd, token)
-  return stl.c.Future.new(function(resolve)
-    if token and token:is_cancelled() then
-      resolve(nil)
-      return
-    end
-
-    local args = { "-C", cwd, "blame", "--porcelain", "--", file }
-
-    local proc = stl.c.Proc.new({
-      cmd = "git",
-      args = args,
-      timeout = 30000,
-      on_exit = function(p, err)
-        if token and token:is_cancelled() then
-          return
-        end
-        if err then
-          resolve(nil)
-          return
-        end
-        local output = p:out()
-        local result = parse_blame_output(output)
-        resolve(result)
-      end,
-    })
-
-    if token then
-      token:on_cancel(function()
-        proc:kill()
-      end)
-    end
-  end)
-end
-
+--- Paint (or clear) the inline annotation for the cursor line, fetching blame only
+--- when the cache misses. Re-reads bufnr/win/lnum/changedtick on every call, so it
+--- is safe to invoke directly OR from a settled blame `:finally` - it never paints
+--- a result against a line/window/content other than the one current right now.
 ---@param bufnr                      integer
 local function inline_update(bufnr)
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    return
-  end
-
-  if vim.api.nvim_get_mode().mode == "i" then
+  if not vim.api.nvim_buf_is_valid(bufnr) or vim.api.nvim_get_mode().mode == "i" then
     return
   end
 
@@ -302,9 +297,7 @@ local function inline_update(bufnr)
   end
 
   local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-
-  local foldclosed = vim.fn.foldclosed(lnum) ---@type integer
-  if foldclosed ~= -1 then
+  if vim.fn.foldclosed(lnum) ~= -1 then
     return
   end
 
@@ -314,101 +307,58 @@ local function inline_update(bufnr)
   end
 
   local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
-  local cached = inline_cache[bufnr]
-  if cached and cached.changedtick == tick and cached.lnum == lnum then
-    inline_set_extmark(bufnr, lnum, cached.info)
+
+  local entry = cache[bufnr]
+  if entry and entry.tick == tick then
+    local info = entry.entries[lnum]
+    if info then
+      inline_set_extmark(bufnr, lnum, info)
+    else
+      inline_reset(bufnr)
+    end
     return
   end
 
-  local buffer_blame = cache[bufnr]
-  if buffer_blame and buffer_blame[lnum] then
-    local info = buffer_blame[lnum] ---@type era.m.git.BlameInfo
-    inline_cache[bufnr] = { changedtick = tick, lnum = lnum, info = info }
-    inline_set_extmark(bufnr, lnum, info)
+  -- A run for this exact content is already going; its :finally re-renders.
+  local inflight = inline_inflight[bufnr]
+  if inflight and inflight.tick == tick then
     return
   end
-
-  if inline_running[bufnr] then
-    return
+  if inflight then
+    inflight.token:cancel()
   end
-  inline_running[bufnr] = true
 
-  if running_tokens[bufnr] then
-    running_tokens[bufnr]:cancel()
-  end
   local token = stl.c.CancellationToken.new()
-  running_tokens[bufnr] = token
+  inline_inflight[bufnr] = { token = token, tick = tick }
 
-  local file = buf_cache.file ---@type string
-  local cwd = buf_cache.repo.toplevel ---@type string
+  run_blame(buf_cache.file, buf_cache.repo.toplevel, token):finally(function(ok, result)
+    local current = inline_inflight[bufnr]
+    if current and current.token == token then
+      inline_inflight[bufnr] = nil
+    end
 
-  run_blame(bufnr, file, cwd, token):finally(function(resolved, blame)
-    running_tokens[bufnr] = nil
-    inline_running[bufnr] = nil
-
-    if not resolved then
+    if not ok then
+      report_failure(bufnr, result)
       return
     end
 
-    if not vim.api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-
-    if blame then
-      cache[bufnr] = blame
-    end
-
-    if not vim.api.nvim_win_is_valid(winnr) or bufnr ~= vim.api.nvim_win_get_buf(winnr) then
-      return
-    end
-
-    local current_lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-    if blame and blame[current_lnum] then
-      local info = blame[current_lnum] ---@type era.m.git.BlameInfo
-      local current_tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
-      inline_cache[bufnr] = { changedtick = current_tick, lnum = current_lnum, info = info }
-      inline_set_extmark(bufnr, current_lnum, info)
-    end
+    cache[bufnr] = { tick = tick, entries = result }
+    inline_update(bufnr)
   end)
 end
 
----@param bufnr                      integer
-local function inline_schedule_update(bufnr)
-  if not inline_config.enabled then
-    return
-  end
-
-  inline_reset(bufnr)
-  inline_cancel_timer(bufnr)
-
-  local timer = inline_timers[bufnr] ---@type uv.uv_timer_t|nil
-  if not timer or timer:is_closing() then
-    timer = vim.uv.new_timer()
-    inline_timers[bufnr] = timer
-  end
-
-  if not timer then
-    return
-  end
-
-  timer:start(
-    inline_config.delay,
-    0,
-    vim.schedule_wrap(function()
-      inline_update(bufnr)
-    end)
-  )
-end
+--- One shared debounce for inline blame: it tracks only the most recent buffer, by
+--- design - inline blame annotates the current line of the current window, so a
+--- pending refresh for a buffer the user just left is intentionally superseded.
+---@type stl.timer.IDisposableCallable
+local inline_update_debounced = stl.timer.debounce(function(bufnr)
+  inline_update(bufnr)
+end, inline_config.delay)
 
 local function inline_setup_autocmds()
   vim.api.nvim_clear_autocmds({ group = inline_augroup })
-
-  for bufnr in pairs(inline_timers) do
-    inline_close_timer(bufnr)
-    inline_reset(bufnr)
-  end
-
   if not inline_config.enabled then
+    inline_update_debounced:cancel()
     return
   end
 
@@ -417,7 +367,8 @@ local function inline_setup_autocmds()
     callback = function(args)
       local bufnr = args.buf ---@type integer
       if era.m.git.buffer.is_attached(bufnr) then
-        inline_schedule_update(bufnr)
+        inline_reset(bufnr) -- clear immediately so a stale value is never shown while moving
+        inline_update_debounced(bufnr)
       end
     end,
   })
@@ -427,34 +378,10 @@ local function inline_setup_autocmds()
     callback = function(args)
       local bufnr = args.buf ---@type integer
       inline_reset(bufnr)
-      inline_cancel_timer(bufnr)
-      inline_cache[bufnr] = nil
-      if running_tokens[bufnr] then
-        running_tokens[bufnr]:cancel()
-        running_tokens[bufnr] = nil
-      end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("InsertLeave", {
-    group = inline_augroup,
-    callback = function(args)
-      local bufnr = args.buf ---@type integer
-      cache[bufnr] = nil
-      inline_cache[bufnr] = nil
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("BufDelete", {
-    group = inline_augroup,
-    callback = function(args)
-      local bufnr = args.buf ---@type integer
-      inline_close_timer(bufnr)
-      inline_cache[bufnr] = nil
-      cache[bufnr] = nil
-      if running_tokens[bufnr] then
-        running_tokens[bufnr]:cancel()
-        running_tokens[bufnr] = nil
+      inline_update_debounced:cancel()
+      local inflight = inline_inflight[bufnr]
+      if inflight then
+        inflight.token:cancel()
       end
     end,
   })
@@ -481,10 +408,7 @@ local buffer_config = {
 }
 
 ---@type table<integer, boolean>
-local buffer_blame_enabled = {}
-
----@type table<integer, boolean>
-local buffer_blame_loading = {}
+local buffer_enabled = {}
 
 ---@type table<integer, integer>
 local buffer_current_lnum = {}
@@ -497,9 +421,9 @@ local function buffer_clear(bufnr)
 end
 
 ---@param bufnr                      integer
----@param blame                      table<integer, era.m.git.BlameInfo>
+---@param entries                    table<integer, era.m.git.BlameInfo>
 ---@param skip_lnum                  integer|nil
-local function buffer_render(bufnr, blame, skip_lnum)
+local function buffer_render(bufnr, entries, skip_lnum)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
@@ -508,19 +432,10 @@ local function buffer_render(bufnr, blame, skip_lnum)
 
   local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
   for lnum = 1, line_count do
-    if lnum == skip_lnum then
-      goto continue
-    end
-
-    local info = blame[lnum]
-    if info then
-      local text ---@type string
-      if info.sha:match("^0+$") or info.author == "Not Committed Yet" then
-        text = "    Not committed yet"
-      else
-        text = "    " .. format_inline_blame(info, buffer_config.formatter)
-      end
-
+    local info = entries[lnum]
+    if lnum ~= skip_lnum and info then
+      local text = "    "
+        .. (is_uncommitted(info) and "Not committed yet" or format_blame(info, buffer_config.formatter))
       pcall(vim.api.nvim_buf_set_extmark, bufnr, buffer_ns, lnum - 1, 0, {
         virt_text = { { text, buffer_config.hl_group } },
         virt_text_win_col = 80,
@@ -528,34 +443,89 @@ local function buffer_render(bufnr, blame, skip_lnum)
         hl_mode = "combine",
       })
     end
-
-    ::continue::
   end
 end
 
 ---@param bufnr                      integer
-local function buffer_update_current_line(bufnr)
-  if not buffer_blame_enabled[bufnr] then
-    return
-  end
-
-  local blame = cache[bufnr]
-  if not blame then
-    return
-  end
-
+---@return integer|nil
+local function buffer_cursor_lnum(bufnr)
   local winnr = vim.fn.bufwinid(bufnr) ---@type integer
   if winnr == -1 then
+    return nil
+  end
+  return vim.api.nvim_win_get_cursor(winnr)[1]
+end
+
+--- Render the overlay from the changedtick-valid cache, fetching blame when the
+--- cache is missing or stale for the current content.
+---@param bufnr                      integer
+local function buffer_render_or_fetch(bufnr)
+  if not buffer_enabled[bufnr] or not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
-  if buffer_current_lnum[bufnr] == lnum then
+  local buf_cache = era.m.git.buffer.get_cache(bufnr)
+  if not buf_cache then
+    return
+  end
+
+  local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
+
+  local entry = cache[bufnr]
+  if entry and entry.tick == tick then
+    local lnum = buffer_cursor_lnum(bufnr)
+    buffer_current_lnum[bufnr] = lnum or 0
+    buffer_render(bufnr, entry.entries, lnum)
+    return
+  end
+
+  local inflight = buffer_inflight[bufnr]
+  if inflight and inflight.tick == tick then
+    return
+  end
+  if inflight then
+    inflight.token:cancel()
+  end
+
+  local token = stl.c.CancellationToken.new()
+  buffer_inflight[bufnr] = { token = token, tick = tick }
+
+  run_blame(buf_cache.file, buf_cache.repo.toplevel, token):finally(function(ok, result)
+    local current = buffer_inflight[bufnr]
+    if current and current.token == token then
+      buffer_inflight[bufnr] = nil
+    end
+
+    if not ok then
+      report_failure(bufnr, result)
+      return
+    end
+
+    cache[bufnr] = { tick = tick, entries = result }
+    buffer_render_or_fetch(bufnr)
+  end)
+end
+
+---@param bufnr                      integer
+local function buffer_update_current_line(bufnr)
+  if not buffer_enabled[bufnr] then
+    return
+  end
+
+  local tick = vim.api.nvim_buf_get_changedtick(bufnr) ---@type integer
+  local entry = cache[bufnr]
+  if not entry or entry.tick ~= tick then
+    buffer_render_or_fetch(bufnr) -- stale/missing: re-blame against current content
+    return
+  end
+
+  local lnum = buffer_cursor_lnum(bufnr)
+  if not lnum or buffer_current_lnum[bufnr] == lnum then
     return
   end
 
   buffer_current_lnum[bufnr] = lnum
-  buffer_render(bufnr, blame, lnum)
+  buffer_render(bufnr, entry.entries, lnum)
 end
 
 ---@type stl.timer.IDisposableCallable
@@ -577,84 +547,161 @@ end
 ---@param bufnr                      integer|nil
 function M.buffer_hide(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-  buffer_blame_enabled[bufnr] = nil
+  buffer_enabled[bufnr] = nil
   buffer_current_lnum[bufnr] = nil
+  local inflight = buffer_inflight[bufnr]
+  if inflight then
+    inflight.token:cancel()
+  end
   buffer_clear(bufnr)
 end
 
 ---@param bufnr                      integer|nil
 function M.buffer_show(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
-
-  local buf_cache = era.m.git.buffer.get_cache(bufnr)
-  if not buf_cache then
+  if not era.m.git.buffer.get_cache(bufnr) then
     return
   end
 
-  if buffer_blame_loading[bufnr] then
-    return
-  end
-
-  buffer_blame_enabled[bufnr] = true
-  buffer_blame_loading[bufnr] = true
-
-  if running_buffer_tokens[bufnr] then
-    running_buffer_tokens[bufnr]:cancel()
-  end
-  local token = stl.c.CancellationToken.new()
-  running_buffer_tokens[bufnr] = token
-
-  local file = buf_cache.file ---@type string
-  local cwd = buf_cache.repo.toplevel ---@type string
-
-  run_blame(bufnr, file, cwd, token):finally(function(resolved, blame)
-    running_buffer_tokens[bufnr] = nil
-    buffer_blame_loading[bufnr] = nil
-
-    if not resolved then
-      return
-    end
-
-    if not vim.api.nvim_buf_is_valid(bufnr) then
-      return
-    end
-
-    if not buffer_blame_enabled[bufnr] then
-      return
-    end
-
-    if blame then
-      cache[bufnr] = blame
-      local winnr = vim.fn.bufwinid(bufnr) ---@type integer
-      local lnum = winnr ~= -1 and vim.api.nvim_win_get_cursor(winnr)[1] or nil ---@type integer|nil
-      buffer_current_lnum[bufnr] = lnum
-      buffer_render(bufnr, blame, lnum)
-    end
-  end)
+  buffer_enabled[bufnr] = true
+  buffer_render_or_fetch(bufnr)
 end
 
 ---@param bufnr                      integer|nil
 function M.buffer_toggle(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
-  if buffer_blame_enabled[bufnr] then
+  if buffer_enabled[bufnr] then
     M.buffer_hide(bufnr)
   else
     M.buffer_show(bufnr)
   end
 end
 
+----------------------------------------------------------------------------------------------------
+-- Invalidation (driven by writes and the repo watcher)
+----------------------------------------------------------------------------------------------------
+
+--- Drop a buffer's cached blame and repaint whatever is currently visible. Used
+--- after a write (file content changed) or a HEAD move (committed blame changed),
+--- neither of which bumps changedtick. Any in-flight run is cancelled first: it was
+--- computed against the pre-invalidate content/HEAD, and because changedtick is
+--- unchanged it would otherwise coalesce and backfill the cache with that stale
+--- result, defeating the invalidate.
+---@param bufnr                      integer
+function M.invalidate(bufnr)
+  cache[bufnr] = nil
+
+  local inline_run = inline_inflight[bufnr]
+  if inline_run then
+    inline_run.token:cancel()
+  end
+  local buffer_run = buffer_inflight[bufnr]
+  if buffer_run then
+    buffer_run.token:cancel()
+  end
+
+  if buffer_enabled[bufnr] then
+    buffer_render_or_fetch(bufnr)
+  end
+
+  -- Inline blame is current-line / current-window only (one shared debounce timer),
+  -- so only the active buffer schedules an inline refresh here; other buffers repaint
+  -- on their next CursorMoved.
+  if inline_config.enabled and bufnr == vim.api.nvim_get_current_buf() and era.m.git.buffer.is_attached(bufnr) then
+    inline_reset(bufnr)
+    inline_update_debounced(bufnr)
+  end
+end
+
+---@return nil
+function M.invalidate_all()
+  -- Visit the UNION of buffers with a cache, an in-flight run, or enabled overlay
+  -- blame - not just `cache`. A buffer whose first blame is still loading has no
+  -- cache entry yet; if we skipped it, its pre-HEAD-move run would survive and
+  -- backfill stale blame on the unchanged changedtick.
+  local seen = {} ---@type table<integer, boolean>
+  local bufs = {} ---@type integer[]
+  local function add(bufnr)
+    if not seen[bufnr] then
+      seen[bufnr] = true
+      bufs[#bufs + 1] = bufnr
+    end
+  end
+  for bufnr in pairs(cache) do
+    add(bufnr)
+  end
+  for bufnr in pairs(inline_inflight) do
+    add(bufnr)
+  end
+  for bufnr in pairs(buffer_inflight) do
+    add(bufnr)
+  end
+  for bufnr in pairs(buffer_enabled) do
+    add(bufnr)
+  end
+
+  for _, bufnr in ipairs(bufs) do
+    M.invalidate(bufnr)
+  end
+
+  -- The active buffer may have nothing cached/in-flight yet but still wants a fresh annotation.
+  local current = vim.api.nvim_get_current_buf() ---@type integer
+  if not seen[current] and inline_config.enabled and era.m.git.buffer.is_attached(current) then
+    inline_update_debounced(current)
+  end
+end
+
+---@type integer
+local invalidate_augroup = vim.api.nvim_create_augroup("DotModuleGitBlameInvalidate", { clear = true })
+
 function M.inline_toggle()
   inline_config.enabled = not inline_config.enabled
   inline_setup_autocmds()
+  if not inline_config.enabled then
+    for bufnr in pairs(cache) do
+      inline_reset(bufnr)
+    end
+  end
 end
 
 function M.setup()
   inline_setup_autocmds()
   buffer_setup_autocmds()
+
+  -- Own augroup so an inline/buffer toggle (which clears their groups) never drops
+  -- write-invalidation. After a write the on-disk file changed but changedtick did
+  -- not, so the cache must be dropped explicitly.
+  vim.api.nvim_clear_autocmds({ group = invalidate_augroup })
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = invalidate_augroup,
+    callback = function(args)
+      M.invalidate(args.buf)
+    end,
+  })
+
+  -- Complete per-buffer teardown on delete (cancels both inflights, drops all
+  -- inline AND overlay state). Lives in the stable augroup so an inline toggle,
+  -- which clears inline_augroup, can never drop it.
+  vim.api.nvim_create_autocmd("BufDelete", {
+    group = invalidate_augroup,
+    callback = function(args)
+      local bufnr = args.buf ---@type integer
+      local inline_run = inline_inflight[bufnr]
+      if inline_run then
+        inline_run.token:cancel()
+      end
+      local buffer_run = buffer_inflight[bufnr]
+      if buffer_run then
+        buffer_run.token:cancel()
+      end
+      cache[bufnr] = nil
+      buffer_enabled[bufnr] = nil
+      buffer_current_lnum[bufnr] = nil
+    end,
+  })
 end
 
 return M
