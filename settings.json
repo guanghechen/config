@@ -87,6 +87,8 @@
     "context7@claude-plugins-official": false
   },
   "alwaysThinkingEnabled": true,
+  "effortLevel": "xhigh",
+  "includeGitInstructions": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
   "editorMode": "vim"
