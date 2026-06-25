@@ -2,6 +2,7 @@
 /logs_*.sqlite*
 /plugins/.plugin-appserver/
 /process_manager/
+/sandbox*.log
 /skills/kit-*
 /skills/yui-*
 /state*.sqlite*
