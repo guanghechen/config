@@ -144,11 +144,16 @@ function renderTrustState(hooks, sourcePath) {
 
   const lines = ["[hooks.state]", ""];
   for (const hook of hooks) {
-    lines.push(`[hooks.state."${sourcePath}:${hook.keySuffix}"]`);
+    const key = `${sourcePath}:${hook.keySuffix}`;
+    lines.push(`[hooks.state.${tomlBasicString(key)}]`);
     lines.push(`trusted_hash = "${hook.currentHash}"`);
     lines.push("");
   }
   return trimTrailingNewlines(lines.join("\n")) + "\n";
+}
+
+function tomlBasicString(value) {
+  return JSON.stringify(value);
 }
 
 function discoverCommandHooks(toml) {
