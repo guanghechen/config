@@ -2,8 +2,6 @@ load_path = ["config.shared.toml"]
 
 model = "gpt-5.5"
 model_provider = "copilot-dev"
-model_context_window = 272000
-model_auto_compact_token_limit = 244800
 
 [model_providers.copilot-dev]
 name = "copilot-dev"
