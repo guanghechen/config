@@ -51,6 +51,16 @@
             "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/pre-bash-git.mjs').href)\""
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import url from'url';import(url.pathToFileURL(process.env.XDG_CONFIG_HOME+'/claude/script/hook/notify.mjs').href)\"",
+            "async": true
+          }
+        ]
       }
     ],
     "Notification": [
