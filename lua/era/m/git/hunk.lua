@@ -5,39 +5,8 @@ local M = {}
 -- State management
 ----------------------------------------------------------------------------------------------------
 
----@type table<integer, stl.c.Observable>
-local buffer_hunks_observables = {}
-
 ---@type table<integer, era.m.git.Hunk[]|nil>
 local buffer_hunks = {}
-
----@type table<integer, stl.c.IUnsubscribable[]>
-local buffer_subscriptions = {}
-
----@param bufnr                         integer
----@return stl.c.Observable
-function M.get_observable(bufnr)
-  if not buffer_hunks_observables[bufnr] then
-    buffer_hunks_observables[bufnr] = stl.c.Observable.from_value({})
-  end
-  return buffer_hunks_observables[bufnr]
-end
-
----@param bufnr                         integer
----@param subscriber                    stl.c.ISubscriber
----@param ignore_initial                boolean|nil
----@return stl.c.IUnsubscribable
-function M.subscribe(bufnr, subscriber, ignore_initial)
-  local observable = M.get_observable(bufnr)
-  local unsubscribable = observable:subscribe(subscriber, ignore_initial)
-
-  if not buffer_subscriptions[bufnr] then
-    buffer_subscriptions[bufnr] = {}
-  end
-  buffer_subscriptions[bufnr][#buffer_subscriptions[bufnr] + 1] = unsubscribable
-
-  return unsubscribable
-end
 
 ---@param bufnr                         integer
 ---@return era.m.git.Hunk[]|nil
@@ -49,32 +18,11 @@ end
 ---@param hunks                         era.m.git.Hunk[]|nil
 function M.set(bufnr, hunks)
   buffer_hunks[bufnr] = hunks
-
-  local observable = buffer_hunks_observables[bufnr]
-  if observable then
-    observable:next(hunks or {})
-  end
 end
 
 ---@param bufnr                         integer
 function M.remove(bufnr)
   buffer_hunks[bufnr] = nil
-
-  -- Unsubscribe all tracked subscriptions for this buffer
-  local subscriptions = buffer_subscriptions[bufnr]
-  if subscriptions then
-    for _, unsubscribable in ipairs(subscriptions) do
-      unsubscribable:unsubscribe()
-    end
-    buffer_subscriptions[bufnr] = nil
-  end
-
-  local observable = buffer_hunks_observables[bufnr]
-  if observable then
-    observable:next({})
-    observable:dispose()
-    buffer_hunks_observables[bufnr] = nil
-  end
 end
 
 ----------------------------------------------------------------------------------------------------
