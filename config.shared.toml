@@ -1,5 +1,6 @@
 approval_policy = "on-request"
 personality = "pragmatic"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 suppress_unstable_features_warning = true
 web_search = "disabled"

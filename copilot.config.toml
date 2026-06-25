@@ -2,7 +2,6 @@ load_path = ["config.shared.toml"]
 
 model = "gpt-5.5"
 model_provider = "copilot"
-model_reasoning_effort = "high"
 model_context_window = 272000
 model_auto_compact_token_limit = 244800
 
@@ -16,4 +15,3 @@ websocket_connect_timeout_ms = 30000
 request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
-
