@@ -1,35 +1,37 @@
 # Supreme Principles
 
-> **Constitutional rules.** `CRITICAL` and `ALWAYS` rules take highest precedence — project-level AGENTS.md MUST NOT override. Other rules are recommendations and may be adapted per context.
+> **Rule levels.** `CRITICAL` rules protect safety, data integrity, irreversible side effects, architectural red lines, and other high-risk operations. `ALWAYS` rules are stable cross-project constraints. `PREFERRED` rules are default preferences; follow them when reasonable, but defer to repository conventions, task efficiency, and local context. Project-level AGENTS.md MUST NOT override `CRITICAL` or `ALWAYS` rules.
 
-1. **CRITICAL**: For complex tasks, multiple options, or any concerns — discuss first, align on direction before doing the work.
-2. **ALWAYS**: Respond in Chinese (简体中文); keep technical terms in English.
-3. **ALWAYS**: Assume the user is a senior computer engineer; communicate concisely, precisely, and with clear logical structure. Avoid tutorial-style explanations unless requested.
-4. **ALWAYS**: Prefer `fd` over `find`, `rg` over `grep`.
-5. **ALWAYS**: Align Markdown tables and ASCII diagrams (CJK = 2 units, ASCII = 1) — monofont rendering requires precise alignment.
-6. **ALWAYS**: For non-trivial proposals, give 2-3 concrete examples with brief contrasts and one recommendation.
-7. **ALWAYS**: When identifying issues, show concrete examples; if no minimal repro, state trigger, evidence, and impact.
+1. **CRITICAL**: For irreversible operations, security risks, architectural direction changes, high-ambiguity choices with no safe default, or choices with significant user cost, discuss first and get explicit alignment.
+2. **ALWAYS**: For read-only analysis, proceed directly and state the scope. For non-trivial write operations, provide a plan, success criteria, and verification approach before editing.
+3. **ALWAYS**: Respond in Simplified Chinese; keep technical terms in English.
+4. **ALWAYS**: Assume the user is a senior software engineer. Communicate concisely, precisely, and with clear logical structure. Avoid tutorial-style explanations unless requested.
+5. **PREFERRED**: Use `fd` over `find`, and `rg` over `grep`.
+6. **PREFERRED**: When using Markdown tables or ASCII diagrams, keep them visually aligned when practical (CJK = 2 units, ASCII = 1 unit).
+7. **PREFERRED**: Avoid tables when bullet lists communicate the point more clearly.
+8. **PREFERRED**: For non-trivial proposals, provide 2-3 concrete examples, brief contrasts, and one recommendation.
+9. **ALWAYS**: When identifying issues, provide concrete examples. If there is no minimal reproduction, state trigger, evidence, and impact.
 
 ## Security
 
-1. **CRITICAL**: Never access secrets (`.ssh/`, `.env*`, `local/env.*`, `.git-credentials`, `*.http_request`, `*.http_response`).
-2. **CRITICAL**: Never run git write commands (`add/rm/clean/commit/checkout/restore/reset/stash/push`) unless **explicitly instructed**.
-3. **ALWAYS**: Confirm with user before installing packages (especially global CLI tools). List packages to be installed — risk of supply-chain attacks.
+1. **CRITICAL**: Never access secrets, including `.ssh/`, real `.env*` files (excluding pure templates such as `.env.example`), `local/env.*`, `.git-credentials`, `*.http_request`, and `*.http_response`. Sample or template env files may be read only when explicitly relevant; stop if they contain real secret values.
+2. **CRITICAL**: Never run git write commands (`add`, `rm`, `clean`, `commit`, `checkout`, `restore`, `reset`, `stash`, `push`) unless **explicitly instructed**.
+3. **ALWAYS**: Confirm with the user before installing packages, especially global CLI tools. List packages to be installed and mention supply-chain risk.
 
 ## Coding
 
-> **ALWAYS**: Scope changes strictly to the task. Refactor dependencies only if required for correctness; avoid unrelated cleanup.
+> **ALWAYS**: Scope changes strictly to the task. Refactor dependencies only when required for correctness; avoid unrelated cleanup.
 
-1. `[planning]` For non-trivial coding tasks, define or derive explicit success criteria during planning; prefer a reproducible test or verification command when feasible.
-2. `[traceability]` Keep changes traceable to the user request: every changed line must be required by the task or by cleanup caused by the current change.
-3. `[comments]` Prefer self-documenting code over comments. Comment "WHY", not "WHAT".
-4. `[layout]` Organize code: imports → constants → types → public API → private impl → entry point.
-5. **ALWAYS** `[naming]`: `I`-prefixed naming for types/interfaces (TS/Lua/Java/C# only) (e.g., `IChatMessage`, `IUser`).
-6. **ALWAYS** `[early-return]`: Early return; avoid nested conditions.
-7. **ALWAYS** `[error-handling]`: Error handling by function type:
-   - Internal (private): Propagate errors to caller (unless designed to suppress).
-   - Exposed with side effects: Validate inputs at boundary; handle or wrap errors.
-   - Exposed pure (no side effects): Propagate errors transparently.
+1. **PREFERRED** `[planning]`: For coding tasks, follow the Supreme Principles planning gate; prefer a reproducible test or verification command when feasible.
+2. **ALWAYS** `[traceability]`: Keep changes traceable to the user request: every changed line must be required by the task or by cleanup caused by the current change.
+3. **PREFERRED** `[comments]`: Prefer self-documenting code over comments. Comment "WHY", not "WHAT".
+4. **PREFERRED** `[layout]`: Organize code as imports → constants → types → public API → private implementation → entry point.
+5. **PREFERRED** `[naming]`: For C# and TypeScript, use `I`-prefixed interface names. For Java and Lua, follow existing repository conventions first; do not force `I` prefixes when there is no clear convention.
+6. **PREFERRED** `[early-return]`: Use early returns to reduce nesting when it improves readability.
+7. **ALWAYS** `[error-handling]`: Apply error handling based on function boundary:
+   - Internal/private functions: propagate errors unless suppression is intentional.
+   - Exposed functions with side effects: validate inputs at the boundary; handle or wrap errors.
+   - Exposed pure functions: propagate errors transparently.
 
 ## Git
 
@@ -41,7 +43,7 @@ Full structural design principles live in the `code-design` skill; the rules bel
 
 1. **CRITICAL** `[module-boundary]`: For large implementation/refactor tasks, strictly enforce SRP — intentional directory/module boundaries, explicit one-way layer calls, and no cross-layer coupling or circular dependency/call chains.
 2. **ALWAYS** `[structure-bias]`: Default to the simplest effective design — high cohesion, low coupling, abstraction on demand (extract a pattern only when the 2nd/3rd real peer appears, never preemptively). If an implementation grows noticeably larger than the problem requires, stop and simplify.
-3. **ALWAYS** `[stateful-contract]`: When a change touches a stateful flow or a module boundary, make explicit — in code or a short note — the state owner and single writer, one-way data flow, interface input/output/error/timeout contract, and failure paths (`retry/rollback/degrade/abort`). No standalone design document is required by default; use a short note unless complexity or the user asks for more.
+3. **ALWAYS** `[stateful-contract]`: When a significant change touches a stateful flow or a module boundary, make explicit — in code or a short note — the state owner and single writer, one-way data flow, interface input/output/error/timeout contract, and failure paths (`retry/rollback/degrade/abort`). No standalone design document is required by default; use a short note unless complexity or the user asks for more.
 4. **CRITICAL** `[plugin-core]`: When extensibility, third-party integration, or multi-implementation replacement is genuinely required, enforce a runnable `Minimal Core` + `Plug-in Architecture` (core works without optional plugins, unified load/unload contract, capability/compatibility checks, and isolated plugin failure with graceful degradation). Otherwise prefer the simplest effective design and avoid forced pluginization.
 5. **ALWAYS** `[open-questions]`: Centralize unresolved design questions in one place; resolve them or explicitly mark them non-blocking before implementation.
 
