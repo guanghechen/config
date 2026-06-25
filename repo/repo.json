@@ -39,7 +39,10 @@
         },
         {
           "branch": "codex",
-          "editions": ["nix", "nix-remote", "osx", "win"]
+          "editions": ["nix", "nix-remote", "osx", "win"],
+          "on": {
+            "synced": "node script/setup.mjs"
+          }
         },
         {
           "branch": "conda",
