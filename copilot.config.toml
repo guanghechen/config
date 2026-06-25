@@ -15,3 +15,6 @@ websocket_connect_timeout_ms = 30000
 request_max_retries = 3
 stream_max_retries = 0
 stream_idle_timeout_ms = 3000000
+
+[tui.model_availability_nux]
+"gpt-5.5" = 1
