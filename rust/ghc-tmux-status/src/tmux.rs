@@ -169,7 +169,12 @@ fn snapshot_command_args() -> Vec<String> {
         ";".to_string(),
         "list-sessions".to_string(),
         "-F".to_string(),
-        "#{session_id}\t#{session_name}\t#{session_bell_flag}\t#{status}\t#{@GHC_SL_LAYOUT}\t#{status-left-length}\t#{status-right-length}".to_string(),
+        // bell: tmux's #{session_bell_flag} is buggy — it inspects only the first window of
+        // the session (returns on the first RB-tree winlink), so a bell in any later window
+        // is never reported. Derive has_bell from #{session_alerts} instead, which lists
+        // every alerted window; a '!' in it marks a bell. parse_session_line reads this third
+        // field as the "1"/"0" has_bell flag, so the shape is unchanged.
+        "#{session_id}\t#{session_name}\t#{?#{m:*!*,#{session_alerts}},1,0}\t#{status}\t#{@GHC_SL_LAYOUT}\t#{status-left-length}\t#{status-right-length}".to_string(),
         ";".to_string(),
         "display-message".to_string(),
         "-p".to_string(),
