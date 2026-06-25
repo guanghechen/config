@@ -27,7 +27,12 @@ M.tools = {
     url = "https://github.com/anthropics/claude-code",
     vim_mode = true,
     insert_pattern = "%-%- INSERT %-%-",
-    busy_pattern = "^%S+%s+%a+…",
+    -- The spinner's trailing ellipsis is the stable busy marker (e.g.
+    -- "✶ Composing… (3s · thinking…)"). Unanchored and word-final so it also catches
+    -- multi-word states ("Compacting conversation…") that a leading "^<glyph> <word>…"
+    -- shape misses — a miss there would let us Escape a still-generating agent. The
+    -- ellipsis-less idle footer and the persistent "Crunched for Ns" summary do not match.
+    busy_pattern = "%a+…",
   },
   codex = {
     cmd = "codex",

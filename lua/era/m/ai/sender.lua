@@ -87,9 +87,17 @@ local function extract_input(content)
   local top, bottom = rules[#rules - 1], rules[#rules]
   local parts = {} ---@type string[]
   for i = top + 1, bottom - 1 do
-    local t = vim.trim(lines[i]):gsub("^❯%s*", ""):gsub("^>%s*", "")
-    if t ~= "" then
-      parts[#parts + 1] = t
+    -- Strip exactly one UI prompt marker (❯ or >), never a second one: a leading
+    -- ">" can be the user's own content (Markdown quote, shell redirection), and
+    -- over-stripping it desyncs extract_input from make_signature, which would
+    -- misclassify still-pending text as "submitted" (a false success).
+    local t = vim.trim(lines[i]) ---@type string
+    local stripped = t:gsub("^❯%s*", "") ---@type string
+    if stripped == t then
+      stripped = t:gsub("^>%s*", "")
+    end
+    if stripped ~= "" then
+      parts[#parts + 1] = stripped
     end
   end
   return vim.trim(table.concat(parts, "\n"))
@@ -169,7 +177,7 @@ end
 --- the message actually left the input box. `on_done(ok, reason)` reports the
 --- outcome: ok=true with reason "submitted"/"placed"/"sent", or "unverified" when
 --- delivery happened but submission could not be confirmed; ok=false with
---- "not submitted"/"busy"/"paste failed"/"unsupported source".
+--- "not submitted"/"busy"/"insert unverified"/"paste failed"/"unsupported source".
 ---@param opts                          era.m.ai.sender.IDeliverOpts
 ---@param on_done                       ?fun(ok: boolean, reason: string)
 ---@return nil
@@ -214,10 +222,19 @@ function M.deliver(opts, on_done)
   -- Enter may already have submitted and started a generation). When neither
   -- outcome can be proven we report "unverified" rather than a false "submitted".
   local function verify_submit(attempt)
+    -- Require two consecutive "submitted" frames before concluding the message left
+    -- the box: while pasting, the TUI can redraw the input border one frame before
+    -- echoing the text, and that transient empty box must not read as a false success.
+    local submitted_streak = 0
     poll(
       pane,
       function(c)
-        return classify(c, signature, busy_pat) == "submitted"
+        if classify(c, signature, busy_pat) == "submitted" then
+          submitted_streak = submitted_streak + 1
+          return submitted_streak >= 2
+        end
+        submitted_streak = 0
+        return false
       end,
       VERIFY_TIMEOUT,
       VERIFY_INTERVAL,
@@ -285,8 +302,14 @@ function M.deliver(opts, on_done)
           VERIFY_TIMEOUT,
           VERIFY_INTERVAL,
           function(ok)
-            if ok or attempt >= INSERT_TRIES then
+            if ok then
               return do_paste()
+            end
+            -- Fail closed: with a configured insert_pattern we must never paste into
+            -- an unconfirmed modal editor, where the text could be read as NORMAL-mode
+            -- commands. Report "insert unverified" instead of risking the buffer.
+            if attempt >= INSERT_TRIES then
+              return done(false, "insert unverified")
             end
             ensure_insert(attempt + 1)
           end
@@ -324,5 +347,15 @@ function M.deliver(opts, on_done)
     start()
   end
 end
+
+--- Test-only: expose the pure capture-parsing helpers for headless unit tests
+--- (see lua/__test__/era/m/ai/sender.lua). Not part of the runtime API.
+M.__test = {
+  bottom_lines = bottom_lines,
+  footer_has = footer_has,
+  extract_input = extract_input,
+  make_signature = make_signature,
+  classify = classify,
+}
 
 return M
