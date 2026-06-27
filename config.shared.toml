@@ -40,7 +40,7 @@ description = "Refines recently changed code for clarity and maintainability wit
 config_file = "agents/code-simplifier.toml"
 
 [[hooks.PreToolUse]]
-matcher = "*"
+matcher = "apply_patch"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
@@ -56,14 +56,6 @@ type = "command"
 command = 'node "$HOME/.config/codex/script/hook/pre-bash-sensitive.mjs"'
 timeout = 5
 statusMessage = "Checking sensitive path usage"
-
-[[hooks.Stop]]
-
-[[hooks.Stop.hooks]]
-type = "command"
-command = 'node "$HOME/.config/codex/script/hook/notify.mjs"'
-timeout = 5
-statusMessage = "Sending terminal notification"
 
 [sandbox_workspace_write]
 network_access = true

@@ -13,12 +13,3 @@ export function denyPreToolUse(reason) {
     }),
   )
 }
-
-export function block(reason) {
-  console.log(
-    JSON.stringify({
-      decision: "block",
-      reason,
-    }),
-  )
-}

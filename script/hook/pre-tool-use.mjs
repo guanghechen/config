@@ -23,20 +23,18 @@ function extractPatchPaths(patchText) {
   return paths
 }
 
+// Codex's native built-in file mutation uses the canonical tool_name
+// `apply_patch` (Write/Edit are only its matcher aliases); the Claude-style
+// Read/Write/Edit/MultiEdit/NotebookEdit names are never emitted by native
+// built-ins. Extension/MCP tools emit their own tool_names, but the prior `*`
+// matcher only ran this Claude-style extractor, which never parsed those names
+// anyway -- so narrowing to `apply_patch` drops no real coverage. Sensitive
+// reads go through Bash (`cat`) and are caught by pre-bash-sensitive.mjs.
 function extractFilePaths(input) {
-  switch (input.tool_name) {
-    case "Read":
-    case "Write":
-    case "Edit":
-    case "MultiEdit":
-      return [input.tool_input?.file_path].filter(Boolean)
-    case "NotebookEdit":
-      return [input.tool_input?.notebook_path].filter(Boolean)
-    case "apply_patch":
-      return extractPatchPaths(input.tool_input?.command)
-    default:
-      return []
+  if (input.tool_name === "apply_patch") {
+    return extractPatchPaths(input.tool_input?.command)
   }
+  return []
 }
 
 const input = JSON.parse(readFileSync(0, "utf-8"))
