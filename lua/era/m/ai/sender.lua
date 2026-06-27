@@ -37,8 +37,17 @@ local RULE_MIN = 20 ---@type integer Minimum horizontal-rule chars for a line to
 ---@return string[]
 local function bottom_lines(content, n)
   local lines = vim.split(content, "\n", { plain = true })
+  -- `tmux capture-pane -p` pads the frame with blank rows up to the pane height, and
+  -- the TUI footer is not pinned to the bottom of the pane (early in a conversation it
+  -- sits well above it). Drop trailing blank lines before taking the last n, or the
+  -- footer region (insert / busy markers) falls outside the window and footer_has
+  -- silently never matches.
+  local last = #lines
+  while last > 0 and vim.trim(lines[last]) == "" do
+    last = last - 1
+  end
   local out = {} ---@type string[]
-  for i = math.max(1, #lines - n + 1), #lines do
+  for i = math.max(1, last - n + 1), last do
     out[#out + 1] = lines[i]
   end
   return out

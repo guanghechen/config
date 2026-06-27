@@ -115,6 +115,31 @@ t:test("shipped insert_pattern: matches the modal INSERT indicator", function()
   t.assert_true(T.footer_has("-- INSERT --", CLAUDE.insert_pattern), "the INSERT modeline must match")
 end)
 
+----------------------------------------------------------------------------------------------------
+-- bottom_lines / footer_has: tmux pads the frame with blank rows up to the pane
+-- height and the TUI footer is not pinned to the bottom (R2). Early in a conversation
+-- the footer sits well above a tall block of blank rows; a naive last-n window skips
+-- it, so footer_has silently never matches => "insert unverified" and false-idle.
+----------------------------------------------------------------------------------------------------
+
+t:test("bottom_lines: drops trailing blank rows so the window ends at the last real line", function()
+  local padded = "alpha\nbravo\ncharlie" .. string.rep("\n", 12)
+  local got = T.bottom_lines(padded, 2)
+  t.assert_eq(2, #got, "exactly n lines returned")
+  t.assert_eq("bravo", got[1], "window ends at the last non-blank line")
+  t.assert_eq("charlie", got[2], "last real line included, not a blank pad row")
+end)
+
+t:test("footer_has: finds the INSERT marker above a tall block of trailing blank rows", function()
+  local padded = frame("❯ ", "-- INSERT -- ⏵⏵ bypass permissions on") .. string.rep("\n", 15)
+  t.assert_true(T.footer_has(padded, CLAUDE.insert_pattern), "INSERT must be found above the blank tail")
+end)
+
+t:test("footer_has: finds the busy spinner above a tall block of trailing blank rows", function()
+  local padded = frame("❯ hello", "✶ Composing… (3s · thinking)") .. string.rep("\n", 15)
+  t.assert_true(T.footer_has(padded, CLAUDE.busy_pattern), "the spinner must be found above the blank tail")
+end)
+
 t:test("classify: a busy frame is submitted via the shipped busy_pattern", function()
   local sig = T.make_signature("hello world")
   -- Our text is still in the box, but a busy footer means the agent already took it
