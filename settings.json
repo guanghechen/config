@@ -20,12 +20,14 @@
       "Read(//**/.git-credentials)",
       "Read(//**/.ssh/**)",
       "Read(//**/local/env.*)",
+      "Read(//**/.credentials/**)",
       "Edit(//**/*.http_request)",
       "Edit(//**/*.http_response)",
       "Edit(//**/.env*)",
       "Edit(//**/.git-credentials)",
       "Edit(//**/.ssh/**)",
-      "Edit(//**/local/env.*)"
+      "Edit(//**/local/env.*)",
+      "Edit(//**/.credentials/**)"
     ]
   },
   "hooks": {

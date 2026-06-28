@@ -9,6 +9,7 @@ export const SENSITIVE_PATTERNS = [
 
 export const SENSITIVE_PATHS = [
   /(?:^|[\\/])\.ssh[\\/]/,
+  /(?:^|[\\/])\.credentials[\\/]/,
   /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
   /(?:^|[\\/])local[\\/]env\.[^/\\]+$/,
 ]
