@@ -31,6 +31,13 @@ local inline_inflight = {}
 ---@type table<integer, era.m.git.blame.IInflight>
 local buffer_inflight = {}
 
+--- Per-buffer changedtick whose blame run failed (untracked file, git error). A
+--- cache miss for the SAME tick then becomes a no-op instead of re-running git and
+--- re-reporting on every cursor move. Cleared whenever content/HEAD changes (a new
+--- changedtick misses naturally, invalidate/BufDelete clear it explicitly).
+---@type table<integer, integer>
+local failed_tick = {}
+
 ---@param output                     string
 ---@return table<integer, era.m.git.BlameInfo>
 local function parse_blame_output(output)
@@ -177,6 +184,10 @@ local function report_failure(bufnr, result)
     group = "git",
     subject = "blame",
     message = string.format("git blame failed for buffer %d: %s", bufnr, result),
+    -- Blame failure is an expected, recoverable condition (untracked file, no path
+    -- in HEAD, transient git error). Record it in history for diagnosis, but never
+    -- pop a window - otherwise every cursor move on such a file floods notifications.
+    silent = true,
   })
 end
 
@@ -302,7 +313,8 @@ local function inline_update(bufnr)
   end
 
   local buf_cache = era.m.git.buffer.get_cache(bufnr)
-  if not buf_cache then
+  if not buf_cache or buf_cache.untracked then
+    inline_reset(bufnr) -- an untracked file has no blame to show; clear any stale value
     return
   end
 
@@ -316,6 +328,12 @@ local function inline_update(bufnr)
     else
       inline_reset(bufnr)
     end
+    return
+  end
+
+  -- This exact content already failed to blame; don't re-run git / re-report on
+  -- every cursor move. A new changedtick (or invalidate) clears the marker and retries.
+  if failed_tick[bufnr] == tick then
     return
   end
 
@@ -338,10 +356,17 @@ local function inline_update(bufnr)
     end
 
     if not ok then
+      -- A cancelled/superseded run rejects with CANCELLED; it must NOT mark this tick
+      -- failed. invalidate (HEAD move / write) cancels the in-flight run WITHOUT bumping
+      -- changedtick, so a stale failed marker would suppress the very refresh it requested.
+      if result ~= CANCELLED then
+        failed_tick[bufnr] = tick
+      end
       report_failure(bufnr, result)
       return
     end
 
+    failed_tick[bufnr] = nil
     cache[bufnr] = { tick = tick, entries = result }
     inline_update(bufnr)
   end)
@@ -465,7 +490,8 @@ local function buffer_render_or_fetch(bufnr)
   end
 
   local buf_cache = era.m.git.buffer.get_cache(bufnr)
-  if not buf_cache then
+  if not buf_cache or buf_cache.untracked then
+    buffer_clear(bufnr) -- untracked (or detached): drop any stale overlay annotations
     return
   end
 
@@ -476,6 +502,11 @@ local function buffer_render_or_fetch(bufnr)
     local lnum = buffer_cursor_lnum(bufnr)
     buffer_current_lnum[bufnr] = lnum or 0
     buffer_render(bufnr, entry.entries, lnum)
+    return
+  end
+
+  -- Same content already failed; skip the re-run/re-report (see inline_update).
+  if failed_tick[bufnr] == tick then
     return
   end
 
@@ -497,10 +528,14 @@ local function buffer_render_or_fetch(bufnr)
     end
 
     if not ok then
+      if result ~= CANCELLED then -- never let a cancel poison failed_tick (see inline_update)
+        failed_tick[bufnr] = tick
+      end
       report_failure(bufnr, result)
       return
     end
 
+    failed_tick[bufnr] = nil
     cache[bufnr] = { tick = tick, entries = result }
     buffer_render_or_fetch(bufnr)
   end)
@@ -593,6 +628,7 @@ end
 ---@param bufnr                      integer
 function M.invalidate(bufnr)
   cache[bufnr] = nil
+  failed_tick[bufnr] = nil -- content/HEAD changed: a previously-failed blame may now succeed
 
   local inline_run = inline_inflight[bufnr]
   if inline_run then
@@ -642,6 +678,12 @@ function M.invalidate_all()
   for bufnr in pairs(buffer_enabled) do
     add(bufnr)
   end
+  -- Also revisit buffers that ONLY hold a failed marker (no cache/inflight/overlay):
+  -- otherwise a HEAD move can't clear failed_tick and the negative cache would suppress
+  -- the post-move re-blame on the unchanged changedtick.
+  for bufnr in pairs(failed_tick) do
+    add(bufnr)
+  end
 
   for _, bufnr in ipairs(bufs) do
     M.invalidate(bufnr)
@@ -651,6 +693,19 @@ function M.invalidate_all()
   local current = vim.api.nvim_get_current_buf() ---@type integer
   if not seen[current] and inline_config.enabled and era.m.git.buffer.is_attached(current) then
     inline_update_debounced(current)
+  end
+end
+
+--- Drop ALL blame failure markers (the negative cache), without touching the
+--- positive cache. Called on a git index change: an untracked file can become
+--- blameable via `git add` / `git add -N` with NO buffer edit or HEAD move, so its
+--- changedtick is unchanged and the negative cache would otherwise keep suppressing
+--- a now-valid blame. Staging never changes blame attribution, so the positive
+--- cache stays valid - clearing only failures avoids a needless re-blame/flicker.
+---@return nil
+function M.clear_failed()
+  for bufnr in pairs(failed_tick) do
+    failed_tick[bufnr] = nil
   end
 end
 
@@ -698,6 +753,7 @@ function M.setup()
         buffer_run.token:cancel()
       end
       cache[bufnr] = nil
+      failed_tick[bufnr] = nil
       buffer_enabled[bufnr] = nil
       buffer_current_lnum[bufnr] = nil
     end,
