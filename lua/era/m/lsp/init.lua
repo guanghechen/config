@@ -39,6 +39,7 @@ local ft_to_lsp_map = {
   cpp = { "clangd" },
   css = { "cssls", "tailwindcss", "emmet_language_server" },
   cuda = { "clangd" },
+  dart = { "dartls" },
   dockerfile = { "dockerls" },
   excalidraw = { "jsonls" },
   handlebars = { "tailwindcss" },

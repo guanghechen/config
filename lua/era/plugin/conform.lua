@@ -26,6 +26,7 @@ local formatters_by_ft = {
   zsh               = { "shfmt" },
 
   -- lang --
+  dart              = { "dart_format" },
   lua               = { "stylua" },
   python            = { "isort", "black" },
   rust              = { "rustfmt", lsp_format = "never" },
