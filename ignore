@@ -9,6 +9,7 @@
 
 .claude/*.lock
 .code-analyzer/
+.credentials/
 .playwright/
 .playwright-cli/
 .playwright-mcp/
