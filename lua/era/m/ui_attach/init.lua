@@ -179,7 +179,11 @@ function M.dressing()
   end
 
   stl.nvim.fn.make_keys({ "i", "n", "s" }, "<esc>", function()
-    local searching = dot.state.status.searching:snapshot() ---@type boolean
+    -- WHY: gate on v:hlsearch (ground truth) too — the `searching` flag is
+    -- derived from ext_messages search_count events and desyncs for searches
+    -- that don't emit one (`:s`, `:g`, `:vimgrep`, `let @/=...`), leaving
+    -- hlsearch stuck on with no way to clear it via <esc>.
+    local searching = dot.state.status.searching:snapshot() or vim.v.hlsearch == 1 ---@type boolean
     if searching then
       dot.state.status.searching:next(false)
       vim.schedule(function()
