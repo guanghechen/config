@@ -36,7 +36,9 @@ return {
     ".git",
   },
   init_options = {
-    onlyAnalyzeProjectsWithOpenFiles = true,
+    -- Deprecated upstream (default false): re-analyzes roots on every open/close and
+    -- can block requests, delaying the first definition/semantic-token response.
+    onlyAnalyzeProjectsWithOpenFiles = false,
     suggestFromUnimportedLibraries = true,
     closingLabels = false,
     outline = false,
