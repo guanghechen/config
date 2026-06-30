@@ -84,6 +84,18 @@ function M.before_init(params, config)
   capabilities.textDocument.completion.completionItem.snippetSupport = true
 end
 
+---@param bufnr                         integer
+---@param method                        string
+---@return boolean
+local function buf_supports_method(bufnr, method)
+  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+    if client:supports_method(method) then
+      return true
+    end
+  end
+  return false
+end
+
 ---@param client                        vim.lsp.Client
 ---@param bufnr                         integer
 function M.on_attach(client, bufnr)
@@ -219,7 +231,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show signature help",
     },
     {
-      disabled = support_definition ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/definition"),
       modes = { "n" },
       key = "gd",
       callback = function()
@@ -229,7 +241,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto definition",
     },
     {
-      disabled = support_implementation ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/implementation"),
       modes = { "n" },
       key = "gi",
       callback = function()
@@ -239,7 +251,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto implementation",
     },
     {
-      disabled = support_references ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/references"),
       modes = { "n" },
       key = "gr",
       callback = function()
@@ -249,7 +261,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: show references",
     },
     {
-      disabled = support_typeDefinition ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/typeDefinition"),
       modes = { "n" },
       key = "gt",
       callback = function()
@@ -259,7 +271,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: goto type definition",
     },
     {
-      disabled = support_codeAction ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/codeAction"),
       modes = { "n", "x" },
       key = "<C-a><cr>",
       aliases = { "<D-cr>", "<M-cr>" },
@@ -272,7 +284,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: code action",
     },
     {
-      disabled = support_codelens ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/codeLens"),
       modes = { "n", "x" },
       key = "<leader>cc",
       callback = function()
@@ -281,7 +293,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: codelens",
     },
     {
-      disabled = support_codelens ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/codeLens"),
       modes = { "n", "x" },
       key = "<leader>cC",
       callback = function()
@@ -290,7 +302,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: refresh & display codelens",
     },
     {
-      disabled = support_codeAction ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/codeAction"),
       modes = { "n" },
       key = "<leader>ca",
       callback = function()
@@ -307,7 +319,7 @@ function M.on_attach(client, bufnr)
       desc = "lsp: source action",
     },
     {
-      disabled = support_rename ~= 1,
+      disabled = not buf_supports_method(bufnr, "textDocument/rename"),
       modes = { "n" },
       key = "<leader>cr",
       callback = function()
