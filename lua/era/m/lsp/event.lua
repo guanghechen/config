@@ -101,8 +101,6 @@ end
 function M.on_attach(client, bufnr)
   local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
   local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
-  local support_rename = vim.b[bufnr].support_rename or 0 ---@type integer
-  local support_codeAction = vim.b[bufnr].support_codeAction or 0 ---@type integer
   local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
   local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
@@ -116,12 +114,6 @@ function M.on_attach(client, bufnr)
   end
   if client:supports_method("textDocument/inlayHint") then
     support_inlayhint = support_inlayhint + 1
-  end
-  if client:supports_method("textDocument/rename") then
-    support_rename = support_rename + 1
-  end
-  if client:supports_method("textDocument/codeAction") then
-    support_codeAction = support_codeAction + 1
   end
   if client:supports_method("textDocument/documentHighlight") then
     support_documentHighlight = support_documentHighlight + 1
@@ -147,8 +139,6 @@ function M.on_attach(client, bufnr)
 
   vim.b[bufnr].support_codelens = support_codelens ---@type integer
   vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
-  vim.b[bufnr].support_rename = support_rename ---@type integer
-  vim.b[bufnr].support_codeAction = support_codeAction ---@type integer
   vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
   vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
   vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
@@ -340,8 +330,6 @@ end
 function M.on_detach(client, bufnr)
   local support_codelens = vim.b[bufnr].support_codelens or 0 ---@type integer
   local support_inlayhint = vim.b[bufnr].support_inlayhint or 0 ---@type integer
-  local support_rename = vim.b[bufnr].support_rename or 0 ---@type integer
-  local support_codeAction = vim.b[bufnr].support_codeAction or 0 ---@type integer
   local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
   local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
@@ -362,12 +350,6 @@ function M.on_detach(client, bufnr)
   end
   if support_inlayhint > 0 and client:supports_method("textDocument/inlayHint") then
     support_inlayhint = support_inlayhint - 1
-  end
-  if support_rename > 0 and client:supports_method("textDocument/rename") then
-    support_rename = support_rename - 1
-  end
-  if support_codeAction > 0 and client:supports_method("textDocument/codeAction") then
-    support_codeAction = support_codeAction - 1
   end
   if support_documentHighlight > 0 and client:supports_method("textDocument/documentHighlight") then
     support_documentHighlight = support_documentHighlight - 1
@@ -397,8 +379,6 @@ function M.on_detach(client, bufnr)
 
   vim.b[bufnr].support_codelens = support_codelens ---@type integer
   vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
-  vim.b[bufnr].support_rename = support_rename ---@type integer
-  vim.b[bufnr].support_codeAction = support_codeAction ---@type integer
   vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
   vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
   vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
