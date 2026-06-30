@@ -40,12 +40,11 @@ local picker = era.m.picker.FiletreeComposer.new({
 })
 
 ---@param method                        string
----@param buf_flagname                  string
 ---@param additional_params             table<string, any>
 ---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future                 Resolves with { ok: boolean, items: ?era.m.lsp.reference.IItem[] }
 ---@see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#referenceContext
-local function fetch_data(method, buf_flagname, additional_params, token)
+local function fetch_data(method, additional_params, token)
   return stl.c.Future.new(function(resolve)
     if token and token:is_cancelled() then
       resolve({ ok = false, items = nil })
@@ -60,7 +59,7 @@ local function fetch_data(method, buf_flagname, additional_params, token)
     end
 
     local bufnr_sourcefile = vim.api.nvim_win_get_buf(winnr_sourcefile) ---@type integer
-    if not vim.b[bufnr_sourcefile][buf_flagname] then
+    if #vim.lsp.get_clients({ bufnr = bufnr_sourcefile, method = method }) == 0 then
       stl.reporter.error({
         from = __module_name__,
         subject = "fetch_data",
@@ -167,11 +166,10 @@ end
 
 ---@param title                         string
 ---@param method                        string
----@param buf_flagname                  string
 ---@param additional_params             table<string, any>
 ---@return nil
-local function focus(title, method, buf_flagname, additional_params)
-  fetch_data(method, buf_flagname, additional_params):finally(function(resolved, result)
+local function focus(title, method, additional_params)
+  fetch_data(method, additional_params):finally(function(resolved, result)
     if not resolved or not result or not result.ok or result.items == nil then
       return
     end
@@ -183,7 +181,7 @@ local function focus(title, method, buf_flagname, additional_params)
         from = __module_name__,
         subject = title,
         message = "No items found.",
-        details = { title = title, method = method, buf_flagname = buf_flagname, additional_params = additional_params },
+        details = { title = title, method = method, additional_params = additional_params },
       })
       return
     end
@@ -244,22 +242,22 @@ local M = {}
 
 ---@return nil
 function M.goto_definitions()
-  focus("LSP Definitions", "textDocument/definition", "support_definition", {})
+  focus("LSP Definitions", "textDocument/definition", {})
 end
 
 ---@return nil
 function M.goto_implementations()
-  focus("LSP Implementations", "textDocument/implementation", "support_implementation", {})
+  focus("LSP Implementations", "textDocument/implementation", {})
 end
 
 ---@return nil
 function M.goto_references()
-  focus("LSP References", "textDocument/references", "support_references", { context = { includeDeclaration = true } })
+  focus("LSP References", "textDocument/references", { context = { includeDeclaration = true } })
 end
 
 ---@return nil
 function M.goto_type_definitions()
-  focus("LSP Type Definitions", "textDocument/typeDefinition", "support_typeDefinition", {})
+  focus("LSP Type Definitions", "textDocument/typeDefinition", {})
 end
 
 return M

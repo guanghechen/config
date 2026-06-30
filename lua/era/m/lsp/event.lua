@@ -88,12 +88,7 @@ end
 ---@param method                        string
 ---@return boolean
 local function buf_supports_method(bufnr, method)
-  for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr })) do
-    if client:supports_method(method) then
-      return true
-    end
-  end
-  return false
+  return #vim.lsp.get_clients({ bufnr = bufnr, method = method }) > 0
 end
 
 ---@param client                        vim.lsp.Client
@@ -104,10 +99,6 @@ function M.on_attach(client, bufnr)
   local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
   local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
-  local support_definition = vim.b[bufnr].support_definition or 0 ---@type integer
-  local support_implementation = vim.b[bufnr].support_implementation or 0 ---@type integer
-  local support_references = vim.b[bufnr].support_references or 0 ---@type integer
-  local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
   if client:supports_method("textDocument/codeLens") then
     support_codelens = support_codelens + 1
@@ -124,28 +115,12 @@ function M.on_attach(client, bufnr)
   if client:supports_method("textDocument/foldingRange") then
     support_foldingRange = support_foldingRange + 1
   end
-  if client:supports_method("textDocument/definition") then
-    support_definition = support_definition + 1
-  end
-  if client:supports_method("textDocument/implementation") then
-    support_implementation = support_implementation + 1
-  end
-  if client:supports_method("textDocument/references") then
-    support_references = support_references + 1
-  end
-  if client:supports_method("textDocument/typeDefinition") then
-    support_typeDefinition = support_typeDefinition + 1
-  end
 
   vim.b[bufnr].support_codelens = support_codelens ---@type integer
   vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
   vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
   vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
   vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
-  vim.b[bufnr].support_definition = support_definition ---@type integer
-  vim.b[bufnr].support_implementation = support_implementation ---@type integer
-  vim.b[bufnr].support_references = support_references ---@type integer
-  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 
   if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
     -- code lens
@@ -333,10 +308,6 @@ function M.on_detach(client, bufnr)
   local support_documentHighlight = vim.b[bufnr].support_documentHighlight or 0 ---@type integer
   local support_documentSymbol = vim.b[bufnr].support_documentSymbol or 0 ---@type integer
   local support_foldingRange = vim.b[bufnr].support_foldingRange or 0 ---@type integer
-  local support_definition = vim.b[bufnr].support_definition or 0 ---@type integer
-  local support_implementation = vim.b[bufnr].support_implementation or 0 ---@type integer
-  local support_references = vim.b[bufnr].support_references or 0 ---@type integer
-  local support_typeDefinition = vim.b[bufnr].support_typeDefinition or 0 ---@type integer
 
   if support_codelens > 0 and client:supports_method("textDocument/codeLens") then
     support_codelens = support_codelens - 1
@@ -364,28 +335,12 @@ function M.on_detach(client, bufnr)
   if support_foldingRange > 0 and client:supports_method("textDocument/foldingRange") then
     support_foldingRange = support_foldingRange - 1
   end
-  if support_definition > 0 and client:supports_method("textDocument/definition") then
-    support_definition = support_definition - 1
-  end
-  if support_implementation > 0 and client:supports_method("textDocument/implementation") then
-    support_implementation = support_implementation - 1
-  end
-  if support_references > 0 and client:supports_method("textDocument/references") then
-    support_references = support_references - 1
-  end
-  if support_typeDefinition > 0 and client:supports_method("textDocument/typeDefinition") then
-    support_typeDefinition = support_typeDefinition - 1
-  end
 
   vim.b[bufnr].support_codelens = support_codelens ---@type integer
   vim.b[bufnr].support_inlayhint = support_inlayhint ---@type integer
   vim.b[bufnr].support_documentHighlight = support_documentHighlight ---@type integer
   vim.b[bufnr].support_documentSymbol = support_documentSymbol ---@type integer
   vim.b[bufnr].support_foldingRange = support_foldingRange ---@type integer
-  vim.b[bufnr].support_definition = support_definition ---@type integer
-  vim.b[bufnr].support_implementation = support_implementation ---@type integer
-  vim.b[bufnr].support_references = support_references ---@type integer
-  vim.b[bufnr].support_typeDefinition = support_typeDefinition ---@type integer
 end
 
 ---@param client                        vim.lsp.Client
