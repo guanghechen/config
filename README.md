@@ -10,6 +10,10 @@
 - [ai/imggen/style.md](topics/ai/imggen/style.md) — 图像生成 style guide
 - [neovim/diff-mode.txt](topics/neovim/diff-mode.txt) — neovim diff 模式
 
+## FAQ
+
+- [os/win.md](faq/os/win.md) — Windows 常见配置(输入法等)
+
 ## Troubleshoot
 
 _(暂无)_

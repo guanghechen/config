@@ -26,6 +26,7 @@ troubleshoot 记录最易带入真实环境信息 —— 一律用占位符替�
 ### 目录规范
 
 - `topics/<领域>/` — wiki 参考知识(长期有效、经整理)。领域如 `ai/`、`neovim/`。
+- `faq/<领域>/` — 问答 / 操作速查(如 `os/win.md`)。
 - `troubleshoot/` — 问题排查记录,文件名 `YYYY-MM-DD-<slug>.md`。
 - `templates/` — 记录模板。
 - `README.md` — 索引 / 导航,新增条目时同步一行。
