@@ -213,10 +213,6 @@
           "editions": ["nix", "osx", "win"]
         },
         {
-          "branch": "translator",
-          "editions": ["nix", "osx", "win"]
-        },
-        {
           "branch": "wiki-note",
           "editions": ["nix", "osx", "win"]
         }
