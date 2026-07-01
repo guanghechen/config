@@ -24,6 +24,9 @@ brew install --cask ghostty
 ### Install kitty
 brew install --cask kitty
 
+### Install tex
+brew install tectonic
+
 ### Install wezterm
 brew install --cask wezterm
 
