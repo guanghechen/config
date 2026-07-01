@@ -9,6 +9,7 @@
 - [ai/loss.md](topics/ai/loss.md) — 常见损失函数中英对照
 - [ai/imggen/style.md](topics/ai/imggen/style.md) — 图像生成 style guide
 - [neovim/diff-mode.txt](topics/neovim/diff-mode.txt) — neovim diff 模式
+- [os/nix/bash.md](topics/os/nix/bash.md) — Bash 配置文件加载机制
 
 ## FAQ
 
