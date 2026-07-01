@@ -166,7 +166,7 @@ function M.default_gen_hlgroup_map(context)
     m_img_anchor = { fg = u.purple },
     m_img_border = { link = "ms_b_none" },
     m_img_loading = { fg = u.fg4 },
-    m_img_math = { fg = u.purple },
+    m_img_math = { fg = u.pink, bold = true },
     m_img_special = { fg = u.purple },
     m_img_spinner = { fg = u.fg4 },
 
