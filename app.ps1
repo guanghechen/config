@@ -7,8 +7,8 @@ function cc0 {
   $env:ANTHROPIC_API_KEY = ''
   $env:ANTHROPIC_BASE_URL = $env:GHC_ANTHROPIC_BASE_URL
   $env:ANTHROPIC_AUTH_TOKEN = $env:GHC_ANTHROPIC_AUTH_TOKEN
-  $env:ANTHROPIC_MODEL = 'claude-opus-4.8'
-  $env:ANTHROPIC_SMALL_FAST_MODEL = 'claude-sonnet-4.6'
+  $env:ANTHROPIC_MODEL = 'claude-opus-4-8[1m]'
+  $env:ANTHROPIC_SMALL_FAST_MODEL = 'claude-sonnet-5'
   claude --dangerously-skip-permissions @args
 }
 

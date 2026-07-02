@@ -1,3 +1,4 @@
 function ghc-update {
-  kit repo sync
+  git -C "$env:XDG_CONFIG_HOME\kit" pull origin kit
+  if ($LASTEXITCODE -eq 0) { kit repo sync }
 }
