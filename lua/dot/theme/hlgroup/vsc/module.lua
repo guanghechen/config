@@ -155,7 +155,6 @@ function M.gen_hlgroup_map(context)
 
     ---module/image
     m_img_anchor = { fg = c.accentPurple },
-    m_img_border = { link = "ms_b_none" },
     m_img_loading = { fg = c.textDim },
     m_img_math = { fg = u.pink, bold = true },
     m_img_special = { fg = c.accentPurple },

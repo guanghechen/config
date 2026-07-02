@@ -177,20 +177,11 @@ local commands = {
     file = function(convert, _)
       return convert:tmpfile("trim.png")
     end,
-    cmd = function(step)
+    cmd = {
       -- PNG-only crop (never decodes PDF/PS) to restore the old `-trim` without ghostscript.
-      -- For math, add transparent vertical padding so the glyph sits below full line-height
-      -- (matches surrounding text) instead of filling the whole cell.
-      local args = { "{src}", "-trim", "+repage" }
-      if step.meta.kind == "math" then
-        vim.list_extend(args, { "-bordercolor", "none", "-border", "0x12%" })
-      end
-      args[#args + 1] = "{file}"
-      return {
-        { cmd = "magick", args = args },
-        { cmd = "convert", args = vim.deepcopy(args) },
-      }
-    end,
+      { cmd = "magick", args = { "{src}", "-trim", "+repage", "{file}" } },
+      { cmd = "convert", args = { "{src}", "-trim", "+repage", "{file}" } },
+    },
   },
   convert = {
     ft = "png",

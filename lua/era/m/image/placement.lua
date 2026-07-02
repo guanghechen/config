@@ -246,11 +246,6 @@ function M:render_grid(loc)
   local height = math.min(#diacritics, loc.height)
   local width = math.min(#diacritics, loc.width)
 
-  local border_hl = "m_img_border"
-  local border_chars = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }
-  local top_border = border_chars[1] .. string.rep(border_chars[2], width) .. border_chars[3]
-  local bottom_border = border_chars[7] .. string.rep(border_chars[6], width) .. border_chars[5]
-
   for r = 1, height do
     local line = {} ---@type string[]
     for c = 1, width do
@@ -341,14 +336,9 @@ function M:render_grid(loc)
       local row = self:find_line(range[3] - 1)
       local padding = string.rep(" ", offset)
       local virt_lines = {} ---@type {[1]: string, [2]: string}[][]
-      table.insert(virt_lines, { { padding }, { top_border, border_hl } })
       for _, l in ipairs(img) do
-        table.insert(
-          virt_lines,
-          { { padding }, { border_chars[8], border_hl }, { l, hl }, { border_chars[4], border_hl } }
-        )
+        table.insert(virt_lines, { { padding }, { l, hl } })
       end
-      table.insert(virt_lines, { { padding }, { bottom_border, border_hl } })
       extmarks[#extmarks + 1] = {
         row = row,
         col = 0,
@@ -363,11 +353,9 @@ function M:render_grid(loc)
     local icons = s.icons
     local icon = icons[self.opts.type or "image"] or icons.image
     local virt_lines = {} ---@type {[1]: string, [2]: string}[][]
-    table.insert(virt_lines, { { top_border, border_hl } })
     for _, l in ipairs(img) do
-      table.insert(virt_lines, { { border_chars[8], border_hl }, { l, hl }, { border_chars[4], border_hl } })
+      table.insert(virt_lines, { { l, hl } })
     end
-    table.insert(virt_lines, { { bottom_border, border_hl } })
     extmarks[#extmarks + 1] = {
       row = range[1] - 1,
       col = range[2],
