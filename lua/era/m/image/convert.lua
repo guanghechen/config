@@ -124,11 +124,11 @@ local commands = {
     cmd = {
       {
         cmd = "magick",
-        args = { "identify", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
+        args = { "identify", "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
       },
       {
         cmd = "identify",
-        args = { "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
+        args = { "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
       },
     },
     on_done = function(step)
@@ -149,6 +149,46 @@ local commands = {
         format = format:lower(),
         size = { width = tonumber(w) or 0, height = tonumber(h) or 0 },
         dpi = { width = tonumber(x) or 0, height = tonumber(y) or 0 },
+      }
+    end,
+  },
+  pdf = {
+    ft = "png",
+    cmd = function(step)
+      -- Rasterize PDF with poppler so ImageMagick never delegates to ghostscript.
+      -- Math stays transparent (like the old magick.math preset); pdftoppm has no
+      -- -transp, so for math we require pdftocairo and fail fast instead of silently
+      -- rendering an opaque (invisible-on-dark) glyph. Direct PDFs keep poppler's
+      -- default white page background and may fall back to pdftoppm.
+      local is_math = step.meta.kind == "math"
+      local args = { "-png", "-r", 192, "-f", "{page1}", "-l", "{page1}", "-singlefile" }
+      if is_math then
+        args[#args + 1] = "-transp"
+      end
+      vim.list_extend(args, { "{src}", "{stem}" })
+      local cmds = { { cmd = "pdftocairo", args = args } }
+      if not is_math then
+        cmds[#cmds + 1] = { cmd = "pdftoppm", args = vim.deepcopy(args) }
+      end
+      return cmds
+    end,
+  },
+  trim = {
+    file = function(convert, _)
+      return convert:tmpfile("trim.png")
+    end,
+    cmd = function(step)
+      -- PNG-only crop (never decodes PDF/PS) to restore the old `-trim` without ghostscript.
+      -- For math, add transparent vertical padding so the glyph sits below full line-height
+      -- (matches surrounding text) instead of filling the whole cell.
+      local args = { "{src}", "-trim", "+repage" }
+      if step.meta.kind == "math" then
+        vim.list_extend(args, { "-bordercolor", "none", "-border", "0x12%" })
+      end
+      args[#args + 1] = "{file}"
+      return {
+        { cmd = "magick", args = args },
+        { cmd = "convert", args = vim.deepcopy(args) },
       }
     end,
   },
@@ -270,7 +310,9 @@ function Convert.new(opts)
   self._future = stl.c.Future.new()
   local base = vim.fn.fnamemodify(opts.src, ":t:r")
   self.prefix = vim.fn.sha256(self.opts.src .. self.page):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
-  self.meta = { src = opts.src }
+  -- kind is inferred only from module-generated template extensions (.math.tex / .math.typ),
+  -- never from a user's direct file, so e.g. a direct `paper.math.pdf` is not treated as math.
+  self.meta = { src = opts.src, kind = opts.src:match("%.(%w+)%.tex$") or opts.src:match("%.(%w+)%.typ$") }
   self.steps = {}
   local terminal = require("era.m.image.terminal")
   self._tpl_data = {
@@ -421,12 +463,19 @@ end
 
 ---@return nil
 function Convert:__resolve__()
+  local from_pdf = false
   while self:ft() ~= "png" do
     local ft = self:ft()
+    if ft == "pdf" then
+      from_pdf = true
+    end
     local target = commands[ft] and ft or "convert"
     if self:__resolve_target__(target) then
       break
     end
+  end
+  if from_pdf then
+    self:__resolve_target__("trim")
   end
   self:__resolve_target__("identify")
   self.file = self.meta.src
@@ -498,9 +547,11 @@ function Convert:__step__()
     file = step.file,
     basename = vim.fs.basename(step.file),
     name = vim.fn.fnamemodify(step.file, ":t:r"),
+    stem = vim.fn.fnamemodify(step.file, ":r"),
     dirname = vim.fs.dirname(step.meta.src),
     src = step.meta.src,
     page = self.page,
+    page1 = self.page + 1,
   }, self._tpl_data)
 
   for a, arg in ipairs(args) do
