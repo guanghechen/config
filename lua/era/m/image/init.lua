@@ -33,7 +33,8 @@ local M = setmetatable({
 
 ---@return nil
 function M.dressing()
-  if stl.env.IS_WIN then
+  -- Graphics-protocol image/math preview is only enabled on macOS by choice.
+  if not stl.env.IS_MAC then
     return
   end
 
