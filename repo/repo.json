@@ -211,10 +211,6 @@
         {
           "branch": "wiki",
           "editions": ["nix", "osx", "win"]
-        },
-        {
-          "branch": "wiki-note",
-          "editions": ["nix", "osx", "win"]
         }
       ]
     }
