@@ -8,11 +8,15 @@
 *.tsbuildinfo
 
 .claude/*.lock
-.code-analyzer/
+
 .credentials/
 .playwright/
 .playwright-cli/
 .playwright-mcp/
 .tmp/
+
+bin/
 local/
 node_modules/
+target/
+tmp/
