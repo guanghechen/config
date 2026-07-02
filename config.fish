@@ -79,7 +79,7 @@ set -gx CODEX_HOME "$XDG_CONFIG_HOME/codex"
 set -gx GEMINI_CONFIG_DIR "$HOME/.gemini"
 
 set -gx ANTHROPIC_MODEL "claude-opus-4-8[1m]"
-set -gx ANTHROPIC_SMALL_FAST_MODEL "claude-sonnet-4.6"
+set -gx ANTHROPIC_SMALL_FAST_MODEL claude-sonnet-5
 set -gx CLAUDE_CODE_SUBAGENT_MODEL "claude-opus-4-8[1m]"
 
 set -gx GEMINI_MODEL gemini-3-pro-preview
