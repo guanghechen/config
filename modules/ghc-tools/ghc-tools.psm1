@@ -10,6 +10,7 @@ $lazyFunctions = @(
     'ghc-update-agents'
     'ghc-update'
     'ghc-upgrade'
+    'ghc-winshark-vsc'
     'swap-alt-win'
     'yoz'
 )
