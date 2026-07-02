@@ -6,10 +6,8 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Context-window patching is intentionally not part of the default flow:
-// newer Claude Code defaults (200K / 1M) are kept as-is. The
-// patch-context-window.mjs script is retained for manual use if needed:
-//   node patch-context-window.mjs [size]
+// Only the WSL clipboard image format/source patch is maintained. The Ctrl+V
+// keybinding is configured via ~/.config/claude/keybindings.json, not patched.
 const patches = [
   { name: 'image-paste', file: 'patch-image-paste.mjs', args: [] },
 ]

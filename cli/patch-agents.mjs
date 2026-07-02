@@ -15,7 +15,6 @@ const reporter = new Reporter({ prefix: 'patch-agents' })
 
 /**
  * @typedef {Object} IPatchAgentsOptions
- * @property {string} [contextWindow]
  * @property {string} [agent]
  */
 
@@ -42,12 +41,10 @@ function runPatch(name, script, args) {
  */
 export async function handlePatchAgents(opts) {
   const agent = opts.agent ?? 'claude'
-  const contextWindow = opts.contextWindow
 
   const agentDir = join(__dirname, 'patch', agent)
 
   const patches = [
-    { name: 'context-window', file: 'patch-context-window.mjs', args: contextWindow ? [contextWindow] : [] },
     { name: 'image-paste', file: 'patch-image-paste.mjs', args: [] },
   ]
 
@@ -67,7 +64,6 @@ export async function handlePatchAgents(opts) {
 if (process.argv[1] === import.meta.filename) {
   const cmd = new Command({ name: 'patch-agents', description: 'Patch AI coding agents to customize behavior.' })
     .option({ long: 'agent', type: 'string', default: 'claude', description: 'Agent to patch (claude)' })
-    .option({ long: 'context-window', type: 'string', description: 'Context window size for the agent' })
     .action(async ({ opts }) => {
       await handlePatchAgents(/** @type {IPatchAgentsOptions} */ (opts))
     })
