@@ -10,6 +10,11 @@
 - [ai/imggen/style.md](topics/ai/imggen/style.md) — 图像生成 style guide
 - [neovim/diff-mode.txt](topics/neovim/diff-mode.txt) — neovim diff 模式
 - [os/nix/bash.md](topics/os/nix/bash.md) — Bash 配置文件加载机制
+- [rust/syntax/borrowing.md](topics/rust/syntax/borrowing.md) — 借用与生命周期
+- [rust/syntax/class.md](topics/rust/syntax/class.md) — 用 struct/impl/trait 实现"类"
+- [rust/syntax/keyword.md](topics/rust/syntax/keyword.md) — 关键字一览
+- [rust/syntax/smart_pointers.md](topics/rust/syntax/smart_pointers.md) — 智能指针
+- [rust/syntax/types.md](topics/rust/syntax/types.md) — 数据类型
 
 ## FAQ
 
