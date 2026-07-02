@@ -33,20 +33,16 @@ end
 ---@field public wo                      ?table<string, any>
 local data = {
   tmpdir = dot.path.join(vim.fn.stdpath("cache"), "image/"),
-  convert = {
-    notify = true,
-    ---@type era.m.image.args
-    mermaid = function()
-      local theme = vim.o.background == "light" and "neutral" or "dark"
-      return { "-i", "{src}", "-o", "{file}", "-b", "transparent", "-t", theme, "-s", "{scale}" }
-    end,
-    ---@type table<string, era.m.image.args>
-    magick = {
-      default = { "{src}[0]", "-scale", "1920x1080>" },
-      vector = { "-density", 192, "{src}[0]" },
-      math = { "-density", 192, "{src}[0]", "-trim" },
-      pdf = { "-density", 192, "{src}[0]", "-background", "white", "-alpha", "remove", "-trim" },
-    },
+  wo = {
+    wrap = false,
+    number = false,
+    relativenumber = false,
+    cursorcolumn = false,
+    signcolumn = "no",
+    foldcolumn = "0",
+    list = false,
+    spell = false,
+    statuscolumn = "",
   },
   doc = {
     enabled = true,
