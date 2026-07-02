@@ -197,17 +197,7 @@
         {
           "branch": "yui",
           "editions": ["nix", "osx"]
-        }
-      ]
-    },
-    {
-      "name": "wiki",
-      "worktree": {
-        "remote": "https://github.com/guanghechen/wiki.git",
-        "template": "${HOME}/wiki/${BRANCH}",
-        "main": "wiki"
-      },
-      "branches": [
+        },
         {
           "branch": "wiki",
           "editions": ["nix", "osx", "win"]
