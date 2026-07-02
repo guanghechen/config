@@ -1,15 +1,4 @@
-.specify/
-.claude/commands/speckit.*
-
-bin/
-local/
-specs/
-target/
-tmp/
-
-*.local/
 local.*/
-*.local.*
 __tmp__.lua
 
 lua/*.dll
