@@ -59,7 +59,7 @@ M.transforms = {
     local s = state.data
     local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
     local color = color_val and string.format("#%06x", color_val) or "#000000"
-    img.content = state.tpl(s.math.typst.tpl, {
+    img.content = state.tpl_env(s.math.typst.tpl, {
       color = color,
       header = M.get_header(ctx.bufnr),
       content = img.content,
@@ -91,7 +91,7 @@ M.transforms = {
       seen[p] = true
       return true
     end, packages)
-    img.content = state.tpl(s.math.latex.tpl, {
+    img.content = state.tpl_env(s.math.latex.tpl, {
       font_size = s.math.latex.font_size or "large",
       packages = table.concat(packages, ", "),
       header = M.get_header(ctx.bufnr),

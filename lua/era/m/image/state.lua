@@ -246,6 +246,16 @@ function M.tpl(tpl, tpl_data)
   end))
 end
 
+---Interpolate ${key} placeholders while leaving literal `{...}` (e.g. LaTeX braces) intact.
+---@param tpl                            string
+---@param tpl_data                       table<string, string|number>
+---@return string
+function M.tpl_env(tpl, tpl_data)
+  return (tpl:gsub("%${([%w_]+)}", function(key)
+    return tostring(tpl_data[key] or "")
+  end))
+end
+
 ---@param filename                       string
 ---@return boolean
 function M.is_support_file(filename)
