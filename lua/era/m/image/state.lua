@@ -85,7 +85,7 @@ local data = {
     enabled = true,
     latex = {
       font_size = "normalsize",
-      packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools" },
+      packages = { "amsmath", "amssymb", "amsfonts", "amscd", "mathtools", "mathpazo" },
       tpl = [[
         \documentclass[preview,border=0pt,varwidth,12pt]{standalone}
         \usepackage{${packages}}
