@@ -299,6 +299,11 @@ local group_items = {
       end,
       action = function()
         require("render-markdown").buf_toggle()
+        -- render-markdown's per-buffer toggle has no observable; notify inline math to re-sync.
+        vim.api.nvim_exec_autocmds("User", {
+          pattern = "EraImageMathSync",
+          data = { buf = vim.api.nvim_get_current_buf() },
+        })
       end,
     },
     maximize = {

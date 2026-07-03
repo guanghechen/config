@@ -246,6 +246,24 @@ function M.resolve(bufnr, src)
   return dot.path.normalize(src)
 end
 
+---@param bufnr                          integer
+---@return boolean Whether inline math should render in `bufnr`: needs the math feature and the
+--- `dressing_image` flight on, plus render-markdown effectively rendering this buffer — which
+--- mirrors its global enable/disable AND the per-buffer `<leader>um` (`buf_toggle`). Falls back
+--- to the global `render_markdown` flag if render-markdown's internals ever move (pcall-guarded).
+function M.math_enabled(bufnr)
+  local s = require("era.m.image.state").data
+  if not s.math.enabled or not dot.context.flight.dressing_image:snapshot() then
+    return false
+  end
+  local ok_m, manager = pcall(require, "render-markdown.core.manager")
+  local ok_s, rm_state = pcall(require, "render-markdown.state")
+  if ok_m and ok_s and bufnr then
+    return manager.attached(bufnr) and rm_state.get(bufnr).enabled == true
+  end
+  return dot.context.plugin.render_markdown:snapshot()
+end
+
 ---@param ctx                            era.m.image.ctx
 ---@return era.m.image.match|nil
 local function make_img(ctx)
@@ -275,7 +293,7 @@ local function make_img(ctx)
   elseif img.ext then
     img.type = img.ext:match("^(%w+)%.") or img.type
   end
-  if not s.math.enabled and img.type == "math" then
+  if img.type == "math" and not M.math_enabled(ctx.bufnr) then
     return
   end
   if ctx.definition then

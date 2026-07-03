@@ -8,6 +8,7 @@ local __module_name__ = "era.m.image.inline" ---@type string
 ---@field protected __call_debounced__    fun(self: era.m.image.inline): nil
 ---@field protected _debounced            ?stl.timer.IDisposableCallable
 ---@field protected _augroup              integer
+---@field protected _flag_unsub           ?stl.c.IUnsubscribable
 local M = {}
 M.__index = M
 
@@ -47,6 +48,26 @@ function M.new(bufnr)
       update()
     end,
   })
+
+  -- Inline math mirrors render-markdown's rendering state (see doc.math_enabled): re-sync on the
+  -- `dressing_image` flight, the global `render_markdown` flag, and the per-buffer `<leader>um`
+  -- toggle (which fires the `User EraImageMathSync` event below since it has no observable).
+  self._flag_unsub = stl.fn.observe({
+    dot.context.flight.dressing_image,
+    dot.context.plugin.render_markdown,
+  }, function()
+    self:sync_math()
+  end, true)
+  vim.api.nvim_create_autocmd("User", {
+    pattern = "EraImageMathSync",
+    group = self._augroup,
+    callback = function(ev)
+      if not (ev.data and ev.data.buf) or ev.data.buf == self.bufnr then
+        self:sync_math()
+      end
+    end,
+  })
+
   vim.schedule(update)
   return self
 end
@@ -57,12 +78,29 @@ function M:dispose()
     self._debounced:dispose()
     self._debounced = nil
   end
+  if self._flag_unsub then
+    self._flag_unsub.unsubscribe()
+    self._flag_unsub = nil
+  end
   pcall(vim.api.nvim_del_augroup_by_id, self._augroup)
   for _, img in pairs(self.imgs) do
     img:close()
   end
   self.imgs = {}
   self.idx = {}
+end
+
+---@return nil
+function M:sync_math()
+  if not require("era.m.image.doc").math_enabled(self.bufnr) then
+    for id, img in pairs(self.imgs) do
+      if img.opts.type == "math" then
+        img:close()
+        self.imgs[id] = nil
+      end
+    end
+  end
+  self:update()
 end
 
 ---@return nil
