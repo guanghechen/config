@@ -26,6 +26,17 @@ local config = {
   },
 }
 
+-- Inline-math uniform canvas height (px, @192dpi/12pt). Each math formula is bottom-aligned
+-- (gravity south) onto a canvas of at least this height so placement's inline down-scaling
+-- applies the same factor to every formula on a line — keeping the math em (e.g. `≤`) a
+-- consistent size regardless of superscripts. South keeps baselines level; taller formulas
+-- keep their own height via max().
+local MATH_INLINE_H = 42
+-- Descender gap (px) left below each formula so its baseline lands on the text baseline
+-- rather than the cell floor (south-alignment alone makes inline math sit low). Tune to the
+-- font's descender; small enough that superscript formulas still fit within MATH_INLINE_H.
+local MATH_BASELINE_GAP = 6
+
 ---@class era.m.image.meta
 ---@field public src                     string
 ---@field public info                    ?era.m.image.Info
@@ -177,11 +188,27 @@ local commands = {
     file = function(convert, _)
       return convert:tmpfile("trim.png")
     end,
-    cmd = {
+    cmd = function(step)
       -- PNG-only crop (never decodes PDF/PS) to restore the old `-trim` without ghostscript.
-      { cmd = "magick", args = { "{src}", "-trim", "+repage", "{file}" } },
-      { cmd = "convert", args = { "{src}", "-trim", "+repage", "{file}" } },
-    },
+      -- Inline math is additionally padded to a uniform height (MATH_INLINE_H) so that
+      -- every formula on a line is down-scaled by the same factor, keeping glyphs like
+      -- `≤` a consistent size. `convert` (IM6) lacks `%[fx:]`, so it degrades to a plain crop.
+      local magick_args = { "{src}", "-trim", "+repage" }
+      local convert_args = { "{src}", "-trim", "+repage" }
+      if step.meta.kind == "math" then
+        vim.list_extend(magick_args, {
+          "-background", "none", "-gravity", "south",
+          "-splice", "0x" .. MATH_BASELINE_GAP,
+          "-extent", "x%[fx:max(" .. MATH_INLINE_H .. ",h)]",
+        })
+      end
+      magick_args[#magick_args + 1] = "{file}"
+      convert_args[#convert_args + 1] = "{file}"
+      return {
+        { cmd = "magick", args = magick_args },
+        { cmd = "convert", args = convert_args },
+      }
+    end,
   },
   convert = {
     ft = "png",
