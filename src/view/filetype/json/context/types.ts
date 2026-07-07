@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 const bit: number = 1
 
 export enum ModeEnum {

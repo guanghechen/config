@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-pascal-case */
 import { Excalidraw as $Excalidraw } from '@excalidraw/excalidraw'
 import type {
   ExcalidrawElement,

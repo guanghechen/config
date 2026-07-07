@@ -1,6 +1,5 @@
-import { chalk } from '@guanghechen/chalk/node'
 import type { IReporter } from '@guanghechen/reporter'
-import { Reporter, ReporterLevelEnum, resolveLevel } from '@guanghechen/reporter'
+import { Reporter, resolveLogLevel } from '@guanghechen/reporter'
 import type { IState } from '@guanghechen/viewmodel'
 import { State } from '@guanghechen/viewmodel'
 import type { FSWatcher } from 'chokidar'
@@ -9,13 +8,12 @@ import path from 'node:path'
 import { ROOT_DIR } from '../env'
 import { normalizeFilepath, resolveRealFilepath } from './util/path'
 
-const reporter = new Reporter(chalk, {
-  baseName: 'guanghechen',
-  level: resolveLevel(process.env.LOG_LEVEL || ReporterLevelEnum.INFO) || ReporterLevelEnum.INFO,
-  flights: {
-    colorful: true,
+const reporter = new Reporter({
+  prefix: 'guanghechen',
+  level: resolveLogLevel(process.env.LOG_LEVEL || 'info') ?? 'info',
+  flight: {
+    color: true,
     date: true,
-    title: false,
   },
 })
 
@@ -73,7 +71,7 @@ class ServerViewModel {
     if (fps.length <= 0) return
 
     for (const fp of fps) {
-      reporter.verbose('  watching: {}.', fp)
+      reporter.debug(`  watching: ${fp}.`)
       _watchingFilepaths.add(fp)
     }
 
@@ -87,7 +85,7 @@ class ServerViewModel {
       this._watcher = watcher
 
       watcher.on('change', filepath => {
-        reporter.debug('--> file changed {}.', filepath)
+        reporter.debug(`--> file changed ${filepath}.`)
         fileChanged$.next(filepath)
       })
     }

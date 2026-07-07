@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
 
 const bit: number = 1

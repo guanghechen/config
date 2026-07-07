@@ -418,7 +418,7 @@ export interface IBatchedGesture {
 
 class GestureBatchManager {
   private batches = new Map<string, IBatchedGesture>()
-  // eslint-disable-next-line func-call-spacing
+
   private processingCallbacks = new Map<string, (batch: IBatchedGesture) => void>()
   private rafId: number | null = null
   private readonly maxBatchTime = 16 // 60fps

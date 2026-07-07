@@ -1,4 +1,4 @@
-import { Subscriber } from '@guanghechen/viewmodel'
+import { Subscriber } from '@guanghechen/subscriber'
 import type { Plugin } from 'vite'
 import { SERVER_HOST, SERVER_PORT } from '../../env'
 import type { IResponsePayloadFileSwitch } from '../../shared/types'

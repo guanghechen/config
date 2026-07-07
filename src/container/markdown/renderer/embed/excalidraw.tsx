@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-pascal-case */
 import { Excalidraw as $Excalidraw } from '@excalidraw/excalidraw'
 import React from 'react'
 import { ElementViewer } from '@/common/component/ElementViewer'

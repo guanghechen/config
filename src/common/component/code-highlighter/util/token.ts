@@ -47,7 +47,6 @@ export const normalizeTokens = (tokens: TokenStream): IToken[][] => {
   const acc = [currentLine]
 
   for (let stackIndex = 0; stackIndex > -1; --stackIndex) {
-    // eslint-disable-next-line no-cond-assign
     for (let i; (i = tokenArrIndexStack[stackIndex]++) < tokenArrSizeStack[stackIndex];) {
       let content: TokenStream
       let types = typeArrStack[stackIndex]

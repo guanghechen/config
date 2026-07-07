@@ -1,4 +1,3 @@
-import { collectIntervals } from '@guanghechen/std'
 import type { Code, Root, Text } from '@yozora/ast'
 import { CodeType, TextType } from '@yozora/ast'
 import type { IHeadingToc } from '@yozora/ast-util'
@@ -23,6 +22,46 @@ const regexes = {
   line: /\r|\n|\n\r/g,
   srcFile: new RegExp(`(?:^|\\b)${'sourcefile'}="([^"]+)"`, 'i'),
   srcLine: new RegExp(`(?:^|\\b)${'sourceline'}="([^"]+)"`, 'i'),
+}
+
+const intervalRegex = /^(\d+)(?:-(\d+))?$/
+const intervalSeparator = /[,\s]+/
+
+/**
+ * Parse a compact interval expression (e.g. `1-3,5,7-9`) into sorted, merged
+ * closed integer intervals. Equivalent to the removed `collectIntervals` from
+ * `@guanghechen/std@1`.
+ */
+function collectIntervals(text: string): Array<[number, number]> {
+  const intervals: Array<[number, number]> = []
+  for (const token of text.split(intervalSeparator)) {
+    const match = intervalRegex.exec(token)
+    if (!match) continue
+
+    const [, lft, rht] = match
+    const x = Number(lft)
+    if (typeof rht !== 'string') {
+      intervals.push([x, x])
+      continue
+    }
+    const y = Number(rht)
+    intervals.push(x < y ? [x, y] : [y, x])
+  }
+
+  intervals.sort((a, b) => (a[0] === b[0] ? a[1] - b[1] : a[0] - b[0]))
+  if (intervals.length <= 1) return intervals
+
+  const result: Array<[number, number]> = [intervals[0]]
+  for (let i = 1; i < intervals.length; ++i) {
+    const interval = intervals[i]
+    const top = result[result.length - 1]
+    if (top[1] + 1 >= interval[0]) {
+      if (top[1] < interval[1]) top[1] = interval[1]
+    } else {
+      result.push(interval)
+    }
+  }
+  return result
 }
 
 const parser = new Parser({

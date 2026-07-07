@@ -101,7 +101,7 @@ const middleware = async (
     return
   }
 
-  state.reporter.verbose('--> request:', req.url)
+  state.reporter.debug('--> request:', req.url)
 
   // Check if authentication is required for this endpoint
   if (requiresAuth(pathname)) {

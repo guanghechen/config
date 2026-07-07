@@ -53,7 +53,6 @@ export const generateDefaultFilename = (extension: string): string => {
   return `whiteboard-${year}-${month}-${day}.${extension}`
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class FileSystemAccessStorage {
   private static readonly STORAGE_PREFIX = 'fsHandle:'
   private static readonly handleStorage = new Map<string, FileSystemFileHandle>()
