@@ -45,12 +45,7 @@ export interface IWhiteboardWheelInput {
 }
 
 export type IWhiteboardInteractionMode =
-  | 'idle'
-  | 'drag-node'
-  | 'resize-node'
-  | 'lasso-select'
-  | 'pan'
-  | 'connect-edge'
+  'idle' | 'drag-node' | 'resize-node' | 'lasso-select' | 'pan' | 'connect-edge'
 
 export interface IEdgeValidationDetail {
   readonly edgeId: string

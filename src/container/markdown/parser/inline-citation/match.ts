@@ -17,7 +17,7 @@ export const match: IMatchInlineHookCreator<T, IDelimiter, IToken> = function (a
   function _findDelimiter(startIndex: number, endIndex: number): IDelimiter | null {
     const nodePoints: ReadonlyArray<INodePoint> = api.getNodePoints()
 
-    for (let index = startIndex; index < endIndex; ) {
+    for (let index = startIndex; index < endIndex;) {
       const c = nodePoints[index].codePoint
       switch (c) {
         case AsciiCodePoint.BACKSLASH: {

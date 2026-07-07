@@ -113,8 +113,7 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
     const { item, setActivatedIdentifier } = this.props
     setActivatedIdentifier(item.identifier)
 
-    let identifier: string = decodeURIComponent(item.identifier)
-    identifier = encodeURIComponent(item.identifier)
+    const identifier: string = encodeURIComponent(item.identifier)
     const element = document.getElementById(identifier)
     element?.scrollIntoView({ behavior: 'smooth' })
   }

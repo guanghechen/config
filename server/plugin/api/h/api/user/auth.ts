@@ -86,7 +86,9 @@ export const postUserAuth: IApiHandle = async params => {
       expiresIn: JWT_EXPIRES_IN,
     }
 
-    const cookieValue = cookie.serialize(COOKIE_NAME, jwtToken, {
+    const cookieValue = cookie.stringifySetCookie({
+      name: COOKIE_NAME,
+      value: jwtToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

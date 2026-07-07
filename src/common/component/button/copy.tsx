@@ -140,7 +140,7 @@ export class CopyButton extends React.Component<IProps, IState> {
       this.setState({ status: CopyStatusEnum.COPYING })
       try {
         const contentForCopy: string = calcContentForCopy()
-        copy(contentForCopy)
+        void copy(contentForCopy)
         this.setState({ status: CopyStatusEnum.COPIED })
       } catch {
         this.setState({ status: CopyStatusEnum.FAILED })

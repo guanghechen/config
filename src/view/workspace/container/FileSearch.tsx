@@ -205,7 +205,7 @@ const highlightMatches = (text: string, textLower: string, keyword: string): Rea
   const result: React.ReactNode[] = []
 
   let lastIndex = 0
-  for (let index = textLower.indexOf(keyword, lastIndex); index !== -1; ) {
+  for (let index = textLower.indexOf(keyword, lastIndex); index !== -1;) {
     if (index > lastIndex) {
       result.push(text.substring(lastIndex, index))
     }

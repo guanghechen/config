@@ -55,8 +55,7 @@ export const ContentPane: React.FC = () => {
 
     const identifiers: Array<[string, HTMLElement]> = []
     const collect = (item: IHeadingTocNode): void => {
-      let identifier: string = decodeURIComponent(item.identifier)
-      identifier = encodeURIComponent(item.identifier)
+      const identifier: string = encodeURIComponent(item.identifier)
       const element: HTMLElement | null = document.getElementById(identifier)
       if (element) identifiers.push([item.identifier, element])
       for (const child of item.children) collect(child)

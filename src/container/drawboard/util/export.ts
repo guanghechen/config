@@ -78,7 +78,7 @@ export function importFromJSON(jsonString: string): IDrawboardElement[] {
     return data.elements
   } catch (error) {
     console.error('Failed to import JSON:', error)
-    throw new Error('Invalid JSON format')
+    throw new Error('Invalid JSON format', { cause: error })
   }
 }
 

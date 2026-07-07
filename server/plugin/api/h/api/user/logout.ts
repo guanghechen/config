@@ -12,7 +12,9 @@ export const postUserLogout: IApiHandle = async () => {
     success: true,
   }
 
-  const cookieValue = cookie.serialize(COOKIE_NAME, '', {
+  const cookieValue = cookie.stringifySetCookie({
+    name: COOKIE_NAME,
+    value: '',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',

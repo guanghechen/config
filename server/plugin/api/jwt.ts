@@ -20,7 +20,7 @@ export function verifyJwtMiddleware(params: IApiHandleParams): IApiHandleResult 
     token = authHeader.substring(7) // Remove 'Bearer ' prefix
   } else {
     // Fallback to cookie-based authentication
-    const cookies = req.headers.cookie ? cookie.parse(req.headers.cookie) : {}
+    const cookies = req.headers.cookie ? cookie.parseCookie(req.headers.cookie) : {}
     token = cookies[COOKIE_NAME]
   }
 

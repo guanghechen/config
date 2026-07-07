@@ -50,17 +50,7 @@ export interface IPrismThemeEntry {
   backgroundColor?: string
   fontStyle?: 'normal' | 'italic'
   fontWeight?:
-    | 'normal'
-    | 'bold'
-    | '100'
-    | '200'
-    | '300'
-    | '400'
-    | '500'
-    | '600'
-    | '700'
-    | '800'
-    | '900'
+    'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900'
   textDecorationLine?: 'none' | 'underline' | 'line-through' | 'underline line-through'
   opacity?: number
   [styleKey: string]: string | number | void

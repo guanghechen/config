@@ -23,13 +23,7 @@ export type IComputeCoalesceStrategy = 'replace-latest' | 'merge-set' | 'drop-ot
 
 export interface IComputeEventFrom {
   readonly source:
-    | 'tool'
-    | 'inspector'
-    | 'shortcut'
-    | 'command_bus'
-    | 'storage_recovery'
-    | 'importer'
-    | 'system'
+    'tool' | 'inspector' | 'shortcut' | 'command_bus' | 'storage_recovery' | 'importer' | 'system'
   readonly activeId?: string
   readonly commandId?: string
   readonly traceId: string
