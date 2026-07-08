@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { ToolMode } from '../context/types'
 import type { HistoryViewModel } from '../context/viewmodel/history'
 import type { LayersViewModel } from '../context/viewmodel/layers'
@@ -80,7 +79,7 @@ export function usePointerEvents(
 
       // Create new element based on tool
       const baseElement = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         x: lastPointerRef.current.x,
         y: lastPointerRef.current.y,
         width: 0,

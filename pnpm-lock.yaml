@@ -73,9 +73,6 @@ importers:
       cookie:
         specifier: 2.0.1
         version: 2.0.1
-      copy-to-clipboard:
-        specifier: 4.0.2
-        version: 4.0.2
       dagre:
         specifier: 0.8.5
         version: 0.8.5
@@ -124,9 +121,6 @@ importers:
       tailwindcss:
         specifier: 4.3.2
         version: 4.3.2
-      uuid:
-        specifier: 14.0.1
-        version: 14.0.1
     devDependencies:
       '@eslint/js':
         specifier: 10.0.1
@@ -2768,12 +2762,6 @@ packages:
         integrity: sha512-yuToqVvRrj6pfDXREyQAAv8SkAEk/8GS3jQRTiUMm66TVtBYmqQeoEjL2Lmq8Rpo6271vH76InTChTitEAm65w==,
       }
     engines: { node: '>=22' }
-
-  copy-to-clipboard@4.0.2:
-    resolution:
-      {
-        integrity: sha512-gklSft7IuhriZKHKpuoA1fpJSLPNgvUMWMo5BlnzAJm0zNKnznoSv23IjtNqclx8eKi6ZcdvFFzYEER/+U1LoQ==,
-      }
 
   cose-base@1.0.3:
     resolution:
@@ -7514,8 +7502,6 @@ snapshots:
   cookie@1.1.1: {}
 
   cookie@2.0.1: {}
-
-  copy-to-clipboard@4.0.2: {}
 
   cose-base@1.0.3:
     dependencies:

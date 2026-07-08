@@ -2,7 +2,6 @@ import { useEventCallback } from '@guanghechen/react-hooks'
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import React from 'react'
 import { toast } from 'react-toastify'
-import { v4 } from 'uuid'
 import { CodeBox } from '@/common/component/CodeBox'
 import type { ITextTransformConfig, ITextTransformStep } from '@/shared/types'
 import { TextTransformStepTypeEnum } from '@/shared/types'
@@ -99,7 +98,7 @@ export const TransformPane: React.FC = () => {
     const originalStep = current[index]
     const duplicatedStep: ITextTransformStep = {
       ...originalStep,
-      id: v4(),
+      id: crypto.randomUUID(),
     }
 
     const updated = [...current]

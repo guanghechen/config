@@ -1,5 +1,4 @@
 import cn from 'clsx'
-import copy from 'copy-to-clipboard'
 import React from 'react'
 import { CheckIcon, CopyIcon } from '../icon/material'
 
@@ -140,8 +139,10 @@ export class CopyButton extends React.Component<IProps, IState> {
       this.setState({ status: CopyStatusEnum.COPYING })
       try {
         const contentForCopy: string = calcContentForCopy()
-        void copy(contentForCopy)
-        this.setState({ status: CopyStatusEnum.COPIED })
+        navigator.clipboard.writeText(contentForCopy).then(
+          () => this.setState({ status: CopyStatusEnum.COPIED }),
+          () => this.setState({ status: CopyStatusEnum.FAILED }),
+        )
       } catch {
         this.setState({ status: CopyStatusEnum.FAILED })
       }
