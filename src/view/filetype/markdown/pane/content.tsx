@@ -1,6 +1,7 @@
 import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Heading, Root } from '@yozora/ast'
 import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
+import cn from 'clsx'
 import throttle from 'lodash.throttle'
 import React from 'react'
 import { NodesRenderer, ReactMarkdown, useMarkdownAst } from '@/container/markdown'
@@ -10,6 +11,7 @@ import { useMarkdownViewViewModel } from '../context'
 export const ContentPane: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
   const data = useStateValue(viewmodel.data$)
+  const contentFullWidth: boolean = useStateValue(viewmodel.contentFullWidth$)
 
   const ast: Root = useMarkdownAst()
   const toc: IHeadingToc | undefined = data?.toc
@@ -116,7 +118,10 @@ export const ContentPane: React.FC = () => {
   }, [toc, viewmodel])
 
   return (
-    <div ref={containerRef} className="flex-auto max-w-[72rem]">
+    <div
+      ref={containerRef}
+      className={cn('flex-auto', contentFullWidth ? 'max-w-none' : 'max-w-[72rem]')}
+    >
       <div className="px-8 py-4">
         <header
           className={`${

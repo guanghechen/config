@@ -65,6 +65,7 @@ export class FilePath extends React.PureComponent<IProps, IState> {
             )}
           </div>
         )}
+        <span className="vl-fp-actions" />
       </div>
     )
   }

@@ -14,6 +14,7 @@ const DEFAULT_DATA: IMarkdownViewData = {
 export class MarkdownViewViewModel extends ViewModel {
   public readonly mode$: IState<ModeEnum>
 
+  public readonly contentFullWidth$: IState<boolean>
   public readonly data$: IState<IMarkdownFileData | null>
   public readonly tocActivatedIdentifier$: IState<string | null>
   public readonly specifiedTocActivatedIdentifier$: IState<string | null>
@@ -25,6 +26,7 @@ export class MarkdownViewViewModel extends ViewModel {
 
     this.mode$ = new State<ModeEnum>(mode)
 
+    this.contentFullWidth$ = new State<boolean>(false)
     this.data$ = new State<IMarkdownFileData | null>(null)
     this.tocActivatedIdentifier$ = new State<string | null>(null)
     this.specifiedTocActivatedIdentifier$ = new State<string | null>(null)
