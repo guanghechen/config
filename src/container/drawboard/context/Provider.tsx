@@ -1,4 +1,5 @@
-import { Subscriber, useViewModel } from '@guanghechen/react-viewmodel'
+import { Subscriber } from '@guanghechen/subscriber'
+import { useViewModel } from '@guanghechen/react-viewmodel'
 import React, { useEffect, useMemo } from 'react'
 import type { IDrawboardElement } from '../types/elements'
 import type { IDrawboardCompositeViewModel, IDrawboardContext } from './context'
