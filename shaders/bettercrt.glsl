@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/bettercrt.glsl
-
 // Original shader collected from: https://www.shadertoy.com/view/WsVSzV
 // Licensed under Shadertoy's default since the original creator didn't provide any license. (CC BY NC SA 3.0)
 // Slight modifications were made to give a green-ish effect.
@@ -13,7 +11,8 @@
 float warp = 0.25; // simulate curvature of CRT monitor
 float scan = 0.50; // simulate darkness between scanlines
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     // squared distance from center
     vec2 uv = fragCoord / iResolution.xy;
     vec2 dc = abs(0.5 - uv);

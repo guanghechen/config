@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/inside-the-matrix.glsl
-
 /*
   Feel free to do anything you want with this code.
   This shader uses "runes" code by FabriceNeyret2 (https://www.shadertoy.com/view/4ltyDM)
@@ -238,7 +236,8 @@ float smoothstep1(float x) {
     return smoothstep(0., 1., x);
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
     if (STRIP_CHAR_WIDTH > XYCELL_SIZE || STRIP_CHAR_HEIGHT * STRIP_CHARS_MAX > ZCELL_SIZE) {
         // error
         fragColor = vec4(1., 0., 0., 1.);

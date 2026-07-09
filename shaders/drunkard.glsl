@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/drunkard.glsl
-
 // Drunken stupor effect using fractal Brownian motion and Perlin noise
 // (c) moni-dz (https://github.com/moni-dz) 
 // CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
@@ -13,7 +11,7 @@ vec2 hash2(vec2 p) {
 float perlin2d(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
+    vec2 u = f*f*(3.0-2.0*f);
 
     return mix(mix(dot(hash2(i + vec2(0.0,0.0)), f - vec2(0.0,0.0)),
                    dot(hash2(i + vec2(1.0,0.0)), f - vec2(1.0,0.0)), u.x),
@@ -47,8 +45,9 @@ float fbm(vec2 p) {
 #define ANIMATE true
 #define SPEED 0.4            // Animation speed
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = fragCoord / iResolution.xy;
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec2 uv = fragCoord/iResolution.xy;
     float time = ANIMATE ? iTime * SPEED : 0.0;
  
     vec2 noisePos = uv * NOISE_SCALE + vec2(time);

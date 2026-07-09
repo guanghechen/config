@@ -1,16 +1,16 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/cursor_blaze.glsl
-
 // Based on https://gist.github.com/chardskarth/95874c54e29da6b5a36ab7b50ae2d088
 float ease(float x) {
     return pow(1.0 - x, 10.0);
 }
 
-float sdBox(in vec2 p, in vec2 xy, in vec2 b) {
+float sdBox(in vec2 p, in vec2 xy, in vec2 b)
+{
     vec2 d = abs(p - xy) - b;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
-float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b) {
+float getSdfRectangle(in vec2 p, in vec2 xy, in vec2 b)
+{
     vec2 d = abs(p - xy) - b;
     return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
@@ -84,25 +84,26 @@ const float DRAW_THRESHOLD = 1.5;
 // people expect them.
 const bool HIDE_TRAILS_ON_THE_SAME_LINE = false;
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     #if !defined(WEB)
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
     #endif
-    // Normalization for fragCoord to a space of -1 to 1;
+    //Normalization for fragCoord to a space of -1 to 1;
     vec2 vu = normalize(fragCoord, 1.);
     vec2 offsetFactor = vec2(-.5, 0.5);
 
-    // Normalization for cursor position and size;
-    // cursor xy has the postion in a space of -1 to 1;
-    // zw has the width and height
+    //Normalization for cursor position and size;
+    //cursor xy has the postion in a space of -1 to 1;
+    //zw has the width and height
     vec4 currentCursor = vec4(normalize(iCurrentCursor.xy, 1.), normalize(iCurrentCursor.zw, 0.));
     vec4 previousCursor = vec4(normalize(iPreviousCursor.xy, 1.), normalize(iPreviousCursor.zw, 0.));
 
-    // When drawing a parellelogram between cursors for the trail i need to determine where to start at the top-left or top-right vertex of the cursor
+    //When drawing a parellelogram between cursors for the trail i need to determine where to start at the top-left or top-right vertex of the cursor
     float vertexFactor = determineStartVertexFactor(currentCursor.xy, previousCursor.xy);
     float invertedVertexFactor = 1.0 - vertexFactor;
 
-    // Set every vertex of my parellogram
+    //Set every vertex of my parellogram
     vec2 v0 = vec2(currentCursor.x + currentCursor.z * vertexFactor, currentCursor.y - currentCursor.w);
     vec2 v1 = vec2(currentCursor.x + currentCursor.z * invertedVertexFactor, currentCursor.y);
     vec2 v2 = vec2(previousCursor.x + currentCursor.z * invertedVertexFactor, previousCursor.y);
@@ -113,12 +114,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     float progress = blend(clamp((iTime - iTimeCursorChange) / DURATION, 0.0, 1));
     float easedProgress = ease(progress);
 
-    // Distance between cursors determine the total length of the parallelogram;
+    //Distance between cursors determine the total length of the parallelogram;
     vec2 centerCC = getRectangleCenter(currentCursor);
     vec2 centerCP = getRectangleCenter(previousCursor);
     float cursorSize = max(currentCursor.z, currentCursor.w);
     float trailThreshold = DRAW_THRESHOLD * cursorSize;
     float lineLength = distance(centerCC, centerCP);
+    //
     bool isFarEnough = lineLength > trailThreshold;
     bool isOnSeparateLine = HIDE_TRAILS_ON_THE_SAME_LINE ? currentCursor.y != previousCursor.y : true;
     if (isFarEnough && isOnSeparateLine) {

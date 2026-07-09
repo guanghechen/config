@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/dither.glsl
-
 // Simple "dithering" effect
 // (c) moni-dz (https://github.com/moni-dz)
 // CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/)
@@ -20,7 +18,8 @@ float getBayerFromPacked(int x, int y) {
 #define LEVELS 2.0 // Available color steps per channel
 #define INV_LEVELS (1.0 / LEVELS)
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     vec2 uv = fragCoord * (1.0 / iResolution.xy);
     vec3 color = texture(iChannel0, uv).rgb;
  

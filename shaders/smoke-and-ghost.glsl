@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/smoke-and-ghost.glsl
-
 // Settings for detection
 #define TARGET_COLOR vec3(0.0, 0.0, 0.0)      // RGB target pixels to transform
 #define REPLACE_COLOR vec3(0.0, 0.0, 0.0)    // Color to replace target pixels
@@ -122,7 +120,7 @@ float isTargetPixel(vec2 uv) {
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 uv = fragCoord / iResolution.xy;
+    vec2 uv = fragCoord/iResolution.xy;
     vec4 originalColor = texture(iChannel0, uv);
     
     // Calculate smoke effect

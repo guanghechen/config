@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/glitchy.glsl
-
 // modified version of https://www.shadertoy.com/view/wld3WN
 // amount of seconds for which the glitch loop occurs
 #define DURATION 10.
@@ -15,14 +13,16 @@
 #define UIF (1. / float(0xffffffffU))
 
 // Hash by David_Hoskins
-vec3 hash33(vec3 p) {
-    uvec3 q = uvec3(ivec3(p)) * UI3;
-    q = (q.x ^ q.y ^ q.z) * UI3;
-    return -1. + 2. * vec3(q) * UIF;
+vec3 hash33(vec3 p)
+{
+	uvec3 q = uvec3(ivec3(p)) * UI3;
+	q = (q.x ^ q.y ^ q.z)*UI3;
+	return -1. + 2. * vec3(q) * UIF;
 }
 
 // Gradient noise by iq
-float gnoise(vec3 x) {
+float gnoise(vec3 x)
+{
     // grid
     vec3 p = floor(x);
     vec3 w = fract(x);
@@ -63,12 +63,14 @@ float gnoise(vec3 x) {
 }
 
 // gradient noise in range [0, 1]
-float gnoise01(vec3 x) {
-    return .5 + .5 * gnoise(x);
+float gnoise01(vec3 x)
+{
+	return .5 + .5 * gnoise(x);   
 }
 
 // warp uvs for the crt effect
-vec2 crt(vec2 uv) {
+vec2 crt(vec2 uv)
+{
     float tht  = atan(uv.y, uv.x);
     float r = length(uv);
     // curve without distorting the center
@@ -79,7 +81,8 @@ vec2 crt(vec2 uv) {
 }
 
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
     vec2 uv = fragCoord / iResolution.xy;
     float t = iTime;
     

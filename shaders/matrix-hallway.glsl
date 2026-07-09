@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/matrix-hallway.glsl
-
 // based on the following Shader Toy entry
 //
 // [SH17A] Matrix rain. Created by Reinder Nijhoff 2017

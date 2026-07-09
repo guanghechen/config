@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/crt.glsl
-
 // source: https://gist.github.com/qwerasd205/c3da6c610c8ffe17d6d2d3cc7068f17f
 // credits: https://github.com/qwerasd205
 //==============================================================
@@ -308,5 +306,5 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     );
 
   // Linear to SRGB for output.
-  fragColor.rgb = ToSrgb(fragColor.rgb);
+  fragColor = vec4(ToSrgb(fragColor.rgb), 1.0);
 }

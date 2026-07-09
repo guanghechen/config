@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/gears-and-belts.glsl
-
 // sligltly modified version of https://www.shadertoy.com/view/DsVSDV
 // The only changes are done in the mainImage function 
 // Ive added comments on what to modify
@@ -349,8 +347,9 @@ vec3 drawGearsAndItems(vec2 p, vec3 col, float size){
     return col;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 p = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 p = (fragCoord-0.5*iResolution.xy)/iResolution.y;
     // set speed of downwards motion
     p.y+=iTime*0.02;
     
@@ -368,7 +367,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 tint = vec3(0.1, 0.12, 0.15); // Slight blue-ish dark tint
     col = col * tint;
     
-    vec2 uv = fragCoord / iResolution.xy;
+    vec2 uv = fragCoord/iResolution.xy;
     vec4 terminalColor = texture(iChannel0, uv);
     
     // Blend with reduced opacity for the shader elements

@@ -1,10 +1,8 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/fireworks-rockets.glsl
-
 // This Ghostty shader is a lightly modified port of https://www.shadertoy.com/view/4dBGRw
 
 #define BLACK_BLEND_THRESHOLD .4
 
-// Creates a diagonal red-and-white striped pattern.
+//Creates a diagonal red-and-white striped pattern.
 vec3 barberpole(vec2 pos, vec2 rocketpos) {
     float d = (pos.x - rocketpos.x) + (pos.y - rocketpos.y);
     vec3 col = vec3(1.0);
@@ -86,7 +84,8 @@ vec3 drawFireworks(float time, vec2 uv, vec3 particolor, float seed) {
     return col;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     vec2 uv = 1.0 - 2.0 * fragCoord.xy / iResolution.xy;
     uv.x *= iResolution.x / iResolution.y;
     vec3 col = vec3(0.1, 0.1, 0.2);

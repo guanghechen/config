@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/fireworks.glsl
-
 // This Ghostty shader is a port of https://www.shadertoy.com/view/lscGRl
 
 // "Fireworks" by Martijn Steinrucken aka BigWings - 2015
@@ -82,7 +80,8 @@ vec3 Rainbow(vec3 c) {
     return c;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     vec2 uv = fragCoord.xy / iResolution.xy;
     uv.x -= .5;
     uv.x *= iResolution.x / iResolution.y;

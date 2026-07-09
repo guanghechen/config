@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/starfield-colors.glsl
-
 // transparent background
 const bool transparent = false;
 
@@ -133,7 +131,8 @@ vec3 stars(vec2 uv, float offset) {
     return col; // Return pure white stars only
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
     // Normalized pixel coordinates (from 0 to 1)
     vec2 uv = fragCoord / iResolution.xy;
 

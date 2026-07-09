@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/glow-rgbsplit-twitchy.glsl
-
 // First it does a "chromatic aberration" by splitting the rgb signals by a product of sin functions
 // over time, then it does a glow effect in a perceptual color space
 // Based on kalgynirae's Ghostty passable glow shader and NickWest's Chromatic Aberration shader demo

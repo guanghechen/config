@@ -1,9 +1,7 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/galaxy.glsl
-
-float triangle(float x, float period) {
-    return 2.0 * abs(3.0 * ((x / period) - floor((x / period) + 0.5))) - 1.0;
+float triangle(float x, float period) { 
+	return 2.0 * abs(3.0*   ((x / period) - floor((x / period) + 0.5))) - 1.0;
 }
-
+ 
 float field(in vec3 position) {	
   float strength = 7.0 + 0.03 * log(1.0e-6 + fract(sin(iTime) * 373.11));
   float accumulated = 0.0;
@@ -138,3 +136,4 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     fragColor = terminalColor;
   }
 }
+

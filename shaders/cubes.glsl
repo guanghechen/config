@@ -1,5 +1,3 @@
-// @see https://github.com/0xhckr/ghostty-shaders/blob/01738211b26a60eac33119d6da0c7bb12763e683/cubes.glsl
-
 // credits: https://github.com/rymdlego
 
 const float speed = 0.2;
@@ -10,46 +8,49 @@ const float camera_rotation_speed = 0.1;
 
 
 
-mat3 rotationMatrix(vec3 m, float a) {
+mat3 rotationMatrix(vec3 m,float a) {
     m = normalize(m);
-    float c = cos(a), s = sin(a);
-    return mat3(
-        c + (1. - c) * m.x * m.x,
-        (1. - c) * m.x * m.y - s * m.z,
-        (1. - c) * m.x * m.z + s * m.y,
-        (1. - c) * m.x * m.y + s * m.z,
-        c + (1. - c) * m.y * m.y,
-        (1. - c) * m.y * m.z - s * m.x,
-        (1. - c) * m.x * m.z - s * m.y,
-        (1. - c) * m.y * m.z + s * m.x,
-        c + (1. - c) * m.z * m.z
-    );
+    float c = cos(a),s=sin(a);
+    return mat3(c+(1.-c)*m.x*m.x,
+        (1.-c)*m.x*m.y-s*m.z,
+        (1.-c)*m.x*m.z+s*m.y,
+        (1.-c)*m.x*m.y+s*m.z,
+        c+(1.-c)*m.y*m.y,
+        (1.-c)*m.y*m.z-s*m.x,
+        (1.-c)*m.x*m.z-s*m.y,
+        (1.-c)*m.y*m.z+s*m.x,
+        c+(1.-c)*m.z*m.z);
 }
 
-float sphere(vec3 pos, float radius) {
+float sphere(vec3 pos, float radius)
+{
     return length(pos) - radius;
 }
 
-float box(vec3 pos, vec3 size) {
+float box(vec3 pos, vec3 size)
+{
     float t = iTime;
-    pos = pos * 0.9 * rotationMatrix(vec3(sin(t / 4.0 * speed) * 10., cos(t / 4.0 * speed) * 12., 2.7), t * 2.4 / 4.0 * speed * cube_rotation_speed);
+    pos = pos * 0.9 * rotationMatrix(vec3(sin(t/4.0*speed)*10.,cos(t/4.0*speed)*12.,2.7), t*2.4/4.0*speed*cube_rotation_speed);
     return length(max(abs(pos) - size, 0.0));
 }
 
-float distfunc(vec3 pos) {
-    float t = iTime;
 
-    float size = 0.45 + 0.25 * abs(16.0 * sin(t * speed / 4.0));
+float distfunc(vec3 pos)
+{
+    float t = iTime;
+    
+    float size = 0.45 + 0.25*abs(16.0*sin(t*speed/4.0));
     // float size = 2.3 + 1.8*tan((t-5.4)*6.549);
     size = cube_size * 0.16 * clamp(size, 2.0, 4.0);
 
-    // pos = pos * rotationMatrix(vec3(0.,-3.,0.7), 3.3 * mod(t/30.0, 4.0));
+    //pos = pos * rotationMatrix(vec3(0.,-3.,0.7), 3.3 * mod(t/30.0, 4.0));
     vec3 q = mod(pos, 5.0) - 2.5;
     float obj1 = box(q, vec3(size));
     return obj1;
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
     float t = iTime;
     vec2 screenPos = -1.0 + 2.0 * fragCoord.xy / iResolution.xy;
     screenPos.x *= iResolution.x / iResolution.y;
@@ -74,17 +75,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 pos = cameraOrigin;
     float dist = EPSILON;
     
-    for (int i = 0; i < MAX_ITER; i++) {
+    for (int i = 0; i < MAX_ITER; i++)
+    {
         if (dist < EPSILON || totalDist > MAX_DIST)
             break;
         dist = distfunc(pos);
         totalDist += dist;
-        pos += dist * rayDir;
+        pos += dist*rayDir;
     }
 
     vec4 cubes;
 
-    if (dist < EPSILON) {
+    if (dist < EPSILON)
+    {
         // Lighting Code
         vec2 eps = vec2(0.0, EPSILON);
         vec3 normal = normalize(vec3(
@@ -98,8 +101,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         cubeColor = mix(cubeColor.rgb, vec3(0.0,0.0,0.0), 1.0);
         color += cubeColor;
         cubes = vec4(color, 1.0) * vec4(1.0 - (totalDist/MAX_DIST));
-        cubes = vec4(cubes.rgb * 0.02 * cube_brightness, 0.1);
-    } else {
+        cubes = vec4(cubes.rgb*0.02*cube_brightness, 0.1);
+    } 
+    else {
         cubes = vec4(0.0);
     }
 
