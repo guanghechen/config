@@ -137,6 +137,29 @@ impl LayoutKind {
     }
 }
 
+/// Manual override for how many rows the adaptive layout uses, read from
+/// `@GHC_SL_ROWS`. `Auto` keeps the width/session-count heuristic; `One`/`Two`
+/// pin the row count regardless of screen width.
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
+pub enum RowsOverride {
+    #[default]
+    Auto,
+    One,
+    Two,
+}
+
+impl RowsOverride {
+    /// Parses the raw option value. Empty, `auto`, and any unrecognized value
+    /// fall back to `Auto` so a stale or typo'd option never wedges the layout.
+    pub fn parse(value: &str) -> Self {
+        match value.trim() {
+            "1" => Self::One,
+            "2" => Self::Two,
+            _ => Self::Auto,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LayoutPlan {
     pub mode: StatusMode,
@@ -196,6 +219,7 @@ pub struct SessionLayout {
 #[cfg(test)]
 mod tests {
     use super::RenderEventKind;
+    use super::RowsOverride;
 
     const ALL_EVENT_KINDS: &[RenderEventKind] = &[
         RenderEventKind::Heartbeat,
@@ -219,5 +243,15 @@ mod tests {
     #[test]
     fn parse_rejects_unknown_event_kind() {
         assert_eq!(RenderEventKind::parse("not-an-event"), None);
+    }
+
+    #[test]
+    fn rows_override_parse_maps_known_values_and_defaults_to_auto() {
+        assert_eq!(RowsOverride::parse("1"), RowsOverride::One);
+        assert_eq!(RowsOverride::parse("2"), RowsOverride::Two);
+        assert_eq!(RowsOverride::parse(" 2 "), RowsOverride::Two);
+        assert_eq!(RowsOverride::parse(""), RowsOverride::Auto);
+        assert_eq!(RowsOverride::parse("auto"), RowsOverride::Auto);
+        assert_eq!(RowsOverride::parse("3"), RowsOverride::Auto);
     }
 }

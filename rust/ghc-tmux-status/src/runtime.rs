@@ -8,6 +8,7 @@ use crate::config::{
     MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
     METRIC_LAST_OK_OPTION, METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
+    ROWS_OVERRIDE_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
@@ -17,7 +18,8 @@ use crate::introspect::{
 use crate::layout::LayoutEngine;
 use crate::metric::NET_INTERFACE_OPTION;
 use crate::model::{
-    RenderContext, RenderEvent, RenderEventKind, SessionGroupView, SessionLayout, TmuxSnapshot,
+    RenderContext, RenderEvent, RenderEventKind, RowsOverride, SessionGroupView, SessionLayout,
+    TmuxSnapshot,
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
@@ -470,6 +472,7 @@ impl StatusRuntime {
             &snapshot.status,
             snapshot.width,
             group.sessions.len(),
+            rows_override(&snapshot),
         ) else {
             return Ok(LiveContextState::Inactive(snapshot));
         };
@@ -485,6 +488,19 @@ impl StatusRuntime {
     }
 }
 
+/// The manual rows override (`@GHC_SL_ROWS`) for this snapshot, defaulting to
+/// `Auto` when the option is unset. Shared by the global and per-session resolves
+/// so both agree on the pinned row count.
+fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
+    RowsOverride::parse(
+        snapshot
+            .options
+            .get(ROWS_OVERRIDE_OPTION)
+            .map(String::as_str)
+            .unwrap_or_default(),
+    )
+}
+
 /// Reconciles a per-session target layout for every ON (not currently `off`),
 /// attached session. A session whose effective `status` is `off` (popup/agent,
 /// owned by hook/session-created.sh) is skipped — the renderer respects the
@@ -493,6 +509,7 @@ impl StatusRuntime {
 /// re-reconciles them.
 fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
     let min_widths = min_client_widths(&snapshot.client_widths);
+    let rows = rows_override(snapshot);
     let mut session_layouts = Vec::new();
     for session in &snapshot.sessions {
         if session.status == "off" {
@@ -504,7 +521,7 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
         let count = SessionGrouper::group(&session.name, &snapshot.sessions)
             .sessions
             .len();
-        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count) else {
+        let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count, rows) else {
             continue;
         };
         session_layouts.push(SessionLayout {

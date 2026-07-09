@@ -21,6 +21,10 @@ pub const MEMORY_SAMPLE_STATE_OPTION: &str = "@GHC_SL_MEM_SAMPLE";
 pub const NETWORK_NOW_OPTION: &str = "@GHC_NET_NOW";
 pub const NETWORK_SAMPLE_STATE_OPTION: &str = "@GHC_SL_NET_SAMPLE";
 
+// Manual rows override for the adaptive layout: `auto` (or unset) keeps the
+// width/session-count heuristic; `1` forces a single row, `2` forces two rows.
+pub const ROWS_OVERRIDE_OPTION: &str = "@GHC_SL_ROWS";
+
 pub const METRIC_LAST_OK_OPTION: &str = "@GHC_SL_METRIC_LAST_OK";
 pub const METRIC_LAST_ERROR_OPTION: &str = "@GHC_SL_METRIC_LAST_ERR";
 pub const METRIC_ERROR_COUNT_OPTION: &str = "@GHC_SL_METRIC_ERR_COUNT";

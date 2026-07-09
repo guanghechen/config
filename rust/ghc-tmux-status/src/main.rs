@@ -21,7 +21,7 @@ mod widget;
 use crate::app::StatusApp;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
-use crate::model::{RenderEvent, RenderEventKind};
+use crate::model::{RenderEvent, RenderEventKind, RowsOverride};
 use crate::session::{FocusTarget, MoveDirection};
 
 fn main() {
@@ -110,9 +110,9 @@ fn run_session(app: &StatusApp, args: Vec<String>) -> AppResult<()> {
 }
 
 fn run_layout(args: Vec<String>) -> AppResult<()> {
-    if args.len() != 4 {
+    if args.len() != 4 && args.len() != 5 {
         return Err(AppError::Usage(
-            "expected: layout <mode> <status> <width> <session-count>".to_string(),
+            "expected: layout <mode> <status> <width> <session-count> [rows: auto|1|2]".to_string(),
         ));
     }
 
@@ -122,8 +122,9 @@ fn run_layout(args: Vec<String>) -> AppResult<()> {
     let session_count = args[3]
         .parse::<usize>()
         .map_err(|_| AppError::Usage(format!("invalid session-count: {}", args[3])))?;
+    let rows = RowsOverride::parse(args.get(4).map(String::as_str).unwrap_or("auto"));
 
-    match LayoutEngine::resolve(&args[0], &args[1], width, session_count) {
+    match LayoutEngine::resolve(&args[0], &args[1], width, session_count, rows) {
         Some(plan) => {
             println!(
                 "mode={} position={} kind={} rows={} status={}",
@@ -153,7 +154,7 @@ USAGE:
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>
-  ghc-tmux-status layout <mode> <status> <width> <session-count>
+  ghc-tmux-status layout <mode> <status> <width> <session-count> [rows: auto|1|2]
   ghc-tmux-status dump-state"
     );
 }
