@@ -1,5 +1,5 @@
 import type { Edge, Node, Position } from '@xyflow/react'
-import dagre from 'dagre'
+import dagre from '@dagrejs/dagre'
 import type { IReactFlowNodeData } from './adaptor'
 
 const nodeWidth = 320
