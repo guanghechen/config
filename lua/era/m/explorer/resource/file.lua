@@ -50,6 +50,15 @@ local function to_os_filepath(filepath)
   return stl.os.path.to_os(filepath)
 end
 
+---@param filepath                      string
+---@return string
+local function strip_trailing_slash(filepath)
+  if filepath == "/" or filepath:match("^[A-Za-z]:/$") then
+    return filepath
+  end
+  return filepath:gsub("/+$", "")
+end
+
 ---@param props                         era.m.explorer.resource.file.IProps
 ---@return era.m.explorer.resource.FileManager
 function M.new(props)
@@ -221,8 +230,8 @@ end
 ---@param target_filepath                    string
 ---@return boolean
 function M:copy(source_filepath, target_filepath)
-  local source_path = self:__filepath_to_filepath__(source_filepath) ---@type string
-  local target_path = self:__filepath_to_filepath__(target_filepath) ---@type string
+  local source_path = strip_trailing_slash(self:__filepath_to_filepath__(source_filepath)) ---@type string
+  local target_path = strip_trailing_slash(self:__filepath_to_filepath__(target_filepath)) ---@type string
 
   if source_path == "" or target_path == "" then
     return false
@@ -231,7 +240,7 @@ function M:copy(source_filepath, target_filepath)
   local source_os_path = to_os_filepath(source_path) ---@type string
   local target_os_path = to_os_filepath(target_path) ---@type string
 
-  if vim.fn.filereadable(target_os_path) == 1 or vim.fn.isdirectory(target_os_path) == 1 then
+  if vim.uv.fs_lstat(target_os_path) ~= nil then
     stl.reporter.error({
       from = self.fullname,
       subject = "copy",
@@ -254,16 +263,12 @@ function M:copy(source_filepath, target_filepath)
     end
   end
 
-  local source_stat = vim.uv.fs_stat(source_os_path)
+  local source_stat = vim.uv.fs_lstat(source_os_path)
   if source_stat == nil then
     return false
   end
 
-  if source_stat.type == "directory" then
-    return self:__copy_directory__(source_os_path, target_os_path)
-  else
-    return self:__copy_file__(source_os_path, target_os_path)
-  end
+  return self:__copy_entry__(source_os_path, target_os_path, source_stat.type)
 end
 
 ---@param filepath                           string
@@ -353,7 +358,19 @@ function M:load(filepath)
     end
 
     if show_hidden or name:sub(1, 1) ~= "." then
-      local is_directory = ftype == "directory" ---@type boolean
+      local is_directory ---@type boolean
+      if ftype == "directory" then
+        is_directory = true
+      elseif ftype == "file" then
+        is_directory = false
+      else
+        -- Symlinks report as "link" (and some filesystems report "unknown") from scandir,
+        -- which cannot reveal the target type. Follow the link for explorer interaction only;
+        -- side-effecting operations use lstat so they still act on the link itself. Dangling
+        -- links fall back to a file leaf.
+        local target_stat = vim.uv.fs_stat(to_os_filepath(filepath .. name)) ---@type uv.fs_stat.result|nil
+        is_directory = target_stat ~= nil and target_stat.type == "directory"
+      end
       local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
 
       ---@type era.m.explorer.resource.INode
@@ -389,8 +406,8 @@ function M:locate(filepath)
 
   local is_directory = stat.type == "directory" ---@type boolean
   local nodetype = is_directory and "D" or "F" ---@type era.m.explorer.NodeTypeEnum
-  local target = is_directory and filepath:sub(1, -2) or filepath ---@type string
-  local nodename = target:match("([^/]+)$") or "" ---@type string
+  local without_slash = filepath:sub(-1) == "/" and filepath:sub(1, -2) or filepath ---@type string
+  local nodename = without_slash:match("([^/]+)$") or "" ---@type string
 
   if is_directory and filepath:sub(-1) ~= "/" then
     filepath = filepath .. "/"
@@ -408,8 +425,8 @@ end
 ---@param target_filepath                    string
 ---@return boolean
 function M:move(source_filepath, target_filepath)
-  local source_path = self:__filepath_to_filepath__(source_filepath) ---@type string
-  local target_path = self:__filepath_to_filepath__(target_filepath) ---@type string
+  local source_path = strip_trailing_slash(self:__filepath_to_filepath__(source_filepath)) ---@type string
+  local target_path = strip_trailing_slash(self:__filepath_to_filepath__(target_filepath)) ---@type string
 
   if source_path == "" or target_path == "" then
     return false
@@ -418,7 +435,7 @@ function M:move(source_filepath, target_filepath)
   local source_os_path = to_os_filepath(source_path) ---@type string
   local target_os_path = to_os_filepath(target_path) ---@type string
 
-  if vim.fn.filereadable(target_os_path) == 1 or vim.fn.isdirectory(target_os_path) == 1 then
+  if vim.uv.fs_lstat(target_os_path) ~= nil then
     stl.reporter.error({
       from = self.fullname,
       subject = "move",
@@ -471,13 +488,13 @@ end
 ---@param on_removed                    fun(): nil
 ---@return boolean
 function M:remove(filepath, on_removed)
-  local filepath = self:__filepath_to_filepath__(filepath) ---@type string
+  local filepath = strip_trailing_slash(self:__filepath_to_filepath__(filepath)) ---@type string
   if filepath == "" then
     return false
   end
 
   local os_filepath = to_os_filepath(filepath) ---@type string
-  local stat = vim.uv.fs_stat(os_filepath)
+  local stat = vim.uv.fs_lstat(os_filepath)
   if stat == nil then
     return false
   end
@@ -485,8 +502,13 @@ function M:remove(filepath, on_removed)
   local use_trash = dot.context.explorer.trash:snapshot() ---@type boolean
   local ok = false ---@type boolean
   local is_directory = stat.type == "directory" ---@type boolean
+  if use_trash and stat.type == "link" and (stl.env.IS_WIN or stl.env.IS_WSL) then
+    local target_stat = vim.uv.fs_stat(os_filepath) ---@type uv.fs_stat.result|nil
+    is_directory = target_stat ~= nil and target_stat.type == "directory"
+  end
 
   if use_trash then
+    -- os_filepath has no trailing slash, so native trash tools operate on the link itself.
     if stl.env.IS_MAC then
       local result = vim.system({ "trash", "-F", os_filepath }, { text = true }):wait()
       ok = result.code == 0
@@ -568,10 +590,16 @@ function M:remove(filepath, on_removed)
 
   if not use_trash then
     local err ---@type any
-    if is_directory then
-      ok, err = pcall(vim.fn.delete, os_filepath, "rf")
+    if stat.type == "link" then
+      ok, err = vim.uv.fs_unlink(os_filepath)
+    elseif stat.type == "directory" then
+      local call_ok, result = pcall(vim.fn.delete, os_filepath, "rf")
+      ok = call_ok and result == 0
+      err = result
     else
-      ok, err = pcall(vim.fn.delete, os_filepath)
+      local call_ok, result = pcall(vim.fn.delete, os_filepath)
+      ok = call_ok and result == 0
+      err = result
     end
     if not ok then
       stl.reporter.error({
@@ -592,6 +620,28 @@ function M:remove(filepath, on_removed)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---@protected
+---@param source_path                   string
+---@param target_path                   string
+---@param source_type                   ?string
+---@return boolean
+function M:__copy_entry__(source_path, target_path, source_type)
+  if source_type == nil or source_type == "unknown" then
+    local source_stat = vim.uv.fs_lstat(source_path) ---@type uv.fs_stat.result|nil
+    if source_stat == nil then
+      return false
+    end
+    source_type = source_stat.type
+  end
+
+  if source_type == "link" then
+    return self:__copy_link__(source_path, target_path)
+  elseif source_type == "directory" then
+    return self:__copy_directory__(source_path, target_path)
+  end
+  return self:__copy_file__(source_path, target_path)
+end
 
 ---@protected
 ---@param source_path                   string
@@ -626,15 +676,44 @@ function M:__copy_directory__(source_path, target_path)
     local child_source = source_prefix .. name ---@type string
     local child_target = target_prefix .. name ---@type string
 
-    if ftype == "directory" then
-      if not self:__copy_directory__(child_source, child_target) then
-        return false
-      end
-    else
-      if not self:__copy_file__(child_source, child_target) then
-        return false
-      end
+    if not self:__copy_entry__(child_source, child_target, ftype) then
+      return false
     end
+  end
+
+  return true
+end
+
+---@protected
+---@param source_path                   string
+---@param target_path                   string
+---@return boolean
+function M:__copy_link__(source_path, target_path)
+  local link_target, read_err = vim.uv.fs_readlink(source_path)
+  if link_target == nil then
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to read symbolic link: %s", source_path),
+      details = { error = read_err },
+    })
+    return false
+  end
+
+  local flags = nil ---@type uv.fs_symlink.flags|nil
+  if stl.env.IS_WIN then
+    local target_stat = vim.uv.fs_stat(source_path) ---@type uv.fs_stat.result|nil
+    flags = { dir = target_stat ~= nil and target_stat.type == "directory", junction = false }
+  end
+  local ok, err = vim.uv.fs_symlink(link_target, target_path, flags)
+  if not ok then
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "copy",
+      message = string.format("Failed to copy symbolic link: %s -> %s", source_path, target_path),
+      details = { error = err },
+    })
+    return false
   end
 
   return true

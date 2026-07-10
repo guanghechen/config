@@ -200,7 +200,10 @@ function M.is_ignored(filepath)
     return false
   end
 
-  local normalized = dot.path.normalize(filepath)
+  -- Strip any trailing slash: `git check-ignore` cannot resolve a directory symlink path
+  -- ending in "/" ("fatal: ... is beyond a symbolic link"), and ignore status is
+  -- slash-insensitive anyway. Keep the cache key consistent with __preload_ignored__.
+  local normalized = dot.path.normalize(filepath, false)
   local cached = ignored_cache[normalized]
   if cached ~= nil then
     return cached
@@ -219,6 +222,77 @@ function M.last_refreshed_at()
   return last_refresh
 end
 
+---@param filepath                   string
+---@param workspace                  string
+---@param resolved_cache             table<string, string|false>
+---@return string
+local function __resolve_ignore_query_path__(filepath, workspace, resolved_cache)
+  local prefix = workspace:sub(-1) == stl.env.PATH_SEP and workspace or (workspace .. stl.env.PATH_SEP) ---@type string
+  if filepath ~= workspace and not vim.startswith(filepath, prefix) then
+    return filepath
+  end
+
+  local current = filepath ---@type string
+  local resolved = false ---@type string|false
+  local visited = {} ---@type string[]
+  while true do
+    local cached = resolved_cache[current] ---@type string|false|nil
+    if cached ~= nil then
+      resolved = cached
+      break
+    end
+
+    local stat = vim.uv.fs_lstat(current) ---@type uv.fs_stat.result|nil
+    visited[#visited + 1] = current
+    if stat ~= nil and stat.type == "link" then
+      resolved = current
+      break
+    end
+    if current == workspace then
+      break
+    end
+
+    local parent = dot.path.dirname(current) ---@type string
+    if parent == "" or parent == current then
+      break
+    end
+    current = parent
+  end
+
+  for _, path in ipairs(visited) do
+    resolved_cache[path] = resolved
+  end
+  return resolved or filepath
+end
+
+---@param filepaths                  string[]
+---@param workspace                  string
+---@param resolved_cache             table<string, string|false>
+---@return table<string, string>     pending
+---@return integer                   pending_count
+---@return string[]                  query_paths
+local function __build_ignore_pending__(filepaths, workspace, resolved_cache)
+  local pending = {} ---@type table<string, string>
+  local pending_count = 0 ---@type integer
+  local query_paths = {} ---@type string[]
+  local query_seen = {} ---@type table<string, boolean>
+
+  for _, filepath in ipairs(filepaths) do
+    local normalized = dot.path.normalize(filepath, false) ---@type string
+    if ignored_cache[normalized] == nil and pending[normalized] == nil then
+      local query_path = __resolve_ignore_query_path__(normalized, workspace, resolved_cache) ---@type string
+      pending[normalized] = query_path
+      pending_count = pending_count + 1
+      if not query_seen[query_path] then
+        query_seen[query_path] = true
+        query_paths[#query_paths + 1] = query_path
+      end
+    end
+  end
+
+  return pending, pending_count, query_paths
+end
+
 ---@param filepaths                  string[]
 ---@param callback                   ?(fun(): nil)
 ---@return fun(): nil                cancel_fn
@@ -230,65 +304,72 @@ local function __preload_ignored__(filepaths, callback)
     return stl.fn.noop
   end
 
-  local uncached = {} ---@type string[]
-  for _, filepath in ipairs(filepaths) do
-    local normalized = dot.path.normalize(filepath)
-    if ignored_cache[normalized] == nil then
-      uncached[#uncached + 1] = normalized
-    end
-  end
-
   refresh_ignore_mtime()
 
-  if #uncached == 0 then
+  local workspace = dot.path.normalize(dot.path.workspace(), false) ---@type string
+  local resolved_cache = {} ---@type table<string, string|false>
+  local pending, pending_count, query_paths = __build_ignore_pending__(filepaths, workspace, resolved_cache)
+
+  if pending_count > 0 and ignored_count + pending_count > IGNORED_CACHE_CAPACITY then
+    -- Clearing invalidates prior hits from this batch, so rebuild instead of querying only the
+    -- keys that were pending before the reset. A fully cached batch must never trigger a reset.
+    ignored_cache = {}
+    ignored_count = 0
+    pending, pending_count, query_paths = __build_ignore_pending__(filepaths, workspace, resolved_cache)
+  end
+
+  if pending_count == 0 then
     if callback then
       callback()
     end
     return stl.fn.noop
   end
 
-  if ignored_count + #uncached > IGNORED_CACHE_CAPACITY then
-    ignored_cache = {}
-    ignored_count = 0
-  end
-
-  local input = table.concat(uncached, "\n")
-  local workspace = dot.path.workspace() ---@type string
+  local input = table.concat(query_paths, "\n")
 
   local cancelled = false
-  local proc = vim.system({ "git", "-C", workspace, "check-ignore", "--stdin" }, { stdin = input, text = true }, function(obj)
-    if cancelled then
-      return
-    end
-    vim.schedule(function()
+  local proc = vim.system(
+    { "git", "-C", workspace, "check-ignore", "--stdin" },
+    { stdin = input, text = true },
+    function(obj)
       if cancelled then
         return
       end
-      local ignored_set = {} ---@type table<string, boolean>
-      if obj.code == 0 or obj.code == 1 then
+      vim.schedule(function()
+        if cancelled then
+          return
+        end
+        local ignored_set = {} ---@type table<string, boolean>
         local stdout = obj.stdout or ""
         for line in stdout:gmatch("[^\r\n]+") do
-          ignored_set[dot.path.normalize(line)] = true
+          ignored_set[dot.path.normalize(line, false)] = true
         end
-      elseif obj.code ~= 128 then
-        stl.reporter.warn({
-          from = __module_name__,
-          subject = "preload_ignored",
-          message = "git check-ignore failed",
-          details = { code = obj.code, stderr = obj.stderr },
-        })
-      end
+        local completed = obj.code == 0 or obj.code == 1 ---@type boolean
+        if not completed then
+          stl.reporter.warn({
+            from = __module_name__,
+            subject = "preload_ignored",
+            message = "git check-ignore failed",
+            details = { code = obj.code, stderr = obj.stderr },
+          })
+        end
 
-      for _, fp in ipairs(uncached) do
-        ignored_cache[fp] = ignored_set[fp] == true
-        ignored_count = ignored_count + 1
-      end
+        -- A failed batch may not have consumed all stdin. Positive matches remain valid, but
+        -- missing output is unknown and must not be persisted as "not ignored".
+        for filepath, query_path in pairs(pending) do
+          local ignored = ignored_set[query_path] == true ---@type boolean
+          if ignored or completed then
+            ignored_cache[filepath] = ignored
+            ignored_count = ignored_count + 1
+          end
+        end
 
-      if callback then
-        callback()
-      end
-    end)
-  end)
+        if callback then
+          callback()
+        end
+      end)
+    end
+  )
 
   return function()
     cancelled = true

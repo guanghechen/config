@@ -100,6 +100,13 @@ M.STATUS_CATEGORY_LIST = STATUS_CATEGORY_LIST
 M.STATUS_CODE_BIT_MAP = STATUS_CODE_BIT_MAP
 M.STATUS_CODE_ORDER = STATUS_CODE_ORDER
 
+---@param filepath                   string
+---@return string
+local function normalize_status_path(filepath)
+  -- Git status cache keys are platform-independent so prefix and ancestor lookups have one contract.
+  return dot.path.normalize(filepath, false, "/")
+end
+
 ---@param code                       string
 ---@return integer
 local function ensure_status_bit(code)
@@ -288,7 +295,7 @@ local function parse_name_status_line(line)
 
   relative = relative:gsub('^"', ""):gsub('"$', "")
   relative = stl.string.octal_to_utf8(relative)
-  relative = dot.path.normalize(relative)
+  relative = normalize_status_path(relative)
 
   return status, relative
 end
@@ -437,7 +444,7 @@ function M.collect(opts, token)
         for _, line in ipairs(staged_result.lines) do
           local status, relative = parse_name_status_line(line)
           if status ~= nil and relative ~= nil then
-            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+            local absolute = normalize_status_path(dot.path.join(workspace, relative))
             local entry = ensure_entry(status_map, absolute, relative)
             apply_status_code(entry, "staged", status)
           end
@@ -450,7 +457,7 @@ function M.collect(opts, token)
         for _, line in ipairs(unstaged_result.lines) do
           local status, relative = parse_name_status_line(line)
           if status ~= nil and relative ~= nil then
-            local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+            local absolute = normalize_status_path(dot.path.join(workspace, relative))
             local entry = ensure_entry(status_map, absolute, relative)
             apply_status_code(entry, "unstaged", status)
           end
@@ -465,9 +472,9 @@ function M.collect(opts, token)
             if type(line) == "string" and #line > 0 then
               local relative = line:gsub('^"', ""):gsub('"$', "")
               relative = stl.string.octal_to_utf8(relative)
-              relative = dot.path.normalize(relative)
+              relative = normalize_status_path(relative)
 
-              local absolute = dot.path.normalize(dot.path.join(workspace, relative))
+              local absolute = normalize_status_path(dot.path.join(workspace, relative))
               local entry = ensure_entry(status_map, absolute, relative)
               entry.codes["?"] = true
               entry.unstaged["?"] = true
@@ -556,6 +563,24 @@ function M.resolve_highlight(stage_state, codes, summary, display, categories)
   return nil
 end
 
+---@param aggregated                 era.m.git.status.IAggregatedCache
+---@param path                       string
+---@return era.m.git.StatusEntry|nil
+local function nearest_untracked_ancestor(aggregated, path)
+  local ancestor = path:sub(-1) == "/" and path:sub(1, -2) or path ---@type string
+  while true do
+    local parent = ancestor:match("^(.*)/[^/]+$") ---@type string|nil
+    if parent == nil or parent == "" then
+      return nil
+    end
+    ancestor = parent
+    local entry = aggregated.status_table[ancestor] ---@type era.m.git.StatusEntry|nil
+    if entry ~= nil and entry.codes and entry.codes["?"] then
+      return entry
+    end
+  end
+end
+
 ---@param filepath                   string
 ---@param filetype                   ?"file"|"directory"
 ---@return string|nil
@@ -565,7 +590,7 @@ function M.resolve(filepath, filetype)
     return nil, nil
   end
 
-  local normalized_filepath = dot.path.normalize(filepath)
+  local normalized_filepath = normalize_status_path(filepath)
   local kind = filetype or "file"
   local aggregated = era.m.git.state.aggregated()
 
@@ -580,6 +605,11 @@ function M.resolve(filepath, filetype)
 
   local display = aggregated.file_display[normalized_filepath]
   if display == nil or #display < 1 then
+    -- A file with no status of its own may still live under an untracked directory symlink,
+    -- whose descendants git never enumerates. Inherit untracked from the nearest such ancestor.
+    if nearest_untracked_ancestor(aggregated, normalized_filepath) ~= nil then
+      return "U", GIT_STATUS_HIGHLIGHT["?"]
+    end
     return nil, nil
   end
   local summary = aggregated.file_summary[normalized_filepath]
@@ -613,10 +643,18 @@ function M.calc_info(filepath, filetype, offset, highlights)
 
   local status_offset = leading_space_colr
   local staged_len = 0
-  local normalized_filepath = dot.path.normalize(filepath)
+  local normalized_filepath = normalize_status_path(filepath)
   local aggregated = era.m.git.state.aggregated()
   local entry = aggregated.status_table[normalized_filepath]
-  local is_untracked = entry ~= nil and entry.codes["?"] == true
+  local is_untracked = entry ~= nil and entry.codes["?"] == true ---@type boolean
+  if not is_untracked then
+    if filetype == "directory" then
+      local dir_info = M.compute_dir_status(aggregated, normalized_filepath) ---@type era.m.git.status.IDirInfo|nil
+      is_untracked = dir_info ~= nil and dir_info.codes["?"] == true
+    else
+      is_untracked = nearest_untracked_ancestor(aggregated, normalized_filepath) ~= nil
+    end
+  end
   if entry ~= nil then
     staged_len = #(entry.staged_display or "")
   end
@@ -655,7 +693,7 @@ function M.aggregate(status_table)
       goto continue
     end
 
-    local normalized_filepath = dot.path.normalize(filepath)
+    local normalized_filepath = normalize_status_path(filepath)
     entry.path = normalized_filepath
     status_entries[normalized_filepath] = entry
     file_display[normalized_filepath] = entry.display or ""
@@ -692,7 +730,7 @@ end
 ---@param dirpath                    string
 ---@return era.m.git.status.IDirInfo|nil
 function M.compute_dir_status(aggregated, dirpath)
-  local normalized_dir = dot.path.normalize(dirpath)
+  local normalized_dir = normalize_status_path(dirpath)
 
   local cached = aggregated.dir_cache[normalized_dir]
   if cached ~= nil then
@@ -704,18 +742,41 @@ function M.compute_dir_status(aggregated, dirpath)
   local summary = nil ---@type string|nil
   local has_status = false ---@type boolean
 
+  ---@param entry era.m.git.StatusEntry
+  local function incorporate(entry)
+    has_status = true
+    if entry.summary then
+      summary = M.merge_priority_status(summary, entry.summary)
+    end
+    stage = M.combine_stage(stage, entry.stage)
+    for code, enabled in pairs(entry.codes or {}) do
+      if enabled then
+        codes[code] = true
+      end
+    end
+  end
+
+  -- A directory may carry a status on its own path rather than through children -- e.g. an
+  -- untracked directory symlink, which git reports at the symlink itself (it never recurses).
+  local own_entry = aggregated.status_table[normalized_dir] ---@type era.m.git.StatusEntry|nil
+  if own_entry ~= nil then
+    incorporate(own_entry)
+  end
+
   for filepath, entry in pairs(aggregated.status_table) do
     if vim.startswith(filepath, normalized_dir .. "/") then
-      has_status = true
-      if entry.summary then
-        summary = M.merge_priority_status(summary, entry.summary)
-      end
-      stage = M.combine_stage(stage, entry.stage)
-      for code, enabled in pairs(entry.codes or {}) do
-        if enabled then
-          codes[code] = true
-        end
-      end
+      incorporate(entry)
+    end
+  end
+
+  if not has_status then
+    -- Inherit "untracked" from the nearest ancestor that carries it. Git reports an untracked
+    -- directory symlink at the symlink's own path and never recurses into it, so descendants of
+    -- the symlink have no status entries of their own yet are still untracked (e.g. a folded row
+    -- like "local/warm-pool"). Ignored subtrees are dimmed separately by is_ignored, so only "?".
+    local ancestor_entry = nearest_untracked_ancestor(aggregated, normalized_dir) ---@type era.m.git.StatusEntry|nil
+    if ancestor_entry ~= nil then
+      incorporate(ancestor_entry)
     end
   end
 
