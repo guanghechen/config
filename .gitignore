@@ -1,5 +1,6 @@
 /goals_*.sqlite*
 /logs_*.sqlite*
+/node_repl/active_execs/
 /plugins/.plugin-appserver/
 /process_manager/
 /sandbox*.log
