@@ -1,5 +1,5 @@
 use crate::error::AppResult;
-use crate::metric::{MemorySnapshot, provider_for_current_platform};
+use crate::metric::MemorySnapshot;
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::TemplateWidget;
 use crate::util::format::format_percent_width_2;
@@ -20,10 +20,6 @@ impl TemplateWidget for MemoryWidget {
             rich_text,
         })
     }
-}
-
-pub fn sample_memory() -> AppResult<MemorySnapshot> {
-    provider_for_current_platform(None).sample_memory()
 }
 
 pub fn encode_memory_snapshot(snapshot: &MemorySnapshot) -> String {

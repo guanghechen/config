@@ -1,12 +1,12 @@
 use std::time::Instant;
 
-use crate::commit::{CommitPlanner, session_layouts_settled};
+use crate::commit::{CommitPlanner, TmuxCommandPlan, session_layouts_settled};
 use crate::composer::{cache_matches, render_status02};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
-    HEARTBEAT_INTERVAL_SECONDS, LEGACY_CPU_SAMPLE_GENERATION_OPTION, MEMORY_NOW_OPTION,
-    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
-    METRIC_LAST_OK_OPTION, METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
+    HEARTBEAT_INTERVAL_SECONDS, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
+    METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
+    METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
     ROWS_OVERRIDE_OPTION,
 };
@@ -16,7 +16,7 @@ use crate::introspect::{
     cache_bytes, metric_health_state, metric_sample_states,
 };
 use crate::layout::LayoutEngine;
-use crate::metric::NET_INTERFACE_OPTION;
+use crate::metric::{NET_INTERFACE_OPTION, provider_for_current_platform};
 use crate::model::{
     RenderContext, RenderEvent, RenderEventKind, RowsOverride, SessionGroupView, SessionLayout,
     TmuxSnapshot,
@@ -28,18 +28,27 @@ use crate::session::{
     ordered_sessions, swap_current,
 };
 use crate::status_length::{status_left_length, status_right_length};
-use crate::tmux::TmuxAdapter;
+use crate::tmux::{TmuxAdapter, TmuxOptionScope};
 use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
 use crate::widget::{
     decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot, encode_cpu_snapshot,
     encode_memory_snapshot, encode_network_snapshot, format_memory_now, format_network_now,
-    sample_cpu, sample_memory, sample_network,
 };
 
 pub struct StatusRuntime {
     tmux: TmuxAdapter,
+}
+
+/// load-theme is the single writer of each server generation. A guarded true
+/// branch atomically mutates state and schedules its successor; mismatch aborts
+/// both operations, so stale workers can neither publish nor self-renew.
+struct GuardedSchedule {
+    generation_option: &'static str,
+    generation: u64,
+    delay_seconds: u64,
+    command: String,
 }
 
 impl StatusRuntime {
@@ -50,6 +59,14 @@ impl StatusRuntime {
     }
 
     pub fn apply(&self, event: RenderEvent) -> AppResult<()> {
+        self.apply_inner(event, None)
+    }
+
+    fn apply_inner(
+        &self,
+        event: RenderEvent,
+        guarded_schedule: Option<&GuardedSchedule>,
+    ) -> AppResult<()> {
         let total_start = Instant::now();
         let context_start = Instant::now();
         let context_state = self.live_context_state()?;
@@ -62,7 +79,7 @@ impl StatusRuntime {
                 let plan_commands = plan.commands.len();
                 let plan_ms = duration_ms(plan_start.elapsed());
                 let commit_start = Instant::now();
-                let result = self.tmux.commit_plan(&plan);
+                let result = self.commit_plan(&plan, guarded_schedule);
                 self.trace_apply(|| {
                     format!(
                         "event={} active=false context_ms={context_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -76,36 +93,34 @@ impl StatusRuntime {
         };
 
         let render_start = Instant::now();
-        let (rendered, cache_options) =
-            render_status02(&context, &event, current_platform().supports_metrics())?;
+        let rendered = render_status02(&context, current_platform().supports_metrics())?;
         let render_ms = duration_ms(render_start.elapsed());
-        let cache_pending_count = cache_options.len();
         let is_noop = event.kind != RenderEventKind::ThemeLoaded
             && cache_matches(&context, &rendered)
-            && session_layouts_settled(&context, &rendered)
-            && cache_options.is_empty();
+            && session_layouts_settled(&context, &rendered);
         if is_noop {
+            let result = self.commit_plan(&TmuxCommandPlan::default(), guarded_schedule);
             self.trace_apply(|| {
                 format!(
-                    "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2} cache_pending=0",
+                    "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2}",
                     event.kind.as_str(),
                     context.layout.key,
                     context.group.sessions.len(),
                     duration_ms(total_start.elapsed())
                 )
             });
-            return Ok(());
+            return result;
         }
 
         let plan_start = Instant::now();
-        let plan = CommitPlanner::plan(&rendered, &context, &event, cache_options);
+        let plan = CommitPlanner::plan(&rendered, &context, &event);
         let plan_commands = plan.commands.len();
         let plan_ms = duration_ms(plan_start.elapsed());
         let commit_start = Instant::now();
-        let result = self.tmux.commit_plan(&plan);
+        let result = self.commit_plan(&plan, guarded_schedule);
         self.trace_apply(|| {
             format!(
-                "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} cache_pending={cache_pending_count} plan_commands={plan_commands}",
+                "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
                 event.kind.as_str(),
                 context.layout.key,
                 context.group.sessions.len(),
@@ -116,12 +131,22 @@ impl StatusRuntime {
         result
     }
 
-    pub fn heartbeat(&self, expected_generation: &str) -> AppResult<()> {
-        let current_generation = self
+    pub fn heartbeat(&self, expected_generation: u64) -> AppResult<()> {
+        let current_generation = match self
             .tmux
-            .show_global_option(HEARTBEAT_GENERATION_OPTION)
-            .unwrap_or_default();
-        if current_generation != expected_generation {
+            .show_options(&[(TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION)])
+        {
+            Ok(values) => values.into_iter().next().unwrap_or_default(),
+            Err(error) => {
+                self.trace_apply(|| {
+                    format!(
+                        "event=heartbeat action=read-error expected={expected_generation} error={error}"
+                    )
+                });
+                return self.schedule_next_heartbeat(expected_generation);
+            }
+        };
+        if !generation_matches(&current_generation, expected_generation) {
             // A newer chain (or a non-02 layout) superseded this one; let it die.
             self.trace_apply(|| {
                 format!(
@@ -131,36 +156,50 @@ impl StatusRuntime {
             return Ok(());
         }
 
-        // Always reschedule, even if this beat's apply fails: a transient tmux
-        // error must not permanently kill the no-event fallback refresh source.
-        if let Err(error) = self.apply(RenderEvent {
-            kind: RenderEventKind::Heartbeat,
-        }) {
+        let guarded_schedule = GuardedSchedule {
+            generation_option: HEARTBEAT_GENERATION_OPTION,
+            generation: expected_generation,
+            delay_seconds: HEARTBEAT_INTERVAL_SECONDS,
+            command: scheduled_command("heartbeat", expected_generation),
+        };
+        if let Err(error) = self.apply_inner(
+            RenderEvent {
+                kind: RenderEventKind::Heartbeat,
+            },
+            Some(&guarded_schedule),
+        ) {
             self.trace_apply(|| format!("event=heartbeat action=apply-error error={error}"));
+            // Preserve the fallback refresh chain across transient snapshot/render
+            // failures, but keep the retry under the same authoritative guard.
+            return self.schedule_next_heartbeat(expected_generation);
         }
-        self.schedule_next_heartbeat(expected_generation)
+        Ok(())
     }
 
-    fn schedule_next_heartbeat(&self, generation: &str) -> AppResult<()> {
-        let command = format!("{} heartbeat {generation}", heartbeat_self_command_path());
-        self.tmux
-            .schedule_background(HEARTBEAT_INTERVAL_SECONDS, &command)
+    fn schedule_next_heartbeat(&self, generation: u64) -> AppResult<()> {
+        let command = scheduled_command("heartbeat", generation);
+        self.tmux.schedule_background_guarded(
+            HEARTBEAT_GENERATION_OPTION,
+            generation,
+            HEARTBEAT_INTERVAL_SECONDS,
+            &command,
+        )
     }
 
-    pub fn metrics_sample(&self, expected_generation: &str) -> AppResult<()> {
+    pub fn metrics_sample(&self, expected_generation: u64) -> AppResult<()> {
         // No metrics provider off macOS: sampling would only error and self-reschedule
         // forever. Let the chain die so we stop polling on unsupported platforms.
         if !current_platform().supports_metrics() {
             return Ok(());
         }
         let total_start = Instant::now();
-        let values = match self.tmux.show_global_options(&[
-            METRIC_SAMPLE_GENERATION_OPTION,
-            CPU_SAMPLE_STATE_OPTION,
-            MEMORY_SAMPLE_STATE_OPTION,
-            NETWORK_SAMPLE_STATE_OPTION,
-            NET_INTERFACE_OPTION,
-            METRIC_ERROR_COUNT_OPTION,
+        let values = match self.tmux.show_options(&[
+            (TmuxOptionScope::Server, METRIC_SAMPLE_GENERATION_OPTION),
+            (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, NET_INTERFACE_OPTION),
+            (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
         ]) {
             Ok(values) => values,
             Err(error) => {
@@ -175,7 +214,7 @@ impl StatusRuntime {
         };
 
         let current_generation = values.first().map(String::as_str).unwrap_or_default();
-        if current_generation != expected_generation {
+        if !generation_matches(current_generation, expected_generation) {
             // A newer chain (or a non-02 layout) superseded this one; let it die.
             self.trace_apply(|| {
                 format!(
@@ -226,15 +265,11 @@ impl StatusRuntime {
         }
     }
 
-    pub fn cpu_sample(&self, expected_generation: &str) -> AppResult<()> {
-        let current_generation = self
-            .tmux
-            .show_global_option(LEGACY_CPU_SAMPLE_GENERATION_OPTION)
-            .unwrap_or_default();
+    pub fn cpu_sample(&self, expected_generation: u64) -> AppResult<()> {
+        // Legacy CPU-only samplers must terminate after one invocation. They are
+        // intentionally not rescheduled, so no tmux read is needed here.
         self.trace_apply(|| {
-            format!(
-                "event=cpu-sample action=legacy-expired expected={expected_generation} current={current_generation}"
-            )
+            format!("event=cpu-sample action=legacy-expired expected={expected_generation}")
         });
         Ok(())
     }
@@ -246,15 +281,16 @@ impl StatusRuntime {
         previous_network_state: &str,
         network_interface: Option<&str>,
         previous_error_count: u64,
-        generation: &str,
+        generation: u64,
     ) -> AppResult<MetricPublishSummary> {
         let previous_cpu = decode_cpu_snapshot(previous_cpu_state);
         let previous_memory = decode_memory_snapshot(previous_memory_state);
         let previous_network = decode_network_snapshot(previous_network_state);
+        let provider = provider_for_current_platform(network_interface);
         let mut summary = MetricPublishSummary::default();
         let mut set_values: Vec<(&'static str, String)> = Vec::new();
 
-        match sample_cpu(previous_cpu.as_ref()) {
+        match provider.sample_cpu(previous_cpu.as_ref().map(|snapshot| &snapshot.sample)) {
             Ok(snapshot) => {
                 set_values.push((CPU_SAMPLE_STATE_OPTION, encode_cpu_snapshot(&snapshot)));
                 if is_recent_sample(
@@ -270,7 +306,7 @@ impl StatusRuntime {
             Err(error) => summary.errors.push(format!("cpu:{error}")),
         }
 
-        match sample_memory() {
+        match provider.sample_memory() {
             Ok(snapshot) => {
                 set_values.push((
                     MEMORY_SAMPLE_STATE_OPTION,
@@ -288,7 +324,7 @@ impl StatusRuntime {
             }
         }
 
-        match sample_network(network_interface, previous_network.as_ref()) {
+        match provider.sample_network(previous_network.as_ref().map(|snapshot| &snapshot.sample)) {
             Ok(snapshot) => {
                 set_values.push((
                     NETWORK_SAMPLE_STATE_OPTION,
@@ -316,29 +352,30 @@ impl StatusRuntime {
             .iter()
             .map(|(name, value)| (*name, value.as_str()))
             .collect::<Vec<_>>();
-        let command = format!(
-            "{} metrics-sample {generation}",
-            heartbeat_self_command_path()
-        );
-        self.tmux
-            .apply_sets_and_reschedule(&sets, METRIC_RESAMPLE_INTERVAL_SECONDS, &command)?;
+        let command = scheduled_command("metrics-sample", generation);
+        self.tmux.apply_sets_and_reschedule_guarded(
+            METRIC_SAMPLE_GENERATION_OPTION,
+            generation,
+            &sets,
+            METRIC_RESAMPLE_INTERVAL_SECONDS,
+            &command,
+        )?;
         Ok(summary)
     }
 
-    fn schedule_next_metrics_sample(&self, generation: &str) -> AppResult<()> {
-        let command = format!(
-            "{} metrics-sample {generation}",
-            heartbeat_self_command_path()
-        );
-        self.tmux
-            .schedule_background(METRIC_RESAMPLE_INTERVAL_SECONDS, &command)
+    fn schedule_next_metrics_sample(&self, generation: u64) -> AppResult<()> {
+        let command = scheduled_command("metrics-sample", generation);
+        self.tmux.schedule_background_guarded(
+            METRIC_SAMPLE_GENERATION_OPTION,
+            generation,
+            METRIC_RESAMPLE_INTERVAL_SECONDS,
+            &command,
+        )
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
         let context = self.live_context()?;
-        let event = RenderEvent::manual_apply();
-        let (rendered, _cache_options) =
-            render_status02(&context, &event, current_platform().supports_metrics())?;
+        let rendered = render_status02(&context, current_platform().supports_metrics())?;
         println!("status-left={}", rendered.status_left.rich_text);
         println!("status-right={}", rendered.status_right.rich_text);
         println!(
@@ -447,6 +484,24 @@ impl StatusRuntime {
         }
     }
 
+    fn commit_plan(
+        &self,
+        plan: &TmuxCommandPlan,
+        guarded_schedule: Option<&GuardedSchedule>,
+    ) -> AppResult<()> {
+        let Some(schedule) = guarded_schedule else {
+            return self.tmux.commit_plan(plan);
+        };
+
+        self.tmux.commit_plan_guarded_and_reschedule(
+            plan,
+            schedule.generation_option,
+            schedule.generation,
+            schedule.delay_seconds,
+            &schedule.command,
+        )
+    }
+
     fn trace_apply(&self, message: impl FnOnce() -> String) {
         if !trace_enabled() {
             return;
@@ -515,12 +570,10 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
         if session.status == "off" {
             continue;
         }
-        let Some(&width) = min_widths.get(&session.id) else {
+        let Some(&width) = min_widths.get(session.id.as_str()) else {
             continue;
         };
-        let count = SessionGrouper::group(&session.name, &snapshot.sessions)
-            .sessions
-            .len();
+        let count = SessionGrouper::count(&session.name, &snapshot.sessions);
         let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count, rows) else {
             continue;
         };
@@ -540,11 +593,11 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
 
 /// Minimum attached-client width per session id. A session shared by several
 /// clients sizes to its narrowest client, matching tmux `window-size smallest`.
-fn min_client_widths(client_widths: &[(String, usize)]) -> std::collections::BTreeMap<String, usize> {
-    let mut min_widths: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+fn min_client_widths(client_widths: &[(String, usize)]) -> std::collections::BTreeMap<&str, usize> {
+    let mut min_widths: std::collections::BTreeMap<&str, usize> = std::collections::BTreeMap::new();
     for (session_id, width) in client_widths {
         min_widths
-            .entry(session_id.clone())
+            .entry(session_id.as_str())
             .and_modify(|current| *current = (*current).min(*width))
             .or_insert(*width);
     }
@@ -624,12 +677,56 @@ fn sanitize_metric_error(value: &str) -> String {
     sanitized.chars().take(MAX_ERROR_LEN).collect()
 }
 
+fn generation_matches(current: &str, expected: u64) -> bool {
+    current.parse::<u64>() == Ok(expected)
+}
+
+fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
+    let mut group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
+    group.sessions = ordered_sessions(&group.sessions, session_order_value(snapshot));
+    group
+}
+
+const RELEASE_BINARY_RELATIVE_PATH: &str =
+    ".config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status";
+
+fn scheduled_command(command: &str, generation: u64) -> String {
+    format!("{} {command} {generation}", executable_command_path())
+}
+
+fn executable_command_path() -> String {
+    let path = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.into_os_string().into_string().ok())
+        .or_else(|| {
+            std::env::var("HOME")
+                .ok()
+                .map(|home| format!("{home}/{RELEASE_BINARY_RELATIVE_PATH}"))
+        })
+        .unwrap_or_else(|| "ghc-tmux-status".to_string());
+    format!("'{}'", path.replace('\'', "'\\''"))
+}
+
+fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
+    snapshot
+        .options
+        .get(SESSION_ORDER_OPTION)
+        .map(String::as_str)
+}
+
+fn focus_missing_message(target: FocusTarget) -> String {
+    match target {
+        FocusTarget::Index(index) => format!("No session at index {index}"),
+        FocusTarget::Previous | FocusTarget::Next => "No session to focus".to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
     use super::{
-        MetricPublishSummary, metric_health_sets, normalize_network_interface,
+        MetricPublishSummary, generation_matches, metric_health_sets, normalize_network_interface,
         parse_metric_error_count, resolve_session_layouts, sanitize_metric_error,
     };
     use crate::config::{
@@ -694,6 +791,14 @@ mod tests {
     }
 
     #[test]
+    fn generation_match_requires_an_unsigned_integer() {
+        assert!(generation_matches("42", 42));
+        assert!(generation_matches("0042", 42));
+        assert!(!generation_matches("42; command", 42));
+        assert!(!generation_matches("", 0));
+    }
+
+    #[test]
     fn metric_health_sets_reset_error_count_on_clean_sample() {
         let summary = MetricPublishSummary::default();
         assert_eq!(
@@ -727,41 +832,5 @@ mod tests {
     fn sanitize_metric_error_replaces_separators_and_bounds_length() {
         assert_eq!(sanitize_metric_error("a\tb\nc\rd"), "a b c d");
         assert_eq!(sanitize_metric_error(&"x".repeat(300)).len(), 240);
-    }
-}
-
-fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
-    let mut group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
-    group.sessions = ordered_sessions(&group.sessions, session_order_value(snapshot));
-    group
-}
-
-const RELEASE_BINARY_RELATIVE_PATH: &str =
-    ".config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status";
-
-fn heartbeat_self_command_path() -> String {
-    let path = std::env::current_exe()
-        .ok()
-        .and_then(|path| path.into_os_string().into_string().ok())
-        .or_else(|| {
-            std::env::var("HOME")
-                .ok()
-                .map(|home| format!("{home}/{RELEASE_BINARY_RELATIVE_PATH}"))
-        })
-        .unwrap_or_else(|| "ghc-tmux-status".to_string());
-    format!("'{}'", path.replace('\'', "'\\''"))
-}
-
-fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
-    snapshot
-        .options
-        .get(SESSION_ORDER_OPTION)
-        .map(String::as_str)
-}
-
-fn focus_missing_message(target: FocusTarget) -> String {
-    match target {
-        FocusTarget::Index(index) => format!("No session at index {index}"),
-        FocusTarget::Previous | FocusTarget::Next => "No session to focus".to_string(),
     }
 }

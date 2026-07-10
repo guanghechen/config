@@ -42,6 +42,10 @@ pub struct NetworkSnapshot {
     pub sample: NetworkSample,
 }
 
+/// Read-only sampling boundary. `StatusRuntime` creates one provider per sampler tick
+/// and remains the single writer of tmux metric state. Providers do not retry or impose
+/// their own timeout; each method returns `AppError`, and the runtime degrades that metric
+/// independently before publishing available values and rescheduling in one tmux invocation.
 pub trait MetricsProvider {
     fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot>;
     fn sample_memory(&self) -> AppResult<MemorySnapshot>;

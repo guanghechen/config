@@ -65,13 +65,23 @@ function _ghc_tmux_reset_per_session_layout_ {
   fi
 }
 
-# Bump the heartbeat generation so any in-flight self-scheduling chain from a
-# previous load expires on its next wake (it compares the stored generation and
-# exits when it no longer matches). Returns the new generation on stdout.
+# A reload token needs uniqueness, not arithmetic ordering. Epoch + process id +
+# a per-call nonce avoids both overlapping reload races and same-shell rapid
+# reload reuse while remaining an unsigned integer accepted by the renderer CLI.
+function _ghc_tmux_new_generation_ {
+  printf '%s%05d%04d\n' \
+    "$(date +%s)" "$(( $$ % 100000 ))" "$(( RANDOM % 10000 ))"
+}
+
+# The server option is authoritative for atomic `if-shell -F` guards: server
+# options win format lookup even when a session has a same-name override. The
+# global copy is retained only to expire pre-upgrade renderer chains that still
+# read `show -gqv`. Both writes share one tmux command queue.
 function _ghc_tmux_bump_heartbeat_generation_ {
   local generation
-  generation=$(( $(tmux show -gqv @GHC_SL_HEARTBEAT_GEN 2>/dev/null || echo 0) + 1 ))
-  tmux set -g @GHC_SL_HEARTBEAT_GEN "$generation"
+  generation=$(_ghc_tmux_new_generation_)
+  tmux set -s @GHC_SL_HEARTBEAT_GEN "$generation" ';' \
+       set -g @GHC_SL_HEARTBEAT_GEN "$generation"
   printf '%s\n' "$generation"
 }
 
@@ -79,8 +89,9 @@ function _ghc_tmux_bump_heartbeat_generation_ {
 # chain. Must match ghc-tmux-status METRIC_SAMPLE_GENERATION_OPTION.
 function _ghc_tmux_bump_metric_generation_ {
   local generation
-  generation=$(( $(tmux show -gqv @GHC_SL_METRIC_GEN 2>/dev/null || echo 0) + 1 ))
-  tmux set -g @GHC_SL_METRIC_GEN "$generation"
+  generation=$(_ghc_tmux_new_generation_)
+  tmux set -s @GHC_SL_METRIC_GEN "$generation" ';' \
+       set -g @GHC_SL_METRIC_GEN "$generation"
   printf '%s\n' "$generation"
 }
 

@@ -1,5 +1,5 @@
 use crate::error::AppResult;
-use crate::metric::{CpuSample, CpuSnapshot, provider_for_current_platform};
+use crate::metric::{CpuSample, CpuSnapshot};
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::TemplateWidget;
 use crate::widget::pill::pill_literal;
@@ -21,10 +21,6 @@ impl TemplateWidget for CpuWidget {
             rich_text,
         })
     }
-}
-
-pub fn sample_cpu(previous: Option<&CpuSnapshot>) -> AppResult<CpuSnapshot> {
-    provider_for_current_platform(None).sample_cpu(previous.map(|snapshot| &snapshot.sample))
 }
 
 pub fn encode_cpu_snapshot(snapshot: &CpuSnapshot) -> String {

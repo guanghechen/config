@@ -83,6 +83,8 @@ pub struct TmuxSnapshot {
     pub sessions: Vec<SessionInfo>,
     /// Attached clients as (session_id, client_width); detached sessions are absent.
     pub client_widths: Vec<(String, usize)>,
+    /// Owner-scope values only: global session options plus authoritative server
+    /// generations. Effective per-session layout/status values live in `sessions`.
     pub options: BTreeMap<String, String>,
 }
 

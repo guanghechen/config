@@ -1,18 +1,33 @@
 use std::collections::BTreeMap;
 use std::process::Command;
 
-use crate::commit::TmuxCommandPlan;
+use crate::commit::{TmuxCommandPlan, tmux_command_string};
 use crate::config::{
-    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
-    LEGACY_CPU_SAMPLE_GENERATION_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
-    METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
-    METRIC_SAMPLE_GENERATION_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
-    ROWS_OVERRIDE_OPTION,
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION, MEMORY_NOW_OPTION,
+    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
+    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, NETWORK_NOW_OPTION,
+    NETWORK_SAMPLE_STATE_OPTION, ROWS_OVERRIDE_OPTION, STATUS_INTERVAL_OPTION,
+    STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::model::{SessionInfo, TmuxSnapshot};
 
 pub struct TmuxAdapter;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TmuxOptionScope {
+    GlobalSession,
+    Server,
+}
+
+impl TmuxOptionScope {
+    fn show_value_flag(self) -> &'static str {
+        match self {
+            Self::GlobalSession => "-gqv",
+            Self::Server => "-sqv",
+        }
+    }
+}
 
 impl TmuxAdapter {
     pub fn new() -> Self {
@@ -62,56 +77,75 @@ impl TmuxAdapter {
         ])
     }
 
-    pub fn show_global_option(&self, name: &str) -> AppResult<String> {
-        self.tmux_output(["show".to_string(), "-gqv".to_string(), name.to_string()])
+    /// Reads explicitly scoped options in one tmux invocation. Marker-delimited
+    /// `show -gqv`/`show -sqv` sections preserve empty, spaced, and tabbed values
+    /// without falling back to the current session's effective option lookup.
+    pub fn show_options(&self, options: &[(TmuxOptionScope, &str)]) -> AppResult<Vec<String>> {
+        let output = self.tmux_output(options_command_args(options))?;
+        parse_options_output(&output, options.len())
     }
 
-    /// Reads several global options in one tmux invocation, returning their values
-    /// in request order. A `display-message` format joins them with FIELD_SEP, which
-    /// never collides with the values' own `\t` separators. Missing/empty trailing
-    /// fields are padded back so the result always has `names.len()` entries.
-    pub fn show_global_options(&self, names: &[&str]) -> AppResult<Vec<String>> {
-        let format = show_global_options_format(names);
-        let output = self.tmux_output(["display-message".to_string(), "-p".to_string(), format])?;
-        Ok(split_padded_option_values(&output, names.len()))
-    }
-
-    /// Folds a run of global-option sets plus a delayed background reschedule into a
-    /// single tmux invocation. argv style (each token a separate element joined by a
-    /// literal `;`), so option values and the command string pass verbatim with no
-    /// shell quoting hazard.
-    pub fn apply_sets_and_reschedule(
+    /// Commits a status plan and its next heartbeat only if the authoritative
+    /// server-scoped generation still matches. `if-shell -F` evaluates the guard
+    /// and inserts the serialized command list in the same tmux command queue.
+    pub fn commit_plan_guarded_and_reschedule(
         &self,
+        plan: &TmuxCommandPlan,
+        generation_option: &str,
+        expected_generation: u64,
+        delay_seconds: u64,
+        command: &str,
+    ) -> AppResult<()> {
+        let command_list = plan_and_reschedule_command(plan, delay_seconds, command);
+        self.tmux_status(guarded_command_args(
+            generation_option,
+            expected_generation,
+            command_list,
+        ))
+    }
+
+    /// Publishes metric state and schedules the next sample under one atomic
+    /// server-generation guard. A stale sampler therefore performs no mutation.
+    pub fn apply_sets_and_reschedule_guarded(
+        &self,
+        generation_option: &str,
+        expected_generation: u64,
         sets: &[(&str, &str)],
         delay_seconds: u64,
         command: &str,
     ) -> AppResult<()> {
-        self.tmux_status(sets_and_reschedule_args(sets, delay_seconds, command))
+        let command_list = sets_and_reschedule_command(sets, delay_seconds, command);
+        self.tmux_status(guarded_command_args(
+            generation_option,
+            expected_generation,
+            command_list,
+        ))
     }
 
-    pub fn schedule_background(&self, delay_seconds: u64, command: &str) -> AppResult<()> {
-        self.tmux_status([
-            "run-shell".to_string(),
-            "-b".to_string(),
-            "-d".to_string(),
-            delay_seconds.to_string(),
-            command.to_string(),
-        ])
+    pub fn schedule_background_guarded(
+        &self,
+        generation_option: &str,
+        expected_generation: u64,
+        delay_seconds: u64,
+        command: &str,
+    ) -> AppResult<()> {
+        let command_list = background_command_string(delay_seconds, command);
+        self.tmux_status(guarded_command_args(
+            generation_option,
+            expected_generation,
+            command_list,
+        ))
     }
 
     pub fn display_message(&self, message: &str) -> AppResult<()> {
         self.tmux_status(["display-message".to_string(), message.to_string()])
     }
 
-    fn tmux_output<I, S>(&self, args: I) -> AppResult<String>
+    fn tmux_output<I>(&self, args: I) -> AppResult<String>
     where
-        I: IntoIterator<Item = S>,
-        S: AsRef<str>,
+        I: IntoIterator<Item = String>,
     {
-        let args = args
-            .into_iter()
-            .map(|arg| arg.as_ref().to_string())
-            .collect::<Vec<_>>();
+        let args = args.into_iter().collect::<Vec<_>>();
         let output = Command::new("tmux").args(&args).output()?;
         if !output.status.success() {
             return Err(AppError::TmuxCommand {
@@ -124,15 +158,11 @@ impl TmuxAdapter {
             .to_string())
     }
 
-    fn tmux_status<I, S>(&self, args: I) -> AppResult<()>
+    fn tmux_status<I>(&self, args: I) -> AppResult<()>
     where
-        I: IntoIterator<Item = S>,
-        S: AsRef<str>,
+        I: IntoIterator<Item = String>,
     {
-        let args = args
-            .into_iter()
-            .map(|arg| arg.as_ref().to_string())
-            .collect::<Vec<_>>();
+        let args = args.into_iter().collect::<Vec<_>>();
         let output = Command::new("tmux").args(&args).output()?;
         if !output.status.success() {
             return Err(AppError::TmuxCommand {
@@ -145,24 +175,15 @@ impl TmuxAdapter {
 }
 
 fn snapshot_command_args() -> Vec<String> {
-    vec![
+    let mut args = vec![
         "display-message".to_string(),
         "-p".to_string(),
         format!(
             "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
         ),
-        ";".to_string(),
-        "display-message".to_string(),
-        "-p".to_string(),
-        STATUS_MARK.to_string(),
-        ";".to_string(),
-        "show".to_string(),
-        "-qv".to_string(),
-        "status".to_string(),
-        ";".to_string(),
-        "display-message".to_string(),
-        "-p".to_string(),
-        options_format(),
+    ];
+    append_options_commands(&mut args, SNAPSHOT_OPTIONS);
+    args.extend([
         ";".to_string(),
         "display-message".to_string(),
         "-p".to_string(),
@@ -184,89 +205,137 @@ fn snapshot_command_args() -> Vec<String> {
         "list-clients".to_string(),
         "-F".to_string(),
         "#{session_id}\t#{client_width}".to_string(),
-    ]
-}
-
-fn options_format() -> String {
-    let mut format = OPTIONS_MARK.to_string();
-    for name in SNAPSHOT_OPTION_NAMES {
-        format.push(FIELD_SEP);
-        format.push_str("#{");
-        format.push_str(name);
-        format.push('}');
-    }
-    format
-}
-
-fn show_global_options_format(names: &[&str]) -> String {
-    names
-        .iter()
-        .map(|name| format!("#{{{name}}}"))
-        .collect::<Vec<_>>()
-        .join(&FIELD_SEP.to_string())
-}
-
-fn split_padded_option_values(output: &str, count: usize) -> Vec<String> {
-    let mut values = output
-        .split(FIELD_SEP)
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    values.resize(count, String::new());
-    values
-}
-
-fn sets_and_reschedule_args(
-    sets: &[(&str, &str)],
-    delay_seconds: u64,
-    command: &str,
-) -> Vec<String> {
-    let mut args: Vec<String> = Vec::new();
-    for (name, value) in sets {
-        if !args.is_empty() {
-            args.push(";".to_string());
-        }
-        args.push("set".to_string());
-        args.push("-g".to_string());
-        args.push((*name).to_string());
-        args.push((*value).to_string());
-    }
-    if !args.is_empty() {
-        args.push(";".to_string());
-    }
-    args.push("run-shell".to_string());
-    args.push("-b".to_string());
-    args.push("-d".to_string());
-    args.push(delay_seconds.to_string());
-    args.push(command.to_string());
+    ]);
     args
 }
 
+fn options_command_args(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
+    let mut args = Vec::new();
+    append_options_commands(&mut args, options);
+    args
+}
+
+fn append_options_commands(args: &mut Vec<String>, options: &[(TmuxOptionScope, &str)]) {
+    push_tmux_command(
+        args,
+        [
+            "display-message".to_string(),
+            "-p".to_string(),
+            OPTIONS_MARK.to_string(),
+        ],
+    );
+    for (index, (scope, name)) in options.iter().enumerate() {
+        push_tmux_command(
+            args,
+            [
+                "display-message".to_string(),
+                "-p".to_string(),
+                option_value_mark(index),
+            ],
+        );
+        push_tmux_command(
+            args,
+            [
+                "show".to_string(),
+                scope.show_value_flag().to_string(),
+                (*name).to_string(),
+            ],
+        );
+    }
+    push_tmux_command(
+        args,
+        [
+            "display-message".to_string(),
+            "-p".to_string(),
+            OPTIONS_END_MARK.to_string(),
+        ],
+    );
+}
+
+fn push_tmux_command<I>(args: &mut Vec<String>, command: I)
+where
+    I: IntoIterator<Item = String>,
+{
+    if !args.is_empty() {
+        args.push(";".to_string());
+    }
+    args.extend(command);
+}
+
+fn option_value_mark(index: usize) -> String {
+    format!("{OPTION_VALUE_MARK_PREFIX}{index}__")
+}
+
+fn plan_and_reschedule_command(
+    plan: &TmuxCommandPlan,
+    delay_seconds: u64,
+    command: &str,
+) -> String {
+    let mut commands = Vec::new();
+    if !plan.is_empty() {
+        commands.push(plan.to_command_string());
+    }
+    commands.push(background_command_string(delay_seconds, command));
+    if !plan.is_empty() {
+        commands.push(tmux_command_string(&[
+            "refresh-client".to_string(),
+            "-S".to_string(),
+        ]));
+    }
+    commands.join("; ")
+}
+
+fn sets_and_reschedule_command(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> String {
+    let mut commands = Vec::new();
+    for (name, value) in sets {
+        commands.push(tmux_command_string(&[
+            "set".to_string(),
+            "-g".to_string(),
+            (*name).to_string(),
+            (*value).to_string(),
+        ]));
+    }
+    commands.push(background_command_string(delay_seconds, command));
+    commands.join("; ")
+}
+
+fn background_command_string(delay_seconds: u64, command: &str) -> String {
+    tmux_command_string(&[
+        "run-shell".to_string(),
+        "-b".to_string(),
+        "-d".to_string(),
+        delay_seconds.to_string(),
+        command.to_string(),
+    ])
+}
+
+fn guarded_command_args(
+    generation_option: &str,
+    expected_generation: u64,
+    command_list: String,
+) -> Vec<String> {
+    vec![
+        "if-shell".to_string(),
+        "-F".to_string(),
+        format!("#{{==:#{{{generation_option}}},{expected_generation}}}"),
+        command_list,
+    ]
+}
+
 fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
-    let mut lines = output.lines();
+    let mut lines = output.lines().peekable();
     let context_line = lines
         .next()
         .ok_or_else(|| AppError::TmuxParse("missing context section".to_string()))?;
     let (width, current_session_name, client_last_session, host, session_created) =
         parse_context_line(context_line)?;
 
-    expect_marker(lines.next(), STATUS_MARK)?;
-    let mut status_lines = Vec::new();
-    let options_line = loop {
-        let line = lines
-            .next()
-            .ok_or_else(|| AppError::TmuxParse("missing options section".to_string()))?;
-        if line.starts_with(OPTIONS_MARK) {
-            break line;
-        }
-        status_lines.push(line);
-    };
-    let status = status_lines
-        .first()
-        .copied()
-        .unwrap_or_default()
-        .to_string();
-
-    let options = parse_options_line(options_line)?;
+    let option_values = parse_option_values(&mut lines, SNAPSHOT_OPTIONS.len())?;
+    let options = SNAPSHOT_OPTIONS
+        .iter()
+        .zip(option_values)
+        .map(|((_, name), value)| ((*name).to_string(), value))
+        .collect::<BTreeMap<_, _>>();
     let mode = options.get("@GHC_SL_MODE").cloned().unwrap_or_default();
 
     expect_marker(lines.next(), SESSIONS_MARK)?;
@@ -291,6 +360,15 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
             "current session name is empty".to_string(),
         ));
     }
+    let status = sessions
+        .iter()
+        .find(|session| session.name == current_session_name)
+        .map(|session| session.status.clone())
+        .ok_or_else(|| {
+            AppError::TmuxParse(format!(
+                "current session is missing from session list: {current_session_name}"
+            ))
+        })?;
 
     Ok(TmuxSnapshot {
         mode,
@@ -304,6 +382,38 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
         client_widths,
         options,
     })
+}
+
+fn parse_options_output(output: &str, count: usize) -> AppResult<Vec<String>> {
+    parse_option_values(&mut output.lines().peekable(), count)
+}
+
+fn parse_option_values<'a, I>(
+    lines: &mut std::iter::Peekable<I>,
+    count: usize,
+) -> AppResult<Vec<String>>
+where
+    I: Iterator<Item = &'a str>,
+{
+    expect_marker(lines.next(), OPTIONS_MARK)?;
+    let mut values = Vec::with_capacity(count);
+    for index in 0..count {
+        expect_marker(lines.next(), &option_value_mark(index))?;
+        let next_marker = if index + 1 < count {
+            option_value_mark(index + 1)
+        } else {
+            OPTIONS_END_MARK.to_string()
+        };
+        let mut value_lines = Vec::new();
+        while lines.peek().copied() != Some(next_marker.as_str()) {
+            value_lines.push(lines.next().ok_or_else(|| {
+                AppError::TmuxParse(format!("missing option delimiter after index {index}"))
+            })?);
+        }
+        values.push(value_lines.join("\n"));
+    }
+    expect_marker(lines.next(), OPTIONS_END_MARK)?;
+    Ok(values)
 }
 
 fn parse_session_line(line: &str) -> Option<SessionInfo> {
@@ -332,24 +442,6 @@ fn parse_client_line(line: &str) -> Option<(String, usize)> {
     let session_id = fields.next()?.to_string();
     let width = fields.next()?.parse::<usize>().ok()?;
     Some((session_id, width))
-}
-
-fn parse_options_line(options_line: &str) -> AppResult<BTreeMap<String, String>> {
-    let mut fields = options_line.split(FIELD_SEP);
-    if fields.next() != Some(OPTIONS_MARK) {
-        return Err(AppError::TmuxParse(format!(
-            "expected options marker, got: {options_line}"
-        )));
-    }
-
-    let mut options = BTreeMap::new();
-    for name in SNAPSHOT_OPTION_NAMES {
-        options.insert(
-            (*name).to_string(),
-            fields.next().unwrap_or_default().to_string(),
-        );
-    }
-    Ok(options)
 }
 
 fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, String, i64)> {
@@ -396,61 +488,87 @@ fn expect_marker(line: Option<&str>, marker: &str) -> AppResult<()> {
 
 const FIELD_SEP: char = '\u{1f}';
 const CONTEXT_MARK: &str = "__GHC_STATUS_CONTEXT__";
-const STATUS_MARK: &str = "__GHC_STATUS_STATUS__";
 const OPTIONS_MARK: &str = "__GHC_STATUS_OPTIONS__";
+const OPTIONS_END_MARK: &str = "__GHC_STATUS_OPTIONS_END__";
+const OPTION_VALUE_MARK_PREFIX: &str = "\u{1e}__GHC_STATUS_OPTION_";
 const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
 const CLIENTS_MARK: &str = "__GHC_STATUS_CLIENTS__";
 
-const SNAPSHOT_OPTION_NAMES: &[&str] = &[
-    "@GHC_SL_MODE",
-    ROWS_OVERRIDE_OPTION,
-    "@GHC_SL_LAYOUT",
-    "@GHC_SL_STATUS02_LEFT",
-    "@GHC_SL_STATUS02_RIGHT",
-    "@GHC_SL_STATUS02_SESSION_FORMAT",
-    "@GHC_SL_STATUS02_CURRENT_FORMAT",
-    "status-left-length",
-    "status-right-length",
-    "status-interval",
-    "@GHC_SL_SESSION_ORDER",
-    "@GHC_SL_NET_IFACE",
-    HEARTBEAT_GENERATION_OPTION,
-    METRIC_SAMPLE_GENERATION_OPTION,
-    LEGACY_CPU_SAMPLE_GENERATION_OPTION,
-    CPU_SAMPLE_STATE_OPTION,
-    CPU_NOW_OPTION,
-    MEMORY_SAMPLE_STATE_OPTION,
-    MEMORY_NOW_OPTION,
-    NETWORK_SAMPLE_STATE_OPTION,
-    NETWORK_NOW_OPTION,
-    METRIC_LAST_OK_OPTION,
-    METRIC_LAST_ERROR_OPTION,
-    METRIC_ERROR_COUNT_OPTION,
-    "@GHC_STATUS_COMPONENT_CACHE_cpu",
-    "@GHC_STATUS_COMPONENT_CACHE_memory",
-    "@GHC_STATUS_COMPONENT_CACHE_network",
+const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
+    (TmuxOptionScope::GlobalSession, ROWS_OVERRIDE_OPTION),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_LEFT"),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_RIGHT"),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_SL_STATUS02_SESSION_FORMAT",
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_SL_STATUS02_CURRENT_FORMAT",
+    ),
+    (TmuxOptionScope::GlobalSession, STATUS_LEFT_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_RIGHT_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_POSITION_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_JUSTIFY_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_INTERVAL_OPTION),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_NET_IFACE"),
+    (TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION),
+    (TmuxOptionScope::Server, METRIC_SAMPLE_GENERATION_OPTION),
+    (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, CPU_NOW_OPTION),
+    (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, MEMORY_NOW_OPTION),
+    (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
+    (TmuxOptionScope::GlobalSession, NETWORK_NOW_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_LAST_OK_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_LAST_ERROR_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_STATUS_COMPONENT_CACHE_cpu",
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_STATUS_COMPONENT_CACHE_memory",
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_STATUS_COMPONENT_CACHE_network",
+    ),
 ];
 
 #[cfg(test)]
 mod tests {
     use super::{
-        CONTEXT_MARK, FIELD_SEP, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTION_NAMES, STATUS_MARK,
-        parse_client_line, parse_session_line, parse_snapshot_output, sets_and_reschedule_args,
-        show_global_options_format, split_padded_option_values,
+        CONTEXT_MARK, FIELD_SEP, OPTIONS_END_MARK, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTIONS,
+        TmuxOptionScope, guarded_command_args, option_value_mark, options_command_args,
+        parse_client_line, parse_options_output, parse_session_line, parse_snapshot_output,
+        sets_and_reschedule_command,
     };
 
     const CLIENTS_MARK: &str = super::CLIENTS_MARK;
 
+    fn option_section(values: &[&str]) -> String {
+        let mut lines = vec![OPTIONS_MARK.to_string()];
+        for (index, value) in values.iter().enumerate() {
+            lines.push(option_value_mark(index));
+            if !value.is_empty() {
+                lines.extend(value.split('\n').map(str::to_string));
+            }
+        }
+        lines.push(OPTIONS_END_MARK.to_string());
+        lines.join("\n")
+    }
+
     #[test]
     fn parses_snapshot_output() {
-        let options = std::iter::repeat_n("", SNAPSHOT_OPTION_NAMES.len())
-            .collect::<Vec<_>>()
-            .join(&FIELD_SEP.to_string());
+        let option_values = vec![""; SNAPSHOT_OPTIONS.len()];
+        let options = option_section(&option_values);
         let output = format!(
             "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
-{STATUS_MARK}
-on
-{OPTIONS_MARK}{FIELD_SEP}{options}
+{options}
 {SESSIONS_MARK}
 $1	yui	0	on	02:wide	64	84
 $2	dev	1	2	02:narrow	120	120
@@ -507,27 +625,26 @@ $2	90"
     }
 
     #[test]
-    fn parses_empty_status_and_tabbed_cache_options() {
-        let mut option_values = vec![""; SNAPSHOT_OPTION_NAMES.len()];
+    fn parses_current_status_and_tabbed_cache_options() {
+        let mut option_values = vec![""; SNAPSHOT_OPTIONS.len()];
         option_values[0] = "02";
-        let network_index = SNAPSHOT_OPTION_NAMES
+        let network_index = SNAPSHOT_OPTIONS
             .iter()
-            .position(|name| *name == "@GHC_SL_NET_SAMPLE")
+            .position(|(_, name)| *name == "@GHC_SL_NET_SAMPLE")
             .unwrap();
         option_values[network_index] = "1	2	3	4	5";
-        let options = option_values.join(&FIELD_SEP.to_string());
+        let options = option_section(&option_values);
         let output = format!(
             "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}42
-{STATUS_MARK}
-{OPTIONS_MARK}{FIELD_SEP}{options}
+{options}
 {SESSIONS_MARK}
-$1	yui	0
+$1	yui	0	off
 {CLIENTS_MARK}
 $1	200"
         );
 
         let snapshot = parse_snapshot_output(&output).unwrap();
-        assert_eq!(snapshot.status, "");
+        assert_eq!(snapshot.status, "off");
         assert_eq!(snapshot.mode, "02");
         assert_eq!(
             snapshot.options.get("@GHC_SL_NET_SAMPLE").unwrap(),
@@ -536,58 +653,63 @@ $1	200"
     }
 
     #[test]
-    fn show_global_options_format_joins_placeholders_with_field_sep() {
-        let format = show_global_options_format(&["@A", "@B"]);
-        assert_eq!(format, format!("#{{@A}}{FIELD_SEP}#{{@B}}"));
-    }
+    fn option_commands_use_explicit_global_and_server_scopes() {
+        let args = options_command_args(&[
+            (TmuxOptionScope::GlobalSession, "@GLOBAL"),
+            (TmuxOptionScope::Server, "@SERVER"),
+        ]);
 
-    #[test]
-    fn split_padded_option_values_pads_missing_trailing_fields() {
-        let output = format!("gen-1{FIELD_SEP}state-blob");
-        assert_eq!(
-            split_padded_option_values(&output, 2),
-            vec!["gen-1".to_string(), "state-blob".to_string()]
+        assert!(
+            args.windows(3)
+                .any(|args| args == ["show", "-gqv", "@GLOBAL"])
         );
-
-        // A blank current generation collapses to one empty token; the state slot is padded.
-        assert_eq!(
-            split_padded_option_values("", 2),
-            vec![String::new(), String::new()]
+        assert!(
+            args.windows(3)
+                .any(|args| args == ["show", "-sqv", "@SERVER"])
         );
     }
 
     #[test]
-    fn sets_and_reschedule_args_orders_sets_then_reschedule() {
-        let args = sets_and_reschedule_args(
-            &[("@GHC_SL_CPU_SAMPLE", "blob"), ("@GHC_CPU_NOW", "100")],
-            5,
-            "'/bin/ghc' metrics-sample 7",
-        );
+    fn option_parser_preserves_empty_special_and_multiline_values() {
+        let output = option_section(&[
+            "",
+            "space # semi; dollar$ quote' slash\\\ttab",
+            "line one\nline two",
+        ]);
+
         assert_eq!(
-            args,
+            parse_options_output(&output, 3).unwrap(),
             vec![
-                "set",
-                "-g",
-                "@GHC_SL_CPU_SAMPLE",
-                "blob",
-                ";",
-                "set",
-                "-g",
-                "@GHC_CPU_NOW",
-                "100",
-                ";",
-                "run-shell",
-                "-b",
-                "-d",
-                "5",
-                "'/bin/ghc' metrics-sample 7",
+                String::new(),
+                "space # semi; dollar$ quote' slash\\\ttab".to_string(),
+                "line one\nline two".to_string(),
             ]
         );
     }
 
     #[test]
-    fn sets_and_reschedule_args_skips_separator_with_no_sets() {
-        let args = sets_and_reschedule_args(&[], 2, "cmd");
-        assert_eq!(args, vec!["run-shell", "-b", "-d", "2", "cmd"]);
+    fn guarded_sets_serialize_mutation_and_reschedule_in_one_branch() {
+        let command = sets_and_reschedule_command(
+            &[
+                ("@GHC_SL_CPU_SAMPLE", "blob #1; '$\\"),
+                ("@GHC_CPU_NOW", "100"),
+            ],
+            5,
+            "'/bin/ghc status' metrics-sample 7",
+        );
+        assert_eq!(
+            command,
+            "\"set\" \"-g\" \"@GHC_SL_CPU_SAMPLE\" \"blob #1; '\\$\\\\\"; \"set\" \"-g\" \"@GHC_CPU_NOW\" \"100\"; \"run-shell\" \"-b\" \"-d\" \"5\" \"'/bin/ghc status' metrics-sample 7\""
+        );
+
+        assert_eq!(
+            guarded_command_args("@GHC_SL_METRIC_GEN", 7, command.clone()),
+            vec![
+                "if-shell".to_string(),
+                "-F".to_string(),
+                "#{==:#{@GHC_SL_METRIC_GEN},7}".to_string(),
+                command,
+            ]
+        );
     }
 }

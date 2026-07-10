@@ -1,5 +1,4 @@
 use std::process::Command;
-use std::sync::OnceLock;
 
 use crate::error::{AppError, AppResult};
 use crate::metric::{
@@ -117,7 +116,7 @@ fn cpu_percent_from_ticks(user: u64, nice: u64, system: u64, idle: u64) -> f64 {
 }
 
 fn read_memory_percent() -> AppResult<f64> {
-    let total_bytes = darwin_system_info()?.memory_bytes as f64;
+    let total_bytes = read_darwin_system_info()?.memory_bytes as f64;
     let vm_stat = command_output("vm_stat", &[])?;
     parse_vm_stat_memory_percent(&vm_stat, total_bytes)
 }
@@ -127,20 +126,38 @@ struct DarwinSystemInfo {
     memory_bytes: u64,
 }
 
-fn darwin_system_info() -> AppResult<&'static DarwinSystemInfo> {
-    static SYSTEM_INFO: OnceLock<AppResult<DarwinSystemInfo>> = OnceLock::new();
-    SYSTEM_INFO
-        .get_or_init(read_darwin_system_info)
-        .as_ref()
-        .map_err(|error| AppError::Render(error.to_string()))
+#[cfg(target_os = "macos")]
+fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
+    let mut memory_bytes = 0_u64;
+    let mut size = std::mem::size_of_val(&memory_bytes);
+    let result = unsafe {
+        sysctlbyname(
+            c"hw.memsize".as_ptr(),
+            std::ptr::addr_of_mut!(memory_bytes).cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if result != 0 {
+        return Err(AppError::Render(format!(
+            "sysctlbyname hw.memsize failed: {}",
+            std::io::Error::last_os_error()
+        )));
+    }
+    if size != std::mem::size_of::<u64>() || memory_bytes == 0 {
+        return Err(AppError::Render(
+            "sysctlbyname hw.memsize returned invalid data".to_string(),
+        ));
+    }
+    Ok(DarwinSystemInfo { memory_bytes })
 }
 
+#[cfg(not(target_os = "macos"))]
 fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
-    let memory_bytes = command_output("sysctl", &["-n", "hw.memsize"])?
-        .trim()
-        .parse::<u64>()
-        .map_err(|_| AppError::Render("failed to parse hw.memsize".to_string()))?;
-    Ok(DarwinSystemInfo { memory_bytes })
+    Err(AppError::Render(
+        "native darwin system info is unavailable".to_string(),
+    ))
 }
 
 fn read_network_counters(interface: &str) -> AppResult<(u64, u64)> {
@@ -151,10 +168,7 @@ fn read_network_counters(interface: &str) -> AppResult<(u64, u64)> {
 const FALLBACK_NETWORK_INTERFACE: &str = "en0";
 
 fn default_network_interface() -> String {
-    static INTERFACE: OnceLock<String> = OnceLock::new();
-    INTERFACE
-        .get_or_init(detect_default_network_interface)
-        .clone()
+    detect_default_network_interface()
 }
 
 fn detect_default_network_interface() -> String {
@@ -294,6 +308,13 @@ unsafe extern "C" {
         host_info_out: *mut Integer,
         host_info_out_count: *mut MachMsgTypeNumber,
     ) -> KernReturn;
+    fn sysctlbyname(
+        name: *const std::ffi::c_char,
+        old_value: *mut std::ffi::c_void,
+        old_length: *mut usize,
+        new_value: *mut std::ffi::c_void,
+        new_length: usize,
+    ) -> i32;
 }
 
 #[cfg(target_os = "macos")]
@@ -321,6 +342,8 @@ mod tests {
         parse_vm_stat_memory_percent, read_cpu_sample, read_darwin_system_info,
     };
     use crate::error::AppError;
+    #[cfg(target_os = "macos")]
+    use crate::metric::MetricsProvider;
     use crate::metric::{CpuSample, NetworkSample};
 
     #[test]
@@ -346,6 +369,16 @@ mod tests {
     fn reads_cpu_sample() {
         let sample = read_cpu_sample().unwrap();
         assert!(sample.user + sample.nice + sample.system + sample.idle > 0);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn reads_memory_sample() {
+        let sample = super::DarwinMetricsProvider::new(None)
+            .sample_memory()
+            .unwrap();
+        assert!((0.0..=100.0).contains(&sample.percent));
+        assert!(sample.timestamp_seconds > 0);
     }
 
     #[test]

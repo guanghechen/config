@@ -1,3 +1,12 @@
+pub const STATUS_LEFT_OPTION: &str = "status-left";
+pub const STATUS_RIGHT_OPTION: &str = "status-right";
+pub const STATUS_POSITION_OPTION: &str = "status-position";
+pub const STATUS_JUSTIFY_OPTION: &str = "status-justify";
+pub const STATUS_INTERVAL_OPTION: &str = "status-interval";
+
+pub const STATUS_LEFT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_LEFT}";
+pub const STATUS_RIGHT_FORMAT: &str = "#{E:@GHC_SL_STATUS02_RIGHT}";
+pub const STATUS_JUSTIFY_VALUE: &str = "centre";
 pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
 pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 5;
 pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
@@ -7,12 +16,10 @@ pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
 // rounding.
 pub const METRIC_SAMPLE_STALE_LIMIT_SECONDS: u64 = METRIC_RESAMPLE_INTERVAL_SECONDS * 2;
 
+// load-theme owns these server-scoped generation tokens. It mirrors the same
+// values to global session options only so pre-upgrade renderer chains expire.
 pub const HEARTBEAT_GENERATION_OPTION: &str = "@GHC_SL_HEARTBEAT_GEN";
 pub const METRIC_SAMPLE_GENERATION_OPTION: &str = "@GHC_SL_METRIC_GEN";
-
-// Legacy generation guard is still bumped by load-theme so any old CPU-only chain
-// expires after upgrading to the unified metric sampler.
-pub const LEGACY_CPU_SAMPLE_GENERATION_OPTION: &str = "@GHC_SL_CPU_GEN";
 
 pub const CPU_NOW_OPTION: &str = "@GHC_CPU_NOW";
 pub const CPU_SAMPLE_STATE_OPTION: &str = "@GHC_SL_CPU_SAMPLE";

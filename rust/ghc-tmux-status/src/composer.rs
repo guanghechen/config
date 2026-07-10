@@ -1,6 +1,10 @@
-use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
+use crate::config::{
+    STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE, STATUS_LEFT_FORMAT,
+    STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_REDRAW_INTERVAL_SECONDS_STR,
+    STATUS_RIGHT_FORMAT, STATUS_RIGHT_OPTION,
+};
 use crate::error::AppResult;
-use crate::model::{RenderContext, RenderEvent, RenderedSegment, RenderedStatus};
+use crate::model::{RenderContext, RenderedSegment, RenderedStatus};
 use crate::status_widget::{StatusWidget, computed, template};
 use crate::util::width::display_width;
 use crate::widget::{
@@ -19,9 +23,8 @@ const RANK_CPU: u8 = 4;
 const RANK_NETWORK: u8 = 5;
 const RANK_TIME: u8 = 6;
 
-/// Renders the status02 layout once and returns the rendered segments plus any
-/// structural option writes. Dynamic metrics are sampler-owned indirect tmux
-/// references, not render-time samples.
+/// Purely renders the status02 layout. Dynamic metrics are sampler-owned indirect
+/// tmux references, not render-time samples or composer-owned cache writes.
 ///
 /// Each widget type is instantiated exactly once. The single-row and two-row
 /// layouts share the rendered sub-segments (prefix / window indicators / metrics):
@@ -29,22 +32,22 @@ const RANK_TIME: u8 = 6;
 /// byte-identical to rendering each row independently.
 pub fn render_status02(
     context: &RenderContext,
-    event: &RenderEvent,
     metrics_supported: bool,
-) -> AppResult<(RenderedStatus, Vec<(String, String)>)> {
+) -> AppResult<RenderedStatus> {
     let mut host = computed(HostWidget);
     let mut session_list = computed(SessionListWidget);
     let mut left_widgets: [&mut dyn StatusWidget; 2] = [&mut host, &mut session_list];
-    let status_left = render_widgets(&mut left_widgets, context, event)?;
+    let status_left = render_widgets(&mut left_widgets, context)?;
 
     let mut prefix = template(PrefixIndicatorWidget);
     let mut prefix_widgets: [&mut dyn StatusWidget; 1] = [&mut prefix];
-    let prefix_segment = render_widgets(&mut prefix_widgets, context, event)?;
+    let prefix_segment = render_widgets(&mut prefix_widgets, context)?;
 
     let mut fullscreen = template(FullscreenWidget);
     let mut window_id = template(WindowIdWidget);
-    let mut window_indicator_widgets: [&mut dyn StatusWidget; 2] = [&mut fullscreen, &mut window_id];
-    let window_indicator_segment = render_widgets(&mut window_indicator_widgets, context, event)?;
+    let mut window_indicator_widgets: [&mut dyn StatusWidget; 2] =
+        [&mut fullscreen, &mut window_id];
+    let window_indicator_segment = render_widgets(&mut window_indicator_widgets, context)?;
 
     let network = template(NetworkWidget).render(context)?;
     let cpu = template(CpuWidget).render(context)?;
@@ -78,7 +81,8 @@ pub fn render_status02(
         .saturating_add(display_width(&prefix_segment.literal_text));
     let metric_segment = responsive_metric_segment(&metrics, metric_base);
 
-    let status_right_body = concat_segments(&[&prefix_segment, &window_indicator_segment, &metric_segment]);
+    let status_right_body =
+        concat_segments(&[&prefix_segment, &window_indicator_segment, &metric_segment]);
     let status_right = RenderedSegment {
         literal_text: format!(" {}", status_right_body.literal_text),
         rich_text: format!("#[default] {}#[default]", status_right_body.rich_text),
@@ -98,15 +102,12 @@ pub fn render_status02(
         rich_text: format_current_format(&window_indicator_segment.rich_text),
     };
 
-    Ok((
-        RenderedStatus {
-            status_left,
-            status_right,
-            session_format,
-            current_format,
-        },
-        Vec::new(),
-    ))
+    Ok(RenderedStatus {
+        status_left,
+        status_right,
+        session_format,
+        current_format,
+    })
 }
 
 fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
@@ -205,7 +206,6 @@ fn escape_conditional_branch(rich: &str) -> String {
 fn render_widgets(
     widgets: &mut [&mut dyn StatusWidget],
     context: &RenderContext,
-    _event: &RenderEvent,
 ) -> AppResult<RenderedSegment> {
     let mut literal_text = String::new();
     let mut rich_text = String::new();
@@ -237,36 +237,49 @@ fn format_current_format(row_right: &str) -> String {
     )
 }
 
-/// Global STYLE cache: the four `@GHC_SL_STATUS02_*` templates plus the redraw
-/// interval. LAYOUT-instance values (rows, position, lengths, `@GHC_SL_LAYOUT`)
-/// are per-session now and checked by [`session_layouts_settled`].
+/// Full global STYLE witness: rendered templates, their `status-left` / `status-right`
+/// bindings, position, justification, and redraw interval. Per-session LAYOUT values
+/// (rows, lengths, `@GHC_SL_LAYOUT`) are checked by [`session_layouts_settled`].
 pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool {
-    context
-        .snapshot
-        .options
-        .get("@GHC_SL_STATUS02_LEFT")
-        .is_some_and(|value| value == &rendered.status_left.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("@GHC_SL_STATUS02_RIGHT")
-            .is_some_and(|value| value == &rendered.status_right.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("@GHC_SL_STATUS02_SESSION_FORMAT")
-            .is_some_and(|value| value == &rendered.session_format.rich_text)
-        && context
-            .snapshot
-            .options
-            .get("@GHC_SL_STATUS02_CURRENT_FORMAT")
-            .is_some_and(|value| value == &rendered.current_format.rich_text)
+    let options = &context.snapshot.options;
+    option_matches(
+        options,
+        "@GHC_SL_STATUS02_LEFT",
+        &rendered.status_left.rich_text,
+    ) && option_matches(
+        options,
+        "@GHC_SL_STATUS02_RIGHT",
+        &rendered.status_right.rich_text,
+    ) && option_matches(
+        options,
+        "@GHC_SL_STATUS02_SESSION_FORMAT",
+        &rendered.session_format.rich_text,
+    ) && option_matches(
+        options,
+        "@GHC_SL_STATUS02_CURRENT_FORMAT",
+        &rendered.current_format.rich_text,
+    ) && option_matches(options, STATUS_LEFT_OPTION, STATUS_LEFT_FORMAT)
+        && option_matches(options, STATUS_RIGHT_OPTION, STATUS_RIGHT_FORMAT)
+        && option_matches(
+            options,
+            STATUS_POSITION_OPTION,
+            context.layout.position.as_str(),
+        )
+        && option_matches(options, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE)
         // Prevent stale 20s redraw from being mistaken for a status02 no-op after cache convergence.
-        && context
-            .snapshot
-            .options
-            .get("status-interval")
-            .is_some_and(|value| value == STATUS_REDRAW_INTERVAL_SECONDS_STR)
+        && option_matches(
+            options,
+            STATUS_INTERVAL_OPTION,
+            STATUS_REDRAW_INTERVAL_SECONDS_STR,
+        )
+}
+
+fn option_matches(
+    options: &std::collections::BTreeMap<String, String>,
+    name: &str,
+    expected: &str,
+) -> bool {
+    options.get(name).is_some_and(|value| value == expected)
 }
 
 fn native_window_list_format() -> &'static str {
@@ -279,12 +292,17 @@ mod tests {
 
     use super::{
         RANK_CPU, RANK_DATE, RANK_DURATION, RANK_MEMORY, RANK_NETWORK, RANK_TIME, cache_matches,
-        escape_conditional_branch, format_current_format, render_status02, responsive_metric_segment,
+        escape_conditional_branch, format_current_format, render_status02,
+        responsive_metric_segment,
     };
-    use crate::config::STATUS_REDRAW_INTERVAL_SECONDS_STR;
+    use crate::config::{
+        STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE, STATUS_LEFT_FORMAT,
+        STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_REDRAW_INTERVAL_SECONDS_STR,
+        STATUS_RIGHT_FORMAT, STATUS_RIGHT_OPTION,
+    };
     use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderedSegment, RenderedStatus,
-        SessionGroupView, SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
+        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionGroupView,
+        SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
     };
 
     fn metric_seg(tag: &str) -> RenderedSegment {
@@ -409,9 +427,9 @@ mod tests {
 
     // The contract tests below lock the structural invariants of render_status02 —
     // row composition, shared sub-segment reuse, window-indicator routing, wrappers, metric
-    // order, and cache-write behavior. They deliberately assert structure (markers,
-    // ordering, presence/absence) rather than any color/style value, so intentional
-    // theme tweaks do not churn them; only a structural regression breaks them.
+    // order, and provider-dependent visibility. They deliberately assert structure
+    // (markers, ordering, presence/absence) rather than any color/style value, so
+    // intentional theme tweaks do not churn them; only a structural regression breaks them.
     //
     // Stable text markers come from Template widgets (fixed strings): window_id
     // `@00`, fullscreen `00/00`, time `00:00:00`. Dynamic metrics render as
@@ -420,7 +438,7 @@ mod tests {
     #[test]
     fn render_status02_composes_row0_as_left_then_shared_right() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
+        let rendered = render_status02(&context, true).unwrap();
 
         // session_format is literally status_left ++ row0_right, so status_left is a
         // prefix of it. This locks the line 65-72 composition.
@@ -435,7 +453,7 @@ mod tests {
     #[test]
     fn render_status02_shares_metric_tail_across_both_rows() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
+        let rendered = render_status02(&context, true).unwrap();
 
         // Associativity witness: the metric block is rendered once and is the tail of
         // both the status_right body and the session row0_right, with each appending
@@ -467,7 +485,7 @@ mod tests {
     #[test]
     fn render_status02_routes_window_indicators_into_status_right_only() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
+        let rendered = render_status02(&context, true).unwrap();
 
         // The window indicators (fullscreen + window_id) belong to status_right and the
         // per-session current_format, never to the session row (row0_right = prefix +
@@ -481,7 +499,7 @@ mod tests {
     #[test]
     fn render_status02_wraps_rows_with_default_and_align() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
+        let rendered = render_status02(&context, true).unwrap();
 
         assert!(rendered.status_right.rich_text.starts_with("#[default] "));
         assert!(rendered.status_right.rich_text.ends_with("#[default]"));
@@ -494,7 +512,7 @@ mod tests {
     #[test]
     fn render_status02_orders_metrics_left_to_right() {
         let context = contract_context();
-        let (rendered, _) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
+        let rendered = render_status02(&context, true).unwrap();
         let rich = &rendered.status_right.rich_text;
 
         // Intended metric order: network, cpu, memory, duration, date, time. Keyed on
@@ -516,21 +534,9 @@ mod tests {
     }
 
     #[test]
-    fn render_status02_writes_no_cache_options_for_sampler_metrics() {
-        let context = contract_context();
-        let (_, cache_options) = render_status02(&context, &RenderEvent::manual_apply(), true).unwrap();
-
-        // Dynamic metrics are sampler-owned indirect options; render never writes
-        // metric cache options. This underpins the noop short-circuit in
-        // StatusRuntime::apply (cache_options.is_empty()).
-        assert!(cache_options.is_empty());
-    }
-
-    #[test]
     fn render_status02_omits_metric_pills_without_provider() {
         let context = contract_context();
-        let (rendered, _) =
-            render_status02(&context, &RenderEvent::manual_apply(), false).unwrap();
+        let rendered = render_status02(&context, false).unwrap();
         let rich = &rendered.status_right.rich_text;
 
         // No metrics provider ⇒ network/cpu/memory pills are dropped, but the
@@ -587,28 +593,7 @@ mod tests {
     #[test]
     fn cache_matches_on_global_style_and_interval() {
         let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(BTreeMap::from([
-            (
-                "@GHC_SL_STATUS02_LEFT".to_string(),
-                status.status_left.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_RIGHT".to_string(),
-                status.status_right.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-                status.session_format.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-                status.current_format.rich_text.clone(),
-            ),
-            (
-                "status-interval".to_string(),
-                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
-            ),
-        ]));
+        let context = context_with_options(settled_global_options(&status));
 
         assert!(cache_matches(&context, &status));
     }
@@ -616,27 +601,19 @@ mod tests {
     #[test]
     fn cache_misses_when_status_interval_is_stale() {
         let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(BTreeMap::from([
-            (
-                "@GHC_SL_STATUS02_LEFT".to_string(),
-                status.status_left.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_RIGHT".to_string(),
-                status.status_right.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-                status.session_format.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-                status.current_format.rich_text.clone(),
-            ),
-            ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
-            ("status-left-length".to_string(), "70".to_string()),
-            ("status-interval".to_string(), "20".to_string()),
-        ]));
+        let mut options = settled_global_options(&status);
+        options.insert(STATUS_INTERVAL_OPTION.to_string(), "20".to_string());
+        let context = context_with_options(options);
+
+        assert!(!cache_matches(&context, &status));
+    }
+
+    #[test]
+    fn cache_misses_when_owned_global_style_drifted() {
+        let status = rendered_status(&"x".repeat(68));
+        let mut options = settled_global_options(&status);
+        options.insert(STATUS_LEFT_OPTION.to_string(), "drifted".to_string());
+        let context = context_with_options(options);
 
         assert!(!cache_matches(&context, &status));
     }
@@ -652,6 +629,44 @@ mod tests {
             session_format: segment.clone(),
             current_format: segment,
         }
+    }
+
+    fn settled_global_options(status: &RenderedStatus) -> BTreeMap<String, String> {
+        BTreeMap::from([
+            (
+                "@GHC_SL_STATUS02_LEFT".to_string(),
+                status.status_left.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_RIGHT".to_string(),
+                status.status_right.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
+                status.session_format.rich_text.clone(),
+            ),
+            (
+                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
+                status.current_format.rich_text.clone(),
+            ),
+            (
+                STATUS_LEFT_OPTION.to_string(),
+                STATUS_LEFT_FORMAT.to_string(),
+            ),
+            (
+                STATUS_RIGHT_OPTION.to_string(),
+                STATUS_RIGHT_FORMAT.to_string(),
+            ),
+            (STATUS_POSITION_OPTION.to_string(), "top".to_string()),
+            (
+                STATUS_JUSTIFY_OPTION.to_string(),
+                STATUS_JUSTIFY_VALUE.to_string(),
+            ),
+            (
+                STATUS_INTERVAL_OPTION.to_string(),
+                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
+            ),
+        ])
     }
 
     fn context_with_options(options: BTreeMap<String, String>) -> RenderContext {

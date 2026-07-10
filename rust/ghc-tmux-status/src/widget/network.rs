@@ -1,5 +1,5 @@
 use crate::error::AppResult;
-use crate::metric::{NetworkSample, NetworkSnapshot, provider_for_current_platform};
+use crate::metric::{NetworkSample, NetworkSnapshot};
 use crate::model::{RenderContext, RenderedSegment};
 use crate::status_widget::TemplateWidget;
 use crate::widget::pill::pill_literal;
@@ -19,14 +19,6 @@ impl TemplateWidget for NetworkWidget {
             rich_text,
         })
     }
-}
-
-pub fn sample_network(
-    interface: Option<&str>,
-    previous: Option<&NetworkSnapshot>,
-) -> AppResult<NetworkSnapshot> {
-    provider_for_current_platform(interface)
-        .sample_network(previous.map(|snapshot| &snapshot.sample))
 }
 
 pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {

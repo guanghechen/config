@@ -15,6 +15,13 @@ impl SessionGrouper {
             sessions,
         }
     }
+
+    pub fn count(current_session_name: &str, sessions: &[SessionInfo]) -> usize {
+        sessions
+            .iter()
+            .filter(|session| same_session_group(current_session_name, &session.name))
+            .count()
+    }
 }
 
 pub fn same_session_group(current_session_name: &str, session_name: &str) -> bool {
@@ -27,7 +34,7 @@ pub fn same_session_group(current_session_name: &str, session_name: &str) -> boo
     }
 
     if let Some(group_id) = grouped_session_id(current_session_name) {
-        return session_name.starts_with(&format!("G{group_id}-"));
+        return grouped_session_id(session_name) == Some(group_id);
     }
 
     if session_name.starts_with("_popup@") {
@@ -65,7 +72,8 @@ fn grouped_session_id(session_name: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
-    use super::same_session_group;
+    use super::{SessionGrouper, same_session_group};
+    use crate::model::SessionInfo;
 
     #[test]
     fn popup_sessions_are_grouped_together() {
@@ -91,5 +99,25 @@ mod tests {
         assert!(!same_session_group("main", "G1-work"));
         assert!(!same_session_group("main", "_popup@a"));
         assert!(!same_session_group("main", "gemini-abcdef"));
+    }
+
+    #[test]
+    fn counts_without_building_a_group_view() {
+        let sessions = ["main", "work", "G1-build"]
+            .into_iter()
+            .enumerate()
+            .map(|(index, name)| SessionInfo {
+                id: format!("${index}"),
+                name: name.to_string(),
+                has_bell: false,
+                status: "on".to_string(),
+                layout_key: String::new(),
+                left_length: String::new(),
+                right_length: String::new(),
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(SessionGrouper::count("main", &sessions), 2);
+        assert_eq!(SessionGrouper::count("G1-test", &sessions), 1);
     }
 }
