@@ -2,11 +2,53 @@ import { useStateValue } from '@guanghechen/react-viewmodel'
 import type { Heading, Root } from '@yozora/ast'
 import type { IHeadingToc, IHeadingTocNode } from '@yozora/ast-util'
 import cn from 'clsx'
-import throttle from 'lodash.throttle'
 import React from 'react'
 import { NodesRenderer, ReactMarkdown, useMarkdownAst } from '@/container/markdown'
 import { ReactMarkdownContent } from '@/container/markdown/ReactMarkdownContent'
 import { useMarkdownViewViewModel } from '../context'
+
+interface IHeadingPosition {
+  readonly identifier: string
+  readonly element: HTMLElement
+  top: number
+}
+
+type IScrollContainer = HTMLElement | Window
+
+const TOC_ACTIVATION_VIEWPORT_OFFSET = 48
+
+const isElementScrollContainer = (container: IScrollContainer): container is HTMLElement =>
+  container instanceof HTMLElement
+
+const resolveScrollContainer = (element: HTMLElement): IScrollContainer => {
+  let current: HTMLElement | null = element.parentElement
+  while (current) {
+    const { overflowY } = window.getComputedStyle(current)
+    if (overflowY === 'auto' || overflowY === 'scroll') return current
+    current = current.parentElement
+  }
+  return window
+}
+
+const getScrollTop = (container: IScrollContainer): number =>
+  isElementScrollContainer(container) ? container.scrollTop : window.scrollY
+
+const getScrollViewportTop = (container: IScrollContainer): number =>
+  isElementScrollContainer(container) ? container.getBoundingClientRect().top : 0
+
+const findActivatedIdentifier = (
+  headings: ReadonlyArray<IHeadingPosition>,
+  boundary: number,
+): string | null => {
+  let low = 0
+  let high = headings.length
+  while (low < high) {
+    const middle = low + ((high - low) >> 1)
+    if (headings[middle].top < boundary) low = middle + 1
+    else high = middle
+  }
+  return headings[low]?.identifier ?? null
+}
 
 export const ContentPane: React.FC = () => {
   const viewmodel = useMarkdownViewViewModel()
@@ -52,17 +94,20 @@ export const ContentPane: React.FC = () => {
     const contentContainer: HTMLDivElement | null = containerRef.current
     if (!contentContainer || !toc) return
 
-    const scrollContainer: HTMLElement =
-      (contentContainer.closest('.vlm-pane') as HTMLElement | null) ?? contentContainer
+    const scrollContainer = resolveScrollContainer(contentContainer)
 
-    const identifiers: Array<[string, HTMLElement]> = []
+    const headings: IHeadingPosition[] = []
     const collect = (item: IHeadingTocNode): void => {
       const identifier: string = encodeURIComponent(item.identifier)
       const element: HTMLElement | null = document.getElementById(identifier)
-      if (element) identifiers.push([item.identifier, element])
+      if (element) headings.push({ identifier: item.identifier, element, top: 0 })
       for (const child of item.children) collect(child)
     }
     for (const child of toc.children) collect(child)
+
+    let scrollViewportTop = 0
+    let animationFrame: number | null = null
+    let measurementPending = false
 
     const flushSpecifiedActivation = (): void => {
       const specifiedTocIdentifier: string | null =
@@ -83,14 +128,9 @@ export const ContentPane: React.FC = () => {
     }
 
     const updateActivatedIdentifier = (): void => {
-      const viewportTopOffset: number = 48
-      let nextTocActivatedIdentifier: string | null = null
-      for (const [identifier, element] of identifiers) {
-        if (element.getBoundingClientRect().top >= viewportTopOffset) {
-          nextTocActivatedIdentifier = identifier
-          break
-        }
-      }
+      const boundary =
+        getScrollTop(scrollContainer) + TOC_ACTIVATION_VIEWPORT_OFFSET - scrollViewportTop
+      const nextTocActivatedIdentifier = findActivatedIdentifier(headings, boundary)
 
       if (lastActivatedIdentifierRef.current !== nextTocActivatedIdentifier) {
         lastActivatedIdentifierRef.current = nextTocActivatedIdentifier
@@ -100,16 +140,38 @@ export const ContentPane: React.FC = () => {
       scheduleSpecifiedActivation()
     }
 
-    const onScroll = throttle(updateActivatedIdentifier, 120, {
-      leading: true,
-      trailing: true,
-    })
+    const flushUpdate = (): void => {
+      animationFrame = null
+      if (measurementPending) {
+        measurementPending = false
+        const scrollTop = getScrollTop(scrollContainer)
+        scrollViewportTop = getScrollViewportTop(scrollContainer)
+        for (const heading of headings) {
+          heading.top = heading.element.getBoundingClientRect().top - scrollViewportTop + scrollTop
+        }
+      }
+      updateActivatedIdentifier()
+    }
 
-    updateActivatedIdentifier()
+    const scheduleUpdate = (measure: boolean): void => {
+      if (measure) measurementPending = true
+      if (animationFrame === null) animationFrame = requestAnimationFrame(flushUpdate)
+    }
+
+    const onScroll = (): void => scheduleUpdate(false)
+    const onResize = (): void => scheduleUpdate(true)
+    const resizeObserver = new ResizeObserver(onResize)
+    resizeObserver.observe(contentContainer)
+    if (isElementScrollContainer(scrollContainer)) resizeObserver.observe(scrollContainer)
+
+    scheduleUpdate(true)
     scrollContainer.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize, { passive: true })
     return () => {
       scrollContainer.removeEventListener('scroll', onScroll)
-      onScroll.cancel()
+      window.removeEventListener('resize', onResize)
+      resizeObserver.disconnect()
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame)
       if (timerRef.current) {
         clearTimeout(timerRef.current)
         timerRef.current = null

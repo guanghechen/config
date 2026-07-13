@@ -14,6 +14,11 @@ interface IState {
   readonly expanded: boolean
 }
 
+const containsIdentifier = (item: IHeadingTocNode, identifier: string | null): boolean =>
+  identifier !== null &&
+  (item.identifier === identifier ||
+    item.children.some(child => containsIdentifier(child, identifier)))
+
 export class MarkdownTocItem extends React.Component<IProps, IState> {
   public static displayName: string = 'MarkdownTocItem'
 
@@ -99,11 +104,17 @@ export class MarkdownTocItem extends React.Component<IProps, IState> {
     if (state.expanded !== nextState.expanded) return true
 
     const props: IProps = this.props
-    return (
+    if (
       props.item !== nextProps.item ||
       props.depth !== nextProps.depth ||
-      props.activatedIdentifier !== nextProps.activatedIdentifier ||
       props.setActivatedIdentifier !== nextProps.setActivatedIdentifier
+    )
+      return true
+
+    if (props.activatedIdentifier === nextProps.activatedIdentifier) return false
+    return (
+      containsIdentifier(props.item, props.activatedIdentifier) ||
+      containsIdentifier(props.item, nextProps.activatedIdentifier)
     )
   }
 
