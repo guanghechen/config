@@ -16,10 +16,20 @@ const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
 const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
-// The last item always pads one trailing cell so status-left-length stays constant no
-// matter which client is on which session (the active state is decided per-client at
-// redraw, so the literal width shadow must not depend on it).
+// The last item always pads one trailing cell so status-left-length stays constant
+// across the session-owned active variants.
 const LAST_RANGE_CLOSE: &str = "#[default]#[norange] #[default]";
+const LAST_ITEM_CLOSE: &str = "#[default] #[default]";
+
+// A status-left cache is embedded in a guarded tmux command. Keep the rendered
+// session-list payload comfortably below tmux's parser limit, leaving headroom
+// for the host segment, cache witness, command syntax, and quoting.
+const MAX_SESSION_LIST_RICH_BYTES: usize = 10 * 1024;
+// Session names are user-controlled. Bound their format-expanded representation
+// so one pathological name cannot consume the entire list budget.
+const MAX_SESSION_NAME_FORMAT_BYTES: usize = 96;
+const DISPLAY_LITERAL_WRAPPER_BYTES: usize = "#{l:}".len();
+const OVERFLOW_LITERAL: &str = " … ";
 
 // This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
 // uses literal_text as a tmux-width shadow, so update it with the rich item shape.
@@ -34,49 +44,118 @@ impl ComputedWidget for SessionListWidget {
     }
 }
 
-/// Rebuilds from the session snapshot. The active session and the last-focus marker are
-/// per-client facts, so they are emitted as tmux conditionals keyed on `#{session_id}` /
-/// `#{client_last_session}` rather than baked from one client's viewpoint: a single shared
-/// option then renders correctly for every attached client at its own status redraw.
+/// Rebuilds one session-owned cache from the snapshot. Active styling is baked for
+/// that cache's owning session, which keeps large groups below tmux's command parser
+/// limit. The last-focus marker remains per-client because clients attached to the
+/// same session can still have different navigation history.
 fn render_session_list(context: &RenderContext) -> RenderedSegment {
     if context.group.sessions.is_empty() {
         return RenderedSegment::empty();
     }
 
+    let current_offset = context
+        .group
+        .sessions
+        .iter()
+        .position(|session| session.name == context.group.current_session_name)
+        .unwrap_or_default();
+    let mut start = current_offset;
+    let mut end = current_offset + 1;
+    let mut rendered = render_session_window(context, start, end);
+
+    loop {
+        let left = (start > 0)
+            .then(|| render_session_window(context, start - 1, end))
+            .filter(|candidate| candidate.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+        let right = (end < context.group.sessions.len())
+            .then(|| render_session_window(context, start, end + 1))
+            .filter(|candidate| candidate.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+
+        match (left, right) {
+            (Some(left), Some(right)) => {
+                let left_count = current_offset - start;
+                let right_count = end - current_offset - 1;
+                if left_count <= right_count {
+                    start -= 1;
+                    rendered = left;
+                } else {
+                    end += 1;
+                    rendered = right;
+                }
+            }
+            (Some(left), None) => {
+                start -= 1;
+                rendered = left;
+            }
+            (None, Some(right)) => {
+                end += 1;
+                rendered = right;
+            }
+            (None, None) => break,
+        }
+    }
+
+    debug_assert!(rendered.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+    rendered
+}
+
+fn render_session_window(context: &RenderContext, start: usize, end: usize) -> RenderedSegment {
     let mut literal_text = String::new();
     let mut rich_text = String::new();
     let session_count = context.group.sessions.len();
-    let mut previous_id: Option<&str> = None;
-    for (offset, session) in context.group.sessions.iter().enumerate() {
-        let index = offset + 1;
-        let is_last = index == session_count;
+    let entry_count = end - start + usize::from(start > 0) + usize::from(end < session_count);
+    let mut entry_offset = 0;
+    let mut previous_active: Option<bool> = None;
+
+    if start > 0 {
+        push_overflow_item(
+            &mut literal_text,
+            &mut rich_text,
+            previous_active,
+            entry_offset + 1 == entry_count,
+        );
+        previous_active = Some(false);
+        entry_offset += 1;
+    }
+
+    for (offset, session) in context.group.sessions[start..end].iter().enumerate() {
+        let index = start + offset + 1;
+        let is_last = entry_offset + 1 == entry_count;
+        let is_active = session.name == context.group.current_session_name;
+        let (display_name, name_was_truncated) = bounded_session_name(&session.name);
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
         literal_text.push(ARROW_LITERAL);
-        match previous_id {
-            Some(left_id) => rich_text.push_str(&render_join_separator(left_id, &session.id)),
-            None => rich_text.push_str(&render_left_edge(&session.id)),
+        match previous_active {
+            Some(left_active) => rich_text.push_str(&render_join_separator(left_active, is_active)),
+            None => rich_text.push_str(&render_left_edge(is_active)),
         }
         literal_text.push_str(&render_item_body_literal(
-            &session.name,
+            &display_name,
             index,
             session.has_bell,
         ));
-        rich_text.push_str(&render_item_body(
-            &session.name,
+        rich_text.push_str(&render_item_body_with_last_focus(
+            &display_name,
             index,
             session.has_bell,
-            &session.id,
+            is_active,
+            (!name_was_truncated).then_some(session.name.as_str()),
         ));
         if is_last {
             literal_text.push(ARROW_LITERAL);
             literal_text.push(' ');
-            rich_text.push_str(&render_right_edge(&session.id));
+            rich_text.push_str(&render_right_edge(is_active));
             rich_text.push_str(LAST_RANGE_CLOSE);
         } else {
             rich_text.push_str(RANGE_CLOSE);
         }
-        previous_id = Some(&session.id);
+        previous_active = Some(is_active);
+        entry_offset += 1;
+    }
+
+    if end < session_count {
+        push_overflow_item(&mut literal_text, &mut rich_text, previous_active, true);
     }
 
     RenderedSegment {
@@ -85,20 +164,69 @@ fn render_session_list(context: &RenderContext) -> RenderedSegment {
     }
 }
 
-/// `1` for the client whose current session is this item, `0` otherwise. Keyed on the
-/// stable session id (not the name) so duplicate session names cannot alias.
-fn active_condition(session_id: &str) -> String {
-    format!("#{{==:#{{session_id}},{session_id}}}")
+fn push_overflow_item(
+    literal_text: &mut String,
+    rich_text: &mut String,
+    previous_active: Option<bool>,
+    is_last: bool,
+) {
+    literal_text.push(ARROW_LITERAL);
+    match previous_active {
+        Some(left_active) => rich_text.push_str(&render_join_separator(left_active, false)),
+        None => rich_text.push_str(&render_left_edge(false)),
+    }
+    literal_text.push_str(OVERFLOW_LITERAL);
+    rich_text.push_str(&format!(
+        "#[fg={INACTIVE_NAME_FG}#,bg={INACTIVE_NAME_BG}] … #[fg={INACTIVE_NUM_FG}#,bg={INACTIVE_NUM_BG}]"
+    ));
+    if is_last {
+        literal_text.push(ARROW_LITERAL);
+        literal_text.push(' ');
+        rich_text.push_str(&render_right_edge(false));
+        rich_text.push_str(LAST_ITEM_CLOSE);
+    }
 }
 
-/// `cond ? active : inactive`, written as a tmux `#{?...}` so only the selected branch is
-/// expanded at redraw (style commas inside the branches stay escaped as `#,`).
-fn conditional(cond: &str, active: &str, inactive: &str) -> String {
-    format!("#{{?{cond},{active},{inactive}}}")
+fn bounded_session_name(session_name: &str) -> (String, bool) {
+    let body_budget = MAX_SESSION_NAME_FORMAT_BYTES - DISPLAY_LITERAL_WRAPPER_BYTES;
+    let ellipsis_bytes = '…'.len_utf8();
+    let mut display_name = String::new();
+    let mut rendered_bytes = 0;
+    let mut truncated = false;
+
+    for character in session_name.chars() {
+        let character_bytes = display_literal_character_bytes(character);
+        if rendered_bytes + character_bytes > body_budget {
+            truncated = true;
+            break;
+        }
+        display_name.push(character);
+        rendered_bytes += character_bytes;
+    }
+
+    if truncated {
+        while rendered_bytes + ellipsis_bytes > body_budget {
+            let character = display_name
+                .pop()
+                .expect("session-name budget always fits an ellipsis");
+            rendered_bytes -= display_literal_character_bytes(character);
+        }
+        display_name.push('…');
+    }
+
+    (display_name, truncated)
+}
+
+fn display_literal_character_bytes(character: char) -> usize {
+    match character {
+        '#' => 4,
+        '}' => 2,
+        _ => character.len_utf8(),
+    }
 }
 
 /// Inactive foreground: orange last-focus ink when this item is the client's
-/// `client_last_session`, otherwise the base item ink. Per-client like the active state.
+/// `client_last_session`, otherwise the base item ink.
 /// The compared name is a literal so a `,`/`#`/`}` in it cannot split the surrounding DSL.
 fn last_focus_fg(session_name: &str, base_fg: &str) -> String {
     let name = compare_literal(session_name);
@@ -131,28 +259,42 @@ fn render_arrow(fg: &str, bg: &str) -> String {
     format!("#[fg={fg}#,bg={bg}]#{{@GHC_SEP_ARROW_RIGHT}}")
 }
 
-fn render_left_edge(first_session_id: &str) -> String {
+fn render_left_edge(first_active: bool) -> String {
     // The orange host segment points its ">" arrow into the first item: ink = host pill
-    // color, bg = the item color (active or name bg, decided per-client).
-    let bg = conditional(
-        &active_condition(first_session_id),
-        ACTIVE_BG,
-        INACTIVE_NAME_BG,
-    );
-    render_arrow(FIRST_ITEM_ARROW_FG, &bg)
+    // color, bg = the owning session's statically selected item color.
+    render_arrow(
+        FIRST_ITEM_ARROW_FG,
+        if first_active {
+            ACTIVE_BG
+        } else {
+            INACTIVE_NAME_BG
+        },
+    )
 }
 
-fn render_join_separator(left_id: &str, right_id: &str) -> String {
+fn render_join_separator(left_active: bool, right_active: bool) -> String {
     // Powerline seam between two items: ink = left item's trailing (num) bg, bg = right
-    // item's leading (name) bg. Both sides depend on each item's per-client active state.
-    let fg = conditional(&active_condition(left_id), ACTIVE_BG, INACTIVE_NUM_BG);
-    let bg = conditional(&active_condition(right_id), ACTIVE_BG, INACTIVE_NAME_BG);
-    render_arrow(&fg, &bg)
+    // item's leading (name) bg.
+    let fg = if left_active {
+        ACTIVE_BG
+    } else {
+        INACTIVE_NUM_BG
+    };
+    let bg = if right_active {
+        ACTIVE_BG
+    } else {
+        INACTIVE_NAME_BG
+    };
+    render_arrow(fg, bg)
 }
 
-fn render_right_edge(last_id: &str) -> String {
-    let fg = conditional(&active_condition(last_id), ACTIVE_BG, INACTIVE_NUM_BG);
-    render_arrow(&fg, LIST_SURFACE_BG)
+fn render_right_edge(last_active: bool) -> String {
+    let fg = if last_active {
+        ACTIVE_BG
+    } else {
+        INACTIVE_NUM_BG
+    };
+    render_arrow(fg, LIST_SURFACE_BG)
 }
 
 fn render_item_body_literal(session_name: &str, index: usize, has_bell: bool) -> String {
@@ -165,12 +307,17 @@ fn render_item_body_literal(session_name: &str, index: usize, has_bell: bool) ->
     format!(" {session_name}  {index} ")
 }
 
-fn render_item_body(session_name: &str, index: usize, has_bell: bool, session_id: &str) -> String {
-    conditional(
-        &active_condition(session_id),
-        &active_item_body(session_name, index, has_bell),
-        &inactive_item_body(session_name, index, has_bell),
-    )
+fn render_item_body_with_last_focus(
+    session_name: &str,
+    index: usize,
+    has_bell: bool,
+    is_active: bool,
+    last_focus_session_name: Option<&str>,
+) -> String {
+    if is_active {
+        return active_item_body(session_name, index, has_bell);
+    }
+    inactive_item_body_with_last_focus(session_name, index, has_bell, last_focus_session_name)
 }
 
 fn active_item_body(session_name: &str, index: usize, has_bell: bool) -> String {
@@ -184,9 +331,20 @@ fn active_item_body(session_name: &str, index: usize, has_bell: bool) -> String 
     format!("#[fg={ACTIVE_FG}#,bg={ACTIVE_BG}#,bold] {name} | {index} ")
 }
 
-fn inactive_item_body(session_name: &str, index: usize, has_bell: bool) -> String {
-    let name_fg = last_focus_fg(session_name, INACTIVE_NAME_FG);
-    let num_fg = last_focus_fg(session_name, INACTIVE_NUM_FG);
+fn inactive_item_body_with_last_focus(
+    session_name: &str,
+    index: usize,
+    has_bell: bool,
+    last_focus_session_name: Option<&str>,
+) -> String {
+    let name_fg = last_focus_session_name.map_or_else(
+        || INACTIVE_NAME_FG.to_string(),
+        |name| last_focus_fg(name, INACTIVE_NAME_FG),
+    );
+    let num_fg = last_focus_session_name.map_or_else(
+        || INACTIVE_NUM_FG.to_string(),
+        |name| last_focus_fg(name, INACTIVE_NUM_FG),
+    );
     let name = display_literal(session_name);
     if has_bell {
         return format!(
@@ -202,10 +360,12 @@ fn inactive_item_body(session_name: &str, index: usize, has_bell: bool) -> Strin
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::rc::Rc;
 
     use super::{
-        RenderedSegment, active_item_body, compare_literal, display_literal, inactive_item_body,
-        render_item_body, render_item_body_literal, render_join_separator, render_left_edge,
+        MAX_SESSION_LIST_RICH_BYTES, RenderedSegment, active_item_body, compare_literal,
+        display_literal, inactive_item_body_with_last_focus, render_item_body_literal,
+        render_item_body_with_last_focus, render_join_separator, render_left_edge,
         render_right_edge, render_session_list,
     };
     use crate::model::{
@@ -214,19 +374,15 @@ mod tests {
     };
 
     #[test]
-    fn item_body_is_a_per_client_conditional_on_session_id() {
-        let body = render_item_body("tmux", 2, false, "$2");
-        assert!(body.starts_with("#{?#{==:#{session_id},$2},"));
-        // Active branch colors.
-        assert!(body.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
-        assert!(body.contains("@GHC_SL_BG_SESSION_LIST_ACTIVE"));
-        // Inactive branch colors plus the per-client last-focus marker.
-        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
-        assert!(body.contains("@GHC_SL_BG_SESSION_ITEM_NAME"));
-        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_NUM"));
-        assert!(body.contains("@GHC_SL_BG_SESSION_ITEM_NUM"));
-        assert!(body.contains("#{==:#{client_last_session},#{l:tmux}}"));
-        assert!(body.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
+    fn item_body_bakes_the_owner_active_branch() {
+        let active = render_item_body_with_last_focus("tmux", 2, false, true, Some("tmux"));
+        assert!(active.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
+        assert!(!active.contains("client_last_session"));
+
+        let inactive = render_item_body_with_last_focus("tmux", 2, false, false, Some("tmux"));
+        assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
+        assert!(inactive.contains("#{==:#{client_last_session},#{l:tmux}}"));
+        assert!(!inactive.contains("#{session_id}"));
     }
 
     #[test]
@@ -241,7 +397,7 @@ mod tests {
 
     #[test]
     fn inactive_branch_splits_name_and_number_with_last_focus_fg() {
-        let inactive = inactive_item_body("dev", 2, false);
+        let inactive = inactive_item_body_with_last_focus("dev", 2, false, Some("dev"));
         assert_eq!(
             inactive,
             "#[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}] #{l:dev} #[fg=#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NUM}}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NUM}] 2 "
@@ -258,7 +414,7 @@ mod tests {
 
     #[test]
     fn inactive_branch_with_bell_renders_bell_without_pipe() {
-        let inactive = inactive_item_body("dev", 2, true);
+        let inactive = inactive_item_body_with_last_focus("dev", 2, true, Some("dev"));
         assert!(inactive.contains("@GHC_SYM_WIN_BELL"));
         assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
         assert!(inactive.contains(" #{l:dev} "));
@@ -293,33 +449,33 @@ mod tests {
         // Display text takes the draw-safe (quadrupled) form in both branches...
         let active = active_item_body("a#b", 1, false);
         assert!(active.contains(" #{l:a####b} | 1 "));
-        let inactive = inactive_item_body("a#b", 1, false);
+        let inactive = inactive_item_body_with_last_focus("a#b", 1, false, Some("a#b"));
         assert!(inactive.contains(" #{l:a####b} "));
         // ...while the last-focus compare right-value keeps the expand-only (doubled) form.
         assert!(inactive.contains("#{==:#{client_last_session},#{l:a##b}}"));
     }
 
     #[test]
-    fn join_separator_keys_both_sides_on_session_id() {
+    fn join_separator_uses_baked_neighbor_states() {
         assert_eq!(
-            render_join_separator("$1", "$2"),
-            "#[fg=#{?#{==:#{session_id},$1},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=#{?#{==:#{session_id},$2},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NAME}}]#{@GHC_SEP_ARROW_RIGHT}"
+            render_join_separator(true, false),
+            "#[fg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}#,bg=#{@GHC_SL_BG_SESSION_ITEM_NAME}]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
     #[test]
-    fn left_edge_keys_first_item_background_on_session_id() {
+    fn left_edge_uses_baked_first_item_state() {
         assert_eq!(
-            render_left_edge("$1"),
-            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{?#{==:#{session_id},$1},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NAME}}]#{@GHC_SEP_ARROW_RIGHT}"
+            render_left_edge(true),
+            "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_BG_SESSION_LIST_ACTIVE}]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
     #[test]
-    fn right_edge_keys_last_item_ink_on_session_id_over_default_surface() {
+    fn right_edge_uses_baked_last_item_state() {
         assert_eq!(
-            render_right_edge("$2"),
-            "#[fg=#{?#{==:#{session_id},$2},#{@GHC_SL_BG_SESSION_LIST_ACTIVE},#{@GHC_SL_BG_SESSION_ITEM_NUM}}#,bg=default]#{@GHC_SEP_ARROW_RIGHT}"
+            render_right_edge(false),
+            "#[fg=#{@GHC_SL_BG_SESSION_ITEM_NUM}#,bg=default]#{@GHC_SEP_ARROW_RIGHT}"
         );
     }
 
@@ -335,10 +491,7 @@ mod tests {
     }
 
     #[test]
-    fn literal_and_rich_are_independent_of_current_session() {
-        // The whole point of the per-client conditional rewrite: one shared option string
-        // renders correctly for every client, so neither the rich text nor its width shadow
-        // may depend on which session is current at build time.
+    fn session_owned_rich_text_bakes_a_different_active_item() {
         let on_dev = render_session_list(&context_with_sessions(
             "dev",
             [("$1", "dev"), ("$2", "yui")],
@@ -349,7 +502,9 @@ mod tests {
         ));
 
         assert_eq!(on_dev.literal_text, on_yui.literal_text);
-        assert_eq!(on_dev.rich_text, on_yui.rich_text);
+        assert_ne!(on_dev.rich_text, on_yui.rich_text);
+        assert!(on_dev.rich_text.contains("#{l:dev} | 1"));
+        assert!(on_yui.rich_text.contains("#{l:yui} | 2"));
     }
 
     #[test]
@@ -406,6 +561,72 @@ mod tests {
         );
     }
 
+    #[test]
+    fn session_owned_cache_stays_bounded_and_keeps_current_global_index() {
+        let sessions = (1..=40)
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .collect();
+        let context = context_with_session_infos("s20", "", sessions);
+
+        let segment = render_session_list(&context);
+
+        assert!(
+            segment.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES,
+            "session list cache grew to {} bytes",
+            segment.rich_text.len()
+        );
+        assert!(segment.rich_text.contains("#{l:s20} | 20"));
+        assert!(segment.literal_text.starts_with("\u{e0b0} … "));
+        assert!(segment.literal_text.contains("… \u{e0b0} "));
+    }
+
+    #[test]
+    fn bounded_window_keeps_current_at_group_edges() {
+        let sessions = (1..=40)
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .collect::<Vec<_>>();
+
+        let first = render_session_list(&context_with_session_infos("s01", "", sessions.clone()));
+        let last = render_session_list(&context_with_session_infos("s40", "", sessions));
+
+        assert!(first.rich_text.contains("#{l:s01} | 1"));
+        assert!(last.rich_text.contains("#{l:s40} | 40"));
+        assert!(first.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+        assert!(last.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+    }
+
+    #[test]
+    fn oversized_current_session_name_is_truncated_to_budget() {
+        let long_name = "#".repeat(MAX_SESSION_LIST_RICH_BYTES * 2);
+        let context =
+            context_with_session_infos(&long_name, "", vec![session_info("$1", &long_name, false)]);
+
+        let segment = render_session_list(&context);
+
+        assert!(segment.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+        assert!(segment.literal_text.contains('…'));
+        assert!(!segment.rich_text.contains(&long_name));
+    }
+
+    #[test]
+    fn oversized_inactive_name_drops_full_last_focus_comparison() {
+        let long_name = "#".repeat(MAX_SESSION_LIST_RICH_BYTES * 2);
+        let context = context_with_session_infos(
+            "main",
+            &long_name,
+            vec![
+                session_info("$1", "main", false),
+                session_info("$2", &long_name, false),
+            ],
+        );
+
+        let segment = render_session_list(&context);
+
+        assert!(segment.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
+        assert!(segment.literal_text.contains('…'));
+        assert!(!segment.rich_text.contains("client_last_session"));
+    }
+
     fn context_with_sessions<const N: usize>(
         current_session_name: &str,
         sessions: [(&str, &str); N],
@@ -428,19 +649,19 @@ mod tests {
     ) -> RenderContext {
         let sessions = sessions
             .into_iter()
-            .map(|(id, name, has_bell)| SessionInfo {
-                id: id.to_string(),
-                name: name.to_string(),
-                has_bell,
-                status: "on".to_string(),
-                layout_key: String::new(),
-                left_length: String::new(),
-                right_length: String::new(),
-            })
+            .map(|(id, name, has_bell)| session_info(id, name, has_bell))
             .collect::<Vec<_>>();
 
+        context_with_session_infos(current_session_name, client_last_session, sessions)
+    }
+
+    fn context_with_session_infos(
+        current_session_name: &str,
+        client_last_session: &str,
+        sessions: Vec<SessionInfo>,
+    ) -> RenderContext {
         RenderContext {
-            snapshot: TmuxSnapshot {
+            snapshot: Rc::new(TmuxSnapshot {
                 mode: "02".to_string(),
                 status: "on".to_string(),
                 width: 200,
@@ -451,7 +672,7 @@ mod tests {
                 sessions: sessions.clone(),
                 client_widths: Vec::new(),
                 options: BTreeMap::new(),
-            },
+            }),
             group: SessionGroupView {
                 current_session_name: current_session_name.to_string(),
                 sessions,
@@ -464,7 +685,25 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            render_session_created: 1,
             session_layouts: Vec::new(),
+        }
+    }
+
+    fn session_info(id: &str, name: &str, has_bell: bool) -> SessionInfo {
+        SessionInfo {
+            id: id.to_string(),
+            name: name.to_string(),
+            has_bell,
+            status: "on".to_string(),
+            layout_key: String::new(),
+            left_length: String::new(),
+            right_length: String::new(),
+            format_0: String::new(),
+            format_1: String::new(),
+            render_key: String::new(),
+            cache_witnesses: std::array::from_fn(|_| String::new()),
+            created: 1,
         }
     }
 }

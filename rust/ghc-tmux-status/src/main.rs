@@ -11,6 +11,7 @@ mod metric;
 mod model;
 mod observability;
 mod platform;
+mod process;
 mod runtime;
 mod session;
 mod status_length;

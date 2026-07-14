@@ -8,6 +8,7 @@ pub enum AppError {
     TmuxCommand { command: String, stderr: String },
     TmuxParse(String),
     Render(String),
+    CommandTimeout { command: String, timeout_ms: u128 },
     Io(std::io::Error),
 }
 
@@ -20,6 +21,13 @@ impl Display for AppError {
             }
             Self::TmuxParse(message) => write!(formatter, "tmux parse failed: {message}"),
             Self::Render(message) => write!(formatter, "render failed: {message}"),
+            Self::CommandTimeout {
+                command,
+                timeout_ms,
+            } => write!(
+                formatter,
+                "command timed out after {timeout_ms}ms: {command}"
+            ),
             Self::Io(error) => write!(formatter, "io failed: {error}"),
         }
     }

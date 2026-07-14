@@ -222,6 +222,9 @@ final row cache：
 @GHC_SL_LAYOUT
 ```
 
+`@GHC_SL_STATUS02_SESSION_FORMAT` 只保存 narrow row 0 的右侧 fragment；左侧通过
+`@GHC_SL_STATUS02_LEFT` 间接组合，避免在每个 session cache 中复制完整 session list。
+
 规则：
 
 - component cache 是 single-slot bounded payload。
@@ -304,7 +307,7 @@ status       = on
 narrow：
 
 ```text
-status-format[0] = @GHC_SL_STATUS02_SESSION_FORMAT
+status-format[0] = @GHC_SL_STATUS02_LEFT + @GHC_SL_STATUS02_SESSION_FORMAT
 status-format[1] = @GHC_SL_STATUS02_CURRENT_FORMAT
 status           = 2
 ```

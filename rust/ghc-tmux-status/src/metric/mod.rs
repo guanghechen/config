@@ -33,6 +33,8 @@ pub struct NetworkSample {
     pub timestamp_seconds: u64,
     pub rx_bytes: u64,
     pub tx_bytes: u64,
+    /// Counter owner. A baseline from another interface must never be diffed.
+    pub interface: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -43,9 +45,10 @@ pub struct NetworkSnapshot {
 }
 
 /// Read-only sampling boundary. `StatusRuntime` creates one provider per sampler tick
-/// and remains the single writer of tmux metric state. Providers do not retry or impose
-/// their own timeout; each method returns `AppError`, and the runtime degrades that metric
-/// independently before publishing available values and rescheduling in one tmux invocation.
+/// and remains the single writer of tmux metric state. Providers do not retry; external
+/// commands use the shared bounded process runner. Each method returns `AppError`, and the
+/// runtime degrades that metric independently before publishing available values and
+/// rescheduling in one tmux invocation.
 pub trait MetricsProvider {
     fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot>;
     fn sample_memory(&self) -> AppResult<MemorySnapshot>;

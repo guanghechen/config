@@ -77,7 +77,7 @@ function _ghc_tmux_status_layout_ {
       set -g status-justify centre \; \
       set -g status 2 \; \
       set status 2 \; \
-      set -g 'status-format[0]' '#{E:@GHC_SL_STATUS02_SESSION_FORMAT}' \; \
+      set -g 'status-format[0]' '#[default]#[align=left]#{E:@GHC_SL_STATUS02_LEFT}#[align=right]#{E:@GHC_SL_STATUS02_SESSION_FORMAT}#[default]' \; \
       set -g 'status-format[1]' '#{E:@GHC_SL_STATUS02_CURRENT_FORMAT}'
   fi
 

@@ -1,8 +1,3 @@
-use crate::config::{
-    STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE, STATUS_LEFT_FORMAT,
-    STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_REDRAW_INTERVAL_SECONDS_STR,
-    STATUS_RIGHT_FORMAT, STATUS_RIGHT_OPTION,
-};
 use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment, RenderedStatus};
 use crate::status_widget::{StatusWidget, computed, template};
@@ -89,14 +84,6 @@ pub fn render_status02(
     };
 
     let row0_right = concat_segments(&[&prefix_segment, &metric_segment]);
-    let session_format = RenderedSegment {
-        literal_text: format!("{}{}", status_left.literal_text, row0_right.literal_text),
-        rich_text: format!(
-            "#[default]#[align=left]{}#[align=right]{}#[default]",
-            status_left.rich_text, row0_right.rich_text
-        ),
-    };
-
     let current_format = RenderedSegment {
         literal_text: window_indicator_segment.literal_text.clone(),
         rich_text: format_current_format(&window_indicator_segment.rich_text),
@@ -105,9 +92,41 @@ pub fn render_status02(
     Ok(RenderedStatus {
         status_left,
         status_right,
-        session_format,
+        session_right: row0_right,
         current_format,
     })
+}
+
+/// Stable, non-cryptographic witness for the four renderer-owned session cache
+/// options. Lengths are framed explicitly so different segment boundaries cannot
+/// alias. Bump the version when the ownership contract changes independently of
+/// the rendered strings.
+pub fn render_cache_key(status: &RenderedStatus) -> String {
+    const VERSION: u8 = 1;
+    const FNV_OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
+    const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
+
+    let mut hash = FNV_OFFSET_BASIS;
+    hash_byte(&mut hash, VERSION, FNV_PRIME);
+    for value in [
+        &status.status_left.rich_text,
+        &status.status_right.rich_text,
+        &status.session_right.rich_text,
+        &status.current_format.rich_text,
+    ] {
+        for byte in (value.len() as u64).to_le_bytes() {
+            hash_byte(&mut hash, byte, FNV_PRIME);
+        }
+        for &byte in value.as_bytes() {
+            hash_byte(&mut hash, byte, FNV_PRIME);
+        }
+    }
+    format!("v{VERSION}:{hash:016x}")
+}
+
+fn hash_byte(hash: &mut u64, byte: u8, prime: u64) {
+    *hash ^= u64::from(byte);
+    *hash = hash.wrapping_mul(prime);
 }
 
 fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
@@ -237,51 +256,6 @@ fn format_current_format(row_right: &str) -> String {
     )
 }
 
-/// Full global STYLE witness: rendered templates, their `status-left` / `status-right`
-/// bindings, position, justification, and redraw interval. Per-session LAYOUT values
-/// (rows, lengths, `@GHC_SL_LAYOUT`) are checked by [`session_layouts_settled`].
-pub fn cache_matches(context: &RenderContext, rendered: &RenderedStatus) -> bool {
-    let options = &context.snapshot.options;
-    option_matches(
-        options,
-        "@GHC_SL_STATUS02_LEFT",
-        &rendered.status_left.rich_text,
-    ) && option_matches(
-        options,
-        "@GHC_SL_STATUS02_RIGHT",
-        &rendered.status_right.rich_text,
-    ) && option_matches(
-        options,
-        "@GHC_SL_STATUS02_SESSION_FORMAT",
-        &rendered.session_format.rich_text,
-    ) && option_matches(
-        options,
-        "@GHC_SL_STATUS02_CURRENT_FORMAT",
-        &rendered.current_format.rich_text,
-    ) && option_matches(options, STATUS_LEFT_OPTION, STATUS_LEFT_FORMAT)
-        && option_matches(options, STATUS_RIGHT_OPTION, STATUS_RIGHT_FORMAT)
-        && option_matches(
-            options,
-            STATUS_POSITION_OPTION,
-            context.layout.position.as_str(),
-        )
-        && option_matches(options, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE)
-        // Prevent stale 20s redraw from being mistaken for a status02 no-op after cache convergence.
-        && option_matches(
-            options,
-            STATUS_INTERVAL_OPTION,
-            STATUS_REDRAW_INTERVAL_SECONDS_STR,
-        )
-}
-
-fn option_matches(
-    options: &std::collections::BTreeMap<String, String>,
-    name: &str,
-    expected: &str,
-) -> bool {
-    options.get(name).is_some_and(|value| value == expected)
-}
-
 fn native_window_list_format() -> &'static str {
     "#{W:#[range=window|#{window_index} #{E:window-status-style}#{?#{&&:#{window_last_flag},#{!=:#{E:window-status-last-style},default}}, #{E:window-status-last-style},}#{?#{&&:#{window_bell_flag},#{!=:#{E:window-status-bell-style},default}}, #{E:window-status-bell-style},#{?#{&&:#{||:#{window_activity_flag},#{window_silence_flag}},#{!=:#{E:window-status-activity-style},default}}, #{E:window-status-activity-style},}}]#[push-default]#{T:window-status-format}#[pop-default]#[norange default]#{?loop_last_flag,,#{window-status-separator}},#[range=window|#{window_index} list=focus #{?#{!=:#{E:window-status-current-style},default},#{E:window-status-current-style},#{E:window-status-style}}#{?#{&&:#{window_last_flag},#{!=:#{E:window-status-last-style},default}}, #{E:window-status-last-style},}#{?#{&&:#{window_bell_flag},#{!=:#{E:window-status-bell-style},default}}, #{E:window-status-bell-style},#{?#{&&:#{||:#{window_activity_flag},#{window_silence_flag}},#{!=:#{E:window-status-activity-style},default}}, #{E:window-status-activity-style},}}]#[push-default]#{T:window-status-current-format}#[pop-default]#[norange list=on default]#{?loop_last_flag,,#{window-status-separator}}}"
 }
@@ -289,17 +263,14 @@ fn native_window_list_format() -> &'static str {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::rc::Rc;
 
     use super::{
-        RANK_CPU, RANK_DATE, RANK_DURATION, RANK_MEMORY, RANK_NETWORK, RANK_TIME, cache_matches,
-        escape_conditional_branch, format_current_format, render_status02,
+        RANK_CPU, RANK_DATE, RANK_DURATION, RANK_MEMORY, RANK_NETWORK, RANK_TIME,
+        escape_conditional_branch, format_current_format, render_cache_key, render_status02,
         responsive_metric_segment,
     };
-    use crate::config::{
-        STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE, STATUS_LEFT_FORMAT,
-        STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_REDRAW_INTERVAL_SECONDS_STR,
-        STATUS_RIGHT_FORMAT, STATUS_RIGHT_OPTION,
-    };
+    use crate::config::STATUS_SESSION_FORMAT;
     use crate::model::{
         LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionGroupView,
         SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
@@ -311,6 +282,16 @@ mod tests {
             literal_text: tag.to_string(),
             rich_text: tag.to_string(),
         }
+    }
+
+    #[test]
+    fn render_cache_key_is_stable_and_content_sensitive() {
+        let first = rendered_status("same");
+        let mut changed = first.clone();
+        changed.current_format.rich_text.push('!');
+
+        assert_eq!(render_cache_key(&first), render_cache_key(&first));
+        assert_ne!(render_cache_key(&first), render_cache_key(&changed));
     }
 
     // network … time, mirroring render_status02's display order; widths NET/CPU/MEM/DUR=3,
@@ -436,18 +417,18 @@ mod tests {
     // indirect tmux options, so these contract tests never sample the host.
 
     #[test]
-    fn render_status02_composes_row0_as_left_then_shared_right() {
+    fn render_status02_keeps_large_left_out_of_session_right_cache() {
         let context = contract_context();
         let rendered = render_status02(&context, true).unwrap();
 
-        // session_format is literally status_left ++ row0_right, so status_left is a
-        // prefix of it. This locks the line 65-72 composition.
         assert!(
-            rendered
-                .session_format
-                .literal_text
-                .starts_with(&rendered.status_left.literal_text)
+            !rendered
+                .session_right
+                .rich_text
+                .contains("@GHC_SL_BG_PILL_HOST")
         );
+        assert!(STATUS_SESSION_FORMAT.contains("#{E:@GHC_SL_STATUS02_LEFT}"));
+        assert!(STATUS_SESSION_FORMAT.contains("#{E:@GHC_SL_STATUS02_SESSION_FORMAT}"));
     }
 
     #[test]
@@ -456,23 +437,24 @@ mod tests {
         let rendered = render_status02(&context, true).unwrap();
 
         // Associativity witness: the metric block is rendered once and is the tail of
-        // both the status_right body and the session row0_right, with each appending
-        // exactly `#[default]` after it. So the suffix from the first metric marker to
-        // end must be byte-identical across the two rows. This is the strong form: a
+        // both the status_right body and the session row0_right. status_right appends
+        // `#[default]` directly; the fixed status-format template appends it after
+        // expanding session_right. Apart from that wrapper, the suffix from the first
+        // metric marker must be byte-identical across the two rows. This is the strong form: a
         // regression that drops network/cpu/memory/duration from the session row (or
         // otherwise desyncs the two metric blocks) breaks the equality, whereas a mere
         // "both rows contain time" check would not. Ordering (asserted on status_right
         // below) therefore transitively holds for the session row too.
         let right_rich = &rendered.status_right.rich_text;
-        let session_rich = &rendered.session_format.rich_text;
+        let session_rich = &rendered.session_right.rich_text;
         let right_tail = &right_rich[right_rich.find("@GHC_SYM_NET").expect("network in right")..];
         let session_tail = &session_rich[session_rich
             .find("@GHC_SYM_NET")
             .expect("network in session")..];
-        assert_eq!(right_tail, session_tail);
+        assert_eq!(right_tail, format!("{session_tail}#[default]"));
 
         let right_literal = &rendered.status_right.literal_text;
-        let session_literal = &rendered.session_format.literal_text;
+        let session_literal = &rendered.session_right.literal_text;
         let right_literal_tail =
             &right_literal[right_literal.find('↓').expect("network in right literal")..];
         let session_literal_tail = &session_literal[session_literal
@@ -492,8 +474,8 @@ mod tests {
         // metric only).
         assert!(rendered.status_right.literal_text.contains("@00"));
         assert!(rendered.status_right.literal_text.contains("00/00"));
-        assert!(!rendered.session_format.literal_text.contains("@00"));
-        assert!(!rendered.session_format.literal_text.contains("00/00"));
+        assert!(!rendered.session_right.literal_text.contains("@00"));
+        assert!(!rendered.session_right.literal_text.contains("00/00"));
     }
 
     #[test]
@@ -503,8 +485,8 @@ mod tests {
 
         assert!(rendered.status_right.rich_text.starts_with("#[default] "));
         assert!(rendered.status_right.rich_text.ends_with("#[default]"));
-        assert!(rendered.session_format.rich_text.contains("#[align=left]"));
-        assert!(rendered.session_format.rich_text.contains("#[align=right]"));
+        assert!(STATUS_SESSION_FORMAT.contains("#[align=left]"));
+        assert!(STATUS_SESSION_FORMAT.contains("#[align=right]"));
         assert!(rendered.current_format.rich_text.contains("#{W:"));
         assert!(rendered.current_format.rich_text.contains("#[list=on"));
     }
@@ -558,10 +540,15 @@ mod tests {
             layout_key: "02:wide".to_string(),
             left_length: "64".to_string(),
             right_length: "84".to_string(),
+            format_0: String::new(),
+            format_1: String::new(),
+            render_key: String::new(),
+            cache_witnesses: std::array::from_fn(|_| String::new()),
+            created: 1,
         }];
 
         RenderContext {
-            snapshot: TmuxSnapshot {
+            snapshot: Rc::new(TmuxSnapshot {
                 mode: "02".to_string(),
                 status: "on".to_string(),
                 width: 200,
@@ -573,7 +560,7 @@ mod tests {
                 sessions: sessions.clone(),
                 client_widths: Vec::new(),
                 options,
-            },
+            }),
             group: SessionGroupView {
                 current_session_name: "main".to_string(),
                 sessions,
@@ -586,36 +573,9 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            render_session_created: 9_999_999_999,
             session_layouts: Vec::new(),
         }
-    }
-
-    #[test]
-    fn cache_matches_on_global_style_and_interval() {
-        let status = rendered_status(&"x".repeat(68));
-        let context = context_with_options(settled_global_options(&status));
-
-        assert!(cache_matches(&context, &status));
-    }
-
-    #[test]
-    fn cache_misses_when_status_interval_is_stale() {
-        let status = rendered_status(&"x".repeat(68));
-        let mut options = settled_global_options(&status);
-        options.insert(STATUS_INTERVAL_OPTION.to_string(), "20".to_string());
-        let context = context_with_options(options);
-
-        assert!(!cache_matches(&context, &status));
-    }
-
-    #[test]
-    fn cache_misses_when_owned_global_style_drifted() {
-        let status = rendered_status(&"x".repeat(68));
-        let mut options = settled_global_options(&status);
-        options.insert(STATUS_LEFT_OPTION.to_string(), "drifted".to_string());
-        let context = context_with_options(options);
-
-        assert!(!cache_matches(&context, &status));
     }
 
     fn rendered_status(value: &str) -> RenderedStatus {
@@ -626,76 +586,8 @@ mod tests {
         RenderedStatus {
             status_left: segment.clone(),
             status_right: segment.clone(),
-            session_format: segment.clone(),
+            session_right: segment.clone(),
             current_format: segment,
-        }
-    }
-
-    fn settled_global_options(status: &RenderedStatus) -> BTreeMap<String, String> {
-        BTreeMap::from([
-            (
-                "@GHC_SL_STATUS02_LEFT".to_string(),
-                status.status_left.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_RIGHT".to_string(),
-                status.status_right.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_SESSION_FORMAT".to_string(),
-                status.session_format.rich_text.clone(),
-            ),
-            (
-                "@GHC_SL_STATUS02_CURRENT_FORMAT".to_string(),
-                status.current_format.rich_text.clone(),
-            ),
-            (
-                STATUS_LEFT_OPTION.to_string(),
-                STATUS_LEFT_FORMAT.to_string(),
-            ),
-            (
-                STATUS_RIGHT_OPTION.to_string(),
-                STATUS_RIGHT_FORMAT.to_string(),
-            ),
-            (STATUS_POSITION_OPTION.to_string(), "top".to_string()),
-            (
-                STATUS_JUSTIFY_OPTION.to_string(),
-                STATUS_JUSTIFY_VALUE.to_string(),
-            ),
-            (
-                STATUS_INTERVAL_OPTION.to_string(),
-                STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
-            ),
-        ])
-    }
-
-    fn context_with_options(options: BTreeMap<String, String>) -> RenderContext {
-        RenderContext {
-            snapshot: TmuxSnapshot {
-                mode: "02".to_string(),
-                status: "on".to_string(),
-                width: 200,
-                current_session_name: "s".to_string(),
-                client_last_session: String::new(),
-                host: "h".to_string(),
-                session_created: 1,
-                sessions: Vec::new(),
-                client_widths: Vec::new(),
-                options,
-            },
-            group: SessionGroupView {
-                current_session_name: "s".to_string(),
-                sessions: Vec::new(),
-            },
-            layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
-                kind: LayoutKind::Wide,
-                rows: 1,
-                target_status: "on".to_string(),
-                key: "02:wide".to_string(),
-            },
-            session_layouts: Vec::new(),
         }
     }
 }

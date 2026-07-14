@@ -1,7 +1,9 @@
+use std::rc::Rc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
-use crate::commit::{CommitPlanner, TmuxCommandPlan, session_layouts_settled};
-use crate::composer::{cache_matches, render_status02};
+use crate::commit::{CommitPlanner, TmuxCommandPlan};
+use crate::composer::{render_cache_key, render_status02};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
     HEARTBEAT_INTERVAL_SECONDS, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
@@ -19,7 +21,7 @@ use crate::layout::LayoutEngine;
 use crate::metric::{NET_INTERFACE_OPTION, provider_for_current_platform};
 use crate::model::{
     RenderContext, RenderEvent, RenderEventKind, RowsOverride, SessionGroupView, SessionLayout,
-    TmuxSnapshot,
+    SessionRenderedStatus, TmuxSnapshot,
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
@@ -69,7 +71,8 @@ impl StatusRuntime {
     ) -> AppResult<()> {
         let total_start = Instant::now();
         let context_start = Instant::now();
-        let context_state = self.live_context_state()?;
+        let render_revision = next_render_revision();
+        let context_state = self.live_context_state(Some(render_revision))?;
         let context_ms = duration_ms(context_start.elapsed());
         let context = match context_state {
             LiveContextState::Active(context) => context,
@@ -79,7 +82,7 @@ impl StatusRuntime {
                 let plan_commands = plan.commands.len();
                 let plan_ms = duration_ms(plan_start.elapsed());
                 let commit_start = Instant::now();
-                let result = self.commit_plan(&plan, guarded_schedule);
+                let result = self.commit_plan(&plan, render_revision, guarded_schedule);
                 self.trace_apply(|| {
                     format!(
                         "event={} active=false context_ms={context_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -93,13 +96,22 @@ impl StatusRuntime {
         };
 
         let render_start = Instant::now();
-        let rendered = render_status02(&context, current_platform().supports_metrics())?;
+        let metrics_supported = current_platform().supports_metrics();
+        let fallback_context = fallback_render_context(&context);
+        let fallback_status = render_status02(&fallback_context, metrics_supported)?;
+        let session_statuses = render_session_statuses(&context, metrics_supported)?;
         let render_ms = duration_ms(render_start.elapsed());
-        let is_noop = event.kind != RenderEventKind::ThemeLoaded
-            && cache_matches(&context, &rendered)
-            && session_layouts_settled(&context, &rendered);
+        let plan_start = Instant::now();
+        let plan = CommitPlanner::plan(&fallback_status, &session_statuses, &context, &event);
+        let plan_commands = plan.commands.len();
+        let plan_ms = duration_ms(plan_start.elapsed());
+        let is_noop = plan.is_empty();
         if is_noop {
-            let result = self.commit_plan(&TmuxCommandPlan::default(), guarded_schedule);
+            let result = self.commit_plan(
+                &TmuxCommandPlan::default(),
+                render_revision,
+                guarded_schedule,
+            );
             self.trace_apply(|| {
                 format!(
                     "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2}",
@@ -112,12 +124,8 @@ impl StatusRuntime {
             return result;
         }
 
-        let plan_start = Instant::now();
-        let plan = CommitPlanner::plan(&rendered, &context, &event);
-        let plan_commands = plan.commands.len();
-        let plan_ms = duration_ms(plan_start.elapsed());
         let commit_start = Instant::now();
-        let result = self.commit_plan(&plan, guarded_schedule);
+        let result = self.commit_plan(&plan, render_revision, guarded_schedule);
         self.trace_apply(|| {
             format!(
                 "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -388,7 +396,7 @@ impl StatusRuntime {
         );
         println!(
             "@GHC_SL_STATUS02_SESSION_FORMAT={}",
-            rendered.session_format.rich_text
+            rendered.session_right.rich_text
         );
         println!(
             "@GHC_SL_STATUS02_CURRENT_FORMAT={}",
@@ -446,8 +454,12 @@ impl StatusRuntime {
     }
 
     pub fn focus_session(&self, target: FocusTarget) -> AppResult<()> {
-        let snapshot = self.tmux.read_snapshot()?;
-        let group = ordered_group_from_snapshot(&snapshot);
+        let snapshot = self.tmux.read_session_navigation()?;
+        let group = ordered_group(
+            &snapshot.current_session_name,
+            &snapshot.sessions,
+            Some(&snapshot.order_value),
+        );
         let Some(target_session) =
             focus_target(&group.sessions, &snapshot.current_session_name, target)
         else {
@@ -462,9 +474,13 @@ impl StatusRuntime {
     }
 
     pub fn swap_session(&self, direction: MoveDirection) -> AppResult<()> {
-        let snapshot = self.tmux.read_snapshot()?;
-        let group = ordered_group_from_snapshot(&snapshot);
-        let order_value = session_order_value(&snapshot);
+        let snapshot = self.tmux.read_session_navigation()?;
+        let group = ordered_group(
+            &snapshot.current_session_name,
+            &snapshot.sessions,
+            Some(&snapshot.order_value),
+        );
+        let order_value = Some(snapshot.order_value.as_str());
         match swap_current(
             &snapshot.sessions,
             &group.sessions,
@@ -487,16 +503,18 @@ impl StatusRuntime {
     fn commit_plan(
         &self,
         plan: &TmuxCommandPlan,
+        render_revision: u64,
         guarded_schedule: Option<&GuardedSchedule>,
     ) -> AppResult<()> {
         let Some(schedule) = guarded_schedule else {
-            return self.tmux.commit_plan(plan);
+            return self.tmux.commit_plan_guarded(plan, render_revision);
         };
 
         self.tmux.commit_plan_guarded_and_reschedule(
             plan,
             schedule.generation_option,
             schedule.generation,
+            render_revision,
             schedule.delay_seconds,
             &schedule.command,
         )
@@ -511,36 +529,67 @@ impl StatusRuntime {
     }
 
     fn live_context(&self) -> AppResult<RenderContext> {
-        match self.live_context_state()? {
-            LiveContextState::Active(context) => Ok(context),
-            LiveContextState::Inactive(_) => Err(AppError::Render(
-                "status02 layout is not active".to_string(),
-            )),
-        }
-    }
-
-    fn live_context_state(&self) -> AppResult<LiveContextState> {
         let snapshot = self.tmux.read_snapshot()?;
-        let group = ordered_group_from_snapshot(&snapshot);
-        let Some(layout) = LayoutEngine::resolve(
-            &snapshot.mode,
-            &snapshot.status,
-            snapshot.width,
-            group.sessions.len(),
-            rows_override(&snapshot),
-        ) else {
-            return Ok(LiveContextState::Inactive(snapshot));
-        };
-
-        let session_layouts = resolve_session_layouts(&snapshot);
-
-        Ok(LiveContextState::Active(RenderContext {
-            snapshot,
-            group,
-            layout,
-            session_layouts,
-        }))
+        current_session_context_from_snapshot(snapshot)
+            .ok_or_else(|| AppError::Render("status02 layout is not active".to_string()))
     }
+
+    fn live_context_state(&self, render_revision: Option<u64>) -> AppResult<LiveContextState> {
+        let snapshot = match render_revision {
+            Some(revision) => self.tmux.read_snapshot_for_render(revision)?,
+            None => self.tmux.read_snapshot()?,
+        };
+        Ok(context_state_from_snapshot(snapshot))
+    }
+}
+
+/// Diagnostic commands describe the invoking session only. Unlike apply's
+/// server-wide reconcile context, they must not borrow another attached
+/// session's active layout when the current session has `status off`.
+fn current_session_context_from_snapshot(snapshot: TmuxSnapshot) -> Option<RenderContext> {
+    let LiveContextState::Active(mut context) = context_state_from_snapshot(snapshot) else {
+        return None;
+    };
+    context.layout = LayoutEngine::resolve(
+        &context.snapshot.mode,
+        &context.snapshot.status,
+        context.snapshot.width,
+        context.group.sessions.len(),
+        rows_override(&context.snapshot),
+    )?;
+    Some(context)
+}
+
+fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
+    let snapshot = Rc::new(snapshot);
+    let render_session_created = snapshot.session_created;
+    let group = ordered_group_from_snapshot(&snapshot);
+    let current_layout = LayoutEngine::resolve(
+        &snapshot.mode,
+        &snapshot.status,
+        snapshot.width,
+        group.sessions.len(),
+        rows_override(&snapshot),
+    );
+    let session_layouts = resolve_session_layouts(&snapshot);
+    // `status off` is owned per session. It excludes the invoking session, not
+    // the server-wide reconcile: hooks and reloads can legitimately originate
+    // from an off popup/agent while other attached sessions still need repair.
+    let Some(layout) = current_layout.or_else(|| {
+        session_layouts
+            .first()
+            .map(|session_layout| session_layout.layout.clone())
+    }) else {
+        return LiveContextState::Inactive(Rc::unwrap_or_clone(snapshot));
+    };
+
+    LiveContextState::Active(RenderContext {
+        snapshot,
+        group,
+        layout,
+        render_session_created,
+        session_layouts,
+    })
 }
 
 /// The manual rows override (`@GHC_SL_ROWS`) for this snapshot, defaulting to
@@ -564,6 +613,7 @@ fn rows_override(snapshot: &TmuxSnapshot) -> RowsOverride {
 /// re-reconciles them.
 fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
     let min_widths = min_client_widths(&snapshot.client_widths);
+    let group_counts = SessionGrouper::counts(&snapshot.sessions);
     let rows = rows_override(snapshot);
     let mut session_layouts = Vec::new();
     for session in &snapshot.sessions {
@@ -573,7 +623,10 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
         let Some(&width) = min_widths.get(session.id.as_str()) else {
             continue;
         };
-        let count = SessionGrouper::count(&session.name, &snapshot.sessions);
+        let count = group_counts
+            .get(&SessionGrouper::key(&session.name))
+            .copied()
+            .unwrap_or_default();
         let Some(layout) = LayoutEngine::resolve(&snapshot.mode, "on", width, count, rows) else {
             continue;
         };
@@ -584,6 +637,11 @@ fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
             current_layout_key: session.layout_key.clone(),
             current_left_length: session.left_length.clone(),
             current_right_length: session.right_length.clone(),
+            current_format_0: session.format_0.clone(),
+            current_format_1: session.format_1.clone(),
+            current_render_key: session.render_key.clone(),
+            current_cache_witnesses: session.cache_witnesses.clone(),
+            session_created: session.created,
             layout,
             width,
         });
@@ -681,10 +739,79 @@ fn generation_matches(current: &str, expected: u64) -> bool {
     current.parse::<u64>() == Ok(expected)
 }
 
+static RENDER_REVISION_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn next_render_revision() -> u64 {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let time_bits = nanos as u64 ^ ((nanos >> 64) as u64).rotate_left(17);
+    let process_bits = u64::from(std::process::id()).rotate_left(32);
+    let counter = RENDER_REVISION_COUNTER.fetch_add(1, Ordering::Relaxed);
+    time_bits ^ process_bits ^ counter
+}
+
 fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
-    let mut group = SessionGrouper::group(&snapshot.current_session_name, &snapshot.sessions);
-    group.sessions = ordered_sessions(&group.sessions, session_order_value(snapshot));
+    ordered_group_for_session(snapshot, &snapshot.current_session_name)
+}
+
+fn ordered_group_for_session(snapshot: &TmuxSnapshot, session_name: &str) -> SessionGroupView {
+    ordered_group(
+        session_name,
+        &snapshot.sessions,
+        session_order_value(snapshot),
+    )
+}
+
+fn ordered_group(
+    session_name: &str,
+    sessions: &[crate::model::SessionInfo],
+    order_value: Option<&str>,
+) -> SessionGroupView {
+    let mut group = SessionGrouper::group(session_name, sessions);
+    group.sessions = ordered_sessions(&group.sessions, order_value);
     group
+}
+
+fn fallback_render_context(context: &RenderContext) -> RenderContext {
+    RenderContext {
+        snapshot: Rc::clone(&context.snapshot),
+        group: SessionGroupView {
+            current_session_name: String::new(),
+            sessions: Vec::new(),
+        },
+        layout: context.layout.clone(),
+        // A future creation timestamp deterministically renders the neutral "0m"
+        // fallback until an attached session receives its local cache.
+        render_session_created: i64::MAX,
+        session_layouts: Vec::new(),
+    }
+}
+
+fn render_session_statuses(
+    context: &RenderContext,
+    metrics_supported: bool,
+) -> AppResult<Vec<SessionRenderedStatus>> {
+    context
+        .session_layouts
+        .iter()
+        .map(|session_layout| {
+            let render_context = RenderContext {
+                snapshot: Rc::clone(&context.snapshot),
+                group: ordered_group_for_session(&context.snapshot, &session_layout.session_name),
+                layout: session_layout.layout.clone(),
+                render_session_created: session_layout.session_created,
+                session_layouts: Vec::new(),
+            };
+            let status = render_status02(&render_context, metrics_supported)?;
+            Ok(SessionRenderedStatus {
+                session_layout: session_layout.clone(),
+                render_key: render_cache_key(&status),
+                status,
+            })
+        })
+        .collect()
 }
 
 const RELEASE_BINARY_RELATIVE_PATH: &str =
@@ -724,15 +851,20 @@ fn focus_missing_message(target: FocusTarget) -> String {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::rc::Rc;
 
     use super::{
-        MetricPublishSummary, generation_matches, metric_health_sets, normalize_network_interface,
-        parse_metric_error_count, resolve_session_layouts, sanitize_metric_error,
+        LiveContextState, MetricPublishSummary, context_state_from_snapshot,
+        current_session_context_from_snapshot, generation_matches, metric_health_sets,
+        next_render_revision, normalize_network_interface, ordered_group_from_snapshot,
+        parse_metric_error_count, render_session_statuses, resolve_session_layouts,
+        sanitize_metric_error,
     };
     use crate::config::{
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     };
-    use crate::model::{SessionInfo, TmuxSnapshot};
+    use crate::layout::LayoutEngine;
+    use crate::model::{RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
 
     fn session(id: &str, name: &str, status: &str) -> SessionInfo {
         SessionInfo {
@@ -743,6 +875,11 @@ mod tests {
             layout_key: String::new(),
             left_length: String::new(),
             right_length: String::new(),
+            format_0: String::new(),
+            format_1: String::new(),
+            render_key: String::new(),
+            cache_witnesses: std::array::from_fn(|_| String::new()),
+            created: 0,
         }
     }
 
@@ -770,6 +907,123 @@ mod tests {
         let layouts = resolve_session_layouts(&snapshot);
         assert_eq!(layouts.len(), 1);
         assert_eq!(layouts[0].session_id, "$1");
+    }
+
+    #[test]
+    fn off_invoking_session_does_not_block_other_session_reconcile() {
+        let snapshot = TmuxSnapshot {
+            mode: "02".to_string(),
+            status: "off".to_string(),
+            width: 120,
+            current_session_name: "_popup@x".to_string(),
+            client_last_session: String::new(),
+            host: "h".to_string(),
+            session_created: 1,
+            sessions: vec![
+                session("$1", "_popup@x", "off"),
+                session("$2", "main", "on"),
+            ],
+            client_widths: vec![("$1".to_string(), 120), ("$2".to_string(), 120)],
+            options: BTreeMap::new(),
+        };
+
+        let LiveContextState::Active(context) = context_state_from_snapshot(snapshot) else {
+            panic!("another attached active session must keep the reconcile active");
+        };
+        assert_eq!(context.session_layouts.len(), 1);
+        assert_eq!(context.session_layouts[0].session_id, "$2");
+    }
+
+    #[test]
+    fn off_invoking_session_is_inactive_for_diagnostic_context() {
+        let snapshot = TmuxSnapshot {
+            mode: "02".to_string(),
+            status: "off".to_string(),
+            width: 120,
+            current_session_name: "_popup@x".to_string(),
+            client_last_session: String::new(),
+            host: "h".to_string(),
+            session_created: 1,
+            sessions: vec![
+                session("$1", "_popup@x", "off"),
+                session("$2", "main", "on"),
+            ],
+            client_widths: vec![("$1".to_string(), 120), ("$2".to_string(), 120)],
+            options: BTreeMap::new(),
+        };
+
+        assert!(current_session_context_from_snapshot(snapshot).is_none());
+    }
+
+    #[test]
+    fn renders_session_owned_cache_for_each_group_and_duration() {
+        let now = crate::util::time::unix_timestamp_seconds() as i64;
+        let mut sessions = vec![
+            session("$1", "main", "on"),
+            session("$2", "work", "on"),
+            session("$3", "G1-build", "on"),
+            session("$4", "G1-test", "on"),
+        ];
+        sessions[0].created = now;
+        sessions[1].created = now.saturating_sub(3_600);
+        sessions[2].created = now;
+        sessions[3].created = now;
+        let snapshot = Rc::new(TmuxSnapshot {
+            mode: "02".to_string(),
+            status: "on".to_string(),
+            width: 220,
+            current_session_name: "main".to_string(),
+            client_last_session: String::new(),
+            host: "host".to_string(),
+            session_created: now,
+            sessions,
+            client_widths: ["$1", "$2", "$3", "$4"]
+                .map(|id| (id.to_string(), 220))
+                .to_vec(),
+            options: BTreeMap::new(),
+        });
+        let session_layouts = resolve_session_layouts(&snapshot);
+        let context = RenderContext {
+            group: ordered_group_from_snapshot(&snapshot),
+            layout: LayoutEngine::resolve("02", "on", 220, 2, RowsOverride::Auto).unwrap(),
+            render_session_created: now,
+            snapshot,
+            session_layouts,
+        };
+
+        let rendered = render_session_statuses(&context, false).unwrap();
+        let main = rendered
+            .iter()
+            .find(|target| target.session_layout.session_id == "$1")
+            .unwrap();
+        let work = rendered
+            .iter()
+            .find(|target| target.session_layout.session_id == "$2")
+            .unwrap();
+        let grouped = rendered
+            .iter()
+            .find(|target| target.session_layout.session_id == "$3")
+            .unwrap();
+
+        assert!(main.status.status_left.rich_text.contains("#{l:main}"));
+        assert!(main.status.status_left.rich_text.contains("#{l:work}"));
+        assert!(!main.status.status_left.rich_text.contains("G1-build"));
+        assert!(
+            grouped
+                .status
+                .status_left
+                .rich_text
+                .contains("#{l:G1-build}")
+        );
+        assert!(!grouped.status.status_left.rich_text.contains("#{l:main}"));
+        assert!(main.status.status_right.rich_text.contains(" 0m "));
+        assert!(work.status.status_right.rich_text.contains(" 1h 00m "));
+        assert_ne!(main.render_key, work.render_key);
+    }
+
+    #[test]
+    fn render_revisions_are_unique_within_a_process() {
+        assert_ne!(next_render_revision(), next_render_revision());
     }
 
     #[test]

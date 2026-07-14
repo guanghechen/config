@@ -44,6 +44,7 @@ impl<T: ComputedWidget> StatusWidget for Computed<T> {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::rc::Rc;
 
     use super::{ComputedWidget, StatusWidget, TemplateWidget, computed, template};
     use crate::error::AppResult;
@@ -90,7 +91,7 @@ mod tests {
 
     fn context() -> RenderContext {
         RenderContext {
-            snapshot: TmuxSnapshot {
+            snapshot: Rc::new(TmuxSnapshot {
                 mode: "02".to_string(),
                 status: "on".to_string(),
                 width: 200,
@@ -101,7 +102,7 @@ mod tests {
                 sessions: Vec::new(),
                 client_widths: Vec::new(),
                 options: BTreeMap::new(),
-            },
+            }),
             group: SessionGroupView {
                 current_session_name: "s".to_string(),
                 sessions: Vec::new(),
@@ -114,6 +115,7 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
+            render_session_created: 1,
             session_layouts: Vec::new(),
         }
     }

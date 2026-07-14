@@ -1,16 +1,27 @@
 use std::collections::BTreeMap;
-use std::process::Command;
+use std::ops::Range;
+use std::time::Duration;
 
-use crate::commit::{TmuxCommandPlan, tmux_command_string};
+use crate::commit::{
+    CACHE_WITNESS_BYTES, SESSION_CACHE_OPTIONS, TmuxCommandPlan, tmux_command_string,
+};
 use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION, MEMORY_NOW_OPTION,
     MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
     METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, NETWORK_NOW_OPTION,
-    NETWORK_SAMPLE_STATE_OPTION, ROWS_OVERRIDE_OPTION, STATUS_INTERVAL_OPTION,
-    STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
+    NETWORK_SAMPLE_STATE_OPTION, RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION,
+    SESSION_RENDER_KEY_OPTION, STATUS_FORMAT_0_OPTION, STATUS_FORMAT_1_OPTION,
+    STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION, STATUS_POSITION_OPTION,
+    STATUS_RIGHT_OPTION,
 };
 use crate::error::{AppError, AppResult};
-use crate::model::{SessionInfo, TmuxSnapshot};
+use crate::model::{SessionInfo, SessionNavigationSnapshot, TmuxSnapshot};
+use crate::process::output_with_timeout;
+
+const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
+// This budget applies before the nested `if-shell` quoting pass. Keeping it far
+// below macOS ARG_MAX also leaves room for argv, environment, and escaping growth.
+const MAX_PLAN_CHUNK_BYTES: usize = 32 * 1024;
 
 pub struct TmuxAdapter;
 
@@ -35,29 +46,29 @@ impl TmuxAdapter {
     }
 
     pub fn read_snapshot(&self) -> AppResult<TmuxSnapshot> {
-        let output = self.tmux_output(snapshot_command_args())?;
+        let output = self.tmux_output(snapshot_command_args(None))?;
         parse_snapshot_output(&output)
     }
 
-    pub fn commit_plan(&self, plan: &TmuxCommandPlan) -> AppResult<()> {
-        if plan.is_empty() {
-            return Ok(());
-        }
+    /// Starts a render revision and collects its snapshot in one tmux command
+    /// queue. A later apply replaces the server token, so this worker's eventual
+    /// commit becomes a guarded no-op instead of publishing stale state.
+    pub fn read_snapshot_for_render(&self, revision: u64) -> AppResult<TmuxSnapshot> {
+        let output = self.tmux_output(snapshot_command_args(Some(revision)))?;
+        parse_snapshot_output(&output)
+    }
 
-        // Fold the redraw into the same command string so the happy path costs a
-        // single tmux round-trip (set...; refresh-client -S) instead of two.
-        let mut combined_args = plan.to_tmux_args();
-        combined_args.push(";".to_string());
-        combined_args.push("refresh-client".to_string());
-        combined_args.push("-S".to_string());
+    pub fn read_session_navigation(&self) -> AppResult<SessionNavigationSnapshot> {
+        let output = self.tmux_output(session_navigation_command_args())?;
+        parse_session_navigation_output(&output)
+    }
 
-        if self.tmux_status(combined_args).is_err() {
-            for command in &plan.commands {
-                self.tmux_status(command.args())?;
-            }
-            let _ = self.tmux_status(["refresh-client".to_string(), "-S".to_string()]);
-        }
-        Ok(())
+    pub fn commit_plan_guarded(
+        &self,
+        plan: &TmuxCommandPlan,
+        expected_revision: u64,
+    ) -> AppResult<()> {
+        self.commit_plan_with_guards(plan, expected_revision, None)
     }
 
     pub fn switch_client(&self, target_session_id: &str) -> AppResult<()> {
@@ -85,23 +96,29 @@ impl TmuxAdapter {
         parse_options_output(&output, options.len())
     }
 
-    /// Commits a status plan and its next heartbeat only if the authoritative
-    /// server-scoped generation still matches. `if-shell -F` evaluates the guard
-    /// and inserts the serialized command list in the same tmux command queue.
+    /// Commits a bounded status plan under generation + render guards, then
+    /// schedules exactly one successor under the generation guard. Each chunk
+    /// rechecks both tokens, so a reload or newer render aborts the remainder.
     pub fn commit_plan_guarded_and_reschedule(
         &self,
         plan: &TmuxCommandPlan,
         generation_option: &str,
         expected_generation: u64,
+        expected_render_revision: u64,
         delay_seconds: u64,
         command: &str,
     ) -> AppResult<()> {
-        let command_list = plan_and_reschedule_command(plan, delay_seconds, command);
-        self.tmux_status(guarded_command_args(
+        self.commit_plan_with_guards(
+            plan,
+            expected_render_revision,
+            Some((generation_option, expected_generation)),
+        )?;
+        self.schedule_background_guarded(
             generation_option,
             expected_generation,
-            command_list,
-        ))
+            delay_seconds,
+            command,
+        )
     }
 
     /// Publishes metric state and schedules the next sample under one atomic
@@ -141,12 +158,50 @@ impl TmuxAdapter {
         self.tmux_status(["display-message".to_string(), message.to_string()])
     }
 
+    fn commit_plan_with_guards(
+        &self,
+        plan: &TmuxCommandPlan,
+        expected_revision: u64,
+        generation_guard: Option<(&str, u64)>,
+    ) -> AppResult<()> {
+        if plan.is_empty() {
+            return Ok(());
+        }
+
+        for chunk in serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES) {
+            let guarded =
+                nested_render_guard_args(expected_revision, &chunk.command_list, generation_guard);
+            if self.tmux_status(guarded).is_ok() {
+                continue;
+            }
+
+            // Commands are idempotent. A chunk-level parser/argv failure can be
+            // retried one command at a time without allowing a stale writer: both
+            // guards are rebuilt around every individual mutation.
+            for command in &plan.commands[chunk.range] {
+                self.tmux_status(nested_render_guard_args(
+                    expected_revision,
+                    &command.to_command_string(),
+                    generation_guard,
+                ))?;
+            }
+        }
+
+        let refresh = tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]);
+        let _ = self.tmux_status(nested_render_guard_args(
+            expected_revision,
+            &refresh,
+            generation_guard,
+        ));
+        Ok(())
+    }
+
     fn tmux_output<I>(&self, args: I) -> AppResult<String>
     where
         I: IntoIterator<Item = String>,
     {
         let args = args.into_iter().collect::<Vec<_>>();
-        let output = Command::new("tmux").args(&args).output()?;
+        let output = output_with_timeout("tmux", &args, TMUX_COMMAND_TIMEOUT)?;
         if !output.status.success() {
             return Err(AppError::TmuxCommand {
                 command: format!("tmux {}", args.join(" ")),
@@ -163,7 +218,7 @@ impl TmuxAdapter {
         I: IntoIterator<Item = String>,
     {
         let args = args.into_iter().collect::<Vec<_>>();
-        let output = Command::new("tmux").args(&args).output()?;
+        let output = output_with_timeout("tmux", &args, TMUX_COMMAND_TIMEOUT)?;
         if !output.status.success() {
             return Err(AppError::TmuxCommand {
                 command: format!("tmux {}", args.join(" ")),
@@ -174,14 +229,30 @@ impl TmuxAdapter {
     }
 }
 
-fn snapshot_command_args() -> Vec<String> {
-    let mut args = vec![
-        "display-message".to_string(),
-        "-p".to_string(),
-        format!(
-            "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
-        ),
-    ];
+fn snapshot_command_args(render_revision: Option<u64>) -> Vec<String> {
+    let mut args = Vec::new();
+    let cache_witness_formats = SESSION_CACHE_OPTIONS.map(cache_witness_format);
+    if let Some(revision) = render_revision {
+        push_tmux_command(
+            &mut args,
+            [
+                "set".to_string(),
+                "-s".to_string(),
+                RENDER_REVISION_OPTION.to_string(),
+                revision.to_string(),
+            ],
+        );
+    }
+    push_tmux_command(
+        &mut args,
+        [
+            "display-message".to_string(),
+            "-p".to_string(),
+            format!(
+                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
+            ),
+        ],
+    );
     append_options_commands(&mut args, SNAPSHOT_OPTIONS);
     args.extend([
         ";".to_string(),
@@ -196,7 +267,13 @@ fn snapshot_command_args() -> Vec<String> {
         // is never reported. Derive has_bell from #{session_alerts} instead, which lists
         // every alerted window; a '!' in it marks a bell. parse_session_line reads this third
         // field as the "1"/"0" has_bell flag, so the shape is unchanged.
-        "#{session_id}\t#{session_name}\t#{?#{m:*!*,#{session_alerts}},1,0}\t#{status}\t#{@GHC_SL_LAYOUT}\t#{status-left-length}\t#{status-right-length}".to_string(),
+        format!(
+            "#{{session_id}}\t#{{session_name}}\t#{{?#{{m:*!*,#{{session_alerts}}}},1,0}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}\t{}\t{}\t{}\t#{{session_created}}",
+            cache_witness_formats[0],
+            cache_witness_formats[1],
+            cache_witness_formats[2],
+            cache_witness_formats[3],
+        ),
         ";".to_string(),
         "display-message".to_string(),
         "-p".to_string(),
@@ -212,6 +289,39 @@ fn snapshot_command_args() -> Vec<String> {
 fn options_command_args(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
     let mut args = Vec::new();
     append_options_commands(&mut args, options);
+    args
+}
+
+fn session_navigation_command_args() -> Vec<String> {
+    let mut args = Vec::new();
+    push_tmux_command(
+        &mut args,
+        [
+            "display-message".to_string(),
+            "-p".to_string(),
+            format!("{NAVIGATION_MARK}{FIELD_SEP}#{{session_name}}"),
+        ],
+    );
+    append_options_commands(
+        &mut args,
+        &[(TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER")],
+    );
+    push_tmux_command(
+        &mut args,
+        [
+            "display-message".to_string(),
+            "-p".to_string(),
+            SESSIONS_MARK.to_string(),
+        ],
+    );
+    push_tmux_command(
+        &mut args,
+        [
+            "list-sessions".to_string(),
+            "-F".to_string(),
+            "#{session_id}\t#{session_name}".to_string(),
+        ],
+    );
     args
 }
 
@@ -266,23 +376,67 @@ fn option_value_mark(index: usize) -> String {
     format!("{OPTION_VALUE_MARK_PREFIX}{index}__")
 }
 
-fn plan_and_reschedule_command(
-    plan: &TmuxCommandPlan,
-    delay_seconds: u64,
-    command: &str,
-) -> String {
-    let mut commands = Vec::new();
-    if !plan.is_empty() {
-        commands.push(plan.to_command_string());
+fn cache_witness_format(option: &str) -> String {
+    let capture = ".".repeat(CACHE_WITNESS_BYTES);
+    format!("#{{s/^({capture}).*$/\\1/:{option}}}")
+}
+
+struct SerializedPlanChunk {
+    range: Range<usize>,
+    command_list: String,
+}
+
+fn serialized_plan_chunks(plan: &TmuxCommandPlan, max_bytes: usize) -> Vec<SerializedPlanChunk> {
+    let mut chunks = Vec::new();
+    let mut chunk_start = 0;
+    let mut command_list = String::new();
+
+    for (index, command) in plan.commands.iter().enumerate() {
+        let serialized = command.to_command_string();
+        let separator_bytes = usize::from(!command_list.is_empty()) * 2;
+        if !command_list.is_empty()
+            && command_list.len() + separator_bytes + serialized.len() > max_bytes
+        {
+            chunks.push(SerializedPlanChunk {
+                range: chunk_start..index,
+                command_list,
+            });
+            chunk_start = index;
+            command_list = String::new();
+        }
+        if !command_list.is_empty() {
+            command_list.push_str("; ");
+        }
+        command_list.push_str(&serialized);
     }
-    commands.push(background_command_string(delay_seconds, command));
-    if !plan.is_empty() {
-        commands.push(tmux_command_string(&[
-            "refresh-client".to_string(),
-            "-S".to_string(),
-        ]));
+
+    if !command_list.is_empty() {
+        chunks.push(SerializedPlanChunk {
+            range: chunk_start..plan.commands.len(),
+            command_list,
+        });
     }
-    commands.join("; ")
+    chunks
+}
+
+fn nested_render_guard_args(
+    expected_revision: u64,
+    command_list: &str,
+    generation_guard: Option<(&str, u64)>,
+) -> Vec<String> {
+    let render_guard = guarded_command_args(
+        RENDER_REVISION_OPTION,
+        expected_revision,
+        command_list.to_string(),
+    );
+    let Some((generation_option, expected_generation)) = generation_guard else {
+        return render_guard;
+    };
+    guarded_command_args(
+        generation_option,
+        expected_generation,
+        tmux_command_string(&render_guard),
+    )
 }
 
 fn sets_and_reschedule_command(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> String {
@@ -388,6 +542,29 @@ fn parse_options_output(output: &str, count: usize) -> AppResult<Vec<String>> {
     parse_option_values(&mut output.lines().peekable(), count)
 }
 
+fn parse_session_navigation_output(output: &str) -> AppResult<SessionNavigationSnapshot> {
+    let mut lines = output.lines().peekable();
+    let context = lines
+        .next()
+        .ok_or_else(|| AppError::TmuxParse("missing navigation context".to_string()))?;
+    let current_session_name = context
+        .strip_prefix(&format!("{NAVIGATION_MARK}{FIELD_SEP}"))
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| AppError::TmuxParse("invalid navigation context".to_string()))?
+        .to_string();
+    let order_value = parse_option_values(&mut lines, 1)?
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+    expect_marker(lines.next(), SESSIONS_MARK)?;
+    let sessions = lines.filter_map(parse_navigation_session_line).collect();
+    Ok(SessionNavigationSnapshot {
+        current_session_name,
+        sessions,
+        order_value,
+    })
+}
+
 fn parse_option_values<'a, I>(
     lines: &mut std::iter::Peekable<I>,
     count: usize,
@@ -425,6 +602,14 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
     let layout_key = fields.next().unwrap_or_default().to_string();
     let left_length = fields.next().unwrap_or_default().to_string();
     let right_length = fields.next().unwrap_or_default().to_string();
+    let format_0 = fields.next().unwrap_or_default().to_string();
+    let format_1 = fields.next().unwrap_or_default().to_string();
+    let render_key = fields.next().unwrap_or_default().to_string();
+    let cache_witnesses = std::array::from_fn(|_| fields.next().unwrap_or_default().to_string());
+    let created = fields
+        .next()
+        .and_then(|value| value.parse::<i64>().ok())
+        .unwrap_or_default();
 
     Some(SessionInfo {
         id: id.to_string(),
@@ -434,6 +619,29 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
         layout_key,
         left_length,
         right_length,
+        format_0,
+        format_1,
+        render_key,
+        cache_witnesses,
+        created,
+    })
+}
+
+fn parse_navigation_session_line(line: &str) -> Option<SessionInfo> {
+    let (id, name) = line.split_once('\t')?;
+    Some(SessionInfo {
+        id: id.to_string(),
+        name: name.to_string(),
+        has_bell: false,
+        status: String::new(),
+        layout_key: String::new(),
+        left_length: String::new(),
+        right_length: String::new(),
+        format_0: String::new(),
+        format_1: String::new(),
+        render_key: String::new(),
+        cache_witnesses: std::array::from_fn(|_| String::new()),
+        created: 0,
     })
 }
 
@@ -488,6 +696,7 @@ fn expect_marker(line: Option<&str>, marker: &str) -> AppResult<()> {
 
 const FIELD_SEP: char = '\u{1f}';
 const CONTEXT_MARK: &str = "__GHC_STATUS_CONTEXT__";
+const NAVIGATION_MARK: &str = "__GHC_STATUS_NAVIGATION__";
 const OPTIONS_MARK: &str = "__GHC_STATUS_OPTIONS__";
 const OPTIONS_END_MARK: &str = "__GHC_STATUS_OPTIONS_END__";
 const OPTION_VALUE_MARK_PREFIX: &str = "\u{1e}__GHC_STATUS_OPTION_";
@@ -512,6 +721,8 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, STATUS_POSITION_OPTION),
     (TmuxOptionScope::GlobalSession, STATUS_JUSTIFY_OPTION),
     (TmuxOptionScope::GlobalSession, STATUS_INTERVAL_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_0_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_1_OPTION),
     (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
     (TmuxOptionScope::GlobalSession, "@GHC_SL_NET_IFACE"),
     (TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION),
@@ -542,11 +753,15 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 #[cfg(test)]
 mod tests {
     use super::{
-        CONTEXT_MARK, FIELD_SEP, OPTIONS_END_MARK, OPTIONS_MARK, SESSIONS_MARK, SNAPSHOT_OPTIONS,
-        TmuxOptionScope, guarded_command_args, option_value_mark, options_command_args,
-        parse_client_line, parse_options_output, parse_session_line, parse_snapshot_output,
-        sets_and_reschedule_command,
+        CONTEXT_MARK, FIELD_SEP, NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, SESSIONS_MARK,
+        SNAPSHOT_OPTIONS, TmuxOptionScope, cache_witness_format, guarded_command_args,
+        nested_render_guard_args, option_value_mark, options_command_args, parse_client_line,
+        parse_options_output, parse_session_line, parse_session_navigation_output,
+        parse_snapshot_output, serialized_plan_chunks, sets_and_reschedule_command,
+        snapshot_command_args,
     };
+    use crate::commit::{TmuxCommand, TmuxCommandPlan};
+    use crate::config::RENDER_REVISION_OPTION;
 
     const CLIENTS_MARK: &str = super::CLIENTS_MARK;
 
@@ -604,17 +819,93 @@ $2	90"
 
     #[test]
     fn parses_session_line_reads_bell_flag_field() {
-        let belling = parse_session_line("$1\tlegacy\t1\ton\t02:wide").unwrap();
+        let belling = parse_session_line(
+            "$1\tlegacy\t1\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3\t123",
+        )
+        .unwrap();
         assert_eq!(belling.id, "$1");
         assert_eq!(belling.name, "legacy");
         assert!(belling.has_bell);
         assert_eq!(belling.status, "on");
         assert_eq!(belling.layout_key, "02:wide");
+        assert_eq!(belling.format_0, "fmt0");
+        assert_eq!(belling.format_1, "fmt1");
+        assert_eq!(belling.render_key, "02:wide:v1:abcd");
+        assert_eq!(belling.cache_witnesses, ["w0", "w1", "w2", "w3"]);
+        assert_eq!(belling.created, 123);
 
         let quiet = parse_session_line("$2\tdev\t0").unwrap();
         assert!(!quiet.has_bell);
         assert_eq!(quiet.status, "");
         assert_eq!(quiet.layout_key, "");
+    }
+
+    #[test]
+    fn parses_minimal_session_navigation_snapshot() {
+        let options = option_section(&["$2\t$1"]);
+        let output = format!(
+            "{NAVIGATION_MARK}{FIELD_SEP}main\n{options}\n{SESSIONS_MARK}\n$1\tmain\n$2\twork"
+        );
+
+        let snapshot = parse_session_navigation_output(&output).unwrap();
+        assert_eq!(snapshot.current_session_name, "main");
+        assert_eq!(snapshot.order_value, "$2\t$1");
+        assert_eq!(snapshot.sessions.len(), 2);
+        assert_eq!(snapshot.sessions[1].name, "work");
+    }
+
+    #[test]
+    fn render_snapshot_starts_revision_in_the_same_tmux_queue() {
+        let args = snapshot_command_args(Some(42));
+        assert_eq!(&args[..4], ["set", "-s", RENDER_REVISION_OPTION, "42"]);
+        assert_eq!(args[4], ";");
+    }
+
+    #[test]
+    fn cache_witness_format_extracts_a_fixed_prefix() {
+        assert_eq!(
+            cache_witness_format("@CACHE"),
+            "#{s/^(..........................).*$/\\1/:@CACHE}"
+        );
+    }
+
+    #[test]
+    fn generation_guard_wraps_each_render_guard() {
+        let plan = TmuxCommandPlan {
+            commands: vec![TmuxCommand::SetGlobal {
+                name: "@VALUE".to_string(),
+                value: "new".to_string(),
+            }],
+        };
+        let chunks = serialized_plan_chunks(&plan, 1024);
+        let args = nested_render_guard_args(
+            9,
+            &chunks[0].command_list,
+            Some(("@GHC_SL_HEARTBEAT_GEN", 7)),
+        );
+
+        assert_eq!(args[2], "#{==:#{@GHC_SL_HEARTBEAT_GEN},7}");
+        assert!(args[3].contains(RENDER_REVISION_OPTION));
+        assert!(args[3].contains("@VALUE"));
+    }
+
+    #[test]
+    fn splits_large_plans_without_splitting_a_command() {
+        let plan = TmuxCommandPlan {
+            commands: (0..4)
+                .map(|index| TmuxCommand::SetGlobal {
+                    name: format!("@VALUE_{index}"),
+                    value: "x".repeat(40),
+                })
+                .collect(),
+        };
+
+        let chunks = serialized_plan_chunks(&plan, 100);
+
+        assert_eq!(chunks.len(), 4);
+        assert_eq!(chunks[0].range, 0..1);
+        assert_eq!(chunks[3].range, 3..4);
+        assert!(chunks.iter().all(|chunk| chunk.command_list.len() < 100));
     }
 
     #[test]

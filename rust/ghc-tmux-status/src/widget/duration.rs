@@ -10,7 +10,7 @@ pub struct DurationWidget;
 impl ComputedWidget for DurationWidget {
     fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
         let duration = format_duration(
-            (unix_timestamp_seconds() as i64).saturating_sub(context.snapshot.session_created),
+            (unix_timestamp_seconds() as i64).saturating_sub(context.render_session_created),
         );
         let body_literal = format!(" {duration} ");
         let literal_text = pill_literal(&body_literal);

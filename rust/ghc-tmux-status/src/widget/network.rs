@@ -23,26 +23,34 @@ impl TemplateWidget for NetworkWidget {
 
 pub fn encode_network_snapshot(snapshot: &NetworkSnapshot) -> String {
     format!(
-        "{}\t{}\t{}\t{}\t{}",
+        "{}\t{}\t{}\t{}\t{}\t{}",
         snapshot.sample.timestamp_seconds,
         snapshot.sample.rx_bytes,
         snapshot.sample.tx_bytes,
         snapshot.rx_bytes_per_second,
-        snapshot.tx_bytes_per_second
+        snapshot.tx_bytes_per_second,
+        snapshot.sample.interface
     )
 }
 
 pub fn decode_network_snapshot(value: &str) -> Option<NetworkSnapshot> {
-    let mut parts = value.splitn(5, '\t');
+    let mut parts = value.splitn(6, '\t');
     let sample = NetworkSample {
         timestamp_seconds: parts.next()?.parse::<u64>().ok()?,
         rx_bytes: parts.next()?.parse::<u64>().ok()?,
         tx_bytes: parts.next()?.parse::<u64>().ok()?,
+        interface: String::new(),
     };
+    let rx_bytes_per_second = parts.next()?.parse::<u64>().ok()?;
+    let tx_bytes_per_second = parts.next()?.parse::<u64>().ok()?;
+    let interface = parts.next().unwrap_or_default().to_string();
     Some(NetworkSnapshot {
-        sample,
-        rx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
-        tx_bytes_per_second: parts.next()?.parse::<u64>().ok()?,
+        sample: NetworkSample {
+            interface,
+            ..sample
+        },
+        rx_bytes_per_second,
+        tx_bytes_per_second,
     })
 }
 
@@ -126,6 +134,7 @@ mod tests {
                 timestamp_seconds: 1,
                 rx_bytes: 2,
                 tx_bytes: 3,
+                interface: "en0".to_string(),
             },
         };
         assert_eq!(format_network_now(&snapshot), "↓12.0K ↑999B");
@@ -140,9 +149,18 @@ mod tests {
                 timestamp_seconds: 1,
                 rx_bytes: 2,
                 tx_bytes: 3,
+                interface: "utun4".to_string(),
             },
         };
         let parsed = decode_network_snapshot(&super::encode_network_snapshot(&snapshot)).unwrap();
         assert_eq!(parsed, snapshot);
+    }
+
+    #[test]
+    fn decodes_legacy_snapshot_without_reusing_an_unowned_interface_baseline() {
+        let parsed = decode_network_snapshot("1\t2\t3\t4\t5").unwrap();
+        assert_eq!(parsed.sample.interface, "");
+        assert_eq!(parsed.rx_bytes_per_second, 4);
+        assert_eq!(parsed.tx_bytes_per_second, 5);
     }
 }

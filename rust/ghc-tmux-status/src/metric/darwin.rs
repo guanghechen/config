@@ -1,9 +1,10 @@
-use std::process::Command;
+use std::time::Duration;
 
 use crate::error::{AppError, AppResult};
 use crate::metric::{
     CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
 };
+use crate::process::output_with_timeout;
 use crate::util::time::unix_timestamp_seconds;
 
 pub struct DarwinMetricsProvider {
@@ -43,7 +44,7 @@ impl MetricsProvider for DarwinMetricsProvider {
         };
         let (rx_bytes, tx_bytes) = read_network_counters(&interface)?;
         let (rx_bytes_per_second, tx_bytes_per_second) =
-            calculate_speed(previous, timestamp_seconds, rx_bytes, tx_bytes);
+            calculate_speed(previous, &interface, timestamp_seconds, rx_bytes, tx_bytes);
 
         Ok(NetworkSnapshot {
             rx_bytes_per_second,
@@ -52,6 +53,7 @@ impl MetricsProvider for DarwinMetricsProvider {
                 timestamp_seconds,
                 rx_bytes,
                 tx_bytes,
+                interface,
             },
         })
     }
@@ -194,7 +196,8 @@ fn parse_route_interface(output: &str) -> Option<String> {
 }
 
 fn command_output(command: &str, args: &[&str]) -> AppResult<String> {
-    let output = Command::new(command).args(args).output()?;
+    const METRIC_COMMAND_TIMEOUT: Duration = Duration::from_secs(1);
+    let output = output_with_timeout(command, args, METRIC_COMMAND_TIMEOUT)?;
     if !output.status.success() {
         return Err(AppError::Render(format!(
             "metrics command failed: {} {}",
@@ -266,6 +269,7 @@ fn parse_netstat_counters(output: &str) -> AppResult<(u64, u64)> {
 
 fn calculate_speed(
     previous: Option<&NetworkSample>,
+    interface: &str,
     timestamp_seconds: u64,
     rx_bytes: u64,
     tx_bytes: u64,
@@ -273,6 +277,9 @@ fn calculate_speed(
     let Some(previous) = previous else {
         return (0, 0);
     };
+    if previous.interface != interface {
+        return (0, 0);
+    }
     let elapsed = timestamp_seconds.saturating_sub(previous.timestamp_seconds);
     if elapsed == 0 || rx_bytes < previous.rx_bytes || tx_bytes < previous.tx_bytes {
         return (0, 0);
@@ -456,7 +463,15 @@ mod tests {
             timestamp_seconds: 10,
             rx_bytes: 100,
             tx_bytes: 200,
+            interface: "en0".to_string(),
         };
-        assert_eq!(calculate_speed(Some(&previous), 20, 1100, 700), (100, 50));
+        assert_eq!(
+            calculate_speed(Some(&previous), "en0", 20, 1100, 700),
+            (100, 50)
+        );
+        assert_eq!(
+            calculate_speed(Some(&previous), "utun4", 20, 50_000, 50_000),
+            (0, 0)
+        );
     }
 }

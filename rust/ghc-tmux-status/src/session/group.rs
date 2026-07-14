@@ -1,12 +1,23 @@
+use std::collections::BTreeMap;
+
 use crate::model::{SessionGroupView, SessionInfo};
 
 pub struct SessionGrouper;
 
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum SessionGroupKey {
+    Popup,
+    Agent,
+    Numbered(String),
+    Default,
+}
+
 impl SessionGrouper {
     pub fn group(current_session_name: &str, sessions: &[SessionInfo]) -> SessionGroupView {
+        let current_key = Self::key(current_session_name);
         let sessions = sessions
             .iter()
-            .filter(|session| same_session_group(current_session_name, &session.name))
+            .filter(|session| Self::key(&session.name) == current_key)
             .cloned()
             .collect();
 
@@ -16,40 +27,40 @@ impl SessionGrouper {
         }
     }
 
+    #[cfg(test)]
     pub fn count(current_session_name: &str, sessions: &[SessionInfo]) -> usize {
+        let current_key = Self::key(current_session_name);
         sessions
             .iter()
-            .filter(|session| same_session_group(current_session_name, &session.name))
+            .filter(|session| Self::key(&session.name) == current_key)
             .count()
+    }
+
+    pub fn counts(sessions: &[SessionInfo]) -> BTreeMap<SessionGroupKey, usize> {
+        let mut counts = BTreeMap::new();
+        for session in sessions {
+            *counts.entry(Self::key(&session.name)).or_default() += 1;
+        }
+        counts
+    }
+
+    pub fn key(session_name: &str) -> SessionGroupKey {
+        if session_name.starts_with("_popup@") {
+            return SessionGroupKey::Popup;
+        }
+        if is_agent_session(session_name) {
+            return SessionGroupKey::Agent;
+        }
+        if let Some(group_id) = grouped_session_id(session_name) {
+            return SessionGroupKey::Numbered(group_id.to_string());
+        }
+        SessionGroupKey::Default
     }
 }
 
+#[cfg(test)]
 pub fn same_session_group(current_session_name: &str, session_name: &str) -> bool {
-    if current_session_name.starts_with("_popup@") {
-        return session_name.starts_with("_popup@");
-    }
-
-    if is_agent_session(current_session_name) {
-        return is_agent_session(session_name);
-    }
-
-    if let Some(group_id) = grouped_session_id(current_session_name) {
-        return grouped_session_id(session_name) == Some(group_id);
-    }
-
-    if session_name.starts_with("_popup@") {
-        return false;
-    }
-
-    if is_agent_session(session_name) {
-        return false;
-    }
-
-    if grouped_session_id(session_name).is_some() {
-        return false;
-    }
-
-    true
+    SessionGrouper::key(current_session_name) == SessionGrouper::key(session_name)
 }
 
 fn is_agent_session(session_name: &str) -> bool {
@@ -114,6 +125,11 @@ mod tests {
                 layout_key: String::new(),
                 left_length: String::new(),
                 right_length: String::new(),
+                format_0: String::new(),
+                format_1: String::new(),
+                render_key: String::new(),
+                cache_witnesses: std::array::from_fn(|_| String::new()),
+                created: 0,
             })
             .collect::<Vec<_>>();
 

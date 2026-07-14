@@ -36,14 +36,13 @@ function _ghc_tmux_unset_status_layout_hooks_ {
   done
 }
 
-# The renderer writes LAYOUT (rows / status-format / lengths / @GHC_SL_LAYOUT) per
-# session, and per-session options shadow the global ones. Switching modes (or any
-# reload) must clear those overrides on EVERY session, else a session left at
-# `status 2` keeps two rows under status01. We only undo the renderer's two-row
-# narrow (`status 2` -> `on`); on/off ownership is left untouched, so popup/agent
-# sessions stay `off` without needing any name-class knowledge here. All sessions'
-# resets are folded into one tmux invocation; `-q` keeps a session that vanishes
-# mid-reload from aborting the rest of the chain.
+# The renderer writes both render cache and LAYOUT (rows / status-format / lengths /
+# @GHC_SL_LAYOUT) per session. Switching modes (or any reload) must clear those
+# overrides on EVERY session, else stale cache shadows the next global fallback and
+# a session left at `status 2` keeps two rows under status01. We only undo the
+# renderer's two-row narrow (`status 2` -> `on`); on/off ownership is left untouched,
+# so popup/agent sessions stay `off` without name-class knowledge here. All resets
+# are folded into one tmux invocation; `-q` tolerates a session vanishing mid-reload.
 function _ghc_tmux_reset_per_session_layout_ {
   local -a args=()
   local session_id session_status
@@ -52,6 +51,11 @@ function _ghc_tmux_reset_per_session_layout_ {
       args+=(';')
     fi
     args+=(set -q -t "$session_id" -u '@GHC_SL_LAYOUT' ';' \
+           set -q -t "$session_id" -u '@GHC_SL_RENDER_KEY' ';' \
+           set -q -t "$session_id" -u '@GHC_SL_STATUS02_LEFT' ';' \
+           set -q -t "$session_id" -u '@GHC_SL_STATUS02_RIGHT' ';' \
+           set -q -t "$session_id" -u '@GHC_SL_STATUS02_SESSION_FORMAT' ';' \
+           set -q -t "$session_id" -u '@GHC_SL_STATUS02_CURRENT_FORMAT' ';' \
            set -q -t "$session_id" -u 'status-format' ';' \
            set -q -t "$session_id" -u 'status-left-length' ';' \
            set -q -t "$session_id" -u 'status-right-length')
@@ -181,6 +185,9 @@ function _ghc_tmux_load_theme_ {
 
         if ! "$status_renderer" apply theme-loaded; then
           _ghc_tmux_unset_status_layout_hooks_
+          # Guarded replay can fail after committing a prefix of the plan. Roll
+          # back every renderer-owned local option before status01 takes over.
+          _ghc_tmux_reset_per_session_layout_
           _ghc_tmux_load_status01_ "$status_position"
           tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true
         else

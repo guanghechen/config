@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use crate::model::SessionInfo;
 use crate::session::item::{FocusTarget, MoveDirection, SwapOutcome};
 
@@ -6,9 +8,17 @@ const ORDER_SEPARATOR: char = '\t';
 
 pub fn ordered_sessions(sessions: &[SessionInfo], order_value: Option<&str>) -> Vec<SessionInfo> {
     let order = normalized_order(sessions, order_value);
+    let sessions_by_id = sessions
+        .iter()
+        .map(|session| (session.id.as_str(), session))
+        .collect::<BTreeMap<_, _>>();
     order
         .iter()
-        .filter_map(|id| sessions.iter().find(|session| &session.id == id).cloned())
+        .filter_map(|id| {
+            sessions_by_id
+                .get(id.as_str())
+                .map(|session| (*session).clone())
+        })
         .collect()
 }
 
@@ -89,14 +99,19 @@ pub fn swap_current(
 
 fn normalized_order(sessions: &[SessionInfo], order_value: Option<&str>) -> Vec<String> {
     let mut order = Vec::new();
+    let live_ids = sessions
+        .iter()
+        .map(|session| session.id.as_str())
+        .collect::<BTreeSet<_>>();
+    let mut seen = BTreeSet::new();
     for id in parse_order(order_value) {
-        if sessions.iter().any(|session| session.id == id) && !order.contains(&id) {
+        if live_ids.contains(id.as_str()) && seen.insert(id.clone()) {
             order.push(id);
         }
     }
 
     for session in sessions_by_creation_id(sessions) {
-        if !order.contains(&session.id) {
+        if seen.insert(session.id.clone()) {
             order.push(session.id.clone());
         }
     }
@@ -297,6 +312,11 @@ mod tests {
                 layout_key: String::new(),
                 left_length: String::new(),
                 right_length: String::new(),
+                format_0: String::new(),
+                format_1: String::new(),
+                render_key: String::new(),
+                cache_witnesses: std::array::from_fn(|_| String::new()),
+                created: 0,
             })
             .collect()
     }

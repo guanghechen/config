@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum RenderEventKind {
@@ -69,6 +70,15 @@ pub struct SessionInfo {
     /// This session's effective `status-left-length` / `status-right-length`.
     pub left_length: String,
     pub right_length: String,
+    /// Effective status row formats used to verify renderer-owned layout state.
+    pub format_0: String,
+    pub format_1: String,
+    /// Fingerprint of this session's renderer-owned cache options.
+    pub render_key: String,
+    /// Fixed-size prefixes read from the four actual renderer-owned cache values.
+    /// They detect drift without copying every full rich-text value into snapshots.
+    pub cache_witnesses: [String; 4],
+    pub created: i64,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -86,6 +96,13 @@ pub struct TmuxSnapshot {
     /// Owner-scope values only: global session options plus authoritative server
     /// generations. Effective per-session layout/status values live in `sessions`.
     pub options: BTreeMap<String, String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SessionNavigationSnapshot {
+    pub current_session_name: String,
+    pub sessions: Vec<SessionInfo>,
+    pub order_value: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -191,15 +208,21 @@ impl RenderedSegment {
 pub struct RenderedStatus {
     pub status_left: RenderedSegment,
     pub status_right: RenderedSegment,
-    pub session_format: RenderedSegment,
+    /// Right side of the two-row session line. The fixed status-format template
+    /// composes it with status_left through tmux indirection.
+    pub session_right: RenderedSegment,
     pub current_format: RenderedSegment,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RenderContext {
-    pub snapshot: TmuxSnapshot,
+    /// One immutable snapshot is shared by all per-session render contexts in an apply.
+    pub snapshot: Rc<TmuxSnapshot>,
     pub group: SessionGroupView,
     pub layout: LayoutPlan,
+    /// Session whose time-dependent widgets are being rendered. This is explicit
+    /// because the snapshot's invoking client is not the owner of every session cache.
+    pub render_session_created: i64,
     /// Resolved target layout for every reconciled (ON, attached) session.
     pub session_layouts: Vec<SessionLayout>,
 }
@@ -214,8 +237,20 @@ pub struct SessionLayout {
     pub current_layout_key: String,
     pub current_left_length: String,
     pub current_right_length: String,
+    pub current_format_0: String,
+    pub current_format_1: String,
+    pub current_render_key: String,
+    pub current_cache_witnesses: [String; 4],
+    pub session_created: i64,
     pub layout: LayoutPlan,
     pub width: usize,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SessionRenderedStatus {
+    pub session_layout: SessionLayout,
+    pub render_key: String,
+    pub status: RenderedStatus,
 }
 
 #[cfg(test)]
