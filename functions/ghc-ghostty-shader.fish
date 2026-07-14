@@ -8,6 +8,7 @@ function ghc-ghostty-shader
         fireworks-rockets \
         gears-and-belts \
         inside-the-matrix \
+        inside-the-matrix-light \
         just-snow \
         matrix-hallway \
         mnoise \
