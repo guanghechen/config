@@ -95,6 +95,7 @@ mod tests {
     #[test]
     fn agent_sessions_are_grouped_together() {
         assert!(same_session_group("codex-deadbeef", "claude-123abc"));
+        assert!(same_session_group("codex-DEADBEEF", "claude-Ab12"));
         assert!(!same_session_group("codex-deadbeef", "main"));
     }
 

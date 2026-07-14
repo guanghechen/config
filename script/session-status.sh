@@ -9,8 +9,8 @@ function _ghc_tmux_same_session_group_ {
     return
   fi
 
-  if [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
-    [[ "${session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]
+  if [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9A-Fa-f]+$ ]]; then
+    [[ "${session_name}" =~ ^(claude|codex|gemini)-[0-9A-Fa-f]+$ ]]
     return
   fi
 
@@ -23,7 +23,7 @@ function _ghc_tmux_same_session_group_ {
     return 1
   fi
 
-  if [[ "${session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
+  if [[ "${session_name}" =~ ^(claude|codex|gemini)-[0-9A-Fa-f]+$ ]]; then
     return 1
   fi
 

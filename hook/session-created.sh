@@ -26,7 +26,7 @@ function _ghc_tmux_hook_session_created {
   if [[ "${new_session_name}" == _popup@* ]]; then
     tmux set-option -t "${new_session_id}" status off
     tmux set-option -t "${new_session_id}" detach-on-destroy on
-  elif [[ "${new_session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
+  elif [[ "${new_session_name}" =~ ^(claude|codex|gemini)-[0-9A-Fa-f]+$ ]]; then
     tmux set-option -t "${new_session_id}" status off
     tmux set-option -t "${new_session_id}" detach-on-destroy on
   elif [[ "${new_session_name}" =~ ^G[0-9]+- ]]; then

@@ -28,13 +28,13 @@ function _ghc_tmux_focus_session_ {
 
   if [[ "${current_session_name}" == _popup@* ]]; then
     sessions=$(tmux list-sessions -F '#{session_name}' | grep '^_popup@')
-  elif [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9a-f]+$ ]]; then
-    sessions=$(tmux list-sessions -F '#{session_name}' | grep -E '^(claude|codex|gemini)-[0-9a-f]+$')
+  elif [[ "${current_session_name}" =~ ^(claude|codex|gemini)-[0-9A-Fa-f]+$ ]]; then
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep -E '^(claude|codex|gemini)-[0-9A-Fa-f]+$')
   elif [[ "${current_session_name}" =~ ^G([0-9]+)- ]]; then
     local group_prefix="G${BASH_REMATCH[1]}-"
     sessions=$(tmux list-sessions -F '#{session_name}' | grep "^${group_prefix}")
   else
-    sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9a-f]+$' | grep -v -E '^G[0-9]+-')
+    sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9A-Fa-f]+$' | grep -v -E '^G[0-9]+-')
   fi
 
   if [[ "${direction}" =~ ^[0-9]$ ]]; then
