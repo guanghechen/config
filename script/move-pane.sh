@@ -48,8 +48,8 @@ function _ghc_tmux_move_pane_ {
   fi
 
   local target_window
-  if ! target_window=$(tmux show-options -pqv -t "${source_pane_id}" "${GHC_MOVE_PANE_TARGET_OPTION}"); then
-    _ghc_tmux_notify_ "source pane not found: ${source_pane_id}"
+  if ! target_window=$(tmux show-options -pv -t "${source_pane_id}" "${GHC_MOVE_PANE_TARGET_OPTION}" 2>/dev/null); then
+    _ghc_tmux_notify_ "move target unavailable for pane: ${source_pane_id}"
     return 1
   fi
 
