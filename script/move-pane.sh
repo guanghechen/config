@@ -14,8 +14,9 @@ function _ghc_tmux_find_window_ {
   local window_index
   local window_id
   local window_name
+  local window_separator=$'\t'
 
-  while read -r window_index window_id window_name; do
+  while IFS="${window_separator}" read -r window_index window_id window_name; do
     if [ "${window_index}" = "${target_window}" ]; then
       printf '%s' "${window_id}"
       return 0
@@ -25,7 +26,7 @@ function _ghc_tmux_find_window_ {
       matched_window_id=${window_id}
       match_count=$((match_count + 1))
     fi
-  done < <(tmux list-windows -t "${session_name}" -F '#{window_index} #{window_id} #{window_name}')
+  done < <(tmux list-windows -t "${session_name}" -F "#{window_index}${window_separator}#{window_id}${window_separator}#{window_name}")
 
   if [ "${match_count}" -eq 1 ]; then
     printf '%s' "${matched_window_id}"
