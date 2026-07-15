@@ -61,6 +61,12 @@ function _ghc_tmux_popup_ {
 
       # Check if the current popup pane is not under or equals with the current_pane_path
       if [[ "${current_popup_pane_path}" != "${current_pane_path}" ]] && [[ "${current_popup_pane_path}" != "${current_pane_path_with_slash}"* ]]; then
+        local popup_is_shell
+        popup_is_shell=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" -F '#{==:#{pane_current_command},#{b:default-shell}}')
+        if [ "${popup_is_shell}" != "1" ]; then
+          return 0
+        fi
+
         local popup_active_pane_id
         popup_active_pane_id=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" "#{pane_id}")
         current_pane_path=$(printf '%q' "$current_pane_path") # Escape the path.
