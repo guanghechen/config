@@ -137,7 +137,7 @@
           "branch": "ora",
           "editions": ["nix", "nix-remote", "osx", "win"],
           "on": {
-            "synced": "pnpm install"
+            "synced": "pnpm install -y"
           }
         },
         {
@@ -191,7 +191,7 @@
           "branch": "yoz",
           "editions": ["nix", "osx"],
           "on": {
-            "synced": "pnpm install"
+            "synced": "pnpm install -y"
           }
         },
         {
