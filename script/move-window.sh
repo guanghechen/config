@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+readonly GHC_MOVE_WINDOW_TARGET_OPTION='@GHC_MOVE_WINDOW_TARGET'
+
 function _ghc_tmux_notify_ {
   tmux display-message "[move-window] $1"
 }
@@ -33,7 +35,24 @@ function _ghc_tmux_fallback_move_window_ {
 }
 
 function _ghc_tmux_move_window_ {
-  local target_session_name=$1
+  local source_pane_id=$1
+  if [ -z "${source_pane_id}" ]; then
+    _ghc_tmux_notify_ "missing source pane"
+    return 1
+  fi
+
+  local target_session_name
+  if ! target_session_name=$(tmux show-options -pv -t "${source_pane_id}" "${GHC_MOVE_WINDOW_TARGET_OPTION}" 2>/dev/null); then
+    _ghc_tmux_notify_ "move target unavailable for pane: ${source_pane_id}"
+    return 1
+  fi
+
+  # Consume before moving so failures cannot leave stale input on the pane.
+  if ! tmux set-option -pu -t "${source_pane_id}" "${GHC_MOVE_WINDOW_TARGET_OPTION}"; then
+    _ghc_tmux_notify_ "failed to clear target for pane: ${source_pane_id}"
+    return 1
+  fi
+
   if [ -z "${target_session_name}" ]; then
     return 0
   fi
@@ -45,8 +64,14 @@ function _ghc_tmux_move_window_ {
   local link_cmd
   local created_target=0
 
-  current_session_name=$(tmux display-message -p '#{session_name}')
-  current_window_index=$(tmux display-message -p '#{window_index}')
+  if ! current_session_name=$(tmux display-message -p -t "${source_pane_id}" '#{session_name}'); then
+    _ghc_tmux_notify_ "source pane not found: ${source_pane_id}"
+    return 1
+  fi
+  if ! current_window_index=$(tmux display-message -p -t "${source_pane_id}" '#{window_index}'); then
+    _ghc_tmux_notify_ "source pane not found: ${source_pane_id}"
+    return 1
+  fi
   source_window="${current_session_name}:${current_window_index}"
 
   if [ "${current_session_name}" = "${target_session_name}" ]; then
