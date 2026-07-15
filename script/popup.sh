@@ -19,12 +19,12 @@ function _ghc_tmux_popup_ {
       tmux new-session -d -s "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}"
     else
       local exist_target_window=false
-      for window_name in $(tmux list-windows -t "${popup_session_name}" -F '#{window_name}'); do
+      while IFS= read -r window_name; do
         if [[ "${window_name}" = "${popup_window_name}" ]]; then
           exist_target_window=true
           break
         fi
-      done
+      done < <(tmux list-windows -t "${popup_session_name}" -F '#{window_name}')
 
       if $exist_target_window; then
         # Ensure we select the correct window in the popup session
