@@ -53,10 +53,10 @@ function _ghc_tmux_popup_ {
 
     # Check if there's exactly one pane in the popup window.
     local popup_pane_count
-    popup_pane_count=$(tmux list-panes | wc -l)
+    popup_pane_count=$(tmux list-panes -t "${popup_session_name}:${popup_window_name}" | wc -l)
     if [ "${popup_pane_count}" -eq 1 ]; then
       local current_popup_pane_path
-      current_popup_pane_path=$(tmux display-message -p -F "#{pane_current_path}")
+      current_popup_pane_path=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" -F "#{pane_current_path}")
       local current_pane_path_with_slash="${current_pane_path%/}/"
 
       # Check if the current popup pane is not under or equals with the current_pane_path
