@@ -37,7 +37,7 @@ function _ghc_tmux_focus_session_ {
     sessions=$(tmux list-sessions -F '#{session_name}' | grep -v '^_popup@' | grep -v -E '^(claude|codex|gemini)-[0-9A-Fa-f]+$' | grep -v -E '^G[0-9]+-')
   fi
 
-  if [[ "${direction}" =~ ^[0-9]$ ]]; then
+  if [[ "${direction}" =~ ^[0-9]+$ ]]; then
     if [ "${direction}" == "0" ]; then
       tmux display-message "No session at index ${direction}"
       return 0
