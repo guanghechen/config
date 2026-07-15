@@ -47,7 +47,7 @@ function _ghc_tmux_popup_ {
     fi
     local popup_border_style="fg=${border_color},bold"
 
-    tmux popup -d '#{pane_current_path}' -xC -yC -w90% -h90% -S "${popup_border_style}" -E "tmux new-session -A -s ${popup_session_name}" &
+    tmux popup -d '#{pane_current_path}' -xC -yC -w90% -h90% -S "${popup_border_style}" -e "GHC_POPUP_SESSION_NAME=${popup_session_name}" -E 'tmux new-session -A -s "$GHC_POPUP_SESSION_NAME"' &
 
     sleep 0.3 # Sleep 300ms.
 
