@@ -17,25 +17,17 @@
   },
   "dependencies": {
     "@guanghechen/equal": "2.0.4",
-    "@guanghechen/react-hooks": "3.0.15",
-    "@guanghechen/react-viewmodel": "0.2.19",
     "@guanghechen/viewmodel": "2.1.4",
-    "eslint-plugin-tailwindcss": "4.2.0",
-    "lodash.debounce": "4.0.8",
     "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "tailwindcss": "4.3.2"
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@guanghechen/chalk": "1.0.4",
     "@guanghechen/eslint-config": "7.1.0",
-    "@guanghechen/reporter": "3.3.1",
     "@guanghechen/rollup-config": "6.0.12",
     "@rollup/plugin-replace": "6.0.3",
     "@rollup/plugin-terser": "1.0.0",
     "@tailwindcss/vite": "4.3.2",
     "@types/chrome": "^0.2.2",
-    "@types/lodash.debounce": "4.0.9",
     "@types/node": "24.13.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
@@ -47,7 +39,7 @@
     "npm-watch": "0.13.0",
     "prettier": "3.9.5",
     "rollup": "4.62.2",
-    "ts-node": "10.9.2",
+    "tailwindcss": "4.3.2",
     "tslib": "^2.8.1",
     "typescript": "6.0.3",
     "vite": "8.1.5"
