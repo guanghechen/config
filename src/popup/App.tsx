@@ -87,7 +87,7 @@ export function App() {
     <main className="popup-shell" aria-busy={isBusy}>
       <header className="app-header">
         <div className="brand-mark" aria-hidden="true">
-          月
+          <img src="/images/icon-48.png" alt="" />
         </div>
         <div className="app-heading">
           <p className="eyebrow">Tsuki settings</p>
