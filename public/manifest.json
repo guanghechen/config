@@ -43,6 +43,11 @@
       "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
       "js": ["inject/reddit.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["https://usaco.training/*"],
+      "js": ["inject/usaco.js"],
+      "run_at": "document_start"
     }
   ],
   "host_permissions": ["http://localhost/*", "https://localhost/*"]
