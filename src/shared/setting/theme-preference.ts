@@ -38,9 +38,9 @@ export function subscribeThemePreference(onChange: (value: ThemePreference) => v
   if (typeof chrome === 'undefined' || !chrome.storage?.onChanged) return () => undefined
 
   const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
-    if (areaName !== 'sync') return
+    if (areaName !== 'sync' || !changes[STORAGE_KEY]) return
 
-    const value = changes[STORAGE_KEY]?.newValue
+    const value = changes[STORAGE_KEY].newValue
     onChange(isThemePreference(value) ? value : DEFAULT_THEME_PREFERENCE)
   }
 

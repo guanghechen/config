@@ -3,6 +3,10 @@ export enum TsukiEventNameEnum {
   FILE_SWITCH = '@tsuki/file_switch',
 }
 
+export enum TsukiContentEventNameEnum {
+  PAGE_STATUS = '@tsuki/page_status',
+}
+
 export enum TsukiTargetEnum {
   BROADCAST = '@@tsuki-broad@@',
   CURRENT = '@@tsuki-current@@',

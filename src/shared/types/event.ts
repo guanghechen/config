@@ -28,3 +28,8 @@ export interface IFileSwitchPayload {
   readonly workspace: string | null
   readonly filepath: string
 }
+
+export interface ITsukiPageStatusResponse {
+  readonly enabled: boolean
+  readonly supported: true
+}

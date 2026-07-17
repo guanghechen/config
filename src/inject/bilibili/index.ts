@@ -1,16 +1,39 @@
+import { startPageStyleController } from '@/inject/shared/page-style-controller'
 import { darkTheme } from './theme/darken'
 
-const darken = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-console.log('[tsuki] inject!', { darken })
+const STYLE_ELEMENT_ID = 'tsuki-bilibili-theme'
+const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+let pageEnabled = false
 
-if (darken) {
-  document.addEventListener('DOMContentLoaded', () => {
-    const darkThemeId: string = 'tsuki-dark-theme'
-    if (!document.getElementById(darkThemeId)) {
-      const styleElement = document.createElement('style')
-      styleElement.id = darkThemeId
-      styleElement.textContent = darkTheme
-      document.head.appendChild(styleElement)
-    }
-  })
+function syncStyle() {
+  const existingStyle = document.getElementById(STYLE_ELEMENT_ID)
+  if (!pageEnabled || !systemTheme.matches) {
+    existingStyle?.remove()
+    return
+  }
+
+  if (existingStyle) return
+  const styleElement = document.createElement('style')
+  styleElement.id = STYLE_ELEMENT_ID
+  styleElement.textContent = darkTheme
+  ;(document.head ?? document.documentElement).appendChild(styleElement)
 }
+
+const stopPageStyleController = startPageStyleController({
+  setEnabled: enabled => {
+    pageEnabled = enabled
+    syncStyle()
+  },
+})
+
+const handleSystemThemeChange = () => syncStyle()
+systemTheme.addEventListener('change', handleSystemThemeChange)
+
+window.addEventListener(
+  'pagehide',
+  () => {
+    stopPageStyleController()
+    systemTheme.removeEventListener('change', handleSystemThemeChange)
+  },
+  { once: true },
+)
