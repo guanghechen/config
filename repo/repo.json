@@ -169,7 +169,10 @@
         },
         {
           "branch": "tsuki",
-          "editions": ["nix", "osx", "win"]
+          "editions": ["nix", "osx", "win"],
+          "on": {
+            "synced": "pnpm install -y && pnpm build"
+          }
         },
         {
           "branch": "wezterm",
