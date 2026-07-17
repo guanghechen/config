@@ -1,2 +1,6 @@
 allowBuilds:
   esbuild: true
+
+overrides:
+  # eslint-config@7.1.0 supports ESLint 9 but depends on @eslint/js 10.
+  '@eslint/js@10.0.1': 9.39.5
