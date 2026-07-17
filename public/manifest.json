@@ -20,7 +20,7 @@
     "48": "images/icon.png",
     "128": "images/icon.png"
   },
-  "permissions": ["activeTab", "tabs"],
+  "permissions": ["activeTab", "storage", "tabs"],
   "background": {
     "service_worker": "inject/server.js"
   },

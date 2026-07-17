@@ -1,15 +1,13 @@
-import React from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { App } from './popup/App'
 
-const App: React.FC = () => {
-  return (
-    <React.StrictMode>
-      <React.Suspense fallback={<div>loading...</div>}>
-        <h1>Tsuki</h1>
-      </React.Suspense>
-    </React.StrictMode>
-  )
-}
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Missing popup root element.')
 
-createRoot(document.getElementById('root')!).render(<App />)
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
