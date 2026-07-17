@@ -1,42 +1,55 @@
-import { genConfigs } from '@guanghechen/eslint-config'
+import eslint from '@eslint/js'
+import eslintConfigPrettier from 'eslint-config-prettier'
 import reactHooks from 'eslint-plugin-react-hooks'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
 
-const configs = [
+const tsconfigPath = './tsconfig.eslint.json'
+
+export default [
   {
-    ignores: ['.vscode/', '**/__tmp__/', '**/doc/', '**/example/', '.prettierrc'],
+    ignores: ['.vscode/', '**/__tmp__/', '**/dist/', '**/doc/', '**/example/', '**/node_modules/'],
   },
-  ...genConfigs({ tsconfigPath: './tsconfig.eslint.json' }),
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
   reactHooks.configs.flat['recommended-latest'],
   {
-    settings: {
-      react: { version: 'detect' },
+    files: ['*.{js,mjs,ts}', 'script/**/*.{js,mjs,ts}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: { ...globals.node },
     },
   },
   {
-    files: ['**/*.{ts,cts,mts,tsx,ctsx,mtsx}'],
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.webextensions },
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx,cts,mts}'],
+    languageOptions: {
+      parserOptions: {
+        project: tsconfigPath,
+      },
+    },
     rules: {
-      '@stylistic/arrow-spacing': ['error', { after: true, before: true }],
-      '@stylistic/type-annotation-spacing': [
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': [
         'error',
-        { after: true, before: false, overrides: { arrow: 'ignore' } },
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
       ],
-      '@typescript-eslint/no-unused-vars': 'off',
-      'no-plusplus': 'off',
-      'no-unused-vars': 'off',
     },
   },
-  {
-    files: ['**/*.d.ts'],
-    rules: {
-      'spaced-comment': 'off',
-    },
-  },
-  {
-    files: ['src/**/*.{tsx,jsx}'],
-    rules: {
-      'react/jsx-curly-spacing': 'off',
-    },
-  },
+  eslintConfigPrettier,
 ]
-
-export default configs
