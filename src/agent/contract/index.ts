@@ -1,5 +1,6 @@
 export const AGENT_PAGE_PORT_NAME = 'tsuki-agent-page'
 export const AGENT_PROTOCOL_VERSION = 1
+export const AGENT_PROTOCOL_MISMATCH_CLOSE_CODE = 4002
 
 export const GENERIC_AGENT_CAPABILITIES = [
   'dom.snapshot',
@@ -27,6 +28,7 @@ export type AgentErrorCode =
   | 'PAGE_STALE'
   | 'PAYLOAD_TOO_LARGE'
   | 'PERMISSION_DENIED'
+  | 'PROTOCOL_MISMATCH'
   | 'SENSITIVE_ELEMENT'
   | 'STALE_ELEMENT'
   | 'STALE_SNAPSHOT'
@@ -127,6 +129,7 @@ export interface IAgentControlStatus {
   readonly paired: boolean
   readonly connected: boolean
   readonly grants: ReadonlyArray<string>
+  readonly error?: IAgentError
 }
 
 export interface IAgentControlResponse {

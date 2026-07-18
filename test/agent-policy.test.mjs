@@ -1,7 +1,20 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import {
+  AGENT_PROTOCOL_MISMATCH_CLOSE_CODE as brokerMismatchCloseCode,
+  AGENT_PROTOCOL_VERSION as brokerProtocolVersion,
+} from '../packages/agent-bridge/src/protocol.mjs'
 import { sanitizePageTitle, sanitizePageUrl } from '../src/agent/background/page-url.ts'
 import { isSafeDomSelector } from '../src/agent/content/selector.ts'
+import {
+  AGENT_PROTOCOL_MISMATCH_CLOSE_CODE as extensionMismatchCloseCode,
+  AGENT_PROTOCOL_VERSION as extensionProtocolVersion,
+} from '../src/agent/contract/index.ts'
+
+test('Extension and broker protocol constants remain aligned', () => {
+  assert.equal(extensionProtocolVersion, brokerProtocolVersion)
+  assert.equal(extensionMismatchCloseCode, brokerMismatchCloseCode)
+})
 
 test('DOM selector policy rejects attribute and state oracles', () => {
   const unsafeSelectors = [

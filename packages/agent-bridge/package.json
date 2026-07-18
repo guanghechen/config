@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "bin": {
     "tsuki-agent": "cli/tsuki-agent.mjs"
   },
   "scripts": {
-    "check": "node --check cli/tsuki-agent.mjs && node --check src/client.mjs && node --check src/server.mjs && node --check src/state.mjs",
+    "check": "node --check cli/tsuki-agent.mjs && node --check src/client.mjs && node --check src/protocol.mjs && node --check src/server.mjs && node --check src/state.mjs",
     "start": "node cli/tsuki-agent.mjs serve",
     "test": "node --test test/*.test.mjs"
   },

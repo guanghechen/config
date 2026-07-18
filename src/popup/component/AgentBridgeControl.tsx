@@ -10,7 +10,10 @@ export function AgentBridgeControl({ bridge }: IAgentBridgeControlProps) {
       <div className="agent-heading">
         <div>
           <h2 id="agent-bridge-heading">Agent bridge</h2>
-          <p>{bridge.status.paired ? connectionLabel(bridge.status.connected) : 'Not paired'}</p>
+          <p>
+            {bridge.status.error?.message ??
+              (bridge.status.paired ? connectionLabel(bridge.status.connected) : 'Not paired')}
+          </p>
         </div>
         {bridge.status.paired ? (
           <button

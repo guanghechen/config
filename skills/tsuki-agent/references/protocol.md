@@ -1,5 +1,8 @@
 # Tsuki Agent Protocol
 
+The current protocol version is `1`. Extension, broker, and CLI authenticate with this version
+before any request is accepted. A mismatch closes the connection with `PROTOCOL_MISMATCH`.
+
 ## Target identity
 
 Every page is identified by a document-scoped `pageId`. Navigation invalidates the old page ID.
@@ -26,6 +29,7 @@ Use `--document DOCUMENT_ID` after the page ID when a workflow must reject navig
 ## Expected errors
 
 - `PERMISSION_DENIED`: origin has not been granted.
+- `PROTOCOL_MISMATCH`: Extension and companion protocol versions differ.
 - `PAGE_NOT_FOUND`: page is not registered.
 - `PAGE_STALE`: document changed or disconnected.
 - `CAPABILITY_UNAVAILABLE`: adapter does not provide the operation.

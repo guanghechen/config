@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import WebSocket from 'ws'
+import { request } from '../src/client.mjs'
+import { AGENT_PROTOCOL_MISMATCH_CLOSE_CODE, AGENT_PROTOCOL_VERSION } from '../src/protocol.mjs'
 import { serve } from '../src/server.mjs'
 
 test('pairing codes are one-time and sessions can be revoked', async t => {
@@ -24,8 +26,20 @@ test('pairing codes are one-time and sessions can be revoked', async t => {
 
   await assert.rejects(connect(url, { origin: 'https://example.com' }))
 
+  const incompatible = await connect(url)
+  const incompatibleClose = readClose(incompatible)
+  incompatible.send(JSON.stringify({ type: 'auth', protocolVersion: 999, role: 'extension' }))
+  assert.deepEqual(await readMessage(incompatible), {
+    type: 'auth.error',
+    code: 'PROTOCOL_MISMATCH',
+    message: `Agent protocol v${AGENT_PROTOCOL_VERSION} is required.`,
+    protocolVersion: AGENT_PROTOCOL_VERSION,
+  })
+  assert.equal((await incompatibleClose).code, AGENT_PROTOCOL_MISMATCH_CLOSE_CODE)
+
   const first = await authenticate(url, {
     type: 'auth',
+    protocolVersion: AGENT_PROTOCOL_VERSION,
     role: 'extension',
     pairingCode: 'pairing-code-123',
   })
@@ -36,6 +50,7 @@ test('pairing codes are one-time and sessions can be revoked', async t => {
   await assert.rejects(
     authenticate(url, {
       type: 'auth',
+      protocolVersion: AGENT_PROTOCOL_VERSION,
       role: 'extension',
       pairingCode: 'pairing-code-123',
     }),
@@ -48,12 +63,36 @@ test('pairing codes are one-time and sessions can be revoked', async t => {
 
   const resumed = await authenticate(url, {
     type: 'auth',
+    protocolVersion: AGENT_PROTOCOL_VERSION,
     role: 'extension',
     sessionToken: first.response.sessionToken,
   })
   assert.equal(broker.getPairingCode(), null)
   resumed.socket.send(JSON.stringify({ type: 'ping' }))
   assert.deepEqual(await readMessage(resumed.socket), { type: 'pong' })
+
+  const agentRequest = request('pages.list', { statePath, timeoutMs: 1_000 })
+  const forwarded = await readMessage(resumed.socket)
+  assert.equal(forwarded.type, 'broker.request')
+  assert.equal(forwarded.request.version, AGENT_PROTOCOL_VERSION)
+  assert.equal(forwarded.request.capability, 'pages.list')
+  resumed.socket.send(
+    JSON.stringify({
+      type: 'broker.response',
+      response: {
+        version: AGENT_PROTOCOL_VERSION,
+        requestId: forwarded.request.requestId,
+        ok: true,
+        data: { pages: [] },
+      },
+    }),
+  )
+  assert.deepEqual(await agentRequest, {
+    version: AGENT_PROTOCOL_VERSION,
+    requestId: forwarded.request.requestId,
+    ok: true,
+    data: { pages: [] },
+  })
 
   resumed.socket.send(
     JSON.stringify({ type: 'auth.revoke', sessionToken: first.response.sessionToken }),
@@ -66,6 +105,7 @@ test('pairing codes are one-time and sessions can be revoked', async t => {
   await assert.rejects(
     authenticate(url, {
       type: 'auth',
+      protocolVersion: AGENT_PROTOCOL_VERSION,
       role: 'extension',
       sessionToken: first.response.sessionToken,
     }),
@@ -74,6 +114,7 @@ test('pairing codes are one-time and sessions can be revoked', async t => {
 
   const repaired = await authenticate(url, {
     type: 'auth',
+    protocolVersion: AGENT_PROTOCOL_VERSION,
     role: 'extension',
     pairingCode: nextPairingCode,
   })
@@ -127,6 +168,13 @@ function readMessage(socket) {
     socket.once('message', handleMessage)
     socket.once('close', handleClose)
     socket.once('error', handleError)
+  })
+}
+
+function readClose(socket) {
+  return new Promise((resolve, reject) => {
+    socket.once('close', (code, reason) => resolve({ code, reason: reason.toString() }))
+    socket.once('error', reject)
   })
 }
 

@@ -1,4 +1,5 @@
 import {
+  AGENT_PROTOCOL_MISMATCH_CLOSE_CODE,
   AGENT_PROTOCOL_VERSION,
   isAgentCapability,
   type IAgentBrokerRequest,
@@ -37,6 +38,7 @@ interface IRevocationAttempt {
 
 export class AgentBridge {
   private connected = false
+  private connectionError: IAgentError | null = null
   private disposed = false
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private pairingAttempt: IPairingAttempt | null = null
@@ -74,6 +76,7 @@ export class AgentBridge {
       paired: Boolean(this.session.sessionToken),
       connected: this.connected,
       grants: this.session.grants,
+      error: this.connectionError ?? undefined,
     }
   }
 
@@ -83,6 +86,7 @@ export class AgentBridge {
     if (this.session.sessionToken) throw new Error('Agent bridge is already paired.')
     if (this.pairingAttempt) throw new Error('Agent bridge pairing is already in progress.')
 
+    this.connectionError = null
     this.pairingCode = code
     this.reconnectDelayMs = 250
     await new Promise<void>((resolve, reject) => {
@@ -103,6 +107,7 @@ export class AgentBridge {
     this.failPairing(new Error('Pairing was cancelled.'))
     this.stopHeartbeat()
     this.connected = false
+    this.connectionError = null
     this.session = { grants: [] }
     this.registry.revokeOrigins(new Set(previousSession.grants))
     try {
@@ -180,6 +185,7 @@ export class AgentBridge {
       socket.send(
         JSON.stringify({
           type: 'auth',
+          protocolVersion: AGENT_PROTOCOL_VERSION,
           role: 'extension',
           pairingCode: this.pairingCode ?? undefined,
           sessionToken: this.session.sessionToken,
@@ -200,11 +206,19 @@ export class AgentBridge {
       this.stopHeartbeat()
       this.socket = null
       this.connected = false
+      if (event.code === AGENT_PROTOCOL_MISMATCH_CLOSE_CODE) {
+        this.connectionError = {
+          code: 'PROTOCOL_MISMATCH',
+          message: 'The local broker uses an incompatible agent protocol.',
+        }
+      }
       if (this.pairingAttempt && !this.pairingAttempt.authenticated) {
         const message =
-          event.code === 4003
-            ? 'Pairing code was rejected.'
-            : 'Could not connect to the agent broker.'
+          event.code === AGENT_PROTOCOL_MISMATCH_CLOSE_CODE
+            ? 'The local broker uses an incompatible agent protocol.'
+            : event.code === 4003
+              ? 'Pairing code was rejected.'
+              : 'Could not connect to the agent broker.'
         this.failPairing(new Error(message))
       } else if (this.pairingAttempt?.authenticated) {
         return
@@ -239,7 +253,32 @@ export class AgentBridge {
     if (!message || typeof message !== 'object') return
     const value = message as Record<string, unknown>
 
-    if (value.type === 'auth.ok' && typeof value.sessionToken === 'string') {
+    if (value.type === 'auth.error') {
+      if (value.code === 'PROTOCOL_MISMATCH') {
+        this.connectionError = {
+          code: 'PROTOCOL_MISMATCH',
+          message:
+            typeof value.message === 'string'
+              ? value.message
+              : 'The local broker uses an incompatible agent protocol.',
+        }
+        throw new Error(this.connectionError.message)
+      }
+      throw new Error(
+        typeof value.message === 'string' ? value.message : 'Agent broker authentication failed.',
+      )
+    }
+    if (value.type === 'auth.ok') {
+      if (value.protocolVersion !== AGENT_PROTOCOL_VERSION) {
+        this.connectionError = {
+          code: 'PROTOCOL_MISMATCH',
+          message: 'The local broker uses an incompatible agent protocol.',
+        }
+        throw new Error(this.connectionError.message)
+      }
+      if (typeof value.sessionToken !== 'string') {
+        throw new Error('Agent broker returned an invalid session token.')
+      }
       const sessionToken = value.sessionToken
       if (!sessionToken) throw new Error('Agent broker returned an invalid session token.')
 
@@ -265,6 +304,7 @@ export class AgentBridge {
       this.session = nextSession
       this.pairingCode = null
       this.connected = this.socket?.readyState === WebSocket.OPEN
+      this.connectionError = null
       this.reconnectDelayMs = 250
       this.completePairing()
       if (this.connected) {
@@ -389,6 +429,7 @@ export class AgentBridge {
     const grants = new Set(this.session.grants)
     this.stopHeartbeat()
     this.connected = false
+    this.connectionError = null
     this.session = { grants: [] }
     this.registry.revokeOrigins(grants)
     try {

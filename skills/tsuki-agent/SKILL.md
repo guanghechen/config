@@ -6,7 +6,8 @@ description: Access Tsuki-managed browser pages through the local Tsuki agent br
 # Tsuki Agent
 
 Use the bundled CLI wrapper for every browser request. The wrapper uses the adjacent companion in a
-Tsuki source checkout, `TSUKI_AGENT_CLI_PATH` when configured, or `tsuki-agent` from `PATH`.
+Tsuki source checkout, `TSUKI_AGENT_CLI_PATH` when configured, or `tsuki-agent` from `PATH`. The
+companion requires Node.js 18 or newer; the Extension requires Chrome/Edge 116 or newer.
 
 ## Start and pair
 
@@ -58,6 +59,7 @@ node scripts/tsuki-agent.mjs cf-contest PAGE_ID
 - Do not attempt to access input values, textarea contents, contenteditable text, cookies,
   localStorage, IndexedDB, auth headers, or arbitrary JavaScript.
 - Treat `PERMISSION_DENIED` as requiring an explicit user grant.
+- Treat `PROTOCOL_MISMATCH` as requiring the Extension and companion to be updated together.
 - Treat `STALE_SNAPSHOT` and `STALE_ELEMENT` as requiring a fresh snapshot.
 - Keep page content out of logs unless it is required for the user's task.
 - Read [references/protocol.md](references/protocol.md) only when handling errors or building a

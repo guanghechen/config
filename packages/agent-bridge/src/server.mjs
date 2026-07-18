@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { WebSocket, WebSocketServer } from 'ws'
+import { AGENT_PROTOCOL_MISMATCH_CLOSE_CODE, AGENT_PROTOCOL_VERSION } from './protocol.mjs'
 import { removeState, writeState } from './state.mjs'
 
 const AUTH_TIMEOUT_MS = 5_000
@@ -79,6 +80,16 @@ export async function serve({
       if (!message) return
 
       if (!role) {
+        if (message?.type === 'auth' && message.protocolVersion !== AGENT_PROTOCOL_VERSION) {
+          send(socket, {
+            type: 'auth.error',
+            code: 'PROTOCOL_MISMATCH',
+            message: `Agent protocol v${AGENT_PROTOCOL_VERSION} is required.`,
+            protocolVersion: AGENT_PROTOCOL_VERSION,
+          })
+          socket.close(AGENT_PROTOCOL_MISMATCH_CLOSE_CODE, 'Agent protocol version mismatch')
+          return
+        }
         const auth = authenticate(message)
         if (!auth) {
           socket.close(4003, 'Authentication failed')
@@ -93,10 +104,14 @@ export async function serve({
           extensionSocket = socket
           extensionSessionToken = auth.sessionToken
           pages.clear()
-          send(socket, { type: 'auth.ok', sessionToken: extensionSessionToken })
+          send(socket, {
+            type: 'auth.ok',
+            protocolVersion: AGENT_PROTOCOL_VERSION,
+            sessionToken: extensionSessionToken,
+          })
         } else {
           agentSockets.add(socket)
-          send(socket, { type: 'auth.ok' })
+          send(socket, { type: 'auth.ok', protocolVersion: AGENT_PROTOCOL_VERSION })
         }
         return
       }

@@ -3,6 +3,7 @@
   "name": "tsuki",
   "description": "tsuki plugin",
   "version": "0.0.20250330",
+  "minimum_chrome_version": "116",
   "action": {
     "default_popup": "index.html",
     "default_title": "tsuki",
