@@ -30,8 +30,11 @@ export function AppearanceContainer() {
           aria-describedby="appearance-description appearance-status"
           disabled={appearance.appearanceControlDisabled}
         >
-          <legend>Appearance</legend>
-          <p id="appearance-description">Choose the mode and color themes.</p>
+          <legend className="visually-hidden">Appearance</legend>
+          <div className="appearance-heading">
+            <h2>Appearance</h2>
+            <p id="appearance-description">Choose the mode and color themes.</p>
+          </div>
 
           <ModeControl mode={appearance.appearanceSettings.mode} onChange={appearance.updateMode} />
           <ThemeControl

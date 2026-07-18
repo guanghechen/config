@@ -109,7 +109,8 @@ button {
 .app-heading p,
 .setting-copy h2,
 .setting-copy p,
-.appearance-setting p,
+.appearance-heading h2,
+.appearance-heading p,
 .status-message {
   margin: 0;
 }
@@ -146,7 +147,7 @@ button {
 }
 
 .setting-copy h2,
-.appearance-setting legend {
+.appearance-heading h2 {
   color: var(--text-primary);
   font-size: 0.82rem;
   font-weight: 650;
@@ -154,7 +155,7 @@ button {
 }
 
 .setting-copy p,
-.appearance-setting p {
+.appearance-heading p {
   margin-top: 0.22rem;
   overflow: hidden;
   color: var(--text-secondary);
@@ -227,7 +228,7 @@ button {
 
 .appearance-setting {
   margin: 0;
-  padding: 0.9rem 0 1rem;
+  padding: 1rem 0;
   border: 0;
   transition: opacity 140ms ease;
 }
@@ -309,17 +310,21 @@ button {
 }
 
 .theme-select-row {
-  display: flex;
+  display: grid;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  gap: 0.65rem;
   color: var(--text-secondary);
   font-size: 0.7rem;
   font-weight: 600;
 }
 
+.theme-select-row > span {
+  white-space: nowrap;
+}
+
 .theme-select-row select {
-  width: 12.25rem;
+  width: 100%;
   min-width: 0;
   min-height: 2rem;
   padding: 0.25rem 1.7rem 0.25rem 0.55rem;

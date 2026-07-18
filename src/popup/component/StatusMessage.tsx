@@ -4,6 +4,8 @@ interface IStatusMessageProps {
 }
 
 export function StatusMessage({ error, message }: IStatusMessageProps) {
+  if (!message) return null
+
   return (
     <p
       id="appearance-status"
