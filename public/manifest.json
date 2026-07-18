@@ -33,15 +33,6 @@
       "run_at": "document_start"
     },
     {
-      "matches": [
-        "https://search.bilibili.com/*",
-        "https://space.bilibili.com/*",
-        "https://www.bilibili.com/*"
-      ],
-      "js": ["inject/bilibili.js"],
-      "run_at": "document_start"
-    },
-    {
       "matches": ["https://codeforces.com/*", "https://*.codeforces.com/*"],
       "js": ["inject/codeforces.js"],
       "run_at": "document_start"
