@@ -4,9 +4,16 @@ import terser from '@rollup/plugin-terser'
 import typescript from '@rollup/plugin-typescript'
 import fs from 'node:fs'
 import path from 'node:path'
-import { SOURCE_INJECT_DIR, TARGET_DIR, YOZ_SERVER_PORT, isProduction } from './script/env.mjs'
+import {
+  ROOT_DIR,
+  SOURCE_INJECT_DIR,
+  TARGET_DIR,
+  YOZ_SERVER_PORT,
+  isProduction,
+} from './script/env.mjs'
 
-const entries = fs
+const BACKGROUND_ENTRY = path.join(ROOT_DIR, 'src/background/index.ts')
+const injectEntries = fs
   .readdirSync(SOURCE_INJECT_DIR, { withFileTypes: true })
   .filter(entry => {
     if (!entry.isDirectory()) return false
@@ -15,8 +22,11 @@ const entries = fs
   .map(entry => entry.name)
   .sort()
 
-if (entries.length === 0) {
+if (injectEntries.length === 0) {
   throw new Error(`No inject entries found in ${SOURCE_INJECT_DIR}`)
+}
+if (!fs.existsSync(BACKGROUND_ENTRY)) {
+  throw new Error(`No background entry found at ${BACKGROUND_ENTRY}`)
 }
 
 function createPlugins() {
@@ -27,7 +37,7 @@ function createPlugins() {
       extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
     }),
     typescript({
-      tsconfig: 'tsconfig.inject.json',
+      tsconfig: 'tsconfig.extension.json',
       compilerOptions: {
         outDir: TARGET_DIR,
         declaration: false,
@@ -48,14 +58,28 @@ function createPlugins() {
   ].filter(Boolean)
 }
 
-export default entries.map(entry => ({
-  input: path.join(SOURCE_INJECT_DIR, entry, 'index.ts'),
-  output: {
-    file: path.join(TARGET_DIR, 'inject', `${entry}.js`),
-    format: 'esm',
-    exports: 'named',
-    sourcemap: false,
-  },
-  external: () => false,
-  plugins: createPlugins(),
-}))
+function createConfig(input, output) {
+  return {
+    input,
+    output: {
+      file: output,
+      format: 'esm',
+      exports: 'named',
+      sourcemap: false,
+    },
+    external: () => false,
+    plugins: createPlugins(),
+  }
+}
+
+const injectConfigs = injectEntries.map(entry =>
+  createConfig(
+    path.join(SOURCE_INJECT_DIR, entry, 'index.ts'),
+    path.join(TARGET_DIR, 'inject', `${entry}.js`),
+  ),
+)
+
+export default [
+  ...injectConfigs,
+  createConfig(BACKGROUND_ENTRY, path.join(TARGET_DIR, 'background.js')),
+]

@@ -24,7 +24,7 @@
   },
   "permissions": ["activeTab", "storage", "tabs"],
   "background": {
-    "service_worker": "inject/server.js"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

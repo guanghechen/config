@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     ":upgrade": "pnpm update --interactive --latest && pnpm format",
-    "build": "tsc -b && vite build --emptyOutDir && pnpm inject:build",
+    "build": "tsc -b && vite build --emptyOutDir && pnpm extension:build",
     "bundle": "node script/bundle.mjs",
     "format": "pnpm format:lintfix && pnpm format:prettier",
     "format:prettier": "prettier . --write",
     "format:lintfix": "eslint . --fix",
-    "inject:build": "rollup -c rollup.config.inject.mjs",
-    "inject:build:production": "rollup -c rollup.config.inject.mjs --environment NODE_ENV:production",
-    "inject:watch": "rollup -c rollup.config.inject.mjs -w",
+    "extension:build": "rollup -c rollup.config.extension.mjs",
+    "extension:build:production": "rollup -c rollup.config.extension.mjs --environment NODE_ENV:production",
+    "extension:watch": "rollup -c rollup.config.extension.mjs -w",
     "start": "vite --force",
     "watch": "npm-watch"
   },
