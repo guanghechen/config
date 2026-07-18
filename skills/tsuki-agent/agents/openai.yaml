@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Tsuki Agent'
+  short_description: 'Read granted Tsuki-managed browser pages safely'
+  default_prompt: 'Inspect the granted browser page through Tsuki using read-only capabilities.'

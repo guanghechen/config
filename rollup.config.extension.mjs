@@ -5,6 +5,7 @@ import typescript from '@rollup/plugin-typescript'
 import fs from 'node:fs'
 import path from 'node:path'
 import {
+  AGENT_BRIDGE_PORT,
   ROOT_DIR,
   SOURCE_INJECT_DIR,
   TARGET_DIR,
@@ -48,6 +49,7 @@ function createPlugins() {
     }),
     replace({
       preventAssignment: true,
+      __AGENT_BRIDGE_PORT__: JSON.stringify(AGENT_BRIDGE_PORT),
       __YOZ_SERVER_PORT__: JSON.stringify(YOZ_SERVER_PORT),
     }),
     isProduction &&

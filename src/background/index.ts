@@ -1,3 +1,4 @@
+import { startAgentBackground } from '@/agent/background'
 import { TsukiEventResponseCodeEnum } from '@/shared/enum/event'
 import type {
   ITsukiRequestContext,
@@ -6,11 +7,11 @@ import type {
 } from '@/shared/types/event'
 import { handleEvent } from './handle'
 
-async function setup(): Promise<void> {
+function setup(): void {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('[server] onMessage:', { message, sender })
+    if (!isTsukiRequestMessage(message)) return undefined
 
-    const data: ITsukiRequestData = message.data
+    const data = message.data
     const context: ITsukiRequestContext = {
       sender,
       eventName: data.event,
@@ -19,24 +20,34 @@ async function setup(): Promise<void> {
     }
 
     void handleEvent(context)
-      .then(response => {
-        sendResponse(response)
-      })
+      .then(response => sendResponse(response))
       .catch(error => {
         const response: ITsukiResponseData = {
           code: TsukiEventResponseCodeEnum.SERVER_ERROR,
           error: {
-            message: error?.message || error?.stack || String(error),
-            details: { error },
+            message: error instanceof Error ? error.message : String(error),
+            details: null,
           },
         }
         sendResponse(response)
       })
 
-    return true // Keep the message channel open for async sendResponse
+    return true
   })
+
+  try {
+    startAgentBackground()
+  } catch {
+    // The optional agent bridge must not prevent core background events from starting.
+  }
 }
 
-void setup().catch(error => {
-  console.error(error)
-})
+function isTsukiRequestMessage(value: unknown): value is { readonly data: ITsukiRequestData } {
+  if (!value || typeof value !== 'object') return false
+  const data = (value as { data?: unknown }).data
+  if (!data || typeof data !== 'object') return false
+  const request = data as Partial<ITsukiRequestData>
+  return typeof request.event === 'string' && typeof request.target === 'string'
+}
+
+setup()

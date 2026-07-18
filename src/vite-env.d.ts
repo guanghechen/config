@@ -2,3 +2,4 @@
 /// <reference types="chrome-types" />
 
 declare const __YOZ_SERVER_PORT__: string
+declare const __AGENT_BRIDGE_PORT__: string

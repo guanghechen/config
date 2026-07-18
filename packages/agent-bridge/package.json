@@ -1,0 +1,17 @@
+{
+  "name": "@tsuki/agent-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tsuki-agent": "cli/tsuki-agent.mjs"
+  },
+  "scripts": {
+    "check": "node --check cli/tsuki-agent.mjs && node --check src/client.mjs && node --check src/server.mjs && node --check src/state.mjs",
+    "start": "node cli/tsuki-agent.mjs serve",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "ws": "8.21.1"
+  }
+}

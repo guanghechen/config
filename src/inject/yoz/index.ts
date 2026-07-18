@@ -1,3 +1,5 @@
+import { createGenericAgentAdapter } from '@/agent/adapter/generic'
+import { startAgentPage } from '@/agent/content/runtime'
 import type { TsukiEventNameEnum } from '@/shared/enum/event'
 import { TsukiTargetEnum } from '@/shared/enum/event'
 import type { ITsukiRequestData } from '@/shared/types/event'
@@ -35,3 +37,7 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
     )
   }
 })
+
+const stopAgentPage = startAgentPage(createGenericAgentAdapter('yoz'))
+
+window.addEventListener('pagehide', stopAgentPage, { once: true })

@@ -14,6 +14,7 @@ export const TARGET_DIR = path.resolve(ROOT_DIR, process.env.OUT_DIR || 'dist')
 export const isProduction = process.env.NODE_ENV === 'production'
 export const isDevelopment = process.env.NODE_ENV === 'development'
 export const YOZ_SERVER_PORT = process.env.YOZ_SERVER_PORT || '7071'
+export const AGENT_BRIDGE_PORT = process.env.AGENT_BRIDGE_PORT || '7072'
 
 const extensionManifestContent = fs.readFileSync(path.join(ROOT_DIR, 'public/manifest.json'))
 export const extensionManifest = JSON.parse(extensionManifestContent)

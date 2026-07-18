@@ -1,15 +1,18 @@
+import { AgentBridgeControl } from '../component/AgentBridgeControl'
 import { AppHeader } from '../component/AppHeader'
 import { ModeControl } from '../component/ModeControl'
 import { SiteControl } from '../component/SiteControl'
 import { StatusMessage } from '../component/StatusMessage'
 import { ThemeControl } from '../component/ThemeControl'
+import { useAgentBridge } from '../hook/useAgentBridge'
 import { useAppearance } from '../hook/useAppearance'
 
 export function AppearanceContainer() {
   const appearance = useAppearance()
+  const agentBridge = useAgentBridge(appearance.pageStatus)
 
   return (
-    <main className="popup-shell" aria-busy={appearance.isBusy}>
+    <main className="popup-shell" aria-busy={appearance.isBusy || agentBridge.isBusy}>
       <AppHeader />
 
       <section className="settings-panel" aria-label="Appearance settings">
@@ -44,6 +47,7 @@ export function AppearanceContainer() {
         </fieldset>
       </section>
 
+      <AgentBridgeControl bridge={agentBridge} />
       <StatusMessage error={appearance.errorMessage} message={appearance.statusMessage} />
     </main>
   )

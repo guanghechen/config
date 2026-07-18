@@ -8,13 +8,27 @@ const tsconfigPath = './tsconfig.eslint.json'
 
 export default [
   {
-    ignores: ['.vscode/', '**/__tmp__/', '**/dist/', '**/doc/', '**/example/', '**/node_modules/'],
+    ignores: [
+      '.vscode/',
+      'local/',
+      '**/__tmp__/',
+      '**/dist/',
+      '**/doc/',
+      '**/example/',
+      '**/node_modules/',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   reactHooks.configs.flat['recommended-latest'],
   {
-    files: ['*.{js,mjs,ts}', 'script/**/*.{js,mjs,ts}'],
+    files: [
+      '*.{js,mjs,ts}',
+      'script/**/*.{js,mjs,ts}',
+      'test/**/*.mjs',
+      'packages/agent-bridge/**/*.mjs',
+      'skills/*/scripts/**/*.mjs',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
