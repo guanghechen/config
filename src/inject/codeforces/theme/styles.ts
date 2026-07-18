@@ -1,21 +1,4 @@
-export const darkTheme: string = `
-  :root {
-    --tsuki-cf-page: #0f1117;
-    --tsuki-cf-surface: #171a22;
-    --tsuki-cf-surface-muted: #1e222d;
-    --tsuki-cf-surface-hover: #252b38;
-    --tsuki-cf-border: #343b49;
-    --tsuki-cf-text: #d8dee9;
-    --tsuki-cf-text-muted: #929cab;
-    --tsuki-cf-link: #8ab4f8;
-    --tsuki-cf-link-hover: #b3ceff;
-    --tsuki-cf-accent: #7c8cff;
-    --tsuki-cf-accent-soft: #303a5f;
-    --tsuki-cf-success: #69d28f;
-    --tsuki-cf-danger: #ff7b86;
-    color-scheme: dark;
-  }
-
+export const codeforcesStyles: string = `
   html,
   body,
   #body {
@@ -39,12 +22,16 @@ export const darkTheme: string = `
     color: var(--tsuki-cf-link-hover) !important;
   }
 
+  a:not(.rated-user):not([class*="user-"]):visited {
+    color: var(--tsuki-cf-link-visited) !important;
+  }
+
   #body a:focus-visible,
   #body button:focus-visible,
   #body input:focus-visible,
   #body select:focus-visible,
   #body textarea:focus-visible {
-    outline: 2px solid var(--tsuki-cf-accent) !important;
+    outline: 2px solid var(--tsuki-cf-focus) !important;
     outline-offset: 2px !important;
   }
 
@@ -99,7 +86,7 @@ export const darkTheme: string = `
   #pageContent .second-level-menu-list li.current a,
   #pageContent .second-level-menu-list li.selectedLava a {
     background: var(--tsuki-cf-accent-soft) !important;
-    color: #dce5ff !important;
+    color: var(--tsuki-cf-text) !important;
   }
 
   #pageContent .second-level-menu-list li a:hover,
@@ -110,7 +97,7 @@ export const darkTheme: string = `
 
   #header img[alt="Codeforces"] {
     border-radius: 0.35rem;
-    filter: invert(1) hue-rotate(180deg) brightness(0.95);
+    filter: var(--tsuki-cf-logo-filter);
   }
 
   #pageContent,
@@ -163,7 +150,7 @@ export const darkTheme: string = `
   #pageContent .topic .title a:hover,
   #pageContent .topic .title a:visited,
   #pageContent .comments .title {
-    color: #9bbcf9 !important;
+    color: var(--tsuki-cf-link-hover) !important;
   }
 
   #pageContent .topic .content,
@@ -227,27 +214,27 @@ export const darkTheme: string = `
   }
 
   #pageContent .problems .accepted-problem td.act {
-    background: #173b2a !important;
+    background: var(--tsuki-cf-success-surface) !important;
   }
 
   #pageContent .problems .accepted-problem td.id {
-    border-left-color: #57c785 !important;
+    border-left-color: var(--tsuki-cf-success) !important;
   }
 
   #pageContent .problems .rejected-problem td.act {
-    background: #401f28 !important;
+    background: var(--tsuki-cf-danger-surface) !important;
   }
 
   #pageContent .problems .rejected-problem td.id {
-    border-left-color: #e56b78 !important;
+    border-left-color: var(--tsuki-cf-danger) !important;
   }
 
   #pageContent .problems .submitted-verdict-problem td.act {
-    background: #1e3554 !important;
+    background: var(--tsuki-cf-info-surface) !important;
   }
 
   #pageContent .problems .submitted-verdict-problem td.id {
-    border-left-color: #6ea8ff !important;
+    border-left-color: var(--tsuki-cf-info) !important;
   }
 
   #sidebar .roundbox table.rtable,
@@ -324,8 +311,8 @@ export const darkTheme: string = `
   .CodeMirror,
   .CodeMirror-gutters {
     border-color: var(--tsuki-cf-border) !important;
-    background: #0c0f15 !important;
-    color: #d7dce5 !important;
+    background: var(--tsuki-cf-code) !important;
+    color: var(--tsuki-cf-code-text) !important;
   }
 
   .CodeMirror-cursor {
@@ -334,7 +321,7 @@ export const darkTheme: string = `
 
   .CodeMirror-selected,
   .CodeMirror-focused .CodeMirror-selected {
-    background: #303953 !important;
+    background: var(--tsuki-cf-selection) !important;
   }
 
   #pageContent .MathJax,
@@ -342,37 +329,37 @@ export const darkTheme: string = `
   #pageContent .MathJax_Display,
   #pageContent .MathJax_Display * {
     border-color: currentColor !important;
-    color: var(--tsuki-cf-text) !important;
+    color: var(--tsuki-cf-info) !important;
   }
 
   .prettyprint .kwd,
   .prettyprint .tag,
   .cm-keyword {
-    color: #c792ea !important;
+    color: var(--tsuki-cf-syntax-keyword) !important;
   }
 
   .prettyprint .str,
   .prettyprint .atv,
   .cm-string {
-    color: #c3e88d !important;
+    color: var(--tsuki-cf-syntax-string) !important;
   }
 
   .prettyprint .com,
   .cm-comment {
-    color: #7f8c98 !important;
+    color: var(--tsuki-cf-syntax-comment) !important;
   }
 
   .prettyprint .lit,
   .prettyprint .dec,
   .cm-number {
-    color: #f78c6c !important;
+    color: var(--tsuki-cf-syntax-number) !important;
   }
 
   .prettyprint .typ,
   .prettyprint .atn,
   .cm-variable,
   .cm-def {
-    color: #82aaff !important;
+    color: var(--tsuki-cf-syntax-type) !important;
   }
 
   input[type="text"],
@@ -386,7 +373,7 @@ export const darkTheme: string = `
   .select2-container .select2-choice,
   .select2-container .select2-selection {
     border-color: var(--tsuki-cf-border) !important;
-    background: var(--tsuki-cf-surface-muted) !important;
+    background: var(--tsuki-cf-input) !important;
     color: var(--tsuki-cf-text) !important;
   }
 
@@ -402,7 +389,7 @@ export const darkTheme: string = `
   #body input[type="search"]:hover,
   #body textarea:hover,
   #body select:hover {
-    border-color: #566075 !important;
+    border-color: var(--tsuki-cf-focus) !important;
   }
 
   #body input[type="text"]:focus,
@@ -420,9 +407,9 @@ export const darkTheme: string = `
   input[type="submit"],
   .button,
   .submit {
-    border-color: #6976d9 !important;
-    background: #4d5bc2 !important;
-    color: #ffffff !important;
+    border-color: var(--tsuki-cf-button) !important;
+    background: var(--tsuki-cf-button) !important;
+    color: var(--tsuki-cf-button-text) !important;
   }
 
   button:hover,
@@ -430,8 +417,8 @@ export const darkTheme: string = `
   input[type="submit"]:hover,
   .button:hover,
   .submit:hover {
-    border-color: #929cff !important;
-    background: #6573d9 !important;
+    border-color: var(--tsuki-cf-focus) !important;
+    background: var(--tsuki-cf-button-hover) !important;
   }
 
   button:active,
@@ -439,7 +426,7 @@ export const darkTheme: string = `
   input[type="submit"]:active,
   .button:active,
   .submit:active {
-    background: #414da4 !important;
+    background: var(--tsuki-cf-button-active) !important;
   }
 
   .popup,
@@ -484,7 +471,7 @@ export const darkTheme: string = `
   }
 
   #sidebar .contest-state-phase {
-    color: #9bbcf9 !important;
+    color: var(--tsuki-cf-link-hover) !important;
   }
 
   #sidebar .contest-state-regular {
@@ -507,7 +494,7 @@ export const darkTheme: string = `
   }
 
   #sidebar .sidebar-menu ul li.active {
-    border-color: #5967aa !important;
+    border-color: var(--tsuki-cf-focus) !important;
     background: var(--tsuki-cf-accent-soft) !important;
   }
 
@@ -548,37 +535,37 @@ export const darkTheme: string = `
 
   #body .user-legendary,
   #body .user-red {
-    color: #ff6b76 !important;
+    color: var(--tsuki-cf-user-legendary) !important;
   }
 
   #body .user-legendary::first-letter,
   #body .legendary-user-first-letter,
   #body .user-admin {
-    color: #f2f4f8 !important;
+    color: var(--tsuki-cf-user-first-letter) !important;
   }
 
   #body .user-orange {
-    color: #ffb454 !important;
+    color: var(--tsuki-cf-user-orange) !important;
   }
 
   #body .user-violet {
-    color: #d28cff !important;
+    color: var(--tsuki-cf-user-violet) !important;
   }
 
   #body .user-blue {
-    color: #6ea8ff !important;
+    color: var(--tsuki-cf-user-blue) !important;
   }
 
   #body .user-cyan {
-    color: #4fd1c5 !important;
+    color: var(--tsuki-cf-user-cyan) !important;
   }
 
   #body .user-green {
-    color: #7ddc8a !important;
+    color: var(--tsuki-cf-user-green) !important;
   }
 
   #body .user-gray {
-    color: #aab2c0 !important;
+    color: var(--tsuki-cf-user-gray) !important;
   }
 
   .notice,
@@ -613,11 +600,11 @@ export const darkTheme: string = `
   .verdict-running,
   .datatable td.verdict-waiting,
   .datatable td.verdict-running {
-    color: #f3c969 !important;
+    color: var(--tsuki-cf-warning) !important;
   }
 
   img.tex-formula {
-    filter: invert(0.9) hue-rotate(180deg);
+    filter: var(--tsuki-cf-formula-filter);
   }
 
   div[style*="background-color: white" i],
@@ -632,7 +619,7 @@ export const darkTheme: string = `
   }
 
   ::selection {
-    background: #39446a;
-    color: #ffffff;
+    background: var(--tsuki-cf-selection);
+    color: var(--tsuki-cf-selection-text);
   }
 `.trim()

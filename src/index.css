@@ -109,7 +109,7 @@ button {
 .app-heading p,
 .setting-copy h2,
 .setting-copy p,
-.theme-setting p,
+.appearance-setting p,
 .status-message {
   margin: 0;
 }
@@ -146,7 +146,7 @@ button {
 }
 
 .setting-copy h2,
-.theme-setting legend {
+.appearance-setting legend {
   color: var(--text-primary);
   font-size: 0.82rem;
   font-weight: 650;
@@ -154,7 +154,7 @@ button {
 }
 
 .setting-copy p,
-.theme-setting p {
+.appearance-setting p {
   margin-top: 0.22rem;
   overflow: hidden;
   color: var(--text-secondary);
@@ -225,24 +225,34 @@ button {
   opacity: 0.48;
 }
 
-.theme-setting {
+.appearance-setting {
   margin: 0;
   padding: 0.9rem 0 1rem;
   border: 0;
   transition: opacity 140ms ease;
 }
 
-.theme-setting:disabled {
+.appearance-setting:disabled {
   opacity: 0.48;
 }
 
-.theme-setting legend {
+.appearance-setting legend {
   padding: 0;
+}
+
+.mode-control {
+  margin-top: 0.75rem;
+}
+
+.control-label {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 600;
 }
 
 .theme-options {
   display: grid;
-  margin-top: 0.7rem;
+  margin-top: 0.4rem;
   padding: 0.22rem;
   border: 1px solid var(--border);
   border-radius: 0.65rem;
@@ -290,6 +300,43 @@ button {
 
 .theme-option:has(input:disabled) {
   cursor: not-allowed;
+}
+
+.theme-selectors {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.theme-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.theme-select-row select {
+  width: 12.25rem;
+  min-width: 0;
+  min-height: 2rem;
+  padding: 0.25rem 1.7rem 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+}
+
+.theme-select-row select:hover {
+  border-color: var(--accent);
+}
+
+.theme-select-row select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .status-message {

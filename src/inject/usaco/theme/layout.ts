@@ -1,24 +1,10 @@
 export const layoutTheme: string = `
-  :root {
-    --tsuki-usaco-page: #eef4ef;
-    --tsuki-usaco-surface: #ffffff;
-    --tsuki-usaco-surface-muted: #f4f7f5;
-    --tsuki-usaco-text: #1f2933;
-    --tsuki-usaco-border: #aeb8b0;
-    --tsuki-usaco-link: #075985;
-    --tsuki-usaco-link-visited: #6b21a8;
-    --tsuki-usaco-accent: #166534;
-    --tsuki-usaco-code: #e7ece8;
-    color-scheme: light;
-  }
-
   *, *::before, *::after {
     box-sizing: border-box;
   }
 
   html {
     min-width: 320px;
-    background-color: var(--tsuki-usaco-page) !important;
   }
 
   body {
@@ -27,8 +13,6 @@ export const layoutTheme: string = `
     min-height: 100vh;
     margin: 0 auto !important;
     padding: 1.5rem 0 2.5rem;
-    background: var(--tsuki-usaco-page) !important;
-    color: var(--tsuki-usaco-text) !important;
     font-family:
       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
     font-size: 16px;
@@ -58,7 +42,6 @@ export const layoutTheme: string = `
 
   table, tbody, thead, tfoot, tr, td, th {
     max-width: 100%;
-    border-color: var(--tsuki-usaco-border) !important;
   }
 
   img {
@@ -79,13 +62,8 @@ export const layoutTheme: string = `
   }
 
   a {
-    color: var(--tsuki-usaco-link) !important;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.15em;
-  }
-
-  a:visited {
-    color: var(--tsuki-usaco-link-visited) !important;
   }
 
   a:focus-visible,
@@ -93,7 +71,7 @@ export const layoutTheme: string = `
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--tsuki-usaco-accent), transparent 45%);
+    outline: 2px solid currentColor;
     outline-offset: 2px;
   }
 
@@ -106,10 +84,9 @@ export const layoutTheme: string = `
     max-width: 100%;
     min-height: 2.25rem;
     padding: 0.35rem 0.55rem;
-    border: 1px solid var(--tsuki-usaco-border);
+    border-width: 1px;
+    border-style: solid;
     border-radius: 0.3rem;
-    background: var(--tsuki-usaco-surface) !important;
-    color: var(--tsuki-usaco-text) !important;
     font: inherit;
   }
 
@@ -120,28 +97,20 @@ export const layoutTheme: string = `
     min-height: 2.25rem;
     margin: 0.25rem !important;
     padding: 0.4rem 0.8rem;
-    border: 1px solid var(--tsuki-usaco-accent);
+    border-width: 1px;
+    border-style: solid;
     border-radius: 0.3rem;
-    background: var(--tsuki-usaco-accent) !important;
-    color: #ffffff !important;
     font: inherit;
     font-weight: 600;
     cursor: pointer;
   }
 
-  input[type="reset"] {
-    border-color: var(--tsuki-usaco-border);
-    background: var(--tsuki-usaco-surface-muted) !important;
-    color: var(--tsuki-usaco-text) !important;
-  }
-
   input[type="file"]::file-selector-button {
     margin-right: 0.6rem;
     padding: 0.35rem 0.65rem;
-    border: 1px solid var(--tsuki-usaco-border);
+    border-width: 1px;
+    border-style: solid;
     border-radius: 0.3rem;
-    background: var(--tsuki-usaco-surface-muted);
-    color: var(--tsuki-usaco-text);
     font: inherit;
     cursor: pointer;
   }
@@ -154,28 +123,9 @@ export const layoutTheme: string = `
     max-width: 100%;
     padding: 0.8rem;
     overflow-x: auto;
-    border: 1px solid var(--tsuki-usaco-border);
+    border-width: 1px;
+    border-style: solid;
     border-radius: 0.3rem;
-    background: var(--tsuki-usaco-code) !important;
-  }
-
-  hr {
-    border: 0;
-    border-top: 1px solid var(--tsuki-usaco-border);
-  }
-
-  [bgcolor="white" i],
-  [bgcolor="#ffffff" i],
-  [style*="background-color:white" i],
-  [style*="background-color: white" i] {
-    border-color: var(--tsuki-usaco-border) !important;
-    background-color: var(--tsuki-usaco-surface) !important;
-    color: var(--tsuki-usaco-text) !important;
-  }
-
-  [bgcolor="#000000" i] {
-    background-color: var(--tsuki-usaco-text) !important;
-    color: var(--tsuki-usaco-surface) !important;
   }
 
   @media (max-width: 640px) {
