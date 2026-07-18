@@ -13,15 +13,17 @@ export function AppearanceContainer() {
       <AppHeader />
 
       <section className="settings-panel" aria-label="Appearance settings">
-        <SiteControl
-          disabled={appearance.pageControlDisabled}
-          enabled={appearance.pageStatus?.enabled ?? false}
-          isLoading={appearance.isLoading}
-          siteLabel={appearance.pageStatus?.label}
-          onChange={appearance.updatePageEnabled}
-        />
-
-        <div className="settings-divider" />
+        {appearance.pageStatus ? (
+          <>
+            <SiteControl
+              disabled={appearance.isBusy}
+              enabled={appearance.pageStatus.enabled}
+              siteLabel={appearance.pageStatus.label}
+              onChange={appearance.updatePageEnabled}
+            />
+            <div className="settings-divider" />
+          </>
+        ) : null}
 
         <fieldset
           className="appearance-setting"

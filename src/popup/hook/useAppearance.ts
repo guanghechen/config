@@ -18,8 +18,6 @@ export interface IAppearanceViewModel {
   readonly appearanceSettings: IAppearanceSettings
   readonly errorMessage: string | null
   readonly isBusy: boolean
-  readonly isLoading: boolean
-  readonly pageControlDisabled: boolean
   readonly pageStatus: IActivePageStatus | null
   readonly statusMessage: string
   readonly updateMode: (mode: AppearanceMode) => void
@@ -125,7 +123,6 @@ export function useAppearance(): IAppearanceViewModel {
   }
 
   const isBusy = isLoading || savingTarget !== null
-  const pageControlDisabled = isBusy || !pageStatus
   const appearanceControlDisabled = isBusy || pageStatus?.enabled === false
   const statusMessage =
     errorMessage ??
@@ -142,8 +139,6 @@ export function useAppearance(): IAppearanceViewModel {
     appearanceSettings,
     errorMessage,
     isBusy,
-    isLoading,
-    pageControlDisabled,
     pageStatus,
     statusMessage,
     updateMode,
