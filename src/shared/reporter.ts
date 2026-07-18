@@ -7,7 +7,7 @@ interface IReporterProps {
   readonly getLevel?: () => LogLevel
 }
 
-const lglevel2priority: Record<LogLevel, LogLevelPriority> = {
+const logLevel2priority: Record<LogLevel, LogLevelPriority> = {
   [LogLevel.DEBUG]: LogLevelPriority.DEBUG,
   [LogLevel.VERBOSE]: LogLevelPriority.VERBOSE,
   [LogLevel.INFO]: LogLevelPriority.INFO,
@@ -32,7 +32,7 @@ export class Reporter {
     const getLevel: () => LogLevel = props.getLevel || (() => LogLevel.DEBUG)
     const getLevelPriority: () => LogLevelPriority = () => {
       const level: LogLevel = getLevel()
-      return lglevel2priority[level]
+      return logLevel2priority[level]
     }
 
     const title: string = formatTitle(name, subject)
