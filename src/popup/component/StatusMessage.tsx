@@ -1,0 +1,17 @@
+interface IStatusMessageProps {
+  readonly error: string | null
+  readonly message: string
+}
+
+export function StatusMessage({ error, message }: IStatusMessageProps) {
+  return (
+    <p
+      id="appearance-status"
+      className={error ? 'status-message status-message-error' : 'status-message'}
+      role={error ? 'alert' : 'status'}
+      aria-live="polite"
+    >
+      {message}
+    </p>
+  )
+}
