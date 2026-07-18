@@ -29,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["https://localhost/*", "http://localhost/*"],
-      "js": ["inject/localhost-yoz.js"],
+      "js": ["inject/yoz.js"],
       "run_at": "document_start"
     },
     {
