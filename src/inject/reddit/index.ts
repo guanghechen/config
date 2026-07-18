@@ -1,4 +1,4 @@
-import { startPageStyleController } from '@/inject/shared/page-style-controller'
+import { startPageStyleController } from '@/shared/page-style'
 import { darkTheme } from './theme/darken'
 
 const STYLE_ELEMENT_ID = 'tsuki-reddit-theme'

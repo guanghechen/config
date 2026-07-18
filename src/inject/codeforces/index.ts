@@ -1,4 +1,4 @@
-import { startPageStyleController } from '@/inject/shared/page-style-controller'
+import { startPageStyleController } from '@/shared/page-style'
 import {
   DEFAULT_THEME_PREFERENCE,
   readThemePreference,
