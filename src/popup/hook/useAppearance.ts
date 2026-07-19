@@ -10,6 +10,7 @@ import { writePageEnabled } from '@/shared/setting/page-enabled'
 import type { ThemeKind } from '@/shared/theme/contract'
 import { isThemeIdForKind } from '@/shared/theme/registry'
 import { readActivePageStatus, type IActivePageStatus } from '../service/active-page'
+import { subscribeActivePageChanges } from '../service/active-page-events'
 
 type SavingTarget = 'appearance' | 'page' | null
 
@@ -37,6 +38,22 @@ export function useAppearance(): IAppearanceViewModel {
 
   useEffect(() => {
     let active = true
+    let pageStatusRevision = 0
+
+    const refreshPageStatus = () => {
+      const revision = ++pageStatusRevision
+      if (active) setPageStatus(null)
+      void readActivePageStatus().then(
+        value => {
+          if (active && revision === pageStatusRevision) setPageStatus(value)
+        },
+        () => {
+          if (active && revision === pageStatusRevision) setPageStatus(null)
+        },
+      )
+    }
+    const unsubscribeActivePage = subscribeActivePageChanges(refreshPageStatus)
+    const initialPageStatusRevision = ++pageStatusRevision
 
     void Promise.allSettled([readAppearanceSettings(), readActivePageStatus()]).then(
       ([appearanceResult, pageResult]) => {
@@ -46,8 +63,10 @@ export function useAppearance(): IAppearanceViewModel {
         if (appearanceResult.status === 'fulfilled') setAppearanceSettings(appearanceResult.value)
         else errors.push('Could not load the appearance settings.')
 
-        if (pageResult.status === 'fulfilled') setPageStatus(pageResult.value)
-        else errors.push('Could not check the current page.')
+        if (initialPageStatusRevision === pageStatusRevision) {
+          if (pageResult.status === 'fulfilled') setPageStatus(pageResult.value)
+          else errors.push('Could not check the current page.')
+        }
 
         setErrorMessage(errors.length > 0 ? errors.join(' ') : null)
         setIsLoading(false)
@@ -56,6 +75,7 @@ export function useAppearance(): IAppearanceViewModel {
 
     return () => {
       active = false
+      unsubscribeActivePage()
     }
   }, [])
 

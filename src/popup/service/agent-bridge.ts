@@ -1,4 +1,5 @@
 import type {
+  AgentGrantKind,
   IAgentControlRequest,
   IAgentControlResponse,
   IAgentControlStatus,
@@ -18,9 +19,10 @@ export async function unpairAgentBridge(): Promise<IAgentControlStatus> {
 
 export async function writeAgentOriginGrant(
   origin: string,
+  grant: AgentGrantKind,
   allowed: boolean,
 ): Promise<IAgentControlStatus> {
-  return sendControlRequest({ type: 'agent.control', action: 'setGrant', origin, allowed })
+  return sendControlRequest({ type: 'agent.control', action: 'setGrant', origin, grant, allowed })
 }
 
 async function sendControlRequest(request: IAgentControlRequest): Promise<IAgentControlStatus> {

@@ -415,11 +415,16 @@ button {
   margin-top: 0.2rem;
 }
 
-.agent-grant-row,
+.agent-grant-list,
 .pairing-control {
   margin-top: 0.85rem;
   padding-top: 0.85rem;
   border-top: 1px solid var(--border);
+}
+
+.agent-grant-list {
+  display: grid;
+  gap: 0.65rem;
 }
 
 .agent-grant-copy {

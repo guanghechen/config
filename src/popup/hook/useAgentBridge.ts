@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { IAgentControlStatus } from '@/agent/contract'
+import type { AgentGrantKind, IAgentControlStatus } from '@/agent/contract'
 import type { IActivePageStatus } from '../service/active-page'
 import {
   pairAgentBridge,
@@ -12,17 +12,21 @@ const EMPTY_STATUS: IAgentControlStatus = {
   paired: false,
   connected: false,
   grants: [],
+  memoryGrants: [],
+  actionGrants: [],
 }
 
 export interface IAgentBridgeViewModel {
   readonly currentOrigin: string | null
   readonly errorMessage: string | null
   readonly isBusy: boolean
-  readonly isGranted: boolean
+  readonly isActionGranted: boolean
+  readonly isMemoryGranted: boolean
+  readonly isReadGranted: boolean
   readonly pairingCode: string
   readonly status: IAgentControlStatus
   readonly pair: () => void
-  readonly setGrant: (allowed: boolean) => void
+  readonly setGrant: (grant: AgentGrantKind, allowed: boolean) => void
   readonly setPairingCode: (value: string) => void
   readonly unpair: () => void
 }
@@ -84,10 +88,10 @@ export function useAgentBridge(pageStatus: IActivePageStatus | null): IAgentBrid
     })
   }
 
-  function setGrant(allowed: boolean): void {
+  function setGrant(grant: AgentGrantKind, allowed: boolean): void {
     if (!currentOrigin) return
     void run(async () => {
-      setStatus(await writeAgentOriginGrant(currentOrigin, allowed))
+      setStatus(await writeAgentOriginGrant(currentOrigin, grant, allowed))
     })
   }
 
@@ -110,7 +114,9 @@ export function useAgentBridge(pageStatus: IActivePageStatus | null): IAgentBrid
     currentOrigin,
     errorMessage,
     isBusy,
-    isGranted: currentOrigin ? status.grants.includes(currentOrigin) : false,
+    isActionGranted: currentOrigin ? status.actionGrants.includes(currentOrigin) : false,
+    isMemoryGranted: currentOrigin ? status.memoryGrants.includes(currentOrigin) : false,
+    isReadGranted: currentOrigin ? status.grants.includes(currentOrigin) : false,
     pairingCode,
     status,
     pair,

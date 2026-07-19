@@ -1,4 +1,8 @@
-import type { IAgentControlRequest, IAgentControlResponse } from '@/agent/contract'
+import {
+  isAgentGrantKind,
+  type IAgentControlRequest,
+  type IAgentControlResponse,
+} from '@/agent/contract'
 import { AgentBridge } from './bridge'
 import { PageRegistry } from './page-registry'
 
@@ -68,10 +72,14 @@ async function handleControlRequest(bridge: AgentBridge, request: IAgentControlR
     case 'unpair':
       return bridge.unpair()
     case 'setGrant':
-      if (!request.origin || typeof request.allowed !== 'boolean') {
+      if (
+        !request.origin ||
+        typeof request.allowed !== 'boolean' ||
+        (request.grant !== undefined && !isAgentGrantKind(request.grant))
+      ) {
         throw new Error('Origin and allowed are required.')
       }
-      return bridge.setGrant(request.origin, request.allowed)
+      return bridge.setGrant(request.origin, request.grant ?? 'read', request.allowed)
   }
 }
 

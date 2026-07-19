@@ -1,4 +1,5 @@
 import type { AgentCapability, IAgentElementDescriptor, IAgentSnapshot } from '@/agent/contract'
+import { HighlightOverlay, isBoundsInViewport } from './highlight'
 import { isSafeDomSelector } from './selector'
 
 const DEFAULT_SNAPSHOT_LIMIT = 300
@@ -17,6 +18,7 @@ interface ISnapshotState {
 }
 
 export class DomCapabilityRuntime {
+  private readonly highlightOverlay = new HighlightOverlay()
   private snapshot: ISnapshotState | null = null
 
   public async execute(
@@ -35,12 +37,21 @@ export class DomCapabilityRuntime {
         return this.getAttributes(payload)
       case 'dom.getBounds':
         return this.getBounds(payload)
+      case 'dom.scrollIntoView':
+        return this.scrollIntoView(payload)
+      case 'dom.highlight':
+        return this.highlight(payload)
       default:
         throw createCapabilityError(
           'CAPABILITY_UNAVAILABLE',
           `Unsupported DOM capability: ${capability}`,
         )
     }
+  }
+
+  public dispose(): void {
+    this.highlightOverlay.dispose()
+    this.snapshot = null
   }
 
   private async createSnapshot(
@@ -85,8 +96,8 @@ export class DomCapabilityRuntime {
     const limit = Math.min(readLimit(payload, MAX_QUERY_RESULTS), MAX_QUERY_RESULTS)
     let matchesElement: (element: Element) => boolean
     try {
-      document.documentElement.matches(selector)
-      matchesElement = element => element.matches(selector)
+      elementMatches(document.documentElement, selector)
+      matchesElement = element => elementMatches(element, selector)
     } catch {
       throw createCapabilityError('INVALID_REQUEST', 'Selector is invalid.')
     }
@@ -138,13 +149,42 @@ export class DomCapabilityRuntime {
     readonly height: number
   } {
     const element = this.resolveElement(payload)
-    const bounds = element.getBoundingClientRect()
-    return {
-      x: bounds.x,
-      y: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
+    return readBounds(element)
+  }
+
+  private scrollIntoView(payload: unknown): {
+    readonly scrolled: true
+    readonly bounds: ReturnType<typeof readBounds>
+  } {
+    const request = readRecord(payload)
+    const element = this.resolveElement(payload)
+    const block = readScrollBlock(request.block)
+    Element.prototype.scrollIntoView.call(element, {
+      behavior: 'instant',
+      block,
+      inline: 'nearest',
+    })
+    return { scrolled: true, bounds: readBounds(element) }
+  }
+
+  private highlight(payload: unknown): {
+    readonly highlighted: true
+    readonly durationMs: number
+    readonly bounds: ReturnType<typeof readBounds>
+  } {
+    const request = readRecord(payload)
+    const element = this.resolveElement(payload)
+    const durationMs = readHighlightDuration(request.durationMs)
+    const bounds = readBounds(element)
+    if (bounds.width <= 0 || bounds.height <= 0) {
+      throw createCapabilityError('STALE_ELEMENT', 'Element is no longer visible.')
     }
+    if (!isBoundsInViewport(bounds)) {
+      throw createCapabilityError('INVALID_REQUEST', 'Scroll the element into view first.')
+    }
+
+    this.highlightOverlay.show(element, bounds, durationMs)
+    return { highlighted: true, durationMs, bounds }
   }
 
   private resolveElement(payload: unknown): Element {
@@ -193,20 +233,23 @@ async function collectElements(
 }
 
 function isSemanticElement(element: Element): boolean {
-  if (element.matches('a,button,input,select,textarea,summary,[role],[contenteditable]'))
+  if (elementMatches(element, 'a,button,input,select,textarea,summary,[role],[contenteditable]'))
     return true
-  return /^H[1-6]$/.test(element.tagName) || element.matches('main,nav,form,table,article,section')
+  return (
+    /^H[1-6]$/.test(element.tagName) ||
+    elementMatches(element, 'main,nav,form,table,article,section')
+  )
 }
 
 function isVisible(element: Element): boolean {
   const style = getComputedStyle(element)
-  const bounds = element.getBoundingClientRect()
+  const bounds = readBounds(element)
   return (
     style.display !== 'none' &&
     style.visibility !== 'hidden' &&
     style.visibility !== 'collapse' &&
     style.opacity !== '0' &&
-    !element.closest('[aria-hidden="true"]') &&
+    !closestElement(element, '[aria-hidden="true"]') &&
     bounds.width > 0 &&
     bounds.height > 0
   )
@@ -293,7 +336,7 @@ async function readSafeText(element: Element, limit: number, signal: AbortSignal
       }
       if (
         node !== element &&
-        (node.matches(EXCLUDED_TEXT_ELEMENT_SELECTOR) || isTextSubtreeHidden(node))
+        (elementMatches(node, EXCLUDED_TEXT_ELEMENT_SELECTOR) || isTextSubtreeHidden(node))
       ) {
         continue
       }
@@ -311,8 +354,8 @@ async function readSafeText(element: Element, limit: number, signal: AbortSignal
 }
 
 function isSensitiveElement(element: Element): boolean {
-  if (element.matches(SENSITIVE_ELEMENT_SELECTOR)) return true
-  return Boolean(element.closest('[contenteditable],select'))
+  if (elementMatches(element, SENSITIVE_ELEMENT_SELECTOR)) return true
+  return Boolean(closestElement(element, '[contenteditable],select'))
 }
 
 function assertNotSensitive(element: Element): void {
@@ -340,6 +383,39 @@ function isTextSubtreeHidden(element: Element): boolean {
     style.visibility === 'collapse' ||
     style.opacity === '0'
   )
+}
+
+function readBounds(element: Element): {
+  readonly x: number
+  readonly y: number
+  readonly width: number
+  readonly height: number
+} {
+  const bounds = Element.prototype.getBoundingClientRect.call(element)
+  return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
+}
+
+function elementMatches(element: Element, selector: string): boolean {
+  return Element.prototype.matches.call(element, selector)
+}
+
+function closestElement(element: Element, selector: string): Element | null {
+  return Element.prototype.closest.call(element, selector)
+}
+
+function readScrollBlock(value: unknown): ScrollLogicalPosition {
+  if (value === undefined) return 'center'
+  if (value === 'start' || value === 'center' || value === 'end' || value === 'nearest')
+    return value
+  throw createCapabilityError('INVALID_REQUEST', 'Scroll block is invalid.')
+}
+
+function readHighlightDuration(value: unknown): number {
+  if (value === undefined) return 1_500
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 100 || value > 5_000) {
+    throw createCapabilityError('INVALID_REQUEST', 'Highlight duration must be 100-5000ms.')
+  }
+  return value
 }
 
 function assertWithinScanBudget(scannedNodes: number): void {

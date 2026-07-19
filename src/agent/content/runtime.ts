@@ -2,6 +2,7 @@ import {
   AGENT_PAGE_PORT_NAME,
   AGENT_PROTOCOL_VERSION,
   GENERIC_AGENT_CAPABILITIES,
+  isAgentErrorCode,
   type IAgentError,
   type IAgentPageAdapter,
   type IAgentPageRegistered,
@@ -100,6 +101,7 @@ export function startAgentPage(adapter: IAgentPageAdapter): () => void {
     if (disposed) return
     disposed = true
     if (reconnectTimer !== null) window.clearTimeout(reconnectTimer)
+    domRuntime.dispose()
     port?.disconnect()
     port = null
   }
@@ -128,9 +130,8 @@ function isPageRequest(value: unknown): value is IAgentPageRequest {
 function normalizeError(cause: unknown, timedOut: boolean): IAgentError {
   if (timedOut) return { code: 'TIMEOUT', message: 'Page request timed out.' }
   const error = cause as { code?: unknown; message?: unknown }
-  const code = typeof error?.code === 'string' ? error.code : 'INTERNAL_ERROR'
   return {
-    code: code as IAgentError['code'],
+    code: isAgentErrorCode(error?.code) ? error.code : 'INTERNAL_ERROR',
     message: typeof error?.message === 'string' ? error.message : 'Page request failed.',
   }
 }

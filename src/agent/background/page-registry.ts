@@ -12,6 +12,8 @@ import {
   type IAgentPageResponse,
 } from '@/agent/contract'
 import { sanitizePageTitle, sanitizePageUrl } from './page-url'
+import { createPageMemoryScopeId, resolvePageMemorySourceUrl } from './page-scope'
+import { isWebsiteOriginAllowed } from './website-policy'
 
 const BROWSER_SESSION_KEY = 'tsuki-agent-browser-session-id'
 const MAX_QUEUED_REQUESTS_PER_PAGE = 16
@@ -19,6 +21,7 @@ const MAX_RESPONSE_BYTES = 512 * 1024
 
 interface IPageEntry {
   accessRevision: number
+  privateUrl: string
   record: IAgentPageRecord
   port: chrome.runtime.Port
   pending: Map<string, IPendingRequest>
@@ -59,19 +62,33 @@ export class PageRegistry {
     }
     const handleUpdated = (
       tabId: number,
-      changeInfo: { readonly title?: string; readonly url?: string },
+      changeInfo: { readonly status?: string; readonly title?: string; readonly url?: string },
       tab: chrome.tabs.Tab,
     ) => {
+      if (changeInfo.status === 'loading' || tab.status === 'loading') {
+        for (const [pageId, entry] of this.pages) {
+          if (entry.record.tabId !== tabId) continue
+          this.removePage(pageId, entry, true)
+        }
+        return
+      }
       if (changeInfo.url === undefined && changeInfo.title === undefined) return
 
       for (const [pageId, entry] of this.pages) {
         if (entry.record.tabId !== tabId) continue
 
         const nextOrigin = changeInfo.url ? resolveOrigin(changeInfo.url) : entry.record.origin
-        if (!isWebsiteOriginAllowed(entry.record.website, nextOrigin)) {
-          this.removePage(pageId, entry)
+        if (
+          nextOrigin !== entry.record.origin ||
+          !isWebsiteOriginAllowed(entry.record.website, nextOrigin)
+        ) {
+          this.removePage(pageId, entry, true)
           continue
         }
+
+        const privateUrlChanged =
+          changeInfo.url !== undefined && changeInfo.url !== entry.privateUrl
+        if (changeInfo.url !== undefined) entry.privateUrl = changeInfo.url
 
         const nextUrl = changeInfo.url ? sanitizePageUrl(changeInfo.url) : entry.record.url
         const nextTitle =
@@ -81,7 +98,13 @@ export class PageRegistry {
                 tab.url ?? changeInfo.url ?? entry.record.url,
               )
             : entry.record.title
-        if (nextUrl === entry.record.url && nextTitle === entry.record.title) continue
+        if (
+          !privateUrlChanged &&
+          nextUrl === entry.record.url &&
+          nextTitle === entry.record.title
+        ) {
+          continue
+        }
 
         entry.record = {
           ...entry.record,
@@ -122,6 +145,24 @@ export class PageRegistry {
 
   public hasPage(pageId: string): boolean {
     return this.pages.has(pageId)
+  }
+
+  public async resolvePageMemoryScopeId(pageId: string): Promise<string | null> {
+    const entry = this.pages.get(pageId)
+    if (!entry) return null
+    let tab: chrome.tabs.Tab
+    try {
+      tab = await chrome.tabs.get(entry.record.tabId)
+    } catch {
+      return null
+    }
+    const sourceUrl = resolvePageMemorySourceUrl(tab, entry.privateUrl, entry.record.origin)
+    if (!sourceUrl || !isWebsiteOriginAllowed(entry.record.website, entry.record.origin))
+      return null
+    const sessionId = await this.getBrowserSessionId()
+    const scopeId = await createPageMemoryScopeId(sessionId, sourceUrl)
+    const currentEntry = this.pages.get(pageId)
+    return currentEntry === entry && currentEntry.privateUrl === sourceUrl ? scopeId : null
   }
 
   public get(pageId: string, grants: ReadonlySet<string>): IAgentPageRecord | null {
@@ -299,9 +340,12 @@ export class PageRegistry {
     }
 
     const existing = this.pages.get(pageId)
-    existing?.port.disconnect()
+    if (existing?.port === port) return pageId
+    if (existing) this.removePage(pageId, existing, true)
+    this.forgetStalePage(pageId)
     this.pages.set(pageId, {
       accessRevision: 0,
+      privateUrl: senderUrl,
       record,
       port,
       pending: new Map(),
@@ -312,7 +356,7 @@ export class PageRegistry {
     return pageId
   }
 
-  private removePage(pageId: string, entry: IPageEntry): void {
+  private removePage(pageId: string, entry: IPageEntry, disconnectPort = false): void {
     for (const pending of entry.pending.values()) {
       clearTimeout(pending.timeoutId)
       pending.resolve(errorResponse('', 'PAGE_STALE', 'Page connection closed.'))
@@ -321,6 +365,7 @@ export class PageRegistry {
     this.pages.delete(pageId)
     this.rememberStalePage(pageId)
     this.emit({ type: 'page.removed', page: entry.record })
+    if (disconnectPort) entry.port.disconnect()
   }
 
   private rememberStalePage(pageId: string): void {
@@ -331,6 +376,12 @@ export class PageRegistry {
       const expiredPageId = this.stalePageOrder.shift()
       if (expiredPageId) this.stalePageIds.delete(expiredPageId)
     }
+  }
+
+  private forgetStalePage(pageId: string): void {
+    if (!this.stalePageIds.delete(pageId)) return
+    const index = this.stalePageOrder.indexOf(pageId)
+    if (index >= 0) this.stalePageOrder.splice(index, 1)
   }
 
   private send(entry: IPageEntry, request: IAgentPageRequest): Promise<IAgentPageResponse> {
@@ -379,7 +430,10 @@ export class PageRegistry {
   }
 
   private getBrowserSessionId(): Promise<string> {
-    this.browserSessionIdPromise ??= resolveBrowserSessionId()
+    this.browserSessionIdPromise ??= resolveBrowserSessionId().catch(cause => {
+      this.browserSessionIdPromise = null
+      throw cause
+    })
     return this.browserSessionIdPromise
   }
 
@@ -434,26 +488,9 @@ function errorResponse(
   return { type: 'page.response', requestId, ok: false, error: { code, message } }
 }
 
-function isWebsiteOriginAllowed(website: string, origin: string): boolean {
-  if (!origin) return false
-  const hostname = new URL(origin).hostname
-  switch (website) {
-    case 'codeforces':
-      return hostname === 'codeforces.com' || hostname.endsWith('.codeforces.com')
-    case 'reddit':
-      return hostname === 'www.reddit.com' || hostname === 'old.reddit.com'
-    case 'usaco':
-      return hostname === 'usaco.training'
-    case 'yoz':
-      return hostname === 'localhost' || hostname === '127.0.0.1'
-    default:
-      return false
-  }
-}
-
 async function resolveBrowserSessionId(): Promise<string> {
   const stored = (await chrome.storage.session.get(BROWSER_SESSION_KEY))[BROWSER_SESSION_KEY]
-  if (typeof stored === 'string') return stored
+  if (typeof stored === 'string' && stored) return stored
   const sessionId = crypto.randomUUID()
   await chrome.storage.session.set({ [BROWSER_SESSION_KEY]: sessionId })
   return sessionId

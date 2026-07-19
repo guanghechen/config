@@ -45,6 +45,30 @@ function resolveCommand(command, args) {
       return requirePage('dom.getAttributes', target, { snapshotId: args[1], ref: args[2] })
     case 'bounds':
       return requirePage('dom.getBounds', target, { snapshotId: args[1], ref: args[2] })
+    case 'scroll':
+      return requirePage('dom.scrollIntoView', target, {
+        snapshotId: args[1],
+        ref: args[2],
+        block: readOption(args, '--block'),
+      })
+    case 'highlight':
+      return requirePage('dom.highlight', target, {
+        snapshotId: args[1],
+        ref: args[2],
+        durationMs: readNumberOption(args, '--duration'),
+      })
+    case 'memory-list':
+      return requirePage('memory.list', target, { scope: args[1] })
+    case 'memory-get':
+      return requirePage('memory.get', target, { scope: args[1], key: args[2] })
+    case 'memory-set':
+      return requirePage('memory.set', target, {
+        scope: args[1],
+        key: args[2],
+        value: args[3],
+      })
+    case 'memory-delete':
+      return requirePage('memory.delete', target, { scope: args[1], key: args[2] })
     case 'cf-problems':
       return requirePage('codeforces.listProblems', target)
     case 'cf-problem':
@@ -53,7 +77,7 @@ function resolveCommand(command, args) {
       return requirePage('codeforces.getContest', target)
     default:
       throw new Error(
-        'Usage: tsuki-agent <serve|pages|active|describe|snapshot|query|text|attributes|bounds|cf-problems|cf-problem|cf-contest>',
+        'Usage: tsuki-agent <serve|pages|active|describe|snapshot|query|text|attributes|bounds|scroll|highlight|memory-list|memory-get|memory-set|memory-delete|cf-problems|cf-problem|cf-contest>',
       )
   }
 }

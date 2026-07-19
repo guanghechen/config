@@ -1,3 +1,4 @@
+import type { AgentGrantKind } from '@/agent/contract'
 import type { IAgentBridgeViewModel } from '../hook/useAgentBridge'
 
 interface IAgentBridgeControlProps {
@@ -29,22 +30,32 @@ export function AgentBridgeControl({ bridge }: IAgentBridgeControlProps) {
 
       {bridge.status.paired ? (
         bridge.currentOrigin ? (
-          <label className="agent-grant-row">
-            <span className="agent-grant-copy">
-              <strong>Allow read access</strong>
-              <small>{bridge.currentOrigin}</small>
-            </span>
-            <span className="switch-control">
-              <input
-                type="checkbox"
-                role="switch"
-                checked={bridge.isGranted}
-                disabled={bridge.isBusy}
-                onChange={event => bridge.setGrant(event.target.checked)}
-              />
-              <span className="switch-track" aria-hidden="true" />
-            </span>
-          </label>
+          <div className="agent-grant-list">
+            <AgentGrantRow
+              label="Read access"
+              description={bridge.currentOrigin}
+              grant="read"
+              checked={bridge.isReadGranted}
+              disabled={bridge.isBusy}
+              onChange={bridge.setGrant}
+            />
+            <AgentGrantRow
+              label="Agent notes"
+              description="Session-scoped memory"
+              grant="memory"
+              checked={bridge.isMemoryGranted}
+              disabled={bridge.isBusy || !bridge.isReadGranted}
+              onChange={bridge.setGrant}
+            />
+            <AgentGrantRow
+              label="Page actions"
+              description="Scroll and highlight only"
+              grant="actions"
+              checked={bridge.isActionGranted}
+              disabled={bridge.isBusy || !bridge.isReadGranted}
+              onChange={bridge.setGrant}
+            />
+          </div>
         ) : null
       ) : (
         <div className="pairing-control">
@@ -75,6 +86,36 @@ export function AgentBridgeControl({ bridge }: IAgentBridgeControlProps) {
         </p>
       ) : null}
     </section>
+  )
+}
+
+interface IAgentGrantRowProps {
+  readonly checked: boolean
+  readonly description: string
+  readonly disabled: boolean
+  readonly grant: AgentGrantKind
+  readonly label: string
+  readonly onChange: (grant: AgentGrantKind, allowed: boolean) => void
+}
+
+function AgentGrantRow(props: IAgentGrantRowProps) {
+  return (
+    <label className="agent-grant-row">
+      <span className="agent-grant-copy">
+        <strong>{props.label}</strong>
+        <small>{props.description}</small>
+      </span>
+      <span className="switch-control">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={props.checked}
+          disabled={props.disabled}
+          onChange={event => props.onChange(props.grant, event.target.checked)}
+        />
+        <span className="switch-track" aria-hidden="true" />
+      </span>
+    </label>
   )
 }
 
