@@ -13,6 +13,7 @@ mod observability;
 mod platform;
 mod process;
 mod runtime;
+mod scheduler;
 mod session;
 mod status_length;
 mod status_widget;
@@ -39,6 +40,7 @@ fn run() -> AppResult<()> {
         CliCommand::Apply(event) => app.apply(event),
         CliCommand::Heartbeat(generation) => app.heartbeat(generation),
         CliCommand::MetricsSample(generation) => app.metrics_sample(generation),
+        CliCommand::SchedulerTick => app.scheduler_tick(),
         CliCommand::LegacyCpuSample(generation) => app.cpu_sample(generation),
         CliCommand::DumpState => app.dump_state(),
         CliCommand::RenderStatus02 => app.render_status02_stdout(),
@@ -92,6 +94,7 @@ USAGE:
   ghc-tmux-status apply
   ghc-tmux-status heartbeat <generation>
   ghc-tmux-status metrics-sample <generation>
+  ghc-tmux-status scheduler-tick
   ghc-tmux-status render status02
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>

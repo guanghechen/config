@@ -10,12 +10,12 @@ use crate::config::{
     METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     METRIC_RESAMPLE_INTERVAL_SECONDS, METRIC_SAMPLE_GENERATION_OPTION,
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
-    ROWS_OVERRIDE_OPTION,
+    ROWS_OVERRIDE_OPTION, SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::introspect::{
     CACHED_METRIC_WIDGET_PLACEMENTS, COMPUTED_WIDGET_PLACEMENTS, TEMPLATE_WIDGET_PLACEMENTS,
-    cache_bytes, metric_health_state, metric_sample_states,
+    cache_bytes, metric_health_state, metric_sample_states, scheduler_state_lines,
 };
 use crate::layout::LayoutEngine;
 use crate::metric::{NET_INTERFACE_OPTION, provider_for_current_platform};
@@ -25,12 +25,14 @@ use crate::model::{
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
 use crate::platform::current_platform;
+use crate::process::OperationDeadline;
+use crate::scheduler::{ClaimPlan, SchedulerTask, plan_claim};
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPTION, SessionGrouper, SwapOutcome, focus_target,
     ordered_sessions, swap_current,
 };
 use crate::status_length::{status_left_length, status_right_length};
-use crate::tmux::{TmuxAdapter, TmuxOptionScope};
+use crate::tmux::{GuardedMutationOutcome, TmuxAdapter, TmuxOptionGuard, TmuxOptionScope};
 use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
@@ -43,14 +45,23 @@ pub struct StatusRuntime {
     tmux: TmuxAdapter,
 }
 
-/// load-theme is the single writer of each server generation. A guarded true
-/// branch atomically mutates state and schedules its successor; mismatch aborts
-/// both operations, so stale workers can neither publish nor self-renew.
+/// Compatibility path for jobs seeded before the tmux-managed scheduler is
+/// activated. New status02 loads only bump these generations to expire the jobs.
 struct GuardedSchedule {
     generation_option: &'static str,
     generation: u64,
     delay_seconds: u64,
     command: String,
+}
+
+#[derive(Clone, Copy)]
+enum ApplyMode<'a> {
+    Standard,
+    LegacySchedule(&'a GuardedSchedule),
+    Scheduler {
+        claim: &'a ClaimPlan,
+        deadline: &'a OperationDeadline,
+    },
 }
 
 impl StatusRuntime {
@@ -61,18 +72,16 @@ impl StatusRuntime {
     }
 
     pub fn apply(&self, event: RenderEvent) -> AppResult<()> {
-        self.apply_inner(event, None)
+        self.apply_inner(event, ApplyMode::Standard)
     }
 
-    fn apply_inner(
-        &self,
-        event: RenderEvent,
-        guarded_schedule: Option<&GuardedSchedule>,
-    ) -> AppResult<()> {
+    fn apply_inner(&self, event: RenderEvent, mode: ApplyMode<'_>) -> AppResult<()> {
+        check_apply_deadline(mode, "start")?;
         let total_start = Instant::now();
         let context_start = Instant::now();
         let render_revision = next_render_revision();
         let context_state = self.live_context_state(Some(render_revision))?;
+        check_apply_deadline(mode, "read-context")?;
         let context_ms = duration_ms(context_start.elapsed());
         let context = match context_state {
             LiveContextState::Active(context) => context,
@@ -82,7 +91,7 @@ impl StatusRuntime {
                 let plan_commands = plan.commands.len();
                 let plan_ms = duration_ms(plan_start.elapsed());
                 let commit_start = Instant::now();
-                let result = self.commit_plan(&plan, render_revision, guarded_schedule);
+                let result = self.commit_plan(&plan, render_revision, mode);
                 self.trace_apply(|| {
                     format!(
                         "event={} active=false context_ms={context_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -100,6 +109,7 @@ impl StatusRuntime {
         let fallback_context = fallback_render_context(&context);
         let fallback_status = render_status02(&fallback_context, metrics_supported)?;
         let session_statuses = render_session_statuses(&context, metrics_supported)?;
+        check_apply_deadline(mode, "render")?;
         let render_ms = duration_ms(render_start.elapsed());
         let plan_start = Instant::now();
         let plan = CommitPlanner::plan(&fallback_status, &session_statuses, &context, &event);
@@ -107,11 +117,7 @@ impl StatusRuntime {
         let plan_ms = duration_ms(plan_start.elapsed());
         let is_noop = plan.is_empty();
         if is_noop {
-            let result = self.commit_plan(
-                &TmuxCommandPlan::default(),
-                render_revision,
-                guarded_schedule,
-            );
+            let result = self.commit_plan(&TmuxCommandPlan::default(), render_revision, mode);
             self.trace_apply(|| {
                 format!(
                     "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2}",
@@ -125,7 +131,7 @@ impl StatusRuntime {
         }
 
         let commit_start = Instant::now();
-        let result = self.commit_plan(&plan, render_revision, guarded_schedule);
+        let result = self.commit_plan(&plan, render_revision, mode);
         self.trace_apply(|| {
             format!(
                 "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
@@ -174,7 +180,7 @@ impl StatusRuntime {
             RenderEvent {
                 kind: RenderEventKind::Heartbeat,
             },
-            Some(&guarded_schedule),
+            ApplyMode::LegacySchedule(&guarded_schedule),
         ) {
             self.trace_apply(|| format!("event=heartbeat action=apply-error error={error}"));
             // Preserve the fallback refresh chain across transient snapshot/render
@@ -240,22 +246,30 @@ impl StatusRuntime {
 
         // The sampler is the single writer for metric baselines, display options, and
         // health state. Render/apply/heartbeat only install templates or repair structure.
-        match self.tick_metrics_sample(
+        let sample = self.collect_metrics_sample(
             previous_cpu_state,
             previous_memory_state,
             previous_network_state,
             network_interface,
             previous_error_count,
+        );
+        let sets = sample.set_refs();
+        let command = scheduled_command("metrics-sample", expected_generation);
+        match self.tmux.apply_sets_and_reschedule_guarded(
+            METRIC_SAMPLE_GENERATION_OPTION,
             expected_generation,
+            &sets,
+            METRIC_RESAMPLE_INTERVAL_SECONDS,
+            &command,
         ) {
-            Ok(summary) => {
+            Ok(()) => {
                 self.trace_apply(|| {
                     format!(
                         "event=metrics-sample action=sample-ok cpu_published={} memory_published={} network_published={} errors={} total_ms={:.2}",
-                        summary.cpu_published,
-                        summary.memory_published,
-                        summary.network_published,
-                        summary.errors.join(","),
+                        sample.summary.cpu_published,
+                        sample.summary.memory_published,
+                        sample.summary.network_published,
+                        sample.summary.errors.join(","),
                         duration_ms(total_start.elapsed())
                     )
                 });
@@ -282,15 +296,14 @@ impl StatusRuntime {
         Ok(())
     }
 
-    fn tick_metrics_sample(
+    fn collect_metrics_sample(
         &self,
         previous_cpu_state: &str,
         previous_memory_state: &str,
         previous_network_state: &str,
         network_interface: Option<&str>,
         previous_error_count: u64,
-        generation: u64,
-    ) -> AppResult<MetricPublishSummary> {
+    ) -> CollectedMetricSample {
         let previous_cpu = decode_cpu_snapshot(previous_cpu_state);
         let previous_memory = decode_memory_snapshot(previous_memory_state);
         let previous_network = decode_network_snapshot(previous_network_state);
@@ -356,19 +369,10 @@ impl StatusRuntime {
             previous_error_count,
             unix_timestamp_seconds(),
         ));
-        let sets = set_values
-            .iter()
-            .map(|(name, value)| (*name, value.as_str()))
-            .collect::<Vec<_>>();
-        let command = scheduled_command("metrics-sample", generation);
-        self.tmux.apply_sets_and_reschedule_guarded(
-            METRIC_SAMPLE_GENERATION_OPTION,
-            generation,
-            &sets,
-            METRIC_RESAMPLE_INTERVAL_SECONDS,
-            &command,
-        )?;
-        Ok(summary)
+        CollectedMetricSample {
+            summary,
+            set_values,
+        }
     }
 
     fn schedule_next_metrics_sample(&self, generation: u64) -> AppResult<()> {
@@ -379,6 +383,227 @@ impl StatusRuntime {
             METRIC_RESAMPLE_INTERVAL_SECONDS,
             &command,
         )
+    }
+
+    pub fn scheduler_tick(&self) -> AppResult<()> {
+        let values = self.tmux.show_options(&[
+            (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
+            (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
+            (
+                TmuxOptionScope::Server,
+                SchedulerTask::Metrics.state_option(),
+            ),
+            (
+                TmuxOptionScope::Server,
+                SchedulerTask::Heartbeat.state_option(),
+            ),
+        ])?;
+        if values.first().map(String::as_str) != Some("1") {
+            return Ok(());
+        }
+        let generation = values
+            .get(1)
+            .and_then(|value| value.parse::<u64>().ok())
+            .ok_or_else(|| AppError::TmuxParse("invalid scheduler generation".to_string()))?;
+        let now_seconds = unix_timestamp_seconds();
+        let mut failures = Vec::new();
+
+        if current_platform().supports_metrics()
+            && let Err(error) = self.run_scheduler_task(
+                SchedulerTask::Metrics,
+                generation,
+                values.get(2).map(String::as_str).unwrap_or_default(),
+                now_seconds,
+            )
+        {
+            self.trace_apply(|| {
+                format!("event=scheduler-tick task=metrics action=error error={error}")
+            });
+            failures.push(format!("metrics:{error}"));
+        }
+        if let Err(error) = self.run_scheduler_task(
+            SchedulerTask::Heartbeat,
+            generation,
+            values.get(3).map(String::as_str).unwrap_or_default(),
+            now_seconds,
+        ) {
+            self.trace_apply(|| {
+                format!("event=scheduler-tick task=heartbeat action=error error={error}")
+            });
+            failures.push(format!("heartbeat:{error}"));
+        }
+
+        if failures.is_empty() {
+            return Ok(());
+        }
+        Err(AppError::Render(format!(
+            "scheduler tick failed: {}",
+            failures.join("; ")
+        )))
+    }
+
+    fn run_scheduler_task(
+        &self,
+        task: SchedulerTask,
+        generation: u64,
+        observed_state: &str,
+        now_seconds: u64,
+    ) -> AppResult<()> {
+        let Some(claim) = plan_claim(task, generation, observed_state, now_seconds) else {
+            return Ok(());
+        };
+        let generation_text = generation.to_string();
+        let guards = scheduler_guards(&claim, &generation_text, &claim.observed_state);
+        let outcome = match self.tmux.claim_scheduler_task(
+            &guards,
+            task.state_option(),
+            &claim.claimed_state,
+            task.last_attempt_option(),
+            claim.started_at_seconds,
+        ) {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                self.record_scheduler_failure(&claim, "claim", &error);
+                return Err(error);
+            }
+        };
+        if outcome == GuardedMutationOutcome::Skipped {
+            return Ok(());
+        }
+
+        let result = match task {
+            SchedulerTask::Metrics => self.execute_scheduled_metrics(&claim),
+            SchedulerTask::Heartbeat => self.execute_scheduled_heartbeat(&claim),
+        };
+        if let Err(error) = &result {
+            self.record_scheduler_failure(&claim, "execute", error);
+        }
+        result
+    }
+
+    fn execute_scheduled_metrics(&self, claim: &ClaimPlan) -> AppResult<()> {
+        let deadline = claim.deadline();
+        deadline.check("read-metric-state")?;
+        let values = self.tmux.show_options(&[
+            (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
+            (TmuxOptionScope::GlobalSession, NET_INTERFACE_OPTION),
+            (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
+        ])?;
+        deadline.check("sample-metrics")?;
+        let sample = self.collect_metrics_sample(
+            values.first().map(String::as_str).unwrap_or_default(),
+            values.get(1).map(String::as_str).unwrap_or_default(),
+            values.get(2).map(String::as_str).unwrap_or_default(),
+            normalize_network_interface(values.get(3).map(String::as_str)),
+            parse_metric_error_count(values.get(4).map(String::as_str)),
+        );
+        deadline.check("publish-metrics")?;
+        let generation = claim.generation.to_string();
+        let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+        let completed_at = unix_timestamp_seconds();
+        let completion_outcome = scheduler_outcome_value(
+            completed_at,
+            claim.generation,
+            claim.sequence,
+            "complete",
+            "known",
+            "ok",
+        );
+        let mut sets = sample.set_refs();
+        sets.push((claim.task.last_outcome_option(), &completion_outcome));
+        let outcome = self.tmux.finish_scheduler_task(
+            &guards,
+            &sets,
+            claim.task.state_option(),
+            &claim.completed_state,
+            claim.task.last_complete_option(),
+            completed_at,
+        )?;
+        self.trace_apply(|| {
+            format!(
+                "event=scheduler-tick task=metrics action={} cpu_published={} memory_published={} network_published={} errors={}",
+                if outcome == GuardedMutationOutcome::Applied {
+                    "complete"
+                } else {
+                    "stale"
+                },
+                sample.summary.cpu_published,
+                sample.summary.memory_published,
+                sample.summary.network_published,
+                sample.summary.errors.join(",")
+            )
+        });
+        Ok(())
+    }
+
+    fn execute_scheduled_heartbeat(&self, claim: &ClaimPlan) -> AppResult<()> {
+        let deadline = claim.deadline();
+        self.apply_inner(
+            RenderEvent {
+                kind: RenderEventKind::Heartbeat,
+            },
+            ApplyMode::Scheduler {
+                claim,
+                deadline: &deadline,
+            },
+        )?;
+        deadline.check("complete-heartbeat")?;
+        let generation = claim.generation.to_string();
+        let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+        let completed_at = unix_timestamp_seconds();
+        let completion_outcome = scheduler_outcome_value(
+            completed_at,
+            claim.generation,
+            claim.sequence,
+            "complete",
+            "known",
+            "ok",
+        );
+        let outcome = self.tmux.finish_scheduler_task(
+            &guards,
+            &[(claim.task.last_outcome_option(), &completion_outcome)],
+            claim.task.state_option(),
+            &claim.completed_state,
+            claim.task.last_complete_option(),
+            completed_at,
+        )?;
+        self.trace_apply(|| {
+            format!(
+                "event=scheduler-tick task=heartbeat action={}",
+                if outcome == GuardedMutationOutcome::Applied {
+                    "complete"
+                } else {
+                    "stale"
+                }
+            )
+        });
+        Ok(())
+    }
+
+    fn record_scheduler_failure(&self, claim: &ClaimPlan, phase: &str, error: &AppError) {
+        let generation = claim.generation.to_string();
+        let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+        let outcome = scheduler_outcome_value(
+            unix_timestamp_seconds(),
+            claim.generation,
+            claim.sequence,
+            phase,
+            "unknown",
+            &error.to_string(),
+        );
+        if let Err(record_error) =
+            self.tmux
+                .record_scheduler_outcome(&guards, claim.task.last_outcome_option(), &outcome)
+        {
+            self.trace_apply(|| {
+                format!(
+                    "event=scheduler-outcome task={} action=record-error error={record_error}",
+                    claim.task.as_str()
+                )
+            });
+        }
     }
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
@@ -433,6 +658,10 @@ impl StatusRuntime {
         println!("rows={}", context.layout.rows);
         println!("target_status={}", context.layout.target_status);
         println!("cache_bytes={}", cache_bytes(&context.snapshot));
+        println!("scheduler:");
+        for line in scheduler_state_lines(&context.snapshot) {
+            println!("  {line}");
+        }
         println!("widget_lifecycles:");
         println!("  template_placements={}", TEMPLATE_WIDGET_PLACEMENTS);
         println!("  computed_placements={}", COMPUTED_WIDGET_PLACEMENTS);
@@ -504,20 +733,26 @@ impl StatusRuntime {
         &self,
         plan: &TmuxCommandPlan,
         render_revision: u64,
-        guarded_schedule: Option<&GuardedSchedule>,
+        mode: ApplyMode<'_>,
     ) -> AppResult<()> {
-        let Some(schedule) = guarded_schedule else {
-            return self.tmux.commit_plan_guarded(plan, render_revision);
-        };
-
-        self.tmux.commit_plan_guarded_and_reschedule(
-            plan,
-            schedule.generation_option,
-            schedule.generation,
-            render_revision,
-            schedule.delay_seconds,
-            &schedule.command,
-        )
+        match mode {
+            ApplyMode::Standard => self.tmux.commit_plan_guarded(plan, render_revision),
+            ApplyMode::LegacySchedule(schedule) => self.tmux.commit_plan_guarded_and_reschedule(
+                plan,
+                schedule.generation_option,
+                schedule.generation,
+                render_revision,
+                schedule.delay_seconds,
+                &schedule.command,
+            ),
+            ApplyMode::Scheduler { claim, deadline } => {
+                deadline.check("commit-render")?;
+                let generation = claim.generation.to_string();
+                let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+                self.tmux
+                    .commit_plan_scheduler_guarded(plan, render_revision, &guards, deadline)
+            }
+        }
     }
 
     fn trace_apply(&self, message: impl FnOnce() -> String) {
@@ -541,6 +776,48 @@ impl StatusRuntime {
         };
         Ok(context_state_from_snapshot(snapshot))
     }
+}
+
+fn check_apply_deadline(mode: ApplyMode<'_>, phase: &str) -> AppResult<()> {
+    match mode {
+        ApplyMode::Scheduler { deadline, .. } => deadline.check(phase),
+        ApplyMode::Standard | ApplyMode::LegacySchedule(_) => Ok(()),
+    }
+}
+
+fn scheduler_guards<'a>(
+    claim: &'a ClaimPlan,
+    generation: &'a str,
+    expected_state: &'a str,
+) -> [TmuxOptionGuard<'a>; 3] {
+    [
+        TmuxOptionGuard {
+            option: SCHEDULER_ACTIVE_OPTION,
+            expected: "1",
+        },
+        TmuxOptionGuard {
+            option: SCHEDULER_GENERATION_OPTION,
+            expected: generation,
+        },
+        TmuxOptionGuard {
+            option: claim.task.state_option(),
+            expected: expected_state,
+        },
+    ]
+}
+
+fn scheduler_outcome_value(
+    timestamp_seconds: u64,
+    generation: u64,
+    sequence: u64,
+    phase: &str,
+    certainty: &str,
+    message: &str,
+) -> String {
+    format!(
+        "{timestamp_seconds}\t{generation}\t{sequence}\t{phase}\t{certainty}\t{}",
+        sanitize_metric_error(message)
+    )
 }
 
 /// Diagnostic commands describe the invoking session only. Unlike apply's
@@ -673,6 +950,20 @@ struct MetricPublishSummary {
     memory_published: bool,
     network_published: bool,
     errors: Vec<String>,
+}
+
+struct CollectedMetricSample {
+    summary: MetricPublishSummary,
+    set_values: Vec<(&'static str, String)>,
+}
+
+impl CollectedMetricSample {
+    fn set_refs(&self) -> Vec<(&str, &str)> {
+        self.set_values
+            .iter()
+            .map(|(name, value)| (*name, value.as_str()))
+            .collect()
+    }
 }
 
 fn is_recent_sample(
@@ -858,7 +1149,7 @@ mod tests {
         current_session_context_from_snapshot, generation_matches, metric_health_sets,
         next_render_revision, normalize_network_interface, ordered_group_from_snapshot,
         parse_metric_error_count, render_session_statuses, resolve_session_layouts,
-        sanitize_metric_error,
+        sanitize_metric_error, scheduler_outcome_value,
     };
     use crate::config::{
         METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
@@ -1086,5 +1377,13 @@ mod tests {
     fn sanitize_metric_error_replaces_separators_and_bounds_length() {
         assert_eq!(sanitize_metric_error("a\tb\nc\rd"), "a b c d");
         assert_eq!(sanitize_metric_error(&"x".repeat(300)).len(), 240);
+    }
+
+    #[test]
+    fn scheduler_outcome_records_phase_certainty_and_sanitized_error() {
+        assert_eq!(
+            scheduler_outcome_value(100, 7, 3, "claim", "unknown", "bad\tstate\nnow"),
+            "100\t7\t3\tclaim\tunknown\tbad state now"
+        );
     }
 }

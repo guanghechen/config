@@ -322,6 +322,7 @@ status           = 2
 
 ```text
 ghc-tmux-status apply
+ghc-tmux-status scheduler-tick
 ghc-tmux-status render status02
 ghc-tmux-status layout <mode> <status> <width> <session-count>
 ghc-tmux-status dump-state
@@ -332,11 +333,36 @@ ghc-tmux-status dump-state
 | Command           | Meaning                         |
 |-------------------|---------------------------------|
 | `apply`           | read live snapshot, render, commit |
+| `scheduler-tick`  | claim and run due one-shot status work |
 | `render status02` | print rendered status02 output  |
 | `layout`          | pure layout calculation         |
 | `dump-state`      | print debug snapshot/state      |
 
 ## 12. Metrics Components
+
+`status02` 的周期任务由 status format 内每约 4 秒完成一次的 tmux `#()` one-shot
+job 驱动；不使用 daemon，
+也不由 worker 递归创建 successor。每个 task 以
+`generation:sequence:next_due:lease_until` 为 server state，通过 exact-state CAS
+在多 client 间去重。timeout 后不重试 ambiguous mutation；worker crash 由 lease
+到期后的下一次 tick 恢复。reload 先将 scheduler 设为 inactive 并更换 generation，
+因此旧 worker 不能 publish。
+
+回滚到不识别 scheduler state 的旧配置前，必须先用当前 loader 切到 status01；
+该步骤按 `ACTIVE=0 -> GEN=new` fence worker。随后才能替换 binary/config，再由旧
+loader 切回 status02。不得直接用旧 loader 覆盖仍 active 的新 scheduler。
+
+完整 Rust、shell 与真实 tmux 回归入口：
+
+```sh
+rust/ghc-tmux-status/check.sh
+```
+
+其中并发、lease、generation fence 与 timeout-after-commit 由以下脚本覆盖：
+
+```sh
+rust/ghc-tmux-status/tests/scheduler-integration.sh
+```
 
 components：
 

@@ -99,6 +99,22 @@ function _ghc_tmux_bump_metric_generation_ {
   printf '%s\n' "$generation"
 }
 
+# Fence every prior status02 scheduler before changing formats. ACTIVE is the
+# first mutation, so even a partially executed command leaves old workers unable
+# to publish. A retry covers an ambiguous client failure after server commit.
+function _ghc_tmux_fence_scheduler_ {
+  local attempt generation
+  for attempt in 1 2; do
+    generation=$(_ghc_tmux_new_generation_)
+    if tmux set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
+            set -s @GHC_SL_SCHED_GEN "$generation"; then
+      return 0
+    fi
+  done
+  tmux set -s @GHC_SL_SCHED_ACTIVE 0 2>/dev/null || true
+  return 1
+}
+
 # Expire pre-unified CPU-only sampler chains after upgrade/reload.
 function _ghc_tmux_bump_legacy_cpu_generation_ {
   local generation
@@ -113,6 +129,17 @@ function _ghc_tmux_load_status01_ {
   tmux set -g status-justify centre
   tmux set -g status-position "$status_position"
   tmux source "$HOME/.config/tmux/conf/theme/status01.tmux.conf"
+}
+
+function _ghc_tmux_status02_fallback_ {
+  local status_position=$1
+  local message=$2
+
+  _ghc_tmux_unset_status_layout_hooks_
+  _ghc_tmux_fence_scheduler_ >/dev/null 2>&1 || true
+  _ghc_tmux_reset_per_session_layout_
+  _ghc_tmux_load_status01_ "$status_position"
+  tmux display-message "$message" 2>/dev/null || true
 }
 
 function _ghc_tmux_normalize_status_mode_ {
@@ -145,17 +172,25 @@ function _ghc_tmux_load_theme_ {
   tmux set -gu @GHC_SL_LAYOUT 2>/dev/null || true
   _ghc_tmux_reset_per_session_layout_
 
-  # Expire any prior heartbeat/metric chains; only the status02 branch starts new
-  # ones, so switching to status01 leaves bumped generations with no live chain.
-  local heartbeat_generation
-  heartbeat_generation=$(_ghc_tmux_bump_heartbeat_generation_)
-  local metric_generation
-  metric_generation=$(_ghc_tmux_bump_metric_generation_)
+  # Expire prior recursive chains. The status02 branch below activates the
+  # tmux-managed scheduler; status01 leaves every scheduler fenced.
+  _ghc_tmux_bump_heartbeat_generation_ >/dev/null
+  _ghc_tmux_bump_metric_generation_ >/dev/null
   _ghc_tmux_bump_legacy_cpu_generation_
 
   local status_position="top"
   if [ "$status_mode" == "11" ] || [ "$status_mode" == "12" ]; then
     status_position="bottom"
+  fi
+
+  if ! _ghc_tmux_fence_scheduler_; then
+    tmux display-message "Status scheduler initialization failed; fallback to status01" 2>/dev/null || true
+    if [ "$status_position" = "bottom" ]; then
+      status_mode="11"
+    else
+      status_mode="01"
+    fi
+    tmux set -g @GHC_SL_MODE "$status_mode" 2>/dev/null || true
   fi
 
   case "$status_mode" in
@@ -184,14 +219,11 @@ function _ghc_tmux_load_theme_ {
         tmux set-hook -g 'session-window-changed[40]' "run-shell '$status_renderer apply window-changed'"
 
         if ! "$status_renderer" apply theme-loaded; then
-          _ghc_tmux_unset_status_layout_hooks_
-          # Guarded replay can fail after committing a prefix of the plan. Roll
-          # back every renderer-owned local option before status01 takes over.
-          _ghc_tmux_reset_per_session_layout_
-          _ghc_tmux_load_status01_ "$status_position"
-          tmux display-message "Rust status renderer failed; fallback to status01" 2>/dev/null || true
+          # Guarded replay can fail after committing a prefix of the plan. Fence
+          # workers before rolling every renderer-owned local option back.
+          _ghc_tmux_status02_fallback_ "$status_position" \
+            "Rust status renderer failed; fallback to status01"
         else
-          tmux run-shell -b -d 30 "'$status_renderer' heartbeat $heartbeat_generation"
           # Seed fixed-width placeholders so metric pills never render blank values
           # before the first publishable sample; keep live values across reloads.
           if [ -z "$(tmux show -gqv @GHC_CPU_NOW 2>/dev/null)" ]; then
@@ -203,9 +235,12 @@ function _ghc_tmux_load_theme_ {
           if [ -z "$(tmux show -gqv @GHC_NET_NOW 2>/dev/null)" ]; then
             tmux set -g @GHC_NET_NOW "↓0B ↑0B"
           fi
-          # The status line redraws every second; the renderer self-reschedules
-          # metric sampling every METRIC_RESAMPLE_INTERVAL_SECONDS.
-          tmux run-shell -b "'$status_renderer' metrics-sample $metric_generation"
+          # status-left/status-format[0] own the tmux-managed #() driver. CAS +
+          # leases inside the renderer deduplicate per-client invocations.
+          if ! tmux set -s @GHC_SL_SCHED_ACTIVE 1; then
+            _ghc_tmux_status02_fallback_ "$status_position" \
+              "Status scheduler activation failed; fallback to status01"
+          fi
         fi
       fi
       ;;

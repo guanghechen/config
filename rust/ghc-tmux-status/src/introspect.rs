@@ -3,8 +3,11 @@ use crate::config::{
     CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
     METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
+    SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
 use crate::model::TmuxSnapshot;
+use crate::platform::current_platform;
+use crate::scheduler::{ScheduleState, SchedulerTask};
 use crate::widget::{decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot};
 
 // Placement counts describe how many times each widget lifecycle appears in the
@@ -140,6 +143,140 @@ pub fn cache_bytes(snapshot: &TmuxSnapshot) -> usize {
         .sum()
 }
 
+pub fn scheduler_state_lines(snapshot: &TmuxSnapshot) -> Vec<String> {
+    scheduler_state_lines_at(
+        snapshot,
+        crate::util::time::unix_timestamp_seconds(),
+        current_platform().supports_metrics(),
+    )
+}
+
+fn scheduler_state_lines_at(
+    snapshot: &TmuxSnapshot,
+    now_seconds: u64,
+    metrics_supported: bool,
+) -> Vec<String> {
+    let active = snapshot
+        .options
+        .get(SCHEDULER_ACTIVE_OPTION)
+        .map(String::as_str)
+        == Some("1");
+    let generation = snapshot
+        .options
+        .get(SCHEDULER_GENERATION_OPTION)
+        .and_then(|value| value.parse::<u64>().ok());
+    let mut lines = vec![format!(
+        "lifecycle active={} generation={}",
+        active,
+        generation
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "invalid".to_string())
+    )];
+    for task in SchedulerTask::ALL {
+        lines.push(scheduler_task_line(
+            snapshot,
+            task,
+            active,
+            generation,
+            now_seconds,
+            metrics_supported,
+        ));
+    }
+    lines
+}
+
+fn scheduler_task_line(
+    snapshot: &TmuxSnapshot,
+    task: SchedulerTask,
+    active: bool,
+    generation: Option<u64>,
+    now_seconds: u64,
+    metrics_supported: bool,
+) -> String {
+    let raw_state = snapshot
+        .options
+        .get(task.state_option())
+        .map(String::as_str)
+        .unwrap_or_default();
+    let state = ScheduleState::parse(raw_state);
+    let last_attempt = option_timestamp(snapshot.options.get(task.last_attempt_option()));
+    let last_complete = option_timestamp(snapshot.options.get(task.last_complete_option()));
+    let status = match (task, metrics_supported, active, generation, state.as_ref()) {
+        (SchedulerTask::Metrics, false, _, _, _) => "unsupported",
+        (_, _, false, _, _) => "inactive",
+        (_, _, true, None, _) => "invalid",
+        (_, _, true, Some(_), None) => "starting",
+        (_, _, true, Some(generation), Some(state)) if state.generation != generation => "starting",
+        (_, _, true, Some(_), Some(state)) if state.lease_until_seconds > now_seconds => "running",
+        (_, _, true, Some(_), Some(state)) if state.lease_until_seconds != 0 => "lease-expired",
+        (_, _, true, Some(_), Some(state))
+            if now_seconds
+                > state
+                    .next_due_seconds
+                    .saturating_add(task.interval_seconds()) =>
+        {
+            "overdue"
+        }
+        (_, _, true, Some(_), Some(_))
+            if last_complete.is_none() || last_attempt > last_complete =>
+        {
+            "degraded"
+        }
+        (_, _, true, Some(_), Some(_)) => "healthy",
+    };
+    let sequence = state
+        .as_ref()
+        .map(|state| state.sequence.to_string())
+        .unwrap_or_else(|| "missing".to_string());
+    let next_due_in = state
+        .as_ref()
+        .map(|state| {
+            state
+                .next_due_seconds
+                .saturating_sub(now_seconds)
+                .to_string()
+        })
+        .unwrap_or_else(|| "missing".to_string());
+    let lease_remaining = state
+        .as_ref()
+        .map(|state| {
+            state
+                .lease_until_seconds
+                .saturating_sub(now_seconds)
+                .to_string()
+        })
+        .unwrap_or_else(|| "missing".to_string());
+    let last_attempt_age = timestamp_age(last_attempt, now_seconds);
+    let last_complete_age = timestamp_age(last_complete, now_seconds);
+    let last_outcome = snapshot
+        .options
+        .get(task.last_outcome_option())
+        .map(|value| value.replace(['\t', '\n', '\r'], " "))
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| "<none>".to_string());
+    format!(
+        "{} status={} sequence={} next_due_in_seconds={} lease_remaining_seconds={} last_attempt_age_seconds={} last_complete_age_seconds={} last_outcome={}",
+        task.as_str(),
+        status,
+        sequence,
+        next_due_in,
+        lease_remaining,
+        last_attempt_age,
+        last_complete_age,
+        last_outcome
+    )
+}
+
+fn option_timestamp(value: Option<&String>) -> Option<u64> {
+    value.and_then(|value| value.parse::<u64>().ok())
+}
+
+fn timestamp_age(timestamp: Option<u64>, now_seconds: u64) -> String {
+    timestamp
+        .map(|timestamp| now_seconds.saturating_sub(timestamp).to_string())
+        .unwrap_or_else(|| "missing".to_string())
+}
+
 #[derive(Clone, Copy)]
 struct MetricSampleSpec {
     id: &'static str,
@@ -225,10 +362,13 @@ mod tests {
     use super::{
         MetricHealthState, MetricSampleSpec, MetricSampleState, MetricSampleStatus,
         cpu_sample_timestamp_seconds, metric_health_state_at, metric_sample_state,
+        scheduler_state_lines_at,
     };
     use crate::config::{
         CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION,
-        METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
+        METRIC_LAST_ATTEMPT_OPTION, METRIC_LAST_COMPLETE_OPTION, METRIC_LAST_ERROR_OPTION,
+        METRIC_LAST_EXEC_OUTCOME_OPTION, METRIC_LAST_OK_OPTION, METRIC_SCHEDULER_STATE_OPTION,
+        SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
     };
     use crate::model::TmuxSnapshot;
 
@@ -296,6 +436,82 @@ mod tests {
                 last_error: String::new(),
             }
         );
+    }
+
+    #[test]
+    fn scheduler_state_reports_running_and_completion_ages() {
+        let snapshot = snapshot_with_options(BTreeMap::from([
+            (SCHEDULER_ACTIVE_OPTION.to_string(), "1".to_string()),
+            (SCHEDULER_GENERATION_OPTION.to_string(), "7".to_string()),
+            (
+                METRIC_SCHEDULER_STATE_OPTION.to_string(),
+                "7:4:105:110".to_string(),
+            ),
+            (METRIC_LAST_ATTEMPT_OPTION.to_string(), "98".to_string()),
+            (METRIC_LAST_COMPLETE_OPTION.to_string(), "95".to_string()),
+            (
+                METRIC_LAST_EXEC_OUTCOME_OPTION.to_string(),
+                "95\t7\t4\tcomplete\tknown\tok".to_string(),
+            ),
+        ]));
+
+        let lines = scheduler_state_lines_at(&snapshot, 100, true);
+
+        assert_eq!(lines[0], "lifecycle active=true generation=7");
+        assert!(lines[1].contains("metrics status=running sequence=4"));
+        assert!(lines[1].contains("lease_remaining_seconds=10"));
+        assert!(lines[1].contains("last_attempt_age_seconds=2"));
+        assert!(lines[1].contains("last_complete_age_seconds=5"));
+        assert!(lines[1].contains("last_outcome=95 7 4 complete known ok"));
+        assert!(lines[2].contains("heartbeat status=starting"));
+    }
+
+    #[test]
+    fn scheduler_state_does_not_report_missing_completion_as_healthy() {
+        let snapshot = snapshot_with_options(BTreeMap::from([
+            (SCHEDULER_ACTIVE_OPTION.to_string(), "1".to_string()),
+            (SCHEDULER_GENERATION_OPTION.to_string(), "7".to_string()),
+            (
+                METRIC_SCHEDULER_STATE_OPTION.to_string(),
+                "7:4:105:0".to_string(),
+            ),
+            (METRIC_LAST_ATTEMPT_OPTION.to_string(), "98".to_string()),
+        ]));
+
+        let lines = scheduler_state_lines_at(&snapshot, 100, true);
+
+        assert!(lines[1].contains("metrics status=degraded"));
+    }
+
+    #[test]
+    fn scheduler_state_reports_expired_incomplete_lease() {
+        let snapshot = snapshot_with_options(BTreeMap::from([
+            (SCHEDULER_ACTIVE_OPTION.to_string(), "1".to_string()),
+            (SCHEDULER_GENERATION_OPTION.to_string(), "7".to_string()),
+            (
+                METRIC_SCHEDULER_STATE_OPTION.to_string(),
+                "7:4:130:120".to_string(),
+            ),
+            (METRIC_LAST_ATTEMPT_OPTION.to_string(), "100".to_string()),
+            (METRIC_LAST_COMPLETE_OPTION.to_string(), "100".to_string()),
+        ]));
+
+        let lines = scheduler_state_lines_at(&snapshot, 121, true);
+
+        assert!(lines[1].contains("metrics status=lease-expired"));
+    }
+
+    #[test]
+    fn scheduler_state_marks_metrics_unsupported() {
+        let snapshot = snapshot_with_options(BTreeMap::from([
+            (SCHEDULER_ACTIVE_OPTION.to_string(), "1".to_string()),
+            (SCHEDULER_GENERATION_OPTION.to_string(), "7".to_string()),
+        ]));
+
+        let lines = scheduler_state_lines_at(&snapshot, 100, false);
+
+        assert!(lines[1].contains("metrics status=unsupported"));
+        assert!(lines[2].contains("heartbeat status=starting"));
     }
 
     #[test]

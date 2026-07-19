@@ -6,17 +6,20 @@ use crate::commit::{
     CACHE_WITNESS_BYTES, SESSION_CACHE_OPTIONS, TmuxCommandPlan, tmux_command_string,
 };
 use crate::config::{
-    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION, MEMORY_NOW_OPTION,
-    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION,
-    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, NETWORK_NOW_OPTION,
-    NETWORK_SAMPLE_STATE_OPTION, RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION,
-    SESSION_RENDER_KEY_OPTION, STATUS_FORMAT_0_OPTION, STATUS_FORMAT_1_OPTION,
-    STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_LEFT_OPTION, STATUS_POSITION_OPTION,
-    STATUS_RIGHT_OPTION,
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, HEARTBEAT_GENERATION_OPTION,
+    HEARTBEAT_LAST_ATTEMPT_OPTION, HEARTBEAT_LAST_COMPLETE_OPTION,
+    HEARTBEAT_LAST_EXEC_OUTCOME_OPTION, HEARTBEAT_SCHEDULER_STATE_OPTION, MEMORY_NOW_OPTION,
+    MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ATTEMPT_OPTION,
+    METRIC_LAST_COMPLETE_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_EXEC_OUTCOME_OPTION,
+    METRIC_LAST_OK_OPTION, METRIC_SAMPLE_GENERATION_OPTION, METRIC_SCHEDULER_STATE_OPTION,
+    NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION, RENDER_REVISION_OPTION, ROWS_OVERRIDE_OPTION,
+    SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION, SESSION_RENDER_KEY_OPTION,
+    STATUS_FORMAT_0_OPTION, STATUS_FORMAT_1_OPTION, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION,
+    STATUS_LEFT_OPTION, STATUS_POSITION_OPTION, STATUS_RIGHT_OPTION,
 };
 use crate::error::{AppError, AppResult};
 use crate::model::{SessionInfo, SessionNavigationSnapshot, TmuxSnapshot};
-use crate::process::output_with_timeout;
+use crate::process::{OperationDeadline, output_with_timeout};
 
 const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 // This budget applies before the nested `if-shell` quoting pass. Keeping it far
@@ -24,6 +27,18 @@ const TMUX_COMMAND_TIMEOUT: Duration = Duration::from_secs(2);
 const MAX_PLAN_CHUNK_BYTES: usize = 32 * 1024;
 
 pub struct TmuxAdapter;
+
+#[derive(Clone, Copy)]
+pub struct TmuxOptionGuard<'a> {
+    pub option: &'a str,
+    pub expected: &'a str,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum GuardedMutationOutcome {
+    Applied,
+    Skipped,
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TmuxOptionScope {
@@ -68,7 +83,7 @@ impl TmuxAdapter {
         plan: &TmuxCommandPlan,
         expected_revision: u64,
     ) -> AppResult<()> {
-        self.commit_plan_with_guards(plan, expected_revision, None)
+        self.commit_plan_with_guards(plan, expected_revision, &[], true, None)
     }
 
     pub fn switch_client(&self, target_session_id: &str) -> AppResult<()> {
@@ -96,6 +111,109 @@ impl TmuxAdapter {
         parse_options_output(&output, options.len())
     }
 
+    pub fn claim_scheduler_task(
+        &self,
+        guards: &[TmuxOptionGuard<'_>],
+        state_option: &str,
+        claimed_state: &str,
+        last_attempt_option: &str,
+        now_seconds: u64,
+    ) -> AppResult<GuardedMutationOutcome> {
+        let command_list = tmux_command_sequence(&[
+            tmux_command_string(&[
+                "set".to_string(),
+                "-g".to_string(),
+                last_attempt_option.to_string(),
+                now_seconds.to_string(),
+            ]),
+            tmux_command_string(&[
+                "set".to_string(),
+                "-s".to_string(),
+                state_option.to_string(),
+                claimed_state.to_string(),
+            ]),
+            tmux_command_string(&[
+                "display-message".to_string(),
+                "-p".to_string(),
+                SCHEDULER_APPLIED_MARK.to_string(),
+            ]),
+        ]);
+        self.guarded_mutation(guards, command_list)
+    }
+
+    pub fn finish_scheduler_task(
+        &self,
+        guards: &[TmuxOptionGuard<'_>],
+        global_sets: &[(&str, &str)],
+        state_option: &str,
+        completed_state: &str,
+        last_complete_option: &str,
+        now_seconds: u64,
+    ) -> AppResult<GuardedMutationOutcome> {
+        let mut commands = global_sets
+            .iter()
+            .map(|(name, value)| {
+                tmux_command_string(&[
+                    "set".to_string(),
+                    "-g".to_string(),
+                    (*name).to_string(),
+                    (*value).to_string(),
+                ])
+            })
+            .collect::<Vec<_>>();
+        commands.push(tmux_command_string(&[
+            "set".to_string(),
+            "-g".to_string(),
+            last_complete_option.to_string(),
+            now_seconds.to_string(),
+        ]));
+        // The state is the completion witness and must be the final mutation.
+        commands.push(tmux_command_string(&[
+            "set".to_string(),
+            "-s".to_string(),
+            state_option.to_string(),
+            completed_state.to_string(),
+        ]));
+        commands.push(tmux_command_string(&[
+            "display-message".to_string(),
+            "-p".to_string(),
+            SCHEDULER_APPLIED_MARK.to_string(),
+        ]));
+        self.guarded_mutation(guards, tmux_command_sequence(&commands))
+    }
+
+    pub fn record_scheduler_outcome(
+        &self,
+        guards: &[TmuxOptionGuard<'_>],
+        outcome_option: &str,
+        outcome: &str,
+    ) -> AppResult<GuardedMutationOutcome> {
+        let command_list = tmux_command_sequence(&[
+            tmux_command_string(&[
+                "set".to_string(),
+                "-g".to_string(),
+                outcome_option.to_string(),
+                outcome.to_string(),
+            ]),
+            tmux_command_string(&[
+                "display-message".to_string(),
+                "-p".to_string(),
+                SCHEDULER_APPLIED_MARK.to_string(),
+            ]),
+        ]);
+        self.guarded_mutation(guards, command_list)
+    }
+
+    pub fn commit_plan_scheduler_guarded(
+        &self,
+        plan: &TmuxCommandPlan,
+        expected_revision: u64,
+        guards: &[TmuxOptionGuard<'_>],
+        deadline: &OperationDeadline,
+    ) -> AppResult<()> {
+        self.commit_plan_with_guards(plan, expected_revision, guards, false, Some(deadline))
+    }
+
     /// Commits a bounded status plan under generation + render guards, then
     /// schedules exactly one successor under the generation guard. Each chunk
     /// rechecks both tokens, so a reload or newer render aborts the remainder.
@@ -108,10 +226,16 @@ impl TmuxAdapter {
         delay_seconds: u64,
         command: &str,
     ) -> AppResult<()> {
+        let generation = expected_generation.to_string();
         self.commit_plan_with_guards(
             plan,
             expected_render_revision,
-            Some((generation_option, expected_generation)),
+            &[TmuxOptionGuard {
+                option: generation_option,
+                expected: &generation,
+            }],
+            true,
+            None,
         )?;
         self.schedule_background_guarded(
             generation_option,
@@ -162,17 +286,25 @@ impl TmuxAdapter {
         &self,
         plan: &TmuxCommandPlan,
         expected_revision: u64,
-        generation_guard: Option<(&str, u64)>,
+        guards: &[TmuxOptionGuard<'_>],
+        retry_individual_commands: bool,
+        deadline: Option<&OperationDeadline>,
     ) -> AppResult<()> {
         if plan.is_empty() {
             return Ok(());
         }
 
         for chunk in serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES) {
-            let guarded =
-                nested_render_guard_args(expected_revision, &chunk.command_list, generation_guard);
-            if self.tmux_status(guarded).is_ok() {
+            if let Some(deadline) = deadline {
+                deadline.check("commit-plan")?;
+            }
+            let guarded = nested_render_guard_args(expected_revision, &chunk.command_list, guards);
+            let result = self.tmux_status(guarded);
+            if result.is_ok() {
                 continue;
+            }
+            if !retry_individual_commands {
+                return result;
             }
 
             // Commands are idempotent. A chunk-level parser/argv failure can be
@@ -182,7 +314,7 @@ impl TmuxAdapter {
                 self.tmux_status(nested_render_guard_args(
                     expected_revision,
                     &command.to_command_string(),
-                    generation_guard,
+                    guards,
                 ))?;
             }
         }
@@ -191,9 +323,33 @@ impl TmuxAdapter {
         let _ = self.tmux_status(nested_render_guard_args(
             expected_revision,
             &refresh,
-            generation_guard,
+            guards,
         ));
         Ok(())
+    }
+
+    fn guarded_mutation(
+        &self,
+        guards: &[TmuxOptionGuard<'_>],
+        command_list: String,
+    ) -> AppResult<GuardedMutationOutcome> {
+        let skipped = tmux_command_string(&[
+            "display-message".to_string(),
+            "-p".to_string(),
+            SCHEDULER_SKIPPED_MARK.to_string(),
+        ]);
+        let output = self.tmux_output(option_guarded_command_args(
+            guards,
+            command_list,
+            Some(skipped),
+        ))?;
+        match output.trim() {
+            SCHEDULER_APPLIED_MARK => Ok(GuardedMutationOutcome::Applied),
+            SCHEDULER_SKIPPED_MARK => Ok(GuardedMutationOutcome::Skipped),
+            value => Err(AppError::TmuxParse(format!(
+                "unexpected scheduler mutation result: {value}"
+            ))),
+        }
     }
 
     fn tmux_output<I>(&self, args: I) -> AppResult<String>
@@ -422,21 +578,17 @@ fn serialized_plan_chunks(plan: &TmuxCommandPlan, max_bytes: usize) -> Vec<Seria
 fn nested_render_guard_args(
     expected_revision: u64,
     command_list: &str,
-    generation_guard: Option<(&str, u64)>,
+    guards: &[TmuxOptionGuard<'_>],
 ) -> Vec<String> {
     let render_guard = guarded_command_args(
         RENDER_REVISION_OPTION,
         expected_revision,
         command_list.to_string(),
     );
-    let Some((generation_option, expected_generation)) = generation_guard else {
+    if guards.is_empty() {
         return render_guard;
-    };
-    guarded_command_args(
-        generation_option,
-        expected_generation,
-        tmux_command_string(&render_guard),
-    )
+    }
+    option_guarded_command_args(guards, tmux_command_string(&render_guard), None)
 }
 
 fn sets_and_reschedule_command(sets: &[(&str, &str)], delay_seconds: u64, command: &str) -> String {
@@ -474,6 +626,48 @@ fn guarded_command_args(
         format!("#{{==:#{{{generation_option}}},{expected_generation}}}"),
         command_list,
     ]
+}
+
+fn option_guarded_command_args(
+    guards: &[TmuxOptionGuard<'_>],
+    command_list: String,
+    false_command: Option<String>,
+) -> Vec<String> {
+    let mut args = vec![
+        "if-shell".to_string(),
+        "-F".to_string(),
+        combined_guard_format(guards),
+        command_list,
+    ];
+    if let Some(false_command) = false_command {
+        args.push(false_command);
+    }
+    args
+}
+
+fn combined_guard_format(guards: &[TmuxOptionGuard<'_>]) -> String {
+    let mut conditions = guards.iter().map(|guard| {
+        format!(
+            "#{{==:#{{{}}},{}}}",
+            guard.option,
+            format_literal(guard.expected)
+        )
+    });
+    let first = conditions
+        .next()
+        .expect("guarded tmux command requires at least one guard");
+    conditions.fold(first, |combined, condition| {
+        format!("#{{&&:{combined},{condition}}}")
+    })
+}
+
+fn format_literal(value: &str) -> String {
+    let escaped = value.replace('#', "##").replace('}', "#}");
+    format!("#{{l:{escaped}}}")
+}
+
+fn tmux_command_sequence(commands: &[String]) -> String {
+    commands.join("; ")
 }
 
 fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
@@ -702,6 +896,8 @@ const OPTIONS_END_MARK: &str = "__GHC_STATUS_OPTIONS_END__";
 const OPTION_VALUE_MARK_PREFIX: &str = "\u{1e}__GHC_STATUS_OPTION_";
 const SESSIONS_MARK: &str = "__GHC_STATUS_SESSIONS__";
 const CLIENTS_MARK: &str = "__GHC_STATUS_CLIENTS__";
+const SCHEDULER_APPLIED_MARK: &str = "__GHC_SCHEDULER_APPLIED__";
+const SCHEDULER_SKIPPED_MARK: &str = "__GHC_SCHEDULER_SKIPPED__";
 
 const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
@@ -727,6 +923,10 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, "@GHC_SL_NET_IFACE"),
     (TmuxOptionScope::Server, HEARTBEAT_GENERATION_OPTION),
     (TmuxOptionScope::Server, METRIC_SAMPLE_GENERATION_OPTION),
+    (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
+    (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
+    (TmuxOptionScope::Server, METRIC_SCHEDULER_STATE_OPTION),
+    (TmuxOptionScope::Server, HEARTBEAT_SCHEDULER_STATE_OPTION),
     (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
     (TmuxOptionScope::GlobalSession, CPU_NOW_OPTION),
     (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
@@ -736,6 +936,24 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, METRIC_LAST_OK_OPTION),
     (TmuxOptionScope::GlobalSession, METRIC_LAST_ERROR_OPTION),
     (TmuxOptionScope::GlobalSession, METRIC_ERROR_COUNT_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_LAST_ATTEMPT_OPTION),
+    (TmuxOptionScope::GlobalSession, METRIC_LAST_COMPLETE_OPTION),
+    (
+        TmuxOptionScope::GlobalSession,
+        METRIC_LAST_EXEC_OUTCOME_OPTION,
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        HEARTBEAT_LAST_ATTEMPT_OPTION,
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        HEARTBEAT_LAST_COMPLETE_OPTION,
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        HEARTBEAT_LAST_EXEC_OUTCOME_OPTION,
+    ),
     (
         TmuxOptionScope::GlobalSession,
         "@GHC_STATUS_COMPONENT_CACHE_cpu",
@@ -754,11 +972,11 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 mod tests {
     use super::{
         CONTEXT_MARK, FIELD_SEP, NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, SESSIONS_MARK,
-        SNAPSHOT_OPTIONS, TmuxOptionScope, cache_witness_format, guarded_command_args,
-        nested_render_guard_args, option_value_mark, options_command_args, parse_client_line,
-        parse_options_output, parse_session_line, parse_session_navigation_output,
-        parse_snapshot_output, serialized_plan_chunks, sets_and_reschedule_command,
-        snapshot_command_args,
+        SNAPSHOT_OPTIONS, TmuxOptionGuard, TmuxOptionScope, cache_witness_format,
+        combined_guard_format, format_literal, guarded_command_args, nested_render_guard_args,
+        option_value_mark, options_command_args, parse_client_line, parse_options_output,
+        parse_session_line, parse_session_navigation_output, parse_snapshot_output,
+        serialized_plan_chunks, sets_and_reschedule_command, snapshot_command_args,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -881,12 +1099,33 @@ $2	90"
         let args = nested_render_guard_args(
             9,
             &chunks[0].command_list,
-            Some(("@GHC_SL_HEARTBEAT_GEN", 7)),
+            &[TmuxOptionGuard {
+                option: "@GHC_SL_HEARTBEAT_GEN",
+                expected: "7",
+            }],
         );
 
-        assert_eq!(args[2], "#{==:#{@GHC_SL_HEARTBEAT_GEN},7}");
+        assert_eq!(args[2], "#{==:#{@GHC_SL_HEARTBEAT_GEN},#{l:7}}");
         assert!(args[3].contains(RENDER_REVISION_OPTION));
         assert!(args[3].contains("@VALUE"));
+    }
+
+    #[test]
+    fn multi_option_guards_escape_literal_state_and_require_every_match() {
+        assert_eq!(format_literal("1:2:#,}"), "#{l:1:2:##,#}}");
+        assert_eq!(
+            combined_guard_format(&[
+                TmuxOptionGuard {
+                    option: "@ACTIVE",
+                    expected: "1",
+                },
+                TmuxOptionGuard {
+                    option: "@STATE",
+                    expected: "7:4:105:0",
+                },
+            ]),
+            "#{&&:#{==:#{@ACTIVE},#{l:1}},#{==:#{@STATE},#{l:7:4:105:0}}}"
+        );
     }
 
     #[test]

@@ -7,6 +7,7 @@ pub enum CliCommand {
     Apply(RenderEvent),
     Heartbeat(u64),
     MetricsSample(u64),
+    SchedulerTick,
     LegacyCpuSample(u64),
     DumpState,
     RenderStatus02,
@@ -39,6 +40,7 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
             generation,
             "metrics-sample",
         )?)),
+        ["scheduler-tick"] => Ok(CliCommand::SchedulerTick),
         ["cpu-sample", generation] => Ok(CliCommand::LegacyCpuSample(parse_generation(
             generation,
             "cpu-sample",
@@ -109,6 +111,7 @@ fn usage_error(command: &str) -> AppError {
         "apply" => "apply [event]",
         "heartbeat" => "heartbeat <generation>",
         "metrics-sample" => "metrics-sample <generation>",
+        "scheduler-tick" => "scheduler-tick",
         "cpu-sample" => "cpu-sample <generation>",
         "dump-state" => "dump-state",
         "render" => "render status02",
@@ -136,6 +139,15 @@ mod tests {
             CliCommand::Heartbeat(42)
         );
         assert!(parse(args(&["heartbeat", "42; touch /tmp/pwned"])).is_err());
+    }
+
+    #[test]
+    fn parses_scheduler_tick_without_arguments() {
+        assert_eq!(
+            parse(args(&["scheduler-tick"])).unwrap(),
+            CliCommand::SchedulerTick
+        );
+        assert!(parse(args(&["scheduler-tick", "extra"])).is_err());
     }
 
     #[test]

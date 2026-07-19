@@ -26,6 +26,10 @@ impl StatusApp {
         self.runtime.metrics_sample(expected_generation)
     }
 
+    pub fn scheduler_tick(&self) -> AppResult<()> {
+        self.runtime.scheduler_tick()
+    }
+
     pub fn cpu_sample(&self, expected_generation: u64) -> AppResult<()> {
         self.runtime.cpu_sample(expected_generation)
     }

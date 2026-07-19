@@ -6,6 +6,33 @@ use std::time::{Duration, Instant};
 
 use crate::error::{AppError, AppResult};
 
+pub struct OperationDeadline {
+    label: String,
+    started_at: Instant,
+    budget: Duration,
+}
+
+impl OperationDeadline {
+    pub fn new(label: impl Into<String>, budget: Duration) -> Self {
+        Self {
+            label: label.into(),
+            started_at: Instant::now(),
+            budget,
+        }
+    }
+
+    pub fn check(&self, phase: &str) -> AppResult<()> {
+        if self.started_at.elapsed() < self.budget {
+            return Ok(());
+        }
+
+        Err(AppError::CommandTimeout {
+            command: format!("{} {phase}", self.label),
+            timeout_ms: self.budget.as_millis(),
+        })
+    }
+}
+
 /// Runs a bounded child process without a shell. Timeout aborts and reaps the
 /// child; all other IO failures propagate to the caller's boundary policy.
 pub fn output_with_timeout<I, S>(program: &str, args: I, timeout: Duration) -> AppResult<Output>
@@ -164,7 +191,7 @@ unsafe extern "C" {
 mod tests {
     use std::time::{Duration, Instant};
 
-    use super::output_with_timeout;
+    use super::{OperationDeadline, output_with_timeout};
     use crate::error::AppError;
 
     #[test]
@@ -174,6 +201,17 @@ mod tests {
                 .unwrap();
         assert!(output.status.success());
         assert_eq!(output.stdout, b"success");
+    }
+
+    #[test]
+    fn operation_deadline_reports_the_operation_and_phase() {
+        let deadline = OperationDeadline::new("scheduler metrics", Duration::ZERO);
+        let error = deadline.check("commit").unwrap_err();
+
+        assert!(matches!(
+            error,
+            AppError::CommandTimeout { command, .. } if command == "scheduler metrics commit"
+        ));
     }
 
     #[test]
