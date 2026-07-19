@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     ":upgrade": "pnpm update --interactive --latest && pnpm format",
+    "agent:check": "pnpm --filter @tsuki/agent-bridge check && pnpm test",
+    "agent:skill:link": "node script/agent-skill.mjs link",
+    "agent:skill:unlink": "node script/agent-skill.mjs unlink",
+    "agent:start": "pnpm --filter @tsuki/agent-bridge start",
     "build": "tsc -b && vite build --emptyOutDir && pnpm extension:build",
     "bundle": "node script/bundle.mjs",
     "format": "pnpm format:lintfix && pnpm format:prettier",
