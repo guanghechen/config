@@ -1,14 +1,6 @@
 export function isWebsiteOriginAllowed(website: string, origin: string): boolean {
-  let hostname: string
-  try {
-    const url = new URL(origin)
-    if ((url.protocol !== 'http:' && url.protocol !== 'https:') || url.origin !== origin) {
-      return false
-    }
-    hostname = url.hostname
-  } catch {
-    return false
-  }
+  const hostname = parseHttpOrigin(origin)?.hostname
+  if (!hostname) return false
 
   switch (website) {
     case 'codeforces':
@@ -21,5 +13,17 @@ export function isWebsiteOriginAllowed(website: string, origin: string): boolean
       return hostname === 'localhost' || hostname === '127.0.0.1'
     default:
       return false
+  }
+}
+
+export function parseHttpOrigin(value: unknown): URL | null {
+  if (typeof value !== 'string') return null
+  try {
+    const url = new URL(value)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.origin === value
+      ? url
+      : null
+  } catch {
+    return null
   }
 }

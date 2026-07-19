@@ -1,18 +1,13 @@
 import {
   AGENT_PROTOCOL_MISMATCH_CLOSE_CODE,
   AGENT_PROTOCOL_VERSION,
-  isAgentActionCapability,
-  isAgentCapability,
-  isAgentErrorCode,
-  isAgentMemoryCapability,
-  type IAgentBrokerRequest,
-  type IAgentBrokerResponse,
   type IAgentControlStatus,
   type IAgentError,
   type AgentGrantKind,
 } from '@/agent/contract'
-import { AgentMemoryStore } from './memory'
 import { PageRegistry, type PageRegistryEvent } from './page-registry'
+import { AgentRequestExecutor } from './request-executor'
+import { parseHttpOrigin } from './website-policy'
 import {
   clearAgentSession,
   readAgentSession,
@@ -22,9 +17,6 @@ import {
 } from './session'
 
 const BROKER_URL = `ws://127.0.0.1:${__AGENT_BRIDGE_PORT__}`
-const MAX_REQUEST_BYTES = 64 * 1024
-const MIN_TIMEOUT_MS = 100
-const MAX_TIMEOUT_MS = 10_000
 const HEARTBEAT_INTERVAL_MS = 20_000
 const PAIR_TIMEOUT_MS = 6_000
 const RECONNECT_MAX_MS = 5_000
@@ -47,21 +39,20 @@ export class AgentBridge {
   private connectionError: IAgentError | null = null
   private disposed = false
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
-  private readonly memoryGrantRevisions = new Map<string, number>()
   private pairingAttempt: IPairingAttempt | null = null
   private pairingCode: string | null = null
   private reconnectDelayMs = 250
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
   private revocationAttempt: IRevocationAttempt | null = null
+  private readonly requestExecutor: AgentRequestExecutor
   private sequence = 0
   private session: IAgentSessionState = createEmptySession()
   private socket: WebSocket | null = null
   private unsubscribeRegistry: (() => void) | null = null
 
-  public constructor(
-    private readonly registry: PageRegistry,
-    private readonly memoryStore = new AgentMemoryStore(),
-  ) {}
+  public constructor(private readonly registry: PageRegistry) {
+    this.requestExecutor = new AgentRequestExecutor(registry, () => this.session)
+  }
 
   public async start(): Promise<() => void> {
     this.session = await readAgentSession()
@@ -121,7 +112,7 @@ export class AgentBridge {
     this.connected = false
     this.connectionError = null
     this.session = createEmptySession()
-    this.bumpMemoryGrantRevisions(previousSession.grants)
+    this.requestExecutor.invalidateMemoryAccess(previousSession.grants)
     this.registry.revokeOrigins(
       new Set([...previousSession.grants, ...previousSession.actionGrants]),
     )
@@ -149,7 +140,7 @@ export class AgentBridge {
     allowed: boolean,
   ): Promise<IAgentControlStatus> {
     if (!this.session.sessionToken) throw new Error('Agent bridge is not paired.')
-    const normalizedOrigin = normalizeOrigin(origin)
+    const normalizedOrigin = parseHttpOrigin(origin)?.origin
     if (!normalizedOrigin || !this.registry.hasOrigin(normalizedOrigin)) {
       throw new Error('Origin is not managed by Tsuki.')
     }
@@ -159,10 +150,14 @@ export class AgentBridge {
     if (allowed) {
       await writeAgentSession(nextSession)
       this.session = nextSession
-      if (grant === 'read' || grant === 'memory') this.bumpMemoryGrantRevisions([normalizedOrigin])
+      if (grant === 'read' || grant === 'memory') {
+        this.requestExecutor.invalidateMemoryAccess([normalizedOrigin])
+      }
     } else {
       this.session = nextSession
-      if (grant === 'read' || grant === 'memory') this.bumpMemoryGrantRevisions([normalizedOrigin])
+      if (grant === 'read' || grant === 'memory') {
+        this.requestExecutor.invalidateMemoryAccess([normalizedOrigin])
+      }
       if (grant === 'read' || grant === 'actions') {
         this.registry.revokeOrigins(new Set([normalizedOrigin]))
       }
@@ -171,7 +166,7 @@ export class AgentBridge {
       } catch (cause) {
         this.session = previousSession
         if (grant === 'read' || grant === 'memory') {
-          this.bumpMemoryGrantRevisions([normalizedOrigin])
+          this.requestExecutor.invalidateMemoryAccess([normalizedOrigin])
         }
         throw cause
       }
@@ -343,149 +338,11 @@ export class AgentBridge {
       return
     }
     if (value.type === 'broker.request') {
-      let response: IAgentBrokerResponse
-      try {
-        response = await this.executeRequest(value.request)
-      } catch (cause) {
-        response = brokerError(
-          readRequestId(value.request),
-          readErrorCode(cause),
-          cause instanceof Error ? cause.message : 'Broker request failed.',
-        )
-      }
+      const response = await this.requestExecutor.execute(value.request)
       this.send({ type: 'broker.response', response })
       return
     }
     if (value.type === 'ping') this.send({ type: 'pong' })
-  }
-
-  private async executeRequest(value: unknown): Promise<IAgentBrokerResponse> {
-    if (!isBrokerRequest(value) || encodedSize(value) > MAX_REQUEST_BYTES) {
-      return brokerError(readRequestId(value), 'INVALID_REQUEST', 'Broker request is invalid.')
-    }
-
-    const request = value
-    const timeoutMs = Math.min(Math.max(request.timeoutMs, MIN_TIMEOUT_MS), MAX_TIMEOUT_MS)
-    let active = true
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
-    const operation = this.executeValidatedRequest(request, timeoutMs, () => active)
-    const timeout = new Promise<IAgentBrokerResponse>(resolve => {
-      timeoutId = setTimeout(() => {
-        active = false
-        resolve(brokerError(request.requestId, 'TIMEOUT', 'Broker request timed out.'))
-      }, timeoutMs)
-    })
-    return Promise.race([operation, timeout]).finally(() => {
-      active = false
-      if (timeoutId !== null) clearTimeout(timeoutId)
-    })
-  }
-
-  private async executeValidatedRequest(
-    request: IAgentBrokerRequest,
-    timeoutMs: number,
-    isActive: () => boolean,
-  ): Promise<IAgentBrokerResponse> {
-    const grants = new Set(this.session.grants)
-
-    if (request.capability === 'pages.list') {
-      return brokerSuccess(request.requestId, { pages: this.registry.list(grants) })
-    }
-    if (request.capability === 'pages.resolveActive') {
-      const page = await this.registry.resolveActive(grants)
-      return brokerSuccess(request.requestId, {
-        page: page && this.session.grants.includes(page.origin) ? page : null,
-      })
-    }
-    if (!request.target) {
-      return brokerError(request.requestId, 'INVALID_REQUEST', 'A page target is required.')
-    }
-
-    const page = this.registry.get(request.target.pageId, grants)
-    if (!page) {
-      if (this.registry.isStale(request.target.pageId) || request.target.expectedDocumentId) {
-        return brokerError(request.requestId, 'PAGE_STALE', 'Page document has changed.')
-      }
-      return this.registry.hasPage(request.target.pageId)
-        ? brokerError(request.requestId, 'PERMISSION_DENIED', 'Page is not granted.')
-        : brokerError(request.requestId, 'PAGE_NOT_FOUND', 'Page is not registered.')
-    }
-    if (
-      request.target.expectedDocumentId &&
-      request.target.expectedDocumentId !== page.documentId
-    ) {
-      return brokerError(request.requestId, 'PAGE_STALE', 'Page document has changed.')
-    }
-
-    if (isAgentMemoryCapability(request.capability)) {
-      if (!this.session.memoryGrants.includes(page.origin)) {
-        return brokerError(request.requestId, 'PERMISSION_DENIED', 'Agent memory is not granted.')
-      }
-      const grantRevision = this.readMemoryGrantRevision(page.origin)
-      const hasMemoryAccess = () => isActive() && this.hasMemoryAccess(page.origin, grantRevision)
-      const pageScopeId = await this.registry.resolvePageMemoryScopeId(page.pageId)
-      if (!pageScopeId) {
-        return brokerError(request.requestId, 'PAGE_STALE', 'Page document has changed.')
-      }
-      if (!hasMemoryAccess()) {
-        return brokerError(request.requestId, 'PERMISSION_DENIED', 'Agent memory was revoked.')
-      }
-      const result = await this.memoryStore.execute(
-        request.capability,
-        page,
-        pageScopeId,
-        request.payload ?? {},
-        hasMemoryAccess,
-      )
-      if (!hasMemoryAccess()) {
-        return brokerError(request.requestId, 'PERMISSION_DENIED', 'Agent memory was revoked.')
-      }
-      return brokerSuccess(request.requestId, {
-        pageId: page.pageId,
-        documentId: page.documentId,
-        pageRevision: page.revision,
-        result,
-      })
-    }
-
-    if (request.capability === 'page.describe') {
-      return brokerSuccess(request.requestId, {
-        page,
-        permissions: {
-          memory: this.session.memoryGrants.includes(page.origin),
-          actions: this.session.actionGrants.includes(page.origin),
-        },
-      })
-    }
-    if (!isAgentCapability(request.capability)) {
-      return brokerError(request.requestId, 'CAPABILITY_UNAVAILABLE', 'Capability is unavailable.')
-    }
-    if (
-      isAgentActionCapability(request.capability) &&
-      !this.session.actionGrants.includes(page.origin)
-    ) {
-      return brokerError(request.requestId, 'PERMISSION_DENIED', 'Page actions are not granted.')
-    }
-
-    const response = await this.registry.execute(
-      page.pageId,
-      request.target.expectedDocumentId,
-      request.capability,
-      request.payload ?? {},
-      timeoutMs,
-    )
-    return response.ok
-      ? brokerSuccess(request.requestId, {
-          pageId: page.pageId,
-          documentId: page.documentId,
-          pageRevision: page.revision,
-          result: response.data,
-        })
-      : brokerError(
-          request.requestId,
-          response.error?.code ?? 'INTERNAL_ERROR',
-          response.error?.message ?? 'Page request failed.',
-        )
   }
 
   private completePairing(): void {
@@ -526,7 +383,7 @@ export class AgentBridge {
     this.connected = false
     this.connectionError = null
     this.session = createEmptySession()
-    this.bumpMemoryGrantRevisions(grants)
+    this.requestExecutor.invalidateMemoryAccess(grants)
     this.registry.revokeOrigins(grants)
     try {
       await clearAgentSession()
@@ -572,93 +429,6 @@ export class AgentBridge {
   private send(message: unknown): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return
     this.socket.send(JSON.stringify(message))
-  }
-
-  private bumpMemoryGrantRevisions(origins: Iterable<string>): void {
-    for (const origin of origins) {
-      this.memoryGrantRevisions.set(origin, this.readMemoryGrantRevision(origin) + 1)
-    }
-  }
-
-  private hasMemoryAccess(origin: string, revision: number): boolean {
-    return (
-      this.readMemoryGrantRevision(origin) === revision &&
-      this.session.grants.includes(origin) &&
-      this.session.memoryGrants.includes(origin)
-    )
-  }
-
-  private readMemoryGrantRevision(origin: string): number {
-    return this.memoryGrantRevisions.get(origin) ?? 0
-  }
-}
-
-function isBrokerRequest(value: unknown): value is IAgentBrokerRequest {
-  if (!value || typeof value !== 'object') return false
-  const request = value as Partial<IAgentBrokerRequest>
-  return (
-    request.version === AGENT_PROTOCOL_VERSION &&
-    isBoundedString(request.requestId, 128) &&
-    isBoundedString(request.capability, 128) &&
-    typeof request.timeoutMs === 'number' &&
-    Number.isFinite(request.timeoutMs) &&
-    isPageTarget(request.target)
-  )
-}
-
-function isPageTarget(value: IAgentBrokerRequest['target'] | undefined): boolean {
-  if (value === undefined) return true
-  if (!value || typeof value !== 'object') return false
-  return (
-    isBoundedString(value.pageId, 128) &&
-    (value.expectedDocumentId === undefined || isBoundedString(value.expectedDocumentId, 256))
-  )
-}
-
-function isBoundedString(value: unknown, maxLength: number): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= maxLength
-}
-
-function brokerSuccess(requestId: string, data: unknown): IAgentBrokerResponse {
-  return { version: 1, requestId, ok: true, data }
-}
-
-function brokerError(
-  requestId: string,
-  code: IAgentError['code'],
-  message: string,
-): IAgentBrokerResponse {
-  return { version: 1, requestId, ok: false, error: { code, message } }
-}
-
-function readRequestId(value: unknown): string {
-  if (!value || typeof value !== 'object') return ''
-  const requestId = (value as Record<string, unknown>).requestId
-  return typeof requestId === 'string' ? requestId : ''
-}
-
-function readErrorCode(value: unknown): IAgentError['code'] {
-  if (!value || typeof value !== 'object') return 'INTERNAL_ERROR'
-  const code = (value as { code?: unknown }).code
-  return isAgentErrorCode(code) ? code : 'INTERNAL_ERROR'
-}
-
-function normalizeOrigin(value: string): string | null {
-  try {
-    const url = new URL(value)
-    return (url.protocol === 'http:' || url.protocol === 'https:') && url.origin === value
-      ? value
-      : null
-  } catch {
-    return null
-  }
-}
-
-function encodedSize(value: unknown): number {
-  try {
-    return new TextEncoder().encode(JSON.stringify(value)).byteLength
-  } catch {
-    return Number.POSITIVE_INFINITY
   }
 }
 

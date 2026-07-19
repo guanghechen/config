@@ -6,7 +6,7 @@ import {
 } from '../packages/agent-bridge/src/protocol.mjs'
 import { resolvePageMemorySourceUrl } from '../src/agent/background/page-scope.ts'
 import { sanitizePageTitle, sanitizePageUrl } from '../src/agent/background/page-url.ts'
-import { isWebsiteOriginAllowed } from '../src/agent/background/website-policy.ts'
+import { isWebsiteOriginAllowed, parseHttpOrigin } from '../src/agent/background/website-policy.ts'
 import { isSafeDomSelector } from '../src/agent/content/selector.ts'
 import {
   AGENT_PROTOCOL_MISMATCH_CLOSE_CODE as extensionMismatchCloseCode,
@@ -45,6 +45,14 @@ test('page metadata URLs omit query parameters and fragments', () => {
     'localhost/problem/1',
   )
   assert.equal(sanitizePageUrl('not a URL'), '')
+})
+
+test('HTTP origin parsing accepts only canonical origins', () => {
+  assert.equal(parseHttpOrigin('https://example.com')?.origin, 'https://example.com')
+  assert.equal(parseHttpOrigin('http://localhost:7071')?.origin, 'http://localhost:7071')
+  assert.equal(parseHttpOrigin('https://example.com/'), null)
+  assert.equal(parseHttpOrigin('https://user@example.com'), null)
+  assert.equal(parseHttpOrigin('chrome://settings'), null)
 })
 
 test('page memory URL resolution fails closed during tab and event races', () => {
