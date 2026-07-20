@@ -15,6 +15,7 @@
     "src/history/commit-order.ts",
     "src/history/model.ts",
     "src/view/change-tree.ts",
+    "src/view/commit-subject.ts",
     "src/view/commit-tree.ts",
     "test/**/*.ts"
   ]

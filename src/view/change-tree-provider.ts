@@ -1,8 +1,9 @@
+import path from 'node:path'
 import {
   EventEmitter,
-  ThemeIcon,
   TreeItem,
   TreeItemCollapsibleState,
+  Uri,
   type Disposable,
   type Event,
   type TreeDataProvider,
@@ -11,11 +12,7 @@ import { CompareSession } from '../compare/compare-session'
 import type { ICompareSnapshot } from '../compare/model'
 import type { IFileChange } from '../git/file-change'
 import { buildChangeTree, type IChangeTreeNode } from './change-tree'
-import {
-  createFileChangeDescription,
-  createFileChangeTooltip,
-  resolveFileChangeIcon,
-} from './file-change-presentation'
+import { createFileChangeDescription, createFileChangeTooltip } from './file-change-presentation'
 
 export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<IChangeTreeNode | undefined>()
@@ -36,7 +33,12 @@ export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Di
       const item = new TreeItem(node.name, TreeItemCollapsibleState.Collapsed)
       item.id = `directory:${node.path}`
       item.contextValue = 'vsgit.directory'
-      item.iconPath = ThemeIcon.Folder
+      if (this.session.snapshot) {
+        item.resourceUri = createRepositoryResourceUri(
+          this.session.snapshot.repositoryPath,
+          node.path,
+        )
+      }
       item.tooltip = node.path
       return item
     }
@@ -63,9 +65,9 @@ function createFileTreeItem(
   item.id = createFileNodeId(node.change)
   item.contextValue = 'vsgit.file'
   item.description = createFileChangeDescription(node.change)
-  item.iconPath = new ThemeIcon(resolveFileChangeIcon(node.change.kind))
   item.tooltip = createFileChangeTooltip(node.change)
   if (snapshot) {
+    item.resourceUri = createRepositoryResourceUri(snapshot.repositoryPath, node.path)
     item.command = {
       command: 'vsgit.openDiff',
       title: 'Open File Diff',
@@ -73,6 +75,10 @@ function createFileTreeItem(
     }
   }
   return item
+}
+
+function createRepositoryResourceUri(repositoryPath: string, relativePath: string): Uri {
+  return Uri.file(path.join(repositoryPath, relativePath))
 }
 
 function createFileNodeId(change: IFileChange): string {

@@ -1,5 +1,5 @@
 import { MarkdownString } from 'vscode'
-import type { FileChangeKind, IFileChange } from '../git/file-change'
+import type { IFileChange } from '../git/file-change'
 
 export function createFileChangeDescription(change: IFileChange): string {
   if (change.kind === 'renamed' || change.kind === 'copied') {
@@ -17,21 +17,4 @@ export function createFileChangeTooltip(change: IFileChange): MarkdownString {
     tooltip.appendText(change.currentPath ?? change.previousPath ?? '')
   }
   return tooltip
-}
-
-export function resolveFileChangeIcon(kind: FileChangeKind): string {
-  switch (kind) {
-    case 'added':
-      return 'diff-added'
-    case 'deleted':
-      return 'diff-removed'
-    case 'renamed':
-    case 'copied':
-      return 'diff-renamed'
-    case 'modified':
-    case 'typeChanged':
-    case 'unmerged':
-    case 'unknown':
-      return 'diff-modified'
-  }
 }
