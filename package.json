@@ -21,7 +21,8 @@
   "activationEvents": [
     "onView:vsgit.commits",
     "onView:vsgit.changes",
-    "onCommand:vsgit.compareSelectedCommits",
+    "onCommand:vsgit.compareMarkedCommits",
+    "onCommand:vsgit.compareCommitToHead",
     "onCommand:vsgit.openCommitFileDiff",
     "onCommand:vsgit.compareRefs"
   ],
@@ -45,10 +46,39 @@
         "icon": "$(git-compare)"
       },
       {
-        "command": "vsgit.compareSelectedCommits",
-        "title": "Compare Selected Commits",
+        "command": "vsgit.compareMarkedCommits",
+        "title": "Compare Marked Commits",
         "category": "VSGit",
         "icon": "$(git-compare)"
+      },
+      {
+        "command": "vsgit.compareWithMarkedCommit",
+        "title": "Compare with Marked Commit",
+        "category": "VSGit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "vsgit.compareCommitToHead",
+        "title": "Compare Commit with HEAD",
+        "category": "VSGit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "vsgit.markCommit",
+        "title": "Mark for Comparison",
+        "category": "VSGit",
+        "icon": "$(bookmark)"
+      },
+      {
+        "command": "vsgit.unmarkCommit",
+        "title": "Unmark Commit",
+        "category": "VSGit"
+      },
+      {
+        "command": "vsgit.clearCommitMarks",
+        "title": "Clear Comparison Marks",
+        "category": "VSGit",
+        "icon": "$(clear-all)"
       },
       {
         "command": "vsgit.refresh",
@@ -122,9 +152,14 @@
           "group": "navigation@2"
         },
         {
-          "command": "vsgit.compareSelectedCommits",
-          "when": "view == vsgit.commits && vsgit.canCompareSelectedCommits",
+          "command": "vsgit.compareMarkedCommits",
+          "when": "view == vsgit.commits && vsgit.canCompareMarkedCommits",
           "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.clearCommitMarks",
+          "when": "view == vsgit.commits && vsgit.hasCommitMarks",
+          "group": "navigation@4"
         },
         {
           "command": "vsgit.compareRefs",
@@ -159,9 +194,34 @@
           "group": "inline"
         },
         {
-          "command": "vsgit.compareSelectedCommits",
-          "when": "view == vsgit.commits && viewItem == vsgit.commit && vsgit.canCompareSelectedCommits",
+          "command": "vsgit.compareWithMarkedCommit",
+          "when": "view == vsgit.commits && viewItem == vsgit.commit && vsgit.hasOneCommitMark",
           "group": "navigation@1"
+        },
+        {
+          "command": "vsgit.compareCommitToHead",
+          "when": "view == vsgit.commits && (viewItem == vsgit.commit || viewItem == vsgit.commitMarked)",
+          "group": "navigation@2"
+        },
+        {
+          "command": "vsgit.markCommit",
+          "when": "view == vsgit.commits && viewItem == vsgit.commit && !vsgit.canCompareMarkedCommits",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.unmarkCommit",
+          "when": "view == vsgit.commits && viewItem == vsgit.commitMarked",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.compareMarkedCommits",
+          "when": "view == vsgit.commits && viewItem == vsgit.commitMarked && vsgit.canCompareMarkedCommits",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.clearCommitMarks",
+          "when": "view == vsgit.commits && viewItem == vsgit.commitMarked",
+          "group": "navigation@4"
         }
       ]
     },

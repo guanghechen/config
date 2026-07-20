@@ -16,12 +16,26 @@ batch.
 
 ## Compare two commits
 
-1. In **VSGit → Commits**, use `Cmd` (macOS) or `Ctrl` (Windows/Linux) to select exactly two commit
-   rows.
-2. Select **Compare Selected Commits** from the view toolbar or context menu.
-3. Expand **Comparison** and select a file to open its immutable commit-to-commit diff.
+Use either workflow in **VSGit → Commits**:
 
-VSGit uses the older selected commit as the base and the newer selected commit as the target.
+- Right-click two commits and select **Mark for Comparison**, then select **Compare Marked Commits**
+  from the view toolbar or context menu.
+- Mark one commit, then right-click another and select **Compare with Marked Commit** to compare
+  immediately while keeping the original mark.
+
+Marked commits use a bookmark icon. Use **Unmark Commit** or **Clear Comparison Marks** to remove
+marks.
+
+To compare a historical commit with the repository's current `HEAD`, right-click it and select
+**Compare Commit with HEAD**.
+
+After starting a comparison:
+
+1. Expand **Comparison**.
+2. Select a file to open its immutable commit-to-commit diff.
+
+VSGit uses the older marked commit as the base and the newer commit as the target. **Compare Commit
+with HEAD** always uses the selected commit as the base and `HEAD` as the target.
 
 ## Compare arbitrary references
 
@@ -38,9 +52,9 @@ supported.
 `extension.ts` is only the composition root. The `app` layer owns command workflows and connects the
 `view`, `history`, `compare`, and `git` layers; dependencies only point toward lower layers.
 `CommitHistorySession` is the single writer for the active repository and paged commit list, while
-`CompareSession` is the single writer for the active comparison. Commit file trees are loaded lazily
-and cached only by the view provider. The revision content provider reads immutable commit blobs
-only when VS Code opens a diff.
+`CommitMarkSession` is the single writer for comparison marks, and `CompareSession` is the single
+writer for the active comparison. Commit file trees are loaded lazily and cached only by the view
+provider. The revision content provider reads immutable commit blobs only when VS Code opens a diff.
 
 Invalid references, history reload failures, or Git comparison failures abort without replacing the
 last successful state. A commit expansion failure is isolated to that node. Binary and oversized

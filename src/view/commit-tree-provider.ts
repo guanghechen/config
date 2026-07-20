@@ -1,16 +1,17 @@
 import path from 'node:path'
 import {
+  Disposable,
   EventEmitter,
   ThemeIcon,
   TreeItem,
   TreeItemCollapsibleState,
   Uri,
-  type Disposable,
   type Event,
   type TreeDataProvider,
 } from 'vscode'
 import { GitClient } from '../git/git-client'
 import { CommitHistorySession } from '../history/commit-history-session'
+import { CommitMarkSession } from '../history/commit-mark-session'
 import {
   buildCommitChangeTree,
   createCommitRootNodes,
@@ -24,24 +25,31 @@ import { formatCommitSubject } from './commit-subject'
 export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<ICommitTreeNode | undefined>()
   private readonly childCache = new Map<string, Promise<ICommitTreeNode[]>>()
-  private readonly sessionSubscription: Disposable
+  private readonly subscriptions: Disposable
 
   public readonly onDidChangeTreeData: Event<ICommitTreeNode | undefined> = this.changeEmitter.event
 
   public constructor(
     private readonly gitClient: GitClient,
+    private readonly marks: CommitMarkSession,
     private readonly session: CommitHistorySession,
   ) {
-    this.sessionSubscription = this.session.onDidChange(() => {
-      this.childCache.clear()
-      this.changeEmitter.fire(undefined)
-    })
+    this.subscriptions = Disposable.from(
+      this.session.onDidChange(() => {
+        this.childCache.clear()
+        this.changeEmitter.fire(undefined)
+      }),
+      this.marks.onDidChange(() => this.changeEmitter.fire(undefined)),
+    )
   }
 
   public getTreeItem(node: ICommitTreeNode): TreeItem {
     switch (node.kind) {
       case 'commit':
-        return createCommitTreeItem(node)
+        return createCommitTreeItem(
+          node,
+          this.marks.isMarked(node.context.repositoryPath, node.context.commit.hash),
+        )
       case 'commit-directory': {
         const item = new TreeItem(node.name, TreeItemCollapsibleState.Expanded)
         item.id = `commit-directory:${node.context.commit.hash}:${node.path}`
@@ -84,7 +92,7 @@ export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Di
 
   public dispose(): void {
     this.childCache.clear()
-    this.sessionSubscription.dispose()
+    this.subscriptions.dispose()
     this.changeEmitter.dispose()
   }
 
@@ -123,19 +131,20 @@ export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Di
   }
 }
 
-function createCommitTreeItem(node: ICommitNode): TreeItem {
+function createCommitTreeItem(node: ICommitNode, marked: boolean): TreeItem {
   const { commit } = node.context
   const item = new TreeItem(
     formatCommitSubject(commit.subject) || '(no commit message)',
     TreeItemCollapsibleState.Collapsed,
   )
   item.id = `commit:${commit.hash}`
-  item.contextValue = 'vsgit.commit'
-  item.description = `${commit.shortHash} · ${commit.authorName || 'Unknown author'}`
-  item.iconPath = new ThemeIcon('git-commit')
+  item.contextValue = marked ? 'vsgit.commitMarked' : 'vsgit.commit'
+  item.description = `${marked ? 'Marked · ' : ''}${commit.shortHash} · ${commit.authorName || 'Unknown author'}`
+  item.iconPath = new ThemeIcon(marked ? 'bookmark' : 'git-commit')
   item.tooltip = [
     commit.subject || '(no commit message)',
     '',
+    ...(marked ? ['Marked for comparison', ''] : []),
     commit.hash,
     `Author: ${commit.authorName || 'Unknown author'}`,
     `Date: ${new Date(commit.authoredAt).toLocaleString()}`,

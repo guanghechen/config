@@ -4,6 +4,7 @@ import { CompareController } from './app/compare-controller'
 import { CompareSession } from './compare/compare-session'
 import { GitClient } from './git/git-client'
 import { CommitHistorySession } from './history/commit-history-session'
+import { CommitMarkSession } from './history/commit-mark-session'
 import { ChangeTreeProvider } from './view/change-tree-provider'
 import { CommitTreeProvider } from './view/commit-tree-provider'
 import { REVISION_SCHEME, RevisionContentProvider } from './view/revision-content-provider'
@@ -13,14 +14,14 @@ export function activate(context: ExtensionContext): void {
   const session = new CompareSession(gitClient)
   const treeProvider = new ChangeTreeProvider(session)
   const historySession = new CommitHistorySession(gitClient)
-  const commitTreeProvider = new CommitTreeProvider(gitClient, historySession)
+  const commitMarks = new CommitMarkSession()
+  const commitTreeProvider = new CommitTreeProvider(gitClient, commitMarks, historySession)
   const contentProvider = new RevisionContentProvider(gitClient)
   const treeView = window.createTreeView('vsgit.changes', {
     treeDataProvider: treeProvider,
     showCollapseAll: true,
   })
   const commitTreeView = window.createTreeView('vsgit.commits', {
-    canSelectMany: true,
     treeDataProvider: commitTreeProvider,
     showCollapseAll: true,
   })
@@ -29,6 +30,7 @@ export function activate(context: ExtensionContext): void {
     compareSession: session,
     contentProvider,
     gitClient,
+    marks: commitMarks,
     session: historySession,
     treeView: commitTreeView,
   })
@@ -36,6 +38,7 @@ export function activate(context: ExtensionContext): void {
   context.subscriptions.push(
     commitController,
     controller,
+    commitMarks,
     historySession,
     session,
     commitTreeProvider,

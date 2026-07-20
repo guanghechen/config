@@ -53,11 +53,16 @@ test('declares commit browser commands, menus, and view activation', () => {
   assert.equal(new Set(commandIds).size, commandIds.length)
 
   const requiredCommands = [
-    'vsgit.compareSelectedCommits',
+    'vsgit.clearCommitMarks',
+    'vsgit.compareCommitToHead',
+    'vsgit.compareMarkedCommits',
+    'vsgit.compareWithMarkedCommit',
     'vsgit.loadMoreCommits',
+    'vsgit.markCommit',
     'vsgit.openCommitFileDiff',
     'vsgit.refreshCommits',
     'vsgit.selectRepository',
+    'vsgit.unmarkCommit',
   ]
   for (const command of requiredCommands) assert.ok(commandIds.includes(command), command)
 
