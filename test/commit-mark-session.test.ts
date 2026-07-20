@@ -46,6 +46,7 @@ function createCommit(seed: string): IGitCommit {
     parents: [],
     authorName: 'VSGit Test',
     authoredAt: '2026-07-20T10:30:00Z',
+    references: [],
     subject: seed,
   }
 }

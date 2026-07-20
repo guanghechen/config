@@ -13,6 +13,7 @@
     "src/compare/reference-label.ts",
     "src/git/**/*.ts",
     "src/history/commit-order.ts",
+    "src/history/commit-graph.ts",
     "src/history/commit-mark-session.ts",
     "src/history/model.ts",
     "src/view/change-tree.ts",

@@ -1,6 +1,6 @@
-import type { IGitCommit } from './commit'
+import type { GitReferenceKind, IGitCommit, IGitReference } from './commit'
 
-const COMMIT_FIELD_COUNT = 6
+const COMMIT_FIELD_COUNT = 7
 const HASH_PATTERN = /^[0-9a-f]{40,64}$/i
 const SHORT_HASH_PATTERN = /^[0-9a-f]{4,64}$/i
 
@@ -23,7 +23,8 @@ export function parseCommitLog(output: Buffer): ReadonlyArray<IGitCommit> {
     const parentField = readField(fields, index + 2, 'parents')
     const authorName = readField(fields, index + 3, 'author name')
     const authoredAt = requireField(fields, index + 4, 'author date')
-    const subject = readField(fields, index + 5, 'subject')
+    const referenceField = readField(fields, index + 5, 'references')
+    const subject = readField(fields, index + 6, 'subject')
     const delimiter = readField(fields, index + COMMIT_FIELD_COUNT, 'record delimiter')
     index += COMMIT_FIELD_COUNT + 1
 
@@ -46,12 +47,44 @@ export function parseCommitLog(output: Buffer): ReadonlyArray<IGitCommit> {
         parents: Object.freeze(parents),
         authorName,
         authoredAt,
+        references: Object.freeze(parseReferences(referenceField)),
         subject,
       }),
     )
   }
 
   return Object.freeze(commits)
+}
+
+function parseReferences(value: string): IGitReference[] {
+  if (!value) return []
+  return value.split(', ').map(reference => parseReference(reference.trim()))
+}
+
+function parseReference(value: string): IGitReference {
+  if (value.startsWith('HEAD -> ')) {
+    return createReference('head', stripRefPrefix(value.slice('HEAD -> '.length), 'refs/heads/'))
+  }
+  if (value === 'HEAD') return createReference('head', value)
+  if (value.startsWith('refs/heads/')) {
+    return createReference('localBranch', stripRefPrefix(value, 'refs/heads/'))
+  }
+  if (value.startsWith('refs/remotes/')) {
+    return createReference('remoteBranch', stripRefPrefix(value, 'refs/remotes/'))
+  }
+  if (value.startsWith('tag: refs/tags/')) {
+    return createReference('tag', stripRefPrefix(value, 'tag: refs/tags/'))
+  }
+  return createReference('other', value)
+}
+
+function createReference(kind: GitReferenceKind, name: string): IGitReference {
+  if (!name) throw new Error('Malformed git log output: empty reference name.')
+  return Object.freeze({ kind, name })
+}
+
+function stripRefPrefix(value: string, prefix: string): string {
+  return value.slice(prefix.length)
 }
 
 function readField(fields: ReadonlyArray<string>, index: number, label: string): string {

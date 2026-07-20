@@ -72,9 +72,10 @@ export class GitClient {
     const output = await runGit(repositoryPath, [
       'log',
       '--topo-order',
+      '--decorate=full',
       '-z',
       `--max-count=${limit + 1}`,
-      '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%s%x00',
+      '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%D%x00%s%x00',
       headCommit,
       '--',
     ])

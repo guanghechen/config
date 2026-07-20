@@ -14,9 +14,10 @@ test('parses NUL-delimited commit records including a root commit', () => {
       PARENT_HASH,
       'Ada Lovelace',
       '2026-07-20T10:30:00+08:00',
+      'HEAD -> refs/heads/main, refs/remotes/origin/main, tag: refs/tags/v1.0.0',
       'Add commit browser',
     ]),
-    createRecord([ROOT_HASH, ROOT_HASH.slice(0, 9), '', '', '2026-07-19T09:00:00Z', '']),
+    createRecord([ROOT_HASH, ROOT_HASH.slice(0, 9), '', '', '2026-07-19T09:00:00Z', '', '']),
   ])
 
   const commits = parseCommitLog(output)
@@ -27,6 +28,11 @@ test('parses NUL-delimited commit records including a root commit', () => {
       parents: [PARENT_HASH],
       authorName: 'Ada Lovelace',
       authoredAt: '2026-07-20T10:30:00+08:00',
+      references: [
+        { kind: 'head', name: 'main' },
+        { kind: 'remoteBranch', name: 'origin/main' },
+        { kind: 'tag', name: 'v1.0.0' },
+      ],
       subject: 'Add commit browser',
     },
     {
@@ -35,6 +41,7 @@ test('parses NUL-delimited commit records including a root commit', () => {
       parents: [],
       authorName: '',
       authoredAt: '2026-07-19T09:00:00Z',
+      references: [],
       subject: '',
     },
   ])
@@ -46,13 +53,23 @@ test('rejects malformed commit records', () => {
   assert.throws(
     () =>
       parseCommitLog(
-        createRecord(['not-a-hash', 'abc1234', '', 'Author', '2026-07-20T10:30:00Z', 'Subject']),
+        createRecord([
+          'not-a-hash',
+          'abc1234',
+          '',
+          'Author',
+          '2026-07-20T10:30:00Z',
+          '',
+          'Subject',
+        ]),
       ),
     /invalid commit hash/,
   )
   assert.throws(
     () =>
-      parseCommitLog(createRecord([HASH, HASH.slice(0, 9), '', 'Author', 'not-a-date', 'Subject'])),
+      parseCommitLog(
+        createRecord([HASH, HASH.slice(0, 9), '', 'Author', 'not-a-date', '', 'Subject']),
+      ),
     /invalid author date/,
   )
   assert.throws(
