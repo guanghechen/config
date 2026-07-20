@@ -80,9 +80,10 @@ function M:render(bufnr, tree, root, options)
   ---@param prefix                      string
   ---@param is_last                     boolean
   ---@param display_name                string|nil
+  ---@param inherited_selected          boolean
   ---@return nil
-  local function traverse(node, prefix, is_last, display_name)
-    local is_selected = node.selected ---@type boolean
+  local function traverse(node, prefix, is_last, display_name, inherited_selected)
+    local is_selected = inherited_selected or node.selected ---@type boolean
 
     if only_selected and not is_selected then
       if node.nodetype == "F" then
@@ -172,12 +173,13 @@ function M:render(bufnr, tree, root, options)
           end
         end
 
-        traverse(child, child_prefix, i == N, child_display_name)
+        traverse(child, child_prefix, i == N, child_display_name, is_selected)
       end
     end
   end
 
   local root_is_expanded = root.expanded ---@type boolean
+  local root_is_selected = tree:is_selected(root_filepath) ---@type boolean
   if root_is_expanded then
     if not root.loaded and ctx.resource_manager ~= nil then
       ctx.tree:load_node(root, false)
@@ -196,7 +198,7 @@ function M:render(bufnr, tree, root, options)
         end
       end
 
-      traverse(child, "", i == N, child_display_name)
+      traverse(child, "", i == N, child_display_name, root_is_selected)
     end
   end
 
@@ -336,6 +338,10 @@ function M:__fold_empty_dirs__(node, ctx)
   local current = node ---@type era.m.explorer.Node
 
   while true do
+    if current.selected then
+      break
+    end
+
     if not current.expanded then
       break
     end

@@ -888,7 +888,7 @@ function M:__setup_keymaps__(bufnr)
       modes = { "i", "n" },
       key = "<C-q>",
       callback = function()
-        action:send_to_quickfix(self._tree:get_root_node())
+        action:send_to_quickfix()
       end,
       desc = "explorer: send selection to quickfix",
     },

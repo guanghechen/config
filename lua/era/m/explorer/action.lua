@@ -193,7 +193,7 @@ function M:copy_visual()
   else
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node.selected then
+      if not ctx.tree:is_selected(node.filepath) then
         has_unselected = true
         break
       end
@@ -366,7 +366,7 @@ function M:cut_visual()
   else
     local has_unselected = false ---@type boolean
     for _, node in ipairs(nodes) do
-      if not node.selected then
+      if not ctx.tree:is_selected(node.filepath) then
         has_unselected = true
         break
       end
@@ -526,7 +526,7 @@ end
 ---@return nil
 function M:delete_selected()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type era.m.explorer.Node[]
+  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
   if #selected_nodes == 0 then
     stl.reporter.warn({
       from = ctx.fullname,
@@ -688,7 +688,7 @@ function M:mark_visual()
 
   local has_unselected = false ---@type boolean
   for _, node in ipairs(nodes) do
-    if not node.selected then
+    if not ctx.tree:is_selected(node.filepath) then
       has_unselected = true
       break
     end
@@ -1006,11 +1006,10 @@ function M:select_toggle()
   ctx.refresh()
 end
 
----@param root                          era.m.explorer.Node
 ---@return nil
-function M:send_to_quickfix(root)
+function M:send_to_quickfix()
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = era.m.explorer.Node.collect_selected(root) ---@type era.m.explorer.Node[]
+  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
 
   if #selected_nodes == 0 then
     local filepath = ctx.get_cursor_filepath() ---@type string|nil
@@ -1121,7 +1120,7 @@ function M:toggle_select_mode_visual(target_mode)
   local all_selected = true ---@type boolean
 
   for _, node in ipairs(nodes) do
-    if not node.selected then
+    if not ctx.tree:is_selected(node.filepath) then
       all_selected = false
       break
     end
@@ -1214,7 +1213,7 @@ end
 ---@return nil
 function M:__transfer_selected__(mode, initial_target)
   local ctx = self._ctx ---@type era.m.explorer.action.IContext
-  local selected_nodes = ctx.tree:get_selected_nodes_toplevel() ---@type era.m.explorer.Node[]
+  local selected_nodes = ctx.tree:get_selected_nodes() ---@type era.m.explorer.Node[]
   if #selected_nodes == 0 then
     stl.reporter.warn({
       from = ctx.fullname,

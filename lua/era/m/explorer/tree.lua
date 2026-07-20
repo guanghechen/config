@@ -89,320 +89,6 @@ function M.new(props)
   return self
 end
 
----@param target_parent_filepath             string
----@return boolean
-function M:apply_copy_paste(target_parent_filepath)
-  self:__health__()
-
-  local subject = string.format("%s#apply_copy_paste", self.name) ---@type string
-  local target_node = self:__locate__(target_parent_filepath) ---@type era.m.explorer.Node|nil
-  if target_node == nil then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' does not exist.", target_parent_filepath),
-    })
-    return false
-  end
-
-  if target_node.nodetype ~= "D" then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' is not a directory.", target_parent_filepath),
-    })
-    return false
-  end
-
-  local target_node_filepath = target_node.filepath ---@type string
-
-  if not target_node.loaded then
-    self:__load_children__(target_node, target_node_filepath)
-  end
-
-  local selected_nodes = era.m.explorer.Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
-  if #selected_nodes == 0 then
-    return false
-  end
-
-  local reserved = {} ---@type table<string, boolean>
-  for name, _ in pairs(target_node.chidxmap) do
-    reserved[name] = true
-  end
-
-  for _, node in ipairs(selected_nodes) do
-    local node_filepath = node.filepath ---@type string
-    if node == self._root then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = "Cannot copy the root.",
-      })
-      return false
-    end
-
-    if node.parent == nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Node '%s' is detached and cannot be copied.", node_filepath),
-      })
-      return false
-    end
-
-    if target_node:is_descendant_or_self(node) then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Target parent '%s' is a descendant of the selected node '%s'.",
-          target_parent_filepath,
-          node_filepath
-        ),
-      })
-      return false
-    end
-
-    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
-    if existing_idx ~= nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Target parent '%s' already contains '%s'.", target_parent_filepath, node.nodename),
-      })
-      return false
-    end
-
-    if reserved[node.nodename] then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Multiple nodes named '%s' cannot be pasted into '%s'.",
-          node.nodename,
-          target_parent_filepath
-        ),
-      })
-      return false
-    end
-
-    reserved[node.nodename] = true
-  end
-
-  local rm = self._resource_manager ---@type era.m.explorer.resource.IManager
-  local changed = false ---@type boolean
-
-  for _, node in ipairs(selected_nodes) do
-    local source_filepath = node.filepath ---@type string
-    local destination_filepath = era.m.explorer.Node.calc_filepath(target_node_filepath, node.nodename, node.nodetype) ---@type string
-
-    local ok, result = pcall(rm.copy, rm, source_filepath, destination_filepath) ---@type boolean, boolean|nil
-    if not ok then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Resource manager copy failed for '%s'.", source_filepath),
-        details = { target = destination_filepath, error = result },
-      })
-      return false
-    end
-
-    if result == false or result == nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Resource manager refused to copy '%s'.", source_filepath),
-        details = { target = destination_filepath },
-      })
-      return false
-    end
-
-    local clone = era.m.explorer.Node.clone(node, target_node) ---@type era.m.explorer.Node
-    era.m.explorer.Node.refresh_depth(clone, target_node.depth + 1)
-    local insert_idx = self:__find_insertion_index__(rm, target_node.children, clone) ---@type integer
-    table.insert(target_node.children, insert_idx, clone)
-    target_node:sync_chidxmap(insert_idx)
-    changed = true
-  end
-
-  if changed then
-    self.ticks.structure = self.ticks.structure + 1
-  end
-  return changed
-end
-
----@param target_parent_filepath             string
----@return boolean
-function M:apply_cut_paste(target_parent_filepath)
-  self:__health__()
-
-  local subject = string.format("%s#apply_cut_paste", self.name) ---@type string
-  local target_node = self:__locate__(target_parent_filepath) ---@type era.m.explorer.Node|nil
-  if target_node == nil then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' does not exist.", target_parent_filepath),
-    })
-    return false
-  end
-
-  if target_node.nodetype ~= "D" then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = subject,
-      message = string.format("Target parent '%s' is not a directory.", target_parent_filepath),
-    })
-    return false
-  end
-
-  local target_node_filepath = target_node.filepath ---@type string
-
-  if not target_node.loaded then
-    self:__load_children__(target_node, target_node_filepath)
-  end
-
-  local selected_nodes = era.m.explorer.Node.collect_selected(self._root) ---@type era.m.explorer.Node[]
-  if #selected_nodes == 0 then
-    return false
-  end
-
-  local reserved = {} ---@type table<string, boolean>
-  for name, _ in pairs(target_node.chidxmap) do
-    reserved[name] = true
-  end
-
-  for _, node in ipairs(selected_nodes) do
-    local node_filepath = node.filepath ---@type string
-    if node == self._root then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = "Cannot move the root.",
-      })
-      return false
-    end
-
-    local parent = node.parent ---@type era.m.explorer.Node|nil
-    if parent == nil then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format("Node '%s' is detached and cannot be moved.", node_filepath),
-      })
-      return false
-    end
-
-    if target_node:is_descendant_or_self(node) then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Target parent '%s' is a descendant of the selected node '%s'.",
-          target_parent_filepath,
-          node_filepath
-        ),
-      })
-      return false
-    end
-
-    local existing_idx = target_node.chidxmap[node.nodename] ---@type integer|nil
-    if existing_idx ~= nil then
-      local existing = target_node.children[existing_idx] ---@type era.m.explorer.Node
-      if existing ~= node then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Target parent '%s' already contains '%s'.", target_parent_filepath, node.nodename),
-        })
-        return false
-      end
-    elseif reserved[node.nodename] then
-      stl.reporter.error({
-        from = __module_name__,
-        subject = subject,
-        message = string.format(
-          "Multiple nodes named '%s' cannot be pasted into '%s'.",
-          node.nodename,
-          target_parent_filepath
-        ),
-      })
-      return false
-    else
-      reserved[node.nodename] = true
-    end
-  end
-
-  local rm = self._resource_manager ---@type era.m.explorer.resource.IManager
-  local changed = false ---@type boolean
-
-  for _, node in ipairs(selected_nodes) do
-    if node.parent ~= target_node then
-      local parent = node.parent ---@type era.m.explorer.Node
-      local source_filepath = node.filepath ---@type string
-      local destination_filepath = era.m.explorer.Node.calc_filepath(target_node_filepath, node.nodename, node.nodetype) ---@type string
-
-      local ok, result = pcall(rm.move, rm, source_filepath, destination_filepath) ---@type boolean, boolean|nil
-      if not ok then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Resource manager move failed for '%s'.", source_filepath),
-          details = { target = destination_filepath, error = result },
-        })
-        return false
-      end
-
-      if result == false or result == nil then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Resource manager refused to move '%s'.", source_filepath),
-          details = { target = destination_filepath },
-        })
-        return false
-      end
-
-      local removal_index = parent.chidxmap[node.nodename] ---@type integer|nil
-      if removal_index == nil then
-        for index, child in ipairs(parent.children) do
-          if child == node then
-            removal_index = index
-            break
-          end
-        end
-      end
-
-      if removal_index == nil then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = subject,
-          message = string.format("Cannot locate node '%s' in its parent list.", source_filepath),
-          details = { target = destination_filepath },
-        })
-        return false
-      end
-
-      table.remove(parent.children, removal_index)
-      parent.chidxmap[node.nodename] = nil
-      parent:sync_chidxmap(removal_index)
-
-      node.parent = target_node
-      era.m.explorer.Node.refresh_depth(node, target_node.depth + 1)
-      local insert_idx = self:__find_insertion_index__(rm, target_node.children, node) ---@type integer
-      table.insert(target_node.children, insert_idx, node)
-      target_node:sync_chidxmap(insert_idx)
-
-      changed = true
-    end
-  end
-
-  if changed then
-    self.ticks.structure = self.ticks.structure + 1
-  end
-  return changed
-end
-
 ---@param filepath                           string
 ---@return boolean
 function M:attach(filepath)
@@ -441,7 +127,7 @@ end
 ---@return nil
 function M:clear_selection()
   self:__health__()
-  self._superroot:set_selected_recursive(false)
+  self._superroot:clear_selection_recursive()
   self.select_mode = "select"
 end
 
@@ -511,7 +197,7 @@ end
 function M:get_common_ancestor_path(nodes)
   self:__health__()
 
-  nodes = nodes or self:get_selected_nodes_toplevel()
+  nodes = nodes or self:get_selected_nodes()
   if #nodes == 0 then
     return nil
   end
@@ -555,19 +241,21 @@ end
 ---@return era.m.explorer.Node[]
 function M:get_selected_nodes()
   self:__health__()
+  local selected_root = self:__get_selected_root__(self._root) ---@type era.m.explorer.Node|nil
+  if selected_root ~= nil then
+    return { selected_root }
+  end
   return era.m.explorer.Node.collect_selected(self._root)
-end
-
----@return era.m.explorer.Node[]
-function M:get_selected_nodes_toplevel()
-  self:__health__()
-  return era.m.explorer.Node.collect_selected_toplevel(self._root)
 end
 
 ---@return string[]
 function M:get_selected_filepaths()
-  self:__health__()
-  return era.m.explorer.Node.collect_selected_filepaths(self._root)
+  local selected_nodes = self:get_selected_nodes() ---@type era.m.explorer.Node[]
+  local filepaths = {} ---@type string[]
+  for _, node in ipairs(selected_nodes) do
+    filepaths[#filepaths + 1] = node.filepath
+  end
+  return filepaths
 end
 
 ---@param parent_filepath                     string
@@ -661,7 +349,7 @@ end
 function M:is_selected(filepath)
   self:__health__()
   local node = self:__locate__(filepath) ---@type era.m.explorer.Node|nil
-  return node ~= nil and node.selected
+  return node ~= nil and self:__get_selected_root__(node) ~= nil
 end
 
 ---@param node                          era.m.explorer.Node
@@ -825,11 +513,11 @@ function M:remove(filepath)
     -- 3. chidxmap[nodename] = nil: explicitly clear the removed node's entry
     --    (sync_chidxmap only re-indexes from removal_index, it won't clear
     --    the removed node's entry if no remaining child has the same name)
-    -- 4. sync_ancestors: update has_selected state along ancestor chain
+    -- 4. sync_selection: update has_selected state along ancestor chain
     table.remove(parent.children, removal_index)
     parent:sync_chidxmap(removal_index)
     parent.chidxmap[node.nodename] = nil
-    era.m.explorer.Node.sync_ancestors(parent)
+    era.m.explorer.Node.sync_selection(parent)
 
     if self._root ~= nil then
       if self._root:is_descendant_or_self(node) then
@@ -907,37 +595,44 @@ function M:toggle_selected(filepath, force_selected)
     return
   end
 
+  local selected_root = self:__get_selected_root__(node) ---@type era.m.explorer.Node|nil
   local selected ---@type boolean
   if force_selected == "select" then
     selected = true
   elseif force_selected == "unselect" then
     selected = false
   else
-    selected = not node.selected
+    selected = selected_root == nil
   end
 
-  self:__load_subtree__(node)
-  node:set_selected_recursive(selected)
-  era.m.explorer.Node.sync_ancestors(node)
+  if selected then
+    if selected_root ~= nil then
+      return
+    end
+    -- Explicit selection roots form an antichain; selecting an ancestor replaces descendants.
+    node:clear_selection_recursive()
+    node.selected = true
+    era.m.explorer.Node.sync_selection(node)
+  elseif selected_root ~= nil then
+    selected_root.selected = false
+    era.m.explorer.Node.sync_selection(selected_root)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
 ---@param node                          era.m.explorer.Node
----@return nil
-function M:__load_subtree__(node)
-  if node.nodetype == "F" then
-    return
+---@return era.m.explorer.Node|nil
+function M:__get_selected_root__(node)
+  local current = node ---@type era.m.explorer.Node|nil
+  while current ~= nil do
+    if current.selected then
+      return current
+    end
+    current = current.parent
   end
-
-  if not node.loaded then
-    self:__load_children__(node, node.filepath)
-  end
-
-  for _, child in ipairs(node.children) do
-    self:__load_subtree__(child)
-  end
+  return nil
 end
 
 ---@protected
@@ -1095,8 +790,8 @@ function M:__load__(node, nodeindex, filepath, force)
       depth = parent.depth + 1,
       expanded = node.expanded,
       loaded = resource_node.nodetype == "F",
-      selected = parent.selected,
-      has_selected = parent.selected,
+      selected = node.selected,
+      has_selected = false,
     }, era.m.explorer.Node)
 
     node.parent.children[nodeindex] = new_node
@@ -1104,6 +799,7 @@ function M:__load__(node, nodeindex, filepath, force)
     if resource_node.nodetype == "D" then
       self:__load_children__(new_node, filepath)
     end
+    era.m.explorer.Node.sync_selection(new_node)
     return new_node
   end
 
@@ -1187,6 +883,7 @@ function M:__load_children__(node, filepath)
   node.children = new_children
   node.chidxmap = new_chidxmap
   node.loaded = true
+  era.m.explorer.Node.sync_selection(node)
 end
 
 ---@protected
