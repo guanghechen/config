@@ -1,0 +1,139 @@
+{
+  "name": "vsgit",
+  "displayName": "VSGit",
+  "description": "Compare any two Git references with a file tree and native VS Code diffs.",
+  "version": "0.0.1",
+  "publisher": "guanghechen",
+  "private": true,
+  "packageManager": "pnpm@11.15.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guanghechen/config.git"
+  },
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "SCM Providers"
+  ],
+  "activationEvents": [
+    "onView:vsgit.changes",
+    "onCommand:vsgit.compareRefs"
+  ],
+  "main": "./dist/extension.cjs",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && vite build",
+    "check": "pnpm lint && pnpm format:check && pnpm test && pnpm build",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint .",
+    "package": "pnpm build && vsce package --no-dependencies --out vsgit.vsix",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test/test/*.test.js",
+    "watch": "vite build --watch"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "vsgit.compareRefs",
+        "title": "Compare References",
+        "category": "VSGit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "vsgit.refresh",
+        "title": "Refresh Comparison",
+        "category": "VSGit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vsgit.swapRefs",
+        "title": "Swap References",
+        "category": "VSGit",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "vsgit.clear",
+        "title": "Clear Comparison",
+        "category": "VSGit",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "vsgit.openDiff",
+        "title": "Open File Diff",
+        "category": "VSGit"
+      }
+    ],
+    "configuration": {
+      "title": "VSGit",
+      "properties": {
+        "vsgit.maxBlobBytes": {
+          "type": "number",
+          "default": 5242880,
+          "minimum": 1024,
+          "maximum": 52428800,
+          "description": "Maximum file size in bytes that VSGit will load into a diff editor."
+        }
+      }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vsgit.compareRefs",
+          "when": "view == vsgit.changes",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vsgit.refresh",
+          "when": "view == vsgit.changes && vsgit.hasComparison",
+          "group": "navigation@2"
+        },
+        {
+          "command": "vsgit.swapRefs",
+          "when": "view == vsgit.changes && vsgit.hasComparison",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.clear",
+          "when": "view == vsgit.changes && vsgit.hasComparison",
+          "group": "navigation@4"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vsgit.openDiff",
+          "when": "view == vsgit.changes && viewItem == vsgit.file",
+          "group": "inline"
+        }
+      ]
+    },
+    "views": {
+      "scm": [
+        {
+          "id": "vsgit.changes",
+          "name": "Reference Comparison"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "vsgit.changes",
+        "contents": "Compare any two commits, branches, or tags.\n[Compare References](command:vsgit.compareRefs)",
+        "when": "!vsgit.hasComparison"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
+    "@types/vscode": "1.125.0",
+    "@vscode/vsce": "3.9.2",
+    "eslint": "10.7.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.7.0",
+    "prettier": "3.9.5",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.64.0",
+    "vite": "8.1.5"
+  }
+}

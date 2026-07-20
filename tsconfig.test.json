@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "noEmit": false,
+    "outDir": "dist-test",
+    "rootDir": ".",
+    "sourceMap": true
+  },
+  "include": ["src/contract.ts", "src/git/**/*.ts", "src/tree/change-tree.ts", "test/**/*.ts"]
+}
