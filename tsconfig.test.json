@@ -17,6 +17,7 @@
     "src/history/commit-mark-session.ts",
     "src/history/model.ts",
     "src/view/change-tree.ts",
+    "src/view/commit-graph-presentation.ts",
     "src/view/commit-subject.ts",
     "src/view/commit-tree.ts",
     "src/view/file-change-decoration.ts",

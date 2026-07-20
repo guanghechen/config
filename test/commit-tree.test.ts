@@ -33,6 +33,12 @@ test('creates commit roots with a load-more sentinel', () => {
         commit: COMMIT,
         parentCommit: COMMIT.parents[0],
       },
+      graph: {
+        commitHash: COMMIT.hash,
+        lane: 0,
+        laneCount: 1,
+        parentCount: 1,
+      },
     },
     { kind: 'load-more-commits', historyRevision: 3 },
   ])

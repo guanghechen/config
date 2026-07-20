@@ -1,6 +1,7 @@
 import type { IGitCommit } from '../git/commit'
 import { isFileChange, type IFileChange } from '../git/file-change'
 import type { ICommitHistorySnapshot } from '../history/model'
+import { buildCommitGraphRows, type ICommitGraphRow } from '../history/commit-graph'
 import { buildChangeTree, type IChangeTreeNode, type IDirectoryNode } from './change-tree'
 
 export interface ICommitDiffContext {
@@ -13,6 +14,7 @@ export interface ICommitDiffContext {
 export interface ICommitNode {
   readonly kind: 'commit'
   readonly context: ICommitDiffContext
+  readonly graph: ICommitGraphRow
 }
 
 export interface ICommitDirectoryNode {
@@ -49,15 +51,21 @@ export type ICommitTreeNode =
 export function createCommitRootNodes(
   snapshot: ICommitHistorySnapshot,
 ): ReadonlyArray<ICommitTreeNode> {
-  const nodes: ICommitTreeNode[] = snapshot.commits.map(commit => ({
-    kind: 'commit',
-    context: Object.freeze({
-      historyRevision: snapshot.revision,
-      repositoryPath: snapshot.repositoryPath,
-      commit,
-      parentCommit: commit.parents[0] ?? null,
-    }),
-  }))
+  const graphRows = buildCommitGraphRows(snapshot.commits)
+  const nodes: ICommitTreeNode[] = snapshot.commits.map((commit, index) => {
+    const graph = graphRows[index]
+    if (!graph) throw new Error('Commit graph is incomplete.')
+    return {
+      kind: 'commit',
+      context: Object.freeze({
+        historyRevision: snapshot.revision,
+        repositoryPath: snapshot.repositoryPath,
+        commit,
+        parentCommit: commit.parents[0] ?? null,
+      }),
+      graph,
+    }
+  })
   if (snapshot.hasMore) {
     nodes.push({ kind: 'load-more-commits', historyRevision: snapshot.revision })
   }
@@ -74,7 +82,18 @@ export function buildCommitChangeTree(
 export function isCommitNode(value: unknown): value is ICommitNode {
   if (!value || typeof value !== 'object') return false
   const node = value as Partial<ICommitNode>
-  return node.kind === 'commit' && isCommitDiffContext(node.context)
+  return node.kind === 'commit' && isCommitDiffContext(node.context) && isCommitGraphRow(node.graph)
+}
+
+function isCommitGraphRow(value: unknown): value is ICommitGraphRow {
+  if (!value || typeof value !== 'object') return false
+  const row = value as Partial<ICommitGraphRow>
+  return (
+    typeof row.commitHash === 'string' &&
+    Number.isSafeInteger(row.lane) &&
+    Number.isSafeInteger(row.laneCount) &&
+    Number.isSafeInteger(row.parentCount)
+  )
 }
 
 export function isCommitFileNode(value: unknown): value is ICommitFileNode {

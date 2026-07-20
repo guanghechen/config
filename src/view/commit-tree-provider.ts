@@ -1,6 +1,7 @@
 import {
   Disposable,
   EventEmitter,
+  ThemeColor,
   ThemeIcon,
   TreeItem,
   TreeItemCollapsibleState,
@@ -17,6 +18,12 @@ import {
   type ICommitNode,
   type ICommitTreeNode,
 } from './commit-tree'
+import {
+  formatCommitGraphPrefix,
+  formatCommitReferenceSummary,
+  formatCommitReferenceTooltip,
+  resolveCommitGraphColorId,
+} from './commit-graph-presentation'
 import { createFileChangeDescription, createFileChangeTooltip } from './file-change-presentation'
 import { createRepositoryResourceUri } from './file-change-resource'
 import { formatCommitSubject } from './commit-subject'
@@ -132,18 +139,28 @@ export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Di
 
 function createCommitTreeItem(node: ICommitNode, marked: boolean): TreeItem {
   const { commit } = node.context
+  const subject = formatCommitSubject(commit.subject) || '(no commit message)'
+  const graphPrefix = formatCommitGraphPrefix(node.graph)
   const item = new TreeItem(
-    formatCommitSubject(commit.subject) || '(no commit message)',
+    graphPrefix ? `${graphPrefix}  ${subject}` : subject,
     TreeItemCollapsibleState.Collapsed,
   )
   item.id = `commit:${commit.hash}`
   item.contextValue = marked ? 'vsgit.commitMarked' : 'vsgit.commit'
-  item.description = `${marked ? 'Marked · ' : ''}${commit.shortHash} · ${commit.authorName || 'Unknown author'}`
-  item.iconPath = new ThemeIcon(marked ? 'bookmark' : 'git-commit')
+  const references = formatCommitReferenceSummary(commit.references)
+  item.description = [marked ? 'Marked' : '', references, commit.authorName || 'Unknown author']
+    .filter(Boolean)
+    .join(' · ')
+  item.iconPath = new ThemeIcon(
+    marked ? 'bookmark' : 'git-commit',
+    new ThemeColor(resolveCommitGraphColorId(node.graph.lane)),
+  )
+  const referenceTooltip = formatCommitReferenceTooltip(commit.references)
   item.tooltip = [
     commit.subject || '(no commit message)',
     '',
     ...(marked ? ['Marked for comparison', ''] : []),
+    ...(referenceTooltip ? [referenceTooltip, ''] : []),
     commit.hash,
     `Author: ${commit.authorName || 'Unknown author'}`,
     `Date: ${new Date(commit.authoredAt).toLocaleString()}`,
