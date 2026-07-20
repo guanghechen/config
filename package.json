@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "publisher": "guanghechen",
   "private": true,
+  "icon": "assets/vsgit-icon.png",
   "packageManager": "pnpm@11.15.0",
   "license": "MIT",
   "repository": {
