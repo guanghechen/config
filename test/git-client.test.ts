@@ -41,6 +41,19 @@ test('resolves commits, detects structural changes, and reads immutable blobs', 
   )
   assert.equal(await client.resolveCommit(repositoryPath, baseCommit.slice(0, 12)), baseCommit)
 
+  const firstPage = await client.listCommits(repositoryPath, 1)
+  assert.equal(firstPage.hasMore, true)
+  assert.equal(firstPage.commits.length, 1)
+  assert.equal(firstPage.commits[0]?.hash, targetCommit)
+  assert.deepEqual(firstPage.commits[0]?.parents, [baseCommit])
+
+  const fullPage = await client.listCommits(repositoryPath, 10)
+  assert.equal(fullPage.hasMore, false)
+  assert.deepEqual(
+    fullPage.commits.map(commit => commit.hash),
+    [targetCommit, baseCommit],
+  )
+
   const changes = await client.listChanges(repositoryPath, baseCommit, targetCommit)
   assert.deepEqual(
     changes.map(change => [change.status, change.previousPath, change.currentPath]),
@@ -50,6 +63,22 @@ test('resolves commits, detects structural changes, and reads immutable blobs', 
       ['D', 'deleted.txt', null],
       ['M', 'modified.txt', 'modified.txt'],
       ['R100', 'old/name.txt', 'new/name.txt'],
+    ],
+  )
+  assert.deepEqual(
+    await client.listCommitChanges(repositoryPath, targetCommit, baseCommit),
+    changes,
+  )
+  assert.deepEqual(
+    (await client.listCommitChanges(repositoryPath, baseCommit, null)).map(change => [
+      change.status,
+      change.previousPath,
+      change.currentPath,
+    ]),
+    [
+      ['A', null, 'deleted.txt'],
+      ['A', null, 'modified.txt'],
+      ['A', null, 'old/name.txt'],
     ],
   )
   assert.equal(
@@ -64,6 +93,7 @@ test('resolves commits, detects structural changes, and reads immutable blobs', 
     client.readTextFile(repositoryPath, targetCommit, 'binary.bin', 1024),
     GitBlobDisplayError,
   )
+  await assert.rejects(client.listCommits(repositoryPath, 0), /Commit page size/)
 })
 
 function git(repositoryPath: string, ...args: string[]): string {

@@ -1,10 +1,14 @@
 import { execFile } from 'node:child_process'
 import path from 'node:path'
+import type { ICommitPage } from './commit'
+import { parseCommitLog } from './commit-log'
 import type { IFileChange } from './file-change'
 import { parseNameStatus } from './name-status'
 
 const GIT_TIMEOUT_MS = 15_000
+const MAX_COMMIT_PAGE_SIZE = 500
 const MAX_COMMAND_OUTPUT_BYTES = 16 * 1024 * 1024
+const NAME_STATUS_ARGS = ['--name-status', '-z', '--find-renames', '--find-copies'] as const
 
 export class GitBlobDisplayError extends Error {}
 
@@ -42,11 +46,50 @@ export class GitClient {
     assertResolvedCommit(targetCommit)
     const output = await runGit(repositoryPath, [
       'diff',
-      '--name-status',
-      '-z',
-      '--find-renames',
+      ...NAME_STATUS_ARGS,
       baseCommit,
       targetCommit,
+      '--',
+    ])
+    return parseNameStatus(output)
+  }
+
+  public async listCommits(repositoryPath: string, limit: number): Promise<ICommitPage> {
+    assertCommitLimit(limit)
+    const output = await runGit(repositoryPath, [
+      'log',
+      '--topo-order',
+      '-z',
+      `--max-count=${limit + 1}`,
+      '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%s%x00',
+      'HEAD',
+      '--',
+    ])
+    const commits = parseCommitLog(output)
+    return Object.freeze({
+      commits: Object.freeze(commits.slice(0, limit)),
+      hasMore: commits.length > limit,
+    })
+  }
+
+  public async listCommitChanges(
+    repositoryPath: string,
+    commit: string,
+    parentCommit: string | null,
+  ): Promise<ReadonlyArray<IFileChange>> {
+    assertResolvedCommit(commit)
+    if (parentCommit) {
+      assertResolvedCommit(parentCommit)
+      return this.listChanges(repositoryPath, parentCommit, commit)
+    }
+
+    const output = await runGit(repositoryPath, [
+      'diff-tree',
+      '--root',
+      '--no-commit-id',
+      ...NAME_STATUS_ARGS,
+      '-r',
+      commit,
       '--',
     ])
     return parseNameStatus(output)
@@ -84,6 +127,12 @@ export class GitClient {
       throw new GitBlobDisplayError('Binary file content is not displayed by VSGit.')
     }
     return contents.toString('utf8')
+  }
+}
+
+function assertCommitLimit(value: number): void {
+  if (!Number.isSafeInteger(value) || value < 1 || value > MAX_COMMIT_PAGE_SIZE) {
+    throw new Error(`Commit page size must be between 1 and ${MAX_COMMIT_PAGE_SIZE}.`)
   }
 }
 
