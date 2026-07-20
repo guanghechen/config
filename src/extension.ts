@@ -20,11 +20,13 @@ export function activate(context: ExtensionContext): void {
     showCollapseAll: true,
   })
   const commitTreeView = window.createTreeView('vsgit.commits', {
+    canSelectMany: true,
     treeDataProvider: commitTreeProvider,
     showCollapseAll: true,
   })
   const controller = new CompareController({ contentProvider, gitClient, session, treeView })
   const commitController = new CommitController({
+    compareSession: session,
     contentProvider,
     gitClient,
     session: historySession,

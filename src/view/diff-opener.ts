@@ -1,5 +1,6 @@
 import { commands } from 'vscode'
 import type { IRevisionComparison } from '../compare/model'
+import { formatReferenceLabel } from '../compare/reference-label'
 import { resolveDisplayPath, type IFileChange } from '../git/file-change'
 import { RevisionContentProvider } from './revision-content-provider'
 
@@ -39,9 +40,5 @@ function createDiffTitle(comparison: IRevisionComparison, change: IFileChange): 
     change.previousPath && change.currentPath && change.previousPath !== change.currentPath
       ? `${change.previousPath} → ${change.currentPath}`
       : resolveDisplayPath(change)
-  return `${pathLabel} (${shorten(comparison.baseRef)} ↔ ${shorten(comparison.targetRef)})`
-}
-
-function shorten(value: string): string {
-  return value.length > 24 ? `${value.slice(0, 21)}…` : value
+  return `${pathLabel} (${formatReferenceLabel(comparison.baseRef)} ↔ ${formatReferenceLabel(comparison.targetRef)})`
 }

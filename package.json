@@ -21,6 +21,7 @@
   "activationEvents": [
     "onView:vsgit.commits",
     "onView:vsgit.changes",
+    "onCommand:vsgit.compareSelectedCommits",
     "onCommand:vsgit.openCommitFileDiff",
     "onCommand:vsgit.compareRefs"
   ],
@@ -40,6 +41,12 @@
       {
         "command": "vsgit.compareRefs",
         "title": "Compare References",
+        "category": "VSGit",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "vsgit.compareSelectedCommits",
+        "title": "Compare Selected Commits",
         "category": "VSGit",
         "icon": "$(git-compare)"
       },
@@ -115,6 +122,11 @@
           "group": "navigation@2"
         },
         {
+          "command": "vsgit.compareSelectedCommits",
+          "when": "view == vsgit.commits && vsgit.canCompareSelectedCommits",
+          "group": "navigation@3"
+        },
+        {
           "command": "vsgit.compareRefs",
           "when": "view == vsgit.changes",
           "group": "navigation@1"
@@ -145,6 +157,11 @@
           "command": "vsgit.openCommitFileDiff",
           "when": "view == vsgit.commits && viewItem == vsgit.commitFile",
           "group": "inline"
+        },
+        {
+          "command": "vsgit.compareSelectedCommits",
+          "when": "view == vsgit.commits && viewItem == vsgit.commit && vsgit.canCompareSelectedCommits",
+          "group": "navigation@1"
         }
       ]
     },
@@ -165,7 +182,7 @@
         },
         {
           "id": "vsgit.changes",
-          "name": "Reference Comparison"
+          "name": "Comparison"
         }
       ]
     },

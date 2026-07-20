@@ -10,7 +10,9 @@
   },
   "include": [
     "src/compare/model.ts",
+    "src/compare/reference-label.ts",
     "src/git/**/*.ts",
+    "src/history/commit-order.ts",
     "src/history/model.ts",
     "src/view/change-tree.ts",
     "src/view/commit-tree.ts",

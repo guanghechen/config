@@ -1,15 +1,18 @@
 import path from 'node:path'
 import { Disposable, ProgressLocation, commands, window, workspace, type TreeView } from 'vscode'
+import { CompareSession } from '../compare/compare-session'
 import type { IRevisionComparison } from '../compare/model'
 import { GitClient } from '../git/git-client'
 import { CommitHistorySession } from '../history/commit-history-session'
+import { orderCommitsForComparison, type IOrderedCommitPair } from '../history/commit-order'
 import type { ICommitHistorySnapshot } from '../history/model'
-import { isCommitFileNode, type ICommitTreeNode } from '../view/commit-tree'
+import { isCommitFileNode, isCommitNode, type ICommitTreeNode } from '../view/commit-tree'
 import { openRevisionDiff } from '../view/diff-opener'
 import { RevisionContentProvider } from '../view/revision-content-provider'
 import { discoverRepositories, pickRepository } from './repository-picker'
 
 const COMMAND = {
+  compareSelected: 'vsgit.compareSelectedCommits',
   loadMore: 'vsgit.loadMoreCommits',
   openFileDiff: 'vsgit.openCommitFileDiff',
   refresh: 'vsgit.refreshCommits',
@@ -17,6 +20,7 @@ const COMMAND = {
 } as const
 
 export interface ICommitControllerOptions {
+  readonly compareSession: CompareSession
   readonly contentProvider: RevisionContentProvider
   readonly gitClient: GitClient
   readonly session: CommitHistorySession
@@ -24,6 +28,7 @@ export interface ICommitControllerOptions {
 }
 
 export class CommitController implements Disposable {
+  private readonly compareSession: CompareSession
   private readonly contentProvider: RevisionContentProvider
   private readonly gitClient: GitClient
   private readonly registrations: Disposable
@@ -31,12 +36,15 @@ export class CommitController implements Disposable {
   private readonly treeView: TreeView<ICommitTreeNode>
 
   public constructor(options: ICommitControllerOptions) {
+    this.compareSession = options.compareSession
     this.contentProvider = options.contentProvider
     this.gitClient = options.gitClient
     this.session = options.session
     this.treeView = options.treeView
     this.registrations = Disposable.from(
       this.session.onDidChange(snapshot => this.updateViewState(snapshot)),
+      this.treeView.onDidChangeSelection(() => this.updateSelectionContext()),
+      commands.registerCommand(COMMAND.compareSelected, () => this.compareSelectedCommits()),
       commands.registerCommand(COMMAND.refresh, () => this.refresh()),
       commands.registerCommand(COMMAND.selectRepository, () => this.selectRepository()),
       commands.registerCommand(COMMAND.loadMore, () =>
@@ -55,6 +63,7 @@ export class CommitController implements Disposable {
   }
 
   public dispose(): void {
+    void commands.executeCommand('setContext', 'vsgit.canCompareSelectedCommits', false)
     this.registrations.dispose()
   }
 
@@ -86,6 +95,30 @@ export class CommitController implements Disposable {
     const repositoryPath = await pickRepository(this.gitClient)
     if (!repositoryPath) return
     await this.runOperation('Loading commits…', () => this.session.load(repositoryPath))
+  }
+
+  private async compareSelectedCommits(): Promise<void> {
+    const pair = this.getSelectedCommitPair()
+    const snapshot = this.session.snapshot
+    if (!pair || !snapshot) {
+      await window.showWarningMessage('VSGit: Select exactly two current commits to compare.')
+      return
+    }
+
+    try {
+      const comparison = await window.withProgress(
+        {
+          location: ProgressLocation.Notification,
+          title: `Comparing ${pair.base.shortHash} with ${pair.target.shortHash}…`,
+          cancellable: false,
+        },
+        () =>
+          this.compareSession.compare(snapshot.repositoryPath, pair.base.hash, pair.target.hash),
+      )
+      if (comparison) await commands.executeCommand('vsgit.changes.focus')
+    } catch (cause) {
+      await this.showError(cause)
+    }
   }
 
   private async openCommitFileDiff(value: unknown): Promise<void> {
@@ -139,6 +172,35 @@ export class CommitController implements Disposable {
         ? 'No commits found in this repository.'
         : undefined
       : 'Open a Git repository to browse commits.'
+    this.updateSelectionContext()
+  }
+
+  private getSelectedCommitPair(): IOrderedCommitPair | null {
+    const snapshot = this.session.snapshot
+    const selection = this.treeView.selection
+    const left = selection[0]
+    const right = selection[1]
+    if (
+      !snapshot ||
+      selection.length !== 2 ||
+      !isCommitNode(left) ||
+      !isCommitNode(right) ||
+      left.context.historyRevision !== snapshot.revision ||
+      right.context.historyRevision !== snapshot.revision ||
+      left.context.repositoryPath !== snapshot.repositoryPath ||
+      right.context.repositoryPath !== snapshot.repositoryPath
+    ) {
+      return null
+    }
+    return orderCommitsForComparison(snapshot.commits, [left.context.commit, right.context.commit])
+  }
+
+  private updateSelectionContext(): void {
+    void commands.executeCommand(
+      'setContext',
+      'vsgit.canCompareSelectedCommits',
+      Boolean(this.getSelectedCommitPair()),
+    )
   }
 
   private async showError(cause: unknown): Promise<void> {

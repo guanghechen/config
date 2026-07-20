@@ -71,17 +71,30 @@ export function buildCommitChangeTree(
   return buildChangeTree(changes).map(node => attachCommitContext(context, node))
 }
 
+export function isCommitNode(value: unknown): value is ICommitNode {
+  if (!value || typeof value !== 'object') return false
+  const node = value as Partial<ICommitNode>
+  return node.kind === 'commit' && isCommitDiffContext(node.context)
+}
+
 export function isCommitFileNode(value: unknown): value is ICommitFileNode {
   if (!value || typeof value !== 'object') return false
   const node = value as Partial<ICommitFileNode>
-  const context = node.context as Partial<ICommitDiffContext> | undefined
   return (
     node.kind === 'commit-file' &&
     typeof node.name === 'string' &&
     typeof node.path === 'string' &&
     isFileChange(node.change) &&
-    Number.isSafeInteger(context?.historyRevision) &&
-    typeof context?.repositoryPath === 'string' &&
+    isCommitDiffContext(node.context)
+  )
+}
+
+function isCommitDiffContext(value: unknown): value is ICommitDiffContext {
+  if (!value || typeof value !== 'object') return false
+  const context = value as Partial<ICommitDiffContext>
+  return (
+    Number.isSafeInteger(context.historyRevision) &&
+    typeof context.repositoryPath === 'string' &&
     typeof context.commit?.hash === 'string' &&
     typeof context.commit.shortHash === 'string' &&
     (context.parentCommit === null || typeof context.parentCommit === 'string')

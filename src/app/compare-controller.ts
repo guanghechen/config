@@ -1,6 +1,7 @@
 import { Disposable, ProgressLocation, commands, window, type TreeView } from 'vscode'
 import { CompareSession } from '../compare/compare-session'
 import type { ICompareSnapshot } from '../compare/model'
+import { formatReferenceLabel } from '../compare/reference-label'
 import { GitClient } from '../git/git-client'
 import { isFileChange } from '../git/file-change'
 import type { IChangeTreeNode, IFileNode } from '../view/change-tree'
@@ -129,7 +130,7 @@ export class CompareController implements Disposable {
   private updateViewState(snapshot: ICompareSnapshot | null): void {
     void commands.executeCommand('setContext', 'vsgit.hasComparison', Boolean(snapshot))
     this.treeView.description = snapshot
-      ? `${shorten(snapshot.baseRef)} ↔ ${shorten(snapshot.targetRef)} · ${snapshot.changes.length}`
+      ? `${formatReferenceLabel(snapshot.baseRef)} ↔ ${formatReferenceLabel(snapshot.targetRef)} · ${snapshot.changes.length}`
       : undefined
     this.treeView.message =
       snapshot?.changes.length === 0 ? 'No changes between these references.' : undefined
@@ -152,8 +153,4 @@ function validateReferenceInput(value: string): string | undefined {
   if (!reference) return 'Enter a Git reference.'
   if (reference.length > 1024 || reference.includes('\0')) return 'Git reference is invalid.'
   return undefined
-}
-
-function shorten(value: string): string {
-  return value.length > 24 ? `${value.slice(0, 21)}…` : value
 }
