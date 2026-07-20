@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import path from 'node:path'
+import type { IFileChange } from './file-change'
 import { parseNameStatus } from './name-status'
-import type { IFileChange } from '../contract'
 
 const GIT_TIMEOUT_MS = 15_000
 const MAX_COMMAND_OUTPUT_BYTES = 16 * 1024 * 1024

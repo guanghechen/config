@@ -14,11 +14,13 @@ Editor. Added, modified, deleted, copied, and renamed files are supported.
 
 ## Architecture
 
-`CompareSession` is the single writer for the active repository, resolved commits, and changed-file
-list. Data flows one way through `GitClient → CompareSession → ChangeTreeProvider`. The revision
-content provider reads immutable commit blobs only when VS Code opens a diff. Invalid references or
-Git failures abort without replacing the last successful comparison; binary and oversized blobs
-degrade to an explanatory virtual document.
+`extension.ts` is only the composition root. The `app` layer owns command workflows and connects the
+`view`, `compare`, and `git` layers; dependencies only point toward lower layers. `CompareSession`
+is the single writer for the active repository, resolved commits, and changed-file list. Data flows
+one way through `GitClient → CompareSession → view providers`. The revision content provider reads
+immutable commit blobs only when VS Code opens a diff. Invalid references or Git failures abort
+without replacing the last successful comparison; binary and oversized blobs degrade to an
+explanatory virtual document.
 
 VSGit invokes `git` with argument arrays and never through a shell. Comparing references does not
 modify the target repository.

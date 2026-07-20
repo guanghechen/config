@@ -1,5 +1,5 @@
 import { EventEmitter, type Disposable, type Event } from 'vscode'
-import type { ICompareSnapshot } from '../contract'
+import type { ICompareSnapshot } from './model'
 import { GitClient } from '../git/git-client'
 
 export class CompareSession implements Disposable {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { IFileChange } from '../src/contract'
-import { buildChangeTree } from '../src/tree/change-tree'
+import type { IFileChange } from '../src/git/file-change'
+import { buildChangeTree } from '../src/view/change-tree'
 
 test('builds a directory-first file tree from display paths', () => {
   const changes: IFileChange[] = [

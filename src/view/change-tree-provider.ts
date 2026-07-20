@@ -9,10 +9,11 @@ import {
   type TreeDataProvider,
 } from 'vscode'
 import { CompareSession } from '../compare/compare-session'
-import type { FileChangeKind, ICompareSnapshot, IFileChange } from '../contract'
+import type { ICompareSnapshot } from '../compare/model'
+import type { FileChangeKind, IFileChange } from '../git/file-change'
 import { buildChangeTree, type IChangeTreeNode } from './change-tree'
 
-export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode> {
+export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<IChangeTreeNode | undefined>()
   private readonly sessionSubscription: Disposable
   private nodes: ReadonlyArray<IChangeTreeNode> = []

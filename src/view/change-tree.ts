@@ -1,4 +1,4 @@
-import { resolveDisplayPath, type IFileChange } from '../contract'
+import { resolveDisplayPath, type IFileChange } from '../git/file-change'
 
 export interface IDirectoryNode {
   readonly kind: 'directory'

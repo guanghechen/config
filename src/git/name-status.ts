@@ -1,4 +1,4 @@
-import type { FileChangeKind, IFileChange } from '../contract'
+import type { FileChangeKind, IFileChange } from './file-change'
 
 export function parseNameStatus(output: Buffer): ReadonlyArray<IFileChange> {
   if (output.length === 0) return []

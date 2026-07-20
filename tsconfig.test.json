@@ -8,5 +8,5 @@
     "rootDir": ".",
     "sourceMap": true
   },
-  "include": ["src/contract.ts", "src/git/**/*.ts", "src/tree/change-tree.ts", "test/**/*.ts"]
+  "include": ["src/compare/model.ts", "src/git/**/*.ts", "src/view/change-tree.ts", "test/**/*.ts"]
 }
