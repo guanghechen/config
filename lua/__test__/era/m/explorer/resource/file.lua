@@ -107,6 +107,36 @@ t:test("load: directory symlink is expandable", function()
   vim.fn.delete(root, "rf")
 end)
 
+t:test("sync_watches: reports each watch-limit transition once", function()
+  local warnings = 0 ---@type integer
+  local within_limit = {} ---@type string[]
+  local over_limit = {} ---@type string[]
+
+  for index = 1, 50 do
+    within_limit[index] = string.format("/project/dir-%d/", index)
+    over_limit[index] = within_limit[index]
+  end
+  over_limit[51] = "/project/dir-51/"
+
+  t:patch_table(FileManager, "__start_watch__", function() end)
+  t:patch_table(stl.reporter, "warn", function()
+    warnings = warnings + 1
+  end)
+
+  local manager = FileManager.new({ name = "test" })
+  manager:sync_watches(over_limit)
+  manager:sync_watches(over_limit)
+  t.assert_eq(1, warnings, "persistent over-limit state")
+
+  manager:sync_watches(within_limit)
+  manager:sync_watches(over_limit)
+  t.assert_eq(2, warnings, "new over-limit transition")
+
+  manager:pause_watch()
+  manager:sync_watches(over_limit)
+  t.assert_eq(3, warnings, "transition after watches resume")
+end)
+
 t:test("remove: deletes the symlink without touching its target", function()
   local root, target, link = create_directory_link_fixture()
   local node = load_link_node(root)

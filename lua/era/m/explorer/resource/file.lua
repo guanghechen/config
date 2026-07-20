@@ -32,6 +32,7 @@ local WATCH_IGNORE_PATTERNS = {
 ---@field protected _on_change          ?fun()
 ---@field protected _pending_change     boolean
 ---@field protected _show_hidden        boolean
+---@field protected _watch_limit_reached boolean
 ---@field protected _watches            table<string, uv.uv_fs_event_t>
 ---@field protected _watch_count        integer
 local M = {}
@@ -74,6 +75,7 @@ function M.new(props)
   self._on_change = props.on_change
   self._pending_change = false
   self._show_hidden = show_hidden
+  self._watch_limit_reached = false
   self._watches = {}
   self._watch_count = 0
 
@@ -102,6 +104,7 @@ function M:pause_watch()
     return
   end
   self:__stop_all_watches__()
+  self._watch_limit_reached = false
 end
 
 ---@param expanded_dirs                 string[]
@@ -125,13 +128,14 @@ function M:sync_watches(expanded_dirs)
     wanted[dirpath] = true
   end
 
-  if limit_reached then
+  if limit_reached and not self._watch_limit_reached then
     stl.reporter.warn({
       from = self.fullname,
       subject = "sync_watches",
       message = string.format("Watch limit reached (%d directories).", MAX_WATCHES),
     })
   end
+  self._watch_limit_reached = limit_reached
 
   for path in pairs(wanted) do
     if not self._watches[path] then
