@@ -18,6 +18,7 @@
     "src/view/change-tree.ts",
     "src/view/commit-subject.ts",
     "src/view/commit-tree.ts",
+    "src/view/file-change-decoration.ts",
     "test/**/*.ts"
   ]
 }

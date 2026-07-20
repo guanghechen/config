@@ -1,11 +1,9 @@
-import path from 'node:path'
 import {
   Disposable,
   EventEmitter,
   ThemeIcon,
   TreeItem,
   TreeItemCollapsibleState,
-  Uri,
   type Event,
   type TreeDataProvider,
 } from 'vscode'
@@ -20,6 +18,7 @@ import {
   type ICommitTreeNode,
 } from './commit-tree'
 import { createFileChangeDescription, createFileChangeTooltip } from './file-change-presentation'
+import { createRepositoryResourceUri } from './file-change-resource'
 import { formatCommitSubject } from './commit-subject'
 
 export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Disposable {
@@ -157,7 +156,11 @@ function createCommitFileTreeItem(node: ICommitFileNode): TreeItem {
   item.id = `commit-file:${node.context.commit.hash}:${node.change.status}:${node.path}`
   item.contextValue = 'vsgit.commitFile'
   item.description = createFileChangeDescription(node.change)
-  item.resourceUri = createRepositoryResourceUri(node.context.repositoryPath, node.path)
+  item.resourceUri = createRepositoryResourceUri(
+    node.context.repositoryPath,
+    node.path,
+    node.change.kind,
+  )
   item.tooltip = createFileChangeTooltip(node.change)
   item.command = {
     command: 'vsgit.openCommitFileDiff',
@@ -165,8 +168,4 @@ function createCommitFileTreeItem(node: ICommitFileNode): TreeItem {
     arguments: [node],
   }
   return item
-}
-
-function createRepositoryResourceUri(repositoryPath: string, relativePath: string): Uri {
-  return Uri.file(path.join(repositoryPath, relativePath))
 }

@@ -7,6 +7,7 @@ import { CommitHistorySession } from './history/commit-history-session'
 import { CommitMarkSession } from './history/commit-mark-session'
 import { ChangeTreeProvider } from './view/change-tree-provider'
 import { CommitTreeProvider } from './view/commit-tree-provider'
+import { FileChangeDecorationProvider } from './view/file-change-decoration-provider'
 import { REVISION_SCHEME, RevisionContentProvider } from './view/revision-content-provider'
 
 export function activate(context: ExtensionContext): void {
@@ -45,6 +46,7 @@ export function activate(context: ExtensionContext): void {
     treeProvider,
     commitTreeView,
     treeView,
+    window.registerFileDecorationProvider(new FileChangeDecorationProvider()),
     workspace.registerTextDocumentContentProvider(REVISION_SCHEME, contentProvider),
   )
   void commitController.initialize()

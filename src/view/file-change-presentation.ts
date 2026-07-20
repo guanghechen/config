@@ -1,11 +1,11 @@
 import { MarkdownString } from 'vscode'
 import type { IFileChange } from '../git/file-change'
 
-export function createFileChangeDescription(change: IFileChange): string {
+export function createFileChangeDescription(change: IFileChange): string | undefined {
   if (change.kind === 'renamed' || change.kind === 'copied') {
-    return `${change.status} · ${change.previousPath ?? ''}`
+    return change.previousPath ? `← ${change.previousPath}` : undefined
   }
-  return change.status
+  return undefined
 }
 
 export function createFileChangeTooltip(change: IFileChange): MarkdownString {

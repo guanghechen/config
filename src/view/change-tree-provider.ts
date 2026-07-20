@@ -1,9 +1,7 @@
-import path from 'node:path'
 import {
   EventEmitter,
   TreeItem,
   TreeItemCollapsibleState,
-  Uri,
   type Disposable,
   type Event,
   type TreeDataProvider,
@@ -13,6 +11,7 @@ import type { ICompareSnapshot } from '../compare/model'
 import type { IFileChange } from '../git/file-change'
 import { buildChangeTree, type IChangeTreeNode } from './change-tree'
 import { createFileChangeDescription, createFileChangeTooltip } from './file-change-presentation'
+import { createRepositoryResourceUri } from './file-change-resource'
 
 export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<IChangeTreeNode | undefined>()
@@ -30,7 +29,7 @@ export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Di
 
   public getTreeItem(node: IChangeTreeNode): TreeItem {
     if (node.kind === 'directory') {
-      const item = new TreeItem(node.name, TreeItemCollapsibleState.Collapsed)
+      const item = new TreeItem(node.name, TreeItemCollapsibleState.Expanded)
       item.id = `directory:${node.path}`
       item.contextValue = 'vsgit.directory'
       if (this.session.snapshot) {
@@ -67,7 +66,11 @@ function createFileTreeItem(
   item.description = createFileChangeDescription(node.change)
   item.tooltip = createFileChangeTooltip(node.change)
   if (snapshot) {
-    item.resourceUri = createRepositoryResourceUri(snapshot.repositoryPath, node.path)
+    item.resourceUri = createRepositoryResourceUri(
+      snapshot.repositoryPath,
+      node.path,
+      node.change.kind,
+    )
     item.command = {
       command: 'vsgit.openDiff',
       title: 'Open File Diff',
@@ -75,10 +78,6 @@ function createFileTreeItem(
     }
   }
   return item
-}
-
-function createRepositoryResourceUri(repositoryPath: string, relativePath: string): Uri {
-  return Uri.file(path.join(repositoryPath, relativePath))
 }
 
 function createFileNodeId(change: IFileChange): string {
