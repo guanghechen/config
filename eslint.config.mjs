@@ -26,6 +26,30 @@ export default [
       globals: { ...globals.node },
     },
     rules: {
+      'no-shadow': 'off',
+      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { fixStyle: 'inline-type-imports', prefer: 'type-imports' },
+      ],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+          custom: { regex: '^I[A-Z]', match: true },
+        },
+        { selector: 'typeLike', format: ['PascalCase'] },
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        { selector: 'function', format: ['camelCase'] },
+        { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },
+      ],
+      '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

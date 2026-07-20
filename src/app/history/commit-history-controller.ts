@@ -1,5 +1,5 @@
 import { Disposable, ProgressLocation, commands, window, workspace } from 'vscode'
-import { CommitHistorySession } from '../../history/commit-history-session'
+import type { CommitHistorySession } from '../../history/commit-history-session'
 import type { ICommitHistorySnapshot } from '../../history/model'
 import { COMMAND_IDS } from '../../platform/extension-ids'
 import type { IRepositoryResolver } from '../shared/repository-discovery'

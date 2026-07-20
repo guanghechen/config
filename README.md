@@ -72,3 +72,6 @@ operations are aborted, while failed cache entries are removed so the next expan
 
 VSGit invokes `git` with argument arrays and never through a shell. Comparing references does not
 modify the target repository.
+
+Development conventions and verification commands are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md).

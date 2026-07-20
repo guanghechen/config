@@ -7,7 +7,7 @@ import {
   type TreeDataProvider,
 } from 'vscode'
 import type { IComparisonSnapshot } from '../../comparison/model'
-import { ComparisonSession } from '../../comparison/session'
+import type { ComparisonSession } from '../../comparison/session'
 import type { IFileChange } from '../../git/file-change'
 import { COMMAND_IDS, VIEW_ITEM_CONTEXT_VALUES } from '../../platform/extension-ids'
 import { createFileChangeDescription, createFileChangeTooltip } from '../file-change/presentation'

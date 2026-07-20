@@ -2,7 +2,7 @@ import { commands } from 'vscode'
 import type { IRevisionComparison } from '../../comparison/model'
 import { formatRevisionLabel } from '../../comparison/reference-label'
 import { resolveDisplayPath, type IFileChange } from '../../git/file-change'
-import { RevisionContentProvider } from './revision-content-provider'
+import type { RevisionContentProvider } from './revision-content-provider'
 
 export async function openRevisionDiff(
   comparison: IRevisionComparison,

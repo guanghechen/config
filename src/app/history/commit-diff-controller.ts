@@ -1,9 +1,9 @@
-import { Disposable, commands, window } from 'vscode'
+import { commands, window, type Disposable } from 'vscode'
 import type { IRevisionComparison } from '../../comparison/model'
-import { CommitHistorySession } from '../../history/commit-history-session'
+import type { CommitHistorySession } from '../../history/commit-history-session'
 import { COMMAND_IDS } from '../../platform/extension-ids'
 import { openRevisionDiff } from '../../view/diff/opener'
-import { RevisionContentProvider } from '../../view/diff/revision-content-provider'
+import type { RevisionContentProvider } from '../../view/diff/revision-content-provider'
 import { isCommitFileNode } from '../../view/history/tree'
 
 export interface ICommitDiffControllerOptions {

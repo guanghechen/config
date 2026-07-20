@@ -8,9 +8,9 @@ import {
   type Event,
   type TreeDataProvider,
 } from 'vscode'
-import { CommitChangeCache } from '../../history/commit-change-cache'
-import { CommitHistorySession } from '../../history/commit-history-session'
-import { CommitMarkSession } from '../../history/commit-mark-session'
+import type { CommitChangeCache } from '../../history/commit-change-cache'
+import type { CommitHistorySession } from '../../history/commit-history-session'
+import type { CommitMarkSession } from '../../history/commit-mark-session'
 import { COMMAND_IDS, VIEW_ITEM_CONTEXT_VALUES } from '../../platform/extension-ids'
 import {
   buildCommitChangeTree,
