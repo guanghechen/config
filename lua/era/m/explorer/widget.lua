@@ -1571,6 +1571,39 @@ function M:__setup_subscriptions__()
   )
   self._subscriptions[#self._subscriptions + 1] = sub_git_refreshed
 
+  local sub_ignored_refreshed = era.m.git.state.o_ignored_refreshed:subscribe(
+    stl.c.Subscriber.new({
+      on_next = function(filepaths)
+        local is_visible = false ---@type boolean
+        for tabnr in pairs(self._tab_wins) do
+          if self:isvisible(tabnr) then
+            is_visible = true
+            break
+          end
+        end
+        if not is_visible then
+          return
+        end
+
+        local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
+        if render_result == nil then
+          return
+        end
+
+        local filepath_to_lnum = render_result.filepath_to_lnum ---@type table<string, integer>
+        for _, filepath in ipairs(filepaths) do
+          local normalized = dot.path.normalize(filepath, false, "/") ---@type string
+          if filepath_to_lnum[normalized] ~= nil or filepath_to_lnum[normalized .. "/"] ~= nil then
+            self:__render__()
+            return
+          end
+        end
+      end,
+    }),
+    false
+  )
+  self._subscriptions[#self._subscriptions + 1] = sub_ignored_refreshed
+
   local sub_diagnostic = era.m.lsp.diagnostic.subscribe_all(stl.c.Subscriber.new({
     on_next = function()
       if self:isvisible() then

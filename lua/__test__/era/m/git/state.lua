@@ -182,6 +182,45 @@ t:test("preload_ignored: failed batches do not cache missing output as false", f
   t.assert_eq(2, calls, "unknown path should be queried again")
 end)
 
+t:test("preload_ignored: reports only ignored states that changed", function()
+  workspace = "/project"
+  state.clear_ignored_cache()
+  local callbacks = {} ---@type (fun(obj: table): nil)[]
+
+  t:patch_table(vim, "system", function(_, _, callback)
+    callbacks[#callbacks + 1] = callback
+    return { kill = function() end }
+  end)
+
+  local first = state.preload_ignored({ "/project/ignored" })
+  local duplicate = state.preload_ignored({ "/project/ignored" })
+  t.assert_eq(2, #callbacks, "both in-flight queries should start")
+
+  callbacks[1]({ code = 0, stdout = "/project/ignored\n", stderr = "" })
+  wait_future(first)
+  local changed = state.o_ignored_refreshed:snapshot()
+  t.assert_eq(1, #changed, "changed path count")
+  t.assert_eq("/project/ignored", changed[1], "changed path")
+
+  callbacks[2]({ code = 0, stdout = "/project/ignored\n", stderr = "" })
+  wait_future(duplicate)
+  t.assert_true(changed == state.o_ignored_refreshed:snapshot(), "duplicate completion should not report again")
+
+  wait_future(state.preload_ignored({ "/project/ignored" }))
+  t.assert_true(changed == state.o_ignored_refreshed:snapshot(), "cache hit should not report again")
+
+  local nonignored = state.preload_ignored({ "/project/tracked" })
+  callbacks[3]({ code = 1, stdout = "", stderr = "" })
+  wait_future(nonignored)
+  t.assert_true(changed == state.o_ignored_refreshed:snapshot(), "non-ignored result should not report")
+
+  state.clear_ignored_cache()
+  local repeated = state.preload_ignored({ "/project/ignored" })
+  callbacks[4]({ code = 0, stdout = "/project/ignored\n", stderr = "" })
+  wait_future(repeated)
+  t.assert_true(changed ~= state.o_ignored_refreshed:snapshot(), "same path should report again after cache reset")
+end)
+
 t:test("preload_ignored: memoizes shared ancestor resolution within a batch", function()
   workspace = "/project"
   state.clear_ignored_cache()

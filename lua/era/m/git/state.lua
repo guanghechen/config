@@ -11,6 +11,9 @@ M.o_branch = stl.c.Observable.from_value("")
 M.o_refreshed = stl.c.Observable.from_value(0)
 
 ---@type stl.c.Observable<string[]>
+M.o_ignored_refreshed = stl.c.Observable.from_value({})
+
+---@type stl.c.Observable<string[]>
 M.o_staged_files = stl.c.Observable.from_value({})
 
 ---@type stl.c.Observable<string[]>
@@ -354,14 +357,29 @@ local function __preload_ignored__(filepaths, callback)
           })
         end
 
+        local changed_filepaths = {} ---@type string[]
         -- A failed batch may not have consumed all stdin. Positive matches remain valid, but
         -- missing output is unknown and must not be persisted as "not ignored".
         for filepath, query_path in pairs(pending) do
           local ignored = ignored_set[query_path] == true ---@type boolean
           if ignored or completed then
-            ignored_cache[filepath] = ignored
-            ignored_count = ignored_count + 1
+            local current = ignored_cache[filepath] ---@type boolean|nil
+            if current == nil then
+              ignored_count = ignored_count + 1
+              ignored_cache[filepath] = ignored
+              if ignored then
+                changed_filepaths[#changed_filepaths + 1] = filepath
+              end
+            elseif current ~= ignored then
+              ignored_cache[filepath] = ignored
+              changed_filepaths[#changed_filepaths + 1] = filepath
+            end
           end
+        end
+
+        if #changed_filepaths > 0 then
+          -- The same paths can change again after a cache reset; this observable carries events, not a snapshot.
+          M.o_ignored_refreshed:next(changed_filepaths, { force = true })
         end
 
         if callback then
