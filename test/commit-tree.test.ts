@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { IGitCommit } from '../src/git/commit'
 import type { IFileChange } from '../src/git/file-change'
 import type { ICommitHistorySnapshot } from '../src/history/model'
-import { buildCommitChangeTree, createCommitRootNodes } from '../src/view/commit-tree'
+import { buildCommitChangeTree, createCommitRootNodes } from '../src/view/history/tree'
 
 const COMMIT: IGitCommit = {
   hash: 'a'.repeat(40),

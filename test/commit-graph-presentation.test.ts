@@ -6,7 +6,7 @@ import {
   formatCommitReferenceSummary,
   formatCommitReferenceTooltip,
   resolveCommitGraphColorId,
-} from '../src/view/commit-graph-presentation'
+} from '../src/view/history/graph-presentation'
 
 test('formats compact native graph prefixes only when topology branches', () => {
   assert.equal(

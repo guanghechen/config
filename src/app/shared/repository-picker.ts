@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { window, workspace } from 'vscode'
-import { GitClient } from '../git/git-client'
+import { GitClient } from '../../git/git-client'
 
 export async function pickRepository(gitClient: GitClient): Promise<string | null> {
   const repositories = await discoverRepositories(gitClient)

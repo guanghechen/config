@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { Uri } from 'vscode'
-import type { FileChangeKind } from '../git/file-change'
-import { createFileChangeQuery } from './file-change-decoration'
+import type { FileChangeKind } from '../../git/file-change'
+import { createFileChangeQuery } from './decoration'
 
 export function createRepositoryResourceUri(
   repositoryPath: string,

@@ -5,9 +5,9 @@ import {
   type ProviderResult,
   type Uri,
 } from 'vscode'
-import { parseFileChangeQuery, resolveFileChangeDecoration } from './file-change-decoration'
+import { parseFileChangeQuery, resolveFileChangeDecoration } from './decoration'
 
-export class FileChangeDecorationProvider implements FileDecorationProvider {
+export class GitFileDecorationProvider implements FileDecorationProvider {
   public provideFileDecoration(uri: Uri): ProviderResult<FileDecoration> {
     const kind = parseFileChangeQuery(uri.query)
     if (!kind) return undefined

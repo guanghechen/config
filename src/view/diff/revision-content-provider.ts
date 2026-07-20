@@ -1,5 +1,5 @@
 import { Uri, workspace, type CancellationToken, type TextDocumentContentProvider } from 'vscode'
-import { GitBlobDisplayError, GitClient } from '../git/git-client'
+import { GitBlobDisplayError, GitClient } from '../../git/git-client'
 
 export const REVISION_SCHEME = 'vsgit'
 

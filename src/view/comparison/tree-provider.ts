@@ -6,23 +6,24 @@ import {
   type Event,
   type TreeDataProvider,
 } from 'vscode'
-import { CompareSession } from '../compare/compare-session'
-import type { ICompareSnapshot } from '../compare/model'
-import type { IFileChange } from '../git/file-change'
-import { buildChangeTree, type IChangeTreeNode } from './change-tree'
-import { createFileChangeDescription, createFileChangeTooltip } from './file-change-presentation'
-import { createRepositoryResourceUri } from './file-change-resource'
+import type { IComparisonSnapshot } from '../../comparison/model'
+import { ComparisonSession } from '../../comparison/session'
+import type { IFileChange } from '../../git/file-change'
+import { COMMAND_IDS, VIEW_ITEM_CONTEXT_VALUES } from '../../platform/extension-ids'
+import { createFileChangeDescription, createFileChangeTooltip } from '../file-change/presentation'
+import { createRepositoryResourceUri } from '../file-change/resource'
+import { buildFileChangeTree, type IChangeTreeNode } from '../file-change/tree'
 
-export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
+export class ComparisonTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<IChangeTreeNode | undefined>()
   private readonly sessionSubscription: Disposable
   private nodes: ReadonlyArray<IChangeTreeNode> = []
 
   public readonly onDidChangeTreeData: Event<IChangeTreeNode | undefined> = this.changeEmitter.event
 
-  public constructor(private readonly session: CompareSession) {
-    this.sessionSubscription = this.session.onDidChange(snapshot => {
-      this.nodes = snapshot ? buildChangeTree(snapshot.changes) : []
+  public constructor(private readonly comparisonSession: ComparisonSession) {
+    this.sessionSubscription = this.comparisonSession.onDidChange(snapshot => {
+      this.nodes = snapshot ? buildFileChangeTree(snapshot.changes) : []
       this.changeEmitter.fire(undefined)
     })
   }
@@ -31,10 +32,10 @@ export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Di
     if (node.kind === 'directory') {
       const item = new TreeItem(node.name, TreeItemCollapsibleState.Expanded)
       item.id = `directory:${node.path}`
-      item.contextValue = 'vsgit.directory'
-      if (this.session.snapshot) {
+      item.contextValue = VIEW_ITEM_CONTEXT_VALUES.comparisonDirectory
+      if (this.comparisonSession.snapshot) {
         item.resourceUri = createRepositoryResourceUri(
-          this.session.snapshot.repositoryPath,
+          this.comparisonSession.snapshot.repositoryPath,
           node.path,
         )
       }
@@ -42,7 +43,7 @@ export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Di
       return item
     }
 
-    return createFileTreeItem(node, this.session.snapshot)
+    return createFileTreeItem(node, this.comparisonSession.snapshot)
   }
 
   public getChildren(node?: IChangeTreeNode): IChangeTreeNode[] {
@@ -58,11 +59,11 @@ export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Di
 
 function createFileTreeItem(
   node: IChangeTreeNode & { readonly kind: 'file' },
-  snapshot: ICompareSnapshot | null,
+  snapshot: IComparisonSnapshot | null,
 ): TreeItem {
   const item = new TreeItem(node.name, TreeItemCollapsibleState.None)
   item.id = createFileNodeId(node.change)
-  item.contextValue = 'vsgit.file'
+  item.contextValue = VIEW_ITEM_CONTEXT_VALUES.comparisonFile
   item.description = createFileChangeDescription(node.change)
   item.tooltip = createFileChangeTooltip(node.change)
   if (snapshot) {
@@ -72,7 +73,7 @@ function createFileTreeItem(
       node.change.kind,
     )
     item.command = {
-      command: 'vsgit.openDiff',
+      command: COMMAND_IDS.openComparisonDiff,
       title: 'Open File Diff',
       arguments: [snapshot.revision, node.change],
     }

@@ -1,4 +1,4 @@
-import { FILE_CHANGE_KINDS, type FileChangeKind } from '../git/file-change'
+import { FILE_CHANGE_KINDS, type FileChangeKind } from '../../git/file-change'
 
 const QUERY_KEY = 'vsgitChange'
 

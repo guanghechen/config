@@ -7,8 +7,8 @@ const MAX_COMMIT_LIMIT = 500
 
 export class CommitHistorySession implements Disposable {
   private readonly changeEmitter = new EventEmitter<ICommitHistorySnapshot | null>()
-  private operationRevision = 0
-  private value: ICommitHistorySnapshot | null = null
+  private currentSnapshot: ICommitHistorySnapshot | null = null
+  private requestRevision = 0
 
   public readonly onDidChange: Event<ICommitHistorySnapshot | null> = this.changeEmitter.event
 
@@ -22,7 +22,7 @@ export class CommitHistorySession implements Disposable {
   }
 
   public get snapshot(): ICommitHistorySnapshot | null {
-    return this.value
+    return this.currentSnapshot
   }
 
   public load(repositoryPath: string): Promise<ICommitHistorySnapshot | null> {
@@ -30,13 +30,13 @@ export class CommitHistorySession implements Disposable {
   }
 
   public refresh(): Promise<ICommitHistorySnapshot | null> {
-    const snapshot = this.value
+    const snapshot = this.currentSnapshot
     if (!snapshot) return Promise.resolve(null)
     return this.loadWithLimit(snapshot.repositoryPath, snapshot.limit)
   }
 
   public loadMore(): Promise<ICommitHistorySnapshot | null> {
-    const snapshot = this.value
+    const snapshot = this.currentSnapshot
     if (!snapshot || !snapshot.hasMore) return Promise.resolve(snapshot)
     const limit = Math.min(snapshot.limit + this.pageSize, MAX_COMMIT_LIMIT)
     if (limit === snapshot.limit) return Promise.resolve(snapshot)
@@ -44,8 +44,8 @@ export class CommitHistorySession implements Disposable {
   }
 
   public clear(): void {
-    this.operationRevision += 1
-    this.value = null
+    this.requestRevision += 1
+    this.currentSnapshot = null
     this.changeEmitter.fire(null)
   }
 
@@ -58,9 +58,9 @@ export class CommitHistorySession implements Disposable {
     repositoryPath: string,
     limit: number,
   ): Promise<ICommitHistorySnapshot | null> {
-    const revision = ++this.operationRevision
+    const revision = ++this.requestRevision
     const page = await this.gitClient.listCommits(repositoryPath, limit)
-    if (revision !== this.operationRevision) return null
+    if (revision !== this.requestRevision) return null
 
     const snapshot: ICommitHistorySnapshot = Object.freeze({
       revision,
@@ -69,7 +69,7 @@ export class CommitHistorySession implements Disposable {
       hasMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
       limit,
     })
-    this.value = snapshot
+    this.currentSnapshot = snapshot
     this.changeEmitter.fire(snapshot)
     return snapshot
   }

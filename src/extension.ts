@@ -1,55 +1,72 @@
 import { window, workspace, type ExtensionContext } from 'vscode'
-import { CommitController } from './app/commit-controller'
-import { CompareController } from './app/compare-controller'
-import { CompareSession } from './compare/compare-session'
+import { ComparisonController } from './app/comparison/comparison-controller'
+import { CommitComparisonController } from './app/history/commit-comparison-controller'
+import { CommitDiffController } from './app/history/commit-diff-controller'
+import { CommitHistoryController } from './app/history/commit-history-controller'
+import { CommitViewController } from './app/history/commit-view-controller'
+import { ComparisonSession } from './comparison/session'
 import { GitClient } from './git/git-client'
 import { CommitHistorySession } from './history/commit-history-session'
 import { CommitMarkSession } from './history/commit-mark-session'
-import { ChangeTreeProvider } from './view/change-tree-provider'
-import { CommitTreeProvider } from './view/commit-tree-provider'
-import { FileChangeDecorationProvider } from './view/file-change-decoration-provider'
-import { REVISION_SCHEME, RevisionContentProvider } from './view/revision-content-provider'
+import { VIEW_IDS } from './platform/extension-ids'
+import { ComparisonTreeProvider } from './view/comparison/tree-provider'
+import { REVISION_SCHEME, RevisionContentProvider } from './view/diff/revision-content-provider'
+import { GitFileDecorationProvider } from './view/file-change/decoration-provider'
+import { CommitHistoryTreeProvider } from './view/history/tree-provider'
 
 export function activate(context: ExtensionContext): void {
   const gitClient = new GitClient()
-  const session = new CompareSession(gitClient)
-  const treeProvider = new ChangeTreeProvider(session)
+  const comparisonSession = new ComparisonSession(gitClient)
   const historySession = new CommitHistorySession(gitClient)
-  const commitMarks = new CommitMarkSession()
-  const commitTreeProvider = new CommitTreeProvider(gitClient, commitMarks, historySession)
+  const markSession = new CommitMarkSession()
+  const comparisonTreeProvider = new ComparisonTreeProvider(comparisonSession)
+  const commitTreeProvider = new CommitHistoryTreeProvider(gitClient, markSession, historySession)
   const contentProvider = new RevisionContentProvider(gitClient)
-  const treeView = window.createTreeView('vsgit.changes', {
-    treeDataProvider: treeProvider,
+  const comparisonTreeView = window.createTreeView(VIEW_IDS.comparison, {
+    treeDataProvider: comparisonTreeProvider,
     showCollapseAll: true,
   })
-  const commitTreeView = window.createTreeView('vsgit.commits', {
+  const commitTreeView = window.createTreeView(VIEW_IDS.commits, {
     treeDataProvider: commitTreeProvider,
     showCollapseAll: true,
   })
-  const controller = new CompareController({ contentProvider, gitClient, session, treeView })
-  const commitController = new CommitController({
-    compareSession: session,
+  const comparisonController = new ComparisonController({
+    comparisonSession,
     contentProvider,
     gitClient,
-    marks: commitMarks,
-    session: historySession,
+    treeView: comparisonTreeView,
+  })
+  const commitComparisonController = new CommitComparisonController({
+    comparisonSession,
+    gitClient,
+    historySession,
+    markSession,
+  })
+  const commitDiffController = new CommitDiffController({ contentProvider, historySession })
+  const commitHistoryController = new CommitHistoryController({ gitClient, historySession })
+  const commitViewController = new CommitViewController({
+    historySession,
+    markSession,
     treeView: commitTreeView,
   })
 
   context.subscriptions.push(
-    commitController,
-    controller,
-    commitMarks,
+    commitComparisonController,
+    commitDiffController,
+    commitHistoryController,
+    commitViewController,
+    comparisonController,
     historySession,
-    session,
+    markSession,
+    comparisonSession,
     commitTreeProvider,
-    treeProvider,
+    comparisonTreeProvider,
     commitTreeView,
-    treeView,
-    window.registerFileDecorationProvider(new FileChangeDecorationProvider()),
+    comparisonTreeView,
+    window.registerFileDecorationProvider(new GitFileDecorationProvider()),
     workspace.registerTextDocumentContentProvider(REVISION_SCHEME, contentProvider),
   )
-  void commitController.initialize()
+  void commitHistoryController.initialize()
 }
 
 export function deactivate(): void {}

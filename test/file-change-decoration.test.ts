@@ -4,7 +4,7 @@ import {
   createFileChangeQuery,
   parseFileChangeQuery,
   resolveFileChangeDecoration,
-} from '../src/view/file-change-decoration'
+} from '../src/view/file-change/decoration'
 
 test('round-trips file change kinds through resource queries', () => {
   for (const kind of ['added', 'modified', 'deleted', 'renamed', 'unmerged'] as const) {

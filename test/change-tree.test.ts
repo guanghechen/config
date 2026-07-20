@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { IFileChange } from '../src/git/file-change'
-import { buildChangeTree } from '../src/view/change-tree'
+import { buildFileChangeTree } from '../src/view/file-change/tree'
 
 test('builds a directory-first file tree from display paths', () => {
   const changes: IFileChange[] = [
@@ -11,7 +11,7 @@ test('builds a directory-first file tree from display paths', () => {
     createChange('deleted', 'D', 'src/old.ts', null),
   ]
 
-  assert.deepEqual(buildChangeTree(changes), [
+  assert.deepEqual(buildFileChangeTree(changes), [
     {
       kind: 'directory',
       name: 'src',
@@ -44,7 +44,7 @@ test('builds a directory-first file tree from display paths', () => {
 test('retains file-to-directory replacements with the same name', () => {
   const deleted = createChange('deleted', 'D', 'config', null)
   const added = createChange('added', 'A', null, 'config/index.ts')
-  const tree = buildChangeTree([deleted, added])
+  const tree = buildFileChangeTree([deleted, added])
 
   assert.equal(tree.length, 2)
   assert.equal(tree[0]?.kind, 'directory')

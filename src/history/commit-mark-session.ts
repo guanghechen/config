@@ -7,60 +7,67 @@ const MAX_MARKS = 2
 export type CommitMarkResult = 'marked' | 'already-marked' | 'full' | 'stale'
 
 export class CommitMarkSession implements Disposable {
-  private readonly listeners = new Set<(marks: ReadonlyArray<string>) => void>()
-  private availableHashes: ReadonlySet<string> = new Set()
-  private repositoryPath: string | null = null
-  private values: ReadonlyArray<string> = Object.freeze([])
+  private readonly changeListeners = new Set<(marks: ReadonlyArray<string>) => void>()
+  private activeRepositoryPath: string | null = null
+  private availableCommitHashes: ReadonlySet<string> = new Set()
+  private markedCommitHashes: ReadonlyArray<string> = Object.freeze([])
 
   public get count(): number {
-    return this.values.length
+    return this.markedCommitHashes.length
   }
 
   public get markedHashes(): ReadonlyArray<string> {
-    return this.values
+    return this.markedCommitHashes
   }
 
   public onDidChange(listener: (marks: ReadonlyArray<string>) => void): Disposable {
-    this.listeners.add(listener)
-    return { dispose: () => this.listeners.delete(listener) }
+    this.changeListeners.add(listener)
+    return { dispose: () => this.changeListeners.delete(listener) }
   }
 
   public reconcile(snapshot: ICommitHistorySnapshot | null): void {
     const repositoryPath = snapshot?.repositoryPath ?? null
-    const availableHashes = new Set(snapshot?.commits.map(commit => commit.hash) ?? [])
+    const availableCommitHashes = new Set(snapshot?.commits.map(commit => commit.hash) ?? [])
     const nextValues =
-      repositoryPath === this.repositoryPath
-        ? this.values.filter(hash => availableHashes.has(hash))
+      repositoryPath === this.activeRepositoryPath
+        ? this.markedCommitHashes.filter(hash => availableCommitHashes.has(hash))
         : []
 
-    this.repositoryPath = repositoryPath
-    this.availableHashes = availableHashes
+    this.activeRepositoryPath = repositoryPath
+    this.availableCommitHashes = availableCommitHashes
     this.replace(nextValues)
   }
 
   public mark(repositoryPath: string, commitHash: string): CommitMarkResult {
     if (
-      repositoryPath !== this.repositoryPath ||
+      repositoryPath !== this.activeRepositoryPath ||
       !RESOLVED_COMMIT_PATTERN.test(commitHash) ||
-      !this.availableHashes.has(commitHash)
+      !this.availableCommitHashes.has(commitHash)
     ) {
       return 'stale'
     }
-    if (this.values.includes(commitHash)) return 'already-marked'
-    if (this.values.length >= MAX_MARKS) return 'full'
+    if (this.markedCommitHashes.includes(commitHash)) return 'already-marked'
+    if (this.markedCommitHashes.length >= MAX_MARKS) return 'full'
 
-    this.replace([...this.values, commitHash])
+    this.replace([...this.markedCommitHashes, commitHash])
     return 'marked'
   }
 
   public unmark(repositoryPath: string, commitHash: string): boolean {
-    if (repositoryPath !== this.repositoryPath || !this.values.includes(commitHash)) return false
-    this.replace(this.values.filter(hash => hash !== commitHash))
+    if (
+      repositoryPath !== this.activeRepositoryPath ||
+      !this.markedCommitHashes.includes(commitHash)
+    ) {
+      return false
+    }
+    this.replace(this.markedCommitHashes.filter(hash => hash !== commitHash))
     return true
   }
 
   public isMarked(repositoryPath: string, commitHash: string): boolean {
-    return repositoryPath === this.repositoryPath && this.values.includes(commitHash)
+    return (
+      repositoryPath === this.activeRepositoryPath && this.markedCommitHashes.includes(commitHash)
+    )
   }
 
   public clear(): void {
@@ -68,16 +75,16 @@ export class CommitMarkSession implements Disposable {
   }
 
   public dispose(): void {
-    this.repositoryPath = null
-    this.availableHashes = new Set()
-    this.values = Object.freeze([])
-    this.listeners.clear()
+    this.activeRepositoryPath = null
+    this.availableCommitHashes = new Set()
+    this.markedCommitHashes = Object.freeze([])
+    this.changeListeners.clear()
   }
 
   private replace(values: ReadonlyArray<string>): void {
-    if (arraysEqual(this.values, values)) return
-    this.values = Object.freeze([...values])
-    for (const listener of this.listeners) listener(this.values)
+    if (arraysEqual(this.markedCommitHashes, values)) return
+    this.markedCommitHashes = Object.freeze([...values])
+    for (const listener of this.changeListeners) listener(this.markedCommitHashes)
   }
 }
 

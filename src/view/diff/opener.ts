@@ -1,7 +1,7 @@
 import { commands } from 'vscode'
-import type { IRevisionComparison } from '../compare/model'
-import { formatReferenceLabel } from '../compare/reference-label'
-import { resolveDisplayPath, type IFileChange } from '../git/file-change'
+import type { IRevisionComparison } from '../../comparison/model'
+import { formatRevisionLabel } from '../../comparison/reference-label'
+import { resolveDisplayPath, type IFileChange } from '../../git/file-change'
 import { RevisionContentProvider } from './revision-content-provider'
 
 export async function openRevisionDiff(
@@ -40,5 +40,5 @@ function createDiffTitle(comparison: IRevisionComparison, change: IFileChange): 
     change.previousPath && change.currentPath && change.previousPath !== change.currentPath
       ? `${change.previousPath} → ${change.currentPath}`
       : resolveDisplayPath(change)
-  return `${pathLabel} (${formatReferenceLabel(comparison.baseRef)} ↔ ${formatReferenceLabel(comparison.targetRef)})`
+  return `${pathLabel} (${formatRevisionLabel(comparison.baseRef)} ↔ ${formatRevisionLabel(comparison.targetRef)})`
 }

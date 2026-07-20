@@ -1,4 +1,4 @@
-import { resolveDisplayPath, type IFileChange } from '../git/file-change'
+import { resolveDisplayPath, type IFileChange } from '../../git/file-change'
 
 export interface IDirectoryNode {
   readonly kind: 'directory'
@@ -23,7 +23,7 @@ interface IMutableDirectoryNode {
   readonly files: IFileNode[]
 }
 
-export function buildChangeTree(
+export function buildFileChangeTree(
   changes: ReadonlyArray<IFileChange>,
 ): ReadonlyArray<IChangeTreeNode> {
   const root = createDirectory('', '')

@@ -8,7 +8,7 @@ export interface IRevisionComparison {
   readonly targetCommit: string
 }
 
-export interface ICompareSnapshot extends IRevisionComparison {
+export interface IComparisonSnapshot extends IRevisionComparison {
   readonly revision: number
   readonly changes: ReadonlyArray<IFileChange>
 }

@@ -1,59 +1,54 @@
 import { Disposable, ProgressLocation, commands, window, type TreeView } from 'vscode'
-import { CompareSession } from '../compare/compare-session'
-import type { ICompareSnapshot } from '../compare/model'
-import { formatReferenceLabel } from '../compare/reference-label'
-import { GitClient } from '../git/git-client'
-import { isFileChange } from '../git/file-change'
-import type { IChangeTreeNode, IFileNode } from '../view/change-tree'
-import { openRevisionDiff } from '../view/diff-opener'
-import { RevisionContentProvider } from '../view/revision-content-provider'
-import { pickRepository } from './repository-picker'
+import type { IComparisonSnapshot } from '../../comparison/model'
+import { formatRevisionLabel } from '../../comparison/reference-label'
+import { ComparisonSession } from '../../comparison/session'
+import { GitClient } from '../../git/git-client'
+import { isFileChange } from '../../git/file-change'
+import { openRevisionDiff } from '../../view/diff/opener'
+import { RevisionContentProvider } from '../../view/diff/revision-content-provider'
+import type { IChangeTreeNode, IFileNode } from '../../view/file-change/tree'
+import { COMMAND_IDS, CONTEXT_KEYS } from '../../platform/extension-ids'
+import { pickRepository } from '../shared/repository-picker'
 
-const COMMAND = {
-  clear: 'vsgit.clear',
-  compareRefs: 'vsgit.compareRefs',
-  openDiff: 'vsgit.openDiff',
-  refresh: 'vsgit.refresh',
-  swapRefs: 'vsgit.swapRefs',
-} as const
-
-export interface ICompareControllerOptions {
+export interface IComparisonControllerOptions {
+  readonly comparisonSession: ComparisonSession
   readonly contentProvider: RevisionContentProvider
   readonly gitClient: GitClient
-  readonly session: CompareSession
   readonly treeView: TreeView<IChangeTreeNode>
 }
 
-export class CompareController implements Disposable {
+export class ComparisonController implements Disposable {
+  private readonly comparisonSession: ComparisonSession
   private readonly contentProvider: RevisionContentProvider
   private readonly gitClient: GitClient
   private readonly registrations: Disposable
-  private readonly session: CompareSession
   private readonly treeView: TreeView<IChangeTreeNode>
 
-  public constructor(options: ICompareControllerOptions) {
+  public constructor(options: IComparisonControllerOptions) {
+    this.comparisonSession = options.comparisonSession
     this.contentProvider = options.contentProvider
     this.gitClient = options.gitClient
-    this.session = options.session
     this.treeView = options.treeView
     this.registrations = Disposable.from(
-      this.session.onDidChange(snapshot => this.updateViewState(snapshot)),
-      commands.registerCommand(COMMAND.compareRefs, () => this.compareReferences()),
-      commands.registerCommand(COMMAND.refresh, () =>
-        this.runOperation('Refreshing comparison…', () => this.session.refresh()),
+      this.comparisonSession.onDidChange(snapshot => this.updateViewState(snapshot)),
+      commands.registerCommand(COMMAND_IDS.compareReferences, () => this.compareReferences()),
+      commands.registerCommand(COMMAND_IDS.refreshComparison, () =>
+        this.runOperation('Refreshing comparison…', () => this.comparisonSession.refresh()),
       ),
-      commands.registerCommand(COMMAND.swapRefs, () =>
-        this.runOperation('Swapping references…', () => this.session.swap()),
+      commands.registerCommand(COMMAND_IDS.swapComparisonReferences, () =>
+        this.runOperation('Swapping references…', () => this.comparisonSession.swap()),
       ),
-      commands.registerCommand(COMMAND.clear, () => this.session.clear()),
-      commands.registerCommand(COMMAND.openDiff, (revisionOrNode: unknown, change: unknown) =>
-        this.openFileDiff(revisionOrNode, change),
+      commands.registerCommand(COMMAND_IDS.clearComparison, () => this.comparisonSession.clear()),
+      commands.registerCommand(
+        COMMAND_IDS.openComparisonDiff,
+        (revisionOrNode: unknown, change: unknown) => this.openFileDiff(revisionOrNode, change),
       ),
     )
-    this.updateViewState(this.session.snapshot)
+    this.updateViewState(this.comparisonSession.snapshot)
   }
 
   public dispose(): void {
+    void commands.executeCommand('setContext', CONTEXT_KEYS.hasComparison, false)
     this.registrations.dispose()
   }
 
@@ -64,22 +59,22 @@ export class CompareController implements Disposable {
 
       const baseRef = await this.promptForReference(
         'Base commit, branch, or tag',
-        this.session.snapshot?.repositoryPath === repositoryPath
-          ? this.session.snapshot.baseRef
+        this.comparisonSession.snapshot?.repositoryPath === repositoryPath
+          ? this.comparisonSession.snapshot.baseRef
           : 'HEAD~1',
       )
       if (baseRef === null) return
 
       const targetRef = await this.promptForReference(
         'Target commit, branch, or tag',
-        this.session.snapshot?.repositoryPath === repositoryPath
-          ? this.session.snapshot.targetRef
+        this.comparisonSession.snapshot?.repositoryPath === repositoryPath
+          ? this.comparisonSession.snapshot.targetRef
           : 'HEAD',
       )
       if (targetRef === null) return
 
       await this.runOperation(`Comparing ${baseRef} with ${targetRef}…`, () =>
-        this.session.compare(repositoryPath, baseRef, targetRef),
+        this.comparisonSession.compare(repositoryPath, baseRef, targetRef),
       )
     } catch (cause) {
       await this.showError(cause)
@@ -99,7 +94,7 @@ export class CompareController implements Disposable {
 
   private async runOperation(
     title: string,
-    operation: () => Promise<ICompareSnapshot | null>,
+    operation: () => Promise<IComparisonSnapshot | null>,
   ): Promise<void> {
     try {
       await window.withProgress(
@@ -112,7 +107,7 @@ export class CompareController implements Disposable {
   }
 
   private async openFileDiff(revisionOrNode: unknown, changeValue: unknown): Promise<void> {
-    const snapshot = this.session.snapshot
+    const snapshot = this.comparisonSession.snapshot
     const revision = isFileNode(revisionOrNode) ? snapshot?.revision : revisionOrNode
     const change = isFileNode(revisionOrNode) ? revisionOrNode.change : changeValue
     if (
@@ -127,10 +122,10 @@ export class CompareController implements Disposable {
     await openRevisionDiff(snapshot, change, this.contentProvider)
   }
 
-  private updateViewState(snapshot: ICompareSnapshot | null): void {
-    void commands.executeCommand('setContext', 'vsgit.hasComparison', Boolean(snapshot))
+  private updateViewState(snapshot: IComparisonSnapshot | null): void {
+    void commands.executeCommand('setContext', CONTEXT_KEYS.hasComparison, Boolean(snapshot))
     this.treeView.description = snapshot
-      ? `${formatReferenceLabel(snapshot.baseRef)} ↔ ${formatReferenceLabel(snapshot.targetRef)} · ${snapshot.changes.length}`
+      ? `${formatRevisionLabel(snapshot.baseRef)} ↔ ${formatRevisionLabel(snapshot.targetRef)} · ${snapshot.changes.length}`
       : undefined
     this.treeView.message =
       snapshot?.changes.length === 0 ? 'No changes between these references.' : undefined

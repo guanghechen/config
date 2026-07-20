@@ -1,4 +1,4 @@
-const GITMOJI_ALIASES: Readonly<Record<string, string>> = Object.freeze({
+const GITMOJI_REPLACEMENTS: Readonly<Record<string, string>> = Object.freeze({
   bento: '🍱',
   building_construction: '🏗️',
   fire: '🔥',
@@ -13,6 +13,6 @@ const GITMOJI_ALIASES: Readonly<Record<string, string>> = Object.freeze({
 
 export function formatCommitSubject(subject: string): string {
   return subject.replace(/:([a-z0-9_+-]+):/g, (alias, name: string) => {
-    return GITMOJI_ALIASES[name] ?? alias
+    return GITMOJI_REPLACEMENTS[name] ?? alias
   })
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatCommitSubject } from '../src/view/commit-subject'
+import { formatCommitSubject } from '../src/view/history/subject'
 
 test('formats known gitmoji aliases for display', () => {
   assert.equal(formatCommitSubject(':sparkles: add commit browser'), '✨ add commit browser')

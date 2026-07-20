@@ -1,5 +1,5 @@
-import type { IGitReference } from '../git/commit'
-import type { ICommitGraphRow } from '../history/commit-graph'
+import type { IGitReference } from '../../git/commit'
+import type { ICommitGraphRow } from '../../history/commit-graph'
 
 const MAX_VISIBLE_LANES = 4
 const GRAPH_LANE_COLORS = [

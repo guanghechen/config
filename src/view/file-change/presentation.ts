@@ -1,5 +1,5 @@
 import { MarkdownString } from 'vscode'
-import type { IFileChange } from '../git/file-change'
+import type { IFileChange } from '../../git/file-change'
 
 export function createFileChangeDescription(change: IFileChange): string | undefined {
   if (change.kind === 'renamed' || change.kind === 'copied') {

@@ -49,12 +49,17 @@ supported.
 
 ## Architecture
 
-`extension.ts` is only the composition root. The `app` layer owns command workflows and connects the
-`view`, `history`, `compare`, and `git` layers; dependencies only point toward lower layers.
-`CommitHistorySession` is the single writer for the active repository and paged commit list, while
-`CommitMarkSession` is the single writer for comparison marks, and `CompareSession` is the single
-writer for the active comparison. Commit file trees are loaded lazily and cached only by the view
-provider. The revision content provider reads immutable commit blobs only when VS Code opens a diff.
+`extension.ts` is only the composition root. The `app` layer groups comparison and commit-history
+workflows into focused controllers. The `view` layer is organized by comparison, history, diff, and
+shared file-change concerns; extension command, context, view, and item IDs live in `platform`.
+Dependencies only point toward lower layers, and automated architecture tests reject reverse edges
+and import cycles.
+
+`CommitHistorySession` is the single writer for the active repository and paged commit list,
+`CommitMarkSession` is the single writer for comparison marks, and `ComparisonSession` is the single
+writer for the active comparison. Commit file trees are loaded lazily and cached only by the history
+tree provider. The revision content provider reads immutable commit blobs only when VS Code opens a
+diff.
 
 Invalid references, history reload failures, or Git comparison failures abort without replacing the
 last successful state. A commit expansion failure is isolated to that node. Binary and oversized

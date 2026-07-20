@@ -1,8 +1,8 @@
-import type { IGitCommit } from '../git/commit'
-import { isFileChange, type IFileChange } from '../git/file-change'
-import type { ICommitHistorySnapshot } from '../history/model'
-import { buildCommitGraphRows, type ICommitGraphRow } from '../history/commit-graph'
-import { buildChangeTree, type IChangeTreeNode, type IDirectoryNode } from './change-tree'
+import type { IGitCommit } from '../../git/commit'
+import { isFileChange, type IFileChange } from '../../git/file-change'
+import { buildCommitGraphRows, type ICommitGraphRow } from '../../history/commit-graph'
+import type { ICommitHistorySnapshot } from '../../history/model'
+import { buildFileChangeTree, type IChangeTreeNode, type IDirectoryNode } from '../file-change/tree'
 
 export interface ICommitDiffContext {
   readonly historyRevision: number
@@ -76,7 +76,7 @@ export function buildCommitChangeTree(
   context: ICommitDiffContext,
   changes: ReadonlyArray<IFileChange>,
 ): ReadonlyArray<ICommitChangeNode> {
-  return buildChangeTree(changes).map(node => attachCommitContext(context, node))
+  return buildFileChangeTree(changes).map(node => attachCommitContext(context, node))
 }
 
 export function isCommitNode(value: unknown): value is ICommitNode {

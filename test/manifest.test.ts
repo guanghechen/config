@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
+import { COMMAND_IDS, VIEW_IDS } from '../src/platform/extension-ids'
 
 interface IManifestCommand {
   readonly command: string
@@ -44,7 +45,7 @@ test('declares a valid VSGit Activity Bar container and views', () => {
   assert.ok(container)
   assert.deepEqual(
     manifest.contributes.views[container.id]?.map(view => view.id),
-    ['vsgit.commits', 'vsgit.changes'],
+    [VIEW_IDS.commits, VIEW_IDS.comparison],
   )
 })
 
@@ -52,23 +53,14 @@ test('declares commit browser commands, menus, and view activation', () => {
   const commandIds = manifest.contributes.commands.map(command => command.command)
   assert.equal(new Set(commandIds).size, commandIds.length)
 
-  const requiredCommands = [
-    'vsgit.clearCommitMarks',
-    'vsgit.compareCommitToHead',
-    'vsgit.compareMarkedCommits',
-    'vsgit.compareWithMarkedCommit',
-    'vsgit.loadMoreCommits',
-    'vsgit.markCommit',
-    'vsgit.openCommitFileDiff',
-    'vsgit.refreshCommits',
-    'vsgit.selectRepository',
-    'vsgit.unmarkCommit',
-  ]
-  for (const command of requiredCommands) assert.ok(commandIds.includes(command), command)
+  const expectedCommandIds = Object.values(COMMAND_IDS).filter(
+    command => command !== COMMAND_IDS.focusComparison,
+  )
+  assert.deepEqual(new Set(commandIds), new Set(expectedCommandIds))
 
   const menuCommands = Object.values(manifest.contributes.menus).flatMap(items =>
     items.map(item => item.command),
   )
   for (const command of menuCommands) assert.ok(commandIds.includes(command), command)
-  assert.ok(manifest.activationEvents.includes('onView:vsgit.commits'))
+  assert.ok(manifest.activationEvents.includes(`onView:${VIEW_IDS.commits}`))
 })
