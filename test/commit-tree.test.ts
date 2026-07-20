@@ -69,3 +69,67 @@ test('attaches immutable commit context to directory-first change nodes', () => 
     },
   ])
 })
+
+test('compacts empty single-child directory chains', () => {
+  const changes: IFileChange[] = [
+    {
+      kind: 'modified',
+      status: 'M',
+      previousPath: 'src/features/account/index.ts',
+      currentPath: 'src/features/account/index.ts',
+    },
+    {
+      kind: 'added',
+      status: 'A',
+      previousPath: null,
+      currentPath: 'src/features/search/index.ts',
+    },
+  ]
+  const context = {
+    historyRevision: 3,
+    repositoryPath: '/repo',
+    commit: COMMIT,
+    parentCommit: COMMIT.parents[0] ?? null,
+  }
+
+  assert.deepEqual(buildCommitChangeTree(context, changes), [
+    {
+      kind: 'commit-directory',
+      name: 'src/features',
+      path: 'src/features',
+      context,
+      children: [
+        {
+          kind: 'commit-directory',
+          name: 'account',
+          path: 'src/features/account',
+          context,
+          children: [
+            {
+              kind: 'commit-file',
+              name: 'index.ts',
+              path: 'src/features/account/index.ts',
+              context,
+              change: changes[0],
+            },
+          ],
+        },
+        {
+          kind: 'commit-directory',
+          name: 'search',
+          path: 'src/features/search',
+          context,
+          children: [
+            {
+              kind: 'commit-file',
+              name: 'index.ts',
+              path: 'src/features/search/index.ts',
+              context,
+              change: changes[1],
+            },
+          ],
+        },
+      ],
+    },
+  ])
+})

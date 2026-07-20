@@ -43,7 +43,7 @@ export class CommitTreeProvider implements TreeDataProvider<ICommitTreeNode>, Di
       case 'commit':
         return createCommitTreeItem(node)
       case 'commit-directory': {
-        const item = new TreeItem(node.name, TreeItemCollapsibleState.Collapsed)
+        const item = new TreeItem(node.name, TreeItemCollapsibleState.Expanded)
         item.id = `commit-directory:${node.context.commit.hash}:${node.path}`
         item.contextValue = 'vsgit.commitDirectory'
         item.resourceUri = createRepositoryResourceUri(node.context.repositoryPath, node.path)

@@ -1,7 +1,7 @@
 import type { IGitCommit } from '../git/commit'
 import { isFileChange, type IFileChange } from '../git/file-change'
 import type { ICommitHistorySnapshot } from '../history/model'
-import { buildChangeTree, type IChangeTreeNode } from './change-tree'
+import { buildChangeTree, type IChangeTreeNode, type IDirectoryNode } from './change-tree'
 
 export interface ICommitDiffContext {
   readonly historyRevision: number
@@ -114,11 +114,32 @@ function attachCommitContext(
       change: node.change,
     }
   }
+
+  const compacted = compactDirectory(node)
   return {
     kind: 'commit-directory',
-    name: node.name,
-    path: node.path,
+    name: compacted.name,
+    path: compacted.path,
     context,
-    children: node.children.map(child => attachCommitContext(context, child)),
+    children: compacted.children.map(child => attachCommitContext(context, child)),
+  }
+}
+
+function compactDirectory(node: IDirectoryNode): IDirectoryNode {
+  const names = [node.name]
+  let tail = node
+
+  while (tail.children.length === 1) {
+    const child = tail.children[0]
+    if (child?.kind !== 'directory') break
+    names.push(child.name)
+    tail = child
+  }
+
+  return {
+    kind: 'directory',
+    name: names.join('/'),
+    path: tail.path,
+    children: tail.children,
   }
 }
