@@ -108,8 +108,17 @@
         }
       ]
     },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vsgit-sidebar",
+          "title": "VSGit",
+          "icon": "assets/vsgit-activitybar.svg"
+        }
+      ]
+    },
     "views": {
-      "scm": [
+      "vsgit-sidebar": [
         {
           "id": "vsgit.changes",
           "name": "Reference Comparison"
