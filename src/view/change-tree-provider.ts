@@ -1,6 +1,5 @@
 import {
   EventEmitter,
-  MarkdownString,
   ThemeIcon,
   TreeItem,
   TreeItemCollapsibleState,
@@ -10,8 +9,13 @@ import {
 } from 'vscode'
 import { CompareSession } from '../compare/compare-session'
 import type { ICompareSnapshot } from '../compare/model'
-import type { FileChangeKind, IFileChange } from '../git/file-change'
+import type { IFileChange } from '../git/file-change'
 import { buildChangeTree, type IChangeTreeNode } from './change-tree'
+import {
+  createFileChangeDescription,
+  createFileChangeTooltip,
+  resolveFileChangeIcon,
+} from './file-change-presentation'
 
 export class ChangeTreeProvider implements TreeDataProvider<IChangeTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<IChangeTreeNode | undefined>()
@@ -58,9 +62,9 @@ function createFileTreeItem(
   const item = new TreeItem(node.name, TreeItemCollapsibleState.None)
   item.id = createFileNodeId(node.change)
   item.contextValue = 'vsgit.file'
-  item.description = createDescription(node.change)
-  item.iconPath = new ThemeIcon(resolveIcon(node.change.kind))
-  item.tooltip = createTooltip(node.change)
+  item.description = createFileChangeDescription(node.change)
+  item.iconPath = new ThemeIcon(resolveFileChangeIcon(node.change.kind))
+  item.tooltip = createFileChangeTooltip(node.change)
   if (snapshot) {
     item.command = {
       command: 'vsgit.openDiff',
@@ -73,39 +77,4 @@ function createFileTreeItem(
 
 function createFileNodeId(change: IFileChange): string {
   return `file:${change.status}:${change.previousPath ?? ''}:${change.currentPath ?? ''}`
-}
-
-function createDescription(change: IFileChange): string {
-  if (change.kind === 'renamed' || change.kind === 'copied') {
-    return `${change.status} · ${change.previousPath ?? ''}`
-  }
-  return change.status
-}
-
-function createTooltip(change: IFileChange): MarkdownString {
-  const tooltip = new MarkdownString(undefined, false)
-  tooltip.appendText(`${change.status} `)
-  if (change.previousPath && change.currentPath && change.previousPath !== change.currentPath) {
-    tooltip.appendText(`${change.previousPath} → ${change.currentPath}`)
-  } else {
-    tooltip.appendText(change.currentPath ?? change.previousPath ?? '')
-  }
-  return tooltip
-}
-
-function resolveIcon(kind: FileChangeKind): string {
-  switch (kind) {
-    case 'added':
-      return 'diff-added'
-    case 'deleted':
-      return 'diff-removed'
-    case 'renamed':
-    case 'copied':
-      return 'diff-renamed'
-    case 'modified':
-    case 'typeChanged':
-    case 'unmerged':
-    case 'unknown':
-      return 'diff-modified'
-  }
 }

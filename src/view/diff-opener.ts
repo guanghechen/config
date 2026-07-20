@@ -1,10 +1,10 @@
 import { commands } from 'vscode'
-import type { ICompareSnapshot } from '../compare/model'
+import type { IRevisionComparison } from '../compare/model'
 import { resolveDisplayPath, type IFileChange } from '../git/file-change'
 import { RevisionContentProvider } from './revision-content-provider'
 
 export async function openRevisionDiff(
-  snapshot: ICompareSnapshot,
+  comparison: IRevisionComparison,
   change: IFileChange,
   contentProvider: RevisionContentProvider,
 ): Promise<void> {
@@ -12,15 +12,15 @@ export async function openRevisionDiff(
   const previousPath = change.previousPath ?? displayPath
   const currentPath = change.currentPath ?? displayPath
   const leftUri = contentProvider.createUri(
-    snapshot.repositoryPath,
-    snapshot.baseCommit,
+    comparison.repositoryPath,
+    comparison.baseCommit,
     previousPath,
     'base',
     change.previousPath === null,
   )
   const rightUri = contentProvider.createUri(
-    snapshot.repositoryPath,
-    snapshot.targetCommit,
+    comparison.repositoryPath,
+    comparison.targetCommit,
     currentPath,
     'target',
     change.currentPath === null,
@@ -29,17 +29,17 @@ export async function openRevisionDiff(
     'vscode.diff',
     leftUri,
     rightUri,
-    createDiffTitle(snapshot, change),
+    createDiffTitle(comparison, change),
     { preview: true },
   )
 }
 
-function createDiffTitle(snapshot: ICompareSnapshot, change: IFileChange): string {
+function createDiffTitle(comparison: IRevisionComparison, change: IFileChange): string {
   const pathLabel =
     change.previousPath && change.currentPath && change.previousPath !== change.currentPath
       ? `${change.previousPath} → ${change.currentPath}`
       : resolveDisplayPath(change)
-  return `${pathLabel} (${shorten(snapshot.baseRef)} ↔ ${shorten(snapshot.targetRef)})`
+  return `${pathLabel} (${shorten(comparison.baseRef)} ↔ ${shorten(comparison.targetRef)})`
 }
 
 function shorten(value: string): string {

@@ -19,7 +19,9 @@
     "SCM Providers"
   ],
   "activationEvents": [
+    "onView:vsgit.commits",
     "onView:vsgit.changes",
+    "onCommand:vsgit.openCommitFileDiff",
     "onCommand:vsgit.compareRefs"
   ],
   "main": "./dist/extension.cjs",
@@ -63,6 +65,29 @@
         "command": "vsgit.openDiff",
         "title": "Open File Diff",
         "category": "VSGit"
+      },
+      {
+        "command": "vsgit.refreshCommits",
+        "title": "Refresh Commits",
+        "category": "VSGit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vsgit.selectRepository",
+        "title": "Select Repository",
+        "category": "VSGit",
+        "icon": "$(repo)"
+      },
+      {
+        "command": "vsgit.loadMoreCommits",
+        "title": "Load More Commits",
+        "category": "VSGit",
+        "icon": "$(unfold)"
+      },
+      {
+        "command": "vsgit.openCommitFileDiff",
+        "title": "Open Commit File Diff",
+        "category": "VSGit"
       }
     ],
     "configuration": {
@@ -79,6 +104,16 @@
     },
     "menus": {
       "view/title": [
+        {
+          "command": "vsgit.selectRepository",
+          "when": "view == vsgit.commits",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vsgit.refreshCommits",
+          "when": "view == vsgit.commits",
+          "group": "navigation@2"
+        },
         {
           "command": "vsgit.compareRefs",
           "when": "view == vsgit.changes",
@@ -105,6 +140,11 @@
           "command": "vsgit.openDiff",
           "when": "view == vsgit.changes && viewItem == vsgit.file",
           "group": "inline"
+        },
+        {
+          "command": "vsgit.openCommitFileDiff",
+          "when": "view == vsgit.commits && viewItem == vsgit.commitFile",
+          "group": "inline"
         }
       ]
     },
@@ -119,6 +159,10 @@
     },
     "views": {
       "vsgit-sidebar": [
+        {
+          "id": "vsgit.commits",
+          "name": "Commits"
+        },
         {
           "id": "vsgit.changes",
           "name": "Reference Comparison"

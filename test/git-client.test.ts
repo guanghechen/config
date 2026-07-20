@@ -96,6 +96,18 @@ test('resolves commits, detects structural changes, and reads immutable blobs', 
   await assert.rejects(client.listCommits(repositoryPath, 0), /Commit page size/)
 })
 
+test('returns an empty commit page for an unborn repository', async t => {
+  const repositoryPath = await mkdtemp(path.join(tmpdir(), 'vsgit-empty-test-'))
+  t.after(() => rm(repositoryPath, { force: true, recursive: true }))
+  git(repositoryPath, 'init', '--quiet')
+
+  const client = new GitClient()
+  assert.deepEqual(await client.listCommits(repositoryPath, 50), {
+    commits: [],
+    hasMore: false,
+  })
+})
+
 function git(repositoryPath: string, ...args: string[]): string {
   return execFileSync('git', ['-C', repositoryPath, ...args], {
     encoding: 'utf8',
