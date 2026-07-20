@@ -108,6 +108,42 @@ test('returns an empty commit page for an unborn repository', async t => {
   })
 })
 
+test('lists only commits reachable from the current HEAD', async t => {
+  const repositoryPath = await mkdtemp(path.join(tmpdir(), 'vsgit-branch-test-'))
+  t.after(() => rm(repositoryPath, { force: true, recursive: true }))
+
+  git(repositoryPath, 'init', '--quiet', '--initial-branch=current')
+  git(repositoryPath, 'config', 'user.name', 'VSGit Test')
+  git(repositoryPath, 'config', 'user.email', 'vsgit@example.invalid')
+  await writeFile(path.join(repositoryPath, 'base.txt'), 'base\n')
+  git(repositoryPath, 'add', '.')
+  git(repositoryPath, 'commit', '--quiet', '-m', 'base')
+  const baseCommit = git(repositoryPath, 'rev-parse', 'HEAD')
+  git(repositoryPath, 'branch', 'other')
+
+  await writeFile(path.join(repositoryPath, 'current.txt'), 'current\n')
+  git(repositoryPath, 'add', '.')
+  git(repositoryPath, 'commit', '--quiet', '-m', 'current only')
+  const currentCommit = git(repositoryPath, 'rev-parse', 'HEAD')
+
+  git(repositoryPath, 'switch', '--quiet', 'other')
+  await writeFile(path.join(repositoryPath, 'other.txt'), 'other\n')
+  git(repositoryPath, 'add', '.')
+  git(repositoryPath, 'commit', '--quiet', '-m', 'other only')
+  const otherCommit = git(repositoryPath, 'rev-parse', 'HEAD')
+  git(repositoryPath, 'switch', '--quiet', 'current')
+
+  const page = await new GitClient().listCommits(repositoryPath, 10)
+  assert.deepEqual(
+    page.commits.map(commit => commit.hash),
+    [currentCommit, baseCommit],
+  )
+  assert.equal(
+    page.commits.some(commit => commit.hash === otherCommit),
+    false,
+  )
+})
+
 function git(repositoryPath: string, ...args: string[]): string {
   return execFileSync('git', ['-C', repositoryPath, ...args], {
     encoding: 'utf8',

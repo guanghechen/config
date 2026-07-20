@@ -12,6 +12,16 @@ const NAME_STATUS_ARGS = ['--name-status', '-z', '--find-renames', '--find-copie
 
 export class GitBlobDisplayError extends Error {}
 
+class GitCommandError extends Error {
+  public constructor(
+    message: string,
+    public readonly exitCode: number | null,
+    cause: Error,
+  ) {
+    super(message, { cause })
+  }
+}
+
 export class GitClient {
   public async resolveRepository(candidatePath: string): Promise<string> {
     const output = await runGit(candidatePath, ['rev-parse', '--show-toplevel'])
@@ -56,13 +66,16 @@ export class GitClient {
 
   public async listCommits(repositoryPath: string, limit: number): Promise<ICommitPage> {
     assertCommitLimit(limit)
+    const headCommit = await resolveOptionalHead(repositoryPath)
+    if (!headCommit) return Object.freeze({ commits: Object.freeze([]), hasMore: false })
+
     const output = await runGit(repositoryPath, [
       'log',
       '--topo-order',
       '-z',
       `--max-count=${limit + 1}`,
       '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%s%x00',
-      '--all',
+      headCommit,
       '--',
     ])
     const commits = parseCommitLog(output)
@@ -136,6 +149,28 @@ function assertCommitLimit(value: number): void {
   }
 }
 
+async function resolveOptionalHead(repositoryPath: string): Promise<string | null> {
+  let output: Buffer
+  try {
+    output = await runGit(repositoryPath, [
+      'rev-parse',
+      '--verify',
+      '--quiet',
+      '--end-of-options',
+      'HEAD^{commit}',
+    ])
+  } catch (cause) {
+    if (cause instanceof GitCommandError && cause.exitCode === 1) return null
+    throw cause
+  }
+
+  const commit = output.toString('utf8').trim()
+  if (!/^[0-9a-f]{40,64}$/i.test(commit)) {
+    throw new Error('Git did not resolve HEAD to a commit.')
+  }
+  return commit
+}
+
 function runGit(
   repositoryPath: string,
   args: ReadonlyArray<string>,
@@ -160,7 +195,13 @@ function runGit(
         }
 
         const detail = stderr.toString('utf8').trim()
-        reject(new Error(detail || error.message, { cause: error }))
+        reject(
+          new GitCommandError(
+            detail || error.message,
+            typeof error.code === 'number' ? error.code : null,
+            error,
+          ),
+        )
       },
     )
   })
