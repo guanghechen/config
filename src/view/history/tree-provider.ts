@@ -8,7 +8,7 @@ import {
   type Event,
   type TreeDataProvider,
 } from 'vscode'
-import { GitClient } from '../../git/git-client'
+import { CommitChangeCache } from '../../history/commit-change-cache'
 import { CommitHistorySession } from '../../history/commit-history-session'
 import { CommitMarkSession } from '../../history/commit-mark-session'
 import { COMMAND_IDS, VIEW_ITEM_CONTEXT_VALUES } from '../../platform/extension-ids'
@@ -31,23 +31,25 @@ import { formatCommitSubject } from './subject'
 
 export class CommitHistoryTreeProvider implements TreeDataProvider<ICommitTreeNode>, Disposable {
   private readonly changeEmitter = new EventEmitter<ICommitTreeNode | undefined>()
-  private readonly childCache = new Map<string, Promise<ICommitTreeNode[]>>()
   private readonly subscriptions: Disposable
+  private rootNodes: ReadonlyArray<ICommitTreeNode> = []
 
   public readonly onDidChangeTreeData: Event<ICommitTreeNode | undefined> = this.changeEmitter.event
 
   public constructor(
-    private readonly gitClient: GitClient,
+    private readonly changeCache: CommitChangeCache,
     private readonly markSession: CommitMarkSession,
     private readonly historySession: CommitHistorySession,
   ) {
     this.subscriptions = Disposable.from(
-      this.historySession.onDidChange(() => {
-        this.childCache.clear()
+      this.historySession.onDidChange(snapshot => {
+        this.rootNodes = snapshot ? createCommitRootNodes(snapshot) : []
         this.changeEmitter.fire(undefined)
       }),
       this.markSession.onDidChange(() => this.changeEmitter.fire(undefined)),
     )
+    const snapshot = this.historySession.snapshot
+    this.rootNodes = snapshot ? createCommitRootNodes(snapshot) : []
   }
 
   public getTreeItem(node: ICommitTreeNode): TreeItem {
@@ -89,8 +91,7 @@ export class CommitHistoryTreeProvider implements TreeDataProvider<ICommitTreeNo
 
   public getChildren(node?: ICommitTreeNode): ICommitTreeNode[] | Promise<ICommitTreeNode[]> {
     if (!node) {
-      const snapshot = this.historySession.snapshot
-      return snapshot ? [...createCommitRootNodes(snapshot)] : []
+      return [...this.rootNodes]
     }
     if (node.kind === 'commit') return this.getCommitChildren(node)
     if (node.kind === 'commit-directory') return [...node.children]
@@ -98,27 +99,13 @@ export class CommitHistoryTreeProvider implements TreeDataProvider<ICommitTreeNo
   }
 
   public dispose(): void {
-    this.childCache.clear()
     this.subscriptions.dispose()
     this.changeEmitter.dispose()
   }
 
-  private getCommitChildren(node: ICommitNode): Promise<ICommitTreeNode[]> {
-    const cacheKey = `${node.context.historyRevision}:${node.context.commit.hash}`
-    const existing = this.childCache.get(cacheKey)
-    if (existing) return existing
-
-    const request = this.loadCommitChildren(node, cacheKey)
-    this.childCache.set(cacheKey, request)
-    return request
-  }
-
-  private async loadCommitChildren(
-    node: ICommitNode,
-    cacheKey: string,
-  ): Promise<ICommitTreeNode[]> {
+  private async getCommitChildren(node: ICommitNode): Promise<ICommitTreeNode[]> {
     try {
-      const changes = await this.gitClient.listCommitChanges(
+      const changes = await this.changeCache.getChanges(
         node.context.repositoryPath,
         node.context.commit.hash,
         node.context.parentCommit,
@@ -126,7 +113,6 @@ export class CommitHistoryTreeProvider implements TreeDataProvider<ICommitTreeNo
       if (this.historySession.snapshot?.revision !== node.context.historyRevision) return []
       return [...buildCommitChangeTree(node.context, changes)]
     } catch (cause) {
-      this.childCache.delete(cacheKey)
       return [
         {
           kind: 'commit-error',

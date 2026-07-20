@@ -1,7 +1,7 @@
 import { Disposable, ProgressLocation, commands, window } from 'vscode'
+import type { IRevisionComparison } from '../../comparison/model'
 import { ComparisonSession } from '../../comparison/session'
 import type { IGitCommit } from '../../git/commit'
-import { GitClient } from '../../git/git-client'
 import { CommitHistorySession } from '../../history/commit-history-session'
 import { CommitMarkSession } from '../../history/commit-mark-session'
 import { orderCommitsForComparison, type IOrderedCommitPair } from '../../history/commit-order'
@@ -10,21 +10,18 @@ import { isCommitNode } from '../../view/history/tree'
 
 export interface ICommitComparisonControllerOptions {
   readonly comparisonSession: ComparisonSession
-  readonly gitClient: GitClient
   readonly historySession: CommitHistorySession
   readonly markSession: CommitMarkSession
 }
 
 export class CommitComparisonController implements Disposable {
   private readonly comparisonSession: ComparisonSession
-  private readonly gitClient: GitClient
   private readonly historySession: CommitHistorySession
   private readonly markSession: CommitMarkSession
   private readonly registrations: Disposable
 
   public constructor(options: ICommitComparisonControllerOptions) {
     this.comparisonSession = options.comparisonSession
-    this.gitClient = options.gitClient
     this.historySession = options.historySession
     this.markSession = options.markSession
     this.registrations = Disposable.from(
@@ -70,9 +67,7 @@ export class CommitComparisonController implements Disposable {
     }
 
     await this.compareCommits(
-      snapshot.repositoryPath,
-      pair.base.hash,
-      pair.target.hash,
+      createResolvedComparison(snapshot.repositoryPath, pair.base.hash, pair.target.hash),
       `Comparing ${pair.base.shortHash} with ${pair.target.shortHash}…`,
     )
   }
@@ -94,9 +89,7 @@ export class CommitComparisonController implements Disposable {
     }
 
     await this.compareCommits(
-      snapshot.repositoryPath,
-      pair.base.hash,
-      pair.target.hash,
+      createResolvedComparison(snapshot.repositoryPath, pair.base.hash, pair.target.hash),
       `Comparing ${pair.base.shortHash} with ${pair.target.shortHash}…`,
     )
   }
@@ -109,14 +102,8 @@ export class CommitComparisonController implements Disposable {
       return
     }
 
-    let headCommit: string
-    try {
-      headCommit = await this.gitClient.resolveCommit(snapshot.repositoryPath, 'HEAD')
-    } catch (cause) {
-      await this.showError(cause)
-      return
-    }
-    if (this.historySession.snapshot?.revision !== snapshot.revision) {
+    const headCommit = snapshot.headCommit
+    if (!headCommit) {
       await this.showStaleCommitWarning()
       return
     }
@@ -126,9 +113,7 @@ export class CommitComparisonController implements Disposable {
     }
 
     await this.compareCommits(
-      snapshot.repositoryPath,
-      commit.hash,
-      headCommit,
+      createResolvedComparison(snapshot.repositoryPath, commit.hash, headCommit, 'HEAD'),
       `Comparing ${commit.shortHash} with HEAD…`,
     )
   }
@@ -198,18 +183,13 @@ export class CommitComparisonController implements Disposable {
     )
   }
 
-  private async compareCommits(
-    repositoryPath: string,
-    baseRef: string,
-    targetRef: string,
-    title: string,
-  ): Promise<void> {
+  private async compareCommits(comparison: IRevisionComparison, title: string): Promise<void> {
     try {
-      const comparison = await window.withProgress(
+      const snapshot = await window.withProgress(
         { location: ProgressLocation.Notification, title, cancellable: false },
-        () => this.comparisonSession.compare(repositoryPath, baseRef, targetRef),
+        () => this.comparisonSession.compareResolved(comparison),
       )
-      if (comparison) await commands.executeCommand(COMMAND_IDS.focusComparison)
+      if (snapshot) await commands.executeCommand(COMMAND_IDS.focusComparison)
     } catch (cause) {
       await this.showError(cause)
     }
@@ -222,5 +202,20 @@ export class CommitComparisonController implements Disposable {
   private async showError(cause: unknown): Promise<void> {
     const message = cause instanceof Error ? cause.message : 'Commit operation failed.'
     await window.showErrorMessage(`VSGit: ${message}`)
+  }
+}
+
+function createResolvedComparison(
+  repositoryPath: string,
+  baseCommit: string,
+  targetCommit: string,
+  targetRef = targetCommit,
+): IRevisionComparison {
+  return {
+    repositoryPath,
+    baseRef: baseCommit,
+    targetRef,
+    baseCommit,
+    targetCommit,
   }
 }

@@ -6,6 +6,7 @@ import { CommitHistoryController } from './app/history/commit-history-controller
 import { CommitViewController } from './app/history/commit-view-controller'
 import { ComparisonSession } from './comparison/session'
 import { GitClient } from './git/git-client'
+import { CommitChangeCache } from './history/commit-change-cache'
 import { CommitHistorySession } from './history/commit-history-session'
 import { CommitMarkSession } from './history/commit-mark-session'
 import { VIEW_IDS } from './platform/extension-ids'
@@ -19,8 +20,13 @@ export function activate(context: ExtensionContext): void {
   const comparisonSession = new ComparisonSession(gitClient)
   const historySession = new CommitHistorySession(gitClient)
   const markSession = new CommitMarkSession()
+  const commitChangeCache = new CommitChangeCache(gitClient)
   const comparisonTreeProvider = new ComparisonTreeProvider(comparisonSession)
-  const commitTreeProvider = new CommitHistoryTreeProvider(gitClient, markSession, historySession)
+  const commitTreeProvider = new CommitHistoryTreeProvider(
+    commitChangeCache,
+    markSession,
+    historySession,
+  )
   const contentProvider = new RevisionContentProvider(gitClient)
   const comparisonTreeView = window.createTreeView(VIEW_IDS.comparison, {
     treeDataProvider: comparisonTreeProvider,
@@ -33,17 +39,19 @@ export function activate(context: ExtensionContext): void {
   const comparisonController = new ComparisonController({
     comparisonSession,
     contentProvider,
-    gitClient,
+    repositoryResolver: gitClient,
     treeView: comparisonTreeView,
   })
   const commitComparisonController = new CommitComparisonController({
     comparisonSession,
-    gitClient,
     historySession,
     markSession,
   })
   const commitDiffController = new CommitDiffController({ contentProvider, historySession })
-  const commitHistoryController = new CommitHistoryController({ gitClient, historySession })
+  const commitHistoryController = new CommitHistoryController({
+    historySession,
+    repositoryResolver: gitClient,
+  })
   const commitViewController = new CommitViewController({
     historySession,
     markSession,
@@ -56,6 +64,7 @@ export function activate(context: ExtensionContext): void {
     commitHistoryController,
     commitViewController,
     comparisonController,
+    commitChangeCache,
     historySession,
     markSession,
     comparisonSession,

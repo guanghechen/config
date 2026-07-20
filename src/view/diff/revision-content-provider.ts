@@ -1,5 +1,5 @@
 import { Uri, workspace, type CancellationToken, type TextDocumentContentProvider } from 'vscode'
-import { GitBlobDisplayError, GitClient } from '../../git/git-client'
+import { GitBlobDisplayError } from '../../git/git-client'
 
 export const REVISION_SCHEME = 'vsgit'
 
@@ -10,8 +10,18 @@ interface IRevisionResource {
   readonly empty: boolean
 }
 
+export interface IRevisionContentSource {
+  readTextFile(
+    repositoryPath: string,
+    commit: string,
+    filePath: string,
+    maxBytes: number,
+    signal: AbortSignal,
+  ): Promise<string>
+}
+
 export class RevisionContentProvider implements TextDocumentContentProvider {
-  public constructor(private readonly gitClient: GitClient) {}
+  public constructor(private readonly contentSource: IRevisionContentSource) {}
 
   public createUri(
     repositoryPath: string,
@@ -42,7 +52,7 @@ export class RevisionContentProvider implements TextDocumentContentProvider {
     const cancellation = token.onCancellationRequested(() => controller.abort())
     try {
       const maxBytes = workspace.getConfiguration('vsgit').get('maxBlobBytes', 5 * 1024 * 1024)
-      return await this.gitClient.readTextFile(
+      return await this.contentSource.readTextFile(
         resource.repositoryPath,
         resource.commit,
         resource.filePath,

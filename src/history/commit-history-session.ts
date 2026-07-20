@@ -1,19 +1,24 @@
-import { EventEmitter, type Disposable, type Event } from 'vscode'
-import { GitClient } from '../git/git-client'
+import { Signal, type Event, type IDisposable } from '../core/signal'
+import type { ICommitPage } from '../git/commit'
 import type { ICommitHistorySnapshot } from './model'
 
 const DEFAULT_PAGE_SIZE = 50
 const MAX_COMMIT_LIMIT = 500
 
-export class CommitHistorySession implements Disposable {
-  private readonly changeEmitter = new EventEmitter<ICommitHistorySnapshot | null>()
+export interface ICommitHistorySource {
+  listCommits(repositoryPath: string, limit: number, signal: AbortSignal): Promise<ICommitPage>
+}
+
+export class CommitHistorySession implements IDisposable {
+  private readonly changeSignal = new Signal<ICommitHistorySnapshot | null>()
+  private activeRequest: AbortController | null = null
   private currentSnapshot: ICommitHistorySnapshot | null = null
   private requestRevision = 0
 
-  public readonly onDidChange: Event<ICommitHistorySnapshot | null> = this.changeEmitter.event
+  public readonly onDidChange: Event<ICommitHistorySnapshot | null> = this.changeSignal.event
 
   public constructor(
-    private readonly gitClient: GitClient,
+    private readonly historySource: ICommitHistorySource,
     private readonly pageSize = DEFAULT_PAGE_SIZE,
   ) {
     if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > MAX_COMMIT_LIMIT) {
@@ -44,33 +49,52 @@ export class CommitHistorySession implements Disposable {
   }
 
   public clear(): void {
+    this.cancelActiveRequest()
     this.requestRevision += 1
     this.currentSnapshot = null
-    this.changeEmitter.fire(null)
+    this.changeSignal.emit(null)
   }
 
   public dispose(): void {
     this.clear()
-    this.changeEmitter.dispose()
+    this.changeSignal.dispose()
   }
 
   private async loadWithLimit(
     repositoryPath: string,
     limit: number,
   ): Promise<ICommitHistorySnapshot | null> {
+    this.cancelActiveRequest()
+    const request = new AbortController()
     const revision = ++this.requestRevision
-    const page = await this.gitClient.listCommits(repositoryPath, limit)
-    if (revision !== this.requestRevision) return null
+    this.activeRequest = request
 
-    const snapshot: ICommitHistorySnapshot = Object.freeze({
-      revision,
-      repositoryPath,
-      commits: page.commits,
-      hasMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
-      limit,
-    })
-    this.currentSnapshot = snapshot
-    this.changeEmitter.fire(snapshot)
-    return snapshot
+    try {
+      const page = await this.historySource.listCommits(repositoryPath, limit, request.signal)
+      if (revision !== this.requestRevision) return null
+
+      const snapshot: ICommitHistorySnapshot = Object.freeze({
+        revision,
+        repositoryPath,
+        headCommit: page.commits[0]?.hash ?? null,
+        commits: page.commits,
+        hasMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
+        limit,
+      })
+      this.currentSnapshot = snapshot
+      this.changeSignal.emit(snapshot)
+      return snapshot
+    } catch (cause) {
+      request.abort()
+      if (revision !== this.requestRevision) return null
+      throw cause
+    } finally {
+      if (this.activeRequest === request) this.activeRequest = null
+    }
+  }
+
+  private cancelActiveRequest(): void {
+    this.activeRequest?.abort()
+    this.activeRequest = null
   }
 }

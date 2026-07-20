@@ -5,13 +5,14 @@ import test from 'node:test'
 
 const SOURCE_ROOT = path.resolve('src')
 const ALLOWED_LAYER_DEPENDENCIES: Readonly<Record<string, ReadonlySet<string>>> = Object.freeze({
-  app: new Set(['app', 'comparison', 'git', 'history', 'platform', 'view']),
-  comparison: new Set(['comparison', 'git']),
-  extension: new Set(['app', 'comparison', 'git', 'history', 'platform', 'view']),
-  git: new Set(['git']),
-  history: new Set(['git', 'history']),
+  app: new Set(['app', 'comparison', 'core', 'git', 'history', 'platform', 'view']),
+  comparison: new Set(['comparison', 'core', 'git']),
+  core: new Set(['core']),
+  extension: new Set(['app', 'comparison', 'core', 'git', 'history', 'platform', 'view']),
+  git: new Set(['core', 'git']),
+  history: new Set(['core', 'git', 'history']),
   platform: new Set(['platform']),
-  view: new Set(['comparison', 'git', 'history', 'platform', 'view']),
+  view: new Set(['comparison', 'core', 'git', 'history', 'platform', 'view']),
 })
 
 const sourceFiles = collectTypeScriptFiles(SOURCE_ROOT)

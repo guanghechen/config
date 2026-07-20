@@ -19,6 +19,7 @@ test('creates commit roots with a load-more sentinel', () => {
   const snapshot: ICommitHistorySnapshot = {
     revision: 3,
     repositoryPath: '/repo',
+    headCommit: COMMIT.hash,
     commits: [COMMIT],
     hasMore: true,
     limit: 50,

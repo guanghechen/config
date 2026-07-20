@@ -1,23 +1,23 @@
 import { Disposable, ProgressLocation, commands, window, workspace } from 'vscode'
-import { GitClient } from '../../git/git-client'
 import { CommitHistorySession } from '../../history/commit-history-session'
 import type { ICommitHistorySnapshot } from '../../history/model'
 import { COMMAND_IDS } from '../../platform/extension-ids'
+import type { IRepositoryResolver } from '../shared/repository-discovery'
 import { discoverRepositories, pickRepository } from '../shared/repository-picker'
 
 export interface ICommitHistoryControllerOptions {
-  readonly gitClient: GitClient
   readonly historySession: CommitHistorySession
+  readonly repositoryResolver: IRepositoryResolver
 }
 
 export class CommitHistoryController implements Disposable {
-  private readonly gitClient: GitClient
   private readonly historySession: CommitHistorySession
+  private readonly repositoryResolver: IRepositoryResolver
   private readonly registrations: Disposable
 
   public constructor(options: ICommitHistoryControllerOptions) {
-    this.gitClient = options.gitClient
     this.historySession = options.historySession
+    this.repositoryResolver = options.repositoryResolver
     this.registrations = Disposable.from(
       commands.registerCommand(COMMAND_IDS.refreshCommits, () => this.refresh()),
       commands.registerCommand(COMMAND_IDS.selectRepository, () => this.selectRepository()),
@@ -37,7 +37,7 @@ export class CommitHistoryController implements Disposable {
   }
 
   private async synchronizeRepository(): Promise<void> {
-    const repositories = await discoverRepositories(this.gitClient)
+    const repositories = await discoverRepositories(this.repositoryResolver)
     const currentRepository = this.historySession.snapshot?.repositoryPath
     if (currentRepository && repositories.includes(currentRepository)) {
       await this.runOperation('Refreshing commits…', () => this.historySession.refresh())
@@ -61,7 +61,7 @@ export class CommitHistoryController implements Disposable {
   }
 
   private async selectRepository(): Promise<void> {
-    const repositoryPath = await pickRepository(this.gitClient)
+    const repositoryPath = await pickRepository(this.repositoryResolver)
     if (!repositoryPath) return
     await this.runOperation('Loading commits…', () => this.historySession.load(repositoryPath))
   }

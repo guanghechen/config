@@ -2,32 +2,32 @@ import { Disposable, ProgressLocation, commands, window, type TreeView } from 'v
 import type { IComparisonSnapshot } from '../../comparison/model'
 import { formatRevisionLabel } from '../../comparison/reference-label'
 import { ComparisonSession } from '../../comparison/session'
-import { GitClient } from '../../git/git-client'
 import { isFileChange } from '../../git/file-change'
 import { openRevisionDiff } from '../../view/diff/opener'
 import { RevisionContentProvider } from '../../view/diff/revision-content-provider'
 import type { IChangeTreeNode, IFileNode } from '../../view/file-change/tree'
 import { COMMAND_IDS, CONTEXT_KEYS } from '../../platform/extension-ids'
+import type { IRepositoryResolver } from '../shared/repository-discovery'
 import { pickRepository } from '../shared/repository-picker'
 
 export interface IComparisonControllerOptions {
   readonly comparisonSession: ComparisonSession
   readonly contentProvider: RevisionContentProvider
-  readonly gitClient: GitClient
+  readonly repositoryResolver: IRepositoryResolver
   readonly treeView: TreeView<IChangeTreeNode>
 }
 
 export class ComparisonController implements Disposable {
   private readonly comparisonSession: ComparisonSession
   private readonly contentProvider: RevisionContentProvider
-  private readonly gitClient: GitClient
+  private readonly repositoryResolver: IRepositoryResolver
   private readonly registrations: Disposable
   private readonly treeView: TreeView<IChangeTreeNode>
 
   public constructor(options: IComparisonControllerOptions) {
     this.comparisonSession = options.comparisonSession
     this.contentProvider = options.contentProvider
-    this.gitClient = options.gitClient
+    this.repositoryResolver = options.repositoryResolver
     this.treeView = options.treeView
     this.registrations = Disposable.from(
       this.comparisonSession.onDidChange(snapshot => this.updateViewState(snapshot)),
@@ -54,7 +54,7 @@ export class ComparisonController implements Disposable {
 
   private async compareReferences(): Promise<void> {
     try {
-      const repositoryPath = await pickRepository(this.gitClient)
+      const repositoryPath = await pickRepository(this.repositoryResolver)
       if (!repositoryPath) return
 
       const baseRef = await this.promptForReference(

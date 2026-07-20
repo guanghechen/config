@@ -1,9 +1,11 @@
 import path from 'node:path'
 import { window, workspace } from 'vscode'
-import { GitClient } from '../../git/git-client'
+import { resolveRepositoryCandidates, type IRepositoryResolver } from './repository-discovery'
 
-export async function pickRepository(gitClient: GitClient): Promise<string | null> {
-  const repositories = await discoverRepositories(gitClient)
+export async function pickRepository(
+  repositoryResolver: IRepositoryResolver,
+): Promise<string | null> {
+  const repositories = await discoverRepositories(repositoryResolver)
 
   if (repositories.length === 0) {
     await window.showErrorMessage('VSGit: Open a Git repository to continue.')
@@ -22,18 +24,11 @@ export async function pickRepository(gitClient: GitClient): Promise<string | nul
   return selected?.repositoryPath ?? null
 }
 
-export async function discoverRepositories(gitClient: GitClient): Promise<ReadonlyArray<string>> {
+export function discoverRepositories(
+  repositoryResolver: IRepositoryResolver,
+): Promise<ReadonlyArray<string>> {
   const candidates = collectRepositoryCandidates()
-  const repositories = new Set<string>()
-
-  for (const candidate of candidates) {
-    try {
-      repositories.add(await gitClient.resolveRepository(candidate))
-    } catch {
-      // Non-repository workspace folders are intentionally skipped.
-    }
-  }
-  return [...repositories]
+  return resolveRepositoryCandidates(candidates, repositoryResolver)
 }
 
 function collectRepositoryCandidates(): ReadonlyArray<string> {

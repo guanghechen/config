@@ -1,4 +1,5 @@
-import type { Disposable } from 'vscode'
+import type { IDisposable } from '../core/signal'
+import { Signal, type Event } from '../core/signal'
 import type { ICommitHistorySnapshot } from './model'
 
 const RESOLVED_COMMIT_PATTERN = /^[0-9a-f]{40,64}$/i
@@ -6,11 +7,13 @@ const MAX_MARKS = 2
 
 export type CommitMarkResult = 'marked' | 'already-marked' | 'full' | 'stale'
 
-export class CommitMarkSession implements Disposable {
-  private readonly changeListeners = new Set<(marks: ReadonlyArray<string>) => void>()
+export class CommitMarkSession implements IDisposable {
+  private readonly changeSignal = new Signal<ReadonlyArray<string>>()
   private activeRepositoryPath: string | null = null
   private availableCommitHashes: ReadonlySet<string> = new Set()
   private markedCommitHashes: ReadonlyArray<string> = Object.freeze([])
+
+  public readonly onDidChange: Event<ReadonlyArray<string>> = this.changeSignal.event
 
   public get count(): number {
     return this.markedCommitHashes.length
@@ -18,11 +21,6 @@ export class CommitMarkSession implements Disposable {
 
   public get markedHashes(): ReadonlyArray<string> {
     return this.markedCommitHashes
-  }
-
-  public onDidChange(listener: (marks: ReadonlyArray<string>) => void): Disposable {
-    this.changeListeners.add(listener)
-    return { dispose: () => this.changeListeners.delete(listener) }
   }
 
   public reconcile(snapshot: ICommitHistorySnapshot | null): void {
@@ -78,13 +76,13 @@ export class CommitMarkSession implements Disposable {
     this.activeRepositoryPath = null
     this.availableCommitHashes = new Set()
     this.markedCommitHashes = Object.freeze([])
-    this.changeListeners.clear()
+    this.changeSignal.dispose()
   }
 
   private replace(values: ReadonlyArray<string>): void {
     if (arraysEqual(this.markedCommitHashes, values)) return
     this.markedCommitHashes = Object.freeze([...values])
-    for (const listener of this.changeListeners) listener(this.markedCommitHashes)
+    this.changeSignal.emit(this.markedCommitHashes)
   }
 }
 

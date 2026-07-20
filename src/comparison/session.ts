@@ -1,45 +1,47 @@
-import { EventEmitter, type Disposable, type Event } from 'vscode'
-import type { IComparisonSnapshot } from './model'
-import { GitClient } from '../git/git-client'
+import { Signal, type Event, type IDisposable } from '../core/signal'
+import type { IFileChange } from '../git/file-change'
+import type { IComparisonSnapshot, IRevisionComparison } from './model'
 
-export class ComparisonSession implements Disposable {
-  private readonly changeEmitter = new EventEmitter<IComparisonSnapshot | null>()
+export interface IComparisonSource {
+  resolveCommit(repositoryPath: string, reference: string, signal: AbortSignal): Promise<string>
+  listChanges(
+    repositoryPath: string,
+    baseCommit: string,
+    targetCommit: string,
+    signal: AbortSignal,
+  ): Promise<ReadonlyArray<IFileChange>>
+}
+
+export class ComparisonSession implements IDisposable {
+  private readonly changeSignal = new Signal<IComparisonSnapshot | null>()
+  private activeRequest: AbortController | null = null
   private currentSnapshot: IComparisonSnapshot | null = null
   private requestRevision = 0
 
-  public readonly onDidChange: Event<IComparisonSnapshot | null> = this.changeEmitter.event
+  public readonly onDidChange: Event<IComparisonSnapshot | null> = this.changeSignal.event
 
-  public constructor(private readonly gitClient: GitClient) {}
+  public constructor(private readonly comparisonSource: IComparisonSource) {}
 
   public get snapshot(): IComparisonSnapshot | null {
     return this.currentSnapshot
   }
 
-  public async compare(
+  public compare(
     repositoryPath: string,
     baseRef: string,
     targetRef: string,
   ): Promise<IComparisonSnapshot | null> {
-    const revision = ++this.requestRevision
-    const [baseCommit, targetCommit] = await Promise.all([
-      this.gitClient.resolveCommit(repositoryPath, baseRef),
-      this.gitClient.resolveCommit(repositoryPath, targetRef),
-    ])
-    const changes = await this.gitClient.listChanges(repositoryPath, baseCommit, targetCommit)
-    if (revision !== this.requestRevision) return null
-
-    const snapshot: IComparisonSnapshot = Object.freeze({
-      revision,
-      repositoryPath,
-      baseRef: baseRef.trim(),
-      targetRef: targetRef.trim(),
-      baseCommit,
-      targetCommit,
-      changes: Object.freeze([...changes]),
+    return this.runComparison(async signal => {
+      const [baseCommit, targetCommit] = await Promise.all([
+        this.comparisonSource.resolveCommit(repositoryPath, baseRef, signal),
+        this.comparisonSource.resolveCommit(repositoryPath, targetRef, signal),
+      ])
+      return { repositoryPath, baseRef, targetRef, baseCommit, targetCommit }
     })
-    this.currentSnapshot = snapshot
-    this.changeEmitter.fire(snapshot)
-    return snapshot
+  }
+
+  public compareResolved(comparison: IRevisionComparison): Promise<IComparisonSnapshot | null> {
+    return this.runComparison(() => Promise.resolve(comparison))
   }
 
   public refresh(): Promise<IComparisonSnapshot | null> {
@@ -55,13 +57,59 @@ export class ComparisonSession implements Disposable {
   }
 
   public clear(): void {
+    this.cancelActiveRequest()
     this.requestRevision += 1
     this.currentSnapshot = null
-    this.changeEmitter.fire(null)
+    this.changeSignal.emit(null)
   }
 
   public dispose(): void {
     this.clear()
-    this.changeEmitter.dispose()
+    this.changeSignal.dispose()
+  }
+
+  private async runComparison(
+    resolveComparison: (signal: AbortSignal) => Promise<IRevisionComparison>,
+  ): Promise<IComparisonSnapshot | null> {
+    this.cancelActiveRequest()
+    const request = new AbortController()
+    const revision = ++this.requestRevision
+    this.activeRequest = request
+
+    try {
+      const comparison = await resolveComparison(request.signal)
+      if (revision !== this.requestRevision) return null
+      const changes = await this.comparisonSource.listChanges(
+        comparison.repositoryPath,
+        comparison.baseCommit,
+        comparison.targetCommit,
+        request.signal,
+      )
+      if (revision !== this.requestRevision) return null
+
+      const snapshot: IComparisonSnapshot = Object.freeze({
+        revision,
+        repositoryPath: comparison.repositoryPath,
+        baseRef: comparison.baseRef.trim(),
+        targetRef: comparison.targetRef.trim(),
+        baseCommit: comparison.baseCommit,
+        targetCommit: comparison.targetCommit,
+        changes: Object.freeze([...changes]),
+      })
+      this.currentSnapshot = snapshot
+      this.changeSignal.emit(snapshot)
+      return snapshot
+    } catch (cause) {
+      request.abort()
+      if (revision !== this.requestRevision) return null
+      throw cause
+    } finally {
+      if (this.activeRequest === request) this.activeRequest = null
+    }
+  }
+
+  private cancelActiveRequest(): void {
+    this.activeRequest?.abort()
+    this.activeRequest = null
   }
 }

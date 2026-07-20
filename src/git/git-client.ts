@@ -1,45 +1,40 @@
-import { execFile } from 'node:child_process'
 import path from 'node:path'
 import type { ICommitPage } from './commit'
 import { parseCommitLog } from './commit-log'
 import type { IFileChange } from './file-change'
+import { GitCommandError, GitRunner, type IGitRunner } from './git-runner'
 import { parseNameStatus } from './name-status'
 
-const GIT_TIMEOUT_MS = 15_000
 const MAX_COMMIT_PAGE_SIZE = 500
-const MAX_COMMAND_OUTPUT_BYTES = 16 * 1024 * 1024
 const NAME_STATUS_ARGS = ['--name-status', '-z', '--find-renames', '--find-copies'] as const
 
 export class GitBlobDisplayError extends Error {}
 
-class GitCommandError extends Error {
-  public constructor(
-    message: string,
-    public readonly exitCode: number | null,
-    cause: Error,
-  ) {
-    super(message, { cause })
-  }
-}
-
 export class GitClient {
-  public async resolveRepository(candidatePath: string): Promise<string> {
-    const output = await runGit(candidatePath, ['rev-parse', '--show-toplevel'])
+  public constructor(private readonly gitRunner: IGitRunner = new GitRunner()) {}
+
+  public async resolveRepository(candidatePath: string, signal?: AbortSignal): Promise<string> {
+    const output = await this.gitRunner.run(candidatePath, ['rev-parse', '--show-toplevel'], {
+      signal,
+    })
     return path.resolve(output.toString('utf8').trim())
   }
 
-  public async resolveCommit(repositoryPath: string, reference: string): Promise<string> {
+  public async resolveCommit(
+    repositoryPath: string,
+    reference: string,
+    signal?: AbortSignal,
+  ): Promise<string> {
     const value = reference.trim()
     if (!value || value.length > 1024 || value.includes('\0')) {
       throw new Error('Git reference is invalid.')
     }
 
-    const output = await runGit(repositoryPath, [
-      'rev-parse',
-      '--verify',
-      '--end-of-options',
-      `${value}^{commit}`,
-    ])
+    const output = await this.gitRunner.run(
+      repositoryPath,
+      ['rev-parse', '--verify', '--end-of-options', `${value}^{commit}`],
+      { signal },
+    )
     const commit = output.toString('utf8').trim()
     if (!/^[0-9a-f]{40,64}$/i.test(commit)) {
       throw new Error(`Git did not resolve "${value}" to a commit.`)
@@ -51,34 +46,41 @@ export class GitClient {
     repositoryPath: string,
     baseCommit: string,
     targetCommit: string,
+    signal?: AbortSignal,
   ): Promise<ReadonlyArray<IFileChange>> {
     assertResolvedCommit(baseCommit)
     assertResolvedCommit(targetCommit)
-    const output = await runGit(repositoryPath, [
-      'diff',
-      ...NAME_STATUS_ARGS,
-      baseCommit,
-      targetCommit,
-      '--',
-    ])
+    const output = await this.gitRunner.run(
+      repositoryPath,
+      ['diff', ...NAME_STATUS_ARGS, baseCommit, targetCommit, '--'],
+      { signal },
+    )
     return parseNameStatus(output)
   }
 
-  public async listCommits(repositoryPath: string, limit: number): Promise<ICommitPage> {
+  public async listCommits(
+    repositoryPath: string,
+    limit: number,
+    signal?: AbortSignal,
+  ): Promise<ICommitPage> {
     assertCommitLimit(limit)
-    const headCommit = await resolveOptionalHead(repositoryPath)
+    const headCommit = await resolveOptionalHead(this.gitRunner, repositoryPath, signal)
     if (!headCommit) return Object.freeze({ commits: Object.freeze([]), hasMore: false })
 
-    const output = await runGit(repositoryPath, [
-      'log',
-      '--topo-order',
-      '--decorate=full',
-      '-z',
-      `--max-count=${limit + 1}`,
-      '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%D%x00%s%x00',
-      headCommit,
-      '--',
-    ])
+    const output = await this.gitRunner.run(
+      repositoryPath,
+      [
+        'log',
+        '--topo-order',
+        '--decorate=full',
+        '-z',
+        `--max-count=${limit + 1}`,
+        '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%D%x00%s%x00',
+        headCommit,
+        '--',
+      ],
+      { signal },
+    )
     const commits = parseCommitLog(output)
     return Object.freeze({
       commits: Object.freeze(commits.slice(0, limit)),
@@ -90,22 +92,19 @@ export class GitClient {
     repositoryPath: string,
     commit: string,
     parentCommit: string | null,
+    signal?: AbortSignal,
   ): Promise<ReadonlyArray<IFileChange>> {
     assertResolvedCommit(commit)
     if (parentCommit) {
       assertResolvedCommit(parentCommit)
-      return this.listChanges(repositoryPath, parentCommit, commit)
+      return this.listChanges(repositoryPath, parentCommit, commit, signal)
     }
 
-    const output = await runGit(repositoryPath, [
-      'diff-tree',
-      '--root',
-      '--no-commit-id',
-      ...NAME_STATUS_ARGS,
-      '-r',
-      commit,
-      '--',
-    ])
+    const output = await this.gitRunner.run(
+      repositoryPath,
+      ['diff-tree', '--root', '--no-commit-id', ...NAME_STATUS_ARGS, '-r', commit, '--'],
+      { signal },
+    )
     return parseNameStatus(output)
   }
 
@@ -120,7 +119,9 @@ export class GitClient {
     if (!filePath || filePath.includes('\0')) throw new Error('Git file path is invalid.')
 
     const object = `${commit}:${filePath}`
-    const sizeOutput = await runGit(repositoryPath, ['cat-file', '-s', object], signal)
+    const sizeOutput = await this.gitRunner.run(repositoryPath, ['cat-file', '-s', object], {
+      signal,
+    })
     const size = Number(sizeOutput.toString('utf8').trim())
     if (!Number.isSafeInteger(size) || size < 0) {
       throw new Error('Git returned an invalid blob size.')
@@ -131,12 +132,10 @@ export class GitClient {
       )
     }
 
-    const contents = await runGit(
-      repositoryPath,
-      ['cat-file', 'blob', object],
+    const contents = await this.gitRunner.run(repositoryPath, ['cat-file', 'blob', object], {
       signal,
-      Math.max(maxBytes + 1024, 64 * 1024),
-    )
+      maxBuffer: Math.max(maxBytes + 1024, 64 * 1024),
+    })
     if (isProbablyBinary(contents)) {
       throw new GitBlobDisplayError('Binary file content is not displayed by VSGit.')
     }
@@ -150,16 +149,18 @@ function assertCommitLimit(value: number): void {
   }
 }
 
-async function resolveOptionalHead(repositoryPath: string): Promise<string | null> {
+async function resolveOptionalHead(
+  gitRunner: IGitRunner,
+  repositoryPath: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
   let output: Buffer
   try {
-    output = await runGit(repositoryPath, [
-      'rev-parse',
-      '--verify',
-      '--quiet',
-      '--end-of-options',
-      'HEAD^{commit}',
-    ])
+    output = await gitRunner.run(
+      repositoryPath,
+      ['rev-parse', '--verify', '--quiet', '--end-of-options', 'HEAD^{commit}'],
+      { signal },
+    )
   } catch (cause) {
     if (cause instanceof GitCommandError && cause.exitCode === 1) return null
     throw cause
@@ -170,42 +171,6 @@ async function resolveOptionalHead(repositoryPath: string): Promise<string | nul
     throw new Error('Git did not resolve HEAD to a commit.')
   }
   return commit
-}
-
-function runGit(
-  repositoryPath: string,
-  args: ReadonlyArray<string>,
-  signal?: AbortSignal,
-  maxBuffer = MAX_COMMAND_OUTPUT_BYTES,
-): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    execFile(
-      'git',
-      ['-C', repositoryPath, ...args],
-      {
-        encoding: 'buffer',
-        maxBuffer,
-        signal,
-        timeout: GIT_TIMEOUT_MS,
-        windowsHide: true,
-      },
-      (error, stdout, stderr) => {
-        if (!error) {
-          resolve(stdout)
-          return
-        }
-
-        const detail = stderr.toString('utf8').trim()
-        reject(
-          new GitCommandError(
-            detail || error.message,
-            typeof error.code === 'number' ? error.code : null,
-            error,
-          ),
-        )
-      },
-    )
-  })
 }
 
 function assertResolvedCommit(value: string): void {

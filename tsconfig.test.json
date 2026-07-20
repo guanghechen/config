@@ -9,11 +9,16 @@
     "sourceMap": true
   },
   "include": [
+    "src/app/shared/repository-discovery.ts",
     "src/comparison/model.ts",
     "src/comparison/reference-label.ts",
+    "src/comparison/session.ts",
+    "src/core/**/*.ts",
     "src/git/**/*.ts",
+    "src/history/commit-change-cache.ts",
     "src/history/commit-order.ts",
     "src/history/commit-graph.ts",
+    "src/history/commit-history-session.ts",
     "src/history/commit-mark-session.ts",
     "src/history/model.ts",
     "src/platform/extension-ids.ts",

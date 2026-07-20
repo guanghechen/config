@@ -56,5 +56,12 @@ function createSnapshot(
   commits: ReadonlyArray<IGitCommit>,
   revision = 1,
 ): ICommitHistorySnapshot {
-  return { revision, repositoryPath, commits, hasMore: false, limit: 50 }
+  return {
+    revision,
+    repositoryPath,
+    headCommit: commits[0]?.hash ?? null,
+    commits,
+    hasMore: false,
+    limit: 50,
+  }
 }

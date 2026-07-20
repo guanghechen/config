@@ -57,13 +57,18 @@ and import cycles.
 
 `CommitHistorySession` is the single writer for the active repository and paged commit list,
 `CommitMarkSession` is the single writer for comparison marks, and `ComparisonSession` is the single
-writer for the active comparison. Commit file trees are loaded lazily and cached only by the history
-tree provider. The revision content provider reads immutable commit blobs only when VS Code opens a
-diff.
+writer for the active comparison. `CommitChangeCache` owns a bounded cache of derived immutable
+commit changes. Commit file trees are loaded lazily, and the revision content provider reads
+immutable commit blobs only when VS Code opens a diff.
+
+Superseded history and comparison operations abort their in-flight Git processes. Comparisons
+started from known commits skip redundant reference resolution, commit-change cache entries survive
+history refreshes, and repository candidates are deduplicated and resolved concurrently.
 
 Invalid references, history reload failures, or Git comparison failures abort without replacing the
 last successful state. A commit expansion failure is isolated to that node. Binary and oversized
-blobs degrade to an explanatory virtual document.
+blobs degrade to an explanatory virtual document. Git processes have a 15-second timeout; superseded
+operations are aborted, while failed cache entries are removed so the next expansion can retry.
 
 VSGit invokes `git` with argument arrays and never through a shell. Comparing references does not
 modify the target repository.
