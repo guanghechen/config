@@ -132,8 +132,10 @@ local function do_refresh()
     end
   end
 
+  local buffers_changed = false ---@type boolean
   for bufnr, change in pairs(changed_bufnrs) do
     if not equals_buffer(change.prev, change.next) then
+      buffers_changed = true
       local subscribers = M._subscribers_bufnr[bufnr] ---@type stl.c.Subscribers|nil
       if subscribers ~= nil then
         subscribers:notify(change.next)
@@ -146,7 +148,7 @@ local function do_refresh()
     or prev_totals.info ~= M._total_info
     or prev_totals.hint ~= M._total_hint
 
-  if totals_changed or next(changed_bufnrs) ~= nil then
+  if totals_changed or buffers_changed then
     M._subscribers_all:notify(nil)
     dot.state.status.dirtier_statusline:mark_dirty()
     dot.state.status.dirtier_tabline:mark_dirty()
