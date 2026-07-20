@@ -1,7 +1,7 @@
 {
   "name": "vsgit",
   "displayName": "VSGit",
-  "description": "Compare any two Git references with a file tree and native VS Code diffs.",
+  "description": "Browse Git commits and compare any two revisions with file trees and native VS Code diffs.",
   "version": "0.0.1",
   "publisher": "guanghechen",
   "private": true,
