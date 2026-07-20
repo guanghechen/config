@@ -230,7 +230,7 @@
         {
           "id": "vsgit-sidebar",
           "title": "VSGit",
-          "icon": "assets/vsgit-activitybar.svg"
+          "icon": "assets/vsgit-activitybar-graph.svg"
         }
       ]
     },
