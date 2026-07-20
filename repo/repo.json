@@ -175,7 +175,18 @@
           }
         },
         {
+          "branch": "vsgit",
+          "editions": ["nix", "osx", "win"],
+          "on": {
+            "synced": "pnpm install -y && pnpm build && pnpm package"
+          }
+        },
+        {
           "branch": "wezterm",
+          "editions": ["nix", "osx", "win"]
+        },
+        {
+          "branch": "wiki",
           "editions": ["nix", "osx", "win"]
         },
         {
@@ -200,10 +211,6 @@
         {
           "branch": "yui",
           "editions": ["nix", "osx"]
-        },
-        {
-          "branch": "wiki",
-          "editions": ["nix", "osx", "win"]
         }
       ]
     }
