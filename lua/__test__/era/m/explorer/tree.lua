@@ -250,4 +250,23 @@ t:test("selection: remains consistent when attaching below a selected directory"
   tree:dispose()
 end)
 
+t:test("refresh: reloads expanded directories after invalidation", function()
+  local tree, load_calls, set_dir_items = create_tree()
+  local dir = tree:locate("/project/dir/")
+  t.assert_true(dir ~= nil, "directory fixture")
+
+  dir.expanded = true
+  tree:refresh(false)
+  t.assert_eq(1, load_calls[dir.filepath], "expanded directory should load once")
+
+  set_dir_items({ { nodename = "new-child", nodetype = "F" } })
+  tree:mark_all_dirty()
+  tree:refresh(false)
+
+  t.assert_eq(2, load_calls[dir.filepath], "invalidated directory should reload on refresh")
+  t.assert_true(tree:locate("/project/dir/new-child") ~= nil, "reloaded directory should expose new entries")
+
+  tree:dispose()
+end)
+
 t:run()

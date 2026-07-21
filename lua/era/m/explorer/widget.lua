@@ -266,8 +266,9 @@ function M:hide(tabnr)
   local winnr = self._tab_wins[tabnr] ---@type integer|nil
   self._tab_wins[tabnr] = nil
 
-  -- Pause watch only if no windows remain
-  if next(self._tab_wins) == nil then
+  -- Invalidate the tree before losing filesystem change coverage.
+  if winnr ~= nil and next(self._tab_wins) == nil then
+    self._tree:mark_all_dirty()
     self._resource_manager:pause_watch()
   end
 

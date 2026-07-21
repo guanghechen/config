@@ -96,6 +96,63 @@ bootstrap.with_runtime(t, {
 
 local Widget = require("era.m.explorer.widget")
 
+---@param tab_wins                     table<integer, integer>
+---@return era.m.explorer.Widget, table
+local function new_hide_widget(tab_wins)
+  local calls = { mark_all_dirty = 0, pause_watch = 0 }
+  local widget = setmetatable({
+    _o_width = new_observable(),
+    _resource_manager = {
+      pause_watch = function()
+        calls.pause_watch = calls.pause_watch + 1
+      end,
+    },
+    _tab_wins = tab_wins,
+    _tree = {
+      mark_all_dirty = function()
+        calls.mark_all_dirty = calls.mark_all_dirty + 1
+      end,
+    },
+  }, Widget)
+  return widget, calls
+end
+
+---@param callback                     fun(): nil
+local function with_invalid_windows(callback)
+  t:patch_table(vim.api, "nvim_win_is_valid", function()
+    return false
+  end)
+  callback()
+end
+
+t:test("hide: invalidates the tree when the last watched window closes", function()
+  with_invalid_windows(function()
+    local widget, calls = new_hide_widget({ [1] = 101 })
+
+    widget:hide(1)
+    t.assert_eq(1, calls.pause_watch, "last window should pause watchers")
+    t.assert_eq(1, calls.mark_all_dirty, "last window should invalidate the tree snapshot")
+
+    widget:hide(1)
+    t.assert_eq(1, calls.pause_watch, "repeated hide should not pause watchers again")
+    t.assert_eq(1, calls.mark_all_dirty, "repeated hide should not invalidate the tree again")
+  end)
+end)
+
+t:test("hide: preserves watcher coverage while another window remains", function()
+  with_invalid_windows(function()
+    local widget, calls = new_hide_widget({ [1] = 101, [2] = 102 })
+
+    widget:hide(1)
+    t.assert_eq(0, calls.pause_watch, "remaining window should keep watchers active")
+    t.assert_eq(0, calls.mark_all_dirty, "remaining window should keep the tree snapshot valid")
+
+    widget:hide(2)
+    t.assert_eq(1, calls.pause_watch, "closing the remaining window should pause watchers")
+    t.assert_eq(1, calls.mark_all_dirty, "closing the remaining window should invalidate the tree")
+  end)
+end)
+
 ---@param initial_root                 string
 ---@param attach_ok                    boolean|nil
 ---@return era.m.explorer.Widget, table
