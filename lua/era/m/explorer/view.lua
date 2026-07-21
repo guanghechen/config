@@ -208,7 +208,14 @@ function M:render(bufnr, tree, root, options)
 
   vim.api.nvim_buf_clear_namespace(bufnr, self._nsnr, 0, -1)
   for _, hl in ipairs(highlights) do
-    vim.hl.range(bufnr, self._nsnr, hl.hlname, { hl.lnum - 1, hl.coll }, { hl.lnum - 1, hl.colr }, { priority = 10 })
+    local row = hl.lnum - 1 ---@type integer
+    vim.api.nvim_buf_set_extmark(bufnr, self._nsnr, row, hl.coll, {
+      end_row = row,
+      end_col = hl.colr,
+      hl_group = hl.hlname,
+      priority = 10,
+      strict = false,
+    })
   end
 
   local diag_by_lnum = {} ---@type table<integer, era.m.explorer.view.IDiagnosticInfo>
