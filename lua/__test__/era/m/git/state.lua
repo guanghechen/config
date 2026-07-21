@@ -20,17 +20,22 @@ local function normalize(filepath, keep_trailing_slash)
 end
 
 local Observable = {}
+local observable_next_counts = setmetatable({}, { __mode = "k" }) ---@type table<table, integer>
 
 function Observable.from_value(initial)
   local value = initial ---@type any
-  return {
+  local observable ---@type table
+  observable = {
     next = function(_, next_value)
       value = next_value
+      observable_next_counts[observable] = observable_next_counts[observable] + 1
     end,
     snapshot = function()
       return value
     end,
   }
+  observable_next_counts[observable] = 0
+  return observable
 end
 
 local Future = {}
@@ -89,6 +94,11 @@ bootstrap.with_runtime(t, {
   },
   stl = {
     c = {
+      CancellationToken = {
+        new = function()
+          return { cancel = function() end }
+        end,
+      },
       Future = Future,
       Observable = Observable,
     },
@@ -96,6 +106,7 @@ bootstrap.with_runtime(t, {
       PATH_SEP = "/",
     },
     fn = {
+      equals_deep = vim.deep_equal,
       noop = function() end,
     },
     reporter = {
@@ -119,6 +130,12 @@ local function wait_future(future)
     end),
     "future should resolve"
   )
+end
+
+---@param observable table
+---@return integer
+local function next_count(observable)
+  return observable_next_counts[observable]
 end
 
 ---@param gitignore string
@@ -271,6 +288,85 @@ t:test("preload_ignored: capacity reset rebuilds the complete current batch", fu
   wait_future(state.preload_ignored(paths))
 
   t.assert_eq(2, calls, "cache-hit batch should not be queried after rebuild")
+end)
+
+t:test("refresh: unchanged status does not publish or discard directory cache", function()
+  local status_maps = {
+    { ["/project/file"] = { display = "M" } },
+    { ["/project/file"] = { display = "M" } },
+    { ["/project/file"] = { display = "D" } },
+  } ---@type table<string, table>[]
+  local collect_index = 0 ---@type integer
+
+  t:patch_table(era.m.git.status, "collect", function()
+    collect_index = collect_index + 1
+    return Future.new(function(resolve)
+      resolve({ status_map = status_maps[collect_index] })
+    end)
+  end)
+  t:patch_table(era.m.git.status, "aggregate", function(status_map)
+    local filepath, entry = next(status_map)
+    return {
+      dir_cache = {},
+      file_display = { [filepath] = entry.display },
+      file_stage = {},
+      file_summary = {},
+      staged_files = {},
+      status_table = status_map,
+      unstaged_files = { filepath },
+    }
+  end)
+
+  local now = 0 ---@type integer
+  t:patch_table(vim.uv, "now", function()
+    now = now + 1
+    return now
+  end)
+
+  local refreshed_before = next_count(state.o_refreshed)
+  local staged_before = next_count(state.o_staged_files)
+  local unstaged_before = next_count(state.o_unstaged_files)
+
+  wait_future(state.refresh(false))
+  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "initial changed status notification")
+  t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "initial staged files notification")
+  t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "initial unstaged files notification")
+
+  local aggregated = state.aggregated()
+  local dir_status = { display = "M" }
+  aggregated.dir_cache["/project"] = dir_status
+
+  wait_future(state.refresh(false))
+  t.assert_eq(refreshed_before + 1, next_count(state.o_refreshed), "unchanged status notification")
+  t.assert_eq(staged_before + 1, next_count(state.o_staged_files), "unchanged staged files notification")
+  t.assert_eq(unstaged_before + 1, next_count(state.o_unstaged_files), "unchanged unstaged files notification")
+  t.assert_true(aggregated.dir_cache["/project"] == dir_status, "unchanged status should preserve directory cache")
+  t.assert_eq(2, state.last_refreshed_at(), "unchanged refresh should still update completion timestamp")
+
+  wait_future(state.refresh(false))
+  t.assert_eq(refreshed_before + 2, next_count(state.o_refreshed), "changed status notification")
+  t.assert_eq(staged_before + 2, next_count(state.o_staged_files), "changed staged files notification")
+  t.assert_eq(unstaged_before + 2, next_count(state.o_unstaged_files), "changed unstaged files notification")
+  t.assert_nil(aggregated.dir_cache["/project"], "changed status should invalidate directory cache")
+  t.assert_eq("D", aggregated.file_display["/project/file"], "changed status should replace aggregated cache")
+end)
+
+t:test("refresh: failed collect preserves status without publishing", function()
+  local aggregated = state.aggregated()
+  local status_table = aggregated.status_table
+  local refreshed_before = next_count(state.o_refreshed)
+
+  t:patch_table(era.m.git.status, "collect", function()
+    return {
+      finally = function(_, callback)
+        callback(false, nil)
+      end,
+    }
+  end)
+
+  wait_future(state.refresh(false))
+  t.assert_true(aggregated.status_table == status_table, "failed collect should preserve status cache")
+  t.assert_eq(refreshed_before, next_count(state.o_refreshed), "failed collect notification")
 end)
 
 t:run()

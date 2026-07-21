@@ -113,22 +113,27 @@ local function do_refresh()
     current_collect_token = nil
 
     if resolved and result and type(result.status_map) == "table" then
-      local aggregated = era.m.git.status.aggregate(result.status_map)
+      local status_changed = not stl.fn.equals_deep(aggregated_cache.status_table, result.status_map) ---@type boolean
+      if status_changed then
+        local aggregated = era.m.git.status.aggregate(result.status_map)
 
-      aggregated_cache.dir_cache = {}
-      aggregated_cache.file_display = aggregated.file_display
-      aggregated_cache.file_stage = aggregated.file_stage
-      aggregated_cache.file_summary = aggregated.file_summary
-      aggregated_cache.staged_files = aggregated.staged_files
-      aggregated_cache.status_table = aggregated.status_table
-      aggregated_cache.unstaged_files = aggregated.unstaged_files
+        aggregated_cache.dir_cache = {}
+        aggregated_cache.file_display = aggregated.file_display
+        aggregated_cache.file_stage = aggregated.file_stage
+        aggregated_cache.file_summary = aggregated.file_summary
+        aggregated_cache.staged_files = aggregated.staged_files
+        aggregated_cache.status_table = aggregated.status_table
+        aggregated_cache.unstaged_files = aggregated.unstaged_files
+      end
 
       initialized = true
       last_refresh = vim.uv.now()
 
-      M.o_refreshed:next(last_refresh)
-      M.o_staged_files:next(aggregated.staged_files)
-      M.o_unstaged_files:next(aggregated.unstaged_files)
+      if status_changed then
+        M.o_refreshed:next(last_refresh)
+        M.o_staged_files:next(aggregated_cache.staged_files)
+        M.o_unstaged_files:next(aggregated_cache.unstaged_files)
+      end
     end
 
     refreshing = false
