@@ -70,12 +70,22 @@
 ---@field public lnum                   integer
 ---@field public text                   string
 
+---@class era.m.explorer.view.IFileIconInfo
+---@field public highlight              stl.t.IHighlight
+---@field public icon                   string
+---@field public is_ignored             boolean
+---@field public lnum                   integer
+---@field public name_highlight         stl.t.IHighlight
+---@field public nodename               string
+
 ---@class era.m.explorer.view.IRenderContext
 ---@field public tree                   era.m.explorer.Tree
 ---@field public root                   era.m.explorer.Node
 ---@field public root_filepath               string
 ---@field public resource_manager       ?era.m.explorer.resource.IManager
 ---@field public diag_counts            table<string, era.m.explorer.view.IDiagCounts>
+---@field public defer_file_icons       boolean
+---@field public deferred_file_icons    era.m.explorer.view.IFileIconInfo[]
 ---@field public foldempty              boolean
 ---@field public only_selected          boolean
 ---@field public select_mode            era.m.explorer.SelectModeEnum
@@ -84,6 +94,7 @@
 ---@field public show_icons             boolean
 
 ---@class era.m.explorer.view.IRenderOptions
+---@field public defer_file_icons       ?boolean
 ---@field public foldempty              ?boolean
 ---@field public only_selected          ?boolean
 ---@field public resource_manager       ?era.m.explorer.resource.IManager
@@ -94,6 +105,7 @@
 
 ---@class era.m.explorer.view.IRenderResult
 ---@field public diag_by_lnum           table<integer, era.m.explorer.view.IDiagnosticInfo>
+---@field public deferred_file_icons    era.m.explorer.view.IFileIconInfo[]
 ---@field public diagnostic_info_list   era.m.explorer.view.IDiagnosticInfo[]
 ---@field public git_by_lnum            table<integer, era.m.explorer.view.IGitStatusInfo>
 ---@field public git_status_list        era.m.explorer.view.IGitStatusInfo[]

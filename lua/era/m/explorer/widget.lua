@@ -6,6 +6,8 @@ local Tree = require("era.m.explorer.tree")
 local View = require("era.m.explorer.view")
 local ResourceFileManager = require("era.m.explorer.resource.file")
 
+local FILE_ICON_BATCH_SIZE = 64 ---@type integer
+
 local EXPLORER_WIN_HIGHLIGHT = table.concat({
   "EndOfBuffer:m_ex_eob",
   "Normal:m_ex_bg",
@@ -60,6 +62,7 @@ end
 ---@field protected _on_disposed        ?fun(): nil
 ---@field protected _o_width            stl.c.Observable
 ---@field protected _prev_cursor_lnum   ?integer
+---@field protected _render_generation  integer
 ---@field protected _unregister_fns     (fun(): nil)[]
 ---@field protected _render_result      ?era.m.explorer.view.IRenderResult
 ---@field protected _resource_manager   era.m.explorer.resource.FileManager
@@ -119,6 +122,7 @@ function M.new(props)
   self._on_disposed = props.on_disposed
   self._o_width = props.o_width
   self._prev_cursor_lnum = nil
+  self._render_generation = 0
   self._unregister_fns = {}
   self._render_result = nil
   self._resource_manager = resource_manager
@@ -170,6 +174,7 @@ function M:dispose()
     return
   end
   self._disposed = true
+  self:__invalidate_render__()
 
   for _, sub in ipairs(self._subscriptions) do
     sub:unsubscribe()
@@ -268,6 +273,7 @@ function M:hide(tabnr)
 
   -- Invalidate the tree before losing filesystem change coverage.
   if winnr ~= nil and next(self._tab_wins) == nil then
+    self:__invalidate_render__()
     self._tree:mark_all_dirty()
     self._resource_manager:pause_watch()
   end
@@ -825,6 +831,74 @@ function M:__refresh__(skip_refresh)
 end
 
 ---@protected
+---@return integer
+function M:__invalidate_render__()
+  -- Widget is the sole generation owner: invalidation cancels pending decoration and releases its metadata.
+  self._render_generation = self._render_generation + 1
+  local render_result = self._render_result ---@type era.m.explorer.view.IRenderResult|nil
+  if render_result ~= nil then
+    render_result.deferred_file_icons = {}
+  end
+  return self._render_generation
+end
+
+---@protected
+---@param bufnr                         integer
+---@param render_result                 era.m.explorer.view.IRenderResult
+---@param generation                    integer
+---@return nil
+function M:__schedule_file_icons__(bufnr, render_result, generation)
+  if #render_result.deferred_file_icons == 0 then
+    return
+  end
+  if next(self._tab_wins) == nil then
+    render_result.deferred_file_icons = {}
+    return
+  end
+
+  local index = 1 ---@type integer
+
+  local function is_current()
+    return not self._disposed
+      and self._render_generation == generation
+      and self._render_result == render_result
+      and next(self._tab_wins) ~= nil
+      and vim.api.nvim_buf_is_valid(bufnr)
+  end
+
+  local step
+  step = function()
+    if not is_current() then
+      render_result.deferred_file_icons = {}
+      return
+    end
+
+    local index_end = math.min(index + FILE_ICON_BATCH_SIZE - 1, #render_result.deferred_file_icons) ---@type integer
+    local ok, err = pcall(self._view.update_file_icons, self._view, bufnr, render_result, index, index_end)
+    if not ok then
+      -- Exact icons are optional decoration; keep the generic icons and abort this generation.
+      render_result.deferred_file_icons = {}
+      stl.reporter.error({
+        from = self.fullname,
+        subject = "file_icons",
+        message = "Failed to decorate Explorer file icons.",
+        details = { error = err },
+      })
+      return
+    end
+
+    index = index_end + 1
+    if index <= #render_result.deferred_file_icons then
+      vim.schedule(step)
+    else
+      render_result.deferred_file_icons = {}
+    end
+  end
+
+  vim.schedule(step)
+end
+
+---@protected
 ---@return nil
 function M:__render__()
   local bufnr = self._bufnr ---@type integer|nil
@@ -832,9 +906,11 @@ function M:__render__()
     return
   end
 
+  local generation = self:__invalidate_render__() ---@type integer
   local root_node = self._tree:get_root_node() ---@type era.m.explorer.Node
 
   local render_result = self._view:render(bufnr, self._tree, root_node, {
+    defer_file_icons = true,
     resource_manager = self._resource_manager,
     foldempty = self._tree.o_flag_foldempty:snapshot(),
     only_selected = dot.context.explorer.flag_selected:snapshot(),
@@ -849,6 +925,7 @@ function M:__render__()
   self:__update_winbar__()
   self:__update_cursorline__()
   self:__sync_watches__(root_node)
+  self:__schedule_file_icons__(bufnr, render_result, generation)
 end
 
 ---@protected

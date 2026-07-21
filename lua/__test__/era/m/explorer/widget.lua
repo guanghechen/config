@@ -102,6 +102,8 @@ local function new_hide_widget(tab_wins)
   local calls = { mark_all_dirty = 0, pause_watch = 0 }
   local widget = setmetatable({
     _o_width = new_observable(),
+    _render_generation = 0,
+    _render_result = { deferred_file_icons = { {} } },
     _resource_manager = {
       pause_watch = function()
         calls.pause_watch = calls.pause_watch + 1
@@ -132,6 +134,8 @@ t:test("hide: invalidates the tree when the last watched window closes", functio
     widget:hide(1)
     t.assert_eq(1, calls.pause_watch, "last window should pause watchers")
     t.assert_eq(1, calls.mark_all_dirty, "last window should invalidate the tree snapshot")
+    t.assert_eq(1, widget._render_generation, "last window should invalidate deferred decoration")
+    t.assert_eq(0, #widget._render_result.deferred_file_icons, "last window should release deferred decoration")
 
     widget:hide(1)
     t.assert_eq(1, calls.pause_watch, "repeated hide should not pause watchers again")
@@ -146,11 +150,105 @@ t:test("hide: preserves watcher coverage while another window remains", function
     widget:hide(1)
     t.assert_eq(0, calls.pause_watch, "remaining window should keep watchers active")
     t.assert_eq(0, calls.mark_all_dirty, "remaining window should keep the tree snapshot valid")
+    t.assert_eq(0, widget._render_generation, "remaining window should preserve deferred decoration")
 
     widget:hide(2)
     t.assert_eq(1, calls.pause_watch, "closing the remaining window should pause watchers")
     t.assert_eq(1, calls.mark_all_dirty, "closing the remaining window should invalidate the tree")
   end)
+end)
+
+---@return era.m.explorer.Widget, fun(): fun()[]
+local function new_scheduled_icon_widget()
+  local scheduled = {} ---@type fun()[]
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled[#scheduled + 1] = callback
+  end)
+  t:patch_table(vim.api, "nvim_buf_is_valid", function()
+    return true
+  end)
+
+  local widget = setmetatable({
+    _disposed = false,
+    _render_generation = 0,
+    _render_result = nil,
+    _tab_wins = { [1] = 101 },
+    _view = {},
+    fullname = "test-explorer",
+  }, Widget)
+  return widget, function()
+    return scheduled
+  end
+end
+
+t:test("file icons: stale generation cannot update the current render", function()
+  local widget, get_scheduled = new_scheduled_icon_widget()
+  local updated = {} ---@type string[]
+  widget._view.update_file_icons = function(_, _, result)
+    updated[#updated + 1] = result.id
+  end
+
+  local stale = { id = "stale", deferred_file_icons = { {} } }
+  local stale_generation = widget:__invalidate_render__()
+  widget._render_result = stale
+  widget:__schedule_file_icons__(1, stale, stale_generation)
+
+  local current = { id = "current", deferred_file_icons = { {} } }
+  local current_generation = widget:__invalidate_render__()
+  widget._render_result = current
+  widget:__schedule_file_icons__(1, current, current_generation)
+
+  local scheduled = get_scheduled()
+  t.assert_eq(2, #scheduled, "scheduled callback count")
+  scheduled[1]()
+  scheduled[2]()
+
+  t.assert_eq(1, #updated, "current update count")
+  t.assert_eq("current", updated[1], "only the current generation should update icons")
+  t.assert_eq(0, #current.deferred_file_icons, "completed render should release deferred icons")
+end)
+
+t:test("file icons: decoration yields between bounded batches", function()
+  local widget, get_scheduled = new_scheduled_icon_widget()
+  local batches = {} ---@type integer[][]
+  widget._view.update_file_icons = function(_, _, _, index_start, index_end)
+    batches[#batches + 1] = { index_start, index_end }
+  end
+
+  local icons = {} ---@type table[]
+  for _ = 1, 65 do
+    icons[#icons + 1] = {}
+  end
+  local result = { deferred_file_icons = icons }
+  local generation = widget:__invalidate_render__()
+  widget._render_result = result
+  widget:__schedule_file_icons__(1, result, generation)
+
+  local scheduled = get_scheduled()
+  t.assert_eq(1, #scheduled, "first batch should be scheduled")
+  scheduled[1]()
+  t.assert_eq(1, #batches, "first batch count")
+  t.assert_eq(1, batches[1][1], "first batch start")
+  t.assert_eq(64, batches[1][2], "first batch end")
+  t.assert_eq(2, #scheduled, "remaining icons should schedule another event-loop turn")
+  scheduled[2]()
+  t.assert_eq(2, #batches, "all batch count")
+  t.assert_eq(65, batches[2][1], "second batch start")
+  t.assert_eq(65, batches[2][2], "second batch end")
+  t.assert_eq(0, #result.deferred_file_icons, "completed batches should release deferred icons")
+end)
+
+t:test("file icons: hidden widgets release decoration without scheduling", function()
+  local widget, get_scheduled = new_scheduled_icon_widget()
+  widget._tab_wins = {}
+
+  local result = { deferred_file_icons = { {} } }
+  local generation = widget:__invalidate_render__()
+  widget._render_result = result
+  widget:__schedule_file_icons__(1, result, generation)
+
+  t.assert_eq(0, #get_scheduled(), "hidden widget should not schedule decoration")
+  t.assert_eq(0, #result.deferred_file_icons, "hidden widget should release deferred icons")
 end)
 
 ---@param initial_root                 string

@@ -16,6 +16,11 @@ local function normalize(filepath, keep_trailing_slash)
 end
 
 local GitStatus = require("era.m.git.status")
+local Fileicon = {
+  get_file_icon = function()
+    return "", "", false
+  end,
+}
 
 bootstrap.with_runtime(t, {
   dot = {
@@ -38,6 +43,9 @@ bootstrap.with_runtime(t, {
         status = GitStatus,
       },
     },
+  },
+  stl = {
+    fileicon = Fileicon,
   },
 })
 
@@ -120,6 +128,126 @@ t:test("render: writes range highlights directly as extmarks", function()
   t.assert_eq(6, highlight_extmarks[2][3], "name start column")
   t.assert_eq(14, highlight_extmarks[2][4].end_col, "name end column")
 
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("render: defers file icons and applies exact icons by byte range", function()
+  local calls = {} ---@type string[]
+  t:patch_table(Fileicon, "get_file_icon", function(_, filetype)
+    calls[#calls + 1] = filetype == nil and "<nil>" or filetype
+    if filetype == "" then
+      return "󰈚", "IconFallback", false
+    end
+    return "", "IconExact", false
+  end)
+
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local view = View.new("deferred-file-icon-test")
+  local child = {
+    filepath = "/project/file.lua",
+    nodename = "file.lua",
+    nodetype = "F",
+  } ---@type era.m.explorer.Node
+  local root = {
+    filepath = "/project/",
+    nodename = "project",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    children = { child },
+  } ---@type era.m.explorer.Node
+  local tree = {
+    ticks = { structure = 1 },
+    is_selected = function()
+      return false
+    end,
+  } ---@type era.m.explorer.Tree
+
+  local result = view:render(bufnr, tree, root, {
+    defer_file_icons = true,
+    show_diagnostics = false,
+    show_git_status = false,
+    show_icons = true,
+  })
+
+  t.assert_eq(1, #calls, "initial icon lookup count")
+  t.assert_eq("", calls[1], "initial lookup should bypass filetype detection")
+  t.assert_eq(1, #result.deferred_file_icons, "deferred icon count")
+  t.assert_eq("╰─󰈚 file.lua", result.lines[1], "fallback line")
+
+  view:update_file_icons(bufnr, result, 1, 1)
+
+  t.assert_eq(2, #calls, "exact icon lookup count")
+  t.assert_eq("<nil>", calls[2], "deferred lookup should use normal filetype detection")
+  t.assert_eq("╰─ file.lua", result.lines[1], "resolved result line")
+  local buffer_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  t.assert_eq(#result.lines, #buffer_lines, "resolved buffer line count")
+  t.assert_eq(result.lines[1], buffer_lines[1], "resolved buffer line")
+  t.assert_eq(false, vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "modifiable restored")
+
+  local main_extmarks = vim.api.nvim_buf_get_extmarks(bufnr, view:get_namespace(), 0, -1, { details = true })
+  local name_start = nil ---@type integer|nil
+  for _, extmark in ipairs(main_extmarks) do
+    if extmark[4].hl_group == "m_ft_filename" then
+      name_start = extmark[3]
+      break
+    end
+  end
+  t.assert_eq(#("╰─" .. "" .. " "), name_start, "name highlight should follow the resolved icon")
+
+  local icon_extmarks = vim.api.nvim_buf_get_extmarks(bufnr, view._file_icon_nsnr, 0, -1, { details = true })
+  t.assert_eq(1, #icon_extmarks, "icon highlight count")
+  t.assert_eq("IconExact", icon_extmarks[1][4].hl_group, "resolved icon highlight")
+  t.assert_eq(#"╰─", icon_extmarks[1][3], "icon start column")
+  t.assert_eq(#("╰─" .. "" .. " "), icon_extmarks[1][4].end_col, "icon end column")
+
+  vim.api.nvim_buf_delete(bufnr, { force = true })
+end)
+
+t:test("file icons: restores modifiable when a buffer update fails", function()
+  t:patch_table(Fileicon, "get_file_icon", function(_, filetype)
+    if filetype == "" then
+      return "󰈚", "IconFallback", false
+    end
+    return "", "IconExact", false
+  end)
+
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local view = View.new("deferred-file-icon-failure-test")
+  local child = {
+    filepath = "/project/file.lua",
+    nodename = "file.lua",
+    nodetype = "F",
+  } ---@type era.m.explorer.Node
+  local root = {
+    filepath = "/project/",
+    nodename = "project",
+    nodetype = "D",
+    expanded = true,
+    loaded = true,
+    children = { child },
+  } ---@type era.m.explorer.Node
+  local tree = {
+    ticks = { structure = 1 },
+    is_selected = function()
+      return false
+    end,
+  } ---@type era.m.explorer.Tree
+
+  local result = view:render(bufnr, tree, root, {
+    defer_file_icons = true,
+    show_diagnostics = false,
+    show_git_status = false,
+    show_icons = true,
+  })
+  t:patch_table(vim.api, "nvim_buf_set_text", function()
+    error("injected icon update failure")
+  end)
+
+  local ok = pcall(view.update_file_icons, view, bufnr, result, 1, 1) ---@type boolean
+
+  t.assert_false(ok, "icon update should propagate the failure")
+  t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }), "modifiable should be restored")
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 

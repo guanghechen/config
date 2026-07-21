@@ -1333,7 +1333,7 @@ function M.get_directory_icon(filepath)
 end
 
 ---@param filepath                      string
----@param filetype                      ?string
+---@param filetype                      ?string Empty string skips automatic filetype detection.
 ---@return string
 ---@return string
 ---@return boolean
@@ -1369,7 +1369,7 @@ function M.get_extension_icon(filepath, filetype)
 end
 
 ---@param filepath                      string
----@param filetype                      ?string
+---@param filetype                      ?string Empty string skips automatic filetype detection.
 ---@return string
 ---@return string
 ---@return boolean

@@ -12,6 +12,7 @@ local VIRT_TEXT_ID_OFFSET = 1000000 ---@type integer
 
 ---@class era.m.explorer.View
 ---@field protected _cached_filepaths   string[]
+---@field protected _file_icon_nsnr     integer
 ---@field protected _indent_hln         string
 ---@field protected _nsnr               integer
 ---@field protected _tick_structure     integer
@@ -30,6 +31,7 @@ function M.new(name)
 
   local self = setmetatable({}, M)
   self._cached_filepaths = {}
+  self._file_icon_nsnr = vim.api.nvim_create_namespace(fullname .. ".file-icons")
   self._indent_hln = "m_ex_indent"
   self._nsnr = vim.api.nvim_create_namespace(fullname)
   self._tick_structure = -1
@@ -45,6 +47,7 @@ function M:render(bufnr, tree, root, options)
   options = options or {} ---@type era.m.explorer.view.IRenderOptions
 
   local diag_counts = {} ---@type table<string, era.m.explorer.view.IDiagCounts>
+  local deferred_file_icons = {} ---@type era.m.explorer.view.IFileIconInfo[]
 
   local root_filepath = root.filepath ---@type string
 
@@ -54,6 +57,8 @@ function M:render(bufnr, tree, root, options)
     root = root,
     root_filepath = root_filepath,
     resource_manager = options.resource_manager,
+    defer_file_icons = options.defer_file_icons == true,
+    deferred_file_icons = deferred_file_icons,
     foldempty = options.foldempty ~= false,
     only_selected = options.only_selected == true,
     show_diagnostics = options.show_diagnostics ~= false,
@@ -207,9 +212,15 @@ function M:render(bufnr, tree, root, options)
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
   vim.api.nvim_buf_clear_namespace(bufnr, self._nsnr, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, self._file_icon_nsnr, 0, -1)
+  local deferred_icon_highlights = {} ---@type table<stl.t.IHighlight, boolean>
+  for _, info in ipairs(deferred_file_icons) do
+    deferred_icon_highlights[info.highlight] = true
+  end
   for _, hl in ipairs(highlights) do
     local row = hl.lnum - 1 ---@type integer
-    vim.api.nvim_buf_set_extmark(bufnr, self._nsnr, row, hl.coll, {
+    local nsnr = deferred_icon_highlights[hl] and self._file_icon_nsnr or self._nsnr ---@type integer
+    vim.api.nvim_buf_set_extmark(bufnr, nsnr, row, hl.coll, {
       end_row = row,
       end_col = hl.colr,
       hl_group = hl.hlname,
@@ -270,6 +281,7 @@ function M:render(bufnr, tree, root, options)
 
   ---@type era.m.explorer.view.IRenderResult
   return {
+    deferred_file_icons = deferred_file_icons,
     lines = lines,
     highlights = highlights,
     diagnostic_info_list = diagnostic_info_list,
@@ -281,6 +293,78 @@ function M:render(bufnr, tree, root, options)
     git_by_lnum = git_by_lnum,
     sign_by_lnum = sign_by_lnum,
   }
+end
+
+---@param bufnr                         integer
+---@param render_result                 era.m.explorer.view.IRenderResult
+---@param index_start                   integer
+---@param index_end                     integer
+---@return nil
+function M:update_file_icons(bufnr, render_result, index_start, index_end)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local infos = render_result.deferred_file_icons ---@type era.m.explorer.view.IFileIconInfo[]
+  local updates = {} ---@type table[]
+  for index = index_start, math.min(index_end, #infos) do
+    local info = infos[index] ---@type era.m.explorer.view.IFileIconInfo
+    local icon, hlname = stl.fileicon.get_file_icon(info.nodename) ---@type string, string
+    if info.is_ignored then
+      hlname = "m_ex_ignored"
+    end
+    if icon ~= info.icon or hlname ~= info.highlight.hlname then
+      updates[#updates + 1] = { info = info, icon = icon, hlname = hlname }
+    end
+  end
+
+  if #updates == 0 then
+    return
+  end
+
+  local was_modifiable = vim.api.nvim_get_option_value("modifiable", { buf = bufnr }) ---@type boolean
+  if not was_modifiable then
+    vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  end
+
+  local ok, err = pcall(function()
+    for _, update in ipairs(updates) do
+      local info = update.info ---@type era.m.explorer.view.IFileIconInfo
+      local icon = update.icon ---@type string
+      local hlname = update.hlname ---@type string
+      local lnum = info.lnum ---@type integer
+      local row = lnum - 1 ---@type integer
+      local coll = info.highlight.coll ---@type integer
+      local old_colr = coll + #info.icon ---@type integer
+      local delta = #icon - #info.icon ---@type integer
+
+      vim.api.nvim_buf_set_text(bufnr, row, coll, row, old_colr, { icon })
+      local line = render_result.lines[lnum] ---@type string
+      render_result.lines[lnum] = line:sub(1, coll) .. icon .. line:sub(old_colr + 1)
+
+      info.icon = icon
+      info.highlight.colr = info.highlight.colr + delta
+      info.highlight.hlname = hlname
+      info.name_highlight.coll = info.name_highlight.coll + delta
+      info.name_highlight.colr = info.name_highlight.colr + delta
+
+      vim.api.nvim_buf_clear_namespace(bufnr, self._file_icon_nsnr, row, row + 1)
+      vim.api.nvim_buf_set_extmark(bufnr, self._file_icon_nsnr, row, coll, {
+        end_row = row,
+        end_col = info.highlight.colr,
+        hl_group = hlname,
+        priority = 10,
+        strict = false,
+      })
+    end
+  end)
+
+  if not was_modifiable and vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+  end
+  if not ok then
+    error(err, 0)
+  end
 end
 
 ---@param bufnr                         integer
@@ -477,9 +561,10 @@ end
 ---@param node                          era.m.explorer.Node
 ---@param is_ignored                    boolean
 ---@param is_expanded                   boolean
+---@param defer_file_icon               boolean
 ---@return string
 ---@return string
-function M:__get_node_icon__(node, is_ignored, is_expanded)
+function M:__get_node_icon__(node, is_ignored, is_expanded, defer_file_icon)
   if node.nodetype == "D" then
     local icon, icon_hl ---@type string, string
     if is_expanded then
@@ -508,7 +593,8 @@ function M:__get_node_icon__(node, is_ignored, is_expanded)
     return icon, icon_hl
   end
 
-  local icon, icon_hl = stl.fileicon.get_file_icon(node.nodename) ---@type string, string
+  local filetype = defer_file_icon and "" or nil ---@type string|nil
+  local icon, icon_hl = stl.fileicon.get_file_icon(node.nodename, filetype) ---@type string, string
   if is_ignored then
     icon_hl = "m_ex_ignored"
   end
@@ -690,17 +776,22 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
   parts[#parts + 1] = indent
   col = col + #indent
 
+  local defer_file_icon = ctx.defer_file_icons and node.nodetype == "F" ---@type boolean
+  local icon = nil ---@type string|nil
+  local icon_highlight = nil ---@type stl.t.IHighlight|nil
   if ctx.show_icons then
-    local icon, icon_hl = self:__get_node_icon__(node, is_ignored, is_expanded) ---@type string, string
+    local icon_hl ---@type string
+    icon, icon_hl = self:__get_node_icon__(node, is_ignored, is_expanded, defer_file_icon)
     parts[#parts + 1] = icon
     parts[#parts + 1] = " "
 
-    highlights[#highlights + 1] = {
+    icon_highlight = {
       lnum = lnum,
       coll = col,
       colr = col + #icon + 1,
       hlname = icon_hl,
     }
+    highlights[#highlights + 1] = icon_highlight
     col = col + #icon + 1
   end
 
@@ -714,12 +805,24 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
   local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_hl) ---@type string
   parts[#parts + 1] = name
 
-  highlights[#highlights + 1] = {
+  local name_highlight = {
     lnum = lnum,
     coll = col,
     colr = col + #name,
     hlname = name_hl,
-  }
+  } ---@type stl.t.IHighlight
+  highlights[#highlights + 1] = name_highlight
+
+  if defer_file_icon and icon ~= nil and icon_highlight ~= nil then
+    ctx.deferred_file_icons[#ctx.deferred_file_icons + 1] = {
+      highlight = icon_highlight,
+      icon = icon,
+      is_ignored = is_ignored,
+      lnum = lnum,
+      name_highlight = name_highlight,
+      nodename = node.nodename,
+    }
+  end
 
   local diag_info ---@type era.m.explorer.view.IDiagnosticInfo|nil
   if ctx.show_diagnostics then
