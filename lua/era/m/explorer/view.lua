@@ -443,26 +443,27 @@ end
 ---@param node                          era.m.explorer.Node
 ---@param lnum                          integer
 ---@return era.m.explorer.view.IGitStatusInfo|nil
+---@return string|nil
 function M:__get_git_status_info__(node, lnum)
   local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
   if filepath == "" then
-    return nil
+    return nil, nil
   end
 
   local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
   local highlights = {} ---@type stl.t.IHighlightInline[]
 
-  local git_text, _ = era.m.git.status.calc_info(filepath, filetype, 0, highlights)
+  local git_text, git_hl = era.m.git.status.calc_info(filepath, filetype, 0, highlights)
 
   if git_text == nil or #git_text < 1 then
-    return nil
+    return nil, git_hl
   end
 
   return {
     lnum = lnum,
     text = git_text,
     highlights = highlights,
-  }
+  }, git_hl
 end
 
 ---@protected
@@ -512,8 +513,9 @@ end
 ---@param node                          era.m.explorer.Node
 ---@param is_ignored                    boolean
 ---@param is_selected                   boolean
+---@param git_hl                        string|nil
 ---@return string
-function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
+function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_hl)
   if is_selected then
     return "m_ex_selected"
   end
@@ -532,15 +534,8 @@ function M:__get_node_name_highlight__(ctx, node, is_ignored, is_selected)
     end
   end
 
-  if ctx.show_git_status then
-    local filepath = self:__filepath_to_filepath__(node.filepath) ---@type string
-    if filepath ~= "" then
-      local filetype = node.nodetype == "D" and "directory" or "file" ---@type string
-      local _, git_hl = era.m.git.status.resolve(filepath, filetype)
-      if git_hl ~= nil then
-        return git_hl
-      end
-    end
+  if git_hl ~= nil then
+    return git_hl
   end
 
   if node.nodetype == "D" then
@@ -702,8 +697,14 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
     col = col + #icon + 1
   end
 
+  local git_info ---@type era.m.explorer.view.IGitStatusInfo|nil
+  local git_hl ---@type string|nil
+  if ctx.show_git_status then
+    git_info, git_hl = self:__get_git_status_info__(node, lnum)
+  end
+
   local name = display_name or node.nodename ---@type string
-  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected) ---@type string
+  local name_hl = self:__get_node_name_highlight__(ctx, node, is_ignored, is_selected, git_hl) ---@type string
   parts[#parts + 1] = name
 
   highlights[#highlights + 1] = {
@@ -712,11 +713,6 @@ function M:__render_node__(ctx, node, indent, lnum, display_name, is_expanded, i
     colr = col + #name,
     hlname = name_hl,
   }
-
-  local git_info ---@type era.m.explorer.view.IGitStatusInfo|nil
-  if ctx.show_git_status then
-    git_info = self:__get_git_status_info__(node, lnum)
-  end
 
   local diag_info ---@type era.m.explorer.view.IDiagnosticInfo|nil
   if ctx.show_diagnostics then
