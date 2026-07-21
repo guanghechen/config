@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken'
 import state from '../../../../../state'
 import type { IApiHandle, IApiHandleData } from '../../../types'
 
-const JWT_EXPIRES_IN = '7d'
+const JWT_EXPIRES_IN = '30d'
 const COOKIE_NAME = 'yoz-auth'
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 // 30 days in seconds
 
 interface IAuthRequest {
   readonly authToken: string

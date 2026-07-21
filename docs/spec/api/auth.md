@@ -17,7 +17,7 @@
   "data": {
     "success": true,
     "token": "jwt_token_string",
-    "expiresIn": "7d"
+    "expiresIn": "30d"
   }
 }
 ```
@@ -34,7 +34,7 @@
 ### Server
 - Environment: `YOZ_AUTH_TOKEN`, `YOZ_JWT_SECRET`
 - Token verification: compare provided token with `YOZ_AUTH_TOKEN`
-- JWT expires in 7 days, contains authentication flag
+- JWT expires in 30 days, contains authentication flag
 - All `/api/*` endpoints except `/api/user/auth` require Bearer token or authentication cookie
 - Return 403 for missing/invalid tokens
 - Auth endpoint sets HTTP-only cookie and returns JWT token in response body
