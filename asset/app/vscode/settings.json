@@ -25,9 +25,6 @@
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": "off"
   },
-  "[hpp]": {
-    "editor.tabSize": 2
-  },
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
   },
@@ -62,12 +59,12 @@
     "editor.defaultFormatter": "ms-python.autopep8"
   },
   "[rust]": {
-    "editor.defaultFormatter": "matklad.rust-analyzer"
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "[scss]": {
     "editor.defaultFormatter": "vscode.css-language-features"
   },
-  "[text]": {
+  "[plaintext]": {
     "editor.wordWrap": "bounded",
     "editor.wordWrapColumn": 100,
     "editor.wrappingIndent": "same"
@@ -79,7 +76,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[vue]": {
-    "editor.defaultFormatter": "octref.vetur"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[xml]": {
     "editor.defaultFormatter": "redhat.vscode-xml"
@@ -90,7 +87,6 @@
   "accessibility.signals.terminalBell": {
     "sound": "on"
   },
-  "application.shellEnvironmentResolutionTimeout": 100,
   "claudeCode.preferredLocation": "panel",
   "cmake.configureOnOpen": true,
   "cSpell.userWords": ["guanghechen", "kyokuya", "sora", "yozora"],
@@ -139,24 +135,6 @@
   "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
   "editor.wordWrap": "off",
   "eslint.format.enable": true,
-  "eslint.options": {
-    "extensions": [
-      ".js",
-      ".json",
-      ".jsx",
-      ".pug",
-      ".ts",
-      ".tsx",
-      ".vue",
-      ".md",
-      ".mdx",
-      ".mjs",
-      ".mts",
-      ".cjs",
-      ".cts"
-    ]
-  },
-  "eslint.packageManager": "yarn",
   "eslint.quiet": true,
   "eslint.run": "onSave",
   "eslint.validate": [
@@ -194,11 +172,10 @@
   "extensions.autoUpdate": "on",
   "files.associations": {
     "*.rs": "rust",
-    "*.txt": "text",
+    "*.txt": "plaintext",
     ".prettierrc": "yaml"
   },
   "files.autoSave": "onFocusChange",
-  "files.autoSaveDelay": 3000,
   "files.eol": "\n",
   "files.exclude": {
     "**/.idea": true,
@@ -211,25 +188,16 @@
   "git.mergeEditor": false,
   "git.openRepositoryInParentFolders": "never",
   "git.showPushSuccessNotification": true,
-  "github.copilot.editor.enableAutoCompletions": true,
   "github.copilot.enable": {
     "*": true,
     "plaintext": false,
     "markdown": false,
-    "scminput": false,
-    "yaml": true,
-    "cpp": true,
-    "dart": true,
-    "js": true,
-    "ts": true,
-    "typescript": true,
-    "typescriptreact": true
+    "scminput": false
   },
   "github.copilot.nextEditSuggestions.enabled": true,
   "gitlens.ai.model": "vscode",
   "gitlens.ai.vscode.model": "copilot:claude-opus-4.6",
-  "gitlens.autolinks": null,
-  "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:SS",
+  "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:ss",
   "gitlens.defaultDateShortFormat": "YYYY-MM-DD",
   "gitlens.defaultDateStyle": "absolute",
   "gitlens.gitCommands.skipConfirmations": [
@@ -239,15 +207,10 @@
   ],
   "gitlens.keymap": "none",
   "html.format.indentInnerHtml": true,
-  "javascript.autoClosingTags": true,
-  "javascript.format.enable": true,
-  "javascript.format.insertSpaceAfterConstructor": true,
-  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
-  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
-  "javascript.format.semicolons": "remove",
-  "javascript.preferences.quoteStyle": "single",
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  "json.trace.server": "messages",
+  "js/ts.implementationsCodeLens.enabled": true,
+  "js/ts.preferences.quoteStyle": "single",
+  "js/ts.tsc.autoDetect": "off",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
   "jupyter.askForKernelRestart": false,
   "latex-workshop.latex.autoBuild.run": "never",
   "markdown.preview.fontFamily": "Maple Mono NF CN, Comic Sans MS, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif",
@@ -257,28 +220,11 @@
   "notebook.lineNumbers": "on",
   "npm.packageManager": "yarn",
   "nxConsole.showNodeVersionOnStartup": false,
-  "python.formatting.provider": "none",
   "remote.defaultExtensionsIfInstalledLocally": [
     "GitHub.copilot",
     "GitHub.copilot-chat",
     "GitHub.vscode-pull-request-github"
   ],
-  "remote.extensionKind": {
-    "streetsidesoftware.code-spell-checker": "workspace",
-    "ms-azuretools.vscode-docker": "workspace",
-    "EditorConfig.EditorConfig": "workspace",
-    "dbaeumer.vscode-eslint": "workspace",
-    "ms-toolsai.jupyter": "workspace",
-    "ms-python.vscode-pylance": "workspace",
-    "ms-python.python": "workspace",
-    "ms-vscode-remote.remote-containers": "ui",
-    "ms-vscode-remote.remote-ssh": "ui",
-    "ms-vscode-remote.remote-ssh-edit": "ui",
-    "ms-vscode-remote.remote-wsl": "ui",
-    "ms-vscode-remote.vscode-remote-extensionpack": "ui",
-    "vscodevim.vim": "ui",
-    "vscode-icons-team.vscode-icons": "ui"
-  },
   "remote.localPortHost": "localhost",
   "remote.restoreForwardedPorts": true,
   "scm.alwaysShowActions": true,
@@ -288,7 +234,7 @@
   "search.seedOnFocus": true,
   "search.showLineNumbers": true,
   "security.workspace.trust.untrustedFiles": "prompt",
-  "settingsSync.ignoredExtensions": ["github.copilot", "rooveterinaryinc.roo-cline"],
+  "settingsSync.ignoredExtensions": ["github.copilot", "github.copilot-chat"],
   "terminal.explorerKind": "integrated",
   "terminal.integrated.cursorBlinking": true,
   "terminal.integrated.env.linux": {
@@ -303,21 +249,10 @@
   "terminal.integrated.enableVisualBell": true,
   "terminal.integrated.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
   "terminal.integrated.fontSize": 18,
-  "terminal.integrated.inheritEnv": false,
   "terminal.integrated.macOptionIsMeta": true,
   "terminal.integrated.rightClickBehavior": "default",
   "terminal.integrated.tabs.location": "left",
   "terminal.external.windowsExec": "pwsh.exe",
-  "typescript.autoClosingTags": true,
-  "typescript.format.enable": true,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
-  "typescript.format.insertSpaceAfterTypeAssertion": true,
-  "typescript.implementationsCodeLens.enabled": true,
-  "typescript.preferences.quoteStyle": "single",
-  "typescript.suggest.completeFunctionCalls": false,
-  "typescript.tsc.autoDetect": "off",
-  "typescript.updateImportsOnFileMove.enabled": "always",
   "vim.easymotion": true,
   "vim.foldfix": true,
   "vim.history": 500,
@@ -360,7 +295,6 @@
   "vsicons.presets.jsOfficial": true,
   "vsicons.presets.jsonOfficial": true,
   "vsicons.presets.tsOfficial": true,
-  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
   "window.commandCenter": false,
   "window.customTitleBarVisibility": "windowed",
   "window.restoreWindows": "none",
