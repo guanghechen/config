@@ -19,6 +19,7 @@
     "SCM Providers"
   ],
   "activationEvents": [
+    "onView:vsgit.historySearch",
     "onView:vsgit.commits",
     "onView:vsgit.changes",
     "onCommand:vsgit.compareMarkedCommits",
@@ -263,6 +264,11 @@
         {
           "id": "vsgit.commits",
           "name": "Commits"
+        },
+        {
+          "id": "vsgit.historySearch",
+          "name": "History Search",
+          "type": "webview"
         },
         {
           "id": "vsgit.changes",

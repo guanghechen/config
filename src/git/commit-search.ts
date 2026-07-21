@@ -70,6 +70,19 @@ export function createCommitSearchArguments(
   })
 }
 
+export function isDefaultCommitSearchQuery(queryValue: ICommitSearchQuery): boolean {
+  const query = createCommitSearchQuery(queryValue)
+  return (
+    query.scope.kind === 'head' &&
+    query.path === null &&
+    query.author === null &&
+    query.since === null &&
+    query.until === null &&
+    query.message === null &&
+    query.content === null
+  )
+}
+
 function normalizeScope(scope: CommitSearchScope): CommitSearchScope {
   switch (scope.kind) {
     case 'head':

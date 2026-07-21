@@ -14,6 +14,7 @@ import { VIEW_IDS } from './platform/extension-ids'
 import { ComparisonTreeProvider } from './view/comparison/tree-provider'
 import { REVISION_SCHEME, RevisionContentProvider } from './view/diff/revision-content-provider'
 import { GitFileDecorationProvider } from './view/file-change/decoration-provider'
+import { CommitSearchViewProvider } from './view/history/search-view-provider'
 import { CommitHistoryTreeProvider } from './view/history/tree-provider'
 
 export function activate(context: ExtensionContext): void {
@@ -57,6 +58,10 @@ export function activate(context: ExtensionContext): void {
     historySession,
     repositoryResolver: gitClient,
   })
+  const commitSearchViewProvider = new CommitSearchViewProvider({
+    historySession,
+    operations: commitSearchController,
+  })
   const commitViewController = new CommitViewController({
     historySession,
     markSession,
@@ -68,6 +73,7 @@ export function activate(context: ExtensionContext): void {
     commitDiffController,
     commitHistoryController,
     commitSearchController,
+    commitSearchViewProvider,
     commitViewController,
     comparisonController,
     commitChangeCache,
@@ -78,6 +84,9 @@ export function activate(context: ExtensionContext): void {
     comparisonTreeProvider,
     commitTreeView,
     comparisonTreeView,
+    window.registerWebviewViewProvider(VIEW_IDS.historySearch, commitSearchViewProvider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
     window.registerFileDecorationProvider(new GitFileDecorationProvider()),
     workspace.registerTextDocumentContentProvider(REVISION_SCHEME, contentProvider),
   )

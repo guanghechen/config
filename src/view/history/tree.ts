@@ -68,7 +68,7 @@ export function createCommitRootNodes(
       graph,
     }
   })
-  if (snapshot.hasMore) {
+  if (snapshot.canLoadMore) {
     nodes.push({ kind: 'load-more-commits', historyRevision: snapshot.revision })
   }
   return nodes

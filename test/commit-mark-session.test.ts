@@ -63,6 +63,7 @@ function createSnapshot(
     searchQuery: null,
     commits,
     hasMore: false,
+    canLoadMore: false,
     limit: 50,
   }
 }

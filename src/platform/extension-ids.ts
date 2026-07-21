@@ -31,6 +31,7 @@ export const CONTEXT_KEYS = Object.freeze({
 export const VIEW_IDS = Object.freeze({
   commits: 'vsgit.commits',
   comparison: 'vsgit.changes',
+  historySearch: 'vsgit.historySearch',
 })
 
 export const VIEW_ITEM_CONTEXT_VALUES = Object.freeze({

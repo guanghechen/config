@@ -26,6 +26,10 @@
     "src/view/file-change/tree.ts",
     "src/view/history/graph-presentation.ts",
     "src/view/history/search-presentation.ts",
+    "src/view/history/search-view-contract.ts",
+    "src/view/history/search-view-html.ts",
+    "src/view/history/search-view-protocol.ts",
+    "src/view/history/search-view-provider.ts",
     "src/view/history/subject.ts",
     "src/view/history/tree.ts",
     "test/**/*.ts"

@@ -8,5 +8,6 @@ export interface ICommitHistorySnapshot {
   readonly searchQuery: ICommitSearchQuery | null
   readonly commits: ReadonlyArray<IGitCommit>
   readonly hasMore: boolean
+  readonly canLoadMore: boolean
   readonly limit: number
 }

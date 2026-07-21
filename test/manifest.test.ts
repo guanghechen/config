@@ -10,6 +10,7 @@ interface IManifestCommand {
 
 interface IManifestView {
   readonly id: string
+  readonly type?: string
 }
 
 interface IManifestViewContainer {
@@ -45,7 +46,12 @@ test('declares a valid VSGit Activity Bar container and views', () => {
   assert.ok(container)
   assert.deepEqual(
     manifest.contributes.views[container.id]?.map(view => view.id),
-    [VIEW_IDS.commits, VIEW_IDS.comparison],
+    [VIEW_IDS.commits, VIEW_IDS.historySearch, VIEW_IDS.comparison],
+  )
+  assert.equal(
+    manifest.contributes.views[container.id]?.find(view => view.id === VIEW_IDS.historySearch)
+      ?.type,
+    'webview',
   )
 })
 
@@ -62,6 +68,7 @@ test('declares commit browser commands, menus, and view activation', () => {
     items.map(item => item.command),
   )
   for (const command of menuCommands) assert.ok(commandIds.includes(command), command)
+  assert.ok(manifest.activationEvents.includes(`onView:${VIEW_IDS.historySearch}`))
   assert.ok(manifest.activationEvents.includes(`onView:${VIEW_IDS.commits}`))
   assert.ok(manifest.activationEvents.includes(`onCommand:${COMMAND_IDS.searchCommits}`))
 })

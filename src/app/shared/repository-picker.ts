@@ -1,27 +1,56 @@
 import path from 'node:path'
-import { window, workspace } from 'vscode'
+import { CancellationTokenSource, window, workspace } from 'vscode'
 import { resolveRepositoryCandidates, type IRepositoryResolver } from './repository-discovery'
+
+export type RepositorySelectionResult =
+  | { readonly kind: 'selected'; readonly repositoryPath: string }
+  | { readonly kind: 'cancelled' }
+  | { readonly kind: 'unavailable' }
 
 export async function pickRepository(
   repositoryResolver: IRepositoryResolver,
 ): Promise<string | null> {
-  const repositories = await discoverRepositories(repositoryResolver)
-
-  if (repositories.length === 0) {
+  const result = await selectRepository(repositoryResolver)
+  if (result.kind === 'unavailable') {
     await window.showErrorMessage('VSGit: Open a Git repository to continue.')
-    return null
   }
-  if (repositories.length === 1) return repositories[0] ?? null
+  return result.kind === 'selected' ? result.repositoryPath : null
+}
 
-  const selected = await window.showQuickPick(
-    repositories.map(repositoryPath => ({
-      label: path.basename(repositoryPath),
-      description: repositoryPath,
-      repositoryPath,
-    })),
-    { ignoreFocusOut: true, placeHolder: 'Select a Git repository' },
-  )
-  return selected?.repositoryPath ?? null
+export async function selectRepository(
+  repositoryResolver: IRepositoryResolver,
+  signal?: AbortSignal,
+): Promise<RepositorySelectionResult> {
+  if (signal?.aborted) return { kind: 'cancelled' }
+  const repositories = await discoverRepositories(repositoryResolver)
+  if (signal?.aborted) return { kind: 'cancelled' }
+
+  if (repositories.length === 0) return { kind: 'unavailable' }
+  const onlyRepository = repositories[0]
+  if (repositories.length === 1 && onlyRepository) {
+    return { kind: 'selected', repositoryPath: onlyRepository }
+  }
+
+  const cancellation = new CancellationTokenSource()
+  const cancelPicker = (): void => cancellation.cancel()
+  signal?.addEventListener('abort', cancelPicker, { once: true })
+  try {
+    if (signal?.aborted) cancellation.cancel()
+    const selected = await window.showQuickPick(
+      repositories.map(repositoryPath => ({
+        label: path.basename(repositoryPath),
+        description: repositoryPath,
+        repositoryPath,
+      })),
+      { ignoreFocusOut: true, placeHolder: 'Select a Git repository' },
+      cancellation.token,
+    )
+    if (!selected || signal?.aborted) return { kind: 'cancelled' }
+    return { kind: 'selected', repositoryPath: selected.repositoryPath }
+  } finally {
+    signal?.removeEventListener('abort', cancelPicker)
+    cancellation.dispose()
+  }
 }
 
 export function discoverRepositories(

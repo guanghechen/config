@@ -24,6 +24,7 @@ test('creates commit roots with a load-more sentinel', () => {
     searchQuery: null,
     commits: [COMMIT],
     hasMore: true,
+    canLoadMore: true,
     limit: 50,
   }
 
@@ -45,6 +46,24 @@ test('creates commit roots with a load-more sentinel', () => {
     },
     { kind: 'load-more-commits', historyRevision: 3 },
   ])
+})
+
+test('does not offer load more after reaching the history cap', () => {
+  const snapshot: ICommitHistorySnapshot = {
+    revision: 3,
+    repositoryPath: '/repo',
+    headCommit: COMMIT.hash,
+    searchQuery: null,
+    commits: [COMMIT],
+    hasMore: true,
+    canLoadMore: false,
+    limit: 500,
+  }
+
+  assert.equal(
+    createCommitRootNodes(snapshot).some(node => node.kind === 'load-more-commits'),
+    false,
+  )
 })
 
 test('attaches immutable commit context to directory-first change nodes', () => {
@@ -94,6 +113,7 @@ test('does not render filtered search results as a continuous commit graph', () 
     searchQuery: createCommitSearchQuery({ message: 'history' }),
     commits: [COMMIT, unrelatedCommit],
     hasMore: false,
+    canLoadMore: false,
     limit: 50,
   }
 

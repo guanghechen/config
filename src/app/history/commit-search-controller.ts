@@ -1,6 +1,7 @@
 import { Disposable, ProgressLocation, commands, window, type QuickPickItem } from 'vscode'
 import {
   createCommitSearchQuery,
+  isDefaultCommitSearchQuery,
   type CommitContentSearch,
   type CommitSearchScope,
   type ICommitSearchQuery,
@@ -9,9 +10,10 @@ import {
 import type { CommitHistorySession } from '../../history/commit-history-session'
 import type { ICommitHistorySnapshot } from '../../history/model'
 import { COMMAND_IDS } from '../../platform/extension-ids'
+import type { CommitSearchViewOperationResult } from '../../view/history/search-view-contract'
 import { formatCommitSearchQuery } from '../../view/history/search-presentation'
 import type { IRepositoryResolver } from '../shared/repository-discovery'
-import { pickRepository } from '../shared/repository-picker'
+import { pickRepository, selectRepository } from '../shared/repository-picker'
 
 type SearchEditorAction =
   'run' | 'scope' | 'path' | 'author' | 'since' | 'until' | 'message' | 'content' | 'reset'
@@ -50,16 +52,41 @@ export class CommitSearchController implements Disposable {
     this.historySession = options.historySession
     this.repositoryResolver = options.repositoryResolver
     this.registrations = Disposable.from(
-      commands.registerCommand(COMMAND_IDS.searchCommits, () => this.searchCommits()),
-      commands.registerCommand(COMMAND_IDS.clearCommitSearch, () => this.clearSearch()),
+      commands.registerCommand(COMMAND_IDS.searchCommits, () => this.openSearchQuickPick()),
+      commands.registerCommand(COMMAND_IDS.clearCommitSearch, () => this.clearSearchCommand()),
     )
+  }
+
+  public async runSearch(
+    query: ICommitSearchQuery,
+    signal: AbortSignal,
+  ): Promise<CommitSearchViewOperationResult> {
+    if (signal.aborted) return { kind: 'cancelled' }
+    let repositoryPath = this.historySession.snapshot?.repositoryPath
+    if (!repositoryPath) {
+      const selection = await selectRepository(this.repositoryResolver, signal)
+      if (selection.kind !== 'selected') return selection
+      repositoryPath = selection.repositoryPath
+    }
+
+    const snapshot = await this.runSearchInRepository(repositoryPath, query, signal)
+    return snapshot ? { kind: 'applied', snapshot } : { kind: 'cancelled' }
+  }
+
+  public async clearSearch(signal: AbortSignal): Promise<CommitSearchViewOperationResult> {
+    if (signal.aborted) return { kind: 'cancelled' }
+    const currentSnapshot = this.historySession.snapshot
+    if (!currentSnapshot?.searchQuery) return { kind: 'applied', snapshot: currentSnapshot }
+
+    const snapshot = await this.historySession.clearSearch(signal)
+    return snapshot ? { kind: 'applied', snapshot } : { kind: 'cancelled' }
   }
 
   public dispose(): void {
     this.registrations.dispose()
   }
 
-  private async searchCommits(): Promise<void> {
+  private async openSearchQuickPick(): Promise<void> {
     try {
       const repositoryPath =
         this.historySession.snapshot?.repositoryPath ??
@@ -81,7 +108,7 @@ export class CommitSearchController implements Disposable {
         if (selected.action === 'run') {
           const completed = await this.runOperation(
             `Searching commits: ${formatCommitSearchQuery(query)}…`,
-            signal => this.historySession.search(repositoryPath, query, signal),
+            signal => this.runSearchInRepository(repositoryPath, query, signal),
           )
           if (completed) return
           continue
@@ -108,10 +135,20 @@ export class CommitSearchController implements Disposable {
     }
   }
 
-  private async clearSearch(): Promise<void> {
+  private async clearSearchCommand(): Promise<void> {
     await this.runOperation('Clearing commit search…', signal =>
       this.historySession.clearSearch(signal),
     )
+  }
+
+  private runSearchInRepository(
+    repositoryPath: string,
+    query: ICommitSearchQuery,
+    signal: AbortSignal,
+  ): Promise<ICommitHistorySnapshot | null> {
+    return isDefaultCommitSearchQuery(query)
+      ? this.historySession.load(repositoryPath, signal)
+      : this.historySession.search(repositoryPath, query, signal)
   }
 
   private async editScope(query: ICommitSearchQuery): Promise<ICommitSearchQuery | null> {

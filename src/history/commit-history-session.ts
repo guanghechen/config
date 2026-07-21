@@ -37,8 +37,11 @@ export class CommitHistorySession implements IDisposable {
     return this.currentSnapshot
   }
 
-  public load(repositoryPath: string): Promise<ICommitHistorySnapshot | null> {
-    return this.loadWithLimit(repositoryPath, null, this.pageSize)
+  public load(
+    repositoryPath: string,
+    signal?: AbortSignal,
+  ): Promise<ICommitHistorySnapshot | null> {
+    return this.loadWithLimit(repositoryPath, null, this.pageSize, signal)
   }
 
   public search(
@@ -57,7 +60,7 @@ export class CommitHistorySession implements IDisposable {
 
   public loadMore(): Promise<ICommitHistorySnapshot | null> {
     const snapshot = this.currentSnapshot
-    if (!snapshot || !snapshot.hasMore) return Promise.resolve(snapshot)
+    if (!snapshot || !snapshot.canLoadMore) return Promise.resolve(snapshot)
     const limit = Math.min(snapshot.limit + this.pageSize, MAX_COMMIT_LIMIT)
     if (limit === snapshot.limit) return Promise.resolve(snapshot)
     return this.loadWithLimit(snapshot.repositoryPath, snapshot.searchQuery, limit)
@@ -112,7 +115,8 @@ export class CommitHistorySession implements IDisposable {
         headCommit: page.headCommit,
         searchQuery,
         commits: page.commits,
-        hasMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
+        hasMore: page.hasMore,
+        canLoadMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
         limit,
       })
       this.currentSnapshot = snapshot

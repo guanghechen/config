@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createCommitSearchArguments, createCommitSearchQuery } from '../src/git/commit-search'
+import {
+  createCommitSearchArguments,
+  createCommitSearchQuery,
+  isDefaultCommitSearchQuery,
+} from '../src/git/commit-search'
 import { formatCommitSearchQuery } from '../src/view/history/search-presentation'
 
 const HEAD_COMMIT = 'a'.repeat(40)
@@ -77,4 +81,13 @@ test('supports HEAD and all-ref text searches without accepting option-like revi
     /must not start/,
   )
   assert.throws(() => createCommitSearchQuery({ author: 'bad\0author' }), /Author is invalid/)
+})
+
+test('distinguishes the default HEAD view from an applied search', () => {
+  assert.equal(isDefaultCommitSearchQuery(createCommitSearchQuery()), true)
+  assert.equal(isDefaultCommitSearchQuery(createCommitSearchQuery({ message: 'fix' })), false)
+  assert.equal(
+    isDefaultCommitSearchQuery(createCommitSearchQuery({ scope: { kind: 'all' } })),
+    false,
+  )
 })

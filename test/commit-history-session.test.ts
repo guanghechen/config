@@ -105,9 +105,22 @@ test('does not let stale cancellation abort a newer history request', async () =
   assert.equal(source.abortCount, 2)
 })
 
+test('reports truncated history without offering load more beyond the hard limit', async () => {
+  const source = new RecordingHistorySource()
+  source.hasMore = true
+  const session = new CommitHistorySession(source, 500)
+
+  const snapshot = await session.load('/repo')
+
+  assert.equal(snapshot?.hasMore, true)
+  assert.equal(snapshot?.canLoadMore, false)
+  assert.equal(await session.loadMore(), snapshot)
+})
+
 class RecordingHistorySource implements ICommitHistorySource {
   public abortCount = 0
   public failure: Error | null = null
+  public hasMore = false
   public readonly searchQueries: ICommitSearchQuery[] = []
   public readonly blockingRequestStarted: Promise<void>
 
@@ -126,7 +139,7 @@ class RecordingHistorySource implements ICommitHistorySource {
   ): Promise<ICommitPage> {
     if (this.failure) return Promise.reject(this.failure)
     if (repositoryPath !== this.blockedRepository) {
-      return Promise.resolve({ headCommit: COMMIT.hash, commits: [COMMIT], hasMore: false })
+      return Promise.resolve({ headCommit: COMMIT.hash, commits: [COMMIT], hasMore: this.hasMore })
     }
 
     this.startBlockingRequest?.()
