@@ -4,7 +4,7 @@ import { runInNewContext } from 'node:vm'
 import { createCommitSearchQuery } from '../src/git/commit-search'
 import { createCommitSearchViewHtml } from '../src/view/history/search-view-html'
 
-test('creates a compact CSP-protected sidebar search form with collapsible filters', () => {
+test('creates a modern CSP-protected sidebar search surface with responsive filters', () => {
   const webview = { cspSource: 'vscode-webview://vsgit-test' } as Parameters<
     typeof createCommitSearchViewHtml
   >[0]
@@ -31,6 +31,13 @@ test('creates a compact CSP-protected sidebar search form with collapsible filte
     assert.ok(html.includes(`id="${id}"`), id)
   }
   assert.match(html, /<section id="filter-panel"[^>]* hidden>/)
+  assert.match(html, /<div class="search-shell">/)
+  assert.match(html, /<svg class="search-icon"/)
+  assert.match(html, /<input\s+id="message"\s+type="search"/)
+  assert.match(html, /class="primary-action"/)
+  assert.match(html, /class="toolbar"/)
+  assert.match(html, /class="filter-divider"/)
+  assert.ok(html.includes('@media (min-width: 290px)'))
   assert.equal(html.includes('<details open>'), false)
 })
 
