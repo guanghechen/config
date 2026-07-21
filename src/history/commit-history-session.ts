@@ -1,5 +1,6 @@
 import { Signal, type Event, type IDisposable } from '../core/signal'
 import type { ICommitPage } from '../git/commit'
+import { createCommitSearchQuery, type ICommitSearchQuery } from '../git/commit-search'
 import type { ICommitHistorySnapshot } from './model'
 
 const DEFAULT_PAGE_SIZE = 50
@@ -7,6 +8,12 @@ const MAX_COMMIT_LIMIT = 500
 
 export interface ICommitHistorySource {
   listCommits(repositoryPath: string, limit: number, signal: AbortSignal): Promise<ICommitPage>
+  searchCommits(
+    repositoryPath: string,
+    query: ICommitSearchQuery,
+    limit: number,
+    signal: AbortSignal,
+  ): Promise<ICommitPage>
 }
 
 export class CommitHistorySession implements IDisposable {
@@ -31,13 +38,21 @@ export class CommitHistorySession implements IDisposable {
   }
 
   public load(repositoryPath: string): Promise<ICommitHistorySnapshot | null> {
-    return this.loadWithLimit(repositoryPath, this.pageSize)
+    return this.loadWithLimit(repositoryPath, null, this.pageSize)
+  }
+
+  public search(
+    repositoryPath: string,
+    query: ICommitSearchQuery,
+    signal?: AbortSignal,
+  ): Promise<ICommitHistorySnapshot | null> {
+    return this.loadWithLimit(repositoryPath, createCommitSearchQuery(query), this.pageSize, signal)
   }
 
   public refresh(): Promise<ICommitHistorySnapshot | null> {
     const snapshot = this.currentSnapshot
     if (!snapshot) return Promise.resolve(null)
-    return this.loadWithLimit(snapshot.repositoryPath, snapshot.limit)
+    return this.loadWithLimit(snapshot.repositoryPath, snapshot.searchQuery, snapshot.limit)
   }
 
   public loadMore(): Promise<ICommitHistorySnapshot | null> {
@@ -45,7 +60,13 @@ export class CommitHistorySession implements IDisposable {
     if (!snapshot || !snapshot.hasMore) return Promise.resolve(snapshot)
     const limit = Math.min(snapshot.limit + this.pageSize, MAX_COMMIT_LIMIT)
     if (limit === snapshot.limit) return Promise.resolve(snapshot)
-    return this.loadWithLimit(snapshot.repositoryPath, limit)
+    return this.loadWithLimit(snapshot.repositoryPath, snapshot.searchQuery, limit)
+  }
+
+  public clearSearch(signal?: AbortSignal): Promise<ICommitHistorySnapshot | null> {
+    const snapshot = this.currentSnapshot
+    if (!snapshot || !snapshot.searchQuery) return Promise.resolve(snapshot)
+    return this.loadWithLimit(snapshot.repositoryPath, null, this.pageSize, signal)
   }
 
   public clear(): void {
@@ -62,21 +83,34 @@ export class CommitHistorySession implements IDisposable {
 
   private async loadWithLimit(
     repositoryPath: string,
+    searchQuery: ICommitSearchQuery | null,
     limit: number,
+    signal?: AbortSignal,
   ): Promise<ICommitHistorySnapshot | null> {
     this.cancelActiveRequest()
     const request = new AbortController()
     const revision = ++this.requestRevision
     this.activeRequest = request
+    const cancelRequest = (): void => {
+      if (revision === this.requestRevision) this.requestRevision += 1
+      request.abort()
+    }
+    signal?.addEventListener('abort', cancelRequest, { once: true })
 
     try {
-      const page = await this.historySource.listCommits(repositoryPath, limit, request.signal)
+      if (signal?.aborted) cancelRequest()
+      if (request.signal.aborted) return null
+
+      const page = searchQuery
+        ? await this.historySource.searchCommits(repositoryPath, searchQuery, limit, request.signal)
+        : await this.historySource.listCommits(repositoryPath, limit, request.signal)
       if (revision !== this.requestRevision) return null
 
       const snapshot: ICommitHistorySnapshot = Object.freeze({
         revision,
         repositoryPath,
-        headCommit: page.commits[0]?.hash ?? null,
+        headCommit: page.headCommit,
+        searchQuery,
         commits: page.commits,
         hasMore: page.hasMore && limit < MAX_COMMIT_LIMIT,
         limit,
@@ -89,6 +123,7 @@ export class CommitHistorySession implements IDisposable {
       if (revision !== this.requestRevision) return null
       throw cause
     } finally {
+      signal?.removeEventListener('abort', cancelRequest)
       if (this.activeRequest === request) this.activeRequest = null
     }
   }

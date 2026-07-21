@@ -1,7 +1,7 @@
 # VSGit
 
-Browse Git history and compare any two commits, branches, tags, or other commit-like references
-inside VS Code.
+Search Git history, browse commits, and compare any two commits, branches, tags, or other
+commit-like references inside VS Code.
 
 ## Browse commits
 
@@ -13,6 +13,28 @@ inside VS Code.
 Root commits are compared with an empty tree. Merge commits are compared with their first parent.
 History is loaded in batches of 50 commits, up to 500; use **Load More Commits** to fetch the next
 batch.
+
+## Search commits
+
+1. Open **VSGit → Commits** and select **Search Commits** in the view toolbar.
+2. Configure any combination of search filters.
+3. Select **Run Search**.
+
+Search supports these filters:
+
+- Scope: commits reachable from `HEAD`, all refs, or one custom revision/range such as
+  `main..feature`.
+- Path: one file, directory, or Git pathspec such as `:(glob)src/**/*.ts`.
+- Author, since date, until date, and commit-message regex.
+- Exact content occurrence changes with `git log -S`.
+- Added or removed lines matching a regex with `git log -G`.
+
+Filters use AND semantics. The `-S` and `-G` content modes are mutually exclusive. Expanding a
+matching commit shows its complete change tree so surrounding changes remain visible. Path filters
+use Git pathspec semantics and do not automatically follow historical names across renames.
+
+Refresh and **Load More Commits** preserve the current search. Select **Clear Commit Search** to
+return to normal `HEAD` history.
 
 ## Compare two commits
 
@@ -55,11 +77,11 @@ shared file-change concerns; extension command, context, view, and item IDs live
 Dependencies only point toward lower layers, and automated architecture tests reject reverse edges
 and import cycles.
 
-`CommitHistorySession` is the single writer for the active repository and paged commit list,
-`CommitMarkSession` is the single writer for comparison marks, and `ComparisonSession` is the single
-writer for the active comparison. `CommitChangeCache` owns a bounded cache of derived immutable
-commit changes. Commit file trees are loaded lazily, and the revision content provider reads
-immutable commit blobs only when VS Code opens a diff.
+`CommitHistorySession` is the single writer for the active repository, browse/search mode, active
+search query, and paged commit list. `CommitMarkSession` is the single writer for comparison marks,
+and `ComparisonSession` is the single writer for the active comparison. `CommitChangeCache` owns a
+bounded cache of derived immutable commit changes. Commit file trees are loaded lazily, and the
+revision content provider reads immutable commit blobs only when VS Code opens a diff.
 
 Superseded history and comparison operations abort their in-flight Git processes. Comparisons
 started from known commits skip redundant reference resolution, commit-change cache entries survive
@@ -68,7 +90,9 @@ history refreshes, and repository candidates are deduplicated and resolved concu
 Invalid references, history reload failures, or Git comparison failures abort without replacing the
 last successful state. A commit expansion failure is isolated to that node. Binary and oversized
 blobs degrade to an explanatory virtual document. Git processes have a 15-second timeout; superseded
-operations are aborted, while failed cache entries are removed so the next expansion can retry.
+operations and cancelled searches are aborted, while failed cache entries are removed so the next
+expansion can retry. Search inputs are validated at the Git boundary, custom revisions are placed
+after `--end-of-options`, and paths are placed after `--`.
 
 VSGit invokes `git` with argument arrays and never through a shell. Comparing references does not
 modify the target repository.

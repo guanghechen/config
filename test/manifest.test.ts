@@ -63,4 +63,5 @@ test('declares commit browser commands, menus, and view activation', () => {
   )
   for (const command of menuCommands) assert.ok(commandIds.includes(command), command)
   assert.ok(manifest.activationEvents.includes(`onView:${VIEW_IDS.commits}`))
+  assert.ok(manifest.activationEvents.includes(`onCommand:${COMMAND_IDS.searchCommits}`))
 })

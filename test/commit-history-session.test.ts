@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ICommitPage, IGitCommit } from '../src/git/commit'
+import { createCommitSearchQuery, type ICommitSearchQuery } from '../src/git/commit-search'
 import {
   CommitHistorySession,
   type ICommitHistorySource,
@@ -32,9 +33,82 @@ test('preserves the last successful history snapshot when refresh fails', async 
   assert.equal(session.snapshot, successful)
 })
 
+test('preserves search filters across refresh and clears back to HEAD history', async () => {
+  const source = new RecordingHistorySource()
+  const session = new CommitHistorySession(source)
+  const query = createCommitSearchQuery({
+    scope: { kind: 'all' },
+    path: 'src',
+    content: { mode: 'text', value: 'legacyFlag' },
+  })
+
+  assert.deepEqual((await session.search('/repo', query))?.searchQuery, query)
+  await session.refresh()
+  assert.deepEqual(source.searchQueries, [query, query])
+  assert.equal((await session.clearSearch())?.searchQuery, null)
+})
+
+test('cancels an active search without replacing the last successful snapshot', async () => {
+  const source = new RecordingHistorySource('/slow')
+  const session = new CommitHistorySession(source)
+  const successful = await session.load('/repo')
+  const cancellation = new AbortController()
+
+  const search = session.search(
+    '/slow',
+    createCommitSearchQuery({ message: 'target' }),
+    cancellation.signal,
+  )
+  await source.blockingRequestStarted
+  cancellation.abort()
+
+  assert.equal(await search, null)
+  assert.equal(session.snapshot, successful)
+  assert.equal(source.abortCount, 1)
+})
+
+test('does not start a search for an already cancelled request', async () => {
+  const source = new RecordingHistorySource()
+  const session = new CommitHistorySession(source)
+  const cancellation = new AbortController()
+  cancellation.abort()
+
+  assert.equal(
+    await session.search(
+      '/repo',
+      createCommitSearchQuery({ message: 'target' }),
+      cancellation.signal,
+    ),
+    null,
+  )
+  assert.deepEqual(source.searchQueries, [])
+  assert.equal(session.snapshot, null)
+})
+
+test('does not let stale cancellation abort a newer history request', async () => {
+  const source = new RecordingHistorySource('/slow')
+  const session = new CommitHistorySession(source)
+  const query = createCommitSearchQuery({ message: 'target' })
+  const staleCancellation = new AbortController()
+
+  const stale = session.search('/slow', query, staleCancellation.signal)
+  await source.blockingRequestStarted
+  const current = session.search('/slow', query)
+
+  assert.equal(await stale, null)
+  assert.equal(source.abortCount, 1)
+  staleCancellation.abort()
+  assert.equal(source.abortCount, 1)
+
+  session.clear()
+  assert.equal(await current, null)
+  assert.equal(source.abortCount, 2)
+})
+
 class RecordingHistorySource implements ICommitHistorySource {
   public abortCount = 0
   public failure: Error | null = null
+  public readonly searchQueries: ICommitSearchQuery[] = []
   public readonly blockingRequestStarted: Promise<void>
 
   private startBlockingRequest: (() => void) | null = null
@@ -52,7 +126,7 @@ class RecordingHistorySource implements ICommitHistorySource {
   ): Promise<ICommitPage> {
     if (this.failure) return Promise.reject(this.failure)
     if (repositoryPath !== this.blockedRepository) {
-      return Promise.resolve({ commits: [COMMIT], hasMore: false })
+      return Promise.resolve({ headCommit: COMMIT.hash, commits: [COMMIT], hasMore: false })
     }
 
     this.startBlockingRequest?.()
@@ -68,6 +142,16 @@ class RecordingHistorySource implements ICommitHistorySource {
         { once: true },
       )
     })
+  }
+
+  public searchCommits(
+    repositoryPath: string,
+    query: ICommitSearchQuery,
+    limit: number,
+    signal: AbortSignal,
+  ): Promise<ICommitPage> {
+    this.searchQueries.push(query)
+    return this.listCommits(repositoryPath, limit, signal)
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "vsgit",
   "displayName": "VSGit",
-  "description": "Browse Git commits and compare any two revisions with file trees and native VS Code diffs.",
+  "description": "Search Git history, browse commits, and compare revisions with file trees and native VS Code diffs.",
   "version": "0.0.1",
   "publisher": "guanghechen",
   "private": true,
@@ -24,7 +24,9 @@
     "onCommand:vsgit.compareMarkedCommits",
     "onCommand:vsgit.compareCommitToHead",
     "onCommand:vsgit.openCommitFileDiff",
-    "onCommand:vsgit.compareRefs"
+    "onCommand:vsgit.compareRefs",
+    "onCommand:vsgit.searchCommits",
+    "onCommand:vsgit.clearCommitSearch"
   ],
   "main": "./dist/extension.cjs",
   "scripts": {
@@ -104,6 +106,18 @@
         "category": "VSGit"
       },
       {
+        "command": "vsgit.searchCommits",
+        "title": "Search Commits",
+        "category": "VSGit",
+        "icon": "$(search)"
+      },
+      {
+        "command": "vsgit.clearCommitSearch",
+        "title": "Clear Commit Search",
+        "category": "VSGit",
+        "icon": "$(clear-all)"
+      },
+      {
         "command": "vsgit.refreshCommits",
         "title": "Refresh Commits",
         "category": "VSGit",
@@ -147,19 +161,29 @@
           "group": "navigation@1"
         },
         {
-          "command": "vsgit.refreshCommits",
+          "command": "vsgit.searchCommits",
           "when": "view == vsgit.commits",
           "group": "navigation@2"
         },
         {
+          "command": "vsgit.clearCommitSearch",
+          "when": "view == vsgit.commits && vsgit.hasCommitSearch",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsgit.refreshCommits",
+          "when": "view == vsgit.commits",
+          "group": "navigation@4"
+        },
+        {
           "command": "vsgit.compareMarkedCommits",
           "when": "view == vsgit.commits && vsgit.canCompareMarkedCommits",
-          "group": "navigation@3"
+          "group": "navigation@5"
         },
         {
           "command": "vsgit.clearCommitMarks",
           "when": "view == vsgit.commits && vsgit.hasCommitMarks",
-          "group": "navigation@4"
+          "group": "navigation@6"
         },
         {
           "command": "vsgit.compareRefs",

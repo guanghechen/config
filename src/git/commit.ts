@@ -16,6 +16,7 @@ export interface IGitCommit {
 }
 
 export interface ICommitPage {
+  readonly headCommit: string | null
   readonly commits: ReadonlyArray<IGitCommit>
   readonly hasMore: boolean
 }

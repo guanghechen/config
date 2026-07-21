@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { IGitCommit } from '../src/git/commit'
+import { createCommitSearchQuery } from '../src/git/commit-search'
 import type { IFileChange } from '../src/git/file-change'
 import type { ICommitHistorySnapshot } from '../src/history/model'
 import { buildCommitChangeTree, createCommitRootNodes } from '../src/view/history/tree'
@@ -20,6 +21,7 @@ test('creates commit roots with a load-more sentinel', () => {
     revision: 3,
     repositoryPath: '/repo',
     headCommit: COMMIT.hash,
+    searchQuery: null,
     commits: [COMMIT],
     hasMore: true,
     limit: 50,
@@ -76,6 +78,34 @@ test('attaches immutable commit context to directory-first change nodes', () => 
       ],
     },
   ])
+})
+
+test('does not render filtered search results as a continuous commit graph', () => {
+  const unrelatedCommit: IGitCommit = {
+    ...COMMIT,
+    hash: 'c'.repeat(40),
+    shortHash: 'c'.repeat(9),
+    parents: ['d'.repeat(40)],
+  }
+  const snapshot: ICommitHistorySnapshot = {
+    revision: 4,
+    repositoryPath: '/repo',
+    headCommit: COMMIT.hash,
+    searchQuery: createCommitSearchQuery({ message: 'history' }),
+    commits: [COMMIT, unrelatedCommit],
+    hasMore: false,
+    limit: 50,
+  }
+
+  assert.deepEqual(
+    createCommitRootNodes(snapshot).map(node =>
+      node.kind === 'commit' ? [node.graph.lane, node.graph.laneCount] : null,
+    ),
+    [
+      [0, 1],
+      [0, 1],
+    ],
+  )
 })
 
 test('compacts empty single-child directory chains', () => {

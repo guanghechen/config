@@ -25,6 +25,7 @@
     "src/view/file-change/decoration.ts",
     "src/view/file-change/tree.ts",
     "src/view/history/graph-presentation.ts",
+    "src/view/history/search-presentation.ts",
     "src/view/history/subject.ts",
     "src/view/history/tree.ts",
     "test/**/*.ts"

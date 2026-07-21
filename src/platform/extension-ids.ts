@@ -1,4 +1,5 @@
 export const COMMAND_IDS = Object.freeze({
+  clearCommitSearch: 'vsgit.clearCommitSearch',
   clearCommitMarks: 'vsgit.clearCommitMarks',
   clearComparison: 'vsgit.clear',
   compareCommitToHead: 'vsgit.compareCommitToHead',
@@ -12,6 +13,7 @@ export const COMMAND_IDS = Object.freeze({
   openComparisonDiff: 'vsgit.openDiff',
   refreshCommits: 'vsgit.refreshCommits',
   refreshComparison: 'vsgit.refresh',
+  searchCommits: 'vsgit.searchCommits',
   selectRepository: 'vsgit.selectRepository',
   swapComparisonReferences: 'vsgit.swapRefs',
   unmarkCommit: 'vsgit.unmarkCommit',
@@ -21,6 +23,7 @@ export const CONTEXT_KEYS = Object.freeze({
   canCompareMarkedCommits: 'vsgit.canCompareMarkedCommits',
   hasCommitHistory: 'vsgit.hasCommitHistory',
   hasCommitMarks: 'vsgit.hasCommitMarks',
+  hasCommitSearch: 'vsgit.hasCommitSearch',
   hasComparison: 'vsgit.hasComparison',
   hasOneCommitMark: 'vsgit.hasOneCommitMark',
 })

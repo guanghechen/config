@@ -60,6 +60,7 @@ function createSnapshot(
     revision,
     repositoryPath,
     headCommit: commits[0]?.hash ?? null,
+    searchQuery: null,
     commits,
     hasMore: false,
     limit: 50,

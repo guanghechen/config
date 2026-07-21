@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { GitBlobDisplayError, GitClient } from '../src/git/git-client'
+import { createCommitSearchQuery } from '../src/git/commit-search'
 
 test('resolves commits, detects structural changes, and reads immutable blobs', async t => {
   const repositoryPath = await mkdtemp(path.join(tmpdir(), 'vsgit-test-'))
@@ -52,6 +53,24 @@ test('resolves commits, detects structural changes, and reads immutable blobs', 
   assert.deepEqual(
     fullPage.commits.map(commit => commit.hash),
     [targetCommit, baseCommit],
+  )
+  assert.equal(fullPage.headCommit, targetCommit)
+
+  const searchPage = await client.searchCommits(
+    repositoryPath,
+    createCommitSearchQuery({
+      scope: { kind: 'revision', revision: `${baseCommit}..HEAD` },
+      path: 'modified.txt',
+      author: 'VSGit Test',
+      message: 'target',
+      content: { mode: 'regex', value: 'after' },
+    }),
+    10,
+  )
+  assert.equal(searchPage.headCommit, targetCommit)
+  assert.deepEqual(
+    searchPage.commits.map(commit => commit.hash),
+    [targetCommit],
   )
 
   const changes = await client.listChanges(repositoryPath, baseCommit, targetCommit)
@@ -103,6 +122,7 @@ test('returns an empty commit page for an unborn repository', async t => {
 
   const client = new GitClient()
   assert.deepEqual(await client.listCommits(repositoryPath, 50), {
+    headCommit: null,
     commits: [],
     hasMore: false,
   })
@@ -141,6 +161,17 @@ test('lists only commits reachable from the current HEAD', async t => {
   assert.equal(
     page.commits.some(commit => commit.hash === otherCommit),
     false,
+  )
+
+  const allRefsPage = await new GitClient().searchCommits(
+    repositoryPath,
+    createCommitSearchQuery({ scope: { kind: 'all' }, message: 'other only' }),
+    10,
+  )
+  assert.equal(allRefsPage.headCommit, currentCommit)
+  assert.deepEqual(
+    allRefsPage.commits.map(commit => commit.hash),
+    [otherCommit],
   )
 })
 

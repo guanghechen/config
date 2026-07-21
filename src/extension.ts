@@ -3,6 +3,7 @@ import { ComparisonController } from './app/comparison/comparison-controller'
 import { CommitComparisonController } from './app/history/commit-comparison-controller'
 import { CommitDiffController } from './app/history/commit-diff-controller'
 import { CommitHistoryController } from './app/history/commit-history-controller'
+import { CommitSearchController } from './app/history/commit-search-controller'
 import { CommitViewController } from './app/history/commit-view-controller'
 import { ComparisonSession } from './comparison/session'
 import { GitClient } from './git/git-client'
@@ -52,6 +53,10 @@ export function activate(context: ExtensionContext): void {
     historySession,
     repositoryResolver: gitClient,
   })
+  const commitSearchController = new CommitSearchController({
+    historySession,
+    repositoryResolver: gitClient,
+  })
   const commitViewController = new CommitViewController({
     historySession,
     markSession,
@@ -62,6 +67,7 @@ export function activate(context: ExtensionContext): void {
     commitComparisonController,
     commitDiffController,
     commitHistoryController,
+    commitSearchController,
     commitViewController,
     comparisonController,
     commitChangeCache,

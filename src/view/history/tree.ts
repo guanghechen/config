@@ -51,7 +51,9 @@ export type ICommitTreeNode =
 export function createCommitRootNodes(
   snapshot: ICommitHistorySnapshot,
 ): ReadonlyArray<ICommitTreeNode> {
-  const graphRows = buildCommitGraphRows(snapshot.commits)
+  const graphRows = snapshot.searchQuery
+    ? createSearchResultRows(snapshot.commits)
+    : buildCommitGraphRows(snapshot.commits)
   const nodes: ICommitTreeNode[] = snapshot.commits.map((commit, index) => {
     const graph = graphRows[index]
     if (!graph) throw new Error('Commit graph is incomplete.')
@@ -161,4 +163,15 @@ function compactDirectory(node: IDirectoryNode): IDirectoryNode {
     path: tail.path,
     children: tail.children,
   }
+}
+
+function createSearchResultRows(
+  commits: ReadonlyArray<IGitCommit>,
+): ReadonlyArray<ICommitGraphRow> {
+  return commits.map(commit => ({
+    commitHash: commit.hash,
+    lane: 0,
+    laneCount: 1,
+    parentCount: commit.parents.length,
+  }))
 }

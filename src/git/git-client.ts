@@ -1,12 +1,18 @@
 import path from 'node:path'
 import type { ICommitPage } from './commit'
 import { parseCommitLog } from './commit-log'
+import {
+  createCommitSearchArguments,
+  createCommitSearchQuery,
+  type ICommitSearchQuery,
+} from './commit-search'
 import type { IFileChange } from './file-change'
 import { GitCommandError, GitRunner, type IGitRunner } from './git-runner'
 import { parseNameStatus } from './name-status'
 
 const MAX_COMMIT_PAGE_SIZE = 500
 const NAME_STATUS_ARGS = ['--name-status', '-z', '--find-renames', '--find-copies'] as const
+const COMMIT_LOG_FORMAT = '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%D%x00%s%x00'
 
 export class GitBlobDisplayError extends Error {}
 
@@ -65,27 +71,44 @@ export class GitClient {
   ): Promise<ICommitPage> {
     assertCommitLimit(limit)
     const headCommit = await resolveOptionalHead(this.gitRunner, repositoryPath, signal)
-    if (!headCommit) return Object.freeze({ commits: Object.freeze([]), hasMore: false })
+    if (!headCommit) {
+      return Object.freeze({
+        headCommit: null,
+        commits: Object.freeze([]),
+        hasMore: false,
+      })
+    }
 
-    const output = await this.gitRunner.run(
+    return this.loadCommitPage(repositoryPath, headCommit, [], [headCommit], [], limit, signal)
+  }
+
+  public async searchCommits(
+    repositoryPath: string,
+    queryValue: ICommitSearchQuery,
+    limit: number,
+    signal?: AbortSignal,
+  ): Promise<ICommitPage> {
+    assertCommitLimit(limit)
+    const query = createCommitSearchQuery(queryValue)
+    const headCommit = await resolveOptionalHead(this.gitRunner, repositoryPath, signal)
+    const search = createCommitSearchArguments(query, headCommit)
+    if (query.scope.kind === 'head' && !headCommit) {
+      return Object.freeze({
+        headCommit: null,
+        commits: Object.freeze([]),
+        hasMore: false,
+      })
+    }
+
+    return this.loadCommitPage(
       repositoryPath,
-      [
-        'log',
-        '--topo-order',
-        '--decorate=full',
-        '-z',
-        `--max-count=${limit + 1}`,
-        '--format=%H%x00%h%x00%P%x00%an%x00%aI%x00%D%x00%s%x00',
-        headCommit,
-        '--',
-      ],
-      { signal },
+      headCommit,
+      search.options,
+      search.revisions,
+      search.pathspecs,
+      limit,
+      signal,
     )
-    const commits = parseCommitLog(output)
-    return Object.freeze({
-      commits: Object.freeze(commits.slice(0, limit)),
-      hasMore: commits.length > limit,
-    })
   }
 
   public async listCommitChanges(
@@ -140,6 +163,39 @@ export class GitClient {
       throw new GitBlobDisplayError('Binary file content is not displayed by VSGit.')
     }
     return contents.toString('utf8')
+  }
+
+  private async loadCommitPage(
+    repositoryPath: string,
+    headCommit: string | null,
+    options: ReadonlyArray<string>,
+    revisions: ReadonlyArray<string>,
+    pathspecs: ReadonlyArray<string>,
+    limit: number,
+    signal?: AbortSignal,
+  ): Promise<ICommitPage> {
+    const output = await this.gitRunner.run(
+      repositoryPath,
+      [
+        'log',
+        '--topo-order',
+        '--decorate=full',
+        '-z',
+        `--max-count=${limit + 1}`,
+        COMMIT_LOG_FORMAT,
+        ...options,
+        ...revisions,
+        '--',
+        ...pathspecs,
+      ],
+      { signal },
+    )
+    const commits = parseCommitLog(output)
+    return Object.freeze({
+      headCommit,
+      commits: Object.freeze(commits.slice(0, limit)),
+      hasMore: commits.length > limit,
+    })
   }
 }
 
