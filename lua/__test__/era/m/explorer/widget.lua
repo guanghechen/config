@@ -7,17 +7,28 @@ local harness = require("__test__.harness")
 
 local t = harness.new("era.m.explorer.widget")
 
+---@param initial_value                any
 ---@return table
-local function new_observable()
+local function new_observable(initial_value)
   local subscribers = {} ---@type table[]
+  local ignore_initial = nil ---@type boolean|nil
+  local value = initial_value
   return {
-    subscribe = function(_, subscriber)
+    get_ignore_initial = function()
+      return ignore_initial
+    end,
+    subscribe = function(_, subscriber, next_ignore_initial)
+      ignore_initial = next_ignore_initial
       subscribers[#subscribers + 1] = subscriber
       return { unsubscribe = function() end }
     end,
-    next = function(_, value)
+    snapshot = function()
+      return value
+    end,
+    next = function(_, next_value)
+      value = next_value
       for _, subscriber in ipairs(subscribers) do
-        subscriber:next(value)
+        subscriber:next(next_value)
       end
     end,
   }
@@ -85,6 +96,100 @@ bootstrap.with_runtime(t, {
 
 local Widget = require("era.m.explorer.widget")
 
+---@param initial_root                 string
+---@param attach_ok                    boolean|nil
+---@return era.m.explorer.Widget, table
+local function new_reveal_widget(initial_root, attach_ok)
+  local calls = {
+    attach = 0,
+    expand_path = 0,
+    focus = 0,
+    refresh = 0,
+    render = 0,
+  }
+  local tree = {
+    o_cursor_filepath = new_observable(initial_root),
+    o_root_filepath = new_observable(initial_root),
+    prev_root_filepath = nil,
+  }
+
+  function tree:attach(filepath)
+    calls.attach = calls.attach + 1
+    calls.attached_filepath = filepath
+    return attach_ok ~= false
+  end
+
+  function tree:expand_path(filepath)
+    calls.expand_path = calls.expand_path + 1
+    calls.expanded_filepath = filepath
+  end
+
+  function tree:refresh()
+    calls.refresh = calls.refresh + 1
+  end
+
+  local widget = setmetatable({
+    _tree = tree,
+    __get_parent_filepath__ = function(_, filepath)
+      return filepath:match("^(.*/)[^/]+/?$")
+    end,
+    __render__ = function()
+      calls.render = calls.render + 1
+    end,
+  }, Widget)
+
+  widget.focus = function(self)
+    calls.focus = calls.focus + 1
+    self._tree:refresh(false)
+    self:__render__()
+  end
+
+  return widget, calls
+end
+
+t:test("reveal: refreshes and renders once after preparing the target", function()
+  local widget, calls = new_reveal_widget("/project/")
+
+  widget:reveal("/project/src/main.lua")
+
+  t.assert_eq(0, calls.attach, "same-root reveal should not attach a new root")
+  t.assert_eq(1, calls.expand_path, "target path should expand once")
+  t.assert_eq("/project/src/", calls.expanded_filepath)
+  t.assert_eq("/project/src/main.lua", widget._tree.o_cursor_filepath:snapshot())
+  t.assert_eq(1, calls.focus, "reveal should focus once")
+  t.assert_eq(1, calls.refresh, "reveal should refresh once")
+  t.assert_eq(1, calls.render, "reveal should render once")
+end)
+
+t:test("reveal: changes root without an intermediate refresh", function()
+  local widget, calls = new_reveal_widget("/project/")
+
+  widget:reveal("/outside/main.lua")
+
+  t.assert_eq(1, calls.attach, "cross-root reveal should attach once")
+  t.assert_eq("/outside/", calls.attached_filepath)
+  t.assert_eq("/project/", widget._tree.prev_root_filepath)
+  t.assert_eq("/outside/", widget._tree.o_root_filepath:snapshot())
+  t.assert_eq("/outside/", calls.expanded_filepath)
+  t.assert_eq(1, calls.focus, "cross-root reveal should focus once")
+  t.assert_eq(1, calls.refresh, "cross-root reveal should refresh once")
+  t.assert_eq(1, calls.render, "cross-root reveal should render once")
+end)
+
+t:test("reveal: preserves the current root when attach fails", function()
+  local widget, calls = new_reveal_widget("/project/", false)
+
+  widget:reveal("/missing/main.lua")
+
+  t.assert_eq(1, calls.attach, "failed root should be attempted once")
+  t.assert_eq("/project/", widget._tree.o_root_filepath:snapshot())
+  t.assert_eq(nil, widget._tree.prev_root_filepath)
+  t.assert_eq(0, calls.expand_path, "failed root should abort target expansion")
+  t.assert_eq(1, calls.focus, "failed reveal should preserve focus behavior")
+  t.assert_eq(1, calls.refresh, "failed reveal should refresh the current root once")
+  t.assert_eq(1, calls.render, "failed reveal should render the current root once")
+end)
+
 t:test("ignored refresh: updates any visible tab and filters unaffected paths", function()
   local valid_wins = { [101] = true } ---@type table<integer, boolean>
   t:patch_table(vim.api, "nvim_get_current_tabpage", function()
@@ -118,6 +223,7 @@ t:test("ignored refresh: updates any visible tab and filters unaffected paths", 
   }, Widget)
 
   widget:__setup_subscriptions__()
+  t.assert_eq(true, tree.o_flag_hidden:get_ignore_initial(), "initial hidden state should not refresh the tree")
 
   o_ignored_refreshed:next({ "/project/file" })
   t.assert_eq(1, renders, "off-current-tab visible window should render")

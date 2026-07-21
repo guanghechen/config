@@ -76,15 +76,7 @@ function M.reveal(filepath)
   filepath = dot.path.normalize(filepath, false, "/")
 
   local widget = M.get_widget() ---@type era.m.explorer.Widget
-  local was_visible = widget:isvisible() ---@type boolean
-  widget:focus()
-  if not was_visible then
-    vim.schedule(function()
-      widget:reveal(filepath)
-    end)
-  else
-    widget:reveal(filepath)
-  end
+  widget:reveal(filepath)
 end
 
 ---@param root                          string|nil

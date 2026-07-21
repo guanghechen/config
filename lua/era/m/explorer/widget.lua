@@ -341,34 +341,25 @@ function M:reveal(filepath)
   local root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
   if not vim.startswith(filepath, root_filepath) then
     local parent_filepath = self:__get_parent_filepath__(filepath) ---@type string
-    self:set_root(parent_filepath)
-    root_filepath = self._tree.o_root_filepath:snapshot()
+    local ok = self:__set_root__(parent_filepath) ---@type boolean
+    if not ok then
+      self:focus()
+      return
+    end
   end
 
   local target_dir = filepath:sub(-1) == "/" and filepath or self:__get_parent_filepath__(filepath) ---@type string
   self._tree:expand_path(target_dir)
 
-  self._tree:refresh(false)
-  self:__refresh__()
-
   self._tree.o_cursor_filepath:next(filepath)
-  self:__sync_cursor_to_filepath__(filepath)
+  self:focus()
 end
 
 ---@param root_filepath                      string
 ---@return boolean
 function M:set_root(root_filepath)
-  root_filepath = normalize_dirpath(root_filepath)
-
-  local current_root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
-  if root_filepath == current_root_filepath then
-    return true
-  end
-
-  local ok = self._tree:attach(root_filepath) ---@type boolean
-  if ok then
-    self._tree.prev_root_filepath = current_root_filepath
-    self._tree.o_root_filepath:next(root_filepath)
+  local ok, changed = self:__set_root__(root_filepath) ---@type boolean, boolean
+  if ok and changed then
     self:__refresh__()
   end
   return ok
@@ -612,6 +603,28 @@ function M:__get_parent_filepath__(filepath)
   end
 
   return parent
+end
+
+---@protected
+---@param root_filepath                string
+---@return boolean                     ok
+---@return boolean                     changed
+function M:__set_root__(root_filepath)
+  root_filepath = normalize_dirpath(root_filepath)
+
+  local current_root_filepath = self._tree.o_root_filepath:snapshot() ---@type string
+  if root_filepath == current_root_filepath then
+    return true, false
+  end
+
+  local ok = self._tree:attach(root_filepath) ---@type boolean
+  if not ok then
+    return false, false
+  end
+
+  self._tree.prev_root_filepath = current_root_filepath
+  self._tree.o_root_filepath:next(root_filepath)
+  return true, true
 end
 
 ---@protected
@@ -1515,7 +1528,7 @@ function M:__setup_subscriptions__()
         self:__render__()
       end,
     }),
-    false
+    true
   )
   self._subscriptions[#self._subscriptions + 1] = sub_show_hidden
 
