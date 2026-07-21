@@ -1,0 +1,393 @@
+{
+  "[cpp]": {
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [
+      {
+        "column": 100,
+        "color": "#49454c"
+      },
+      {
+        "column": 120,
+        "color": "#ad6c40"
+      }
+    ],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  "[hpp]": {
+    "editor.tabSize": 2
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[latex]": {
+    "editor.formatOnPaste": false,
+    "editor.suggestSelection": "recentlyUsedByPrefix"
+  },
+  "[markdown]": {
+    "editor.wordWrap": "off",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    },
+    "diffEditor.ignoreTrimWhitespace": false
+  },
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.formatOnType": true,
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
+  "[rust]": {
+    "editor.defaultFormatter": "matklad.rust-analyzer"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[text]": {
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 100,
+    "editor.wrappingIndent": "same"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "octref.vetur"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[yaml]": {
+    "diffEditor.ignoreTrimWhitespace": true
+  },
+  "accessibility.signals.terminalBell": {
+    "sound": "on"
+  },
+  "application.shellEnvironmentResolutionTimeout": 100,
+  "claudeCode.preferredLocation": "panel",
+  "cmake.configureOnOpen": true,
+  "cSpell.userWords": ["guanghechen", "kyokuya", "sora", "yozora"],
+  "dart.hotReloadOnSave": "all",
+  "debug.console.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
+  "debug.console.fontSize": 18,
+  "debug.javascript.terminalOptions": {
+    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+  },
+  "diffEditor.diffAlgorithm": "advanced",
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.accessibilitySupport": "off",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorStyle": "line",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.detectIndentation": false,
+  "editor.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
+  "editor.fontSize": 18,
+  "editor.formatOnSave": false,
+  "editor.hideCursorInOverviewRuler": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.lineNumbers": "relative",
+  "editor.minimap.enabled": false,
+  "editor.mouseWheelZoom": true,
+  "editor.padding.top": 10,
+  "editor.renderControlCharacters": true,
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [
+    {
+      "column": 100,
+      "color": "#49454c"
+    },
+    {
+      "column": 120,
+      "color": "#ad6c40"
+    }
+  ],
+  "editor.showFoldingControls": "always",
+  "editor.smoothScrolling": true,
+  "editor.suggestSelection": "first",
+  "editor.tabCompletion": "on",
+  "editor.tabSize": 2,
+  "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
+  "editor.wordWrap": "off",
+  "eslint.format.enable": true,
+  "eslint.options": {
+    "extensions": [
+      ".js",
+      ".json",
+      ".jsx",
+      ".pug",
+      ".ts",
+      ".tsx",
+      ".vue",
+      ".md",
+      ".mdx",
+      ".mjs",
+      ".mts",
+      ".cjs",
+      ".cts"
+    ]
+  },
+  "eslint.packageManager": "yarn",
+  "eslint.quiet": true,
+  "eslint.run": "onSave",
+  "eslint.validate": [
+    "html",
+    "javascript",
+    "javascriptreact",
+    "markdown",
+    "pug",
+    "typescript",
+    "typescriptreact",
+    "vue"
+  ],
+  "explorer.autoReveal": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.confirmPasteNative": false,
+  "explorer.copyRelativePathSeparator": "/",
+  "explorer.fileNesting.expand": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js",
+    "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+    "*.jsx": "${capture}.js",
+    "*.tsx": "${capture}.ts",
+    ".eslintrc": ".eslintignore",
+    ".npmrc": ".nvmrc, .yarnrc, .yarnrc.yml",
+    ".prettierrc": ".prettierignore",
+    "rollup.config.mjs": "rollup.config.*.mjs",
+    "tsconfig.json": "tsconfig.*.json",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
+    "pubspec.yaml": "pubspec.lock, .metadata"
+  },
+  "explorer.incrementalNaming": "smart",
+  "explorer.openEditors.sortOrder": "fullPath",
+  "explorer.openEditors.visible": 0,
+  "extensions.autoUpdate": "on",
+  "files.associations": {
+    "*.rs": "rust",
+    "*.txt": "text",
+    ".prettierrc": "yaml"
+  },
+  "files.autoSave": "onFocusChange",
+  "files.autoSaveDelay": 3000,
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.idea": true,
+    "**/*.tsbuildinfo": true
+  },
+  "files.watcherExclude": {
+    "**/.idea": true
+  },
+  "git.autoRepositoryDetection": false,
+  "git.mergeEditor": false,
+  "git.openRepositoryInParentFolders": "never",
+  "git.showPushSuccessNotification": true,
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "yaml": true,
+    "cpp": true,
+    "dart": true,
+    "js": true,
+    "ts": true,
+    "typescript": true,
+    "typescriptreact": true
+  },
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "gitlens.ai.model": "vscode",
+  "gitlens.ai.vscode.model": "copilot:claude-opus-4.6",
+  "gitlens.autolinks": null,
+  "gitlens.defaultDateFormat": "YYYY-MM-DD HH:mm:SS",
+  "gitlens.defaultDateShortFormat": "YYYY-MM-DD",
+  "gitlens.defaultDateStyle": "absolute",
+  "gitlens.gitCommands.skipConfirmations": [
+    "fetch:command",
+    "stash-push:command",
+    "switch:command"
+  ],
+  "gitlens.keymap": "none",
+  "html.format.indentInnerHtml": true,
+  "javascript.autoClosingTags": true,
+  "javascript.format.enable": true,
+  "javascript.format.insertSpaceAfterConstructor": true,
+  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+  "javascript.format.semicolons": "remove",
+  "javascript.preferences.quoteStyle": "single",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "json.trace.server": "messages",
+  "jupyter.askForKernelRestart": false,
+  "latex-workshop.latex.autoBuild.run": "never",
+  "markdown.preview.fontFamily": "Maple Mono NF CN, Comic Sans MS, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif",
+  "markdown.preview.fontSize": 18,
+  "markdown.preview.scrollEditorWithPreview": false,
+  "markdown.preview.scrollPreviewWithEditor": false,
+  "notebook.lineNumbers": "on",
+  "npm.packageManager": "yarn",
+  "nxConsole.showNodeVersionOnStartup": false,
+  "python.formatting.provider": "none",
+  "remote.defaultExtensionsIfInstalledLocally": [
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "GitHub.vscode-pull-request-github"
+  ],
+  "remote.extensionKind": {
+    "streetsidesoftware.code-spell-checker": "workspace",
+    "ms-azuretools.vscode-docker": "workspace",
+    "EditorConfig.EditorConfig": "workspace",
+    "dbaeumer.vscode-eslint": "workspace",
+    "ms-toolsai.jupyter": "workspace",
+    "ms-python.vscode-pylance": "workspace",
+    "ms-python.python": "workspace",
+    "ms-vscode-remote.remote-containers": "ui",
+    "ms-vscode-remote.remote-ssh": "ui",
+    "ms-vscode-remote.remote-ssh-edit": "ui",
+    "ms-vscode-remote.remote-wsl": "ui",
+    "ms-vscode-remote.vscode-remote-extensionpack": "ui",
+    "vscodevim.vim": "ui",
+    "vscode-icons-team.vscode-icons": "ui"
+  },
+  "remote.localPortHost": "localhost",
+  "remote.restoreForwardedPorts": true,
+  "scm.alwaysShowActions": true,
+  "scm.alwaysShowRepositories": true,
+  "scm.showIncomingChanges": "never",
+  "scm.showOutgoingChanges": "never",
+  "search.seedOnFocus": true,
+  "search.showLineNumbers": true,
+  "security.workspace.trust.untrustedFiles": "prompt",
+  "settingsSync.ignoredExtensions": ["github.copilot", "rooveterinaryinc.roo-cline"],
+  "terminal.explorerKind": "integrated",
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.env.linux": {
+    "TERM": "xterm-256color"
+  },
+  "terminal.integrated.env.osx": {
+    "TERM": "xterm-256color"
+  },
+  "terminal.integrated.defaultProfile.linux": "fish",
+  "terminal.integrated.defaultProfile.osx": "fish",
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.enableVisualBell": true,
+  "terminal.integrated.fontFamily": "Maple Mono NF CN, Consolas, monospace, sans-serif",
+  "terminal.integrated.fontSize": 18,
+  "terminal.integrated.inheritEnv": false,
+  "terminal.integrated.macOptionIsMeta": true,
+  "terminal.integrated.rightClickBehavior": "default",
+  "terminal.integrated.tabs.location": "left",
+  "terminal.external.windowsExec": "pwsh.exe",
+  "typescript.autoClosingTags": true,
+  "typescript.format.enable": true,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+  "typescript.format.insertSpaceAfterTypeAssertion": true,
+  "typescript.implementationsCodeLens.enabled": true,
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.suggest.completeFunctionCalls": false,
+  "typescript.tsc.autoDetect": "off",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "vim.easymotion": true,
+  "vim.foldfix": true,
+  "vim.history": 500,
+  "vim.hlsearch": true,
+  "vim.incsearch": true,
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["u"],
+      "commands": [
+        {
+          "command": "undo",
+          "args": []
+        }
+      ]
+    },
+    {
+      "before": ["<C-r>"],
+      "commands": [
+        {
+          "command": "redo",
+          "args": []
+        }
+      ]
+    }
+  ],
+  "vim.sneak": true,
+  "vim.surround": true,
+  "vim.textwidth": 100,
+  "vscode-edge-devtools.webhint": false,
+  "vscode-neovim.useWSL": false,
+  "vscode-neovim.neovimExecutablePaths.linux": "/home/linuxbrew/.linuxbrew/bin/nvim",
+  "vscode-neovim.neovimExecutablePaths.win32": "C:\\Program Files\\Neovim\\bin\\nvim.exe",
+  "vsicons.dontShowNewVersionMessage": true,
+  "vsicons.presets.jsOfficial": true,
+  "vsicons.presets.jsonOfficial": true,
+  "vsicons.presets.tsOfficial": true,
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "window.commandCenter": false,
+  "window.customTitleBarVisibility": "windowed",
+  "window.restoreWindows": "none",
+  "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}${separator}",
+  "window.titleBarStyle": "custom",
+  "workbench.activityBar.location": "top",
+  "workbench.commandPalette.history": 1024,
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.perEditorGroup": true,
+  "workbench.editor.splitInGroupLayout": "vertical",
+  "workbench.editor.splitSizing": "split",
+  "workbench.editor.tabActionCloseVisibility": false,
+  "workbench.editor.tabCloseButton": "off",
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook"
+  },
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.layoutControl.enabled": false,
+  "workbench.panel.defaultLocation": "bottom",
+  "workbench.settings.openDefaultKeybindings": true,
+  "workbench.settings.openDefaultSettings": true,
+  "workbench.startupEditor": "none",
+  "workbench.statusBar.visible": true,
+  "workbench.tree.indent": 12,
+  "zenMode.hideLineNumbers": false,
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  }
+}
