@@ -1,0 +1,26 @@
+---@diagnostic disable: undefined-global
+--- Test for stl.filetype
+--- Run with: nvim -l lua/__test__/stl/filetype.lua
+
+local harness = require("__test__.harness")
+
+local t = harness.new("stl.filetype")
+
+local Filetype = require("stl.filetype")
+
+t:test("detect: matches by filename without a buffer", function()
+  local received = nil ---@type table|nil
+  t:patch_table(vim.filetype, "match", function(opts)
+    received = opts
+    return "lua"
+  end)
+
+  local result = Filetype.detect("init.lua") ---@type string|nil
+
+  t.assert_eq("lua", result, "detected filetype")
+  t.assert_true(received ~= nil, "match options")
+  t.assert_eq("init.lua", received.filename, "filename")
+  t.assert_nil(received.buf, "buffer")
+end)
+
+t:run()
