@@ -27,6 +27,15 @@ function _ghc_tmux_status_driver_bin_ {
   fi
 }
 
+
+function _ghc_tmux_recover_status_scheduler_lock_ {
+  local status_driver
+  status_driver=$(_ghc_tmux_status_driver_bin_)
+  if [ -n "$status_driver" ]; then
+    "$status_driver" --recover >/dev/null 2>&1 || true
+  fi
+}
+
 function _ghc_tmux_status_layout_hooks_ {
   printf '%s\n' \
     'client-resized[40]' \
@@ -200,6 +209,7 @@ function _ghc_tmux_load_theme_ {
     fi
     tmux set -g @GHC_SL_MODE "$status_mode" 2>/dev/null || true
   fi
+  _ghc_tmux_recover_status_scheduler_lock_
 
   case "$status_mode" in
     "01" | "11")
