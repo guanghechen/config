@@ -103,24 +103,50 @@ function M.dressing()
 
   if state.data.doc.enabled then
     local queries = vim.api.nvim_get_runtime_file("queries/*/images.scm", true)
-    local supported_langs = vim.tbl_map(function(q)
-      return q:match("queries/(.-)/images%.scm")
-    end, queries)
+    local supported_lang_set = {} ---@type table<string, true>
+    for _, query in ipairs(queries) do
+      local lang = query:match("queries/(.-)/images%.scm") ---@type string|nil
+      if lang then
+        supported_lang_set[lang] = true
+      end
+    end
+
+    ---@param bufnr                      integer
+    ---@return boolean
+    local function is_doc_supported(bufnr)
+      if not vim.api.nvim_buf_is_valid(bufnr) or not vim.api.nvim_buf_is_loaded(bufnr) then
+        return false
+      end
+
+      local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+      local lang = vim.treesitter.language.get_lang(filetype) ---@type string|nil
+      return lang ~= nil and supported_lang_set[lang] == true
+    end
+
+    ---@param bufnr                      integer
+    ---@return nil
+    local function attach_doc(bufnr)
+      if not is_doc_supported(bufnr) then
+        return
+      end
+
+      vim.schedule(function()
+        if is_doc_supported(bufnr) then
+          require("era.m.image.doc").attach(bufnr)
+        end
+      end)
+    end
 
     vim.api.nvim_create_autocmd("FileType", {
       group = group,
       callback = function(e)
-        local filetype = vim.api.nvim_get_option_value("filetype", { buf = e.buf })
-        local lang = vim.treesitter.language.get_lang(filetype)
-        if vim.tbl_contains(supported_langs, lang) then
-          vim.schedule(function()
-            if vim.api.nvim_buf_is_valid(e.buf) then
-              require("era.m.image.doc").attach(e.buf)
-            end
-          end)
-        end
+        attach_doc(e.buf)
       end,
     })
+
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      attach_doc(bufnr)
+    end
   end
 end
 
