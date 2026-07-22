@@ -10,6 +10,7 @@
 6. **PREFERRED**: Keep Markdown tables and ASCII diagrams visually aligned (CJK = 2 units, ASCII = 1); prefer bullet lists when clearer than a table.
 7. **PREFERRED**: For non-trivial proposals, give 2–3 examples + brief contrast + one recommendation.
 8. **ALWAYS**: When identifying issues, provide concrete examples; if there is no minimal reproduction, state trigger, evidence, and impact.
+9. **ALWAYS**: Before delivering changes, perform a risk-proportionate adversarial self-review: Is the change robust, minimal in scope and complexity, and free of new issues? Fix confirmed in-scope issues and re-verify. If a material concern remains unresolved, pause delivery, present the evidence and options, and await the user's decision.
 
 ## Security
 
