@@ -15,10 +15,15 @@ local tmux_socket = vim.env.TMUX and vim.fn.split(vim.env.TMUX, ",")[1] or ""
 --
 -- the check if tmux is actually running (so the variable $TMUX is
 -- not nil) is made before actually calling this function
----@param command                       string
+---@param args                          string[]
 ---@return string
-local function tmux_command(command)
-  return vim.fn.system("tmux -S " .. tmux_socket .. " " .. command)
+local function tmux_command(args)
+  local cmd = { "tmux", "-S", tmux_socket }
+  for _, arg in ipairs(args) do
+    table.insert(cmd, arg)
+  end
+  local ok, output = pcall(vim.fn.system, cmd)
+  return ok and output or ""
 end
 
 ---@param args                          string[]
@@ -33,22 +38,22 @@ end
 
 ---@return boolean
 local function is_tmux_pane_leftest()
-  return tonumber(tmux_command("display-message -p '#{pane_at_left}'")) == 1
+  return tonumber(tmux_command({ "display-message", "-p", "#{pane_at_left}" })) == 1
 end
 
 ---@return boolean
 local function is_tmux_pane_topmost()
-  return tonumber(tmux_command("display-message -p '#{pane_at_top}'")) == 1
+  return tonumber(tmux_command({ "display-message", "-p", "#{pane_at_top}" })) == 1
 end
 
 ---@return boolean
 local function is_tmux_pane_bottommost()
-  return tonumber(tmux_command("display-message -p '#{pane_at_bottom}'")) == 1
+  return tonumber(tmux_command({ "display-message", "-p", "#{pane_at_bottom}" })) == 1
 end
 
 ---@return boolean
 local function is_tmux_pane_rightest()
-  return tonumber(tmux_command("display-message -p '#{pane_at_right}'")) == 1
+  return tonumber(tmux_command({ "display-message", "-p", "#{pane_at_right}" })) == 1
 end
 
 ---@class stl.tmux
@@ -81,10 +86,9 @@ if vim.env.TMUX ~= nil then
   -- check whether the current tmux pane is the only pane of the window or if the pane is zoomed
   ---@return boolean
   function M.is_tmux_pane_zoomed()
-    return (
-      tonumber(tmux_command("display-message -p '#{window_panes}'")) == 1 ---! Check if the current window has only one pane
-      or tonumber(tmux_command("display-message -p '#{window_zoomed_flag}'")) == 1 ---! Check if the current pane is zoomed
-    )
+    local status = tmux_command({ "display-message", "-p", "#{window_panes}:#{window_zoomed_flag}" })
+    local window_panes, window_zoomed_flag = status:match("^(%d+):(%d+)")
+    return tonumber(window_panes) == 1 or tonumber(window_zoomed_flag) == 1
   end
 
   -- whether tmux should take control over the navigation
