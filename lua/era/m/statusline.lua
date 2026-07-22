@@ -5,6 +5,7 @@ local dirtier = dot.state.status.dirtier_statusline ---@type stl.c.Dirtier
 local position = "f_sl" ---@type stl.t.NvimbarPositionEnum
 
 local statusline ---@type era.m.nvimbar.Nvimbar
+
 statusline = era.m.nvimbar.Nvimbar.new({
   name = "statusline",
   comp_sep = "  ",
@@ -56,6 +57,10 @@ statusline
 
 ---@return nil
 function M.dressing()
+  local statusline_snapshot = statusline:render(true) ---@type string
+  vim.o.statusline = statusline_snapshot
+  dirtier:mark_clean()
+
   dirtier:subscribe(stl.c.Subscriber.new({
     on_next = function()
       if dirtier:is_dirty() then
