@@ -579,8 +579,8 @@
   },
   {
     "key": "alt+enter",
-    "command": "inlineChat.acceptChanges",
-    "when": "inlineChatHasProvider && inlineChatVisible"
+    "command": "inlineChat2.keep",
+    "when": "inlineChatVisible && chatEdits.hasEditorModifications && !chatEdits.isRequestInProgress"
   },
   {
     "key": "alt+enter",
