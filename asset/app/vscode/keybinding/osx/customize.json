@@ -314,17 +314,6 @@
     "title": "view: close chat"
   },
   {
-    "key": "cmd+8",
-    "command": "roo-cline.SidebarProvider.focus",
-    "title": "view: show roo-code"
-  },
-  {
-    "key": "cmd+8",
-    "command": "workbench.action.closeSidebar",
-    "when": "focusedView =~ /roo[- ](code|cline)/i",
-    "title": "view: close sidebar"
-  },
-  {
     "key": "cmd+[",
     "command": "workbench.action.previousEditorInGroup",
     "when": "editorFocus || (!panelFocus && !sideBarFocus && !terminalFocus)",
