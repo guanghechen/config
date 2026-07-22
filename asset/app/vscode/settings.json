@@ -327,6 +327,7 @@
   "vsicons.presets.tsOfficial": true,
   "window.commandCenter": false,
   "window.customTitleBarVisibility": "windowed",
+  "window.enableMenuBarMnemonics": false,
   "window.restoreWindows": "none",
   "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}${separator}",
   "window.titleBarStyle": "custom",
