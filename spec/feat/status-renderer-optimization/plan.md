@@ -51,11 +51,14 @@ the priority at the current session count.
      optimization does not relax the execution budget.
    - Alternating isolated due-tick A/B, 20 runs each: median 58.5/49.9 ms,
      p95 70.2/61.9 ms, mean 85.0/70.2 ms.
-4. **Pending — precompute session groups/order at scale**
-   - Implement only if same-group sessions reach 20–30 or traced pure render
-     time exceeds 5–10 ms.
-5. **Pending — retire legacy recursive scheduler compatibility**
-   - Remove only after the rollback compatibility window is explicitly closed.
+4. **Deferred — precompute session groups/order at scale**
+   - Reconsider only if phase-level tracing attributes more than 5–10 ms to pure
+     rendering rather than tmux snapshot IPC.
+   - A 4/10/20 attached-client prototype did not improve median latency; at 20
+     sessions median changed 17.8 → 19.3 ms. The prototype was reverted. Revisit
+     only with phase-level profiling that separates tmux snapshot IPC from render.
+5. **Blocked — retire legacy recursive scheduler compatibility**
+   - Requires an explicit decision to close the rollback compatibility window.
 
 ## Deferred
 
