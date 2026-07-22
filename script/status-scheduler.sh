@@ -35,6 +35,7 @@ legacy_owner_file="$lock_path/owner"
 owns_lock=0
 owns_recovery_lease=0
 renderer_pid=""
+lock_owner_value=""
 
 owner_value_is_alive() {
   local owner_value=$1
@@ -53,12 +54,15 @@ lock_exists() {
 }
 
 read_lock_owner() {
+  lock_owner_value=""
   if [ -d "$lock_path" ]; then
-    cat "$legacy_owner_file" 2>/dev/null || true
+    if [ -r "$legacy_owner_file" ]; then
+      IFS= read -r lock_owner_value <"$legacy_owner_file" || true
+    fi
     return
   fi
-  if [ -f "$lock_path" ]; then
-    cat "$lock_path" 2>/dev/null || true
+  if [ -f "$lock_path" ] && [ -r "$lock_path" ]; then
+    IFS= read -r lock_owner_value <"$lock_path" || true
   fi
 }
 
@@ -93,7 +97,8 @@ publish_renderer_owner() {
   if ! printf '%s:%s\n' "$$" "$renderer_pid" >"$lock_update"; then
     return 1
   fi
-  owner=$(read_lock_owner)
+  read_lock_owner
+  owner=$lock_owner_value
   if [ "${owner%%:*}" != "$$" ]; then
     unlink "$lock_update" 2>/dev/null || true
     return 1
@@ -106,7 +111,8 @@ recover_stale_lock() {
   if ! lock_exists; then
     return 0
   fi
-  owner=$(read_lock_owner)
+  read_lock_owner
+  owner=$lock_owner_value
   # Empty or unsupported lock state is retained rather than guessed stale.
   if [ -z "$owner" ] || owner_value_is_alive "$owner"; then
     return 1
@@ -129,7 +135,8 @@ recover_stale_lock() {
 release_lock() {
   local owner
   if [ "$owns_lock" = "1" ]; then
-    owner=$(read_lock_owner)
+    read_lock_owner
+    owner=$lock_owner_value
   else
     owner=""
   fi

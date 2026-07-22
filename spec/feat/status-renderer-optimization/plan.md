@@ -37,9 +37,13 @@ the priority at the current session count.
    - Alternating A/B no-due benchmark: old/new median 68.8/77.2 ms,
      mean 79.1/82.8 ms. The small absolute cost is accepted for deterministic
      ownership and error-path isolation; later hot-path work remains item 2.
-2. **Pending — reduce scheduler driver process count**
-   - Replace hot-path `cat` calls with shell built-in reads.
-   - Re-measure before considering a Rust supervisor.
+2. **Completed — reduce scheduler driver process count**
+   - Replace hot-path `cat` calls and command substitutions with shell built-in
+     reads while preserving exact owner parsing.
+   - Alternating HEAD/worktree A/B, 50 runs each: median 85.1/70.7 ms,
+     p95 90.3/76.4 ms, mean 103.8/72.3 ms.
+   - Keep the Rust supervisor idea deferred; the low-risk shell change produced
+     a measurable improvement without changing lifecycle behavior.
 3. **Pending — reduce metrics tmux IPC**
    - Evaluate combining task claim with metric-state reads.
    - Preserve timeout-after-commit ambiguity rules.
