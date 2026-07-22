@@ -61,6 +61,16 @@ the priority at the current session count.
    - The rollback compatibility window was explicitly closed.
    - Removed the retired CLI, runtime, tmux adapter, loader generation, and
      self-rescheduling paths; old commands now fail at the CLI boundary.
+6. **Completed — split render and diagnostic snapshot options**
+   - Reduced the render/apply hot path from 37 option reads to 15; metric
+     payload, health, scheduler outcome, and legacy cache state remain available
+     to `dump-state` through the complete diagnostic snapshot.
+   - Sequential live no-op apply benchmark, 50 runs before/after: median
+     16.660/14.993 ms, p95 18.346/16.495 ms, mean 17.000/15.403 ms.
+   - Alternating old/new A/B on the same live server, 50 runs each: median
+     14.811/14.320 ms, p95 23.489/16.847 ms, mean 15.985/14.573 ms. Both methods
+     show a positive direction; use alternating A/B as the comparative signal
+     because the absolute improvement is sensitive to execution order and noise.
 
 ## Deferred
 

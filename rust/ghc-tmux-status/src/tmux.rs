@@ -61,8 +61,8 @@ impl TmuxAdapter {
     }
 
     pub fn read_snapshot(&self) -> AppResult<TmuxSnapshot> {
-        let output = self.tmux_output(snapshot_command_args(None))?;
-        parse_snapshot_output(&output)
+        let output = self.tmux_output(snapshot_command_args(None, DIAGNOSTIC_SNAPSHOT_OPTIONS))?;
+        parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS)
     }
 
     /// Claims a render revision and collects its snapshot in one guarded tmux
@@ -74,7 +74,7 @@ impl TmuxAdapter {
         guards: &[TmuxOptionGuard<'_>],
     ) -> AppResult<Option<TmuxSnapshot>> {
         let args = if guards.is_empty() {
-            snapshot_command_args(Some(revision))
+            snapshot_command_args(Some(revision), RENDER_SNAPSHOT_OPTIONS)
         } else {
             guarded_snapshot_command_args(revision, guards)
         };
@@ -82,7 +82,7 @@ impl TmuxAdapter {
         if output == RENDER_SKIPPED_MARK {
             return Ok(None);
         }
-        parse_snapshot_output(&output).map(Some)
+        parse_snapshot_output(&output, RENDER_SNAPSHOT_OPTIONS).map(Some)
     }
 
     pub fn read_session_navigation(&self) -> AppResult<SessionNavigationSnapshot> {
@@ -375,7 +375,10 @@ impl TmuxAdapter {
     }
 }
 
-fn snapshot_command_args(render_revision: Option<u64>) -> Vec<String> {
+fn snapshot_command_args(
+    render_revision: Option<u64>,
+    options: &[(TmuxOptionScope, &str)],
+) -> Vec<String> {
     let mut args = Vec::new();
     let cache_witness_formats = SESSION_CACHE_OPTIONS.map(cache_witness_format);
     if let Some(revision) = render_revision {
@@ -399,7 +402,7 @@ fn snapshot_command_args(render_revision: Option<u64>) -> Vec<String> {
             ),
         ],
     );
-    append_options_commands(&mut args, SNAPSHOT_OPTIONS);
+    append_options_commands(&mut args, options);
     args.extend([
         ";".to_string(),
         "display-message".to_string(),
@@ -436,7 +439,10 @@ fn guarded_snapshot_command_args(
     render_revision: u64,
     guards: &[TmuxOptionGuard<'_>],
 ) -> Vec<String> {
-    let command_list = tmux_argv_sequence(&snapshot_command_args(Some(render_revision)));
+    let command_list = tmux_argv_sequence(&snapshot_command_args(
+        Some(render_revision),
+        RENDER_SNAPSHOT_OPTIONS,
+    ));
     option_guarded_command_args(
         guards,
         command_list,
@@ -702,7 +708,10 @@ fn tmux_argv_sequence(args: &[String]) -> String {
         .join("; ")
 }
 
-fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
+fn parse_snapshot_output(
+    output: &str,
+    options: &[(TmuxOptionScope, &str)],
+) -> AppResult<TmuxSnapshot> {
     let mut lines = output.lines().peekable();
     let context_line = lines
         .next()
@@ -710,8 +719,8 @@ fn parse_snapshot_output(output: &str) -> AppResult<TmuxSnapshot> {
     let (width, current_session_name, client_last_session, host, session_created) =
         parse_context_line(context_line)?;
 
-    let option_values = parse_option_values(&mut lines, SNAPSHOT_OPTIONS.len())?;
-    let options = SNAPSHOT_OPTIONS
+    let option_values = parse_option_values(&mut lines, options.len())?;
+    let options = options
         .iter()
         .zip(option_values)
         .map(|((_, name), value)| ((*name).to_string(), value))
@@ -958,7 +967,35 @@ const RENDER_SKIPPED_MARK: &str = "__GHC_RENDER_SKIPPED__";
 const SCHEDULER_APPLIED_MARK: &str = "__GHC_SCHEDULER_APPLIED__";
 const SCHEDULER_SKIPPED_MARK: &str = "__GHC_SCHEDULER_SKIPPED__";
 
-const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
+// Render/apply hot path: only values consumed by context resolution, composition,
+// commit planning, and lifecycle fencing. Metric payload/health state remains
+// indirect in templates and belongs to diagnostic snapshots only.
+const RENDER_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
+    (TmuxOptionScope::GlobalSession, ROWS_OVERRIDE_OPTION),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_LEFT"),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_RIGHT"),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_SL_STATUS02_SESSION_FORMAT",
+    ),
+    (
+        TmuxOptionScope::GlobalSession,
+        "@GHC_SL_STATUS02_CURRENT_FORMAT",
+    ),
+    (TmuxOptionScope::GlobalSession, STATUS_LEFT_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_RIGHT_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_POSITION_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_JUSTIFY_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_INTERVAL_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_0_OPTION),
+    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_1_OPTION),
+    (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
+    (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
+];
+
+// Read-only diagnostics retain the complete state surface used by dump-state.
+const DIAGNOSTIC_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
     (TmuxOptionScope::GlobalSession, ROWS_OVERRIDE_OPTION),
     (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_LEFT"),
@@ -1028,14 +1065,14 @@ const SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 #[cfg(test)]
 mod tests {
     use super::{
-        CONTEXT_MARK, FIELD_SEP, GuardedMutationOutcome, NAVIGATION_MARK, OPTIONS_END_MARK,
-        OPTIONS_MARK, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
-        SNAPSHOT_OPTIONS, TmuxOptionGuard, TmuxOptionScope, cache_witness_format,
-        combined_guard_format, format_literal, guarded_snapshot_command_args,
-        nested_render_guard_args, option_value_mark, options_command_args, parse_client_line,
-        parse_guarded_options_output, parse_options_output, parse_session_line,
-        parse_session_navigation_output, parse_snapshot_output, serialized_plan_chunks,
-        snapshot_command_args,
+        CONTEXT_MARK, DIAGNOSTIC_SNAPSHOT_OPTIONS, FIELD_SEP, GuardedMutationOutcome,
+        NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, RENDER_SNAPSHOT_OPTIONS,
+        SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK, TmuxOptionGuard,
+        TmuxOptionScope, cache_witness_format, combined_guard_format, format_literal,
+        guarded_snapshot_command_args, nested_render_guard_args, option_value_mark,
+        options_command_args, parse_client_line, parse_guarded_options_output,
+        parse_options_output, parse_session_line, parse_session_navigation_output,
+        parse_snapshot_output, serialized_plan_chunks, snapshot_command_args,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -1056,7 +1093,7 @@ mod tests {
 
     #[test]
     fn parses_snapshot_output() {
-        let option_values = vec![""; SNAPSHOT_OPTIONS.len()];
+        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         let options = option_section(&option_values);
         let output = format!(
             "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
@@ -1070,7 +1107,7 @@ $2	120
 $2	90"
         );
 
-        let snapshot = parse_snapshot_output(&output).unwrap();
+        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
         assert_eq!(snapshot.width, 120);
         assert_eq!(snapshot.status, "on");
         assert_eq!(snapshot.current_session_name, "yui");
@@ -1133,9 +1170,54 @@ $2	90"
 
     #[test]
     fn render_snapshot_starts_revision_in_the_same_tmux_queue() {
-        let args = snapshot_command_args(Some(42));
+        let args = snapshot_command_args(Some(42), RENDER_SNAPSHOT_OPTIONS);
         assert_eq!(&args[..4], ["set", "-s", RENDER_REVISION_OPTION, "42"]);
         assert_eq!(args[4], ";");
+    }
+
+    #[test]
+    fn render_snapshot_excludes_diagnostic_metric_and_health_options() {
+        let names = RENDER_SNAPSHOT_OPTIONS
+            .iter()
+            .map(|(_, name)| *name)
+            .collect::<Vec<_>>();
+        let diagnostic_names = DIAGNOSTIC_SNAPSHOT_OPTIONS
+            .iter()
+            .map(|(_, name)| *name)
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            names,
+            [
+                "@GHC_SL_MODE",
+                "@GHC_SL_ROWS",
+                "@GHC_SL_STATUS02_LEFT",
+                "@GHC_SL_STATUS02_RIGHT",
+                "@GHC_SL_STATUS02_SESSION_FORMAT",
+                "@GHC_SL_STATUS02_CURRENT_FORMAT",
+                "status-left",
+                "status-right",
+                "status-position",
+                "status-justify",
+                "status-interval",
+                "status-format[0]",
+                "status-format[1]",
+                "@GHC_SL_SESSION_ORDER",
+                "@GHC_SL_SCHED_GEN",
+            ]
+        );
+        assert_eq!(DIAGNOSTIC_SNAPSHOT_OPTIONS.len(), 37);
+        assert!(names.iter().all(|name| diagnostic_names.contains(name)));
+        for diagnostic_only in [
+            "@GHC_SL_NET_IFACE",
+            "@GHC_SL_METRIC_SCHED",
+            "@GHC_SL_CPU_SAMPLE",
+            "@GHC_SL_METRIC_LAST_ERR",
+            "@GHC_SL_HEARTBEAT_LAST_EXEC_OUTCOME",
+            "@GHC_STATUS_COMPONENT_CACHE_cpu",
+        ] {
+            assert!(!names.contains(&diagnostic_only));
+        }
     }
 
     #[test]
@@ -1232,9 +1314,9 @@ $2	90"
 
     #[test]
     fn parses_current_status_and_tabbed_cache_options() {
-        let mut option_values = vec![""; SNAPSHOT_OPTIONS.len()];
+        let mut option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         option_values[0] = "02";
-        let network_index = SNAPSHOT_OPTIONS
+        let network_index = DIAGNOSTIC_SNAPSHOT_OPTIONS
             .iter()
             .position(|(_, name)| *name == "@GHC_SL_NET_SAMPLE")
             .unwrap();
@@ -1249,7 +1331,7 @@ $1	yui	0	off
 $1	200"
         );
 
-        let snapshot = parse_snapshot_output(&output).unwrap();
+        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
         assert_eq!(snapshot.status, "off");
         assert_eq!(snapshot.mode, "02");
         assert_eq!(
