@@ -1327,7 +1327,7 @@
   {
     "key": "cmd+enter",
     "command": "chatEditing.acceptAllFiles",
-    "when": "hasUndecidedChatEditingResource && inChatInput && !chatSessionRequestInProgress && chatLocation == 'editing-session'"
+    "when": "hasUndecidedChatEditingResource && inChatInput"
   },
   {
     "key": "cmd+enter",

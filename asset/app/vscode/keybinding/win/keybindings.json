@@ -610,7 +610,7 @@
   {
     "key": "alt+enter",
     "command": "chatEditing.acceptAllFiles",
-    "when": "hasUndecidedChatEditingResource && inChatInput && !chatSessionRequestInProgress && chatLocation == 'editing-session'"
+    "when": "hasUndecidedChatEditingResource && inChatInput"
   },
   {
     "key": "alt+enter",
